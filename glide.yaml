@@ -1,0 +1,44 @@
+package: github.com/drud/bootstrap/cli
+repo: github.com/drud/bootstrap/files/cli
+import:
+- package: github.com/Masterminds/sprig
+  version: ~2.3.0
+- package: github.com/Sirupsen/logrus
+  version: ~0.10.0
+- package: github.com/aws/aws-sdk-go
+  version: ~1.4.1
+  subpackages:
+  - aws
+  - aws/credentials
+  - aws/session
+  - service/s3
+  - service/s3/s3manager
+- package: github.com/drud/drud-go
+  subpackages:
+  - drudapi
+  - secrets
+- package: github.com/fsouza/go-dockerclient
+- package: github.com/ghodss/yaml
+- package: github.com/google/go-github
+  subpackages:
+  - github
+- package: github.com/gosuri/uitable
+- package: github.com/hashicorp/vault
+  version: ~0.5.3
+  subpackages:
+  - api
+  - builtin/credential/github
+- package: github.com/inconshreveable/go-update
+- package: github.com/kennygrant/sanitize
+  version: ~1.0.0
+- package: github.com/spf13/cobra
+  subpackages:
+  - doc
+- package: github.com/spf13/viper
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: google.golang.org/cloud
+  subpackages:
+  - storage
+- package: gopkg.in/yaml.v2
