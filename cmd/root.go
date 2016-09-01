@@ -192,8 +192,18 @@ func initConfig() {
 	}
 
 	if filesAccess {
-		awsID = os.Getenv("NMD_AWS_ACCESS_KEY")
-		awsSecret = os.Getenv("NMD_AWS_SECRET_KEY")
+
+		sobj := secrets.Secret{
+			Path: "secret/shared/services/awscfg",
+		}
+
+		err := sobj.Read()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		awsID = sobj.Data["accesskey"].(string)
+		awsSecret = sobj.Data["secretkey"].(string)
 		os.Setenv("AWS_ACCESS_KEY_ID", awsID)
 		os.Setenv("AWS_SECRET_ACCESS_KEY", awsSecret)
 
