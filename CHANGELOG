@@ -1,0 +1,9 @@
+Changelog
+=========
+
+Version 0.2.1
+-------------
+
+- Remove auto updating of the binary
+- replace github releases source for binary with GCS link
+- get credentials for drud file from vault instead of env

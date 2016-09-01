@@ -23,7 +23,7 @@ const (
 	timestampFormat = "20060102150405"
 	updateFile      = ".drud-update"
 	tokenFile       = ".drud-sanctuary-token"
-	cliVersion      = "0.2.0"
+	cliVersion      = "0.2.1"
 	drudapiVersion  = "v0.1"
 )
 
@@ -210,17 +210,4 @@ func initConfig() {
 		svc = s3.New(session.New(&aws.Config{Region: aws.String(region)}))
 	}
 
-	// allow devs to skip updates with a dev bool value in drud config
-	if !cfg.Dev {
-		// check if it has been 24 hours since last update and run one if it has
-		isTime, terr := isUpdateTime()
-		if terr != nil {
-			fmt.Println(terr)
-		}
-
-		if isTime {
-			log.Println("checking for updates!")
-			updateCmd.Run(RootCmd, []string{})
-		}
-	}
 }
