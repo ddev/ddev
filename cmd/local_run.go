@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 	"strings"
 
+	"github.com/drud/drud-go/drudapi"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 )
@@ -66,13 +66,10 @@ var localRunCmd = &cobra.Command{
 			"-T", nameContainer,
 		}
 		cmdArgs = append(cmdArgs, cmdSplit...)
-
-		out, err := exec.Command("docker-compose", cmdArgs...).CombinedOutput()
+		err := drudapi.DockerCompose(cmdArgs...)
 		if err != nil {
-			fmt.Println(fmt.Errorf("%s - %s", err.Error(), string(out)))
+			log.Fatalln(err)
 		}
-
-		fmt.Println(string(out))
 
 	},
 }

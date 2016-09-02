@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"os/exec"
 	"path"
 
+	"github.com/drud/drud-go/drudapi"
 	"github.com/spf13/cobra"
 )
 
@@ -24,18 +24,15 @@ var localRMCmd = &cobra.Command{
 		}
 
 		basePath := path.Join(homedir, ".drud", appClient, args[0], args[1])
-
-		out, err := exec.Command(
-			"docker-compose",
-			"-f", path.Join(basePath, "docker-compose.yaml"),
-			"rm",
-			"-f",
-		).CombinedOutput()
+		err := drudapi.DockerCompose("-f", path.Join(basePath, "docker-compose.yaml"), "stop")
 		if err != nil {
-			fmt.Println(fmt.Errorf("%s - %s", err.Error(), string(out)))
+			log.Fatalln(err)
 		}
 
-		fmt.Println(string(out))
+		dcErr := drudapi.DockerCompose("-f", path.Join(basePath, "docker-compose.yaml"), "rm", "-f")
+		if dcErr != nil {
+			fmt.Println(fmt.Errorf("%s", dcErr.Error()))
+		}
 
 	},
 }

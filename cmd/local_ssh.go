@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 
+	"github.com/drud/drud-go/drudapi"
 	"github.com/spf13/cobra"
 )
 
@@ -39,22 +39,16 @@ var localSSHCmd = &cobra.Command{
 			log.Fatalln("No docker-compose yaml for this site. Try `drud local add`.")
 		}
 
-		cmdArgs := []string{
+		err := drudapi.DockerCompose(
 			"-f", composeLOC,
 			"exec",
 			nameContainer,
 			"bash",
-		}
-
-		proc := exec.Command("docker-compose", cmdArgs...)
-		proc.Stdout = os.Stdout
-		proc.Stdin = os.Stdin
-		proc.Stderr = os.Stderr
-
-		err := proc.Run()
+		)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Fatalln(err)
 		}
+
 	},
 }
 

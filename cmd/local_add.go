@@ -272,14 +272,13 @@ var addCmd = &cobra.Command{
 		}
 
 		// run docker-compose up -d in the newly created directory
-		out, err = exec.Command(
-			"docker-compose",
+		dcErr := drudapi.DockerCompose(
 			"-f", path.Join(basePath, "docker-compose.yaml"),
 			"up",
 			"-d",
-		).CombinedOutput()
-		if err != nil {
-			fmt.Println(fmt.Errorf("%s - %s", err.Error(), string(out)))
+		)
+		if dcErr != nil {
+			log.Fatalln(dcErr)
 		}
 
 		// use the docker client to wait for the containers to spin up then print a linik to the app
