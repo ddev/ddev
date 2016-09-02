@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Development
+-----------
+
+- Stop containers if still running when `local rm` is executed.
+
 Version 0.2.1
 -------------
 
