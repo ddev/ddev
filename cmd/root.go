@@ -72,7 +72,7 @@ func Execute() {
 	//RootCmd.RemoveCommand(SecretCmd)
 	SetHomedir()
 	tokenLocation := filepath.Join(homedir, tokenFile)
-	if len(os.Args) == 2 && os.Args[1] != "--hrlp" {
+	if len(os.Args) == 2 && RequiresAuth(os.Args[1]) {
 		if _, err := os.Stat(tokenLocation); os.IsNotExist(err) {
 			RootCmd.Help()
 			os.Exit(0)
@@ -80,7 +80,6 @@ func Execute() {
 	}
 
 	SetConf()
-
 	// create a blank drud config if one does not exist
 	if _, err := os.Stat(drudconf); os.IsNotExist(err) {
 		f, ferr := os.Create(drudconf)
@@ -131,7 +130,7 @@ Version: v0.1
 
 	// load the vault token from disk and use it to get policy information
 	// if permission is denied send the user through `drud auth github` and then try again
-	if len(os.Args) >= 2 && os.Args[1] != "auth" {
+	if len(os.Args) >= 2 && RequiresAuth(os.Args[1]) {
 		for i := 0; i < 2; i++ {
 			vaultToken = secrets.ConfigVault(tokenLocation, cfg.VaultHost)
 			vault = secrets.GetVault()
