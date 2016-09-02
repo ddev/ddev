@@ -5,8 +5,9 @@ Development
 -----------
 
 - Stop containers if still running when `local rm` is executed.
+- Don't require auth for commands like `drud version` and `drud config set`
 
-Version 0.2.1
+Version 0.2.1 - Sept 1st 2016
 -------------
 
 - Remove auto updating of the binary
