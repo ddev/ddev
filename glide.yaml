@@ -15,7 +15,6 @@ import:
   - service/s3/s3manager
 - package: github.com/drud/drud-go
   vcs: git
-  version: timeout
   subpackages:
   - drudapi
   - secrets
