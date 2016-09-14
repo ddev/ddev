@@ -320,6 +320,14 @@ var addCmd = &cobra.Command{
 			wpConfig := model.NewWordpressConfig()
 			wpConfig.DatabaseHost = "db"
 			wpConfig.DeployURL = fmt.Sprintf("http://localhost:%d", publicPort)
+			wpConfig.AuthKey = app.AuthKey
+			wpConfig.AuthSalt = app.AuthSalt
+			wpConfig.LoggedInKey = app.LoggedInKey
+			wpConfig.LoggedInSalt = app.LoggedInSalt
+			wpConfig.NonceKey = app.NonceKey
+			wpConfig.NonceSalt = app.NonceSalt
+			wpConfig.SecureAuthKey = app.SecureAuthKey
+			wpConfig.SecureAuthSalt = app.SecureAuthSalt
 			err = config.WriteWordpressConfig(wpConfig, settingsFilePath)
 			if err != nil {
 				log.Fatalln(err)
