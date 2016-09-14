@@ -209,6 +209,9 @@ func EnableAvailablePackages() error {
 			drudAccess = true
 			filesAccess = true
 			clientCreateAccess = true
+		case "templatefit":
+			drudAccess = true
+			filesAccess = true
 		case "1fee":
 			filesAccess = true
 		case "newmedia":
