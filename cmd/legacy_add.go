@@ -67,7 +67,22 @@ var LegacyAddCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		err = app.GetAppResources()
+		err = app.GetResources()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		err = app.UnpackResources()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		err = app.Start()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		err = app.Config()
 		if err != nil {
 			log.Fatalln(err)
 		}

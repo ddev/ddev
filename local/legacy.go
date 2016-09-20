@@ -17,6 +17,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/drud/bootstrap/cli/cache"
+	"github.com/drud/bootstrap/cli/cms/config"
+	"github.com/drud/bootstrap/cli/cms/model"
+	"github.com/drud/drud-go/drudapi"
 	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils"
 	"gopkg.in/yaml.v2"
@@ -32,6 +35,7 @@ type LegacyApp struct {
 	Template    string
 	Branch      string
 	Repo        string
+	Archive     string //absolute path to the downloaded archive
 }
 
 // RenderComposeYAML returns teh contents of a docker compose config for this app
@@ -45,14 +49,28 @@ func (l LegacyApp) RenderComposeYAML() (string, error) {
 	}
 	templ.Execute(&doc, map[string]string{
 		"image": fmt.Sprintf("drud/nginx-php-fpm-%s", l.AppType),
-		"name":  fmt.Sprintf("legacy-%s", l.Name),
+		"name":  l.ContainerName(),
 	})
 	return doc.String(), nil
 }
 
-// Path returns the path from the '.drud' directory to this apps directory
-func (l LegacyApp) Path() string {
+// RelPath returns the path from the '.drud' directory to this apps directory
+func (l LegacyApp) RelPath() string {
 	return path.Join("legacy", fmt.Sprintf("%s-%s", l.Name, l.Environment))
+}
+
+// AbsPath returnt he full path from root to the app directory
+func (l LegacyApp) AbsPath() string {
+	homedir, err := utils.GetHomeDir()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return path.Join(homedir, ".drud", l.RelPath())
+}
+
+// ContainerName returns the base name for legacy app containers
+func (l LegacyApp) ContainerName() string {
+	return fmt.Sprintf("legacy-%s", l.Name)
 }
 
 // GetRepoDetails uses the Environment field to get the relevant repo details about an app
@@ -70,14 +88,9 @@ func (l LegacyApp) GetRepoDetails() (RepoDetails, error) {
 	return details, nil
 }
 
-// GetAppResources downloads external data for this app
-func (l LegacyApp) GetAppResources() error {
-	homedir, err := utils.GetHomeDir()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	basePath := path.Join(homedir, ".drud", l.Path())
+// GetResources downloads external data for this app
+func (l *LegacyApp) GetResources() error {
+	basePath := l.AbsPath()
 
 	dbag, err := GetDatabag(l.Name)
 	if err != nil {
@@ -127,8 +140,6 @@ func (l LegacyApp) GetAppResources() error {
 	}
 
 	archive := resp.Contents[len(resp.Contents)-1]
-	fmt.Println(archive)
-
 	file, err := os.Create(path.Join(basePath, filepath.Base(*archive.Key)))
 	if err != nil {
 		log.Fatal("Failed to create file", err)
@@ -148,13 +159,27 @@ func (l LegacyApp) GetAppResources() error {
 	}
 
 	fmt.Println("Downloaded file", file.Name(), numBytes, "bytes")
+	l.Archive = file.Name()
+
+	return nil
+}
+
+// UnpackResources takes the archive from the GetResources method and
+// unarchives it. Then the contents are moved to their proper locations.
+func (l LegacyApp) UnpackResources() error {
+	basePath := l.AbsPath()
 
 	out, err := utils.RunCommand(
 		"tar",
-		[]string{"-xzvf", file.Name(), "-C", path.Join(basePath, "files")},
+		[]string{"-xzvf", l.Archive, "-C", path.Join(basePath, "files"), "--exclude=sites/default/settings.php"},
 	)
 	if err != nil {
 		fmt.Println(out)
+		return err
+	}
+
+	err = os.Remove(l.Archive)
+	if err != nil {
 		return err
 	}
 
@@ -179,6 +204,69 @@ func (l LegacyApp) GetAppResources() error {
 	return nil
 }
 
+// Start initiates docker-compose up
+func (l LegacyApp) Start() error {
+	basePath := l.AbsPath()
+
+	return drudapi.DockerCompose(
+		"-f", path.Join(basePath, "docker-compose.yaml"),
+		"up",
+		"-d",
+	)
+}
+
+// Config creates the apps config file adding thigns like database host, name, and password
+// as well as other sensitive data like salts.
+func (l LegacyApp) Config() error {
+	basePath := l.AbsPath()
+
+	dbag, err := GetDatabag(l.Name)
+	if err != nil {
+		return err
+	}
+
+	env, err := dbag.GetEnv(l.Environment)
+	if err != nil {
+		return err
+	}
+
+	publicPort, err := GetPodPort(l)
+	if err != nil {
+		return err
+	}
+
+	settingsFilePath := ""
+	if l.AppType == "drupal" {
+		log.Printf("Drupal site. Creating settings.php file.")
+		settingsFilePath = path.Join(basePath, "src", "docroot/sites/default/settings.php")
+		drupalConfig := model.NewDrupalConfig()
+		drupalConfig.DatabaseHost = "db"
+		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	} else if l.AppType == "wp" {
+		log.Printf("WordPress site. Creating wp-config.php file.")
+		settingsFilePath = path.Join(basePath, "src", "docroot/wp-config.php")
+		wpConfig := model.NewWordpressConfig()
+		wpConfig.DatabaseHost = "db"
+		wpConfig.DeployURL = fmt.Sprintf("http://localhost:%d", publicPort)
+		wpConfig.AuthKey = env.AuthKey
+		wpConfig.AuthSalt = env.AuthSalt
+		wpConfig.LoggedInKey = env.LoggedInKey
+		wpConfig.LoggedInSalt = env.LoggedInSalt
+		wpConfig.NonceKey = env.NonceKey
+		wpConfig.NonceSalt = env.NonceSalt
+		wpConfig.SecureAuthKey = env.SecureAuthKey
+		wpConfig.SecureAuthSalt = env.SecureAuthSalt
+		err = config.WriteWordpressConfig(wpConfig, settingsFilePath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+	return nil
+}
+
 // GetDatabag returns databag info ad a Databag struct
 func GetDatabag(name string) (Databag, error) {
 	if cacher == nil {
@@ -187,10 +275,8 @@ func GetDatabag(name string) (Databag, error) {
 
 	cacheDb := cacher.Get(name + "-databag")
 	if cacheDb != nil {
-		fmt.Println("usign cached object")
 		return cacheDb.(Databag), nil
 	}
-	fmt.Println("Not usign cached object")
 
 	sobj := secrets.Secret{
 		Path: "secret/databags/nmdhosting/" + name,
@@ -230,6 +316,7 @@ func (d Databag) GetID() string {
 	return d.ID + "-databag"
 }
 
+// GetEnv returns SiteEnv for the environment you want
 func (d *Databag) GetEnv(name string) (*SiteEnv, error) {
 	var siteEnviron *SiteEnv
 
@@ -249,17 +336,10 @@ func (d *Databag) GetEnv(name string) (*SiteEnv, error) {
 // GetRepoDetails get the relevant repo details from a databag and returns a RepoDetails struct
 func (d Databag) GetRepoDetails(env string) (RepoDetails, error) {
 	details := RepoDetails{}
-	siteEnviron := SiteEnv{}
 
-	switch env {
-	case "production":
-		siteEnviron = d.Production
-	case "staging":
-		siteEnviron = d.Staging
-	case "default":
-		siteEnviron = d.Default
-	default:
-		return details, errors.New("Unrecognized environment name.")
+	siteEnviron, err := d.GetEnv(env)
+	if err != nil {
+		return details, err
 	}
 
 	repoPath := siteEnviron.Repository

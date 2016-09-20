@@ -8,8 +8,9 @@ import (
 // App is an interface apps for Drud Local must implement to use shared functionality
 type App interface {
 	RenderComposeYAML() (string, error)   // returns contents for docke rcompose config
-	Path() string                         // returns path from root dir ('$HOME/.drud') to app
+	RelPath() string                      // returns path from root dir ('$HOME/.drud') to app
 	GetRepoDetails() (RepoDetails, error) // retuirns struct with branch, org, host, etc...
+	ContainerName() string
 }
 
 // RepoDetails encapsulates repository info
