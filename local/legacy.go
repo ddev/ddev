@@ -4,14 +4,25 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
+	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"text/template"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/drud/bootstrap/cli/cache"
 	"github.com/drud/drud-go/secrets"
+	"github.com/drud/drud-go/utils"
 	"gopkg.in/yaml.v2"
 )
+
+var cacher *cache.Cache
 
 // LegacyApp implements the LocalApp interface for Legacy Newmedia apps
 type LegacyApp struct {
@@ -59,8 +70,128 @@ func (l LegacyApp) GetRepoDetails() (RepoDetails, error) {
 	return details, nil
 }
 
+// GetAppResources downloads external data for this app
+func (l LegacyApp) GetAppResources() error {
+	homedir, err := utils.GetHomeDir()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	basePath := path.Join(homedir, ".drud", l.Path())
+
+	dbag, err := GetDatabag(l.Name)
+	if err != nil {
+		return err
+	}
+
+	s, err := dbag.GetEnv(l.Environment)
+	if err != nil {
+		return err
+	}
+
+	bucket := "nmdarchive"
+	if s.AwsBucket != "" {
+		bucket = s.AwsBucket
+	}
+
+	awsID := s.AwsAccessKey
+	awsSecret := s.AwsSecretKey
+	if awsID == "" {
+		sobj := secrets.Secret{
+			Path: "secret/shared/services/awscfg",
+		}
+
+		err := sobj.Read()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		awsID = sobj.Data["accesskey"].(string)
+		awsSecret = sobj.Data["secretkey"].(string)
+	}
+
+	os.Setenv("AWS_ACCESS_KEY_ID", awsID)
+	os.Setenv("AWS_SECRET_ACCESS_KEY", awsSecret)
+
+	svc := s3.New(session.New(&aws.Config{Region: aws.String("us-west-2")}))
+	prefix := fmt.Sprintf("%[1]s/%[2]s-%[1]s-", l.Name, l.Environment)
+
+	params := &s3.ListObjectsInput{
+		Bucket: aws.String(bucket),
+		Prefix: &prefix,
+	}
+
+	resp, err := svc.ListObjects(params)
+	if err != nil {
+		return err
+	}
+
+	archive := resp.Contents[len(resp.Contents)-1]
+	fmt.Println(archive)
+
+	file, err := os.Create(path.Join(basePath, filepath.Base(*archive.Key)))
+	if err != nil {
+		log.Fatal("Failed to create file", err)
+	}
+	defer file.Close()
+
+	downloader := s3manager.NewDownloader(session.New(&aws.Config{Region: aws.String("us-west-2")}))
+	numBytes, err := downloader.Download(
+		file,
+		&s3.GetObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(*archive.Key),
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Downloaded file", file.Name(), numBytes, "bytes")
+
+	out, err := utils.RunCommand(
+		"tar",
+		[]string{"-xzvf", file.Name(), "-C", path.Join(basePath, "files")},
+	)
+	if err != nil {
+		fmt.Println(out)
+		return err
+	}
+
+	err = os.Rename(
+		path.Join(basePath, "files", l.Name+".sql"),
+		path.Join(basePath, "data", l.Name+".sql"),
+	)
+	if err != nil {
+		return err
+	}
+
+	rsyncFrom := path.Join(basePath, "files", "docroot")
+	rsyncTo := path.Join(basePath, "src", "docroot")
+	out, err = utils.RunCommand(
+		"rsync",
+		[]string{"-avz", "--recursive", rsyncFrom + "/", rsyncTo},
+	)
+	if err != nil {
+		return fmt.Errorf("%s - %s", err.Error(), string(out))
+	}
+
+	return nil
+}
+
 // GetDatabag returns databag info ad a Databag struct
 func GetDatabag(name string) (Databag, error) {
+	if cacher == nil {
+		cacher = cache.New()
+	}
+
+	cacheDb := cacher.Get(name + "-databag")
+	if cacheDb != nil {
+		fmt.Println("usign cached object")
+		return cacheDb.(Databag), nil
+	}
+	fmt.Println("Not usign cached object")
+
 	sobj := secrets.Secret{
 		Path: "secret/databags/nmdhosting/" + name,
 	}
@@ -81,6 +212,8 @@ func GetDatabag(name string) (Databag, error) {
 		return db, err
 	}
 
+	cacher.Add(db)
+
 	return db, nil
 }
 
@@ -90,6 +223,27 @@ type Databag struct {
 	Default    SiteEnv `yaml:"_default"`
 	Production SiteEnv `yaml:"production"`
 	Staging    SiteEnv `yaml:"staging"`
+}
+
+// GetID satisfies cache interface
+func (d Databag) GetID() string {
+	return d.ID + "-databag"
+}
+
+func (d *Databag) GetEnv(name string) (*SiteEnv, error) {
+	var siteEnviron *SiteEnv
+
+	switch name {
+	case "production":
+		siteEnviron = &d.Production
+	case "staging":
+		siteEnviron = &d.Staging
+	case "default":
+		siteEnviron = &d.Default
+	default:
+		return siteEnviron, errors.New("Unrecognized environment name.")
+	}
+	return siteEnviron, nil
 }
 
 // GetRepoDetails get the relevant repo details from a databag and returns a RepoDetails struct
