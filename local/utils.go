@@ -10,6 +10,7 @@ import (
 
 	"github.com/drud/drud-go/utils"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/gosuri/uitable"
 )
 
 // PrepLocalSiteDirs creates a site's directories for local dev in ~/.drud/client/site
@@ -190,4 +191,40 @@ func FilterNonLegacy(vs []docker.APIContainers) []docker.APIContainers {
 		vsf = append(vsf, v)
 	}
 	return vsf
+}
+
+// FormatPlural is a simple wrapper which returns different strings based on the count value.
+func FormatPlural(count int, single string, plural string) string {
+	if count == 1 {
+		return single
+	}
+	return plural
+}
+
+func RenderContainerList(containers []docker.APIContainers) error {
+	fmt.Printf("%v %v found.\n", len(containers), FormatPlural(len(containers), "container", "containers"))
+
+	table := uitable.New()
+	table.MaxColWidth = 200
+	table.AddRow("NAME", "IMAGE", "STATUS", "MISC")
+
+	for _, container := range containers {
+
+		var miscField string
+		for _, port := range container.Ports {
+			if port.PublicPort != 0 {
+				miscField = fmt.Sprintf("port: %d", port.PublicPort)
+			}
+		}
+
+		table.AddRow(
+			strings.Join(container.Names, ", "),
+			container.Image,
+			fmt.Sprintf("%s - %s", container.State, container.Status),
+			miscField,
+		)
+	}
+	fmt.Println(table)
+
+	return nil
 }
