@@ -159,3 +159,35 @@ func GetDockerClient() (*docker.Client, error) {
 	}
 	return client, err
 }
+
+func FilterNonDrud(vs []docker.APIContainers) []docker.APIContainers {
+	homedir, err := utils.GetHomeDir()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var vsf []docker.APIContainers
+	for _, v := range vs {
+		clientName := strings.Split(v.Names[0][1:], "-")[0]
+		if _, err = os.Stat(path.Join(homedir, ".drud", clientName)); os.IsNotExist(err) {
+			continue
+		}
+		vsf = append(vsf, v)
+	}
+	return vsf
+}
+
+func FilterNonLegacy(vs []docker.APIContainers) []docker.APIContainers {
+
+	var vsf []docker.APIContainers
+	for _, v := range vs {
+		container := v.Names[0][1:]
+
+		if !strings.HasPrefix(container, "legacy-") {
+			continue
+		}
+
+		vsf = append(vsf, v)
+	}
+	return vsf
+}

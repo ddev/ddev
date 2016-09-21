@@ -70,7 +70,7 @@ func (l LegacyApp) AbsPath() string {
 
 // ContainerName returns the base name for legacy app containers
 func (l LegacyApp) ContainerName() string {
-	return fmt.Sprintf("legacy-%s", l.Name)
+	return fmt.Sprintf("legacy-%s-%s", l.Name, l.Environment)
 }
 
 // GetRepoDetails uses the Environment field to get the relevant repo details about an app
@@ -171,7 +171,13 @@ func (l LegacyApp) UnpackResources() error {
 
 	out, err := utils.RunCommand(
 		"tar",
-		[]string{"-xzvf", l.Archive, "-C", path.Join(basePath, "files"), "--exclude=sites/default/settings.php"},
+		[]string{
+			"-xzvf",
+			l.Archive,
+			"-C", path.Join(basePath, "files"),
+			"--exclude=sites/default/settings.php",
+			"--exclude=docroot/wp-config.php",
+		},
 	)
 	if err != nil {
 		fmt.Println(out)
