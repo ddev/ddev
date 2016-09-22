@@ -7,7 +7,7 @@ import (
 )
 
 // listCmd represents the list command
-var listCmd = &cobra.Command{
+var LegacyListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List applications that exist locally",
 	Long:  `List applications that exist locally.`,
@@ -16,13 +16,13 @@ var listCmd = &cobra.Command{
 		client, _ := GetDockerClient()
 
 		containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
-		containers = local.FilterNonDrud(containers)
+		containers = local.FilterNonLegacy(containers)
 
 		local.RenderContainerList(containers)
 	},
 }
 
 func init() {
-	LocalCmd.AddCommand(listCmd)
+	LegacyCmd.AddCommand(LegacyListCmd)
 
 }

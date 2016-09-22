@@ -137,8 +137,11 @@ Version: v0.1
 			err = EnableAvailablePackages()
 			if err != nil {
 				if strings.Contains(err.Error(), "permission denied") && i == 0 {
-					githubCmd.Run(RootCmd, []string{})
-					continue
+					if os.Args[1] != "--help" {
+						githubCmd.Run(RootCmd, []string{})
+						continue
+					}
+					break
 				}
 				log.Fatal(err)
 			}
