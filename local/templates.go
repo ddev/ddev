@@ -2,6 +2,7 @@ package local
 
 // LegacyComposeTemplate is used to create the docker-compose.yaml for
 // legacy sites in the local DRUD env
+
 const LegacyComposeTemplate = `version: '2'
 services:
   {{.name}}-db:
@@ -34,6 +35,7 @@ services:
 
 // DrudComposeTemplate is used to create docker-compose.yaml for local Drud sites
 // @todo use the template engine instead of fmt
+
 const DrudComposeTemplate = `version: '2'
 services:
   %[1]s-db:

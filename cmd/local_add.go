@@ -14,7 +14,9 @@ import (
 	"github.com/drud/bootstrap/cli/cms/config"
 	"github.com/drud/bootstrap/cli/cms/model"
 	"github.com/drud/bootstrap/cli/local"
+
 	"github.com/drud/bootstrap/cli/utils"
+
 	"github.com/drud/drud-go/drudapi"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
