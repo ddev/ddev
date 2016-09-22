@@ -13,40 +13,11 @@ import (
 
 	"github.com/drud/bootstrap/cli/cms/config"
 	"github.com/drud/bootstrap/cli/cms/model"
+	"github.com/drud/bootstrap/cli/local"
 	"github.com/drud/drud-go/drudapi"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 )
-
-const composeTemplate = `version: '2'
-services:
-  %[1]s-db:
-    container_name: %[1]s-db
-    image: drud/mysql-docker-local:5.7
-    volumes:
-      - "./data:/db"
-    restart: always
-    environment:
-      MYSQL_DATABASE: data
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3306"
-  %[1]s-web:
-    container_name: %[1]s-web
-    image: %[2]s
-    volumes:
-      - "./src:/var/www/html"
-    restart: always
-    depends_on:
-      - %[1]s-db
-    links:
-      - %[1]s-db:db
-    ports:
-      - "80"
-    working_dir: "/var/www/html/docroot"
-    environment:
-      - DEPLOY_NAME=local
-`
 
 const drupalFilesPath = "src/docroot/sites/default/files/"
 const drupalFilesDir = "files"
@@ -137,7 +108,7 @@ func WriteComposeFile(dest string, app *drudapi.Application, deploy *drudapi.Dep
 		webImage = "drud/nginx-php-fpm-drupal"
 	}
 
-	template := fmt.Sprintf(composeTemplate, nameContainer, webImage)
+	template := fmt.Sprintf(local.DrudComposeTemplate, nameContainer, webImage)
 	f.WriteString(template)
 }
 

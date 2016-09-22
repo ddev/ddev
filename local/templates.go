@@ -1,6 +1,6 @@
-package utils
+package local
 
-const legacyComposeTemplate = `version: '2'
+const LegacyComposeTemplate = `version: '2'
 services:
   {{.name}}-db:
     container_name: {{.name}}-db
@@ -23,6 +23,36 @@ services:
       - {{.name}}-db
     links:
       - {{.name}}-db:db
+    ports:
+      - "80"
+    working_dir: "/var/www/html/docroot"
+    environment:
+      - DEPLOY_NAME=local
+`
+
+const DrudComposeTemplate = `version: '2'
+services:
+  %[1]s-db:
+    container_name: %[1]s-db
+    image: drud/mysql-docker-local:5.7
+    volumes:
+      - "./data:/db"
+    restart: always
+    environment:
+      MYSQL_DATABASE: data
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306"
+  %[1]s-web:
+    container_name: %[1]s-web
+    image: %[2]s
+    volumes:
+      - "./src:/var/www/html"
+    restart: always
+    depends_on:
+      - %[1]s-db
+    links:
+      - %[1]s-db:db
     ports:
       - "80"
     working_dir: "/var/www/html/docroot"

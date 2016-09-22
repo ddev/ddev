@@ -2,14 +2,11 @@ package local
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"log"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"text/template"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,7 +19,6 @@ import (
 	"github.com/drud/drud-go/drudapi"
 	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils"
-	"gopkg.in/yaml.v2"
 )
 
 var cacher *cache.Cache
@@ -272,4 +268,3 @@ func (l LegacyApp) Config() error {
 	}
 	return nil
 }
-

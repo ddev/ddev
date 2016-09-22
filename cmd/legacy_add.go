@@ -24,7 +24,7 @@ var LegacyAddCmd = &cobra.Command{
 			Name:        args[0],
 			Environment: args[1],
 			AppType:     appType,
-			Template:    local.legacyComposeTemplate,
+			Template:    local.LegacyComposeTemplate,
 		}
 
 		err := local.WriteLocalAppYAML(app)
