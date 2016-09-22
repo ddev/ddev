@@ -1,20 +1,11 @@
 package utils
 
 import (
-	"math/rand"
+	"io"
+	"net/http"
+	"os"
 	"os/exec"
 )
-
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*(){}[]<>?*")
-
-// RandStringRunes returns a random string of length n
-func RandStringRunes(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
-}
 
 // RunCommand runs a command on the host system.
 func RunCommand(command string, args []string) (string, error) {
@@ -26,4 +17,29 @@ func RunCommand(command string, args []string) (string, error) {
 		return string(out), err
 	}
 	return string(out), nil
+}
+
+func DownloadFile(filepath string, url string) (err error) {
+
+	// Create the file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Writer the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

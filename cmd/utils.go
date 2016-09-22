@@ -3,18 +3,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"math/rand"
 	"net"
-	"net/http"
 	"os"
-	"os/exec"
-	"os/user"
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
@@ -22,90 +16,13 @@ import (
 	"google.golang.org/cloud/storage"
 
 	"github.com/drud/drud-go/secrets"
+	"github.com/drud/drud-go/utils"
 )
-
-// RandomString returns a random string of len strlen
-func RandomString(strlen int) string {
-	rand.Seed(time.Now().UTC().UnixNano())
-	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
-	result := make([]byte, strlen)
-	for i := 0; i < strlen; i++ {
-		result[i] = chars[rand.Intn(len(chars))]
-	}
-	return string(result)
-}
-
-// CheckDependencies verifies dependensies of DRUD Cli.
-func CheckDependencies() bool {
-	// @todo verify versions of the dependencies
-	_, dmachineerr := exec.LookPath("docker-machine")
-	_, dockererr := exec.LookPath("docker")
-	_, vboxerr := exec.LookPath("vboxmanage")
-
-	deperr := false
-	if dmachineerr != nil || dockererr != nil {
-		fmt.Println("Please install docker toolbox to get access to `docker-machine` and `docker` commands. https://www.docker.com/docker-toolbox")
-		deperr = true
-	}
-	if vboxerr != nil {
-		fmt.Println("Please install virtualbox in order to get access to the `vboxmanage` command. https://www.virtualbox.org/wiki/Downloads")
-		deperr = true
-	}
-
-	// @todo ensure the default docker-machine is running with increased specs
-	// @todo ensure they have run `docker login` to generate the dockercfg.
-
-	if deperr {
-		log.Fatal("Unmet dependencies. See errors above.")
-	}
-	return !deperr
-}
-
-// FormatPlural is a simple wrapper which returns different strings based on the count value.
-func FormatPlural(count int, single string, plural string) string {
-	if count == 1 {
-		return single
-	}
-	return plural
-}
-
-func empty(p string) bool {
-	return p == ""
-}
-
-func byteify(s string) []byte {
-	return []byte(s)
-}
 
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
-}
-
-func downloadFile(filepath string, url string) (err error) {
-
-	// Create the file
-	out, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	// Writer the body to file
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // NormalizePath prefixes secret paths with secret when necessary
@@ -160,19 +77,9 @@ func containsString(slice []string, element string) bool {
 // SetHomedir gets homedir and sets it to global homedir
 func SetHomedir() {
 	var err error
-	pwd, err = os.Getwd()
+	homedir, err = utils.GetHomeDir()
 	if err != nil {
 		log.Fatal(err)
-	}
-	// use the usr lib to get homedir then try $HOME if it does not work
-	usr, err := user.Current()
-	if err != nil {
-		homedir = os.Getenv("HOME")
-		if homedir == "" {
-			log.Fatal("Could not write token to user's homedir")
-		}
-	} else {
-		homedir = usr.HomeDir
 	}
 }
 

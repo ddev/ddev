@@ -10,41 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// GetDatabag returns databag info ad a Databag struct
-func GetDatabag(name string) (Databag, error) {
-	if cacher == nil {
-		cacher = cache.New()
-	}
-
-	cacheDb := cacher.Get(name + "-databag")
-	if cacheDb != nil {
-		return cacheDb.(Databag), nil
-	}
-
-	sobj := secrets.Secret{
-		Path: "secret/databags/nmdhosting/" + name,
-	}
-	db := Databag{}
-
-	err := sobj.Read()
-	if err != nil {
-		return db, err
-	}
-
-	yamlbytes, err := sobj.ToYAML()
-	if err != nil {
-		return db, err
-	}
-
-	err = yaml.Unmarshal(yamlbytes, &db)
-	if err != nil {
-		return db, err
-	}
-
-	cacher.Add(db)
-
-	return db, nil
-}
+var cacher *cache.Cache
 
 // Databag models the outer most layer of a databag
 type Databag struct {
@@ -156,4 +122,40 @@ func (s *SiteEnv) Name() string {
 		return s.Sitename2
 	}
 	return s.Sitename
+}
+
+// GetDatabag returns databag info ad a Databag struct
+func GetDatabag(name string) (Databag, error) {
+	if cacher == nil {
+		cacher = cache.New()
+	}
+
+	cacheDb := cacher.Get(name + "-databag")
+	if cacheDb != nil {
+		return cacheDb.(Databag), nil
+	}
+
+	sobj := secrets.Secret{
+		Path: "secret/databags/nmdhosting/" + name,
+	}
+	db := Databag{}
+
+	err := sobj.Read()
+	if err != nil {
+		return db, err
+	}
+
+	yamlbytes, err := sobj.ToYAML()
+	if err != nil {
+		return db, err
+	}
+
+	err = yaml.Unmarshal(yamlbytes, &db)
+	if err != nil {
+		return db, err
+	}
+
+	cacher.Add(db)
+
+	return db, nil
 }

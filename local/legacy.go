@@ -13,15 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/drud/bootstrap/cli/cache"
 	"github.com/drud/bootstrap/cli/cms/config"
 	"github.com/drud/bootstrap/cli/cms/model"
 	"github.com/drud/drud-go/drudapi"
 	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils"
 )
-
-var cacher *cache.Cache
 
 // LegacyApp implements the LocalApp interface for Legacy Newmedia apps
 type LegacyApp struct {

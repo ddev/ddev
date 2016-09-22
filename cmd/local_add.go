@@ -14,6 +14,7 @@ import (
 	"github.com/drud/bootstrap/cli/cms/config"
 	"github.com/drud/bootstrap/cli/cms/model"
 	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/bootstrap/cli/utils"
 	"github.com/drud/drud-go/drudapi"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
@@ -71,11 +72,10 @@ func GetBackup(aid string, did string, kind string, basePath string) error {
 	}
 
 	// download backup, extract, remove
-	// dgfsdgsdfg
 	fmt.Println("downloading/unpacking", kind)
 	fpath := path.Join(basePath, fmt.Sprintf("%s.tar.gz", kind))
 	defer os.Remove(fpath)
-	downloadFile(fpath, link.URL)
+	utils.DownloadFile(fpath, link.URL)
 
 	destdir := "files"
 	if kind == "mysql" {
