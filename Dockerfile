@@ -19,8 +19,7 @@ WORKDIR $DRUD_BUILD_DIR
 
 ADD . $DRUD_BUILD_DIR
 
-RUN glide install \
-    && go get .
+RUN go get .
 
 RUN go build -a -installsuffix cgo -ldflags '-w' -o $GOPATH/bin/drud  ./main.go
 

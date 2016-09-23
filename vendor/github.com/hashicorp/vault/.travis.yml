@@ -1,0 +1,26 @@
+sudo: false
+
+language: go
+
+go:
+  - 1.6
+# tip is currently using go1.4.1, which we're not compatible with, so always
+# fails
+#  - tip
+
+matrix:
+  allow_failures:
+    - go: tip
+
+branches:
+  only:
+    - master
+    - travis-testing
+
+# Having an install function stops Travis from trying to do automagic things
+# with godep
+install:
+  - true
+
+script:
+  - make test testrace

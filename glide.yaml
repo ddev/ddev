@@ -16,9 +16,10 @@ import:
   - service/s3/s3manager
 - package: github.com/drud/drud-go
   vcs: git
-  version: 76765bc51616ad9788aae69174fbbb9562831723
+  version: 2abadaa9068e38b640f1c8e77522de07d93d2519
   subpackages:
   - drudapi
+  - utils
   - secrets
 - package: github.com/fsouza/go-dockerclient
 - package: github.com/ghodss/yaml
@@ -41,7 +42,10 @@ import:
 - package: golang.org/x/net
   subpackages:
   - context
-- package: google.golang.org/cloud
+- package: cloud.google.com/go
   subpackages:
   - storage
 - package: gopkg.in/yaml.v2
+- package: google.golang.org/api
+  subpackages:
+  - option

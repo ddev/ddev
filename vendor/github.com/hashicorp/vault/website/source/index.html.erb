@@ -1,0 +1,87 @@
+<%= partial "layouts/sidebar" %>
+
+<div id="hero">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-offset-3 col-md-6">
+				<div id="logo-lockup">
+					<div class="keys">
+						<span></span>
+						<span></span>
+						<span></span>
+						<span></span>
+						<span></span>
+						<span></span>
+						<span></span>
+						<span></span>
+						<span></span>
+						<span></span>
+					</div>
+				</div>
+				<h2 id="tag-line">A tool for managing secrets.</h2>
+				<div>
+					<a class="v-btn blue lrg started" href="/intro">Get Started</a>
+					<a class="v-btn black lrg terminal" href="/#/demo/0">Launch Interactive Tutorial</a>
+				</div>
+				<div id="diagram"></div>
+				<p><span class="strong">Vault</span> secures, stores, and tightly controls access to tokens, passwords, certificates, API keys, and other secrets in modern computing. Vault handles leasing, key revocation, key rolling, and auditing. Vault presents a unified API to access multiple backends: HSMs, AWS IAM, SQL databases, raw key/value, and more.
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div id="demo-app"></div>
+
+<div id="content">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-offset-3 col-md-6">
+				<h2 class="featuer-header">Features</h2>
+
+				<div id="crud" class="feature">
+					<div class="graphic"></div>
+					<h3 class="">Secret Storage</h3>
+					<p>
+					Vault encrypts and provides access to any secrets. Leases can be associated with secrets, and Vault will automatically revoke secrets after the lease period ends. Access control policies provide strict control over who can access what secrets.
+					</p>
+					<div class="feature-footer">
+						<a class="v-btn black sml" href="/intro/use-cases.html">Learn more</a>
+					</div>
+				</div> <!-- .feature -->
+
+				<div id="key" class="feature">
+					<div class="graphic"></div>
+					<h3 class="">Key Rolling</h3>
+					<p>
+						Every secret in Vault is associated with a lease. Clients must renew their secret within the lease period, or request a new secret. Key rolling is as simple as storing a new secret and revoking existing secrets or waiting for the lease period to expire.
+						<div class="feature-footer">
+							<a class="v-btn black sml" href="/docs/concepts/lease.html">Learn more</a>
+						</div>
+					</p>
+				</div> <!-- .feature -->
+
+				<div id="audit" class="feature">
+					<div class="graphic"></div>
+					<h3 class="">Audit Logs</h3>
+					<p>
+					Vault stores a detailed audit log of every interaction: authentication, token creation, secret access, secret revocation, and more. Audit logs can be sent to multiple backends to ensure redundant copies. Paired with Vault's strict leasing policies, operators can easily trace back to the source of any secret.
+						<div class="feature-footer">
+							<a class="v-btn black sml" href="/docs/audit/index.html">Learn more</a>
+						</div>
+					</p>
+				</div> <!-- .feature -->
+
+			</div> <!-- .col -->
+		</div> <!-- .row -->
+
+		<div class="row">
+			<div class="col-sm-offset-1 col-sm-10 col-xs-12">
+				<div id="cta">
+					<a class="v-btn black sml" href="/intro/index.html">Get Started with Vault</a>
+					<p class="cta-black">Completely free and open source.</p>
+				</div><!-- #cta -->
+			</div> <!-- .col -->
+		</div> <!-- .row -->
+	</div> <!-- /container -->
+</div> <!-- #features -->

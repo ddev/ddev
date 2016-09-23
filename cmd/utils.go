@@ -10,10 +10,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"cloud.google.com/go/storage"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
-	"google.golang.org/cloud"
-	"google.golang.org/cloud/storage"
+	"google.golang.org/api/option"
 
 	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils"
@@ -169,7 +169,7 @@ func getStorageClient(jwt []byte, ctx context.Context) (*storage.Client, error) 
 		return nil, err
 	}
 
-	client, err := storage.NewClient(ctx, cloud.WithTokenSource(conf.TokenSource(ctx)))
+	client, err := storage.NewClient(ctx, option.WithTokenSource(conf.TokenSource(ctx)))
 	if err != nil {
 		return nil, err
 	}
