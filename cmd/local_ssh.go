@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/drud/bootstrap/cli/utils"
 	"github.com/drud/drud-go/drudapi"
 	"github.com/spf13/cobra"
 )
@@ -30,7 +31,7 @@ var localSSHCmd = &cobra.Command{
 		basePath := path.Join(homedir, ".drud", appClient, cfg.ActiveApp, cfg.ActiveDeploy)
 		nameContainer := fmt.Sprintf("%s-%s-%s-%s", appClient, cfg.ActiveApp, cfg.ActiveDeploy, serviceType)
 
-		if !checkLocalRunning(nameContainer) {
+		if !utils.IsRunning(nameContainer) {
 			log.Fatal("App not runnign locally. Try `drud local add`.")
 		}
 

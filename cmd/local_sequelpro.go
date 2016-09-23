@@ -8,6 +8,7 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/drud/bootstrap/cli/utils"
 	"github.com/drud/drud-go/drudapi"
 	"github.com/spf13/cobra"
 )
@@ -43,14 +44,14 @@ var SequelproCmd = &cobra.Command{
 		app := al.Items[0]
 		nameContainer := fmt.Sprintf("/%s-%s-db", app.AppID, args[1])
 
-		dclient, err := GetDockerClient()
+		dclient, err := utils.GetDockerClient()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		var index int
 		var found bool
-		containers, err := ListDockerContainers(dclient, nil)
+		containers, err := utils.ListDockerContainers(dclient, nil)
 		for i, container := range containers {
 			if container.Names[0] == nameContainer {
 				index = i
@@ -63,7 +64,7 @@ var SequelproCmd = &cobra.Command{
 
 		mysqlContainer := containers[index]
 
-		dbPort, err := GetDockerPublicPort(mysqlContainer, int64(3306))
+		dbPort, err := utils.GetDockerPublicPort(mysqlContainer, int64(3306))
 		if err != nil {
 			log.Fatal(err)
 		}

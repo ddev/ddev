@@ -255,7 +255,7 @@ var addCmd = &cobra.Command{
 		}
 
 		// use the docker client to wait for the containers to spin up then print a linik to the app
-		client, _ := GetDockerClient()
+		client, _ := utils.GetDockerClient()
 		var publicPort int64
 	Loop:
 		for {

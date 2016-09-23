@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/bootstrap/cli/utils"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 )
@@ -13,7 +14,7 @@ var LegacyListCmd = &cobra.Command{
 	Long:  `List applications that exist locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		client, _ := GetDockerClient()
+		client, _ := utils.GetDockerClient()
 
 		containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
 		containers = local.FilterNonLegacy(containers)

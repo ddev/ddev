@@ -1,4 +1,4 @@
-package cmd
+package utils
 
 import (
 	"bytes"
@@ -8,35 +8,14 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"strings"
 
+	drudutils "github.com/drud/drud-go/utils"
 	"github.com/fsouza/go-dockerclient"
 )
 
-// GetDockerMachineIP returns the IP of a docker-machine.
-func GetDockerMachineIP(machineName string) (string, error) {
-	ipoutput, err := exec.Command("docker-machine", "ip", machineName).Output()
-
-	if err != nil {
-		fmt.Println("Unable to obtain default docker-machine ip.")
-		return "", err
-	}
-
-	// TrimSpace needed to get rid of trailing linebreak on defaultip.
-	return strings.TrimSpace(string(ipoutput)), nil
-}
-
-// GetDockerMachineEndpoint returns the docker endpoint for a docker-machine.
-func GetDockerMachineEndpoint(machineName string) (string, error) {
-	dockerip, err := GetDockerMachineIP(machineName)
-	if err != nil {
-		return "", err
-	}
-	return "tcp://" + dockerip + ":2376", nil
-}
-
 // GetDockerCertPaths returns the ca, cert, and key paths.
 func GetDockerCertPaths() (ca string, cert string, key string) {
+	homedir, _ := drudutils.GetHomeDir()
 
 	certpath := os.Getenv("DOCKER_CERT_PATH")
 	if certpath == "" {
@@ -73,38 +52,6 @@ func PullDockerImage(client *docker.Client, imageName string) error {
 		return err
 	}
 	return nil
-}
-
-// CreateStartDockerContainer creates and then starts a docker container.
-func CreateStartDockerContainer(client *docker.Client, imageName string, containerBinds []string) (*docker.Container, error) {
-	// @see https://github.com/fsouza/go-dockerclient/blob/master/container.go#L200
-	config := docker.Config{
-		Image: imageName,
-	}
-	// @see https://github.com/fsouza/go-dockerclient/blob/master/container.go#L474
-	hostConfig := docker.HostConfig{
-		Binds:           containerBinds,
-		PublishAllPorts: true,
-	}
-	// @see https://github.com/fsouza/go-dockerclient/blob/master/container.go#L377
-	containerOptions := docker.CreateContainerOptions{
-		//Name:       "@todo",
-		Config:     &config,
-		HostConfig: &hostConfig,
-	}
-
-	// Create the container.
-	container, err := client.CreateContainer(containerOptions)
-	if err != nil {
-		fmt.Printf("Failed to create docker container. Error: %s\n", err)
-	}
-
-	// Start the container.
-	err = client.StartContainer(container.ID, &hostConfig)
-	if err != nil {
-		fmt.Printf("Failed to start docker container. Error:  %s\n", err)
-	}
-	return container, err
 }
 
 // CopyFromDockerContainer creates an archive from a directory within a container and then extracts it locally.
@@ -188,4 +135,18 @@ func GetDockerPublicPort(container docker.APIContainers, privatePort int64) (int
 		return 0, fmt.Errorf("Public Port %d not found in container %v", publicPort, container.ID)
 	}
 	return publicPort, nil
+}
+
+// IsRunning takes a container name and determines if it running
+func IsRunning(name string) (exists bool) {
+	client, _ := GetDockerClient()
+	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
+
+	for _, container := range containers {
+		if container.Names[0][1:] == name {
+			exists = true
+		}
+	}
+
+	return exists
 }

@@ -7,29 +7,16 @@ import (
 	"path"
 	"strings"
 
+	"github.com/drud/bootstrap/cli/utils"
 	"github.com/drud/drud-go/drudapi"
-	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 )
 
 var serviceType string
 
-func checkLocalRunning(name string) (exists bool) {
-	client, _ := GetDockerClient()
-	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
-
-	for _, container := range containers {
-		if container.Names[0][1:] == name {
-			exists = true
-		}
-	}
-
-	return exists
-}
-
-// localRunCmd allows users to execute arbitrary bash commands within a container.
-var localRunCmd = &cobra.Command{
-	Use:   "run",
+// localExecCmd allows users to execute arbitrary bash commands within a container.
+var localExecCmd = &cobra.Command{
+	Use:   "exec",
 	Short: "run a command in an app container.",
 	Long:  `Execs into container and runs bash commands.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -51,7 +38,7 @@ var localRunCmd = &cobra.Command{
 		basePath := path.Join(homedir, ".drud", appClient, cfg.ActiveApp, cfg.ActiveDeploy)
 		nameContainer := fmt.Sprintf("%s-%s-%s-%s", appClient, cfg.ActiveApp, cfg.ActiveDeploy, serviceType)
 
-		if !checkLocalRunning(nameContainer) {
+		if !utils.IsRunning(nameContainer) {
 			log.Fatal("App not runnign locally. Try `drud local add`.")
 		}
 
@@ -75,8 +62,8 @@ var localRunCmd = &cobra.Command{
 }
 
 func init() {
-	localRunCmd.Flags().StringVarP(&appClient, "client", "c", "", "Client name")
-	localRunCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Which service to send the command to. [web, db]")
-	LocalCmd.AddCommand(localRunCmd)
+	localExecCmd.Flags().StringVarP(&appClient, "client", "c", "", "Client name")
+	localExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Which service to send the command to. [web, db]")
+	LocalCmd.AddCommand(localExecCmd)
 
 }
