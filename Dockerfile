@@ -1,6 +1,6 @@
 FROM golang:1.7-alpine
 ENV DRUD_BUILD_DIR $GOPATH/src/github.com/drud/bootstrap/cli
-ENV CGO_ENABLED=0
+ENV CGO_ENABLED=1
 ENV GOOS=linux 
 
 RUN apk add  --update bzr git ca-certificates wget gcc abuild binutils binutils-doc gcc-doc cmake cmake-doc bash musl-dev openssl \
