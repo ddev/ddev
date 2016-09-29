@@ -11,7 +11,7 @@ export GOPATH=$HOME/goworkspace
 export PATH=$PATH:$GOPATH/bin
 mkdir -p $GOPATH/src/github.com/drud
 cd $GOPATH/src/github.com/drud && git clone git@github.com:drud/bootstrap.git
-cd bootstrap && glide install
+cd bootstrap
 make osxbin
 ```
 

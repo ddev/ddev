@@ -11,7 +11,7 @@ import (
 // Helper which returns a generic regex string for creating endpoint patterns
 // that are identified by the given name in the backends
 func GenericNameRegex(name string) string {
-	return fmt.Sprintf("(?P<%s>\\w[\\w-.]+\\w)", name)
+	return fmt.Sprintf("(?P<%s>\\w(([\\w-.]+)?\\w)?)", name)
 }
 
 // Helper which returns a regex string for optionally accepting the a field
@@ -46,7 +46,7 @@ type Path struct {
 	// priority.
 	//
 	// Note that only named capture fields are available in every operation,
-	// whereas all fields are avaiable in the Write operation.
+	// whereas all fields are available in the Write operation.
 	Fields map[string]*FieldSchema
 
 	// Callbacks are the set of callbacks that are called for a given
@@ -148,11 +148,12 @@ Matching Route: {{.RoutePattern}}
 
 {{.Synopsis}}
 
+{{ if .Fields -}}
 ## PARAMETERS
 {{range .Fields}}
 {{indent 4 .Key}} ({{.Type}})
 {{indent 8 .Description}}
-{{end}}
+{{end}}{{end}}
 ## DESCRIPTION
 
 {{.Description}}

@@ -48,15 +48,15 @@ func (b *BucketHandle) Delete(ctx context.Context) error {
 // ACL returns an ACLHandle, which provides access to the bucket's access control list.
 // This controls who can list, create or overwrite the objects in a bucket.
 // This call does not perform any network operations.
-func (c *BucketHandle) ACL() *ACLHandle {
-	return c.acl
+func (b *BucketHandle) ACL() *ACLHandle {
+	return &b.acl
 }
 
 // DefaultObjectACL returns an ACLHandle, which provides access to the bucket's default object ACLs.
 // These ACLs are applied to newly created objects in this bucket that do not have a defined ACL.
 // This call does not perform any network operations.
-func (c *BucketHandle) DefaultObjectACL() *ACLHandle {
-	return c.defaultObjectACL
+func (b *BucketHandle) DefaultObjectACL() *ACLHandle {
+	return &b.defaultObjectACL
 }
 
 // Object returns an ObjectHandle, which provides operations on the named object.
@@ -70,7 +70,7 @@ func (b *BucketHandle) Object(name string) *ObjectHandle {
 		c:      b.c,
 		bucket: b.name,
 		object: name,
-		acl: &ACLHandle{
+		acl: ACLHandle{
 			c:      b.c,
 			bucket: b.name,
 			object: name,
@@ -116,6 +116,10 @@ type BucketAttrs struct {
 
 	// Created is the creation time of the bucket.
 	Created time.Time
+
+	// VersioningEnabled reports whether this bucket has versioning enabled.
+	// This field is read-only.
+	VersioningEnabled bool
 }
 
 func newBucket(b *raw.Bucket) *BucketAttrs {
@@ -123,11 +127,12 @@ func newBucket(b *raw.Bucket) *BucketAttrs {
 		return nil
 	}
 	bucket := &BucketAttrs{
-		Name:           b.Name,
-		Location:       b.Location,
-		MetaGeneration: b.Metageneration,
-		StorageClass:   b.StorageClass,
-		Created:        convertTime(b.TimeCreated),
+		Name:              b.Name,
+		Location:          b.Location,
+		MetaGeneration:    b.Metageneration,
+		StorageClass:      b.StorageClass,
+		Created:           convertTime(b.TimeCreated),
+		VersioningEnabled: b.Versioning != nil && b.Versioning.Enabled,
 	}
 	acl := make([]ACLRule, len(b.Acl))
 	for i, rule := range b.Acl {

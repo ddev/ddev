@@ -4,6 +4,9 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/vault/helper/logformat"
+	log "github.com/mgutz/logxi/v1"
 )
 
 // TestRequest is a helper to create a purely in-memory Request struct.
@@ -71,8 +74,11 @@ func TestSystemView() *StaticSystemView {
 }
 
 func TestBackendConfig() *BackendConfig {
-	return &BackendConfig{
-		Logger: nil,
+	bc := &BackendConfig{
+		Logger: logformat.NewVaultLogger(log.LevelTrace),
 		System: TestSystemView(),
 	}
+	bc.Logger.SetLevel(log.LevelTrace)
+
+	return bc
 }
