@@ -241,6 +241,16 @@ func (s *Secret) Read() error {
 	return nil
 }
 
+// List gets the sub-objects for a path
+func (s *Secret) List() error {
+	secret, err := vault.List(s.Path)
+	if err != nil {
+		return err
+	}
+	s.Data = secret.Data
+	return nil
+}
+
 // Delete removes secret from vault
 func (s *Secret) Delete() error {
 

@@ -4,25 +4,16 @@ import (
 	"errors"
 	"os"
 	"os/exec"
-	"os/user"
 )
 
-// GetHomeDir uses the os/user module to locate user's home directory. If this failes check the contents of $HOME.
+// GetHomeDir uses the $HOME var to return the user's home directory
 func GetHomeDir() (string, error) {
-	var homedir string
-
-	// use the usr lib to get homedir then try $HOME if it does not work
-	usr, err := user.Current()
-	if err != nil {
-		homedir = os.Getenv("HOME")
-		if homedir == "" {
-			return "", errors.New("Standard methods to locate user's home firectory failed. Please set $HOME and try again.")
-		}
-	} else {
-		homedir = usr.HomeDir
+	homedir := os.Getenv("HOME")
+	if homedir == "" {
+		return "", errors.New("Standard methods to locate user's home firectory failed. Please set $HOME and try again.")
 	}
 
-	return homedir, err
+	return homedir, nil
 }
 
 // RunCommand runs a command on the host system.
