@@ -16,10 +16,19 @@ dev:
 	docker build -t $(PREFIX):$(TAG) .
 	docker run -v $(shell pwd)/bin:/go/bin -it $(PREFIX):$(TAG)
 
+devcircle:
+	# The remove flag helps with CircleCI
+	# https://discuss.circleci.com/t/docker-error-removing-intermediate-container/70/23
+	docker build --rm=false -t $(PREFIX):$(TAG) .
+	docker run -v $(shell pwd)/bin:/go/bin -it $(PREFIX):$(TAG)
+
 latest: dev
 	docker tag $(PREFIX):$(TAG) $(PREFIX):latest
 
 canary: dev
+	docker push $(PREFIX):$(TAG)
+
+circle: devcircle
 	docker push $(PREFIX):$(TAG)
 
 all: latest canary
