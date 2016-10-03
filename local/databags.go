@@ -94,6 +94,7 @@ type SiteEnv struct {
 	DbUsername         string   `yaml:"db_username"`
 	Docroot            string   `yaml:"docroot"`
 	Hosts              []string `yaml:"hosts"`
+	HashSalt           string   `yaml:"hash_salt"`
 	LoggedInKey        string   `yaml:"logged_in_key"`
 	LoggedInSalt       string   `yaml:"logged_in_salt"`
 	NonceKey           string   `yaml:"nonce_key"`

@@ -11,6 +11,8 @@ type App interface {
 	RelPath() string                      // returns path from root dir ('$HOME/.drud') to app
 	GetRepoDetails() (RepoDetails, error) // retuirns struct with branch, org, host, etc...
 	ContainerName() string
+	AbsPath() string
+	GetName() string
 }
 
 // RepoDetails encapsulates repository info

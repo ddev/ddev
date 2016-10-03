@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 )
@@ -110,7 +111,7 @@ func CloneSource(app App) error {
 	return nil
 }
 
-func GetPod(app App) (int64, error) {
+func GetPort(name string) (int64, error) {
 	client, _ := GetDockerClient()
 	var publicPort int64
 
@@ -120,7 +121,7 @@ func GetPod(app App) (int64, error) {
 	}
 
 	for _, ctr := range containers {
-		if strings.Contains(ctr.Names[0][1:], app.ContainerName()+"-web") {
+		if strings.Contains(ctr.Names[0][1:], name) {
 			for _, port := range ctr.Ports {
 				if port.PublicPort != 0 {
 					publicPort = port.PublicPort
@@ -129,16 +130,16 @@ func GetPod(app App) (int64, error) {
 			}
 		}
 	}
-	return publicPort, fmt.Errorf("%s container not ready", app.ContainerName())
+	return publicPort, fmt.Errorf("%s container not ready", name)
 }
 
 // GetPodPort clones or pulls a repo
-func GetPodPort(app App) (int64, error) {
+func GetPodPort(name string) (int64, error) {
 	var publicPort int64
 
-	err := utils.Do(func(attempt int) (bool, error) {
+	err := try.Do(func(attempt int) (bool, error) {
 		var err error
-		publicPort, err = GetPod(app)
+		publicPort, err = GetPort(name)
 		if err != nil {
 			time.Sleep(2 * time.Second) // wait a couple seconds
 		}
@@ -227,4 +228,32 @@ func RenderContainerList(containers []docker.APIContainers) error {
 	fmt.Println(table)
 
 	return nil
+}
+
+// DetermineAppType uses some predetermined file checks to determine if a local app
+// is of any of the known types
+func DetermineAppType(basePath string) (string, error) {
+	defaultLocations := map[string]string{
+		"docroot/sites/default/settings.php": "drupal",
+		"docroot/wp-config.php":              "wp",
+	}
+
+	for k, v := range defaultLocations {
+		if FileExists(path.Join(basePath, "src", k)) {
+			return v, nil
+		}
+	}
+
+	return "", fmt.Errorf("Couldn't determine app's type!")
+}
+
+// FileExists checks a file's existence
+// @todo replace this with drud-go/utils version when merged
+func FileExists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }

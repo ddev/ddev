@@ -16,7 +16,7 @@ import (
 
 	"github.com/drud/bootstrap/cli/cms/config"
 	"github.com/drud/bootstrap/cli/cms/model"
-	"github.com/drud/drud-go/drudapi"
+	cliUtils "github.com/drud/bootstrap/cli/utils"
 	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils"
 )
@@ -53,6 +53,15 @@ func (l LegacyApp) RelPath() string {
 	return path.Join("legacy", fmt.Sprintf("%s-%s", l.Name, l.Environment))
 }
 
+// ComposeFileExists returns true if the docker-compose.yaml file exists
+func (l LegacyApp) ComposeFileExists() bool {
+	composeLOC := path.Join(l.AbsPath(), "docker-compose.yaml")
+	if _, err := os.Stat(composeLOC); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
 // AbsPath returnt he full path from root to the app directory
 func (l LegacyApp) AbsPath() string {
 	homedir, err := utils.GetHomeDir()
@@ -60,6 +69,11 @@ func (l LegacyApp) AbsPath() string {
 		log.Fatalln(err)
 	}
 	return path.Join(homedir, ".drud", l.RelPath())
+}
+
+// Name returns the  name for legacy app
+func (l LegacyApp) GetName() string {
+	return l.Name
 }
 
 // ContainerName returns the base name for legacy app containers
@@ -80,6 +94,15 @@ func (l LegacyApp) GetRepoDetails() (RepoDetails, error) {
 	}
 
 	return details, nil
+}
+
+// DatabagExists checks if a databag exists or not
+func (l LegacyApp) DatabagExists() bool {
+	_, err := GetDatabag(l.Name)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 // GetResources downloads external data for this app
@@ -208,7 +231,7 @@ func (l LegacyApp) UnpackResources() error {
 func (l LegacyApp) Start() error {
 	basePath := l.AbsPath()
 
-	return drudapi.DockerCompose(
+	return utils.DockerCompose(
 		"-f", path.Join(basePath, "docker-compose.yaml"),
 		"up",
 		"-d",
@@ -230,7 +253,7 @@ func (l LegacyApp) Config() error {
 		return err
 	}
 
-	publicPort, err := GetPodPort(l)
+	publicPort, err := GetPodPort(l.ContainerName() + "-web")
 	if err != nil {
 		return err
 	}
@@ -241,6 +264,10 @@ func (l LegacyApp) Config() error {
 		settingsFilePath = path.Join(basePath, "src", "docroot/sites/default/settings.php")
 		drupalConfig := model.NewDrupalConfig()
 		drupalConfig.DatabaseHost = "db"
+		drupalConfig.HashSalt = env.HashSalt
+		if drupalConfig.HashSalt == "" {
+			drupalConfig.HashSalt = cliUtils.RandomString(64)
+		}
 		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
 		if err != nil {
 			log.Fatalln(err)

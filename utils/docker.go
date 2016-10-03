@@ -150,3 +150,17 @@ func IsRunning(name string) (exists bool) {
 
 	return exists
 }
+
+// GetContainer returns container by name
+func GetContainer(name string) (docker.APIContainers, error) {
+	client, _ := GetDockerClient()
+	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
+
+	for _, container := range containers {
+		if container.Names[0][1:] == name {
+			return container, nil
+		}
+	}
+
+	return docker.APIContainers{}, fmt.Errorf("Not found!")
+}

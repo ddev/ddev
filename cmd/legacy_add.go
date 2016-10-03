@@ -1,13 +1,17 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
+	"runtime"
+	"sync"
 
 	"github.com/drud/bootstrap/cli/local"
 	"github.com/spf13/cobra"
 )
 
 var appType string
+var scaffold bool
 
 // LegacyAddCmd represents the add command
 var LegacyAddCmd = &cobra.Command{
@@ -20,6 +24,19 @@ var LegacyAddCmd = &cobra.Command{
 			log.Fatalln("app_name and deploy_name are expected as arguments.")
 		}
 
+		if posString([]string{"default", "staging", "production"}, args[1]) == -1 {
+			log.Fatalln("Bad environment name.")
+		}
+
+		var err error
+
+		// limit logical processors to 3
+		runtime.GOMAXPROCS(3)
+		// set up wait group
+
+		var wg sync.WaitGroup
+		wg.Add(3)
+
 		app := local.LegacyApp{
 			Name:        args[0],
 			Environment: args[1],
@@ -27,40 +44,66 @@ var LegacyAddCmd = &cobra.Command{
 			Template:    local.LegacyComposeTemplate,
 		}
 
-		err := local.WriteLocalAppYAML(app)
-		if err != nil {
-			log.Fatalln(err)
+		if !app.DatabagExists() {
+			log.Fatalln("No legacy site by that name.")
 		}
 
-		err = local.CloneSource(app)
-		if err != nil {
-			log.Fatalln(err)
-		}
+		go func() {
+			defer wg.Done()
 
-		err = app.GetResources()
-		if err != nil {
-			log.Fatalln(err)
-		}
+			log.Println("Creating docker-compose config.")
+			err := local.WriteLocalAppYAML(app)
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+
+			log.Println("Getting source code.")
+			err := local.CloneSource(app)
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+
+			log.Println("Getting Resources.")
+			err := app.GetResources()
+			if err != nil {
+				log.Fatalln(err)
+			}
+		}()
+
+		wg.Wait()
 
 		err = app.UnpackResources()
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		err = app.Start()
-		if err != nil {
-			log.Fatalln(err)
+		if !scaffold {
+			err = app.Start()
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			err = app.Config()
+			if err != nil {
+				log.Fatalln(err)
+			}
 		}
 
-		err = app.Config()
-		if err != nil {
-			log.Fatalln(err)
-		}
+		fmt.Println("Successfully added", args[0], args[1])
 
 	},
 }
 
 func init() {
 	LegacyAddCmd.Flags().StringVarP(&appType, "type", "t", "drupal", "Type of application ('drupal' or 'wp')")
+	LegacyAddCmd.Flags().BoolVarP(&scaffold, "scaffold", "s", false, "Add the app but don't run or config it.")
 	LegacyCmd.AddCommand(LegacyAddCmd)
 }

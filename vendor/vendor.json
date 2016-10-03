@@ -414,24 +414,24 @@
 			"revisionTime": "2016-09-08T21:06:52Z"
 		},
 		{
-			"checksumSHA1": "n2k7CXY3qHfnwN6LIv3MRlcDT+4=",
+			"checksumSHA1": "Zsq2bYaJRUwXoIJz5sbEG9XG9F8=",
 			"path": "github.com/drud/drud-go/drudapi",
-			"revision": "e9a1c50647ebb30d7c749f8c7d1d8082eb1b5bc3",
-			"revisionTime": "2016-09-30T16:25:03Z",
+			"revision": "6981837c82a992b82d1a8e1224e1fe72ced1b23b",
+			"revisionTime": "2016-09-30T20:23:25Z",
 			"tree": true
 		},
 		{
 			"checksumSHA1": "u/fPCVZURoHZIIjbBGRQ3+hghpw=",
 			"path": "github.com/drud/drud-go/secrets",
-			"revision": "e9a1c50647ebb30d7c749f8c7d1d8082eb1b5bc3",
-			"revisionTime": "2016-09-30T16:25:03Z",
+			"revision": "6981837c82a992b82d1a8e1224e1fe72ced1b23b",
+			"revisionTime": "2016-09-30T20:23:25Z",
 			"tree": true
 		},
 		{
-			"checksumSHA1": "Ej2ZKuxZRokHVfHJKEF+6QWvVmA=",
+			"checksumSHA1": "Lj88lw7GYwEEAHmp/5gdI9lWcCU=",
 			"path": "github.com/drud/drud-go/utils",
-			"revision": "e9a1c50647ebb30d7c749f8c7d1d8082eb1b5bc3",
-			"revisionTime": "2016-09-30T16:25:03Z",
+			"revision": "6981837c82a992b82d1a8e1224e1fe72ced1b23b",
+			"revisionTime": "2016-09-30T20:23:25Z",
 			"tree": true
 		},
 		{

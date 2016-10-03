@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"path"
 
-	"github.com/drud/drud-go/drudapi"
+	drudutils "github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -24,14 +23,9 @@ var localRMCmd = &cobra.Command{
 		}
 
 		basePath := path.Join(homedir, ".drud", appClient, args[0], args[1])
-		err := drudapi.DockerCompose("-f", path.Join(basePath, "docker-compose.yaml"), "stop")
+		err := drudutils.DockerCompose("-f", path.Join(basePath, "docker-compose.yaml"), "down")
 		if err != nil {
 			log.Fatalln(err)
-		}
-
-		dcErr := drudapi.DockerCompose("-f", path.Join(basePath, "docker-compose.yaml"), "rm", "-f")
-		if dcErr != nil {
-			fmt.Println(fmt.Errorf("%s", dcErr.Error()))
 		}
 
 	},

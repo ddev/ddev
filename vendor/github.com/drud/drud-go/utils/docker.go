@@ -1,4 +1,4 @@
-package drudapi
+package utils
 
 import (
 	"os"

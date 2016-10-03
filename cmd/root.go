@@ -165,9 +165,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/drud.yaml)")
 	RootCmd.PersistentFlags().StringVar(&vaultAddress, "vault_address", "https://sanctuary.drud.io:8200", "Vault Address")
 	RootCmd.PersistentFlags().BoolVarP(&isDev, "dev", "", false, "Enable Dev mode")
-	// files related
-	RootCmd.PersistentFlags().StringVar(&bucket, "bucket", "nmdarchive", "name of S3 bucket to work with")
-	RootCmd.PersistentFlags().StringVar(&region, "region", "us-west-2", "region your bucket is in")
+
 	RootCmd.PersistentFlags().StringVar(&workdir, "workdir", "", "directory other than cwd we are running from")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

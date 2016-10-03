@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/drud/bootstrap/cli/utils"
-	"github.com/drud/drud-go/drudapi"
+	drudutils "github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +16,7 @@ var serviceType string
 
 // localExecCmd allows users to execute arbitrary bash commands within a container.
 var localExecCmd = &cobra.Command{
-	Use:   "exec",
+	Use:   "exec '[cmd]'",
 	Short: "run a command in an app container.",
 	Long:  `Execs into container and runs bash commands.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -53,7 +53,7 @@ var localExecCmd = &cobra.Command{
 			"-T", nameContainer,
 		}
 		cmdArgs = append(cmdArgs, cmdSplit...)
-		err := drudapi.DockerCompose(cmdArgs...)
+		err := drudutils.DockerCompose(cmdArgs...)
 		if err != nil {
 			log.Fatalln(err)
 		}

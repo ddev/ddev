@@ -11,6 +11,7 @@ type DrupalConfig struct {
 	DatabaseDriver   string
 	DatabasePort     int
 	DatabasePrefix   string
+	HashSalt         string
 }
 
 // NewDrupalConfig produces a DrupalConfig object with default.
