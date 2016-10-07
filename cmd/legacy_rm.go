@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// localStopCmd represents the stop command
+// LegacyRMCmd represents the stop command
 var LegacyRMCmd = &cobra.Command{
 	Use:   "rm",
 	Short: "Remove an application's local services.",

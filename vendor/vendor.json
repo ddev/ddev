@@ -421,6 +421,12 @@
 			"tree": true
 		},
 		{
+			"checksumSHA1": "h7pOhNW5IkLwSVoFA5bsJfxo4wM=",
+			"path": "github.com/drud/drud-go/files",
+			"revision": "0642800b1372ab1bf1e4f9e7e6492f4b4e785eb9",
+			"revisionTime": "2016-10-07T16:44:18Z"
+		},
+		{
 			"checksumSHA1": "u/fPCVZURoHZIIjbBGRQ3+hghpw=",
 			"path": "github.com/drud/drud-go/secrets",
 			"revision": "6981837c82a992b82d1a8e1224e1fe72ced1b23b",
@@ -428,10 +434,10 @@
 			"tree": true
 		},
 		{
-			"checksumSHA1": "Lj88lw7GYwEEAHmp/5gdI9lWcCU=",
+			"checksumSHA1": "uTydeCt+jhyUBHvjR8m4HLGCuzg=",
 			"path": "github.com/drud/drud-go/utils",
-			"revision": "6981837c82a992b82d1a8e1224e1fe72ced1b23b",
-			"revisionTime": "2016-09-30T20:23:25Z",
+			"revision": "0642800b1372ab1bf1e4f9e7e6492f4b4e785eb9",
+			"revisionTime": "2016-10-07T16:44:18Z",
 			"tree": true
 		},
 		{

@@ -10,7 +10,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-// @todo: move me to shared package
+// Verify a deployment exists at a URL within the timeout period (in seconds)
 func EnsureHTTPStatus(targetURL string, username string, password string, timeout int, expectedStatus int) error {
 	giveUp := make(chan bool)
 	go func() {

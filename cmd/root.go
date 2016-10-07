@@ -8,10 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	drudfiles "github.com/drud/drud-go/files"
+
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/drud/drud-go/drudapi"
 	"github.com/drud/drud-go/secrets"
 	"github.com/hashicorp/vault/api"
@@ -36,9 +35,8 @@ var (
 	drudclient         *drudapi.Request //client for interacting with drud api
 	workdir            string
 	bucket             string                   // aws s3 bucket used with file storage functionality
-	region             string                   // region where the s3 bucket can be found
+	region             = "us-west-2"            // region where the s3 bucket can be found
 	creds              *credentials.Credentials // s3 related credentials
-	svc                *s3.S3
 	awsID              string
 	vaultAddress       string // stores the vault host address
 	awsSecret          string
@@ -46,10 +44,11 @@ var (
 	isDev              bool   // isDev stores boolean value to allow special functionality for devs
 	homedir            string // current user's home directory
 	gitToken           string
+	fileService        *drudfiles.FileService
 	clientCreateAccess bool
 	filesAccess        bool
 	drudAccess         bool
-	bucketName         = "drudcli-drud-files-bucket"
+	bucketName         = "nmdarchive"
 	forceDelete        bool
 	vaultToken         string
 	vault              api.Logical // part of the vault go api
@@ -204,10 +203,8 @@ func initConfig() {
 
 		awsID = sobj.Data["accesskey"].(string)
 		awsSecret = sobj.Data["secretkey"].(string)
-		os.Setenv("AWS_ACCESS_KEY_ID", awsID)
-		os.Setenv("AWS_SECRET_ACCESS_KEY", awsSecret)
-
-		svc = s3.New(session.New(&aws.Config{Region: aws.String(region)}))
+		fs, err := drudfiles.NewFileService(awsID, awsSecret, region, bucketName)
+		fileService = fs
 	}
 
 }

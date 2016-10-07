@@ -16,7 +16,6 @@ import (
 
 	"github.com/drud/bootstrap/cli/cms/config"
 	"github.com/drud/bootstrap/cli/cms/model"
-	cliUtils "github.com/drud/bootstrap/cli/utils"
 	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils"
 )
@@ -266,7 +265,7 @@ func (l LegacyApp) Config() error {
 		drupalConfig.DatabaseHost = "db"
 		drupalConfig.HashSalt = env.HashSalt
 		if drupalConfig.HashSalt == "" {
-			drupalConfig.HashSalt = cliUtils.RandomString(64)
+			drupalConfig.HashSalt = utils.RandomString(64)
 		}
 		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
 		if err != nil {

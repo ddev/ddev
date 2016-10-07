@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// listCmd represents the list command
+// LegacyListCmd represents the list command
 var LegacyListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List applications that exist locally",
