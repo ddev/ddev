@@ -217,7 +217,7 @@ func (l LegacyApp) UnpackResources() error {
 	rsyncTo := path.Join(basePath, "src", "docroot")
 	out, err = utils.RunCommand(
 		"rsync",
-		[]string{"-avz", "--recursive", rsyncFrom + "/", rsyncTo},
+		[]string{"-avz", "--recursive", "--exclude=profiles", rsyncFrom + "/", rsyncTo},
 	)
 	if err != nil {
 		return fmt.Errorf("%s - %s", err.Error(), string(out))
