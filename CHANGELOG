@@ -4,9 +4,14 @@ Changelog
 Development
 -----------
 
-- Add salt fields to local and remote wp config
+- Allow drush commands to be ran from the host on drupal sites.
+- Automatically fallback to `drud secret list` if `drud secret read` fails.
+- Wait until database import has finished before printing the URL when adding a site.
+- Move source directory outside of webroot and automatically sync changes to improve performance.
+- Add salt fields to local and remote wp config.
 - Stop containers if still running when `local rm` is executed.
-- Don't require auth for commands like `drud version` and `drud config set`
+- Don't require auth for commands like `drud version` and `drud config set`.
+- Added `drud legacy logs` command to grant quick access to site container logs.
 
 Version 0.2.1 - Sept 1st 2016
 -------------
