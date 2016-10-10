@@ -233,6 +233,14 @@ func (l LegacyApp) UnpackResources() error {
 func (l LegacyApp) Start() error {
 	basePath := l.AbsPath()
 
+	err := utils.DockerCompose(
+		"-f", path.Join(basePath, "docker-compose.yaml"),
+		"pull",
+	)
+	if err != nil {
+		return err
+	}
+
 	return utils.DockerCompose(
 		"-f", path.Join(basePath, "docker-compose.yaml"),
 		"up",
