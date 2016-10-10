@@ -24,6 +24,7 @@ $databases['default']['default'] = array(
 );
 
 $drupal_hash_salt = '{{ $config.HashSalt }}';
+$base_url = '{{ $config.DeployURL }}';
 
 ini_set('session.gc_probability', 1);
 ini_set('session.gc_divisor', 100);
@@ -46,8 +47,28 @@ $conf['cache'] = '1';
 if (file_exists(__DIR__ . '/custom.settings.php')) {
   include __DIR__ . '/custom.settings.php';
 }
+
+// This is super ugly but it determines whether or not drush should include a custom settings file which allows
+// it to work both within a docker container and natively on the host system.
+if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
+  include __DIR__ . '../../../../drush.settings.php';
+}
 `
 )
+
+const drushTemplate = `<?php
+{{ $config := . }}
+$databases['default']['default'] = array(
+  'database' => "data",
+  'username' => "root",
+  'password' => "root",
+  'host' => "127.0.0.1",
+  'driver' => "mysql",
+  'port' => {{ $config.DatabasePort }},
+  'prefix' => "",
+);
+
+`
 
 // WriteDrupalConfig dynamically produces valid settings.php file by combining a configuration
 // object with a data-driven template.
@@ -61,6 +82,22 @@ func WriteDrupalConfig(drupalConfig *model.DrupalConfig, filePath string) error 
 		return err
 	}
 	err = tmpl.Execute(file, drupalConfig)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func WriteDrushConfig(drushConfig *model.DrushConfig, filePath string) error {
+	tmpl, err := template.New("drushConfig").Funcs(sprig.TxtFuncMap()).Parse(drushTemplate)
+	if err != nil {
+		return err
+	}
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	err = tmpl.Execute(file, drushConfig)
 	if err != nil {
 		return err
 	}

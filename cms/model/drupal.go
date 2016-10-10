@@ -26,3 +26,15 @@ func NewDrupalConfig() *DrupalConfig {
 		DatabasePrefix:   "",
 	}
 }
+
+type DrushConfig struct {
+	DatabasePort int64
+	DatabaseHost string
+}
+
+func NewDrushConfig() *DrushConfig {
+	return &DrushConfig{
+		DatabaseHost: "127.0.0.1",
+		DatabasePort: 3306,
+	}
+}

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"text/template"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -285,7 +286,24 @@ func (l *LegacyApp) Config() error {
 		if drupalConfig.HashSalt == "" {
 			drupalConfig.HashSalt = utils.RandomString(64)
 		}
+
+		drupalConfig.DeployURL = "http://localhost:" + strconv.FormatInt(publicPort, 10)
 		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		// Setup a custom settings file for use with drush.
+		dbPort, err := GetPodPort(l.ContainerName() + "-db")
+		if err != nil {
+			return err
+		}
+
+		drushSettingsPath := path.Join(basePath, "src", "drush.settings.php")
+		drushConfig := model.NewDrushConfig()
+		drushConfig.DatabasePort = dbPort
+		err = config.WriteDrushConfig(drushConfig, drushSettingsPath)
+
 		if err != nil {
 			log.Fatalln(err)
 		}
