@@ -97,6 +97,7 @@ var LegacyAddCmd = &cobra.Command{
 				log.Fatalln(err)
 			}
 
+			fmt.Println("Waiting for site readiness. This may take a couple minutes...")
 			siteURL, err = app.Wait()
 			if err != nil {
 				log.Fatalln(err)
