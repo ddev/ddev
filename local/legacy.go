@@ -22,13 +22,15 @@ import (
 
 // LegacyApp implements the LocalApp interface for Legacy Newmedia apps
 type LegacyApp struct {
-	Name        string
-	Environment string
-	AppType     string
-	Template    string
-	Branch      string
-	Repo        string
-	Archive     string //absolute path to the downloaded archive
+	Name          string
+	Environment   string
+	AppType       string
+	Template      string
+	Branch        string
+	Repo          string
+	Archive       string //absolute path to the downloaded archive
+	WebPublicPort int64
+	DbPublicPort  int64
 }
 
 // RenderComposeYAML returns teh contents of a docker compose config for this app
@@ -237,9 +239,20 @@ func (l LegacyApp) Start() error {
 	)
 }
 
+// Wait ensures that the app appears to be read before returning
+func (l *LegacyApp) Wait() (string, error) {
+	siteURL := fmt.Sprintf("http://localhost:%d", l.WebPublicPort)
+	err := utils.EnsureHTTPStatus(fmt.Sprintf("http://localhost:%d", l.WebPublicPort), "", "", 300, 200)
+	if err != nil {
+		return "", fmt.Errorf("200 Was not returned from the web container")
+	}
+
+	return siteURL, nil
+}
+
 // Config creates the apps config file adding thigns like database host, name, and password
 // as well as other sensitive data like salts.
-func (l LegacyApp) Config() error {
+func (l *LegacyApp) Config() error {
 	basePath := l.AbsPath()
 
 	dbag, err := GetDatabag(l.Name)
@@ -252,7 +265,12 @@ func (l LegacyApp) Config() error {
 		return err
 	}
 
-	publicPort, err := GetPodPort(l.ContainerName() + "-web")
+	l.WebPublicPort, err = GetPodPort(l.ContainerName() + "-web")
+	if err != nil {
+		return err
+	}
+
+	l.DbPublicPort, err = GetPodPort(l.ContainerName() + "-db")
 	if err != nil {
 		return err
 	}
@@ -276,7 +294,7 @@ func (l LegacyApp) Config() error {
 		settingsFilePath = path.Join(basePath, "src", "docroot/wp-config.php")
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DatabaseHost = "db"
-		wpConfig.DeployURL = fmt.Sprintf("http://localhost:%d", publicPort)
+		wpConfig.DeployURL = fmt.Sprintf("http://localhost:%d", l.WebPublicPort)
 		wpConfig.AuthKey = env.AuthKey
 		wpConfig.AuthSalt = env.AuthSalt
 		wpConfig.LoggedInKey = env.LoggedInKey

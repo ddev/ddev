@@ -85,6 +85,7 @@ var LegacyAddCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
+		var siteURL string
 		if !scaffold {
 			err = app.Start()
 			if err != nil {
@@ -95,9 +96,17 @@ var LegacyAddCmd = &cobra.Command{
 			if err != nil {
 				log.Fatalln(err)
 			}
+
+			siteURL, err = app.Wait()
+			if err != nil {
+				log.Fatalln(err)
+			}
 		}
 
 		fmt.Println("Successfully added", args[0], args[1])
+		if siteURL != "" {
+			fmt.Println("Your application can be reached at:", siteURL)
+		}
 
 	},
 }

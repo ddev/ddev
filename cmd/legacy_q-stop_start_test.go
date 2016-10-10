@@ -46,8 +46,8 @@ func TestLegacyStart(t *testing.T) {
 	dbPort, err := local.GetPodPort(app.ContainerName() + "-db")
 	assert.NoError(err)
 
-	assert.Equal(true, IsTCPPortAvailable(int(webPort)))
-	assert.Equal(true, IsTCPPortAvailable(int(dbPort)))
+	assert.Equal(true, utils.IsTCPPortAvailable(int(webPort)))
+	assert.Equal(true, utils.IsTCPPortAvailable(int(dbPort)))
 	err = drudutils.EnsureHTTPStatus(fmt.Sprintf("http://localhost:%d", webPort), "", "", 120, 200)
 	assert.NoError(err)
 }

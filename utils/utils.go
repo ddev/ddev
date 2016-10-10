@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 
@@ -43,4 +45,14 @@ func DownloadFile(filepath string, url string) (err error) {
 	}
 
 	return nil
+}
+
+// // @todo: move me to shared package
+func IsTCPPortAvailable(port int) bool {
+	conn, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
 }

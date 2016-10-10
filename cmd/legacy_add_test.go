@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"net"
 	"path"
 	"testing"
 
@@ -33,16 +32,6 @@ func checkRequiredFolders(app local.App) bool {
 			return false
 		}
 	}
-	return true
-}
-
-// // @todo: move me to shared package
-func IsTCPPortAvailable(port int) bool {
-	conn, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
-	if err != nil {
-		return false
-	}
-	conn.Close()
 	return true
 }
 
@@ -113,8 +102,8 @@ func TestLegacyAddWP(t *testing.T) {
 	dbPort, err := local.GetPodPort(app.ContainerName() + "-db")
 	assert.NoError(err)
 
-	assert.Equal(true, IsTCPPortAvailable(int(webPort)))
-	assert.Equal(true, IsTCPPortAvailable(int(dbPort)))
+	assert.Equal(true, utils.IsTCPPortAvailable(int(webPort)))
+	assert.Equal(true, utils.IsTCPPortAvailable(int(dbPort)))
 	err = drudutils.EnsureHTTPStatus(fmt.Sprintf("http://localhost:%d", webPort), "", "", 120, 200)
 	assert.NoError(err)
 
