@@ -287,7 +287,7 @@ func (l *LegacyApp) Config() error {
 			drupalConfig.HashSalt = utils.RandomString(64)
 		}
 
-		drupalConfig.DeployURL = "http://localhost:" + strconv.FormatInt(publicPort, 10)
+		drupalConfig.DeployURL = "http://localhost:" + strconv.FormatInt(l.WebPublicPort, 10)
 		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
 		if err != nil {
 			log.Fatalln(err)
