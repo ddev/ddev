@@ -20,7 +20,7 @@ services:
     container_name: {{.name}}-web
     image: {{.image}}
     volumes:
-      - "./src:/var/www/html"
+      - "./src:/src"
     restart: always
     depends_on:
       - {{.name}}-db

@@ -27,6 +27,8 @@ var LegacyExecCmd = &cobra.Command{
 			log.Fatalln("Must pass a command as first argument.")
 		}
 
+		cmdString := args[0]
+
 		app := local.LegacyApp{
 			Name:        activeApp,
 			Environment: activeDeploy,
@@ -47,8 +49,15 @@ var LegacyExecCmd = &cobra.Command{
 			"exec",
 			"-T", nameContainer,
 		}
-		cmdSplit := strings.Split(args[0], " ")
+
+		if strings.Contains(cmdString, "drush dl") {
+			// do we want to add a -y here?
+			cmdString = strings.Replace(cmdString, "drush dl", "drush --root=/src/docroot dl", 1)
+		}
+
+		cmdSplit := strings.Split(cmdString, " ")
 		cmdArgs = append(cmdArgs, cmdSplit...)
+
 		err := drudutils.DockerCompose(cmdArgs...)
 		if err != nil {
 			log.Fatalln(err)
