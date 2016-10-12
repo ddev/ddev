@@ -6,8 +6,7 @@ import (
 	"path"
 
 	"github.com/drud/bootstrap/cli/local"
-	"github.com/drud/bootstrap/cli/utils"
-	drudutils "github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -59,7 +58,7 @@ var LegacyLogsCmd = &cobra.Command{
 		}
 		cmdArgs = append(cmdArgs, nameContainer)
 
-		err := drudutils.DockerCompose(cmdArgs...)
+		err := utils.DockerCompose(cmdArgs...)
 		if err != nil {
 			log.Fatalln(err)
 		}

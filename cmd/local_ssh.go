@@ -6,8 +6,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/drud/bootstrap/cli/utils"
-	drudutils "github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -40,7 +39,7 @@ var localSSHCmd = &cobra.Command{
 			log.Fatalln("No docker-compose yaml for this site. Try `drud local add`.")
 		}
 
-		err := drudutils.DockerCompose(
+		err := utils.DockerCompose(
 			"-f", composeLOC,
 			"exec",
 			nameContainer,

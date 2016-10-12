@@ -10,8 +10,8 @@ import (
 
 	"github.com/drud/bootstrap/cli/local"
 
-	"github.com/drud/bootstrap/cli/utils"
 	"github.com/drud/drud-go/drudapi"
+	"github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 

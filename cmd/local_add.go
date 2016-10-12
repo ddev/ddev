@@ -14,11 +14,8 @@ import (
 	"github.com/drud/bootstrap/cli/cms/config"
 	"github.com/drud/bootstrap/cli/cms/model"
 	"github.com/drud/bootstrap/cli/local"
-
-	"github.com/drud/bootstrap/cli/utils"
-
 	"github.com/drud/drud-go/drudapi"
-	drudutils "github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 )
@@ -246,7 +243,7 @@ var addCmd = &cobra.Command{
 		}
 
 		// run docker-compose up -d in the newly created directory
-		dcErr := drudutils.DockerCompose(
+		dcErr := utils.DockerCompose(
 			"-f", path.Join(basePath, "docker-compose.yaml"),
 			"up",
 			"-d",

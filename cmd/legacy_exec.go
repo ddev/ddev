@@ -7,8 +7,7 @@ import (
 	"strings"
 
 	"github.com/drud/bootstrap/cli/local"
-	"github.com/drud/bootstrap/cli/utils"
-	drudutils "github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -57,8 +56,7 @@ var LegacyExecCmd = &cobra.Command{
 
 		cmdSplit := strings.Split(cmdString, " ")
 		cmdArgs = append(cmdArgs, cmdSplit...)
-
-		err := drudutils.DockerCompose(cmdArgs...)
+		err := utils.DockerCompose(cmdArgs...)
 		if err != nil {
 			log.Fatalln(err)
 		}

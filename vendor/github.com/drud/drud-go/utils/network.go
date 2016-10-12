@@ -59,8 +59,8 @@ func EnsureHTTPStatus(targetURL string, username string, password string, timeou
 
 // IsTCPPortAvailable checks a port to see if anythign is listening
 // hostPort is a string like 'localhost:80'
-func IsTCPPortAvailable(hostPort string) bool {
-	conn, err := net.Listen("tcp", hostPort)
+func IsTCPPortAvailable(port int) bool {
+	conn, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
 		return false
 	}

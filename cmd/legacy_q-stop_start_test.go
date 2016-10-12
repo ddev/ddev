@@ -5,19 +5,18 @@ import (
 	"testing"
 
 	"github.com/drud/bootstrap/cli/local"
-	"github.com/drud/bootstrap/cli/utils"
-	drudutils "github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 // TestLegacyStop runs drud legacy stop on the test apps
 func TestLegacyStop(t *testing.T) {
-	args := []string{"legacy", "stop", "-a", legacyTestApp}
-	out, err := drudutils.RunCommand(drudBin, args)
+	args := []string{"legacy", "stop", "-a", LegacyTestApp}
+	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
 	format := fmt.Sprintf
-	assert.Contains(t, string(out), format("Stopping legacy-%s-%s-web ... done", legacyTestApp, legacyTestEnv))
-	assert.Contains(t, string(out), format("Stopping legacy-%s-%s-db ... done", legacyTestApp, legacyTestEnv))
+	assert.Contains(t, string(out), format("Stopping legacy-%s-%s-web ... done", LegacyTestApp, LegacyTestEnv))
+	assert.Contains(t, string(out), format("Stopping legacy-%s-%s-db ... done", LegacyTestApp, LegacyTestEnv))
 
 }
 
@@ -25,17 +24,17 @@ func TestLegacyStop(t *testing.T) {
 func TestLegacyStart(t *testing.T) {
 	assert := assert.New(t)
 
-	args := []string{"legacy", "start", "-a", legacyTestApp}
-	out, err := drudutils.RunCommand(drudBin, args)
+	args := []string{"legacy", "start", "-a", LegacyTestApp}
+	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	format := fmt.Sprintf
-	assert.Contains(string(out), format("Starting legacy-%s-%s-web", legacyTestApp, legacyTestEnv))
-	assert.Contains(string(out), format("Starting legacy-%s-%s-db", legacyTestApp, legacyTestEnv))
+	assert.Contains(string(out), format("Starting legacy-%s-%s-web", LegacyTestApp, LegacyTestEnv))
+	assert.Contains(string(out), format("Starting legacy-%s-%s-db", LegacyTestApp, LegacyTestEnv))
 	assert.Contains(string(out), "WordPress site")
 
 	app := local.LegacyApp{
-		Name:        legacyTestApp,
-		Environment: legacyTestEnv,
+		Name:        LegacyTestApp,
+		Environment: LegacyTestEnv,
 	}
 
 	assert.Equal(true, utils.IsRunning(app.ContainerName()+"-web"))
@@ -48,6 +47,6 @@ func TestLegacyStart(t *testing.T) {
 
 	assert.Equal(true, utils.IsTCPPortAvailable(int(webPort)))
 	assert.Equal(true, utils.IsTCPPortAvailable(int(dbPort)))
-	err = drudutils.EnsureHTTPStatus(fmt.Sprintf("http://localhost:%d", webPort), "", "", 120, 200)
+	err = utils.EnsureHTTPStatus(fmt.Sprintf("http://localhost:%d", webPort), "", "", 120, 200)
 	assert.NoError(err)
 }

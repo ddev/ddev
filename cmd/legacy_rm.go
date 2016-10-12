@@ -5,7 +5,7 @@ import (
 	"path"
 
 	"github.com/drud/bootstrap/cli/local"
-	drudutils "github.com/drud/drud-go/utils"
+	utils "github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +24,7 @@ var LegacyRMCmd = &cobra.Command{
 			Environment: activeDeploy,
 		}
 
-		err := drudutils.DockerCompose(
+		err := utils.DockerCompose(
 			"-f", path.Join(app.AbsPath(), "docker-compose.yaml"),
 			"down",
 		)

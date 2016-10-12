@@ -7,6 +7,14 @@ import (
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*(){}[]<>?*")
 
+// FormatPlural is a simple wrapper which returns different strings based on the count value.
+func FormatPlural(count int, single string, plural string) string {
+	if count == 1 {
+		return single
+	}
+	return plural
+}
+
 // RandStringRunes returns a random string of length n
 func RandStringRunes(n int) string {
 	b := make([]rune, n)

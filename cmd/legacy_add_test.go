@@ -6,15 +6,8 @@ import (
 	"testing"
 
 	"github.com/drud/bootstrap/cli/local"
-	"github.com/drud/bootstrap/cli/utils"
-	drudutils "github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils"
 	"github.com/stretchr/testify/assert"
-)
-
-var (
-	drudBin       = "drud"
-	legacyTestApp = "drudio"
-	legacyTestEnv = "production"
 )
 
 func checkRequiredFolders(app local.App) bool {
@@ -28,7 +21,7 @@ func checkRequiredFolders(app local.App) bool {
 		path.Join(basePath, "docker-compose.yaml"),
 	}
 	for _, p := range files {
-		if !drudutils.FileExists(p) {
+		if !utils.FileExists(p) {
 			return false
 		}
 	}
@@ -41,19 +34,19 @@ func TestLegacyAddBadArgs(t *testing.T) {
 
 	// test that you get an error when you run with no args
 	args := []string{"legacy", "add"}
-	out, err := drudutils.RunCommand(drudBin, args)
+	out, err := utils.RunCommand(DrudBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "app_name and deploy_name are expected as arguments.")
 
 	// test that you get an error when passing a bad environment name
 	args = append(args, "mcsnaggletooth", "smith")
-	out, err = drudutils.RunCommand(drudBin, args)
+	out, err = utils.RunCommand(DrudBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Bad environment name.")
 
 	// testing that you get an error when passing a bad site name
-	args[3] = legacyTestEnv
-	out, err = drudutils.RunCommand(drudBin, args)
+	args[3] = LegacyTestEnv
+	out, err = utils.RunCommand(DrudBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "No legacy site by that name")
 }
@@ -63,14 +56,14 @@ func TestLegacyAddScaffoldWP(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"legacy", "add", legacyTestApp, legacyTestEnv, "-s", "-t", "wp"}
-	out, err := drudutils.RunCommand(drudBin, args)
+	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv, "-s", "-t", "wp"}
+	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
 	app := local.LegacyApp{
-		Name:        legacyTestApp,
-		Environment: legacyTestEnv,
+		Name:        LegacyTestApp,
+		Environment: LegacyTestEnv,
 	}
 
 	assert.Equal(true, checkRequiredFolders(app))
@@ -82,15 +75,15 @@ func TestLegacyAddWP(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"legacy", "add", legacyTestApp, legacyTestEnv, "-t", "wp"}
-	out, err := drudutils.RunCommand(drudBin, args)
+	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv, "-t", "wp"}
+	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 	assert.Contains(string(out), "WordPress site")
 
 	app := local.LegacyApp{
-		Name:        legacyTestApp,
-		Environment: legacyTestEnv,
+		Name:        LegacyTestApp,
+		Environment: LegacyTestEnv,
 	}
 
 	assert.Equal(true, checkRequiredFolders(app))
@@ -104,7 +97,7 @@ func TestLegacyAddWP(t *testing.T) {
 
 	assert.Equal(true, utils.IsTCPPortAvailable(int(webPort)))
 	assert.Equal(true, utils.IsTCPPortAvailable(int(dbPort)))
-	err = drudutils.EnsureHTTPStatus(fmt.Sprintf("http://localhost:%d", webPort), "", "", 120, 200)
+	err = utils.EnsureHTTPStatus(fmt.Sprintf("http://localhost:%d", webPort), "", "", 120, 200)
 	assert.NoError(err)
 
 }

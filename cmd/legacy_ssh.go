@@ -6,8 +6,7 @@ import (
 	"path"
 
 	"github.com/drud/bootstrap/cli/local"
-	"github.com/drud/bootstrap/cli/utils"
-	drudutils "github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +36,7 @@ var LegacySSHCmd = &cobra.Command{
 			log.Fatalln("No docker-compose yaml for this site. Try `drud legacy add`.")
 		}
 
-		err := drudutils.DockerCompose(
+		err := utils.DockerCompose(
 			"-f", path.Join(app.AbsPath(), "docker-compose.yaml"),
 			"exec",
 			nameContainer,

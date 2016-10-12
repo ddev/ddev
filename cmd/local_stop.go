@@ -4,7 +4,7 @@ import (
 	"log"
 	"path"
 
-	drudutils "github.com/drud/drud-go/utils"
+	utils "github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +23,7 @@ var localStopCmd = &cobra.Command{
 		}
 
 		basePath := path.Join(homedir, ".drud", appClient, args[0], args[1])
-		err := drudutils.DockerCompose(
+		err := utils.DockerCompose(
 			"-f", path.Join(basePath, "docker-compose.yaml"),
 			"stop",
 		)
