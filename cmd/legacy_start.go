@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/drud/bootstrap/cli/local"
@@ -37,6 +38,18 @@ var LegacyStartCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
+
+		fmt.Println("Waiting for site readiness. This may take a couple minutes...")
+		siteURL, err := app.Wait()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		fmt.Println("Successfully started", activeApp, activeDeploy)
+		if siteURL != "" {
+			fmt.Println("Your application can be reached at:", siteURL)
+		}
+
 	},
 }
 
