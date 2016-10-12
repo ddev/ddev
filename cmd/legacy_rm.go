@@ -1,11 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
-	"path"
 
 	"github.com/drud/bootstrap/cli/local"
-	utils "github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +15,7 @@ var LegacyRMCmd = &cobra.Command{
 	Long:  `Remove will delete the local service containers from this machine..`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if activeApp == "" {
-			log.Fatalln("Must set app flag to dentoe which app you want to work with.")
+			log.Fatalln("Must set app flag to denote which app you want to work with.")
 		}
 
 		app := local.LegacyApp{
@@ -24,18 +23,16 @@ var LegacyRMCmd = &cobra.Command{
 			Environment: activeDeploy,
 		}
 
-		err := utils.DockerCompose(
-			"-f", path.Join(app.AbsPath(), "docker-compose.yaml"),
-			"down",
-		)
+		err := app.Down()
+
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatalf("Could not remove site: %s", err)
 		}
 
+		fmt.Printf("Successfully removed the %s deploy for the %s application.\n", activeDeploy, activeApp)
 	},
 }
 
 func init() {
 	LegacyCmd.AddCommand(LegacyRMCmd)
-
 }

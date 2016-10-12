@@ -3,17 +3,20 @@ package local
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"text/template"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/fsouza/go-dockerclient"
 
 	"github.com/drud/bootstrap/cli/cms/config"
 	"github.com/drud/bootstrap/cli/cms/model"
@@ -177,7 +180,7 @@ func (l *LegacyApp) GetResources() error {
 		return err
 	}
 
-	fmt.Println("Downloaded file", file.Name(), numBytes, "bytes")
+	log.Println("Downloaded file", file.Name(), numBytes, "bytes")
 	l.Archive = file.Name()
 
 	return nil
@@ -334,5 +337,47 @@ func (l *LegacyApp) Config() error {
 			log.Fatalln(err)
 		}
 	}
+	return nil
+}
+
+// Down stops the docker containers for the legacy project.
+func (l *LegacyApp) Down() error {
+	err := utils.DockerCompose(
+		"-f", path.Join(l.AbsPath(), "docker-compose.yaml"),
+		"down",
+	)
+	if err != nil {
+		return l.Cleanup()
+	}
+
+	return nil
+
+}
+
+// Cleanup will clean up legacy apps even if the composer file has been deleted.
+func (l *LegacyApp) Cleanup() error {
+	client, _ := GetDockerClient()
+	containers, err := client.ListContainers(docker.ListContainersOptions{All: false})
+
+	if err != nil {
+		return err
+	}
+
+	needle := fmt.Sprintf("legacy-%s-%s", l.Name, l.Environment)
+	for _, c := range containers {
+		if strings.Contains(c.Names[0], needle) {
+			actions := []string{"stop", "rm"}
+
+			for _, action := range actions {
+				args := []string{action, c.ID}
+				_, err := utils.RunCommand("docker", args)
+
+				if err != nil {
+					return fmt.Errorf("Could nnot %s container %s: %s", action, c.Names[0], err)
+				}
+			}
+		}
+	}
+
 	return nil
 }

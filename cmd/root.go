@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -10,6 +9,7 @@ import (
 
 	drudfiles "github.com/drud/drud-go/files"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/drud/drud-go/drudapi"
 	"github.com/drud/drud-go/secrets"
@@ -52,6 +52,7 @@ var (
 	forceDelete        bool
 	vaultToken         string
 	vault              api.Logical // part of the vault go api
+	logLevel           = log.WarnLevel
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -169,6 +170,13 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+
+	drudDebug := os.Getenv("DRUD_DEBUG")
+	if drudDebug != "" {
+		logLevel = log.InfoLevel
+	}
+
+	log.SetLevel(logLevel)
 }
 
 // initConfig reads in config file and ENV variables if set.
