@@ -2,11 +2,12 @@ package local
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"strings"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/drud/drud-go/utils"
 	"github.com/drud/drud-go/utils/try"
@@ -93,7 +94,7 @@ func CloneSource(app App) error {
 			return fmt.Errorf("%s - %s", err.Error(), string(out))
 		}
 
-		log.Println("Local copy of site exists...updating")
+		fmt.Print("Local copy of site exists, updating... ")
 
 		out, err = utils.RunCommand("git", []string{
 			"-C", basePath,
@@ -102,10 +103,12 @@ func CloneSource(app App) error {
 		if err != nil {
 			return fmt.Errorf("%s - %s", err.Error(), string(out))
 		}
+
+		fmt.Printf("Updated to latest in %s branch\n", details.Branch)
 	}
 
 	if len(out) > 0 {
-		fmt.Println(string(out))
+		log.Info(string(out))
 	}
 
 	return nil

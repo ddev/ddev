@@ -51,7 +51,7 @@ var LegacyAddCmd = &cobra.Command{
 		go func() {
 			defer wg.Done()
 
-			log.Println("Creating docker-compose config.")
+			fmt.Println("Creating docker-compose config.")
 			err := local.WriteLocalAppYAML(app)
 			if err != nil {
 				log.Fatalln(err)
@@ -61,7 +61,7 @@ var LegacyAddCmd = &cobra.Command{
 		go func() {
 			defer wg.Done()
 
-			log.Println("Getting source code.")
+			fmt.Println("Getting source code.")
 			err := local.CloneSource(app)
 			if err != nil {
 				log.Fatalln(err)
@@ -71,7 +71,7 @@ var LegacyAddCmd = &cobra.Command{
 		go func() {
 			defer wg.Done()
 
-			log.Println("Getting Resources.")
+			fmt.Println("Getting Resources.")
 			err := app.GetResources()
 			if err != nil {
 				log.Fatalln(err)

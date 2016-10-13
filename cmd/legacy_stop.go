@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"log"
 	"path"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/drud/bootstrap/cli/local"
 	utils "github.com/drud/drud-go/utils"
@@ -31,6 +32,8 @@ var LegacyStopCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
+
+		log.Println("Application has been stopped.")
 	},
 }
 

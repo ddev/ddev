@@ -76,7 +76,7 @@ func (l LegacyApp) AbsPath() string {
 	return path.Join(homedir, ".drud", l.RelPath())
 }
 
-// Name returns the  name for legacy app
+// GetName returns the  name for legacy app
 func (l LegacyApp) GetName() string {
 	return l.Name
 }
@@ -235,11 +235,9 @@ func (l LegacyApp) UnpackResources() error {
 // Start initiates docker-compose up
 func (l LegacyApp) Start() error {
 	basePath := l.AbsPath()
+	cmdArgs := []string{"-f", path.Join(basePath, "docker-compose.yaml"), "pull"}
+	_, err := utils.RunCommand("docker-compose", cmdArgs)
 
-	err := utils.DockerCompose(
-		"-f", path.Join(basePath, "docker-compose.yaml"),
-		"pull",
-	)
 	if err != nil {
 		return err
 	}

@@ -79,7 +79,7 @@ func TestLegacyAddWP(t *testing.T) {
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
-	assert.Contains(string(out), "WordPress site")
+	assert.Contains(string(out), "Your application can be reached at")
 
 	app := local.LegacyApp{
 		Name:        LegacyTestApp,

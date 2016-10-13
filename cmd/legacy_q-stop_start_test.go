@@ -30,7 +30,7 @@ func TestLegacyStart(t *testing.T) {
 	format := fmt.Sprintf
 	assert.Contains(string(out), format("Starting legacy-%s-%s-web", LegacyTestApp, LegacyTestEnv))
 	assert.Contains(string(out), format("Starting legacy-%s-%s-db", LegacyTestApp, LegacyTestEnv))
-	assert.Contains(string(out), "WordPress site")
+	assert.Contains(string(out), "Your application can be reached at")
 
 	app := local.LegacyApp{
 		Name:        LegacyTestApp,
