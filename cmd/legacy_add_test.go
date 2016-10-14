@@ -74,7 +74,7 @@ func TestLegacyAddScaffoldWP(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv, "-s", "-t", "wp"}
+	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv, "-s"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
@@ -93,7 +93,7 @@ func TestLegacyAddWP(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv, "-t", "wp"}
+	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")

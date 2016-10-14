@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var appType string
 var scaffold bool
 
 // LegacyAddCmd represents the add command
@@ -24,16 +23,15 @@ var LegacyAddCmd = &cobra.Command{
 		var err error
 
 		// limit logical processors to 3
-		runtime.GOMAXPROCS(3)
+		runtime.GOMAXPROCS(2)
 		// set up wait group
 
 		var wg sync.WaitGroup
-		wg.Add(3)
+		wg.Add(2)
 
 		app := local.LegacyApp{
 			Name:        activeApp,
 			Environment: activeDeploy,
-			AppType:     appType,
 			Template:    local.LegacyComposeTemplate,
 		}
 
@@ -44,17 +42,8 @@ var LegacyAddCmd = &cobra.Command{
 		go func() {
 			defer wg.Done()
 
-			fmt.Println("Creating docker-compose config.")
-			err := local.WriteLocalAppYAML(app)
-			if err != nil {
-				log.Fatalln(err)
-			}
-		}()
-
-		go func() {
-			defer wg.Done()
-
 			fmt.Println("Getting source code.")
+
 			err := local.CloneSource(app)
 			if err != nil {
 				log.Fatalln(err)
@@ -74,6 +63,17 @@ var LegacyAddCmd = &cobra.Command{
 		wg.Wait()
 
 		err = app.UnpackResources()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		err = app.SetType()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.Println("Creating docker-compose config.")
+		err = local.WriteLocalAppYAML(app)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -106,7 +106,6 @@ var LegacyAddCmd = &cobra.Command{
 }
 
 func init() {
-	LegacyAddCmd.Flags().StringVarP(&appType, "type", "t", "drupal", "Type of application ('drupal' or 'wp')")
 	LegacyAddCmd.Flags().BoolVarP(&scaffold, "scaffold", "s", false, "Add the app but don't run or config it.")
 	LegacyCmd.AddCommand(LegacyAddCmd)
 }

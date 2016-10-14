@@ -1,12 +1,9 @@
 package cmd
 
 import (
-	"path"
-
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/drud/bootstrap/cli/local"
-	utils "github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -21,10 +18,7 @@ var LegacyStopCmd = &cobra.Command{
 			Environment: activeDeploy,
 		}
 
-		err := utils.DockerCompose(
-			"-f", path.Join(app.AbsPath(), "docker-compose.yaml"),
-			"stop",
-		)
+		err := app.Stop()
 		if err != nil {
 			log.Fatalln(err)
 		}

@@ -249,6 +249,24 @@ func (l LegacyApp) Start() error {
 	)
 }
 
+// Stop initiates docker-compose stop
+func (l LegacyApp) Stop() error {
+	return utils.DockerCompose(
+		"-f", path.Join(l.AbsPath(), "docker-compose.yaml"),
+		"stop",
+	)
+}
+
+// SetType determines the app type and sets it
+func (l *LegacyApp) SetType() error {
+	appType, err := DetermineAppType(l.AbsPath())
+	if err != nil {
+		return err
+	}
+	l.AppType = appType
+	return nil
+}
+
 // Wait ensures that the app appears to be read before returning
 func (l *LegacyApp) Wait() (string, error) {
 	siteURL := fmt.Sprintf("http://localhost:%d", l.WebPublicPort)
@@ -264,6 +282,13 @@ func (l *LegacyApp) Wait() (string, error) {
 // as well as other sensitive data like salts.
 func (l *LegacyApp) Config() error {
 	basePath := l.AbsPath()
+
+	if l.AppType == "" {
+		err := l.SetType()
+		if err != nil {
+			return err
+		}
+	}
 
 	dbag, err := GetDatabag(l.Name)
 	if err != nil {

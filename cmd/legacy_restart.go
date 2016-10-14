@@ -8,18 +8,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// LegacyStartCmd represents the stop command
-var LegacyStartCmd = &cobra.Command{
-	Use:   "start [app_name] [environment_name]",
-	Short: "Start an application's local services.",
-	Long:  `Start will turn on the local containers that were previously stopped for an app.`,
+// LegacyReconfigCmd rebuilds an apps settings
+var LegacyReconfigCmd = &cobra.Command{
+	Use:   "restart",
+	Short: "Stop and Start the app.",
+	Long:  `Restart is useful for when the port of your local app has changed due to a system reboot or some other failure.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if activeApp == "" {
+			log.Fatalln("Must set app flag to dentoe which app you want to work with.")
+		}
+
 		app := local.LegacyApp{
 			Name:        activeApp,
 			Environment: activeDeploy,
 		}
 
-		err := app.Start()
+		err := app.Stop()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		err = app.Start()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -35,16 +44,15 @@ var LegacyStartCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		fmt.Println("Successfully started", activeApp, activeDeploy)
+		fmt.Println("Successfully restarted", activeApp, activeDeploy)
 		if siteURL != "" {
 			fmt.Println("Your application can be reached at:", siteURL)
 		}
-
 	},
 }
 
 func init() {
 
-	LegacyCmd.AddCommand(LegacyStartCmd)
+	LegacyCmd.AddCommand(LegacyReconfigCmd)
 
 }

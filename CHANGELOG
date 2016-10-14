@@ -6,6 +6,9 @@ Development
 -----------
 - Removed all instances of --app_name and --deploy_name flags from `drud legacy` commands with arguments, for consistency.
 - Added `drud config unset` command for unsetting config items.
+- Added `drud legacy restart` command.
+- Remove -t flag for `drud legacy add` in favor of dynamically determining app type.
+
 
 Version 0.2.2-rc2
 -----------
@@ -18,6 +21,7 @@ Version 0.2.2-rc2
 - Stop containers if still running when `local rm` is executed.
 - Don't require auth for commands like `drud version` and `drud config set`.
 - Added `drud legacy logs` command to grant quick access to site container logs.
+
 
 Version 0.2.1 - Sept 1st 2016
 -------------
