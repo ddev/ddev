@@ -31,6 +31,8 @@ func checkRequiredFolders(app local.App) bool {
 // TestLegacyAddBadArgs tests whether the command reacts properly to badly formatted or missing args
 func TestLegacyAddBadArgs(t *testing.T) {
 	assert := assert.New(t)
+	err := setActiveApp("", "")
+	assert.NoError(err)
 
 	// test that you get an error when you run with no args
 	args := []string{"legacy", "add"}
@@ -49,6 +51,22 @@ func TestLegacyAddBadArgs(t *testing.T) {
 	out, err = utils.RunCommand(DrudBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "No legacy site by that name")
+
+	err = setActiveApp(utils.RandomString(10), utils.RandomString(10))
+	assert.NoError(err)
+	args = []string{"legacy", "add"}
+	out, err = utils.RunCommand(DrudBin, args)
+	assert.Error(err)
+	assert.Contains(string(out), "Bad environment name")
+
+	err = setActiveApp(utils.RandomString(10), LegacyTestEnv)
+	assert.NoError(err)
+	out, err = utils.RunCommand(DrudBin, args)
+	assert.Error(err)
+	assert.Contains(string(out), "No legacy site by that name")
+
+	err = setActiveApp("", "")
+	assert.NoError(err)
 }
 
 // TestLegacyAddScaffoldWP uses the scaffold flag to test that everything needed to run a site locally is created correctly

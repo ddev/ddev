@@ -13,20 +13,16 @@ import (
 
 // LegacyExecCmd allows users to execute arbitrary bash commands within a container.
 var LegacyExecCmd = &cobra.Command{
-	Use:   "exec '[cmd]'",
+	Use:   "exec [app_name] [environment_name] '[cmd]'",
 	Short: "run a command in an app container.",
 	Long:  `Execs into container and runs bash commands.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		if activeApp == "" {
-			log.Fatalln("Must set app flag to dentoe which app you want to work with.")
-		}
-
-		if len(args) < 1 {
-			log.Fatalln("Must pass a command as first argument.")
-		}
-
+		// The command string will be the first argument if using a stored
+		// appConfig, or the third if passing in app/deploy names.
 		cmdString := args[0]
+		if len(args) > 2 {
+			cmdString = args[2]
+		}
 
 		app := local.LegacyApp{
 			Name:        activeApp,
@@ -62,11 +58,20 @@ var LegacyExecCmd = &cobra.Command{
 		}
 
 	},
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if len(args) == 1 {
+			return
+		}
+
+		if len(args) == 3 {
+			return
+		}
+
+		log.Fatal("Invalid arguments detected. Please use a command in the form of: exec [app_name] [environment_name] '[cmd]'")
+	},
 }
 
 func init() {
-
 	LegacyExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Which service to send the command to. [web, db]")
 	LegacyCmd.AddCommand(LegacyExecCmd)
-
 }

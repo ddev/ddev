@@ -48,7 +48,7 @@ var setCmd = &cobra.Command{
 
 		cfg.Dev = developerMode
 
-		err := WriteConfig(cfg, drudconf)
+		err := cfg.WriteConfig(drudconf)
 		if err != nil {
 			log.Fatal(err)
 		}

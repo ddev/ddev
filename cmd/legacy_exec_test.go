@@ -3,27 +3,46 @@ package cmd
 import (
 	"testing"
 
-	utils "github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 // TestLegacyExecBadArgs run `drud legacy exec` without the proper args
 func TestLegacyExecBadArgs(t *testing.T) {
-	args := []string{"legacy", "exec", "-a", LegacyTestApp, "-e", LegacyTestEnv}
+
+	assert := assert.New(t)
+	args := []string{"legacy", "exec", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
-	assert.Error(t, err)
-	assert.Contains(t, string(out), "Must pass a command as first argument.")
+	assert.Error(err)
+	assert.Contains(string(out), "Invalid arguments detected.")
 
 	args = []string{"legacy", "exec", "pwd"}
 	out, err = utils.RunCommand(DrudBin, args)
-	assert.Error(t, err)
-	assert.Contains(t, string(out), "Must set app flag to dentoe which app you want to work with")
+	assert.Error(err)
+	assert.Contains(string(out), "app_name and deploy_name are expected as arguments")
+
+	// Try with an invalid number of args
+	args = []string{"legacy", "exec", LegacyTestApp, "pwd"}
+	out, err = utils.RunCommand(DrudBin, args)
+	assert.Error(err)
+	assert.Contains(string(out), "Bad environment name")
 }
 
 // TestLegacyExec run `drud legacy exec pwd` with proper args
 func TestLegacyExec(t *testing.T) {
-	args := []string{"legacy", "exec", "-a", LegacyTestApp, "-e", LegacyTestEnv, "pwd"}
+
+	// Run an exec by passing in TestApp + TestEnv
+	assert := assert.New(t)
+	args := []string{"legacy", "exec", LegacyTestApp, LegacyTestEnv, "pwd"}
 	out, err := utils.RunCommand(DrudBin, args)
-	assert.NoError(t, err)
-	assert.Contains(t, string(out), "/var/www/html/docroot")
+	assert.NoError(err)
+	assert.Contains(string(out), "/var/www/html/docroot")
+
+	// Try again with active app set.
+	err = setActiveApp(LegacyTestApp, LegacyTestEnv)
+	assert.NoError(err)
+	args = []string{"legacy", "exec", LegacyTestApp, LegacyTestEnv, "pwd"}
+	out, err = utils.RunCommand(DrudBin, args)
+	assert.NoError(err)
+	assert.Contains(string(out), "/var/www/html/docroot")
 }

@@ -10,14 +10,10 @@ import (
 
 // LegacyRMCmd represents the stop command
 var LegacyRMCmd = &cobra.Command{
-	Use:   "rm",
+	Use:   "rm [app_name] [environment_name]",
 	Short: "Remove an application's local services.",
 	Long:  `Remove will delete the local service containers from this machine..`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if activeApp == "" {
-			log.Fatalln("Must set app flag to denote which app you want to work with.")
-		}
-
 		app := local.LegacyApp{
 			Name:        activeApp,
 			Environment: activeDeploy,

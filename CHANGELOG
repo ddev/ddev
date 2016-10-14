@@ -1,7 +1,13 @@
 Changelog
 =========
 
+
 Development
+-----------
+- Removed all instances of --app_name and --deploy_name flags from `drud legacy` commands with arguments, for consistency.
+- Added `drud config unset` command for unsetting config items.
+
+Version 0.2.2-rc2
 -----------
 
 - Allow drush commands to be ran from the host on drupal sites.

@@ -12,14 +12,10 @@ import (
 
 // LegacyStopCmd represents the stop command
 var LegacyStopCmd = &cobra.Command{
-	Use:   "stop",
+	Use:   "stop [app_name] [environment_name]",
 	Short: "Stop an application's local services.",
 	Long:  `Stop will turn off the local containers and not remove them.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if activeApp == "" {
-			log.Fatalln("Must set app flag to dentoe which app you want to work with.")
-		}
-
 		app := local.LegacyApp{
 			Name:        activeApp,
 			Environment: activeDeploy,

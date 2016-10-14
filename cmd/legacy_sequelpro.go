@@ -15,14 +15,10 @@ import (
 
 // LegacySequelproCmd represents the sequelpro command
 var LegacySequelproCmd = &cobra.Command{
-	Use:   "sequelpro",
+	Use:   "sequelpro [app_name] [environment_name]",
 	Short: "Easily connect local site to sequelpro",
 	Long:  `A helper command for easily using sequelpro with a drud app that has been initialized locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if activeApp == "" {
-			log.Fatalln("Must set app flag to dentoe which app you want to work with.")
-		}
-
 		app := local.LegacyApp{
 			Name:        activeApp,
 			Environment: activeDeploy,

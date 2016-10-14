@@ -21,9 +21,9 @@ var LegacyListCmd = &cobra.Command{
 
 		local.RenderContainerList(containers)
 	},
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {},
 }
 
 func init() {
 	LegacyCmd.AddCommand(LegacyListCmd)
-
 }

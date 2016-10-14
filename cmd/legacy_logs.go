@@ -18,15 +18,13 @@ var (
 
 // LegacyLogsCmd ...
 var LegacyLogsCmd = &cobra.Command{
-	Use:   "logs",
+	Use:   "logs [app_name] [environment_name]",
 	Short: "Get the logs from your running services.",
 	Long:  `Uses 'docker logs' to display stdout from the running services.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		if activeApp == "" {
-			log.Fatalln("Must set app flag to dentoe which app you want to work with.")
-		}
-
+		fmt.Println(activeApp)
+		fmt.Println(activeDeploy)
+		fmt.Println("Wtf")
 		app := local.LegacyApp{
 			Name:        activeApp,
 			Environment: activeDeploy,

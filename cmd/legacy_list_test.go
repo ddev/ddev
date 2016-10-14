@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	utils "github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils"
 	"github.com/stretchr/testify/assert"
 )
 

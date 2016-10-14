@@ -32,7 +32,7 @@ var SequelproCmd = &cobra.Command{
 		}
 
 		al := &drudapi.ApplicationList{}
-		drudclient.Query = fmt.Sprintf(`where={"name":"%s","client":"%s"}`, args[0], appClient)
+		drudclient.Query = fmt.Sprintf(`where={"name":"%s","client":"%s"}`, activeApp, appClient)
 
 		err := drudclient.Get(al)
 		if err != nil {
@@ -44,7 +44,7 @@ var SequelproCmd = &cobra.Command{
 		}
 
 		app := al.Items[0]
-		nameContainer := fmt.Sprintf("/%s-%s-db", app.AppID, args[1])
+		nameContainer := fmt.Sprintf("/%s-%s-db", app.AppID, activeDeploy)
 
 		dclient, err := utils.GetDockerClient()
 		if err != nil {

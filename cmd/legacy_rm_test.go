@@ -10,7 +10,7 @@ import (
 
 // TestLegacyRm runs `drud legacy rm` on the test apps
 func TestLegacyRm(t *testing.T) {
-	args := []string{"legacy", "rm", "-a", LegacyTestApp}
+	args := []string{"legacy", "rm", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
 	format := fmt.Sprintf

@@ -15,18 +15,11 @@ var scaffold bool
 
 // LegacyAddCmd represents the add command
 var LegacyAddCmd = &cobra.Command{
-	Use:   "add [app_name] [deploy_name]",
+	Use:   "add [app_name] [environment_name]",
 	Short: "Add an existing application to your local development environment",
 	Long: `Add an existing application to your local dev environment.  This involves
 	downloading of containers, media, and databases.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 2 {
-			log.Fatalln("app_name and deploy_name are expected as arguments.")
-		}
-
-		if posString([]string{"default", "staging", "production"}, args[1]) == -1 {
-			log.Fatalln("Bad environment name.")
-		}
 
 		var err error
 
@@ -38,8 +31,8 @@ var LegacyAddCmd = &cobra.Command{
 		wg.Add(3)
 
 		app := local.LegacyApp{
-			Name:        args[0],
-			Environment: args[1],
+			Name:        activeApp,
+			Environment: activeDeploy,
 			AppType:     appType,
 			Template:    local.LegacyComposeTemplate,
 		}
@@ -104,7 +97,7 @@ var LegacyAddCmd = &cobra.Command{
 			}
 		}
 
-		fmt.Println("Successfully added", args[0], args[1])
+		fmt.Println("Successfully added", activeApp, activeDeploy)
 		if siteURL != "" {
 			fmt.Println("Your application can be reached at:", siteURL)
 		}

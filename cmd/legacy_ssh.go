@@ -12,15 +12,10 @@ import (
 
 // LegacySSHCmd represents the ssh command.
 var LegacySSHCmd = &cobra.Command{
-	Use:   "ssh",
+	Use:   "ssh [app_name] [environment_name]",
 	Short: "SSH to an app container.",
 	Long:  `Connects user to the running container.`,
 	Run: func(cmd *cobra.Command, args []string) {
-
-		if activeApp == "" {
-			log.Fatalln("Must set app flag to dentoe which app you want to work with.")
-		}
-
 		app := local.LegacyApp{
 			Name:        activeApp,
 			Environment: activeDeploy,

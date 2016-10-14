@@ -11,20 +11,19 @@ import (
 
 // TestLegacyStop runs drud legacy stop on the test apps
 func TestLegacyStop(t *testing.T) {
-	args := []string{"legacy", "stop", "-a", LegacyTestApp}
+	args := []string{"legacy", "stop", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
 	format := fmt.Sprintf
 	assert.Contains(t, string(out), format("Stopping legacy-%s-%s-web ... done", LegacyTestApp, LegacyTestEnv))
 	assert.Contains(t, string(out), format("Stopping legacy-%s-%s-db ... done", LegacyTestApp, LegacyTestEnv))
-
 }
 
 // TestLegacyStart runs drud legacy start on the test apps
 func TestLegacyStart(t *testing.T) {
 	assert := assert.New(t)
 
-	args := []string{"legacy", "start", "-a", LegacyTestApp}
+	args := []string{"legacy", "start", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	format := fmt.Sprintf
