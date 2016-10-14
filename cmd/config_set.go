@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"os"
+	"log"
 	"path"
 
 	"github.com/spf13/cobra"
@@ -17,7 +17,7 @@ var setCmd = &cobra.Command{
 	Short: "Set configuration values for DRUD.",
 	Long:  `Set configuration values for DRUD.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
+
 		if repoDir == "" {
 			repoDir = path.Join(homedir, "Desktop")
 		}
@@ -25,27 +25,32 @@ var setCmd = &cobra.Command{
 		if protocol != "" {
 			cfg.Protocol = protocol
 		}
+
 		if drudHost != "" {
 			cfg.DrudHost = drudHost
 		}
+
 		if version != "" {
 			cfg.Version = version
 		}
+
 		if client != "" {
 			cfg.Client = client
 		}
+
 		if activeApp != "" {
 			cfg.ActiveApp = activeApp
 		}
+
 		if activeDeploy != "" {
 			cfg.ActiveDeploy = activeDeploy
 		}
+
 		cfg.Dev = developerMode
 
 		err := WriteConfig(cfg, drudconf)
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			log.Fatal(err)
 		}
 		fmt.Println("Config items set.")
 	},

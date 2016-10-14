@@ -53,6 +53,7 @@ var (
 	vaultToken         string
 	vault              api.Logical // part of the vault go api
 	logLevel           = log.WarnLevel
+	tokenLocation      = ""
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -68,34 +69,16 @@ var RootCmd = &cobra.Command{
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	cfgFile = ParseConfigFlag()
 
 	//RootCmd.RemoveCommand(SecretCmd)
 	SetHomedir()
-	tokenLocation := filepath.Join(homedir, tokenFile)
+	tokenLocation = filepath.Join(homedir, tokenFile)
 	if len(os.Args) == 2 && RequiresAuth(os.Args[1]) {
 		if _, err := os.Stat(tokenLocation); os.IsNotExist(err) {
 			RootCmd.Help()
 			os.Exit(0)
 		}
-	}
-
-	SetConf()
-	// create a blank drud config if one does not exist
-	if _, err := os.Stat(drudconf); os.IsNotExist(err) {
-		f, ferr := os.Create(drudconf)
-		if ferr != nil {
-			log.Fatal(ferr)
-		}
-		defer f.Close()
-		//default drud.yaml contents
-		f.WriteString(`Client: 1fee
-Dev: false
-DrudHost: drudapi.genesis.drud.io
-Protocol: https
-VaultHost: https://sanctuary.drud.io:8200
-Version: v0.1
-`)
-
 	}
 
 	// prepopulate tokenfile so i dont have to check for its existence everywhere
@@ -108,6 +91,11 @@ Version: v0.1
 		//default drud.yaml contents
 		f.WriteString("placeholder")
 	}
+
+	gitToken = os.Getenv("GITHUB_TOKEN")
+
+	// sets up config path and defaults
+	PrepConf()
 
 	// bind flags to viper config values...allows override by flag
 	//viper.BindPFlag("vault_host", RootCmd.PersistentFlags().Lookup("vault_host"))
@@ -125,8 +113,6 @@ Version: v0.1
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	gitToken = os.Getenv("GITHUB_TOKEN")
 
 	// load the vault token from disk and use it to get policy information
 	// if permission is denied send the user through `drud auth github` and then try again
@@ -162,9 +148,9 @@ func init() {
 	// Cobra supports Persistent Flags, which, if defined here,
 	// will be global for your application.
 
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/drud.yaml)")
 	RootCmd.PersistentFlags().StringVar(&vaultAddress, "vault_address", "https://sanctuary.drud.io:8200", "Vault Address")
 	RootCmd.PersistentFlags().BoolVarP(&isDev, "dev", "", false, "Enable Dev mode")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/drud.yaml)")
 
 	RootCmd.PersistentFlags().StringVar(&workdir, "workdir", "", "directory other than cwd we are running from")
 	// Cobra also supports local flags, which will only run

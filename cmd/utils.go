@@ -83,8 +83,9 @@ func SetHomedir() {
 	}
 }
 
-// SetConf sets global drudconf with abs path to conf file
-func SetConf() {
+// PrepConf sets global drudconf with abs path to conf file
+// and then creates a default config file if one does not exist
+func PrepConf() {
 	// figure out where the config is for reals
 	var err error
 	if cfgFile == "" {
@@ -98,6 +99,24 @@ func SetConf() {
 				log.Fatal(err)
 			}
 		}
+	}
+
+	// create a blank drud config if one does not exist
+	if _, err := os.Stat(drudconf); os.IsNotExist(err) {
+		f, ferr := os.Create(drudconf)
+		if ferr != nil {
+			log.Fatal(ferr)
+		}
+		defer f.Close()
+		//default drud.yaml contents
+		f.WriteString(`Client: 1fee
+Dev: false
+DrudHost: drudapi.genesis.drud.io
+Protocol: https
+VaultHost: https://sanctuary.drud.io:8200
+Version: v0.1
+`)
+
 	}
 }
 
@@ -125,6 +144,7 @@ func EnableAvailablePackages() error {
 			filesAccess = true
 		}
 	}
+
 	if drudAccess {
 		RootCmd.AddCommand(HostingCmd)
 		RootCmd.AddCommand(LocalCmd)
@@ -222,4 +242,19 @@ func getMAC() (string, error) {
 		return macADDR, fmt.Errorf("No MAC Addr found!")
 	}
 	return macADDR, nil
+}
+
+// ParseConfigFlag is needed in order to get teh value of the flag before cobra can
+func ParseConfigFlag() string {
+	value := ""
+
+	for i, arg := range os.Args {
+		if strings.HasPrefix(arg, "--config=") {
+			value = strings.TrimPrefix(arg, "--config=")
+		} else if arg == "--config" {
+			value = os.Args[i+1]
+		}
+	}
+
+	return value
 }
