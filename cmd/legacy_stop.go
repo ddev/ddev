@@ -4,6 +4,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/drud/bootstrap/cli/local"
+
 	"github.com/spf13/cobra"
 )
 

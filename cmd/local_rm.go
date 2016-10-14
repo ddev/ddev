@@ -4,7 +4,7 @@ import (
 	"log"
 	"path"
 
-	utils "github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 

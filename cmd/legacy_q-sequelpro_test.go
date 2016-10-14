@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/drud/bootstrap/cli/local"
-	utils "github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils"
 	"github.com/stretchr/testify/assert"
 )
 
