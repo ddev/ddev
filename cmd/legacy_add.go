@@ -39,6 +39,11 @@ var LegacyAddCmd = &cobra.Command{
 			log.Fatalln("No legacy site by that name.")
 		}
 
+		err = PrepLocalSiteDirs(app.AbsPath())
+		if err != nil {
+			log.Fatalln(err)
+		}
+
 		go func() {
 			defer wg.Done()
 

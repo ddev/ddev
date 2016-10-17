@@ -48,10 +48,6 @@ func WriteLocalAppYAML(app App) error {
 	}
 
 	basePath := path.Join(homedir, ".drud", app.RelPath())
-	err = PrepLocalSiteDirs(basePath)
-	if err != nil {
-		log.Fatalln(err)
-	}
 
 	f, err := os.Create(path.Join(basePath, "docker-compose.yaml"))
 	if err != nil {
@@ -237,8 +233,8 @@ func RenderContainerList(containers []docker.APIContainers) error {
 // is of any of the known types
 func DetermineAppType(basePath string) (string, error) {
 	defaultLocations := map[string]string{
-		"docroot/sites/default/settings.php": "drupal",
-		"docroot/wp-config.php":              "wp",
+		"docroot/scripts/drupal.sh": "drupal",
+		"docroot/wp":                "wp",
 	}
 
 	for k, v := range defaultLocations {
