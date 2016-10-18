@@ -8,6 +8,7 @@ Development
 - Added `drud config unset` command for unsetting config items.
 - Added `drud legacy restart` command.
 - Remove -t flag for `drud legacy add` in favor of dynamically determining app type.
+- Added `drud legacy workon` command to interactively set the active app.
 
 
 Version 0.2.2-rc2

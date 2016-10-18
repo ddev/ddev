@@ -9,7 +9,6 @@ import (
 
 // TestLegacyExecBadArgs run `drud legacy exec` without the proper args
 func TestLegacyExecBadArgs(t *testing.T) {
-
 	assert := assert.New(t)
 	args := []string{"legacy", "exec", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
@@ -33,6 +32,7 @@ func TestLegacyExec(t *testing.T) {
 
 	// Run an exec by passing in TestApp + TestEnv
 	assert := assert.New(t)
+
 	args := []string{"legacy", "exec", LegacyTestApp, LegacyTestEnv, "pwd"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
