@@ -19,7 +19,7 @@ var LegacyListCmd = &cobra.Command{
 		containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
 		containers = local.FilterNonLegacy(containers)
 
-		local.RenderContainerList(containers)
+		local.SiteList(containers)
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {},
 }

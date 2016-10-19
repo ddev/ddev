@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/gosuri/uitable"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -24,6 +25,10 @@ import (
 	"github.com/drud/drud-go/utils"
 )
 
+const (
+	containerRunning = "running"
+)
+
 // LegacyApp implements the LocalApp interface for Legacy Newmedia apps
 type LegacyApp struct {
 	Name          string
@@ -35,6 +40,7 @@ type LegacyApp struct {
 	Archive       string //absolute path to the downloaded archive
 	WebPublicPort int64
 	DbPublicPort  int64
+	Status        string
 }
 
 // RenderComposeYAML returns teh contents of a docker compose config for this app
@@ -278,6 +284,46 @@ func (l *LegacyApp) Wait() (string, error) {
 	return siteURL, nil
 }
 
+func (l *LegacyApp) AddRow(t *uitable.Table) error {
+	err := l.SetType()
+	if err != nil {
+		l.AppType = "error"
+	}
+
+	if l.Status == containerRunning {
+		t.AddRow(
+			l.Name,
+			l.Environment,
+			l.AppType,
+			fmt.Sprintf("http://127.0.0.1:%d", l.WebPublicPort),
+			fmt.Sprintf("127.0.0.1:%d", l.DbPublicPort),
+			l.Status,
+		)
+	} else {
+		t.AddRow(
+			l.Name,
+			l.Environment,
+			l.AppType,
+			"",
+			"",
+			l.Status,
+		)
+	}
+
+	return nil
+}
+
+func (l *LegacyApp) FindPorts() error {
+	var err error
+	l.WebPublicPort, err = GetPodPort(l.ContainerName() + "-web")
+	if err != nil {
+		return err
+	}
+
+	l.DbPublicPort, err = GetPodPort(l.ContainerName() + "-db")
+	return err
+}
+
 // Config creates the apps config file adding thigns like database host, name, and password
 // as well as other sensitive data like salts.
 func (l *LegacyApp) Config() error {
@@ -300,12 +346,7 @@ func (l *LegacyApp) Config() error {
 		return err
 	}
 
-	l.WebPublicPort, err = GetPodPort(l.ContainerName() + "-web")
-	if err != nil {
-		return err
-	}
-
-	l.DbPublicPort, err = GetPodPort(l.ContainerName() + "-db")
+	err = l.FindPorts()
 	if err != nil {
 		return err
 	}

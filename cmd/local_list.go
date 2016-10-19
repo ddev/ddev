@@ -19,7 +19,7 @@ var listCmd = &cobra.Command{
 		containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
 		containers = local.FilterNonDrud(containers)
 
-		local.RenderContainerList(containers)
+		local.SiteList(containers)
 	},
 }
 

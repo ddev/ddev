@@ -40,6 +40,7 @@ var LegacyAddCmd = &cobra.Command{
 		}
 
 		err = PrepLocalSiteDirs(app.AbsPath())
+
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -77,7 +78,7 @@ var LegacyAddCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		log.Println("Creating docker-compose config.")
+		fmt.Println("Creating docker-compose config.")
 		err = local.WriteLocalAppYAML(app)
 		if err != nil {
 			log.Fatalln(err)

@@ -19,6 +19,16 @@ func TestLegacyStop(t *testing.T) {
 	assert.Contains(t, string(out), format("Stopping legacy-%s-%s-db ... done", LegacyTestApp, LegacyTestEnv))
 }
 
+func TestLegacyStoppedList(t *testing.T) {
+	args := []string{"legacy", "list"}
+	out, err := utils.RunCommand(DrudBin, args)
+	assert.NoError(t, err)
+	assert.Contains(t, string(out), "found")
+	assert.Contains(t, string(out), LegacyTestApp)
+	assert.Contains(t, string(out), LegacyTestEnv)
+	assert.Contains(t, string(out), "exited")
+}
+
 // TestLegacyStart runs drud legacy start on the test apps
 func TestLegacyStart(t *testing.T) {
 	assert := assert.New(t)

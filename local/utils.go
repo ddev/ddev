@@ -201,32 +201,92 @@ func FormatPlural(count int, single string, plural string) string {
 	return plural
 }
 
-func RenderContainerList(containers []docker.APIContainers) error {
-	fmt.Printf("%v %v found.\n", len(containers), FormatPlural(len(containers), "container", "containers"))
-
-	table := uitable.New()
-	table.MaxColWidth = 200
-	table.AddRow("NAME", "IMAGE", "STATUS", "MISC")
+// SiteList will prepare and render a list of drud sites running locally.
+func SiteList(containers []docker.APIContainers) error {
+	legacy, local := map[string]LegacyApp{}, map[string]LegacyApp{}
 
 	for _, container := range containers {
+		for _, containerName := range container.Names {
+			if strings.HasPrefix(containerName[1:], "legacy-") {
+				ProcessContainer(legacy, containerName[1:], container)
+				break
+			}
+			if strings.HasSuffix(containerName[1:], "-db") || strings.HasSuffix(containerName[1:], "-web") {
+				ProcessContainer(local, containerName[1:], container)
+				break
+			}
+		}
+	}
 
-		var miscField string
+	if len(legacy) > 0 {
+		RenderAppTable(legacy, "legacy")
+	}
+
+	if len(local) > 0 {
+		RenderAppTable(local, "local")
+	}
+
+	if len(local) == 0 && len(legacy) == 0 {
+		fmt.Println("No applications found.")
+	}
+
+	return nil
+}
+
+// RenderAppTable will format a table for user display based on a list of apps.
+func RenderAppTable(apps map[string]LegacyApp, name string) {
+	if len(apps) > 0 {
+		fmt.Printf("%v %s %v found.\n", len(apps), name, FormatPlural(len(apps), "site", "sites"))
+		table := uitable.New()
+		table.MaxColWidth = 200
+		table.AddRow("NAME", "ENVIRONMENT", "TYPE", "URL", "DATABASE URL", "STATUS")
+
+		for _, site := range apps {
+			site.AddRow(table)
+		}
+		fmt.Println(table)
+	}
+
+}
+
+// ProcessContainer will process a docker container for an app listing.
+// Since apps contain multiple containers, ProcessContainer will be called once per container.
+func ProcessContainer(l map[string]LegacyApp, containerName string, container docker.APIContainers) {
+	parts := strings.Split(containerName, "-")
+
+	if len(parts) == 4 {
+		appid := parts[1] + "-" + parts[2]
+
+		_, exists := l[appid]
+		if exists == false {
+			l[appid] = LegacyApp{
+				Name:        parts[1],
+				Environment: parts[2],
+				Status:      container.State,
+			}
+		}
+		app := l[appid]
+
+		var publicPort int64
 		for _, port := range container.Ports {
 			if port.PublicPort != 0 {
-				miscField = fmt.Sprintf("port: %d", port.PublicPort)
+				publicPort = port.PublicPort
 			}
 		}
 
-		table.AddRow(
-			strings.Join(container.Names, ", "),
-			container.Image,
-			fmt.Sprintf("%s - %s", container.State, container.Status),
-			miscField,
-		)
-	}
-	fmt.Println(table)
+		if parts[3] == "web" {
+			app.WebPublicPort = publicPort
+		}
 
-	return nil
+		if parts[3] == "db" {
+			app.DbPublicPort = publicPort
+		}
+
+		if container.State != "running" {
+			app.Status = container.State
+		}
+		l[appid] = app
+	}
 }
 
 // DetermineAppType uses some predetermined file checks to determine if a local app
