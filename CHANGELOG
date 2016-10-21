@@ -4,7 +4,7 @@ Changelog
 Development
 ------------
 - Added a local router. No longer will sites be available on a randomized port on the loopback IP (i.e. http://127.0.0.1:32690/), but now have their own hostnames, such as 'http://legacy-drudio-production/'
-
+- Changing file sync method to unison in order to get two-way syncing
 
 Version 0.2.2-rc3
 -----------
