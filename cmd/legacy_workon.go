@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/drud/bootstrap/cli/local"
 	"github.com/spf13/cobra"
 )
 
@@ -24,22 +25,29 @@ var LegacyWorkonCmd = &cobra.Command{
 		if activeApp == "" && activeDeploy == "" {
 			fmt.Println("Enter a number to choose which app to work on:")
 			files, _ = ioutil.ReadDir(path.Join(homedir, ".drud", "legacy"))
+			files = local.FilterNonLegacyFiles(files)
+
+			fmt.Printf("%d: %s\n", 0, "Cancel")
 			for i, f := range files {
-				if f.Name()[0:1] != "." && strings.Contains(f.Name(), "-") {
-					fmt.Printf("%d: %s\n", i, f.Name())
-				}
+				name := f.Name()
+				c := i + 1
+				fmt.Printf("%d: %s\n", c, name)
 			}
 
 			fmt.Scanf("%d", &answer)
-			if answer >= len(files) {
-				fmt.Println("You must choose a number listed above.")
-				log.Fatal("Number entered was not valid")
+			if answer == 0 {
+				os.Exit(0)
 			}
-
-			parts = strings.Split(files[answer].Name(), "-")
+			if answer >= len(files)+1 {
+				Failed("You must choose one of the numbers listed above.")
+			}
+			fmt.Println(answer - 1)
+			fmt.Println(files[answer-1].Name())
+			parts = strings.Split(files[answer-1].Name(), "-")
 		} else {
 			parts = []string{activeApp, activeDeploy}
 		}
+		fmt.Println(parts)
 		cfg.ActiveApp = parts[0]
 		cfg.ActiveDeploy = parts[1]
 
@@ -49,7 +57,7 @@ var LegacyWorkonCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		fmt.Println("You are now working on", files[answer].Name())
+		fmt.Println("You are now working on", strings.Join(parts, "-"))
 
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {},

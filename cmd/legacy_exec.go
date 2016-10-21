@@ -32,11 +32,11 @@ var LegacyExecCmd = &cobra.Command{
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 
 		if !utils.IsRunning(nameContainer) {
-			log.Fatal("App not running locally. Try `drud legacy add`.")
+			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
 		if !app.ComposeFileExists() {
-			log.Fatalln("No docker-compose yaml for this site. Try `drud legacy add`.")
+			Failed("No docker-compose yaml for this site. Try `drud legacy add`.")
 		}
 
 		cmdArgs := []string{
@@ -54,7 +54,8 @@ var LegacyExecCmd = &cobra.Command{
 		cmdArgs = append(cmdArgs, cmdSplit...)
 		err := utils.DockerCompose(cmdArgs...)
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
+			Failed("Could not execute command.")
 		}
 
 	},
@@ -67,7 +68,7 @@ var LegacyExecCmd = &cobra.Command{
 			return
 		}
 
-		log.Fatal("Invalid arguments detected. Please use a command in the form of: exec [app_name] [environment_name] '[cmd]'")
+		Failed("Invalid arguments detected. Please use a command in the form of: exec [app_name] [environment_name] '[cmd]'")
 	},
 }
 

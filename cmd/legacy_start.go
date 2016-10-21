@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/drud/bootstrap/cli/local"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +23,8 @@ var LegacyStartCmd = &cobra.Command{
 
 		err := app.Start()
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
+			Failed("Failed to start site.")
 		}
 
 		err = app.Config()
@@ -33,12 +35,13 @@ var LegacyStartCmd = &cobra.Command{
 		fmt.Println("Waiting for site readiness. This may take a couple minutes...")
 		siteURL, err := app.Wait()
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
+			Failed("Site failed to achieve readiness.")
 		}
 
-		fmt.Println("Successfully started", activeApp, activeDeploy)
+		color.Cyan("Successfully started %s %s", activeApp, activeDeploy)
 		if siteURL != "" {
-			fmt.Println("Your application can be reached at:", siteURL)
+			color.Cyan("Your application can be reached at: %s", siteURL)
 		}
 
 	},

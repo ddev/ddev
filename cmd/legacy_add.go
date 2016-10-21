@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/drud/bootstrap/cli/local"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -50,13 +51,14 @@ var LegacyAddCmd = &cobra.Command{
 		}
 
 		if !app.DatabagExists() {
-			log.Fatalln("No legacy site by that name.")
+			log.Println(err)
+			Failed("No legacy site by that name.")
 		}
 
 		err = PrepLocalSiteDirs(app.AbsPath())
-
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
+			Failed("Failed to unpack application resources.")
 		}
 
 		go func() {
@@ -66,7 +68,8 @@ var LegacyAddCmd = &cobra.Command{
 
 			err := local.CloneSource(app)
 			if err != nil {
-				log.Fatalln(err)
+				log.Println(err)
+				Failed("Failed to clone the project repository.")
 			}
 		}()
 
@@ -76,7 +79,8 @@ var LegacyAddCmd = &cobra.Command{
 			fmt.Println("Getting Resources.")
 			err := app.GetResources()
 			if err != nil {
-				log.Fatalln(err)
+				log.Println(err)
+				Failed("Failed to retrieve application resources.")
 			}
 		}()
 
@@ -84,31 +88,51 @@ var LegacyAddCmd = &cobra.Command{
 
 		err = app.UnpackResources()
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
+			Failed("Failed to unpack application resources.")
 		}
 
+<<<<<<< HEAD
+		err = app.SetType()
+		if err != nil {
+			log.Println(err)
+			Failed("Failed to determine app type.")
+		}
+
+		fmt.Println("Creating docker-compose config.")
+		err = local.WriteLocalAppYAML(app)
+		if err != nil {
+			log.Println(err)
+			Failed("Failed to create docker-compose.yaml.")
+		}
+
+=======
+>>>>>>> master
 		var siteURL string
 		if !scaffold {
 			err = app.Start()
 			if err != nil {
-				log.Fatalln(err)
+				log.Println(err)
+				Failed("Failed to start application.")
 			}
 
 			err = app.Config()
 			if err != nil {
-				log.Fatalln(err)
+				log.Println(err)
+				Failed("Failed to configure application.")
 			}
 
 			fmt.Println("Waiting for site readiness. This may take a couple minutes...")
 			siteURL, err = app.Wait()
 			if err != nil {
-				log.Fatalln(err)
+				log.Println(err)
+				Failed("Site never became ready")
 			}
 		}
 
-		fmt.Println("Successfully added", activeApp, activeDeploy)
+		color.Cyan("Successfully added %s-%s", activeApp, activeDeploy)
 		if siteURL != "" {
-			fmt.Println("Your application can be reached at:", siteURL)
+			color.Cyan("Your application can be reached at: %s", siteURL)
 		}
 
 	},

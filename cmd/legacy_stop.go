@@ -2,6 +2,7 @@ package cmd
 
 import (
 	log "github.com/Sirupsen/logrus"
+	"github.com/fatih/color"
 
 	"github.com/drud/bootstrap/cli/local"
 
@@ -21,10 +22,11 @@ var LegacyStopCmd = &cobra.Command{
 
 		err := app.Stop()
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
+			Failed("Failed to stop containers for %s. Run 'drud legacy list' to ensure your site exists.", app.ContainerName())
 		}
 
-		log.Println("Application has been stopped.")
+		color.Cyan("Application has been stopped.")
 	},
 }
 

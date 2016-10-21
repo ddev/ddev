@@ -441,6 +441,12 @@
 			"tree": true
 		},
 		{
+			"checksumSHA1": "Yn+Uxp0Vz4WiGdrYLLwYX9lzD5I=",
+			"path": "github.com/fatih/color",
+			"revision": "a360acfe359f146180cfc1c6ea6f4397f5c133ec",
+			"revisionTime": "2016-10-18T20:13:48Z"
+		},
+		{
 			"checksumSHA1": "KCWVxG+J8SxHGlGiUghe0KBGsa8=",
 			"path": "github.com/fatih/structs",
 			"revision": "dc3312cb1a4513a366c4c9e622ad55c32df12ed3",

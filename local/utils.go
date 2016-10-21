@@ -193,6 +193,36 @@ func FilterNonLegacy(vs []docker.APIContainers) []docker.APIContainers {
 	return vsf
 }
 
+func FilterNonLegacyFiles(files []os.FileInfo) []os.FileInfo {
+
+	var filtered []os.FileInfo
+	for _, v := range files {
+		name := v.Name()
+		parts := strings.SplitN(name, "-", 2)
+
+		if len(parts) != 2 || !IsValidLegacyEnv(parts[1]) {
+			continue
+		}
+
+		filtered = append(filtered, v)
+	}
+	return filtered
+}
+
+func IsValidLegacyEnv(s string) bool {
+	envs := []string{"default", "staging", "production"}
+	var valid bool
+
+	for _, e := range envs {
+		if s == e {
+			valid = true
+			break
+		}
+	}
+
+	return valid
+}
+
 // FormatPlural is a simple wrapper which returns different strings based on the count value.
 func FormatPlural(count int, single string, plural string) string {
 	if count == 1 {

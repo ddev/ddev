@@ -240,11 +240,20 @@ func (l LegacyApp) UnpackResources() error {
 
 // Start initiates docker-compose up
 func (l LegacyApp) Start() error {
+
+	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
+
+	// If the containers aren't running and there is no compose file, we can assume the site doesn't exist.
+	if !utils.IsRunning(l.ContainerName()) && !l.ComposeFileExists() {
+		return fmt.Errorf("Site does not exist or is malformed.")
+	}
+
 	err := l.SetType()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Regenerate the yaml. Mostly used for forcing updates.
 	err = WriteLocalAppYAML(l)
 	if err != nil {
 		fmt.Println("Could not create docker-compose config.")
@@ -257,8 +266,8 @@ func (l LegacyApp) Start() error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	basePath := l.AbsPath()
-	cmdArgs := []string{"-f", path.Join(basePath, "docker-compose.yaml"), "pull"}
+
+	cmdArgs := []string{"-f", composePath, "pull"}
 	_, err = utils.RunCommand("docker-compose", cmdArgs)
 
 	if err != nil {
@@ -266,7 +275,7 @@ func (l LegacyApp) Start() error {
 	}
 
 	return utils.DockerCompose(
-		"-f", path.Join(basePath, "docker-compose.yaml"),
+		"-f", composePath,
 		"up",
 		"-d",
 	)
@@ -274,8 +283,14 @@ func (l LegacyApp) Start() error {
 
 // Stop initiates docker-compose stop
 func (l LegacyApp) Stop() error {
+	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
+
+	if !utils.IsRunning(l.ContainerName()) && !l.ComposeFileExists() {
+		return fmt.Errorf("Site does not exist or is malformed.")
+	}
+
 	return utils.DockerCompose(
-		"-f", path.Join(l.AbsPath(), "docker-compose.yaml"),
+		"-f", composePath,
 		"stop",
 	)
 }
@@ -426,8 +441,14 @@ func (l *LegacyApp) Config() error {
 
 // Down stops the docker containers for the legacy project.
 func (l *LegacyApp) Down() error {
+	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
+
+	if !utils.IsRunning(l.ContainerName()) && !l.ComposeFileExists() {
+		return fmt.Errorf("Site does not exist or is malformed.")
+	}
+
 	err := utils.DockerCompose(
-		"-f", path.Join(l.AbsPath(), "docker-compose.yaml"),
+		"-f", composePath,
 		"down",
 	)
 	if err != nil {
@@ -441,8 +462,8 @@ func (l *LegacyApp) Down() error {
 // Cleanup will clean up legacy apps even if the composer file has been deleted.
 func (l *LegacyApp) Cleanup() error {
 	client, _ := GetDockerClient()
-	containers, err := client.ListContainers(docker.ListContainersOptions{All: false})
 
+	containers, err := client.ListContainers(docker.ListContainersOptions{All: false})
 	if err != nil {
 		return err
 	}
@@ -451,16 +472,15 @@ func (l *LegacyApp) Cleanup() error {
 	for _, c := range containers {
 		if strings.Contains(c.Names[0], needle) {
 			actions := []string{"stop", "rm"}
-
 			for _, action := range actions {
 				args := []string{action, c.ID}
 				_, err := utils.RunCommand("docker", args)
-
 				if err != nil {
 					return fmt.Errorf("Could nnot %s container %s: %s", action, c.Names[0], err)
 				}
 			}
 		}
+
 	}
 
 	return nil

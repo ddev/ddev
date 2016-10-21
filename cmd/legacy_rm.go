@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/drud/bootstrap/cli/local"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -20,12 +20,12 @@ var LegacyRMCmd = &cobra.Command{
 		}
 
 		err := app.Down()
-
 		if err != nil {
-			log.Fatalf("Could not remove site: %s", err)
+			log.Println(err)
+			Failed("Could not remove site: %s", app.ContainerName())
 		}
 
-		fmt.Printf("Successfully removed the %s deploy for the %s application.\n", activeDeploy, activeApp)
+		color.Cyan("Successfully removed the %s deploy for the %s application.\n", activeDeploy, activeApp)
 	},
 }
 

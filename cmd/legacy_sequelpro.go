@@ -10,6 +10,7 @@ import (
 
 	"github.com/drud/bootstrap/cli/local"
 	"github.com/drud/drud-go/utils"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +28,7 @@ var LegacySequelproCmd = &cobra.Command{
 		nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
 
 		if !utils.IsRunning(nameContainer) {
-			log.Fatal("App not running locally. Try `drud legacy add`.")
+			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
 		mysqlContainer, err := utils.GetContainer(nameContainer)
@@ -61,7 +62,7 @@ var LegacySequelproCmd = &cobra.Command{
 			exec.Command("open", tmpFilePath).Run()
 		}
 
-		fmt.Println("sequelpro command finished successfully!")
+		color.Cyan("sequelpro command finished successfully!")
 
 	},
 }

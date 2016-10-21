@@ -24,11 +24,11 @@ var LegacySSHCmd = &cobra.Command{
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 
 		if !utils.IsRunning(nameContainer) {
-			log.Fatal("App not running locally. Try `drud legacy add`.")
+			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
 		if !app.ComposeFileExists() {
-			log.Fatalln("No docker-compose yaml for this site. Try `drud legacy add`.")
+			Failed("No docker-compose yaml for this site. Try `drud legacy add`.")
 		}
 
 		err := utils.DockerCompose(
@@ -38,7 +38,8 @@ var LegacySSHCmd = &cobra.Command{
 			"bash",
 		)
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
+			Failed("Failed to run exec command.")
 		}
 
 	},

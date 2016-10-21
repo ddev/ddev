@@ -17,6 +17,7 @@ import (
 
 	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils"
+	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -258,6 +259,11 @@ func ParseConfigFlag() string {
 	}
 
 	return value
+}
+
+func Failed(format string, a ...interface{}) {
+	color.Red(format, a...)
+	os.Exit(1)
 }
 
 func NetExists(client *docker.Client, name string) bool {
