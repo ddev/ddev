@@ -247,17 +247,15 @@ func (l LegacyApp) Start() error {
 	if !utils.IsRunning(l.ContainerName()) && !l.ComposeFileExists() {
 		return fmt.Errorf("Site does not exist or is malformed.")
 	}
-
 	err := l.SetType()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	// Regenerate the yaml. Mostly used for forcing updates.
+	fmt.Println("Creating docker-compose config.")
 	err = WriteLocalAppYAML(l)
 	if err != nil {
-		fmt.Println("Could not create docker-compose config.")
-		log.Fatalln(err)
+		return err
 	}
 
 	EnsureDockerRouter()

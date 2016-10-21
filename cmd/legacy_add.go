@@ -90,24 +90,9 @@ var LegacyAddCmd = &cobra.Command{
 		if err != nil {
 			log.Println(err)
 			Failed("Failed to unpack application resources.")
+
 		}
 
-<<<<<<< HEAD
-		err = app.SetType()
-		if err != nil {
-			log.Println(err)
-			Failed("Failed to determine app type.")
-		}
-
-		fmt.Println("Creating docker-compose config.")
-		err = local.WriteLocalAppYAML(app)
-		if err != nil {
-			log.Println(err)
-			Failed("Failed to create docker-compose.yaml.")
-		}
-
-=======
->>>>>>> master
 		var siteURL string
 		if !scaffold {
 			err = app.Start()
