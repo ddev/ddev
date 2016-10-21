@@ -434,10 +434,10 @@
 			"tree": true
 		},
 		{
-			"checksumSHA1": "KNrUIxr+teYzYtMgOt/Wdqs35oc=",
+			"checksumSHA1": "a7+EnHS4Ozmt8wBNFL0UP/UEZr8=",
 			"path": "github.com/drud/drud-go/utils",
-			"revision": "0e34f844dba9295889af638745ec6f2fb896a876",
-			"revisionTime": "2016-10-12T14:18:16Z",
+			"revision": "e7f7fcb343a309ff09fd5d7fc13c83ffd303067d",
+			"revisionTime": "2016-10-20T19:52:06Z",
 			"tree": true
 		},
 		{
@@ -762,6 +762,12 @@
 			"path": "github.com/kr/fs",
 			"revision": "2788f0dbd16903de03cb8186e5c7d97b69ad387b",
 			"revisionTime": "2013-11-06T22:25:44Z"
+		},
+		{
+			"checksumSHA1": "1IJgnROTHyj6G1S64bqQQsEeKv4=",
+			"path": "github.com/lextoumbourou/goodhosts",
+			"revision": "14360c1fefd3a4f3a42fc0fcefcf1d5df1fc6e60",
+			"revisionTime": "2016-04-26T12:16:52Z"
 		},
 		{
 			"checksumSHA1": "dNYxHiBLalTqluak2/Z8c3RsSEM=",

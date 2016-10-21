@@ -31,6 +31,12 @@ services:
     working_dir: "/var/www/html/docroot"
     environment:
       - DEPLOY_NAME=local
+      - VIRTUAL_HOST={{ .name }}
+
+networks:
+  default:
+    external:
+      name: drud_default
 `
 
 // DrudComposeTemplate is used to create docker-compose.yaml for local Drud sites
@@ -126,3 +132,18 @@ var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
     <integer>1</integer>
 </dict>
 </plist>`
+
+const DrudRouterTemplate = `version: '2'
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy:0.4.0
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+networks:
+   default:
+     external:
+       name: drud_default
+`

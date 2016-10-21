@@ -316,3 +316,27 @@ func FileExists(name string) bool {
 	}
 	return true
 }
+
+// EnsureDockerRouter ensures the router is running.
+func EnsureDockerRouter() {
+	homeDir, err := utils.GetHomeDir()
+	if err != nil {
+		log.Fatal("could not find home directory")
+	}
+	dest := path.Join(homeDir, ".drud", "router-compose.yaml")
+	f, ferr := os.Create(dest)
+	if ferr != nil {
+		log.Fatal(ferr)
+	}
+	defer f.Close()
+
+	template := fmt.Sprintf(DrudRouterTemplate)
+	f.WriteString(template)
+
+	// run docker-compose up -d in the newly created directory
+	out, err := utils.RunCommand("docker-compose", []string{"-f", dest, "up", "-d"})
+	if err != nil {
+		fmt.Println(fmt.Errorf("%s - %s", err.Error(), string(out)))
+	}
+
+}

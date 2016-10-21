@@ -17,6 +17,7 @@ var LegacyStartCmd = &cobra.Command{
 		app := local.LegacyApp{
 			Name:        activeApp,
 			Environment: activeDeploy,
+			Template:    local.LegacyComposeTemplate,
 		}
 
 		err := app.Start()

@@ -17,6 +17,7 @@ import (
 
 	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils"
+	"github.com/fsouza/go-dockerclient"
 )
 
 func check(e error) {
@@ -257,4 +258,31 @@ func ParseConfigFlag() string {
 	}
 
 	return value
+}
+
+func NetExists(client *docker.Client, name string) bool {
+	nets, _ := client.ListNetworks()
+	for _, n := range nets {
+		if n.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func EnsureNetwork(client *docker.Client, name string) error {
+	if !NetExists(client, name) {
+		netOptions := docker.CreateNetworkOptions{
+			Name:     name,
+			Driver:   "bridge",
+			Internal: false,
+		}
+		_, err := client.CreateNetwork(netOptions)
+		if err != nil {
+			return err
+		}
+		log.Println("Network", name, "created")
+
+	}
+	return nil
 }

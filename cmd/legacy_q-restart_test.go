@@ -37,6 +37,9 @@ func TestLegacyRestart(t *testing.T) {
 
 	assert.Equal(true, utils.IsTCPPortAvailable(int(webPort)))
 	assert.Equal(true, utils.IsTCPPortAvailable(int(dbPort)))
-	err = utils.EnsureHTTPStatus(fmt.Sprintf("http://localhost:%d", webPort), "", "", 120, 200)
+	o := utils.NewHTTPOptions("http://127.0.0.1")
+	o.Timeout = 120
+	o.Headers["Host"] = app.HostName()
+	err = utils.EnsureHTTPStatus(o)
 	assert.NoError(err)
 }

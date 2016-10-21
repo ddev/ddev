@@ -6,12 +6,12 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"text/template"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gosuri/uitable"
+	"github.com/lextoumbourou/goodhosts"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -240,9 +240,26 @@ func (l LegacyApp) UnpackResources() error {
 
 // Start initiates docker-compose up
 func (l LegacyApp) Start() error {
+	err := l.SetType()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = WriteLocalAppYAML(l)
+	if err != nil {
+		fmt.Println("Could not create docker-compose config.")
+		log.Fatalln(err)
+	}
+
+	EnsureDockerRouter()
+
+	err = l.AddHostsEntry()
+	if err != nil {
+		log.Fatal(err)
+	}
 	basePath := l.AbsPath()
 	cmdArgs := []string{"-f", path.Join(basePath, "docker-compose.yaml"), "pull"}
-	_, err := utils.RunCommand("docker-compose", cmdArgs)
+	_, err = utils.RunCommand("docker-compose", cmdArgs)
 
 	if err != nil {
 		return err
@@ -275,15 +292,18 @@ func (l *LegacyApp) SetType() error {
 
 // Wait ensures that the app appears to be read before returning
 func (l *LegacyApp) Wait() (string, error) {
-	siteURL := fmt.Sprintf("http://localhost:%d", l.WebPublicPort)
-	err := utils.EnsureHTTPStatus(fmt.Sprintf("http://localhost:%d", l.WebPublicPort), "", "", 300, 200)
+	o := utils.NewHTTPOptions("http://127.0.0.1")
+	o.Timeout = 420
+	o.Headers["Host"] = l.HostName()
+	err := utils.EnsureHTTPStatus(o)
 	if err != nil {
 		return "", fmt.Errorf("200 Was not returned from the web container")
 	}
 
-	return siteURL, nil
+	return l.URL(), nil
 }
 
+// AddRow adds a app listing row for the given application.
 func (l *LegacyApp) AddRow(t *uitable.Table) error {
 	err := l.SetType()
 	if err != nil {
@@ -295,7 +315,7 @@ func (l *LegacyApp) AddRow(t *uitable.Table) error {
 			l.Name,
 			l.Environment,
 			l.AppType,
-			fmt.Sprintf("http://127.0.0.1:%d", l.WebPublicPort),
+			l.URL(),
 			fmt.Sprintf("127.0.0.1:%d", l.DbPublicPort),
 			l.Status,
 		)
@@ -362,7 +382,7 @@ func (l *LegacyApp) Config() error {
 			drupalConfig.HashSalt = utils.RandomString(64)
 		}
 
-		drupalConfig.DeployURL = "http://localhost:" + strconv.FormatInt(l.WebPublicPort, 10)
+		drupalConfig.DeployURL = l.URL()
 		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
 		if err != nil {
 			log.Fatalln(err)
@@ -387,7 +407,7 @@ func (l *LegacyApp) Config() error {
 		settingsFilePath = path.Join(basePath, "src", "docroot/wp-config.php")
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DatabaseHost = "db"
-		wpConfig.DeployURL = fmt.Sprintf("http://localhost:%d", l.WebPublicPort)
+		wpConfig.DeployURL = l.URL()
 		wpConfig.AuthKey = env.AuthKey
 		wpConfig.AuthSalt = env.AuthSalt
 		wpConfig.LoggedInKey = env.LoggedInKey
@@ -444,4 +464,35 @@ func (l *LegacyApp) Cleanup() error {
 	}
 
 	return nil
+}
+
+// URL returns the URL for a given application.
+func (l *LegacyApp) URL() string {
+	return "http://" + l.HostName() + "/"
+}
+
+// HostName returns the hostname of a given application.
+func (l *LegacyApp) HostName() string {
+	return l.ContainerName()
+}
+
+// AddHostsEntry will add the legacy site URL to the local hostfile.
+func (l *LegacyApp) AddHostsEntry() error {
+	if os.Getenv("DRUD_NONINTERACTIVE") != "" {
+		fmt.Printf("Please add the following entry to your host file:\n127.0.0.1 %s\n", l.HostName())
+		return nil
+	}
+
+	hosts, err := goodhosts.NewHosts()
+	if err != nil {
+		log.Fatalf("could not open hostfile. %s", err)
+	}
+	if hosts.Has("127.0.0.1", l.HostName()) {
+		return nil
+	}
+
+	fmt.Println("\n\n\nAdding hostfile entry. You will be prompted for your password.")
+	hostnameArgs := []string{"drud", "legacy", "hostname", l.HostName(), "127.0.0.1"}
+	err = utils.RunCommandPipe("sudo", hostnameArgs)
+	return err
 }

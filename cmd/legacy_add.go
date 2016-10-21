@@ -18,6 +18,20 @@ var LegacyAddCmd = &cobra.Command{
 	Short: "Add an existing application to your local development environment",
 	Long: `Add an existing application to your local dev environment.  This involves
 	downloading of containers, media, and databases.`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		netName := "drud_default"
+
+		client, err := local.GetDockerClient()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = EnsureNetwork(client, netName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		var err error
@@ -69,17 +83,6 @@ var LegacyAddCmd = &cobra.Command{
 		wg.Wait()
 
 		err = app.UnpackResources()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		err = app.SetType()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Println("Creating docker-compose config.")
-		err = local.WriteLocalAppYAML(app)
 		if err != nil {
 			log.Fatalln(err)
 		}

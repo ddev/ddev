@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Development
+------------
+- Added a local router. No longer will sites be available on a randomized port on the loopback IP (i.e. http://127.0.0.1:32690/), but now have their own hostnames, such as 'http://legacy-drudio-production/'
+
 
 Version 0.2.2-rc3
 -----------
