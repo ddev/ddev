@@ -52,7 +52,7 @@ var LegacyReconfigCmd = &cobra.Command{
 
 		color.Cyan("Successfully restarted %s %s", activeApp, activeDeploy)
 		if siteURL != "" {
-			color.Cyan("Your application can be reached at:", siteURL)
+			color.Cyan("Your application can be reached at: %s", siteURL)
 		}
 	},
 }
