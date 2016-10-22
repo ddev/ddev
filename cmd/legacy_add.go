@@ -20,7 +20,6 @@ var LegacyAddCmd = &cobra.Command{
 	Long: `Add an existing application to your local dev environment.  This involves
 	downloading of containers, media, and databases.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		netName := "drud_default"
 
 		client, err := local.GetDockerClient()
 		if err != nil {

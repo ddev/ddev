@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.2.2-rc5
+-----------
+- Fixed issue in creating drud_default network on restart
+- Fixed linking issue where relative links started with two forward slashes
+
+
 Version 0.2.2-rc4
 -----------
 - Colorizing some output

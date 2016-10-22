@@ -14,6 +14,19 @@ var LegacyStartCmd = &cobra.Command{
 	Use:   "start [app_name] [environment_name]",
 	Short: "Start an application's local services.",
 	Long:  `Start will turn on the local containers that were previously stopped for an app.`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+
+		client, err := local.GetDockerClient()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = EnsureNetwork(client, netName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		app := local.LegacyApp{
 			Name:        activeApp,

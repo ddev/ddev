@@ -17,7 +17,6 @@ func checkRequiredFolders(app local.App) bool {
 		path.Join(basePath, "data"),
 		path.Join(basePath, "data", app.GetName()+".sql"),
 		path.Join(basePath, "files"),
-		path.Join(basePath, "docker-compose.yaml"),
 	}
 	for _, p := range files {
 		if !utils.FileExists(p) {

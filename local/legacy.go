@@ -243,10 +243,6 @@ func (l LegacyApp) Start() error {
 
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
-	// If the containers aren't running and there is no compose file, we can assume the site doesn't exist.
-	if !utils.IsRunning(l.ContainerName()) && !l.ComposeFileExists() {
-		return fmt.Errorf("Site does not exist or is malformed.")
-	}
 	err := l.SetType()
 	if err != nil {
 		return err

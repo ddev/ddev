@@ -6,6 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const netName = "drud_default"
+
 // LegacyCmd represents the local command
 var LegacyCmd = &cobra.Command{
 	Use:   "legacy",

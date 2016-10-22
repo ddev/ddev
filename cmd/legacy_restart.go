@@ -14,6 +14,19 @@ var LegacyReconfigCmd = &cobra.Command{
 	Use:   "restart",
 	Short: "Stop and Start the app.",
 	Long:  `Restart is useful for when the port of your local app has changed due to a system reboot or some other failure.`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+
+		client, err := local.GetDockerClient()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = EnsureNetwork(client, netName)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if activeApp == "" {
 			log.Fatalln("Must set app flag to dentoe which app you want to work with.")
