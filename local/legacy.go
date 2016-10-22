@@ -486,7 +486,7 @@ func (l *LegacyApp) Cleanup() error {
 
 // URL returns the URL for a given application.
 func (l *LegacyApp) URL() string {
-	return "http://" + l.HostName() + "/"
+	return "http://" + l.HostName()
 }
 
 // HostName returns the hostname of a given application.
