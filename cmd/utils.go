@@ -113,7 +113,7 @@ func PrepConf() {
 		//default drud.yaml contents
 		f.WriteString(`Client: 1fee
 Dev: false
-DrudHost: drudapi.genesis.drud.io
+DrudHost: drudapi.drud.io
 Protocol: https
 VaultHost: https://sanctuary.drud.io:8200
 Version: v0.1
