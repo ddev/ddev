@@ -421,10 +421,10 @@
 			"tree": true
 		},
 		{
-			"checksumSHA1": "h7pOhNW5IkLwSVoFA5bsJfxo4wM=",
+			"checksumSHA1": "/T0nc/cBWRicR9DHLtda+JJDB7k=",
 			"path": "github.com/drud/drud-go/files",
-			"revision": "0642800b1372ab1bf1e4f9e7e6492f4b4e785eb9",
-			"revisionTime": "2016-10-07T16:44:18Z"
+			"revision": "8672283b5566499d2587a49c07ec8449f76d84b7",
+			"revisionTime": "2016-10-21T17:03:54Z"
 		},
 		{
 			"checksumSHA1": "u/fPCVZURoHZIIjbBGRQ3+hghpw=",
