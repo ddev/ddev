@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"log"
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func init() {
@@ -12,11 +13,9 @@ func init() {
 }
 
 func TestVersion(t *testing.T) {
-	log.Printf("%s version should be '%s'\n", binary, cliVersion)
+	assert := assert.New(t)
 	v, err := exec.Command(binary, "version").Output()
-	if err != nil {
-		t.Errorf("Error executing %s version", binary)
-	}
+	assert.NoError(err)
 	output := strings.TrimSpace(string(v))
-	expect(t, output, cliVersion)
+	assert.Contains(output, cliVersion)
 }

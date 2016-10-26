@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Development
+-----------
+- Colorize output for secret comands
+
 Version 0.2.2-rc5
 -----------
 - Fixed issue in creating drud_default network on restart

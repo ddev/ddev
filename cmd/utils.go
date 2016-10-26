@@ -261,11 +261,13 @@ func ParseConfigFlag() string {
 	return value
 }
 
+// Failed will print an red error message and exit with failure.
 func Failed(format string, a ...interface{}) {
 	color.Red(format, a...)
 	os.Exit(1)
 }
 
+// NetExists checks to see if the docker network for DRUD local development exists.
 func NetExists(client *docker.Client, name string) bool {
 	nets, _ := client.ListNetworks()
 	for _, n := range nets {
@@ -276,6 +278,7 @@ func NetExists(client *docker.Client, name string) bool {
 	return false
 }
 
+// EnsureNetwork will ensure the docker network for DRUD local development is created.
 func EnsureNetwork(client *docker.Client, name string) error {
 	if !NetExists(client, name) {
 		netOptions := docker.CreateNetworkOptions{
