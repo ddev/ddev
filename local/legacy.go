@@ -279,7 +279,7 @@ func (l LegacyApp) Start() error {
 func (l LegacyApp) Stop() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
-	if !utils.IsRunning(l.ContainerName()) && !l.ComposeFileExists() {
+	if !utils.IsRunning(l.ContainerName()+"-db") && !utils.IsRunning(l.ContainerName()+"-web") && !l.ComposeFileExists() {
 		return fmt.Errorf("Site does not exist or is malformed.")
 	}
 
@@ -437,7 +437,7 @@ func (l *LegacyApp) Config() error {
 func (l *LegacyApp) Down() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
-	if !utils.IsRunning(l.ContainerName()) && !l.ComposeFileExists() {
+	if !l.ComposeFileExists() {
 		return fmt.Errorf("Site does not exist or is malformed.")
 	}
 
