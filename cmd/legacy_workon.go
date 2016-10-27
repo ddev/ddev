@@ -41,8 +41,6 @@ var LegacyWorkonCmd = &cobra.Command{
 			if answer >= len(files)+1 {
 				Failed("You must choose one of the numbers listed above.")
 			}
-			fmt.Println(answer - 1)
-			fmt.Println(files[answer-1].Name())
 			parts = strings.Split(files[answer-1].Name(), "-")
 		} else {
 			parts = []string{activeApp, activeDeploy}
