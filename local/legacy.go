@@ -219,7 +219,7 @@ func (l LegacyApp) UnpackResources() error {
 
 	err = os.Rename(
 		path.Join(basePath, "files", l.Name+".sql"),
-		path.Join(basePath, "data", l.Name+".sql"),
+		path.Join(basePath, "data", "data.sql"),
 	)
 	if err != nil {
 		return err
@@ -233,6 +233,19 @@ func (l LegacyApp) UnpackResources() error {
 	)
 	if err != nil {
 		return fmt.Errorf("%s - %s", err.Error(), string(out))
+	}
+
+	dcfgFile := path.Join(basePath, "src", "drud.yaml")
+	if utils.FileExists(dcfgFile) {
+		log.Println("copying drud.yaml to data container")
+		out, err := utils.RunCommand("cp", []string{
+			dcfgFile,
+			path.Join(basePath, "data/drud.yaml"),
+		})
+		if err != nil {
+			fmt.Println(out)
+			return err
+		}
 	}
 
 	return nil
