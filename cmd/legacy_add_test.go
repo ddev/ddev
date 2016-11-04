@@ -15,7 +15,7 @@ func checkRequiredFolders(app local.App) bool {
 		basePath,
 		path.Join(basePath, "src"),
 		path.Join(basePath, "data"),
-		path.Join(basePath, "data", app.GetName()+".sql"),
+		path.Join(basePath, "data", "data.sql"),
 		path.Join(basePath, "files"),
 	}
 	for _, p := range files {
