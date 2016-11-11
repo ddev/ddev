@@ -136,7 +136,7 @@ var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 const DrudRouterTemplate = `version: '2'
 services:
   nginx-proxy:
-    image: jwilder/nginx-proxy:0.4.0
+    image: drud/nginx-proxy:latest
     container_name: nginx-proxy
     ports:
       - "80:80"
