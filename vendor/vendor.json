@@ -427,10 +427,10 @@
 			"revisionTime": "2016-10-21T17:03:54Z"
 		},
 		{
-			"checksumSHA1": "u/fPCVZURoHZIIjbBGRQ3+hghpw=",
+			"checksumSHA1": "Yx3NNfs7yHKainxWPprPH7jxuvk=",
 			"path": "github.com/drud/drud-go/secrets",
-			"revision": "0e34f844dba9295889af638745ec6f2fb896a876",
-			"revisionTime": "2016-10-12T14:18:16Z",
+			"revision": "73616f0659e67858422aaae530d552f71285f0f1",
+			"revisionTime": "2016-11-14T18:22:37Z",
 			"tree": true
 		},
 		{

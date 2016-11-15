@@ -247,6 +247,10 @@ func (s *Secret) List() error {
 	if err != nil {
 		return err
 	}
+
+	if secret == nil {
+		return errors.New("no secret found")
+	}
 	s.Data = secret.Data
 	return nil
 }
