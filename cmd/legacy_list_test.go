@@ -8,6 +8,9 @@ import (
 )
 
 func TestLegacyList(t *testing.T) {
+	if skipComposeTests {
+		t.Skip("Compose tests being skipped.")
+	}
 	args := []string{"legacy", "list"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)

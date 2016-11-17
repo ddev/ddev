@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"path"
 	"testing"
 
@@ -8,6 +9,8 @@ import (
 	"github.com/drud/drud-go/utils"
 	"github.com/stretchr/testify/assert"
 )
+
+var skipComposeTests bool
 
 func checkRequiredFolders(app local.App) bool {
 	basePath := app.AbsPath()
@@ -88,6 +91,9 @@ func TestLegacyAddScaffoldWP(t *testing.T) {
 
 // TestLegacyAddWP tests a `drud legacy add` on a wp site
 func TestLegacyAddWP(t *testing.T) {
+	if skipComposeTests {
+		t.Skip("Compose tests being skipped.")
+	}
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
@@ -118,4 +124,10 @@ func TestLegacyAddWP(t *testing.T) {
 	o.Headers["Host"] = app.HostName()
 	err = utils.EnsureHTTPStatus(o)
 	assert.NoError(err)
+}
+
+func init() {
+	if os.Getenv("SKIP_COMPOSE_TESTS") == "true" {
+		skipComposeTests = true
+	}
 }

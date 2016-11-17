@@ -29,6 +29,9 @@ func TestLegacyExecBadArgs(t *testing.T) {
 
 // TestLegacyExec run `drud legacy exec pwd` with proper args
 func TestLegacyExec(t *testing.T) {
+	if skipComposeTests {
+		t.Skip("Compose tests being skipped.")
+	}
 
 	// Run an exec by passing in TestApp + TestEnv
 	assert := assert.New(t)

@@ -11,6 +11,9 @@ import (
 
 // TestLegacyStart runs drud legacy start on the test apps
 func TestLegacyRestart(t *testing.T) {
+	if skipComposeTests {
+		t.Skip("Compose tests being skipped.")
+	}
 	assert := assert.New(t)
 	args := []string{"legacy", "restart", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)

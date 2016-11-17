@@ -11,6 +11,9 @@ import (
 
 // TestLegacyStop runs drud legacy stop on the test apps
 func TestLegacyStop(t *testing.T) {
+	if skipComposeTests {
+		t.Skip("Compose tests being skipped.")
+	}
 	args := []string{"legacy", "stop", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
@@ -20,6 +23,9 @@ func TestLegacyStop(t *testing.T) {
 }
 
 func TestLegacyStoppedList(t *testing.T) {
+	if skipComposeTests {
+		t.Skip("Compose tests being skipped.")
+	}
 	args := []string{"legacy", "list"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
@@ -31,6 +37,9 @@ func TestLegacyStoppedList(t *testing.T) {
 
 // TestLegacyStart runs drud legacy start on the test apps
 func TestLegacyStart(t *testing.T) {
+	if skipComposeTests {
+		t.Skip("Compose tests being skipped.")
+	}
 	assert := assert.New(t)
 
 	args := []string{"legacy", "start", LegacyTestApp, LegacyTestEnv}

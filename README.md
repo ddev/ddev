@@ -41,3 +41,12 @@ This will create a drud/drudintegration container tagged with the current branch
  docker run -v /Users/beeradb/.drud-sanctuary-token:/root/.drud-sanctuary-token -e "GITHUB_TOKEN=$GITHUB_TOKEN" -e CLUSTER_DOMAIN=unsalted.pw -e DRUD_CLI_INT_NUM=2 -it drud/drudintegration:glide
  ```
 
+## Local testing
+
+from the bootstrap/cli directory.
+
+```
+go test -v ./cmd
+```
+
+To skip tests that require a docker-compose environment use this `export SKIP_COMPOSE_TESTS=true`

@@ -11,6 +11,9 @@ import (
 
 // TestLegacySequelproScaffold tests the the sequelpro config file is created successfully
 func TestLegacySequelproScaffold(t *testing.T) {
+	if skipComposeTests {
+		t.Skip("Compose tests being skipped.")
+	}
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args

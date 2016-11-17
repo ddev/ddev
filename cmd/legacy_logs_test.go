@@ -18,6 +18,9 @@ func TestLegacyLogsBadArgs(t *testing.T) {
 
 // TestLegacyLogs tests that the legacy logs functionality is working.
 func TestLegacyLogs(t *testing.T) {
+	if skipComposeTests {
+		t.Skip("Compose tests being skipped.")
+	}
 	assert := assert.New(t)
 	args := []string{"legacy", "logs", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)

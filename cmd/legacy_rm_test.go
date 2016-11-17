@@ -10,6 +10,9 @@ import (
 
 // TestLegacyRm runs `drud legacy rm` on the test apps
 func TestLegacyRm(t *testing.T) {
+	if skipComposeTests {
+		t.Skip("Compose tests being skipped.")
+	}
 	args := []string{"legacy", "rm", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
