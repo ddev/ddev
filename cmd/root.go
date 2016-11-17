@@ -22,7 +22,7 @@ const (
 	timestampFormat = "20060102150405"
 	updateFile      = ".drud-update"
 	tokenFile       = ".drud-sanctuary-token"
-	cliVersion      = "0.3.0"
+	cliVersion      = "0.3.1"
 	drudapiVersion  = "v0.1"
 )
 
