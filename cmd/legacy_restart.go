@@ -36,6 +36,7 @@ var LegacyReconfigCmd = &cobra.Command{
 			Name:        activeApp,
 			Environment: activeDeploy,
 			Template:    local.LegacyComposeTemplate,
+			SkipYAML:    skipYAML,
 		}
 
 		err := app.Stop()
@@ -71,7 +72,7 @@ var LegacyReconfigCmd = &cobra.Command{
 }
 
 func init() {
-
+	LegacyReconfigCmd.Flags().BoolVarP(&skipYAML, "skip-yaml", "", false, "Skip creating the docker-compose.yaml.")
 	LegacyCmd.AddCommand(LegacyReconfigCmd)
 
 }

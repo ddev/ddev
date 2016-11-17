@@ -11,7 +11,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var scaffold bool
+var (
+	scaffold bool
+	skipYAML bool
+)
 
 // LegacyAddCmd represents the add command
 var LegacyAddCmd = &cobra.Command{
@@ -47,6 +50,7 @@ var LegacyAddCmd = &cobra.Command{
 			Name:        activeApp,
 			Environment: activeDeploy,
 			Template:    local.LegacyComposeTemplate,
+			SkipYAML:    skipYAML,
 		}
 
 		if !app.DatabagExists() {
@@ -124,5 +128,6 @@ var LegacyAddCmd = &cobra.Command{
 
 func init() {
 	LegacyAddCmd.Flags().BoolVarP(&scaffold, "scaffold", "s", false, "Add the app but don't run or config it.")
+	LegacyAddCmd.Flags().BoolVarP(&skipYAML, "skip-yaml", "", false, "Skip creating the docker-compose.yaml.")
 	LegacyCmd.AddCommand(LegacyAddCmd)
 }

@@ -41,6 +41,7 @@ type LegacyApp struct {
 	WebPublicPort int64
 	DbPublicPort  int64
 	Status        string
+	SkipYAML      bool
 }
 
 // RenderComposeYAML returns teh contents of a docker compose config for this app
@@ -261,10 +262,12 @@ func (l LegacyApp) Start() error {
 		return err
 	}
 
-	fmt.Println("Creating docker-compose config.")
-	err = WriteLocalAppYAML(l)
-	if err != nil {
-		return err
+	if !l.SkipYAML {
+		fmt.Println("Creating docker-compose config.")
+		err = WriteLocalAppYAML(l)
+		if err != nil {
+			return err
+		}
 	}
 
 	EnsureDockerRouter()

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Development
+-----------
+
+- Add flag to skip recreation of the docker-compose.yaml on site add.
+
+
 Version 0.3.0 - Oct 27th 2016
 -------------
 
