@@ -133,7 +133,7 @@ func EnableAvailablePackages() error {
 	// @todo: make policies like [files, hosting, etc] instead of using client name
 	for _, p := range policies {
 		switch p.(string) {
-		case "root", "admin":
+		case "root", "admin", "drud_team", "drud_test_users":
 			drudAccess = true
 			filesAccess = true
 			clientCreateAccess = true
