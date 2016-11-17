@@ -12,8 +12,13 @@ import (
 )
 
 var (
-	scaffold bool
-	skipYAML bool
+	scaffold    bool
+	unison      bool
+	webImage    string
+	dbImage     string
+	webImageTag string
+	dbImageTag  string
+	skipYAML    bool
 )
 
 // LegacyAddCmd represents the add command
@@ -46,12 +51,14 @@ var LegacyAddCmd = &cobra.Command{
 		var wg sync.WaitGroup
 		wg.Add(2)
 
-		app := local.LegacyApp{
-			Name:        activeApp,
-			Environment: activeDeploy,
-			Template:    local.LegacyComposeTemplate,
-			SkipYAML:    skipYAML,
-		}
+		app := local.NewLegacyApp(activeApp, activeDeploy)
+		app.Template = local.LegacyComposeTemplate
+
+		app.Options.WebImage = webImage
+		app.Options.DbImage = dbImage
+		app.Options.WebImageTag = webImageTag
+		app.Options.DbImageTag = dbImageTag
+		app.SkipYAML = skipYAML
 
 		if !app.DatabagExists() {
 			log.Println(err)
@@ -116,6 +123,12 @@ var LegacyAddCmd = &cobra.Command{
 				log.Println(err)
 				Failed("Site never became ready")
 			}
+		} else {
+			err = local.WriteLocalAppYAML(*app)
+			if err != nil {
+				log.Println(err)
+				Failed("Could not create docker-compose.yaml")
+			}
 		}
 
 		color.Cyan("Successfully added %s-%s", activeApp, activeDeploy)
@@ -128,6 +141,12 @@ var LegacyAddCmd = &cobra.Command{
 
 func init() {
 	LegacyAddCmd.Flags().BoolVarP(&scaffold, "scaffold", "s", false, "Add the app but don't run or config it.")
+	LegacyAddCmd.Flags().BoolVarP(&unison, "unison", "", false, "Turn on experimental unison support for better performance.")
+	LegacyAddCmd.Flags().StringVarP(&webImage, "web-image", "", "", "Change the image used for the app's web server")
+	LegacyAddCmd.Flags().StringVarP(&dbImage, "db-image", "", "", "Change the image used for the app's database server")
+	LegacyAddCmd.Flags().StringVarP(&webImageTag, "web-image-tag", "", "", "Override the default web image tag")
+	LegacyAddCmd.Flags().StringVarP(&dbImageTag, "db-image-tag", "", "", "Override the default web image tag")
 	LegacyAddCmd.Flags().BoolVarP(&skipYAML, "skip-yaml", "", false, "Skip creating the docker-compose.yaml.")
+
 	LegacyCmd.AddCommand(LegacyAddCmd)
 }

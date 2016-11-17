@@ -28,11 +28,8 @@ var LegacyStartCmd = &cobra.Command{
 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app := local.LegacyApp{
-			Name:        activeApp,
-			Environment: activeDeploy,
-			Template:    local.LegacyComposeTemplate,
-		}
+		app := local.NewLegacyApp(activeApp, activeDeploy)
+		app.Template = local.LegacyComposeTemplate
 
 		err := app.Start()
 		if err != nil {

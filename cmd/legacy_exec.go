@@ -24,10 +24,7 @@ var LegacyExecCmd = &cobra.Command{
 			cmdString = args[2]
 		}
 
-		app := local.LegacyApp{
-			Name:        activeApp,
-			Environment: activeDeploy,
-		}
+		app := local.NewLegacyApp(activeApp, activeDeploy)
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 

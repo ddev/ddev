@@ -7,7 +7,7 @@ const LegacyComposeTemplate = `version: '2'
 services:
   {{.name}}-db:
     container_name: {{.name}}-db
-    image: drud/mysql-docker-local:5.7
+    image: {{.db_image}}
     volumes:
       - "./data:/db"
     restart: always
@@ -18,9 +18,9 @@ services:
       - "3306"
   {{.name}}-web:
     container_name: {{.name}}-web
-    image: {{.image}}
+    image: {{.web_image}}
     volumes:
-      - "./src:/src"
+      - "./src:{{ .srctarget }}"
     restart: always
     depends_on:
       - {{.name}}-db

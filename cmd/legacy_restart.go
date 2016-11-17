@@ -32,12 +32,9 @@ var LegacyReconfigCmd = &cobra.Command{
 			log.Fatalln("Must set app flag to dentoe which app you want to work with.")
 		}
 
-		app := local.LegacyApp{
-			Name:        activeApp,
-			Environment: activeDeploy,
-			Template:    local.LegacyComposeTemplate,
-			SkipYAML:    skipYAML,
-		}
+		app := local.NewLegacyApp(activeApp, activeDeploy)
+		app.Template = local.LegacyComposeTemplate
+		app.SkipYAML = skipYAML
 
 		err := app.Stop()
 		if err != nil {

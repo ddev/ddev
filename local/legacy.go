@@ -29,6 +29,13 @@ const (
 	containerRunning = "running"
 )
 
+type LocalAppOptions struct {
+	WebImage    string
+	DbImage     string
+	WebImageTag string
+	DbImageTag  string
+}
+
 // LegacyApp implements the LocalApp interface for Legacy Newmedia apps
 type LegacyApp struct {
 	Name          string
@@ -42,6 +49,16 @@ type LegacyApp struct {
 	DbPublicPort  int64
 	Status        string
 	SkipYAML      bool
+	Options       *LocalAppOptions
+}
+
+// NewLegacyApp returns an empty legacy app with options struct pre inserted
+func NewLegacyApp(name string, environment string) *LegacyApp {
+	return &LegacyApp{
+		Name:        name,
+		Environment: environment,
+		Options:     &LocalAppOptions{},
+	}
 }
 
 // RenderComposeYAML returns teh contents of a docker compose config for this app
@@ -53,10 +70,36 @@ func (l LegacyApp) RenderComposeYAML() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	templ.Execute(&doc, map[string]string{
-		"image": fmt.Sprintf("drud/nginx-php-fpm-%s", l.AppType),
-		"name":  l.ContainerName(),
-	})
+
+	if l.Options == nil {
+		l.Options = &LocalAppOptions{}
+	}
+
+	if l.Options.WebImage == "" {
+		l.Options.WebImage = fmt.Sprintf("drud/nginx-php-fpm-%s:latest", l.AppType)
+	}
+	if l.Options.DbImage == "" {
+		l.Options.DbImage = "drud/mysql-docker-local:5.7"
+	}
+	if l.Options.WebImageTag != "" {
+		l.Options.WebImage = SubTag(l.Options.WebImage, l.Options.WebImageTag)
+	}
+	if l.Options.DbImageTag != "" {
+		l.Options.DbImage = SubTag(l.Options.DbImage, l.Options.DbImageTag)
+	}
+
+	templateVars := map[string]string{
+		"web_image": l.Options.WebImage,
+		"db_image":  l.Options.DbImage,
+		"name":      l.ContainerName(),
+		"srctarget": "/var/www/html",
+	}
+
+	if l.Options.WebImageTag == "unison" || strings.HasSuffix(l.Options.WebImage, ":unison") {
+		templateVars["srctarget"] = "/src"
+	}
+
+	templ.Execute(&doc, templateVars)
 	return doc.String(), nil
 }
 

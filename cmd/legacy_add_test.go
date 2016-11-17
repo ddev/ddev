@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -80,12 +81,51 @@ func TestLegacyAddScaffoldWP(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
-	app := local.LegacyApp{
-		Name:        LegacyTestApp,
-		Environment: LegacyTestEnv,
-	}
-
+	app := local.NewLegacyApp(LegacyTestApp, LegacyTestEnv)
 	assert.Equal(true, checkRequiredFolders(app))
+
+}
+
+// TestLegacyAddScaffoldWPImageTag makes sure the --web-image-tag and --db-image-tag flags work
+func TestLegacyAddScaffoldWPImageTag(t *testing.T) {
+	assert := assert.New(t)
+
+	// test that you get an error when you run with no args
+	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv, "-s", "--web-image-tag=unison,", "--db-image-tag=5.6"}
+	out, err := utils.RunCommand(DrudBin, args)
+	assert.NoError(err)
+	assert.Contains(string(out), "Successfully added")
+
+	app := local.NewLegacyApp(LegacyTestApp, LegacyTestEnv)
+	assert.Equal(true, checkRequiredFolders(app))
+
+	composeFile, err := ioutil.ReadFile(path.Join(app.AbsPath(), "docker-compose.yaml"))
+	assert.NoError(err)
+
+	assert.Contains(string(composeFile), "unison")
+	assert.Contains(string(composeFile), "5.6")
+
+}
+
+// TestLegacyAddScaffoldWPImageChange makes sure the --web-image and --db-image flags work
+func TestLegacyAddScaffoldWPImageChange(t *testing.T) {
+	assert := assert.New(t)
+
+	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv, "-s",
+		"--web-image=drud/testmewebimage,", "--db-image=drud/testmedbimage",
+	}
+	out, err := utils.RunCommand(DrudBin, args)
+	assert.NoError(err)
+	assert.Contains(string(out), "Successfully added")
+
+	app := local.NewLegacyApp(LegacyTestApp, LegacyTestEnv)
+	assert.Equal(true, checkRequiredFolders(app))
+
+	composeFile, err := ioutil.ReadFile(path.Join(app.AbsPath(), "docker-compose.yaml"))
+	assert.NoError(err)
+
+	assert.Contains(string(composeFile), "drud/testmewebimage")
+	assert.Contains(string(composeFile), "drud/testmedbimage")
 
 }
 
@@ -103,10 +143,7 @@ func TestLegacyAddWP(t *testing.T) {
 	assert.Contains(string(out), "Successfully added")
 	assert.Contains(string(out), "Your application can be reached at")
 
-	app := local.LegacyApp{
-		Name:        LegacyTestApp,
-		Environment: LegacyTestEnv,
-	}
+	app := local.NewLegacyApp(LegacyTestApp, LegacyTestEnv)
 
 	assert.Equal(true, checkRequiredFolders(app))
 	assert.Equal(true, utils.IsRunning(app.ContainerName()+"-web"))
@@ -124,6 +161,21 @@ func TestLegacyAddWP(t *testing.T) {
 	o.Headers["Host"] = app.HostName()
 	err = utils.EnsureHTTPStatus(o)
 	assert.NoError(err)
+
+}
+
+func TestSubTag(t *testing.T) {
+	tests := [][]string{
+		[]string{"drud/testimage", "drud/testimage:unison"},
+		[]string{"drud/testimage:test", "drud/testimage:unison"},
+		[]string{"http://docker.io/drud/testimage:test", "http://docker.io/drud/testimage:unison"},
+		[]string{"http://docker.io/drud/testimage", "http://docker.io/drud/testimage:unison"},
+		[]string{"http://docker.io/drud/testimage:unison", "http://docker.io/drud/testimage:unison"},
+	}
+	for _, l := range tests {
+		img := local.SubTag(l[0], "unison")
+		assert.Equal(t, l[1], img)
+	}
 }
 
 func init() {

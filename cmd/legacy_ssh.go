@@ -16,10 +16,7 @@ var LegacySSHCmd = &cobra.Command{
 	Short: "SSH to an app container.",
 	Long:  `Connects user to the running container.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := local.LegacyApp{
-			Name:        activeApp,
-			Environment: activeDeploy,
-		}
+		app := local.NewLegacyApp(activeApp, activeDeploy)
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 

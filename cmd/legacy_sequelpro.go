@@ -20,10 +20,7 @@ var LegacySequelproCmd = &cobra.Command{
 	Short: "Easily connect local site to sequelpro",
 	Long:  `A helper command for easily using sequelpro with a drud app that has been initialized locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := local.LegacyApp{
-			Name:        activeApp,
-			Environment: activeDeploy,
-		}
+		app := local.NewLegacyApp(activeApp, activeDeploy)
 
 		nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
 

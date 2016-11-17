@@ -15,10 +15,7 @@ var LegacyStopCmd = &cobra.Command{
 	Short: "Stop an application's local services.",
 	Long:  `Stop will turn off the local containers and not remove them.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := local.LegacyApp{
-			Name:        activeApp,
-			Environment: activeDeploy,
-		}
+		app := local.NewLegacyApp(activeApp, activeDeploy)
 
 		err := app.Stop()
 		if err != nil {

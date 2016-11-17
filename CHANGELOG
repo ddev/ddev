@@ -1,9 +1,11 @@
 Changelog
 =========
 
-Development
------------
 
+Development
+------------
+
+- Allow user to change the images being used for local sites
 - Add flag to skip recreation of the docker-compose.yaml on site add.
 
 
