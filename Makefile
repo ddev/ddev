@@ -1,6 +1,5 @@
 TAG = $(shell git rev-parse --abbrev-ref HEAD | tr -d '\n')
 PREFIX = drud/drud
-INTEGRATION_PREFIX = drud/drudintegration
 
 osxbin:
 	CGO_ENABLED=0 GOOS=darwin go build -a -installsuffix cgo -ldflags '-w' -o $(GOPATH)/bin/drud  ./main.go
@@ -12,7 +11,7 @@ linuxbin:
 	@mkdir -p ./bin
 	@cp -p $(GOPATH)/bin/drud ./bin
 
-dev:
+dockerimage:
 	docker build -t $(PREFIX):$(TAG) .
 	docker run -v $(shell pwd)/bin:/go/bin -it $(PREFIX):$(TAG)
 
@@ -22,14 +21,18 @@ devcircle:
 	docker build --rm=false -t $(PREFIX):$(TAG) .
 	docker run -v $(shell pwd)/bin:/go/bin -it $(PREFIX):$(TAG)
 
-latest: dev
+latest: dockerimage
 	docker tag $(PREFIX):$(TAG) $(PREFIX):latest
 
-canary: dev
+canary: dockerimage
 	docker push $(PREFIX):$(TAG)
 
 circle: devcircle
 	docker push $(PREFIX):$(TAG)
 
+# Warning: Pushes "latest" to dockerhub
 all: latest canary
+	echo "Warning: this 'all' target pushes $(PREFIX):latest to hub.docker.com" >&2
 	docker push $(PREFIX):latest
+
+

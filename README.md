@@ -29,17 +29,29 @@ And for linux with
 make linuxbin
 ```
 
-## Test runs
+## Test runs for CLI
 
-To build for local testing you should use.
+```
+go test -timeout 20m -v ./cmd
+```
+
+## Test runs for integration (hosting)
+
+To build for local testing you can build a dockerhub image with:
 ```shell
 make canary
 ```
 
-This will create a drud/drudintegration container tagged with the current branch. You can then run tests against a working cluster by running the following:
-```shell
- docker run -v /Users/beeradb/.drud-sanctuary-token:/root/.drud-sanctuary-token -e "GITHUB_TOKEN=$GITHUB_TOKEN" -e CLUSTER_DOMAIN=unsalted.pw -e DRUD_CLI_INT_NUM=2 -it drud/drudintegration:glide
- ```
+
+This will create a drud/drud container tagged with the current branch. You can then run tests against a working cluster by setting environment variables and running:
+
+* CLUSTER_DOMAIN should be set to the domain in use. For example, Brad uses unsalted.pw
+* DRUDAPI_PROTOCOL should be http or https
+* GITHUB_TOKEN is the authorizing token for the github.com user. used to create a vault token.
+* CIRCLE_BRANCH is the branch built with "make canary" above
+
+
+`docker run -e "GITHUB_TOKEN=$GITHUB_TOKEN" -e "CLUSTER_DOMAIN=$CLUSTER_DOMAIN" -e "DRUDAPI_PROTOCOL=$DRUDAPI_PROTOCOL" -it drud/drud:$CIRCLE_BRANCH go test -timeout 20m -v ./integration`
 
 ## Local testing
 
