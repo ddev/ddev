@@ -9,15 +9,20 @@ import (
 )
 
 var (
-	// DrudBin is the name of the DRUD binary
+	// DrudBin is the full path to the drud binary
 	DrudBin = "drud"
+
 	// LegacyTestApp is the name of the legacy DRUD app to test
 	LegacyTestApp = "drudio"
 	// LegacyTestEnv is the name of the legacy DRUD environment to test
 	LegacyTestEnv = "production"
 )
 
+
 func TestMain(m *testing.M) {
+	if os.Getenv("DRUD_BINARY_FULLPATH") != "" {
+		DrudBin = os.Getenv("DRUD_BINARY_FULLPATH")
+	}
 
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
 	if err != nil {

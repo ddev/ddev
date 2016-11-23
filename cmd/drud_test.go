@@ -7,7 +7,7 @@ var (
 )
 
 func setup() {
-	if os.Getenv("DRUD_BINARY") != "" {
-		binary = os.Getenv("DRUD_BINARY")
+	if os.Getenv("DRUD_BINARY_FULLPATH") != "" {
+		binary = os.Getenv("DRUD_BINARY_FULLPATH")
 	}
 }
