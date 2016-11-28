@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
+	"github.com/fatih/color"
 	"github.com/inconshreveable/go-update"
 	"github.com/spf13/cobra"
 )
@@ -33,13 +33,14 @@ var updateCmd = &cobra.Command{
 	Long:  `Update DRUD tool to latest release.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		fmt.Println("Checking for updated binary...")
+		color.Yellow("Updating DRUD binary ...")
 
 		err := doUpdate("https://storage.googleapis.com/drud/drud")
 		if err != nil {
-			log.Fatal(err)
+			Failed("Could not update DRUD: %s", err)
+		} else {
+			Success("You are now running the latest version of DRUD.")
 		}
-
 	},
 }
 

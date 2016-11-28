@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/drud/bootstrap/cli/local"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +21,7 @@ var LegacyRMCmd = &cobra.Command{
 			Failed("Could not remove site: %s", app.ContainerName())
 		}
 
-		color.Cyan("Successfully removed the %s deploy for the %s application.\n", activeDeploy, activeApp)
+		Success("Successfully removed the %s deploy for the %s application.\n", activeDeploy, activeApp)
 	},
 }
 

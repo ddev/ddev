@@ -267,6 +267,16 @@ func Failed(format string, a ...interface{}) {
 	os.Exit(1)
 }
 
+// Success will indicate an operation succeeded with colored confirmation text.
+func Success(format string, a ...interface{}) {
+	color.Cyan(format, a...)
+}
+
+// Warning will present the user with warning text.
+func Warning(format string, a ...interface{}) {
+	color.Yellow(format, a...)
+}
+
 // NetExists checks to see if the docker network for DRUD local development exists.
 func NetExists(client *docker.Client, name string) bool {
 	nets, _ := client.ListNetworks()

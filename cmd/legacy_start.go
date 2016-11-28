@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/drud/bootstrap/cli/local"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -49,9 +48,9 @@ var LegacyStartCmd = &cobra.Command{
 			Failed("Site failed to achieve readiness.")
 		}
 
-		color.Cyan("Successfully started %s %s", activeApp, activeDeploy)
+		Success("Successfully started %s %s", activeApp, activeDeploy)
 		if siteURL != "" {
-			color.Cyan("Your application can be reached at: %s", siteURL)
+			Success("Your application can be reached at: %s", siteURL)
 		}
 
 	},

@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/drud/bootstrap/cli/local"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -131,9 +130,9 @@ var LegacyAddCmd = &cobra.Command{
 			}
 		}
 
-		color.Cyan("Successfully added %s-%s", activeApp, activeDeploy)
+		Success("Successfully added %s-%s", activeApp, activeDeploy)
 		if siteURL != "" {
-			color.Cyan("Your application can be reached at: %s", siteURL)
+			Success("Your application can be reached at: %s", siteURL)
 		}
 
 	},

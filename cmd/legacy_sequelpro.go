@@ -10,7 +10,6 @@ import (
 
 	"github.com/drud/bootstrap/cli/local"
 	"github.com/drud/drud-go/utils"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -59,7 +58,7 @@ var LegacySequelproCmd = &cobra.Command{
 			exec.Command("open", tmpFilePath).Run()
 		}
 
-		color.Cyan("sequelpro command finished successfully!")
+		Success("sequelpro command finished successfully!")
 
 	},
 }
