@@ -183,22 +183,4 @@ func initConfig() {
 			Auth: eveCreds,
 		}
 	}
-
-	if filesAccess {
-
-		sobj := secrets.Secret{
-			Path: "secret/shared/services/awscfg",
-		}
-
-		err := sobj.Read()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		awsID = sobj.Data["accesskey"].(string)
-		awsSecret = sobj.Data["secretkey"].(string)
-		fs, err := drudfiles.NewFileService(awsID, awsSecret, region, bucketName)
-		fileService = fs
-	}
-
 }
