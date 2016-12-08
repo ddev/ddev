@@ -2,6 +2,7 @@ package local
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -209,6 +210,10 @@ func (l *LegacyApp) GetResources() error {
 	resp, err := svc.ListObjects(params)
 	if err != nil {
 		return err
+	}
+
+	if len(resp.Contents) == 0 {
+		return errors.New("No site archive found")
 	}
 
 	archive := resp.Contents[len(resp.Contents)-1]
