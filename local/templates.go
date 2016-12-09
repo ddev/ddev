@@ -28,6 +28,7 @@ services:
       - {{.name}}-db:db
     ports:
       - "80"
+      - "8025"
     working_dir: "/var/www/html/docroot"
     environment:
       - DEPLOY_NAME=local
@@ -140,6 +141,7 @@ services:
     container_name: nginx-proxy
     ports:
       - "80:80"
+      - "8025:8025"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
 networks:
