@@ -2,6 +2,10 @@ Changelog
 =========
 
 
+Version 0.3.2
+------------
+- Added mailhog (https://github.com/mailhog/MailHog) to catch local smtp based mail.  GUI is available on port 8025.
+
 Version 0.3.1 - Nov 17th 2016
 ------------
 
