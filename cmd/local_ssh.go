@@ -31,7 +31,7 @@ var localSSHCmd = &cobra.Command{
 		nameContainer := fmt.Sprintf("%s-%s-%s-%s", appClient, cfg.ActiveApp, cfg.ActiveDeploy, serviceType)
 
 		if !utils.IsRunning(nameContainer) {
-			log.Fatal("App not runnign locally. Try `drud local add`.")
+			log.Fatal("App not running locally. Try `drud local add`.")
 		}
 
 		composeLOC := path.Join(basePath, "docker-compose.yaml")

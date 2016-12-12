@@ -144,7 +144,7 @@ var addCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		// get deploy that hasd the passed in name
+		// get deploy that has the passed in name
 		deploy := app.GetDeploy(args[1])
 		if deploy == nil {
 			log.Fatalln("Deploy", args[1], "does not exist.")
@@ -164,7 +164,7 @@ var addCmd = &cobra.Command{
 			deploy,
 		)
 
-		// Gather data, files, src resoruces in parallel
+		// Gather data, files, src resources in parallel
 
 		// limit logical processors to 3
 		runtime.GOMAXPROCS(3)
@@ -252,7 +252,7 @@ var addCmd = &cobra.Command{
 			log.Fatalln(dcErr)
 		}
 
-		// use the docker client to wait for the containers to spin up then print a linik to the app
+		// use the docker client to wait for the containers to spin up then print a link to the app
 		client, _ := utils.GetDockerClient()
 		var publicPort int64
 	Loop:

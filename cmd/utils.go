@@ -71,7 +71,7 @@ func posString(slice []string, element string) int {
 	return -1
 }
 
-// containsString returns true iff slice contains element
+// containsString returns true if slice contains element
 func containsString(slice []string, element string) bool {
 	return !(posString(slice, element) == -1)
 }
@@ -246,7 +246,7 @@ func getMAC() (string, error) {
 	return macADDR, nil
 }
 
-// ParseConfigFlag is needed in order to get teh value of the flag before cobra can
+// ParseConfigFlag is needed in order to get the value of the flag before cobra can
 func ParseConfigFlag() string {
 	value := ""
 

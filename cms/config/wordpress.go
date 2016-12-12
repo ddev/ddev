@@ -26,7 +26,7 @@ if ( ! defined( 'DB_HOST' ) )
     define( 'DB_HOST', "{{ $config.DatabaseHost }}" );
 
 // ======================================================
-// Additonal DB settings, you do not want to change these
+// Additional DB settings, you do not want to change these
 // ======================================================
 if (file_exists(__DIR__ . '/custom.settings.php')) {
   include __DIR__ . '/custom.settings.php';
@@ -162,7 +162,7 @@ if ( !defined( 'DISALLOW_FILE_MODS' ) ) // updates
 
 // =====================================
 // WP - Core only updates the core files
-// No Akisemet or Hello Dolly
+// No Akismet or Hello Dolly
 // =====================================
 if ( !defined( 'CORE_UPGRADE_SKIP_NEW_BUNDLED' ) )
   define( 'CORE_UPGRADE_SKIP_NEW_BUNDLED', true );
@@ -183,7 +183,7 @@ if ( file_exists( dirname( __FILE__ ) . '/memcached.php' ) )
   $memcached_servers = include( dirname( __FILE__ ) . '/memcached.php' );
 
 // ===========================================================================================
-// This can be used to programatically set the stage when deploying (e.g. production, staging)
+// This can be used to programmatically set the stage when deploying (e.g. production, staging)
 // ===========================================================================================
 define( 'WP_STAGE', 'xxxx' );
 define( 'STAGING_DOMAIN', 'xxxx' ); // Does magic in WP Stack to handle staging domain rewriting

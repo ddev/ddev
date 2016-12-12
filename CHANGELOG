@@ -35,7 +35,7 @@ Version 0.3.0 - Oct 27th 2016
 - Changing file sync method to unison in order to get two-way syncing.
 - Fixed issue in creating drud_default network on restart.
 - Fixed linking issue where relative links started with two forward slashes.
-- Colorize output of `drud secret` comands.
+- Colorize output of `drud secret` commands.
 - Added a `drud file delete` command.
 - Added a `drud secret search` command.
 - Added experimental support for startup hooks provided by https://github.com/drud/dcfg.
