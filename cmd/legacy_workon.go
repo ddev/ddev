@@ -16,7 +16,7 @@ import (
 var LegacyWorkonCmd = &cobra.Command{
 	Use:   "workon",
 	Short: "Set a site to work on",
-	Long:  `If you select an app to workon you cant skip the activeApp and activeDeploy args.`,
+	Long:  `If you select an app to workon you cant skip the acticeApp and activeDeploy args.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var parts []string
 		var answer int

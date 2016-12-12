@@ -81,7 +81,7 @@ func Execute() {
 		}
 	}
 
-	// prepopulate tokenfile so I don't have to check for its existence everywhere
+	// prepopulate tokenfile so i dont have to check for its existence everywhere
 	if _, err := os.Stat(tokenLocation); os.IsNotExist(err) {
 		f, ferr := os.Create(tokenLocation)
 		if ferr != nil {

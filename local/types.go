@@ -7,9 +7,9 @@ import (
 
 // App is an interface apps for Drud Local must implement to use shared functionality
 type App interface {
-	RenderComposeYAML() (string, error)   // returns contents for docker compose config
+	RenderComposeYAML() (string, error)   // returns contents for docke rcompose config
 	RelPath() string                      // returns path from root dir ('$HOME/.drud') to app
-	GetRepoDetails() (RepoDetails, error) // returns struct with branch, org, host, etc...
+	GetRepoDetails() (RepoDetails, error) // retuirns struct with branch, org, host, etc...
 	ContainerName() string
 	AbsPath() string
 	GetName() string

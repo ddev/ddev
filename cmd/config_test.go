@@ -19,7 +19,7 @@ var configTest = []struct {
 }{
 	{utils.RandomString(10) + ".yaml", "drudio", "production", "snuffleupagus", "drudapi.turtleduck.drud.io", "http"},
 	{utils.RandomString(10) + ".yaml", "nonsense", "staging", "barney", "drudapi.bowbell.drud.io", "https"},
-	{utils.RandomString(10) + ".yaml", "bologna", "default", "bigbird", "drudapi.genesis.drud.io", "https"},
+	{utils.RandomString(10) + ".yaml", "balogna", "default", "bigbird", "drudapi.genesis.drud.io", "https"},
 }
 
 // TestIntegrationConfigCreate makes sure that when a config does not exist one will be created
@@ -67,7 +67,7 @@ func TestIntegrationConfigSet(t *testing.T) {
 	}
 }
 
-// TestUnitConfigSet uses internal functions to test the config set operation
+// TestUnitConfigSet uses internal functions to test teh config set operation
 func TestUnitConfigSet(t *testing.T) {
 	var err error
 

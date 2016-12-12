@@ -72,7 +72,7 @@ func (d Databag) GetRepoDetails(env string) (RepoDetails, error) {
 	return details, nil
 }
 
-// SiteEnv models the inner contents of a databag
+// SiteEnv models the iner contents of a databag
 type SiteEnv struct {
 	ActiveTheme        string   `yaml:"active_theme"`
 	AdminMail          string   `yaml:"admin_mail"`

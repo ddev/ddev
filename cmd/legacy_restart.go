@@ -28,7 +28,7 @@ var LegacyReconfigCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if activeApp == "" {
-			log.Fatalln("Must set app flag to denote which app you want to work with.")
+			log.Fatalln("Must set app flag to dentoe which app you want to work with.")
 		}
 
 		app := local.NewLegacyApp(activeApp, activeDeploy)

@@ -1,11 +1,11 @@
 ## drud init local
 
-Initialize machine for local development.
+Initialize machien for local development.
 
 ### Synopsis
 
 
-Ensures machine has requirements and setup for working with Drud applications locally.
+Ensures machine has requirements and setup for workign with Drud appls locally.
 
 ```
 drud init local

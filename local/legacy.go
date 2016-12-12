@@ -62,7 +62,7 @@ func NewLegacyApp(name string, environment string) *LegacyApp {
 	}
 }
 
-// RenderComposeYAML returns the contents of a docker compose config for this app
+// RenderComposeYAML returns teh contents of a docker compose config for this app
 func (l LegacyApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
@@ -118,7 +118,7 @@ func (l LegacyApp) ComposeFileExists() bool {
 	return true
 }
 
-// AbsPath return the full path from root to the app directory
+// AbsPath returnt he full path from root to the app directory
 func (l LegacyApp) AbsPath() string {
 	homedir, err := utils.GetHomeDir()
 	if err != nil {
@@ -417,7 +417,7 @@ func (l *LegacyApp) FindPorts() error {
 	return err
 }
 
-// Config creates the apps config file adding things like database host, name, and password
+// Config creates the apps config file adding thigns like database host, name, and password
 // as well as other sensitive data like salts.
 func (l *LegacyApp) Config() error {
 	basePath := l.AbsPath()
@@ -534,7 +534,7 @@ func (l *LegacyApp) Cleanup() error {
 				args := []string{action, c.ID}
 				_, err := utils.RunCommand("docker", args)
 				if err != nil {
-					return fmt.Errorf("Could not %s container %s: %s", action, c.Names[0], err)
+					return fmt.Errorf("Could nnot %s container %s: %s", action, c.Names[0], err)
 				}
 			}
 		}

@@ -5,7 +5,7 @@ Download a file stored in Drud.
 ### Synopsis
 
 
-Download a file stored remotely in the Drud system to your local system.
+Downlload a file stored remotely in the Drud system to your local system.
 
 ```
 drud get file [/path/to/filename]
