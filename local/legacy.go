@@ -77,7 +77,7 @@ func (l LegacyApp) RenderComposeYAML() (string, error) {
 	}
 
 	if l.Options.WebImage == "" {
-		l.Options.WebImage = fmt.Sprintf("drud/nginx-php-fpm-%s:latest", l.AppType)
+		l.Options.WebImage = fmt.Sprintf("drud/nginx-php-fpm-local:latest")
 	}
 	if l.Options.DbImage == "" {
 		l.Options.DbImage = "drud/mysql-docker-local:5.7"
