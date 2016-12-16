@@ -18,7 +18,6 @@ var (
 	LegacyTestEnv = "production"
 )
 
-
 func TestMain(m *testing.M) {
 	if os.Getenv("DRUD_BINARY_FULLPATH") != "" {
 		DrudBin = os.Getenv("DRUD_BINARY_FULLPATH")
