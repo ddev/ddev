@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// LegacyExecCmd allows users to execute arbitrary bash commands within a container.
-var LegacyExecCmd = &cobra.Command{
+// LocalDevExecCmd allows users to execute arbitrary bash commands within a container.
+var LocalDevExecCmd = &cobra.Command{
 	Use:   "exec [app_name] [environment_name] '[cmd]'",
 	Short: "run a command in an app container.",
 	Long:  `Execs into container and runs bash commands.`,
@@ -24,15 +24,19 @@ var LegacyExecCmd = &cobra.Command{
 			cmdString = args[2]
 		}
 
-		app := local.NewLegacyApp(activeApp, activeDeploy)
+		app := local.PluginMap[strings.ToLower(plugin)]
+		opts := local.AppOptions{
+			Name:        activeApp,
+			Environment: activeDeploy,
+		}
+		app.SetOpts(opts)
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
-
 		if !utils.IsRunning(nameContainer) {
 			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
-		if !app.ComposeFileExists() {
+		if !local.ComposeFileExists(app) {
 			Failed("No docker-compose yaml for this site. Try `drud legacy add`.")
 		}
 
@@ -70,6 +74,6 @@ var LegacyExecCmd = &cobra.Command{
 }
 
 func init() {
-	LegacyExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Which service to send the command to. [web, db]")
-	LegacyCmd.AddCommand(LegacyExecCmd)
+	LocalDevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Which service to send the command to. [web, db]")
+	LocalDevCmd.AddCommand(LocalDevExecCmd)
 }

@@ -4,27 +4,33 @@ import (
 	"fmt"
 	"log"
 	"path"
+	"strings"
 
 	"github.com/drud/bootstrap/cli/local"
 	"github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
 
-// LegacySSHCmd represents the ssh command.
-var LegacySSHCmd = &cobra.Command{
+// LocalDevSSHCmd represents the ssh command.
+var LocalDevSSHCmd = &cobra.Command{
 	Use:   "ssh [app_name] [environment_name]",
 	Short: "SSH to an app container.",
 	Long:  `Connects user to the running container.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := local.NewLegacyApp(activeApp, activeDeploy)
+		app := local.PluginMap[strings.ToLower(plugin)]
+
+		opts := local.AppOptions{
+			Name:        activeApp,
+			Environment: activeDeploy,
+		}
+		app.SetOpts(opts)
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
-
 		if !utils.IsRunning(nameContainer) {
 			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
-		if !app.ComposeFileExists() {
+		if !local.ComposeFileExists(app) {
 			Failed("No docker-compose yaml for this site. Try `drud legacy add`.")
 		}
 
@@ -43,6 +49,6 @@ var LegacySSHCmd = &cobra.Command{
 }
 
 func init() {
-	LegacySSHCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Which service to send the command to. [web, db]")
-	LegacyCmd.AddCommand(LegacySSHCmd)
+	LocalDevSSHCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Which service to send the command to. [web, db]")
+	LocalDevCmd.AddCommand(LocalDevSSHCmd)
 }

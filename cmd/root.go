@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/drud/bootstrap/cli/local"
 	drudfiles "github.com/drud/drud-go/files"
 
 	log "github.com/Sirupsen/logrus"
@@ -27,7 +28,7 @@ const (
 )
 
 var (
-	cfg                *Config
+	cfg                *local.Config
 	usr                *user.User
 	pwd                string
 	cfgFile            string
@@ -109,10 +110,11 @@ func Execute() {
 		log.Fatalf("Fatal error config file: %s \n", err)
 	}
 
-	cfg, err = GetConfig()
+	cfg, err = local.GetConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
+	cfg.Version = drudapiVersion
 
 	// load the vault token from disk and use it to get policy information
 	// if permission is denied send the user through `drud auth github` and then try again

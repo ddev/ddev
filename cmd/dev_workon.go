@@ -13,7 +13,7 @@ import (
 )
 
 // LegacyWorkonCmd represents the list command
-var LegacyWorkonCmd = &cobra.Command{
+var LocalDevWorkonCmd = &cobra.Command{
 	Use:   "workon",
 	Short: "Set a site to work on",
 	Long:  `If you select an app to workon you cant skip the acticeApp and activeDeploy args.`,
@@ -24,8 +24,8 @@ var LegacyWorkonCmd = &cobra.Command{
 
 		if activeApp == "" && activeDeploy == "" {
 			fmt.Println("Enter a number to choose which app to work on:")
-			files, _ = ioutil.ReadDir(path.Join(homedir, ".drud", "legacy"))
-			files = local.FilterNonLegacyFiles(files)
+			files, _ = ioutil.ReadDir(path.Join(homedir, ".drud", plugin))
+			files = local.FilterNonAppDirs(files)
 
 			fmt.Printf("%d: %s\n", 0, "Cancel")
 			for i, f := range files {
@@ -62,5 +62,5 @@ var LegacyWorkonCmd = &cobra.Command{
 }
 
 func init() {
-	LegacyCmd.AddCommand(LegacyWorkonCmd)
+	LocalDevCmd.AddCommand(LocalDevWorkonCmd)
 }

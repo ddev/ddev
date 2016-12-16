@@ -13,7 +13,7 @@ func TestLegacyRm(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
-	args := []string{"legacy", "rm", LegacyTestApp, LegacyTestEnv}
+	args := []string{"dev", "rm", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
 	format := fmt.Sprintf

@@ -4,6 +4,11 @@ Changelog
 
 Version 0.3.2
 ------------
+- Switched to new combined nginx image for drupal and wp apps
+- Fix bug where settings.php not writeable
+- Adding pluggability for local dev platforms/sources
+- Alias `drud legacy` to `drud dev`
+- Combining `drud legacy` and `drud local` into `drud dev`
 - Added mailhog (https://github.com/mailhog/MailHog) to catch local smtp based mail.  GUI is available on port 8025.
 
 Version 0.3.1 - Nov 17th 2016

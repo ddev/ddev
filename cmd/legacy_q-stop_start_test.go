@@ -14,7 +14,7 @@ func TestLegacyStop(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
-	args := []string{"legacy", "stop", LegacyTestApp, LegacyTestEnv}
+	args := []string{"dev", "stop", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
 	format := fmt.Sprintf
@@ -26,7 +26,7 @@ func TestLegacyStoppedList(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
-	args := []string{"legacy", "list"}
+	args := []string{"dev", "list"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
 	assert.Contains(t, string(out), "found")
@@ -42,7 +42,7 @@ func TestLegacyStart(t *testing.T) {
 	}
 	assert := assert.New(t)
 
-	args := []string{"legacy", "start", LegacyTestApp, LegacyTestEnv}
+	args := []string{"dev", "start", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	format := fmt.Sprintf
@@ -50,10 +50,9 @@ func TestLegacyStart(t *testing.T) {
 	assert.Contains(string(out), format("Starting legacy-%s-%s-db", LegacyTestApp, LegacyTestEnv))
 	assert.Contains(string(out), "Your application can be reached at")
 
-	app := local.LegacyApp{
-		Name:        LegacyTestApp,
-		Environment: LegacyTestEnv,
-	}
+	app := local.LegacyApp{}
+	app.AppBase.Name = LegacyTestApp
+	app.AppBase.Environment = LegacyTestEnv
 
 	assert.Equal(true, utils.IsRunning(app.ContainerName()+"-web"))
 	assert.Equal(true, utils.IsRunning(app.ContainerName()+"-db"))
@@ -66,7 +65,7 @@ func TestLegacyStart(t *testing.T) {
 	assert.Equal(true, utils.IsTCPPortAvailable(int(webPort)))
 	assert.Equal(true, utils.IsTCPPortAvailable(int(dbPort)))
 	o := utils.NewHTTPOptions("http://127.0.0.1")
-	o.Timeout = 120
+	o.Timeout = 420
 	o.Headers["Host"] = app.HostName()
 	err = utils.EnsureHTTPStatus(o)
 	assert.NoError(err)

@@ -1,20 +1,29 @@
 package cmd
 
 import (
+	"strings"
+
 	log "github.com/Sirupsen/logrus"
+	"github.com/fatih/color"
 
 	"github.com/drud/bootstrap/cli/local"
 
 	"github.com/spf13/cobra"
 )
 
-// LegacyStopCmd represents the stop command
-var LegacyStopCmd = &cobra.Command{
+// LocalDevStopCmd represents the stop command
+var LocalDevStopCmd = &cobra.Command{
 	Use:   "stop [app_name] [environment_name]",
 	Short: "Stop an application's local services.",
 	Long:  `Stop will turn off the local containers and not remove them.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := local.NewLegacyApp(activeApp, activeDeploy)
+		app := local.PluginMap[strings.ToLower(plugin)]
+
+		opts := local.AppOptions{
+			Name:        activeApp,
+			Environment: activeDeploy,
+		}
+		app.SetOpts(opts)
 
 		err := app.Stop()
 		if err != nil {
@@ -22,12 +31,10 @@ var LegacyStopCmd = &cobra.Command{
 			Failed("Failed to stop containers for %s. Run 'drud legacy list' to ensure your site exists.", app.ContainerName())
 		}
 
-		Success("Application has been stopped.")
+		color.Cyan("Application has been stopped.")
 	},
 }
 
 func init() {
-
-	LegacyCmd.AddCommand(LegacyStopCmd)
-
+	LocalDevCmd.AddCommand(LocalDevStopCmd)
 }

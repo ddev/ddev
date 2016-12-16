@@ -4,6 +4,8 @@ import (
 	"os"
 	"text/template"
 
+	"strings"
+
 	"github.com/Masterminds/sprig"
 	"github.com/drud/bootstrap/cli/cms/model"
 )
@@ -74,9 +76,14 @@ $databases['default']['default'] = array(
 // object with a data-driven template.
 func WriteDrupalConfig(drupalConfig *model.DrupalConfig, filePath string) error {
 	tmpl, err := template.New("drupalConfig").Funcs(sprig.TxtFuncMap()).Parse(drupalTemplate)
+	dir := strings.TrimSuffix(filePath, "/settings.php")
 	if err != nil {
 		return err
 	}
+	// Ensure target directory is writable.
+	os.Chmod(dir, 0755)
+	// Ensure filePath is writable.
+	os.Chmod(filePath, 0644)
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
@@ -90,9 +97,14 @@ func WriteDrupalConfig(drupalConfig *model.DrupalConfig, filePath string) error 
 
 func WriteDrushConfig(drushConfig *model.DrushConfig, filePath string) error {
 	tmpl, err := template.New("drushConfig").Funcs(sprig.TxtFuncMap()).Parse(drushTemplate)
+	dir := strings.TrimSuffix(filePath, "/drush.settings.php")
 	if err != nil {
 		return err
 	}
+	// Ensure target directory is writable.
+	os.Chmod(dir, 0755)
+	// Ensure filePath is writable.
+	os.Chmod(filePath, 0644)
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err

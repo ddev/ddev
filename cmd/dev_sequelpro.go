@@ -7,19 +7,27 @@ import (
 	"os/exec"
 	"path"
 	"strconv"
+	"strings"
 
 	"github.com/drud/bootstrap/cli/local"
 	"github.com/drud/drud-go/utils"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
-// LegacySequelproCmd represents the sequelpro command
-var LegacySequelproCmd = &cobra.Command{
+// LocalDevSequelproCmd represents the sequelpro command
+var LocalDevSequelproCmd = &cobra.Command{
 	Use:   "sequelpro [app_name] [environment_name]",
 	Short: "Easily connect local site to sequelpro",
 	Long:  `A helper command for easily using sequelpro with a drud app that has been initialized locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := local.NewLegacyApp(activeApp, activeDeploy)
+		app := local.PluginMap[strings.ToLower(plugin)]
+
+		opts := local.AppOptions{
+			Name:        activeApp,
+			Environment: activeDeploy,
+		}
+		app.SetOpts(opts)
 
 		nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
 
@@ -58,13 +66,13 @@ var LegacySequelproCmd = &cobra.Command{
 			exec.Command("open", tmpFilePath).Run()
 		}
 
-		Success("sequelpro command finished successfully!")
+		color.Cyan("sequelpro command finished successfully!")
 
 	},
 }
 
 func init() {
-	LegacySequelproCmd.Flags().BoolVarP(&scaffold, "scaffold", "s", false, "Add the app but don't run or config it.")
-	LegacyCmd.AddCommand(LegacySequelproCmd)
+	LocalDevSequelproCmd.Flags().BoolVarP(&scaffold, "scaffold", "s", false, "Add the app but don't run or config it.")
+	LocalDevCmd.AddCommand(LocalDevSequelproCmd)
 	//RootCmd.AddCommand(SequelproCmd)
 }

@@ -1,31 +1,18 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
-
-	"cloud.google.com/go/storage"
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/option"
 
 	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils"
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 )
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
 
 // NormalizePath prefixes secret paths with secret when necessary
 func NormalizePath(sPath string) (newPath string) {
@@ -149,7 +136,7 @@ func EnableAvailablePackages() error {
 
 	if drudAccess {
 		RootCmd.AddCommand(HostingCmd)
-		RootCmd.AddCommand(LocalCmd)
+		RootCmd.AddCommand(LocalDevCmd)
 	}
 	if filesAccess {
 		RootCmd.AddCommand(FileCmd)
@@ -162,66 +149,6 @@ func EnableAvailablePackages() error {
 
 	return nil
 
-}
-
-func getClientJWT(client string) ([]byte, error) {
-	sobj := secrets.Secret{
-		Path: fmt.Sprintf("secret/gce/%s-jwt", client),
-	}
-
-	err := sobj.Read()
-	if err != nil {
-		return []byte(""), err
-	}
-
-	b, err := json.Marshal(sobj.Data)
-	if err != nil {
-		return []byte(""), err
-	}
-
-	return b, nil
-}
-
-func getStorageClient(jwt []byte, ctx context.Context) (*storage.Client, error) {
-	conf, err := google.JWTConfigFromJSON(
-		jwt,
-		storage.ScopeReadOnly,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := storage.NewClient(ctx, option.WithTokenSource(conf.TokenSource(ctx)))
-	if err != nil {
-		return nil, err
-	}
-
-	return client, nil
-}
-
-// PrepLocalSiteDirs creates a site's directories for local dev in ~/.drud/client/site
-func PrepLocalSiteDirs(base string) error {
-	err := os.MkdirAll(base, os.FileMode(int(0774)))
-	if err != nil {
-		return err
-	}
-
-	dirs := []string{
-		"src",
-		"files",
-		"data",
-	}
-	for _, d := range dirs {
-		dirPath := path.Join(base, d)
-		err := os.Mkdir(dirPath, os.FileMode(int(0774)))
-		if err != nil {
-			if !strings.Contains(err.Error(), "file exists") {
-				return err
-			}
-		}
-	}
-
-	return nil
 }
 
 // getMAC returns the mac address for interface en0 or the first in the list otherwise

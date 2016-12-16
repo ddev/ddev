@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/drud/bootstrap/cli/local"
 	"github.com/drud/drud-go/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -56,11 +57,11 @@ func TestIntegrationConfigSet(t *testing.T) {
 
 		fbytes, err := ioutil.ReadFile(c.config)
 		assert.NoError(t, err)
-		assert.Contains(t, string(fbytes), "Client: "+c.client)
-		assert.Contains(t, string(fbytes), "ActiveApp: "+c.app)
-		assert.Contains(t, string(fbytes), "ActiveDeploy: "+c.env)
-		assert.Contains(t, string(fbytes), "DrudHost: "+c.host)
-		assert.Contains(t, string(fbytes), "Protocol: "+c.protocol)
+		assert.Contains(t, string(fbytes), "client: "+c.client)
+		assert.Contains(t, string(fbytes), "activeapp: "+c.app)
+		assert.Contains(t, string(fbytes), "activedeploy: "+c.env)
+		assert.Contains(t, string(fbytes), "drudhost: "+c.host)
+		assert.Contains(t, string(fbytes), "protocol: "+c.protocol)
 
 		err = os.Remove(c.config)
 		assert.NoError(t, err)
@@ -72,7 +73,7 @@ func TestUnitConfigSet(t *testing.T) {
 	var err error
 
 	for _, c := range configTest {
-		cfg, err = GetConfig()
+		cfg, err = local.GetConfig()
 		assert.NoError(t, err)
 		assert.NotNil(t, cfg)
 
@@ -91,11 +92,11 @@ func TestUnitConfigSet(t *testing.T) {
 
 		fbytes, err := ioutil.ReadFile(c.config)
 		assert.NoError(t, err)
-		assert.Contains(t, string(fbytes), "Client: "+c.client)
-		assert.Contains(t, string(fbytes), "ActiveApp: "+c.app)
-		assert.Contains(t, string(fbytes), "ActiveDeploy: "+c.env)
-		assert.Contains(t, string(fbytes), "DrudHost: "+c.host)
-		assert.Contains(t, string(fbytes), "Protocol: "+c.protocol)
+		assert.Contains(t, string(fbytes), "client: "+c.client)
+		assert.Contains(t, string(fbytes), "activeapp: "+c.app)
+		assert.Contains(t, string(fbytes), "activedeploy: "+c.env)
+		assert.Contains(t, string(fbytes), "drudhost: "+c.host)
+		assert.Contains(t, string(fbytes), "protocol: "+c.protocol)
 
 		err = os.Remove(c.config)
 		assert.NoError(t, err)

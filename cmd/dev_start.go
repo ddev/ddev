@@ -3,13 +3,15 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/drud/bootstrap/cli/local"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
-// LegacyStartCmd represents the stop command
-var LegacyStartCmd = &cobra.Command{
+// LocalDevStartCmd represents the stop command
+var LocalDevStartCmd = &cobra.Command{
 	Use:   "start [app_name] [environment_name]",
 	Short: "Start an application's local services.",
 	Long:  `Start will turn on the local containers that were previously stopped for an app.`,
@@ -27,18 +29,18 @@ var LegacyStartCmd = &cobra.Command{
 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app := local.NewLegacyApp(activeApp, activeDeploy)
-		app.Template = local.LegacyComposeTemplate
+		app := local.PluginMap[strings.ToLower(plugin)]
+
+		opts := local.AppOptions{
+			Name:        activeApp,
+			Environment: activeDeploy,
+		}
+		app.SetOpts(opts)
 
 		err := app.Start()
 		if err != nil {
 			log.Println(err)
 			Failed("Failed to start site.")
-		}
-
-		err = app.Config()
-		if err != nil {
-			log.Fatalln(err)
 		}
 
 		fmt.Println("Waiting for site readiness. This may take a couple minutes...")
@@ -48,16 +50,14 @@ var LegacyStartCmd = &cobra.Command{
 			Failed("Site failed to achieve readiness.")
 		}
 
-		Success("Successfully started %s %s", activeApp, activeDeploy)
+		color.Cyan("Successfully started %s %s", activeApp, activeDeploy)
 		if siteURL != "" {
-			Success("Your application can be reached at: %s", siteURL)
+			color.Cyan("Your application can be reached at: %s", siteURL)
 		}
 
 	},
 }
 
 func init() {
-
-	LegacyCmd.AddCommand(LegacyStartCmd)
-
+	LocalDevCmd.AddCommand(LocalDevStartCmd)
 }

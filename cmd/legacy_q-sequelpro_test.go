@@ -17,15 +17,14 @@ func TestLegacySequelproScaffold(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"legacy", "sequelpro", LegacyTestApp, LegacyTestEnv, "-s"}
+	args := []string{"dev", "sequelpro", LegacyTestApp, LegacyTestEnv, "-s"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "finished successfully")
 
-	app := local.LegacyApp{
-		Name:        LegacyTestApp,
-		Environment: LegacyTestEnv,
-	}
+	app := local.LegacyApp{}
+	app.AppBase.Name = LegacyTestApp
+	app.AppBase.Environment = LegacyTestEnv
 
 	assert.Equal(true, utils.FileExists(path.Join(app.AbsPath(), "sequelpro.spf")))
 

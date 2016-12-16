@@ -1,24 +1,22 @@
 package local
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
-	"text/template"
+	"runtime"
+	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/gosuri/uitable"
+	"github.com/hashicorp/vault/api"
 	"github.com/lextoumbourou/goodhosts"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/fsouza/go-dockerclient"
 
 	"github.com/drud/bootstrap/cli/cms/config"
 	"github.com/drud/bootstrap/cli/cms/model"
@@ -30,92 +28,70 @@ const (
 	containerRunning = "running"
 )
 
-type LocalAppOptions struct {
-	WebImage    string
-	DbImage     string
-	WebImageTag string
-	DbImageTag  string
-}
-
-// LegacyApp implements the LocalApp interface for Legacy Newmedia apps
+// LegacyApp implements the AppBase interface for Legacy Newmedia apps
 type LegacyApp struct {
-	Name          string
-	Environment   string
-	AppType       string
-	Template      string
-	Branch        string
-	Repo          string
-	Archive       string //absolute path to the downloaded archive
-	WebPublicPort int64
-	DbPublicPort  int64
-	Status        string
-	SkipYAML      bool
-	Options       *LocalAppOptions
+	AppBase
+	Options *AppOptions
+	Vault   *api.Logical
 }
 
 // NewLegacyApp returns an empty legacy app with options struct pre inserted
 func NewLegacyApp(name string, environment string) *LegacyApp {
-	return &LegacyApp{
-		Name:        name,
-		Environment: environment,
-		Options:     &LocalAppOptions{},
+	app := &LegacyApp{
+		Options: &AppOptions{},
 	}
+	app.AppBase.Name = name
+	app.AppBase.Environment = environment
+
+	return app
 }
 
-// RenderComposeYAML returns teh contents of a docker compose config for this app
-func (l LegacyApp) RenderComposeYAML() (string, error) {
-	var doc bytes.Buffer
-	var err error
-	templ := template.New("compose template")
-	templ, err = templ.Parse(l.Template)
+func (l *LegacyApp) SetOpts(opts AppOptions) {
+	l.Options = &opts
+	l.Name = opts.Name
+	l.Environment = opts.Environment
+	//l.AppType = opts.AppType
+	l.Template = LegacyComposeTemplate
+	if opts.Template != "" {
+		l.Template = opts.Template
+	}
+	l.SkipYAML = opts.SkipYAML
+}
+
+func (l *LegacyApp) GetOpts() AppOptions {
+	return *l.Options
+}
+
+func (l *LegacyApp) GetTemplate() string {
+	return l.Template
+}
+
+func (l *LegacyApp) GetType() string {
+	if l.AppType == "" {
+		l.SetType()
+	}
+	return l.AppType
+}
+
+// Init sets values from the AppInitOptions on the Drud app object
+func (l *LegacyApp) Init(opts AppOptions) {
+	l.SetOpts(opts)
+
+	if !l.DatabagExists() {
+		log.Fatal("No legacy site by that name.")
+	}
+
+	basePath := l.AbsPath()
+	err := PrepLocalSiteDirs(basePath)
 	if err != nil {
-		return "", err
+		log.Fatalln(err)
 	}
 
-	if l.Options == nil {
-		l.Options = &LocalAppOptions{}
-	}
-
-	if l.Options.WebImage == "" {
-		l.Options.WebImage = fmt.Sprintf("drud/nginx-php-fpm-local:latest")
-	}
-	if l.Options.DbImage == "" {
-		l.Options.DbImage = "drud/mysql-docker-local:5.7"
-	}
-	if l.Options.WebImageTag != "" {
-		l.Options.WebImage = SubTag(l.Options.WebImage, l.Options.WebImageTag)
-	}
-	if l.Options.DbImageTag != "" {
-		l.Options.DbImage = SubTag(l.Options.DbImage, l.Options.DbImageTag)
-	}
-
-	templateVars := map[string]string{
-		"web_image": l.Options.WebImage,
-		"db_image":  l.Options.DbImage,
-		"name":      l.ContainerName(),
-		"srctarget": "/var/www/html",
-	}
-
-	if l.Options.WebImageTag == "unison" || strings.HasSuffix(l.Options.WebImage, ":unison") {
-		templateVars["srctarget"] = "/src"
-	}
-
-	templ.Execute(&doc, templateVars)
-	return doc.String(), nil
 }
 
 // RelPath returns the path from the '.drud' directory to this apps directory
 func (l LegacyApp) RelPath() string {
 	return path.Join("legacy", fmt.Sprintf("%s-%s", l.Name, l.Environment))
-}
-
-// ComposeFileExists returns true if the docker-compose.yaml file exists
-func (l LegacyApp) ComposeFileExists() bool {
-	composeLOC := path.Join(l.AbsPath(), "docker-compose.yaml")
-	if _, err := os.Stat(composeLOC); os.IsNotExist(err) {
-		return false
-	}
-	return true
 }
 
 // AbsPath returnt he full path from root to the app directory
@@ -132,9 +108,14 @@ func (l LegacyApp) GetName() string {
 	return l.Name
 }
 
+// ContainerPrefix returns the base name for legacy app containers
+func (l LegacyApp) ContainerPrefix() string {
+	return "legacy-"
+}
+
 // ContainerName returns the base name for legacy app containers
 func (l LegacyApp) ContainerName() string {
-	return fmt.Sprintf("legacy-%s-%s", l.Name, l.Environment)
+	return fmt.Sprintf("%s%s-%s", l.ContainerPrefix(), l.Name, l.Environment)
 }
 
 // GetRepoDetails uses the Environment field to get the relevant repo details about an app
@@ -152,7 +133,7 @@ func (l LegacyApp) GetRepoDetails() (RepoDetails, error) {
 	return details, nil
 }
 
-// DatabagExists checks if a databag exists or not
+// DatabagExists checks if a databag exists or not.
 func (l LegacyApp) DatabagExists() bool {
 	_, err := GetDatabag(l.Name)
 	if err != nil {
@@ -163,6 +144,71 @@ func (l LegacyApp) DatabagExists() bool {
 
 // GetResources downloads external data for this app
 func (l *LegacyApp) GetResources() error {
+
+	// save errors for when the waitgroup has finished executing
+	errChannel := make(chan error, 1)
+	// apparently this is necessary
+	finished := make(chan bool, 1)
+
+	// limit logical processors to 3
+	runtime.GOMAXPROCS(2)
+	// set up wait group
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+
+		fmt.Println("Getting source code.")
+
+		err := CloneSource(l)
+		if err != nil {
+			log.Println(err)
+			errChannel <- fmt.Errorf("Error cloning source: %s", err)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		fmt.Println("Getting Resources.")
+		err := l.GetArchive()
+		if err != nil {
+			log.Println(err)
+			errChannel <- fmt.Errorf("Error retrieving site resources: %s", err)
+		}
+	}()
+
+	wg.Wait()
+	close(finished)
+
+	select {
+	case <-finished:
+	case err := <-errChannel:
+		if err != nil {
+			return fmt.Errorf("Unable to retrieve one or more resources.")
+		}
+	}
+
+	err := l.SetType()
+	if err != nil {
+		return err
+	}
+
+	if !l.SkipYAML {
+		err = WriteLocalAppYAML(l)
+		if err != nil {
+			log.Println("Could not create docker-compose.yaml")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// GetArchive downloads external data for this app
+func (l *LegacyApp) GetArchive() error {
 	basePath := l.AbsPath()
 
 	dbag, err := GetDatabag(l.Name)
@@ -312,7 +358,7 @@ func (l LegacyApp) Start() error {
 
 	if !l.SkipYAML {
 		fmt.Println("Creating docker-compose config.")
-		err = WriteLocalAppYAML(l)
+		err = WriteLocalAppYAML(&l)
 		if err != nil {
 			return err
 		}
@@ -327,7 +373,6 @@ func (l LegacyApp) Start() error {
 
 	cmdArgs := []string{"-f", composePath, "pull"}
 	_, err = utils.RunCommand("docker-compose", cmdArgs)
-
 	if err != nil {
 		return err
 	}
@@ -343,7 +388,7 @@ func (l LegacyApp) Start() error {
 func (l LegacyApp) Stop() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
-	if !utils.IsRunning(l.ContainerName()+"-db") && !utils.IsRunning(l.ContainerName()+"-web") && !l.ComposeFileExists() {
+	if !utils.IsRunning(l.ContainerName()+"-db") && !utils.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
 		return fmt.Errorf("Site does not exist or is malformed.")
 	}
 
@@ -374,36 +419,6 @@ func (l *LegacyApp) Wait() (string, error) {
 	}
 
 	return l.URL(), nil
-}
-
-// AddRow adds a app listing row for the given application.
-func (l *LegacyApp) AddRow(t *uitable.Table) error {
-	err := l.SetType()
-	if err != nil {
-		l.AppType = "error"
-	}
-
-	if l.Status == containerRunning {
-		t.AddRow(
-			l.Name,
-			l.Environment,
-			l.AppType,
-			l.URL(),
-			fmt.Sprintf("127.0.0.1:%d", l.DbPublicPort),
-			l.Status,
-		)
-	} else {
-		t.AddRow(
-			l.Name,
-			l.Environment,
-			l.AppType,
-			"",
-			"",
-			l.Status,
-		)
-	}
-
-	return nil
 }
 
 func (l *LegacyApp) FindPorts() error {
@@ -501,47 +516,16 @@ func (l *LegacyApp) Config() error {
 func (l *LegacyApp) Down() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
-	if !l.ComposeFileExists() {
-		return fmt.Errorf("Site does not exist or is malformed.")
-	}
-
 	err := utils.DockerCompose(
 		"-f", composePath,
 		"down",
 	)
 	if err != nil {
-		return l.Cleanup()
+		return Cleanup(l)
 	}
 
 	return nil
 
-}
-
-// Cleanup will clean up legacy apps even if the composer file has been deleted.
-func (l *LegacyApp) Cleanup() error {
-	client, _ := GetDockerClient()
-
-	containers, err := client.ListContainers(docker.ListContainersOptions{All: false})
-	if err != nil {
-		return err
-	}
-
-	needle := fmt.Sprintf("legacy-%s-%s", l.Name, l.Environment)
-	for _, c := range containers {
-		if strings.Contains(c.Names[0], needle) {
-			actions := []string{"stop", "rm"}
-			for _, action := range actions {
-				args := []string{action, c.ID}
-				_, err := utils.RunCommand("docker", args)
-				if err != nil {
-					return fmt.Errorf("Could nnot %s container %s: %s", action, c.Names[0], err)
-				}
-			}
-		}
-
-	}
-
-	return nil
 }
 
 // URL returns the URL for a given application.
@@ -570,7 +554,7 @@ func (l *LegacyApp) AddHostsEntry() error {
 	}
 
 	fmt.Println("\n\n\nAdding hostfile entry. You will be prompted for your password.")
-	hostnameArgs := []string{"drud", "legacy", "hostname", l.HostName(), "127.0.0.1"}
+	hostnameArgs := []string{"drud", "dev", "hostname", l.HostName(), "127.0.0.1"}
 	err = utils.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }

@@ -37,16 +37,13 @@ func TestLegacyAddBadArgs(t *testing.T) {
 	assert.NoError(err)
 
 	// test that you get an error when you run with no args
-	args := []string{"legacy", "add"}
+	args := []string{"dev", "add"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "app_name and deploy_name are expected as arguments.")
 
 	// test that you get an error when passing a bad environment name
 	args = append(args, "mcsnaggletooth", "smith")
-	out, err = utils.RunCommand(DrudBin, args)
-	assert.Error(err)
-	assert.Contains(string(out), "Bad environment name.")
 
 	// testing that you get an error when passing a bad site name
 	args[3] = LegacyTestEnv
@@ -56,10 +53,10 @@ func TestLegacyAddBadArgs(t *testing.T) {
 
 	err = setActiveApp(utils.RandomString(10), utils.RandomString(10))
 	assert.NoError(err)
-	args = []string{"legacy", "add"}
+	args = []string{"dev", "add"}
 	out, err = utils.RunCommand(DrudBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Bad environment name")
+	assert.Contains(string(out), "No legacy site by that name")
 
 	err = setActiveApp(utils.RandomString(10), LegacyTestEnv)
 	assert.NoError(err)
@@ -76,7 +73,7 @@ func TestLegacyAddScaffoldWP(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv, "-s"}
+	args := []string{"dev", "add", LegacyTestApp, LegacyTestEnv, "-s"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
@@ -91,7 +88,7 @@ func TestLegacyAddScaffoldWPImageTag(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv, "-s", "--web-image-tag=unison,", "--db-image-tag=5.6"}
+	args := []string{"dev", "add", LegacyTestApp, LegacyTestEnv, "-s", "--web-image-tag=unison,", "--db-image-tag=5.6"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
@@ -111,7 +108,7 @@ func TestLegacyAddScaffoldWPImageTag(t *testing.T) {
 func TestLegacyAddScaffoldWPImageChange(t *testing.T) {
 	assert := assert.New(t)
 
-	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv, "-s",
+	args := []string{"dev", "add", LegacyTestApp, LegacyTestEnv, "-s",
 		"--web-image=drud/testmewebimage,", "--db-image=drud/testmedbimage",
 	}
 	out, err := utils.RunCommand(DrudBin, args)
@@ -137,7 +134,7 @@ func TestLegacyAddWP(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"legacy", "add", LegacyTestApp, LegacyTestEnv}
+	args := []string{"dev", "add", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")

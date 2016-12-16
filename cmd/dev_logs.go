@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"path"
+	"strings"
 
 	"github.com/drud/bootstrap/cli/local"
 	"github.com/drud/drud-go/utils"
@@ -16,14 +17,19 @@ var (
 	timestamp bool
 )
 
-// LegacyLogsCmd ...
-var LegacyLogsCmd = &cobra.Command{
+// LocalDevLogsCmd ...
+var LocalDevLogsCmd = &cobra.Command{
 	Use:   "logs [app_name] [environment_name]",
 	Short: "Get the logs from your running services.",
 	Long:  `Uses 'docker logs' to display stdout from the running services.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		app := local.NewLegacyApp(activeApp, activeDeploy)
+		app := local.PluginMap[strings.ToLower(plugin)]
+		opts := local.AppOptions{
+			Name:        activeApp,
+			Environment: activeDeploy,
+		}
+		app.SetOpts(opts)
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 
@@ -31,7 +37,7 @@ var LegacyLogsCmd = &cobra.Command{
 			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
-		if !app.ComposeFileExists() {
+		if !local.ComposeFileExists(app) {
 			Failed("No docker-compose yaml for this site. Try `drud legacy add`.")
 		}
 
@@ -60,9 +66,9 @@ var LegacyLogsCmd = &cobra.Command{
 }
 
 func init() {
-	LegacyLogsCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Follow the logs in real time.")
-	LegacyLogsCmd.Flags().BoolVarP(&timestamp, "time", "p", false, "Add timestamps to logs")
-	LegacyLogsCmd.Flags().StringVarP(&tail, "tail", "t", "", "How many lines to show")
-	LegacyCmd.AddCommand(LegacyLogsCmd)
+	LocalDevLogsCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Follow the logs in real time.")
+	LocalDevLogsCmd.Flags().BoolVarP(&timestamp, "time", "s", false, "Add timestamps to logs")
+	LocalDevLogsCmd.Flags().StringVarP(&tail, "tail", "t", "", "How many lines to show")
+	LocalDevCmd.AddCommand(LocalDevLogsCmd)
 
 }

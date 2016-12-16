@@ -10,21 +10,21 @@ import (
 // TestLegacyExecBadArgs run `drud legacy exec` without the proper args
 func TestLegacyExecBadArgs(t *testing.T) {
 	assert := assert.New(t)
-	args := []string{"legacy", "exec", LegacyTestApp, LegacyTestEnv}
+	args := []string{"dev", "exec", LegacyTestApp, LegacyTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Invalid arguments detected.")
 
-	args = []string{"legacy", "exec", "pwd"}
+	args = []string{"dev", "exec", "pwd"}
 	out, err = utils.RunCommand(DrudBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "app_name and deploy_name are expected as arguments")
 
 	// Try with an invalid number of args
-	args = []string{"legacy", "exec", LegacyTestApp, "pwd"}
+	args = []string{"dev", "exec", LegacyTestApp, "pwd"}
 	out, err = utils.RunCommand(DrudBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Bad environment name")
+	assert.Contains(string(out), "Invalid arguments detected")
 }
 
 // TestLegacyExec run `drud legacy exec pwd` with proper args
@@ -36,7 +36,7 @@ func TestLegacyExec(t *testing.T) {
 	// Run an exec by passing in TestApp + TestEnv
 	assert := assert.New(t)
 
-	args := []string{"legacy", "exec", LegacyTestApp, LegacyTestEnv, "pwd"}
+	args := []string{"dev", "exec", LegacyTestApp, LegacyTestEnv, "pwd"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "/var/www/html/docroot")
@@ -44,7 +44,7 @@ func TestLegacyExec(t *testing.T) {
 	// Try again with active app set.
 	err = setActiveApp(LegacyTestApp, LegacyTestEnv)
 	assert.NoError(err)
-	args = []string{"legacy", "exec", LegacyTestApp, LegacyTestEnv, "pwd"}
+	args = []string{"dev", "exec", LegacyTestApp, LegacyTestEnv, "pwd"}
 	out, err = utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "/var/www/html/docroot")
