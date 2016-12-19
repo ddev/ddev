@@ -291,6 +291,13 @@ func (l *LegacyApp) GetArchive() error {
 // unarchives it. Then the contents are moved to their proper locations.
 func (l LegacyApp) UnpackResources() error {
 	basePath := l.AbsPath()
+	fileDir := ""
+
+	if l.AppType == "wp" {
+		fileDir = "content/uploads"
+	} else if l.AppType == "drupal" || l.AppType == "drupal8" {
+		fileDir = "sites/default/files"
+	}
 
 	out, err := utils.RunCommand(
 		"tar",
@@ -320,11 +327,11 @@ func (l LegacyApp) UnpackResources() error {
 		return err
 	}
 
-	rsyncFrom := path.Join(basePath, "files", "docroot")
-	rsyncTo := path.Join(basePath, "src", "docroot")
+	rsyncFrom := path.Join(basePath, "files", "docroot", fileDir)
+	rsyncTo := path.Join(basePath, "src", "docroot", fileDir)
 	out, err = utils.RunCommand(
 		"rsync",
-		[]string{"-avz", "--recursive", "--exclude=profiles", rsyncFrom + "/", rsyncTo},
+		[]string{"-avz", "--recursive", rsyncFrom + "/", rsyncTo},
 	)
 	if err != nil {
 		return fmt.Errorf("%s - %s", err.Error(), string(out))
