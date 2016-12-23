@@ -60,7 +60,7 @@ func (l *DrudApp) Init(opts AppOptions) {
 	}
 	l.APIApp = app
 
-	// get deploy that hasd the passed in name
+	// get deploy that has the passed in name
 	deploy := app.GetDeploy(l.Environment)
 	if deploy == nil {
 		log.Fatalln("Deploy", l.Environment, "does not exist.")
@@ -171,7 +171,7 @@ func (l DrudApp) GetResources() error {
 	errChannel := make(chan error, 1)
 	// apparently this is necessary
 	finished := make(chan bool, 1)
-	// Gather data, files, src resoruces in parallel
+	// Gather data, files, src resources in parallel
 	// limit logical processors to 3
 	runtime.GOMAXPROCS(3)
 	// set up wait group

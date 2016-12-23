@@ -14,7 +14,7 @@ type App interface {
 	GetOpts() AppOptions
 	GetType() string
 	RelPath() string                      // returns path from root dir ('$HOME/.drud') to app
-	GetRepoDetails() (RepoDetails, error) // retuirns struct with branch, org, host, etc...
+	GetRepoDetails() (RepoDetails, error) // returns struct with branch, org, host, etc...
 	GetResources() error
 	GetTemplate() string
 	UnpackResources() error

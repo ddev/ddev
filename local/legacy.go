@@ -94,7 +94,7 @@ func (l LegacyApp) RelPath() string {
 	return path.Join("legacy", fmt.Sprintf("%s-%s", l.Name, l.Environment))
 }
 
-// AbsPath returnt he full path from root to the app directory
+// AbsPath return the full path from root to the app directory
 func (l LegacyApp) AbsPath() string {
 	homedir, err := utils.GetHomeDir()
 	if err != nil {
@@ -145,7 +145,7 @@ func (l LegacyApp) DatabagExists() bool {
 // GetResources downloads external data for this app
 func (l *LegacyApp) GetResources() error {
 
-	// save errors for when the waitgroup has finished executing
+	// save errors for when the wait group has finished executing
 	errChannel := make(chan error, 1)
 	// apparently this is necessary
 	finished := make(chan bool, 1)
@@ -439,7 +439,7 @@ func (l *LegacyApp) FindPorts() error {
 	return err
 }
 
-// Config creates the apps config file adding thigns like database host, name, and password
+// Config creates the apps config file adding things like database host, name, and password
 // as well as other sensitive data like salts.
 func (l *LegacyApp) Config() error {
 	basePath := l.AbsPath()

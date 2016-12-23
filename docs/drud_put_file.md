@@ -5,7 +5,7 @@ Upload a file to the Drud file storage system.
 ### Synopsis
 
 
-Push a file to yor org's storage space in the Drud system.
+Push a file to your organization's storage space in the Drud system.
 
 ```
 drud put file [/path/to/filename] [optional remote dest]

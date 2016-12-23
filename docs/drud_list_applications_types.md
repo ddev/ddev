@@ -5,7 +5,7 @@ List application types.
 ### Synopsis
 
 
-List the application tempaltes that have been created for your use.
+List the application templates that have been created for your use.
 
 ```
 drud list applications types
