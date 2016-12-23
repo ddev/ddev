@@ -396,7 +396,7 @@ func (l LegacyApp) Stop() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
 	if !utils.IsRunning(l.ContainerName()+"-db") && !utils.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
-		return fmt.Errorf("Site does not exist or is malformed.")
+		return fmt.Errorf("site does not exist or is malformed")
 	}
 
 	return utils.DockerCompose(
@@ -467,7 +467,7 @@ func (l *LegacyApp) Config() error {
 	}
 
 	settingsFilePath := ""
-	if l.AppType == "drupal" {
+	if l.AppType == "drupal" || l.AppType == "drupal8" {
 		log.Printf("Drupal site. Creating settings.php file.")
 		settingsFilePath = path.Join(basePath, "src", "docroot/sites/default/settings.php")
 		drupalConfig := model.NewDrupalConfig()
@@ -475,6 +475,9 @@ func (l *LegacyApp) Config() error {
 		drupalConfig.HashSalt = env.HashSalt
 		if drupalConfig.HashSalt == "" {
 			drupalConfig.HashSalt = utils.RandomString(64)
+		}
+		if l.AppType == "drupal8" {
+			drupalConfig.IsDrupal8 = true
 		}
 
 		drupalConfig.DeployURL = l.URL()
@@ -492,6 +495,9 @@ func (l *LegacyApp) Config() error {
 		drushSettingsPath := path.Join(basePath, "src", "drush.settings.php")
 		drushConfig := model.NewDrushConfig()
 		drushConfig.DatabasePort = dbPort
+		if l.AppType == "drupal8" {
+			drushConfig.IsDrupal8 = true
+		}
 		err = config.WriteDrushConfig(drushConfig, drushSettingsPath)
 
 		if err != nil {

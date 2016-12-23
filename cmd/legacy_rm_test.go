@@ -13,12 +13,15 @@ func TestLegacyRm(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
-	args := []string{"dev", "rm", LegacyTestApp, LegacyTestEnv}
-	out, err := utils.RunCommand(DrudBin, args)
-	assert.NoError(t, err)
-	format := fmt.Sprintf
-	assert.Contains(t, string(out), format("Stopping legacy-%s-%s-web ... done", LegacyTestApp, LegacyTestEnv))
-	assert.Contains(t, string(out), format("Stopping legacy-%s-%s-db ... done", LegacyTestApp, LegacyTestEnv))
-	assert.Contains(t, string(out), format("Removing legacy-%s-%s-web ... done", LegacyTestApp, LegacyTestEnv))
-	assert.Contains(t, string(out), format("Removing legacy-%s-%s-db ... done", LegacyTestApp, LegacyTestEnv))
+
+	for _, site := range LegacyTestSites {
+		args := []string{"dev", "rm", site[0], site[1]}
+		out, err := utils.RunCommand(DrudBin, args)
+		assert.NoError(t, err)
+		format := fmt.Sprintf
+		assert.Contains(t, string(out), format("Stopping legacy-%s-%s-web ... done", site[0], site[1]))
+		assert.Contains(t, string(out), format("Stopping legacy-%s-%s-db ... done", site[0], site[1]))
+		assert.Contains(t, string(out), format("Removing legacy-%s-%s-web ... done", site[0], site[1]))
+		assert.Contains(t, string(out), format("Removing legacy-%s-%s-db ... done", site[0], site[1]))
+	}
 }

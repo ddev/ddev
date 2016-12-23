@@ -12,10 +12,17 @@ var (
 	// DrudBin is the full path to the drud binary
 	DrudBin = "drud"
 
-	// LegacyTestApp is the name of the legacy DRUD app to test
-	LegacyTestApp = "drudio"
 	// LegacyTestEnv is the name of the legacy DRUD environment to test
 	LegacyTestEnv = "production"
+
+	// LegacyTestApp is the name of the legacy DRUD app to testes
+	LegacyTestApp = "drudio"
+
+	LegacyTestSites = [][]string{
+		[]string{"drudio", LegacyTestEnv},
+		[]string{"d8", LegacyTestEnv},
+		[]string{"talentreef", LegacyTestEnv},
+	}
 )
 
 func TestMain(m *testing.M) {

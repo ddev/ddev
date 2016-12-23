@@ -127,38 +127,39 @@ func TestLegacyAddScaffoldWPImageChange(t *testing.T) {
 }
 
 // TestLegacyAddWP tests a `drud legacy add` on a wp site
-func TestLegacyAddWP(t *testing.T) {
+func TestLegacyAddSites(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
 	assert := assert.New(t)
+	for _, site := range LegacyTestSites {
 
-	// test that you get an error when you run with no args
-	args := []string{"dev", "add", LegacyTestApp, LegacyTestEnv}
-	out, err := utils.RunCommand(DrudBin, args)
-	assert.NoError(err)
-	assert.Contains(string(out), "Successfully added")
-	assert.Contains(string(out), "Your application can be reached at")
+		// test that you get an error when you run with no args
+		args := []string{"dev", "add", site[0], site[1]}
+		out, err := utils.RunCommand(DrudBin, args)
+		assert.NoError(err)
+		assert.Contains(string(out), "Successfully added")
+		assert.Contains(string(out), "Your application can be reached at")
 
-	app := local.NewLegacyApp(LegacyTestApp, LegacyTestEnv)
+		app := local.NewLegacyApp(site[0], site[1])
 
-	assert.Equal(true, checkRequiredFolders(app))
-	assert.Equal(true, utils.IsRunning(app.ContainerName()+"-web"))
-	assert.Equal(true, utils.IsRunning(app.ContainerName()+"-db"))
+		assert.Equal(true, checkRequiredFolders(app))
+		assert.Equal(true, utils.IsRunning(app.ContainerName()+"-web"))
+		assert.Equal(true, utils.IsRunning(app.ContainerName()+"-db"))
 
-	webPort, err := local.GetPodPort(app.ContainerName() + "-web")
-	assert.NoError(err)
-	dbPort, err := local.GetPodPort(app.ContainerName() + "-db")
-	assert.NoError(err)
+		webPort, err := local.GetPodPort(app.ContainerName() + "-web")
+		assert.NoError(err)
+		dbPort, err := local.GetPodPort(app.ContainerName() + "-db")
+		assert.NoError(err)
 
-	assert.Equal(true, utils.IsTCPPortAvailable(int(webPort)))
-	assert.Equal(true, utils.IsTCPPortAvailable(int(dbPort)))
-	o := utils.NewHTTPOptions("http://127.0.0.1")
-	o.Timeout = 120
-	o.Headers["Host"] = app.HostName()
-	err = utils.EnsureHTTPStatus(o)
-	assert.NoError(err)
-
+		assert.Equal(true, utils.IsTCPPortAvailable(int(webPort)))
+		assert.Equal(true, utils.IsTCPPortAvailable(int(dbPort)))
+		o := utils.NewHTTPOptions("http://127.0.0.1")
+		o.Timeout = 120
+		o.Headers["Host"] = app.HostName()
+		err = utils.EnsureHTTPStatus(o)
+		assert.NoError(err)
+	}
 }
 
 func TestSubTag(t *testing.T) {

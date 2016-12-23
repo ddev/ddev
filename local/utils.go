@@ -297,8 +297,9 @@ func ProcessContainer(l map[string]map[string]string, plugin string, containerNa
 // is of any of the known types
 func DetermineAppType(basePath string) (string, error) {
 	defaultLocations := map[string]string{
-		"docroot/scripts/drupal.sh": "drupal",
-		"docroot/wp":                "wp",
+		"docroot/scripts/drupal.sh":      "drupal",
+		"docroot/core/scripts/drupal.sh": "drupal8",
+		"docroot/wp":                     "wp",
 	}
 
 	for k, v := range defaultLocations {
