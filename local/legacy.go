@@ -327,6 +327,11 @@ func (l LegacyApp) UnpackResources() error {
 		return err
 	}
 
+	// Ensure sites/default is readable.
+	if l.AppType == "drupal" || l.AppType == "drupal8" {
+		os.Chmod(path.Join(basePath, "files", "docroot", "sites", "default"), 0755)
+	}
+
 	rsyncFrom := path.Join(basePath, "files", "docroot", fileDir)
 	rsyncTo := path.Join(basePath, "src", "docroot", fileDir)
 	out, err = utils.RunCommand(
@@ -336,6 +341,16 @@ func (l LegacyApp) UnpackResources() error {
 	if err != nil {
 		return fmt.Errorf("%s - %s", err.Error(), string(out))
 	}
+
+	// Ensure extracted files are writable so they can be removed when we're done.
+	out, err = utils.RunCommand(
+		"chmod",
+		[]string{"-R", "+rwx", path.Join(basePath, "files")},
+	)
+	if err != nil {
+		return fmt.Errorf("%s - %s", err.Error(), string(out))
+	}
+	defer os.RemoveAll(path.Join(basePath, "files"))
 
 	dcfgFile := path.Join(basePath, "src", "drud.yaml")
 	if utils.FileExists(dcfgFile) {
