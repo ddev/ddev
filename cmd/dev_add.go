@@ -41,7 +41,6 @@ var DevAddCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		app := local.PluginMap[strings.ToLower(plugin)]
-		//fmt.Println(reflect.TypeOf(app))
 
 		opts := local.AppOptions{
 			Name:        activeApp,

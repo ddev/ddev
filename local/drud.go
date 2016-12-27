@@ -118,11 +118,7 @@ func (l DrudApp) RelPath() string {
 
 // AbsPath returnt he full path from root to the app directory
 func (l DrudApp) AbsPath() string {
-	homedir, err := utils.GetHomeDir()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return path.Join(homedir, ".drud", l.RelPath())
+	return path.Join(GetWorkspace(), l.RelPath())
 }
 
 // GetRepoDetails uses the Environment field to get the relevant repo details about an app
@@ -485,6 +481,7 @@ func (l *DrudApp) AddHostsEntry() error {
 
 	fmt.Println("\n\n\nAdding hostfile entry. You will be prompted for your password.")
 	hostnameArgs := []string{"drud", "dev", "hostname", l.HostName(), "127.0.0.1"}
+
 	err = utils.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }

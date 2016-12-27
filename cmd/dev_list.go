@@ -24,6 +24,7 @@ var DevListCmd = &cobra.Command{
 
 		client, _ := utils.GetDockerClient()
 		containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
+
 		containers = func(containers []docker.APIContainers) []docker.APIContainers {
 			var vsf []docker.APIContainers
 			for _, c := range containers {

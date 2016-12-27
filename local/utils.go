@@ -67,10 +67,6 @@ func WriteLocalAppYAML(app App) error {
 
 // CloneSource clones or pulls a repo
 func CloneSource(app App) error {
-	homedir, err := utils.GetHomeDir()
-	if err != nil {
-		log.Fatalln(err)
-	}
 
 	details, err := app.GetRepoDetails()
 	if err != nil {
@@ -82,7 +78,7 @@ func CloneSource(app App) error {
 		return err
 	}
 
-	basePath := path.Join(homedir, ".drud", app.RelPath(), "src")
+	basePath := path.Join(GetWorkspace(), app.RelPath(), "src")
 
 	out, err := utils.RunCommand("git", []string{
 		"clone", "-b", details.Branch, cloneURL, basePath,
@@ -324,11 +320,7 @@ func FileExists(name string) bool {
 
 // EnsureDockerRouter ensures the router is running.
 func EnsureDockerRouter() {
-	homeDir, err := utils.GetHomeDir()
-	if err != nil {
-		log.Fatal("could not find home directory")
-	}
-	dest := path.Join(homeDir, ".drud", "router-compose.yaml")
+	dest := path.Join(GetWorkspace(), "router-compose.yaml")
 	f, ferr := os.Create(dest)
 	if ferr != nil {
 		log.Fatal(ferr)
@@ -488,4 +480,15 @@ func RenderComposeYAML(app App) (string, error) {
 
 	templ.Execute(&doc, templateVars)
 	return doc.String(), nil
+}
+
+func GetWorkspace() string {
+	homedir, _ := utils.GetHomeDir()
+
+	workspace := os.Getenv("DRUD_WORKSPACE")
+	if workspace == "" {
+		workspace = path.Join(homedir, ".drud")
+	}
+	return workspace
+
 }

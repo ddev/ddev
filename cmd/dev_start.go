@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// LocalDevStartCmd represents the stop command
 var LocalDevStartCmd = &cobra.Command{
 	Use:   "start [app_name] [environment_name]",
 	Short: "Start an application's local services.",
@@ -44,6 +43,7 @@ var LocalDevStartCmd = &cobra.Command{
 		}
 
 		fmt.Println("Waiting for site readiness. This may take a couple minutes...")
+
 		siteURL, err := app.Wait()
 		if err != nil {
 			log.Println(err)

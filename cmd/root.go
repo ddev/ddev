@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -35,6 +36,7 @@ var (
 	drudconf           string           //absolute path to cfg file
 	drudclient         *drudapi.Request //client for interacting with drud api
 	workdir            string
+	workspace          string
 	bucket             string                   // aws s3 bucket used with file storage functionality
 	region             = "us-west-2"            // region where the s3 bucket can be found
 	creds              *credentials.Credentials // s3 related credentials
@@ -73,7 +75,7 @@ func Execute() {
 	cfgFile = ParseConfigFlag()
 
 	//RootCmd.RemoveCommand(SecretCmd)
-	SetHomedir()
+
 	tokenLocation = filepath.Join(homedir, tokenFile)
 	if len(os.Args) == 2 && RequiresAuth(os.Args[1]) {
 		if _, err := os.Stat(tokenLocation); os.IsNotExist(err) {
@@ -144,6 +146,15 @@ func Execute() {
 }
 
 func init() {
+
+	SetHomedir()
+	if workspace == "" {
+		workspace = os.Getenv("DRUD_WORKSPACE")
+		if workspace == "" {
+			workspace = path.Join(homedir, ".drud")
+		}
+	}
+
 	cobra.OnInitialize(initConfig)
 
 	// Here you will define your flags and configuration settings.

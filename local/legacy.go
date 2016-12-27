@@ -96,11 +96,7 @@ func (l LegacyApp) RelPath() string {
 
 // AbsPath return the full path from root to the app directory
 func (l LegacyApp) AbsPath() string {
-	homedir, err := utils.GetHomeDir()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return path.Join(homedir, ".drud", l.RelPath())
+	return path.Join(GetWorkspace(), l.RelPath())
 }
 
 // GetName returns the  name for legacy app

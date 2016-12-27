@@ -24,7 +24,7 @@ var LocalDevWorkonCmd = &cobra.Command{
 
 		if activeApp == "" && activeDeploy == "" {
 			fmt.Println("Enter a number to choose which app to work on:")
-			files, _ = ioutil.ReadDir(path.Join(homedir, ".drud", plugin))
+			files, _ = ioutil.ReadDir(path.Join(workspace, plugin))
 			files = local.FilterNonAppDirs(files)
 
 			fmt.Printf("%d: %s\n", 0, "Cancel")
