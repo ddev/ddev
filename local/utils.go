@@ -455,7 +455,7 @@ func RenderComposeYAML(app App) (string, error) {
 	opts := app.GetOpts()
 
 	if opts.WebImage == "" {
-		opts.WebImage = "drud/nginx-php-fpm-local:latest"
+		opts.WebImage = "drud/nginx-php-fpm-local:0.0.1"
 	}
 	if opts.DbImage == "" {
 		opts.DbImage = "drud/mysql-docker-local:5.7"
