@@ -1,7 +1,6 @@
 Changelog
 =========
 
-
 Version 0.3.2
 ------------
 - Switched to new combined nginx image for drupal and wp apps
@@ -13,14 +12,11 @@ Version 0.3.2
 
 Version 0.3.1 - Nov 17th 2016
 ------------
-
 - Allow user to change the images being used for local sites
 - Add flag to skip recreation of the docker-compose.yaml on site add.
 
-
 Version 0.3.0 - Oct 27th 2016
 -------------
-
 - Allow drush commands to be ran from the host on drupal sites.
 - Automatically fallback to `drud secret list` if `drud secret read` fails.
 - Wait until database import has finished before printing the URL when adding a site.
@@ -45,10 +41,8 @@ Version 0.3.0 - Oct 27th 2016
 - Added a `drud secret search` command.
 - Added experimental support for startup hooks provided by https://github.com/drud/dcfg.
 
-
 Version 0.2.1 - Sept 1st 2016
 -------------
-
 - Remove auto updating of the binary
 - replace github releases source for binary with GCS link
 - get credentials for drud file from vault instead of env
