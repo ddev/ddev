@@ -68,6 +68,7 @@ type Deploy struct {
 	BasicAuthPass string `json:"basicauth_pass,omitempty"`
 	AutoManaged   bool   `json:"auto_managed,omitempty"`
 	MigrateFrom   string `json:"migrate_from,omitempty"`
+	Url           string `json:"url,omitempty"`
 }
 
 // Application ...
@@ -205,17 +206,6 @@ func (a *Application) Describe() {
 	table.Wrap = true // wrap columns
 
 	deployTable := uitable.New()
-	deployTable.MaxColWidth = 50
-	deployTable.AddRow(
-		"NAME",
-		"TEMPLATE",
-		"BRANCH",
-		"PROTOCOL",
-		"HOSTNAME",
-		"BASICAUTH USERNAME",
-		"BASICAUTH PASSWORD",
-		"AUTO MANAGED",
-	)
 
 	// gather list of deploys by name
 	var appNames []string
@@ -223,21 +213,21 @@ func (a *Application) Describe() {
 		appNames = append(appNames, dep.Name)
 		var managed string
 
+		url := dep.Protocol + "://" + dep.Url
+
 		if dep.AutoManaged == true {
-			managed = "     ✓"
+			managed = "✓"
 		}
-		deployTable.AddRow(
-			dep.Name,
-			dep.Template,
-			dep.Branch,
-			dep.Protocol,
-			dep.Hostname,
-			dep.BasicAuthUser,
-			dep.BasicAuthPass,
-			managed,
-		)
+		deployTable.AddRow("DEPLOY NAME:", dep.Name)
+		deployTable.AddRow("URL:", url)
+		deployTable.AddRow("TEMPLATE:", dep.Template)
+		deployTable.AddRow("BRANCH:", dep.Branch)
+		deployTable.AddRow("AUTH USER:", dep.BasicAuthUser)
+		deployTable.AddRow("AUTH PASS:", dep.BasicAuthPass)
+		deployTable.AddRow("AUTO MANAGED:", managed)
+		deployTable.AddRow("\n")
 	}
-	table.AddRow("NAME:", a.Name)
+	table.AddRow("APP NAME:", a.Name)
 	table.AddRow("CLIENT:", a.Client.Name)
 	table.AddRow("DEPLOY(s):", strings.Join(appNames, ","))
 	table.AddRow("SLACK CHANNEL:", a.SlackChannel)

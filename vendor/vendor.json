@@ -414,10 +414,10 @@
 			"revisionTime": "2016-09-08T21:06:52Z"
 		},
 		{
-			"checksumSHA1": "Zsq2bYaJRUwXoIJz5sbEG9XG9F8=",
+			"checksumSHA1": "3boCcWNh3c1O5yMDj/g/PZPe5qs=",
 			"path": "github.com/drud/drud-go/drudapi",
-			"revision": "0e34f844dba9295889af638745ec6f2fb896a876",
-			"revisionTime": "2016-10-12T14:18:16Z",
+			"revision": "1c917ad16cd8b8ce402501babd41e37bbf32e9d8",
+			"revisionTime": "2016-12-27T23:03:32Z",
 			"tree": true
 		},
 		{
