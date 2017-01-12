@@ -15,6 +15,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/spf13/viper"
 
+	"github.com/drud/bootstrap/cli/version"
 	"github.com/drud/drud-go/utils"
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
@@ -455,10 +456,10 @@ func RenderComposeYAML(app App) (string, error) {
 	opts := app.GetOpts()
 
 	if opts.WebImage == "" {
-		opts.WebImage = "drud/nginx-php-fpm-local:0.0.1"
+		opts.WebImage = "drud/nginx-php-fpm-local:" + version.NGINX
 	}
 	if opts.DbImage == "" {
-		opts.DbImage = "drud/mysql-docker-local:5.7"
+		opts.DbImage = "drud/mysql-docker-local:" + version.MYSQL
 	}
 	if opts.WebImageTag != "" {
 		opts.WebImage = SubTag(opts.WebImage, opts.WebImageTag)

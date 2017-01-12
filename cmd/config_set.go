@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var client, token, repoDir, adminToken, protocol, drudHost, version, activeApp, activeDeploy string
+var client, token, repoDir, adminToken, protocol, drudHost, APIVersion, activeApp, activeDeploy string
 var developerMode bool
 
 // setCmd represents the set command
@@ -30,8 +30,8 @@ var setCmd = &cobra.Command{
 			cfg.DrudHost = drudHost
 		}
 
-		if version != "" {
-			cfg.Version = version
+		if APIVersion != "" {
+			cfg.Version = APIVersion
 		}
 
 		if client != "" {
@@ -59,7 +59,7 @@ var setCmd = &cobra.Command{
 func init() {
 	setCmd.Flags().StringVarP(&protocol, "protocol", "p", "", "Protocol to use, e.g. http or https")
 	setCmd.Flags().StringVarP(&drudHost, "drud_host", "o", "", "DRUD API hostname. e.g. drudapi.mydrud.drud.us")
-	setCmd.Flags().StringVarP(&version, "version", "v", "", "API Version")
+	setCmd.Flags().StringVarP(&APIVersion, "version", "v", "", "API Version")
 	setCmd.Flags().StringVarP(&client, "client", "c", "", "DRUD client name")
 	setCmd.Flags().StringVarP(&activeApp, "active_app", "a", "", "active app name")
 	setCmd.Flags().StringVarP(&activeDeploy, "active_deploy", "d", "", "active deploy name")

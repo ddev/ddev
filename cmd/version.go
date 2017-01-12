@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/drud/bootstrap/cli/version"
+	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
 )
 
@@ -12,8 +14,14 @@ var versionCmd = &cobra.Command{
 	Short: "print DRUD version",
 	Long:  `Display the version of this DRUD binary.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Work your own magic here
-		fmt.Println(cliVersion)
+		table := uitable.New()
+		table.MaxColWidth = 200
+
+		table.AddRow("cli:", version.VERSION)
+		table.AddRow("nginx:", version.NGINX)
+		table.AddRow("mysql:", version.MYSQL)
+
+		fmt.Println(table)
 	},
 }
 
