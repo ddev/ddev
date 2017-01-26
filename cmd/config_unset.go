@@ -3,51 +3,94 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/spf13/cobra"
 )
 
 // unsetCmd
+var (
+	uAPIVersion      bool
+	uActiveApp       bool
+	uActiveDeploy    bool
+	uClient          bool
+	uDrudHost        bool
+	uGithubAuthToken bool
+	uGithubAuthOrg   bool
+	uProtocol        bool
+	uVaultAddr       bool
+	uVaultAuthToken  bool
+	unset            bool
+)
 var unsetCmd = &cobra.Command{
-	Use:   "unset config_item [, config_item...]",
-	Short: "Set configuration values for DRUD.",
-	Long:  `Set configuration values for DRUD.`,
+	Use:   "unset",
+	Short: "Unset configuration values for DRUD.",
+	Long:  `Unset configuration values for DRUD.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			log.Fatal("You must pick a config item to unset.")
+		if uAPIVersion {
+			cfg.APIVersion = ""
+			unset = true
+		}
+		if uActiveApp {
+			cfg.ActiveApp = ""
+			unset = true
+		}
+		if uActiveDeploy {
+			cfg.ActiveDeploy = ""
+			unset = true
+		}
+		if uClient {
+			cfg.Client = ""
+			unset = true
+		}
+		if uDrudHost {
+			cfg.DrudHost = ""
+			unset = true
+		}
+		if uGithubAuthToken {
+			cfg.GithubAuthToken = ""
+			unset = true
+		}
+		if uGithubAuthOrg {
+			cfg.GithubAuthOrg = ""
+			unset = true
+		}
+		if uProtocol {
+			cfg.Protocol = ""
+			unset = true
+		}
+		if uVaultAddr {
+			cfg.VaultAddr = ""
+			unset = true
+		}
+		if uVaultAuthToken {
+			cfg.VaultAuthToken = ""
+			unset = true
 		}
 
-		for _, arg := range args {
-
-			if arg == "protocol" {
-				cfg.Protocol = ""
-			} else if arg == "drud_host" {
-				cfg.DrudHost = ""
-			} else if arg == "version" {
-				cfg.Version = ""
-			} else if arg == "client" {
-				cfg.Client = ""
-			} else if arg == "active_app" {
-				cfg.ActiveApp = ""
-			} else if arg == "active_deploy" {
-				cfg.ActiveDeploy = ""
-			} else if arg == "disable_updates" {
-				cfg.Dev = false
-			} else {
-				log.Fatalf("There is no config item called %s.", arg)
-			}
-		}
-
-		err := cfg.WriteConfig(drudconf)
+		err := cfg.WriteConfig(cfgFile)
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			log.Fatal(err)
 		}
-		fmt.Println("Config items unset.")
+
+		if unset == true {
+			fmt.Println("Config items unset.")
+		} else {
+			fmt.Println("Config items not unset. See `drud config unset --help`")
+		}
 	},
 }
 
 func init() {
+	unsetCmd.Flags().BoolVarP(&uAPIVersion, "apiversion", "", false, "Unset APIVersion")
+	unsetCmd.Flags().BoolVarP(&uActiveApp, "activeapp", "", false, "Unset ActiveApp")
+	unsetCmd.Flags().BoolVarP(&uActiveDeploy, "activedeploy", "", false, "Unset ActiveDeploy")
+	unsetCmd.Flags().BoolVarP(&uClient, "client", "", false, "Unset Client")
+	unsetCmd.Flags().BoolVarP(&uDrudHost, "drudhost", "", false, "Unset DrudHost")
+	unsetCmd.Flags().BoolVarP(&uGithubAuthToken, "githubauthtoken", "", false, "Unset GithubAuthToken")
+	unsetCmd.Flags().BoolVarP(&uGithubAuthOrg, "githubauthorg", "", false, "Unset GithubAuthOrg")
+	unsetCmd.Flags().BoolVarP(&uProtocol, "protocol", "", false, "Unset Protocol")
+	unsetCmd.Flags().BoolVarP(&uVaultAddr, "vaultaddr", "", false, "Unset VaultAddr")
+	unsetCmd.Flags().BoolVarP(&uVaultAuthToken, "vaultauthtoken", "", false, "Unset VaultAuthToken")
+
 	ConfigCmd.AddCommand(unsetCmd)
 }

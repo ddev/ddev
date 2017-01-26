@@ -96,7 +96,8 @@ func (l LegacyApp) RelPath() string {
 
 // AbsPath return the full path from root to the app directory
 func (l LegacyApp) AbsPath() string {
-	return path.Join(GetWorkspace(), l.RelPath())
+	cfg, _ := GetConfig()
+	return path.Join(cfg.Workspace, l.RelPath())
 }
 
 // GetName returns the  name for legacy app

@@ -24,7 +24,7 @@ var LocalDevWorkonCmd = &cobra.Command{
 
 		if activeApp == "" && activeDeploy == "" {
 			fmt.Println("Enter a number to choose which app to work on:")
-			files, _ = ioutil.ReadDir(path.Join(workspace, plugin))
+			files, _ = ioutil.ReadDir(path.Join(cfg.Workspace, plugin))
 			files = local.FilterNonAppDirs(files)
 
 			fmt.Printf("%d: %s\n", 0, "Cancel")
@@ -49,7 +49,7 @@ var LocalDevWorkonCmd = &cobra.Command{
 		cfg.ActiveApp = parts[0]
 		cfg.ActiveDeploy = parts[1]
 
-		err := cfg.WriteConfig(drudconf)
+		err := cfg.WriteConfig(cfgFile)
 		if err != nil {
 			fmt.Println("Could not set config items.")
 			log.Fatal(err)

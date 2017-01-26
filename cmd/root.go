@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/drud/bootstrap/cli/local"
@@ -23,7 +21,7 @@ import (
 const (
 	timestampFormat = "20060102150405"
 	updateFile      = ".drud-update"
-	tokenFile       = ".drud-sanctuary-token"
+	cliVersion      = "0.3.1"
 	drudapiVersion  = "v0.1"
 )
 
@@ -32,30 +30,22 @@ var (
 	usr                *user.User
 	pwd                string
 	cfgFile            string
-	drudconf           string           //absolute path to cfg file
-	drudclient         *drudapi.Request //client for interacting with drud api
-	workdir            string
-	workspace          string
+	drudclient         *drudapi.Request         //client for interacting with drud api
 	bucket             string                   // aws s3 bucket used with file storage functionality
 	region             = "us-west-2"            // region where the s3 bucket can be found
 	creds              *credentials.Credentials // s3 related credentials
 	awsID              string
-	vaultAddress       string // stores the vault host address
 	awsSecret          string
 	dbFile             string
-	isDev              bool   // isDev stores boolean value to allow special functionality for devs
 	homedir            string // current user's home directory
-	gitToken           string
 	fileService        *drudfiles.FileService
 	clientCreateAccess bool
 	filesAccess        bool
 	drudAccess         bool
 	bucketName         = "nmdarchive"
 	forceDelete        bool
-	vaultToken         string
 	vault              api.Logical // part of the vault go api
 	logLevel           = log.WarnLevel
-	tokenLocation      = ""
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -73,36 +63,11 @@ var RootCmd = &cobra.Command{
 func Execute() {
 	cfgFile = ParseConfigFlag()
 
-	//RootCmd.RemoveCommand(SecretCmd)
-
-	tokenLocation = filepath.Join(homedir, tokenFile)
-	if len(os.Args) == 2 && RequiresAuth(os.Args[1]) {
-		if _, err := os.Stat(tokenLocation); os.IsNotExist(err) {
-			RootCmd.Help()
-			os.Exit(0)
-		}
-	}
-
-	// prepopulate tokenfile so I don't have to check for its existence everywhere
-	if _, err := os.Stat(tokenLocation); os.IsNotExist(err) {
-		f, ferr := os.Create(tokenLocation)
-		if ferr != nil {
-			log.Fatal(ferr)
-		}
-		defer f.Close()
-		//default drud.yaml contents
-		f.WriteString("placeholder")
-	}
-
-	gitToken = os.Getenv("GITHUB_TOKEN")
-
 	// sets up config path and defaults
 	PrepConf()
-
 	// bind flags to viper config values...allows override by flag
 	//viper.BindPFlag("vault_host", RootCmd.PersistentFlags().Lookup("vault_host"))
-	viper.BindPFlag("dev", RootCmd.PersistentFlags().Lookup("dev"))
-	viper.SetConfigFile(drudconf)
+	viper.SetConfigFile(cfgFile)
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
@@ -115,13 +80,11 @@ func Execute() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cfg.Version = drudapiVersion
 
-	// load the vault token from disk and use it to get policy information
-	// if permission is denied send the user through `drud auth github` and then try again
+	// Get policy information from vault. If permission is denied send the user through `drud auth github` and then try again
 	if len(os.Args) >= 2 && RequiresAuth(os.Args[1]) {
 		for i := 0; i < 2; i++ {
-			vaultToken = secrets.ConfigVault(tokenLocation, cfg.VaultHost)
+			secrets.ConfigVault(cfg.VaultAuthToken, cfg.VaultAddr)
 			vault = secrets.GetVault()
 			err = EnableAvailablePackages()
 			if err != nil {
@@ -145,29 +108,15 @@ func Execute() {
 }
 
 func init() {
-
-	SetHomedir()
-	if workspace == "" {
-		workspace = os.Getenv("DRUD_WORKSPACE")
-		if workspace == "" {
-			workspace = path.Join(homedir, ".drud")
-		}
+	cobra.OnInitialize(initConfig)
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "$HOME/drud.yaml", "yaml config file")
+	cfgFile = ParseConfigFlag()
+	_, err := local.GetConfig()
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports Persistent Flags, which, if defined here,
-	// will be global for your application.
-
-	RootCmd.PersistentFlags().StringVar(&vaultAddress, "vault_address", "https://sanctuary.drud.io:8200", "Vault Address")
-	RootCmd.PersistentFlags().BoolVarP(&isDev, "dev", "", false, "Enable Dev mode")
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/drud.yaml)")
-
-	RootCmd.PersistentFlags().StringVar(&workdir, "workdir", "", "directory other than cwd we are running from")
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	SetHomedir()
 
 	drudDebug := os.Getenv("DRUD_DEBUG")
 	if drudDebug != "" {
@@ -183,10 +132,10 @@ func initConfig() {
 	if drudAccess {
 		// auth with vault token if available
 		eveCreds := &drudapi.Credentials{}
-		if vaultToken != "" {
-			eveCreds.Token = vaultToken
+		if cfg.VaultAuthToken != "" {
+			eveCreds.Token = cfg.VaultAuthToken
 		} else {
-			eveCreds.AdminToken = gitToken
+			eveCreds.AdminToken = cfg.GithubAuthToken
 		}
 
 		// drud api client

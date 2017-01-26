@@ -6,14 +6,15 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"gopkg.in/yaml.v2"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/spf13/viper"
 
 	"github.com/drud/bootstrap/cli/version"
 	"github.com/drud/drud-go/utils"
@@ -78,8 +79,8 @@ func CloneSource(app App) error {
 	if err != nil {
 		return err
 	}
-
-	basePath := path.Join(GetWorkspace(), app.RelPath(), "src")
+	cfg, _ := GetConfig()
+	basePath := path.Join(cfg.Workspace, app.RelPath(), "src")
 
 	out, err := utils.RunCommand("git", []string{
 		"clone", "-b", details.Branch, cloneURL, basePath,
@@ -321,7 +322,8 @@ func FileExists(name string) bool {
 
 // EnsureDockerRouter ensures the router is running.
 func EnsureDockerRouter() {
-	dest := path.Join(GetWorkspace(), "router-compose.yaml")
+	cfg, _ := GetConfig()
+	dest := path.Join(cfg.Workspace, "router-compose.yaml")
 	f, ferr := os.Create(dest)
 	if ferr != nil {
 		log.Fatal(ferr)
@@ -354,41 +356,111 @@ func SubTag(image string, tag string) string {
 
 // Config represents the data that is or can be stored in $HOME/.drud
 type Config struct {
-	Protocol     string `yaml:"protocol"`
-	Client       string `yaml:"client"`
-	DrudHost     string `yaml:"drudhost"`
-	VaultHost    string `yaml:"vaulthost"`
-	Version      string `yaml:"version"`
-	Dev          bool   `yaml:"dev"`
-	ActiveApp    string `yaml:"activeapp"`
-	ActiveDeploy string `yaml:"activedeploy"`
+	APIVersion      string `yaml:"apiversion"`
+	ActiveApp       string `yaml:"activeapp"`
+	ActiveDeploy    string `yaml:"activedeploy"`
+	Client          string `yaml:"client"`
+	DrudHost        string `yaml:"drudhost"`
+	GithubAuthToken string `yaml:"githubauthtoken"`
+	GithubAuthOrg   string `yaml:"githubauthorg"`
+	Protocol        string `yaml:"protocol"`
+	VaultAddr       string `yaml:"vaultaddr"`
+	VaultAuthToken  string `yaml:"vaultauthtoken"`
+	Workspace       string `yaml:"workspace"`
 }
 
 // EveHost creates the eve host string from the config.
 func (cfg *Config) EveHost() string {
-	return fmt.Sprintf("%s://%s/%s/", cfg.Protocol, cfg.DrudHost, cfg.Version)
+	return fmt.Sprintf("%s://%s/%s/", cfg.Protocol, cfg.DrudHost, cfg.APIVersion)
 }
 
-// GetConfig ...
+func parseConfigFlag() string {
+	var value string
+
+	for i, arg := range os.Args {
+		if strings.HasPrefix(arg, "--config=") {
+			value = strings.TrimPrefix(arg, "--config=")
+		} else if arg == "--config" {
+			value = os.Args[i+1]
+		}
+	}
+	usr, err := user.Current()
+	if value == "" {
+		if err != nil {
+			log.Fatal(err)
+		}
+		value = fmt.Sprintf("%v/drud.yaml", usr.HomeDir)
+	}
+	if strings.HasPrefix(value, "$HOME") || strings.HasPrefix(value, "~") {
+		value = strings.Replace(value, "$HOME", usr.HomeDir, 1)
+		value = strings.Replace(value, "~", usr.HomeDir, 1)
+	}
+
+	if !strings.HasPrefix(value, "/") {
+		absPath, absErr := filepath.Abs(value)
+		if absErr != nil {
+			log.Fatal(absErr)
+		}
+		value = absPath
+	}
+
+	if _, err := os.Stat(value); os.IsNotExist(err) {
+		var cFile, err = os.Create(value)
+		if err != nil {
+			log.Fatal(err)
+		}
+		cFile.Close()
+	}
+	return value
+}
+
+// GetConfig Loads a config structure from yaml and environment.
 func GetConfig() (cfg *Config, err error) {
+	cfgFile := parseConfigFlag()
+
+	source, err := ioutil.ReadFile(cfgFile)
+	if err != nil {
+		panic(err)
+	}
 
 	c := &Config{}
-	err = viper.Unmarshal(c)
-
-	// if c.Version == "" {
-	// 	c.Version = drudapiVersion
-	// }
-
-	if c.VaultHost == "" {
-		c.VaultHost = "https://sanctuary.drud.io:8200"
+	err = yaml.Unmarshal(source, c)
+	if err != nil {
+		panic(err)
 	}
 
-	if c.Protocol == "" {
-		c.Protocol = "https"
+	if c.APIVersion == "" && os.Getenv("DRUD_APIVERSION") != "" {
+		c.APIVersion = os.Getenv("DRUD_APIVERSION")
 	}
-
-	if c.DrudHost == "" {
-		c.DrudHost = "drudapi.drud.io"
+	if c.ActiveApp == "" && os.Getenv("DRUD_ACTIVEAPP") != "" {
+		c.ActiveApp = os.Getenv("DRUD_ACTIVEAPP")
+	}
+	if c.ActiveDeploy == "" && os.Getenv("DRUD_ACTIVEDEPLOY") != "" {
+		c.ActiveDeploy = os.Getenv("DRUD_ACTIVEDEPLOY")
+	}
+	if c.Client == "" && os.Getenv("DRUD_CLIENT") != "" {
+		c.Client = os.Getenv("DRUD_CLIENT")
+	}
+	if c.DrudHost == "" && os.Getenv("DRUD_DRUDHOST") != "" {
+		c.DrudHost = os.Getenv("DRUD_DRUDHOST")
+	}
+	if c.GithubAuthToken == "" && os.Getenv("DRUD_GITHUBAUTHTOKEN") != "" {
+		c.GithubAuthToken = os.Getenv("DRUD_GITHUBAUTHTOKEN")
+	}
+	if c.GithubAuthOrg == "" && os.Getenv("DRUD_GITHUBAUTHORG") != "" {
+		c.GithubAuthOrg = os.Getenv("DRUD_GITHUBAUTHORG")
+	}
+	if c.Protocol == "" && os.Getenv("DRUD_PROTOCOL") != "" {
+		c.Protocol = os.Getenv("DRUD_PROTOCOL")
+	}
+	if c.VaultAddr == "" && os.Getenv("DRUD_VAULTADDR") != "" {
+		c.VaultAddr = os.Getenv("DRUD_VAULTADDR")
+	}
+	if c.VaultAuthToken == "" && os.Getenv("DRUD_VAULTAUTHTOKEN") != "" {
+		c.VaultAuthToken = os.Getenv("DRUD_VAULTAUTHTOKEN")
+	}
+	if c.Workspace == "" && os.Getenv("DRUD_WORKSPACE") != "" {
+		c.Workspace = os.Getenv("DRUD_WORKSPACE")
 	}
 
 	return c, nil
@@ -481,15 +553,4 @@ func RenderComposeYAML(app App) (string, error) {
 
 	templ.Execute(&doc, templateVars)
 	return doc.String(), nil
-}
-
-func GetWorkspace() string {
-	homedir, _ := utils.GetHomeDir()
-
-	workspace := os.Getenv("DRUD_WORKSPACE")
-	if workspace == "" {
-		workspace = path.Join(homedir, ".drud")
-	}
-	return workspace
-
 }

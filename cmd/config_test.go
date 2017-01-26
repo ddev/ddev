@@ -23,33 +23,17 @@ var configTest = []struct {
 	{utils.RandomString(10) + ".yaml", "bologna", "default", "bigbird", "drudapi.genesis.drud.io", "https"},
 }
 
-// TestIntegrationConfigCreate makes sure that when a config does not exist one will be created
-func TestIntegrationConfigCreate(t *testing.T) {
-	for _, c := range configTest {
-		args := []string{
-			"version",
-			"--config", c.config,
-		}
-		_, err := utils.RunCommand(DrudBin, args)
-		assert.NoError(t, err)
-		assert.Equal(t, true, utils.FileExists(c.config))
-
-		err = os.Remove(c.config)
-		assert.NoError(t, err)
-	}
-}
-
 // TestIntegrationConfigSet uses the compiled binary to test config set operation
 func TestIntegrationConfigSet(t *testing.T) {
 	for _, c := range configTest {
 		args := []string{
 			"config", "set",
 			"--config", c.config,
-			"-a", c.app,
-			"-d", c.env,
-			"-c", c.client,
-			"-o", c.host,
-			"-p", c.protocol,
+			"--activeapp", c.app,
+			"--activedeploy", c.env,
+			"--client", c.client,
+			"--drudhost", c.host,
+			"--protocol", c.protocol,
 		}
 		out, err := utils.RunCommand(DrudBin, args)
 		assert.NoError(t, err)

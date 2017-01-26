@@ -40,10 +40,10 @@ func TestMain(m *testing.M) {
 
 func setActiveApp(appName string, deployName string) error {
 	if appName == "" && deployName == "" {
-		_, err := utils.RunCommand(DrudBin, []string{"config", "unset", "active_app", "active_deploy"})
+		_, err := utils.RunCommand(DrudBin, []string{"config", "unset", "--activeapp", "--activedeploy"})
 		return err
 	}
 
-	_, err := utils.RunCommand(DrudBin, []string{"config", "set", "-a", appName, "-d", deployName})
+	_, err := utils.RunCommand(DrudBin, []string{"config", "set", "--activeapp", appName, "--activedeploy", deployName})
 	return err
 }

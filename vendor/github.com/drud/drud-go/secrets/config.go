@@ -2,21 +2,19 @@ package secrets
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/hashicorp/vault/api"
 )
 
-// SetVaultVars sets globals for vault access
-func ConfigVault(tokenFile string, vaultHost string) string {
+// ConfigVault sets globals for vault access
+func ConfigVault(token string, vaultHost string) {
 	// ensure there is a token for use with vault unless this is the auth command
 	configEditor()
 	var err error
-	if _, err = os.Stat(tokenFile); os.IsNotExist(err) {
-		log.Fatal("No sanctuary token found. Run `drud auth --help`")
+	if token == "" {
+		log.Fatal("Not authenticated. Run `drud auth --help`")
 	}
 
 	vaultCFG := *api.DefaultConfig()
@@ -27,17 +25,9 @@ func ConfigVault(tokenFile string, vaultHost string) string {
 		fmt.Println(err)
 	}
 
-	var cTok string
-	cTok, err = getSanctuaryToken(tokenFile)
-	if err != nil {
-		log.Fatalln("Error reading token file", err)
-	}
-
-	vClient.SetToken(cTok)
+	vClient.SetToken(token)
 
 	vault = *vClient.Logical()
-	
-	return cTok
 }
 
 // GetTokenDetails returns a map of the user's token info
@@ -54,18 +44,10 @@ func GetTokenDetails() (map[string]interface{}, error) {
 	return sobj.Data, nil
 }
 
-func getSanctuaryToken(tokenFile string) (string, error) {
-	fileBytes, err := ioutil.ReadFile(tokenFile)
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(fileBytes)), nil
-}
-
 func configEditor() {
 	// allow user to have different editor for secrets
 	// fall back to default editor
-	editor = os.Getenv("SECRET_EDITOR")
+	editor = os.Getenv("DRUD_SECRET_EDITOR")
 	if editor == "" {
 		editor = os.Getenv("EDITOR")
 		if editor == "" {

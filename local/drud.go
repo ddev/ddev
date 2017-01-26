@@ -118,7 +118,8 @@ func (l DrudApp) RelPath() string {
 
 // AbsPath returnt he full path from root to the app directory
 func (l DrudApp) AbsPath() string {
-	return path.Join(GetWorkspace(), l.RelPath())
+	cfg, _ := GetConfig()
+	return path.Join(cfg.Workspace, l.RelPath())
 }
 
 // GetRepoDetails uses the Environment field to get the relevant repo details about an app

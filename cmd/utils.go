@@ -72,40 +72,28 @@ func SetHomedir() {
 	}
 }
 
-// PrepConf sets global drudconf with abs path to conf file
+// PrepConf sets global cfgFile with abs path to conf file
 // and then creates a default config file if one does not exist
 func PrepConf() {
-	// figure out where the config is for reals
-	var err error
-	if cfgFile == "" {
-		drudconf = filepath.Join(homedir, "drud.yaml")
-	} else {
-		if strings.HasPrefix(cfgFile, "/") {
-			drudconf = cfgFile
-		} else {
-			drudconf, err = filepath.Abs(cfgFile)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
+	if strings.HasPrefix(cfgFile, "$HOME") || strings.HasPrefix(cfgFile, "~") {
+		cfgFile = strings.Replace(cfgFile, "$HOME", homedir, 1)
+		cfgFile = strings.Replace(cfgFile, "~", homedir, 1)
 	}
 
-	// create a blank drud config if one does not exist
-	if _, err := os.Stat(drudconf); os.IsNotExist(err) {
-		f, ferr := os.Create(drudconf)
-		if ferr != nil {
-			log.Fatal(ferr)
+	if !strings.HasPrefix(cfgFile, "/") {
+		absPath, absErr := filepath.Abs(cfgFile)
+		if absErr != nil {
+			log.Fatal(absErr)
 		}
-		defer f.Close()
-		//default drud.yaml contents
-		f.WriteString(`Client: 1fee
-Dev: false
-DrudHost: drudapi.drud.io
-Protocol: https
-VaultHost: https://sanctuary.drud.io:8200
-Version: v0.1
-`)
+		cfgFile = absPath
+	}
 
+	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
+		var cFile, err = os.Create(cfgFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		cFile.Close()
 	}
 }
 
@@ -175,7 +163,7 @@ func getMAC() (string, error) {
 
 // ParseConfigFlag is needed in order to get the value of the flag before cobra can
 func ParseConfigFlag() string {
-	value := ""
+	value := cfgFile
 
 	for i, arg := range os.Args {
 		if strings.HasPrefix(arg, "--config=") {
