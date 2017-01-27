@@ -3,8 +3,14 @@ package version
 // VERSION is the current version of the drud tool
 var VERSION = "0.3.2"
 
-// NGINX is the tag used for the nginx-php-fpm-local image
-var NGINX = "0.0.1"
+// WebImg defines the default web image for drud dev
+var WebImg = "drud/nginx-php-fpm7-local"
 
-// MYSQL is the version tag of the local mysql image that hsould be used
-var MYSQL = "5.7"
+// WebTag defines the default web image tag for drud dev
+var WebTag = "0.1.0"
+
+// DBImg defines the default db image for drud dev
+var DBImg = "drud/mysql-docker-local"
+
+// DBTag defines the default db image tag for drud dev
+var DBTag = "5.7"

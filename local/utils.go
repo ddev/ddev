@@ -528,10 +528,10 @@ func RenderComposeYAML(app App) (string, error) {
 	opts := app.GetOpts()
 
 	if opts.WebImage == "" {
-		opts.WebImage = "drud/nginx-php-fpm-local:" + version.NGINX
+		opts.WebImage = version.WebImg + ":" + version.WebTag
 	}
 	if opts.DbImage == "" {
-		opts.DbImage = "drud/mysql-docker-local:" + version.MYSQL
+		opts.DbImage = version.DBImg + ":" + version.DBTag
 	}
 	if opts.WebImageTag != "" {
 		opts.WebImage = SubTag(opts.WebImage, opts.WebImageTag)

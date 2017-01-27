@@ -18,8 +18,8 @@ var versionCmd = &cobra.Command{
 		table.MaxColWidth = 200
 
 		table.AddRow("cli:", version.VERSION)
-		table.AddRow("nginx:", version.NGINX)
-		table.AddRow("mysql:", version.MYSQL)
+		table.AddRow("web:", version.WebImg+":"+version.WebTag)
+		table.AddRow("db:", version.DBImg+":"+version.DBTag)
 
 		fmt.Println(table)
 	},

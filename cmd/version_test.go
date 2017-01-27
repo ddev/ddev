@@ -19,6 +19,8 @@ func TestVersion(t *testing.T) {
 	assert.NoError(err)
 	output := strings.TrimSpace(string(v))
 	assert.Contains(output, version.VERSION)
-	assert.Contains(output, version.NGINX)
-	assert.Contains(output, version.MYSQL)
+	assert.Contains(output, version.WebImg)
+	assert.Contains(output, version.WebTag)
+	assert.Contains(output, version.DBImg)
+	assert.Contains(output, version.DBTag)
 }
