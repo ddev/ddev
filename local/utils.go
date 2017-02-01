@@ -322,6 +322,7 @@ func FileExists(name string) bool {
 
 // EnsureDockerRouter ensures the router is running.
 func EnsureDockerRouter() {
+	var doc bytes.Buffer
 	cfg, _ := GetConfig()
 	dest := path.Join(cfg.Workspace, "router-compose.yaml")
 	f, ferr := os.Create(dest)
@@ -330,8 +331,19 @@ func EnsureDockerRouter() {
 	}
 	defer f.Close()
 
-	template := fmt.Sprintf(DrudRouterTemplate)
-	f.WriteString(template)
+	templ := template.New("compose template")
+	templ, err := templ.Parse(fmt.Sprintf(DrudRouterTemplate))
+	if err != nil {
+		log.Fatal(ferr)
+	}
+
+	templateVars := map[string]string{
+		"router_image": version.RouterImage,
+		"router_tag":   version.RouterTag,
+	}
+
+	templ.Execute(&doc, templateVars)
+	f.WriteString(doc.String())
 
 	// run docker-compose up -d in the newly created directory
 	out, err := utils.RunCommand("docker-compose", []string{"-f", dest, "up", "-d"})

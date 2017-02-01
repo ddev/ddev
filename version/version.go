@@ -14,3 +14,9 @@ var DBImg = "drud/mysql-docker-local"
 
 // DBTag defines the default db image tag for drud dev
 var DBTag = "5.7"
+
+// RouterImage defines the image used for the drud dev router.
+var RouterImage = "drud/nginx-proxy"
+
+// RouterTag defines the tag used for the drud dev router.
+var RouterTag = "0.1.0"
