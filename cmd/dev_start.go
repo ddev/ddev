@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/ddev/local"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -59,5 +59,5 @@ var LocalDevStartCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevCmd.AddCommand(LocalDevStartCmd)
+	RootCmd.AddCommand(LocalDevStartCmd)
 }

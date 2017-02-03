@@ -4,22 +4,25 @@ import (
 	"log"
 	"strings"
 
-	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/ddev/local"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
+const netName = "drud_default"
+
 var (
 	scaffold    bool
+	serviceType string
 	webImage    string
 	dbImage     string
 	webImageTag string
 	dbImageTag  string
 	skipYAML    bool
-	plugin      string
+	appClient   string
 )
 
-// LegacyAddCmd represents the add command
+// DevAddCmd represents the add command
 var DevAddCmd = &cobra.Command{
 	Use:   "add [app_name] [environment_name]",
 	Short: "Add an existing application to your local development environment",
@@ -46,7 +49,6 @@ var DevAddCmd = &cobra.Command{
 			Name:        activeApp,
 			Environment: activeDeploy,
 			Client:      appClient,
-			DrudClient:  drudclient,
 			WebImage:    webImage,
 			WebImageTag: webImageTag,
 			DbImage:     dbImage,
@@ -106,5 +108,5 @@ func init() {
 	DevAddCmd.Flags().BoolVarP(&skipYAML, "skip-yaml", "", false, "Skip creating the docker-compose.yaml.")
 	DevAddCmd.Flags().StringVarP(&appClient, "client", "c", "", "Client name")
 
-	LocalDevCmd.AddCommand(DevAddCmd)
+	RootCmd.AddCommand(DevAddCmd)
 }

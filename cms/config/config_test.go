@@ -7,7 +7,7 @@ import (
 
 	"io/ioutil"
 
-	"github.com/drud/bootstrap/cli/cms/model"
+	"github.com/drud/ddev/cms/model"
 	"github.com/stretchr/testify/assert"
 )
 

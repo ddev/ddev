@@ -6,7 +6,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig"
-	"github.com/drud/bootstrap/cli/cms/model"
+	"github.com/drud/ddev/cms/model"
 )
 
 const (

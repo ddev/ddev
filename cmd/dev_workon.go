@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/ddev/local"
 	"github.com/spf13/cobra"
 )
 
@@ -62,5 +62,5 @@ var LocalDevWorkonCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevCmd.AddCommand(LocalDevWorkonCmd)
+	RootCmd.AddCommand(LocalDevWorkonCmd)
 }

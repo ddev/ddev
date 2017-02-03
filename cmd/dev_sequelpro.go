@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/ddev/local"
 	"github.com/drud/drud-go/utils"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -73,6 +73,6 @@ var LocalDevSequelproCmd = &cobra.Command{
 
 func init() {
 	LocalDevSequelproCmd.Flags().BoolVarP(&scaffold, "scaffold", "s", false, "Add the app but don't run or config it.")
-	LocalDevCmd.AddCommand(LocalDevSequelproCmd)
+	RootCmd.AddCommand(LocalDevSequelproCmd)
 	//RootCmd.AddCommand(SequelproCmd)
 }

@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/ddev/local"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -36,7 +36,6 @@ var LocalDevReconfigCmd = &cobra.Command{
 			Name:        activeApp,
 			Environment: activeDeploy,
 			Client:      appClient,
-			DrudClient:  drudclient,
 			SkipYAML:    skipYAML,
 		}
 		app.Init(opts)
@@ -75,6 +74,6 @@ var LocalDevReconfigCmd = &cobra.Command{
 
 func init() {
 	LocalDevReconfigCmd.Flags().BoolVarP(&skipYAML, "skip-yaml", "", false, "Skip creating the docker-compose.yaml.")
-	LocalDevCmd.AddCommand(LocalDevReconfigCmd)
+	RootCmd.AddCommand(LocalDevReconfigCmd)
 
 }

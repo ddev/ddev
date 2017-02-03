@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/ddev/local"
 	"github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
@@ -69,6 +69,6 @@ func init() {
 	LocalDevLogsCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Follow the logs in real time.")
 	LocalDevLogsCmd.Flags().BoolVarP(&timestamp, "time", "s", false, "Add timestamps to logs")
 	LocalDevLogsCmd.Flags().StringVarP(&tail, "tail", "t", "", "How many lines to show")
-	LocalDevCmd.AddCommand(LocalDevLogsCmd)
+	RootCmd.AddCommand(LocalDevLogsCmd)
 
 }

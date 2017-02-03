@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils"
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
@@ -95,48 +94,6 @@ func PrepConf() {
 		}
 		cFile.Close()
 	}
-}
-
-// EnableAvailablePackages gets token info and determines what functionality to enable based on policies
-func EnableAvailablePackages() error {
-	data, err := secrets.GetTokenDetails()
-	if err != nil {
-		return err
-	}
-
-	policies := data["policies"].([]interface{})
-	// @todo: make policies like [files, hosting, etc] instead of using client name
-	for _, p := range policies {
-		switch p.(string) {
-		case "root", "admin", "drud_team", "drud_test_users":
-			drudAccess = true
-			filesAccess = true
-			clientCreateAccess = true
-		case "templatefit":
-			drudAccess = true
-			filesAccess = true
-		case "1fee":
-			filesAccess = true
-		case "newmedia":
-			filesAccess = true
-		}
-	}
-
-	if drudAccess {
-		RootCmd.AddCommand(HostingCmd)
-		RootCmd.AddCommand(LocalDevCmd)
-	}
-	if filesAccess {
-		RootCmd.AddCommand(FileCmd)
-	}
-	if clientCreateAccess {
-		CreateCmd.AddCommand(clientCreateCmd)
-		DeleteCmd.AddCommand(clientDeleteCmd)
-		ListCmd.AddCommand(clientListCmd)
-	}
-
-	return nil
-
 }
 
 // getMAC returns the mac address for interface en0 or the first in the list otherwise

@@ -6,7 +6,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/fatih/color"
 
-	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/ddev/local"
 
 	"github.com/spf13/cobra"
 )
@@ -36,5 +36,5 @@ var LocalDevStopCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevCmd.AddCommand(LocalDevStopCmd)
+	RootCmd.AddCommand(LocalDevStopCmd)
 }

@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/drud/bootstrap/cli/cms/config"
-	"github.com/drud/bootstrap/cli/cms/model"
+	"github.com/drud/ddev/cms/config"
+	"github.com/drud/ddev/cms/model"
 	"github.com/drud/drud-go/drudapi"
 	"github.com/drud/drud-go/utils"
 	"github.com/lextoumbourou/goodhosts"
@@ -22,6 +22,7 @@ type DrudApp struct {
 	Client     string
 	APIApp     *drudapi.Application
 	APIDeploy  *drudapi.Deploy
+	CFG        *Config
 	DrudClient *drudapi.Request
 	Options    *AppOptions
 }
@@ -31,8 +32,8 @@ func (l *DrudApp) SetOpts(opts AppOptions) {
 	l.Name = opts.Name
 	l.Environment = opts.Environment
 	l.AppType = opts.AppType
+	l.CFG = opts.CFG
 	l.Client = opts.Client
-	l.DrudClient = opts.DrudClient
 	l.Template = LegacyComposeTemplate
 	l.SkipYAML = opts.SkipYAML
 }
@@ -40,6 +41,20 @@ func (l *DrudApp) SetOpts(opts AppOptions) {
 // Init sets values from the AppInitOptions on the Drud app object
 func (l *DrudApp) Init(opts AppOptions) {
 	l.SetOpts(opts)
+
+	// auth with vault token if available
+	eveCreds := &drudapi.Credentials{}
+	if l.CFG.VaultAuthToken != "" {
+		eveCreds.Token = l.CFG.VaultAuthToken
+	} else {
+		eveCreds.AdminToken = l.CFG.GithubAuthToken
+	}
+
+	// drud api client
+	l.DrudClient = &drudapi.Request{
+		Host: l.CFG.EveHost(),
+		Auth: eveCreds,
+	}
 
 	al := &drudapi.ApplicationList{}
 	l.DrudClient.Query = fmt.Sprintf(`where={"name":"%s","client":"%s"}`, l.Name, l.Client)

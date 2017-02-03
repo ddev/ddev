@@ -3,8 +3,6 @@ package local
 import (
 	"errors"
 	"fmt"
-
-	"github.com/drud/drud-go/drudapi"
 )
 
 // App is an interface apps for Drud Local must implement to use shared functionality
@@ -59,7 +57,7 @@ type AppOptions struct {
 	DbImageTag  string
 	SkipYAML    bool
 	Template    string
-	DrudClient  *drudapi.Request
+	CFG         *Config
 }
 
 // RepoDetails encapsulates repository info

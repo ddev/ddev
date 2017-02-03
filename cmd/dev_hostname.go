@@ -41,5 +41,5 @@ var HostNameCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevCmd.AddCommand(HostNameCmd)
+	RootCmd.AddCommand(HostNameCmd)
 }

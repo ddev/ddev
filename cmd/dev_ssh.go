@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/ddev/local"
 	"github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
@@ -50,5 +50,5 @@ var LocalDevSSHCmd = &cobra.Command{
 
 func init() {
 	LocalDevSSHCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Which service to send the command to. [web, db]")
-	LocalDevCmd.AddCommand(LocalDevSSHCmd)
+	RootCmd.AddCommand(LocalDevSSHCmd)
 }

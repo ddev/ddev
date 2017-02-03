@@ -1,18 +1,15 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"os/user"
-	"strings"
 
-	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/ddev/local"
 	drudfiles "github.com/drud/drud-go/files"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/drud/drud-go/drudapi"
-	"github.com/drud/drud-go/secrets"
 	"github.com/hashicorp/vault/api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -46,15 +43,16 @@ var (
 	forceDelete        bool
 	vault              api.Logical // part of the vault go api
 	logLevel           = log.WarnLevel
+	plugin             = ""
 )
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "drud",
+	Use:   "ddev",
 	Short: "A CLI for interacting with DRUD.",
 	Long:  "This Command Line Interface (CLI) gives you the ability to interact with the DRUD platform to manage applications, create a local development environment, or deploy an application to production. DRUD also provides utilities for securely uploading files and secrets associated with applications.",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(`Use "drud --help" for more information about this tool.`)
+		// fmt.Println(`Use "drud --help" for more information about this tool.`)
 	},
 }
 
@@ -81,26 +79,6 @@ func Execute() {
 		log.Fatal(err)
 	}
 
-	// Get policy information from vault. If permission is denied send the user through `drud auth github` and then try again
-	if len(os.Args) >= 2 && RequiresAuth(os.Args[1]) {
-		for i := 0; i < 2; i++ {
-			secrets.ConfigVault(cfg.VaultAuthToken, cfg.VaultAddr)
-			vault = secrets.GetVault()
-			err = EnableAvailablePackages()
-			if err != nil {
-				if strings.Contains(err.Error(), "permission denied") && i == 0 {
-					if os.Args[1] != "--help" {
-						githubCmd.Run(RootCmd, []string{})
-						continue
-					}
-					break
-				}
-				log.Fatal(err)
-			}
-			break
-		}
-	}
-
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
 	}
@@ -109,6 +87,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	RootCmd.PersistentFlags().StringVarP(&plugin, "plugin", "p", "legacy", "Choose which plugin to use")
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "$HOME/drud.yaml", "yaml config file")
 	cfgFile = ParseConfigFlag()
 	_, err := local.GetConfig()
@@ -127,21 +106,26 @@ func init() {
 }
 
 // initConfig reads in config file and ENV variables if set.
-func initConfig() {
+func initConfig() {}
 
-	if drudAccess {
-		// auth with vault token if available
-		eveCreds := &drudapi.Credentials{}
-		if cfg.VaultAuthToken != "" {
-			eveCreds.Token = cfg.VaultAuthToken
-		} else {
-			eveCreds.AdminToken = cfg.GithubAuthToken
+func parseLegacyArgs(args []string) {
+	activeApp = cfg.ActiveApp
+	activeDeploy = cfg.ActiveDeploy
+	appClient = cfg.Client
+
+	if len(args) > 1 {
+		if args[0] != "" {
+			activeApp = args[0]
 		}
 
-		// drud api client
-		drudclient = &drudapi.Request{
-			Host: cfg.EveHost(),
-			Auth: eveCreds,
+		if args[1] != "" {
+			activeDeploy = args[1]
 		}
+	}
+	if activeApp == "" {
+		log.Fatalln("No app name found. app_name and deploy_name are expected as arguments.")
+	}
+	if activeDeploy == "" {
+		log.Fatalln("No deploy name found. app_name and deploy_name are expected as arguments.")
 	}
 }

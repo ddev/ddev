@@ -3,7 +3,7 @@ package cmd
 import (
 	"strings"
 
-	"github.com/drud/bootstrap/cli/local"
+	"github.com/drud/ddev/local"
 	"github.com/drud/drud-go/utils"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
@@ -44,5 +44,5 @@ var DevListCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevCmd.AddCommand(DevListCmd)
+	RootCmd.AddCommand(DevListCmd)
 }

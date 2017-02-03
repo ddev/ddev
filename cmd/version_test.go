@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/drud/bootstrap/cli/version"
+	"github.com/drud/ddev/version"
 	"github.com/stretchr/testify/assert"
 )
 
