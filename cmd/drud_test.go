@@ -3,7 +3,7 @@ package cmd
 import "os"
 
 var (
-	binary = "drud" // The drud binary to use.
+	binary = "ddev" // The ddev binary to use.
 )
 
 func setup() {
