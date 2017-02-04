@@ -28,6 +28,8 @@ const (
 	containerRunning = "running"
 )
 
+var vault api.Logical
+
 // LegacyApp implements the AppBase interface for Legacy Newmedia apps
 type LegacyApp struct {
 	AppBase
@@ -76,6 +78,10 @@ func (l *LegacyApp) GetType() string {
 // Init sets values from the AppInitOptions on the Drud app object
 func (l *LegacyApp) Init(opts AppOptions) {
 	l.SetOpts(opts)
+
+	// instantiate an authed vault client
+	secrets.ConfigVault(opts.CFG.VaultAuthToken, opts.CFG.VaultAddr)
+	vault = secrets.GetVault()
 
 	if !l.DatabagExists() {
 		log.Fatal("No legacy site by that name.")
@@ -133,7 +139,9 @@ func (l LegacyApp) GetRepoDetails() (RepoDetails, error) {
 // DatabagExists checks if a databag exists or not.
 func (l LegacyApp) DatabagExists() bool {
 	_, err := GetDatabag(l.Name)
+
 	if err != nil {
+		log.Println(err)
 		return false
 	}
 	return true

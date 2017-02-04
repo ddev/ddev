@@ -3,14 +3,13 @@ package cmd
 import (
 	"os"
 	"os/user"
+	"strings"
 
 	"github.com/drud/ddev/local"
 	drudfiles "github.com/drud/drud-go/files"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/drud/drud-go/drudapi"
-	"github.com/hashicorp/vault/api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,7 +26,6 @@ var (
 	usr                *user.User
 	pwd                string
 	cfgFile            string
-	drudclient         *drudapi.Request         //client for interacting with drud api
 	bucket             string                   // aws s3 bucket used with file storage functionality
 	region             = "us-west-2"            // region where the s3 bucket can be found
 	creds              *credentials.Credentials // s3 related credentials
@@ -41,7 +39,6 @@ var (
 	drudAccess         bool
 	bucketName         = "nmdarchive"
 	forceDelete        bool
-	vault              api.Logical // part of the vault go api
 	logLevel           = log.WarnLevel
 	plugin             = ""
 )
@@ -53,6 +50,15 @@ var RootCmd = &cobra.Command{
 	Long:  "This Command Line Interface (CLI) gives you the ability to interact with the DRUD platform to manage applications, create a local development environment, or deploy an application to production. DRUD also provides utilities for securely uploading files and secrets associated with applications.",
 	Run: func(cmd *cobra.Command, args []string) {
 		// fmt.Println(`Use "drud --help" for more information about this tool.`)
+	},
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if !strings.Contains(strings.Join(os.Args, " "), " list") {
+			parseLegacyArgs(args)
+			plugin = strings.ToLower(plugin)
+			if _, ok := local.PluginMap[plugin]; !ok {
+				Failed("Plugin %s is not registered", plugin)
+			}
+		}
 	},
 }
 
