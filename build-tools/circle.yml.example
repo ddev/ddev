@@ -1,0 +1,10 @@
+machine:
+    services:
+        - docker
+
+#dependencies:
+#    pre:
+
+test:
+    override:
+        - make test
