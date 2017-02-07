@@ -58,7 +58,7 @@ func TestDevStart(t *testing.T) {
 	assert.Equal(true, utils.IsRunning(app.ContainerName()+"-db"))
 
 	o := utils.NewHTTPOptions("http://127.0.0.1")
-	o.Timeout = 420
+	o.Timeout = 90
 	o.Headers["Host"] = app.HostName()
 	err = utils.EnsureHTTPStatus(o)
 	assert.NoError(err)

@@ -46,8 +46,8 @@ stages:
 #      - type: shell
 #        command: |
 #          cd ~/src/github.com/drud/ddev &&
-#          go test -v -run TestDevAddSites ./cmd/...
-#        name: CLI/ddev tests
+#          go test -v -run TestDevAddSites ./pkg/...
+#        name: CLI/ddev single test
 
 
       # Run the built-in ddev tests

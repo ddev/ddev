@@ -35,13 +35,6 @@ func TestMain(m *testing.M) {
 		fmt.Println("could not set noninteractive mode")
 	}
 
-	args := []string{"auth", "github"}
-	out, err := utils.RunCommand(DrudBin, args)
-	if err != nil {
-		fmt.Println(	"Failed to run command 'drud auth github' output=", out)
-		os.Exit(1)
-	}
-
 	fmt.Println("Running tests.")
 	os.Exit(m.Run())
 }
