@@ -138,7 +138,9 @@ func TestDevAddSites(t *testing.T) {
 		// test that you get an error when you run with no args
 		args := []string{"add", site[0], site[1]}
 		out, err := utils.RunCommand(DrudBin, args)
-		log.Println("Output from drud dev add:", out)
+		if err != nil {
+			log.Println("Error Output from ddev add:", out)
+		}
 		assert.NoError(err)
 		assert.Contains(string(out), "Successfully added")
 		assert.Contains(string(out), "Your application can be reached at")
