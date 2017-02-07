@@ -16,7 +16,6 @@ var LocalDevReconfigCmd = &cobra.Command{
 	Short: "Stop and Start the app.",
 	Long:  `Restart is useful for when the port of your local app has changed due to a system reboot or some other failure.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-
 		client, err := local.GetDockerClient()
 		if err != nil {
 			log.Fatal(err)
@@ -29,7 +28,6 @@ var LocalDevReconfigCmd = &cobra.Command{
 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-
 		app := local.PluginMap[strings.ToLower(plugin)]
 
 		opts := local.AppOptions{
@@ -37,6 +35,7 @@ var LocalDevReconfigCmd = &cobra.Command{
 			Environment: activeDeploy,
 			Client:      appClient,
 			SkipYAML:    skipYAML,
+			CFG:         cfg,
 		}
 		app.Init(opts)
 

@@ -47,7 +47,7 @@ func TestDevAddBadArgs(t *testing.T) {
 	args = append(args, "mcsnaggletooth", "smith")
 
 	// testing that you get an error when passing a bad site name
-	args[3] = DevTestEnv
+	args[2] = DevTestEnv
 	out, err = utils.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "No legacy site by that name")
