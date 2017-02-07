@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/drud/drud-go/utils"
-	"github.com/golang/go/src/pkg/log"
 )
 
 var (
@@ -30,7 +29,7 @@ func TestMain(m *testing.M) {
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
-	log.Println("Running ddev with ddev=", DdevBin)
+	fmt.Println("Running ddev with ddev=", DdevBin)
 
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
 	if err != nil {
