@@ -42,12 +42,12 @@ stages:
           sudo cp bin/linux/ddev /usr/local/bin/
         name: Build the linux drud executable binary
 
-      # Run just one test in drud-dev
-#      - type: shell
-#        command: |
-#          cd ~/src/github.com/drud/ddev &&
-#          go test -v -run TestDevAddSites ./pkg/...
-#        name: CLI/ddev single test
+      # Run just one test in ddev
+      - type: shell
+        command: |
+          cd ~/src/github.com/drud/ddev &&
+          go test -v -run TestDevAddSites ./pkg/...
+        name: ddev single test
 
 
       # Run the built-in ddev tests
