@@ -14,7 +14,7 @@ func TestDevStop(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
-	args := []string{"dev", "stop", DevTestApp, DevTestEnv}
+	args := []string{"stop", DevTestApp, DevTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
 	format := fmt.Sprintf
@@ -26,7 +26,7 @@ func TestDevStoppedList(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
-	args := []string{"dev", "list"}
+	args := []string{"list"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
 	assert.Contains(t, string(out), "found")
@@ -42,7 +42,7 @@ func TestDevStart(t *testing.T) {
 	}
 	assert := assert.New(t)
 
-	args := []string{"dev", "start", DevTestApp, DevTestEnv}
+	args := []string{"start", DevTestApp, DevTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	format := fmt.Sprintf

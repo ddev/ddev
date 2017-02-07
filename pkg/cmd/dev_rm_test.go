@@ -15,7 +15,7 @@ func TestDevRm(t *testing.T) {
 	}
 
 	for _, site := range DevTestSites {
-		args := []string{"dev", "rm", site[0], site[1]}
+		args := []string{"rm", site[0], site[1]}
 		out, err := utils.RunCommand(DrudBin, args)
 		assert.NoError(t, err)
 		format := fmt.Sprintf

@@ -15,7 +15,7 @@ func TestDevRestart(t *testing.T) {
 		t.Skip("Compose tests being skipped.")
 	}
 	assert := assert.New(t)
-	args := []string{"dev", "restart", DevTestApp, DevTestEnv}
+	args := []string{"restart", DevTestApp, DevTestEnv}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	format := fmt.Sprintf

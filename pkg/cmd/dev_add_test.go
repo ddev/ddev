@@ -38,7 +38,7 @@ func TestDevAddBadArgs(t *testing.T) {
 	assert.NoError(err)
 
 	// test that you get an error when you run with no args
-	args := []string{"dev", "add"}
+	args := []string{"add"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "app_name and deploy_name are expected as arguments.")
@@ -54,7 +54,7 @@ func TestDevAddBadArgs(t *testing.T) {
 
 	err = setActiveApp(utils.RandomString(10), utils.RandomString(10))
 	assert.NoError(err)
-	args = []string{"dev", "add"}
+	args = []string{"add"}
 	out, err = utils.RunCommand(DrudBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "No legacy site by that name")
@@ -74,7 +74,7 @@ func TestDevAddScaffoldWP(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"dev", "add", DevTestApp, DevTestEnv, "-s"}
+	args := []string{"add", DevTestApp, DevTestEnv, "-s"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
@@ -89,7 +89,7 @@ func TestDevAddScaffoldWPImageTag(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"dev", "add", DevTestApp, DevTestEnv, "-s", "--web-image-tag=unison,", "--db-image-tag=5.6"}
+	args := []string{"add", DevTestApp, DevTestEnv, "-s", "--web-image-tag=unison,", "--db-image-tag=5.6"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
@@ -109,7 +109,7 @@ func TestDevAddScaffoldWPImageTag(t *testing.T) {
 func TestDevAddScaffoldWPImageChange(t *testing.T) {
 	assert := assert.New(t)
 
-	args := []string{"dev", "add", DevTestApp, DevTestEnv, "-s",
+	args := []string{"add", DevTestApp, DevTestEnv, "-s",
 		"--web-image=drud/testmewebimage,", "--db-image=drud/testmedbimage",
 	}
 	out, err := utils.RunCommand(DrudBin, args)
@@ -136,7 +136,7 @@ func TestDevAddSites(t *testing.T) {
 	for _, site := range DevTestSites {
 
 		// test that you get an error when you run with no args
-		args := []string{"dev", "add", site[0], site[1]}
+		args := []string{"add", site[0], site[1]}
 		out, err := utils.RunCommand(DrudBin, args)
 		log.Println("Output from drud dev add:", out)
 		assert.NoError(err)

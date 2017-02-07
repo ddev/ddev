@@ -15,7 +15,7 @@ import (
 // TestDevWorkonCancel runs `drud legacy workon` and selects 0.
 func TestDevWorkonCancel(t *testing.T) {
 	assert := assert.New(t)
-	cmd := exec.Command(DrudBin, "dev", "workon")
+	cmd := exec.Command(DrudBin, "workon")
 	cmd.Stdin = strings.NewReader("0\n")
 
 	out, err := cmd.Output()
@@ -24,7 +24,7 @@ func TestDevWorkonCancel(t *testing.T) {
 }
 
 func getDevTestID() string {
-	cmd := exec.Command(DrudBin, "dev", "workon")
+	cmd := exec.Command(DrudBin, "workon")
 	cmd.Stdin = strings.NewReader("0\n")
 
 	out, err := cmd.Output()
@@ -48,7 +48,7 @@ func getDevTestID() string {
 // TestDevWorkon runs `drud legacy workon` and selects our legacy test app.
 func TestDevWorkon(t *testing.T) {
 	assert := assert.New(t)
-	cmd := exec.Command(DrudBin, "dev", "workon")
+	cmd := exec.Command(DrudBin, "workon")
 	selection := getDevTestID()
 	cmd.Stdin = strings.NewReader(selection + "\n")
 

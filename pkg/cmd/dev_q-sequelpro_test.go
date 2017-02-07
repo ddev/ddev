@@ -17,7 +17,7 @@ func TestDevSequelproScaffold(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"dev", "sequelpro", DevTestApp, DevTestEnv, "-s"}
+	args := []string{"sequelpro", DevTestApp, DevTestEnv, "-s"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "finished successfully")
