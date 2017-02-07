@@ -10,7 +10,7 @@ import (
 
 var (
 	// DrudBin is the full path to the drud binary
-	DrudBin = "drud"
+	DrudBin = "ddev"
 
 	// DevTestEnv is the name of the Dev DRUD environment to test
 	DevTestEnv = "production"
@@ -26,8 +26,8 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	if os.Getenv("DRUD_BINARY_FULLPATH") != "" {
-		DrudBin = os.Getenv("DRUD_BINARY_FULLPATH")
+	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
+		DrudBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
 
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")

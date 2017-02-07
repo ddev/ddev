@@ -587,7 +587,7 @@ func (l *LegacyApp) AddHostsEntry() error {
 	}
 
 	fmt.Println("\n\n\nAdding hostfile entry. You will be prompted for your password.")
-	hostnameArgs := []string{"drud", "dev", "hostname", l.HostName(), "127.0.0.1"}
+	hostnameArgs := []string{"ddev", "hostname", l.HostName(), "127.0.0.1"}
 	err = utils.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }
