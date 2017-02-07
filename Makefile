@@ -42,7 +42,7 @@ include build-tools/makefile_components/base_test_go.mak
 
 # Override test section with tests specific to ddev
 test:
-	@mkdir -p bin/linux
+	@mkdir -p bin/linux bin/darwin
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
-	DRUD_DEBUG=true OS=linux go test -timeout 20m -v ./cmd/... ./pkg/...
+	DRUD_DEBUG=true go test -timeout 20m -v ./cmd/... ./pkg/...
 
