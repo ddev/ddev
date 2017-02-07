@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/sprig"
-	"github.com/drud/ddev/cms/model"
+	"github.com/drud/ddev/pkg/model"
 )
 
 const (
