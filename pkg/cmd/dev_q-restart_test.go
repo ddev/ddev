@@ -32,13 +32,6 @@ func TestDevRestart(t *testing.T) {
 	assert.Equal(true, utils.IsRunning(app.ContainerName()+"-web"))
 	assert.Equal(true, utils.IsRunning(app.ContainerName()+"-db"))
 
-	webPort, err := local.GetPodPort(app.ContainerName() + "-web")
-	assert.NoError(err)
-	dbPort, err := local.GetPodPort(app.ContainerName() + "-db")
-	assert.NoError(err)
-
-	assert.Equal(true, utils.IsTCPPortAvailable(int(webPort)))
-	assert.Equal(true, utils.IsTCPPortAvailable(int(dbPort)))
 	o := utils.NewHTTPOptions("http://127.0.0.1")
 	o.Timeout = 420
 	o.Headers["Host"] = app.HostName()

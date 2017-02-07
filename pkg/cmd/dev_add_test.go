@@ -138,6 +138,7 @@ func TestDevAddSites(t *testing.T) {
 		// test that you get an error when you run with no args
 		args := []string{"dev", "add", site[0], site[1]}
 		out, err := utils.RunCommand(DrudBin, args)
+		log.Println("Output from drud dev add:", out)
 		assert.NoError(err)
 		assert.Contains(string(out), "Successfully added")
 		assert.Contains(string(out), "Your application can be reached at")
@@ -148,13 +149,6 @@ func TestDevAddSites(t *testing.T) {
 		assert.Equal(true, utils.IsRunning(app.ContainerName()+"-web"))
 		assert.Equal(true, utils.IsRunning(app.ContainerName()+"-db"))
 
-		webPort, err := local.GetPodPort(app.ContainerName() + "-web")
-		assert.NoError(err)
-		dbPort, err := local.GetPodPort(app.ContainerName() + "-db")
-		assert.NoError(err)
-
-		assert.Equal(true, utils.IsTCPPortAvailable(int(webPort)))
-		assert.Equal(true, utils.IsTCPPortAvailable(int(dbPort)))
 		o := utils.NewHTTPOptions("http://127.0.0.1")
 		o.Timeout = 120
 		o.Headers["Host"] = app.HostName()

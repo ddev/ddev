@@ -483,7 +483,7 @@ func (l *DrudApp) Wait() (string, error) {
 // AddHostsEntry will add the legacy site URL to the local hostfile.
 func (l *DrudApp) AddHostsEntry() error {
 	if os.Getenv("DRUD_NONINTERACTIVE") != "" {
-		fmt.Printf("Please add the following entry to your host file:\n127.0.0.1 %s\n", l.HostName())
+		fmt.Printf("DRUD_NONINTERACTIVE is set. If this message is not in a test you may want to add the following entry to your host file:\n127.0.0.1 %s\n", l.HostName())
 		return nil
 	}
 

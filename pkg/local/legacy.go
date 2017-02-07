@@ -438,7 +438,7 @@ func (l *LegacyApp) SetType() error {
 // Wait ensures that the app appears to be read before returning
 func (l *LegacyApp) Wait() (string, error) {
 	o := utils.NewHTTPOptions("http://127.0.0.1")
-	o.Timeout = 420
+	o.Timeout = 90
 	o.Headers["Host"] = l.HostName()
 	err := utils.EnsureHTTPStatus(o)
 	if err != nil {
@@ -574,7 +574,7 @@ func (l *LegacyApp) HostName() string {
 // AddHostsEntry will add the legacy site URL to the local hostfile.
 func (l *LegacyApp) AddHostsEntry() error {
 	if os.Getenv("DRUD_NONINTERACTIVE") != "" {
-		fmt.Printf("Please add the following entry to your host file:\n127.0.0.1 %s\n", l.HostName())
+		fmt.Printf("DRUD_NONINTERACTIVE is set. If this message is not in a test you may want to add the following entry to your host file:\n127.0.0.1 %s\n", l.HostName())
 		return nil
 	}
 

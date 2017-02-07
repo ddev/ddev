@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os/exec"
-	"os/user"
 	"strings"
 	"testing"
+	"github.com/drud/drud-go/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -56,11 +56,8 @@ func TestDevWorkon(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(string(out), fmt.Sprintf("You are now working on %s-%s", DevTestApp, DevTestEnv))
 
-	usr, err := user.Current()
-	if err != nil {
-		log.Fatal(err)
-	}
-	fb, err := ioutil.ReadFile(usr.HomeDir + "/drud.yaml")
+	home, _ := utils.GetHomeDir()
+	fb, err := ioutil.ReadFile(home + "/drud.yaml")
 	assert.Contains(string(fb), "activeapp: "+DevTestApp)
 	assert.Contains(string(fb), "activedeploy: "+DevTestEnv)
 }

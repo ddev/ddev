@@ -15,7 +15,7 @@ var (
 	// DevTestEnv is the name of the Dev DRUD environment to test
 	DevTestEnv = "production"
 
-	// DevTestApp is the name of the Dev DRUD app to testes
+	// DevTestApp is the name of the Dev DRUD app to test
 	DevTestApp = "drudio"
 
 	DevTestSites = [][]string{
@@ -34,7 +34,15 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		fmt.Println("could not set noninteractive mode")
 	}
-	fmt.Println("Running tests")
+
+	args := []string{"auth", "github"}
+	out, err := utils.RunCommand(DrudBin, args)
+	if err != nil {
+		fmt.Println(	"Failed to run command 'drud auth github' output=", out)
+		os.Exit(1)
+	}
+
+	fmt.Println("Running tests.")
 	os.Exit(m.Run())
 }
 

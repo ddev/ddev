@@ -103,6 +103,5 @@ func TestDevExecWpCLI(t *testing.T) {
 	args = []string{"dev", "exec", wpApp, DevTestEnv, "wp plugin status"}
 	out, err = utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "riot-autoloader")
-	assert.Contains(string(out), "drudio-core")
+	assert.Contains(string(out), "installed plugins")
 }

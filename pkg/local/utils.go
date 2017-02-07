@@ -6,9 +6,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -396,25 +394,8 @@ func parseConfigFlag() string {
 			value = os.Args[i+1]
 		}
 	}
-	usr, err := user.Current()
-	if value == "" {
-		if err != nil {
-			log.Fatal(err)
-		}
-		value = fmt.Sprintf("%v/drud.yaml", usr.HomeDir)
-	}
-	if strings.HasPrefix(value, "$HOME") || strings.HasPrefix(value, "~") {
-		value = strings.Replace(value, "$HOME", usr.HomeDir, 1)
-		value = strings.Replace(value, "~", usr.HomeDir, 1)
-	}
-
-	if !strings.HasPrefix(value, "/") {
-		absPath, absErr := filepath.Abs(value)
-		if absErr != nil {
-			log.Fatal(absErr)
-		}
-		value = absPath
-	}
+	home, _ := utils.GetHomeDir()
+	value = fmt.Sprintf("%v/drud.yaml", home)
 
 	if _, err := os.Stat(value); os.IsNotExist(err) {
 		var cFile, err = os.Create(value)
