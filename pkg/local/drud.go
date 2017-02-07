@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/drud/ddev/cms/config"
-	"github.com/drud/ddev/cms/model"
+	"github.com/drud/ddev/pkg/cms/config"
+	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/drud-go/drudapi"
 	"github.com/drud/drud-go/utils"
 	"github.com/lextoumbourou/goodhosts"

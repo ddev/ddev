@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/drud/ddev/local"
+	"github.com/drud/ddev/pkg/local"
 	"github.com/spf13/cobra"
 )
 

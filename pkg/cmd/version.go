@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/drud/ddev/version"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
 )

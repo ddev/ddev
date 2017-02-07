@@ -5,7 +5,7 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/drud/ddev/local"
+	"github.com/drud/ddev/pkg/local"
 	drudfiles "github.com/drud/drud-go/files"
 
 	log "github.com/Sirupsen/logrus"

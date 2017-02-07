@@ -16,7 +16,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/drud/ddev/version"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils"
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"

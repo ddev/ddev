@@ -18,8 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
-	"github.com/drud/ddev/cms/config"
-	"github.com/drud/ddev/cms/model"
+	"github.com/drud/ddev/pkg/cms/config"
+	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils"
 )

@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/drud/ddev/local"
+	"github.com/drud/ddev/pkg/local"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )

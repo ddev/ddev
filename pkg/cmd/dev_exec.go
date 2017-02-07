@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/drud/ddev/local"
+	"github.com/drud/ddev/pkg/local"
 	"github.com/drud/drud-go/utils"
 	"github.com/spf13/cobra"
 )
