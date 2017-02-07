@@ -35,7 +35,7 @@ func TestIntegrationConfigSet(t *testing.T) {
 			"--drudhost", c.host,
 			"--protocol", c.protocol,
 		}
-		out, err := utils.RunCommand(DrudBin, args)
+		out, err := utils.RunCommand(DdevBin, args)
 		assert.NoError(t, err)
 		assert.Contains(t, string(out), "Config items set.")
 
@@ -92,19 +92,19 @@ func TestConfigBadArgs(t *testing.T) {
 	assert := assert.New(t)
 	// test that you get an error when you try to something potato
 	args := []string{"config", "set", "VaultHost", "https://nowhereinhell.com:8200"}
-	out, err := utils.RunCommand(DrudBin, args)
+	out, err := utils.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "No configuration flag provided.")
 
 	// test that The Doors are not welcome here
 	args = []string{"config", "set", "the", "world", "on", "fire"}
-	out, err = utils.RunCommand(DrudBin, args)
+	out, err = utils.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "No configuration flag provided.")
 
 	// test that file is specified if global --config is set
 	args = []string{"config", "set", "--vaultaddr", "https://junk", "--config"}
-	out, err = utils.RunCommand(DrudBin, args)
+	out, err = utils.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "--config requires a configuration file to be specified.")
 }
@@ -114,13 +114,13 @@ func TestConfigNoArgs(t *testing.T) {
 	assert := assert.New(t)
 	// test that you get an error when you try to something potato
 	args := []string{"config", "set"}
-	out, err := utils.RunCommand(DrudBin, args)
+	out, err := utils.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Usage:")
 
 	// test that The Doors are not welcome here
 	args = []string{"config", "unset"}
-	out, err = utils.RunCommand(DrudBin, args)
+	out, err = utils.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Usage:")
 }

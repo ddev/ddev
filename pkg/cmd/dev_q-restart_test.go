@@ -16,7 +16,7 @@ func TestDevRestart(t *testing.T) {
 	}
 	assert := assert.New(t)
 	args := []string{"restart", DevTestApp, DevTestEnv}
-	out, err := utils.RunCommand(DrudBin, args)
+	out, err := utils.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	format := fmt.Sprintf
 	assert.Contains(string(out), format("Stopping legacy-%s-%s-web ... done", DevTestApp, DevTestEnv))

@@ -6,11 +6,12 @@ import (
 	"testing"
 
 	"github.com/drud/drud-go/utils"
+	"github.com/golang/go/src/pkg/log"
 )
 
 var (
-	// DrudBin is the full path to the drud binary
-	DrudBin = "ddev"
+	// DdevBin is the full path to the drud binary
+	DdevBin = "ddev"
 
 	// DevTestEnv is the name of the Dev DRUD environment to test
 	DevTestEnv = "production"
@@ -27,8 +28,9 @@ var (
 
 func TestMain(m *testing.M) {
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
-		DrudBin = os.Getenv("DDEV_BINARY_FULLPATH")
+		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
+	log.Println("Running ddev with ddev=", DdevBin)
 
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
 	if err != nil {
@@ -41,10 +43,10 @@ func TestMain(m *testing.M) {
 
 func setActiveApp(appName string, deployName string) error {
 	if appName == "" && deployName == "" {
-		_, err := utils.RunCommand(DrudBin, []string{"config", "unset", "--activeapp", "--activedeploy"})
+		_, err := utils.RunCommand(DdevBin, []string{"config", "unset", "--activeapp", "--activedeploy"})
 		return err
 	}
 
-	_, err := utils.RunCommand(DrudBin, []string{"config", "set", "--activeapp", appName, "--activedeploy", deployName})
+	_, err := utils.RunCommand(DdevBin, []string{"config", "set", "--activeapp", appName, "--activedeploy", deployName})
 	return err
 }

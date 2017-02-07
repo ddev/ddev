@@ -12,7 +12,7 @@ func TestDevList(t *testing.T) {
 		t.Skip("Compose tests being skipped.")
 	}
 	args := []string{"list"}
-	out, err := utils.RunCommand(DrudBin, args)
+	out, err := utils.RunCommand(DdevBin, args)
 	assert.NoError(t, err)
 	assert.Contains(t, string(out), "found")
 	assert.Contains(t, string(out), DevTestApp)

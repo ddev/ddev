@@ -11,7 +11,7 @@ func TestDevLogsBadArgs(t *testing.T) {
 	err := setActiveApp("", "")
 	assert := assert.New(t)
 	args := []string{"logs"}
-	out, err := utils.RunCommand(DrudBin, args)
+	out, err := utils.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "app_name and deploy_name are expected as arguments")
 }
@@ -23,7 +23,7 @@ func TestDevLogs(t *testing.T) {
 	}
 	assert := assert.New(t)
 	args := []string{"logs", DevTestApp, DevTestEnv}
-	out, err := utils.RunCommand(DrudBin, args)
+	out, err := utils.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Server started")
 	assert.Contains(string(out), "GET")

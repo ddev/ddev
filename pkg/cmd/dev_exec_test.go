@@ -11,18 +11,18 @@ import (
 func TestDevExecBadArgs(t *testing.T) {
 	assert := assert.New(t)
 	args := []string{"exec", DevTestApp, DevTestEnv}
-	out, err := utils.RunCommand(DrudBin, args)
+	out, err := utils.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Invalid arguments detected.")
 
 	args = []string{"exec", "pwd"}
-	out, err = utils.RunCommand(DrudBin, args)
+	out, err = utils.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "app_name and deploy_name are expected as arguments")
 
 	// Try with an invalid number of args
 	args = []string{"exec", DevTestApp, "pwd"}
-	out, err = utils.RunCommand(DrudBin, args)
+	out, err = utils.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Invalid arguments detected")
 }
@@ -37,7 +37,7 @@ func TestDevExec(t *testing.T) {
 	assert := assert.New(t)
 
 	args := []string{"exec", DevTestApp, DevTestEnv, "pwd"}
-	out, err := utils.RunCommand(DrudBin, args)
+	out, err := utils.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "/var/www/html/docroot")
 
@@ -45,7 +45,7 @@ func TestDevExec(t *testing.T) {
 	err = setActiveApp(DevTestApp, DevTestEnv)
 	assert.NoError(err)
 	args = []string{"exec", DevTestApp, DevTestEnv, "pwd"}
-	out, err = utils.RunCommand(DrudBin, args)
+	out, err = utils.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "/var/www/html/docroot")
 }
@@ -61,7 +61,7 @@ func TestDevExecDrush(t *testing.T) {
 
 	for _, app := range []string{d8App, d7App} {
 		args := []string{"exec", app, DevTestEnv, "drush uli"}
-		out, err := utils.RunCommand(DrudBin, args)
+		out, err := utils.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.Contains(string(out), "http://")
 
@@ -69,12 +69,12 @@ func TestDevExecDrush(t *testing.T) {
 		err = setActiveApp(DevTestSites[1][0], DevTestEnv)
 		assert.NoError(err)
 		args = []string{"exec", app, DevTestEnv, "drush uli"}
-		out, err = utils.RunCommand(DrudBin, args)
+		out, err = utils.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.Contains(string(out), "http://")
 
 		args = []string{"exec", app, DevTestEnv, "drush status"}
-		out, err = utils.RunCommand(DrudBin, args)
+		out, err = utils.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		// Check for database status
 		assert.Contains(string(out), "Connected")
@@ -96,12 +96,12 @@ func TestDevExecWpCLI(t *testing.T) {
 	assert := assert.New(t)
 
 	args := []string{"exec", wpApp, DevTestEnv, "wp --info"}
-	out, err := utils.RunCommand(DrudBin, args)
+	out, err := utils.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
 
 	args = []string{"exec", wpApp, DevTestEnv, "wp plugin status"}
-	out, err = utils.RunCommand(DrudBin, args)
+	out, err = utils.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "installed plugins")
 }

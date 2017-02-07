@@ -16,7 +16,7 @@ func TestDevRm(t *testing.T) {
 
 	for _, site := range DevTestSites {
 		args := []string{"rm", site[0], site[1]}
-		out, err := utils.RunCommand(DrudBin, args)
+		out, err := utils.RunCommand(DdevBin, args)
 		assert.NoError(t, err)
 		format := fmt.Sprintf
 		assert.Contains(t, string(out), format("Stopping legacy-%s-%s-web ... done", site[0], site[1]))
