@@ -1,0 +1,58 @@
+version: 2
+executorType: machine
+stages:
+  build:
+    workDir: ~/ddev
+    environment:
+      - GOPATH: /home/circleci
+      - DRUD_DEBUG: true
+    steps:
+      - type: checkout
+
+      - type: shell
+        command: sudo apt-get update && sudo apt-get install golang
+        name: Upgrade golang
+
+      - type: shell
+        command: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+        name: "docker login"
+
+      - type: shell
+        command: sudo apt-get -qq update && sudo apt-get -qq -y install python-pip && sudo pip -q install docker-compose
+        name: docker-compose install
+
+      - type: shell
+        command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
+        name: Installed tool versions
+
+      # Create environment which respects GOPATH
+      - type: shell
+        command: |
+          mkdir -p ~/src/github.com/drud &&
+          ln -s ~/ddev ~/src/github.com/drud/ddev &&
+          cd  ~/src/github.com/drud/ddev &&
+          pwd
+        name: Set up directory structure
+
+      # Build drud and move it into /usr/local/bin - tests look for it in $PATH
+      - type: shell
+        command: |
+          cd  ~/src/github.com/drud/ddev &&
+          make GOPATH=~/ linux &&
+          sudo cp bin/linux/drud /usr/local/bin/
+        name: Build the linux drud executable binary
+
+      # Run just one test in drud-dev
+#      - type: shell
+#        command: |
+#          cd ~/src/github.com/drud/ddev &&
+#          go test -v -run TestDevAddSites ./cmd/...
+#        name: CLI/ddev tests
+
+
+      # Run the built-in ddev tests
+      - type: shell
+        command: |
+          cd ~/src/github.com/drud/ddev &&
+          make GOPATH=~/ test
+        name: ddev tests
