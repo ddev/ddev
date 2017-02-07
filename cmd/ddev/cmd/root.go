@@ -52,7 +52,18 @@ var RootCmd = &cobra.Command{
 		// fmt.Println(`Use "drud --help" for more information about this tool.`)
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if !strings.Contains(strings.Join(os.Args, " "), " list") {
+		ignores := []string{"list", "config", "version", "update"}
+		skip := false
+		command := strings.Join(os.Args, " ")
+
+		for _, k := range ignores {
+			if strings.Contains(command, " "+k) {
+				skip = true
+				break
+			}
+		}
+
+		if !skip {
 			parseLegacyArgs(args)
 			plugin = strings.ToLower(plugin)
 			if _, ok := local.PluginMap[plugin]; !ok {
