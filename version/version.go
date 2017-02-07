@@ -7,7 +7,7 @@ var VERSION = "0.3.2"
 var WebImg = "drud/nginx-php-fpm7-local"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "0.1.0"
+var WebTag = "0.2.0"
 
 // DBImg defines the default db image for drud dev
 var DBImg = "drud/mysql-docker-local"
