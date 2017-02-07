@@ -12,16 +12,16 @@ var (
 	// DrudBin is the full path to the drud binary
 	DrudBin = "drud"
 
-	// LegacyTestEnv is the name of the legacy DRUD environment to test
-	LegacyTestEnv = "production"
+	// DevTestEnv is the name of the Dev DRUD environment to test
+	DevTestEnv = "production"
 
-	// LegacyTestApp is the name of the legacy DRUD app to testes
-	LegacyTestApp = "drudio"
+	// DevTestApp is the name of the Dev DRUD app to testes
+	DevTestApp = "drudio"
 
-	LegacyTestSites = [][]string{
-		[]string{"drudio", LegacyTestEnv},
-		[]string{"d8", LegacyTestEnv},
-		[]string{"talentreef", LegacyTestEnv},
+	DevTestSites = [][]string{
+		[]string{"drudio", DevTestEnv},
+		[]string{"d8", DevTestEnv},
+		[]string{"talentreef", DevTestEnv},
 	}
 )
 

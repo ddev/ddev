@@ -5,6 +5,8 @@ import (
 	"log"
 	"strings"
 
+	"os"
+
 	"github.com/spf13/cobra"
 )
 
@@ -26,6 +28,16 @@ var setCmd = &cobra.Command{
 	Use:   "set",
 	Short: "Set configuration values for DRUD.",
 	Long:  `Set configuration values for DRUD.`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if len(os.Args) < 4 {
+			cmd.Usage()
+			os.Exit(0)
+		}
+		if !isFlagPresent(cmd) {
+			cmd.Usage()
+			log.Fatalln("No configuration flag provided. Use one of the available flags to set a configuration value.")
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if activeApp != "" {
 			cfg.ActiveApp = activeApp

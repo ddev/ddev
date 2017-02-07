@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestLegacyList(t *testing.T) {
+func TestDevList(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
@@ -15,7 +15,7 @@ func TestLegacyList(t *testing.T) {
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(t, err)
 	assert.Contains(t, string(out), "found")
-	assert.Contains(t, string(out), LegacyTestApp)
-	assert.Contains(t, string(out), LegacyTestEnv)
+	assert.Contains(t, string(out), DevTestApp)
+	assert.Contains(t, string(out), DevTestEnv)
 	assert.Contains(t, string(out), "running")
 }

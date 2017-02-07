@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// LegacyWorkonCmd represents the list command
+// LocalDevWorkonCmd represents the list command
 var LocalDevWorkonCmd = &cobra.Command{
 	Use:   "workon",
 	Short: "Set a site to work on",

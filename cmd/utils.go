@@ -113,7 +113,7 @@ func getMAC() (string, error) {
 		macADDR = ifs[0].HardwareAddr.String()
 	}
 	if macADDR == "" {
-		return macADDR, fmt.Errorf("No MAC Addr found!")
+		return macADDR, fmt.Errorf("no MAC Address found")
 	}
 	return macADDR, nil
 }
@@ -121,12 +121,17 @@ func getMAC() (string, error) {
 // ParseConfigFlag is needed in order to get the value of the flag before cobra can
 func ParseConfigFlag() string {
 	value := cfgFile
+	args := os.Args
 
-	for i, arg := range os.Args {
+	for i, arg := range args {
 		if strings.HasPrefix(arg, "--config=") {
 			value = strings.TrimPrefix(arg, "--config=")
 		} else if arg == "--config" {
-			value = os.Args[i+1]
+			if len(args) > i+1 {
+				value = args[i+1]
+			} else {
+				log.Fatalln("--config requires a configuration file to be specified.")
+			}
 		}
 	}
 

@@ -86,3 +86,41 @@ func TestUnitConfigSet(t *testing.T) {
 		assert.NoError(t, err)
 	}
 }
+
+// TestConfigBadArgs tests whether the command reacts properly to invalid args
+func TestConfigBadArgs(t *testing.T) {
+	assert := assert.New(t)
+	// test that you get an error when you try to something potato
+	args := []string{"config", "set", "VaultHost", "https://nowhereinhell.com:8200"}
+	out, err := utils.RunCommand(DrudBin, args)
+	assert.Error(err)
+	assert.Contains(string(out), "No configuration flag provided.")
+
+	// test that The Doors are not welcome here
+	args = []string{"config", "set", "the", "world", "on", "fire"}
+	out, err = utils.RunCommand(DrudBin, args)
+	assert.Error(err)
+	assert.Contains(string(out), "No configuration flag provided.")
+
+	// test that file is specified if global --config is set
+	args = []string{"config", "set", "--vaultaddr", "https://junk", "--config"}
+	out, err = utils.RunCommand(DrudBin, args)
+	assert.Error(err)
+	assert.Contains(string(out), "--config requires a configuration file to be specified.")
+}
+
+// TestConfigNoArgs tests that command returns usage when no args provided
+func TestConfigNoArgs(t *testing.T) {
+	assert := assert.New(t)
+	// test that you get an error when you try to something potato
+	args := []string{"config", "set"}
+	out, err := utils.RunCommand(DrudBin, args)
+	assert.NoError(err)
+	assert.Contains(string(out), "Usage:")
+
+	// test that The Doors are not welcome here
+	args = []string{"config", "unset"}
+	out, err = utils.RunCommand(DrudBin, args)
+	assert.NoError(err)
+	assert.Contains(string(out), "Usage:")
+}

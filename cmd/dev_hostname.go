@@ -11,8 +11,8 @@ import (
 // HostNameCmd represents the local command
 var HostNameCmd = &cobra.Command{
 	Use:   "hostname [hostname] [ip]",
-	Short: "Local dev for legacy sites.",
-	Long:  `Manage your hostfile entries..`,
+	Short: "Manage your hostfile entries.",
+	Long:  `Manage your hostfile entries.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 2 {
 			log.Fatal("Invalid arguments supplied. Please use 'drud legacy hostname [hostname] [ip]'")

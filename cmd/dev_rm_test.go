@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestLegacyRm runs `drud legacy rm` on the test apps
-func TestLegacyRm(t *testing.T) {
+// TestDevRm runs `drud legacy rm` on the test apps
+func TestDevRm(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
 
-	for _, site := range LegacyTestSites {
+	for _, site := range DevTestSites {
 		args := []string{"dev", "rm", site[0], site[1]}
 		out, err := utils.RunCommand(DrudBin, args)
 		assert.NoError(t, err)

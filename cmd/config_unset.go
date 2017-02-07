@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -25,6 +26,16 @@ var unsetCmd = &cobra.Command{
 	Use:   "unset",
 	Short: "Unset configuration values for DRUD.",
 	Long:  `Unset configuration values for DRUD.`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if len(os.Args) < 4 {
+			cmd.Usage()
+			os.Exit(0)
+		}
+		if !isFlagPresent(cmd) {
+			cmd.Usage()
+			log.Fatalln("No configuration flag provided. Use one of the available flags to unset a configuration value.")
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if uAPIVersion {
 			cfg.APIVersion = ""

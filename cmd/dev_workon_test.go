@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestLegacyWorkonCancel runs `drud legacy workon` and selects 0.
-func TestLegacyWorkonCancel(t *testing.T) {
+// TestDevWorkonCancel runs `drud legacy workon` and selects 0.
+func TestDevWorkonCancel(t *testing.T) {
 	assert := assert.New(t)
 	cmd := exec.Command(DrudBin, "dev", "workon")
 	cmd.Stdin = strings.NewReader("0\n")
@@ -23,7 +23,7 @@ func TestLegacyWorkonCancel(t *testing.T) {
 	assert.Contains(string(out), "0: Cancel")
 }
 
-func getLegacyTestID() string {
+func getDevTestID() string {
 	cmd := exec.Command(DrudBin, "dev", "workon")
 	cmd.Stdin = strings.NewReader("0\n")
 
@@ -31,7 +31,7 @@ func getLegacyTestID() string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	testApp := LegacyTestApp + "-" + LegacyTestEnv
+	testApp := DevTestApp + "-" + DevTestEnv
 	testOption := "0"
 	for _, line := range strings.Split(string(out), "\n") {
 		if line != "" {
@@ -45,22 +45,22 @@ func getLegacyTestID() string {
 	return testOption
 }
 
-// TestLegacyWorkon runs `drud legacy workon` and selects our legacy test app.
-func TestLegacyWorkon(t *testing.T) {
+// TestDevWorkon runs `drud legacy workon` and selects our legacy test app.
+func TestDevWorkon(t *testing.T) {
 	assert := assert.New(t)
 	cmd := exec.Command(DrudBin, "dev", "workon")
-	selection := getLegacyTestID()
+	selection := getDevTestID()
 	cmd.Stdin = strings.NewReader(selection + "\n")
 
 	out, err := cmd.Output()
 	assert.NoError(err)
-	assert.Contains(string(out), fmt.Sprintf("You are now working on %s-%s", LegacyTestApp, LegacyTestEnv))
+	assert.Contains(string(out), fmt.Sprintf("You are now working on %s-%s", DevTestApp, DevTestEnv))
 
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
 	}
 	fb, err := ioutil.ReadFile(usr.HomeDir + "/drud.yaml")
-	assert.Contains(string(fb), "activeapp: "+LegacyTestApp)
-	assert.Contains(string(fb), "activedeploy: "+LegacyTestEnv)
+	assert.Contains(string(fb), "activeapp: "+DevTestApp)
+	assert.Contains(string(fb), "activedeploy: "+DevTestEnv)
 }

@@ -31,8 +31,8 @@ func checkRequiredFolders(app local.App) bool {
 	return true
 }
 
-// TestLegacyAddBadArgs tests whether the command reacts properly to badly formatted or missing args
-func TestLegacyAddBadArgs(t *testing.T) {
+// TestDevAddBadArgs tests whether the command reacts properly to badly formatted or missing args
+func TestDevAddBadArgs(t *testing.T) {
 	assert := assert.New(t)
 	err := setActiveApp("", "")
 	assert.NoError(err)
@@ -47,7 +47,7 @@ func TestLegacyAddBadArgs(t *testing.T) {
 	args = append(args, "mcsnaggletooth", "smith")
 
 	// testing that you get an error when passing a bad site name
-	args[3] = LegacyTestEnv
+	args[3] = DevTestEnv
 	out, err = utils.RunCommand(DrudBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "No legacy site by that name")
@@ -59,7 +59,7 @@ func TestLegacyAddBadArgs(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(string(out), "No legacy site by that name")
 
-	err = setActiveApp(utils.RandomString(10), LegacyTestEnv)
+	err = setActiveApp(utils.RandomString(10), DevTestEnv)
 	assert.NoError(err)
 	out, err = utils.RunCommand(DrudBin, args)
 	assert.Error(err)
@@ -69,32 +69,32 @@ func TestLegacyAddBadArgs(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestLegacyAddScaffoldWP uses the scaffold flag to test that everything needed to run a site locally is created correctly
-func TestLegacyAddScaffoldWP(t *testing.T) {
+// TestDevAddScaffoldWP uses the scaffold flag to test that everything needed to run a site locally is created correctly
+func TestDevAddScaffoldWP(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"dev", "add", LegacyTestApp, LegacyTestEnv, "-s"}
+	args := []string{"dev", "add", DevTestApp, DevTestEnv, "-s"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
-	app := local.NewLegacyApp(LegacyTestApp, LegacyTestEnv)
+	app := local.NewLegacyApp(DevTestApp, DevTestEnv)
 	assert.Equal(true, checkRequiredFolders(app))
 
 }
 
-// TestLegacyAddScaffoldWPImageTag makes sure the --web-image-tag and --db-image-tag flags work
-func TestLegacyAddScaffoldWPImageTag(t *testing.T) {
+// TestDevAddScaffoldWPImageTag makes sure the --web-image-tag and --db-image-tag flags work
+func TestDevAddScaffoldWPImageTag(t *testing.T) {
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"dev", "add", LegacyTestApp, LegacyTestEnv, "-s", "--web-image-tag=unison,", "--db-image-tag=5.6"}
+	args := []string{"dev", "add", DevTestApp, DevTestEnv, "-s", "--web-image-tag=unison,", "--db-image-tag=5.6"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
-	app := local.NewLegacyApp(LegacyTestApp, LegacyTestEnv)
+	app := local.NewLegacyApp(DevTestApp, DevTestEnv)
 	assert.Equal(true, checkRequiredFolders(app))
 
 	composeFile, err := ioutil.ReadFile(path.Join(app.AbsPath(), "docker-compose.yaml"))
@@ -105,18 +105,18 @@ func TestLegacyAddScaffoldWPImageTag(t *testing.T) {
 
 }
 
-// TestLegacyAddScaffoldWPImageChange makes sure the --web-image and --db-image flags work
-func TestLegacyAddScaffoldWPImageChange(t *testing.T) {
+// TestDevAddScaffoldWPImageChange makes sure the --web-image and --db-image flags work
+func TestDevAddScaffoldWPImageChange(t *testing.T) {
 	assert := assert.New(t)
 
-	args := []string{"dev", "add", LegacyTestApp, LegacyTestEnv, "-s",
+	args := []string{"dev", "add", DevTestApp, DevTestEnv, "-s",
 		"--web-image=drud/testmewebimage,", "--db-image=drud/testmedbimage",
 	}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
-	app := local.NewLegacyApp(LegacyTestApp, LegacyTestEnv)
+	app := local.NewLegacyApp(DevTestApp, DevTestEnv)
 	assert.Equal(true, checkRequiredFolders(app))
 
 	composeFile, err := ioutil.ReadFile(path.Join(app.AbsPath(), "docker-compose.yaml"))
@@ -127,13 +127,13 @@ func TestLegacyAddScaffoldWPImageChange(t *testing.T) {
 
 }
 
-// TestLegacyAddWP tests a `drud legacy add` on a wp site
-func TestLegacyAddSites(t *testing.T) {
+// TestDevAddWP tests a `drud Dev add` on a wp site
+func TestDevAddSites(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
 	assert := assert.New(t)
-	for _, site := range LegacyTestSites {
+	for _, site := range DevTestSites {
 
 		// test that you get an error when you run with no args
 		args := []string{"dev", "add", site[0], site[1]}

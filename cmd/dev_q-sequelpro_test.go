@@ -9,22 +9,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestLegacySequelproScaffold tests the the sequelpro config file is created successfully
-func TestLegacySequelproScaffold(t *testing.T) {
+// TestDevSequelproScaffold tests the the sequelpro config file is created successfully
+func TestDevSequelproScaffold(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
 	assert := assert.New(t)
 
 	// test that you get an error when you run with no args
-	args := []string{"dev", "sequelpro", LegacyTestApp, LegacyTestEnv, "-s"}
+	args := []string{"dev", "sequelpro", DevTestApp, DevTestEnv, "-s"}
 	out, err := utils.RunCommand(DrudBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "finished successfully")
 
 	app := local.LegacyApp{}
-	app.AppBase.Name = LegacyTestApp
-	app.AppBase.Environment = LegacyTestEnv
+	app.AppBase.Name = DevTestApp
+	app.AppBase.Environment = DevTestEnv
 
 	assert.Equal(true, utils.FileExists(path.Join(app.AbsPath(), "sequelpro.spf")))
 

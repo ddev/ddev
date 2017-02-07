@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// LocalDevStartCmd represents the start cmd
 var LocalDevStartCmd = &cobra.Command{
 	Use:   "start [app_name] [environment_name]",
 	Short: "Start an application's local services.",
