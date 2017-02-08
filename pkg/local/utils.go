@@ -394,8 +394,10 @@ func parseConfigFlag() string {
 			value = os.Args[i+1]
 		}
 	}
-	home, _ := utils.GetHomeDir()
-	value = fmt.Sprintf("%v/drud.yaml", home)
+	if value == "" {
+		home, _ := utils.GetHomeDir()
+		value = fmt.Sprintf("%v/drud.yaml", home)
+	}
 
 	if _, err := os.Stat(value); os.IsNotExist(err) {
 		var cFile, err = os.Create(value)
