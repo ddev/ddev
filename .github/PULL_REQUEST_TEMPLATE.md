@@ -5,7 +5,7 @@
 ## The Test:
 
 ## Automation Overview:
-<!-- MANDATORY: Please provide an overview of new tests introduced by this PR, or an explanation for why no tests are needed. -->
+<!-- Please provide an overview of tests introduced by this PR, or an explanation for why no tests are needed. -->
 
 ## Related Issue Link(s):
 
