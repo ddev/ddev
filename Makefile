@@ -40,9 +40,15 @@ include build-tools/makefile_components/base_build_go.mak
 include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
+TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+DDEV_BINARY_FULLPATH=$(shell pwd)/bin/$(TESTOS)/ddev
+
 # Override test section with tests specific to ddev
-test:
+test: build setup
 	@mkdir -p bin/linux bin/darwin
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
-	DRUD_DEBUG=true go test -timeout 20m -v ./cmd/... ./pkg/...
+	PATH=$$PWD/bin/$(TESTOS):$$PATH DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) DRUD_DEBUG=true go test -timeout 20m -v ./cmd/... ./pkg/...
 
+setup:
+	@mkdir -p bin/darwin bin/linux
+	@if [ ! -L $$PWD/bin/darwin/ddev ] ; then ln -s $$PWD/bin/darwin/darwin_amd64/ddev $$PWD/bin/darwin/ddev; fi

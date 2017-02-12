@@ -7,7 +7,7 @@ stages:
       GOPATH: /home/circleci
       DRUD_DEBUG: "true"
       DRUD_DOWNLOAD_URL: "http://thefays.us/tmp/drud.linux"
-      
+
     steps:
       - type: checkout
 
@@ -47,7 +47,7 @@ stages:
           cd  ~/src/github.com/drud/ddev &&
           make GOPATH=~/ linux &&
           sudo cp bin/linux/ddev /usr/local/bin/
-        name: Build the linux drud executable binary
+        name: Build the linux ddev executable binary
 
       # Run just one test in ddev
 #      - type: shell
