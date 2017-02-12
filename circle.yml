@@ -4,8 +4,8 @@ stages:
   build:
     workDir: ~/ddev
     environment:
-      - GOPATH: /home/circleci
-      - DRUD_DEBUG: true
+      GOPATH: /home/circleci
+      DRUD_DEBUG: "true"
     steps:
       - type: checkout
 
