@@ -17,9 +17,10 @@ var versionCmd = &cobra.Command{
 		table := uitable.New()
 		table.MaxColWidth = 200
 
-		table.AddRow("cli:", version.VERSION)
+		table.AddRow("cli:", version.CliVersion)
 		table.AddRow("web:", version.WebImg+":"+version.WebTag)
 		table.AddRow("db:", version.DBImg+":"+version.DBTag)
+		table.AddRow("commit", version.VERSION)
 
 		fmt.Println(table)
 	},

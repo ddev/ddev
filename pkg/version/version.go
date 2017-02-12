@@ -1,13 +1,16 @@
 package version
 
-// VERSION is the current version of the drud tool
-var VERSION = "0.3.2"
+// VERSION is supplied with the git committish this is built from
+var VERSION = ""
+
+// CliVersion is the current version of the ddev tool
+var CliVersion = "0.4.0"
 
 // WebImg defines the default web image for drud dev
 var WebImg = "drud/nginx-php-fpm7-local"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "0.2.0temp4"
+var WebTag = "0.2.0"
 
 // DBImg defines the default db image for drud dev
 var DBImg = "drud/mysql-docker-local"
