@@ -536,10 +536,11 @@ func RenderComposeYAML(app App) (string, error) {
 	}
 
 	templateVars := map[string]string{
-		"web_image": opts.WebImage,
-		"db_image":  opts.DbImage,
-		"name":      app.ContainerName(),
-		"srctarget": "/var/www/html",
+		"web_image":  opts.WebImage,
+		"db_image":   opts.DbImage,
+		"name":       app.ContainerName(),
+		"srctarget":  "/var/www/html",
+		"deploy_url": app.URL(),
 	}
 
 	if opts.WebImageTag == "unison" || strings.HasSuffix(opts.WebImage, ":unison") {

@@ -302,6 +302,11 @@ func (l LegacyApp) UnpackResources() error {
 	basePath := l.AbsPath()
 	fileDir := ""
 
+	err := os.Mkdir(extPath, 0755)
+	if err != nil {
+		return err
+	}
+
 	if l.AppType == "wp" {
 		fileDir = "docroot/content/uploads"
 	} else if l.AppType == "drupal" || l.AppType == "drupal8" {

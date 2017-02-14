@@ -2,7 +2,6 @@ package local
 
 // LegacyComposeTemplate is used to create the docker-compose.yaml for
 // legacy sites in the local DRUD env
-
 const LegacyComposeTemplate = `version: '2'
 services:
   {{.name}}-db:
@@ -21,6 +20,7 @@ services:
     image: {{.web_image}}
     volumes:
       - "./src:{{ .srctarget }}"
+      - "./files:/files"
     restart: always
     depends_on:
       - {{.name}}-db
@@ -29,9 +29,11 @@ services:
     ports:
       - "80"
       - "8025"
-    working_dir: "/var/www/html/docroot"
+    working_dir: "/var/www/html"
     environment:
       - DEPLOY_NAME=local
+      - DB_HOST=db
+      - DEPLOY_URL={{ .deploy_url }}
       - VIRTUAL_HOST={{ .name }}
 
 networks:
@@ -40,6 +42,7 @@ networks:
       name: drud_default
 `
 
+// SequelproTemplate is used to create the config file for Sequel Pro
 var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -101,6 +104,7 @@ var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 </dict>
 </plist>`
 
+// DrudRouterTemplate is used to create the docker compose file for the router
 const DrudRouterTemplate = `version: '2'
 services:
   nginx-proxy:
