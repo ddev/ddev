@@ -434,13 +434,6 @@
 			"tree": true
 		},
 		{
-			"checksumSHA1": "a7+EnHS4Ozmt8wBNFL0UP/UEZr8=",
-			"path": "github.com/drud/drud-go/utils",
-			"revision": "e7f7fcb343a309ff09fd5d7fc13c83ffd303067d",
-			"revisionTime": "2016-10-20T19:52:06Z",
-			"tree": true
-		},
-		{
 			"checksumSHA1": "Yn+Uxp0Vz4WiGdrYLLwYX9lzD5I=",
 			"path": "github.com/fatih/color",
 			"revision": "a360acfe359f146180cfc1c6ea6f4397f5c133ec",
@@ -1177,5 +1170,5 @@
 			"revisionTime": "2016-09-22T05:42:04Z"
 		}
 	],
-	"rootPath": "github.com/drud/bootstrap/cli"
+	"rootPath": "github.com/drud/ddev"
 }
