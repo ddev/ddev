@@ -1,0 +1,65 @@
+version: 2
+executorType: machine
+stages:
+  build:
+    workDir: ~/ddev
+    environment:
+      GOPATH: /home/circleci
+      DRUD_DEBUG: "true"
+      DRUD_DOWNLOAD_URL: "http://thefays.us/tmp/drud.linux"
+
+    steps:
+      - type: checkout
+
+      # This step is a temporary hack until we have some kind of auth built into ddev
+      - type: shell
+        command: wget -q -O /tmp/drud $DRUD_DOWNLOAD_URL && chmod ugo+x /tmp/drud && /tmp/drud auth github
+        name: Download temporary drud binary and do gitub auth
+
+      - type: shell
+        command: sudo apt-get update && sudo apt-get install golang
+        name: Upgrade golang
+
+      - type: shell
+        command: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+        name: "docker login"
+
+      - type: shell
+        command: sudo apt-get -qq update && sudo apt-get -qq -y install python-pip && sudo pip -q install docker-compose
+        name: docker-compose install
+
+      - type: shell
+        command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
+        name: Installed tool versions
+
+      # Create environment which respects GOPATH
+      - type: shell
+        command: |
+          mkdir -p ~/src/github.com/drud &&
+          ln -s ~/ddev ~/src/github.com/drud/ddev &&
+          cd  ~/src/github.com/drud/ddev &&
+          pwd
+        name: Set up directory structure
+
+      # Build ddev  and move it into /usr/local/bin - tests look for it in $PATH
+      - type: shell
+        command: |
+          cd  ~/src/github.com/drud/ddev &&
+          make GOPATH=~/ linux &&
+          sudo cp bin/linux/ddev /usr/local/bin/
+        name: Build the linux ddev executable binary
+
+      # Run just one test in ddev
+#      - type: shell
+#        command: |
+#          cd ~/src/github.com/drud/ddev &&
+#          go test -v -run TestDevAddSites ./pkg/...
+#        name: ddev single test
+
+
+      # Run the built-in ddev tests
+      - type: shell
+        command: |
+          cd ~/src/github.com/drud/ddev &&
+          make GOPATH=~/ test
+        name: ddev tests

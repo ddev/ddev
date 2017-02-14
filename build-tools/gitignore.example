@@ -1,3 +1,5 @@
+# Add these lines to project .gitignore
+
 # Temporary build-tools artifacts to be ignored
 .go/
 bin/

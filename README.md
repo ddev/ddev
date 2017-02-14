@@ -1,64 +1,52 @@
-#DRUD CLI
+#ddev
 
-[Full CLI docs](docs/drud.md)
+The purpose of *ddev* is to support developers with a local copy of a site for development purposes. It runs the site in a Docker containers similar to a normal hosting environment.
 
-## Setup
+You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev add -h`, etc.
+ 
+ 
+ ## Building
+ 
+ Environment variables:
+ * DRUD_DEBUG: Will display more extensive information as a site is deployed.
+ 
+ ```
+ make 
+ make linux
+ make darwin
+ make test
+ make clean
+ ```
 
-```shell
-mkdir -p ~/goworkspace/{bin,src,pkg}
-mkdir ~/goworkspace/src/github.com/drud
-export GOPATH=$HOME/goworkspace
-export PATH=$PATH:$GOPATH/bin
-mkdir -p $GOPATH/src/github.com/drud
-cd $GOPATH/src/github.com/drud && git clone git@github.com:drud/bootstrap.git
-cd bootstrap
-make osxbin
-```
+## Testing
 
-## Building Binary
+Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...`
 
-You can build the binary for osx by running
-
-```shell
-make osxbin
-```
-
-And for linux with
-
-```shell
-make linuxbin
-```
-
-## Test runs for CLI
-
-```
-go test -timeout 20m -v ./cmd
-```
-
-## Test runs for integration (hosting)
-
-To build for local testing you can build a dockerhub image with:
-```shell
-make canary
-```
+* DRUD_DEBUG: It helps a lot to set DRUD_DEBUG=true to see what ddev commands are being executed in the tests.
+* DDEV_BINARY_FULLPATH should be set to the full pathname of the ddev binary we're attempting to test. That way it won't accidentally use some other version of ddev that happens to be on the filesystem.
+* SKIP_COMPOSE_TESTS=true allows skipping tests that require docker-compose. 
 
 
-This will create a drud/drud container tagged with the current branch. You can then run tests against a working cluster by setting environment variables and running:
+## Basic Usage
 
-* CLUSTER_DOMAIN should be set to the domain in use. For example, Brad uses unsalted.pw
-* DRUDAPI_PROTOCOL should be http or https
-* GITHUB_TOKEN is the authorizing token for the github.com user. used to create a vault token.
-* CIRCLE_BRANCH is the branch built with "make canary" above
+**Key prerequisites**
+* The *workspace* where the code will be checked out is specified in "workspace" in your drud.yaml. It defaults to ~/.drud, but you may want to change it to something like ~/workspace with `drud config set --workspace ~/workspace`
+* The *client* in drud.yaml is the name of the organization where the code repository is to be found. Where the app name "drudio" is used below, the client specified in drud.yaml is the default organization on github. So if "client" in drud.yaml is "newmediadenver", it will look for the repo in https://github.com/newmediadenver/drudio.
+* In `ddev add drudio production` the first argument is the repo/site name, and the second is an arbitrary "environment name" (and source for the dev database), which is typically either "production" or "staging".
 
-
-`docker run -e "GITHUB_TOKEN=$GITHUB_TOKEN" -e "CLUSTER_DOMAIN=$CLUSTER_DOMAIN" -e "DRUDAPI_PROTOCOL=$DRUDAPI_PROTOCOL" -it drud/drud:$CIRCLE_BRANCH go test -timeout 20m -v ./integration`
-
-## Local testing
-
-from the bootstrap/cli directory.
+Examples:
 
 ```
-go test -v ./cmd
-```
+ddev add drudio production
+Successfully added drudio-production
+Your application can be reached at: http://legacy-drudio-production
 
-To skip tests that require a docker-compose environment use this `export SKIP_COMPOSE_TESTS=true`
+ddev list 
+
+ddev stop drudio production
+ddev start drudio production
+
+ddev rm drudio production
+
+
+```
