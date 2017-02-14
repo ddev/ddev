@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/local"
-	"github.com/drud/drud-go/utils"
+	drudutil "github.com/drud/drud-go/utils/docker"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +22,7 @@ var DevListCmd = &cobra.Command{
 			prefixes = append(prefixes, instance.ContainerPrefix())
 		}
 
-		client, _ := utils.GetDockerClient()
+		client, _ := drudutil.GetDockerClient()
 		containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
 
 		containers = func(containers []docker.APIContainers) []docker.APIContainers {

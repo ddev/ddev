@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,7 +12,7 @@ func TestDevList(t *testing.T) {
 		t.Skip("Compose tests being skipped.")
 	}
 	args := []string{"list"}
-	out, err := utils.RunCommand(DdevBin, args)
+	out, err := system.RunCommand(DdevBin, args)
 	assert.NoError(t, err)
 	assert.Contains(t, string(out), "found")
 	assert.Contains(t, string(out), DevTestApp)

@@ -15,7 +15,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/drud/ddev/pkg/version"
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/system"
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
@@ -80,7 +80,7 @@ func CloneSource(app App) error {
 	cfg, _ := GetConfig()
 	basePath := path.Join(cfg.Workspace, app.RelPath(), "src")
 
-	out, err := utils.RunCommand("git", []string{
+	out, err := system.RunCommand("git", []string{
 		"clone", "-b", details.Branch, cloneURL, basePath,
 	})
 	if err != nil {
@@ -90,7 +90,7 @@ func CloneSource(app App) error {
 
 		fmt.Print("Local copy of site exists, updating... ")
 
-		out, err = utils.RunCommand("git", []string{
+		out, err = system.RunCommand("git", []string{
 			"-C", basePath,
 			"pull", "origin", details.Branch,
 		})
@@ -344,7 +344,7 @@ func EnsureDockerRouter() {
 	f.WriteString(doc.String())
 
 	// run docker-compose up -d in the newly created directory
-	out, err := utils.RunCommand("docker-compose", []string{"-f", dest, "up", "-d"})
+	out, err := system.RunCommand("docker-compose", []string{"-f", dest, "up", "-d"})
 	if err != nil {
 		fmt.Println(fmt.Errorf("%s - %s", err.Error(), string(out)))
 	}
@@ -395,7 +395,7 @@ func parseConfigFlag() string {
 		}
 	}
 	if value == "" {
-		home, _ := utils.GetHomeDir()
+		home, _ := system.GetHomeDir()
 		value = fmt.Sprintf("%v/drud.yaml", home)
 	}
 
@@ -499,7 +499,7 @@ func Cleanup(app App) error {
 		if strings.Contains(c.Names[0], app.ContainerName()) {
 			for _, action := range actions {
 				args := []string{action, c.ID}
-				_, err := utils.RunCommand("docker", args)
+				_, err := system.RunCommand("docker", args)
 				if err != nil {
 					return fmt.Errorf("Could not %s container %s: %s", action, c.Names[0], err)
 				}

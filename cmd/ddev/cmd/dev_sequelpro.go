@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/local"
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/docker"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -31,16 +31,16 @@ var LocalDevSequelproCmd = &cobra.Command{
 
 		nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
 
-		if !utils.IsRunning(nameContainer) {
+		if !docker.IsRunning(nameContainer) {
 			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
-		mysqlContainer, err := utils.GetContainer(nameContainer)
+		mysqlContainer, err := docker.GetContainer(nameContainer)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		dbPort, err := utils.GetDockerPublicPort(mysqlContainer, int64(3306))
+		dbPort, err := docker.GetDockerPublicPort(mysqlContainer, int64(3306))
 		if err != nil {
 			log.Fatal(err)
 		}

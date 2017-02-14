@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/local"
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +18,7 @@ func TestDevSequelproScaffold(t *testing.T) {
 
 	// test that you get an error when you run with no args
 	args := []string{"sequelpro", DevTestApp, DevTestEnv, "-s"}
-	out, err := utils.RunCommand(DdevBin, args)
+	out, err := system.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "finished successfully")
 
@@ -26,6 +26,6 @@ func TestDevSequelproScaffold(t *testing.T) {
 	app.AppBase.Name = DevTestApp
 	app.AppBase.Environment = DevTestEnv
 
-	assert.Equal(true, utils.FileExists(path.Join(app.AbsPath(), "sequelpro.spf")))
+	assert.Equal(true, system.FileExists(path.Join(app.AbsPath(), "sequelpro.spf")))
 
 }

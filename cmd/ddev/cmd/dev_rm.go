@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/local"
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/docker"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +26,7 @@ var LocalDevRMCmd = &cobra.Command{
 		app.SetOpts(opts)
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
-		if !utils.IsRunning(nameContainer) {
+		if !docker.IsRunning(nameContainer) {
 			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
