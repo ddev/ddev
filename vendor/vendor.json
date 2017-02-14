@@ -434,11 +434,40 @@
 			"tree": true
 		},
 		{
-			"checksumSHA1": "a7+EnHS4Ozmt8wBNFL0UP/UEZr8=",
-			"path": "github.com/drud/drud-go/utils",
-			"revision": "e7f7fcb343a309ff09fd5d7fc13c83ffd303067d",
-			"revisionTime": "2016-10-20T19:52:06Z",
-			"tree": true
+			"checksumSHA1": "yOfsAVJspLZMx7Kcb+ITgvORrHQ=",
+			"path": "github.com/drud/drud-go/utils/cache",
+			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
+			"revisionTime": "2017-02-13T20:31:38Z"
+		},
+		{
+			"checksumSHA1": "z87uUOC3fjhtYdc2o9pgBKNbAXE=",
+			"path": "github.com/drud/drud-go/utils/dockerutil",
+			"revision": "a2be5bb0f689026434244fe1404638c075406533",
+			"revisionTime": "2017-02-14T02:40:55Z"
+		},
+		{
+			"checksumSHA1": "8ZdXPfz2MhN0Ho2qneeBNoQqGak=",
+			"path": "github.com/drud/drud-go/utils/network",
+			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
+			"revisionTime": "2017-02-13T20:31:38Z"
+		},
+		{
+			"checksumSHA1": "iAwuw+lHePVbzI7mb80cdsO5Le4=",
+			"path": "github.com/drud/drud-go/utils/stringutil",
+			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
+			"revisionTime": "2017-02-13T20:31:38Z"
+		},
+		{
+			"checksumSHA1": "dEwm+7KMFrQIqOEMsjePRNAEwUI=",
+			"path": "github.com/drud/drud-go/utils/system",
+			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
+			"revisionTime": "2017-02-13T20:31:38Z"
+		},
+		{
+			"checksumSHA1": "2R63ApwuyAQtMhWv7EhO21SZniQ=",
+			"path": "github.com/drud/drud-go/utils/try",
+			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
+			"revisionTime": "2017-02-13T20:31:38Z"
 		},
 		{
 			"checksumSHA1": "Yn+Uxp0Vz4WiGdrYLLwYX9lzD5I=",
@@ -1177,5 +1206,5 @@
 			"revisionTime": "2016-09-22T05:42:04Z"
 		}
 	],
-	"rootPath": "github.com/drud/bootstrap/cli"
+	"rootPath": "github.com/drud/ddev"
 }

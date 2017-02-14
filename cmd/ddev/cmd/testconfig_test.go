@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/system"
 )
 
 var (
@@ -42,10 +42,10 @@ func TestMain(m *testing.M) {
 
 func setActiveApp(appName string, deployName string) error {
 	if appName == "" && deployName == "" {
-		_, err := utils.RunCommand(DdevBin, []string{"config", "unset", "--activeapp", "--activedeploy"})
+		_, err := system.RunCommand(DdevBin, []string{"config", "unset", "--activeapp", "--activedeploy"})
 		return err
 	}
 
-	_, err := utils.RunCommand(DdevBin, []string{"config", "set", "--activeapp", appName, "--activedeploy", deployName})
+	_, err := system.RunCommand(DdevBin, []string{"config", "set", "--activeapp", appName, "--activedeploy", deployName})
 	return err
 }

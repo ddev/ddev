@@ -8,7 +8,10 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/local"
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/dockerutil"
+	"github.com/drud/drud-go/utils/network"
+	"github.com/drud/drud-go/utils/stringutil"
+	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +26,7 @@ func checkRequiredFolders(app local.App) bool {
 		path.Join(basePath, "data", "data.sql"),
 	}
 	for _, p := range files {
-		if !utils.FileExists(p) {
+		if !system.FileExists(p) {
 			log.Println(p)
 			return false
 		}
@@ -39,7 +42,7 @@ func TestDevAddBadArgs(t *testing.T) {
 
 	// test that you get an error when you run with no args
 	args := []string{"add"}
-	out, err := utils.RunCommand(DdevBin, args)
+	out, err := system.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "app_name and deploy_name are expected as arguments.")
 
@@ -48,20 +51,20 @@ func TestDevAddBadArgs(t *testing.T) {
 
 	// testing that you get an error when passing a bad site name
 	args[2] = DevTestEnv
-	out, err = utils.RunCommand(DdevBin, args)
+	out, err = system.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "No legacy site by that name")
 
-	err = setActiveApp(utils.RandomString(10), utils.RandomString(10))
+	err = setActiveApp(stringutil.RandomString(10), stringutil.RandomString(10))
 	assert.NoError(err)
 	args = []string{"add"}
-	out, err = utils.RunCommand(DdevBin, args)
+	out, err = system.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "No legacy site by that name")
 
-	err = setActiveApp(utils.RandomString(10), DevTestEnv)
+	err = setActiveApp(stringutil.RandomString(10), DevTestEnv)
 	assert.NoError(err)
-	out, err = utils.RunCommand(DdevBin, args)
+	out, err = system.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "No legacy site by that name")
 
@@ -75,7 +78,7 @@ func TestDevAddScaffoldWP(t *testing.T) {
 
 	// test that you get an error when you run with no args
 	args := []string{"add", DevTestApp, DevTestEnv, "-s"}
-	out, err := utils.RunCommand(DdevBin, args)
+	out, err := system.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
@@ -90,7 +93,7 @@ func TestDevAddScaffoldWPImageTag(t *testing.T) {
 
 	// test that you get an error when you run with no args
 	args := []string{"add", DevTestApp, DevTestEnv, "-s", "--web-image-tag=unison,", "--db-image-tag=5.6"}
-	out, err := utils.RunCommand(DdevBin, args)
+	out, err := system.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
@@ -112,7 +115,7 @@ func TestDevAddScaffoldWPImageChange(t *testing.T) {
 	args := []string{"add", DevTestApp, DevTestEnv, "-s",
 		"--web-image=drud/testmewebimage,", "--db-image=drud/testmedbimage",
 	}
-	out, err := utils.RunCommand(DdevBin, args)
+	out, err := system.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
@@ -137,7 +140,7 @@ func TestDevAddSites(t *testing.T) {
 
 		// test that you get an error when you run with no args
 		args := []string{"add", site[0], site[1]}
-		out, err := utils.RunCommand(DdevBin, args)
+		out, err := system.RunCommand(DdevBin, args)
 		if err != nil {
 			log.Println("Error Output from ddev add:", out)
 		}
@@ -148,13 +151,13 @@ func TestDevAddSites(t *testing.T) {
 		app := local.NewLegacyApp(site[0], site[1])
 
 		assert.Equal(true, checkRequiredFolders(app))
-		assert.Equal(true, utils.IsRunning(app.ContainerName()+"-web"))
-		assert.Equal(true, utils.IsRunning(app.ContainerName()+"-db"))
+		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-web"))
+		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-db"))
 
-		o := utils.NewHTTPOptions("http://127.0.0.1")
+		o := network.NewHTTPOptions("http://127.0.0.1")
 		o.Timeout = 90
 		o.Headers["Host"] = app.HostName()
-		err = utils.EnsureHTTPStatus(o)
+		err = network.EnsureHTTPStatus(o)
 		assert.NoError(err)
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +16,7 @@ func TestDevRm(t *testing.T) {
 
 	for _, site := range DevTestSites {
 		args := []string{"rm", site[0], site[1]}
-		out, err := utils.RunCommand(DdevBin, args)
+		out, err := system.RunCommand(DdevBin, args)
 		assert.NoError(t, err)
 		format := fmt.Sprintf
 		assert.Contains(t, string(out), format("Stopping legacy-%s-%s-web ... done", site[0], site[1]))

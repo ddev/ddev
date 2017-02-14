@@ -1,4 +1,4 @@
-package utils
+package dockerutil
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 
+	"github.com/drud/drud-go/utils/system"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -24,7 +25,7 @@ func DockerCompose(arg ...string) error {
 
 // GetDockerCertPaths returns the ca, cert, and key paths.
 func GetDockerCertPaths() (ca string, cert string, key string) {
-	homedir, _ := GetHomeDir()
+	homedir, _ := system.GetHomeDir()
 
 	certpath := os.Getenv("DOCKER_CERT_PATH")
 	if certpath == "" {

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/local"
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +33,7 @@ var LocalDevLogsCmd = &cobra.Command{
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 
-		if !utils.IsRunning(nameContainer) {
+		if !dockerutil.IsRunning(nameContainer) {
 			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
@@ -57,7 +57,7 @@ var LocalDevLogsCmd = &cobra.Command{
 		}
 		cmdArgs = append(cmdArgs, nameContainer)
 
-		err := utils.DockerCompose(cmdArgs...)
+		err := dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
 			log.Fatalln(err)
 		}

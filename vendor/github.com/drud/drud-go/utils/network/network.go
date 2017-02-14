@@ -1,9 +1,8 @@
-package utils
+package network
 
 import (
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"time"
 
@@ -21,7 +20,7 @@ type HTTPOptions struct {
 	Headers        map[string]string
 }
 
-// Returns a new HTTPOptions struct with some sane defaults.
+// NewHTTPOptions returns a new HTTPOptions struct with some sane defaults.
 func NewHTTPOptions(URL string) *HTTPOptions {
 	o := HTTPOptions{
 		URL:            URL,
@@ -96,15 +95,4 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 			return fmt.Errorf("No deployment found after waiting %d seconds", o.Timeout)
 		}
 	}
-}
-
-// IsTCPPortAvailable checks a port to see if anythign is listening
-// hostPort is a string like 'localhost:80'
-func IsTCPPortAvailable(port int) bool {
-	conn, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
-	if err != nil {
-		return false
-	}
-	conn.Close()
-	return true
 }

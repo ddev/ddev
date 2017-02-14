@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/system"
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 )
@@ -65,7 +65,7 @@ func containsString(slice []string, element string) bool {
 // SetHomedir gets homedir and sets it to global homedir
 func SetHomedir() {
 	var err error
-	homedir, err = utils.GetHomeDir()
+	homedir, err = system.GetHomeDir()
 	if err != nil {
 		log.Fatal(err)
 	}

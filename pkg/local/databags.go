@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/drud/drud-go/secrets"
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/cache"
 	"gopkg.in/yaml.v2"
 )
 
-var cacher *utils.Cache
+var cacher *cache.Cache
 
 // Databag models the outer most layer of a databag
 type Databag struct {
@@ -128,7 +128,7 @@ func (s *SiteEnv) Name() string {
 // GetDatabag returns databag info ad a Databag struct
 func GetDatabag(name string) (Databag, error) {
 	if cacher == nil {
-		cacher = utils.New()
+		cacher = cache.New()
 	}
 
 	cacheDb := cacher.Get(name + "-databag")

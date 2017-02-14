@@ -12,7 +12,10 @@ import (
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/drud-go/drudapi"
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/dockerutil"
+	"github.com/drud/drud-go/utils/network"
+	"github.com/drud/drud-go/utils/stringutil"
+	"github.com/drud/drud-go/utils/system"
 	"github.com/lextoumbourou/goodhosts"
 )
 
@@ -283,7 +286,7 @@ func (l DrudApp) UnpackResources() error {
 		rsyncTo = path.Join(basePath, "src", "docroot/sites/default/files")
 	}
 
-	outs, err := utils.RunCommand(
+	outs, err := system.RunCommand(
 		"rsync",
 		[]string{"-avz", "--recursive", "--exclude=profiles", rsyncFrom + "/", rsyncTo},
 	)
@@ -318,7 +321,7 @@ func (l *DrudApp) Config() error {
 		drupalConfig.DatabaseHost = "db"
 		drupalConfig.HashSalt = ""
 		if drupalConfig.HashSalt == "" {
-			drupalConfig.HashSalt = utils.RandomString(64)
+			drupalConfig.HashSalt = stringutil.RandomString(64)
 		}
 
 		drupalConfig.DeployURL = l.URL()
@@ -379,7 +382,7 @@ func (l DrudApp) GetBackup(kind string) error {
 	// download backup, extract, remove
 	fmt.Println("downloading", kind)
 	fpath := path.Join(l.AbsPath(), fmt.Sprintf("%s.tar.gz", kind))
-	utils.DownloadFile(fpath, link.URL)
+	system.DownloadFile(fpath, link.URL)
 
 	return nil
 }
@@ -410,13 +413,13 @@ func (l DrudApp) Start() error {
 	}
 
 	cmdArgs := []string{"-f", composePath, "pull"}
-	_, err = utils.RunCommand("docker-compose", cmdArgs)
+	_, err = system.RunCommand("docker-compose", cmdArgs)
 
 	if err != nil {
 		return err
 	}
 
-	return utils.DockerCompose(
+	return dockerutil.DockerCompose(
 		"-f", composePath,
 		"up",
 		"-d",
@@ -427,11 +430,11 @@ func (l DrudApp) Start() error {
 func (l DrudApp) Stop() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
-	if !utils.IsRunning(l.ContainerName()+"-db") && !utils.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
+	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
 		return fmt.Errorf("Site does not exist or is malformed.")
 	}
 
-	return utils.DockerCompose(
+	return dockerutil.DockerCompose(
 		"-f", composePath,
 		"stop",
 	)
@@ -445,7 +448,7 @@ func (l *DrudApp) Down() error {
 		return fmt.Errorf("Site does not exist or is malformed.")
 	}
 
-	err := utils.DockerCompose(
+	err := dockerutil.DockerCompose(
 		"-f", composePath,
 		"down",
 	)
@@ -469,10 +472,10 @@ func (l *DrudApp) SetType() error {
 
 // Wait ensures that the app appears to be read before returning
 func (l *DrudApp) Wait() (string, error) {
-	o := utils.NewHTTPOptions("http://127.0.0.1")
+	o := network.NewHTTPOptions("http://127.0.0.1")
 	o.Timeout = 420
 	o.Headers["Host"] = l.HostName()
-	err := utils.EnsureHTTPStatus(o)
+	err := network.EnsureHTTPStatus(o)
 	if err != nil {
 		return "", fmt.Errorf("200 Was not returned from the web container")
 	}
@@ -498,6 +501,6 @@ func (l *DrudApp) AddHostsEntry() error {
 	fmt.Println("\n\n\nAdding hostfile entry. You will be prompted for your password.")
 	hostnameArgs := []string{"ddev", "hostname", l.HostName(), "127.0.0.1"}
 
-	err = utils.RunCommandPipe("sudo", hostnameArgs)
+	err = system.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }

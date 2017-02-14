@@ -21,7 +21,10 @@ import (
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/drud-go/secrets"
-	"github.com/drud/drud-go/utils"
+	"github.com/drud/drud-go/utils/dockerutil"
+	"github.com/drud/drud-go/utils/network"
+	"github.com/drud/drud-go/utils/stringutil"
+	"github.com/drud/drud-go/utils/system"
 )
 
 const (
@@ -304,7 +307,7 @@ func (l LegacyApp) UnpackResources() error {
 		fileDir = "sites/default/files"
 	}
 
-	out, err := utils.RunCommand(
+	out, err := system.RunCommand(
 		"tar",
 		[]string{
 			"-xzvf",
@@ -339,7 +342,7 @@ func (l LegacyApp) UnpackResources() error {
 
 	rsyncFrom := path.Join(basePath, "files", "docroot", fileDir)
 	rsyncTo := path.Join(basePath, "src", "docroot", fileDir)
-	out, err = utils.RunCommand(
+	out, err = system.RunCommand(
 		"rsync",
 		[]string{"-avz", "--recursive", rsyncFrom + "/", rsyncTo},
 	)
@@ -348,7 +351,7 @@ func (l LegacyApp) UnpackResources() error {
 	}
 
 	// Ensure extracted files are writable so they can be removed when we're done.
-	out, err = utils.RunCommand(
+	out, err = system.RunCommand(
 		"chmod",
 		[]string{"-R", "+rwx", path.Join(basePath, "files")},
 	)
@@ -358,9 +361,9 @@ func (l LegacyApp) UnpackResources() error {
 	defer os.RemoveAll(path.Join(basePath, "files"))
 
 	dcfgFile := path.Join(basePath, "src", "drud.yaml")
-	if utils.FileExists(dcfgFile) {
+	if system.FileExists(dcfgFile) {
 		log.Println("copying drud.yaml to data container")
-		out, err := utils.RunCommand("cp", []string{
+		out, err := system.RunCommand("cp", []string{
 			dcfgFile,
 			path.Join(basePath, "data/drud.yaml"),
 		})
@@ -399,12 +402,12 @@ func (l LegacyApp) Start() error {
 	}
 
 	cmdArgs := []string{"-f", composePath, "pull"}
-	_, err = utils.RunCommand("docker-compose", cmdArgs)
+	_, err = system.RunCommand("docker-compose", cmdArgs)
 	if err != nil {
 		return err
 	}
 
-	return utils.DockerCompose(
+	return dockerutil.DockerCompose(
 		"-f", composePath,
 		"up",
 		"-d",
@@ -415,11 +418,11 @@ func (l LegacyApp) Start() error {
 func (l LegacyApp) Stop() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
-	if !utils.IsRunning(l.ContainerName()+"-db") && !utils.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
+	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
 		return fmt.Errorf("site does not exist or is malformed")
 	}
 
-	return utils.DockerCompose(
+	return dockerutil.DockerCompose(
 		"-f", composePath,
 		"stop",
 	)
@@ -437,10 +440,10 @@ func (l *LegacyApp) SetType() error {
 
 // Wait ensures that the app appears to be read before returning
 func (l *LegacyApp) Wait() (string, error) {
-	o := utils.NewHTTPOptions("http://127.0.0.1")
+	o := network.NewHTTPOptions("http://127.0.0.1")
 	o.Timeout = 90
 	o.Headers["Host"] = l.HostName()
-	err := utils.EnsureHTTPStatus(o)
+	err := network.EnsureHTTPStatus(o)
 	if err != nil {
 		return "", fmt.Errorf("200 Was not returned from the web container")
 	}
@@ -494,7 +497,7 @@ func (l *LegacyApp) Config() error {
 		drupalConfig.DatabaseHost = "db"
 		drupalConfig.HashSalt = env.HashSalt
 		if drupalConfig.HashSalt == "" {
-			drupalConfig.HashSalt = utils.RandomString(64)
+			drupalConfig.HashSalt = stringutil.RandomString(64)
 		}
 		if l.AppType == "drupal8" {
 			drupalConfig.IsDrupal8 = true
@@ -549,7 +552,7 @@ func (l *LegacyApp) Config() error {
 func (l *LegacyApp) Down() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
-	err := utils.DockerCompose(
+	err := dockerutil.DockerCompose(
 		"-f", composePath,
 		"down",
 	)
@@ -588,6 +591,6 @@ func (l *LegacyApp) AddHostsEntry() error {
 
 	fmt.Println("\n\n\nAdding hostfile entry. You will be prompted for your password.")
 	hostnameArgs := []string{"ddev", "hostname", l.HostName(), "127.0.0.1"}
-	err = utils.RunCommandPipe("sudo", hostnameArgs)
+	err = system.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }
