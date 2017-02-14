@@ -21,7 +21,7 @@ import (
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/drud-go/secrets"
-	"github.com/drud/drud-go/utils/docker"
+	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/drud/drud-go/utils/system"
@@ -407,7 +407,7 @@ func (l LegacyApp) Start() error {
 		return err
 	}
 
-	return docker.DockerCompose(
+	return dockerutil.DockerCompose(
 		"-f", composePath,
 		"up",
 		"-d",
@@ -418,11 +418,11 @@ func (l LegacyApp) Start() error {
 func (l LegacyApp) Stop() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
-	if !docker.IsRunning(l.ContainerName()+"-db") && !docker.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
+	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
 		return fmt.Errorf("site does not exist or is malformed")
 	}
 
-	return docker.DockerCompose(
+	return dockerutil.DockerCompose(
 		"-f", composePath,
 		"stop",
 	)
@@ -552,7 +552,7 @@ func (l *LegacyApp) Config() error {
 func (l *LegacyApp) Down() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
-	err := docker.DockerCompose(
+	err := dockerutil.DockerCompose(
 		"-f", composePath,
 		"down",
 	)

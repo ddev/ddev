@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/local"
-	"github.com/drud/drud-go/utils/docker"
+	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/drud/drud-go/utils/system"
@@ -151,8 +151,8 @@ func TestDevAddSites(t *testing.T) {
 		app := local.NewLegacyApp(site[0], site[1])
 
 		assert.Equal(true, checkRequiredFolders(app))
-		assert.Equal(true, docker.IsRunning(app.ContainerName()+"-web"))
-		assert.Equal(true, docker.IsRunning(app.ContainerName()+"-db"))
+		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-web"))
+		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-db"))
 
 		o := network.NewHTTPOptions("http://127.0.0.1")
 		o.Timeout = 90

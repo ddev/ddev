@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/local"
-	"github.com/drud/drud-go/utils/docker"
+	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +26,7 @@ var LocalDevSSHCmd = &cobra.Command{
 		app.SetOpts(opts)
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
-		if !docker.IsRunning(nameContainer) {
+		if !dockerutil.IsRunning(nameContainer) {
 			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
@@ -34,7 +34,7 @@ var LocalDevSSHCmd = &cobra.Command{
 			Failed("No docker-compose yaml for this site. Try `drud legacy add`.")
 		}
 
-		err := docker.DockerCompose(
+		err := dockerutil.DockerCompose(
 			"-f", path.Join(app.AbsPath(), "docker-compose.yaml"),
 			"exec",
 			nameContainer,

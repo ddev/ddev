@@ -12,7 +12,7 @@ import (
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/drud-go/drudapi"
-	"github.com/drud/drud-go/utils/docker"
+	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/drud/drud-go/utils/system"
@@ -419,7 +419,7 @@ func (l DrudApp) Start() error {
 		return err
 	}
 
-	return docker.DockerCompose(
+	return dockerutil.DockerCompose(
 		"-f", composePath,
 		"up",
 		"-d",
@@ -430,11 +430,11 @@ func (l DrudApp) Start() error {
 func (l DrudApp) Stop() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
-	if !docker.IsRunning(l.ContainerName()+"-db") && !docker.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
+	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
 		return fmt.Errorf("Site does not exist or is malformed.")
 	}
 
-	return docker.DockerCompose(
+	return dockerutil.DockerCompose(
 		"-f", composePath,
 		"stop",
 	)
@@ -448,7 +448,7 @@ func (l *DrudApp) Down() error {
 		return fmt.Errorf("Site does not exist or is malformed.")
 	}
 
-	err := docker.DockerCompose(
+	err := dockerutil.DockerCompose(
 		"-f", composePath,
 		"down",
 	)
