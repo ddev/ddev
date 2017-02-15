@@ -14,6 +14,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
+	"github.com/drud/dcfg/dcfglib"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/drud/drud-go/utils/try"
@@ -292,6 +293,19 @@ func ProcessContainer(l map[string]map[string]string, plugin string, containerNa
 // DetermineAppType uses some predetermined file checks to determine if a local app
 // is of any of the known types
 func DetermineAppType(basePath string) (string, error) {
+	// load the "pre-start" group of the drud.yaml
+	dcfg, err := DrudCfgTaskSet(path.Join(basePath, "src", "drud.yaml"), "pre-start")
+	if err != nil {
+		return "", err
+	}
+
+	env := dcfg.Env
+	for k, v := range env {
+		if k == "appType" {
+			return v, nil
+		}
+	}
+
 	defaultLocations := map[string]string{
 		"docroot/scripts/drupal.sh":      "drupal",
 		"docroot/core/scripts/drupal.sh": "drupal8",
@@ -304,7 +318,7 @@ func DetermineAppType(basePath string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("Couldn't determine app's type!")
+	return "", fmt.Errorf("could not determine the app type")
 }
 
 // FileExists checks a file's existence
@@ -549,4 +563,25 @@ func RenderComposeYAML(app App) (string, error) {
 
 	templ.Execute(&doc, templateVars)
 	return doc.String(), nil
+}
+
+// DrudCfgTaskSet returns a TaskSet of the defined group
+func DrudCfgTaskSet(filePath string, group string) (dcfglib.TaskSet, error) {
+	var set dcfglib.TaskSet
+	cfg, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	setList, err := dcfglib.GetTaskSetList(cfg)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	for _, taskSet := range setList {
+		if taskSet.Name == group {
+			set = taskSet
+		}
+	}
+	return set, nil
 }

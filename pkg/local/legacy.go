@@ -496,9 +496,8 @@ func (l *LegacyApp) Config() error {
 	}
 
 	settingsFilePath := ""
-	if l.AppType == "drupal" || l.AppType == "drupal8" {
-		log.Printf("Drupal site. Creating settings.php file.")
-
+	log.Printf("Provisioning %s site", l.AppType)
+	if l.AppType == "drupal" {
 		// Setup a custom settings file for use with drush.
 		dbPort, err := GetPodPort(l.ContainerName() + "-db")
 		if err != nil {
@@ -516,8 +515,7 @@ func (l *LegacyApp) Config() error {
 		if err != nil {
 			log.Fatalln(err)
 		}
-	} else if l.AppType == "wp" {
-		log.Printf("WordPress site. Creating wp-config.php file.")
+	} else if l.AppType == "wordpress" {
 		settingsFilePath = path.Join(basePath, "src", "docroot/wp-config.php")
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DatabaseHost = "db"
