@@ -47,8 +47,8 @@ DDEV_BINARY_FULLPATH=$(shell pwd)/bin/$(TESTOS)/ddev
 test: build setup
 	@mkdir -p bin/linux bin/darwin
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
-	PATH=$$PWD/bin/$(TESTOS):$$PATH DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) DRUD_DEBUG=true go test -timeout 20m -v ./cmd/ddev/cmd
-	PATH=$$PWD/bin/$(TESTOS):$$PATH DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) DRUD_DEBUG=true go test -timeout 20m -v ./pgk/...
+	DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) DRUD_DEBUG=true go test -timeout 20m -v ./cmd/ddev/cmd
+	DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) DRUD_DEBUG=true go test -timeout 20m -v ./pkg/...
 
 setup:
 	@mkdir -p bin/darwin bin/linux
