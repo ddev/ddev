@@ -13,10 +13,10 @@ var WebImg = "drud/nginx-php-fpm7-local"
 var WebTag = "0.2.0"
 
 // DBImg defines the default db image for drud dev
-var DBImg = "drud/mysql-docker-local"
+var DBImg = "drud/mysql-docker-local-57"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "5.7"
+var DBTag = "0.1.0"
 
 // RouterImage defines the image used for the drud dev router.
 var RouterImage = "drud/nginx-proxy"
