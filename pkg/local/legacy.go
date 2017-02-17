@@ -480,22 +480,11 @@ func (l *LegacyApp) Config() error {
 		}
 	}
 
-	dbag, err := GetDatabag(l.Name)
+	err := l.FindPorts()
 	if err != nil {
 		return err
 	}
 
-	env, err := dbag.GetEnv(l.Environment)
-	if err != nil {
-		return err
-	}
-
-	err = l.FindPorts()
-	if err != nil {
-		return err
-	}
-
-	settingsFilePath := ""
 	log.Printf("Provisioning %s site", l.AppType)
 	if l.AppType == "drupal" {
 		// Setup a custom settings file for use with drush.
@@ -512,23 +501,6 @@ func (l *LegacyApp) Config() error {
 		}
 		err = config.WriteDrushConfig(drushConfig, drushSettingsPath)
 
-		if err != nil {
-			log.Fatalln(err)
-		}
-	} else if l.AppType == "wordpress" {
-		settingsFilePath = path.Join(basePath, "src", "docroot/wp-config.php")
-		wpConfig := model.NewWordpressConfig()
-		wpConfig.DatabaseHost = "db"
-		wpConfig.DeployURL = l.URL()
-		wpConfig.AuthKey = env.AuthKey
-		wpConfig.AuthSalt = env.AuthSalt
-		wpConfig.LoggedInKey = env.LoggedInKey
-		wpConfig.LoggedInSalt = env.LoggedInSalt
-		wpConfig.NonceKey = env.NonceKey
-		wpConfig.NonceSalt = env.NonceSalt
-		wpConfig.SecureAuthKey = env.SecureAuthKey
-		wpConfig.SecureAuthSalt = env.SecureAuthSalt
-		err = config.WriteWordpressConfig(wpConfig, settingsFilePath)
 		if err != nil {
 			log.Fatalln(err)
 		}
