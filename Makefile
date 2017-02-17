@@ -15,7 +15,7 @@ PKG := github.com/drud/ddev
 SRC_DIRS := cmd pkg
 
 # Optional to docker build
-#DOCKER_ARGS = 
+#DOCKER_ARGS =
 
 # VERSION can be set by
   # Default: git tag
@@ -47,7 +47,8 @@ DDEV_BINARY_FULLPATH=$(shell pwd)/bin/$(TESTOS)/ddev
 test: build setup
 	@mkdir -p bin/linux bin/darwin
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
-	PATH=$$PWD/bin/$(TESTOS):$$PATH DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) DRUD_DEBUG=true go test -timeout 20m -v ./cmd/... ./pkg/...
+	PATH=$$PWD/bin/$(TESTOS):$$PATH DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) DRUD_DEBUG=true go test -timeout 20m -v ./cmd/ddev/cmd
+	PATH=$$PWD/bin/$(TESTOS):$$PATH DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) DRUD_DEBUG=true go test -timeout 20m -v ./pgk/...
 
 setup:
 	@mkdir -p bin/darwin bin/linux
