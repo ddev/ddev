@@ -414,6 +414,24 @@
 			"revisionTime": "2016-09-08T21:06:52Z"
 		},
 		{
+			"checksumSHA1": "vFXOcXmqtgAyvHYQObgylqdZ+aU=",
+			"path": "github.com/drud/dcfg/pkg/dcfg",
+			"revision": "cc9177e556a998d3ff92d43599dee06918c46eb8",
+			"revisionTime": "2017-02-18T01:23:22Z"
+		},
+		{
+			"checksumSHA1": "xeBGrbiiQX7lKhQNgCkdwsQWMjU=",
+			"path": "github.com/drud/dcfg/plugins",
+			"revision": "cc9177e556a998d3ff92d43599dee06918c46eb8",
+			"revisionTime": "2017-02-18T01:23:22Z"
+		},
+		{
+			"checksumSHA1": "KIRF05lb90gryu5XH9SnuyOklLc=",
+			"path": "github.com/drud/dcfg/tpl",
+			"revision": "cc9177e556a998d3ff92d43599dee06918c46eb8",
+			"revisionTime": "2017-02-18T01:23:22Z"
+		},
+		{
 			"checksumSHA1": "3boCcWNh3c1O5yMDj/g/PZPe5qs=",
 			"path": "github.com/drud/drud-go/drudapi",
 			"revision": "1c917ad16cd8b8ce402501babd41e37bbf32e9d8",
@@ -434,6 +452,12 @@
 			"tree": true
 		},
 		{
+			"checksumSHA1": "N2DEK8m/jM+xUTHhEJs4JraMn3U=",
+			"path": "github.com/drud/drud-go/utils",
+			"revision": "fce2a08344a49113d7ce57d8c7d02d8ce331a69b",
+			"revisionTime": "2017-02-14T20:31:04Z"
+		},
+		{
 			"checksumSHA1": "yOfsAVJspLZMx7Kcb+ITgvORrHQ=",
 			"path": "github.com/drud/drud-go/utils/cache",
 			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
@@ -452,6 +476,12 @@
 			"revisionTime": "2017-02-13T20:31:38Z"
 		},
 		{
+			"checksumSHA1": "t01l9GMxPPn/ThMgpk9pWkzjm4g=",
+			"path": "github.com/drud/drud-go/utils/pretty",
+			"revision": "fce2a08344a49113d7ce57d8c7d02d8ce331a69b",
+			"revisionTime": "2017-02-14T20:31:04Z"
+		},
+		{
 			"checksumSHA1": "iAwuw+lHePVbzI7mb80cdsO5Le4=",
 			"path": "github.com/drud/drud-go/utils/stringutil",
 			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
@@ -460,8 +490,8 @@
 		{
 			"checksumSHA1": "dEwm+7KMFrQIqOEMsjePRNAEwUI=",
 			"path": "github.com/drud/drud-go/utils/system",
-			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
-			"revisionTime": "2017-02-13T20:31:38Z"
+			"revision": "fce2a08344a49113d7ce57d8c7d02d8ce331a69b",
+			"revisionTime": "2017-02-14T20:31:04Z"
 		},
 		{
 			"checksumSHA1": "2R63ApwuyAQtMhWv7EhO21SZniQ=",
@@ -883,6 +913,12 @@
 			"revisionTime": "2016-06-17T13:25:49Z"
 		},
 		{
+			"checksumSHA1": "R8z+BOS81hOWgcqymuVWHNta/yc=",
+			"path": "github.com/oleiade/reflections",
+			"revision": "0e86b3c98b2ff33e30c85cfe97d9a63d439fe7eb",
+			"revisionTime": "2016-08-17T07:03:35Z"
+		},
+		{
 			"checksumSHA1": "R93mnw63M+513kttRwG4YDp62oM=",
 			"path": "github.com/opencontainers/runc/libcontainer/system",
 			"revision": "3597b7b743c18b9813cba347d67dfbba69373842",
@@ -1204,6 +1240,12 @@
 			"path": "golang.org/x/text/unicode/norm",
 			"revision": "a7c023693a94aedd6b6df43ae7526bfe9d2b7d22",
 			"revisionTime": "2016-09-22T05:42:04Z"
+		},
+		{
+			"checksumSHA1": "6Rfu8Y/96ALpk4VIC1dK3uo+WYc=",
+			"path": "gopkg.in/oleiade/reflections.v1",
+			"revision": "2b6ec3da648e3e834dc41bad8d9ed7f2dc6a9496",
+			"revisionTime": "2016-08-17T06:38:38Z"
 		}
 	],
 	"rootPath": "github.com/drud/ddev"
