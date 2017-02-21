@@ -14,7 +14,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/drud/dcfg/dcfglib"
+	"github.com/drud/dcfg/pkg/dcfg"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/drud/drud-go/utils/try"
@@ -566,14 +566,14 @@ func RenderComposeYAML(app App) (string, error) {
 }
 
 // DrudCfgTaskSet returns a TaskSet of the defined group
-func DrudCfgTaskSet(filePath string, group string) (dcfglib.TaskSet, error) {
-	var set dcfglib.TaskSet
+func DrudCfgTaskSet(filePath string, group string) (dcfg.TaskSet, error) {
+	var set dcfg.TaskSet
 	cfg, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	setList, err := dcfglib.GetTaskSetList(cfg)
+	setList, err := dcfg.GetTaskSetList(cfg)
 	if err != nil {
 		fmt.Println(err)
 	}
