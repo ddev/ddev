@@ -24,6 +24,7 @@ stages:
         command: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
         name: "docker login"
 
+
       - type: shell
         command: sudo apt-get -qq update && sudo apt-get -qq -y install python-pip && sudo pip -q install docker-compose
         name: docker-compose install
