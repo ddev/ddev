@@ -14,6 +14,18 @@ PKG := github.com/drud/ddev
 # Top-level directories to build
 SRC_DIRS := cmd pkg
 
+# Version variables to replace in build
+VERSION_VARIABLES = DdevVersion WebImg WebTag DBImg DBTag RouterImage RouterTag
+
+# These variables will be used as the default unless overridden by the make
+DdevVersion ?= $(VERSION)
+WebImg ?= drud/nginx-php-fpm7-local
+WebTag ?= 0.2.0
+DBImg ?= drud/mysql-docker-local
+DBTag ?= 5.7
+RouterImage ?= drud/nginx-proxy
+RouterTag ?= 0.1.0
+
 # Optional to docker build
 #DOCKER_ARGS =
 

@@ -14,6 +14,10 @@ PKG := github.com/drud/repo_name
 # Top-level directories to build
 SRC_DIRS := files drudapi secrets utils
 
+# Version variables to replace in build, The variable VERSION is automatically pulled from git committish so it doesn't have to be added
+# These are replaced in the $(PKG).version package.
+# VERSION_VARIABLES = ThisCmdVersion ThatContainerVersion
+
 # Optional to docker build
 # DOCKER_ARGS =
 
@@ -39,3 +43,7 @@ include build-tools/makefile_components/base_container.mak
 include build-tools/makefile_components/base_push.mak
 include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
+
+
+# Additional targets can be added here
+# Also, existing targets can be overridden by copying and customizing them.

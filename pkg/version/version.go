@@ -3,8 +3,8 @@ package version
 // VERSION is supplied with the git committish this is built from
 var VERSION = ""
 
-// CliVersion is the current version of the ddev tool
-var CliVersion = "0.4.0"
+// Current version of the ddev tool, by default the git committish (should be current tag)
+var DdevVersion = "0.4.0"
 
 // WebImg defines the default web image for drud dev
 var WebImg = "drud/nginx-php-fpm7-local"

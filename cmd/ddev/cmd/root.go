@@ -17,8 +17,6 @@ import (
 const (
 	timestampFormat = "20060102150405"
 	updateFile      = ".drud-update"
-	cliVersion      = "0.3.1"
-	drudapiVersion  = "v0.1"
 )
 
 var (
