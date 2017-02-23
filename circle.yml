@@ -53,7 +53,7 @@ stages:
 #      - type: shell
 #        command: |
 #          cd ~/src/github.com/drud/ddev &&
-#          go test -v -run TestDevAddSites ./pkg/...
+#          DDEV_BINARY_FULLPATH=$PWD/bin/linux/ddev CGO_ENABLED=0 go test -v -run TestVersion ./cmd/... ./pkg/...
 #        name: ddev single test
 
 

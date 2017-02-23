@@ -18,9 +18,12 @@ BUILD_BASE_DIR ?= $$PWD
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
 
+
 VERSION_VARIABLES += VERSION
 
-VERSION_LDFLAGS := -ldflags "$(foreach v,$(VERSION_VARIABLES),-X $(PKG)/pkg/version.$(v)=$($(v)))"
+VERSION_LDFLAGS := $(foreach v,$(VERSION_VARIABLES),-X $(PKG)/pkg/version.$(v)=$($(v)))
+
+LDFLAGS := -extldflags -static $(VERSION_LDFLAGS)
 
 build: linux darwin
 
@@ -36,13 +39,12 @@ linux darwin: $(GOFILES)
 	    -v $$(pwd)/bin/$@:/go/bin                                     \
 	    -v $$(pwd)/bin/$@:/go/bin/$@                      \
 	    -v $$(pwd)/.go/std/$@:/usr/local/go/pkg/$@_amd64_static  \
+	    -e CGO_ENABLED=0                  \
 	    -w /go/src/$(PKG)                 \
 	    $(BUILD_IMAGE)                    \
 	    /bin/sh -c '                      \
-	        GOOS=$@ CGO_ENABLED=0                \
-	        go install -installsuffix 'static'   \
-                $(VERSION_LDFLAGS) \
-                $(SRC_AND_UNDER)  \
+	        GOOS=$@                       \
+	        go install -installsuffix 'static' -ldflags "$(LDFLAGS)" $(SRC_AND_UNDER)  \
 	    '
 	@touch $@
 	@echo $(VERSION) >VERSION.txt

@@ -16,9 +16,10 @@ test: linux
 	    -v $$(pwd):/go/src/$(PKG)                                          \
 	    -v $$(pwd)/bin/linux:/go/bin                                     \
 	    -v $$(pwd)/.go/std/linux:/usr/local/go/pkg/linux_amd64_static  \
+	    -e CGO_ENABLED=0	\
 	    -w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
 	    /bin/bash -c '                                                    \
 	        GOOS=`uname -s |  tr '[:upper:]' '[:lower:]'`  && echo GOOS=$$GOOS &&		\
-	        go test -v -installsuffix "static" $(VERSION_LDFLAGS) $(SRC_AND_UNDER)   \
+	        go test -v -installsuffix "static" -ldflags "$(LDFLAGS)" $(SRC_AND_UNDER)   \
 	    '
