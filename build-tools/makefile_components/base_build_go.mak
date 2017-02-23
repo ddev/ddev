@@ -39,7 +39,7 @@ linux darwin: $(GOFILES)
 	    -w /go/src/$(PKG)                 \
 	    $(BUILD_IMAGE)                    \
 	    /bin/sh -c '                      \
-	        GOOS=$@                       \
+	        GOOS=$@ CGO_ENABLED=0                \
 	        go install -installsuffix 'static'   \
                 $(VERSION_LDFLAGS) \
                 $(SRC_AND_UNDER)  \

@@ -46,11 +46,10 @@ stages:
       - type: shell
         command: |
           cd  ~/src/github.com/drud/ddev &&
-          make GOPATH=~/ linux &&
-          sudo cp bin/linux/ddev /usr/local/bin/
+          make GOPATH=~/ linux
         name: Build the linux ddev executable binary
 
-      # Run just one test in ddev
+      # Example: Run just one test in ddev by name
 #      - type: shell
 #        command: |
 #          cd ~/src/github.com/drud/ddev &&
