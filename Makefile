@@ -14,6 +14,18 @@ PKG := github.com/drud/ddev
 # Top-level directories to build
 SRC_DIRS := cmd pkg
 
+# Version variables to replace in build
+VERSION_VARIABLES = DdevVersion WebImg WebTag DBImg DBTag RouterImage RouterTag
+
+# These variables will be used as the default unless overridden by the make
+DdevVersion ?= $(VERSION)
+WebImg ?= drud/nginx-php-fpm7-local
+WebTag ?= 0.2.0
+DBImg ?= drud/mysql-docker-local-57
+DBTag ?= 0.1.0
+RouterImage ?= drud/nginx-proxy
+RouterTag ?= 0.1.0
+
 # Optional to docker build
 #DOCKER_ARGS =
 
@@ -47,8 +59,8 @@ DDEV_BINARY_FULLPATH=$(shell pwd)/bin/$(TESTOS)/ddev
 test: build setup
 	@mkdir -p bin/linux bin/darwin
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
-	PATH=$$PWD/bin/$(TESTOS):$$PATH DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -timeout 20m -v ./cmd/ddev/cmd
-	PATH=$$PWD/bin/$(TESTOS):$$PATH DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) DRUD_DEBUG=true go test -timeout 20m -v ./pkg/...
+	PATH=$$PWD/bin/$(TESTOS):$$PATH CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -timeout 20m -v -installsuffix 'static' -ldflags "$(LDFLAGS)" ./cmd/ddev/cmd
+	PATH=$$PWD/bin/$(TESTOS):$$PATH CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) DRUD_DEBUG=true go test -timeout 20m -v -installsuffix 'static' -ldflags "$(LDFLAGS)" ./pkg/...
 
 setup:
 	@mkdir -p bin/darwin bin/linux

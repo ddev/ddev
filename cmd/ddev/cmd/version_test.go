@@ -18,7 +18,7 @@ func TestVersion(t *testing.T) {
 	v, err := exec.Command(binary, "version").Output()
 	assert.NoError(err)
 	output := strings.TrimSpace(string(v))
-	assert.Contains(output, version.CliVersion)
+	assert.Contains(output, version.DdevVersion)
 	assert.Contains(output, version.WebImg)
 	assert.Contains(output, version.WebTag)
 	assert.Contains(output, version.DBImg)
