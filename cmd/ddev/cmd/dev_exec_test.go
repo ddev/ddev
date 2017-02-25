@@ -3,6 +3,8 @@ package cmd
 import (
 	"testing"
 
+	"log"
+
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
@@ -39,7 +41,7 @@ func TestDevExec(t *testing.T) {
 	args := []string{"exec", DevTestApp, DevTestEnv, "pwd"}
 	out, err := system.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "/var/www/html/docroot")
+	assert.Contains(string(out), "/var/www/html")
 
 	// Try again with active app set.
 	err = setActiveApp(DevTestApp, DevTestEnv)
@@ -47,7 +49,7 @@ func TestDevExec(t *testing.T) {
 	args = []string{"exec", DevTestApp, DevTestEnv, "pwd"}
 	out, err = system.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "/var/www/html/docroot")
+	assert.Contains(string(out), "/var/www/html")
 }
 
 // TestDevExec runs drud Dev exec using basic drush commands
@@ -59,9 +61,10 @@ func TestDevExecDrush(t *testing.T) {
 	d7App := DevTestSites[2][0]
 	assert := assert.New(t)
 
-	for _, app := range []string{d8App, d7App} {
+	for k, app := range []string{d8App, d7App} {
 		args := []string{"exec", app, DevTestEnv, "drush uli"}
 		out, err := system.RunCommand(DdevBin, args)
+		log.Printf("%s", k)
 		assert.NoError(err)
 		assert.Contains(string(out), "http://")
 
