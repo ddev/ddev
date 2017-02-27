@@ -20,7 +20,7 @@ var (
 
 	DevTestSites = [][]string{
 		[]string{"drudio", DevTestEnv},
-		[]string{"d8", DevTestEnv},
+		[]string{"drud-d8", DevTestEnv},
 		[]string{"talentreef", DevTestEnv},
 	}
 )

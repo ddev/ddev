@@ -248,14 +248,13 @@ func RenderAppTable(apps map[string]map[string]string, name string) {
 // ProcessContainer will process a docker container for an app listing.
 // Since apps contain multiple containers, ProcessContainer will be called once per container.
 func ProcessContainer(l map[string]map[string]string, plugin string, containerName string, container docker.APIContainers) {
-	// appID = "sitename-environment"
-	appID := strings.TrimPrefix(containerName, plugin+"-")
-	appID = strings.TrimSuffix(appID, "-db")
-	appID = strings.TrimSuffix(appID, "-web")
 
-	idSplit := strings.Split(appID, "-")
-	appEnv := idSplit[len(idSplit)-1] // return the last element in the slice
-	appName := strings.TrimSuffix(appID, "-"+appEnv)
+	label := container.Labels
+
+	appName := label["com.drud.site-name"]
+	appEnv := label["com.drud.site-env"]
+	containerType := label["com.drud.container-type"]
+	appID := appName + "-" + appEnv
 
 	_, exists := l[appID]
 	if exists == false {
@@ -282,11 +281,11 @@ func ProcessContainer(l map[string]map[string]string, plugin string, containerNa
 		}
 	}
 
-	if strings.HasSuffix(containerName, "-web") {
+	if containerType == "web" {
 		l[appID]["WebPublicPort"] = fmt.Sprintf("%d", publicPort)
 	}
 
-	if strings.HasSuffix(containerName, "-db") {
+	if containerType == "db" {
 		l[appID]["DbPublicPort"] = fmt.Sprintf("%d", publicPort)
 	}
 
@@ -543,6 +542,8 @@ func RenderComposeYAML(app App) (string, error) {
 		"db_image":  opts.DbImage,
 		"name":      app.ContainerName(),
 		"srctarget": "/var/www/html",
+		"site_name": opts.Name,
+		"site_env":  opts.Environment,
 	}
 
 	if opts.WebImageTag == "unison" || strings.HasSuffix(opts.WebImage, ":unison") {
