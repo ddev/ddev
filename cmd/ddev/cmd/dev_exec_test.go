@@ -1,9 +1,8 @@
 package cmd
 
 import (
-	"testing"
-
 	"log"
+	"testing"
 
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
@@ -62,25 +61,10 @@ func TestDevExecDrush(t *testing.T) {
 	assert := assert.New(t)
 
 	for k, app := range []string{d8App, d7App} {
-		args := []string{"exec", app, DevTestEnv, "drush uli"}
+		args := []string{"exec", app, DevTestEnv, "drush status"}
 		out, err := system.RunCommand(DdevBin, args)
+		assert.NoError(err)
 		log.Printf("%s", k)
-		assert.NoError(err)
-		assert.Contains(string(out), "http://")
-
-		// Try again with active app set.
-		err = setActiveApp(DevTestSites[1][0], DevTestEnv)
-		assert.NoError(err)
-		args = []string{"exec", app, DevTestEnv, "drush uli"}
-		out, err = system.RunCommand(DdevBin, args)
-		assert.NoError(err)
-		assert.Contains(string(out), "http://")
-
-		args = []string{"exec", app, DevTestEnv, "drush status"}
-		out, err = system.RunCommand(DdevBin, args)
-		assert.NoError(err)
-		// Check for database status
-		assert.Contains(string(out), "Connected")
 		// Check for PHP configuration
 		assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
 		// Check for drush version
@@ -102,9 +86,4 @@ func TestDevExecWpCLI(t *testing.T) {
 	out, err := system.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
-
-	args = []string{"exec", wpApp, DevTestEnv, "wp plugin status"}
-	out, err = system.RunCommand(DdevBin, args)
-	assert.NoError(err)
-	assert.Contains(string(out), "installed plugins")
 }
