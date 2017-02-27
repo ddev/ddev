@@ -16,7 +16,7 @@ var (
 	DevTestEnv = "production"
 
 	// DevTestApp is the name of the Dev DRUD app to test
-	DevTestApp = "drudio"
+	DevTestApp = "drud-d8"
 
 	DevTestSites = [][]string{
 		[]string{"drudio", DevTestEnv},
