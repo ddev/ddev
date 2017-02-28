@@ -3,7 +3,7 @@ package cmd
 import (
 	"strings"
 
-	"github.com/drud/ddev/pkg/local"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
@@ -18,7 +18,7 @@ var DevListCmd = &cobra.Command{
 
 		var prefixes []string
 
-		for _, instance := range local.PluginMap {
+		for _, instance := range platform.PluginMap {
 			prefixes = append(prefixes, instance.ContainerPrefix())
 		}
 
@@ -39,7 +39,7 @@ var DevListCmd = &cobra.Command{
 			return vsf
 		}(containers)
 
-		local.SiteList(containers)
+		platform.SiteList(containers)
 	},
 }
 

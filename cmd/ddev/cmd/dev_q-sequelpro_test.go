@@ -4,7 +4,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/drud/ddev/pkg/local"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +22,7 @@ func TestDevSequelproScaffold(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(string(out), "finished successfully")
 
-	app := local.LegacyApp{}
+	app := platform.LegacyApp{}
 	app.AppBase.Name = DevTestApp
 	app.AppBase.Environment = DevTestEnv
 

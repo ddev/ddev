@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/drud/ddev/pkg/local"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
@@ -58,7 +58,7 @@ func TestUnitConfigSet(t *testing.T) {
 	var err error
 
 	for _, c := range configTest {
-		cfg, err = local.GetConfig()
+		cfg, err = platform.GetConfig()
 		assert.NoError(t, err)
 		assert.NotNil(t, cfg)
 

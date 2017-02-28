@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/drud/ddev/pkg/local"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/system"
@@ -52,7 +52,7 @@ func TestDevStart(t *testing.T) {
 	assert.Contains(string(out), format("Starting legacy-%s-%s-db", DevTestApp, DevTestEnv))
 	assert.Contains(string(out), "Your application can be reached at")
 
-	app := local.LegacyApp{}
+	app := platform.LegacyApp{}
 	app.AppBase.Name = DevTestApp
 	app.AppBase.Environment = DevTestEnv
 
