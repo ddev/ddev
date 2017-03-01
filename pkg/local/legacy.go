@@ -298,13 +298,19 @@ func (l *LegacyApp) GetArchive() error {
 // UnpackResources takes the archive from the GetResources method and
 // unarchives it. Then the contents are moved to their proper locations.
 func (l LegacyApp) UnpackResources() error {
+	extPath := os.TempDir() + "/extract-" + stringutil.RandomString(4)
 	basePath := l.AbsPath()
 	fileDir := ""
 
+	err := os.Mkdir(extPath, 0755)
+	if err != nil {
+		return err
+	}
+
 	if l.AppType == "wp" {
-		fileDir = "content/uploads"
+		fileDir = "docroot/content/uploads"
 	} else if l.AppType == "drupal" || l.AppType == "drupal8" {
-		fileDir = "sites/default/files"
+		fileDir = "docroot/sites/default/files"
 	}
 
 	out, err := system.RunCommand(
@@ -312,7 +318,7 @@ func (l LegacyApp) UnpackResources() error {
 		[]string{
 			"-xzvf",
 			l.Archive,
-			"-C", path.Join(basePath, "files"),
+			"-C", extPath,
 			"--exclude=sites/default/settings.php",
 			"--exclude=docroot/wp-config.php",
 		},
@@ -328,7 +334,7 @@ func (l LegacyApp) UnpackResources() error {
 	}
 
 	err = os.Rename(
-		path.Join(basePath, "files", l.Name+".sql"),
+		path.Join(extPath, l.Name+".sql"),
 		path.Join(basePath, "data", "data.sql"),
 	)
 	if err != nil {
@@ -340,8 +346,8 @@ func (l LegacyApp) UnpackResources() error {
 		os.Chmod(path.Join(basePath, "files", "docroot", "sites", "default"), 0755)
 	}
 
-	rsyncFrom := path.Join(basePath, "files", "docroot", fileDir)
-	rsyncTo := path.Join(basePath, "src", "docroot", fileDir)
+	rsyncFrom := path.Join(extPath, fileDir)
+	rsyncTo := path.Join(basePath, "files")
 	out, err = system.RunCommand(
 		"rsync",
 		[]string{"-avz", "--recursive", rsyncFrom + "/", rsyncTo},
@@ -353,12 +359,12 @@ func (l LegacyApp) UnpackResources() error {
 	// Ensure extracted files are writable so they can be removed when we're done.
 	out, err = system.RunCommand(
 		"chmod",
-		[]string{"-R", "+rwx", path.Join(basePath, "files")},
+		[]string{"-R", "+rwx", extPath},
 	)
 	if err != nil {
 		return fmt.Errorf("%s - %s", err.Error(), string(out))
 	}
-	defer os.RemoveAll(path.Join(basePath, "files"))
+	defer os.RemoveAll(extPath)
 
 	dcfgFile := path.Join(basePath, "src", "drud.yaml")
 	if system.FileExists(dcfgFile) {
@@ -474,41 +480,13 @@ func (l *LegacyApp) Config() error {
 		}
 	}
 
-	dbag, err := GetDatabag(l.Name)
+	err := l.FindPorts()
 	if err != nil {
 		return err
 	}
 
-	env, err := dbag.GetEnv(l.Environment)
-	if err != nil {
-		return err
-	}
-
-	err = l.FindPorts()
-	if err != nil {
-		return err
-	}
-
-	settingsFilePath := ""
-	if l.AppType == "drupal" || l.AppType == "drupal8" {
-		log.Printf("Drupal site. Creating settings.php file.")
-		settingsFilePath = path.Join(basePath, "src", "docroot/sites/default/settings.php")
-		drupalConfig := model.NewDrupalConfig()
-		drupalConfig.DatabaseHost = "db"
-		drupalConfig.HashSalt = env.HashSalt
-		if drupalConfig.HashSalt == "" {
-			drupalConfig.HashSalt = stringutil.RandomString(64)
-		}
-		if l.AppType == "drupal8" {
-			drupalConfig.IsDrupal8 = true
-		}
-
-		drupalConfig.DeployURL = l.URL()
-		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
+	log.Printf("Provisioning %s site", l.AppType)
+	if l.AppType == "drupal" {
 		// Setup a custom settings file for use with drush.
 		dbPort, err := GetPodPort(l.ContainerName() + "-db")
 		if err != nil {
@@ -523,24 +501,6 @@ func (l *LegacyApp) Config() error {
 		}
 		err = config.WriteDrushConfig(drushConfig, drushSettingsPath)
 
-		if err != nil {
-			log.Fatalln(err)
-		}
-	} else if l.AppType == "wp" {
-		log.Printf("WordPress site. Creating wp-config.php file.")
-		settingsFilePath = path.Join(basePath, "src", "docroot/wp-config.php")
-		wpConfig := model.NewWordpressConfig()
-		wpConfig.DatabaseHost = "db"
-		wpConfig.DeployURL = l.URL()
-		wpConfig.AuthKey = env.AuthKey
-		wpConfig.AuthSalt = env.AuthSalt
-		wpConfig.LoggedInKey = env.LoggedInKey
-		wpConfig.LoggedInSalt = env.LoggedInSalt
-		wpConfig.NonceKey = env.NonceKey
-		wpConfig.NonceSalt = env.NonceSalt
-		wpConfig.SecureAuthKey = env.SecureAuthKey
-		wpConfig.SecureAuthSalt = env.SecureAuthSalt
-		err = config.WriteWordpressConfig(wpConfig, settingsFilePath)
 		if err != nil {
 			log.Fatalln(err)
 		}
