@@ -24,6 +24,7 @@ stages:
         command: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
         name: "docker login"
 
+
       - type: shell
         command: sudo apt-get -qq update && sudo apt-get -qq -y install python-pip && sudo pip -q install docker-compose
         name: docker-compose install
@@ -45,15 +46,14 @@ stages:
       - type: shell
         command: |
           cd  ~/src/github.com/drud/ddev &&
-          make GOPATH=~/ linux &&
-          sudo cp bin/linux/ddev /usr/local/bin/
+          make GOPATH=~/ linux
         name: Build the linux ddev executable binary
 
-      # Run just one test in ddev
+      # Example: Run just one test in ddev by name
 #      - type: shell
 #        command: |
 #          cd ~/src/github.com/drud/ddev &&
-#          go test -v -run TestDevAddSites ./pkg/...
+#          DDEV_BINARY_FULLPATH=$PWD/bin/linux/ddev CGO_ENABLED=0 go test -v -run TestVersion ./cmd/... ./pkg/...
 #        name: ddev single test
 
 

@@ -249,45 +249,47 @@ func RenderAppTable(apps map[string]map[string]string, name string) {
 // ProcessContainer will process a docker container for an app listing.
 // Since apps contain multiple containers, ProcessContainer will be called once per container.
 func ProcessContainer(l map[string]map[string]string, plugin string, containerName string, container docker.APIContainers) {
-	parts := strings.Split(containerName, "-")
 
-	if len(parts) == 4 {
-		appid := parts[1] + "-" + parts[2]
+	label := container.Labels
 
-		_, exists := l[appid]
-		if exists == false {
-			app := PluginMap[strings.ToLower(plugin)]
-			opts := AppOptions{
-				Name:        parts[1],
-				Environment: parts[2],
-			}
-			app.SetOpts(opts)
+	appName := label["com.drud.site-name"]
+	appEnv := label["com.drud.site-env"]
+	containerType := label["com.drud.container-type"]
+	appID := appName + "-" + appEnv
 
-			l[appid] = map[string]string{
-				"name":        parts[1],
-				"environment": parts[2],
-				"status":      container.State,
-				"url":         app.URL(),
-				"type":        app.GetType(),
-			}
+	_, exists := l[appID]
+	if exists == false {
+		app := PluginMap[strings.ToLower(plugin)]
+		opts := AppOptions{
+			Name:        appName,
+			Environment: appEnv,
 		}
+		app.SetOpts(opts)
 
-		var publicPort int64
-		for _, port := range container.Ports {
-			if port.PublicPort != 0 {
-				publicPort = port.PublicPort
-			}
+		l[appID] = map[string]string{
+			"name":        appName,
+			"environment": appEnv,
+			"status":      container.State,
+			"url":         app.URL(),
+			"type":        app.GetType(),
 		}
-
-		if parts[3] == "web" {
-			l[appid]["WebPublicPort"] = fmt.Sprintf("%d", publicPort)
-		}
-
-		if parts[3] == "db" {
-			l[appid]["DbPublicPort"] = fmt.Sprintf("%d", publicPort)
-		}
-
 	}
+
+	var publicPort int64
+	for _, port := range container.Ports {
+		if port.PublicPort != 0 {
+			publicPort = port.PublicPort
+		}
+	}
+
+	if containerType == "web" {
+		l[appID]["WebPublicPort"] = fmt.Sprintf("%d", publicPort)
+	}
+
+	if containerType == "db" {
+		l[appID]["DbPublicPort"] = fmt.Sprintf("%d", publicPort)
+	}
+
 }
 
 // DetermineAppType uses some predetermined file checks to determine if a local app
@@ -554,6 +556,8 @@ func RenderComposeYAML(app App) (string, error) {
 		"db_image":   opts.DbImage,
 		"name":       app.ContainerName(),
 		"srctarget":  "/var/www/html",
+		"site_name":  opts.Name,
+		"site_env":   opts.Environment,
 		"deploy_url": app.URL(),
 	}
 
