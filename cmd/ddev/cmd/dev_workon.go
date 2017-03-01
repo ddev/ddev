@@ -18,7 +18,9 @@ var LocalDevWorkonCmd = &cobra.Command{
 	Short: "Set a site to work on",
 	Long:  `If you select an app to workon you cant skip the activeApp and activeDeploy args.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var parts []string
+		var name string
+		var env string
+		var app string
 		var answer int
 		var files []os.FileInfo
 
@@ -41,13 +43,18 @@ var LocalDevWorkonCmd = &cobra.Command{
 			if answer >= len(files)+1 {
 				Failed("You must choose one of the numbers listed above.")
 			}
-			parts = strings.Split(files[answer-1].Name(), "-")
+			name = files[answer-1].Name()
+			parts := strings.Split(name, "-")
+			env = parts[len(parts)-1]
+			app = strings.TrimSuffix(name, "-"+env)
 		} else {
-			parts = []string{activeApp, activeDeploy}
+			name = activeApp + "-" + activeDeploy
+			env = activeDeploy
+			app = activeApp
 		}
-		fmt.Println(parts)
-		cfg.ActiveApp = parts[0]
-		cfg.ActiveDeploy = parts[1]
+		fmt.Println(name)
+		cfg.ActiveApp = app
+		cfg.ActiveDeploy = env
 
 		err := cfg.WriteConfig(cfgFile)
 		if err != nil {
@@ -55,7 +62,7 @@ var LocalDevWorkonCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		fmt.Println("You are now working on", strings.Join(parts, "-"))
+		fmt.Println("You are now working on", name)
 
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {},
