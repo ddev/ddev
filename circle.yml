@@ -13,7 +13,7 @@ stages:
 
       # This step is a temporary hack until we have some kind of auth built into ddev
       - type: shell
-        command: wget -q -O /tmp/drud $DRUD_DOWNLOAD_URL && chmod ugo+x /tmp/drud && /tmp/drud auth github
+        command: wget -q -O /tmp/drud $DRUD_DOWNLOAD_URL && chmod ugo+x /tmp/drud && /tmp/drud config set --githubauthorg drud && /tmp/drud auth github
         name: Download temporary drud binary and do gitub auth
 
       - type: shell
@@ -63,3 +63,5 @@ stages:
           cd ~/src/github.com/drud/ddev &&
           make GOPATH=~/ test
         name: ddev tests
+
+
