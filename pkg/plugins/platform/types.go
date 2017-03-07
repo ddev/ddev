@@ -91,4 +91,5 @@ func (r RepoDetails) GetCloneURL() (string, error) {
 var PluginMap = map[string]App{
 	"drud":   &DrudApp{},
 	"legacy": &LegacyApp{},
+	"local":  &LocalApp{},
 }

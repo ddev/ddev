@@ -230,17 +230,7 @@ func (l *LocalApp) Config() error {
 		}
 	}
 
-	dbag, err := GetDatabag(l.Name)
-	if err != nil {
-		return err
-	}
-
-	env, err := dbag.GetEnv(l.Environment)
-	if err != nil {
-		return err
-	}
-
-	err = l.FindPorts()
+	err := l.FindPorts()
 	if err != nil {
 		return err
 	}
@@ -251,7 +241,6 @@ func (l *LocalApp) Config() error {
 		settingsFilePath = path.Join(basePath, "src", "docroot/sites/default/settings.php")
 		drupalConfig := model.NewDrupalConfig()
 		drupalConfig.DatabaseHost = "db"
-		drupalConfig.HashSalt = env.HashSalt
 		if drupalConfig.HashSalt == "" {
 			drupalConfig.HashSalt = stringutil.RandomString(64)
 		}
@@ -288,14 +277,14 @@ func (l *LocalApp) Config() error {
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DatabaseHost = "db"
 		wpConfig.DeployURL = l.URL()
-		wpConfig.AuthKey = env.AuthKey
-		wpConfig.AuthSalt = env.AuthSalt
-		wpConfig.LoggedInKey = env.LoggedInKey
-		wpConfig.LoggedInSalt = env.LoggedInSalt
-		wpConfig.NonceKey = env.NonceKey
-		wpConfig.NonceSalt = env.NonceSalt
-		wpConfig.SecureAuthKey = env.SecureAuthKey
-		wpConfig.SecureAuthSalt = env.SecureAuthSalt
+		wpConfig.AuthKey = stringutil.RandomString(64)
+		wpConfig.AuthSalt = stringutil.RandomString(64)
+		wpConfig.LoggedInKey = stringutil.RandomString(64)
+		wpConfig.LoggedInSalt = stringutil.RandomString(64)
+		wpConfig.NonceKey = stringutil.RandomString(64)
+		wpConfig.NonceSalt = stringutil.RandomString(64)
+		wpConfig.SecureAuthKey = stringutil.RandomString(64)
+		wpConfig.SecureAuthSalt = stringutil.RandomString(64)
 		err = config.WriteWordpressConfig(wpConfig, settingsFilePath)
 		if err != nil {
 			log.Fatalln(err)
