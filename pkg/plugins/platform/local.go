@@ -105,7 +105,14 @@ func (l LocalApp) GetRepoDetails() (RepoDetails, error) {
 // GetResources downloads external data for this app
 func (l *LocalApp) GetResources() error {
 
-	err := l.SetType()
+	fmt.Println("Getting Resources.")
+	err := l.GetArchive()
+	if err != nil {
+		log.Println(err)
+		fmt.Errorf("Error retrieving site resources: %s", err)
+	}
+
+	err = l.SetType()
 	if err != nil {
 		return err
 	}
@@ -123,12 +130,94 @@ func (l *LocalApp) GetResources() error {
 
 // GetArchive downloads external data
 func (l *LocalApp) GetArchive() error {
+	name := fmt.Sprintf("%[2]s-%[1]s.tar.gz", l.Name, l.Environment)
+	basePath := path.Dir(l.AbsPath())
+	archive := path.Join(basePath, name)
+
+	if system.FileExists(archive) {
+		l.Archive = archive
+	}
 	return nil
 }
 
 // UnpackResources takes the archive from the GetResources method and
 // unarchives it. Then the contents are moved to their proper locations.
 func (l LocalApp) UnpackResources() error {
+	basePath := l.AbsPath()
+	fileDir := ""
+
+	if l.AppType == "wp" {
+		fileDir = "content/uploads"
+	} else if l.AppType == "drupal" || l.AppType == "drupal8" {
+		fileDir = "sites/default/files"
+	}
+
+	out, err := system.RunCommand(
+		"tar",
+		[]string{
+			"-xzvf",
+			l.Archive,
+			"-C", path.Join(basePath, "files"),
+			"--exclude=sites/default/settings.php",
+			"--exclude=docroot/wp-config.php",
+		},
+	)
+	if err != nil {
+		fmt.Println(out)
+		return err
+	}
+
+	err = os.Remove(l.Archive)
+	if err != nil {
+		return err
+	}
+
+	err = os.Rename(
+		path.Join(basePath, "files", l.Name+".sql"),
+		path.Join(basePath, "data", "data.sql"),
+	)
+	if err != nil {
+		return err
+	}
+
+	// Ensure sites/default is readable.
+	if l.AppType == "drupal" || l.AppType == "drupal8" {
+		os.Chmod(path.Join(basePath, "files", "docroot", "sites", "default"), 0755)
+	}
+
+	rsyncFrom := path.Join(basePath, "files", "docroot", fileDir)
+	rsyncTo := path.Join(basePath, "src", "docroot", fileDir)
+	out, err = system.RunCommand(
+		"rsync",
+		[]string{"-avz", "--recursive", rsyncFrom + "/", rsyncTo},
+	)
+	if err != nil {
+		return fmt.Errorf("%s - %s", err.Error(), string(out))
+	}
+
+	// Ensure extracted files are writable so they can be removed when we're done.
+	out, err = system.RunCommand(
+		"chmod",
+		[]string{"-R", "+rwx", path.Join(basePath, "files")},
+	)
+	if err != nil {
+		return fmt.Errorf("%s - %s", err.Error(), string(out))
+	}
+	defer os.RemoveAll(path.Join(basePath, "files"))
+
+	dcfgFile := path.Join(basePath, "src", "drud.yaml")
+	if system.FileExists(dcfgFile) {
+		log.Println("copying drud.yaml to data container")
+		out, err := system.RunCommand("cp", []string{
+			dcfgFile,
+			path.Join(basePath, "data/drud.yaml"),
+		})
+		if err != nil {
+			fmt.Println(out)
+			return err
+		}
+	}
+
 	return nil
 }
 
