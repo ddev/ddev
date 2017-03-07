@@ -1,0 +1,33 @@
+version: 2
+executorType: machine
+stages:
+  build:
+    workDir: ~/build-tools
+
+    environment:
+      GOPATH: /home/circleci
+
+    steps:
+      - type: checkout
+
+      # Create environment which respects GOPATH
+      - type: shell
+        command: |
+          mkdir -p ~/src/github.com/drud &&
+          ln -s ~/build-tools ~/src/github.com/drud/build-tools
+        name: Set up directory structure
+
+      # Build linux outputs
+      - type: shell
+        command: |
+          cd  ~/src/github.com/drud/build-tools/tests &&
+          make GOPATH=~/ linux
+        name: Build linux outputs
+
+      # Run the "make test"
+      - type: shell
+        command: |
+          cd  ~/src/github.com/drud/build-tools/tests &&
+          make GOPATH=~/ test
+        name: make test
+

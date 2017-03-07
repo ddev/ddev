@@ -18,6 +18,10 @@ SRC_DIRS := files drudapi secrets utils
 # These are replaced in the $(PKG).version package.
 # VERSION_VARIABLES = ThisCmdVersion ThatContainerVersion
 
+# These variables will be used as the defaults unless overridden by the make command line
+#ThisCmdVersion ?= $(VERSION)
+#ThatContainerVersion ?= drud/nginx-php-fpm7-local
+
 # Optional to docker build
 # DOCKER_ARGS =
 
