@@ -1,48 +1,30 @@
-package local
+package platform
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
-	"runtime"
-	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/hashicorp/vault/api"
 	"github.com/lextoumbourou/goodhosts"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
-	"github.com/drud/drud-go/secrets"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/drud/drud-go/utils/system"
 )
 
-const (
-	containerRunning = "running"
-)
-
-var vault api.Logical
-
-// LegacyApp implements the AppBase interface for Legacy Newmedia apps
-type LegacyApp struct {
+// LocalApp implements the AppBase interface for local Newmedia apps
+type LocalApp struct {
 	AppBase
 	Options *AppOptions
-	Vault   *api.Logical
 }
 
-// NewLegacyApp returns an empty legacy app with options struct pre inserted
-func NewLegacyApp(name string, environment string) *LegacyApp {
-	app := &LegacyApp{
+// NewLocalApp returns an empty local app with options struct pre inserted
+func NewLocalApp(name string, environment string) *LocalApp {
+	app := &LocalApp{
 		Options: &AppOptions{},
 	}
 	app.AppBase.Name = name
@@ -51,7 +33,7 @@ func NewLegacyApp(name string, environment string) *LegacyApp {
 	return app
 }
 
-func (l *LegacyApp) SetOpts(opts AppOptions) {
+func (l *LocalApp) SetOpts(opts AppOptions) {
 	l.Options = &opts
 	l.Name = opts.Name
 	l.Environment = opts.Environment
@@ -63,15 +45,15 @@ func (l *LegacyApp) SetOpts(opts AppOptions) {
 	l.SkipYAML = opts.SkipYAML
 }
 
-func (l *LegacyApp) GetOpts() AppOptions {
+func (l *LocalApp) GetOpts() AppOptions {
 	return *l.Options
 }
 
-func (l *LegacyApp) GetTemplate() string {
+func (l *LocalApp) GetTemplate() string {
 	return l.Template
 }
 
-func (l *LegacyApp) GetType() string {
+func (l *LocalApp) GetType() string {
 	if l.AppType == "" {
 		l.SetType()
 	}
@@ -79,16 +61,8 @@ func (l *LegacyApp) GetType() string {
 }
 
 // Init sets values from the AppInitOptions on the Drud app object
-func (l *LegacyApp) Init(opts AppOptions) {
+func (l *LocalApp) Init(opts AppOptions) {
 	l.SetOpts(opts)
-
-	// instantiate an authed vault client
-	secrets.ConfigVault(opts.CFG.VaultAuthToken, opts.CFG.VaultAddr)
-	vault = secrets.GetVault()
-
-	if !l.DatabagExists() {
-		log.Fatal("No legacy site by that name.")
-	}
 
 	basePath := l.AbsPath()
 	err := PrepLocalSiteDirs(basePath)
@@ -99,107 +73,46 @@ func (l *LegacyApp) Init(opts AppOptions) {
 }
 
 // RelPath returns the path from the '.drud' directory to this apps directory
-func (l LegacyApp) RelPath() string {
-	return path.Join("legacy", fmt.Sprintf("%s-%s", l.Name, l.Environment))
+func (l LocalApp) RelPath() string {
+	return path.Join("local", fmt.Sprintf("%s-%s", l.Name, l.Environment))
 }
 
 // AbsPath return the full path from root to the app directory
-func (l LegacyApp) AbsPath() string {
+func (l LocalApp) AbsPath() string {
 	cfg, _ := GetConfig()
 	return path.Join(cfg.Workspace, l.RelPath())
 }
 
-// GetName returns the  name for legacy app
-func (l LegacyApp) GetName() string {
+// GetName returns the  name for local app
+func (l LocalApp) GetName() string {
 	return l.Name
 }
 
-// ContainerPrefix returns the base name for legacy app containers
-func (l LegacyApp) ContainerPrefix() string {
-	return "legacy-"
+// ContainerPrefix returns the base name for local app containers
+func (l LocalApp) ContainerPrefix() string {
+	return "local-"
 }
 
-// ContainerName returns the base name for legacy app containers
-func (l LegacyApp) ContainerName() string {
+// ContainerName returns the base name for local app containers
+func (l LocalApp) ContainerName() string {
 	return fmt.Sprintf("%s%s-%s", l.ContainerPrefix(), l.Name, l.Environment)
 }
 
-// GetRepoDetails uses the Environment field to get the relevant repo details about an app
-func (l LegacyApp) GetRepoDetails() (RepoDetails, error) {
-	dbag, err := GetDatabag(l.Name)
-	if err != nil {
-		return RepoDetails{}, err
-	}
-
-	details, err := dbag.GetRepoDetails(l.Environment)
-	if err != nil {
-		return RepoDetails{}, err
-	}
-
-	return details, nil
-}
-
-// DatabagExists checks if a databag exists or not.
-func (l LegacyApp) DatabagExists() bool {
-	_, err := GetDatabag(l.Name)
-
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	return true
+func (l LocalApp) GetRepoDetails() (RepoDetails, error) {
+	return RepoDetails{}, nil
 }
 
 // GetResources downloads external data for this app
-func (l *LegacyApp) GetResources() error {
+func (l *LocalApp) GetResources() error {
 
-	// save errors for when the wait group has finished executing
-	errChannel := make(chan error, 1)
-	// apparently this is necessary
-	finished := make(chan bool, 1)
-
-	// limit logical processors to 3
-	runtime.GOMAXPROCS(2)
-	// set up wait group
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
-
-		fmt.Println("Getting source code.")
-
-		err := CloneSource(l)
-		if err != nil {
-			log.Println(err)
-			errChannel <- fmt.Errorf("Error cloning source: %s", err)
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-
-		fmt.Println("Getting Resources.")
-		err := l.GetArchive()
-		if err != nil {
-			log.Println(err)
-			errChannel <- fmt.Errorf("Error retrieving site resources: %s", err)
-		}
-	}()
-
-	wg.Wait()
-	close(finished)
-
-	select {
-	case <-finished:
-	case err := <-errChannel:
-		if err != nil {
-			return fmt.Errorf("Unable to retrieve one or more resources.")
-		}
+	fmt.Println("Getting Resources.")
+	err := l.GetArchive()
+	if err != nil {
+		log.Println(err)
+		fmt.Errorf("Error retrieving site resources: %s", err)
 	}
 
-	err := l.SetType()
+	err = l.SetType()
 	if err != nil {
 		return err
 	}
@@ -215,89 +128,21 @@ func (l *LegacyApp) GetResources() error {
 	return nil
 }
 
-// GetArchive downloads external data for this app
-func (l *LegacyApp) GetArchive() error {
-	basePath := l.AbsPath()
+// GetArchive downloads external data
+func (l *LocalApp) GetArchive() error {
+	name := fmt.Sprintf("%[2]s-%[1]s.tar.gz", l.Name, l.Environment)
+	basePath := path.Dir(l.AbsPath())
+	archive := path.Join(basePath, name)
 
-	dbag, err := GetDatabag(l.Name)
-	if err != nil {
-		return err
+	if system.FileExists(archive) {
+		l.Archive = archive
 	}
-
-	s, err := dbag.GetEnv(l.Environment)
-	if err != nil {
-		return err
-	}
-
-	bucket := "nmdarchive"
-	if s.AwsBucket != "" {
-		bucket = s.AwsBucket
-	}
-
-	awsID := s.AwsAccessKey
-	awsSecret := s.AwsSecretKey
-	if awsID == "" {
-		sobj := secrets.Secret{
-			Path: "secret/shared/services/awscfg",
-		}
-
-		err := sobj.Read()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		awsID = sobj.Data["accesskey"].(string)
-		awsSecret = sobj.Data["secretkey"].(string)
-	}
-
-	os.Setenv("AWS_ACCESS_KEY_ID", awsID)
-	os.Setenv("AWS_SECRET_ACCESS_KEY", awsSecret)
-
-	svc := s3.New(session.New(&aws.Config{Region: aws.String("us-west-2")}))
-	prefix := fmt.Sprintf("%[1]s/%[2]s-%[1]s-", l.Name, l.Environment)
-
-	params := &s3.ListObjectsInput{
-		Bucket: aws.String(bucket),
-		Prefix: &prefix,
-	}
-
-	resp, err := svc.ListObjects(params)
-	if err != nil {
-		return err
-	}
-
-	if len(resp.Contents) == 0 {
-		return errors.New("No site archive found")
-	}
-
-	archive := resp.Contents[len(resp.Contents)-1]
-	file, err := os.Create(path.Join(basePath, filepath.Base(*archive.Key)))
-	if err != nil {
-		log.Fatal("Failed to create file", err)
-	}
-	defer file.Close()
-
-	downloader := s3manager.NewDownloader(session.New(&aws.Config{Region: aws.String("us-west-2")}))
-	numBytes, err := downloader.Download(
-		file,
-		&s3.GetObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(*archive.Key),
-		},
-	)
-	if err != nil {
-		return err
-	}
-
-	log.Println("Downloaded file", file.Name(), numBytes, "bytes")
-	l.Archive = file.Name()
-
 	return nil
 }
 
 // UnpackResources takes the archive from the GetResources method and
 // unarchives it. Then the contents are moved to their proper locations.
-func (l LegacyApp) UnpackResources() error {
+func (l LocalApp) UnpackResources() error {
 	basePath := l.AbsPath()
 	fileDir := ""
 
@@ -319,11 +164,6 @@ func (l LegacyApp) UnpackResources() error {
 	)
 	if err != nil {
 		fmt.Println(out)
-		return err
-	}
-
-	err = os.Remove(l.Archive)
-	if err != nil {
 		return err
 	}
 
@@ -353,7 +193,7 @@ func (l LegacyApp) UnpackResources() error {
 	// Ensure extracted files are writable so they can be removed when we're done.
 	out, err = system.RunCommand(
 		"chmod",
-		[]string{"-R", "+rwx", path.Join(basePath, "files")},
+		[]string{"-R", "ugo+rw", path.Join(basePath, "files")},
 	)
 	if err != nil {
 		return fmt.Errorf("%s - %s", err.Error(), string(out))
@@ -377,7 +217,7 @@ func (l LegacyApp) UnpackResources() error {
 }
 
 // Start initiates docker-compose up
-func (l LegacyApp) Start() error {
+func (l LocalApp) Start() error {
 
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
@@ -415,7 +255,7 @@ func (l LegacyApp) Start() error {
 }
 
 // Stop initiates docker-compose stop
-func (l LegacyApp) Stop() error {
+func (l LocalApp) Stop() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
 	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
@@ -429,7 +269,7 @@ func (l LegacyApp) Stop() error {
 }
 
 // SetType determines the app type and sets it
-func (l *LegacyApp) SetType() error {
+func (l *LocalApp) SetType() error {
 	appType, err := DetermineAppType(l.AbsPath())
 	if err != nil {
 		return err
@@ -439,7 +279,7 @@ func (l *LegacyApp) SetType() error {
 }
 
 // Wait ensures that the app appears to be read before returning
-func (l *LegacyApp) Wait() (string, error) {
+func (l *LocalApp) Wait() (string, error) {
 	o := network.NewHTTPOptions("http://127.0.0.1")
 	o.Timeout = 90
 	o.Headers["Host"] = l.HostName()
@@ -451,7 +291,7 @@ func (l *LegacyApp) Wait() (string, error) {
 	return l.URL(), nil
 }
 
-func (l *LegacyApp) FindPorts() error {
+func (l *LocalApp) FindPorts() error {
 	var err error
 	l.WebPublicPort, err = GetPodPort(l.ContainerName() + "-web")
 	if err != nil {
@@ -464,7 +304,7 @@ func (l *LegacyApp) FindPorts() error {
 
 // Config creates the apps config file adding things like database host, name, and password
 // as well as other sensitive data like salts.
-func (l *LegacyApp) Config() error {
+func (l *LocalApp) Config() error {
 	basePath := l.AbsPath()
 
 	if l.AppType == "" {
@@ -474,17 +314,7 @@ func (l *LegacyApp) Config() error {
 		}
 	}
 
-	dbag, err := GetDatabag(l.Name)
-	if err != nil {
-		return err
-	}
-
-	env, err := dbag.GetEnv(l.Environment)
-	if err != nil {
-		return err
-	}
-
-	err = l.FindPorts()
+	err := l.FindPorts()
 	if err != nil {
 		return err
 	}
@@ -495,7 +325,6 @@ func (l *LegacyApp) Config() error {
 		settingsFilePath = path.Join(basePath, "src", "docroot/sites/default/settings.php")
 		drupalConfig := model.NewDrupalConfig()
 		drupalConfig.DatabaseHost = "db"
-		drupalConfig.HashSalt = env.HashSalt
 		if drupalConfig.HashSalt == "" {
 			drupalConfig.HashSalt = stringutil.RandomString(64)
 		}
@@ -532,14 +361,14 @@ func (l *LegacyApp) Config() error {
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DatabaseHost = "db"
 		wpConfig.DeployURL = l.URL()
-		wpConfig.AuthKey = env.AuthKey
-		wpConfig.AuthSalt = env.AuthSalt
-		wpConfig.LoggedInKey = env.LoggedInKey
-		wpConfig.LoggedInSalt = env.LoggedInSalt
-		wpConfig.NonceKey = env.NonceKey
-		wpConfig.NonceSalt = env.NonceSalt
-		wpConfig.SecureAuthKey = env.SecureAuthKey
-		wpConfig.SecureAuthSalt = env.SecureAuthSalt
+		wpConfig.AuthKey = stringutil.RandomString(64)
+		wpConfig.AuthSalt = stringutil.RandomString(64)
+		wpConfig.LoggedInKey = stringutil.RandomString(64)
+		wpConfig.LoggedInSalt = stringutil.RandomString(64)
+		wpConfig.NonceKey = stringutil.RandomString(64)
+		wpConfig.NonceSalt = stringutil.RandomString(64)
+		wpConfig.SecureAuthKey = stringutil.RandomString(64)
+		wpConfig.SecureAuthSalt = stringutil.RandomString(64)
 		err = config.WriteWordpressConfig(wpConfig, settingsFilePath)
 		if err != nil {
 			log.Fatalln(err)
@@ -548,8 +377,8 @@ func (l *LegacyApp) Config() error {
 	return nil
 }
 
-// Down stops the docker containers for the legacy project.
-func (l *LegacyApp) Down() error {
+// Down stops the docker containers for the local project.
+func (l *LocalApp) Down() error {
 	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
 
 	err := dockerutil.DockerCompose(
@@ -565,17 +394,17 @@ func (l *LegacyApp) Down() error {
 }
 
 // URL returns the URL for a given application.
-func (l *LegacyApp) URL() string {
+func (l *LocalApp) URL() string {
 	return "http://" + l.HostName()
 }
 
 // HostName returns the hostname of a given application.
-func (l *LegacyApp) HostName() string {
+func (l *LocalApp) HostName() string {
 	return l.ContainerName()
 }
 
-// AddHostsEntry will add the legacy site URL to the local hostfile.
-func (l *LegacyApp) AddHostsEntry() error {
+// AddHostsEntry will add the local site URL to the local hostfile.
+func (l *LocalApp) AddHostsEntry() error {
 	if os.Getenv("DRUD_NONINTERACTIVE") != "" {
 		fmt.Printf("DRUD_NONINTERACTIVE is set. If this message is not in a test you may want to add the following entry to your host file:\n127.0.0.1 %s\n", l.HostName())
 		return nil

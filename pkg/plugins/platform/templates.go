@@ -1,4 +1,4 @@
-package local
+package platform
 
 // LegacyComposeTemplate is used to create the docker-compose.yaml for
 // legacy sites in the local DRUD env

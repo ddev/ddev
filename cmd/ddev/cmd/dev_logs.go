@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/drud/ddev/pkg/local"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
@@ -24,8 +24,8 @@ var LocalDevLogsCmd = &cobra.Command{
 	Long:  `Uses 'docker logs' to display stdout from the running services.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		app := local.PluginMap[strings.ToLower(plugin)]
-		opts := local.AppOptions{
+		app := platform.PluginMap[strings.ToLower(plugin)]
+		opts := platform.AppOptions{
 			Name:        activeApp,
 			Environment: activeDeploy,
 		}
@@ -37,7 +37,7 @@ var LocalDevLogsCmd = &cobra.Command{
 			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
-		if !local.ComposeFileExists(app) {
+		if !platform.ComposeFileExists(app) {
 			Failed("No docker-compose yaml for this site. Try `drud legacy add`.")
 		}
 

@@ -1,4 +1,4 @@
-package local
+package platform
 
 import (
 	"errors"

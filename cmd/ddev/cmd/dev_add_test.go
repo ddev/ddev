@@ -7,7 +7,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/drud/ddev/pkg/local"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
@@ -17,7 +17,7 @@ import (
 
 var skipComposeTests bool
 
-func checkRequiredFolders(app local.App) bool {
+func checkRequiredFolders(app platform.App) bool {
 	basePath := app.AbsPath()
 	files := []string{
 		basePath,
@@ -82,7 +82,7 @@ func TestDevAddScaffoldWP(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
-	app := local.NewLegacyApp(DevTestApp, DevTestEnv)
+	app := platform.NewLegacyApp(DevTestApp, DevTestEnv)
 	assert.Equal(true, checkRequiredFolders(app))
 
 }
@@ -97,7 +97,7 @@ func TestDevAddScaffoldWPImageTag(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
-	app := local.NewLegacyApp(DevTestApp, DevTestEnv)
+	app := platform.NewLegacyApp(DevTestApp, DevTestEnv)
 	assert.Equal(true, checkRequiredFolders(app))
 
 	composeFile, err := ioutil.ReadFile(path.Join(app.AbsPath(), "docker-compose.yaml"))
@@ -119,7 +119,7 @@ func TestDevAddScaffoldWPImageChange(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
-	app := local.NewLegacyApp(DevTestApp, DevTestEnv)
+	app := platform.NewLegacyApp(DevTestApp, DevTestEnv)
 	assert.Equal(true, checkRequiredFolders(app))
 
 	composeFile, err := ioutil.ReadFile(path.Join(app.AbsPath(), "docker-compose.yaml"))
@@ -148,7 +148,7 @@ func TestDevAddSites(t *testing.T) {
 		assert.Contains(string(out), "Successfully added")
 		assert.Contains(string(out), "Your application can be reached at")
 
-		app := local.NewLegacyApp(site[0], site[1])
+		app := platform.NewLegacyApp(site[0], site[1])
 
 		assert.Equal(true, checkRequiredFolders(app))
 		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-web"))
@@ -171,7 +171,7 @@ func TestSubTag(t *testing.T) {
 		[]string{"http://docker.io/drud/testimage:unison", "http://docker.io/drud/testimage:unison"},
 	}
 	for _, l := range tests {
-		img := local.SubTag(l[0], "unison")
+		img := platform.SubTag(l[0], "unison")
 		assert.Equal(t, l[1], img)
 	}
 }

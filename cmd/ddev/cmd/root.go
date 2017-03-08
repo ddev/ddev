@@ -5,11 +5,11 @@ import (
 	"os/user"
 	"strings"
 
-	"github.com/drud/ddev/pkg/local"
 	drudfiles "github.com/drud/drud-go/files"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,7 +20,7 @@ const (
 )
 
 var (
-	cfg                *local.Config
+	cfg                *platform.Config
 	usr                *user.User
 	pwd                string
 	cfgFile            string
@@ -64,7 +64,7 @@ var RootCmd = &cobra.Command{
 		if !skip {
 			parseLegacyArgs(args)
 			plugin = strings.ToLower(plugin)
-			if _, ok := local.PluginMap[plugin]; !ok {
+			if _, ok := platform.PluginMap[plugin]; !ok {
 				Failed("Plugin %s is not registered", plugin)
 			}
 		}
@@ -89,7 +89,7 @@ func Execute() {
 		log.Fatalf("Fatal error config file: %s \n", err)
 	}
 
-	cfg, err = local.GetConfig()
+	cfg, err = platform.GetConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&plugin, "plugin", "p", "legacy", "Choose which plugin to use")
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "$HOME/drud.yaml", "yaml config file")
 	cfgFile = ParseConfigFlag()
-	_, err := local.GetConfig()
+	_, err := platform.GetConfig()
 	if err != nil {
 		log.Fatal(err)
 	}

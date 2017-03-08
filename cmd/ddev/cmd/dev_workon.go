@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/drud/ddev/pkg/local"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +27,7 @@ var LocalDevWorkonCmd = &cobra.Command{
 		if activeApp == "" && activeDeploy == "" {
 			fmt.Println("Enter a number to choose which app to work on:")
 			files, _ = ioutil.ReadDir(path.Join(cfg.Workspace, plugin))
-			files = local.FilterNonAppDirs(files)
+			files = platform.FilterNonAppDirs(files)
 
 			fmt.Printf("%d: %s\n", 0, "Cancel")
 			for i, f := range files {

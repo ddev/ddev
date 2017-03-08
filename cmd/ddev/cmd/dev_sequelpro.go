@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/drud/ddev/pkg/local"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -21,9 +21,9 @@ var LocalDevSequelproCmd = &cobra.Command{
 	Short: "Easily connect local site to sequelpro",
 	Long:  `A helper command for easily using sequelpro with a drud app that has been initialized locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := local.PluginMap[strings.ToLower(plugin)]
+		app := platform.PluginMap[strings.ToLower(plugin)]
 
-		opts := local.AppOptions{
+		opts := platform.AppOptions{
 			Name:        activeApp,
 			Environment: activeDeploy,
 		}
@@ -53,7 +53,7 @@ var LocalDevSequelproCmd = &cobra.Command{
 		defer tmpFile.Close()
 
 		tmpFile.WriteString(fmt.Sprintf(
-			local.SequelproTemplate,
+			platform.SequelproTemplate,
 			"data",                  //dbname
 			"127.0.0.1",             //host
 			mysqlContainer.Names[0], //container name

@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/drud/ddev/pkg/local"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -30,7 +30,7 @@ var DevAddCmd = &cobra.Command{
 	downloading of containers, media, and databases.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 
-		client, err := local.GetDockerClient()
+		client, err := platform.GetDockerClient()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -43,9 +43,9 @@ var DevAddCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		app := local.PluginMap[strings.ToLower(plugin)]
+		app := platform.PluginMap[strings.ToLower(plugin)]
 
-		opts := local.AppOptions{
+		opts := platform.AppOptions{
 			Name:        activeApp,
 			Environment: activeDeploy,
 			Client:      appClient,

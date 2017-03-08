@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/drud/ddev/pkg/local"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -17,9 +17,9 @@ var LocalDevRMCmd = &cobra.Command{
 	Short: "Remove an application's local services.",
 	Long:  `Remove will delete the local service containers from this machine..`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := local.PluginMap[strings.ToLower(plugin)]
+		app := platform.PluginMap[strings.ToLower(plugin)]
 
-		opts := local.AppOptions{
+		opts := platform.AppOptions{
 			Name:        activeApp,
 			Environment: activeDeploy,
 		}
@@ -30,7 +30,7 @@ var LocalDevRMCmd = &cobra.Command{
 			Failed("App not running locally. Try `drud legacy add`.")
 		}
 
-		if !local.ComposeFileExists(app) {
+		if !platform.ComposeFileExists(app) {
 			Failed("No docker-compose yaml for this site. Try `drud legacy add`.")
 		}
 

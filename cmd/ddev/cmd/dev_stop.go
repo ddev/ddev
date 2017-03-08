@@ -6,8 +6,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/fatih/color"
 
-	"github.com/drud/ddev/pkg/local"
-
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/spf13/cobra"
 )
 
@@ -17,9 +16,9 @@ var LocalDevStopCmd = &cobra.Command{
 	Short: "Stop an application's local services.",
 	Long:  `Stop will turn off the local containers and not remove them.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := local.PluginMap[strings.ToLower(plugin)]
+		app := platform.PluginMap[strings.ToLower(plugin)]
 
-		opts := local.AppOptions{
+		opts := platform.AppOptions{
 			Name:        activeApp,
 			Environment: activeDeploy,
 		}
