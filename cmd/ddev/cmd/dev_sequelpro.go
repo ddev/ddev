@@ -62,9 +62,7 @@ var LocalDevSequelproCmd = &cobra.Command{
 			"root", //dbuser
 		))
 
-		if scaffold != true {
-			exec.Command("open", tmpFilePath).Run()
-		}
+		exec.Command("open", tmpFilePath).Run()
 
 		color.Cyan("sequelpro command finished successfully!")
 
@@ -72,7 +70,6 @@ var LocalDevSequelproCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevSequelproCmd.Flags().BoolVarP(&scaffold, "scaffold", "s", false, "Add the app but don't run or config it.")
 	RootCmd.AddCommand(LocalDevSequelproCmd)
 	//RootCmd.AddCommand(SequelproCmd)
 }
