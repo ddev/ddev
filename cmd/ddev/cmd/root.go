@@ -46,9 +46,6 @@ var RootCmd = &cobra.Command{
 	Use:   "ddev",
 	Short: "A CLI for interacting with DRUD.",
 	Long:  "This Command Line Interface (CLI) gives you the ability to interact with the DRUD platform to manage applications, create a local development environment, or deploy an application to production. DRUD also provides utilities for securely uploading files and secrets associated with applications.",
-	Run: func(cmd *cobra.Command, args []string) {
-		// fmt.Println(`Use "drud --help" for more information about this tool.`)
-	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		ignores := []string{"list", "config", "version", "update"}
 		skip := false
