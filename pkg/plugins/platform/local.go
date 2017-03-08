@@ -167,11 +167,6 @@ func (l LocalApp) UnpackResources() error {
 		return err
 	}
 
-	err = os.Remove(l.Archive)
-	if err != nil {
-		return err
-	}
-
 	err = os.Rename(
 		path.Join(basePath, "files", l.Name+".sql"),
 		path.Join(basePath, "data", "data.sql"),
