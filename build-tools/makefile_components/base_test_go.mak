@@ -6,12 +6,12 @@
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
-test: linux
+test: build
 	@mkdir -p bin/linux
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
-	docker run                                                            \
+	@docker run                                                            \
 	    -t                                                                \
-	    -u root:root                                             \
+	    -u $(shell id -u):$(shell id -g)                                             \
 	    -v $$(pwd)/.go:/go                                                 \
 	    -v $$(pwd):/go/src/$(PKG)                                          \
 	    -v $$(pwd)/bin/linux:/go/bin                                     \
@@ -20,6 +20,6 @@ test: linux
 	    -w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
 	    /bin/bash -c '                                                    \
-	        GOOS=`uname -s |  tr '[:upper:]' '[:lower:]'`  && echo GOOS=$$GOOS &&		\
+	        GOOS=`uname -s |  tr '[:upper:]' '[:lower:]'`  &&		\
 	        go test -v -installsuffix "static" -ldflags "$(LDFLAGS)" $(SRC_AND_UNDER)   \
 	    '
