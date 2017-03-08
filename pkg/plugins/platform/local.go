@@ -193,7 +193,7 @@ func (l LocalApp) UnpackResources() error {
 	// Ensure extracted files are writable so they can be removed when we're done.
 	out, err = system.RunCommand(
 		"chmod",
-		[]string{"-R", "+rwx", path.Join(basePath, "files")},
+		[]string{"-R", "ugo+rw", path.Join(basePath, "files")},
 	)
 	if err != nil {
 		return fmt.Errorf("%s - %s", err.Error(), string(out))
