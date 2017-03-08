@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
+	"path"
 	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -61,6 +64,24 @@ var ImportCmd = &cobra.Command{
 		if err != nil {
 			log.Println(err)
 			Failed("Failed to configure application.")
+		}
+
+		nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
+		if !dockerutil.IsRunning(nameContainer) || !platform.ComposeFileExists(app) {
+			Failed("This application is not currently running. Run `ddev start [sitename] [environment]` to start the environment.")
+		}
+
+		cmdArgs := []string{
+			"-f", path.Join(app.AbsPath(), "docker-compose.yaml"),
+			"exec",
+			"-T", nameContainer,
+			"./import.sh",
+		}
+
+		err = dockerutil.DockerCompose(cmdArgs...)
+		if err != nil {
+			log.Println(err)
+			Failed("Could not execute command.")
 		}
 
 		siteURL, err := app.Wait()
