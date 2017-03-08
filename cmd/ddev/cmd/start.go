@@ -63,22 +63,8 @@ var StartCmd = &cobra.Command{
 			Failed("Failed to start application.")
 		}
 
-		err = app.Config()
-		if err != nil {
-			log.Println(err)
-			Failed("Failed to configure application.")
-		}
-
-		siteURL, err := app.Wait()
-		if err != nil {
-			log.Println(err)
-			Failed("Site never became ready")
-		}
-
 		color.Cyan("Successfully added %s-%s", activeApp, activeDeploy)
-		if siteURL != "" {
-			color.Cyan("Your application can be reached at: %s", siteURL)
-		}
+		color.Cyan("Your application can be reached at: %s", app.URL())
 
 	},
 }

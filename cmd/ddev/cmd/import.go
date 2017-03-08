@@ -57,6 +57,12 @@ var ImportCmd = &cobra.Command{
 			Failed("Failed to unpack application resources.")
 		}
 
+		err = app.Config()
+		if err != nil {
+			log.Println(err)
+			Failed("Failed to configure application.")
+		}
+
 		siteURL, err := app.Wait()
 		if err != nil {
 			log.Println(err)
