@@ -23,9 +23,10 @@ var (
 
 // StartCmd represents the add command
 var StartCmd = &cobra.Command{
-	Use:   "start [app_name] [environment_name]",
-	Short: "Start the local development environment for a site.",
-	Long:  `Start initializes and configures the web server and database containers to provide a working environment for development.`,
+	Use:     "start [app_name] [environment_name]",
+	Aliases: []string{"add"},
+	Short:   "Start the local development environment for a site.",
+	Long:    `Start initializes and configures the web server and database containers to provide a working environment for development.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 
 		client, err := platform.GetDockerClient()
