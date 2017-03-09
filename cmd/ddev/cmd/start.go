@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -60,12 +59,11 @@ var StartCmd = &cobra.Command{
 
 		err := app.Start()
 		if err != nil {
-			log.Println(err)
-			Failed("Failed to start application.")
+			Failed("Failed to start %s: %s", app.GetName(), err)
 		}
 
-		color.Cyan("Successfully added %s-%s", activeApp, activeDeploy)
-		color.Cyan("Your application can be reached at: %s", app.URL())
+		Success("Successfully added %s-%s", activeApp, activeDeploy)
+		Success("Your application can be reached at: %s", app.URL())
 
 	},
 }

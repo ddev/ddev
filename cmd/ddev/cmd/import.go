@@ -8,7 +8,6 @@ import (
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -50,20 +49,17 @@ var ImportCmd = &cobra.Command{
 
 		err := app.GetResources()
 		if err != nil {
-			log.Println(err)
-			Failed("Failed to gather resources.")
+			Failed("Failed to gather resources for %s: %s", app.GetName(), err)
 		}
 
 		err = app.UnpackResources()
 		if err != nil {
-			log.Println(err)
-			Failed("Failed to unpack application resources.")
+			Failed("Failed to unpack resources for %s: %s", app.GetName(), err)
 		}
 
 		err = app.Config()
 		if err != nil {
-			log.Println(err)
-			Failed("Failed to configure application.")
+			Failed("Failed to configure %s: %s.", app.GetName(), err)
 		}
 
 		nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
@@ -80,19 +76,17 @@ var ImportCmd = &cobra.Command{
 
 		err = dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
-			log.Println(err)
-			Failed("Could not execute command.")
+			Failed("Could not execute command: %s", err)
 		}
 
 		siteURL, err := app.Wait()
 		if err != nil {
-			log.Println(err)
-			Failed("Site never became ready")
+			Failed("%s did not return a 200 status before timeout. %s", app.GetName(), err)
 		}
 
-		color.Cyan("Successfully imported %s-%s", activeApp, activeDeploy)
+		Success("Successfully imported %s-%s", activeApp, activeDeploy)
 		if siteURL != "" {
-			color.Cyan("Your application can be reached at: %s", siteURL)
+			Success("Your application can be reached at: %s", siteURL)
 		}
 
 	},

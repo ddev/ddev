@@ -11,7 +11,6 @@ import (
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -62,14 +61,16 @@ var LocalDevSequelproCmd = &cobra.Command{
 			"root", //dbuser
 		))
 
-		exec.Command("open", tmpFilePath).Run()
+		err = exec.Command("open", tmpFilePath).Run()
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		color.Cyan("sequelpro command finished successfully!")
+		Success("sequelpro command finished successfully!")
 
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(LocalDevSequelproCmd)
-	//RootCmd.AddCommand(SequelproCmd)
 }
