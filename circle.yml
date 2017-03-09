@@ -42,7 +42,11 @@ stages:
           pwd
         name: Set up directory structure
 
-      # Build ddev  and move it into /usr/local/bin - tests look for it in $PATH
+      - type: shell
+        command: |
+          make gofmt
+
+      # Build ddev
       - type: shell
         command: |
           cd  ~/src/github.com/drud/ddev &&
