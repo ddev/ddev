@@ -30,8 +30,6 @@ Normal test invocation is just `make test`. Run a single test with an invocation
 ## Basic Usage
 
 **Key prerequisites**
-* The *workspace* where the code will be checked out is specified in "workspace" in your drud.yaml. It defaults to ~/.drud, but you may want to change it to something like ~/workspace with `drud config set --workspace ~/workspace`
-* The *client* in drud.yaml is the name of the organization where the code repository is to be found. Where the app name "drudio" is used below, the client specified in drud.yaml is the default organization on github. So if "client" in drud.yaml is "newmediadenver", it will look for the repo in https://github.com/newmediadenver/drudio.
 * In `ddev add drudio production` the first argument is the repo/site name, and the second is an arbitrary "environment name" (and source for the dev database), which is typically either "production" or "staging".
 
 Examples:

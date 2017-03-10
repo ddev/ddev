@@ -17,7 +17,7 @@ import (
 )
 
 
-// LocalApp implements the AppBase interface for local Newmedia apps
+// LocalApp implements the AppBase interface local development apps
 type LocalApp struct {
 	AppBase
 	Options *AppOptions
