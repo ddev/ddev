@@ -60,7 +60,6 @@ func containsString(slice []string, element string) bool {
 	return !(posString(slice, element) == -1)
 }
 
-
 // Failed will print an red error message and exit with failure.
 func Failed(format string, a ...interface{}) {
 	color.Red(format, a...)

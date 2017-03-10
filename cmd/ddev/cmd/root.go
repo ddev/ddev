@@ -16,9 +16,9 @@ const (
 )
 
 var (
-	cfg                *platform.Config
-	logLevel           = log.WarnLevel
-	plugin             = "local"
+	cfg      *platform.Config
+	logLevel = log.WarnLevel
+	plugin   = "local"
 )
 
 // RootCmd represents the base command when called without any subcommands

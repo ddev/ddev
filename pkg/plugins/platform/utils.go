@@ -328,7 +328,6 @@ func SubTag(image string, tag string) string {
 	return strings.Join(parts, ":")
 }
 
-
 func ComposeFileExists(app App) bool {
 	composeLOC := path.Join(app.AbsPath(), "docker-compose.yaml")
 	if _, err := os.Stat(composeLOC); os.IsNotExist(err) {
