@@ -41,9 +41,9 @@ make linux
 make darwin
 make gofmt 
 make govet
-make vendorcheck
+make govendor
 make golint
-make static (gofmt, govet, golint, vendorcheck)
+make static (gofmt, govet, golint, govendor)
 make test
 make container
 make push

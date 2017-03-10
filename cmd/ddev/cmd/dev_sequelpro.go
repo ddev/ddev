@@ -31,7 +31,7 @@ var LocalDevSequelproCmd = &cobra.Command{
 		nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
 
 		if !dockerutil.IsRunning(nameContainer) {
-			Failed("App not running locally. Try `drud legacy add`.")
+			Failed("App not running locally. Try `ddev add`.")
 		}
 
 		mysqlContainer, err := dockerutil.GetContainer(nameContainer)

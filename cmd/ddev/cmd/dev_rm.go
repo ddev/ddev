@@ -27,11 +27,11 @@ var LocalDevRMCmd = &cobra.Command{
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 		if !dockerutil.IsRunning(nameContainer) {
-			Failed("App not running locally. Try `drud legacy add`.")
+			Failed("App not running locally. Try `dev add`.")
 		}
 
 		if !platform.ComposeFileExists(app) {
-			Failed("No docker-compose yaml for this site. Try `drud legacy add`.")
+			Failed("No docker-compose yaml for this site. Try `dev add`.")
 		}
 
 		err := app.Down()
