@@ -16,7 +16,6 @@ import (
 	"github.com/drud/drud-go/utils/system"
 )
 
-
 // LocalApp implements the AppBase interface local development apps
 type LocalApp struct {
 	AppBase
