@@ -16,7 +16,8 @@ import (
 	"github.com/drud/drud-go/utils/system"
 )
 
-// LocalApp implements the AppBase interface for local Newmedia apps
+
+// LocalApp implements the AppBase interface local development apps
 type LocalApp struct {
 	AppBase
 	Options *AppOptions
@@ -79,8 +80,8 @@ func (l LocalApp) RelPath() string {
 
 // AbsPath return the full path from root to the app directory
 func (l LocalApp) AbsPath() string {
-	cfg, _ := GetConfig()
-	return path.Join(cfg.Workspace, l.RelPath())
+	workspace := GetWorkspace()
+	return path.Join(workspace, l.RelPath())
 }
 
 // GetName returns the  name for local app
@@ -96,10 +97,6 @@ func (l LocalApp) ContainerPrefix() string {
 // ContainerName returns the base name for local app containers
 func (l LocalApp) ContainerName() string {
 	return fmt.Sprintf("%s%s-%s", l.ContainerPrefix(), l.Name, l.Environment)
-}
-
-func (l LocalApp) GetRepoDetails() (RepoDetails, error) {
-	return RepoDetails{}, nil
 }
 
 // GetResources downloads external data for this app

@@ -7,7 +7,6 @@ type App interface {
 	GetOpts() AppOptions
 	GetType() string
 	RelPath() string                      // returns path from root dir ('$HOME/.drud') to app
-	GetRepoDetails() (RepoDetails, error) // returns struct with branch, org, host, etc...
 	GetResources() error
 	GetTemplate() string
 	UnpackResources() error
@@ -56,7 +55,5 @@ type AppOptions struct {
 }
 
 var PluginMap = map[string]App{
-	"drud":   &DrudApp{},
-	"legacy": &LegacyApp{},
 	"local":  &LocalApp{},
 }

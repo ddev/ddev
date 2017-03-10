@@ -18,6 +18,14 @@ import (
 	"github.com/gosuri/uitable"
 )
 
+// GetWorkspace() is a temporary hack caused by removal of config; currently wired to ~/.drud/local
+// This will be fixed with the move into a code repo-based workspace
+// TODO: Remove and replace (or implement differently)
+func GetWorkspace() string {
+	workspace := os.Getenv("HOME") + "/.drud"
+	return workspace
+}
+
 // PrepLocalSiteDirs creates a site's directories for local dev in ~/.drud/client/site
 func PrepLocalSiteDirs(base string) error {
 	err := os.MkdirAll(base, os.FileMode(int(0774)))
@@ -277,8 +285,8 @@ func FileExists(name string) bool {
 // EnsureDockerRouter ensures the router is running.
 func EnsureDockerRouter() {
 	var doc bytes.Buffer
-	cfg, _ := GetConfig()
-	dest := path.Join(cfg.Workspace, "router-compose.yaml")
+	workspace := GetWorkspace()
+	dest := path.Join(workspace, "router-compose.yaml")
 	f, ferr := os.Create(dest)
 	if ferr != nil {
 		log.Fatal(ferr)
@@ -320,10 +328,6 @@ func SubTag(image string, tag string) string {
 	return strings.Join(parts, ":")
 }
 
-// EveHost creates the eve host string from the config.
-func (cfg *Config) EveHost() string {
-	return fmt.Sprintf("%s://%s/%s/", cfg.Protocol, cfg.DrudHost, cfg.APIVersion)
-}
 
 func ComposeFileExists(app App) bool {
 	composeLOC := path.Join(app.AbsPath(), "docker-compose.yaml")

@@ -106,7 +106,6 @@ func init() {
 	DevAddCmd.Flags().StringVarP(&dbImage, "db-image", "", "", "Change the image used for the app's database server")
 	DevAddCmd.Flags().StringVarP(&webImageTag, "web-image-tag", "", "", "Override the default web image tag")
 	DevAddCmd.Flags().StringVarP(&dbImageTag, "db-image-tag", "", "", "Override the default web image tag")
-	DevAddCmd.Flags().StringVarP(&plugin, "plugin", "p", "legacy", "Choose which plugin to use")
 	DevAddCmd.Flags().BoolVarP(&skipYAML, "skip-yaml", "", false, "Skip creating the docker-compose.yaml.")
 	DevAddCmd.Flags().StringVarP(&appClient, "client", "c", "", "Client name")
 

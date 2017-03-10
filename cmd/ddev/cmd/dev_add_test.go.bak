@@ -82,7 +82,7 @@ func TestDevAddScaffoldWP(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
-	app := platform.NewLegacyApp(DevTestApp, DevTestEnv)
+	app := platform.NewLocalApp(DevTestApp, DevTestEnv)
 	assert.Equal(true, checkRequiredFolders(app))
 
 }
@@ -97,7 +97,7 @@ func TestDevAddScaffoldWPImageTag(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
-	app := platform.NewLegacyApp(DevTestApp, DevTestEnv)
+	app := platform.NewLocalApp(DevTestApp, DevTestEnv)
 	assert.Equal(true, checkRequiredFolders(app))
 
 	composeFile, err := ioutil.ReadFile(path.Join(app.AbsPath(), "docker-compose.yaml"))
@@ -119,7 +119,7 @@ func TestDevAddScaffoldWPImageChange(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(string(out), "Successfully added")
 
-	app := platform.NewLegacyApp(DevTestApp, DevTestEnv)
+	app := platform.NewLocalApp(DevTestApp, DevTestEnv)
 	assert.Equal(true, checkRequiredFolders(app))
 
 	composeFile, err := ioutil.ReadFile(path.Join(app.AbsPath(), "docker-compose.yaml"))
@@ -148,7 +148,7 @@ func TestDevAddSites(t *testing.T) {
 		assert.Contains(string(out), "Successfully added")
 		assert.Contains(string(out), "Your application can be reached at")
 
-		app := platform.NewLegacyApp(site[0], site[1])
+		app := platform.NewLocalApp(site[0], site[1])
 
 		assert.Equal(true, checkRequiredFolders(app))
 		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-web"))
