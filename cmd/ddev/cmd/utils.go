@@ -3,12 +3,10 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/drud/drud-go/utils/system"
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 )
@@ -62,81 +60,6 @@ func containsString(slice []string, element string) bool {
 	return !(posString(slice, element) == -1)
 }
 
-// SetHomedir gets homedir and sets it to global homedir
-func SetHomedir() {
-	var err error
-	homedir, err = system.GetHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-// PrepConf sets global cfgFile with abs path to conf file
-// and then creates a default config file if one does not exist
-func PrepConf() {
-	if strings.HasPrefix(cfgFile, "$HOME") || strings.HasPrefix(cfgFile, "~") {
-		cfgFile = strings.Replace(cfgFile, "$HOME", homedir, 1)
-		cfgFile = strings.Replace(cfgFile, "~", homedir, 1)
-	}
-
-	if !strings.HasPrefix(cfgFile, "/") {
-		absPath, absErr := filepath.Abs(cfgFile)
-		if absErr != nil {
-			log.Fatal(absErr)
-		}
-		cfgFile = absPath
-	}
-
-	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
-		var cFile, err = os.Create(cfgFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		cFile.Close()
-	}
-}
-
-// getMAC returns the mac address for interface en0 or the first in the list otherwise
-func getMAC() (string, error) {
-	var macADDR string
-	ifs, _ := net.Interfaces()
-	for _, v := range ifs {
-		h := v.HardwareAddr.String()
-		if len(h) == 0 {
-			continue
-		}
-		if v.Name == "en0" {
-			macADDR = h
-		}
-	}
-	if macADDR == "" {
-		macADDR = ifs[0].HardwareAddr.String()
-	}
-	if macADDR == "" {
-		return macADDR, fmt.Errorf("no MAC Address found")
-	}
-	return macADDR, nil
-}
-
-// ParseConfigFlag is needed in order to get the value of the flag before cobra can
-func ParseConfigFlag() string {
-	value := cfgFile
-	args := os.Args
-
-	for i, arg := range args {
-		if strings.HasPrefix(arg, "--config=") {
-			value = strings.TrimPrefix(arg, "--config=")
-		} else if arg == "--config" {
-			if len(args) > i+1 {
-				value = args[i+1]
-			} else {
-				log.Fatalln("--config requires a configuration file to be specified.")
-			}
-		}
-	}
-
-	return value
-}
 
 // Failed will print an red error message and exit with failure.
 func Failed(format string, a ...interface{}) {

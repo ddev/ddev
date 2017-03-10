@@ -1,7 +1,7 @@
 package platform
 
 // LegacyComposeTemplate is used to create the docker-compose.yaml for
-// legacy sites in the local DRUD env
+// legacy sites in the ddev env
 
 const LegacyComposeTemplate = `version: '2'
 services:
