@@ -109,7 +109,7 @@ func (l *LocalApp) GetResources() error {
 	err := l.GetArchive()
 	if err != nil {
 		log.Println(err)
-		fmt.Errorf("Error retrieving site resources: %s", err)
+		fmt.Println(fmt.Errorf("Error retrieving site resources: %s", err))
 	}
 
 	err = l.SetType()
