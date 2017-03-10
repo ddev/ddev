@@ -22,7 +22,7 @@ DdevVersion ?= $(VERSION)
 WebImg ?= drud/nginx-php-fpm7-local
 WebTag ?= 0.2.0
 DBImg ?= drud/mysql-docker-local-57
-DBTag ?= 0.1.0
+DBTag ?= 0.2.0
 RouterImage ?= drud/nginx-proxy
 RouterTag ?= 0.1.0
 
