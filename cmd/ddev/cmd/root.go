@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"path"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -85,24 +86,11 @@ func init() {
 func initConfig() {}
 
 func parseAppDeployArgs(args []string) {
-	plaformConfig, _ := platform.GetConfig()
-
-	activeApp = plaformConfig.ActiveApp
-	activeDeploy = plaformConfig.ActiveDeploy
-
-	if len(args) > 1 {
-		if args[0] != "" {
-			activeApp = args[0]
-		}
-
-		if args[1] != "" {
-			activeDeploy = args[1]
-		}
+	workdir, err := os.Getwd()
+	if err != nil {
+		log.Printf("Error determining the current directory: %s", err)
 	}
-	if activeApp == "" {
-		log.Fatalln("No app name found. app_name and deploy_name are expected as arguments.")
-	}
-	if activeDeploy == "" {
-		log.Fatalln("No deploy name found. app_name and deploy_name are expected as arguments.")
-	}
+	activeApp = path.Base(workdir)
+
+	activeDeploy = "production"
 }

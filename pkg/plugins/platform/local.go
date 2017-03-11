@@ -72,15 +72,14 @@ func (l *LocalApp) Init(opts AppOptions) {
 
 }
 
-// RelPath returns the path from the '.drud' directory to this apps directory
-func (l LocalApp) RelPath() string {
-	return path.Join("local", fmt.Sprintf("%s-%s", l.Name, l.Environment))
-}
-
 // AbsPath return the full path from root to the app directory
 func (l LocalApp) AbsPath() string {
-	workspace := GetWorkspace()
-	return path.Join(workspace, l.RelPath())
+	workspace, err := os.Getwd()
+	if err != nil {
+		log.Printf("Error determining the current directory: %s", err)
+	}
+
+	return workspace
 }
 
 // GetName returns the  name for local app
@@ -90,12 +89,12 @@ func (l LocalApp) GetName() string {
 
 // ContainerPrefix returns the base name for local app containers
 func (l LocalApp) ContainerPrefix() string {
-	return "local-"
+	return "local"
 }
 
 // ContainerName returns the base name for local app containers
 func (l LocalApp) ContainerName() string {
-	return fmt.Sprintf("%s%s-%s", l.ContainerPrefix(), l.Name, l.Environment)
+	return fmt.Sprintf("%s-%s", l.ContainerPrefix(), l.Name)
 }
 
 // GetResources downloads external data for this app
@@ -127,8 +126,8 @@ func (l *LocalApp) GetResources() error {
 // GetArchive downloads external data
 func (l *LocalApp) GetArchive() error {
 	name := fmt.Sprintf("%[2]s-%[1]s.tar.gz", l.Name, l.Environment)
-	basePath := path.Dir(l.AbsPath())
-	archive := path.Join(basePath, name)
+	basePath := l.AbsPath()
+	archive := path.Join(basePath, ".ddev", name)
 
 	if system.FileExists(archive) {
 		l.Archive = archive
@@ -177,7 +176,7 @@ func (l LocalApp) UnpackResources() error {
 	}
 
 	rsyncFrom := path.Join(basePath, "files", "docroot", fileDir)
-	rsyncTo := path.Join(basePath, "src", "docroot", fileDir)
+	rsyncTo := path.Join(basePath, "docroot", fileDir)
 	out, err = system.RunCommand(
 		"rsync",
 		[]string{"-avz", "--recursive", rsyncFrom + "/", rsyncTo},
@@ -196,26 +195,13 @@ func (l LocalApp) UnpackResources() error {
 	}
 	defer os.RemoveAll(path.Join(basePath, "files"))
 
-	dcfgFile := path.Join(basePath, "src", "drud.yaml")
-	if system.FileExists(dcfgFile) {
-		log.Println("copying drud.yaml to data container")
-		out, err := system.RunCommand("cp", []string{
-			dcfgFile,
-			path.Join(basePath, "data/drud.yaml"),
-		})
-		if err != nil {
-			fmt.Println(out)
-			return err
-		}
-	}
-
 	return nil
 }
 
 // Start initiates docker-compose up
 func (l LocalApp) Start() error {
 
-	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
+	composePath := path.Join(l.AbsPath(), ".ddev", "docker-compose.yaml")
 
 	err := l.SetType()
 	if err != nil {
@@ -252,7 +238,7 @@ func (l LocalApp) Start() error {
 
 // Stop initiates docker-compose stop
 func (l LocalApp) Stop() error {
-	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
+	composePath := path.Join(l.AbsPath(), ".ddev", "docker-compose.yaml")
 
 	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
 		return fmt.Errorf("site does not exist or is malformed")
@@ -287,6 +273,7 @@ func (l *LocalApp) Wait() (string, error) {
 	return l.URL(), nil
 }
 
+// FindPorts retrieves the public ports for db and web containers
 func (l *LocalApp) FindPorts() error {
 	var err error
 	l.WebPublicPort, err = GetPodPort(l.ContainerName() + "-web")
@@ -318,7 +305,7 @@ func (l *LocalApp) Config() error {
 	settingsFilePath := ""
 	if l.AppType == "drupal" || l.AppType == "drupal8" {
 		log.Printf("Drupal site. Creating settings.php file.")
-		settingsFilePath = path.Join(basePath, "src", "docroot/sites/default/settings.php")
+		settingsFilePath = path.Join(basePath, "docroot/sites/default/settings.php")
 		drupalConfig := model.NewDrupalConfig()
 		drupalConfig.DatabaseHost = "db"
 		if drupalConfig.HashSalt == "" {
@@ -340,7 +327,7 @@ func (l *LocalApp) Config() error {
 			return err
 		}
 
-		drushSettingsPath := path.Join(basePath, "src", "drush.settings.php")
+		drushSettingsPath := path.Join(basePath, "drush.settings.php")
 		drushConfig := model.NewDrushConfig()
 		drushConfig.DatabasePort = dbPort
 		if l.AppType == "drupal8" {
@@ -353,7 +340,7 @@ func (l *LocalApp) Config() error {
 		}
 	} else if l.AppType == "wp" {
 		log.Printf("WordPress site. Creating wp-config.php file.")
-		settingsFilePath = path.Join(basePath, "src", "docroot/wp-config.php")
+		settingsFilePath = path.Join(basePath, "docroot/wp-config.php")
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DatabaseHost = "db"
 		wpConfig.DeployURL = l.URL()
@@ -375,7 +362,7 @@ func (l *LocalApp) Config() error {
 
 // Down stops the docker containers for the local project.
 func (l *LocalApp) Down() error {
-	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
+	composePath := path.Join(l.AbsPath(), ".ddev", "docker-compose.yaml")
 
 	err := dockerutil.DockerCompose(
 		"-f", composePath,

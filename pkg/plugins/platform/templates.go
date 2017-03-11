@@ -2,14 +2,13 @@ package platform
 
 // LegacyComposeTemplate is used to create the docker-compose.yaml for
 // legacy sites in the ddev env
-
 const LegacyComposeTemplate = `version: '2'
 services:
   {{.name}}-db:
     container_name: {{.name}}-db
     image: {{.db_image}}
     volumes:
-      - "./data:/db"
+      - "../data:/db"
     restart: always
     environment:
       MYSQL_DATABASE: data
@@ -24,7 +23,7 @@ services:
     container_name: {{.name}}-web
     image: {{.web_image}}
     volumes:
-      - "./src:{{ .srctarget }}"
+      - "../:{{ .srctarget }}"
     restart: always
     depends_on:
       - {{.name}}-db
