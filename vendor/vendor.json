@@ -460,6 +460,12 @@
 			"revisionTime": "2016-09-23T08:39:13Z"
 		},
 		{
+			"checksumSHA1": "Y+HGqEkYM15ir+J93MEaHdyFy0c=",
+			"path": "golang.org/x/net/context",
+			"revision": "a6577fac2d73be281a500b310739095313165611",
+			"revisionTime": "2017-03-08T20:54:49Z"
+		},
+		{
 			"checksumSHA1": "vu7njn8O4vhFtmgGWntwjA2NAbk=",
 			"path": "golang.org/x/sys/unix",
 			"revision": "8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9",
@@ -476,6 +482,12 @@
 			"path": "golang.org/x/text/unicode/norm",
 			"revision": "a7c023693a94aedd6b6df43ae7526bfe9d2b7d22",
 			"revisionTime": "2016-09-22T05:42:04Z"
+		},
+		{
+			"checksumSHA1": "0KwOlQV1dNUh9X8t+5s7nX5bqfk=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "a3f3340b5840cee44f372bddb5880fcbc419b46a",
+			"revisionTime": "2017-02-08T14:18:51Z"
 		}
 	],
 	"rootPath": "github.com/drud/ddev"
