@@ -131,7 +131,7 @@ func (c *AppConfig) Config() error {
 
 	err := c.appTypePrompt()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// Log the resulting config, for debugging purposes.
