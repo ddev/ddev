@@ -7,7 +7,6 @@ type App interface {
 	GetOpts() AppOptions
 	GetType() string
 	GetResources() error
-	GetTemplate() string
 	UnpackResources() error
 	ContainerPrefix() string
 	ContainerName() string
@@ -26,7 +25,6 @@ type AppBase struct {
 	Name          string
 	Plugin        string
 	AppType       string
-	Template      string
 	Branch        string
 	Repo          string
 	Archive       string //absolute path to the downloaded archive

@@ -6,20 +6,21 @@ import (
 	"path"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/lextoumbourou/goodhosts"
-
+	"github.com/drud/ddev/pkg/appconfig"
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/drud/drud-go/utils/system"
+	"github.com/lextoumbourou/goodhosts"
 )
 
 // LocalApp implements the AppBase interface local development apps
 type LocalApp struct {
 	AppBase
-	Options *AppOptions
+	AppConfig *appconfig.AppConfig
+	Options   *AppOptions
 }
 
 // NewLocalApp returns an empty local app with options struct pre inserted
@@ -27,6 +28,7 @@ func NewLocalApp(name string, environment string) *LocalApp {
 	app := &LocalApp{
 		Options: &AppOptions{},
 	}
+
 	app.AppBase.Name = name
 
 	return app
@@ -39,14 +41,12 @@ func (l *LocalApp) SetOpts(opts AppOptions) {
 	if opts.Template != "" {
 		l.Template = opts.Template
 	}
+	l.Environment = opts.Environment
+	//l.AppType = opts.AppType
 }
 
 func (l *LocalApp) GetOpts() AppOptions {
 	return *l.Options
-}
-
-func (l *LocalApp) GetTemplate() string {
-	return l.Template
 }
 
 func (l *LocalApp) GetType() string {

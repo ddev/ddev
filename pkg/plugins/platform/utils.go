@@ -338,7 +338,6 @@ func Cleanup(app App) error {
 
 	return nil
 }
-
 func RenderComposeYAML(app App) (string, error) {
 	var doc bytes.Buffer
 	var err error
