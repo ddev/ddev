@@ -44,7 +44,6 @@ type AppOptions struct {
 	Environment string
 	Plugin      string
 	AppType     string
-	Client      string
 	WebImage    string
 	DbImage     string
 	WebImageTag string
