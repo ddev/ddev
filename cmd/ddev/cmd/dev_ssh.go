@@ -34,7 +34,7 @@ var LocalDevSSHCmd = &cobra.Command{
 		}
 
 		err := dockerutil.DockerCompose(
-			"-f", path.Join(app.AbsPath(), "docker-compose.yaml"),
+			"-f", path.Join(app.AbsPath(), ".ddev", "docker-compose.yaml"),
 			"exec",
 			nameContainer,
 			"bash",

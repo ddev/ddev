@@ -53,7 +53,6 @@ var DevAddCmd = &cobra.Command{
 			DbImage:     dbImage,
 			DbImageTag:  dbImageTag,
 			SkipYAML:    skipYAML,
-			CFG:         cfg,
 		}
 
 		app.Init(opts)

@@ -48,7 +48,6 @@ type AppOptions struct {
 	DbImageTag  string
 	SkipYAML    bool
 	Template    string
-	CFG         *Config
 }
 
 var PluginMap = map[string]App{

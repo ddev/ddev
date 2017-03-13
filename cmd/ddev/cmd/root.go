@@ -17,9 +17,9 @@ const (
 )
 
 var (
-	cfg      *platform.Config
-	logLevel = log.WarnLevel
-	plugin   = "local"
+	logLevel  = log.WarnLevel
+	plugin    = "local"
+	activeApp string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -40,7 +40,7 @@ var RootCmd = &cobra.Command{
 		}
 
 		if !skip {
-			parseAppDeployArgs(args)
+			setActiveApp()
 			plugin = strings.ToLower(plugin)
 			if _, ok := platform.PluginMap[plugin]; !ok {
 				Failed("Plugin %s is not registered", plugin)
@@ -56,11 +56,6 @@ func Execute() {
 	//viper.BindPFlag("vault_host", RootCmd.PersistentFlags().Lookup("vault_host"))
 	viper.AutomaticEnv() // read in environment variables that match
 
-	_, err := platform.GetConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
 	}
@@ -68,12 +63,6 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-	_, err := platform.GetConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	drudDebug := os.Getenv("DRUD_DEBUG")
 	if drudDebug != "" {
 		logLevel = log.InfoLevel
@@ -82,10 +71,7 @@ func init() {
 	log.SetLevel(logLevel)
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {}
-
-func parseAppDeployArgs(args []string) {
+func setActiveApp() {
 	workdir, err := os.Getwd()
 	if err != nil {
 		log.Printf("Error determining the current directory: %s", err)
