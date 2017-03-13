@@ -36,7 +36,6 @@ var ImportCmd = &cobra.Command{
 		opts := platform.AppOptions{
 			Name:        activeApp,
 			Environment: activeDeploy,
-			Client:      appClient,
 			WebImage:    webImage,
 			WebImageTag: webImageTag,
 			DbImage:     dbImage,
