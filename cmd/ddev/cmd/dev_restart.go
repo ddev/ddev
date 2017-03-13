@@ -32,7 +32,6 @@ var LocalDevReconfigCmd = &cobra.Command{
 
 		opts := platform.AppOptions{
 			Name:     activeApp,
-			Client:   appClient,
 			SkipYAML: skipYAML,
 		}
 		app.Init(opts)

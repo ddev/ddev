@@ -41,7 +41,6 @@ type AppOptions struct {
 	Name        string
 	Plugin      string
 	AppType     string
-	Client      string
 	WebImage    string
 	DbImage     string
 	WebImageTag string
