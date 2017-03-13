@@ -2,6 +2,7 @@ package platform
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"os"
@@ -398,4 +399,21 @@ func RenderComposeYAML(app App) (string, error) {
 
 	templ.Execute(&doc, templateVars)
 	return doc.String(), nil
+}
+
+// CheckForConf checks for a ddev.yaml at the cwd or parent dirs.
+func CheckForConf(confPath string) (string, error) {
+	if system.FileExists(confPath + "/ddev.yaml") {
+		return confPath, nil
+	}
+	pathList := strings.Split(confPath, "/")
+
+	for _ = range pathList {
+		confPath = path.Dir(confPath)
+		if system.FileExists(confPath + "/ddev.yaml") {
+			return confPath, nil
+		}
+	}
+
+	return "", errors.New("no ddev.yaml file in this directory or any parent")
 }

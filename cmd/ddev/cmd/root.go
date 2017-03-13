@@ -53,7 +53,6 @@ var RootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	// bind flags to viper config values...allows override by flag
-	//viper.BindPFlag("vault_host", RootCmd.PersistentFlags().Lookup("vault_host"))
 	viper.AutomaticEnv() // read in environment variables that match
 
 	if err := RootCmd.Execute(); err != nil {
@@ -72,10 +71,15 @@ func init() {
 }
 
 func setActiveApp() {
-	workdir, err := os.Getwd()
+	cwd, err := os.Getwd()
 	if err != nil {
 		log.Printf("Error determining the current directory: %s", err)
 	}
-	activeApp = path.Base(workdir)
 
+	app, err := platform.CheckForConf(cwd)
+	if err != nil {
+		log.Fatalf("Unable to determine the application for this command: %s", err)
+	}
+
+	activeApp = path.Base(app)
 }

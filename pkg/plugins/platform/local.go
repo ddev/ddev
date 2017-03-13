@@ -71,12 +71,17 @@ func (l *LocalApp) Init(opts AppOptions) {
 
 // AbsPath return the full path from root to the app directory
 func (l LocalApp) AbsPath() string {
-	workspace, err := os.Getwd()
+	cwd, err := os.Getwd()
 	if err != nil {
 		log.Printf("Error determining the current directory: %s", err)
 	}
 
-	return workspace
+	appPath, err := CheckForConf(cwd)
+	if err != nil {
+		log.Fatalf("Unable to determine the application for this command: %s", err)
+	}
+
+	return appPath
 }
 
 // GetName returns the  name for local app
