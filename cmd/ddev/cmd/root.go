@@ -92,5 +92,4 @@ func parseAppDeployArgs(args []string) {
 	}
 	activeApp = path.Base(workdir)
 
-	activeDeploy = "production"
 }

@@ -47,7 +47,6 @@ var DevAddCmd = &cobra.Command{
 
 		opts := platform.AppOptions{
 			Name:        activeApp,
-			Environment: activeDeploy,
 			Client:      appClient,
 			WebImage:    webImage,
 			WebImageTag: webImageTag,
@@ -92,7 +91,7 @@ var DevAddCmd = &cobra.Command{
 			}
 		}
 
-		color.Cyan("Successfully added %s-%s", activeApp, activeDeploy)
+		color.Cyan("Successfully added %s", activeApp)
 		if siteURL != "" {
 			color.Cyan("Your application can be reached at: %s", siteURL)
 		}

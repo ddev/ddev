@@ -17,7 +17,6 @@ services:
       - "3306"
     labels:
       com.drud.site-name: {{ .site_name }}
-      com.drud.site-env: {{ .site_env }}
       com.drud.container-type: web
   {{.name}}-web:
     container_name: {{.name}}-web
@@ -38,7 +37,6 @@ services:
       - VIRTUAL_HOST={{ .name }}
     labels:
       com.drud.site-name: {{ .site_name }}
-      com.drud.site-env: {{ .site_env }}
       com.drud.container-type: db
 
 networks:

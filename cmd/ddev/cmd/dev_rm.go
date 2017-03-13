@@ -20,8 +20,7 @@ var LocalDevRMCmd = &cobra.Command{
 		app := platform.PluginMap[strings.ToLower(plugin)]
 
 		opts := platform.AppOptions{
-			Name:        activeApp,
-			Environment: activeDeploy,
+			Name: activeApp,
 		}
 		app.SetOpts(opts)
 
@@ -40,7 +39,7 @@ var LocalDevRMCmd = &cobra.Command{
 			Failed("Could not remove site: %s", app.ContainerName())
 		}
 
-		color.Cyan("Successfully removed the %s deploy for the %s application.\n", activeDeploy, activeApp)
+		color.Cyan("Successfully removed the %s application.\n", activeApp)
 	},
 }
 

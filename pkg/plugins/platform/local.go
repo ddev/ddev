@@ -28,7 +28,6 @@ func NewLocalApp(name string, environment string) *LocalApp {
 		Options: &AppOptions{},
 	}
 	app.AppBase.Name = name
-	app.AppBase.Environment = environment
 
 	return app
 }
@@ -36,8 +35,6 @@ func NewLocalApp(name string, environment string) *LocalApp {
 func (l *LocalApp) SetOpts(opts AppOptions) {
 	l.Options = &opts
 	l.Name = opts.Name
-	l.Environment = opts.Environment
-	//l.AppType = opts.AppType
 	l.Template = LegacyComposeTemplate
 	if opts.Template != "" {
 		l.Template = opts.Template
@@ -125,7 +122,7 @@ func (l *LocalApp) GetResources() error {
 
 // GetArchive downloads external data
 func (l *LocalApp) GetArchive() error {
-	name := fmt.Sprintf("%[2]s-%[1]s.tar.gz", l.Name, l.Environment)
+	name := fmt.Sprintf("production-%s.tar.gz", l.Name)
 	basePath := l.AbsPath()
 	archive := path.Join(basePath, ".ddev", name)
 

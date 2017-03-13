@@ -26,8 +26,7 @@ var LocalDevExecCmd = &cobra.Command{
 
 		app := platform.PluginMap[strings.ToLower(plugin)]
 		opts := platform.AppOptions{
-			Name:        activeApp,
-			Environment: activeDeploy,
+			Name: activeApp,
 		}
 		app.SetOpts(opts)
 

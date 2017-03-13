@@ -24,7 +24,6 @@ type App interface {
 // AppBase is the parent type for all local app implementations
 type AppBase struct {
 	Name          string
-	Environment   string
 	Plugin        string
 	AppType       string
 	Template      string
@@ -40,7 +39,6 @@ type AppBase struct {
 // AppOptions ..
 type AppOptions struct {
 	Name        string
-	Environment string
 	Plugin      string
 	AppType     string
 	Client      string

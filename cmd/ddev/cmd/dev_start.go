@@ -32,8 +32,7 @@ var LocalDevStartCmd = &cobra.Command{
 		app := platform.PluginMap[strings.ToLower(plugin)]
 
 		opts := platform.AppOptions{
-			Name:        activeApp,
-			Environment: activeDeploy,
+			Name: activeApp,
 		}
 		app.SetOpts(opts)
 
@@ -51,7 +50,7 @@ var LocalDevStartCmd = &cobra.Command{
 			Failed("Site failed to achieve readiness.")
 		}
 
-		color.Cyan("Successfully started %s %s", activeApp, activeDeploy)
+		color.Cyan("Successfully started %s", activeApp)
 		if siteURL != "" {
 			color.Cyan("Your application can be reached at: %s", siteURL)
 		}

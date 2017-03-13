@@ -208,25 +208,22 @@ func ProcessContainer(l map[string]map[string]string, plugin string, containerNa
 	label := container.Labels
 
 	appName := label["com.drud.site-name"]
-	appEnv := label["com.drud.site-env"]
 	containerType := label["com.drud.container-type"]
-	appID := appName + "-" + appEnv
+	appID := appName
 
 	_, exists := l[appID]
 	if exists == false {
 		app := PluginMap[strings.ToLower(plugin)]
 		opts := AppOptions{
-			Name:        appName,
-			Environment: appEnv,
+			Name: appName,
 		}
 		app.SetOpts(opts)
 
 		l[appID] = map[string]string{
-			"name":        appName,
-			"environment": appEnv,
-			"status":      container.State,
-			"url":         app.URL(),
-			"type":        app.GetType(),
+			"name":   appName,
+			"status": container.State,
+			"url":    app.URL(),
+			"type":   app.GetType(),
 		}
 	}
 
@@ -393,7 +390,6 @@ func RenderComposeYAML(app App) (string, error) {
 		"name":      app.ContainerName(),
 		"srctarget": "/var/www/html",
 		"site_name": opts.Name,
-		"site_env":  opts.Environment,
 	}
 
 	if opts.WebImageTag == "unison" || strings.HasSuffix(opts.WebImage, ":unison") {

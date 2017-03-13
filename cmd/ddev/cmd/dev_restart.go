@@ -31,11 +31,10 @@ var LocalDevReconfigCmd = &cobra.Command{
 		app := platform.PluginMap[strings.ToLower(plugin)]
 
 		opts := platform.AppOptions{
-			Name:        activeApp,
-			Environment: activeDeploy,
-			Client:      appClient,
-			SkipYAML:    skipYAML,
-			CFG:         cfg,
+			Name:     activeApp,
+			Client:   appClient,
+			SkipYAML: skipYAML,
+			CFG:      cfg,
 		}
 		app.Init(opts)
 
@@ -64,7 +63,7 @@ var LocalDevReconfigCmd = &cobra.Command{
 			Failed("Site never became ready")
 		}
 
-		color.Cyan("Successfully restarted %s %s", activeApp, activeDeploy)
+		color.Cyan("Successfully restarted %s", activeApp)
 		if siteURL != "" {
 			color.Cyan("Your application can be reached at: %s", siteURL)
 		}
