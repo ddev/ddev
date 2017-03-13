@@ -6,7 +6,7 @@ type App interface {
 	Init(AppOptions)
 	GetOpts() AppOptions
 	GetType() string
-	RelPath() string                      // returns path from root dir ('$HOME/.drud') to app
+	RelPath() string // returns path from root dir ('$HOME/.drud') to app
 	GetResources() error
 	GetTemplate() string
 	UnpackResources() error
@@ -55,5 +55,5 @@ type AppOptions struct {
 }
 
 var PluginMap = map[string]App{
-	"local":  &LocalApp{},
+	"local": &LocalApp{},
 }
