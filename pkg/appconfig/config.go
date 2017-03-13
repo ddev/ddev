@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
-
+	"path"
 	"path/filepath"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/pretty"
+	"github.com/drud/drud-go/utils/system"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -29,15 +30,16 @@ type AppConfig struct {
 	Docroot    string `yaml:"docroot"`
 	WebImage   string `yaml:"webimage"`
 	DBImage    string `yaml:"dbimage"`
-	FilePath   string
+	ConfigPath string
+	AppRoot    string
 }
 
 // NewAppConfig creates a new AppConfig struct with defaults set. It is preferred to using new() directly.
-func NewAppConfig(FilePath string) (*AppConfig, error) {
+func NewAppConfig(AppRoot string, ConfigPath string) (*AppConfig, error) {
 	// Set defaults.
 	c := &AppConfig{}
-	c.FilePath = FilePath
-
+	c.ConfigPath = ConfigPath
+	c.AppRoot = AppRoot
 	c.AppVersion = CurrentAppVersion
 
 	// These should always default to the latest image/tag names from the Version package.
@@ -56,7 +58,7 @@ func NewAppConfig(FilePath string) (*AppConfig, error) {
 
 // Write the app configuration to a specific location on disk
 func (c *AppConfig) Write() error {
-	err := prepDirectory(filepath.Dir(c.FilePath))
+	err := prepDirectory(filepath.Dir(c.ConfigPath))
 	if err != nil {
 		return err
 	}
@@ -67,13 +69,14 @@ func (c *AppConfig) Write() error {
 	}
 
 	log.WithFields(log.Fields{
-		"location": c.FilePath,
+		"location": c.ConfigPath,
 	}).Debug("Writing Appconfig")
-	err = ioutil.WriteFile(c.FilePath, cfgbytes, 0644)
+	err = ioutil.WriteFile(c.ConfigPath, cfgbytes, 0644)
 	if err != nil {
 		return err
 	}
 
+	log.Debug("Write successful")
 	return nil
 }
 
@@ -83,7 +86,7 @@ func (c *AppConfig) Read() error {
 		"Existing config": pretty.Prettify(c),
 	}).Debug("Starting Config Read")
 
-	source, err := ioutil.ReadFile(c.FilePath)
+	source, err := ioutil.ReadFile(c.ConfigPath)
 	if err != nil {
 		return err
 	}
@@ -111,27 +114,22 @@ func (c *AppConfig) Config() error {
 		c.AppVersion = "1"
 	}
 
-	// Define an application name.
-	fmt.Print("Name: ")
-	c.Name = getInput()
-
-	// Determine the application type.
-	var appType string
-	for isAllowedAppType(appType) != true {
-		fmt.Printf("Application Type [%s]: ", strings.Join(allowedAppTypes, ", "))
-		appType = strings.ToLower(getInput())
-
-		if isAllowedAppType(appType) != true {
-			fmt.Printf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(allowedAppTypes, ", "))
-		} else {
-			c.AppType = appType
-		}
+	var namePrompt string
+	if c.Name == "" {
+		namePrompt = "Name: "
+	} else {
+		namePrompt = fmt.Sprintf("Name (%s): ", c.Name)
 	}
+	// Define an application name.
+	fmt.Print(namePrompt)
+	c.Name = getInput(c.Name)
 
-	// Determine the document root.
-	// @TODO: Should check to ensure the docroot exists here.
-	fmt.Print("Docroot Location: ")
-	c.Docroot = getInput()
+	c.docrootPrompt()
+
+	err := c.appTypePrompt()
+	if err != nil {
+		return nil
+	}
 
 	// Log the resulting config, for debugging purposes.
 	log.WithFields(log.Fields{
@@ -141,15 +139,85 @@ func (c *AppConfig) Config() error {
 	return nil
 }
 
+func (c *AppConfig) docrootPrompt() error {
+	// Determine the document root.
+	var basePrompt = "Docroot Location"
+	var docrootPrompt string
+	if c.Docroot == "" {
+		docrootPrompt = fmt.Sprintf("%s: ", basePrompt)
+	} else {
+		docrootPrompt = fmt.Sprintf("%s (%s): ", basePrompt, c.Docroot)
+	}
+	fmt.Print(docrootPrompt)
+	c.Docroot = getInput(c.Docroot)
+
+	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
+	fullPath := filepath.Join(c.AppRoot, c.Docroot)
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		fmt.Printf("No directory could be found at %s. Are you sure this is where your docroot is location? (y/N): ", fullPath)
+		answer := strings.ToLower(getInput("y"))
+		if answer != "y" && answer != "yes" {
+			return c.docrootPrompt()
+		}
+	}
+	return nil
+}
+
+// appTypePrompt handles the AppType workflow.
+func (c *AppConfig) appTypePrompt() error {
+	var appType string
+	basePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(allowedAppTypes, ", "))
+
+	// First, see if we can auto detect what kind of site it is so we can set a sane default.
+	absDocroot := filepath.Join(c.AppRoot, c.Docroot)
+	log.WithFields(log.Fields{
+		"Location": absDocroot,
+	}).Debug("Attempting to auto-determine application type")
+
+	appType, err := determineAppType(absDocroot)
+	if err == nil {
+		// If we found an application type just set it and inform the user.
+		fmt.Printf("Found a %s codebase at %s\n", appType, c.Docroot)
+		c.AppType = appType
+		return nil
+	}
+
+	// If we weren't able to auto-detect the app type, then prompt the user.
+	var typePrompt string
+	if c.AppType == "" {
+		typePrompt = fmt.Sprintf("%s: ", basePrompt)
+	} else {
+		typePrompt = fmt.Sprintf("%s (%s): ", basePrompt, c.AppType)
+	}
+
+	for isAllowedAppType(appType) != true {
+		fmt.Printf(typePrompt)
+		appType = strings.ToLower(getInput(c.AppType))
+
+		if isAllowedAppType(appType) != true {
+			fmt.Printf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(allowedAppTypes, ", "))
+		} else {
+			c.AppType = appType
+		}
+	}
+	return nil
+}
+
 // getInput reads input from an input buffer and returns the result as a string.
-func getInput() string {
+func getInput(defaultValue string) string {
 	reader := bufio.NewReader(os.Stdin)
 	input, err := reader.ReadString('\n')
 	if err != nil {
 		log.Fatalf("Could not read input: %s\n", err)
 	}
 
-	return strings.TrimSpace(input)
+	// If the value from the input buffer is blank, then use the default instead.
+	value := strings.TrimSpace(input)
+	if value == "" {
+		value = defaultValue
+	}
+
+	return value
 }
 
 // isAllowedAppType determines if a given string exists in the allowedAppTypes slice.
@@ -162,6 +230,7 @@ func isAllowedAppType(appType string) bool {
 	return false
 }
 
+// prepDirectory creates a .ddev directory in the current working
 func prepDirectory(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 
@@ -169,7 +238,7 @@ func prepDirectory(dir string) error {
 			"directory": dir,
 		}).Debug("Config Directory does not exist, attempting to create.")
 
-		os.MkdirAll(dir, os.FileMode(int(0774)))
+		err := os.MkdirAll(dir, 0755)
 		if err != nil {
 			return err
 		}
@@ -180,4 +249,32 @@ func prepDirectory(dir string) error {
 	}
 
 	return nil
+}
+
+// DetermineAppType uses some predetermined file checks to determine if a local app
+// is of any of the known types
+func determineAppType(basePath string) (string, error) {
+	defaultLocations := map[string]string{
+		"scripts/drupal.sh":      "drupal7",
+		"core/scripts/drupal.sh": "drupal8",
+		"wp": "wordpress",
+	}
+
+	for k, v := range defaultLocations {
+		fp := path.Join(basePath, k)
+
+		log.WithFields(log.Fields{
+			"file": fp,
+		}).Debug("Looking for app fingerprint.")
+		if system.FileExists(fp) {
+			log.WithFields(log.Fields{
+				"file": fp,
+				"app":  v,
+			}).Debug("Found app fingerprint.")
+
+			return v, nil
+		}
+	}
+
+	return "", fmt.Errorf("Couldn't determine app's type!")
 }
