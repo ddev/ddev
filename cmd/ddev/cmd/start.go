@@ -44,13 +44,11 @@ var StartCmd = &cobra.Command{
 
 		opts := platform.AppOptions{
 			Name:        activeApp,
-			Environment: activeDeploy,
 			WebImage:    webImage,
 			WebImageTag: webImageTag,
 			DbImage:     dbImage,
 			DbImageTag:  dbImageTag,
 			SkipYAML:    skipYAML,
-			CFG:         cfg,
 		}
 
 		app.Init(opts)
@@ -60,7 +58,7 @@ var StartCmd = &cobra.Command{
 			Failed("Failed to start %s: %s", app.GetName(), err)
 		}
 
-		Success("Successfully added %s-%s", activeApp, activeDeploy)
+		Success("Successfully added %s", activeApp)
 		Success("Your application can be reached at: %s", app.URL())
 
 	},

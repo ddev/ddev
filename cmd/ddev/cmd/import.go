@@ -35,13 +35,11 @@ var ImportCmd = &cobra.Command{
 
 		opts := platform.AppOptions{
 			Name:        activeApp,
-			Environment: activeDeploy,
 			WebImage:    webImage,
 			WebImageTag: webImageTag,
 			DbImage:     dbImage,
 			DbImageTag:  dbImageTag,
 			SkipYAML:    skipYAML,
-			CFG:         cfg,
 		}
 
 		app.Init(opts)
@@ -83,7 +81,7 @@ var ImportCmd = &cobra.Command{
 			Failed("%s did not return a 200 status before timeout. %s", app.GetName(), err)
 		}
 
-		Success("Successfully imported %s-%s", activeApp, activeDeploy)
+		Success("Successfully imported %s", activeApp)
 		if siteURL != "" {
 			Success("Your application can be reached at: %s", siteURL)
 		}
