@@ -2,7 +2,9 @@ package appconfig
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"os"
 	"path"
@@ -19,6 +21,7 @@ import (
 // CurrentAppVersion sets the current YAML config file version.
 // We're not doing anything with AppVersion, so just default it to 1 for now.
 const CurrentAppVersion = "1"
+const DDevTLD = "ddev.local"
 
 var allowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
 
@@ -137,6 +140,43 @@ func (c *AppConfig) Config() error {
 	}).Debug("Configuration completed")
 
 	return nil
+}
+
+// WriteLocalAppYAML writes docker-compose.yaml to $HOME/.drud/app.Path()
+func (c *AppConfig) WriteDockerComposeConfig() error {
+
+	basePath := c.AppRoot
+
+	f, err := os.Create(path.Join(basePath, ".ddev", "docker-compose.yaml"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+
+	rendered, err := c.RenderComposeYAML()
+	if err != nil {
+		return err
+	}
+	f.WriteString(rendered)
+	return nil
+}
+
+func (c *AppConfig) RenderComposeYAML() (string, error) {
+	var doc bytes.Buffer
+	var err error
+	templ := template.New("compose template")
+	templ, err = templ.Parse(DDevComposeTemplate)
+	if err != nil {
+		return "", err
+	}
+	templateVars := map[string]string{
+		"name":    c.Name,
+		"tld":     DDevTLD,
+		"docroot": filepath.Join("../", c.Docroot),
+	}
+
+	templ.Execute(&doc, templateVars)
+	return doc.String(), nil
 }
 
 func (c *AppConfig) docrootPrompt() error {
