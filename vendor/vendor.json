@@ -148,6 +148,12 @@
 			"revisionTime": "2017-02-13T20:31:38Z"
 		},
 		{
+			"checksumSHA1": "t01l9GMxPPn/ThMgpk9pWkzjm4g=",
+			"path": "github.com/drud/drud-go/utils/pretty",
+			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
+			"revisionTime": "2017-02-13T20:31:38Z"
+		},
+		{
 			"checksumSHA1": "iAwuw+lHePVbzI7mb80cdsO5Le4=",
 			"path": "github.com/drud/drud-go/utils/stringutil",
 			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
