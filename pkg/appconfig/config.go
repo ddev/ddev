@@ -7,12 +7,16 @@ import (
 	"os"
 	"strings"
 
+	"path/filepath"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/pretty"
 	yaml "gopkg.in/yaml.v2"
 )
 
+// CurrentAppVersion sets the current YAML config file version.
+// We're not doing anything with AppVersion, so just default it to 1 for now.
 const CurrentAppVersion = "1"
 
 var allowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
@@ -34,8 +38,7 @@ func NewAppConfig(FilePath string) (*AppConfig, error) {
 	c := &AppConfig{}
 	c.FilePath = FilePath
 
-	// We're not currently doing anything with AppVersion, so just default it to 1 for now.
-	c.AppVersion = "1"
+	c.AppVersion = CurrentAppVersion
 
 	// These should always default to the latest image/tag names from the Version package.
 	c.WebImage = version.WebImg + ":" + version.WebTag
@@ -44,20 +47,28 @@ func NewAppConfig(FilePath string) (*AppConfig, error) {
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
 	err := c.Read()
+
+	if err != nil {
+		log.Debug("Existing config not found or could not be loaded")
+	}
 	return c, err
 }
 
 // Write the app configuration to a specific location on disk
 func (c *AppConfig) Write() error {
-	log.WithFields(log.Fields{
-		"location": c.FilePath,
-	}).Debug("Writing Appconfig")
+	err := prepDirectory(filepath.Dir(c.FilePath))
+	if err != nil {
+		return err
+	}
 
 	cfgbytes, err := yaml.Marshal(c)
 	if err != nil {
 		return err
 	}
 
+	log.WithFields(log.Fields{
+		"location": c.FilePath,
+	}).Debug("Writing Appconfig")
 	err = ioutil.WriteFile(c.FilePath, cfgbytes, 0644)
 	if err != nil {
 		return err
@@ -74,17 +85,17 @@ func (c *AppConfig) Read() error {
 
 	source, err := ioutil.ReadFile(c.FilePath)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = yaml.Unmarshal(source, c)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	log.WithFields(log.Fields{
 		"Existing config": pretty.Prettify(c),
-	}).Debug("Finished Config Read")
+	}).Debug("Finished config read")
 	return nil
 }
 
@@ -149,4 +160,24 @@ func isAllowedAppType(appType string) bool {
 		}
 	}
 	return false
+}
+
+func prepDirectory(dir string) error {
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+
+		log.WithFields(log.Fields{
+			"directory": dir,
+		}).Debug("Config Directory does not exist, attempting to create.")
+
+		os.MkdirAll(dir, os.FileMode(int(0774)))
+		if err != nil {
+			return err
+		}
+
+		log.WithFields(log.Fields{
+			"directory": dir,
+		}).Debug("Directory creation successful")
+	}
+
+	return nil
 }
