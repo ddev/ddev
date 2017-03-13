@@ -33,7 +33,6 @@ var LocalDevReconfigCmd = &cobra.Command{
 		opts := platform.AppOptions{
 			Name:        activeApp,
 			Environment: activeDeploy,
-			Client:      appClient,
 			SkipYAML:    skipYAML,
 			CFG:         cfg,
 		}
