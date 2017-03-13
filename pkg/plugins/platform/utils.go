@@ -116,22 +116,6 @@ func GetDockerClient() (*docker.Client, error) {
 	return client, err
 }
 
-func FilterNonAppDirs(files []os.FileInfo) []os.FileInfo {
-
-	var filtered []os.FileInfo
-	for _, v := range files {
-		name := v.Name()
-		parts := strings.SplitN(name, "-", 2)
-
-		if len(parts) != 2 {
-			continue
-		}
-
-		filtered = append(filtered, v)
-	}
-	return filtered
-}
-
 // FormatPlural is a simple wrapper which returns different strings based on the count value.
 func FormatPlural(count int, single string, plural string) string {
 	if count == 1 {
