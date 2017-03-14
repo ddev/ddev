@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/fatih/color"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/spf13/cobra"
@@ -29,7 +28,7 @@ var LocalDevStopCmd = &cobra.Command{
 			Failed("Failed to stop containers for %s. Run `ddev list` to ensure your site exists.", app.ContainerName())
 		}
 
-		color.Cyan("Application has been stopped.")
+		Success("Application has been stopped.")
 	},
 }
 

@@ -7,7 +7,6 @@ import (
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +38,7 @@ var LocalDevRMCmd = &cobra.Command{
 			Failed("Could not remove site: %s", app.ContainerName())
 		}
 
-		color.Cyan("Successfully removed the %s application.\n", activeApp)
+		Success("Successfully removed the %s application.\n", activeApp)
 	},
 }
 

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -61,9 +60,9 @@ var LocalDevReconfigCmd = &cobra.Command{
 			Failed("Site never became ready")
 		}
 
-		color.Cyan("Successfully restarted %s", activeApp)
+		Success("Successfully restarted %s", activeApp)
 		if siteURL != "" {
-			color.Cyan("Your application can be reached at: %s", siteURL)
+			Success("Your application can be reached at: %s", siteURL)
 		}
 	},
 }

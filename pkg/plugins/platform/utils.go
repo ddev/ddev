@@ -22,11 +22,6 @@ import (
 
 // PrepLocalSiteDirs creates a site's directories for local dev in ~/.drud/client/site
 func PrepLocalSiteDirs(base string) error {
-	err := os.MkdirAll(base, os.FileMode(int(0774)))
-	if err != nil {
-		return err
-	}
-
 	dirs := []string{
 		".ddev",
 		".ddev/files",
