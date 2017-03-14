@@ -19,7 +19,7 @@ var (
 
 // LocalDevLogsCmd ...
 var LocalDevLogsCmd = &cobra.Command{
-	Use:   "logs [app_name] [environment_name]",
+	Use:   "logs",
 	Short: "Get the logs from your running services.",
 	Long:  `Uses 'docker logs' to display stdout from the running services.`,
 	Run: func(cmd *cobra.Command, args []string) {

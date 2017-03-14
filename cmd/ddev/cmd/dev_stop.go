@@ -12,7 +12,7 @@ import (
 
 // LocalDevStopCmd represents the stop command
 var LocalDevStopCmd = &cobra.Command{
-	Use:   "stop [app_name] [environment_name]",
+	Use:   "stop",
 	Short: "Stop an application's local services.",
 	Long:  `Stop will turn off the local containers and not remove them.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -26,7 +26,7 @@ var LocalDevStopCmd = &cobra.Command{
 		err := app.Stop()
 		if err != nil {
 			log.Println(err)
-			Failed("Failed to stop containers for %s. Run 'drud legacy list' to ensure your site exists.", app.ContainerName())
+			Failed("Failed to stop containers for %s. Run `ddev list` to ensure your site exists.", app.ContainerName())
 		}
 
 		color.Cyan("Application has been stopped.")

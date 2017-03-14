@@ -13,7 +13,7 @@ import (
 
 // ImportCmd represents the add command
 var ImportCmd = &cobra.Command{
-	Use:   "import [app_name] [environment_name]",
+	Use:   "import",
 	Short: "Import an existing site to the local dev environment",
 	Long:  `Import the database and file assets of an existing site into the local development environment.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -61,7 +61,7 @@ var ImportCmd = &cobra.Command{
 
 		nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
 		if !dockerutil.IsRunning(nameContainer) || !platform.ComposeFileExists(app) {
-			Failed("This application is not currently running. Run `ddev start [sitename] [environment]` to start the environment.")
+			Failed("This application is not currently running. Run `ddev start` to start the environment.")
 		}
 
 		cmdArgs := []string{

@@ -13,7 +13,7 @@ import (
 
 // LocalDevExecCmd allows users to execute arbitrary bash commands within a container.
 var LocalDevExecCmd = &cobra.Command{
-	Use:   "exec [app_name] [environment_name] '[cmd]'",
+	Use:   "exec '[cmd]'",
 	Short: "run a command in an app container.",
 	Long:  `Execs into container and runs bash commands.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -32,11 +32,11 @@ var LocalDevExecCmd = &cobra.Command{
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 		if !dockerutil.IsRunning(nameContainer) {
-			Failed("App not running locally. Try `ddev add`.")
+			Failed("App not running locally. Try `ddev start`.")
 		}
 
 		if !platform.ComposeFileExists(app) {
-			Failed("No docker-compose yaml for this site. Try `ddev add`.")
+			Failed("No docker-compose yaml for this site. Try `ddev start`.")
 		}
 
 		cmdArgs := []string{
