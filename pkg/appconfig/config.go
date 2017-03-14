@@ -21,6 +21,8 @@ import (
 // CurrentAppVersion sets the current YAML config file version.
 // We're not doing anything with AppVersion, so just default it to 1 for now.
 const CurrentAppVersion = "1"
+
+// DDevTLD defines the tld to use for DDev site URLs.
 const DDevTLD = "ddev.local"
 
 var allowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
