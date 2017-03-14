@@ -33,7 +33,6 @@ type AppBase struct {
 	WebPublicPort int64
 	DbPublicPort  int64
 	Status        string
-	SkipYAML      bool
 }
 
 // AppOptions ..
@@ -45,7 +44,6 @@ type AppOptions struct {
 	DbImage     string
 	WebImageTag string
 	DbImageTag  string
-	SkipYAML    bool
 	Template    string
 }
 

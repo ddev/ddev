@@ -39,7 +39,6 @@ func (l *LocalApp) SetOpts(opts AppOptions) {
 	if opts.Template != "" {
 		l.Template = opts.Template
 	}
-	l.SkipYAML = opts.SkipYAML
 }
 
 func (l *LocalApp) GetOpts() AppOptions {
@@ -114,12 +113,10 @@ func (l *LocalApp) GetResources() error {
 		return err
 	}
 
-	if !l.SkipYAML {
-		err = WriteLocalAppYAML(l)
-		if err != nil {
-			log.Println("Could not create docker-compose.yaml")
-			return err
-		}
+	err = WriteLocalAppYAML(l)
+	if err != nil {
+		log.Println("Could not create docker-compose.yaml")
+		return err
 	}
 
 	return nil
@@ -210,12 +207,10 @@ func (l LocalApp) Start() error {
 		return err
 	}
 
-	if !l.SkipYAML {
-		fmt.Println("Creating docker-compose config.")
-		err = WriteLocalAppYAML(&l)
-		if err != nil {
-			return err
-		}
+	fmt.Println("Creating docker-compose config.")
+	err = WriteLocalAppYAML(&l)
+	if err != nil {
+		return err
 	}
 
 	EnsureDockerRouter()

@@ -16,7 +16,6 @@ var (
 	dbImage     string
 	webImageTag string
 	dbImageTag  string
-	skipYAML    bool
 )
 
 // StartCmd represents the add command
@@ -48,7 +47,6 @@ var StartCmd = &cobra.Command{
 			WebImageTag: webImageTag,
 			DbImage:     dbImage,
 			DbImageTag:  dbImageTag,
-			SkipYAML:    skipYAML,
 		}
 
 		app.Init(opts)
@@ -69,7 +67,6 @@ func init() {
 	StartCmd.Flags().StringVarP(&dbImage, "db-image", "", "", "Change the image used for the app's database server")
 	StartCmd.Flags().StringVarP(&webImageTag, "web-image-tag", "", "", "Override the default web image tag")
 	StartCmd.Flags().StringVarP(&dbImageTag, "db-image-tag", "", "", "Override the default web image tag")
-	StartCmd.Flags().BoolVarP(&skipYAML, "skip-yaml", "", false, "Skip creating the docker-compose.yaml.")
 
 	RootCmd.AddCommand(StartCmd)
 }

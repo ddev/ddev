@@ -39,7 +39,6 @@ var ImportCmd = &cobra.Command{
 			WebImageTag: webImageTag,
 			DbImage:     dbImage,
 			DbImageTag:  dbImageTag,
-			SkipYAML:    skipYAML,
 		}
 
 		app.Init(opts)

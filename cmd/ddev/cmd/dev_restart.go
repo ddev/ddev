@@ -30,8 +30,7 @@ var LocalDevReconfigCmd = &cobra.Command{
 		app := platform.PluginMap[strings.ToLower(plugin)]
 
 		opts := platform.AppOptions{
-			Name:     activeApp,
-			SkipYAML: skipYAML,
+			Name: activeApp,
 		}
 		app.Init(opts)
 
@@ -68,7 +67,6 @@ var LocalDevReconfigCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevReconfigCmd.Flags().BoolVarP(&skipYAML, "skip-yaml", "", false, "Skip creating the docker-compose.yaml.")
 	RootCmd.AddCommand(LocalDevReconfigCmd)
 
 }
