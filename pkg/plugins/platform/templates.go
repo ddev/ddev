@@ -1,9 +1,7 @@
 package platform
 
-// LegacyComposeTemplate is used to create the docker-compose.yaml for
-// legacy sites in the ddev env
-
-const LegacyComposeTemplate = `version: '2'
+// AppComposeTemplate is used to create the docker-compose.yaml for each application
+const AppComposeTemplate = `version: '2'
 services:
   {{.name}}-db:
     container_name: {{.name}}-db
@@ -18,13 +16,13 @@ services:
       - "3306"
     labels:
       com.drud.site-name: {{ .site_name }}
-      com.drud.site-env: {{ .site_env }}
+      com.drud.app-type: {{ .apptype }}
       com.drud.container-type: web
   {{.name}}-web:
     container_name: {{.name}}-web
     image: {{.web_image}}
     volumes:
-      - "./src:{{ .srctarget }}"
+      - "../:{{ .srctarget }}"
     restart: always
     depends_on:
       - {{.name}}-db
@@ -39,7 +37,7 @@ services:
       - VIRTUAL_HOST={{ .name }}
     labels:
       com.drud.site-name: {{ .site_name }}
-      com.drud.site-env: {{ .site_env }}
+      com.drud.app-type: {{ .apptype }}
       com.drud.container-type: db
 
 networks:

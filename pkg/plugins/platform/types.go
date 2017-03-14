@@ -6,7 +6,6 @@ type App interface {
 	Init(AppOptions)
 	GetOpts() AppOptions
 	GetType() string
-	RelPath() string // returns path from root dir ('$HOME/.drud') to app
 	GetResources() error
 	GetTemplate() string
 	UnpackResources() error
@@ -25,7 +24,6 @@ type App interface {
 // AppBase is the parent type for all local app implementations
 type AppBase struct {
 	Name          string
-	Environment   string
 	Plugin        string
 	AppType       string
 	Template      string
@@ -35,22 +33,18 @@ type AppBase struct {
 	WebPublicPort int64
 	DbPublicPort  int64
 	Status        string
-	SkipYAML      bool
 }
 
 // AppOptions ..
 type AppOptions struct {
 	Name        string
-	Environment string
 	Plugin      string
 	AppType     string
 	WebImage    string
 	DbImage     string
 	WebImageTag string
 	DbImageTag  string
-	SkipYAML    bool
 	Template    string
-	CFG         *Config
 }
 
 var PluginMap = map[string]App{

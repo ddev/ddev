@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -31,10 +30,7 @@ var LocalDevReconfigCmd = &cobra.Command{
 		app := platform.PluginMap[strings.ToLower(plugin)]
 
 		opts := platform.AppOptions{
-			Name:        activeApp,
-			Environment: activeDeploy,
-			SkipYAML:    skipYAML,
-			CFG:         cfg,
+			Name: activeApp,
 		}
 		app.Init(opts)
 
@@ -63,15 +59,14 @@ var LocalDevReconfigCmd = &cobra.Command{
 			Failed("Site never became ready")
 		}
 
-		color.Cyan("Successfully restarted %s %s", activeApp, activeDeploy)
+		Success("Successfully restarted %s", activeApp)
 		if siteURL != "" {
-			color.Cyan("Your application can be reached at: %s", siteURL)
+			Success("Your application can be reached at: %s", siteURL)
 		}
 	},
 }
 
 func init() {
-	LocalDevReconfigCmd.Flags().BoolVarP(&skipYAML, "skip-yaml", "", false, "Skip creating the docker-compose.yaml.")
 	RootCmd.AddCommand(LocalDevReconfigCmd)
 
 }

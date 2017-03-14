@@ -28,7 +28,6 @@ func NewLocalApp(name string, environment string) *LocalApp {
 		Options: &AppOptions{},
 	}
 	app.AppBase.Name = name
-	app.AppBase.Environment = environment
 
 	return app
 }
@@ -36,13 +35,10 @@ func NewLocalApp(name string, environment string) *LocalApp {
 func (l *LocalApp) SetOpts(opts AppOptions) {
 	l.Options = &opts
 	l.Name = opts.Name
-	l.Environment = opts.Environment
-	//l.AppType = opts.AppType
-	l.Template = LegacyComposeTemplate
+	l.Template = AppComposeTemplate
 	if opts.Template != "" {
 		l.Template = opts.Template
 	}
-	l.SkipYAML = opts.SkipYAML
 }
 
 func (l *LocalApp) GetOpts() AppOptions {
@@ -72,15 +68,19 @@ func (l *LocalApp) Init(opts AppOptions) {
 
 }
 
-// RelPath returns the path from the '.drud' directory to this apps directory
-func (l LocalApp) RelPath() string {
-	return path.Join("local", fmt.Sprintf("%s-%s", l.Name, l.Environment))
-}
-
 // AbsPath return the full path from root to the app directory
 func (l LocalApp) AbsPath() string {
-	workspace := GetWorkspace()
-	return path.Join(workspace, l.RelPath())
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Printf("Error determining the current directory: %s", err)
+	}
+
+	appPath, err := CheckForConf(cwd)
+	if err != nil {
+		log.Fatalf("Unable to determine the application for this command: %s", err)
+	}
+
+	return appPath
 }
 
 // GetName returns the  name for local app
@@ -90,12 +90,12 @@ func (l LocalApp) GetName() string {
 
 // ContainerPrefix returns the base name for local app containers
 func (l LocalApp) ContainerPrefix() string {
-	return "local-"
+	return "local"
 }
 
 // ContainerName returns the base name for local app containers
 func (l LocalApp) ContainerName() string {
-	return fmt.Sprintf("%s%s-%s", l.ContainerPrefix(), l.Name, l.Environment)
+	return fmt.Sprintf("%s-%s", l.ContainerPrefix(), l.Name)
 }
 
 // GetResources downloads external data for this app
@@ -113,12 +113,10 @@ func (l *LocalApp) GetResources() error {
 		return err
 	}
 
-	if !l.SkipYAML {
-		err = WriteLocalAppYAML(l)
-		if err != nil {
-			log.Println("Could not create docker-compose.yaml")
-			return err
-		}
+	err = WriteLocalAppYAML(l)
+	if err != nil {
+		log.Println("Could not create docker-compose.yaml")
+		return err
 	}
 
 	return nil
@@ -126,9 +124,9 @@ func (l *LocalApp) GetResources() error {
 
 // GetArchive downloads external data
 func (l *LocalApp) GetArchive() error {
-	name := fmt.Sprintf("%[2]s-%[1]s.tar.gz", l.Name, l.Environment)
-	basePath := path.Dir(l.AbsPath())
-	archive := path.Join(basePath, name)
+	name := fmt.Sprintf("production-%s.tar.gz", l.Name)
+	basePath := l.AbsPath()
+	archive := path.Join(basePath, ".ddev", name)
 
 	if system.FileExists(archive) {
 		l.Archive = archive
@@ -153,7 +151,7 @@ func (l LocalApp) UnpackResources() error {
 		[]string{
 			"-xzvf",
 			l.Archive,
-			"-C", path.Join(basePath, "files"),
+			"-C", path.Join(basePath, ".ddev", "files"),
 			"--exclude=sites/default/settings.php",
 			"--exclude=docroot/wp-config.php",
 		},
@@ -164,8 +162,8 @@ func (l LocalApp) UnpackResources() error {
 	}
 
 	err = os.Rename(
-		path.Join(basePath, "files", l.Name+".sql"),
-		path.Join(basePath, "data", "data.sql"),
+		path.Join(basePath, ".ddev", "files", l.Name+".sql"),
+		path.Join(basePath, ".ddev", "data", "data.sql"),
 	)
 	if err != nil {
 		return err
@@ -173,11 +171,11 @@ func (l LocalApp) UnpackResources() error {
 
 	// Ensure sites/default is readable.
 	if l.AppType == "drupal" || l.AppType == "drupal8" {
-		os.Chmod(path.Join(basePath, "files", "docroot", "sites", "default"), 0755)
+		os.Chmod(path.Join(basePath, ".ddev", "files", "docroot", "sites", "default"), 0755)
 	}
 
-	rsyncFrom := path.Join(basePath, "files", "docroot", fileDir)
-	rsyncTo := path.Join(basePath, "src", "docroot", fileDir)
+	rsyncFrom := path.Join(basePath, ".ddev", "files", "docroot", fileDir)
+	rsyncTo := path.Join(basePath, "docroot", fileDir)
 	out, err = system.RunCommand(
 		"rsync",
 		[]string{"-avz", "--recursive", rsyncFrom + "/", rsyncTo},
@@ -189,25 +187,12 @@ func (l LocalApp) UnpackResources() error {
 	// Ensure extracted files are writable so they can be removed when we're done.
 	out, err = system.RunCommand(
 		"chmod",
-		[]string{"-R", "ugo+rw", path.Join(basePath, "files")},
+		[]string{"-R", "ugo+rw", path.Join(basePath, ".ddev", "files")},
 	)
 	if err != nil {
 		return fmt.Errorf("%s - %s", err.Error(), string(out))
 	}
-	defer os.RemoveAll(path.Join(basePath, "files"))
-
-	dcfgFile := path.Join(basePath, "src", "drud.yaml")
-	if system.FileExists(dcfgFile) {
-		log.Println("copying drud.yaml to data container")
-		out, err := system.RunCommand("cp", []string{
-			dcfgFile,
-			path.Join(basePath, "data/drud.yaml"),
-		})
-		if err != nil {
-			fmt.Println(out)
-			return err
-		}
-	}
+	defer os.RemoveAll(path.Join(basePath, ".ddev", "files"))
 
 	return nil
 }
@@ -215,19 +200,17 @@ func (l LocalApp) UnpackResources() error {
 // Start initiates docker-compose up
 func (l LocalApp) Start() error {
 
-	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
+	composePath := path.Join(l.AbsPath(), ".ddev", "docker-compose.yaml")
 
 	err := l.SetType()
 	if err != nil {
 		return err
 	}
 
-	if !l.SkipYAML {
-		fmt.Println("Creating docker-compose config.")
-		err = WriteLocalAppYAML(&l)
-		if err != nil {
-			return err
-		}
+	fmt.Println("Creating docker-compose config.")
+	err = WriteLocalAppYAML(&l)
+	if err != nil {
+		return err
 	}
 
 	EnsureDockerRouter()
@@ -252,7 +235,7 @@ func (l LocalApp) Start() error {
 
 // Stop initiates docker-compose stop
 func (l LocalApp) Stop() error {
-	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
+	composePath := path.Join(l.AbsPath(), ".ddev", "docker-compose.yaml")
 
 	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
 		return fmt.Errorf("site does not exist or is malformed")
@@ -287,6 +270,7 @@ func (l *LocalApp) Wait() (string, error) {
 	return l.URL(), nil
 }
 
+// FindPorts retrieves the public ports for db and web containers
 func (l *LocalApp) FindPorts() error {
 	var err error
 	l.WebPublicPort, err = GetPodPort(l.ContainerName() + "-web")
@@ -318,7 +302,7 @@ func (l *LocalApp) Config() error {
 	settingsFilePath := ""
 	if l.AppType == "drupal" || l.AppType == "drupal8" {
 		log.Printf("Drupal site. Creating settings.php file.")
-		settingsFilePath = path.Join(basePath, "src", "docroot/sites/default/settings.php")
+		settingsFilePath = path.Join(basePath, "docroot/sites/default/settings.php")
 		drupalConfig := model.NewDrupalConfig()
 		drupalConfig.DatabaseHost = "db"
 		if drupalConfig.HashSalt == "" {
@@ -340,7 +324,7 @@ func (l *LocalApp) Config() error {
 			return err
 		}
 
-		drushSettingsPath := path.Join(basePath, "src", "drush.settings.php")
+		drushSettingsPath := path.Join(basePath, "drush.settings.php")
 		drushConfig := model.NewDrushConfig()
 		drushConfig.DatabasePort = dbPort
 		if l.AppType == "drupal8" {
@@ -353,7 +337,7 @@ func (l *LocalApp) Config() error {
 		}
 	} else if l.AppType == "wp" {
 		log.Printf("WordPress site. Creating wp-config.php file.")
-		settingsFilePath = path.Join(basePath, "src", "docroot/wp-config.php")
+		settingsFilePath = path.Join(basePath, "docroot/wp-config.php")
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DatabaseHost = "db"
 		wpConfig.DeployURL = l.URL()
@@ -375,7 +359,7 @@ func (l *LocalApp) Config() error {
 
 // Down stops the docker containers for the local project.
 func (l *LocalApp) Down() error {
-	composePath := path.Join(l.AbsPath(), "docker-compose.yaml")
+	composePath := path.Join(l.AbsPath(), ".ddev", "docker-compose.yaml")
 
 	err := dockerutil.DockerCompose(
 		"-f", composePath,

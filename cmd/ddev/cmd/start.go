@@ -16,12 +16,11 @@ var (
 	dbImage     string
 	webImageTag string
 	dbImageTag  string
-	skipYAML    bool
 )
 
 // StartCmd represents the add command
 var StartCmd = &cobra.Command{
-	Use:     "start [app_name] [environment_name]",
+	Use:     "start",
 	Aliases: []string{"add"},
 	Short:   "Start the local development environment for a site.",
 	Long:    `Start initializes and configures the web server and database containers to provide a working environment for development.`,
@@ -44,13 +43,10 @@ var StartCmd = &cobra.Command{
 
 		opts := platform.AppOptions{
 			Name:        activeApp,
-			Environment: activeDeploy,
 			WebImage:    webImage,
 			WebImageTag: webImageTag,
 			DbImage:     dbImage,
 			DbImageTag:  dbImageTag,
-			SkipYAML:    skipYAML,
-			CFG:         cfg,
 		}
 
 		app.Init(opts)
@@ -60,7 +56,7 @@ var StartCmd = &cobra.Command{
 			Failed("Failed to start %s: %s", app.GetName(), err)
 		}
 
-		Success("Successfully added %s-%s", activeApp, activeDeploy)
+		Success("Successfully added %s", activeApp)
 		Success("Your application can be reached at: %s", app.URL())
 
 	},
@@ -71,7 +67,6 @@ func init() {
 	StartCmd.Flags().StringVarP(&dbImage, "db-image", "", "", "Change the image used for the app's database server")
 	StartCmd.Flags().StringVarP(&webImageTag, "web-image-tag", "", "", "Override the default web image tag")
 	StartCmd.Flags().StringVarP(&dbImageTag, "db-image-tag", "", "", "Override the default web image tag")
-	StartCmd.Flags().BoolVarP(&skipYAML, "skip-yaml", "", false, "Skip creating the docker-compose.yaml.")
 
 	RootCmd.AddCommand(StartCmd)
 }

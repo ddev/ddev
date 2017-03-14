@@ -13,7 +13,7 @@ import (
 
 // ImportCmd represents the add command
 var ImportCmd = &cobra.Command{
-	Use:   "import [app_name] [environment_name]",
+	Use:   "import",
 	Short: "Import an existing site to the local dev environment",
 	Long:  `Import the database and file assets of an existing site into the local development environment.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -35,13 +35,10 @@ var ImportCmd = &cobra.Command{
 
 		opts := platform.AppOptions{
 			Name:        activeApp,
-			Environment: activeDeploy,
 			WebImage:    webImage,
 			WebImageTag: webImageTag,
 			DbImage:     dbImage,
 			DbImageTag:  dbImageTag,
-			SkipYAML:    skipYAML,
-			CFG:         cfg,
 		}
 
 		app.Init(opts)
@@ -63,11 +60,11 @@ var ImportCmd = &cobra.Command{
 
 		nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
 		if !dockerutil.IsRunning(nameContainer) || !platform.ComposeFileExists(app) {
-			Failed("This application is not currently running. Run `ddev start [sitename] [environment]` to start the environment.")
+			Failed("This application is not currently running. Run `ddev start` to start the environment.")
 		}
 
 		cmdArgs := []string{
-			"-f", path.Join(app.AbsPath(), "docker-compose.yaml"),
+			"-f", path.Join(app.AbsPath(), ".ddev", "docker-compose.yaml"),
 			"exec",
 			"-T", nameContainer,
 			"./import.sh",
@@ -83,7 +80,7 @@ var ImportCmd = &cobra.Command{
 			Failed("%s did not return a 200 status before timeout. %s", app.GetName(), err)
 		}
 
-		Success("Successfully imported %s-%s", activeApp, activeDeploy)
+		Success("Successfully imported %s", activeApp)
 		if siteURL != "" {
 			Success("Your application can be reached at: %s", siteURL)
 		}

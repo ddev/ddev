@@ -16,15 +16,14 @@ import (
 
 // LocalDevSequelproCmd represents the sequelpro command
 var LocalDevSequelproCmd = &cobra.Command{
-	Use:   "sequelpro [app_name] [environment_name]",
+	Use:   "sequelpro",
 	Short: "Easily connect local site to sequelpro",
 	Long:  `A helper command for easily using sequelpro with a drud app that has been initialized locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app := platform.PluginMap[strings.ToLower(plugin)]
 
 		opts := platform.AppOptions{
-			Name:        activeApp,
-			Environment: activeDeploy,
+			Name: activeApp,
 		}
 		app.SetOpts(opts)
 

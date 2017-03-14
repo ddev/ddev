@@ -13,9 +13,9 @@ import (
 
 // LocalDevExecCmd allows users to execute arbitrary bash commands within a container.
 var LocalDevExecCmd = &cobra.Command{
-	Use:   "exec [app_name] [environment_name] '[cmd]'",
-	Short: "run a command in an app container.",
-	Long:  `Execs into container and runs bash commands.`,
+	Use:   "exec '[cmd]'",
+	Short: "Execute a Linux shell command in the webserver container.",
+	Long:  `Execute a Linux shell command in the webserver container.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// The command string will be the first argument if using a stored
 		// appConfig, or the third if passing in app/deploy names.
@@ -26,22 +26,21 @@ var LocalDevExecCmd = &cobra.Command{
 
 		app := platform.PluginMap[strings.ToLower(plugin)]
 		opts := platform.AppOptions{
-			Name:        activeApp,
-			Environment: activeDeploy,
+			Name: activeApp,
 		}
 		app.SetOpts(opts)
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 		if !dockerutil.IsRunning(nameContainer) {
-			Failed("App not running locally. Try `ddev add`.")
+			Failed("App not running locally. Try `ddev start`.")
 		}
 
 		if !platform.ComposeFileExists(app) {
-			Failed("No docker-compose yaml for this site. Try `ddev add`.")
+			Failed("No docker-compose yaml for this site. Try `ddev start`.")
 		}
 
 		cmdArgs := []string{
-			"-f", path.Join(app.AbsPath(), "docker-compose.yaml"),
+			"-f", path.Join(app.AbsPath(), ".ddev", "docker-compose.yaml"),
 			"exec",
 			"-T", nameContainer,
 		}
@@ -59,17 +58,6 @@ var LocalDevExecCmd = &cobra.Command{
 			Failed("Could not execute command.")
 		}
 
-	},
-	PreRun: func(cmd *cobra.Command, args []string) {
-		if len(args) == 1 {
-			return
-		}
-
-		if len(args) == 3 {
-			return
-		}
-
-		Failed("Invalid arguments detected. Please use a command in the form of: exec [app_name] [environment_name] '[cmd]'")
 	},
 }
 

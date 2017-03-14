@@ -2,6 +2,7 @@ package platform
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"os"
@@ -11,6 +12,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
+	"github.com/docker/docker/pkg/homedir"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/drud/drud-go/utils/try"
@@ -18,25 +20,12 @@ import (
 	"github.com/gosuri/uitable"
 )
 
-// GetWorkspace() is a temporary hack caused by removal of config; currently wired to ~/.drud/local
-// This will be fixed with the move into a code repo-based workspace
-// TODO: Remove and replace (or implement differently)
-func GetWorkspace() string {
-	workspace := os.Getenv("HOME") + "/.drud"
-	return workspace
-}
-
 // PrepLocalSiteDirs creates a site's directories for local dev in ~/.drud/client/site
 func PrepLocalSiteDirs(base string) error {
-	err := os.MkdirAll(base, os.FileMode(int(0774)))
-	if err != nil {
-		return err
-	}
-
 	dirs := []string{
-		"src",
-		"files",
-		"data",
+		".ddev",
+		".ddev/files",
+		".ddev/data",
 	}
 	for _, d := range dirs {
 		dirPath := path.Join(base, d)
@@ -51,12 +40,12 @@ func PrepLocalSiteDirs(base string) error {
 	return nil
 }
 
-// WriteLocalAppYAML writes docker-compose.yaml to $HOME/.drud/app.Path()
+// WriteLocalAppYAML writes docker-compose.yaml to .ddev folder
 func WriteLocalAppYAML(app App) error {
 
 	basePath := app.AbsPath()
 
-	f, err := os.Create(path.Join(basePath, "docker-compose.yaml"))
+	f, err := os.Create(path.Join(basePath, ".ddev", "docker-compose.yaml"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,6 +59,7 @@ func WriteLocalAppYAML(app App) error {
 	return nil
 }
 
+// GetPort determines and returns the public port for a given container.
 func GetPort(name string) (int64, error) {
 	client, _ := GetDockerClient()
 	var publicPort int64
@@ -92,7 +82,7 @@ func GetPort(name string) (int64, error) {
 	return publicPort, fmt.Errorf("%s container not ready", name)
 }
 
-// GetPodPort clones or pulls a repo
+// GetPodPort provides a wait loop to help in successfully returning the public port for a given container.
 func GetPodPort(name string) (int64, error) {
 	var publicPort int64
 
@@ -119,22 +109,6 @@ func GetDockerClient() (*docker.Client, error) {
 		log.Fatal(err)
 	}
 	return client, err
-}
-
-func FilterNonAppDirs(files []os.FileInfo) []os.FileInfo {
-
-	var filtered []os.FileInfo
-	for _, v := range files {
-		name := v.Name()
-		parts := strings.SplitN(name, "-", 2)
-
-		if len(parts) != 2 {
-			continue
-		}
-
-		filtered = append(filtered, v)
-	}
-	return filtered
 }
 
 // FormatPlural is a simple wrapper which returns different strings based on the count value.
@@ -190,12 +164,11 @@ func RenderAppTable(apps map[string]map[string]string, name string) {
 		fmt.Printf("%v %s %v found.\n", len(apps), name, FormatPlural(len(apps), "site", "sites"))
 		table := uitable.New()
 		table.MaxColWidth = 200
-		table.AddRow("NAME", "ENVIRONMENT", "TYPE", "URL", "DATABASE URL", "STATUS")
+		table.AddRow("NAME", "TYPE", "URL", "DATABASE URL", "STATUS")
 
 		for _, site := range apps {
 			table.AddRow(
 				site["name"],
-				site["environment"],
 				site["type"],
 				site["url"],
 				fmt.Sprintf("127.0.0.1:%s", site["DbPublicPort"]),
@@ -214,25 +187,22 @@ func ProcessContainer(l map[string]map[string]string, plugin string, containerNa
 	label := container.Labels
 
 	appName := label["com.drud.site-name"]
-	appEnv := label["com.drud.site-env"]
+	appType := label["com.drud.app-type"]
 	containerType := label["com.drud.container-type"]
-	appID := appName + "-" + appEnv
 
-	_, exists := l[appID]
+	_, exists := l[appName]
 	if exists == false {
 		app := PluginMap[strings.ToLower(plugin)]
 		opts := AppOptions{
-			Name:        appName,
-			Environment: appEnv,
+			Name: appName,
 		}
 		app.SetOpts(opts)
 
-		l[appID] = map[string]string{
-			"name":        appName,
-			"environment": appEnv,
-			"status":      container.State,
-			"url":         app.URL(),
-			"type":        app.GetType(),
+		l[appName] = map[string]string{
+			"name":   appName,
+			"status": container.State,
+			"url":    app.URL(),
+			"type":   appType,
 		}
 	}
 
@@ -244,11 +214,11 @@ func ProcessContainer(l map[string]map[string]string, plugin string, containerNa
 	}
 
 	if containerType == "web" {
-		l[appID]["WebPublicPort"] = fmt.Sprintf("%d", publicPort)
+		l[appName]["WebPublicPort"] = fmt.Sprintf("%d", publicPort)
 	}
 
 	if containerType == "db" {
-		l[appID]["DbPublicPort"] = fmt.Sprintf("%d", publicPort)
+		l[appName]["DbPublicPort"] = fmt.Sprintf("%d", publicPort)
 	}
 
 }
@@ -263,12 +233,12 @@ func DetermineAppType(basePath string) (string, error) {
 	}
 
 	for k, v := range defaultLocations {
-		if FileExists(path.Join(basePath, "src", k)) {
+		if FileExists(path.Join(basePath, k)) {
 			return v, nil
 		}
 	}
 
-	return "", fmt.Errorf("Couldn't determine app's type!")
+	return "", fmt.Errorf("unable to determine the application type")
 }
 
 // FileExists checks a file's existence
@@ -284,9 +254,15 @@ func FileExists(name string) bool {
 
 // EnsureDockerRouter ensures the router is running.
 func EnsureDockerRouter() {
+	userHome := homedir.Get()
+	routerdir := path.Join(userHome, ".ddev")
+	err := os.MkdirAll(routerdir, 0755)
+	if err != nil {
+		log.Fatalf("unable to create directory for ddev router: %s", err)
+	}
+
 	var doc bytes.Buffer
-	workspace := GetWorkspace()
-	dest := path.Join(workspace, "router-compose.yaml")
+	dest := path.Join(routerdir, "router-compose.yaml")
 	f, ferr := os.Create(dest)
 	if ferr != nil {
 		log.Fatal(ferr)
@@ -294,7 +270,7 @@ func EnsureDockerRouter() {
 	defer f.Close()
 
 	templ := template.New("compose template")
-	templ, err := templ.Parse(fmt.Sprintf(DrudRouterTemplate))
+	templ, err = templ.Parse(fmt.Sprintf(DrudRouterTemplate))
 	if err != nil {
 		log.Fatal(ferr)
 	}
@@ -328,8 +304,9 @@ func SubTag(image string, tag string) string {
 	return strings.Join(parts, ":")
 }
 
+// ComposeFileExists determines if a docker-compose.yml exists for a given app.
 func ComposeFileExists(app App) bool {
-	composeLOC := path.Join(app.AbsPath(), "docker-compose.yaml")
+	composeLOC := path.Join(app.AbsPath(), ".ddev", "docker-compose.yaml")
 	if _, err := os.Stat(composeLOC); os.IsNotExist(err) {
 		return false
 	}
@@ -392,7 +369,7 @@ func RenderComposeYAML(app App) (string, error) {
 		"name":      app.ContainerName(),
 		"srctarget": "/var/www/html",
 		"site_name": opts.Name,
-		"site_env":  opts.Environment,
+		"apptype":   app.GetType(),
 	}
 
 	if opts.WebImageTag == "unison" || strings.HasSuffix(opts.WebImage, ":unison") {
@@ -401,4 +378,21 @@ func RenderComposeYAML(app App) (string, error) {
 
 	templ.Execute(&doc, templateVars)
 	return doc.String(), nil
+}
+
+// CheckForConf checks for a ddev.yaml at the cwd or parent dirs.
+func CheckForConf(confPath string) (string, error) {
+	if system.FileExists(confPath + "/ddev.yaml") {
+		return confPath, nil
+	}
+	pathList := strings.Split(confPath, "/")
+
+	for _ = range pathList {
+		confPath = path.Dir(confPath)
+		if system.FileExists(confPath + "/ddev.yaml") {
+			return confPath, nil
+		}
+	}
+
+	return "", errors.New("no ddev.yaml file in this directory or any parent")
 }

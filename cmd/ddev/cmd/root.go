@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"path"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -16,9 +17,9 @@ const (
 )
 
 var (
-	cfg      *platform.Config
-	logLevel = log.WarnLevel
-	plugin   = "local"
+	logLevel  = log.WarnLevel
+	plugin    = "local"
+	activeApp string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -39,7 +40,7 @@ var RootCmd = &cobra.Command{
 		}
 
 		if !skip {
-			parseAppDeployArgs(args)
+			setActiveApp()
 			plugin = strings.ToLower(plugin)
 			if _, ok := platform.PluginMap[plugin]; !ok {
 				Failed("Plugin %s is not registered", plugin)
@@ -52,13 +53,7 @@ var RootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	// bind flags to viper config values...allows override by flag
-	//viper.BindPFlag("vault_host", RootCmd.PersistentFlags().Lookup("vault_host"))
 	viper.AutomaticEnv() // read in environment variables that match
-
-	_, err := platform.GetConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
@@ -67,12 +62,6 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-	_, err := platform.GetConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	drudDebug := os.Getenv("DRUD_DEBUG")
 	if drudDebug != "" {
 		logLevel = log.InfoLevel
@@ -81,28 +70,16 @@ func init() {
 	log.SetLevel(logLevel)
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {}
-
-func parseAppDeployArgs(args []string) {
-	plaformConfig, _ := platform.GetConfig()
-
-	activeApp = plaformConfig.ActiveApp
-	activeDeploy = plaformConfig.ActiveDeploy
-
-	if len(args) > 1 {
-		if args[0] != "" {
-			activeApp = args[0]
-		}
-
-		if args[1] != "" {
-			activeDeploy = args[1]
-		}
+func setActiveApp() {
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Error determining the current directory: %s", err)
 	}
-	if activeApp == "" {
-		log.Fatalln("No app name found. app_name and deploy_name are expected as arguments.")
+
+	app, err := platform.CheckForConf(cwd)
+	if err != nil {
+		log.Fatalf("Unable to determine the application for this command: %s", err)
 	}
-	if activeDeploy == "" {
-		log.Fatalln("No deploy name found. app_name and deploy_name are expected as arguments.")
-	}
+
+	activeApp = path.Base(app)
 }

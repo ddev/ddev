@@ -7,31 +7,29 @@ import (
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
 // LocalDevRMCmd represents the stop command
 var LocalDevRMCmd = &cobra.Command{
-	Use:   "rm [app_name] [environment_name]",
+	Use:   "rm",
 	Short: "Remove an application's local services.",
 	Long:  `Remove will delete the local service containers from this machine..`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app := platform.PluginMap[strings.ToLower(plugin)]
 
 		opts := platform.AppOptions{
-			Name:        activeApp,
-			Environment: activeDeploy,
+			Name: activeApp,
 		}
 		app.SetOpts(opts)
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 		if !dockerutil.IsRunning(nameContainer) {
-			Failed("App not running locally. Try `dev add`.")
+			Failed("App not running locally. Try `ddev start`.")
 		}
 
 		if !platform.ComposeFileExists(app) {
-			Failed("No docker-compose yaml for this site. Try `dev add`.")
+			Failed("No docker-compose.yaml could be found for this application.")
 		}
 
 		err := app.Down()
@@ -40,7 +38,7 @@ var LocalDevRMCmd = &cobra.Command{
 			Failed("Could not remove site: %s", app.ContainerName())
 		}
 
-		color.Cyan("Successfully removed the %s deploy for the %s application.\n", activeDeploy, activeApp)
+		Success("Successfully removed the %s application.\n", activeApp)
 	},
 }
 
