@@ -40,7 +40,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func setActiveApp(appName string, deployName string) error {
+func testSetActiveApp(appName string, deployName string) error {
 	if appName == "" && deployName == "" {
 		_, err := system.RunCommand(DdevBin, []string{"config", "unset", "--activeapp", "--activedeploy"})
 		return err

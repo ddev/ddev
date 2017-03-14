@@ -8,7 +8,7 @@ services:
     container_name: {{.name}}-db
     image: {{.db_image}}
     volumes:
-      - "../data:/db"
+      - "./data:/db"
     restart: always
     environment:
       MYSQL_DATABASE: data

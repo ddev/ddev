@@ -65,7 +65,7 @@ var ImportCmd = &cobra.Command{
 		}
 
 		cmdArgs := []string{
-			"-f", path.Join(app.AbsPath(), "docker-compose.yaml"),
+			"-f", path.Join(app.AbsPath(), ".ddev", "docker-compose.yaml"),
 			"exec",
 			"-T", nameContainer,
 			"./import.sh",

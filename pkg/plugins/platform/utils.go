@@ -29,8 +29,8 @@ func PrepLocalSiteDirs(base string) error {
 
 	dirs := []string{
 		".ddev",
-		"files",
-		"data",
+		".ddev/files",
+		".ddev/data",
 	}
 	for _, d := range dirs {
 		dirPath := path.Join(base, d)

@@ -154,7 +154,7 @@ func (l LocalApp) UnpackResources() error {
 		[]string{
 			"-xzvf",
 			l.Archive,
-			"-C", path.Join(basePath, "files"),
+			"-C", path.Join(basePath, ".ddev", "files"),
 			"--exclude=sites/default/settings.php",
 			"--exclude=docroot/wp-config.php",
 		},
@@ -165,8 +165,8 @@ func (l LocalApp) UnpackResources() error {
 	}
 
 	err = os.Rename(
-		path.Join(basePath, "files", l.Name+".sql"),
-		path.Join(basePath, "data", "data.sql"),
+		path.Join(basePath, ".ddev", "files", l.Name+".sql"),
+		path.Join(basePath, ".ddev", "data", "data.sql"),
 	)
 	if err != nil {
 		return err
@@ -174,10 +174,10 @@ func (l LocalApp) UnpackResources() error {
 
 	// Ensure sites/default is readable.
 	if l.AppType == "drupal" || l.AppType == "drupal8" {
-		os.Chmod(path.Join(basePath, "files", "docroot", "sites", "default"), 0755)
+		os.Chmod(path.Join(basePath, ".ddev", "files", "docroot", "sites", "default"), 0755)
 	}
 
-	rsyncFrom := path.Join(basePath, "files", "docroot", fileDir)
+	rsyncFrom := path.Join(basePath, ".ddev", "files", "docroot", fileDir)
 	rsyncTo := path.Join(basePath, "docroot", fileDir)
 	out, err = system.RunCommand(
 		"rsync",
@@ -190,12 +190,12 @@ func (l LocalApp) UnpackResources() error {
 	// Ensure extracted files are writable so they can be removed when we're done.
 	out, err = system.RunCommand(
 		"chmod",
-		[]string{"-R", "ugo+rw", path.Join(basePath, "files")},
+		[]string{"-R", "ugo+rw", path.Join(basePath, ".ddev", "files")},
 	)
 	if err != nil {
 		return fmt.Errorf("%s - %s", err.Error(), string(out))
 	}
-	defer os.RemoveAll(path.Join(basePath, "files"))
+	defer os.RemoveAll(path.Join(basePath, ".ddev", "files"))
 
 	return nil
 }
