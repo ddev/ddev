@@ -28,6 +28,10 @@ var ConfigCommand = &cobra.Command{
 		configFile := path.Join(appRoot, ".ddev", "config.yaml")
 
 		c, err := appconfig.NewAppConfig(appRoot, configFile)
+		if err != nil {
+			log.Fatalf("Could not read config: %v", err)
+		}
+
 		err = c.Config()
 		if err != nil {
 			log.Fatalf("There was a problem configuring your application: %v\n", err)
