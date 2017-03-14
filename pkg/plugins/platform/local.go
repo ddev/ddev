@@ -35,7 +35,7 @@ func NewLocalApp(name string, environment string) *LocalApp {
 func (l *LocalApp) SetOpts(opts AppOptions) {
 	l.Options = &opts
 	l.Name = opts.Name
-	l.Template = LegacyComposeTemplate
+	l.Template = AppComposeTemplate
 	if opts.Template != "" {
 		l.Template = opts.Template
 	}

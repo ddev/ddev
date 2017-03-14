@@ -169,12 +169,11 @@ func RenderAppTable(apps map[string]map[string]string, name string) {
 		fmt.Printf("%v %s %v found.\n", len(apps), name, FormatPlural(len(apps), "site", "sites"))
 		table := uitable.New()
 		table.MaxColWidth = 200
-		table.AddRow("NAME", "ENVIRONMENT", "TYPE", "URL", "DATABASE URL", "STATUS")
+		table.AddRow("NAME", "TYPE", "URL", "DATABASE URL", "STATUS")
 
 		for _, site := range apps {
 			table.AddRow(
 				site["name"],
-				site["environment"],
 				site["type"],
 				site["url"],
 				fmt.Sprintf("127.0.0.1:%s", site["DbPublicPort"]),
@@ -193,10 +192,10 @@ func ProcessContainer(l map[string]map[string]string, plugin string, containerNa
 	label := container.Labels
 
 	appName := label["com.drud.site-name"]
+	appType := label["com.drud.app-type"]
 	containerType := label["com.drud.container-type"]
-	appID := appName
 
-	_, exists := l[appID]
+	_, exists := l[appName]
 	if exists == false {
 		app := PluginMap[strings.ToLower(plugin)]
 		opts := AppOptions{
@@ -204,11 +203,11 @@ func ProcessContainer(l map[string]map[string]string, plugin string, containerNa
 		}
 		app.SetOpts(opts)
 
-		l[appID] = map[string]string{
+		l[appName] = map[string]string{
 			"name":   appName,
 			"status": container.State,
 			"url":    app.URL(),
-			"type":   app.GetType(),
+			"type":   appType,
 		}
 	}
 
@@ -220,11 +219,11 @@ func ProcessContainer(l map[string]map[string]string, plugin string, containerNa
 	}
 
 	if containerType == "web" {
-		l[appID]["WebPublicPort"] = fmt.Sprintf("%d", publicPort)
+		l[appName]["WebPublicPort"] = fmt.Sprintf("%d", publicPort)
 	}
 
 	if containerType == "db" {
-		l[appID]["DbPublicPort"] = fmt.Sprintf("%d", publicPort)
+		l[appName]["DbPublicPort"] = fmt.Sprintf("%d", publicPort)
 	}
 
 }
@@ -375,6 +374,7 @@ func RenderComposeYAML(app App) (string, error) {
 		"name":      app.ContainerName(),
 		"srctarget": "/var/www/html",
 		"site_name": opts.Name,
+		"apptype":   app.GetType(),
 	}
 
 	if opts.WebImageTag == "unison" || strings.HasSuffix(opts.WebImage, ":unison") {
