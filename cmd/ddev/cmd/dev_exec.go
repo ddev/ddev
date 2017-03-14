@@ -68,7 +68,7 @@ var LocalDevExecCmd = &cobra.Command{
 			return
 		}
 
-		Failed("Invalid arguments detected. Please use a command in the form of: exec [app_name] [environment_name] '[cmd]'")
+		Failed("Invalid arguments detected. Please use a command in the form of: ddev exec '[cmd]'")
 	},
 }
 
