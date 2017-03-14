@@ -110,7 +110,7 @@ func (c *AppConfig) Read() error {
 // Config goes through a set of prompts to receive user input and generate an AppConfig struct.
 func (c *AppConfig) Config() error {
 	if c.configExists() {
-		fmt.Printf("Editing existing ddev project config at %s\n\n", c.ConfigPath)
+		fmt.Printf("Editing existing ddev project at %s\n\n", c.AppRoot)
 	} else {
 		fmt.Printf("Creating a new ddev project config in the current directory (%s)\n", c.AppRoot)
 		fmt.Printf("Once completed, you configuration will be written to %s\n\n\n", c.ConfigPath)
@@ -138,6 +138,10 @@ func (c *AppConfig) Config() error {
 		return err
 	}
 
+	if !system.FileExists(c.dockerComposeYAMLPath()) {
+		c.WriteDockerComposeConfig()
+	}
+
 	// Log the resulting config, for debugging purposes.
 	log.WithFields(log.Fields{
 		"Config": pretty.Prettify(c),
@@ -146,12 +150,23 @@ func (c *AppConfig) Config() error {
 	return nil
 }
 
+// dockerComposeYAMLPath returns the absolute path to where the docker-compose.yaml should exist for this app configuration.
+func (c *AppConfig) dockerComposeYAMLPath() string {
+	return path.Join(c.AppRoot, ".ddev", "docker-compose.yaml")
+}
+
+// URL returns the URL to the app controlled by this config.
+func (c *AppConfig) URL() string {
+	return c.Name + "." + DDevTLD
+}
+
 // WriteLocalAppYAML writes docker-compose.yaml to $HOME/.drud/app.Path()
 func (c *AppConfig) WriteDockerComposeConfig() error {
+	log.WithFields(log.Fields{
+		"Location": c.dockerComposeYAMLPath(),
+	}).Debug("Writing docker-compose.yaml")
 
-	basePath := c.AppRoot
-
-	f, err := os.Create(path.Join(basePath, ".ddev", "docker-compose.yaml"))
+	f, err := os.Create(c.dockerComposeYAMLPath())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -161,10 +176,12 @@ func (c *AppConfig) WriteDockerComposeConfig() error {
 	if err != nil {
 		return err
 	}
-	f.WriteString(rendered)
-	return nil
+	_, err = f.WriteString(rendered)
+
+	return err
 }
 
+// RenderComposeYAML renders the contents of docker-compose.yaml.
 func (c *AppConfig) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
@@ -177,6 +194,8 @@ func (c *AppConfig) RenderComposeYAML() (string, error) {
 		"name":    c.Name,
 		"tld":     DDevTLD,
 		"docroot": filepath.Join("../", c.Docroot),
+		// @TODO: this absolutely needs to come from outside the appconfig package.
+		"app_url": c.URL(),
 	}
 
 	templ.Execute(&doc, templateVars)

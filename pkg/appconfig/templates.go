@@ -8,7 +8,7 @@ const DDevComposeTemplate = `version: '2'
 services:
   {{.name}}-db:
     container_name: {{.name}}-db
-    image: {{.db_image}}
+    image: $DRUD_DBIMAGE
     volumes:
       - "./data:/db"
     restart: always
@@ -22,7 +22,7 @@ services:
       com.drud.container-type: web
   {{.name}}-web:
     container_name: {{.name}}-web
-    image: {{.web_image}}
+    image: $DRUD_WEBIMAGE
     volumes:
       - "{{ .docroot }}/:/var/www/html/docroot"
     restart: always
