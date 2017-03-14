@@ -160,7 +160,7 @@ func (c *AppConfig) URL() string {
 	return c.Name + "." + DDevTLD
 }
 
-// WriteLocalAppYAML writes docker-compose.yaml to $HOME/.drud/app.Path()
+// WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.
 func (c *AppConfig) WriteDockerComposeConfig() error {
 	log.WithFields(log.Fields{
 		"Location": c.dockerComposeYAMLPath(),
