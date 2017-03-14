@@ -27,7 +27,7 @@ var allowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
 
 // AppConfig defines the yaml config file format for ddev applications
 type AppConfig struct {
-	AppVersion string `yaml:"version"`
+	APIVersion string `yaml:"APIVersion"`
 	Name       string `yaml:"name"`
 	AppType    string `yaml:"type"`
 	Docroot    string `yaml:"docroot"`
@@ -43,7 +43,7 @@ func NewAppConfig(AppRoot string, ConfigPath string) (*AppConfig, error) {
 	c := &AppConfig{}
 	c.ConfigPath = ConfigPath
 	c.AppRoot = AppRoot
-	c.AppVersion = CurrentAppVersion
+	c.APIVersion = CurrentAppVersion
 
 	// These should always default to the latest image/tag names from the Version package.
 	c.WebImage = version.WebImg + ":" + version.WebTag
@@ -51,12 +51,14 @@ func NewAppConfig(AppRoot string, ConfigPath string) (*AppConfig, error) {
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
-	err := c.Read()
-
-	if err != nil {
-		log.Debug("Existing config not found or could not be loaded")
+	if c.configExists() {
+		err := c.Read()
+		if err != nil {
+			return c, err
+		}
 	}
-	return c, err
+
+	return c, nil
 }
 
 // Write the app configuration to a specific location on disk
@@ -107,15 +109,17 @@ func (c *AppConfig) Read() error {
 
 // Config goes through a set of prompts to receive user input and generate an AppConfig struct.
 func (c *AppConfig) Config() error {
+	if c.configExists() {
+		fmt.Printf("Editing existing ddev project config at %s\n\n", c.ConfigPath)
+	} else {
+		fmt.Printf("Creating a new ddev project config in the current directory (%s)\n", c.AppRoot)
+		fmt.Printf("Once completed, you configuration will be written to %s\n\n\n", c.ConfigPath)
+	}
+
 	// Log what the starting config is, for debugging purposes.
 	log.WithFields(log.Fields{
 		"Existing config": pretty.Prettify(c),
 	}).Debug("Configuring application")
-
-	// Default Version
-	if c.AppVersion == "" {
-		c.AppVersion = "1"
-	}
 
 	var namePrompt string
 	if c.Name == "" {
@@ -201,6 +205,13 @@ func (c *AppConfig) docrootPrompt() error {
 		}
 	}
 	return nil
+}
+
+func (c *AppConfig) configExists() bool {
+	if _, err := os.Stat(c.ConfigPath); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
 
 // appTypePrompt handles the AppType workflow.
