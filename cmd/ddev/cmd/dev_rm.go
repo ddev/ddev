@@ -29,7 +29,7 @@ var LocalDevRMCmd = &cobra.Command{
 		}
 
 		if !platform.ComposeFileExists(app) {
-			Failed("No docker-compose yaml for this site. Try `ddev start`.")
+			Failed("No docker-compose.yaml could be found for this application.")
 		}
 
 		err := app.Down()

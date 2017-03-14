@@ -73,7 +73,7 @@ func init() {
 func setActiveApp() {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Printf("Error determining the current directory: %s", err)
+		log.Fatalf("Error determining the current directory: %s", err)
 	}
 
 	app, err := platform.CheckForConf(cwd)
