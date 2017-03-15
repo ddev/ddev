@@ -37,11 +37,6 @@ func NewLocalApp(name string, environment string) *LocalApp {
 func (l *LocalApp) SetOpts(opts AppOptions) {
 	l.Options = &opts
 	l.Name = opts.Name
-	l.Template = AppComposeTemplate
-	if opts.Template != "" {
-		l.Template = opts.Template
-	}
-	l.Environment = opts.Environment
 	//l.AppType = opts.AppType
 }
 
@@ -110,12 +105,6 @@ func (l *LocalApp) GetResources() error {
 
 	err = l.SetType()
 	if err != nil {
-		return err
-	}
-
-	err = WriteLocalAppYAML(l)
-	if err != nil {
-		log.Println("Could not create docker-compose.yaml")
 		return err
 	}
 
@@ -203,12 +192,6 @@ func (l LocalApp) Start() error {
 	composePath := path.Join(l.AbsPath(), ".ddev", "docker-compose.yaml")
 
 	err := l.SetType()
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Creating docker-compose config.")
-	err = WriteLocalAppYAML(&l)
 	if err != nil {
 		return err
 	}
