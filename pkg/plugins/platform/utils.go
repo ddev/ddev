@@ -40,25 +40,6 @@ func PrepLocalSiteDirs(base string) error {
 	return nil
 }
 
-// WriteLocalAppYAML writes docker-compose.yaml to .ddev folder
-func WriteLocalAppYAML(app App) error {
-
-	basePath := app.AbsPath()
-
-	f, err := os.Create(path.Join(basePath, ".ddev", "docker-compose.yaml"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	rendered, err := RenderComposeYAML(app)
-	if err != nil {
-		return err
-	}
-	f.WriteString(rendered)
-	return nil
-}
-
 // GetPort determines and returns the public port for a given container.
 func GetPort(name string) (int64, error) {
 	client, _ := GetDockerClient()
@@ -337,46 +318,6 @@ func Cleanup(app App) error {
 	}
 
 	return nil
-}
-func RenderComposeYAML(app App) (string, error) {
-	var doc bytes.Buffer
-	var err error
-	templ := template.New("compose template")
-	templ, err = templ.Parse(app.GetTemplate())
-	if err != nil {
-		return "", err
-	}
-
-	opts := app.GetOpts()
-
-	if opts.WebImage == "" {
-		opts.WebImage = version.WebImg + ":" + version.WebTag
-	}
-	if opts.DbImage == "" {
-		opts.DbImage = version.DBImg + ":" + version.DBTag
-	}
-	if opts.WebImageTag != "" {
-		opts.WebImage = SubTag(opts.WebImage, opts.WebImageTag)
-	}
-	if opts.DbImageTag != "" {
-		opts.DbImage = SubTag(opts.DbImage, opts.DbImageTag)
-	}
-
-	templateVars := map[string]string{
-		"web_image": opts.WebImage,
-		"db_image":  opts.DbImage,
-		"name":      app.ContainerName(),
-		"srctarget": "/var/www/html",
-		"site_name": opts.Name,
-		"apptype":   app.GetType(),
-	}
-
-	if opts.WebImageTag == "unison" || strings.HasSuffix(opts.WebImage, ":unison") {
-		templateVars["srctarget"] = "/src"
-	}
-
-	templ.Execute(&doc, templateVars)
-	return doc.String(), nil
 }
 
 // CheckForConf checks for a ddev.yaml at the cwd or parent dirs.
