@@ -40,7 +40,7 @@ tar -xf $local_file
 rm -rf build-tools/*
 cp -r $internal_name/ build-tools/
 rm -rf $internal_name/
-rm -rf build-tools/tests/
+rm -rf build-tools/tests/ build-tools/circle.yml
 git add build-tools
 echo "Updated build-tools to $tag
 

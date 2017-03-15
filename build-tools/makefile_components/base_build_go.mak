@@ -44,7 +44,7 @@ linux darwin: $(GOFILES)
 	    $(BUILD_IMAGE)                    \
 	    /bin/sh -c '                      \
 	        GOOS=$@                       \
-	        go install -installsuffix 'static' -ldflags "$(LDFLAGS)" $(SRC_AND_UNDER)  \
+	        go install -installsuffix static -ldflags "$(LDFLAGS)" $(SRC_AND_UNDER)  \
 	    '
 	@touch $@
 	@echo $(VERSION) >VERSION.txt
