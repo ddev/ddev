@@ -10,12 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO: Temporary hack left in until workspace issues moved, March 2017
-var (
-	activeApp    string
-	activeDeploy string
-)
-
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
 	Use:   "config",
