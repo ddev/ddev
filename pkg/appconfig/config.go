@@ -35,8 +35,8 @@ type AppConfig struct {
 	Docroot    string `yaml:"docroot"`
 	WebImage   string `yaml:"webimage"`
 	DBImage    string `yaml:"dbimage"`
-	ConfigPath string
-	AppRoot    string
+	ConfigPath string `yaml:"-"`
+	AppRoot    string `yaml:"-"`
 }
 
 // NewAppConfig creates a new AppConfig struct with defaults set. It is preferred to using new() directly.
