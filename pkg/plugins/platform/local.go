@@ -5,10 +5,12 @@ import (
 	"os"
 	"path"
 
+	"strings"
+
 	log "github.com/Sirupsen/logrus"
-	"github.com/drud/ddev/pkg/appconfig"
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
@@ -19,48 +21,37 @@ import (
 // LocalApp implements the AppBase interface local development apps
 type LocalApp struct {
 	AppBase
-	AppConfig *appconfig.AppConfig
-	Options   *AppOptions
+	AppConfig *ddevapp.Config
 }
 
 // NewLocalApp returns an empty local app with options struct pre inserted
-func NewLocalApp(name string, environment string) *LocalApp {
+func NewLocalApp(AppConfig *ddevapp.Config) *LocalApp {
 	app := &LocalApp{
-		Options: &AppOptions{},
+		AppConfig: AppConfig,
 	}
-
-	app.AppBase.Name = name
-
 	return app
 }
 
-func (l *LocalApp) SetOpts(opts AppOptions) {
-	l.Options = &opts
-	l.Name = opts.Name
-	//l.AppType = opts.AppType
-}
-
-func (l *LocalApp) GetOpts() AppOptions {
-	return *l.Options
-}
-
+// GetType returns the application type as a (lowercase) string
 func (l *LocalApp) GetType() string {
-	if l.AppType == "" {
-		l.SetType()
-	}
-	return l.AppType
+	return strings.ToLower(l.AppConfig.AppType)
 }
 
 // Init sets values from the AppInitOptions on the Drud app object
-func (l *LocalApp) Init(opts AppOptions) {
-	l.SetOpts(opts)
-
+func (l *LocalApp) Init() error {
 	basePath := l.AbsPath()
-	err := PrepLocalSiteDirs(basePath)
+	config, err := ddevapp.NewConfig(basePath)
+	if err != nil {
+		return err
+	}
+	l.AppConfig = config
+
+	err = PrepLocalSiteDirs(basePath)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+	return nil
 }
 
 // AbsPath return the full path from root to the app directory
@@ -80,7 +71,7 @@ func (l LocalApp) AbsPath() string {
 
 // GetName returns the  name for local app
 func (l LocalApp) GetName() string {
-	return l.Name
+	return l.AppConfig.Name
 }
 
 // ContainerPrefix returns the base name for local app containers
@@ -90,7 +81,7 @@ func (l LocalApp) ContainerPrefix() string {
 
 // ContainerName returns the base name for local app containers
 func (l LocalApp) ContainerName() string {
-	return fmt.Sprintf("%s-%s", l.ContainerPrefix(), l.Name)
+	return fmt.Sprintf("%s-%s", l.ContainerPrefix(), l.GetName())
 }
 
 // GetResources downloads external data for this app
@@ -103,17 +94,12 @@ func (l *LocalApp) GetResources() error {
 		fmt.Println(fmt.Errorf("Error retrieving site resources: %s", err))
 	}
 
-	err = l.SetType()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
 // GetArchive downloads external data
 func (l *LocalApp) GetArchive() error {
-	name := fmt.Sprintf("production-%s.tar.gz", l.Name)
+	name := fmt.Sprintf("production-%s.tar.gz", l.GetName())
 	basePath := l.AbsPath()
 	archive := path.Join(basePath, ".ddev", name)
 
@@ -123,15 +109,21 @@ func (l *LocalApp) GetArchive() error {
 	return nil
 }
 
+// DockerComposeYAMLPath returns the absolute path to where the docker-compose.yaml should exist for this app configuration.
+// This is a bit redundant, but is here to avoid having to expose too many details of AppConfig.
+func (l LocalApp) DockerComposeYAMLPath() string {
+	return l.AppConfig.DockerComposeYAMLPath()
+}
+
 // UnpackResources takes the archive from the GetResources method and
 // unarchives it. Then the contents are moved to their proper locations.
 func (l LocalApp) UnpackResources() error {
 	basePath := l.AbsPath()
 	fileDir := ""
 
-	if l.AppType == "wp" {
+	if l.GetType() == "wordpress" {
 		fileDir = "content/uploads"
-	} else if l.AppType == "drupal" || l.AppType == "drupal8" {
+	} else if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
 		fileDir = "sites/default/files"
 	}
 
@@ -151,7 +143,7 @@ func (l LocalApp) UnpackResources() error {
 	}
 
 	err = os.Rename(
-		path.Join(basePath, ".ddev", "files", l.Name+".sql"),
+		path.Join(basePath, ".ddev", "files", l.GetName()+".sql"),
 		path.Join(basePath, ".ddev", "data", "data.sql"),
 	)
 	if err != nil {
@@ -159,7 +151,7 @@ func (l LocalApp) UnpackResources() error {
 	}
 
 	// Ensure sites/default is readable.
-	if l.AppType == "drupal" || l.AppType == "drupal8" {
+	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
 		os.Chmod(path.Join(basePath, ".ddev", "files", "docroot", "sites", "default"), 0755)
 	}
 
@@ -188,17 +180,11 @@ func (l LocalApp) UnpackResources() error {
 
 // Start initiates docker-compose up
 func (l LocalApp) Start() error {
-
-	composePath := path.Join(l.AbsPath(), ".ddev", "docker-compose.yaml")
-
-	err := l.SetType()
-	if err != nil {
-		return err
-	}
+	composePath := l.DockerComposeYAMLPath()
 
 	EnsureDockerRouter()
 
-	err = l.AddHostsEntry()
+	err := l.AddHostsEntry()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -216,9 +202,36 @@ func (l LocalApp) Start() error {
 	)
 }
 
+// DockerEnv sets environment variables for a docker-compose run.
+func (l LocalApp) DockerEnv() {
+	envVars := map[string]string{
+		"DRUD_DBIMAGE":  l.AppConfig.DBImage,
+		"DRUD_WEBIMAGE": l.AppConfig.WebImage,
+	}
+
+	// Only set values if they don't already exist in env.
+	for k, v := range envVars {
+		if os.Getenv(k) != "" {
+
+			log.WithFields(log.Fields{
+				"Key":   k,
+				"Value": v,
+			}).Debug("Setting DockerEnv variable")
+
+			err := os.Setenv(k, v)
+			// @ TODO: I have no idea what a Setenv error would even look like, so I'm not sure what
+			// to do other than notify the user.
+			if err != nil {
+				fmt.Printf("Could not set the environment variable %s=%s: %v\n", k, v, err)
+			}
+		}
+	}
+}
+
 // Stop initiates docker-compose stop
 func (l LocalApp) Stop() error {
-	composePath := path.Join(l.AbsPath(), ".ddev", "docker-compose.yaml")
+	composePath := l.DockerComposeYAMLPath()
+	l.DockerEnv()
 
 	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
 		return fmt.Errorf("site does not exist or is malformed")
@@ -228,16 +241,6 @@ func (l LocalApp) Stop() error {
 		"-f", composePath,
 		"stop",
 	)
-}
-
-// SetType determines the app type and sets it
-func (l *LocalApp) SetType() error {
-	appType, err := DetermineAppType(l.AbsPath())
-	if err != nil {
-		return err
-	}
-	l.AppType = appType
-	return nil
 }
 
 // Wait ensures that the app appears to be read before returning
@@ -270,20 +273,13 @@ func (l *LocalApp) FindPorts() error {
 func (l *LocalApp) Config() error {
 	basePath := l.AbsPath()
 
-	if l.AppType == "" {
-		err := l.SetType()
-		if err != nil {
-			return err
-		}
-	}
-
 	err := l.FindPorts()
 	if err != nil {
 		return err
 	}
 
 	settingsFilePath := ""
-	if l.AppType == "drupal" || l.AppType == "drupal8" {
+	if l.GetType() == "drupal" || l.GetType() == "drupal8" {
 		log.Printf("Drupal site. Creating settings.php file.")
 		settingsFilePath = path.Join(basePath, "docroot/sites/default/settings.php")
 		drupalConfig := model.NewDrupalConfig()
@@ -291,7 +287,7 @@ func (l *LocalApp) Config() error {
 		if drupalConfig.HashSalt == "" {
 			drupalConfig.HashSalt = stringutil.RandomString(64)
 		}
-		if l.AppType == "drupal8" {
+		if l.GetType() == "drupal8" {
 			drupalConfig.IsDrupal8 = true
 		}
 
@@ -310,7 +306,7 @@ func (l *LocalApp) Config() error {
 		drushSettingsPath := path.Join(basePath, "drush.settings.php")
 		drushConfig := model.NewDrushConfig()
 		drushConfig.DatabasePort = dbPort
-		if l.AppType == "drupal8" {
+		if l.GetType() == "drupal8" {
 			drushConfig.IsDrupal8 = true
 		}
 		err = config.WriteDrushConfig(drushConfig, drushSettingsPath)
@@ -318,7 +314,7 @@ func (l *LocalApp) Config() error {
 		if err != nil {
 			log.Fatalln(err)
 		}
-	} else if l.AppType == "wp" {
+	} else if l.GetType() == "wp" {
 		log.Printf("WordPress site. Creating wp-config.php file.")
 		settingsFilePath = path.Join(basePath, "docroot/wp-config.php")
 		wpConfig := model.NewWordpressConfig()
@@ -342,7 +338,7 @@ func (l *LocalApp) Config() error {
 
 // Down stops the docker containers for the local project.
 func (l *LocalApp) Down() error {
-	composePath := path.Join(l.AbsPath(), ".ddev", "docker-compose.yaml")
+	composePath := l.DockerComposeYAMLPath()
 
 	err := dockerutil.DockerCompose(
 		"-f", composePath,
@@ -353,7 +349,6 @@ func (l *LocalApp) Down() error {
 	}
 
 	return nil
-
 }
 
 // URL returns the URL for a given application.

@@ -174,10 +174,6 @@ func ProcessContainer(l map[string]map[string]string, plugin string, containerNa
 	_, exists := l[appName]
 	if exists == false {
 		app := PluginMap[strings.ToLower(plugin)]
-		opts := AppOptions{
-			Name: appName,
-		}
-		app.SetOpts(opts)
 
 		l[appName] = map[string]string{
 			"name":   appName,
@@ -287,8 +283,7 @@ func SubTag(image string, tag string) string {
 
 // ComposeFileExists determines if a docker-compose.yml exists for a given app.
 func ComposeFileExists(app App) bool {
-	composeLOC := path.Join(app.AbsPath(), ".ddev", "docker-compose.yaml")
-	if _, err := os.Stat(composeLOC); os.IsNotExist(err) {
+	if _, err := os.Stat(app.DockerComposeYAMLPath()); os.IsNotExist(err) {
 		return false
 	}
 	return true
@@ -322,14 +317,14 @@ func Cleanup(app App) error {
 
 // CheckForConf checks for a ddev.yaml at the cwd or parent dirs.
 func CheckForConf(confPath string) (string, error) {
-	if system.FileExists(confPath + "/ddev.yaml") {
+	if system.FileExists(confPath + "/.ddev/config.yaml") {
 		return confPath, nil
 	}
 	pathList := strings.Split(confPath, "/")
 
 	for _ = range pathList {
 		confPath = path.Dir(confPath)
-		if system.FileExists(confPath + "/ddev.yaml") {
+		if system.FileExists(confPath + "/.ddev/config.yaml") {
 			return confPath, nil
 		}
 	}
