@@ -181,6 +181,7 @@ func (l LocalApp) UnpackResources() error {
 // Start initiates docker-compose up
 func (l LocalApp) Start() error {
 	composePath := l.DockerComposeYAMLPath()
+	l.DockerEnv()
 
 	EnsureDockerRouter()
 
@@ -211,7 +212,7 @@ func (l LocalApp) DockerEnv() {
 
 	// Only set values if they don't already exist in env.
 	for k, v := range envVars {
-		if os.Getenv(k) != "" {
+		if os.Getenv(k) == "" {
 
 			log.WithFields(log.Fields{
 				"Key":   k,
@@ -353,12 +354,12 @@ func (l *LocalApp) Down() error {
 
 // URL returns the URL for a given application.
 func (l *LocalApp) URL() string {
-	return "http://" + l.HostName()
+	return "http://" + l.AppConfig.Hostname()
 }
 
 // HostName returns the hostname of a given application.
 func (l *LocalApp) HostName() string {
-	return l.ContainerName()
+	return l.AppConfig.Hostname()
 }
 
 // AddHostsEntry will add the local site URL to the local hostfile.

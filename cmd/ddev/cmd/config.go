@@ -21,7 +21,11 @@ var ConfigCommand = &cobra.Command{
 
 		c, err := ddevapp.NewConfig(appRoot)
 		if err != nil {
-			log.Fatalf("Could not read config: %v", err)
+			// If there is an error reading the config and the file exists, we're not sure
+			// how to proceed.
+			if c.ConfigExists() {
+				log.Fatalf("Could not read config: %v", err)
+			}
 		}
 
 		err = c.Config()
@@ -33,6 +37,10 @@ var ConfigCommand = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Could not write ddev config file: %v\n", err)
 		}
+	},
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// We need to override the PersistentPrerun which checks for a config.yaml in this instance,
+		// since we're actually generating the config here.
 	},
 }
 

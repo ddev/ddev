@@ -61,7 +61,7 @@ func NewConfig(AppRoot string) (*Config, error) {
 	return c, nil
 }
 
-// Write the app configuration to a specific location on disk
+// Write the app configuration to the .ddev folder.
 func (c *Config) Write() error {
 	err := prepDirectory(filepath.Dir(c.ConfigPath))
 	if err != nil {
@@ -79,6 +79,11 @@ func (c *Config) Write() error {
 	err = ioutil.WriteFile(c.ConfigPath, cfgbytes, 0644)
 	if err != nil {
 		return err
+	}
+
+	// Write docker-compose.yaml (if it doesn't exist).
+	if !system.FileExists(c.DockerComposeYAMLPath()) {
+		c.WriteDockerComposeConfig()
 	}
 
 	log.Debug("Write successful")
@@ -109,7 +114,7 @@ func (c *Config) Read() error {
 
 // Config goes through a set of prompts to receive user input and generate an Config struct.
 func (c *Config) Config() error {
-	if c.configExists() {
+	if c.ConfigExists() {
 		fmt.Printf("Editing existing ddev project at %s\n\n", c.AppRoot)
 	} else {
 		fmt.Printf("Creating a new ddev project config in the current directory (%s)\n", c.AppRoot)
@@ -136,10 +141,6 @@ func (c *Config) Config() error {
 		return err
 	}
 
-	if !system.FileExists(c.DockerComposeYAMLPath()) {
-		c.WriteDockerComposeConfig()
-	}
-
 	// Log the resulting config, for debugging purposes.
 	log.WithFields(log.Fields{
 		"Config": pretty.Prettify(c),
@@ -153,8 +154,8 @@ func (c *Config) DockerComposeYAMLPath() string {
 	return path.Join(c.AppRoot, ".ddev", "docker-compose.yaml")
 }
 
-// URL returns the URL to the app controlled by this config.
-func (c *Config) URL() string {
+// Hostname returns the hostname to the app controlled by this config.
+func (c *Config) Hostname() string {
 	return c.Name + "." + DDevTLD
 }
 
@@ -193,7 +194,7 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		"tld":     DDevTLD,
 		"docroot": filepath.Join("../", c.Docroot),
 		// @TODO: this absolutely needs to come from outside the Config package.
-		"app_url": c.URL(),
+		"app_url": c.Hostname(),
 	}
 
 	templ.Execute(&doc, templateVars)
@@ -222,7 +223,8 @@ func (c *Config) docrootPrompt() error {
 	return nil
 }
 
-func (c *Config) configExists() bool {
+// ConfigExists determines if a ddev config file exists for this application.
+func (c *Config) ConfigExists() bool {
 	if _, err := os.Stat(c.ConfigPath); os.IsNotExist(err) {
 		return false
 	}
