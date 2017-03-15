@@ -28,11 +28,7 @@ var LocalDevReconfigCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		app := platform.PluginMap[strings.ToLower(plugin)]
-
-		opts := platform.AppOptions{
-			Name: activeApp,
-		}
-		app.Init(opts)
+		app.Init()
 
 		err := app.Stop()
 		if err != nil {

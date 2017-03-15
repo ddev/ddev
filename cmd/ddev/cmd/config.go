@@ -3,10 +3,9 @@ package cmd
 import (
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 
-	"github.com/drud/ddev/pkg/appconfig"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/spf13/cobra"
 )
 
@@ -19,9 +18,8 @@ var ConfigCommand = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Could not determine current working directory: %v\n", err)
 		}
-		configFile := path.Join(appRoot, ".ddev", "config.yaml")
 
-		c, err := appconfig.NewAppConfig(appRoot, configFile)
+		c, err := ddevapp.NewConfig(appRoot)
 		if err != nil {
 			log.Fatalf("Could not read config: %v", err)
 		}

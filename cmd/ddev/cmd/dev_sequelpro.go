@@ -21,11 +21,7 @@ var LocalDevSequelproCmd = &cobra.Command{
 	Long:  `A helper command for easily using sequelpro with a drud app that has been initialized locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app := platform.PluginMap[strings.ToLower(plugin)]
-
-		opts := platform.AppOptions{
-			Name: activeApp,
-		}
-		app.SetOpts(opts)
+		app.Init()
 
 		nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
 

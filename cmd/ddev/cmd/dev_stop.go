@@ -16,11 +16,7 @@ var LocalDevStopCmd = &cobra.Command{
 	Long:  `Stop will turn off the local containers and not remove them.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app := platform.PluginMap[strings.ToLower(plugin)]
-
-		opts := platform.AppOptions{
-			Name: activeApp,
-		}
-		app.SetOpts(opts)
+		app.Init()
 
 		err := app.Stop()
 		if err != nil {

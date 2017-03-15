@@ -38,18 +38,8 @@ var StartCmd = &cobra.Command{
 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-
 		app := platform.PluginMap[strings.ToLower(plugin)]
-
-		opts := platform.AppOptions{
-			Name:        activeApp,
-			WebImage:    webImage,
-			WebImageTag: webImageTag,
-			DbImage:     dbImage,
-			DbImageTag:  dbImageTag,
-		}
-
-		app.Init(opts)
+		app.Init()
 
 		err := app.Start()
 		if err != nil {
