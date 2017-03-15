@@ -1,4 +1,4 @@
-package appconfig
+package ddevapp
 
 // DDevComposeTemplate is used to create the docker-compose.yaml for
 // legacy sites in the ddev env
