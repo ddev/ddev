@@ -280,7 +280,7 @@ func (l *LocalApp) Config() error {
 	}
 
 	settingsFilePath := ""
-	if l.GetType() == "drupal" || l.GetType() == "drupal8" {
+	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
 		log.Printf("Drupal site. Creating settings.php file.")
 		settingsFilePath = path.Join(basePath, "docroot/sites/default/settings.php")
 		drupalConfig := model.NewDrupalConfig()
@@ -315,7 +315,7 @@ func (l *LocalApp) Config() error {
 		if err != nil {
 			log.Fatalln(err)
 		}
-	} else if l.GetType() == "wp" {
+	} else if l.GetType() == "wordpress" {
 		log.Printf("WordPress site. Creating wp-config.php file.")
 		settingsFilePath = path.Join(basePath, "docroot/wp-config.php")
 		wpConfig := model.NewWordpressConfig()

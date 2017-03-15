@@ -36,7 +36,7 @@ services:
     working_dir: "/var/www/html/docroot"
     environment:
       - DEPLOY_NAME=local
-      - VIRTUAL_HOST={{ .name }}.{{ .drud_tld }}
+      - VIRTUAL_HOST={{ .app_url }}
     labels:
       com.drud.site-name: {{ .name }}
       com.drud.container-type: db
