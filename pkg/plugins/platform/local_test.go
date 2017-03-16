@@ -63,6 +63,13 @@ func TestLocalStart(t *testing.T) {
 	}
 	fmt.Printf("running from %s", TestDir)
 
+	// ensure we have docker network
+	client, _ := dockerutil.GetDockerClient()
+	err = EnsureNetwork(client, netName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	assert := assert.New(t)
 
 	app := PluginMap["local"]
@@ -85,11 +92,6 @@ func TestLocalStart(t *testing.T) {
 	assert.True(composeFile)
 
 	// ensure we have running containers for this site
-	client, _ := dockerutil.GetDockerClient()
-	err = EnsureNetwork(client, netName)
-	if err != nil {
-		log.Fatal(err)
-	}
 	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
 
 	dbContainer := ""
