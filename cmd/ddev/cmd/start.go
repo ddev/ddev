@@ -39,9 +39,12 @@ var StartCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		app := platform.PluginMap[strings.ToLower(plugin)]
-		app.Init()
+		err := app.Init()
+		if err != nil {
+			log.Fatalf("Could not initialize application: %v", err)
+		}
 
-		err := app.Start()
+		err = app.Start()
 		if err != nil {
 			Failed("Failed to start %s: %s", app.GetName(), err)
 		}
