@@ -31,9 +31,7 @@ linux darwin: $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
 	@rm -f VERSION.txt
 	@mkdir -p bin/$@ .go/std/$@ .go/bin .go/src/$(PKG)
-	docker run                                                            \
-	    -t                                                                \
-	    -u $(shell id -u):$(shell id -g)                                             \
+	docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
 	    -v $$(pwd)/.go:/go                                                 \
 	    -v $$(pwd):/go/src/$(PKG)                                          \
 	    -v $$(pwd)/bin/$@:/go/bin                                     \
@@ -44,7 +42,7 @@ linux darwin: $(GOFILES)
 	    $(BUILD_IMAGE)                    \
 	    /bin/sh -c '                      \
 	        GOOS=$@                       \
-	        go install -installsuffix 'static' -ldflags "$(LDFLAGS)" $(SRC_AND_UNDER)  \
+	        go install -installsuffix static -ldflags "$(LDFLAGS)" $(SRC_AND_UNDER)  \
 	    '
 	@touch $@
 	@echo $(VERSION) >VERSION.txt
@@ -53,9 +51,7 @@ static: govendor gofmt govet lint
 
 govendor:
 	@echo -n "Using govendor to check for missing dependencies and unused dependencies: "
-	docker run                                                            \
-		-t                                                                \
-	    -u $(shell id -u):$(shell id -g)                                             \
+	docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
@@ -64,9 +60,7 @@ govendor:
 
 gofmt:
 	@echo "Checking gofmt: "
-	docker run                                                            \
-		-t                                                                \
-	    -u $(shell id -u):$(shell id -g)                                             \
+	docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
@@ -75,9 +69,7 @@ gofmt:
 
 govet:
 	@echo -n "Checking go vet: "
-	docker run                                                            \
-		-t                                                                \
-		-u $(shell id -u):$(shell id -g)                                             \
+	docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
@@ -86,9 +78,7 @@ govet:
 
 golint:
 	@echo -n "Checking golint: "
-	docker run                                                            \
-		-t                                                                \
-	    -u $(shell id -u):$(shell id -g)                                             \
+	docker run -t --rm -u $(shell id -u):$(shell id -g)                   \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
