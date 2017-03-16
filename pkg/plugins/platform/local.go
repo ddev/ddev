@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 
 	"strings"
 
@@ -188,6 +189,13 @@ func (l LocalApp) Start() error {
 	composePath := l.DockerComposeYAMLPath()
 	l.DockerEnv()
 
+	// Write docker-compose.yaml (if it doesn't exist).
+	// If the user went through the `ddev config` process it will be written already, but
+	// we also do it here in the case of a manually created `.ddev/config.yaml` file.
+	if !system.FileExists(l.AppConfig.DockerComposeYAMLPath()) {
+		l.AppConfig.WriteDockerComposeConfig()
+	}
+
 	EnsureDockerRouter()
 
 	err := l.AddHostsEntry()
@@ -211,8 +219,12 @@ func (l LocalApp) Start() error {
 // DockerEnv sets environment variables for a docker-compose run.
 func (l LocalApp) DockerEnv() {
 	envVars := map[string]string{
-		"DRUD_DBIMAGE":  l.AppConfig.DBImage,
-		"DRUD_WEBIMAGE": l.AppConfig.WebImage,
+		"DDEV_DBIMAGE":  l.AppConfig.DBImage,
+		"DDEV_WEBIMAGE": l.AppConfig.WebImage,
+		"DDEV_APPROOT":  l.AppConfig.AppRoot,
+		"DDEV_DOCROOT":  filepath.Join(l.AppConfig.AppRoot, l.AppConfig.Docroot),
+		"DDEV_URL":      l.URL(),
+		"DDEV_HOSTNAME": l.HostName(),
 	}
 
 	// Only set values if they don't already exist in env.

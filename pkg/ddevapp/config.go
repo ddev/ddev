@@ -22,6 +22,9 @@ import (
 // We're not doing anything with AppVersion, so just default it to 1 for now.
 const CurrentAppVersion = "1"
 
+// This defines the DDev Platform. It's just hardcoded for now, but should be adjusted as we add more platforms.
+const DDevDefaultPlatform = "local"
+
 // DDevTLD defines the tld to use for DDev site URLs.
 const DDevTLD = "ddev.local"
 
@@ -37,6 +40,7 @@ type Config struct {
 	DBImage    string `yaml:"dbimage"`
 	ConfigPath string `yaml:"-"`
 	AppRoot    string `yaml:"-"`
+	Platform   string `yaml:"-"`
 }
 
 // NewConfig creates a new Config struct with defaults set. It is preferred to using new() directly.
@@ -46,6 +50,9 @@ func NewConfig(AppRoot string) (*Config, error) {
 	c.ConfigPath = path.Join(AppRoot, ".ddev", "config.yaml")
 	c.AppRoot = AppRoot
 	c.APIVersion = CurrentAppVersion
+
+	// Default platform for now.
+	c.Platform = DDevDefaultPlatform
 
 	// These should always default to the latest image/tag names from the Version package.
 	c.WebImage = version.WebImg + ":" + version.WebTag
@@ -193,8 +200,8 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		"name":    c.Name,
 		"tld":     DDevTLD,
 		"docroot": filepath.Join("../", c.Docroot),
-		// @TODO: this absolutely needs to come from outside the Config package.
-		"app_url": c.Hostname(),
+		"plugin":  c.Platform,
+		"appType": c.AppType,
 	}
 
 	templ.Execute(&doc, templateVars)

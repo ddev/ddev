@@ -74,5 +74,5 @@ services:
 networks:
    default:
      external:
-       name: drud_default
+       name: ddev_default
 `

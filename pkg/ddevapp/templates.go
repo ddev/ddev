@@ -2,13 +2,13 @@ package ddevapp
 
 // DDevComposeTemplate is used to create the docker-compose.yaml for
 // legacy sites in the ddev env
-// @TODO: this should be updated to simplify things where possible and remove 'drud' in favor of ddev.
+// @TODO: this should be updated to simplify things where possible and remove 'ddev' in favor of ddev.
 // This was not undertaken when moving the template into the appconfig package to reduce churn.
 const DDevComposeTemplate = `version: '2'
 services:
-  {{.name}}-db:
-    container_name: {{.name}}-db
-    image: $DRUD_DBIMAGE
+  {{ .name }}-db:
+    container_name: {{ .plugin }}-{{ .name }}-db
+    image: $DDEV_DBIMAGE
     volumes:
       - "./data:/db"
     restart: always
@@ -18,31 +18,38 @@ services:
     ports:
       - "3306"
     labels:
-      com.drud.site-name: {{ .name }}
-      com.drud.container-type: web
-  {{.name}}-web:
-    container_name: {{.name}}-web
-    image: $DRUD_WEBIMAGE
+      com.ddev.site-name: {{ .name }}
+      com.ddev.container-type: web
+      com.ddev.app-type: {{ .appType }}
+      com.ddev.docroot: $DDEV_DOCROOT
+      com.ddev.approot: $DDEV_APPROOT
+      com.ddev.app-url: $DDEV_URL
+  {{ .name }}-web:
+    container_name: {{ .plugin }}-{{ .name }}-web
+    image: $DDEV_WEBIMAGE
     volumes:
       - "{{ .docroot }}/:/var/www/html/docroot"
     restart: always
     depends_on:
-      - {{.name}}-db
+      - {{ .name }}-db
     links:
-      - {{.name}}-db:db
+      - {{ .name }}-db:db
     ports:
       - "80"
       - "8025"
     working_dir: "/var/www/html/docroot"
     environment:
       - DEPLOY_NAME=local
-      - VIRTUAL_HOST={{ .app_url }}
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
     labels:
-      com.drud.site-name: {{ .name }}
-      com.drud.container-type: db
-
+      com.ddev.site-name: {{ .name }}
+      com.ddev.container-type: db
+      com.ddev.app-type: {{ .appType }}
+      com.ddev.docroot: $DDEV_DOCROOT
+      com.ddev.approot: $DDEV_APPROOT
+      com.ddev.app-url: $DDEV_URL
 networks:
   default:
     external:
-      name: drud_default
+      name: ddev_default
 `

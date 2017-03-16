@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const netName = "drud_default"
+const netName = "ddev_default"
 
 var (
 	serviceType string

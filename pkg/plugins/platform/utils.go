@@ -164,22 +164,21 @@ func RenderAppTable(apps map[string]map[string]string, name string) {
 // ProcessContainer will process a docker container for an app listing.
 // Since apps contain multiple containers, ProcessContainer will be called once per container.
 func ProcessContainer(l map[string]map[string]string, plugin string, containerName string, container docker.APIContainers) {
-
 	label := container.Labels
-
-	appName := label["com.drud.site-name"]
-	appType := label["com.drud.app-type"]
-	containerType := label["com.drud.container-type"]
+	appName := label["com.ddev.site-name"]
+	appType := label["com.ddev.app-type"]
+	containerType := label["com.ddev.container-type"]
+	appRoot := label["com.ddev.approot"]
+	url := label["com.ddev.app-url"]
 
 	_, exists := l[appName]
 	if exists == false {
-		app := PluginMap[strings.ToLower(plugin)]
-
 		l[appName] = map[string]string{
-			"name":   appName,
-			"status": container.State,
-			"url":    app.URL(),
-			"type":   appType,
+			"name":    appName,
+			"status":  container.State,
+			"url":     url,
+			"type":    appType,
+			"approot": appRoot,
 		}
 	}
 
