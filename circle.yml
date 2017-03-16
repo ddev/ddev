@@ -11,14 +11,21 @@ stages:
     steps:
       - type: checkout
 
-      # This step is a temporary hack until we have some kind of auth built into ddev
-      - type: shell
-        command: wget -q -O /tmp/drud $DRUD_DOWNLOAD_URL && chmod ugo+x /tmp/drud && /tmp/drud config set --githubauthorg drud && /tmp/drud auth github
-        name: Download temporary drud binary and do gitub auth
-
       - type: shell
         command: sudo apt-get update && sudo apt-get install golang
         name: Upgrade golang
+
+      - type: shell
+        command: |
+          sudo apt-get install linux-image-extra-$(uname -r) linux-image-extra-virtual &&
+          sudo apt-get remove docker docker-engine &&
+          sudo apt-get update &&
+          sudo apt-get install  apt-transport-https ca-certificates  curl software-properties-common &&
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &&
+          sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" &&
+          sudo apt-get update &&
+          sudo apt-get install docker-ce=17.03.0~ce-0~ubuntu-trusty
+        name: Install docker
 
       - type: shell
         command: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
