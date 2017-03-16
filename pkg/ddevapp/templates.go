@@ -5,7 +5,7 @@ package ddevapp
 
 const DDevComposeTemplate = `version: '2'
 services:
-  {{ .plugin }}-${DDEV_SITENAME}-db:
+  {{ .plugin }}-{{.name }}-db:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-db
     image: $DDEV_DBIMAGE
     volumes:
@@ -23,7 +23,7 @@ services:
       com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
-  {{ .plugin }}-${DDEV_SITENAME}-web:
+  {{ .plugin }}-{{ .name }}-web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
     volumes:
