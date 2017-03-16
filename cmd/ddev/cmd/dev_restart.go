@@ -42,12 +42,6 @@ var LocalDevReconfigCmd = &cobra.Command{
 			Failed("Failed to start application.")
 		}
 
-		err = app.Config()
-		if err != nil {
-			log.Println(err)
-			Failed("Failed to configure application.")
-		}
-
 		fmt.Println("Waiting for site readiness. This may take a couple minutes...")
 		siteURL, err := app.Wait()
 		if err != nil {

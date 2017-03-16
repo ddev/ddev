@@ -24,10 +24,15 @@ type LocalApp struct {
 	AppConfig *ddevapp.Config
 }
 
-// NewLocalApp returns an empty local app with options struct pre inserted
-func NewLocalApp(AppConfig *ddevapp.Config) *LocalApp {
-	app := &LocalApp{
-		AppConfig: AppConfig,
+// NewLocalApp creates a new LocalApp based on any application root specified by appRoot
+func NewLocalApp(appRoot string) *LocalApp {
+	app := &LocalApp{}
+	config, err := ddevapp.NewConfig(appRoot)
+	app.AppConfig = config
+
+	err = PrepLocalSiteDirs(appRoot)
+	if err != nil {
+		log.Fatalln(err)
 	}
 	return app
 }
@@ -37,7 +42,7 @@ func (l *LocalApp) GetType() string {
 	return strings.ToLower(l.AppConfig.AppType)
 }
 
-// Init sets values from the AppInitOptions on the Drud app object
+// Init populates LocalApp settings based on the current working directory.
 func (l *LocalApp) Init() error {
 	basePath := l.AbsPath()
 	config, err := ddevapp.NewConfig(basePath)
