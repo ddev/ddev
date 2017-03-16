@@ -2,11 +2,13 @@ package platform
 
 import (
 	"fmt"
+	"log"
 	"path"
 	"testing"
 
 	"os"
 
+	"github.com/drud/ddev/cmd/ddev/cmd"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
@@ -24,6 +26,8 @@ var (
 	TestDBContainerName  = "local-" + TestSite + "-db"
 	TestWebContainerName = "local-" + TestSite + "-web"
 )
+
+const netName = "drud_default"
 
 func TestMain(m *testing.M) {
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
@@ -80,6 +84,10 @@ func TestLocalStart(t *testing.T) {
 
 	// ensure we have running containers for this site
 	client, _ := dockerutil.GetDockerClient()
+	err = cmd.EnsureNetwork(client, netName)
+	if err != nil {
+		log.Fatal(err)
+	}
 	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
 
 	dbContainer := ""
@@ -114,6 +122,10 @@ func TestLocalStop(t *testing.T) {
 
 	// ensure we have stopped containers for this site
 	client, _ := dockerutil.GetDockerClient()
+	err = cmd.EnsureNetwork(client, netName)
+	if err != nil {
+		log.Fatal(err)
+	}
 	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
 
 	var active bool
@@ -158,6 +170,10 @@ func TestLocalRemove(t *testing.T) {
 
 	// ensure we have stopped containers for this site
 	client, _ := dockerutil.GetDockerClient()
+	err = cmd.EnsureNetwork(client, netName)
+	if err != nil {
+		log.Fatal(err)
+	}
 	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
 
 	var active bool
