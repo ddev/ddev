@@ -2,12 +2,11 @@ package ddevapp
 
 // DDevComposeTemplate is used to create the docker-compose.yaml for
 // legacy sites in the ddev env
-// @TODO: this should be updated to simplify things where possible and remove 'ddev' in favor of ddev.
-// This was not undertaken when moving the template into the appconfig package to reduce churn.
+
 const DDevComposeTemplate = `version: '2'
 services:
-  {{ .plugin }}-{{ .name }}-db:
-    container_name: {{ .plugin }}-{{ .name }}-db
+  {{ .plugin }}-${DDEV_SITENAME}-db:
+    container_name: {{ .plugin }}-${DDEV_SITENAME}-db
     image: $DDEV_DBIMAGE
     volumes:
       - "./data:/db"
@@ -18,22 +17,22 @@ services:
     ports:
       - "3306"
     labels:
-      com.ddev.site-name: {{ .name }}
+      com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.container-type: web
       com.ddev.app-type: {{ .appType }}
       com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
-  {{ .plugin }}-{{ .name }}-web:
-    container_name: {{ .plugin }}-{{ .name }}-web
+  {{ .plugin }}-${DDEV_SITENAME}-web:
+    container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
     volumes:
       - "{{ .docroot }}/:/var/www/html/docroot"
     restart: always
     depends_on:
-      - {{ .plugin }}-{{ .name }}-db
+      - {{ .plugin }}-${DDEV_SITENAME}-db
     links:
-      - {{ .plugin }}-{{ .name }}-db:db
+      - {{ .plugin }}-${DDEV_SITENAME}-db:db
     ports:
       - "80"
       - "8025"
@@ -42,7 +41,7 @@ services:
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
     labels:
-      com.ddev.site-name: {{ .name }}
+      com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.container-type: db
       com.ddev.app-type: {{ .appType }}
       com.ddev.docroot: $DDEV_DOCROOT

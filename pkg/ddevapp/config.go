@@ -88,11 +88,6 @@ func (c *Config) Write() error {
 		return err
 	}
 
-	// Write docker-compose.yaml (if it doesn't exist).
-	if !system.FileExists(c.DockerComposeYAMLPath()) {
-		c.WriteDockerComposeConfig()
-	}
-
 	log.Debug("Write successful")
 	return nil
 }

@@ -219,6 +219,7 @@ func (l LocalApp) Start() error {
 // DockerEnv sets environment variables for a docker-compose run.
 func (l LocalApp) DockerEnv() {
 	envVars := map[string]string{
+		"DDEV_SITENAME": l.AppConfig.Name,
 		"DDEV_DBIMAGE":  l.AppConfig.DBImage,
 		"DDEV_WEBIMAGE": l.AppConfig.WebImage,
 		"DDEV_APPROOT":  l.AppConfig.AppRoot,
