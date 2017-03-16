@@ -6,13 +6,16 @@ stages:
     environment:
       GOPATH: /home/circleci
       DRUD_DEBUG: "true"
-      DRUD_DOWNLOAD_URL: "http://thefays.us/tmp/drud.linux"
 
     steps:
       - type: checkout
 
       - type: shell
-        command: sudo apt-get update && sudo apt-get install golang
+        command: |
+          sudo apt-get remove golang &&
+          wget -q -O /tmp/golang.tgz https://storage.googleapis.com/golang/go1.7.5.linux-amd64.tar.gz &&
+          cd /tmp && tar -xf golang.tgz &&
+          sudo rm -rf /usr/local/go && sudo mv go /usr/local
         name: Upgrade golang
 
       - type: shell
@@ -30,7 +33,6 @@ stages:
       - type: shell
         command: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
         name: "docker login"
-
 
       - type: shell
         command: sudo apt-get -qq update && sudo curl -L "https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose
