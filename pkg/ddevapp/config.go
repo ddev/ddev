@@ -133,10 +133,15 @@ func (c *Config) Config() error {
 		"Existing config": pretty.Prettify(c),
 	}).Debug("Configuring application")
 
-	namePrompt := "Name"
-	if c.Name != "" {
-		namePrompt = fmt.Sprintf("%s (%s)", namePrompt, c.Name)
+	namePrompt := "Project name"
+	if c.Name == "" {
+		dir, err := os.Getwd()
+		if err == nil {
+			c.Name = path.Base(dir)
+		}
 	}
+
+	namePrompt = fmt.Sprintf("%s (%s)", namePrompt, c.Name)
 	// Define an application name.
 	fmt.Print(namePrompt + ": ")
 	c.Name = getInput(c.Name)
@@ -252,7 +257,7 @@ func (c *Config) appTypePrompt() error {
 	appType, err := determineAppType(absDocroot)
 	if err == nil {
 		// If we found an application type just set it and inform the user.
-		fmt.Printf("Found a %s codebase at %s\n", appType, c.Docroot)
+		fmt.Printf("Found a %s codebase at %s\n", appType, filepath.Join(c.AppRoot, c.Docroot))
 		c.AppType = appType
 		return nil
 	}
