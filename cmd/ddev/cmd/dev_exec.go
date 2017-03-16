@@ -7,7 +7,6 @@ import (
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
-	"github.com/drud/drud-go/utils/pretty"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +32,6 @@ var LocalDevExecCmd = &cobra.Command{
 		}
 
 		app.DockerEnv()
-		fmt.Println(nameContainer)
 		cmdArgs := []string{
 			"-f", app.DockerComposeYAMLPath(),
 			"exec",
@@ -47,7 +45,6 @@ var LocalDevExecCmd = &cobra.Command{
 
 		cmdSplit := strings.Split(cmdString, " ")
 		cmdArgs = append(cmdArgs, cmdSplit...)
-		fmt.Println(pretty.Prettify(cmdArgs))
 		err := dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
 			log.Println(err)
