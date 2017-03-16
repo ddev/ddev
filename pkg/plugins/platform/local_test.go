@@ -8,7 +8,6 @@ import (
 
 	"os"
 
-	"github.com/drud/ddev/cmd/ddev/cmd"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
@@ -17,12 +16,10 @@ import (
 )
 
 var (
-	TestSite    = "drupal8"
-	TestSiteVer = "v0.1.0"
-	TestDir     = path.Join(os.TempDir(), TestSite)
-	TestSites   = [][]string{
-		[]string{"drupal8", TestSiteVer},
-	}
+	tmp                  = os.TempDir()
+	TestSite             = "drupal8"
+	TestSiteVer          = "0.1.0"
+	TestDir              = path.Join(tmp, TestSite+"-"+TestSiteVer)
 	TestDBContainerName  = "local-" + TestSite + "-db"
 	TestWebContainerName = "local-" + TestSite + "-web"
 )
@@ -38,18 +35,19 @@ func TestMain(m *testing.M) {
 }
 
 func PrepareTest() {
+	os.Mkdir(TestDir, 0755)
 	archive := path.Join(path.Dir(TestDir), "testsite.tar.gz")
 
-	if !system.FileExists(archive) {
-		system.DownloadFile(archive, "https://github.com/drud/"+TestSite+"/archive/"+TestSiteVer+".tar.gz")
-	}
+	// if !system.FileExists(archive) {
+	system.DownloadFile(archive, "https://github.com/drud/"+TestSite+"/archive/v"+TestSiteVer+".tar.gz")
+	// }
 
 	system.RunCommand("tar",
 		[]string{
 			"-xzf",
 			archive,
 			"-C",
-			TestDir,
+			tmp,
 		})
 }
 
@@ -59,7 +57,11 @@ func CleanupTest() {
 
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
 func TestLocalStart(t *testing.T) {
-	os.Chdir(TestDir)
+	err := os.Chdir(TestDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("running from %s", TestDir)
 
 	assert := assert.New(t)
 
@@ -75,7 +77,7 @@ func TestLocalStart(t *testing.T) {
 
 	app.Init(opts)
 
-	err := app.Start()
+	err = app.Start()
 	assert.NoError(err)
 
 	// ensure docker-compose.yaml exists inside .ddev site folder
@@ -84,7 +86,7 @@ func TestLocalStart(t *testing.T) {
 
 	// ensure we have running containers for this site
 	client, _ := dockerutil.GetDockerClient()
-	err = cmd.EnsureNetwork(client, netName)
+	err = EnsureNetwork(client, netName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -122,7 +124,7 @@ func TestLocalStop(t *testing.T) {
 
 	// ensure we have stopped containers for this site
 	client, _ := dockerutil.GetDockerClient()
-	err = cmd.EnsureNetwork(client, netName)
+	err = EnsureNetwork(client, netName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -170,7 +172,7 @@ func TestLocalRemove(t *testing.T) {
 
 	// ensure we have stopped containers for this site
 	client, _ := dockerutil.GetDockerClient()
-	err = cmd.EnsureNetwork(client, netName)
+	err = EnsureNetwork(client, netName)
 	if err != nil {
 		log.Fatal(err)
 	}
