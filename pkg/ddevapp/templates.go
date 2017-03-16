@@ -6,7 +6,7 @@ package ddevapp
 // This was not undertaken when moving the template into the appconfig package to reduce churn.
 const DDevComposeTemplate = `version: '2'
 services:
-  {{ .name }}-db:
+  {{ .plugin }}-{{ .name }}-db:
     container_name: {{ .plugin }}-{{ .name }}-db
     image: $DDEV_DBIMAGE
     volumes:
@@ -24,16 +24,16 @@ services:
       com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
-  {{ .name }}-web:
+  {{ .plugin }}-{{ .name }}-web:
     container_name: {{ .plugin }}-{{ .name }}-web
     image: $DDEV_WEBIMAGE
     volumes:
       - "{{ .docroot }}/:/var/www/html/docroot"
     restart: always
     depends_on:
-      - {{ .name }}-db
+      - {{ .plugin }}-{{ .name }}-db
     links:
-      - {{ .name }}-db:db
+      - {{ .plugin }}-{{ .name }}-db:db
     ports:
       - "80"
       - "8025"

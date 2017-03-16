@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"path"
 	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
@@ -24,13 +23,9 @@ var LocalDevSSHCmd = &cobra.Command{
 		if !dockerutil.IsRunning(nameContainer) {
 			Failed("App not running locally. Try `ddev start`.")
 		}
-
-		if !platform.ComposeFileExists(app) {
-			Failed("No docker-compose yaml for this site. Try `ddev start`.")
-		}
-
+		app.DockerEnv()
 		err := dockerutil.DockerCompose(
-			"-f", path.Join(app.AbsPath(), ".ddev", "docker-compose.yaml"),
+			"-f", app.DockerComposeYAMLPath(),
 			"exec",
 			nameContainer,
 			"bash",

@@ -12,6 +12,7 @@ type App interface {
 	GetName() string
 	Start() error
 	Stop() error
+	DockerEnv()
 	DockerComposeYAMLPath() string
 	Down() error
 	Config() error

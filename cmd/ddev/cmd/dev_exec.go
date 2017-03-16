@@ -3,11 +3,11 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"path"
 	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
+	"github.com/drud/drud-go/utils/pretty"
 	"github.com/spf13/cobra"
 )
 
@@ -32,12 +32,10 @@ var LocalDevExecCmd = &cobra.Command{
 			Failed("App not running locally. Try `ddev start`.")
 		}
 
-		if !platform.ComposeFileExists(app) {
-			Failed("No docker-compose yaml for this site. Try `ddev start`.")
-		}
-
+		app.DockerEnv()
+		fmt.Println(nameContainer)
 		cmdArgs := []string{
-			"-f", path.Join(app.AbsPath(), ".ddev", "docker-compose.yaml"),
+			"-f", app.DockerComposeYAMLPath(),
 			"exec",
 			"-T", nameContainer,
 		}
@@ -49,6 +47,7 @@ var LocalDevExecCmd = &cobra.Command{
 
 		cmdSplit := strings.Split(cmdString, " ")
 		cmdArgs = append(cmdArgs, cmdSplit...)
+		fmt.Println(pretty.Prettify(cmdArgs))
 		err := dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
 			log.Println(err)
