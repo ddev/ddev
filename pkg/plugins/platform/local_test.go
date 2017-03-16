@@ -16,6 +16,7 @@ import (
 )
 
 var (
+	archive              = path.Join(path.Dir(TestDir), "testsite.tar.gz")
 	tmp                  = os.TempDir()
 	TestSite             = "drupal8"
 	TestSiteVer          = "0.1.0"
@@ -27,20 +28,22 @@ var (
 const netName = "drud_default"
 
 func TestMain(m *testing.M) {
-	os.Setenv("DRUD_NONINTERACTIVE", "true")
 	PrepareTest()
 
 	fmt.Println("Running tests.")
-	os.Exit(m.Run())
+	testRun := m.Run()
+
+	CleanupTest()
+
+	os.Exit(testRun)
 }
 
 func PrepareTest() {
+	fmt.Println("Prepping tests.")
+	os.Setenv("DRUD_NONINTERACTIVE", "true")
 	os.Mkdir(TestDir, 0755)
-	archive := path.Join(path.Dir(TestDir), "testsite.tar.gz")
 
-	// if !system.FileExists(archive) {
 	system.DownloadFile(archive, "https://github.com/drud/"+TestSite+"/archive/v"+TestSiteVer+".tar.gz")
-	// }
 
 	system.RunCommand("tar",
 		[]string{
@@ -49,23 +52,26 @@ func PrepareTest() {
 			"-C",
 			tmp,
 		})
+
+	err := os.Chdir(TestDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("running from %s\n", TestDir)
 }
 
 func CleanupTest() {
+	fmt.Println("Cleaning up from tests.")
+	os.Remove(archive)
 	os.RemoveAll(TestDir)
 }
 
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
 func TestLocalStart(t *testing.T) {
-	err := os.Chdir(TestDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("running from %s", TestDir)
 
 	// ensure we have docker network
 	client, _ := dockerutil.GetDockerClient()
-	err = EnsureNetwork(client, netName)
+	err := EnsureNetwork(client, netName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -193,7 +199,4 @@ func TestLocalRemove(t *testing.T) {
 	}
 
 	assert.False(active)
-
-	CleanupTest()
-	os.Unsetenv("DRUD_NONINTERACTIVE")
 }
