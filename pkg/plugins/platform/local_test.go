@@ -8,6 +8,7 @@ import (
 
 	"os"
 
+	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
@@ -16,54 +17,24 @@ import (
 )
 
 var (
-	archive              = path.Join(path.Dir(TestDir), "testsite.tar.gz")
-	tmp                  = os.TempDir()
-	TestSite             = "drupal8"
-	TestSiteVer          = "0.1.0"
-	TestDir              = path.Join(tmp, TestSite+"-"+TestSiteVer)
-	TestDBContainerName  = "local-" + TestSite + "-db"
-	TestWebContainerName = "local-" + TestSite + "-web"
+	siteName             = "drupal8"
+	TestDBContainerName  = "local-" + siteName + "-db"
+	TestWebContainerName = "local-" + siteName + "-web"
+	TestSite             = []string{"drupal8", "https://github.com/drud/drupal8/archive/v0.1.0.tar.gz", "drupal8-0.1.0"}
+	TestDir              = path.Join(os.TempDir(), TestSite[2])
 )
 
 const netName = "drud_default"
 
 func TestMain(m *testing.M) {
-	PrepareTest()
+	testcommon.PrepareTest(TestSite)
 
 	fmt.Println("Running tests.")
 	testRun := m.Run()
 
-	CleanupTest()
+	testcommon.CleanupTest(TestSite)
 
 	os.Exit(testRun)
-}
-
-func PrepareTest() {
-	fmt.Println("Prepping tests.")
-	os.Setenv("DRUD_NONINTERACTIVE", "true")
-	os.Mkdir(TestDir, 0755)
-
-	system.DownloadFile(archive, "https://github.com/drud/"+TestSite+"/archive/v"+TestSiteVer+".tar.gz")
-
-	system.RunCommand("tar",
-		[]string{
-			"-xzf",
-			archive,
-			"-C",
-			tmp,
-		})
-
-	err := os.Chdir(TestDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("running from %s\n", TestDir)
-}
-
-func CleanupTest() {
-	fmt.Println("Cleaning up from tests.")
-	os.Remove(archive)
-	os.RemoveAll(TestDir)
 }
 
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
@@ -81,7 +52,7 @@ func TestLocalStart(t *testing.T) {
 	app := PluginMap["local"]
 
 	opts := AppOptions{
-		Name:        TestSite,
+		Name:        siteName,
 		WebImage:    version.WebImg,
 		WebImageTag: version.WebTag,
 		DbImage:     version.DBImg,
@@ -123,7 +94,7 @@ func TestLocalStop(t *testing.T) {
 
 	app := PluginMap["local"]
 	opts := AppOptions{
-		Name: TestSite,
+		Name: siteName,
 	}
 	app.SetOpts(opts)
 
@@ -159,7 +130,7 @@ func TestLocalRemove(t *testing.T) {
 
 	app := PluginMap["local"]
 	opts := AppOptions{
-		Name:        TestSite,
+		Name:        siteName,
 		WebImage:    version.WebImg,
 		WebImageTag: version.WebTag,
 		DbImage:     version.DBImg,
