@@ -210,6 +210,8 @@ func (c *Config) RenderComposeYAML() (string, error) {
 
 func (c *Config) docrootPrompt() error {
 	// Determine the document root.
+	fmt.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)\n", c.AppRoot)
+	fmt.Println("You may leave this value blank if your site files are in the application root")
 	var docrootPrompt = "Docroot Location"
 	if c.Docroot != "" {
 		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, c.Docroot)
