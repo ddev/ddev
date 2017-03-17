@@ -20,7 +20,7 @@ var (
 	siteName             = "drupal8"
 	TestDBContainerName  = "local-" + siteName + "-db"
 	TestWebContainerName = "local-" + siteName + "-web"
-	TestSite             = []string{"drupal8", "https://github.com/drud/drupal8/archive/v0.2.0.tar.gz", "drupal8-0.2.0"}
+	TestSite             = []string{"drupal8", "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz", "drupal8-0.2.1"}
 	TestDir              = path.Join(os.TempDir(), TestSite[2])
 )
 
