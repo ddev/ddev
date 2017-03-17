@@ -8,3 +8,5 @@ darwin
 .dockerfile
 VERSION.txt
 .docker_image
+debug
+debug.test

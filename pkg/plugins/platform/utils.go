@@ -396,3 +396,32 @@ func CheckForConf(confPath string) (string, error) {
 
 	return "", errors.New("no ddev.yaml file in this directory or any parent")
 }
+
+// NetExists checks to see if the docker network for DRUD local development exists.
+func NetExists(client *docker.Client, name string) bool {
+	nets, _ := client.ListNetworks()
+	for _, n := range nets {
+		if n.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+// EnsureNetwork will ensure the docker network for DRUD local development is created.
+func EnsureNetwork(client *docker.Client, name string) error {
+	if !NetExists(client, name) {
+		netOptions := docker.CreateNetworkOptions{
+			Name:     name,
+			Driver:   "bridge",
+			Internal: false,
+		}
+		_, err := client.CreateNetwork(netOptions)
+		if err != nil {
+			return err
+		}
+		log.Println("Network", name, "created")
+
+	}
+	return nil
+}
