@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/drud/drud-go/utils/pretty"
 	"github.com/drud/drud-go/utils/system"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -104,7 +104,7 @@ func (c *Config) Read() error {
 	}
 
 	log.WithFields(log.Fields{
-		"Existing config": pretty.Prettify(c),
+		"Existing config": awsutil.Prettify(c),
 	}).Debug("Finished config read")
 	return nil
 }
@@ -120,7 +120,7 @@ func (c *Config) Config() error {
 
 	// Log what the starting config is, for debugging purposes.
 	log.WithFields(log.Fields{
-		"Existing config": pretty.Prettify(c),
+		"Existing config": awsutil.Prettify(c),
 	}).Debug("Configuring application")
 
 	namePrompt := "Project name"
@@ -145,7 +145,7 @@ func (c *Config) Config() error {
 
 	// Log the resulting config, for debugging purposes.
 	log.WithFields(log.Fields{
-		"Config": pretty.Prettify(c),
+		"Config": awsutil.Prettify(c),
 	}).Debug("Configuration completed")
 
 	return nil

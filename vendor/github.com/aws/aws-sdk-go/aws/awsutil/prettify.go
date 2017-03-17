@@ -1,8 +1,4 @@
-// This file and its contents were authored by AWS Engineers and other open source contributors.
-// This software is under the Apacher 2.0 License.
-// Original code can be found here: https://github.com/aws/aws-sdk-go/blob/master/aws/awsutil/prettify.go
-
-package pretty
+package awsutil
 
 import (
 	"bytes"
@@ -65,6 +61,12 @@ func prettify(v reflect.Value, indent int, buf *bytes.Buffer) {
 
 		buf.WriteString("\n" + strings.Repeat(" ", indent) + "}")
 	case reflect.Slice:
+		strtype := v.Type().String()
+		if strtype == "[]uint8" {
+			fmt.Fprintf(buf, "<binary> len %d", v.Len())
+			break
+		}
+
 		nl, id, id2 := "", "", ""
 		if v.Len() > 3 {
 			nl, id, id2 = "\n", strings.Repeat(" ", indent), strings.Repeat(" ", indent+2)

@@ -28,6 +28,16 @@
 			"revisionTime": "2015-01-07T20:56:47Z"
 		},
 		{
+			"checksumSHA1": "yyYr41HZ1Aq0hWc3J5ijXwYEcac=",
+			"path": "github.com/aws/aws-sdk-go/aws/awsutil",
+			"revision": "744a71d4f73aeecb509ed9cf3e5dfa650d03d03e",
+			"revisionTime": "2016-11-18T22:00:42Z"
+		},
+		{
+			"path": "github.com/aws/aws-sdk-go/tree/master/aws/awsutil",
+			"revision": ""
+		},
+		{
 			"checksumSHA1": "BJXHEdzHxRPmVnt6GFaPpwgns2c=",
 			"path": "github.com/coreos/go-etcd/etcd",
 			"revision": "003851be7bb0694fe3cc457a49529a19388ee7cf",
@@ -148,12 +158,6 @@
 			"revisionTime": "2017-02-13T20:31:38Z"
 		},
 		{
-			"checksumSHA1": "t01l9GMxPPn/ThMgpk9pWkzjm4g=",
-			"path": "github.com/drud/drud-go/utils/pretty",
-			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
-			"revisionTime": "2017-02-13T20:31:38Z"
-		},
-		{
 			"checksumSHA1": "iAwuw+lHePVbzI7mb80cdsO5Le4=",
 			"path": "github.com/drud/drud-go/utils/stringutil",
 			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
@@ -244,6 +248,12 @@
 			"revision": "8152e7eb6ccf8679a64582a66b78519688d156ad",
 			"revisionTime": "2016-01-12T19:33:35Z",
 			"tree": true
+		},
+		{
+			"checksumSHA1": "0ZrwvB6KoGPj2PoDNSEJwxQ6Mog=",
+			"path": "github.com/jmespath/go-jmespath",
+			"revision": "bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d",
+			"revisionTime": "2016-08-03T19:07:31Z"
 		},
 		{
 			"checksumSHA1": "KQhA4EQp4Ldwj9nJZnEURlE6aQw=",
