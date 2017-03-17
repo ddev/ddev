@@ -218,11 +218,8 @@ func (c *Config) docrootPrompt() error {
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(c.AppRoot, c.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		fmt.Printf("No directory could be found at %s. Are you sure this is where your docroot is location? (y/N): ", fullPath)
-		answer := strings.ToLower(getInput("y"))
-		if answer != "y" && answer != "yes" {
-			return c.docrootPrompt()
-		}
+		fmt.Printf("No directory could be found at %s. Please enter a valid docroot", fullPath)
+		return c.docrootPrompt()
 	}
 	return nil
 }
