@@ -24,7 +24,7 @@ var (
 	TestDir              = path.Join(os.TempDir(), TestSite[2])
 )
 
-const netName = "drud_default"
+const netName = "ddev_default"
 
 func TestMain(m *testing.M) {
 	testcommon.PrepareTest(TestSite)
