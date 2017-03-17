@@ -20,7 +20,7 @@ var (
 	siteName             = "drupal8"
 	TestDBContainerName  = "local-" + siteName + "-db"
 	TestWebContainerName = "local-" + siteName + "-web"
-	TestSite             = []string{"drupal8", "https://github.com/drud/drupal8/archive/v0.2.0.tar.gz", "drupal8-0.2.0"}
+	TestSite             = []string{"drupal8", "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz", "drupal8-0.2.1"}
 	TestDir              = path.Join(os.TempDir(), TestSite[2])
 )
 
@@ -82,6 +82,9 @@ func TestLocalStart(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
+	_, err = app.Wait()
+	assert.NoError(err)
+
 	// ensure docker-compose.yaml exists inside .ddev site folder
 	composeFile := system.FileExists(path.Join(TestDir, ".ddev", "docker-compose.yaml"))
 	assert.True(composeFile)
@@ -125,6 +128,9 @@ func TestLocalRemove(t *testing.T) {
 	// start the previously stopped containers -
 	// stopped/removed have the same state
 	err := app.Start()
+	assert.NoError(err)
+
+	_, err = app.Wait()
 	assert.NoError(err)
 
 	if err == nil {

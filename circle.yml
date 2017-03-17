@@ -30,10 +30,6 @@ stages:
         name: Install docker
 
       - type: shell
-        command: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-        name: "docker login"
-
-      - type: shell
         command: sudo apt-get -qq update && sudo curl -L "https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose
         name: docker-compose install
 

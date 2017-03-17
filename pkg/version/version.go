@@ -5,14 +5,14 @@ var VERSION = ""
 
 // IMPORTANT: These versions are overridden by version ldflags specifications VERSION_VARIABLES in the Makefile
 
-// Current version of the ddev tool, by default the git committish (should be current git tag)
+// DdevVersion is the current version of the ddev tool, by default the git committish (should be current git tag)
 var DdevVersion = "v0.1.0-dev" // Note that this is overridden by make
 
 // WebImg defines the default web image for drud dev
 var WebImg = "drud/nginx-php-fpm7-local" // Note that this is overridden by make
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "v0.3.0" // Note that this is overridden by make
+var WebTag = "v0.3.1" // Note that this is overridden by make
 
 // DBImg defines the default db image for drud dev
 var DBImg = "drud/mysql-docker-local-57" // Note that this is overridden by make
