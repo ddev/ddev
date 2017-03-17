@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"path"
@@ -37,6 +38,33 @@ func TestMain(m *testing.M) {
 	os.Exit(testRun)
 }
 
+// ContainerCheck determines if a given container name exists and matches a given state
+func ContainerCheck(checkName string, checkState string) (bool, error) {
+	// ensure we have docker network
+	client, _ := dockerutil.GetDockerClient()
+	err := EnsureNetwork(client, netName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	containers, err := client.ListContainers(docker.ListContainersOptions{All: true})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, container := range containers {
+		name := container.Names[0][1:]
+		if name == checkName {
+			if container.State == checkState {
+				return true, nil
+			}
+			return false, errors.New("container " + name + " returned " + container.State)
+		}
+	}
+
+	return false, errors.New("unable to find container " + checkName)
+}
+
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
 func TestLocalStart(t *testing.T) {
 
@@ -68,24 +96,13 @@ func TestLocalStart(t *testing.T) {
 	composeFile := system.FileExists(path.Join(TestDir, ".ddev", "docker-compose.yaml"))
 	assert.True(composeFile)
 
-	// ensure we have running containers for this site
-	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
+	check, err := ContainerCheck(TestWebContainerName, "running")
+	assert.NoError(err)
+	assert.True(check)
 
-	dbContainer := ""
-	webContainer := ""
-
-	for _, container := range containers {
-		name := container.Names[0][1:]
-		if name == TestDBContainerName && container.State == "running" {
-			dbContainer = name
-		}
-		if name == TestWebContainerName && container.State == "running" {
-			webContainer = name
-		}
-	}
-
-	assert.Equal(TestDBContainerName, dbContainer)
-	assert.Equal(TestWebContainerName, webContainer)
+	check, err = ContainerCheck(TestDBContainerName, "running")
+	assert.NoError(err)
+	assert.True(check)
 }
 
 // TestLocalStop tests the functionality that is called when "ddev stop" is executed
@@ -101,27 +118,13 @@ func TestLocalStop(t *testing.T) {
 	err := app.Stop()
 	assert.NoError(err)
 
-	// ensure we have stopped containers for this site
-	client, _ := dockerutil.GetDockerClient()
-	err = EnsureNetwork(client, netName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
+	check, err := ContainerCheck(TestWebContainerName, "exited")
+	assert.NoError(err)
+	assert.True(check)
 
-	var active bool
-
-	for _, container := range containers {
-		name := container.Names[0][1:]
-		if name == TestDBContainerName && container.State == "running" {
-			active = true
-		}
-		if name == TestWebContainerName && container.State == "running" {
-			active = true
-		}
-	}
-
-	assert.False(active)
+	check, err = ContainerCheck(TestDBContainerName, "exited")
+	assert.NoError(err)
+	assert.True(check)
 }
 
 // TestLocalRemove tests the functionality that is called when "ddev rm" is executed
@@ -149,25 +152,11 @@ func TestLocalRemove(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// ensure we have stopped containers for this site
-	client, _ := dockerutil.GetDockerClient()
-	err = EnsureNetwork(client, netName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
+	check, err := ContainerCheck(TestWebContainerName, "running")
+	assert.Error(err)
+	assert.False(check)
 
-	var active bool
-
-	for _, container := range containers {
-		name := container.Names[0][1:]
-		if name == TestDBContainerName && container.State == "running" {
-			active = true
-		}
-		if name == TestWebContainerName && container.State == "running" {
-			active = true
-		}
-	}
-
-	assert.False(active)
+	check, err = ContainerCheck(TestDBContainerName, "running")
+	assert.Error(err)
+	assert.False(check)
 }
