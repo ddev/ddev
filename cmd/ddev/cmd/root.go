@@ -64,7 +64,7 @@ func Execute() {
 func init() {
 	drudDebug := os.Getenv("DRUD_DEBUG")
 	if drudDebug != "" {
-		logLevel = log.InfoLevel
+		logLevel = log.DebugLevel
 	}
 
 	log.SetLevel(logLevel)

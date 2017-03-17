@@ -10,7 +10,6 @@ import (
 	"os"
 
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
 	docker "github.com/fsouza/go-dockerclient"
@@ -21,11 +20,11 @@ var (
 	siteName             = "drupal8"
 	TestDBContainerName  = "local-" + siteName + "-db"
 	TestWebContainerName = "local-" + siteName + "-web"
-	TestSite             = []string{"drupal8", "https://github.com/drud/drupal8/archive/v0.1.0.tar.gz", "drupal8-0.1.0"}
+	TestSite             = []string{"drupal8", "https://github.com/drud/drupal8/archive/v0.2.0.tar.gz", "drupal8-0.2.0"}
 	TestDir              = path.Join(os.TempDir(), TestSite[2])
 )
 
-const netName = "drud_default"
+const netName = "ddev_default"
 
 func TestMain(m *testing.M) {
 	testcommon.PrepareTest(TestSite)
@@ -78,16 +77,7 @@ func TestLocalStart(t *testing.T) {
 	assert := assert.New(t)
 
 	app := PluginMap["local"]
-
-	opts := AppOptions{
-		Name:        siteName,
-		WebImage:    version.WebImg,
-		WebImageTag: version.WebTag,
-		DbImage:     version.DBImg,
-		DbImageTag:  version.DBTag,
-	}
-
-	app.Init(opts)
+	app.Init()
 
 	err = app.Start()
 	assert.NoError(err)
@@ -110,10 +100,7 @@ func TestLocalStop(t *testing.T) {
 	assert := assert.New(t)
 
 	app := PluginMap["local"]
-	opts := AppOptions{
-		Name: siteName,
-	}
-	app.SetOpts(opts)
+	app.Init()
 
 	err := app.Stop()
 	assert.NoError(err)
@@ -132,15 +119,8 @@ func TestLocalRemove(t *testing.T) {
 	assert := assert.New(t)
 
 	app := PluginMap["local"]
-	opts := AppOptions{
-		Name:        siteName,
-		WebImage:    version.WebImg,
-		WebImageTag: version.WebTag,
-		DbImage:     version.DBImg,
-		DbImageTag:  version.DBTag,
-	}
 
-	app.Init(opts)
+	app.Init()
 
 	// start the previously stopped containers -
 	// stopped/removed have the same state

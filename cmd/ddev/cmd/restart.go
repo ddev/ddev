@@ -28,11 +28,7 @@ var LocalDevReconfigCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		app := platform.PluginMap[strings.ToLower(plugin)]
-
-		opts := platform.AppOptions{
-			Name: activeApp,
-		}
-		app.Init(opts)
+		app.Init()
 
 		err := app.Stop()
 		if err != nil {
@@ -44,12 +40,6 @@ var LocalDevReconfigCmd = &cobra.Command{
 		if err != nil {
 			log.Println(err)
 			Failed("Failed to start application.")
-		}
-
-		err = app.Config()
-		if err != nil {
-			log.Println(err)
-			Failed("Failed to configure application.")
 		}
 
 		fmt.Println("Waiting for site readiness. This may take a couple minutes...")

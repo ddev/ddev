@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const netName = "drud_default"
+const netName = "ddev_default"
 
 var (
 	serviceType string
@@ -38,20 +38,13 @@ var StartCmd = &cobra.Command{
 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-
 		app := platform.PluginMap[strings.ToLower(plugin)]
-
-		opts := platform.AppOptions{
-			Name:        activeApp,
-			WebImage:    webImage,
-			WebImageTag: webImageTag,
-			DbImage:     dbImage,
-			DbImageTag:  dbImageTag,
+		err := app.Init()
+		if err != nil {
+			log.Fatalf("Could not initialize application: %v", err)
 		}
 
-		app.Init(opts)
-
-		err := app.Start()
+		err = app.Start()
 		if err != nil {
 			Failed("Failed to start %s: %s", app.GetName(), err)
 		}
