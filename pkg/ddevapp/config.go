@@ -70,7 +70,7 @@ func NewConfig(AppRoot string) (*Config, error) {
 
 // Write the app configuration to the .ddev folder.
 func (c *Config) Write() error {
-	err := prepDirectory(filepath.Dir(c.ConfigPath))
+	err := prepDDevDirectory(filepath.Dir(c.ConfigPath))
 	if err != nil {
 		return err
 	}
@@ -94,10 +94,6 @@ func (c *Config) Write() error {
 
 // Read app configuration from a specified location on disk.
 func (c *Config) Read() error {
-	log.WithFields(log.Fields{
-		"Existing config": pretty.Prettify(c),
-	}).Debug("Starting Config Read")
-
 	source, err := ioutil.ReadFile(c.ConfigPath)
 	if err != nil {
 		return err
@@ -120,7 +116,7 @@ func (c *Config) Config() error {
 		fmt.Printf("Editing existing ddev project at %s\n\n", c.AppRoot)
 	} else {
 		fmt.Printf("Creating a new ddev project config in the current directory (%s)\n", c.AppRoot)
-		fmt.Printf("Once completed, you configuration will be written to %s\n\n\n", c.ConfigPath)
+		fmt.Printf("Once completed, your configuration will be written to %s\n\n\n", c.ConfigPath)
 	}
 
 	// Log what the starting config is, for debugging purposes.
@@ -304,8 +300,8 @@ func isAllowedAppType(appType string) bool {
 	return false
 }
 
-// prepDirectory creates a .ddev directory in the current working
-func prepDirectory(dir string) error {
+// prepDDevDirectory creates a .ddev directory in the current working
+func prepDDevDirectory(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 
 		log.WithFields(log.Fields{
@@ -316,10 +312,6 @@ func prepDirectory(dir string) error {
 		if err != nil {
 			return err
 		}
-
-		log.WithFields(log.Fields{
-			"directory": dir,
-		}).Debug("Directory creation successful")
 	}
 
 	return nil
