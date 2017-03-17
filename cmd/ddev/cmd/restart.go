@@ -50,9 +50,7 @@ var LocalDevReconfigCmd = &cobra.Command{
 		}
 
 		Success("Successfully restarted %s", activeApp)
-		if siteURL != "" {
-			Success("Your application can be reached at: %s", siteURL)
-		}
+		Success("Your application can be reached at: %s", siteURL)
 	},
 }
 

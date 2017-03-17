@@ -264,7 +264,7 @@ func (l LocalApp) Stop() error {
 
 // Wait ensures that the app appears to be read before returning
 func (l *LocalApp) Wait() (string, error) {
-	o := network.NewHTTPOptions("http://127.0.0.1")
+	o := network.NewHTTPOptions("http://127.0.0.1/healthcheck")
 	o.Timeout = 90
 	o.Headers["Host"] = l.HostName()
 	err := network.EnsureHTTPStatus(o)

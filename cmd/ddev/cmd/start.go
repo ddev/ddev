@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -49,8 +50,15 @@ var StartCmd = &cobra.Command{
 			Failed("Failed to start %s: %s", app.GetName(), err)
 		}
 
-		Success("Successfully added %s", activeApp)
-		Success("Your application can be reached at: %s", app.URL())
+		fmt.Println("Waiting for site readiness. This may take a couple minutes...")
+		siteURL, err := app.Wait()
+		if err != nil {
+			log.Println(err)
+			Failed("Site never became ready")
+		}
+
+		Success("Successfully started %s", activeApp)
+		Success("Your application can be reached at: %s", siteURL)
 
 	},
 }
