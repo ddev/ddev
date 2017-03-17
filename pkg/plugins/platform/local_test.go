@@ -82,6 +82,9 @@ func TestLocalStart(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
+	_, err = app.Wait()
+	assert.NoError(err)
+
 	// ensure docker-compose.yaml exists inside .ddev site folder
 	composeFile := system.FileExists(path.Join(TestDir, ".ddev", "docker-compose.yaml"))
 	assert.True(composeFile)
@@ -125,6 +128,9 @@ func TestLocalRemove(t *testing.T) {
 	// start the previously stopped containers -
 	// stopped/removed have the same state
 	err := app.Start()
+	assert.NoError(err)
+
+	_, err = app.Wait()
 	assert.NoError(err)
 
 	if err == nil {
