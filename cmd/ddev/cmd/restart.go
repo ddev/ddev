@@ -12,9 +12,11 @@ import (
 // LocalDevReconfigCmd rebuilds an apps settings
 var LocalDevReconfigCmd = &cobra.Command{
 	Use:   "restart",
-	Short: "Stop and Start the app.",
-	Long:  `Restart is useful for when the port of your local app has changed due to a system reboot or some other failure.`,
+	Short: "Restart the local development environment for a site.",
+	Long:  `Restart stops the containers for site's environment and starts them back up again.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("Restarting environment for %s...", activeApp)
+
 		client, err := platform.GetDockerClient()
 		if err != nil {
 			log.Fatal(err)
@@ -42,11 +44,10 @@ var LocalDevReconfigCmd = &cobra.Command{
 			Failed("Failed to start application.")
 		}
 
-		fmt.Println("Waiting for site readiness. This may take a couple minutes...")
+		fmt.Println("Waiting for the environment to become ready. This may take a couple of minutes...")
 		siteURL, err := app.Wait()
 		if err != nil {
-			log.Println(err)
-			Failed("Site never became ready")
+			Failed("The environment for %s never became ready: %s", activeApp, err)
 		}
 
 		Success("Successfully restarted %s", activeApp)

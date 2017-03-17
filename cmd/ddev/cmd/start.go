@@ -26,6 +26,7 @@ var StartCmd = &cobra.Command{
 	Short:   "Start the local development environment for a site.",
 	Long:    `Start initializes and configures the web server and database containers to provide a working environment for development.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("Starting environment for %s...", activeApp)
 
 		client, err := platform.GetDockerClient()
 		if err != nil {
@@ -50,11 +51,10 @@ var StartCmd = &cobra.Command{
 			Failed("Failed to start %s: %s", app.GetName(), err)
 		}
 
-		fmt.Println("Waiting for site readiness. This may take a couple minutes...")
+		fmt.Println("Waiting for the environment to become ready. This may take a couple of minutes...")
 		siteURL, err := app.Wait()
 		if err != nil {
-			log.Println(err)
-			Failed("Site never became ready")
+			Failed("The environment for %s never became ready: %s", activeApp, err)
 		}
 
 		Success("Successfully started %s", activeApp)
