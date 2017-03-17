@@ -52,6 +52,7 @@ var LocalDevLogsCmd = &cobra.Command{
 		}
 		cmdArgs = append(cmdArgs, nameContainer)
 
+		app.DockerEnv()
 		err := dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
 			log.Fatalln(err)

@@ -358,7 +358,7 @@ func (l *LocalApp) Config() error {
 // Down stops the docker containers for the local project.
 func (l *LocalApp) Down() error {
 	composePath := l.DockerComposeYAMLPath()
-
+	l.DockerEnv()
 	err := dockerutil.DockerCompose(
 		"-f", composePath,
 		"down",
