@@ -88,7 +88,6 @@ func (c *Config) Write() error {
 		return err
 	}
 
-	log.Debug("Write successful")
 	return nil
 }
 
