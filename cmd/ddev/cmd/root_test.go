@@ -21,10 +21,9 @@ var (
 	DevTestSites = []testcommon.TestSite{
 		// The third parameter (TmpDir) is purposefully left empty to hold the tmpDir, once created.
 		{
-			Name:   "drupal8",
-			URL:    "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz",
-			Folder: "drupal8-0.2.1",
-			Path:   "",
+			Name: "drupal8",
+			URL:  "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz",
+			Path: "",
 		},
 	}
 )

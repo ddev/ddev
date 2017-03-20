@@ -21,10 +21,9 @@ var (
 	TestDBContainerName  = "local-" + siteName + "-db"
 	TestWebContainerName = "local-" + siteName + "-web"
 	TestSite             = testcommon.TestSite{
-		Name:   "drupal8",
-		URL:    "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz",
-		Folder: "drupal8-0.2.1",
-		Path:   "",
+		Name: "drupal8",
+		URL:  "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz",
+		Path: "",
 	}
 )
 

@@ -11,10 +11,9 @@ import (
 )
 
 type TestSite struct {
-	Name   string
-	URL    string
-	Path   string
-	Folder string
+	Name string
+	URL  string
+	Path string
 }
 
 var archive = path.Join(os.TempDir(), "testsite.tar.gz")
