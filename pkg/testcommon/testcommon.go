@@ -2,6 +2,7 @@ package testcommon
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -9,43 +10,49 @@ import (
 	"github.com/drud/drud-go/utils/system"
 )
 
+type TestSite struct {
+	Name   string
+	URL    string
+	Path   string
+	Folder string
+}
+
 var archive = path.Join(os.TempDir(), "testsite.tar.gz")
 
 // PrepareTest downloads and extracts a site codebase, and ensures the tests are run from the location the codebase is extracted to.
-func PrepareTest(site []string) {
-	siteName := site[0]
-	archiveURL := site[1]
-	archiveExtPath := site[2]
+func PrepareTest(site *TestSite) {
 
-	testDir := path.Join(os.TempDir(), archiveExtPath)
-
-	fmt.Printf("Prepping test for %s.", siteName)
+	testDir, err := ioutil.TempDir("", "example")
+	if err != nil {
+		log.Fatalf("Could not create temporary directory %s for site %s", testDir, site.Name)
+	}
+	site.Path = testDir
+	fmt.Printf("Prepping test for %s.", site.Name)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
-	os.Mkdir(testDir, 0755)
 
-	system.DownloadFile(archive, archiveURL)
-
+	system.DownloadFile(archive, site.URL)
 	system.RunCommand("tar",
 		[]string{
 			"-xzf",
 			archive,
+			"--strip", "1",
 			"-C",
-			os.TempDir(),
+			site.Path,
 		})
+}
 
-	err := os.Chdir(testDir)
+func Chdir(dir string) func() {
+	curDir, _ := os.Getwd()
+	err := os.Chdir(dir)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Could not change to directory %s: %v\n", dir, err)
 	}
-	fmt.Printf("running from %s\n", testDir)
+
+	return func() { os.Chdir(curDir) }
 }
 
 // CleanupTest removes the archive and codebase extraction for a site after a test run has completed.
-func CleanupTest(site []string) {
-	siteName := site[0]
-	archiveExtPath := site[2]
-	testDir := path.Join(os.TempDir(), archiveExtPath)
-	fmt.Printf("Cleaning up from %s tests.", siteName)
+func CleanupTest(site TestSite) {
 	os.Remove(archive)
-	os.RemoveAll(testDir)
+	os.RemoveAll(site.Path)
 }

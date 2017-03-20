@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/drud/drud-go/utils/system"
+	"github.com/drud/ddev/pkg/testcommon"
 )
 
 var (
@@ -18,10 +18,14 @@ var (
 	// DevTestApp is the name of the Dev DRUD app to test
 	DevTestApp = "drud-d8"
 
-	DevTestSites = [][]string{
-		[]string{"drudio", DevTestEnv},
-		[]string{"drud-d8", DevTestEnv},
-		[]string{"talentreef", DevTestEnv},
+	DevTestSites = []testcommon.TestSite{
+		// The third parameter (TmpDir) is purposefully left empty to hold the tmpDir, once created.
+		{
+			Name:   "drupal8",
+			URL:    "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz",
+			Folder: "drupal8-0.2.1",
+			Path:   "",
+		},
 	}
 )
 
@@ -36,16 +40,17 @@ func TestMain(m *testing.M) {
 		fmt.Println("could not set noninteractive mode")
 	}
 
-	fmt.Println("Running tests.")
-	os.Exit(m.Run())
-}
-
-func testSetActiveApp(appName string, deployName string) error {
-	if appName == "" && deployName == "" {
-		_, err := system.RunCommand(DdevBin, []string{"config", "unset", "--activeapp", "--activedeploy"})
-		return err
+	for i := range DevTestSites {
+		testcommon.PrepareTest(&DevTestSites[i])
 	}
 
-	_, err := system.RunCommand(DdevBin, []string{"config", "set", "--activeapp", appName, "--activedeploy", deployName})
-	return err
+	fmt.Println("Running tests.")
+	testRun := m.Run()
+
+	for _, v := range DevTestSites {
+		testcommon.CleanupTest(v)
+	}
+
+	os.Exit(testRun)
+
 }
