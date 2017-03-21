@@ -19,7 +19,7 @@ func TestDevRm(t *testing.T) {
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
 
-		args := []string{"rm"}
+		args := []string{"stop"}
 		out, err := system.RunCommand(DdevBin, args)
 		assert.NoError(t, err)
 
