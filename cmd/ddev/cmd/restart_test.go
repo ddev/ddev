@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestDevRm runs `drud legacy rm` on the test apps
-func TestDevRm(t *testing.T) {
+// TestDevRestart runs `drud legacy restart` on the test apps
+func TestDevRestart(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
