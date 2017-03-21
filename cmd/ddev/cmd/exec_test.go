@@ -43,6 +43,8 @@ func TestDevExec(t *testing.T) {
 	}
 }
 
+// @TODO: These are still valid tests, but we should only be doing them after an import.
+
 // TestDevExec runs drud Dev exec using basic drush commands
 func TestDevExecDrush(t *testing.T) {
 	/**if skipComposeTests {
