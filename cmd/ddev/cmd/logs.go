@@ -37,7 +37,7 @@ var LocalDevLogsCmd = &cobra.Command{
 		}
 
 		cmdArgs := []string{
-			"-f", path.Join(app.AbsPath(), ".ddev", "docker-compose.yaml"),
+			"-f", path.Join(app.DockerComposeYAMLPath()),
 			"logs",
 		}
 

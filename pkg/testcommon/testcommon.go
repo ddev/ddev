@@ -22,8 +22,7 @@ func (site *TestSite) archivePath() string {
 
 // Prepare downloads and extracts a site codebase to a temporary directory.
 func (site *TestSite) Prepare() {
-
-	testDir, err := ioutil.TempDir("", "example")
+	testDir, err := ioutil.TempDir("", site.Name)
 	if err != nil {
 		log.Fatalf("Could not create temporary directory %s for site %s", testDir, site.Name)
 	}
