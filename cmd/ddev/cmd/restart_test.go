@@ -26,10 +26,10 @@ func TestDevRestart(t *testing.T) {
 		app := platform.PluginMap[strings.ToLower(plugin)]
 		app.Init()
 		format := fmt.Sprintf
-		assert.Contains(t, string(out), format("Stopping %s-web ... done", app.ContainerName()))
-		assert.Contains(t, string(out), format("Stopping %s-db ... done", app.ContainerName()))
-		assert.Contains(t, string(out), format("Starting %s-web ... done", app.ContainerName()))
-		assert.Contains(t, string(out), format("Starting %s-db ... done", app.ContainerName()))
+		assert.Contains(t, string(out), format("Stopping %s-web", app.ContainerName()))
+		assert.Contains(t, string(out), format("Stopping %s-db", app.ContainerName()))
+		assert.Contains(t, string(out), format("Starting %s-web", app.ContainerName()))
+		assert.Contains(t, string(out), format("Starting %s-db", app.ContainerName()))
 		assert.Contains(t, string(out), "Your application can be reached at")
 		assert.Contains(t, string(out), app.URL())
 		cleanup()
