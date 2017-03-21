@@ -30,14 +30,17 @@ func TestDevExec(t *testing.T) {
 	if skipComposeTests {
 		t.Skip("Compose tests being skipped.")
 	}
-
-	// Run an exec by passing in TestApp + TestEnv
 	assert := assert.New(t)
+	for _, v := range DevTestSites {
+		cleanup := v.Chdir()
 
-	args := []string{"exec", "pwd"}
-	out, err := system.RunCommand(DdevBin, args)
-	assert.NoError(err)
-	assert.Contains(string(out), "/var/www/html/docroot")
+		args := []string{"exec", "pwd"}
+		out, err := system.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		assert.Contains(string(out), "/var/www/html/docroot")
+
+		cleanup()
+	}
 }
 
 // TestDevExec runs drud Dev exec using basic drush commands
