@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
-	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +17,7 @@ func TestDevRm(t *testing.T) {
 	}
 
 	for _, site := range DevTestSites {
-		cleanup := testcommon.Chdir(site.Path)
+		cleanup := site.Chdir()
 
 		args := []string{"rm"}
 		out, err := system.RunCommand(DdevBin, args)

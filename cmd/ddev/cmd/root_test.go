@@ -23,7 +23,6 @@ var (
 		{
 			Name: "drupal8",
 			URL:  "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz",
-			Path: "",
 		},
 	}
 )
@@ -40,14 +39,14 @@ func TestMain(m *testing.M) {
 	}
 
 	for i := range DevTestSites {
-		testcommon.PrepareTest(&DevTestSites[i])
+		DevTestSites[i].Prepare()
 	}
 
 	fmt.Println("Running tests.")
 	testRun := m.Run()
 
-	for _, v := range DevTestSites {
-		testcommon.CleanupTest(v)
+	for i := range DevTestSites {
+		DevTestSites[i].Cleanup()
 	}
 
 	os.Exit(testRun)

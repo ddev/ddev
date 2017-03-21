@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
-	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/system"
@@ -23,7 +22,7 @@ func TestDevAddSites(t *testing.T) {
 	}
 	assert := assert.New(t)
 	for _, site := range DevTestSites {
-		cleanup := testcommon.Chdir(site.Path)
+		cleanup := site.Chdir()
 
 		// test that you get an error when you run with no args
 		args := []string{"start"}
