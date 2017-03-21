@@ -27,9 +27,7 @@ func TestDevExecBadArgs(t *testing.T) {
 
 // TestDevExec run `ddev exec pwd` with proper args
 func TestDevExec(t *testing.T) {
-	if skipComposeTests {
-		t.Skip("Compose tests being skipped.")
-	}
+
 	assert := assert.New(t)
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
@@ -44,12 +42,9 @@ func TestDevExec(t *testing.T) {
 }
 
 // @TODO: These are still valid tests, but we should only be doing them after an import.
-
-// TestDevExec runs drud Dev exec using basic drush commands
+// TestDevExecDrush runs  `ddev exec`` using basic drush commands
 func TestDevExecDrush(t *testing.T) {
-	/**if skipComposeTests {
-		t.Skip("Compose tests being skipped.")
-	}
+	/**
 	d8App := DevTestSites[1][0]
 	d7App := DevTestSites[2][0]
 	assert := assert.New(t)
@@ -81,12 +76,10 @@ func TestDevExecDrush(t *testing.T) {
 	**/
 }
 
-// TestDevExec run for drud Dev exec using the wp-cli
+// TestDevExecWpCLI run for `ddev exec`` using the wp-cli
 func TestDevExecWpCLI(t *testing.T) {
 	/**
-	if skipComposeTests {
-		t.Skip("Compose tests being skipped.")
-	}
+
 	wpApp := DevTestSites[0][0]
 
 	// Run an exec by passing in TestApp + TestEnv

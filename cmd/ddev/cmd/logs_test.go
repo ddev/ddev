@@ -32,9 +32,6 @@ func TestDevLogsBadArgs(t *testing.T) {
 
 // TestDevLogs tests that the Dev logs functionality is working.
 func TestDevLogs(t *testing.T) {
-	if skipComposeTests {
-		t.Skip("Compose tests being skipped.")
-	}
 	assert := assert.New(t)
 
 	for _, v := range DevTestSites {

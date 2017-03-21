@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"log"
-	"os"
 	"strings"
 	"testing"
 
@@ -13,13 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var skipComposeTests bool
-
-// TestDevAddWP tests a `drud Dev add` on a wp site
+// TestDevAddSites tests a `drud Dev add` on a wp site
 func TestDevAddSites(t *testing.T) {
-	if skipComposeTests {
-		t.Skip("Compose tests being skipped.")
-	}
 	assert := assert.New(t)
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
@@ -47,11 +41,5 @@ func TestDevAddSites(t *testing.T) {
 		assert.NoError(err)
 
 		cleanup()
-	}
-}
-
-func init() {
-	if os.Getenv("SKIP_COMPOSE_TESTS") == "true" {
-		skipComposeTests = true
 	}
 }

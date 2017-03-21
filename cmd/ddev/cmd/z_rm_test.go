@@ -12,10 +12,6 @@ import (
 
 // TestDevRm runs `drud legacy rm` on the test apps
 func TestDevRm(t *testing.T) {
-	if skipComposeTests {
-		t.Skip("Compose tests being skipped.")
-	}
-
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
 

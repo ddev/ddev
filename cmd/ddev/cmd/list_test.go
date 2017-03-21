@@ -10,10 +10,6 @@ import (
 )
 
 func TestDevList(t *testing.T) {
-	if skipComposeTests {
-		t.Skip("Compose tests being skipped.")
-	}
-
 	args := []string{"list"}
 	out, err := system.RunCommand(DdevBin, args)
 	assert.NoError(t, err)
