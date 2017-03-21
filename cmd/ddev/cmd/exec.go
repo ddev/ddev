@@ -50,7 +50,11 @@ var LocalDevExecCmd = &cobra.Command{
 			log.Println(err)
 			Failed("Could not execute command.")
 		}
-
+	},
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			log.Fatalf("Invalid arguments detected. Please use a command in the form of `ddev exec '[cmd]'`")
+		}
 	},
 }
 
