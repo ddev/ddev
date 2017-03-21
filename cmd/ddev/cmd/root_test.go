@@ -10,14 +10,7 @@ import (
 
 var (
 	// DdevBin is the full path to the drud binary
-	DdevBin = "ddev"
-
-	// DevTestEnv is the name of the Dev DRUD environment to test
-	DevTestEnv = "production"
-
-	// DevTestApp is the name of the Dev DRUD app to test
-	DevTestApp = "drud-d8"
-
+	DdevBin      = "ddev"
 	DevTestSites = []testcommon.TestSite{
 		// The third parameter (TmpDir) is purposefully left empty to hold the tmpDir, once created.
 		{
