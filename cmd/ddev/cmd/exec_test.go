@@ -19,7 +19,7 @@ func TestDevExecBadArgs(t *testing.T) {
 	assert.Contains(string(out), "Invalid arguments detected.")
 
 	// Try with an invalid number of args
-	args = []string{"exec", DevTestApp, "pwd"}
+	args = []string{"exec", "RandomValue", "pwd"}
 	out, err = system.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Invalid arguments detected")
