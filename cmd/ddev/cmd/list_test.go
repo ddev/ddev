@@ -18,11 +18,15 @@ func TestDevList(t *testing.T) {
 	out, err := system.RunCommand(DdevBin, args)
 	assert.NoError(t, err)
 	for _, v := range DevTestSites {
+		cleanup := v.Chdir()
+
 		app := platform.PluginMap[strings.ToLower(plugin)]
 		app.Init()
 		assert.Contains(t, string(out), v.Name)
 		assert.Contains(t, string(out), app.URL())
 		assert.Contains(t, string(out), app.GetType())
+
+		cleanup()
 	}
 
 }
