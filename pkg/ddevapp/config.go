@@ -274,7 +274,8 @@ func getInput(defaultValue string, in *os.File) string {
 	reader := bufio.NewReader(in)
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		log.Fatalf("Could not read input: %s\n", err)
+		log.Debug(ioutil.ReadFile(in.Name()))
+		log.Debug("Could not read input: %s\n", err)
 	}
 
 	// If the value from the input buffer is blank, then use the default instead.
