@@ -63,6 +63,7 @@ func (site *TestSite) Cleanup() {
 func CleanupDir(dir string) error {
 	err := os.RemoveAll(dir)
 	return err
+
 }
 
 // CreateTmpDir creates a temporary directory and returns its path as a string.
@@ -124,4 +125,5 @@ func CaptureStdOut() func() string {
 		out := <-outC
 		return out
 	}
+
 }

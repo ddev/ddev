@@ -16,6 +16,7 @@ import (
 )
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
+
 func TestNewConfig(t *testing.T) {
 	assert := assert.New(t)
 	// Create a temporary directory and change to it for the duration of this test.
@@ -40,6 +41,7 @@ func TestNewConfig(t *testing.T) {
 	// Write the newConfig.
 	err = newConfig.Write()
 	assert.NoError(err)
+
 	_, err = os.Stat(newConfig.ConfigPath)
 	assert.NoError(err)
 
