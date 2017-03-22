@@ -170,7 +170,7 @@ func (c *Config) WriteDockerComposeConfig() error {
 
 	f, err := os.Create(c.DockerComposeYAMLPath())
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer f.Close()
 
