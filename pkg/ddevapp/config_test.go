@@ -195,4 +195,15 @@ func TestConfigCommand(t *testing.T) {
 	assert.Contains(out, testDir)
 	assert.Contains(out, fmt.Sprintf("No directory could be found at %s", invalidDir))
 	assert.Contains(out, fmt.Sprintf("%s is not a valid application type", invalidAppType))
+
+	// Write the config.
+	err = config.Write()
+	assert.NoError(err)
+
+	// Load the config from the filesystem and ensure it has expected values.
+	loadedConfig, err := NewConfig(testDir)
+	assert.NoError(err)
+	assert.Equal(loadedConfig.Name, name)
+	assert.Equal(loadedConfig.AppType, "drupal8")
+	assert.Equal(loadedConfig.Docroot, "docroot")
 }
