@@ -197,4 +197,5 @@ func TestConfigCommand(t *testing.T) {
 	// Read directory info an ensure it exists.
 	_, err = os.Stat(filepath.Dir(config.ConfigPath))
 	assert.NoError(err)
+
 }
