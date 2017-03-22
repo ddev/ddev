@@ -1,6 +1,9 @@
 package ddevapp
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -134,4 +137,62 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	assert.Contains(contentString, config.Name)
 	assert.Contains(contentString, config.Platform)
 	assert.Contains(contentString, config.AppType)
+}
+
+// TestConfigCommand tests the interactive config options.
+func TestConfigCommand(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := assert.New(t)
+	testDir := testcommon.CreateTmpDir()
+	defer testcommon.Chdir(testDir)()
+	defer testcommon.CleanupDir(testDir)
+
+	// Create a docroot folder
+	err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
+	if err != nil {
+		t.Skip("Could not create docroot directory under %s", testDir)
+	}
+
+	// Create a file to hold our inputs
+	inputFile, _ := ioutil.TempFile(os.TempDir(), "stdin")
+	defer os.Remove(inputFile.Name())
+
+	// Create the ddevapp we'll use for testing.
+	// This should return an error, since no existing config can be read.
+	config, err := NewConfig(testDir)
+	assert.Error(err)
+
+	// Randomize some values to use for Stdin during testing.
+	name := testcommon.RandString(32)
+	invalidDir := testcommon.RandString(16)
+	invalidAppType := testcommon.RandString(16)
+
+	// This is a bit hard to follow, but we create an example input buffer that writes the sitename, a (invalid) document root, a valid document root,
+	// an invalid app type, and finally a valid site type (drupal8)
+	inputFile.WriteString(fmt.Sprintf("%s\n%s\ndocroot\n%s\ndrupal8", name, invalidDir, invalidAppType))
+
+	// Modify stdOut to be a file.
+	old := os.Stdout // keep backup of the real stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	config.Config(inputFile)
+	outC := make(chan string)
+	// copy the output in a separate goroutine so printing can't block indefinitely
+	go func() {
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		outC <- buf.String()
+	}()
+
+	// back to normal state
+	w.Close()
+	os.Stdout = old // restoring the real stdout
+	out := <-outC
+
+	// Ensure we have expected vales in output.
+	assert.Contains(out, "Creating a new ddev project")
+	assert.Contains(out, testDir)
+	assert.Contains(out, fmt.Sprintf("No directory could be found at %s", invalidDir))
+	assert.Contains(out, fmt.Sprintf("%s is not a valid application type", invalidAppType))
 }
