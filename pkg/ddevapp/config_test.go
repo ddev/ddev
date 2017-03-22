@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"io/ioutil"
+
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/stretchr/testify/assert"
@@ -106,6 +108,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	assert.Error(err)
 	config.Name = testcommon.RandString(32)
 	config.AppType = allowedAppTypes[0]
+	config.Docroot = testcommon.RandString(16)
 
 	err = config.WriteDockerComposeConfig()
 	// We should get an error here since no config or directory path exists.
@@ -124,4 +127,12 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	assert.NoError(err)
 	assert.False(fileinfo.IsDir())
 	assert.Equal(fileinfo.Name(), filepath.Base(config.DockerComposeYAMLPath()))
+
+	composeBytes, err := ioutil.ReadFile(config.DockerComposeYAMLPath())
+	assert.NoError(err)
+	contentString := string(composeBytes)
+	assert.Contains(contentString, config.Docroot)
+	assert.Contains(contentString, config.Name)
+	assert.Contains(contentString, config.Platform)
+	assert.Contains(contentString, config.AppType)
 }
