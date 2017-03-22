@@ -71,11 +71,15 @@ func TestPrepDirectory(t *testing.T) {
 	assert.Error(err)
 
 	// Prep the directory.
-	err = prepDDevDirectory(testDir)
+	err = prepDDevDirectory(filepath.Dir(config.ConfigPath))
 	assert.NoError(err)
 
 	// Read directory info an ensure it exists.
 	dirinfo, err := os.Stat(filepath.Dir(config.ConfigPath))
 	assert.NoError(err)
 	assert.Equal(dirinfo.Mode, "0644")
+}
+
+func TestHostName() {
+
 }
