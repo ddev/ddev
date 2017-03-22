@@ -157,6 +157,10 @@ func TestConfigCommand(t *testing.T) {
 		t.Errorf("Could not create docroot directory under %s", testDir)
 	}
 
+	// Create a file to hold our inputs
+	inputFile, _ := ioutil.TempFile(os.TempDir(), "stdin")
+	defer os.Remove(inputFile.Name())
+
 	// Create the ddevapp we'll use for testing.
 	// This should return an error, since no existing config can be read.
 	config, err := NewConfig(testDir)
@@ -193,59 +197,4 @@ func TestConfigCommand(t *testing.T) {
 	// Read directory info an ensure it exists.
 	_, err = os.Stat(filepath.Dir(config.ConfigPath))
 	assert.NoError(err)
-}
-
-// TestHostName tests that the TestSite.Hostname() field returns the hostname as expected.
-func TestHostName(t *testing.T) {
-	assert := assert.New(t)
-	testDir := testcommon.CreateTmpDir()
-	defer testcommon.Chdir(testDir)()
-	defer testcommon.CleanupDir(testDir)
-	config, err := NewConfig(testDir)
-	assert.Error(err)
-	config.Name = testcommon.RandString(32)
-
-	assert.Equal(config.Hostname(), config.Name+"."+DDevTLD)
-}
-
-// TestWriteDockerComposeYaml tests the writing of a docker-compose.yaml file.
-func TestWriteDockerComposeYaml(t *testing.T) {
-	// Set up tests and give ourselves a working directory.
-	assert := assert.New(t)
-	testDir := testcommon.CreateTmpDir()
-	defer testcommon.Chdir(testDir)()
-	defer testcommon.CleanupDir(testDir)
-
-	// Create a config
-	config, err := NewConfig(testDir)
-	assert.Error(err)
-	config.Name = testcommon.RandString(32)
-	config.AppType = allowedAppTypes[0]
-	config.Docroot = testcommon.RandString(16)
-
-	err = config.WriteDockerComposeConfig()
-	// We should get an error here since no config or directory path exists.
-	assert.Error(err)
-
-	// Write a config to create/prep necessary directories.
-	err = config.Write()
-	assert.NoError(err)
-
-	// After the config has been written and directories exist, the write should work.
-	err = config.WriteDockerComposeConfig()
-	assert.NoError(err)
-
-	// Ensure we can read from the file and that it's a regular file with the expected name.
-	fileinfo, err := os.Stat(config.DockerComposeYAMLPath())
-	assert.NoError(err)
-	assert.False(fileinfo.IsDir())
-	assert.Equal(fileinfo.Name(), filepath.Base(config.DockerComposeYAMLPath()))
-
-	composeBytes, err := ioutil.ReadFile(config.DockerComposeYAMLPath())
-	assert.NoError(err)
-	contentString := string(composeBytes)
-	assert.Contains(contentString, config.Docroot)
-	assert.Contains(contentString, config.Name)
-	assert.Contains(contentString, config.Platform)
-	assert.Contains(contentString, config.AppType)
 }
