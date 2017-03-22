@@ -77,9 +77,8 @@ func TestPrepDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	// Read directory info an ensure it exists.
-	dirinfo, err := os.Stat(filepath.Dir(config.ConfigPath))
+	_, err := os.Stat(filepath.Dir(config.ConfigPath))
 	assert.NoError(err)
-	assert.Equal(dirinfo.Mode(), 0644)
 }
 
 // TestHostName tests that the TestSite.Hostname() field returns the hostname as expected.
