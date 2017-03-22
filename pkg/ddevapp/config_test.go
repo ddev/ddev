@@ -41,6 +41,8 @@ func TestNewConfig(t *testing.T) {
 	// Write the newConfig.
 	err = newConfig.Write()
 	assert.NoError(err)
+	_, err = os.Stat(newConfig.ConfigPath)
+	assert.NoError(err)
 
 	_, err = os.Stat(newConfig.ConfigPath)
 	assert.NoError(err)
@@ -185,4 +187,11 @@ func TestConfigCommand(t *testing.T) {
 	assert.Equal(name, config.Name)
 	assert.Equal("drupal8", config.AppType)
 	assert.Equal("docroot", config.Docroot)
+	err = prepDDevDirectory(testDir)
+	assert.NoError(err)
+
+	// Read directory info an ensure it exists.
+	dirinfo, err := os.Stat(filepath.Dir(config.ConfigPath))
+	assert.NoError(err)
+	assert.Equal(dirinfo.Mode, "0644")
 }
