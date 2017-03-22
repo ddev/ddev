@@ -272,7 +272,6 @@ func setInputScanner(scanner *bufio.Scanner) {
 }
 
 // getInput reads input from an input buffer and returns the result as a string.
-
 func getInput(defaultValue string) string {
 	inputScanner.Scan()
 	input := inputScanner.Text()
