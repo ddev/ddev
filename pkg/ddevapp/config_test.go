@@ -195,3 +195,7 @@ func TestConfigCommand(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(dirinfo.Mode, "0644")
 }
+
+func TestHostName() {
+
+}
