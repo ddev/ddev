@@ -54,7 +54,13 @@ func (site *TestSite) Chdir() func() {
 // Cleanup removes the archive and codebase extraction for a site after a test run has completed.
 func (site *TestSite) Cleanup() {
 	os.Remove(site.archivePath())
-	os.RemoveAll(site.Dir)
+	CleanupDir(site.Dir)
+}
+
+// Cleanupdir removes a directory specified by string.
+func CleanupDir(dir string) error {
+	err := os.RemoveAll(dir)
+	return err
 }
 
 // CreateTmpDir creates a temporary directory and returns its path as a string.
