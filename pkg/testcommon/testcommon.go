@@ -2,50 +2,59 @@ package testcommon
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/drud/drud-go/utils/system"
 )
 
-var archive = path.Join(os.TempDir(), "testsite.tar.gz")
+type TestSite struct {
+	Name string
+	URL  string
+	Dir  string
+}
 
-// PrepareTest downloads and extracts a site codebase, and ensures the tests are run from the location the codebase is extracted to.
-func PrepareTest(site []string) {
-	siteName := site[0]
-	archiveURL := site[1]
-	archiveExtPath := site[2]
+func (site *TestSite) archivePath() string {
+	return filepath.Join(os.TempDir(), site.Name+".tar.gz")
+}
 
-	testDir := path.Join(os.TempDir(), archiveExtPath)
-
-	fmt.Printf("Prepping test for %s.", siteName)
+// Prepare downloads and extracts a site codebase to a temporary directory.
+func (site *TestSite) Prepare() {
+	testDir, err := ioutil.TempDir("", site.Name)
+	if err != nil {
+		log.Fatalf("Could not create temporary directory %s for site %s", testDir, site.Name)
+	}
+	site.Dir = testDir
+	fmt.Printf("Prepping test for %s.", site.Name)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
-	os.Mkdir(testDir, 0755)
 
-	system.DownloadFile(archive, archiveURL)
-
+	system.DownloadFile(site.archivePath(), site.URL)
 	system.RunCommand("tar",
 		[]string{
 			"-xzf",
-			archive,
+			site.archivePath(),
+			"--strip", "1",
 			"-C",
-			os.TempDir(),
+			site.Dir,
 		})
-
-	err := os.Chdir(testDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("running from %s\n", testDir)
 }
 
-// CleanupTest removes the archive and codebase extraction for a site after a test run has completed.
-func CleanupTest(site []string) {
-	siteName := site[0]
-	archiveExtPath := site[2]
-	testDir := path.Join(os.TempDir(), archiveExtPath)
-	fmt.Printf("Cleaning up from %s tests.", siteName)
-	os.Remove(archive)
-	os.RemoveAll(testDir)
+// Chdir will change to the directory for the site specified by TestSite.
+// It returns an anonymous function which will return to the original working directory when called.
+func (site *TestSite) Chdir() func() {
+	curDir, _ := os.Getwd()
+	err := os.Chdir(site.Dir)
+	if err != nil {
+		log.Fatalf("Could not change to directory %s: %v\n", site.Dir, err)
+	}
+
+	return func() { os.Chdir(curDir) }
+}
+
+// Cleanup removes the archive and codebase extraction for a site after a test run has completed.
+func (site *TestSite) Cleanup() {
+	os.Remove(site.archivePath())
+	os.RemoveAll(site.Dir)
 }

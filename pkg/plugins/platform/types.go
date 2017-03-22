@@ -17,6 +17,7 @@ type App interface {
 	Down() error
 	Config() error
 	Wait() (string, error)
+	HostName() string
 	URL() string
 }
 

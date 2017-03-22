@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"path"
 	"testing"
 
 	"os"
@@ -20,19 +19,22 @@ var (
 	siteName             = "drupal8"
 	TestDBContainerName  = "local-" + siteName + "-db"
 	TestWebContainerName = "local-" + siteName + "-web"
-	TestSite             = []string{"drupal8", "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz", "drupal8-0.2.1"}
-	TestDir              = path.Join(os.TempDir(), TestSite[2])
+	TestSite             = testcommon.TestSite{
+		Name: "drupal8",
+		URL:  "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz",
+	}
 )
 
 const netName = "ddev_default"
 
 func TestMain(m *testing.M) {
-	testcommon.PrepareTest(TestSite)
+	TestSite.Prepare()
+	defer TestSite.Chdir()()
 
 	fmt.Println("Running tests.")
 	testRun := m.Run()
 
-	testcommon.CleanupTest(TestSite)
+	TestSite.Cleanup()
 
 	os.Exit(testRun)
 }
@@ -86,7 +88,7 @@ func TestLocalStart(t *testing.T) {
 	assert.NoError(err)
 
 	// ensure docker-compose.yaml exists inside .ddev site folder
-	composeFile := system.FileExists(path.Join(TestDir, ".ddev", "docker-compose.yaml"))
+	composeFile := system.FileExists(app.DockerComposeYAMLPath())
 	assert.True(composeFile)
 
 	check, err := ContainerCheck(TestWebContainerName, "running")
