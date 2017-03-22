@@ -28,7 +28,7 @@ var ConfigCommand = &cobra.Command{
 			}
 		}
 
-		err = c.Config()
+		err = c.Config(nil)
 		if err != nil {
 			log.Fatalf("There was a problem configuring your application: %v\n", err)
 		}
