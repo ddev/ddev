@@ -194,7 +194,6 @@ func (c *Config) RenderComposeYAML() (string, error) {
 	}
 	templateVars := map[string]string{
 		"name":    c.Name,
-		"tld":     DDevTLD,
 		"docroot": filepath.Join("../", c.Docroot),
 		"plugin":  c.Platform,
 		"appType": c.AppType,
