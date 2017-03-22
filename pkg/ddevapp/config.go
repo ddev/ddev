@@ -111,6 +111,7 @@ func (c *Config) Read() error {
 }
 
 // Config goes through a set of prompts to receive user input and generate an Config struct.
+
 func (c *Config) Config() error {
 
 	if c.ConfigExists() {
@@ -271,6 +272,7 @@ func setInputScanner(scanner *bufio.Scanner) {
 }
 
 // getInput reads input from an input buffer and returns the result as a string.
+
 func getInput(defaultValue string) string {
 	inputScanner.Scan()
 	input := inputScanner.Text()
