@@ -200,8 +200,8 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		"appType": c.AppType,
 	}
 
-	templ.Execute(&doc, templateVars)
-	return doc.String(), nil
+	err = templ.Execute(&doc, templateVars)
+	return doc.String(), err
 }
 
 func (c *Config) docrootPrompt() error {

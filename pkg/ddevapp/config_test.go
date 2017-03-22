@@ -80,6 +80,48 @@ func TestPrepDirectory(t *testing.T) {
 	assert.Equal(dirinfo.Mode, "0644")
 }
 
-func TestHostName() {
+// TestHostName tests that the TestSite.Hostname() field returns the hostname as expected.
+func TestHostName(t *testing.T) {
+	assert := assert.New(t)
+	testDir := testcommon.CreateTmpDir()
+	defer testcommon.Chdir(testDir)()
+	defer testcommon.CleanupDir(testDir)
+	config, err := NewConfig(testDir)
+	assert.Error(err)
+	config.Name = testcommon.RandString(32)
 
+	assert.Equal(config.Hostname(), config.Name+"."+DDevTLD)
+}
+
+// TestWriteDockerComposeYaml tests the writing of a docker-compose.yaml file.
+func TestWriteDockerComposeYaml(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := assert.New(t)
+	testDir := testcommon.CreateTmpDir()
+	defer testcommon.Chdir(testDir)()
+	defer testcommon.CleanupDir(testDir)
+
+	// Create a config
+	config, err := NewConfig(testDir)
+	assert.Error(err)
+	config.Name = testcommon.RandString(32)
+	config.AppType = allowedAppTypes[0]
+
+	err = config.WriteDockerComposeConfig()
+	// We should get an error here since no config or directory path exists.
+	assert.Error(err)
+
+	// Write a config to create/prep necessary directories.
+	err = config.Write()
+	assert.NoError(err)
+
+	// After the config has been written and directories exist, the write should work.
+	err = config.WriteDockerComposeConfig()
+	assert.NoError(err)
+
+	// Ensure we can read from the file and that it's a regular file with the expected name.
+	fileinfo, err := os.Stat(config.DockerComposeYAMLPath())
+	assert.NoError(err)
+	assert.False(fileinfo.IsDir())
+	assert.Equal(fileinfo.Name(), filepath.Base(config.DockerComposeYAMLPath()))
 }
