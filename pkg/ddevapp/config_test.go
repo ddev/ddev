@@ -147,7 +147,7 @@ func TestConfigCommand(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 
-	// Create a docroot folder
+	// Create a docroot folder.
 	err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
 	if err != nil {
 		t.Skip("Could not create docroot directory under %s", testDir)
@@ -159,9 +159,9 @@ func TestConfigCommand(t *testing.T) {
 	assert.Error(err)
 
 	// Randomize some values to use for Stdin during testing.
-	name := testcommon.RandString(4)
-	invalidDir := testcommon.RandString(4)
-	invalidAppType := testcommon.RandString(4)
+	name := testcommon.RandString(16)
+	invalidDir := testcommon.RandString(16)
+	invalidAppType := testcommon.RandString(8)
 
 	// This is a bit hard to follow, but we create an example input buffer that writes the sitename, a (invalid) document root, a valid document root,
 	// an invalid app type, and finally a valid site type (drupal8)

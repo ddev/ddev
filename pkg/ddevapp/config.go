@@ -265,7 +265,7 @@ func (c *Config) appTypePrompt() error {
 	return nil
 }
 
-// SetInputReader allows you to override the default input reader.
+// SetInputScanner allows you to override the default input scanner with your own.
 func setInputScanner(scanner *bufio.Scanner) {
 	inputScanner = scanner
 }
