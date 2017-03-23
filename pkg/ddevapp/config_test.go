@@ -159,17 +159,27 @@ func TestConfigCommand(t *testing.T) {
 	assert.Error(err)
 
 	// Randomize some values to use for Stdin during testing.
-	name := testcommon.RandString(16)
-	invalidDir := testcommon.RandString(16)
-	invalidAppType := testcommon.RandString(8)
+	name := strings.ToLower(testcommon.RandString(16))
+	invalidDir := strings.ToLower(testcommon.RandString(16))
+	invalidAppType := strings.ToLower(testcommon.RandString(8))
 
 	// This is a bit hard to follow, but we create an example input buffer that writes the sitename, a (invalid) document root, a valid document root,
 	// an invalid app type, and finally a valid site type (drupal8)
 	input := fmt.Sprintf("%s\n%s\ndocroot\n%s\ndrupal8", name, invalidDir, invalidAppType)
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	setInputScanner(scanner)
-	config.Config()
 
+	restoreOutput := testcommon.CaptureStdOut()
+	config.Config()
+	out := restoreOutput()
+
+	// Ensure we have expected vales in output.
+	assert.Contains(out, "Creating a new ddev project")
+	assert.Contains(out, testDir)
+	assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
+	assert.Contains(out, fmt.Sprintf("%s is not a valid application type", invalidAppType))
+
+	// Ensure values were properly set on the config struct.
 	assert.Equal(name, config.Name)
 	assert.Equal("drupal8", config.AppType)
 	assert.Equal("docroot", config.Docroot)
