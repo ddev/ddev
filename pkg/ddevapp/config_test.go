@@ -2,11 +2,10 @@ package ddevapp
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"io/ioutil"
@@ -164,50 +163,18 @@ func TestConfigCommand(t *testing.T) {
 	assert.Error(err)
 
 	// Randomize some values to use for Stdin during testing.
-	name := testcommon.RandString(32)
-	invalidDir := testcommon.RandString(16)
-	invalidAppType := testcommon.RandString(16)
+	name := testcommon.RandString(4)
+	invalidDir := testcommon.RandString(4)
+	invalidAppType := testcommon.RandString(4)
 
 	// This is a bit hard to follow, but we create an example input buffer that writes the sitename, a (invalid) document root, a valid document root,
 	// an invalid app type, and finally a valid site type (drupal8)
-	inputFile.WriteString(fmt.Sprintf("%s\n%s\ndocroot\n%s\ndrupal8", name, invalidDir, invalidAppType))
-
-	// Modify stdOut to be a file.
-	old := os.Stdout // keep backup of the real stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	reader := bufio.NewReader(r)
-	setInputReader(reader)
+	input := fmt.Sprintf("%s\n%s\ndocroot\n%s\ndrupal8", name, invalidDir, invalidAppType)
+	scanner := bufio.NewScanner(strings.NewReader(input))
+	setInputScanner(scanner)
 	config.Config()
 
-	outC := make(chan string)
-	// copy the output in a separate goroutine so printing can't block indefinitely
-	go func() {
-		var buf bytes.Buffer
-		io.Copy(&buf, r)
-		outC <- buf.String()
-	}()
-
-	// back to normal state
-	w.Close()
-	os.Stdout = old // restoring the real stdout
-	out := <-outC
-
-	// Ensure we have expected vales in output.
-	assert.Contains(out, "Creating a new ddev project")
-	assert.Contains(out, testDir)
-	assert.Contains(out, fmt.Sprintf("No directory could be found at %s", invalidDir))
-	assert.Contains(out, fmt.Sprintf("%s is not a valid application type", invalidAppType))
-
-	// Write the config.
-	err = config.Write()
-	assert.NoError(err)
-
-	// Load the config from the filesystem and ensure it has expected values.
-	loadedConfig, err := NewConfig(testDir)
-	assert.NoError(err)
-	assert.Equal(loadedConfig.Name, name)
-	assert.Equal(loadedConfig.AppType, "drupal8")
-	assert.Equal(loadedConfig.Docroot, "docroot")
+	assert.Equal(name, config.Name)
+	assert.Equal("drupal8", config.AppType)
+	assert.Equal("docroot", config.Docroot)
 }

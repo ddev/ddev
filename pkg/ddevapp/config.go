@@ -14,7 +14,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/drud/drud-go/utils/system"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -30,7 +29,7 @@ const DDevDefaultPlatform = "local"
 const DDevTLD = "ddev.local"
 
 var allowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
-var inputReader = bufio.NewReader(os.Stdin)
+var inputScanner = bufio.NewScanner(os.Stdin)
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
@@ -267,17 +266,14 @@ func (c *Config) appTypePrompt() error {
 }
 
 // SetInputReader allows you to override the default input reader.
-func setInputReader(reader *bufio.Reader) {
-	inputReader = reader
+func setInputScanner(scanner *bufio.Scanner) {
+	inputScanner = scanner
 }
 
 // getInput reads input from an input buffer and returns the result as a string.
 func getInput(defaultValue string) string {
-	input, err := inputReader.ReadString('\n')
-	if err != nil {
-		log.Debug("Could not read input: %s\n", err)
-		return defaultValue
-	}
+	inputScanner.Scan()
+	input := inputScanner.Text()
 
 	// If the value from the input buffer is blank, then use the default instead.
 	value := strings.TrimSpace(input)
@@ -326,11 +322,10 @@ func determineAppType(basePath string) (string, error) {
 
 	for k, v := range defaultLocations {
 		fp := path.Join(basePath, k)
-
 		log.WithFields(log.Fields{
 			"file": fp,
 		}).Debug("Looking for app fingerprint.")
-		if system.FileExists(fp) {
+		if _, err := os.Stat(fp); err == nil {
 			log.WithFields(log.Fields{
 				"file": fp,
 				"app":  v,
