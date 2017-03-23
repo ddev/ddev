@@ -18,7 +18,7 @@ import (
 type TestSite struct {
 	// Name is the generic name of the site, and is used as the default dir.
 	Name string
-	// URL is the URL of the tarball to be used for building the site.
+	// DownloadURL is the URL of the tarball to be used for building the site.
 	DownloadURL string
 	Dir         string
 }
