@@ -19,8 +19,8 @@ type TestSite struct {
 	// Name is the generic name of the site, and is used as the default dir.
 	Name string
 	// URL is the URL of the tarball to be used for building the site.
-	URL string
-	Dir string
+	DownloadURL string
+	Dir         string
 }
 
 func (site *TestSite) archivePath() string {
@@ -37,7 +37,7 @@ func (site *TestSite) Prepare() {
 	fmt.Printf("Prepping test for %s.", site.Name)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
 
-	system.DownloadFile(site.archivePath(), site.URL)
+	system.DownloadFile(site.archivePath(), site.DownloadURL)
 	system.RunCommand("tar",
 		[]string{
 			"-xzf",
@@ -59,7 +59,7 @@ func (site *TestSite) Cleanup() {
 	CleanupDir(site.Dir)
 }
 
-// Cleanupdir removes a directory specified by string.
+// CleanupDir removes a directory specified by string.
 func CleanupDir(dir string) error {
 	err := os.RemoveAll(dir)
 	return err
