@@ -153,10 +153,6 @@ func TestConfigCommand(t *testing.T) {
 		t.Skip("Could not create docroot directory under %s", testDir)
 	}
 
-	// Create a file to hold our inputs
-	inputFile, _ := ioutil.TempFile(os.TempDir(), "stdin")
-	defer os.Remove(inputFile.Name())
-
 	// Create the ddevapp we'll use for testing.
 	// This should return an error, since no existing config can be read.
 	config, err := NewConfig(testDir)
