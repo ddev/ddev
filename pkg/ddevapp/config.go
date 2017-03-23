@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
+
 	yaml "gopkg.in/yaml.v2"
 )
 

@@ -167,9 +167,11 @@ func TestConfigCommand(t *testing.T) {
 	assert.Error(err)
 
 	// Randomize some values to use for Stdin during testing.
+
 	name := strings.ToLower(testcommon.RandString(16))
 	invalidDir := strings.ToLower(testcommon.RandString(16))
 	invalidAppType := strings.ToLower(testcommon.RandString(8))
+
 
 	// This is a bit hard to follow, but we create an example input buffer that writes the sitename, a (invalid) document root, a valid document root,
 	// an invalid app type, and finally a valid site type (drupal8)
@@ -194,8 +196,5 @@ func TestConfigCommand(t *testing.T) {
 	err = prepDDevDirectory(testDir)
 	assert.NoError(err)
 
-	// Read directory info an ensure it exists.
-	_, err = os.Stat(filepath.Dir(config.ConfigPath))
-	assert.NoError(err)
 
 }
