@@ -30,6 +30,7 @@ const DDevDefaultPlatform = "local"
 const DDevTLD = "ddev.local"
 
 var allowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
+var inputReader = bufio.NewReader(os.Stdin)
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
@@ -111,10 +112,7 @@ func (c *Config) Read() error {
 }
 
 // Config goes through a set of prompts to receive user input and generate an Config struct.
-func (c *Config) Config(in *os.File) error {
-	if in == nil {
-		in = os.Stdin
-	}
+func (c *Config) Config() error {
 
 	if c.ConfigExists() {
 		fmt.Printf("Editing existing ddev project at %s\n\n", c.AppRoot)
@@ -139,11 +137,11 @@ func (c *Config) Config(in *os.File) error {
 	namePrompt = fmt.Sprintf("%s (%s)", namePrompt, c.Name)
 	// Define an application name.
 	fmt.Print(namePrompt + ": ")
-	c.Name = getInput(c.Name, in)
+	c.Name = getInput(c.Name)
 
-	c.docrootPrompt(in)
+	c.docrootPrompt()
 
-	err := c.appTypePrompt(in)
+	err := c.appTypePrompt()
 	if err != nil {
 		return err
 	}
@@ -207,7 +205,7 @@ func (c *Config) RenderComposeYAML() (string, error) {
 	return doc.String(), err
 }
 
-func (c *Config) docrootPrompt(in *os.File) error {
+func (c *Config) docrootPrompt() error {
 	// Determine the document root.
 	fmt.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)\n", c.AppRoot)
 	fmt.Println("You may leave this value blank if your site files are in the application root")
@@ -217,13 +215,13 @@ func (c *Config) docrootPrompt(in *os.File) error {
 	}
 
 	fmt.Print(docrootPrompt + ": ")
-	c.Docroot = getInput(c.Docroot, in)
+	c.Docroot = getInput(c.Docroot)
 
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(c.AppRoot, c.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		fmt.Printf("No directory could be found at %s. Please enter a valid docroot", fullPath)
-		return c.docrootPrompt(in)
+		return c.docrootPrompt()
 	}
 	return nil
 }
@@ -238,7 +236,6 @@ func (c *Config) ConfigExists() bool {
 
 // appTypePrompt handles the AppType workflow.
 func (c *Config) appTypePrompt() error {
-
 	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(allowedAppTypes, ", "))
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
@@ -258,7 +255,7 @@ func (c *Config) appTypePrompt() error {
 
 	for isAllowedAppType(appType) != true {
 		fmt.Printf(typePrompt + ": ")
-		appType = strings.ToLower(getInput(c.AppType, in))
+		appType = strings.ToLower(getInput(c.AppType))
 
 		if isAllowedAppType(appType) != true {
 			fmt.Printf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(allowedAppTypes, ", "))
@@ -269,13 +266,17 @@ func (c *Config) appTypePrompt() error {
 	return nil
 }
 
+// SetInputReader allows you to override the default input reader.
+func setInputReader(reader *bufio.Reader) {
+	inputReader = reader
+}
+
 // getInput reads input from an input buffer and returns the result as a string.
-func getInput(defaultValue string, in *os.File) string {
-	reader := bufio.NewReader(in)
-	input, err := reader.ReadString('\n')
+func getInput(defaultValue string) string {
+	input, err := inputReader.ReadString('\n')
 	if err != nil {
-		log.Debug(ioutil.ReadFile(in.Name()))
 		log.Debug("Could not read input: %s\n", err)
+		return defaultValue
 	}
 
 	// If the value from the input buffer is blank, then use the default instead.

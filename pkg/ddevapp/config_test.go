@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -176,7 +177,10 @@ func TestConfigCommand(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	config.Config(inputFile)
+	reader := bufio.NewReader(r)
+	setInputReader(reader)
+	config.Config()
+
 	outC := make(chan string)
 	// copy the output in a separate goroutine so printing can't block indefinitely
 	go func() {
