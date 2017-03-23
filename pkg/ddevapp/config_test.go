@@ -16,7 +16,6 @@ import (
 )
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
-
 func TestNewConfig(t *testing.T) {
 	assert := assert.New(t)
 	// Create a temporary directory and change to it for the duration of this test.
@@ -164,9 +163,9 @@ func TestConfigCommand(t *testing.T) {
 
 	// Randomize some values to use for Stdin during testing.
 
-	name := testcommon.RandString(16)
-	invalidDir := testcommon.RandString(16)
-	invalidAppType := testcommon.RandString(8)
+	name := strings.ToLower(testcommon.RandString(16))
+	invalidDir := strings.ToLower(testcommon.RandString(16))
+	invalidAppType := strings.ToLower(testcommon.RandString(8))
 
 	// This is a bit hard to follow, but we create an example input buffer that writes the sitename, a (invalid) document root, a valid document root,
 	// an invalid app type, and finally a valid site type (drupal8)
