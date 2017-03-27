@@ -1,13 +1,12 @@
 #ddev
 
-The purpose of *ddev* is to support developers with a local copy of a site for development purposes. It runs the site in a Docker containers.
+The purpose of *ddev* is to support developers with a local copy of a site for development purposes. It runs the site in Docker containers.
 
-You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev start -h`, etc.
+You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev add -h`, etc.
 
 ## Key prerequisites
 - A working [docker install](https://www.docker.com/community-edition)
 - The [ddev binary](https://github.com/drud/ddev/releases)
-
 
 ---
 
@@ -93,13 +92,13 @@ All of the commands can be performed by explicitly specifying the sitename or, t
 ### Retrieve Site Metadata
 To view information about a specific site (such as URL, MySQL credentials, mailhog credentials), run `ddev describe` from within the working directory of the site. To view information for any site, use `ddev describe sitename`.
 
-### Viewing Error Logs
-To follow an error log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. If you only want to view the most recent events, omit the `-f` flag.
+### Viewing Webserver Logs
+To follow the webserver  error log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. If you only want to view the most recent events, omit the `-f` flag.
 
 ### Executing Commands
-To run a command against your site use `ddev exec`. e.g. `ddev exec 'drush core-status'` would execute `drush core-status` against your site root. You are free to use any of [the tools included in the container](#tools-included-in-the-container).
+To run a command against your site use `ddev exec`. e.g. `ddev exec 'drush core-status'` would execute `drush core-status` against your site root. Commands ran in this way are executed in the webserver docroot. You are free to use any of [the tools included in the container](#tools-included-in-the-container).
 
-### Getting into the Container
+### SSH Into The Container
 To interact with the site more fully, `ddev ssh` will drop you into a bash shell for your container.
 
 ## Tools Included in the Container
@@ -122,5 +121,3 @@ To interact with the site more fully, `ddev ssh` will drop you into a bash shell
 Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...`
 
 * DRUD_DEBUG: It helps a lot to set DRUD_DEBUG=true to see what ddev commands are being executed in the tests.
-* DDEV_BINARY_FULLPATH should be set to the full pathname of the ddev binary we're attempting to test. That way it won't accidentally use some other version of ddev that happens to be on the filesystem.
-* SKIP_COMPOSE_TESTS=true allows skipping tests that require docker-compose.
