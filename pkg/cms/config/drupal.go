@@ -117,6 +117,7 @@ func WriteDrupalConfig(drupalConfig *model.DrupalConfig, filePath string) error 
 	return nil
 }
 
+// WriteDrushConfig writes out a drush config based on passed-in values.
 func WriteDrushConfig(drushConfig *model.DrushConfig, filePath string) error {
 	tmpl, err := template.New("drushConfig").Funcs(sprig.TxtFuncMap()).Parse(drushTemplate)
 	dir := strings.TrimSuffix(filePath, "/drush.settings.php")

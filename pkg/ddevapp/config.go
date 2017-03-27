@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/system"
+	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -22,7 +23,7 @@ import (
 // We're not doing anything with AppVersion, so just default it to 1 for now.
 const CurrentAppVersion = "1"
 
-// This defines the DDev Platform. It's just hardcoded for now, but should be adjusted as we add more platforms.
+// DDevDefaultPlatform defines the DDev Platform. It's just hardcoded for now, but should be adjusted as we add more platforms.
 const DDevDefaultPlatform = "local"
 
 // DDevTLD defines the tld to use for DDev site URLs.
@@ -234,7 +235,6 @@ func (c *Config) ConfigExists() bool {
 
 // appTypePrompt handles the AppType workflow.
 func (c *Config) appTypePrompt() error {
-	var appType string
 	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(allowedAppTypes, ", "))
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
@@ -250,11 +250,7 @@ func (c *Config) appTypePrompt() error {
 		c.AppType = appType
 		return nil
 	}
-
-	// If we weren't able to auto-detect the app type, then prompt the user.
-	if c.AppType != "" {
-		typePrompt = fmt.Sprintf("%s (%s)", typePrompt, c.AppType)
-	}
+	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, c.AppType)
 
 	for isAllowedAppType(appType) != true {
 		fmt.Printf(typePrompt + ": ")
@@ -262,9 +258,9 @@ func (c *Config) appTypePrompt() error {
 
 		if isAllowedAppType(appType) != true {
 			fmt.Printf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(allowedAppTypes, ", "))
-		} else {
-			c.AppType = appType
+			return errors.New("failed to get valid application type")
 		}
+		c.AppType = appType
 	}
 	return nil
 }
@@ -338,5 +334,5 @@ func determineAppType(basePath string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("Couldn't determine app's type!")
+	return "", errors.New("determineAppType() couldn't determine app's type")
 }

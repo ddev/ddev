@@ -10,10 +10,13 @@ import (
 	"github.com/drud/drud-go/utils/system"
 )
 
+// TestSite describes a site for testing, with name, URL of tarball, and optional dir.
 type TestSite struct {
+	// Name is the generic name of the site, and is used as the default dir.
 	Name string
-	URL  string
-	Dir  string
+	// URL is the URL of the tarball to be used for building the site.
+	URL string
+	Dir string
 }
 
 func (site *TestSite) archivePath() string {

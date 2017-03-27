@@ -2,8 +2,8 @@ package ddevapp
 
 // DDevComposeTemplate is used to create the docker-compose.yaml for
 // legacy sites in the ddev env
-
 const DDevComposeTemplate = `version: '2'
+
 services:
   {{ .plugin }}-{{.name }}-db:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-db

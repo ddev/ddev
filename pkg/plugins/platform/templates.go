@@ -1,5 +1,6 @@
 package platform
 
+// SequelproTemplate is the template for Sequelpro config.
 var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -61,6 +62,7 @@ var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 </dict>
 </plist>`
 
+// DrudRouterTemplate is the template for the generic router container.
 const DrudRouterTemplate = `version: '2'
 services:
   nginx-proxy:

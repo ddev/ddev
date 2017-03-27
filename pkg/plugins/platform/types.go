@@ -30,6 +30,7 @@ type AppBase struct {
 	Status        string
 }
 
+// PluginMap maps the name of the plugins to their implementation.
 var PluginMap = map[string]App{
 	"local": &LocalApp{},
 }
