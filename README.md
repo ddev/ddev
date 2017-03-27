@@ -1,15 +1,14 @@
 #ddev
 
-The purpose of *ddev* is to support developers with a local copy of a site for development purposes. It runs the site in a Docker containers similar to a normal hosting environment.
+The purpose of *ddev* is to support developers with a local copy of a site for development purposes. It runs the site in a Docker containers.
 
-You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev add -h`, etc.
+You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev start -h`, etc.
 
 ## Key prerequisites
-- The *workspace* where the code will be checked out is specified in "workspace" in your drud.yaml. It defaults to ~/.drud, but you may want to change it to something like ~/workspace with `drud config set --workspace ~/workspace`
-- The *client* in drud.yaml is the name of the organization where the code repository is to be found. Where the app name "drudio" is used below, the client specified in drud.yaml is the default organization on github. So if "client" in drud.yaml is "newmediadenver", it will look for the repo in https://github.com/newmediadenver/drudio.
-- In `ddev add drudio production` the first argument is the repo/site name, and the second is an arbitrary "environment name" (and source for the dev database), which is typically either "production" or "staging".
+- A working [docker install](https://www.docker.com/community-edition)
+- The [ddev binary](https://github.com/drud/ddev/releases)
 
-| Where you run the ddev command from is important. You must be in the top-level of your drud workspace (e.g. `cd ~/.drud`) to run commands. (If you don't, `local` directories will be spawned wherever you run the command from)|
+
 ---
 
 ## Usage
@@ -47,16 +46,16 @@ $ cd ~/Projects
 $ git clone git@github.com:drud/drupal8.git
 $ cd drud-d8
 $ ddev config
-Creating a new ddev project config in the current directory (/Users/beeradb/Projects/newmedia/drupal8)
-Once completed, your configuration will be written to /Users/beeradb/Projects/newmedia/drupal8/.ddev/config.yaml
+Creating a new ddev project config in the current directory (/Users/username/Projects/drupal8)
+Once completed, your configuration will be written to /Users/username/Projects/drupal8/.ddev/config.yaml
 
 
 Project name (drupal8):
 
-The docroot is the directory from which your site is served. This is a relative path from your application root (/Users/beeradb/Projects/newmedia/drupal8)
+The docroot is the directory from which your site is served. This is a relative path from your application root (/Users/username/Projects/drupal8)
 You may leave this value blank if your site files are in the application root
 Docroot Location: docroot
-Found a drupal8 codebase at /Users/beeradb/Projects/newmedia/drupal8/docroot
+Found a drupal8 codebase at /Users/username/Projects/drupal8/docroot
 ```
 
 Configuration files have now been created for your site. (Available for inspection/modification at .ddev/ddev.yaml).
@@ -110,8 +109,6 @@ To interact with the site more fully, `ddev ssh` will drop you into a bash shell
 - Mailhog
 
 ## Building
- Environment variables:
- * DRUD_DEBUG: Will display more extensive information as a site is deployed.
 
  ```
  make
