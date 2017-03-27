@@ -1,6 +1,7 @@
 package testcommon
 
 import (
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
@@ -40,7 +41,9 @@ func TestChDir(t *testing.T) {
 	// Change to the temporary directory.
 	cleanupFunc := Chdir(testDir)
 	currentDir, err := os.Getwd()
-	assert.Equal(testDir, currentDir, "Ensure the current directory is the temporary directory we created")
+
+	// On OSX this are created under /var, but /var is a symlink to /var/private, so we cannot ensure complete equality of these strings.
+	assert.Contains(currentDir, testDir, "Ensure the current directory is the temporary directory we created")
 	assert.True(reflect.TypeOf(cleanupFunc).Kind() == reflect.Func, "Chdir return is of type function")
 
 	cleanupFunc()
@@ -50,4 +53,15 @@ func TestChDir(t *testing.T) {
 
 	err = CleanupDir(testDir)
 	assert.NoError(err, "Clean up test directory")
+}
+
+// TestCaptureStdOut ensures capturing of standard out works as expected.
+func TestCaptureStdOut(t *testing.T) {
+	assert := assert.New(t)
+	restoreOutput := CaptureStdOut()
+	text := RandString(128)
+	fmt.Print(text)
+	out := restoreOutput()
+
+	assert.Equal(text, out)
 }
