@@ -78,7 +78,7 @@ func setActiveApp() {
 
 	app, err := platform.CheckForConf(cwd)
 	if err != nil {
-		log.Fatalf("Unable to determine the application for this command: %s", err)
+		log.Fatalf("Unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
 	}
 
 	activeApp = path.Base(app)
