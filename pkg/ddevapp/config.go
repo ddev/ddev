@@ -235,6 +235,7 @@ func (c *Config) ConfigExists() bool {
 
 // appTypePrompt handles the AppType workflow.
 func (c *Config) appTypePrompt() error {
+	var appType string
 	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(allowedAppTypes, ", "))
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
@@ -258,7 +259,6 @@ func (c *Config) appTypePrompt() error {
 
 		if isAllowedAppType(appType) != true {
 			fmt.Printf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(allowedAppTypes, ", "))
-			return errors.New("failed to get valid application type")
 		}
 		c.AppType = appType
 	}
