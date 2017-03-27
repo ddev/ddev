@@ -57,8 +57,9 @@ stages:
         command: |
           cd  ~/src/github.com/drud/ddev &&
           make GOPATH=~/ gofmt &&
-          make GOPATH=/ govet
-        name: Static analysis targets govet/gofmt
+          make GOPATH=~/ govet &&
+          make GOPATH=~/ golint
+        name: Static analysis targets govet/gofmt/golint
 
 
       # Example: Run just one test in ddev by name
