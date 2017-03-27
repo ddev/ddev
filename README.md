@@ -15,32 +15,25 @@ You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev add
 ## Usage
 ```
 ➜  .drud ddev --help
-This Command Line Interface (CLI) gives you the ability to interact with the DRUD platform to manage applications, create a local development environment, or deploy an application to production. DRUD also provides utilities for securely uploading files and secrets associated with applications.
+This Command Line Interface (CLI) gives you the ability to interact with the ddev to create a local development environment.
 
 Usage:
-  ddev [flags]
   ddev [command]
 
 Available Commands:
-  add         Add an existing application to your local development environment
-  config      Set or view DRUD configurations.
-  exec        run a command in an app container.
+  config      Create or modify a ddev application config in the current directory
+  exec        Execute a Linux shell command in the webserver container.
   hostname    Manage your hostfile entries.
+  import      Import an existing site to the local dev environment
   list        List applications that exist locally
   logs        Get the logs from your running services.
-  restart     Stop and Start the app.
+  restart     Restart the local development environment for a site.
   rm          Remove an application's local services.
   sequelpro   Easily connect local site to sequelpro
   ssh         SSH to an app container.
-  start       Start an application's local services.
+  start       Start the local development environment for a site.
   stop        Stop an application's local services.
-  update      Update DRUD cli tool
   version     print ddev version and component versions
-  workon      Set a site to work on
-
-Flags:
-      --config string   yaml config file (default "$HOME/drud.yaml")
-  -p, --plugin string   Choose which plugin to use (default "legacy")
 
 Use "ddev [command] --help" for more information about a command.
 ```
@@ -51,56 +44,55 @@ Check out the git repository for the site you want to work on. `cd` into the dir
 
 ```
 $ cd ~/Projects
-$ git clone <git-url>/drud-d8.git
-$ cd drud-d8 
+$ git clone git@github.com:drud/drupal8.git
+$ cd drud-d8
 $ ddev config
-Name (drud-d8):
-Type [drupal7, drupal8, wordpress]: drupal8
-Docroot location: src
+Creating a new ddev project config in the current directory (/Users/beeradb/Projects/newmedia/drupal8)
+Once completed, your configuration will be written to /Users/beeradb/Projects/newmedia/drupal8/.ddev/config.yaml
 
-Your ddev configuration has been written to .ddev/config.yaml
+
+Project name (drupal8):
+
+The docroot is the directory from which your site is served. This is a relative path from your application root (/Users/beeradb/Projects/newmedia/drupal8)
+You may leave this value blank if your site files are in the application root
+Docroot Location: docroot
+Found a drupal8 codebase at /Users/beeradb/Projects/newmedia/drupal8/docroot
 ```
-Configuration files have now been created for your site. (Available for inspection/modification at .ddev/ddev.yaml and .ddev/ddev-compose.yaml).
+
+Configuration files have now been created for your site. (Available for inspection/modification at .ddev/ddev.yaml).
 Now that the configuration has been created, you can start your site with `ddev start` (still from within the project working directory):
 ```
 $ ddev start
 
-Successfully added drud-d8
-Your application can be reached at: http://drud-d8.ddev.local
-You can run "ddev describe" to get additional information about your site, such as database credentials.
+Starting environment for drupal8...
+Creating local-drupal8-db
+Creating local-drupal8-web
+Waiting for the environment to become ready. This may take a couple of minutes...
+Successfully started drupal8
+Your application can be reached at: http://drupal8.ddev.local
 ```
 And you can now visit your working site. Enjoy!
 
-## Site Lifecyle
-Create a new site using `ddev add sitename environment`. This command will spin-up a new site and make it available at http://local-sitename-environment/.
+## Listing sites
 
 To see a list of your current sites you can use `ddev list`.
 
 ```
 ➜  ddev list
 1 local site found.
-NAME        ENVIRONMENT TYPE    URL                                 DATABASE URL    STATUS
-sitename  environment   drupal  http://local-sitename-environment 127.0.0.1:32770 running
+NAME   	TYPE   	URL                      	DATABASE URL   	STATUS
+drupal8	drupal8	http://drupal8.ddev.local	127.0.0.1:32852	running
 ```
 
-To stop the site, run `ddev stop sitename environment`.
+## Removing a site
 
-If you run `ddev list` again, the site will still be listed, but now you'll see the status has changed to 'exited'
-
-```
-➜  ddev list
-1 local site found.
-NAME        ENVIRONMENT TYPE    URL                                 DATABASE URL  STATUS
-sitename  environment   drupal  http://local-sitename-environment 127.0.0.1:0   exited
-```
-
-Once you are done with your site, you can remove it with `ddev rm sitename environment`.
+You can remove a site by going to the working directory for the site and running `ddev rm`.
 
 ## Interacting with your Site
 All of the commands can be performed by explicitly specifying the sitename or, to save time, you can execute commands from the site directory. All of the following examples assume you are in the working directory of your site.
 
 ### Retrieve Site Metadata
-To view information about a specific site (such as URL, MySQL credentials, mailhog credentials), run `ddev describe` from within the working directory of the site. To view information for any site, use `ddev describe sitename`. 
+To view information about a specific site (such as URL, MySQL credentials, mailhog credentials), run `ddev describe` from within the working directory of the site. To view information for any site, use `ddev describe sitename`.
 
 ### Viewing Error Logs
 To follow an error log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. If you only want to view the most recent events, omit the `-f` flag.
@@ -120,9 +112,9 @@ To interact with the site more fully, `ddev ssh` will drop you into a bash shell
 ## Building
  Environment variables:
  * DRUD_DEBUG: Will display more extensive information as a site is deployed.
- 
+
  ```
- make 
+ make
  make linux
  make darwin
  make test
@@ -134,4 +126,4 @@ Normal test invocation is just `make test`. Run a single test with an invocation
 
 * DRUD_DEBUG: It helps a lot to set DRUD_DEBUG=true to see what ddev commands are being executed in the tests.
 * DDEV_BINARY_FULLPATH should be set to the full pathname of the ddev binary we're attempting to test. That way it won't accidentally use some other version of ddev that happens to be on the filesystem.
-* SKIP_COMPOSE_TESTS=true allows skipping tests that require docker-compose. 
+* SKIP_COMPOSE_TESTS=true allows skipping tests that require docker-compose.
