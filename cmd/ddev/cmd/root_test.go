@@ -14,7 +14,7 @@ var (
 	DevTestSites = []testcommon.TestSite{
 		{
 			Name:        "drupal8",
-			DownloadURL: "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz",
+			DownloadURL: "https://github.com/drud/drupal8/archive/v0.2.2.tar.gz",
 		},
 	}
 )
