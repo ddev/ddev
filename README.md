@@ -2,7 +2,7 @@
 
 The purpose of *ddev* is to support developers with a local copy of a site for development purposes. It runs the site in Docker containers.
 
-You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev add -h`, etc.
+You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev start -h`, etc.
 
 ## Key prerequisites
 - A working [docker install](https://www.docker.com/community-edition)

@@ -29,11 +29,11 @@ var LocalDevLogsCmd = &cobra.Command{
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 
 		if !dockerutil.IsRunning(nameContainer) {
-			Failed("App not running locally. Try `ddev add`.")
+			Failed("App not running locally. Try `ddev start`.")
 		}
 
 		if !platform.ComposeFileExists(app) {
-			Failed("No docker-compose yaml for this site. Try `ddev add`.")
+			Failed("No docker-compose yaml for this site. Try `ddev start`.")
 		}
 
 		cmdArgs := []string{
