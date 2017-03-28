@@ -328,7 +328,7 @@ func CheckForConf(confPath string) (string, error) {
 		}
 	}
 
-	return "", errors.New("no ddev.yaml file in this directory or any parent")
+	return "", errors.New("no .ddev/config.yaml file was found in this directory or any parent")
 }
 
 // NetExists checks to see if the docker network for DRUD local development exists.

@@ -69,7 +69,7 @@ func (l LocalApp) AbsPath() string {
 
 	appPath, err := CheckForConf(cwd)
 	if err != nil {
-		log.Fatalf("Unable to determine the application for this command: %s", err)
+		log.Fatalf("Unable to determine the application for this command - have you run 'ddev config'? Error: %s", err)
 	}
 
 	return appPath
