@@ -317,7 +317,7 @@ func determineAppType(basePath string) (string, error) {
 	defaultLocations := map[string]string{
 		"scripts/drupal.sh":      "drupal7",
 		"core/scripts/drupal.sh": "drupal8",
-		"wp": "wordpress",
+		"wp-settings.php":        "wordpress",
 	}
 
 	for k, v := range defaultLocations {
