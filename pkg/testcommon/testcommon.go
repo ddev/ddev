@@ -1,11 +1,15 @@
 package testcommon
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/drud/drud-go/utils/system"
 )
@@ -15,8 +19,8 @@ type TestSite struct {
 	// Name is the generic name of the site, and is used as the default dir.
 	Name string
 	// URL is the URL of the tarball to be used for building the site.
-	URL string
-	Dir string
+	DownloadURL string
+	Dir         string
 }
 
 func (site *TestSite) archivePath() string {
@@ -33,7 +37,7 @@ func (site *TestSite) Prepare() {
 	fmt.Printf("Prepping test for %s.", site.Name)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
 
-	system.DownloadFile(site.archivePath(), site.URL)
+	system.DownloadFile(site.archivePath(), site.DownloadURL)
 	system.RunCommand("tar",
 		[]string{
 			"-xzf",
@@ -45,19 +49,79 @@ func (site *TestSite) Prepare() {
 }
 
 // Chdir will change to the directory for the site specified by TestSite.
-// It returns an anonymous function which will return to the original working directory when called.
 func (site *TestSite) Chdir() func() {
-	curDir, _ := os.Getwd()
-	err := os.Chdir(site.Dir)
-	if err != nil {
-		log.Fatalf("Could not change to directory %s: %v\n", site.Dir, err)
-	}
-
-	return func() { os.Chdir(curDir) }
+	return Chdir(site.Dir)
 }
 
 // Cleanup removes the archive and codebase extraction for a site after a test run has completed.
 func (site *TestSite) Cleanup() {
 	os.Remove(site.archivePath())
-	os.RemoveAll(site.Dir)
+	CleanupDir(site.Dir)
+}
+
+// CleanupDir removes a directory specified by string.
+func CleanupDir(dir string) error {
+	err := os.RemoveAll(dir)
+	return err
+}
+
+// CreateTmpDir creates a temporary directory and returns its path as a string.
+func CreateTmpDir() string {
+	testDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		log.Fatalf("Could not create temporary directory %s: %v", testDir, err)
+	}
+
+	return testDir
+}
+
+// Chdir will change to the directory for the site specified by TestSite.
+// It returns an anonymous function which will return to the original working directory when called.
+func Chdir(path string) func() {
+	curDir, _ := os.Getwd()
+	err := os.Chdir(path)
+	if err != nil {
+		log.Fatalf("Could not change to directory %s: %v\n", path, err)
+	}
+
+	return func() { os.Chdir(curDir) }
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+// RandString returns a random string of given length n.
+func RandString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+// CaptureStdOut captures Stdout to a string. Capturing starts when it is called. It returns an anonymous function that when called, will return a string
+// containing the output during capture, and revert once again to the original value of os.StdOut.
+func CaptureStdOut() func() string {
+	old := os.Stdout // keep backup of the real stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	return func() string {
+		outC := make(chan string)
+		// copy the output in a separate goroutine so printing can't block indefinitely
+		go func() {
+			var buf bytes.Buffer
+			io.Copy(&buf, r)
+			outC <- buf.String()
+		}()
+
+		// back to normal state
+		w.Close()
+		os.Stdout = old // restoring the real stdout
+		out := <-outC
+		return out
+	}
 }

@@ -14,7 +14,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/drud/drud-go/utils/system"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -30,6 +29,7 @@ const DDevDefaultPlatform = "local"
 const DDevTLD = "ddev.local"
 
 var allowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
+var inputScanner = bufio.NewScanner(os.Stdin)
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
@@ -112,6 +112,7 @@ func (c *Config) Read() error {
 
 // Config goes through a set of prompts to receive user input and generate an Config struct.
 func (c *Config) Config() error {
+
 	if c.ConfigExists() {
 		fmt.Printf("Editing existing ddev project at %s\n\n", c.AppRoot)
 	} else {
@@ -170,7 +171,7 @@ func (c *Config) WriteDockerComposeConfig() error {
 
 	f, err := os.Create(c.DockerComposeYAMLPath())
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer f.Close()
 
@@ -194,14 +195,13 @@ func (c *Config) RenderComposeYAML() (string, error) {
 	}
 	templateVars := map[string]string{
 		"name":    c.Name,
-		"tld":     DDevTLD,
 		"docroot": filepath.Join("../", c.Docroot),
 		"plugin":  c.Platform,
 		"appType": c.AppType,
 	}
 
-	templ.Execute(&doc, templateVars)
-	return doc.String(), nil
+	err = templ.Execute(&doc, templateVars)
+	return doc.String(), err
 }
 
 func (c *Config) docrootPrompt() error {
@@ -235,6 +235,7 @@ func (c *Config) ConfigExists() bool {
 
 // appTypePrompt handles the AppType workflow.
 func (c *Config) appTypePrompt() error {
+	var appType string
 	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(allowedAppTypes, ", "))
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
@@ -258,20 +259,21 @@ func (c *Config) appTypePrompt() error {
 
 		if isAllowedAppType(appType) != true {
 			fmt.Printf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(allowedAppTypes, ", "))
-			return errors.New("failed to get valid application type")
 		}
 		c.AppType = appType
 	}
 	return nil
 }
 
+// SetInputScanner allows you to override the default input scanner with your own.
+func setInputScanner(scanner *bufio.Scanner) {
+	inputScanner = scanner
+}
+
 // getInput reads input from an input buffer and returns the result as a string.
 func getInput(defaultValue string) string {
-	reader := bufio.NewReader(os.Stdin)
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		log.Fatalf("Could not read input: %s\n", err)
-	}
+	inputScanner.Scan()
+	input := inputScanner.Text()
 
 	// If the value from the input buffer is blank, then use the default instead.
 	value := strings.TrimSpace(input)
@@ -320,11 +322,10 @@ func determineAppType(basePath string) (string, error) {
 
 	for k, v := range defaultLocations {
 		fp := path.Join(basePath, k)
-
 		log.WithFields(log.Fields{
 			"file": fp,
 		}).Debug("Looking for app fingerprint.")
-		if system.FileExists(fp) {
+		if _, err := os.Stat(fp); err == nil {
 			log.WithFields(log.Fields{
 				"file": fp,
 				"app":  v,
