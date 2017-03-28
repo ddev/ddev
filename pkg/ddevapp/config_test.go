@@ -63,7 +63,7 @@ func TestAllowedAppTypes(t *testing.T) {
 	}
 }
 
-// TestPrepDirectory ensures the configuraion directory can be created with the correct permissions.
+// TestPrepDirectory ensures the configuration directory can be created with the correct permissions.
 func TestPrepDirectory(t *testing.T) {
 	assert := assert.New(t)
 	// Create a temporary directory and change to it for the duration of this test.
@@ -150,7 +150,7 @@ func TestConfigCommand(t *testing.T) {
 	// Create a docroot folder.
 	err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
 	if err != nil {
-		t.Skip("Could not create docroot directory under %s", testDir)
+		t.Error("Could not create a docroot directory for config tests.")
 	}
 
 	// Create the ddevapp we'll use for testing.

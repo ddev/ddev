@@ -193,7 +193,10 @@ func (l LocalApp) Start() error {
 	// If the user went through the `ddev config` process it will be written already, but
 	// we also do it here in the case of a manually created `.ddev/config.yaml` file.
 	if !system.FileExists(l.AppConfig.DockerComposeYAMLPath()) {
-		l.AppConfig.WriteDockerComposeConfig()
+		err := l.AppConfig.WriteDockerComposeConfig()
+		if err != nil {
+			return err
+		}
 	}
 
 	EnsureDockerRouter()
