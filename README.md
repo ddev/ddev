@@ -120,4 +120,4 @@ To interact with the site more fully, `ddev ssh` will drop you into a bash shell
 ## Testing
 Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...`
 
-* DRUD_DEBUG: It helps a lot to set DRUD_DEBUG=true to see what ddev commands are being executed in the tests.
+If you set the environment variable DRUD_DEBUG=true you can see what ddev commands are being executed in the tests.
