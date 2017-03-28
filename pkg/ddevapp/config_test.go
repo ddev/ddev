@@ -150,7 +150,7 @@ func TestConfigCommand(t *testing.T) {
 	// Create a docroot folder.
 	err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
 	if err != nil {
-		t.Error("Could not create a docroot directory for config tests.")
+		t.Errorf("Could not create docroot directory under %s", testDir)
 	}
 
 	// Create the ddevapp we'll use for testing.
