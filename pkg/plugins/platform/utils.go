@@ -260,7 +260,7 @@ func EnsureDockerRouter() {
 	f.WriteString(doc.String())
 
 	// run docker-compose up -d in the newly created directory
-	out, err := system.RunCommand("docker-compose", []string{"-f", dest, "up", "-d"})
+	out, err := system.RunCommand("docker-compose", []string{"-p", "ddev-router", "-f", dest, "up", "-d"})
 	if err != nil {
 		fmt.Println(fmt.Errorf("%s - %s", err.Error(), string(out)))
 	}
