@@ -109,7 +109,7 @@ func TestValidTestSite(t *testing.T) {
 
 }
 
-// TestInvalidTestSite ensures that
+// TestInvalidTestSite ensures that errors are returned in cases where Prepare() can't download or extract an archive.
 func TestInvalidTestSite(t *testing.T) {
 	assert := assert.New(t)
 
