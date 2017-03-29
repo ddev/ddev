@@ -159,7 +159,6 @@ func TestConfigCommand(t *testing.T) {
 	assert.Error(err)
 
 	// Randomize some values to use for Stdin during testing.
-
 	name := strings.ToLower(testcommon.RandString(16))
 	invalidDir := strings.ToLower(testcommon.RandString(16))
 	invalidAppType := strings.ToLower(testcommon.RandString(8))

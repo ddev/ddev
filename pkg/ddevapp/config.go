@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
-
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -269,7 +268,6 @@ func (c *Config) appTypePrompt() error {
 // SetInputScanner allows you to override the default input scanner with your own.
 func setInputScanner(scanner *bufio.Scanner) {
 	inputScanner = scanner
-
 }
 
 // getInput reads input from an input buffer and returns the result as a string.
