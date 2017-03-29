@@ -43,9 +43,6 @@ func TestNewConfig(t *testing.T) {
 	_, err = os.Stat(newConfig.ConfigPath)
 	assert.NoError(err)
 
-	_, err = os.Stat(newConfig.ConfigPath)
-	assert.NoError(err)
-
 	loadedConfig, err := NewConfig(testDir)
 	// There should be no error this time, since the config should be available for loading.
 	assert.NoError(err)
