@@ -26,6 +26,7 @@ func TestDevAddSites(t *testing.T) {
 		}
 		assert.NoError(err)
 		assert.Contains(string(out), "Your application can be reached at")
+		assert.NotContains(string(out), "WARNING: Found orphan containers")
 
 		app := platform.PluginMap[strings.ToLower(plugin)]
 		err = app.Init()
