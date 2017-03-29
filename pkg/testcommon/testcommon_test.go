@@ -3,6 +3,7 @@ package testcommon
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -28,7 +29,7 @@ func TestTmpDir(t *testing.T) {
 }
 
 // TestCreateTmpDir tests the functionality that is called when "ddev start" is executed
-func TestChDir(t *testing.T) {
+func TestTempDir(t *testing.T) {
 	assert := assert.New(t)
 	// Get the current working directory.
 	startingDir, err := os.Getwd()
@@ -64,4 +65,90 @@ func TestCaptureStdOut(t *testing.T) {
 	out := restoreOutput()
 
 	assert.Equal(text, out)
+}
+
+// TestValidTestSite tests the TestSite struct behavior in the case of a valid configuration.
+func TestValidTestSite(t *testing.T) {
+	assert := assert.New(t)
+	// Get the current working directory.
+	startingDir, err := os.Getwd()
+	assert.NoError(err, "Could not get current directory.")
+
+	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
+	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
+	//not need to be updated over time.
+	ts := TestSite{
+		Name:        "drupal8",
+		DownloadURL: "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz",
+	}
+
+	// Create a testsite and ensure the prepare() method extracts files into a temporary directory.
+	ts.Prepare()
+	assert.NotNil(ts.Dir, "Directory is set.")
+	docroot := filepath.Join(ts.Dir, "docroot")
+	dirStat, err := os.Stat(docroot)
+	assert.NoError(err, "Docroot exists after prepare()")
+	assert.True(dirStat.IsDir(), "Docroot is a directory")
+
+	cleanup := ts.Chdir()
+	currentDir, err := os.Getwd()
+	assert.NoError(err, "We can determine the current directory after changing to our TestSite directory")
+
+	// On OSX this are created under /var, but /var is a symlink to /var/private, so we cannot ensure complete equality of these strings.
+	assert.Contains(currentDir, ts.Dir, "Current directory matches expectations")
+
+	cleanup()
+
+	currentDir, err = os.Getwd()
+	assert.NoError(err)
+	assert.Equal(startingDir, currentDir, "Able to return to our original starting directory")
+
+	ts.Cleanup()
+	dirStat, err = os.Stat(ts.Dir)
+	assert.Error(err, "Could not stat temporary directory after cleanup")
+
+}
+
+// TestInvalidTestSite ensures that
+func TestInvalidTestSite(t *testing.T) {
+	assert := assert.New(t)
+
+	testSites := []TestSite{
+		// This should generate a 404 page on github, which will be downloaded, but cannot be extracted (as it's not a true tar.gz)
+		TestSite{
+			Name:        "drupal8",
+			DownloadURL: "https://github.com/drud/drupal8/archive/somevaluethatdoesnotexist.tar.gz",
+		},
+		// This is an invalid domain, so it can't even be downloaded. This tests error handling in the case of
+		// a site URL which does not exist
+		TestSite{
+			Name:        "drupal8",
+			DownloadURL: "http://invalid_domain/somefilethatdoesnotexists",
+		},
+	}
+
+	for i := range testSites {
+		ts := testSites[i]
+		// Create a testsite and ensure the prepare() method extracts files into a temporary directory.
+		err := ts.Prepare()
+		assert.Error(err)
+		_, err = os.Stat(ts.Dir)
+		assert.Error(err, "Stat for site directory fails after invalid download")
+	}
+}
+
+// TestRandString ensures that RandString only generates string of the correct value and characters.
+func TestRandString(t *testing.T) {
+	assert := assert.New(t)
+	stringLengths := []int{2, 4, 8, 16, 23, 47}
+
+	for _, stringLength := range stringLengths {
+		testString := RandString(stringLength)
+		assert.Equal(len(testString), stringLength, fmt.Sprintf("Generated string is of length %d", stringLengths))
+	}
+
+	lb := "a"
+	setLetterBytes(lb)
+	testString := RandString(1)
+	assert.Equal(testString, lb)
 }
