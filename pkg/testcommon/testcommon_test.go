@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestCreateTmpDir tests the functionality that is called when "ddev start" is executed
+// TestTmpDir tests the ability to create a temporary directory.
 func TestTmpDir(t *testing.T) {
 	assert := assert.New(t)
 
@@ -28,7 +28,7 @@ func TestTmpDir(t *testing.T) {
 	assert.True(os.IsNotExist(err), "Error is of type IsNotExists")
 }
 
-// TestCreateTmpDir tests the functionality that is called when "ddev start" is executed
+// TestTempDir tests the ability to create a temporary directory and change to it for the test run.
 func TestTempDir(t *testing.T) {
 	assert := assert.New(t)
 	// Get the current working directory.
