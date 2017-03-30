@@ -28,8 +28,9 @@ func TestTmpDir(t *testing.T) {
 	assert.True(os.IsNotExist(err), "Error is of type IsNotExists")
 }
 
-// TestTempDir tests the ability to create a temporary directory and change to it for the test run.
-func TestTempDir(t *testing.T) {
+// TestChdir tests the Chdir function and ensures it will change to a temporary directory and then properly return
+// to the original directory when cleaned up.
+func TestChdir(t *testing.T) {
 	assert := assert.New(t)
 	// Get the current working directory.
 	startingDir, err := os.Getwd()
