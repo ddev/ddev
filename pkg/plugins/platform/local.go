@@ -222,13 +222,14 @@ func (l LocalApp) Start() error {
 // DockerEnv sets environment variables for a docker-compose run.
 func (l LocalApp) DockerEnv() {
 	envVars := map[string]string{
-		"DDEV_SITENAME": l.AppConfig.Name,
-		"DDEV_DBIMAGE":  l.AppConfig.DBImage,
-		"DDEV_WEBIMAGE": l.AppConfig.WebImage,
-		"DDEV_APPROOT":  l.AppConfig.AppRoot,
-		"DDEV_DOCROOT":  filepath.Join(l.AppConfig.AppRoot, l.AppConfig.Docroot),
-		"DDEV_URL":      l.URL(),
-		"DDEV_HOSTNAME": l.HostName(),
+		"COMPOSE_PROJECT_NAME": "ddev-" + l.AppConfig.Name,
+		"DDEV_SITENAME":        l.AppConfig.Name,
+		"DDEV_DBIMAGE":         l.AppConfig.DBImage,
+		"DDEV_WEBIMAGE":        l.AppConfig.WebImage,
+		"DDEV_APPROOT":         l.AppConfig.AppRoot,
+		"DDEV_DOCROOT":         filepath.Join(l.AppConfig.AppRoot, l.AppConfig.Docroot),
+		"DDEV_URL":             l.URL(),
+		"DDEV_HOSTNAME":        l.HostName(),
 	}
 
 	// Only set values if they don't already exist in env.

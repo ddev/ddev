@@ -26,7 +26,7 @@ var StartCmd = &cobra.Command{
 	Short:   "Start the local development environment for a site.",
 	Long:    `Start initializes and configures the web server and database containers to provide a working environment for development.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Starting environment for %s...", activeApp)
+		fmt.Printf("Starting environment for %s...\n", activeApp)
 
 		client, err := platform.GetDockerClient()
 		if err != nil {
