@@ -183,4 +183,7 @@ func TestConfigCommand(t *testing.T) {
 	assert.Equal(name, config.Name)
 	assert.Equal("drupal8", config.AppType)
 	assert.Equal("docroot", config.Docroot)
+	err = prepDDevDirectory(testDir)
+	assert.NoError(err)
+
 }

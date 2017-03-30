@@ -18,7 +18,7 @@ import (
 type TestSite struct {
 	// Name is the generic name of the site, and is used as the default dir.
 	Name string
-	// URL is the URL of the tarball to be used for building the site.
+	// DownloadURL is the URL of the tarball to be used for building the site.
 	DownloadURL string
 	Dir         string
 }
@@ -28,7 +28,7 @@ func (site *TestSite) archivePath() string {
 }
 
 // Prepare downloads and extracts a site codebase to a temporary directory.
-func (site *TestSite) Prepare() {
+func (site *TestSite) Prepare() error {
 	testDir, err := ioutil.TempDir("", site.Name)
 	if err != nil {
 		log.Fatalf("Could not create temporary directory %s for site %s", testDir, site.Name)
@@ -37,8 +37,13 @@ func (site *TestSite) Prepare() {
 	fmt.Printf("Prepping test for %s.", site.Name)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
 
-	system.DownloadFile(site.archivePath(), site.DownloadURL)
-	system.RunCommand("tar",
+	err = system.DownloadFile(site.archivePath(), site.DownloadURL)
+	if err != nil {
+		site.Cleanup()
+		return err
+	}
+
+	_, err = system.RunCommand("tar",
 		[]string{
 			"-xzf",
 			site.archivePath(),
@@ -46,6 +51,13 @@ func (site *TestSite) Prepare() {
 			"-C",
 			site.Dir,
 		})
+	// If we had an error extracting the archive, we should go ahead and clean up the temporary directory, since this
+	// testsite is useless.
+	if err != nil {
+		site.Cleanup()
+	}
+
+	return err
 }
 
 // Chdir will change to the directory for the site specified by TestSite.
@@ -87,7 +99,7 @@ func Chdir(path string) func() {
 	return func() { os.Chdir(curDir) }
 }
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 // RandString returns a random string of given length n.
 func RandString(n int) string {
@@ -124,4 +136,9 @@ func CaptureStdOut() func() string {
 		out := <-outC
 		return out
 	}
+
+}
+
+func setLetterBytes(lb string) {
+	letterBytes = lb
 }
