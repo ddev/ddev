@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -142,6 +143,36 @@ func (l *LocalApp) GetArchive() error {
 	if system.FileExists(archive) {
 		l.Archive = archive
 	}
+	return nil
+}
+
+// ImportDB takes a source sql dump and imports it to an active site's database container.
+func (l *LocalApp) ImportDB(path string) error {
+	l.DockerEnv()
+	container := fmt.Sprintf("%s-db", l.ContainerName())
+
+	if path == "" {
+		fmt.Println("Provide the path to the database you wish to import. This can be a relative or absolute path... probably.")
+		fmt.Println("Import path: ")
+
+		path = ddevapp.GetInput("")
+	}
+
+	importPath, err := appimport.ValidateAsset(path, "db")
+	if err != nil {
+		return err
+	}
+
+	err = appimport.ImportSQLDump(importPath, l.AbsPath(), container)
+	if err != nil {
+		return err
+	}
+
+	// err = l.Config()
+	// if err != nil {
+	// 	return fmt.Errorf("failed to write configuration file for %s: %s", l.GetName(), err)
+	// }
+
 	return nil
 }
 

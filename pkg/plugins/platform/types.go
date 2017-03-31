@@ -20,6 +20,7 @@ type App interface {
 	Wait() (string, error)
 	HostName() string
 	URL() string
+	ImportDB(string) error
 }
 
 // AppBase is the parent type for all local app implementations
