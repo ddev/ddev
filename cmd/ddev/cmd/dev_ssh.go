@@ -3,9 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"strings"
 
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
@@ -16,15 +14,17 @@ var LocalDevSSHCmd = &cobra.Command{
 	Short: "SSH to an app container.",
 	Long:  `Connects user to the running container.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := platform.PluginMap[strings.ToLower(plugin)]
-		app.Init()
+		app, err := getActiveApp()
+		if err != nil {
+			log.Fatalf("Could not find an active ddev configuration, have you ran 'ddev config'?: %v", err)
+		}
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 		if !dockerutil.IsRunning(nameContainer) {
 			Failed("App not running locally. Try `ddev start`.")
 		}
 		app.DockerEnv()
-		err := dockerutil.DockerCompose(
+		err = dockerutil.DockerCompose(
 			"-f", app.DockerComposeYAMLPath(),
 			"exec",
 			nameContainer,

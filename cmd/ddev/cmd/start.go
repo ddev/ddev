@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/spf13/cobra"
@@ -26,8 +25,6 @@ var StartCmd = &cobra.Command{
 	Short:   "Start the local development environment for a site.",
 	Long:    `Start initializes and configures the web server and database containers to provide a working environment for development.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Starting environment for %s...\n", activeApp)
-
 		client, err := platform.GetDockerClient()
 		if err != nil {
 			log.Fatal(err)
@@ -40,11 +37,12 @@ var StartCmd = &cobra.Command{
 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app := platform.PluginMap[strings.ToLower(plugin)]
-		err := app.Init()
+		app, err := getActiveApp()
 		if err != nil {
-			log.Fatalf("Could not initialize application: %v", err)
+			log.Fatalf("Could not find an active ddev configuration, have you ran 'ddev config'?: %v", err)
 		}
+
+		fmt.Printf("Starting environment for %s...\n", app.GetName())
 
 		err = app.Start()
 		if err != nil {
@@ -54,10 +52,10 @@ var StartCmd = &cobra.Command{
 		fmt.Println("Waiting for the environment to become ready. This may take a couple of minutes...")
 		siteURL, err := app.Wait()
 		if err != nil {
-			Failed("The environment for %s never became ready: %s", activeApp, err)
+			Failed("The environment for %s never became ready: %s", app.GetName(), err)
 		}
 
-		Success("Successfully started %s", activeApp)
+		Success("Successfully started %s", app.GetName())
 		Success("Your application can be reached at: %s", siteURL)
 
 	},

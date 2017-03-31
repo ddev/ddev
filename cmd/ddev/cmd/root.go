@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"os"
-	"path"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -17,9 +16,9 @@ const (
 )
 
 var (
-	logLevel  = log.WarnLevel
-	plugin    = "local"
-	activeApp string
+	logLevel      = log.WarnLevel
+	plugin        = "local"
+	activeAppRoot string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -40,7 +39,7 @@ var RootCmd = &cobra.Command{
 		}
 
 		if !skip {
-			setActiveApp()
+			setActiveAppRoot()
 			plugin = strings.ToLower(plugin)
 			if _, ok := platform.PluginMap[plugin]; !ok {
 				Failed("Plugin %s is not registered", plugin)
@@ -70,16 +69,24 @@ func init() {
 	log.SetLevel(logLevel)
 }
 
-func setActiveApp() {
+func setActiveAppRoot() {
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Error determining the current directory: %s", err)
 	}
 
-	app, err := platform.CheckForConf(cwd)
+	appRoot, err := platform.CheckForConf(cwd)
 	if err != nil {
 		log.Fatalf("Unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
 	}
 
-	activeApp = path.Base(app)
+	activeAppRoot = appRoot
+}
+
+// getActiveApp returns the active platform.App based on the current working directory.
+func getActiveApp() (platform.App, error) {
+	setActiveAppRoot()
+	app := platform.PluginMap[strings.ToLower(plugin)]
+	err := app.Init(activeAppRoot)
+	return app, err
 }

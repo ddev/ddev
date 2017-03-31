@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"path"
-	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -23,9 +22,11 @@ var LocalDevLogsCmd = &cobra.Command{
 	Short: "Get the logs from your running services.",
 	Long:  `Uses 'docker logs' to display stdout from the running services.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		app, err := getActiveApp()
+		if err != nil {
+			log.Fatalf("Could not find an active ddev configuration, have you ran 'ddev config'?: %v", err)
+		}
 
-		app := platform.PluginMap[strings.ToLower(plugin)]
-		app.Init()
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 
 		if !dockerutil.IsRunning(nameContainer) {
@@ -53,7 +54,7 @@ var LocalDevLogsCmd = &cobra.Command{
 		cmdArgs = append(cmdArgs, nameContainer)
 
 		app.DockerEnv()
-		err := dockerutil.DockerCompose(cmdArgs...)
+		err = dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
 			log.Fatalln(err)
 		}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"path"
-	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -30,10 +29,12 @@ var ImportCmd = &cobra.Command{
 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app := platform.PluginMap[strings.ToLower(plugin)]
-		app.Init()
+		app, err := getActiveApp()
+		if err != nil {
+			log.Fatalf("Could not find an active ddev configuration, have you ran 'ddev config'?: %v", err)
+		}
 
-		err := app.GetResources()
+		err = app.GetResources()
 		if err != nil {
 			Failed("Failed to gather resources for %s: %s", app.GetName(), err)
 		}
@@ -70,7 +71,7 @@ var ImportCmd = &cobra.Command{
 			Failed("%s did not return a 200 status before timeout. %s", app.GetName(), err)
 		}
 
-		Success("Successfully imported %s", activeApp)
+		Success("Successfully imported %s", app.GetName())
 		if siteURL != "" {
 			Success("Your application can be reached at: %s", siteURL)
 		}

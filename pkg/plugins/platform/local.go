@@ -25,27 +25,13 @@ type LocalApp struct {
 	AppConfig *ddevapp.Config
 }
 
-// NewLocalApp creates a new LocalApp based on any application root specified by appRoot
-func NewLocalApp(appRoot string) *LocalApp {
-	app := &LocalApp{}
-	config, err := ddevapp.NewConfig(appRoot)
-	app.AppConfig = config
-
-	err = PrepLocalSiteDirs(appRoot)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return app
-}
-
 // GetType returns the application type as a (lowercase) string
 func (l *LocalApp) GetType() string {
 	return strings.ToLower(l.AppConfig.AppType)
 }
 
 // Init populates LocalApp settings based on the current working directory.
-func (l *LocalApp) Init() error {
-	basePath := l.AbsPath()
+func (l *LocalApp) Init(basePath string) error {
 	config, err := ddevapp.NewConfig(basePath)
 	if err != nil {
 		return err
@@ -62,17 +48,7 @@ func (l *LocalApp) Init() error {
 
 // AbsPath return the full path from root to the app directory
 func (l LocalApp) AbsPath() string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Printf("Error determining the current directory: %s", err)
-	}
-
-	appPath, err := CheckForConf(cwd)
-	if err != nil {
-		log.Fatalf("Unable to determine the application for this command - have you run 'ddev config'? Error: %s", err)
-	}
-
-	return appPath
+	return l.AppConfig.AppRoot
 }
 
 // GetName returns the  name for local app
