@@ -19,33 +19,34 @@ import (
 )
 
 // ValidateAsset determines if a given asset matches the required criteria for a given asset type. If the path provided is a tarball, it will extract, validate, and return the extracted asset path.
-func ValidateAsset(path string, assetType string) (string, error) {
+func ValidateAsset(assetPath string, assetType string) (string, error) {
 	var invalidAssetError = "no valid import asset could be found at %s: %s. Please provide a valid asset path."
+	// @TODO: system echo func to expand ~ and the like
 
 	// ensure we are working w/ an absolute path
-	path, err := filepath.Abs(path)
+	assetPath, err := filepath.Abs(assetPath)
 	if err != nil {
-		return "", fmt.Errorf(invalidAssetError, path, err)
+		return "", fmt.Errorf(invalidAssetError, assetPath, err)
 	}
 
 	// make sure the path exists
-	if _, err = os.Stat(path); os.IsNotExist(err) {
-		return "", fmt.Errorf(invalidAssetError, path, err)
+	if _, err = os.Stat(assetPath); os.IsNotExist(err) {
+		return "", fmt.Errorf(invalidAssetError, assetPath, err)
 	}
 
 	// if we have a tarball, extract and set path to the extraction point
-	if strings.HasSuffix(path, ".tar.gz") {
-		path = extractArchive(path)
+	if strings.HasSuffix(assetPath, ".tar.gz") {
+		assetPath = extractArchive(assetPath)
 	}
 
-	info, err := os.Stat(path)
+	info, err := os.Stat(assetPath)
 	if err != nil {
-		return "", fmt.Errorf(invalidAssetError, path, err)
+		return "", fmt.Errorf(invalidAssetError, assetPath, err)
 	}
 
 	// see if we can find a .sql in the directory
 	if assetType == "db" && info.IsDir() {
-		files, err := findFileExt(path, ".sql")
+		files, err := findFileExt(assetPath, ".sql")
 		if err != nil {
 			return "", err
 		}
@@ -54,15 +55,13 @@ func ValidateAsset(path string, assetType string) (string, error) {
 			fmt.Println("WARNING: Multiple .sql files found. Only the first .sql file will be used.")
 		}
 
-		path = files[0]
-
-		return "", fmt.Errorf(invalidAssetError, path, errors.New("provided path is a directory; expecting a .tar.gz or .sql file"))
+		assetPath = path.Join(assetPath, files[0])
 	}
 
 	if assetType == "files" && !info.IsDir() {
-		return "", fmt.Errorf(invalidAssetError, path, errors.New("provided path is not a directory or archive; expecting a directory path or .tar.gz file"))
+		return "", fmt.Errorf(invalidAssetError, assetPath, errors.New("provided path is not a directory or archive; expecting a directory path or .tar.gz file"))
 	}
-	return path, nil
+	return assetPath, nil
 }
 
 // ImportSQLDump places a provided sql dump into the app data mount, and executes mysql import to the container.
@@ -82,6 +81,10 @@ func ImportSQLDump(source string, sitepath string, container string) error {
 	err := copyFile(source, destination)
 	if err != nil {
 		return fmt.Errorf("failed to copy provided database dump to container mount: %s", err)
+	}
+
+	if strings.Contains(source, os.TempDir()) {
+		os.RemoveAll(path.Dir(source))
 	}
 
 	cmdArgs := []string{
