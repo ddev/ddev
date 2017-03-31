@@ -79,7 +79,7 @@ func TestLocalStart(t *testing.T) {
 	assert := assert.New(t)
 
 	app := PluginMap["local"]
-	app.Init()
+	app.Init(TestSite.Dir)
 
 	err = app.Start()
 	assert.NoError(err)
@@ -105,7 +105,7 @@ func TestLocalStop(t *testing.T) {
 	assert := assert.New(t)
 
 	app := PluginMap["local"]
-	app.Init()
+	app.Init(TestSite.Dir)
 
 	err := app.Stop()
 	assert.NoError(err)
@@ -125,7 +125,7 @@ func TestLocalRemove(t *testing.T) {
 
 	app := PluginMap["local"]
 
-	app.Init()
+	app.Init(TestSite.Dir)
 
 	// start the previously stopped containers -
 	// stopped/removed have the same state
