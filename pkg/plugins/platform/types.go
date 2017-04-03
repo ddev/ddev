@@ -21,6 +21,7 @@ type App interface {
 	HostName() string
 	URL() string
 	ImportDB(string) error
+	ImportFiles(string) error
 }
 
 // AppBase is the parent type for all local app implementations

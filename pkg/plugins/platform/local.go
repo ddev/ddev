@@ -106,6 +106,11 @@ func (l *LocalApp) AppRoot() string {
 	return l.AppConfig.AppRoot
 }
 
+// Docroot returns the docroot path for local app
+func (l LocalApp) Docroot() string {
+	return l.AppConfig.Docroot
+}
+
 // GetName returns the  name for local app
 func (l *LocalApp) GetName() string {
 	return l.AppConfig.Name
@@ -147,18 +152,18 @@ func (l *LocalApp) GetArchive() error {
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
-func (l *LocalApp) ImportDB(path string) error {
+func (l *LocalApp) ImportDB(imPath string) error {
 	l.DockerEnv()
 	container := fmt.Sprintf("%s-db", l.ContainerName())
 
-	if path == "" {
-		fmt.Println("Provide the path to the database you wish to import. This can be a relative or absolute path... probably.")
+	if imPath == "" {
+		fmt.Println("Provide the path to the database you wish to import.")
 		fmt.Println("Import path: ")
 
-		path = ddevapp.GetInput("")
+		imPath = ddevapp.GetInput("")
 	}
 
-	importPath, err := appimport.ValidateAsset(path, "db")
+	importPath, err := appimport.ValidateAsset(imPath, "db")
 	if err != nil {
 		return err
 	}
@@ -171,6 +176,57 @@ func (l *LocalApp) ImportDB(path string) error {
 	err = l.Config()
 	if err != nil {
 		return fmt.Errorf("failed to write configuration file for %s: %s", l.GetName(), err)
+	}
+
+	return nil
+}
+
+// ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
+func (l *LocalApp) ImportFiles(imPath string) error {
+	var uploadDir string
+	l.DockerEnv()
+
+	if imPath == "" {
+		fmt.Println("Provide the path to the directory or archive you wish to import.")
+		fmt.Println("Import path: ")
+
+		imPath = ddevapp.GetInput("")
+	}
+
+	importPath, err := appimport.ValidateAsset(imPath, "files")
+	if err != nil {
+		return err
+	}
+
+	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
+		uploadDir = "sites/default/files"
+	}
+
+	if l.GetType() == "wordpress" {
+		uploadDir = "wp-content/uploads"
+	}
+
+	destPath := path.Join(l.AbsPath(), l.Docroot(), uploadDir)
+	// parent of destination dir should exist
+	if !system.FileExists(path.Dir(destPath)) {
+		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
+	}
+	// destination dir should not exist
+	if system.FileExists(destPath) {
+		err := os.RemoveAll(destPath)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = appimport.CopyDir(importPath, destPath)
+	if err != nil {
+		return err
+	}
+
+	// if we extracted an archive, clean up the extraction point
+	if strings.Contains(importPath, os.TempDir()) {
+		os.RemoveAll(path.Dir(importPath))
 	}
 
 	return nil
@@ -356,7 +412,7 @@ func (l *LocalApp) FindPorts() error {
 // as well as other sensitive data like salts.
 func (l *LocalApp) Config() error {
 	basePath := l.AppRoot()
-	docroot := l.AppConfig.Docroot
+	docroot := l.Docroot()
 
 	err := l.FindPorts()
 	if err != nil {

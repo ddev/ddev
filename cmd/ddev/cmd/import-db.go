@@ -40,6 +40,6 @@ var ImportDBCmd = &cobra.Command{
 }
 
 func init() {
-	ImportDBCmd.Flags().StringVarP(&dbSource, "db-src", "", "", "Provide the path to a sql dump in .sql or .tar.gz format")
+	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "", "", "Provide the path to a sql dump in .sql or .tar.gz format")
 	RootCmd.AddCommand(ImportDBCmd)
 }

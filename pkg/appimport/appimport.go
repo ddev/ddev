@@ -3,6 +3,7 @@ package appimport
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 
@@ -84,11 +85,12 @@ func ImportSQLDump(source string, sitepath string, container string) error {
 		return fmt.Errorf("the %s container is not currently running", container)
 	}
 
-	err := copyFile(source, destination)
+	err := CopyFile(source, destination)
 	if err != nil {
 		return fmt.Errorf("failed to copy provided database dump to container mount: %s", err)
 	}
 
+	// if we extracted an archive, clean up the extraction point
 	if strings.Contains(source, os.TempDir()) {
 		os.RemoveAll(path.Dir(source))
 	}
@@ -103,33 +105,6 @@ func ImportSQLDump(source string, sitepath string, container string) error {
 	err = dockerutil.DockerCompose(cmdArgs...)
 	if err != nil {
 		return fmt.Errorf("failed to execute import: %s", err)
-	}
-	return nil
-}
-
-func copyFile(src string, dest string) error {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	destFile, err := os.Create(dest)
-	if err != nil {
-		return err
-	}
-	defer destFile.Close()
-
-	// Copy the bytes to destination from source
-	_, err = io.Copy(destFile, srcFile)
-	if err != nil {
-		return err
-	}
-
-	// Commit the file contents
-	err = destFile.Sync()
-	if err != nil {
-		return err
 	}
 	return nil
 }
@@ -169,4 +144,106 @@ func findFileExt(dirpath string, ext string) ([]string, error) {
 	}
 
 	return match, nil
+}
+
+// CopyFile copies the contents of the file named src to the file named
+// by dst. The file will be created if it does not already exist. If the
+// destination file exists, all it's contents will be replaced by the contents
+// of the source file. The file mode will be copied from the source and
+// the copied data is synced/flushed to stable storage. Credit @m4ng0squ4sh https://gist.github.com/m4ng0squ4sh/92462b38df26839a3ca324697c8cba04
+func CopyFile(src string, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if e := out.Close(); e != nil {
+			err = e
+		}
+	}()
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		return err
+	}
+
+	err = out.Sync()
+	if err != nil {
+		return err
+	}
+
+	si, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(dst, si.Mode())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CopyDir recursively copies a directory tree, attempting to preserve permissions.
+// Source directory must exist, destination directory must *not* exist.
+// Symlinks are ignored and skipped. Credit @m4ng0squ4sh https://gist.github.com/m4ng0squ4sh/92462b38df26839a3ca324697c8cba04
+func CopyDir(src string, dst string) error {
+	src = filepath.Clean(src)
+	dst = filepath.Clean(dst)
+
+	si, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	if !si.IsDir() {
+		return fmt.Errorf("source is not a directory")
+	}
+
+	_, err = os.Stat(dst)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	if err == nil {
+		return fmt.Errorf("destination already exists")
+	}
+
+	err = os.MkdirAll(dst, si.Mode())
+	if err != nil {
+		return err
+	}
+
+	entries, err := ioutil.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+
+		if entry.IsDir() {
+			err = CopyDir(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Skip symlinks.
+			if entry.Mode()&os.ModeSymlink != 0 {
+				continue
+			}
+
+			err = CopyFile(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
