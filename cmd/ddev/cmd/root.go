@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -39,7 +40,6 @@ var RootCmd = &cobra.Command{
 		}
 
 		if !skip {
-			setActiveAppRoot()
 			plugin = strings.ToLower(plugin)
 			if _, ok := platform.PluginMap[plugin]; !ok {
 				Failed("Plugin %s is not registered", plugin)
@@ -69,24 +69,28 @@ func init() {
 	log.SetLevel(logLevel)
 }
 
-func setActiveAppRoot() {
+func getActiveAppRoot() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("Error determining the current directory: %s", err)
+		return "", fmt.Errorf("error determining the current directory: %s", err)
 	}
 
 	appRoot, err := platform.CheckForConf(cwd)
 	if err != nil {
-		log.Fatalf("Unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
+		return "", fmt.Errorf("unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
 	}
 
-	activeAppRoot = appRoot
+	return appRoot, nil
 }
 
 // getActiveApp returns the active platform.App based on the current working directory.
 func getActiveApp() (platform.App, error) {
-	setActiveAppRoot()
 	app := platform.PluginMap[strings.ToLower(plugin)]
-	err := app.Init(activeAppRoot)
+	activeAppRoot, err := getActiveAppRoot()
+	if err != nil {
+		return app, err
+	}
+
+	err = app.Init(activeAppRoot)
 	return app, err
 }
