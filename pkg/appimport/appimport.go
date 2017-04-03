@@ -106,6 +106,10 @@ func ImportSQLDump(source string, sitepath string, container string) error {
 	if err != nil {
 		return fmt.Errorf("failed to execute import: %s", err)
 	}
+
+	// remove the copied dump from container mount point
+	os.Remove(path.Join(sitepath, ".ddev", "data", "data.sql"))
+
 	return nil
 }
 

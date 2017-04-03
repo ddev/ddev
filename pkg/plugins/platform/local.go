@@ -187,7 +187,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 	l.DockerEnv()
 
 	if imPath == "" {
-		fmt.Println("Provide the path to the directory or archive you wish to import.")
+		fmt.Println("Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.")
 		fmt.Println("Import path: ")
 
 		imPath = ddevapp.GetInput("")

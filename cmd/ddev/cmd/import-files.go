@@ -13,8 +13,8 @@ var fileSource string
 // ImportFileCmd represents the `ddev import-db` command.
 var ImportFileCmd = &cobra.Command{
 	Use:   "import-files",
-	Short: "Import the uploaded files directory of an existing site to the local dev environment.",
-	Long:  "Import the uploaded files directory of an existing site to the local development environment. The files can be provided as a directory path or an archive in .tar.gz format. For the .tar.gz format, the contents of the uploaded files directory must be present at the root of the archive.",
+	Short: "Import the uploaded files directory of an existing site to the default public upload directory of your application.",
+	Long:  "Import the uploaded files directory of an existing site to the default public upload directory of your application. The files can be provided as a directory path or an archive in .tar.gz format. For the .tar.gz format, the contents of the uploaded files directory must be present at the root of the archive. If the destination directory exists, it will be removed in favor of the assets being imported.",
 	PreRun: func(cmd *cobra.Command, args []string) {
 
 		client, err := platform.GetDockerClient()
