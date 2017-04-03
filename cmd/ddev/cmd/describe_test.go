@@ -21,7 +21,7 @@ func TestDescribeBadArgs(t *testing.T) {
 	args := []string{"describe"}
 	out, err := system.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Unable to determine the application for this command")
+	assert.Contains(string(out), "unable to determine the application for this command")
 
 	// Ensure we get a failure if we run a describe on a named application which does not exist.
 	args = []string{"describe", testcommon.RandString(16)}
