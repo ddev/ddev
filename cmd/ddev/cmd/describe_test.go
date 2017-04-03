@@ -101,8 +101,6 @@ func TestDescribeUsingSitename(t *testing.T) {
 	for _, v := range DevTestSites {
 		out, err := describeApp(v.Name)
 		assert.NoError(err)
-		assert.Contains(string(out), app.URL())
-		assert.Contains(string(out), app.GetName())
 		assert.Contains(string(out), "running")
 		assert.Contains(string(out), v.Dir)
 	}

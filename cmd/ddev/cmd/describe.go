@@ -69,6 +69,3 @@ func describeApp(appName string) (string, error) {
 func init() {
 	RootCmd.AddCommand(DescribeCommand)
 }
-
-var app platform.App
-var err error
