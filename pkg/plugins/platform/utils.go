@@ -14,6 +14,7 @@ import (
 
 	"github.com/docker/docker/pkg/homedir"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
@@ -358,4 +359,38 @@ func EnsureNetwork(client *docker.Client, name string) error {
 
 	}
 	return nil
+}
+
+// FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.
+func FindContainerByLabels(labels map[string]string) (docker.APIContainers, error) {
+	client, _ := dockerutil.GetDockerClient()
+	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
+
+	if len(labels) < 1 {
+		return docker.APIContainers{}, fmt.Errorf("the provided list of labels was empty")
+	}
+
+	// First, ensure a site name is set and matches the current application.
+	for i := range containers {
+		matched := true
+		for matchName, matchValue := range labels {
+			// If the label exists check the value to ensure a match
+			if labelValue, ok := containers[i].Labels[matchName]; ok {
+				if labelValue != matchValue {
+					matched = false
+					break
+				}
+			} else {
+				// If the label does not exist, we can just fail immediately.
+				matched = false
+				break
+			}
+		}
+
+		if matched {
+			return containers[i], nil
+		}
+	}
+
+	return docker.APIContainers{}, fmt.Errorf("could not find containers which matched search criteria")
 }

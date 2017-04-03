@@ -1,30 +1,74 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+	"log"
+	"strings"
+
+	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/spf13/cobra"
+)
 
 // DescribeCommand represents the `ddev config` command
 var DescribeCommand = &cobra.Command{
 	Use:   "describe",
 	Short: "Get a detailed description about a running ddev site.",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) > 1 {
+			log.Fatal("Too many arguments detected. Please use `ddev describe` or `ddev describe [appname]`")
+		}
 
-		//out, err := app.Describe()
+		appName := ""
+
+		if len(args) == 1 {
+			appName = args[0]
+		}
+
+		out, err := describeApp(appName)
+		if err != nil {
+			log.Fatalf("Could not describe app: %v", err)
+		}
+
+		fmt.Println(out)
 	},
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// We need to override the PersistentPrerun which checks for a config.yaml in this instance,
-		// since we're actually generating the config here.
-	},
+}
+
+func describeApp(appName string) (string, error) {
+	var app platform.App
+	var err error
+
+	if appName == "" {
+		app, err = getActiveApp()
+		if err != nil {
+			return "", err
+		}
+	} else {
+		labels := map[string]string{
+			"com.ddev.site-name":      appName,
+			"com.ddev.container-type": "web",
+		}
+
+		webContainer, err := platform.FindContainerByLabels(labels)
+		if err != nil {
+			return "", err
+		}
+
+		if dir, ok := webContainer.Labels["com.ddev.approot"]; ok {
+			if err != nil {
+				return "", err
+			}
+			app = platform.PluginMap[strings.ToLower(plugin)]
+			err = app.Init(dir)
+		}
+	}
+
+	out, err := app.Describe()
+	return out, err
 }
 
 func init() {
 	RootCmd.AddCommand(DescribeCommand)
 }
 
-/*func getDescribeApp(artg []string) (*platform.App, error) {
-	appRoot, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		return nil, err
-	}
-	app := platform.NewLocalApp(appRoot)
-	return app, nil
-}*/
+var app platform.App
+var err error

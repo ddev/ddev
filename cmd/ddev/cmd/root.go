@@ -27,7 +27,7 @@ var RootCmd = &cobra.Command{
 	Short: "A CLI for interacting with ddev.",
 	Long:  "This Command Line Interface (CLI) gives you the ability to interact with the ddev to create a local development environment.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		ignores := []string{"list", "version"}
+		ignores := []string{"list", "version", "describe", "config"}
 		skip := false
 		command := strings.Join(os.Args, " ")
 
