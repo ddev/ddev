@@ -168,10 +168,10 @@ func (l *LocalApp) ImportDB(path string) error {
 		return err
 	}
 
-	// err = l.Config()
-	// if err != nil {
-	// 	return fmt.Errorf("failed to write configuration file for %s: %s", l.GetName(), err)
-	// }
+	err = l.Config()
+	if err != nil {
+		return fmt.Errorf("failed to write configuration file for %s: %s", l.GetName(), err)
+	}
 
 	return nil
 }
@@ -356,6 +356,7 @@ func (l *LocalApp) FindPorts() error {
 // as well as other sensitive data like salts.
 func (l *LocalApp) Config() error {
 	basePath := l.AppRoot()
+	docroot := l.AppConfig.Docroot
 
 	err := l.FindPorts()
 	if err != nil {
@@ -365,7 +366,7 @@ func (l *LocalApp) Config() error {
 	settingsFilePath := ""
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
 		log.Printf("Drupal site. Creating settings.php file.")
-		settingsFilePath = path.Join(basePath, "docroot/sites/default/settings.php")
+		settingsFilePath = path.Join(basePath, docroot, "sites/default/settings.php")
 		drupalConfig := model.NewDrupalConfig()
 		drupalConfig.DatabaseHost = "db"
 		if drupalConfig.HashSalt == "" {
@@ -400,7 +401,7 @@ func (l *LocalApp) Config() error {
 		}
 	} else if l.GetType() == "wordpress" {
 		log.Printf("WordPress site. Creating wp-config.php file.")
-		settingsFilePath = path.Join(basePath, "docroot/wp-config.php")
+		settingsFilePath = path.Join(basePath, docroot, "wp-config.php")
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DatabaseHost = "db"
 		wpConfig.DeployURL = l.URL()
