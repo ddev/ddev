@@ -16,22 +16,28 @@ import (
 
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 // ValidateAsset determines if a given asset matches the required criteria for a given asset type. If the path provided is a tarball, it will extract, validate, and return the extracted asset path.
 func ValidateAsset(assetPath string, assetType string) (string, error) {
-	var invalidAssetError = "no valid import asset could be found at %s: %s. Please provide a valid asset path."
-	// @TODO: system echo func to expand ~ and the like
+	var invalidAssetError = "%s. Please provide a valid asset path."
+
+	// Input provided via prompt or "--flag=value" is not expanded by shell. This will help ensure ~ is expanded to the user home directory.
+	assetPath, err := homedir.Expand(assetPath)
+	if err != nil {
+		return "", fmt.Errorf(invalidAssetError, err)
+	}
 
 	// ensure we are working w/ an absolute path
-	assetPath, err := filepath.Abs(assetPath)
+	assetPath, err = filepath.Abs(assetPath)
 	if err != nil {
-		return "", fmt.Errorf(invalidAssetError, assetPath, err)
+		return "", fmt.Errorf(invalidAssetError, err)
 	}
 
 	// make sure the path exists
 	if _, err = os.Stat(assetPath); os.IsNotExist(err) {
-		return "", fmt.Errorf(invalidAssetError, assetPath, err)
+		return "", fmt.Errorf(invalidAssetError, err)
 	}
 
 	// if we have a tarball, extract and set path to the extraction point
@@ -41,7 +47,7 @@ func ValidateAsset(assetPath string, assetType string) (string, error) {
 
 	info, err := os.Stat(assetPath)
 	if err != nil {
-		return "", fmt.Errorf(invalidAssetError, assetPath, err)
+		return "", fmt.Errorf(invalidAssetError, err)
 	}
 
 	// see if we can find a .sql in the directory
@@ -59,7 +65,7 @@ func ValidateAsset(assetPath string, assetType string) (string, error) {
 	}
 
 	if assetType == "files" && !info.IsDir() {
-		return "", fmt.Errorf(invalidAssetError, assetPath, errors.New("provided path is not a directory or archive; expecting a directory path or .tar.gz file"))
+		return "", fmt.Errorf(invalidAssetError, errors.New("provided path is not a directory or archive; expecting a directory path or .tar.gz file"))
 	}
 	return assetPath, nil
 }
