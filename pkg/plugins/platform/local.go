@@ -206,12 +206,6 @@ func (l LocalApp) Start() error {
 		log.Fatal(err)
 	}
 
-	cmdArgs := []string{"-f", composePath, "pull"}
-	_, err = system.RunCommand("docker-compose", cmdArgs)
-	if err != nil {
-		return err
-	}
-
 	return dockerutil.DockerCompose(
 		"-f", composePath,
 		"up",
