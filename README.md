@@ -139,6 +139,10 @@ Please note this will not intercept emails if your application is configured to 
 
 MailHog provides several [configuration options](https://github.com/mailhog/MailHog/blob/master/docs/CONFIG.md). If you need to alter its configuration, you can do so by adding the desired environment variable to the `environment` section for the web container in the `.ddev/docker-compose.yaml` for your site.
 
+### PHP Step-Debugging with an IDE and ddev site
+
+Instructions for IDE setup are in [step-debugging](docs/step-debugging.md).
+
 ## Building
 
  ```
