@@ -11,6 +11,7 @@ import (
 
 	"log"
 
+	"github.com/drud/ddev/pkg/util/files"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
@@ -44,7 +45,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatalf("failed to make dir: %s", err)
 	}
-	CopyFile(path.Join("testing", "db-compose.yaml"), composePath)
+	files.CopyFile(path.Join("testing", "db-compose.yaml"), composePath)
 	err = dockerutil.DockerCompose("-f", composePath, "up", "-d")
 	if err != nil {
 		log.Fatalf("failed to start db container: %s", err)
@@ -83,68 +84,6 @@ func TestExtractArchive(t *testing.T) {
 	assert.Contains(extract, temp)
 
 	os.RemoveAll(extract)
-}
-
-// TestCopyFile tests copying a file.
-func TestCopyFile(t *testing.T) {
-	assert := assert.New(t)
-	dest := path.Join(temp, "test.tar.gz")
-
-	err := os.Chmod(testArchivePath, 0666)
-	assert.NoError(err)
-
-	err = CopyFile(testArchivePath, dest)
-	assert.NoError(err)
-
-	file, err := os.Stat(dest)
-	assert.NoError(err)
-	assert.Equal(int(file.Mode()), 0666)
-
-	os.RemoveAll(dest)
-}
-
-// TestCopyDir tests copying a directory.
-func TestCopyDir(t *testing.T) {
-	assert := assert.New(t)
-	dest := path.Join(temp, "copy")
-	os.Mkdir(dest, 0755)
-
-	// test source not a directory
-	err := CopyDir("appimport.go", temp)
-	assert.Error(err)
-	msg := fmt.Sprintf("%v", err)
-	assert.Contains(msg, "source is not a directory")
-
-	// test destination exists
-	err = CopyDir(temp, cwd)
-	assert.Error(err)
-	msg = fmt.Sprintf("%v", err)
-	assert.Contains(msg, "destination already exists")
-	os.RemoveAll(dest)
-
-	// copy a directory.
-	err = CopyDir(cwd, dest)
-	assert.NoError(err)
-	assert.True(system.FileExists(path.Join(dest, "appimport.go")))
-	assert.True(system.FileExists(path.Join(dest, "appimport_test.go")))
-
-	os.RemoveAll(dest)
-}
-
-// TestFindFileExt tests search function for files w/ matching extension.
-func TestFindFileExt(t *testing.T) {
-	assert := assert.New(t)
-
-	// test against cwd
-	match, err := findFileByExtension(cwd, ".go")
-	assert.NoError(err)
-	assert.True(len(match) > 1)
-
-	// test no matching files
-	_, err = findFileByExtension(cwd, ".sql")
-	msg := fmt.Sprintf("%v", err)
-	assert.Contains(msg, "no .sql files found in")
-	assert.Error(err)
 }
 
 // TestValidateAsset tests validation of asset paths.
@@ -188,24 +127,24 @@ func TestValidateAsset(t *testing.T) {
 	assert.Contains(msg, "provided path is not a directory or archive")
 }
 
-// TestImportSQLDump tests import of db to container.
-func TestImportSQLDump(t *testing.T) {
-	assert := assert.New(t)
-	importFile := path.Join(temp, "extract", "wp-db.sql")
+// // TestImportSQLDump tests import of db to container.
+// func TestImportSQLDump(t *testing.T) {
+// 	assert := assert.New(t)
+// 	importFile := path.Join(temp, "extract", "wp-db.sql")
 
-	// test no sql dump provided
-	err := ImportSQLDump("appimport.go", temp, "invalid")
-	assert.Error(err)
-	msg := fmt.Sprintf("%v", err)
-	assert.Contains(msg, "a database dump in .sql format must be provided")
+// 	// test no sql dump provided
+// 	err := ImportSQLDump("appimport.go", temp, "invalid")
+// 	assert.Error(err)
+// 	msg := fmt.Sprintf("%v", err)
+// 	assert.Contains(msg, "a database dump in .sql format must be provided")
 
-	// test container is not running
-	err = ImportSQLDump(importFile, temp, "invalid")
-	assert.Error(err)
-	msg = fmt.Sprintf("%v", err)
-	assert.Contains(msg, "container is not currently running")
+// 	// test container is not running
+// 	err = ImportSQLDump(importFile, temp, "invalid")
+// 	assert.Error(err)
+// 	msg = fmt.Sprintf("%v", err)
+// 	assert.Contains(msg, "container is not currently running")
 
-	// test import
-	// err = ImportSQLDump(importFile, cwd, "local-test-db")
-	// assert.NoError(err)
-}
+// 	// test import
+// 	// err = ImportSQLDump(importFile, cwd, "local-test-db")
+// 	// assert.NoError(err)
+// }

@@ -14,6 +14,7 @@ import (
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/util/files"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
@@ -155,6 +156,7 @@ func (l *LocalApp) GetArchive() error {
 func (l *LocalApp) ImportDB(imPath string) error {
 	l.DockerEnv()
 	container := fmt.Sprintf("%s-db", l.ContainerName())
+	dbPath := path.Join(l.AbsPath(), ".ddev", "data")
 
 	if imPath == "" {
 		fmt.Println("Provide the path to the database you wish to import.")
@@ -165,10 +167,27 @@ func (l *LocalApp) ImportDB(imPath string) error {
 
 	importPath, err := appimport.ValidateAsset(imPath, "db")
 	if err != nil {
-		return err
+		if err.Error() == "is archive" {
+			err := files.Untargz(importPath, dbPath)
+			if err != nil {
+				return fmt.Errorf("failed to extract provided archive: %v", err)
+			}
+			// empty the path so we don't try to copy
+			importPath = ""
+		} else {
+			return err
+		}
 	}
 
-	err = appimport.ImportSQLDump(importPath, l.AbsPath(), container)
+	// an archive was not extracted, we need to copy
+	if importPath != "" {
+		err = files.CopyFile(importPath, path.Join(dbPath, "db.sql"))
+		if err != nil {
+			return err
+		}
+	}
+
+	err = appimport.ImportSQLDump(l.DockerComposeYAMLPath(), container)
 	if err != nil {
 		return err
 	}
@@ -193,11 +212,6 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		imPath = ddevapp.GetInput("")
 	}
 
-	importPath, err := appimport.ValidateAsset(imPath, "files")
-	if err != nil {
-		return err
-	}
-
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
 		uploadDir = "sites/default/files"
 	}
@@ -207,6 +221,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 	}
 
 	destPath := path.Join(l.AbsPath(), l.Docroot(), uploadDir)
+
 	// parent of destination dir should exist
 	if !system.FileExists(path.Dir(destPath)) {
 		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
@@ -219,14 +234,21 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		}
 	}
 
-	err = appimport.CopyDir(importPath, destPath)
+	importPath, err := appimport.ValidateAsset(imPath, "files")
 	if err != nil {
+		if err.Error() == "is archive" {
+			err := files.Untargz(importPath, destPath)
+			if err != nil {
+				return fmt.Errorf("failed to extract provided archive: %v", err)
+			}
+			return nil
+		}
 		return err
 	}
 
-	// if we extracted an archive, clean up the extraction point
-	if strings.Contains(importPath, os.TempDir()) {
-		os.RemoveAll(path.Dir(importPath))
+	err = files.CopyDir(importPath, destPath)
+	if err != nil {
+		return err
 	}
 
 	return nil
