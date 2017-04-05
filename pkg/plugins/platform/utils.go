@@ -392,5 +392,5 @@ func FindContainerByLabels(labels map[string]string) (docker.APIContainers, erro
 		}
 	}
 
-	return docker.APIContainers{}, fmt.Errorf("could not find containers which matched search criteria")
+	return docker.APIContainers{}, fmt.Errorf("could not find containers which matched search criteria: %+v", labels)
 }
