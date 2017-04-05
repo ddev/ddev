@@ -9,4 +9,5 @@
 
 ## Anything else do we need to know:
 
-## Related source links or issues (like source JIRA issue):
+
+## Related source links or issues:
