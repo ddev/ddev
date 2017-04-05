@@ -24,7 +24,7 @@ var LocalDevLogsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			log.Fatalf("Could not find an active ddev configuration, have you ran 'ddev config'?: %v", err)
+			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
 		}
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)

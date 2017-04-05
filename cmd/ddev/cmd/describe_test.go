@@ -37,7 +37,7 @@ func TestDescribeBadArgs(t *testing.T) {
 
 }
 
-// TestDevLogs tests that the Dev logs functionality is working.
+// TestDescribe tests that the describe command works properly when using the binary.
 func TestDescribe(t *testing.T) {
 	assert := assert.New(t)
 
@@ -71,7 +71,8 @@ func TestDescribe(t *testing.T) {
 	}
 }
 
-func TestDescribeFunction(t *testing.T) {
+// TestDescribeAppFunction performs unit tests on the describeApp function from the working directory.
+func TestDescribeAppFunction(t *testing.T) {
 	assert := assert.New(t)
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
@@ -90,7 +91,8 @@ func TestDescribeFunction(t *testing.T) {
 	}
 }
 
-func TestDescribeUsingSitename(t *testing.T) {
+// TestDescribeAppUsingSitename performs unit tests on the describeApp function using the sitename as an argument.
+func TestDescribeAppUsingSitename(t *testing.T) {
 	assert := assert.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
@@ -106,7 +108,8 @@ func TestDescribeUsingSitename(t *testing.T) {
 	}
 }
 
-func TestDescribeWithInvalidParams(t *testing.T) {
+// TestDescribeAppWithInvalidParams performs unit tests on the describeApp function using a variety of invalid parameters.
+func TestDescribeAppWithInvalidParams(t *testing.T) {
 	assert := assert.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
