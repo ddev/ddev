@@ -32,6 +32,7 @@ services:
     depends_on:
       - {{ .plugin }}-${DDEV_SITENAME}-db
     links:
+      - {{ .plugin }}-${DDEV_SITENAME}-db:$DDEV_HOSTNAME
       - {{ .plugin }}-${DDEV_SITENAME}-db:db
     ports:
       - "80"
