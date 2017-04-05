@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+  local-test-db:
+    container_name: local-test-db
+    image: $DDEV_DBIMAGE
+    volumes:
+      - "./data:/db"
+    restart: always
+    environment:
+      MYSQL_DATABASE: data
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306"
+networks:
+  default:
+    external:
+      name: ddev_default

@@ -7,8 +7,6 @@ import (
 	"os"
 	"path"
 
-	"log"
-
 	"strings"
 
 	"io"
@@ -43,7 +41,10 @@ func ValidateAsset(assetPath string, assetType string) (string, error) {
 
 	// if we have a tarball, extract and set path to the extraction point
 	if strings.HasSuffix(assetPath, ".tar.gz") {
-		assetPath = extractArchive(assetPath)
+		assetPath, err = extractArchive(assetPath)
+		if err != nil {
+			return "", fmt.Errorf(invalidAssetError, err)
+		}
 	}
 
 	info, err := os.Stat(assetPath)
@@ -114,20 +115,20 @@ func ImportSQLDump(source string, sitepath string, container string) error {
 }
 
 // extractArchive uses tar to extract a provided archive and returns the path of the extracted archive contents
-func extractArchive(extPath string) string {
+func extractArchive(extPath string) (string, error) {
 	extractDir := path.Join(os.TempDir(), "extract")
 	err := os.Mkdir(extractDir, 0755)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	out, err := system.RunCommand(
 		"tar",
 		[]string{"-xzf", extPath, "-C", extractDir},
 	)
 	if err != nil {
-		log.Fatalf("Unable to extract archive: %s. command output: %s", err, out)
+		return "", fmt.Errorf("Unable to extract archive: %s. command output: %s", err, out)
 	}
-	return extractDir
+	return extractDir, nil
 }
 
 // findFileExt walks a given directory searching for a given extension and returns a list of matching results.
