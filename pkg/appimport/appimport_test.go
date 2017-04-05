@@ -130,12 +130,12 @@ func TestFindFileExt(t *testing.T) {
 	assert := assert.New(t)
 
 	// test against cwd
-	match, err := findFileExt(cwd, ".go")
+	match, err := findFileByExtension(cwd, ".go")
 	assert.NoError(err)
 	assert.True(len(match) > 1)
 
 	// test no matching files
-	_, err = findFileExt(cwd, ".sql")
+	_, err = findFileByExtension(cwd, ".sql")
 	assert.Error(err)
 }
 

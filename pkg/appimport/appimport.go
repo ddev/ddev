@@ -18,9 +18,10 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 )
 
-// ValidateAsset determines if a given asset matches the required criteria for a given asset type. If the path provided is a tarball, it will extract, validate, and return the extracted asset path.
+// ValidateAsset determines if a given asset matches the required criteria for a given asset type.
+// If the path provided is a tarball, it will extract, validate, and return the extracted asset path.
 func ValidateAsset(assetPath string, assetType string) (string, error) {
-	var invalidAssetError = "%s. Please provide a valid asset path."
+	var invalidAssetError = "%v. Please provide a valid asset path."
 
 	// Input provided via prompt or "--flag=value" is not expanded by shell. This will help ensure ~ is expanded to the user home directory.
 	assetPath, err := homedir.Expand(assetPath)
@@ -54,15 +55,14 @@ func ValidateAsset(assetPath string, assetType string) (string, error) {
 
 	// see if we can find a .sql in the directory
 	if assetType == "db" && info.IsDir() {
-		files, err := findFileExt(assetPath, ".sql")
+		files, err := findFileByExtension(assetPath, ".sql")
 		if err != nil {
 			return "", err
 		}
 
 		if len(files) > 1 {
-			fmt.Println("WARNING: Multiple .sql files found. Only the first .sql file will be used.")
+			fmt.Printf("WARNING: Multiple .sql files found, only single file imports are supported. Importing %s. \n", files[0])
 		}
-
 		assetPath = path.Join(assetPath, files[0])
 	}
 
@@ -88,12 +88,12 @@ func ImportSQLDump(source string, sitepath string, container string) error {
 
 	err := CopyFile(source, destination)
 	if err != nil {
-		return fmt.Errorf("failed to copy provided database dump to container mount: %s", err)
+		return fmt.Errorf("failed to copy provided database dump to container mount: %v", err)
 	}
 
 	// if we extracted an archive, clean up the extraction point
 	if strings.Contains(source, os.TempDir()) {
-		os.RemoveAll(path.Dir(source))
+		defer os.RemoveAll(path.Dir(source))
 	}
 
 	cmdArgs := []string{
@@ -105,7 +105,7 @@ func ImportSQLDump(source string, sitepath string, container string) error {
 
 	err = dockerutil.DockerCompose(cmdArgs...)
 	if err != nil {
-		return fmt.Errorf("failed to execute import: %s", err)
+		return fmt.Errorf("failed to execute import: %v", err)
 	}
 
 	// remove the copied dump from container mount point
@@ -126,13 +126,13 @@ func extractArchive(extPath string) (string, error) {
 		[]string{"-xzf", extPath, "-C", extractDir},
 	)
 	if err != nil {
-		return "", fmt.Errorf("Unable to extract archive: %s. command output: %s", err, out)
+		return "", fmt.Errorf("Unable to extract archive: %v. command output: %s", err, out)
 	}
 	return extractDir, nil
 }
 
-// findFileExt walks a given directory searching for a given extension and returns a list of matching results.
-func findFileExt(dirpath string, ext string) ([]string, error) {
+// findFileByExtension walks a given directory searching for a given extension and returns a list of matching results.
+func findFileByExtension(dirpath string, ext string) ([]string, error) {
 	var match []string
 	err := filepath.Walk(dirpath, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() && strings.HasSuffix(f.Name(), ext) {

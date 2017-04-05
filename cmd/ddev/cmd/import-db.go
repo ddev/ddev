@@ -30,8 +30,12 @@ var ImportDBCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		app := platform.PluginMap[strings.ToLower(plugin)]
-		app.Init()
-		err := app.ImportDB(dbSource)
+		err := app.Init()
+		if err != nil {
+			log.Fatalf("Could not initialize application: %v", err)
+		}
+
+		err = app.ImportDB(dbSource)
 		if err != nil {
 			Failed("Unable to successfully import database for %s: %s", app.GetName(), err)
 		}

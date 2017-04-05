@@ -30,8 +30,12 @@ var ImportFileCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		app := platform.PluginMap[strings.ToLower(plugin)]
-		app.Init()
-		err := app.ImportFiles(fileSource)
+		err := app.Init()
+		if err != nil {
+			log.Fatalf("Could not initialize application: %v", err)
+		}
+
+		err = app.ImportFiles(fileSource)
 		if err != nil {
 			Failed("Unable to successfully import files for %s: %s", app.GetName(), err)
 		}
