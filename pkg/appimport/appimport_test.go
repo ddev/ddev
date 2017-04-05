@@ -72,6 +72,8 @@ func TestExtractArchive(t *testing.T) {
 	// test bad archive
 	_, err := extractArchive("appimport.go")
 	assert.Error(err)
+	msg := fmt.Sprintf("%v", err)
+	assert.Contains(msg, "Unable to extract archive")
 	err = os.RemoveAll(path.Join(temp, "extract"))
 	assert.NoError(err)
 
@@ -110,10 +112,14 @@ func TestCopyDir(t *testing.T) {
 	// test source not a directory
 	err := CopyDir("appimport.go", temp)
 	assert.Error(err)
+	msg := fmt.Sprintf("%v", err)
+	assert.Contains(msg, "source is not a directory")
 
 	// test destination exists
 	err = CopyDir(temp, cwd)
 	assert.Error(err)
+	msg = fmt.Sprintf("%v", err)
+	assert.Contains(msg, "destination already exists")
 	os.RemoveAll(dest)
 
 	// copy a directory.
@@ -136,6 +142,8 @@ func TestFindFileExt(t *testing.T) {
 
 	// test no matching files
 	_, err = findFileByExtension(cwd, ".sql")
+	msg := fmt.Sprintf("%v", err)
+	assert.Contains(msg, "no .sql files found in")
 	assert.Error(err)
 }
 
@@ -169,11 +177,15 @@ func TestValidateAsset(t *testing.T) {
 
 	// fail to find sql
 	_, err = ValidateAsset("../../vendor", "db")
+	msg := fmt.Sprintf("%v", err)
+	assert.Contains(msg, "no .sql files found")
 	assert.Error(err)
 
 	// files not a directory
 	_, err = ValidateAsset("appimport.go", "files")
 	assert.Error(err)
+	msg = fmt.Sprintf("%v", err)
+	assert.Contains(msg, "provided path is not a directory or archive")
 }
 
 // TestImportSQLDump tests import of db to container.
@@ -184,13 +196,13 @@ func TestImportSQLDump(t *testing.T) {
 	// test no sql dump provided
 	err := ImportSQLDump("appimport.go", temp, "invalid")
 	assert.Error(err)
-	msg := fmt.Sprintf("%s", err)
+	msg := fmt.Sprintf("%v", err)
 	assert.Contains(msg, "a database dump in .sql format must be provided")
 
 	// test container is not running
 	err = ImportSQLDump(importFile, temp, "invalid")
 	assert.Error(err)
-	msg = fmt.Sprintf("%s", err)
+	msg = fmt.Sprintf("%v", err)
 	assert.Contains(msg, "container is not currently running")
 
 	// test import
