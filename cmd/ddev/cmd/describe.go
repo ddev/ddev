@@ -12,7 +12,7 @@ import (
 // DescribeCommand represents the `ddev config` command
 var DescribeCommand = &cobra.Command{
 	Use:   "describe",
-	Short: "Get a detailed description about a running ddev site.",
+	Short: "Get a detailed description of a running ddev site.",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
 			log.Fatal("Too many arguments detected. Please use `ddev describe` or `ddev describe [appname]`")
