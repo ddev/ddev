@@ -18,7 +18,7 @@ services:
       - "3306"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.container-type: web
+      com.ddev.container-type: db
       com.ddev.app-type: {{ .appType }}
       com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
@@ -42,7 +42,7 @@ services:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.container-type: db
+      com.ddev.container-type: web
       com.ddev.app-type: {{ .appType }}
       com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
