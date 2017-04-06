@@ -40,7 +40,7 @@ var LocalDevSequelproCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		tmpFilePath := path.Join(app.AbsPath(), "sequelpro.spf")
+		tmpFilePath := path.Join(app.AppRoot(), "sequelpro.spf")
 		tmpFile, err := os.Create(tmpFilePath)
 		if err != nil {
 			log.Fatalln(err)

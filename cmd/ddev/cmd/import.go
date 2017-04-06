@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"path"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -55,7 +54,7 @@ var ImportCmd = &cobra.Command{
 		}
 
 		cmdArgs := []string{
-			"-f", path.Join(app.AbsPath(), ".ddev", "docker-compose.yaml"),
+			"-f", app.DockerComposeYAMLPath(),
 			"exec",
 			"-T", nameContainer,
 			"./import.sh",

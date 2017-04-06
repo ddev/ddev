@@ -78,8 +78,8 @@ func (l *LocalApp) Describe() (string, error) {
 	var output string
 	app := uitable.New()
 	app.MaxColWidth = maxWidth
-	app.AddRow("NAME", "DOCROOT", "TYPE", "URL", "STATUS")
-	app.AddRow(l.GetName(), filepath.Join(l.AppConfig.AppRoot, l.AppConfig.Docroot), l.GetType(), l.URL(), "running")
+	app.AddRow("NAME", "LOCATION", "TYPE", "URL", "STATUS")
+	app.AddRow(l.GetName(), l.AppRoot(), l.GetType(), l.URL(), "running")
 	output = fmt.Sprint(app)
 
 	output = output + "\n\nMySQL Credentials\n-----------------\n"
@@ -99,8 +99,8 @@ func (l *LocalApp) Describe() (string, error) {
 	return output, nil
 }
 
-// AbsPath return the full path from root to the app directory
-func (l *LocalApp) AbsPath() string {
+// AppRoot return the full path from root to the app directory
+func (l *LocalApp) AppRoot() string {
 	return l.AppConfig.AppRoot
 }
 
@@ -135,7 +135,7 @@ func (l *LocalApp) GetResources() error {
 // GetArchive downloads external data
 func (l *LocalApp) GetArchive() error {
 	name := fmt.Sprintf("production-%s.tar.gz", l.GetName())
-	basePath := l.AbsPath()
+	basePath := l.AppRoot()
 	archive := path.Join(basePath, ".ddev", name)
 
 	if system.FileExists(archive) {
@@ -153,7 +153,7 @@ func (l *LocalApp) DockerComposeYAMLPath() string {
 // UnpackResources takes the archive from the GetResources method and
 // unarchives it. Then the contents are moved to their proper locations.
 func (l *LocalApp) UnpackResources() error {
-	basePath := l.AbsPath()
+	basePath := l.AppRoot()
 	fileDir := ""
 
 	if l.GetType() == "wordpress" {
@@ -317,7 +317,7 @@ func (l *LocalApp) FindPorts() error {
 // Config creates the apps config file adding things like database host, name, and password
 // as well as other sensitive data like salts.
 func (l *LocalApp) Config() error {
-	basePath := l.AbsPath()
+	basePath := l.AppRoot()
 
 	err := l.FindPorts()
 	if err != nil {

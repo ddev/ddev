@@ -9,7 +9,7 @@ type App interface {
 	UnpackResources() error
 	ContainerPrefix() string
 	ContainerName() string
-	AbsPath() string
+	AppRoot() string
 	GetName() string
 	Start() error
 	Stop() error
