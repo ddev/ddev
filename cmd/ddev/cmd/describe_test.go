@@ -51,7 +51,7 @@ func TestDescribe(t *testing.T) {
 		out, err := system.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.Contains(string(out), "NAME")
-		assert.Contains(string(out), "DOCROOT")
+		assert.Contains(string(out), "LOCATION")
 		assert.Contains(string(out), v.Name)
 		assert.Contains(string(out), "running")
 
@@ -63,7 +63,7 @@ func TestDescribe(t *testing.T) {
 		out, err = system.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.Contains(string(out), "NAME")
-		assert.Contains(string(out), "DOCROOT")
+		assert.Contains(string(out), "LOCATION")
 		assert.Contains(string(out), v.Name)
 		assert.Contains(string(out), "running")
 
