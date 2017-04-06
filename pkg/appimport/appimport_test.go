@@ -66,26 +66,6 @@ func TestMain(m *testing.M) {
 	os.Exit(testRun)
 }
 
-// TestExtractArchive tests extraction of an archive.
-func TestExtractArchive(t *testing.T) {
-	assert := assert.New(t)
-
-	// test bad archive
-	_, err := extractArchive("appimport.go")
-	assert.Error(err)
-	msg := fmt.Sprintf("%v", err)
-	assert.Contains(msg, "Unable to extract archive")
-	err = os.RemoveAll(path.Join(temp, "extract"))
-	assert.NoError(err)
-
-	// test good archive
-	extract, err := extractArchive(testArchivePath)
-	assert.NoError(err)
-	assert.Contains(extract, temp)
-
-	os.RemoveAll(extract)
-}
-
 // TestValidateAsset tests validation of asset paths.
 func TestValidateAsset(t *testing.T) {
 	assert := assert.New(t)
@@ -108,23 +88,21 @@ func TestValidateAsset(t *testing.T) {
 	upTwo := strings.TrimSuffix(cwd, "/pkg/appimport")
 	assert.Contains(testPath, upTwo)
 
-	// trigger extraction
+	// archive
 	testPath, err = ValidateAsset(testArchivePath, "db")
-	fmt.Printf(testPath)
-	assert.NoError(err)
+	assert.Error(err)
+	assert.Equal(err.Error(), "is archive")
 	assert.Contains(testPath, temp)
 
-	// fail to find sql
-	_, err = ValidateAsset("../../vendor", "db")
-	msg := fmt.Sprintf("%v", err)
-	assert.Contains(msg, "no .sql files found")
+	// db no sql
+	_, err = ValidateAsset("appimport.go", "db")
+	assert.Contains(err.Error(), "provided path is not a .sql file or archive")
 	assert.Error(err)
 
 	// files not a directory
 	_, err = ValidateAsset("appimport.go", "files")
 	assert.Error(err)
-	msg = fmt.Sprintf("%v", err)
-	assert.Contains(msg, "provided path is not a directory or archive")
+	assert.Contains(err.Error(), "provided path is not a directory or archive")
 }
 
 // // TestImportSQLDump tests import of db to container.

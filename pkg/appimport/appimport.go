@@ -4,14 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 
 	"strings"
 
 	"path/filepath"
 
 	"github.com/drud/drud-go/utils/dockerutil"
-	"github.com/drud/drud-go/utils/system"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -79,21 +77,4 @@ func ImportSQLDump(composePath string, container string) error {
 	}
 
 	return nil
-}
-
-// extractArchive uses tar to extract a provided archive and returns the path of the extracted archive contents
-func extractArchive(extPath string) (string, error) {
-	extractDir := path.Join(os.TempDir(), "extract")
-	err := os.Mkdir(extractDir, 0755)
-	if err != nil {
-		return "", err
-	}
-	out, err := system.RunCommand(
-		"tar",
-		[]string{"-xzf", extPath, "-C", extractDir},
-	)
-	if err != nil {
-		return "", fmt.Errorf("Unable to extract archive: %v. command output: %s", err, out)
-	}
-	return extractDir, nil
 }
