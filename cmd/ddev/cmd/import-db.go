@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"log"
-	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/spf13/cobra"
@@ -29,10 +28,9 @@ var ImportDBCmd = &cobra.Command{
 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app := platform.PluginMap[strings.ToLower(plugin)]
-		err := app.Init()
+		app, err := getActiveApp()
 		if err != nil {
-			log.Fatalf("Could not initialize application: %v", err)
+			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
 		}
 
 		err = app.ImportDB(dbSource)

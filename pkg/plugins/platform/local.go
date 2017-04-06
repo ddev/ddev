@@ -156,7 +156,7 @@ func (l *LocalApp) GetArchive() error {
 func (l *LocalApp) ImportDB(imPath string) error {
 	l.DockerEnv()
 	container := fmt.Sprintf("%s-db", l.ContainerName())
-	dbPath := path.Join(l.AbsPath(), ".ddev", "data")
+	dbPath := path.Join(l.AppRoot(), ".ddev", "data")
 
 	if imPath == "" {
 		fmt.Println("Provide the path to the database you wish to import.")
@@ -220,7 +220,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		uploadDir = "wp-content/uploads"
 	}
 
-	destPath := path.Join(l.AbsPath(), l.Docroot(), uploadDir)
+	destPath := path.Join(l.AppRoot(), l.Docroot(), uploadDir)
 
 	// parent of destination dir should exist
 	if !system.FileExists(path.Dir(destPath)) {

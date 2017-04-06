@@ -170,7 +170,7 @@ func TestLocalImportFiles(t *testing.T) {
 		assert.NoError(err)
 
 		testcommon.ClearDockerEnv()
-		app.Init()
+		app.Init(site.Dir)
 
 		err = app.ImportDB(filePath)
 		assert.NoError(err)
