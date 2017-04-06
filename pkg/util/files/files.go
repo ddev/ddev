@@ -36,15 +36,15 @@ func Untargz(source string, dest string) error {
 		}
 
 		if file.Typeflag == tar.TypeDir {
-			os.Mkdir(file.Name, 0755)
+			os.Mkdir(path.Join(dest, file.Name), 0755)
+		} else {
+			exFile, err := os.Create(path.Join(dest, file.Name))
+			if err != nil {
+				return err
+			}
+			defer exFile.Close()
+			io.Copy(exFile, tf)
 		}
-
-		exFile, err := os.Create(path.Join(dest, file.Name))
-		if err != nil {
-			return err
-		}
-		defer exFile.Close()
-		io.Copy(exFile, tf)
 	}
 
 	return nil
