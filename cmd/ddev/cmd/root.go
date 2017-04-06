@@ -17,9 +17,8 @@ const (
 )
 
 var (
-	logLevel      = log.WarnLevel
-	plugin        = "local"
-	activeAppRoot string
+	logLevel = log.WarnLevel
+	plugin   = "local"
 )
 
 // RootCmd represents the base command when called without any subcommands
