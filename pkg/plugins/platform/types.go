@@ -2,13 +2,14 @@ package platform
 
 // App is an interface apps for Drud Local must implement to use shared functionality
 type App interface {
-	Init() error
+	Init(string) error
+	Describe() (string, error)
 	GetType() string
 	GetResources() error
 	UnpackResources() error
 	ContainerPrefix() string
 	ContainerName() string
-	AbsPath() string
+	AppRoot() string
 	GetName() string
 	Start() error
 	Stop() error

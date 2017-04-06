@@ -27,7 +27,7 @@ func TestDevLogsBadArgs(t *testing.T) {
 	args := []string{"logs"}
 	out, err := system.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Unable to determine the application for this command")
+	assert.Contains(string(out), "unable to determine the application for this command")
 }
 
 // TestDevLogs tests that the Dev logs functionality is working.

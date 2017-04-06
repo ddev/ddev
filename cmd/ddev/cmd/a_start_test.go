@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"log"
-	"strings"
 	"testing"
 
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/system"
@@ -28,8 +26,10 @@ func TestDevAddSites(t *testing.T) {
 		assert.Contains(string(out), "Your application can be reached at")
 		assert.NotContains(string(out), "WARNING: Found orphan containers")
 
-		app := platform.PluginMap[strings.ToLower(plugin)]
-		err = app.Init()
+		app, err := getActiveApp()
+		if err != nil {
+			assert.Fail("Could not find an active ddev configuration: %v", err)
+		}
 
 		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-web"))
 		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-db"))

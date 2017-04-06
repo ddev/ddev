@@ -16,6 +16,8 @@ import (
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/drud/drud-go/utils/system"
+	"github.com/fsouza/go-dockerclient"
+	"github.com/gosuri/uitable"
 	"github.com/lextoumbourou/goodhosts"
 )
 
@@ -25,31 +27,18 @@ type LocalApp struct {
 	AppConfig *ddevapp.Config
 }
 
-// NewLocalApp creates a new LocalApp based on any application root specified by appRoot
-func NewLocalApp(appRoot string) *LocalApp {
-	app := &LocalApp{}
-	config, err := ddevapp.NewConfig(appRoot)
-	app.AppConfig = config
-
-	err = PrepLocalSiteDirs(appRoot)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return app
-}
-
 // GetType returns the application type as a (lowercase) string
 func (l *LocalApp) GetType() string {
 	return strings.ToLower(l.AppConfig.AppType)
 }
 
 // Init populates LocalApp settings based on the current working directory.
-func (l *LocalApp) Init() error {
-	basePath := l.AbsPath()
+func (l *LocalApp) Init(basePath string) error {
 	config, err := ddevapp.NewConfig(basePath)
 	if err != nil {
 		return err
 	}
+
 	l.AppConfig = config
 
 	err = PrepLocalSiteDirs(basePath)
@@ -60,33 +49,73 @@ func (l *LocalApp) Init() error {
 	return nil
 }
 
-// AbsPath return the full path from root to the app directory
-func (l LocalApp) AbsPath() string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Printf("Error determining the current directory: %s", err)
+// FindContainerByType will find a container for this site denoted by the containerType if it is available.
+func (l *LocalApp) FindContainerByType(containerType string) (docker.APIContainers, error) {
+	labels := map[string]string{
+		"com.ddev.site-name":      l.GetName(),
+		"com.ddev.container-type": containerType,
 	}
 
-	appPath, err := CheckForConf(cwd)
+	return FindContainerByLabels(labels)
+}
+
+// Describe returns a string which provides detailed information on services associated with the running site.
+func (l *LocalApp) Describe() (string, error) {
+	maxWidth := uint(200)
+	web, err := l.FindContainerByType("web")
 	if err != nil {
-		log.Fatalf("Unable to determine the application for this command - have you run 'ddev config'? Error: %s", err)
+		return "", err
+	}
+	db, err := l.FindContainerByType("db")
+	if err != nil {
+		return "", err
 	}
 
-	return appPath
+	if db.State != "running" || web.State != "running" {
+		return "", fmt.Errorf("ddev site is configured but not currently running")
+	}
+
+	var output string
+	app := uitable.New()
+	app.MaxColWidth = maxWidth
+	app.AddRow("NAME", "LOCATION", "TYPE", "URL", "STATUS")
+	app.AddRow(l.GetName(), l.AppRoot(), l.GetType(), l.URL(), "running")
+	output = fmt.Sprint(app)
+
+	output = output + "\n\nMySQL Credentials\n-----------------\n"
+	dbTable := uitable.New()
+	dbTable.MaxColWidth = maxWidth
+	dbTable.AddRow("Username:", "root")
+	dbTable.AddRow("Password:", "root")
+	dbTable.AddRow("Database name:", "data")
+	dbTable.AddRow("Connection Info:", l.HostName()+":3306")
+	output = output + fmt.Sprint(dbTable)
+
+	output = output + "\n\nOther Services\n--------------\n"
+	other := uitable.New()
+	other.AddRow("MailHog:", l.URL()+":8025")
+
+	output = output + fmt.Sprint(other)
+	return output, nil
+}
+
+// AppRoot return the full path from root to the app directory
+func (l *LocalApp) AppRoot() string {
+	return l.AppConfig.AppRoot
 }
 
 // GetName returns the  name for local app
-func (l LocalApp) GetName() string {
+func (l *LocalApp) GetName() string {
 	return l.AppConfig.Name
 }
 
 // ContainerPrefix returns the base name for local app containers
-func (l LocalApp) ContainerPrefix() string {
+func (l *LocalApp) ContainerPrefix() string {
 	return "local"
 }
 
 // ContainerName returns the base name for local app containers
-func (l LocalApp) ContainerName() string {
+func (l *LocalApp) ContainerName() string {
 	return fmt.Sprintf("%s-%s", l.ContainerPrefix(), l.GetName())
 }
 
@@ -106,7 +135,7 @@ func (l *LocalApp) GetResources() error {
 // GetArchive downloads external data
 func (l *LocalApp) GetArchive() error {
 	name := fmt.Sprintf("production-%s.tar.gz", l.GetName())
-	basePath := l.AbsPath()
+	basePath := l.AppRoot()
 	archive := path.Join(basePath, ".ddev", name)
 
 	if system.FileExists(archive) {
@@ -117,14 +146,14 @@ func (l *LocalApp) GetArchive() error {
 
 // DockerComposeYAMLPath returns the absolute path to where the docker-compose.yaml should exist for this app configuration.
 // This is a bit redundant, but is here to avoid having to expose too many details of AppConfig.
-func (l LocalApp) DockerComposeYAMLPath() string {
+func (l *LocalApp) DockerComposeYAMLPath() string {
 	return l.AppConfig.DockerComposeYAMLPath()
 }
 
 // UnpackResources takes the archive from the GetResources method and
 // unarchives it. Then the contents are moved to their proper locations.
-func (l LocalApp) UnpackResources() error {
-	basePath := l.AbsPath()
+func (l *LocalApp) UnpackResources() error {
+	basePath := l.AppRoot()
 	fileDir := ""
 
 	if l.GetType() == "wordpress" {
@@ -185,7 +214,7 @@ func (l LocalApp) UnpackResources() error {
 }
 
 // Start initiates docker-compose up
-func (l LocalApp) Start() error {
+func (l *LocalApp) Start() error {
 	composePath := l.DockerComposeYAMLPath()
 	l.DockerEnv()
 
@@ -214,7 +243,7 @@ func (l LocalApp) Start() error {
 }
 
 // DockerEnv sets environment variables for a docker-compose run.
-func (l LocalApp) DockerEnv() {
+func (l *LocalApp) DockerEnv() {
 	envVars := map[string]string{
 		"COMPOSE_PROJECT_NAME": "ddev-" + l.AppConfig.Name,
 		"DDEV_SITENAME":        l.AppConfig.Name,
@@ -246,11 +275,11 @@ func (l LocalApp) DockerEnv() {
 }
 
 // Stop initiates docker-compose stop
-func (l LocalApp) Stop() error {
+func (l *LocalApp) Stop() error {
 	composePath := l.DockerComposeYAMLPath()
 	l.DockerEnv()
 
-	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(&l) {
+	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(l) {
 		return fmt.Errorf("site does not exist or is malformed")
 	}
 
@@ -288,7 +317,7 @@ func (l *LocalApp) FindPorts() error {
 // Config creates the apps config file adding things like database host, name, and password
 // as well as other sensitive data like salts.
 func (l *LocalApp) Config() error {
-	basePath := l.AbsPath()
+	basePath := l.AppRoot()
 
 	err := l.FindPorts()
 	if err != nil {

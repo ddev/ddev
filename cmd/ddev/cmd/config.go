@@ -38,10 +38,6 @@ var ConfigCommand = &cobra.Command{
 			log.Fatalf("Could not write ddev config file: %v\n", err)
 		}
 	},
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// We need to override the PersistentPrerun which checks for a config.yaml in this instance,
-		// since we're actually generating the config here.
-	},
 }
 
 func init() {

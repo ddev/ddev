@@ -4,25 +4,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 )
-
-// NormalizePath prefixes secret paths with secret when necessary
-func NormalizePath(sPath string) (newPath string) {
-	newPath = sPath
-	if !strings.HasPrefix(sPath, "secret/") || !strings.HasPrefix(sPath, "cubbyhole/") {
-		if strings.HasPrefix(sPath, "/") {
-			newPath = filepath.Join("secret", sPath[1:])
-		} else {
-			newPath = filepath.Join("secret", sPath)
-		}
-	}
-	return
-}
 
 func askForConfirmation() bool {
 	var response string

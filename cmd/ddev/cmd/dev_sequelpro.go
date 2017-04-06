@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path"
 	"strconv"
-	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -20,8 +19,10 @@ var LocalDevSequelproCmd = &cobra.Command{
 	Short: "Easily connect local site to sequelpro",
 	Long:  `A helper command for easily using sequelpro with a drud app that has been initialized locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app := platform.PluginMap[strings.ToLower(plugin)]
-		app.Init()
+		app, err := getActiveApp()
+		if err != nil {
+			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+		}
 
 		nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
 
@@ -39,7 +40,7 @@ var LocalDevSequelproCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		tmpFilePath := path.Join(app.AbsPath(), "sequelpro.spf")
+		tmpFilePath := path.Join(app.AppRoot(), "sequelpro.spf")
 		tmpFile, err := os.Create(tmpFilePath)
 		if err != nil {
 			log.Fatalln(err)

@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
-	"path"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -17,9 +17,8 @@ const (
 )
 
 var (
-	logLevel  = log.WarnLevel
-	plugin    = "local"
-	activeApp string
+	logLevel = log.WarnLevel
+	plugin   = "local"
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -28,7 +27,7 @@ var RootCmd = &cobra.Command{
 	Short: "A CLI for interacting with ddev.",
 	Long:  "This Command Line Interface (CLI) gives you the ability to interact with the ddev to create a local development environment.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		ignores := []string{"list", "version"}
+		ignores := []string{"list", "version", "describe", "config"}
 		skip := false
 		command := strings.Join(os.Args, " ")
 
@@ -40,7 +39,6 @@ var RootCmd = &cobra.Command{
 		}
 
 		if !skip {
-			setActiveApp()
 			plugin = strings.ToLower(plugin)
 			if _, ok := platform.PluginMap[plugin]; !ok {
 				Failed("Plugin %s is not registered", plugin)
@@ -70,16 +68,28 @@ func init() {
 	log.SetLevel(logLevel)
 }
 
-func setActiveApp() {
+func getActiveAppRoot() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("Error determining the current directory: %s", err)
+		return "", fmt.Errorf("error determining the current directory: %s", err)
 	}
 
-	app, err := platform.CheckForConf(cwd)
+	appRoot, err := platform.CheckForConf(cwd)
 	if err != nil {
-		log.Fatalf("Unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
+		return "", fmt.Errorf("unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
 	}
 
-	activeApp = path.Base(app)
+	return appRoot, nil
+}
+
+// getActiveApp returns the active platform.App based on the current working directory.
+func getActiveApp() (platform.App, error) {
+	app := platform.PluginMap[strings.ToLower(plugin)]
+	activeAppRoot, err := getActiveAppRoot()
+	if err != nil {
+		return app, err
+	}
+
+	err = app.Init(activeAppRoot)
+	return app, err
 }

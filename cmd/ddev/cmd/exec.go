@@ -5,7 +5,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
@@ -23,8 +22,10 @@ var LocalDevExecCmd = &cobra.Command{
 			cmdString = args[2]
 		}
 
-		app := platform.PluginMap[strings.ToLower(plugin)]
-		app.Init()
+		app, err := getActiveApp()
+		if err != nil {
+			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+		}
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 		if !dockerutil.IsRunning(nameContainer) {
@@ -45,7 +46,7 @@ var LocalDevExecCmd = &cobra.Command{
 
 		cmdSplit := strings.Split(cmdString, " ")
 		cmdArgs = append(cmdArgs, cmdSplit...)
-		err := dockerutil.DockerCompose(cmdArgs...)
+		err = dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
 			log.Println(err)
 			Failed("Could not execute command.")
