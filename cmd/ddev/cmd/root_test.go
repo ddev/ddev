@@ -14,8 +14,8 @@ var (
 	DdevBin      = "ddev"
 	DevTestSites = []testcommon.TestSite{
 		{
-			Name:        "drupal8",
-			DownloadURL: "https://github.com/drud/drupal8/archive/v0.2.2.tar.gz",
+			Name:      "drupal8",
+			SourceURL: "https://github.com/drud/drupal8/archive/v0.2.2.tar.gz",
 		},
 	}
 )

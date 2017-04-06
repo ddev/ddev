@@ -77,8 +77,8 @@ func TestValidTestSite(t *testing.T) {
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
 	//not need to be updated over time.
 	ts := TestSite{
-		Name:        "drupal8",
-		DownloadURL: "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz",
+		Name:      "drupal8",
+		SourceURL: "https://github.com/drud/drupal8/archive/v0.2.1.tar.gz",
 	}
 
 	// Create a testsite and ensure the prepare() method extracts files into a temporary directory.
@@ -119,14 +119,14 @@ func TestInvalidTestSite(t *testing.T) {
 	testSites := []TestSite{
 		// This should generate a 404 page on github, which will be downloaded, but cannot be extracted (as it's not a true tar.gz)
 		TestSite{
-			Name:        "drupal8",
-			DownloadURL: "https://github.com/drud/drupal8/archive/somevaluethatdoesnotexist.tar.gz",
+			Name:      "drupal8",
+			SourceURL: "https://github.com/drud/drupal8/archive/somevaluethatdoesnotexist.tar.gz",
 		},
 		// This is an invalid domain, so it can't even be downloaded. This tests error handling in the case of
 		// a site URL which does not exist
 		TestSite{
-			Name:        "drupal8",
-			DownloadURL: "http://invalid_domain/somefilethatdoesnotexists",
+			Name:      "drupal8",
+			SourceURL: "http://invalid_domain/somefilethatdoesnotexists",
 		},
 	}
 
