@@ -157,6 +157,30 @@ func TestLocalImportDB(t *testing.T) {
 	}
 }
 
+// TestLocalImportFiles tests the functionality that is called when "ddev import-files" is executed
+func TestLocalImportFiles(t *testing.T) {
+	assert := assert.New(t)
+	app := PluginMap["local"]
+
+	for _, site := range TestSites {
+		cleanup := site.Chdir()
+		filePath := path.Join(os.TempDir(), "files.tar.gz")
+
+		err := system.DownloadFile(filePath, site.FileURL)
+		assert.NoError(err)
+
+		testcommon.ClearDockerEnv()
+		app.Init()
+
+		err = app.ImportDB(filePath)
+		assert.NoError(err)
+
+		os.Remove(filePath)
+
+		cleanup()
+	}
+}
+
 // TestLocalStop tests the functionality that is called when "ddev stop" is executed
 func TestLocalStop(t *testing.T) {
 	assert := assert.New(t)
