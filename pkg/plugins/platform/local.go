@@ -236,20 +236,18 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 
 	importPath, err := appimport.ValidateAsset(imPath, "files")
 	if err != nil {
-		if err.Error() == "is archive" {
-			err := os.Mkdir(destPath, 0755)
-			if err != nil {
-				return fmt.Errorf("failed to create destination: %v", err)
-			}
-			err = files.Untargz(importPath, destPath)
-			if err != nil {
-				return fmt.Errorf("failed to extract provided archive: %v", err)
-			}
-			return nil
-			// the cake is a lie - this else is necessary despite golint
-		} else {
+		if err.Error() != "is archive" {
 			return err
 		}
+		err := os.Mkdir(destPath, 0755)
+		if err != nil {
+			return fmt.Errorf("failed to create destination: %v", err)
+		}
+		err = files.Untargz(importPath, destPath)
+		if err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
+		}
+		return nil
 	}
 
 	err = files.CopyDir(importPath, destPath)
