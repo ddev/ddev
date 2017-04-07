@@ -16,6 +16,8 @@ var (
 		{
 			Name:      "drupal8",
 			SourceURL: "https://github.com/drud/drupal8/archive/v0.2.2.tar.gz",
+			FileURL:   "https://github.com/drud/drupal8/releases/download/v0.2.2/files.tar.gz",
+			DBURL:     "https://github.com/drud/drupal8/releases/download/v0.2.2/db.tar.gz",
 		},
 	}
 )
