@@ -62,7 +62,6 @@ stages:
           make GOPATH=~/ errcheck
         name: Static analysis targets govet/gofmt/golint
 
-
       # Example: Run just one test in ddev by name
 #      - type: shell
 #        command: |
@@ -74,8 +73,23 @@ stages:
       # Run the built-in ddev tests
       - type: shell
         command: |
-          cd ~/src/github.com/drud/ddev &&
-          make GOPATH=~/ test
-        name: ddev tests
+          if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
+            cd ~/src/github.com/drud/ddev &&
+            make GOPATH=~/ test
+          fi
+        name: ddev tests (not nightly build)
 
+
+      - type: shell
+        command: |
+          RUN_NIGHTLY_BUILD=true
+          if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
+            make clean
+            git submodule update --init
+            export VERSION=nightly.$(date +%Y%m%d%H%M%S)
+            make -f nightly_build.mak clean
+            make -f nightly_build.mak --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION WebTag=$VERSION RouterTag=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
+            make GOPATH=~/ test
+          fi
+        name: Run full nightly build
 
