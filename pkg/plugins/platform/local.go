@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -195,7 +196,11 @@ func (l *LocalApp) ImportDB(imPath string) error {
 
 	err = l.Config()
 	if err != nil {
-		return fmt.Errorf("failed to write configuration file for %s: %s", l.GetName(), err)
+		if err.Error() != "app config exists" {
+			return fmt.Errorf("failed to write configuration file for %s: %v", l.GetName(), err)
+		}
+		fmt.Println("A settings file already exists for your application, so ddev did not generate one.")
+		fmt.Println("Run 'ddev describe' to find the database credentials for this application.")
 	}
 
 	return nil
@@ -440,16 +445,27 @@ func (l *LocalApp) FindPorts() error {
 func (l *LocalApp) Config() error {
 	basePath := l.AppRoot()
 	docroot := l.Docroot()
+	settingsFilePath := path.Join(basePath, docroot)
 
 	err := l.FindPorts()
 	if err != nil {
 		return err
 	}
 
-	settingsFilePath := ""
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
-		log.Printf("Drupal site. Creating settings.php file.")
-		settingsFilePath = path.Join(basePath, docroot, "sites/default/settings.php")
+		settingsFilePath = path.Join(settingsFilePath, "sites/default/settings.php")
+	}
+
+	if l.GetType() == "wordpress" {
+		settingsFilePath = path.Join(settingsFilePath, "wp-config.php")
+	}
+
+	if system.FileExists(settingsFilePath) {
+		return errors.New("app config exists")
+	}
+
+	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
+		fmt.Println("Generating settings.php file for database connection.")
 		drupalConfig := model.NewDrupalConfig()
 		drupalConfig.DatabaseHost = "db"
 		if drupalConfig.HashSalt == "" {
@@ -483,8 +499,7 @@ func (l *LocalApp) Config() error {
 			log.Fatalln(err)
 		}
 	} else if l.GetType() == "wordpress" {
-		log.Printf("WordPress site. Creating wp-config.php file.")
-		settingsFilePath = path.Join(basePath, docroot, "wp-config.php")
+		fmt.Println("Generating wp-config.php file for database connection.")
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DatabaseHost = "db"
 		wpConfig.DeployURL = l.URL()
