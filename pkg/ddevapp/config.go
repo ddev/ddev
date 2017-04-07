@@ -1,7 +1,6 @@
 package ddevapp
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"html/template"
@@ -14,6 +13,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/util/prompt"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
@@ -30,7 +30,6 @@ const DDevDefaultPlatform = "local"
 const DDevTLD = "ddev.local"
 
 var allowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
-var inputScanner = bufio.NewScanner(os.Stdin)
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
@@ -137,7 +136,7 @@ func (c *Config) Config() error {
 	namePrompt = fmt.Sprintf("%s (%s)", namePrompt, c.Name)
 	// Define an application name.
 	fmt.Print(namePrompt + ": ")
-	c.Name = GetInput(c.Name)
+	c.Name = prompt.GetInput(c.Name)
 
 	err := c.docrootPrompt()
 	util.CheckErr(err)
@@ -216,7 +215,7 @@ func (c *Config) docrootPrompt() error {
 	}
 
 	fmt.Print(docrootPrompt + ": ")
-	c.Docroot = GetInput(c.Docroot)
+	c.Docroot = prompt.GetInput(c.Docroot)
 
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(c.AppRoot, c.Docroot)
@@ -257,7 +256,7 @@ func (c *Config) appTypePrompt() error {
 
 	for isAllowedAppType(appType) != true {
 		fmt.Printf(typePrompt + ": ")
-		appType = strings.ToLower(GetInput(c.AppType))
+		appType = strings.ToLower(prompt.GetInput(c.AppType))
 
 		if isAllowedAppType(appType) != true {
 			fmt.Printf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(allowedAppTypes, ", "))
@@ -265,25 +264,6 @@ func (c *Config) appTypePrompt() error {
 		c.AppType = appType
 	}
 	return nil
-}
-
-// SetInputScanner allows you to override the default input scanner with your own.
-func setInputScanner(scanner *bufio.Scanner) {
-	inputScanner = scanner
-}
-
-// GetInput reads input from an input buffer and returns the result as a string.
-func GetInput(defaultValue string) string {
-	inputScanner.Scan()
-	input := inputScanner.Text()
-
-	// If the value from the input buffer is blank, then use the default instead.
-	value := strings.TrimSpace(input)
-	if value == "" {
-		value = defaultValue
-	}
-
-	return value
 }
 
 // isAllowedAppType determines if a given string exists in the allowedAppTypes slice.

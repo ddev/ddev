@@ -15,6 +15,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/util/files"
+	"github.com/drud/ddev/pkg/util/prompt"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
@@ -162,7 +163,7 @@ func (l *LocalApp) ImportDB(imPath string) error {
 		fmt.Println("Provide the path to the database you wish to import.")
 		fmt.Println("Import path: ")
 
-		imPath = ddevapp.GetInput("")
+		imPath = prompt.GetInput("")
 	}
 
 	importPath, err := appimport.ValidateAsset(imPath, "db")
@@ -209,7 +210,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		fmt.Println("Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.")
 		fmt.Println("Import path: ")
 
-		imPath = ddevapp.GetInput("")
+		imPath = prompt.GetInput("")
 	}
 
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
