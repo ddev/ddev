@@ -137,12 +137,11 @@ func CopyDir(src string, dst string) error {
 				return err
 			}
 		} else {
-			// Skip symlinks.
-			if entry.Mode()&os.ModeSymlink != 0 {
+			err = CopyFile(srcPath, dstPath)
+			if err != nil && entry.Mode()&os.ModeSymlink != 0 {
+				fmt.Printf("failed to copy symlink %s, skipping...\n", srcPath)
 				continue
 			}
-
-			err = CopyFile(srcPath, dstPath)
 			if err != nil {
 				return err
 			}
