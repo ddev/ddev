@@ -71,6 +71,7 @@ services:
     ports:
       - "80:80"
       - "8025:8025"
+      - "3306:3306"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
 networks:
