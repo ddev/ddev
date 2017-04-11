@@ -11,6 +11,10 @@ stages:
       - type: checkout
 
       - type: shell
+        command: sudo apt-get update && sudo apt-get install mysql-client
+        name: Basic tool installation
+        
+      - type: shell
         command: |
           sudo apt-get remove golang &&
           wget -q -O /tmp/golang.tgz https://storage.googleapis.com/golang/go1.7.5.linux-amd64.tar.gz &&
