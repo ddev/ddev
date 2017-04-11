@@ -15,7 +15,8 @@ func TestTmpDir(t *testing.T) {
 	assert := assert.New(t)
 
 	// Create a temporary directory and ensure it exists.
-	testDir := CreateTmpDir()
+	testDir, err := CreateTmpDir("TestTmpDir")
+	assert.NoError(err)
 	dirStat, err := os.Stat(testDir)
 	assert.NoError(err, "There is no error when getting directory details")
 	assert.True(dirStat.IsDir(), "Temp Directory created and exists")
@@ -37,7 +38,8 @@ func TestChdir(t *testing.T) {
 	assert.NoError(err)
 
 	// Create a temporary directory.
-	testDir := CreateTmpDir()
+	testDir, err := CreateTmpDir("TestChdir")
+	assert.NoError(err)
 	assert.NotEqual(startingDir, testDir, "Ensure our starting directory and temporary directory are not the same")
 
 	// Change to the temporary directory.
