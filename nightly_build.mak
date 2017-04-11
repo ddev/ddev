@@ -28,13 +28,13 @@ clean:
 
 
 $(CONTAINER_DIRS):
-	git --git-dir=$(addprefix $(BASEDIR),$@)/.git fetch && git --git-dir=$(addprefix $(BASEDIR),$@)/.git checkout  origin/master
 	$(MAKE) -C $(addprefix $(BASEDIR),$@) --print-directory test
 
 submodules:
-	git submodule update --init
+	git submodule update --init && git submodule update --remote
 
 test:
 	$(MAKE) && $(MAKE) test
+
 
 
