@@ -24,4 +24,4 @@ var DBTag = "v0.2.0" // Note that this is overridden by make
 var RouterImage = "drud/nginx-proxy" // Note that this is overridden by make
 
 // RouterTag defines the tag used for the drud dev router.
-var RouterTag = "0.1.0" // Note that this is overridden by make
+var RouterTag = "v0.2.0" // Note that this is overridden by make
