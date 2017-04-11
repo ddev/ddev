@@ -11,6 +11,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"errors"
+	"regexp"
+
 	"github.com/docker/docker/pkg/homedir"
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
@@ -186,4 +188,19 @@ func DetermineAppType(basePath string) (string, error) {
 	}
 
 	return "", fmt.Errorf("unable to determine the application type")
+}
+
+// GetContainerHealth retrieves the status of a given container. The status string returned
+// by docker contains uptime and the health status in parenths. This function will filter the uptime and
+// return only the health status.
+func GetContainerHealth(container docker.APIContainers) string {
+	status := container.Status
+	re := regexp.MustCompile(`\(([^\)]+)\)`)
+	match := re.FindString(status)
+	match = strings.Trim(match, "()")
+	pre := "health: "
+	if strings.HasPrefix(match, pre) {
+		match = strings.TrimPrefix(match, pre)
+	}
+	return match
 }

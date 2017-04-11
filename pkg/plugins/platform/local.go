@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"strings"
 
@@ -19,7 +20,6 @@ import (
 	"github.com/drud/ddev/pkg/util/files"
 	"github.com/drud/ddev/pkg/util/prompt"
 	"github.com/drud/drud-go/utils/dockerutil"
-	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/fsouza/go-dockerclient"
@@ -335,12 +335,9 @@ func (l *LocalApp) Stop() error {
 
 // Wait ensures that the app appears to be read before returning
 func (l *LocalApp) Wait() (string, error) {
-	o := network.NewHTTPOptions("http://127.0.0.1/healthcheck")
-	o.Timeout = 90
-	o.Headers["Host"] = l.HostName()
-	err := network.EnsureHTTPStatus(o)
+	err := l.ContainerWait(30, "web")
 	if err != nil {
-		return "", fmt.Errorf("200 Was not returned from the web container")
+		return "", errors.New("container failed to reach healthy state")
 	}
 
 	return l.URL(), nil
@@ -481,4 +478,25 @@ func (l *LocalApp) AddHostsEntry() error {
 	hostnameArgs := []string{"ddev", "hostname", l.HostName(), "127.0.0.1"}
 	err = system.RunCommandPipe("sudo", hostnameArgs)
 	return err
+}
+
+// ContainerWait provides a wait loop to check for container in "healthy" status.
+func (l *LocalApp) ContainerWait(timeout time.Duration, containerType string) error {
+	timedOut := time.After(timeout * time.Second)
+	tick := time.Tick(500 * time.Millisecond)
+	for {
+		select {
+		case <-timedOut:
+			return errors.New("timed out")
+		case <-tick:
+			container, err := l.FindContainerByType(containerType)
+			if err != nil {
+				return errors.New("failed to query container")
+			}
+			status := GetContainerHealth(container)
+			if status == "healthy" {
+				return nil
+			}
+		}
+	}
 }
