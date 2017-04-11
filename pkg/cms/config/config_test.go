@@ -13,8 +13,7 @@ import (
 )
 
 func TestWriteDrupalConfig(t *testing.T) {
-	dir, err := testcommon.CreateTmpDir("example")
-	assert.NoError(t, err)
+	dir := testcommon.CreateTmpDir("example")
 
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
@@ -30,8 +29,7 @@ func TestWriteDrupalConfig(t *testing.T) {
 }
 
 func TestWriteDrushConfig(t *testing.T) {
-	dir, err := testcommon.CreateTmpDir("example")
-	assert.NoError(t, err)
+	dir := testcommon.CreateTmpDir("example")
 
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
@@ -47,8 +45,7 @@ func TestWriteDrushConfig(t *testing.T) {
 }
 
 func TestWriteWordpressConfig(t *testing.T) {
-	dir, err := testcommon.CreateTmpDir("example")
-	assert.NoError(t, err)
+	dir := testcommon.CreateTmpDir("example")
 
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)

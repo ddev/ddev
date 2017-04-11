@@ -33,15 +33,12 @@ func (site *TestSite) archivePath() string {
 
 // Prepare downloads and extracts a site codebase to a temporary directory.
 func (site *TestSite) Prepare() error {
-	testDir, err := CreateTmpDir(site.Name)
-	if err != nil {
-		log.Fatalf("Could not create temporary directory %s for site %s", testDir, site.Name)
-	}
+	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
 	fmt.Printf("Prepping test for %s.", site.Name)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
 
-	err = system.DownloadFile(site.archivePath(), site.DownloadURL)
+	err := system.DownloadFile(site.archivePath(), site.DownloadURL)
 	if err != nil {
 		site.Cleanup()
 		return err
@@ -95,16 +92,16 @@ func OsTempDir() (string, error) {
 }
 
 // CreateTmpDir creates a temporary directory and returns its path as a string.
-func CreateTmpDir(prefix string) (string, error) {
+func CreateTmpDir(prefix string) string {
 	systemTempDir, err := OsTempDir()
 	if err != nil {
-		return "", err
+		log.Fatalln("Failed getting system temp dir", err)
 	}
 	fullPath, err := ioutil.TempDir(systemTempDir, prefix)
 	if err != nil {
-		return "", err
+		log.Fatalln("Failed to create temp directory", err)
 	}
-	return fullPath, nil
+	return fullPath
 }
 
 // Chdir will change to the directory for the site specified by TestSite.

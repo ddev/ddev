@@ -6,7 +6,6 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
-	"log"
 )
 
 // TestDescribeBadArgs ensures the binary behaves as expected when used with invalid arguments or working directories.
@@ -14,10 +13,7 @@ func TestDescribeBadArgs(t *testing.T) {
 	assert := assert.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
-	tmpdir, err := testcommon.CreateTmpDir("badargs")
-	if err != nil {
-		log.Fatalln("Failed to CreateTmpDir()", err)
-	}
+	tmpdir := testcommon.CreateTmpDir("badargs")
 	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
 
@@ -47,10 +43,7 @@ func TestDescribe(t *testing.T) {
 
 	for _, v := range DevTestSites {
 		// First, try to do a describe from another directory.
-		tmpdir, err := testcommon.CreateTmpDir("")
-		if err != nil {
-			log.Fatalln("Failed to CreateTmpDir", err)
-		}
+		tmpdir := testcommon.CreateTmpDir("")
 		cleanup := testcommon.Chdir(tmpdir)
 		defer testcommon.CleanupDir(tmpdir)
 
@@ -103,10 +96,7 @@ func TestDescribeAppUsingSitename(t *testing.T) {
 	assert := assert.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
-	tmpdir, err := testcommon.CreateTmpDir("describeAppUsingSitename")
-	if err != nil {
-		log.Fatalln("Failed to CreateTmpDir", err)
-	}
+	tmpdir := testcommon.CreateTmpDir("describeAppUsingSitename")
 	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
 
@@ -123,15 +113,12 @@ func TestDescribeAppWithInvalidParams(t *testing.T) {
 	assert := assert.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
-	tmpdir, err := testcommon.CreateTmpDir("TestDescribeAppWithInvalidParams")
-	if err != nil {
-		log.Fatalln("Failed to CreateTmpDir", err)
-	}
+	tmpdir := testcommon.CreateTmpDir("TestDescribeAppWithInvalidParams")
 	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
 
 	// Ensure describeApp fails from an invalid working directory.
-	_, err = describeApp("")
+	_, err := describeApp("")
 	assert.Error(err)
 
 	// Ensure describeApp fails with invalid site-names.
