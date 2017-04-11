@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"log"
 	"testing"
 
 	"os"
 
+	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +14,7 @@ import (
 func TestDevLogsBadArgs(t *testing.T) {
 	assert := assert.New(t)
 
-	testDir, err := ioutil.TempDir("", "no-valid-ddev-config")
+	testDir, err := testcommon.CreateTmpDir("no-valid-ddev-config")
 	if err != nil {
 		log.Fatalf("Could not create temporary directory %s ", testDir)
 	}
