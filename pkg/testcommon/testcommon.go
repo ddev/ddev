@@ -24,12 +24,16 @@ type TestSite struct {
 }
 
 func (site *TestSite) archivePath() string {
-	return filepath.Join(os.TempDir(), site.Name+".tar.gz")
+	dir, err := OsTempDir()
+	if err != nil {
+		log.Fatalln("Failed to create OsTempDir", err)
+	}
+	return filepath.Join(dir, site.Name+".tar.gz")
 }
 
 // Prepare downloads and extracts a site codebase to a temporary directory.
 func (site *TestSite) Prepare() error {
-	testDir, err := ioutil.TempDir("", site.Name)
+	testDir, err := CreateTmpDir(site.Name)
 	if err != nil {
 		log.Fatalf("Could not create temporary directory %s for site %s", testDir, site.Name)
 	}
@@ -77,14 +81,30 @@ func CleanupDir(dir string) error {
 	return err
 }
 
-// CreateTmpDir creates a temporary directory and returns its path as a string.
-func CreateTmpDir() string {
-	testDir, err := ioutil.TempDir("", "")
+// OsTempDir gets os.TempDir() (usually provided by $TMPDIR) but expands any symlinks found within it.
+// This wrapper function can prevent problems with docker-for-mac trying to use /var/..., which is not typically
+// shared/mounted. It will be expanded via the /var symlink to /private/var/...
+func OsTempDir() (string, error) {
+	dirName := os.TempDir()
+	tmpDir, err := filepath.EvalSymlinks(dirName)
 	if err != nil {
-		log.Fatalf("Could not create temporary directory %s: %v", testDir, err)
+		return "", err
 	}
+	tmpDir = filepath.Clean(tmpDir)
+	return tmpDir, nil
+}
 
-	return testDir
+// CreateTmpDir creates a temporary directory and returns its path as a string.
+func CreateTmpDir(prefix string) (string, error) {
+	systemTempDir, err := OsTempDir()
+	if err != nil {
+		return "", err
+	}
+	fullPath, err := ioutil.TempDir(systemTempDir, prefix)
+	if err != nil {
+		return "", err
+	}
+	return fullPath, nil
 }
 
 // Chdir will change to the directory for the site specified by TestSite.

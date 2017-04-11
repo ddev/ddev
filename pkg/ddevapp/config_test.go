@@ -19,7 +19,9 @@ import (
 func TestNewConfig(t *testing.T) {
 	assert := assert.New(t)
 	// Create a temporary directory and change to it for the duration of this test.
-	testDir := testcommon.CreateTmpDir()
+	testDir, err := testcommon.CreateTmpDir("TestNewConfig")
+	assert.NoError(err)
+
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 
@@ -67,7 +69,8 @@ func TestAllowedAppTypes(t *testing.T) {
 func TestPrepDirectory(t *testing.T) {
 	assert := assert.New(t)
 	// Create a temporary directory and change to it for the duration of this test.
-	testDir := testcommon.CreateTmpDir()
+	testDir, err := testcommon.CreateTmpDir("TestPrepDirectory")
+	assert.NoError(err)
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 
@@ -87,7 +90,8 @@ func TestPrepDirectory(t *testing.T) {
 // TestHostName tests that the TestSite.Hostname() field returns the hostname as expected.
 func TestHostName(t *testing.T) {
 	assert := assert.New(t)
-	testDir := testcommon.CreateTmpDir()
+	testDir, err := testcommon.CreateTmpDir("TestHostName")
+	assert.NoError(err)
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 	config, err := NewConfig(testDir)
@@ -101,7 +105,8 @@ func TestHostName(t *testing.T) {
 func TestWriteDockerComposeYaml(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := assert.New(t)
-	testDir := testcommon.CreateTmpDir()
+	testDir, err := testcommon.CreateTmpDir("TestWriteDockerCompose")
+	assert.NoError(err)
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 
@@ -143,12 +148,13 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 func TestConfigCommand(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := assert.New(t)
-	testDir := testcommon.CreateTmpDir()
+	testDir, err := testcommon.CreateTmpDir("TestConfigCommand")
+	assert.NoError(err)
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 
 	// Create a docroot folder.
-	err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
+	err = os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
 	if err != nil {
 		t.Errorf("Could not create docroot directory under %s", testDir)
 	}
