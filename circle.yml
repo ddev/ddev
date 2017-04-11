@@ -13,7 +13,7 @@ stages:
       - type: shell
         command: sudo apt-get update && sudo apt-get install mysql-client
         name: Basic tool installation
-        
+
       - type: shell
         command: |
           sudo apt-get remove golang &&
