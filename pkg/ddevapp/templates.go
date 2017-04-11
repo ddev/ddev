@@ -12,8 +12,7 @@ services:
       - "./data:/db"
     restart: always
     environment:
-      MYSQL_DATABASE: data
-      MYSQL_ROOT_PASSWORD: root
+      - TCP_PORT=$DDEV_HOSTNAME:3306
     ports:
       - "3306"
     labels:
