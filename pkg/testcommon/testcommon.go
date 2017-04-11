@@ -2,7 +2,6 @@ package testcommon
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -35,16 +34,18 @@ func (site *TestSite) archivePath() string {
 func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
-	fmt.Printf("Prepping test for %s.", site.Name)
+	log.Printf("Prepping test for %s.\n", site.Name)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
 
+	log.Print("Downloading file:", site.DownloadURL)
 	err := system.DownloadFile(site.archivePath(), site.DownloadURL)
 	if err != nil {
 		site.Cleanup()
 		return err
 	}
+	log.Print("File downloaded:", site.archivePath())
 
-	_, err = system.RunCommand("tar",
+	result, err := system.RunCommand("tar",
 		[]string{
 			"-xzf",
 			site.archivePath(),
@@ -52,6 +53,9 @@ func (site *TestSite) Prepare() error {
 			"-C",
 			site.Dir,
 		})
+	if err != nil {
+		log.Printf("Tar extraction failed err=%v result=%v:", err, result)
+	}
 	// If we had an error extracting the archive, we should go ahead and clean up the temporary directory, since this
 	// testsite is useless.
 	if err != nil {
