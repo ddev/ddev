@@ -37,24 +37,28 @@ func (site *TestSite) Prepare() error {
 	log.Printf("Prepping test for %s.\n", site.Name)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
 
-	log.Print("Downloading file:", site.DownloadURL)
-	err := system.DownloadFile(site.archivePath(), site.DownloadURL)
+	log.Println("Downloading file:", site.DownloadURL)
+	tarballPath := site.archivePath()
+	err := system.DownloadFile(tarballPath, site.DownloadURL)
+
 	if err != nil {
 		site.Cleanup()
 		return err
 	}
-	log.Print("File downloaded:", site.archivePath())
+	log.Println("File downloaded:", tarballPath)
 
-	result, err := system.RunCommand("tar",
+	_, err = system.RunCommand("tar",
 		[]string{
 			"-xzf",
-			site.archivePath(),
+			tarballPath,
 			"--strip", "1",
 			"-C",
 			site.Dir,
 		})
 	if err != nil {
-		log.Printf("Tar extraction failed err=%v result=%v:", err, result)
+		log.Printf("Tar extraction failed err=%v ", err)
+		_, _ = system.RunCommand("cp", []string{tarballPath, "/tmp/"})
+		log.Printf("Copy of bad tarball from %v has been copied to /tmp", tarballPath)
 	}
 	// If we had an error extracting the archive, we should go ahead and clean up the temporary directory, since this
 	// testsite is useless.

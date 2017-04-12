@@ -85,14 +85,14 @@ func TestValidTestSite(t *testing.T) {
 
 	// Create a testsite and ensure the prepare() method extracts files into a temporary directory.
 	err = ts.Prepare()
-	assert.NoError(err)
+	if err != nil {
+		t.Logf("Prepare() failed on TestSite %v, err=%v", ts, err)
+		t.FailNow()
+	}
 	assert.NotNil(ts.Dir, "Directory is set.")
 	docroot := filepath.Join(ts.Dir, "docroot")
 	dirStat, err := os.Stat(docroot)
 	assert.NoError(err, "Docroot exists after prepare()")
-	//if (err != nil) {
-	//	log.Fatal("Stopping to let you figure out what happened to docroot", docroot)
-	//}
 	assert.True(dirStat.IsDir(), "Docroot is a directory")
 
 	cleanup := ts.Chdir()
