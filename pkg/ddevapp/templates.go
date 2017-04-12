@@ -47,6 +47,19 @@ services:
       com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
+  {{ .plugin }}-{{ .name }}-dba:
+    container_name: local-${DDEV_SITENAME}-dba
+    image: $DDEV_DBAIMAGE
+    restart: always
+    depends_on:
+      - local-${DDEV_SITENAME}-db
+    links:
+      - local-${DDEV_SITENAME}-db:db
+    ports:
+      - "80"
+    environment:
+      - PMA_USER=root
+      - PMA_PASSWORD=root
 networks:
   default:
     external:

@@ -33,6 +33,7 @@ func TestDevAddSites(t *testing.T) {
 
 		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-web"))
 		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-db"))
+		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-dba"))
 
 		o := network.NewHTTPOptions("http://127.0.0.1/core/install.php")
 		o.ExpectedStatus = 200

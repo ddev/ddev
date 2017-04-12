@@ -289,6 +289,7 @@ func (l *LocalApp) DockerEnv() {
 		"COMPOSE_PROJECT_NAME": "ddev-" + l.AppConfig.Name,
 		"DDEV_SITENAME":        l.AppConfig.Name,
 		"DDEV_DBIMAGE":         l.AppConfig.DBImage,
+		"DDEV_DBAIMAGE":        l.AppConfig.DBAImage,
 		"DDEV_WEBIMAGE":        l.AppConfig.WebImage,
 		"DDEV_APPROOT":         l.AppConfig.AppRoot,
 		"DDEV_DOCROOT":         filepath.Join(l.AppConfig.AppRoot, l.AppConfig.Docroot),
