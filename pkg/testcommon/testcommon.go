@@ -23,10 +23,7 @@ type TestSite struct {
 }
 
 func (site *TestSite) archivePath() string {
-	dir, err := OsTempDir()
-	if err != nil {
-		log.Fatalln("Failed to create OsTempDir", err)
-	}
+	dir := CreateTmpDir(site.Name + "download")
 	return filepath.Join(dir, site.Name+".tar.gz")
 }
 
