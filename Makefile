@@ -25,6 +25,8 @@ DBImg ?= drud/mysql-docker-local-57
 DBTag ?= v0.3.0
 RouterImage ?= drud/nginx-proxy
 RouterTag ?= v0.2.0
+DBAImg ?= drud/phpmyadmin
+DBATag ?= v0.1.0
 
 # Optional to docker build
 #DOCKER_ARGS =
