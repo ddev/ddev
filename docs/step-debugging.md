@@ -33,7 +33,8 @@ For each IDE the link to their documentation is provided, and the skeleton steps
 PHPStorm [zero-configuration debugging](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm) means you only have to:
 
 1. Make sure your "Debug port" is set to 11011 in preferences.
-2. Toggle the “Start Listening for PHP Debug Connections” button.
+2. Toggle the “Start Listening for PHP Debug Connections” button:
+  ![Start listening for debug connections button](images/phpstorm_listen_for_debug_connections.png)
 3. Set a breakpoint.
 4. Using bookmarks from https://www.jetbrains.com/phpstorm/marklets/, "start debugger"
 5. Visit a page that should stop in the breakpoint you set.
@@ -83,7 +84,7 @@ Before, beginning anything else, please set your Debugger Port to 11011. (Prefer
 1. Install an xdebug helper extension for your browser, [as suggested in documentation](https://atom.io/packages/php-debug#setting-up-xdebug)
 2. Under Preferences->+Install install the php-debug add-on:
 ![php-debug installation](images/atom_php_debug_install.png)
-3. Add configuration to the Atom config.cson by choosing "Config..." under the "Atom" menu. A "php-debug" stanza must be added, with file mappings that relate to your project.
+3. Add configuration to the Atom config.cson by choosing "Config..." under the "Atom" menu. A "php-debug" stanza must be added, with file mappings that relate to your project. (Example [config.cson snippet](snippets/atom_config_cson_snippet.txt)
 ![Atom cson config](images/atom_cson_config.png)
 4. Open a project/folder and open a PHP file you'd like to debug.
 5. Set a breakpoint. (Right-click->PHP Debug->Toggle breakpoint)

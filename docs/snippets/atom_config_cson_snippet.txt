@@ -1,0 +1,6 @@
+  "php-debug":
+    PathMaps: [
+      "remotepath;localpath"
+      "/var/www/html/docroot;/Users/rfay/workspace/drud-d8/docroot"
+    ]
+    ServerPort: 11011
