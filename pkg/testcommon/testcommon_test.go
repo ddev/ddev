@@ -15,7 +15,7 @@ func TestTmpDir(t *testing.T) {
 	assert := assert.New(t)
 
 	// Create a temporary directory and ensure it exists.
-	testDir := CreateTmpDir()
+	testDir := CreateTmpDir("TestTmpDir")
 	dirStat, err := os.Stat(testDir)
 	assert.NoError(err, "There is no error when getting directory details")
 	assert.True(dirStat.IsDir(), "Temp Directory created and exists")
@@ -37,7 +37,7 @@ func TestChdir(t *testing.T) {
 	assert.NoError(err)
 
 	// Create a temporary directory.
-	testDir := CreateTmpDir()
+	testDir := CreateTmpDir("TestChdir")
 	assert.NotEqual(startingDir, testDir, "Ensure our starting directory and temporary directory are not the same")
 
 	// Change to the temporary directory.
@@ -84,7 +84,11 @@ func TestValidTestSite(t *testing.T) {
 	}
 
 	// Create a testsite and ensure the prepare() method extracts files into a temporary directory.
-	ts.Prepare()
+	err = ts.Prepare()
+	if err != nil {
+		t.Logf("Prepare() failed on TestSite %v, err=%v", ts, err)
+		t.FailNow()
+	}
 	assert.NotNil(ts.Dir, "Directory is set.")
 	docroot := filepath.Join(ts.Dir, "docroot")
 	dirStat, err := os.Stat(docroot)

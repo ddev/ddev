@@ -19,7 +19,8 @@ import (
 func TestNewConfig(t *testing.T) {
 	assert := assert.New(t)
 	// Create a temporary directory and change to it for the duration of this test.
-	testDir := testcommon.CreateTmpDir()
+	testDir := testcommon.CreateTmpDir("TestNewConfig")
+
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 
@@ -67,7 +68,7 @@ func TestAllowedAppTypes(t *testing.T) {
 func TestPrepDirectory(t *testing.T) {
 	assert := assert.New(t)
 	// Create a temporary directory and change to it for the duration of this test.
-	testDir := testcommon.CreateTmpDir()
+	testDir := testcommon.CreateTmpDir("TestPrepDirectory")
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 
@@ -87,7 +88,7 @@ func TestPrepDirectory(t *testing.T) {
 // TestHostName tests that the TestSite.Hostname() field returns the hostname as expected.
 func TestHostName(t *testing.T) {
 	assert := assert.New(t)
-	testDir := testcommon.CreateTmpDir()
+	testDir := testcommon.CreateTmpDir("TestHostName")
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 	config, err := NewConfig(testDir)
@@ -101,7 +102,7 @@ func TestHostName(t *testing.T) {
 func TestWriteDockerComposeYaml(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := assert.New(t)
-	testDir := testcommon.CreateTmpDir()
+	testDir := testcommon.CreateTmpDir("TestWriteDockerCompose")
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 
@@ -143,7 +144,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 func TestConfigCommand(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := assert.New(t)
-	testDir := testcommon.CreateTmpDir()
+	testDir := testcommon.CreateTmpDir("TestConfigCommand")
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 

@@ -2,10 +2,9 @@ package testcommon
 
 import (
 	"bytes"
-	"fmt"
+	log "github.com/Sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -24,36 +23,39 @@ type TestSite struct {
 }
 
 func (site *TestSite) archivePath() string {
-	return filepath.Join(os.TempDir(), site.Name+".tar.gz")
+	dir := CreateTmpDir(site.Name + "download")
+	return filepath.Join(dir, site.Name+".tar.gz")
 }
 
 // Prepare downloads and extracts a site codebase to a temporary directory.
 func (site *TestSite) Prepare() error {
-	testDir, err := ioutil.TempDir("", site.Name)
-	if err != nil {
-		log.Fatalf("Could not create temporary directory %s for site %s", testDir, site.Name)
-	}
+	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
-	fmt.Printf("Prepping test for %s.", site.Name)
+	log.Debugf("Prepping test for %s.\n", site.Name)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
 
-	err = system.DownloadFile(site.archivePath(), site.DownloadURL)
+	log.Debugln("Downloading file:", site.DownloadURL)
+	tarballPath := site.archivePath()
+	err := system.DownloadFile(tarballPath, site.DownloadURL)
+
 	if err != nil {
 		site.Cleanup()
 		return err
 	}
+	log.Debugln("File downloaded:", tarballPath)
 
 	_, err = system.RunCommand("tar",
 		[]string{
 			"-xzf",
-			site.archivePath(),
+			tarballPath,
 			"--strip", "1",
 			"-C",
 			site.Dir,
 		})
-	// If we had an error extracting the archive, we should go ahead and clean up the temporary directory, since this
-	// testsite is useless.
 	if err != nil {
+		log.Errorf("Tar extraction failed err=%v\n", err)
+		// If we had an error extracting the archive, we should go ahead and clean up the temporary directory, since this
+		// testsite is useless.
 		site.Cleanup()
 	}
 
@@ -77,14 +79,30 @@ func CleanupDir(dir string) error {
 	return err
 }
 
-// CreateTmpDir creates a temporary directory and returns its path as a string.
-func CreateTmpDir() string {
-	testDir, err := ioutil.TempDir("", "")
+// OsTempDir gets os.TempDir() (usually provided by $TMPDIR) but expands any symlinks found within it.
+// This wrapper function can prevent problems with docker-for-mac trying to use /var/..., which is not typically
+// shared/mounted. It will be expanded via the /var symlink to /private/var/...
+func OsTempDir() (string, error) {
+	dirName := os.TempDir()
+	tmpDir, err := filepath.EvalSymlinks(dirName)
 	if err != nil {
-		log.Fatalf("Could not create temporary directory %s: %v", testDir, err)
+		return "", err
 	}
+	tmpDir = filepath.Clean(tmpDir)
+	return tmpDir, nil
+}
 
-	return testDir
+// CreateTmpDir creates a temporary directory and returns its path as a string.
+func CreateTmpDir(prefix string) string {
+	systemTempDir, err := OsTempDir()
+	if err != nil {
+		log.Fatalln("Failed getting system temp dir", err)
+	}
+	fullPath, err := ioutil.TempDir(systemTempDir, prefix)
+	if err != nil {
+		log.Fatalln("Failed to create temp directory", err)
+	}
+	return fullPath
 }
 
 // Chdir will change to the directory for the site specified by TestSite.

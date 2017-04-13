@@ -8,12 +8,12 @@ import (
 	"io/ioutil"
 
 	"github.com/drud/ddev/pkg/cms/model"
+	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteDrupalConfig(t *testing.T) {
-	dir, err := ioutil.TempDir("", "example")
-	assert.NoError(t, err)
+	dir := testcommon.CreateTmpDir("example")
 
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
@@ -29,8 +29,7 @@ func TestWriteDrupalConfig(t *testing.T) {
 }
 
 func TestWriteDrushConfig(t *testing.T) {
-	dir, err := ioutil.TempDir("", "example")
-	assert.NoError(t, err)
+	dir := testcommon.CreateTmpDir("example")
 
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
@@ -46,8 +45,7 @@ func TestWriteDrushConfig(t *testing.T) {
 }
 
 func TestWriteWordpressConfig(t *testing.T) {
-	dir, err := ioutil.TempDir("", "example")
-	assert.NoError(t, err)
+	dir := testcommon.CreateTmpDir("example")
 
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)

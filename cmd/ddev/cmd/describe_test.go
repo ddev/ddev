@@ -13,7 +13,7 @@ func TestDescribeBadArgs(t *testing.T) {
 	assert := assert.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
-	tmpdir := testcommon.CreateTmpDir()
+	tmpdir := testcommon.CreateTmpDir("badargs")
 	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
 
@@ -43,7 +43,7 @@ func TestDescribe(t *testing.T) {
 
 	for _, v := range DevTestSites {
 		// First, try to do a describe from another directory.
-		tmpdir := testcommon.CreateTmpDir()
+		tmpdir := testcommon.CreateTmpDir("")
 		cleanup := testcommon.Chdir(tmpdir)
 		defer testcommon.CleanupDir(tmpdir)
 
@@ -96,7 +96,7 @@ func TestDescribeAppUsingSitename(t *testing.T) {
 	assert := assert.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
-	tmpdir := testcommon.CreateTmpDir()
+	tmpdir := testcommon.CreateTmpDir("describeAppUsingSitename")
 	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
 
@@ -113,7 +113,7 @@ func TestDescribeAppWithInvalidParams(t *testing.T) {
 	assert := assert.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
-	tmpdir := testcommon.CreateTmpDir()
+	tmpdir := testcommon.CreateTmpDir("TestDescribeAppWithInvalidParams")
 	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
 
