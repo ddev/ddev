@@ -35,7 +35,7 @@ var ImportDBCmd = &cobra.Command{
 
 		err = app.ImportDB(dbSource)
 		if err != nil {
-			Failed("Unable to successfully import database for %s: %s", app.GetName(), err)
+			Failed("Failed to import database for %s: %s", app.GetName(), err)
 		}
 		Success("Successfully imported database for %s", app.GetName())
 	},

@@ -35,7 +35,7 @@ var ImportFileCmd = &cobra.Command{
 
 		err = app.ImportFiles(fileSource)
 		if err != nil {
-			Failed("Unable to successfully import files for %s: %s", app.GetName(), err)
+			Failed("Failed to import files for %s: %s", app.GetName(), err)
 		}
 		Success("Successfully imported files for %s", app.GetName())
 	},
