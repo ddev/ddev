@@ -335,7 +335,7 @@ func (l *LocalApp) Stop() error {
 
 // Wait ensures that the app appears to be read before returning
 func (l *LocalApp) Wait() (string, error) {
-	err := l.ContainerWait(45, "web")
+	err := l.ContainerWait(90, "web")
 	if err != nil {
 		return "", err
 	}
