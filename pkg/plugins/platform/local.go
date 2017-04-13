@@ -335,9 +335,9 @@ func (l *LocalApp) Stop() error {
 
 // Wait ensures that the app appears to be read before returning
 func (l *LocalApp) Wait() (string, error) {
-	err := l.ContainerWait(30, "web")
+	err := l.ContainerWait(45, "web")
 	if err != nil {
-		return "", errors.New("container failed to reach healthy state")
+		return "", err
 	}
 
 	return l.URL(), nil
@@ -487,7 +487,7 @@ func (l *LocalApp) ContainerWait(timeout time.Duration, containerType string) er
 	for {
 		select {
 		case <-timedOut:
-			return errors.New("timed out")
+			return errors.New("health check timed out")
 		case <-tick:
 			container, err := l.FindContainerByType(containerType)
 			if err != nil {
