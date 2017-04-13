@@ -2,9 +2,9 @@ package testcommon
 
 import (
 	"bytes"
+	log "github.com/Sirupsen/logrus"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -31,10 +31,10 @@ func (site *TestSite) archivePath() string {
 func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
-	log.Printf("Prepping test for %s.\n", site.Name)
+	log.Debugf("Prepping test for %s.\n", site.Name)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
 
-	log.Println("Downloading file:", site.DownloadURL)
+	log.Debugln("Downloading file:", site.DownloadURL)
 	tarballPath := site.archivePath()
 	err := system.DownloadFile(tarballPath, site.DownloadURL)
 
@@ -42,7 +42,7 @@ func (site *TestSite) Prepare() error {
 		site.Cleanup()
 		return err
 	}
-	log.Println("File downloaded:", tarballPath)
+	log.Debugln("File downloaded:", tarballPath)
 
 	_, err = system.RunCommand("tar",
 		[]string{
@@ -53,13 +53,9 @@ func (site *TestSite) Prepare() error {
 			site.Dir,
 		})
 	if err != nil {
-		log.Printf("Tar extraction failed err=%v ", err)
-		_, _ = system.RunCommand("cp", []string{tarballPath, "/tmp/"})
-		log.Printf("Copy of bad tarball from %v has been copied to /tmp", tarballPath)
-	}
-	// If we had an error extracting the archive, we should go ahead and clean up the temporary directory, since this
-	// testsite is useless.
-	if err != nil {
+		log.Errorf("Tar extraction failed err=%v\n", err)
+		// If we had an error extracting the archive, we should go ahead and clean up the temporary directory, since this
+		// testsite is useless.
 		site.Cleanup()
 	}
 
