@@ -82,7 +82,7 @@ Before, beginning anything else, please set your Debugger Port to 11011. (Prefer
 
 1. Install an xdebug helper extension for your browser, [as suggested in documentation](https://atom.io/packages/php-debug#setting-up-xdebug)
 2. Under Preferences->+Install install the php-debug add-on:
-![php-debug installation](images/atom_php_debug_install.php)
+![php-debug installation](images/atom_php_debug_install.png)
 3. Add configuration to the Atom config.cson by choosing "Config..." under the "Atom" menu. A "php-debug" stanza must be added, with file mappings that relate to your project.
 ![Atom cson config](images/atom_cson_config.png)
 4. Open a project/folder and open a PHP file you'd like to debug.
