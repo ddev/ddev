@@ -101,7 +101,7 @@ Connection Info:	drupal8.ddev.local:3306
 Other Services
 --------------
 MailHog:   	http://drupal8.ddev.local:8025
-PHPMyAdmin:	http://drupal8.ddev.local:8036
+phpMyAdmin:	http://drupal8.ddev.local:8036
 ```
 
 ## Importing an existing site
