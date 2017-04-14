@@ -11,7 +11,7 @@ SHELL := /bin/bash
 
 GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
 
-BUILD_IMAGE ?= drud/golang-build-container:0.1.0
+BUILD_IMAGE ?= drud/golang-build-container:v0.2.0
 
 BUILD_BASE_DIR ?= $$PWD
 
@@ -84,6 +84,42 @@ golint:
 		-w /go/src/$(PKG)                                                  \
 		$(BUILD_IMAGE)                                                     \
 		bash -c 'export OUT=$$(golint $(SRC_AND_UNDER)) && if [ -n "$$OUT" ]; then echo "Golint problems discovered: $$OUT"; exit 1; fi'
+
+errcheck:
+	@echo -n "Checking errcheck: "
+	docker run -t --rm -u $(shell id -u):$(shell id -g)                   \
+		-v $$(pwd)/.go:/go                                                 \
+		-v $$(pwd):/go/src/$(PKG)                                          \
+		-w /go/src/$(PKG)                                                  \
+		$(BUILD_IMAGE)                                                     \
+		errcheck $(SRC_AND_UNDER)
+
+staticcheck:
+	@echo -n "Checking staticcheck: "
+	docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
+		-v $$(pwd)/.go:/go                                                 \
+		-v $$(pwd):/go/src/$(PKG)                                          \
+		-w /go/src/$(PKG)                                                  \
+		$(BUILD_IMAGE)                                                     \
+		staticcheck $(SRC_AND_UNDER)
+
+unused:
+	@echo -n "Checking unused variables and functions: "
+	docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
+		-v $$(pwd)/.go:/go                                                 \
+		-v $$(pwd):/go/src/$(PKG)                                          \
+		-w /go/src/$(PKG)                                                  \
+		$(BUILD_IMAGE)                                                     \
+		unused $(SRC_AND_UNDER)
+
+varcheck:
+	@echo -n "Checking unused globals and struct members: "
+	docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
+		-v $$(pwd)/.go:/go                                                 \
+		-v $$(pwd):/go/src/$(PKG)                                          \
+		-w /go/src/$(PKG)                                                  \
+		$(BUILD_IMAGE)                                                     \
+		varcheck $(SRC_AND_UNDER) && structcheck $(SRC_AND_UNDER)
 
 
 version:
