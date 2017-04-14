@@ -11,6 +11,7 @@ import (
 
 	"log"
 
+	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util/files"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -21,8 +22,7 @@ import (
 
 var (
 	testArchiveURL  = "https://github.com/drud/wordpress/releases/download/v0.1.0/db.tar.gz"
-	testArchivePath = path.Join(os.TempDir(), "db.tar.gz")
-	temp            = os.TempDir()
+	testArchivePath = path.Join(testcommon.CreateTmpDir("appimport"), "db.tar.gz")
 	composePath     = path.Join(".ddev", "docker-compose.yaml")
 	cwd             string
 )
@@ -60,7 +60,6 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Remove(testArchivePath)
-	os.RemoveAll(path.Join(temp, "extract"))
 	os.RemoveAll(".ddev")
 
 	os.Exit(testRun)
@@ -92,7 +91,6 @@ func TestValidateAsset(t *testing.T) {
 	testPath, err = ValidateAsset(testArchivePath, "db")
 	assert.Error(err)
 	assert.Equal(err.Error(), "is archive")
-	assert.Contains(testPath, temp)
 
 	// db no sql
 	_, err = ValidateAsset("appimport.go", "db")

@@ -138,7 +138,7 @@ func TestLocalImportDB(t *testing.T) {
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
-		dbPath := path.Join(os.TempDir(), "db.tar.gz")
+		dbPath := path.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
 
 		err := system.DownloadFile(dbPath, site.DBURL)
 		assert.NoError(err)
@@ -163,7 +163,7 @@ func TestLocalImportFiles(t *testing.T) {
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
-		filePath := path.Join(os.TempDir(), "files.tar.gz")
+		filePath := path.Join(testcommon.CreateTmpDir("local-files"), "files.tar.gz")
 
 		err := system.DownloadFile(filePath, site.FileURL)
 		assert.NoError(err)

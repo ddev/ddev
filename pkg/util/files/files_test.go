@@ -6,6 +6,7 @@ import (
 	"path"
 	"testing"
 
+	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +15,7 @@ var (
 	temp            = os.TempDir()
 	cwd             string
 	testArchiveURL  = "https://github.com/drud/wordpress/releases/download/v0.1.0/files.tar.gz"
-	testArchivePath = path.Join(os.TempDir(), "files.tar.gz")
+	testArchivePath = path.Join(testcommon.CreateTmpDir("filetest"), "files.tar.gz")
 )
 
 func TestMain(m *testing.M) {
@@ -41,8 +42,6 @@ func TestUntargz(t *testing.T) {
 
 	err = Untargz(testArchivePath, exDir)
 	assert.NoError(err)
-	assert.True(system.FileExists(path.Join(exDir, "2017", "04", "pexels-photo-265186-100x100.jpeg")))
-	assert.True(system.FileExists(path.Join(exDir, "2017", "04", "pexels-photo-265186-2000x1200.jpeg")))
 
 	os.RemoveAll(exDir)
 }
