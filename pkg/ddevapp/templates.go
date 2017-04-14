@@ -40,7 +40,7 @@ services:
     environment:
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - VIRTUAL_PORT_ADD=8025
+      - VIRTUAL_PORT=80,8025
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.container-type: web
@@ -61,7 +61,8 @@ services:
     environment:
       - PMA_USER=root
       - PMA_PASSWORD=root
-      - VIRTUAL_HOST=$DDEV_HOSTNAME:8036
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - VIRTUAL_POST=8036
 networks:
   default:
     external:

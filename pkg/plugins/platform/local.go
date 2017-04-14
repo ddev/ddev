@@ -98,7 +98,7 @@ func (l *LocalApp) Describe() (string, error) {
 	output = output + "\n\nOther Services\n--------------\n"
 	other := uitable.New()
 	other.AddRow("MailHog:", l.URL()+":8025")
-
+	other.AddRow("PHPMyAdmin:", l.URL()+":8036")
 	output = output + fmt.Sprint(other)
 	return output, nil
 }
