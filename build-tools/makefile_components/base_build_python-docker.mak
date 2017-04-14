@@ -9,7 +9,7 @@
 
 SHELL := /bin/bash
 
-BUILD_IMAGE ?= golang:1.7-alpine
+BUILD_IMAGE ?= drud/golang-build-container:v0.2.0
 
 all: VERSION.txt build
 
