@@ -220,6 +220,11 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
 		uploadDir = "sites/default/files"
+		// drupal likes to make sites/default 0555, which is not helpful for us.
+		err := os.Chmod(path.Dir(uploadDir), 0755)
+		if err != nil {
+			return err
+		}
 	}
 
 	if l.GetType() == "wordpress" {
