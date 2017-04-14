@@ -234,7 +234,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 	}
 
 	// parent of destination dir should be writable
-	err := os.Chmod(path.Dir(uploadDir), 0755)
+	err := os.Chmod(path.Dir(destPath), 0755)
 	if err != nil {
 		return err
 	}
