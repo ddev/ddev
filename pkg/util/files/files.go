@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 // Untargz accepts a tar gz file and extracts the contents to the provided destination path.
@@ -32,6 +33,21 @@ func Untargz(source string, dest string) error {
 			break
 		}
 		if err != nil {
+			// attempt to extract as gzip file.
+			if err.Error() == "archive/tar: invalid tar header" {
+				fname := strings.TrimSuffix(path.Base(f.Name()), ".gz")
+				file, err := os.Create(path.Join(dest, fname))
+				if err != nil {
+					return err
+				}
+				defer file.Close()
+
+				_, err = io.Copy(file, gf)
+				if err != nil {
+					return err
+				}
+				return nil
+			}
 			return err
 		}
 
