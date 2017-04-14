@@ -7,6 +7,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -41,7 +42,7 @@ var RootCmd = &cobra.Command{
 		if !skip {
 			plugin = strings.ToLower(plugin)
 			if _, ok := platform.PluginMap[plugin]; !ok {
-				Failed("Plugin %s is not registered", plugin)
+				util.Failed("Plugin %s is not registered", plugin)
 			}
 		}
 	},

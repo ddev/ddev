@@ -3,6 +3,7 @@ package cmd
 import (
 	log "github.com/Sirupsen/logrus"
 
+	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -20,10 +21,10 @@ var LocalDevStopCmd = &cobra.Command{
 		err = app.Stop()
 		if err != nil {
 			log.Println(err)
-			Failed("Failed to stop containers for %s. Run `ddev list` to ensure your site exists.", app.ContainerName())
+			util.Failed("Failed to stop containers for %s. Run `ddev list` to ensure your site exists.", app.ContainerName())
 		}
 
-		Success("Application has been stopped.")
+		util.Success("Application has been stopped.")
 	},
 }
 

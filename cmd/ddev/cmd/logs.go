@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
@@ -30,11 +31,11 @@ var LocalDevLogsCmd = &cobra.Command{
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 
 		if !dockerutil.IsRunning(nameContainer) {
-			Failed("App not running locally. Try `ddev start`.")
+			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
 		if !platform.ComposeFileExists(app) {
-			Failed("No docker-compose yaml for this site. Try `ddev start`.")
+			util.Failed("No docker-compose yaml for this site. Try `ddev start`.")
 		}
 
 		cmdArgs := []string{
