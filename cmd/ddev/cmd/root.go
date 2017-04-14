@@ -12,11 +12,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	timestampFormat = "20060102150405"
-	updateFile      = ".drud-update"
-)
-
 var (
 	logLevel = log.WarnLevel
 	plugin   = "local"
