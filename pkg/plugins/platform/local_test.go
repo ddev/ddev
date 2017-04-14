@@ -3,7 +3,6 @@ package platform
 import (
 	"errors"
 	"fmt"
-	"log"
 	"path"
 	"testing"
 
