@@ -14,6 +14,7 @@ import (
 	"github.com/drud/drud-go/utils/system"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
+	"github.com/drud/ddev/pkg/util"
 )
 
 var (
@@ -65,7 +66,7 @@ func TestMain(m *testing.M) {
 func ContainerCheck(checkName string, checkState string) (bool, error) {
 	// ensure we have docker network
 	client, _ := dockerutil.GetDockerClient()
-	err := EnsureNetwork(client, netName)
+	err := util.EnsureNetwork(client, netName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,7 +94,7 @@ func TestLocalStart(t *testing.T) {
 
 	// ensure we have docker network
 	client, _ := dockerutil.GetDockerClient()
-	err := EnsureNetwork(client, netName)
+	err := util.EnsureNetwork(client, netName)
 	if err != nil {
 		log.Fatal(err)
 	}
