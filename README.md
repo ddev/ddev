@@ -22,6 +22,7 @@ Usage:
 
 Available Commands:
   config      Create or modify a ddev application config in the current directory
+  describe    Get a detailed description of a running ddev site.
   exec        Execute a Linux shell command in the webserver container.
   hostname    Manage your hostfile entries.
   import      Import an existing site to the local dev environment
@@ -99,7 +100,8 @@ Connection Info:	drupal8.ddev.local:3306
 
 Other Services
 --------------
-MailHog:	http://drupal8.ddev.local:8025
+MailHog:   	http://drupal8.ddev.local:8025
+PHPMyAdmin:	http://drupal8.ddev.local:8036
 ```
 
 ## Importing an existing site
