@@ -2,12 +2,11 @@ package platform
 
 import (
 	"errors"
-	"fmt"
-	"log"
 	"testing"
 
 	"os"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
@@ -28,10 +27,13 @@ var (
 const netName = "ddev_default"
 
 func TestMain(m *testing.M) {
-	TestSite.Prepare()
+	err := TestSite.Prepare()
+	if err != nil {
+		log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
+	}
 	defer TestSite.Chdir()()
 
-	fmt.Println("Running tests.")
+	log.Debugln("Running tests.")
 	testRun := m.Run()
 
 	TestSite.Cleanup()
