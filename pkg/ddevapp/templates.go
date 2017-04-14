@@ -62,7 +62,7 @@ services:
       - PMA_USER=root
       - PMA_PASSWORD=root
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - VIRTUAL_POST=8036
+      - VIRTUAL_PORT=8036
 networks:
   default:
     external:
