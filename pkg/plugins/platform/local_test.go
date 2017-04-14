@@ -10,11 +10,11 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
-	"github.com/drud/ddev/pkg/util"
 )
 
 var (
