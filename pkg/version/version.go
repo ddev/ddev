@@ -18,7 +18,7 @@ var WebTag = "v0.3.4" // Note that this is overridden by make
 var DBImg = "drud/mysql-docker-local-57" // Note that this is overridden by make
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "v0.2.0" // Note that this is overridden by make
+var DBTag = "v0.3.0" // Note that this is overridden by make
 
 // RouterImage defines the image used for the drud dev router.
 var RouterImage = "drud/nginx-proxy" // Note that this is overridden by make
