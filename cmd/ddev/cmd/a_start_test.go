@@ -35,12 +35,20 @@ func TestDevAddSites(t *testing.T) {
 		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-db"))
 		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-dba"))
 
-		o := network.NewHTTPOptions("http://127.0.0.1/core/install.php")
-		o.ExpectedStatus = 200
-		o.Timeout = 180
-		o.Headers["Host"] = app.HostName()
-		err = network.EnsureHTTPStatus(o)
-		assert.NoError(err)
+		urls := []string{
+			"http://127.0.0.1/core/install.php",
+			"http://127.0.0.1:8025",
+			"http://127.0.0.1:8036",
+		}
+
+		for _, url := range urls {
+			o := network.NewHTTPOptions(url)
+			o.ExpectedStatus = 200
+			o.Timeout = 180
+			o.Headers["Host"] = app.HostName()
+			err = network.EnsureHTTPStatus(o)
+			assert.NoError(err)
+		}
 
 		cleanup()
 	}
