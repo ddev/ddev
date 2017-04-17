@@ -21,8 +21,7 @@ func TestTmpDir(t *testing.T) {
 	assert.True(dirStat.IsDir(), "Temp Directory created and exists")
 
 	// Clean up tempoary directory and ensure it no longer exists.
-	err = CleanupDir(testDir)
-	assert.NoError(err, "Clean up temporary directory")
+	CleanupDir(testDir)
 	dirStat, err = os.Stat(testDir)
 	assert.Error(err, "Could not stat temporary directory")
 	assert.True(os.IsNotExist(err), "Error is of type IsNotExists")
@@ -53,8 +52,7 @@ func TestChdir(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(currentDir, startingDir, "Ensure we have changed back to the starting directory")
 
-	err = CleanupDir(testDir)
-	assert.NoError(err, "Clean up test directory")
+	CleanupDir(testDir)
 }
 
 // TestCaptureStdOut ensures capturing of standard out works as expected.

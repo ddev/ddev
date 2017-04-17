@@ -12,6 +12,7 @@ import (
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
@@ -187,7 +188,8 @@ func (l *LocalApp) UnpackResources() error {
 
 	// Ensure sites/default is readable.
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
-		os.Chmod(path.Join(basePath, ".ddev", "files", "docroot", "sites", "default"), 0755)
+		err := os.Chmod(path.Join(basePath, ".ddev", "files", "docroot", "sites", "default"), 0755)
+		util.CheckErr(err)
 	}
 
 	rsyncFrom := path.Join(basePath, ".ddev", "files", "docroot", fileDir)
@@ -208,7 +210,10 @@ func (l *LocalApp) UnpackResources() error {
 	if err != nil {
 		return fmt.Errorf("%s - %s", err.Error(), string(out))
 	}
-	defer os.RemoveAll(path.Join(basePath, ".ddev", "files"))
+	defer func() {
+		err := os.RemoveAll(path.Join(basePath, ".ddev", "files"))
+		util.CheckErr(err)
+	}()
 
 	return nil
 }

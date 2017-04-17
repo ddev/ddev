@@ -13,6 +13,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/stretchr/testify/assert"
+	"github.com/drud/ddev/pkg/util"
 )
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
@@ -145,6 +146,8 @@ func TestConfigCommand(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := assert.New(t)
 	testDir := testcommon.CreateTmpDir("TestConfigCommand")
+
+	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 
@@ -171,7 +174,8 @@ func TestConfigCommand(t *testing.T) {
 	setInputScanner(scanner)
 
 	restoreOutput := testcommon.CaptureStdOut()
-	config.Config()
+	err = config.Config()
+	util.CheckErr(err)
 	out := restoreOutput()
 
 	// Ensure we have expected vales in output.

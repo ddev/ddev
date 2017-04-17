@@ -16,6 +16,7 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
+	"github.com/drud/ddev/pkg/util"
 )
 
 // CurrentAppVersion sets the current YAML config file version.
@@ -138,9 +139,10 @@ func (c *Config) Config() error {
 	fmt.Print(namePrompt + ": ")
 	c.Name = getInput(c.Name)
 
-	c.docrootPrompt()
+	err := c.docrootPrompt()
+	util.CheckErr(err)
 
-	err := c.appTypePrompt()
+	err = c.appTypePrompt()
 	if err != nil {
 		return err
 	}
@@ -173,7 +175,7 @@ func (c *Config) WriteDockerComposeConfig() error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer util.CheckClose(f)
 
 	rendered, err := c.RenderComposeYAML()
 	if err != nil {

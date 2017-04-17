@@ -7,6 +7,7 @@ import (
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
+	"github.com/drud/ddev/pkg/util"
 )
 
 // DevListCmd represents the list command
@@ -39,7 +40,8 @@ var DevListCmd = &cobra.Command{
 			return vsf
 		}(containers)
 
-		platform.SiteList(containers)
+		err := platform.SiteList(containers)
+		util.CheckErr(err)
 	},
 }
 

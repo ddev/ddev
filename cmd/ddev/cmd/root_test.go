@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 )
 
 var (
@@ -31,7 +32,8 @@ func TestMain(m *testing.M) {
 	}
 
 	for i := range DevTestSites {
-		DevTestSites[i].Prepare()
+		err = DevTestSites[i].Prepare()
+		util.CheckErr(err)
 	}
 
 	fmt.Println("Running tests.")

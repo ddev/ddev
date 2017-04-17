@@ -7,6 +7,7 @@ import (
 
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/cms/model"
+	"github.com/drud/ddev/pkg/util"
 )
 
 const (
@@ -213,9 +214,11 @@ func WriteWordpressConfig(wordpressConfig *model.WordpressConfig, filePath strin
 		return err
 	}
 	// Ensure target directory is writable.
-	os.Chmod(dir, 0755)
+	err = os.Chmod(dir, 0755)
+	util.CheckErr(err)
 	// Ensure filePath is writable.
-	os.Chmod(filePath, 0644)
+	err = os.Chmod(filePath, 0644)
+	util.CheckErr(err)
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err

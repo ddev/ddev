@@ -12,6 +12,7 @@ import (
 	"github.com/drud/drud-go/utils/system"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
+	"github.com/drud/ddev/pkg/util"
 )
 
 var (
@@ -81,7 +82,8 @@ func TestLocalStart(t *testing.T) {
 	assert := assert.New(t)
 
 	app := PluginMap["local"]
-	app.Init(TestSite.Dir)
+	err = app.Init(TestSite.Dir)
+	assert.NoError(err)
 
 	err = app.Start()
 	assert.NoError(err)
@@ -107,9 +109,10 @@ func TestLocalStop(t *testing.T) {
 	assert := assert.New(t)
 
 	app := PluginMap["local"]
-	app.Init(TestSite.Dir)
+	err := app.Init(TestSite.Dir)
+	assert.NoError(err)
 
-	err := app.Stop()
+	err = app.Stop()
 	assert.NoError(err)
 
 	check, err := ContainerCheck(TestWebContainerName, "exited")
@@ -127,11 +130,12 @@ func TestLocalRemove(t *testing.T) {
 
 	app := PluginMap["local"]
 
-	app.Init(TestSite.Dir)
+	err := app.Init(TestSite.Dir)
+	util.CheckErr(err)
 
 	// start the previously stopped containers -
 	// stopped/removed have the same state
-	err := app.Start()
+	err = app.Start()
 	assert.NoError(err)
 
 	_, err = app.Wait()

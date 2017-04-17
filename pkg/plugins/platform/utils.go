@@ -19,6 +19,7 @@ import (
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
+	"github.com/drud/ddev/pkg/util"
 )
 
 // PrepLocalSiteDirs creates a site's directories for local dev in ~/.drud/client/site
@@ -244,7 +245,7 @@ func EnsureDockerRouter() {
 	if ferr != nil {
 		log.Fatal(ferr)
 	}
-	defer f.Close()
+	defer util.CheckClose(f)
 
 	templ := template.New("compose template")
 	templ, err = templ.Parse(fmt.Sprintf(DrudRouterTemplate))
@@ -257,8 +258,10 @@ func EnsureDockerRouter() {
 		"router_tag":   version.RouterTag,
 	}
 
-	templ.Execute(&doc, templateVars)
-	f.WriteString(doc.String())
+	err = templ.Execute(&doc, templateVars)
+	util.CheckErr(err)
+	_, err = f.WriteString(doc.String())
+	util.CheckErr(err)
 
 	// run docker-compose up -d in the newly created directory
 	out, err := system.RunCommand("docker-compose", []string{"-p", "ddev-router", "-f", dest, "up", "-d"})

@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/system"
 )
 
@@ -32,11 +33,12 @@ func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
 	log.Debugf("Prepping test for %s.\n", site.Name)
-	os.Setenv("DRUD_NONINTERACTIVE", "true")
+	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
+	util.CheckErr(err)
 
 	log.Debugln("Downloading file:", site.DownloadURL)
 	tarballPath := site.archivePath()
-	err := system.DownloadFile(tarballPath, site.DownloadURL)
+	err = system.DownloadFile(tarballPath, site.DownloadURL)
 
 	if err != nil {
 		site.Cleanup()
@@ -69,14 +71,16 @@ func (site *TestSite) Chdir() func() {
 
 // Cleanup removes the archive and codebase extraction for a site after a test run has completed.
 func (site *TestSite) Cleanup() {
-	os.Remove(site.archivePath())
+	err := os.Remove(site.archivePath())
+	util.CheckErr(err)
+	// CleanupDir checks its own errors.
 	CleanupDir(site.Dir)
 }
 
 // CleanupDir removes a directory specified by string.
-func CleanupDir(dir string) error {
+func CleanupDir(dir string) {
 	err := os.RemoveAll(dir)
-	return err
+	util.CheckErr(err)
 }
 
 // OsTempDir gets os.TempDir() (usually provided by $TMPDIR) but expands any symlinks found within it.
@@ -114,7 +118,10 @@ func Chdir(path string) func() {
 		log.Fatalf("Could not change to directory %s: %v\n", path, err)
 	}
 
-	return func() { os.Chdir(curDir) }
+	return func() {
+		err := os.Chdir(curDir)
+		util.CheckErr(err)
+	}
 }
 
 var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -144,12 +151,14 @@ func CaptureStdOut() func() string {
 		// copy the output in a separate goroutine so printing can't block indefinitely
 		go func() {
 			var buf bytes.Buffer
-			io.Copy(&buf, r)
+			_, err := io.Copy(&buf, r)
+			util.CheckErr(err)
 			outC <- buf.String()
 		}()
 
 		// back to normal state
-		w.Close()
+		err := w.Close()
+		util.CheckErr(err)
 		os.Stdout = old // restoring the real stdout
 		out := <-outC
 		return out
