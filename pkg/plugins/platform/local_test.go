@@ -22,21 +22,21 @@ var (
 	TestSites             = []testcommon.TestSite{
 		{
 			Name:      "drupal8",
-			SourceURL: "https://github.com/drud/drupal8/archive/v0.2.2.tar.gz",
-			FileURL:   "https://github.com/drud/drupal8/releases/download/v0.2.2/files.tar.gz",
-			DBURL:     "https://github.com/drud/drupal8/releases/download/v0.2.2/db.tar.gz",
+			SourceURL: "https://github.com/drud/drupal8/archive/v0.3.0.tar.gz",
+			FileURL:   "https://github.com/drud/drupal8/releases/download/v0.3.0/files.tar.gz",
+			DBURL:     "https://github.com/drud/drupal8/releases/download/v0.3.0/db.tar.gz",
 		},
 		{
-			Name:      "wp",
-			SourceURL: "https://github.com/drud/wordpress/archive/v0.1.0.tar.gz",
-			FileURL:   "https://github.com/drud/wordpress/releases/download/v0.1.0/files.tar.gz",
-			DBURL:     "https://github.com/drud/wordpress/releases/download/v0.1.0/db.tar.gz",
+			Name:      "wordpress",
+			SourceURL: "https://github.com/drud/wordpress/archive/v0.2.0.tar.gz",
+			FileURL:   "https://github.com/drud/wordpress/releases/download/v0.2.0/files.tar.gz",
+			DBURL:     "https://github.com/drud/wordpress/releases/download/v0.2.0/db.tar.gz",
 		},
 		{
 			Name:      "kickstart",
-			SourceURL: "https://github.com/drud/drupal-kickstart/archive/v0.1.0.tar.gz",
-			FileURL:   "https://github.com/drud/drupal-kickstart/releases/download/v0.1.0/files.tar.gz",
-			DBURL:     "https://github.com/drud/drupal-kickstart/releases/download/v0.1.0/db.tar.gz",
+			SourceURL: "https://github.com/drud/drupal-kickstart/archive/v0.2.0.tar.gz",
+			FileURL:   "https://github.com/drud/drupal-kickstart/releases/download/v0.2.0/files.tar.gz",
+			DBURL:     "https://github.com/drud/drupal-kickstart/releases/download/v0.2.0/db.tar.gz",
 		},
 	}
 )
@@ -171,7 +171,7 @@ func TestLocalImportFiles(t *testing.T) {
 		testcommon.ClearDockerEnv()
 		app.Init(site.Dir)
 
-		err = app.ImportDB(filePath)
+		err = app.ImportFiles(filePath)
 		assert.NoError(err)
 
 		os.Remove(filePath)
