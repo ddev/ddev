@@ -14,7 +14,6 @@ import (
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/util/files"
 	"github.com/drud/ddev/pkg/util/prompt"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -127,31 +126,6 @@ func (l *LocalApp) ContainerPrefix() string {
 // ContainerName returns the base name for local app containers
 func (l *LocalApp) ContainerName() string {
 	return fmt.Sprintf("%s-%s", l.ContainerPrefix(), l.GetName())
-}
-
-// GetResources downloads external data for this app
-func (l *LocalApp) GetResources() error {
-
-	fmt.Println("Getting Resources.")
-	err := l.GetArchive()
-	if err != nil {
-		log.Println(err)
-		fmt.Println(fmt.Errorf("Error retrieving site resources: %s", err))
-	}
-
-	return nil
-}
-
-// GetArchive downloads external data
-func (l *LocalApp) GetArchive() error {
-	name := fmt.Sprintf("production-%s.tar.gz", l.GetName())
-	basePath := l.AppRoot()
-	archive := path.Join(basePath, ".ddev", name)
-
-	if system.FileExists(archive) {
-		l.Archive = archive
-	}
-	return nil
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
@@ -275,75 +249,6 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 // This is a bit redundant, but is here to avoid having to expose too many details of AppConfig.
 func (l *LocalApp) DockerComposeYAMLPath() string {
 	return l.AppConfig.DockerComposeYAMLPath()
-}
-
-// UnpackResources takes the archive from the GetResources method and
-// unarchives it. Then the contents are moved to their proper locations.
-func (l *LocalApp) UnpackResources() error {
-	basePath := l.AppRoot()
-	fileDir := ""
-
-	if l.GetType() == "wordpress" {
-		fileDir = "content/uploads"
-	} else if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
-		fileDir = "sites/default/files"
-	}
-
-	out, err := system.RunCommand(
-		"tar",
-		[]string{
-			"-xzvf",
-			l.Archive,
-			"-C", path.Join(basePath, ".ddev", "files"),
-			"--exclude=sites/default/settings.php",
-			"--exclude=docroot/wp-config.php",
-		},
-	)
-	if err != nil {
-		fmt.Println(out)
-		return err
-	}
-
-	err = os.Rename(
-		path.Join(basePath, ".ddev", "files", l.GetName()+".sql"),
-		path.Join(basePath, ".ddev", "data", "data.sql"),
-	)
-	if err != nil {
-		return err
-	}
-
-	// Ensure sites/default is readable.
-	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
-		err := os.Chmod(path.Join(basePath, ".ddev", "files", "docroot", "sites", "default"), 0755)
-		if err != nil {
-			return err
-		}
-	}
-
-	rsyncFrom := path.Join(basePath, ".ddev", "files", "docroot", fileDir)
-	rsyncTo := path.Join(basePath, "docroot", fileDir)
-	out, err = system.RunCommand(
-		"rsync",
-		[]string{"-avz", "--recursive", rsyncFrom + "/", rsyncTo},
-	)
-	if err != nil {
-		return fmt.Errorf("%s - %s", err.Error(), string(out))
-	}
-
-	// Ensure extracted files are writable so they can be removed when we're done.
-	out, err = system.RunCommand(
-		"chmod",
-		[]string{"-R", "ugo+rw", path.Join(basePath, ".ddev", "files")},
-	)
-	if err != nil {
-		return fmt.Errorf("%s - %s", err.Error(), string(out))
-	}
-	defer func() {
-		err := os.RemoveAll(path.Join(basePath, ".ddev", "files"))
-		util.CheckErr(err)
-	}()
-
-	return nil
 }
 
 // Start initiates docker-compose up

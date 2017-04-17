@@ -5,8 +5,6 @@ type App interface {
 	Init(string) error
 	Describe() (string, error)
 	GetType() string
-	GetResources() error
-	UnpackResources() error
 	ContainerPrefix() string
 	ContainerName() string
 	AppRoot() string

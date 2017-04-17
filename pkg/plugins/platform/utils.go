@@ -26,7 +26,6 @@ import (
 func PrepLocalSiteDirs(base string) error {
 	dirs := []string{
 		".ddev",
-		".ddev/files",
 		".ddev/data",
 	}
 	for _, d := range dirs {
