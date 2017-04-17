@@ -9,8 +9,8 @@ import (
 
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/stretchr/testify/assert"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteDrupalConfig(t *testing.T) {
@@ -28,7 +28,7 @@ func TestWriteDrupalConfig(t *testing.T) {
 	err = WriteDrupalConfig(drupalConfig, file.Name())
 	assert.NoError(t, err)
 
-	defer func () {
+	defer func() {
 		err := os.RemoveAll(dir)
 		util.CheckErr(err)
 	}()
@@ -49,7 +49,7 @@ func TestWriteDrushConfig(t *testing.T) {
 	err = WriteDrushConfig(drushConfig, file.Name())
 	assert.NoError(t, err)
 
-	defer func () {
+	defer func() {
 		err := os.RemoveAll(dir)
 		util.CheckErr(err)
 	}()
@@ -70,7 +70,7 @@ func TestWriteWordpressConfig(t *testing.T) {
 	err = WriteWordpressConfig(wpConfig, file.Name())
 	assert.NoError(t, err)
 
-	defer func () {
+	defer func() {
 		err := os.RemoveAll(dir)
 		util.CheckErr(err)
 	}()

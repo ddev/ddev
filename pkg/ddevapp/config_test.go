@@ -11,9 +11,9 @@ import (
 	"io/ioutil"
 
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/stretchr/testify/assert"
-	"github.com/drud/ddev/pkg/util"
 )
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.

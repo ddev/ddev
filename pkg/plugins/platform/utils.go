@@ -13,13 +13,13 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/docker/docker/pkg/homedir"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
-	"github.com/drud/ddev/pkg/util"
 )
 
 // PrepLocalSiteDirs creates a site's directories for local dev in ~/.drud/client/site

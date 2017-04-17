@@ -13,10 +13,10 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
-	"github.com/drud/ddev/pkg/util"
 )
 
 // CurrentAppVersion sets the current YAML config file version.

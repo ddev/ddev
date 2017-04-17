@@ -9,9 +9,9 @@ import (
 	"strconv"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
-	"github.com/drud/ddev/pkg/util"
 )
 
 // LocalDevSequelproCmd represents the sequelpro command
