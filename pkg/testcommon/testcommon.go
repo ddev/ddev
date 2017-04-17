@@ -72,7 +72,6 @@ func (site *TestSite) Chdir() func() {
 
 // Cleanup removes the archive and codebase extraction for a site after a test run has completed.
 func (site *TestSite) Cleanup() {
-	log.Debugln("Cleanup(): site.createArchivePath()=", site.createArchivePath())
 	err := os.Remove(site.ArchivePath)
 	util.CheckErr(err)
 	// CleanupDir checks its own errors.
