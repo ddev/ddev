@@ -8,7 +8,6 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
 	docker "github.com/fsouza/go-dockerclient"
@@ -131,7 +130,7 @@ func TestLocalRemove(t *testing.T) {
 	app := PluginMap["local"]
 
 	err := app.Init(TestSite.Dir)
-	util.CheckErr(err)
+	assert.NoError(err, t)
 
 	// start the previously stopped containers -
 	// stopped/removed have the same state

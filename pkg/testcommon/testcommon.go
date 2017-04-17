@@ -121,7 +121,9 @@ func Chdir(path string) func() {
 
 	return func() {
 		err := os.Chdir(curDir)
-		util.CheckErr(err)
+		if err != nil {
+			log.Fatalf("Failed to change directory to original dir=%s, err=%v", curDir, err)
+		}
 	}
 }
 
@@ -158,8 +160,7 @@ func CaptureStdOut() func() string {
 		}()
 
 		// back to normal state
-		err := w.Close()
-		util.CheckErr(err)
+		util.CheckClose(w)
 		os.Stdout = old // restoring the real stdout
 		out := <-outC
 		return out

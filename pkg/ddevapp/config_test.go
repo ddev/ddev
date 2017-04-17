@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/stretchr/testify/assert"
 )
@@ -175,7 +174,7 @@ func TestConfigCommand(t *testing.T) {
 
 	restoreOutput := testcommon.CaptureStdOut()
 	err = config.Config()
-	util.CheckErr(err)
+	assert.NoError(err, t)
 	out := restoreOutput()
 
 	// Ensure we have expected vales in output.
