@@ -19,7 +19,6 @@ func TestWriteDrupalConfig(t *testing.T) {
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
 
-	err = os.Chmod(dir, 0555)
 	util.CheckErr(err)
 	err = os.Chmod(file.Name(), 0444)
 	util.CheckErr(err)
@@ -40,7 +39,6 @@ func TestWriteDrushConfig(t *testing.T) {
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
 
-	err = os.Chmod(dir, 0555)
 	util.CheckErr(err)
 	err = os.Chmod(file.Name(), 0444)
 	util.CheckErr(err)
@@ -61,7 +59,6 @@ func TestWriteWordpressConfig(t *testing.T) {
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
 
-	err = os.Chmod(dir, 0555)
 	util.CheckErr(err)
 	err = os.Chmod(file.Name(), 0444)
 	util.CheckErr(err)
