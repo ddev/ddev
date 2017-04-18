@@ -39,6 +39,10 @@ func TestMain(m *testing.M) {
 		log.Fatalf("failed to get cwd: %s", err)
 	}
 
+	// ensure we have docker network
+	_, err = system.RunCommand("docker", []string{"network", "create", "ddev_default"})
+	util.CheckErr(err)
+
 	// prep db container for import testing
 	dbimg := fmt.Sprintf("%s:%s", version.DBImg, version.DBTag)
 	err = os.Setenv("DDEV_DBIMAGE", dbimg)
