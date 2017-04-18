@@ -91,7 +91,7 @@ stages:
             make clean
             export VERSION=nightly.$(date +%Y%m%d%H%M%S)
             echo VERSION=$VERSION
-            git submodule update --remote
+            git submodule update --init && git submodule update --remote
             git submodule
             ls -lR containers
             make -f nightly_build.mak clean
