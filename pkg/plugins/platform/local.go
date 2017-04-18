@@ -233,10 +233,6 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		if err.Error() != "is archive" {
 			return err
 		}
-		err := os.Mkdir(destPath, 0755)
-		if err != nil {
-			return fmt.Errorf("failed to create destination: %v", err)
-		}
 		err = files.Untar(importPath, destPath)
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)

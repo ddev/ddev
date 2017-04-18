@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +19,8 @@ var ImportDBCmd = &cobra.Command{
 	Long:  "Import the database of an existing site to the local development environment. The database can be provided as a SQL dump in a .sql, .sql.gz, or .tar.gz format. For the .tar.gz format, a SQL dump in .sql format must be present at the root of the archive.",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
-			cmd.Usage()
+			err := cmd.Usage()
+			util.CheckErr(err)
 			os.Exit(0)
 		}
 

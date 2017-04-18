@@ -19,7 +19,8 @@ func TestImportTilde(t *testing.T) {
 
 		usr, err := homedir.Dir()
 		assert.NoError(err)
-		system.DownloadFile(path.Join(usr, "files.tar.gz"), site.FileURL)
+		err = system.DownloadFile(path.Join(usr, "files.tar.gz"), site.FileURL)
+		assert.NoError(err)
 
 		// this ~ should be expanded by shell
 		args := []string{"import-files", "--src", "~/files.tar.gz"}

@@ -103,14 +103,25 @@ func Untar(source string, dest string) error {
 		}
 
 		if file.Typeflag == tar.TypeDir {
-			os.Mkdir(path.Join(dest, file.Name), 0755)
+			err = os.Mkdir(path.Join(dest, file.Name), 0755)
+			if err != nil {
+				return err
+			}
 		} else {
 			exFile, err := os.Create(path.Join(dest, file.Name))
 			if err != nil {
 				return err
 			}
-			defer exFile.Close()
-			io.Copy(exFile, tf)
+			defer func() {
+				if e := exFile.Close(); e != nil {
+					err = e
+				}
+			}()
+
+			_, err = io.Copy(exFile, tf)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -127,7 +138,11 @@ func CopyFile(src string, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer in.Close()
+	defer func() {
+		if e := in.Close(); e != nil {
+			err = e
+		}
+	}()
 
 	out, err := os.Create(dst)
 	if err != nil {

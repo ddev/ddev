@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +28,8 @@ var StartCmd = &cobra.Command{
 	Long:    `Start initializes and configures the web server and database containers to provide a working environment for development.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
-			cmd.Usage()
+			err := cmd.Usage()
+			util.CheckErr(err)
 			os.Exit(0)
 		}
 

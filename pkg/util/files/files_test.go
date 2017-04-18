@@ -37,13 +37,12 @@ func TestMain(m *testing.M) {
 func TestUntar(t *testing.T) {
 	assert := assert.New(t)
 	exDir := path.Join(temp, "extract")
-	err := os.Mkdir(exDir, 0755)
+
+	err := Untar(testArchivePath, exDir)
 	assert.NoError(err)
 
-	err = Untar(testArchivePath, exDir)
+	err = os.RemoveAll(exDir)
 	assert.NoError(err)
-
-	os.RemoveAll(exDir)
 }
 
 // TestCopyFile tests copying a file.
@@ -61,17 +60,19 @@ func TestCopyFile(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(int(file.Mode()), 0644)
 
-	os.RemoveAll(dest)
+	err = os.RemoveAll(dest)
+	assert.NoError(err)
 }
 
 // TestCopyDir tests copying a directory.
 func TestCopyDir(t *testing.T) {
 	assert := assert.New(t)
 	dest := path.Join(temp, "copy")
-	os.Mkdir(dest, 0755)
+	err := os.Mkdir(dest, 0755)
+	assert.NoError(err)
 
 	// test source not a directory
-	err := CopyDir(testArchivePath, temp)
+	err = CopyDir(testArchivePath, temp)
 	assert.Error(err)
 	assert.Contains(err.Error(), "source is not a directory")
 
@@ -79,7 +80,8 @@ func TestCopyDir(t *testing.T) {
 	err = CopyDir(temp, cwd)
 	assert.Error(err)
 	assert.Contains(err.Error(), "destination already exists")
-	os.RemoveAll(dest)
+	err = os.RemoveAll(dest)
+	assert.NoError(err)
 
 	// copy a directory.
 	err = CopyDir(cwd, dest)
@@ -87,5 +89,6 @@ func TestCopyDir(t *testing.T) {
 	assert.True(system.FileExists(path.Join(dest, "files.go")))
 	assert.True(system.FileExists(path.Join(dest, "files_test.go")))
 
-	os.RemoveAll(dest)
+	err = os.RemoveAll(dest)
+	assert.NoError(err)
 }

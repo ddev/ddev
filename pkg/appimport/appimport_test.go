@@ -12,6 +12,7 @@ import (
 	"log"
 
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/util/files"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -40,12 +41,14 @@ func TestMain(m *testing.M) {
 
 	// prep db container for import testing
 	dbimg := fmt.Sprintf("%s:%s", version.DBImg, version.DBTag)
-	os.Setenv("DDEV_DBIMAGE", dbimg)
+	err = os.Setenv("DDEV_DBIMAGE", dbimg)
+	util.CheckErr(err)
 	err = os.MkdirAll(path.Join(".ddev", "data"), 0755)
 	if err != nil {
 		log.Fatalf("failed to make dir: %s", err)
 	}
-	files.CopyFile(path.Join("testing", "db-compose.yaml"), composePath)
+	err = files.CopyFile(path.Join("testing", "db-compose.yaml"), composePath)
+	util.CheckErr(err)
 	err = dockerutil.DockerCompose("-f", composePath, "up", "-d")
 	if err != nil {
 		log.Fatalf("failed to start db container: %s", err)
@@ -59,8 +62,10 @@ func TestMain(m *testing.M) {
 		log.Fatalf("failed to remove db container: %s", err)
 	}
 
-	os.Remove(testArchivePath)
-	os.RemoveAll(".ddev")
+	err = os.Remove(testArchivePath)
+	util.CheckErr(err)
+	err = os.RemoveAll(".ddev")
+	util.CheckErr(err)
 
 	os.Exit(testRun)
 }

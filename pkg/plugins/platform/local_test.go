@@ -107,7 +107,8 @@ func TestLocalStart(t *testing.T) {
 		cleanup := site.Chdir()
 
 		testcommon.ClearDockerEnv()
-		app.Init(site.Dir)
+		err = app.Init(site.Dir)
+		assert.NoError(err)
 
 		err = app.Start()
 		assert.NoError(err)
@@ -150,7 +151,8 @@ func TestLocalImportDB(t *testing.T) {
 		err = app.ImportDB(dbPath)
 		assert.NoError(err)
 
-		os.Remove(dbPath)
+		err = os.Remove(dbPath)
+		assert.NoError(err)
 
 		cleanup()
 	}
@@ -169,12 +171,14 @@ func TestLocalImportFiles(t *testing.T) {
 		assert.NoError(err)
 
 		testcommon.ClearDockerEnv()
-		app.Init(site.Dir)
+		err = app.Init(site.Dir)
+		assert.NoError(err)
 
 		err = app.ImportFiles(filePath)
 		assert.NoError(err)
 
-		os.Remove(filePath)
+		err = os.Remove(filePath)
+		assert.NoError(err)
 
 		cleanup()
 	}
