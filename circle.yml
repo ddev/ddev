@@ -75,18 +75,17 @@ stages:
 
 
       # Run the built-in ddev tests
-#      - type: shell
-#        command: |
-#          if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
-#            cd ~/src/github.com/drud/ddev &&
-#            make GOPATH=~/ test
-#          fi
-#        name: ddev tests (not nightly build)
+      - type: shell
+        command: |
+          if [ ! -n "${RUN_NIGHTLY_BUILD}" ]; then
+            cd ~/src/github.com/drud/ddev &&
+            make GOPATH=~/ test
+          fi
+        name: ddev tests (not nightly build)
 
 
       - type: shell
         command: |
-          RUN_NIGHTLY_BUILD=true
           if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
             cd ~/src/github.com/drud/ddev && make clean
             export VERSION=nightly.$(date +%Y%m%d%H%M%S)
@@ -96,5 +95,5 @@ stages:
             cd ~/src/github.com/drud/ddev && make -f nightly_build.mak --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
             ~/src/github.com/drud/ddev/bin/linux/ddev version
           fi
-        name: Run full nightly build
+        name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
 
