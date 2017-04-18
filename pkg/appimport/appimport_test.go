@@ -78,13 +78,15 @@ func TestValidateAsset(t *testing.T) {
 	userDir, err := homedir.Dir()
 	testDir := path.Join(userDir, "testpath")
 	assert.NoError(err)
-	os.Mkdir(testDir, 0755)
+	err = os.Mkdir(testDir, 0755)
+	assert.NoError(err)
 
 	testPath, err := ValidateAsset("~/testpath", "files")
 	assert.NoError(err)
 	assert.Contains(testPath, userDir)
 	assert.False(strings.Contains(testPath, "~"))
-	os.Remove(testDir)
+	err = os.Remove(testDir)
+	assert.NoError(err)
 
 	// test a relative path
 	testPath, err = ValidateAsset("../../vendor", "files")
