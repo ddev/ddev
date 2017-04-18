@@ -201,8 +201,8 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		"docroot":     filepath.Join("../", c.Docroot),
 		"plugin":      c.Platform,
 		"appType":     c.AppType,
-		"MailHogPort": version.MailHogPort,
-		"DBAPort":     version.DBAPort,
+		"mailhogport": version.MailHogPort,
+		"dbaport":     version.DBAPort,
 	}
 
 	err = templ.Execute(&doc, templateVars)

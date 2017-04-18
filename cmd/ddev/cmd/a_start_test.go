@@ -38,8 +38,8 @@ func TestDevAddSites(t *testing.T) {
 
 		urls := []string{
 			"http://127.0.0.1/core/install.php",
-			"http://127.0.0.1:" + version.MailHogPort,
-			"http://127.0.0.1:" + version.DBAPort,
+			"http://127.0.0.1:" + appports.GetPort("mailhog"),
+			"http://127.0.0.1:" + appports.GetPort("dba"),
 		}
 
 		for _, url := range urls {

@@ -13,6 +13,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/docker/docker/pkg/homedir"
+	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -222,7 +223,7 @@ func DetermineAppType(basePath string) (string, error) {
 // @todo replace this with drud-go/utils version when merged
 func FileExists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
-		if os.IsNotExist(err) {
+		if os.IsNotExist(err) {@r
 			return false
 		}
 	}
@@ -255,8 +256,8 @@ func EnsureDockerRouter() {
 	templateVars := map[string]string{
 		"router_image": version.RouterImage,
 		"router_tag":   version.RouterTag,
-		"MailHogPort":  version.MailHogPort,
-		"DBAPort":      version.DBAPort,
+		"mailhogport":  appports.GetPort("mailhog"),
+		"dbaport":      appports.GetPort("dba"),
 	}
 
 	err = templ.Execute(&doc, templateVars)

@@ -98,8 +98,8 @@ func (l *LocalApp) Describe() (string, error) {
 
 	output = output + "\n\nOther Services\n--------------\n"
 	other := uitable.New()
-	other.AddRow("MailHog:", l.URL()+":"+version.MailHogPort)
-	other.AddRow("phpMyAdmin:", l.URL()+":"+version.DBAPort)
+	other.AddRow("MailHog:", l.URL()+":"+appports.GetPort("mailhog"))
+	other.AddRow("phpMyAdmin:", l.URL()+":"+appports.GetPort("dba"))
 	output = output + fmt.Sprint(other)
 	return output, nil
 }
