@@ -189,7 +189,9 @@ func (l *LocalApp) UnpackResources() error {
 	// Ensure sites/default is readable.
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
 		err := os.Chmod(path.Join(basePath, ".ddev", "files", "docroot", "sites", "default"), 0755)
-		util.CheckErr(err)
+		if err != nil {
+			return err
+		}
 	}
 
 	rsyncFrom := path.Join(basePath, ".ddev", "files", "docroot", fileDir)

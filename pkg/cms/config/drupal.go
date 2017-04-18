@@ -8,7 +8,6 @@ import (
 
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/cms/model"
-	"github.com/drud/ddev/pkg/util"
 )
 
 const (
@@ -105,10 +104,14 @@ func WriteDrupalConfig(drupalConfig *model.DrupalConfig, filePath string) error 
 	}
 	// Ensure target directory is writable.
 	err = os.Chmod(dir, 0755)
-	util.CheckErr(err)
+	if err != nil {
+		return err
+	}
 	// Ensure filePath is writable.
 	err = os.Chmod(filePath, 0644)
-	util.CheckErr(err)
+	if err != nil {
+		return err
+	}
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
@@ -129,10 +132,14 @@ func WriteDrushConfig(drushConfig *model.DrushConfig, filePath string) error {
 	}
 	// Ensure target directory is writable.
 	err = os.Chmod(dir, 0755)
-	util.CheckErr(err)
+	if err != nil {
+		return err
+	}
 	// Ensure filePath is writable.
 	err = os.Chmod(filePath, 0644)
-	util.CheckErr(err)
+	if err != nil {
+		return err
+	}
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
