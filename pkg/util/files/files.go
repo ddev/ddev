@@ -12,20 +12,86 @@ import (
 	"strings"
 )
 
-// Untargz accepts a tar gz file and extracts the contents to the provided destination path.
-func Untargz(source string, dest string) error {
+// Ungzip accepts a gzipped file and uncompresses it to the provided destination path.
+func Ungzip(source string, dest string) error {
 	f, err := os.Open(source)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+
+	defer func() {
+		if e := f.Close(); e != nil {
+			err = e
+		}
+	}()
 
 	gf, err := gzip.NewReader(f)
 	if err != nil {
 		return err
 	}
 
-	tf := tar.NewReader(gf)
+	defer func() {
+		if e := gf.Close(); e != nil {
+			err = e
+		}
+	}()
+
+	fname := strings.TrimSuffix(path.Base(f.Name()), ".gz")
+	exFile, err := os.Create(path.Join(dest, fname))
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if e := exFile.Close(); e != nil {
+			err = e
+		}
+	}()
+
+	_, err = io.Copy(exFile, gf)
+	if err != nil {
+		return err
+	}
+
+	err = exFile.Sync()
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+// Untar accepts a tar or tar.gz file and extracts the contents to the provided destination path.
+func Untar(source string, dest string) error {
+	var tf *tar.Reader
+	f, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if e := f.Close(); e != nil {
+			err = e
+		}
+	}()
+
+	if strings.HasSuffix(source, "gz") {
+		gf, err := gzip.NewReader(f)
+		if err != nil {
+			return err
+		}
+
+		defer func() {
+			if e := gf.Close(); e != nil {
+				err = e
+			}
+		}()
+
+		tf = tar.NewReader(gf)
+	} else {
+		tf = tar.NewReader(f)
+	}
 
 	for {
 		file, err := tf.Next()
@@ -33,21 +99,6 @@ func Untargz(source string, dest string) error {
 			break
 		}
 		if err != nil {
-			// attempt to extract as gzip file.
-			if err.Error() == "archive/tar: invalid tar header" {
-				fname := strings.TrimSuffix(path.Base(f.Name()), ".gz")
-				file, err := os.Create(path.Join(dest, fname))
-				if err != nil {
-					return err
-				}
-				defer file.Close()
-
-				_, err = io.Copy(file, gf)
-				if err != nil {
-					return err
-				}
-				return nil
-			}
 			return err
 		}
 

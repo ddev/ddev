@@ -144,9 +144,16 @@ func (l *LocalApp) ImportDB(imPath string) error {
 	importPath, err := appimport.ValidateAsset(imPath, "db")
 	if err != nil {
 		if err.Error() == "is archive" {
-			err := files.Untargz(importPath, dbPath)
-			if err != nil {
-				return fmt.Errorf("failed to extract provided archive: %v", err)
+			if strings.HasSuffix(importPath, "sql.gz") {
+				err := files.Ungzip(importPath, dbPath)
+				if err != nil {
+					return fmt.Errorf("failed to extract provided archive: %v", err)
+				}
+			} else {
+				err := files.Untar(importPath, dbPath)
+				if err != nil {
+					return fmt.Errorf("failed to extract provided archive: %v", err)
+				}
 			}
 			// empty the path so we don't try to copy
 			importPath = ""
@@ -230,7 +237,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		if err != nil {
 			return fmt.Errorf("failed to create destination: %v", err)
 		}
-		err = files.Untargz(importPath, destPath)
+		err = files.Untar(importPath, destPath)
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
