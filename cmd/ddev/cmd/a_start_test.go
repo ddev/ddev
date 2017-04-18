@@ -4,7 +4,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/drud/ddev/pkg/version"
+	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/system"
