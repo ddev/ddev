@@ -1,4 +1,4 @@
-[![circleci badge](https://circleci.com/gh/drud/ddev/tree/master.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/drud/ddev/tree/master.svg?style=shield&circle-token=:circle-token) [![Go Report Card](https://goreportcard.com/badge/github.com/drud/ddev)](https://goreportcard.com/report/github.com/drud/ddev)
+![circlci badge, hopefully passing](https://circleci.com/gh/drud/ddev/tree/master.svg?style=shield&circle-token=:circle-token) [![Go Report Card](https://goreportcard.com/badge/github.com/drud/ddev)](https://goreportcard.com/report/github.com/drud/ddev)
 
 # ddev
 
