@@ -223,7 +223,7 @@ func DetermineAppType(basePath string) (string, error) {
 // @todo replace this with drud-go/utils version when merged
 func FileExists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
-		if os.IsNotExist(err) {@r
+		if os.IsNotExist(err) {
 			return false
 		}
 	}
