@@ -24,7 +24,7 @@ WebTag ?= v0.3.4
 DBImg ?= drud/mysql-docker-local-57
 DBTag ?= v0.3.0
 RouterImage ?= drud/nginx-proxy
-RouterTag ?= http-port-options
+RouterTag ?= v0.3.0
 DBAImg ?= drud/phpmyadmin
 DBATag ?= v0.1.0
 

@@ -30,4 +30,4 @@ var DBATag = "v0.1.0"
 var RouterImage = "drud/nginx-proxy" // Note that this is overridden by make
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "v0.2.0" // Note that this is overridden by make
+var RouterTag = "v0.3.0" // Note that this is overridden by make
