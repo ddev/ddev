@@ -58,7 +58,8 @@ stages:
           cd  ~/src/github.com/drud/ddev &&
           make GOPATH=~/ gofmt &&
           make GOPATH=~/ govet &&
-          make GOPATH=~/ golint
+          make GOPATH=~/ golint &&
+          make GOPATH=~/ errcheck
         name: Static analysis targets govet/gofmt/golint
 
 

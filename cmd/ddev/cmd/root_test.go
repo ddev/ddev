@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/testcommon"
 )
 
@@ -31,7 +32,10 @@ func TestMain(m *testing.M) {
 	}
 
 	for i := range DevTestSites {
-		DevTestSites[i].Prepare()
+		err = DevTestSites[i].Prepare()
+		if err != nil {
+			log.Fatalln("Prepare() failed in TestMain site=%s, err=", DevTestSites[i].Name, err)
+		}
 	}
 
 	fmt.Println("Running tests.")

@@ -213,9 +213,15 @@ func WriteWordpressConfig(wordpressConfig *model.WordpressConfig, filePath strin
 		return err
 	}
 	// Ensure target directory is writable.
-	os.Chmod(dir, 0755)
+	err = os.Chmod(dir, 0755)
+	if err != nil {
+		return err
+	}
 	// Ensure filePath is writable.
-	os.Chmod(filePath, 0644)
+	err = os.Chmod(filePath, 0644)
+	if err != nil {
+		return err
+	}
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err

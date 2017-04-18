@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
@@ -39,7 +40,8 @@ var DevListCmd = &cobra.Command{
 			return vsf
 		}(containers)
 
-		platform.SiteList(containers)
+		err := platform.SiteList(containers)
+		util.CheckErr(err)
 	},
 }
 

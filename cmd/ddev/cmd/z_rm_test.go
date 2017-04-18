@@ -12,7 +12,7 @@ import (
 func TestDevRm(t *testing.T) {
 	assert := assert.New(t)
 	for _, site := range DevTestSites {
-		cleanup := site.Chdir()
+		_ = site.Chdir()
 
 		args := []string{"rm"}
 		out, err := system.RunCommand(DdevBin, args)
@@ -27,7 +27,6 @@ func TestDevRm(t *testing.T) {
 		assert.Contains(string(out), format("Stopping %s-db ... done", app.ContainerName()))
 		assert.Contains(string(out), format("Removing %s-web ... done", app.ContainerName()))
 		assert.Contains(string(out), format("Removing %s-db ... done", app.ContainerName()))
-
-		cleanup()
+		// site cleanup is handled in TestMain
 	}
 }

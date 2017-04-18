@@ -145,6 +145,8 @@ func TestConfigCommand(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := assert.New(t)
 	testDir := testcommon.CreateTmpDir("TestConfigCommand")
+
+	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
 	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
 
@@ -171,7 +173,8 @@ func TestConfigCommand(t *testing.T) {
 	setInputScanner(scanner)
 
 	restoreOutput := testcommon.CaptureStdOut()
-	config.Config()
+	err = config.Config()
+	assert.NoError(err, t)
 	out := restoreOutput()
 
 	// Ensure we have expected vales in output.

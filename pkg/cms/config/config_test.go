@@ -18,14 +18,15 @@ func TestWriteDrupalConfig(t *testing.T) {
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
 
-	os.Chmod(dir, 0555)
-	os.Chmod(file.Name(), 0444)
+	err = os.Chmod(file.Name(), 0444)
+	assert.NoError(t, err)
 
 	drupalConfig := model.NewDrupalConfig()
 	err = WriteDrupalConfig(drupalConfig, file.Name())
 	assert.NoError(t, err)
 
-	defer os.RemoveAll(dir)
+	err = os.RemoveAll(dir)
+	assert.NoError(t, err)
 }
 
 func TestWriteDrushConfig(t *testing.T) {
@@ -34,14 +35,15 @@ func TestWriteDrushConfig(t *testing.T) {
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
 
-	os.Chmod(dir, 0555)
-	os.Chmod(file.Name(), 0444)
+	err = os.Chmod(file.Name(), 0444)
+	assert.NoError(t, err)
 
 	drushConfig := model.NewDrushConfig()
 	err = WriteDrushConfig(drushConfig, file.Name())
 	assert.NoError(t, err)
 
-	defer os.RemoveAll(dir)
+	err = os.RemoveAll(dir)
+	assert.NoError(t, err)
 }
 
 func TestWriteWordpressConfig(t *testing.T) {
@@ -50,12 +52,13 @@ func TestWriteWordpressConfig(t *testing.T) {
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
 
-	os.Chmod(dir, 0555)
-	os.Chmod(file.Name(), 0444)
+	err = os.Chmod(file.Name(), 0444)
+	assert.NoError(t, err)
 
 	wpConfig := model.NewWordpressConfig()
 	err = WriteWordpressConfig(wpConfig, file.Name())
 	assert.NoError(t, err)
 
-	defer os.RemoveAll(dir)
+	err = os.RemoveAll(dir)
+	assert.NoError(t, err)
 }

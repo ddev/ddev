@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/system"
 )
 
@@ -20,9 +21,10 @@ type TestSite struct {
 	// DownloadURL is the URL of the tarball to be used for building the site.
 	DownloadURL string
 	Dir         string
+	ArchivePath string
 }
 
-func (site *TestSite) archivePath() string {
+func (site *TestSite) createArchivePath() string {
 	dir := CreateTmpDir(site.Name + "download")
 	return filepath.Join(dir, site.Name+".tar.gz")
 }
@@ -32,22 +34,23 @@ func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
 	log.Debugf("Prepping test for %s.\n", site.Name)
-	os.Setenv("DRUD_NONINTERACTIVE", "true")
+	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
+	util.CheckErr(err)
 
 	log.Debugln("Downloading file:", site.DownloadURL)
-	tarballPath := site.archivePath()
-	err := system.DownloadFile(tarballPath, site.DownloadURL)
+	site.ArchivePath = site.createArchivePath()
+	err = system.DownloadFile(site.ArchivePath, site.DownloadURL)
 
 	if err != nil {
 		site.Cleanup()
 		return err
 	}
-	log.Debugln("File downloaded:", tarballPath)
+	log.Debugln("File downloaded:", site.ArchivePath)
 
 	_, err = system.RunCommand("tar",
 		[]string{
 			"-xzf",
-			tarballPath,
+			site.ArchivePath,
 			"--strip", "1",
 			"-C",
 			site.Dir,
@@ -69,14 +72,16 @@ func (site *TestSite) Chdir() func() {
 
 // Cleanup removes the archive and codebase extraction for a site after a test run has completed.
 func (site *TestSite) Cleanup() {
-	os.Remove(site.archivePath())
+	err := os.Remove(site.ArchivePath)
+	util.CheckErr(err)
+	// CleanupDir checks its own errors.
 	CleanupDir(site.Dir)
 }
 
 // CleanupDir removes a directory specified by string.
-func CleanupDir(dir string) error {
+func CleanupDir(dir string) {
 	err := os.RemoveAll(dir)
-	return err
+	util.CheckErr(err)
 }
 
 // OsTempDir gets os.TempDir() (usually provided by $TMPDIR) but expands any symlinks found within it.
@@ -114,7 +119,12 @@ func Chdir(path string) func() {
 		log.Fatalf("Could not change to directory %s: %v\n", path, err)
 	}
 
-	return func() { os.Chdir(curDir) }
+	return func() {
+		err := os.Chdir(curDir)
+		if err != nil {
+			log.Fatalf("Failed to change directory to original dir=%s, err=%v", curDir, err)
+		}
+	}
 }
 
 var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -144,12 +154,13 @@ func CaptureStdOut() func() string {
 		// copy the output in a separate goroutine so printing can't block indefinitely
 		go func() {
 			var buf bytes.Buffer
-			io.Copy(&buf, r)
+			_, err := io.Copy(&buf, r)
+			util.CheckErr(err)
 			outC <- buf.String()
 		}()
 
 		// back to normal state
-		w.Close()
+		util.CheckClose(w)
 		os.Stdout = old // restoring the real stdout
 		out := <-outC
 		return out

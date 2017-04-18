@@ -13,6 +13,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/docker/docker/pkg/homedir"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
@@ -244,7 +245,7 @@ func EnsureDockerRouter() {
 	if ferr != nil {
 		log.Fatal(ferr)
 	}
-	defer f.Close()
+	defer util.CheckClose(f)
 
 	templ := template.New("compose template")
 	templ, err = templ.Parse(fmt.Sprintf(DrudRouterTemplate))
@@ -257,8 +258,10 @@ func EnsureDockerRouter() {
 		"router_tag":   version.RouterTag,
 	}
 
-	templ.Execute(&doc, templateVars)
-	f.WriteString(doc.String())
+	err = templ.Execute(&doc, templateVars)
+	util.CheckErr(err)
+	_, err = f.WriteString(doc.String())
+	util.CheckErr(err)
 
 	// run docker-compose up -d in the newly created directory
 	out, err := system.RunCommand("docker-compose", []string{"-p", "ddev-router", "-f", dest, "up", "-d"})

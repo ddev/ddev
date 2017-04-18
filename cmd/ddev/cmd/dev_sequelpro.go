@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
@@ -45,9 +46,9 @@ var LocalDevSequelproCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalln(err)
 		}
-		defer tmpFile.Close()
+		defer util.CheckClose(tmpFile)
 
-		tmpFile.WriteString(fmt.Sprintf(
+		_, err = tmpFile.WriteString(fmt.Sprintf(
 			platform.SequelproTemplate,
 			"data",                  //dbname
 			"127.0.0.1",             //host
@@ -56,6 +57,7 @@ var LocalDevSequelproCmd = &cobra.Command{
 			strconv.FormatInt(dbPort, 10), // port
 			"root", //dbuser
 		))
+		util.CheckErr(err)
 
 		err = exec.Command("open", tmpFilePath).Run()
 		if err != nil {
