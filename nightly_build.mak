@@ -31,10 +31,7 @@ $(CONTAINER_DIRS):
 	$(MAKE) -C $(addprefix $(BASEDIR),$@) --print-directory test
 
 submodules:
-	git submodule update --init && git submodule update --remote
+	git fetch --all && git submodule update --init && git submodule update --remote
 
 test:
 	$(MAKE) && $(MAKE) test
-
-
-
