@@ -197,10 +197,12 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 	templateVars := map[string]string{
-		"name":    c.Name,
-		"docroot": filepath.Join("../", c.Docroot),
-		"plugin":  c.Platform,
-		"appType": c.AppType,
+		"name":        c.Name,
+		"docroot":     filepath.Join("../", c.Docroot),
+		"plugin":      c.Platform,
+		"appType":     c.AppType,
+		"MailHogPort": version.MailHogPort,
+		"DBAPort":     version.DBAPort,
 	}
 
 	err = templ.Execute(&doc, templateVars)

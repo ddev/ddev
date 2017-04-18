@@ -70,8 +70,8 @@ services:
     container_name: nginx-proxy
     ports:
       - "80:80"
-      - "8025:8025"
-      - "8036:8036"
+      - "{{ .MailHogPort }}":"{{ .MailHogPort }}
+      - "{{ .DBAPort }}:{{ .DBAPort }}
       - "3306:3306"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro

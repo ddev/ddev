@@ -4,6 +4,7 @@ import (
 	"log"
 	"testing"
 
+	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/system"
@@ -37,8 +38,8 @@ func TestDevAddSites(t *testing.T) {
 
 		urls := []string{
 			"http://127.0.0.1/core/install.php",
-			"http://127.0.0.1:8025",
-			"http://127.0.0.1:8036",
+			"http://127.0.0.1:" + version.MailHogPort,
+			"http://127.0.0.1:" + version.DBAPort,
 		}
 
 		for _, url := range urls {

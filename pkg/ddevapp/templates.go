@@ -35,12 +35,12 @@ services:
       - {{ .plugin }}-${DDEV_SITENAME}-db:db
     ports:
       - "80"
-      - "8025"
+      - "{{ .MailHogPort }}"
     working_dir: "/var/www/html/docroot"
     environment:
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - VIRTUAL_PORT=80,8025
+      - VIRTUAL_PORT=80,{{ .MailHogPort }}
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.container-type: web
@@ -62,7 +62,7 @@ services:
       - PMA_USER=root
       - PMA_PASSWORD=root
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - VIRTUAL_PORT=8036
+      - VIRTUAL_PORT="{{ .DBAPort }}"
 networks:
   default:
     external:

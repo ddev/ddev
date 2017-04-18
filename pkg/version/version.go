@@ -23,8 +23,14 @@ var DBTag = "v0.3.0" // Note that this is overridden by make
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
 
+// DBAPort defines the default phpmyadmin port used on the router.
+var DBAPort = "8036"
+
 // DBATag defines the default phpmyadmin image tag used for applications.
 var DBATag = "v0.1.0"
+
+// MailHogPort defines the default mailhog exposed by the router.
+var MailHogPort = "8025"
 
 // RouterImage defines the image used for the router.
 var RouterImage = "drud/nginx-proxy" // Note that this is overridden by make

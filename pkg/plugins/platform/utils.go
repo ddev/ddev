@@ -255,6 +255,8 @@ func EnsureDockerRouter() {
 	templateVars := map[string]string{
 		"router_image": version.RouterImage,
 		"router_tag":   version.RouterTag,
+		"MailHogPort":  version.MailHogPort,
+		"DBAPort":      version.DBAPort,
 	}
 
 	err = templ.Execute(&doc, templateVars)

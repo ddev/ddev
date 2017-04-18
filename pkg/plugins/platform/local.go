@@ -16,6 +16,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util/files"
 	"github.com/drud/ddev/pkg/util/prompt"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
@@ -97,8 +98,8 @@ func (l *LocalApp) Describe() (string, error) {
 
 	output = output + "\n\nOther Services\n--------------\n"
 	other := uitable.New()
-	other.AddRow("MailHog:", l.URL()+":8025")
-	other.AddRow("phpMyAdmin:", l.URL()+":8036")
+	other.AddRow("MailHog:", l.URL()+":"+version.MailHogPort)
+	other.AddRow("phpMyAdmin:", l.URL()+":"+version.DBAPort)
 	output = output + fmt.Sprint(other)
 	return output, nil
 }
