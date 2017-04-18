@@ -1,3 +1,5 @@
+![circlci badge, hopefully passing](https://circleci.com/gh/drud/ddev/tree/master.svg?style=shield&circle-token=:circle-token) [![Go Report Card](https://goreportcard.com/badge/github.com/drud/ddev)](https://goreportcard.com/report/github.com/drud/ddev) ![project is maintained](https://img.shields.io/maintenance/yes/2017.svg)
+
 # ddev
 
 The purpose of *ddev* is to support developers with a local copy of a site for development purposes. It runs the site in Docker containers.
@@ -128,7 +130,7 @@ We have included several useful tools for Developers in our containers.
 - [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations.
 
 ### Email
-[MailHog](https://github.com/mailhog/MailHog) is a mail catcher we have installed and configured to catch emails sent by PHP. 
+[MailHog](https://github.com/mailhog/MailHog) is a mail catcher we have installed and configured to catch emails sent by PHP.
 
 Its web interface can be accessed at its default port after your site has been started. e.g.:
 ```
