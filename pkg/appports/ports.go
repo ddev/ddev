@@ -21,11 +21,11 @@ var ports = map[string]string{
 
 // GetPort returns the external router (as a string) for the given service. This can be used to find a given port for docker-compose manifests,
 // or for automated testing.
-func GetPort(port string) string {
-	port = strings.ToLower(port)
-	val, ok := ports[port]
+func GetPort(service string) string {
+	service = strings.ToLower(service)
+	val, ok := ports[service]
 	if !ok {
-		log.Fatalf("Could not find port for service %s", port)
+		log.Fatalf("Could not find port for service %s", service)
 	}
 
 	return val
