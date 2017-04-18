@@ -3,7 +3,6 @@ package cmd
 import (
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/spf13/cobra"
@@ -14,7 +13,7 @@ var ConfigCommand = &cobra.Command{
 	Use:   "config",
 	Short: "Create or modify a ddev application config in the current directory",
 	Run: func(cmd *cobra.Command, args []string) {
-		appRoot, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		appRoot, err := os.Getwd()
 		if err != nil {
 			log.Fatalf("Could not determine current working directory: %v\n", err)
 		}
