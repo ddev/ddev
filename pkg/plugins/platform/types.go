@@ -5,8 +5,6 @@ type App interface {
 	Init(string) error
 	Describe() (string, error)
 	GetType() string
-	GetResources() error
-	UnpackResources() error
 	ContainerPrefix() string
 	ContainerName() string
 	AppRoot() string
@@ -20,6 +18,8 @@ type App interface {
 	Wait() (string, error)
 	HostName() string
 	URL() string
+	ImportDB(string) error
+	ImportFiles(string) error
 }
 
 // AppBase is the parent type for all local app implementations

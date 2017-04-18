@@ -2,7 +2,6 @@ package testcommon
 
 import (
 	"bytes"
-	log "github.com/Sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -10,18 +9,24 @@ import (
 	"path/filepath"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/util"
+
 	"github.com/drud/drud-go/utils/system"
 )
 
 // TestSite describes a site for testing, with name, URL of tarball, and optional dir.
 type TestSite struct {
 	// Name is the generic name of the site, and is used as the default dir.
-	Name string
-	// DownloadURL is the URL of the tarball to be used for building the site.
-	DownloadURL string
-	Dir         string
+	Name        string
 	ArchivePath string
+	// SourceURL is the URL of the source code tarball to be used for building the site.
+	SourceURL string
+	// FileURL is the URL of the archive of file uploads used for testing file import.
+	FileURL string
+	// DBURL is the URL of the database dump tarball used for testing database import.
+	DBURL string
+	Dir   string
 }
 
 func (site *TestSite) createArchivePath() string {
@@ -37,9 +42,9 @@ func (site *TestSite) Prepare() error {
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
 	util.CheckErr(err)
 
-	log.Debugln("Downloading file:", site.DownloadURL)
+	log.Debugln("Downloading file:", site.SourceURL)
 	site.ArchivePath = site.createArchivePath()
-	err = system.DownloadFile(site.ArchivePath, site.DownloadURL)
+	err = system.DownloadFile(site.ArchivePath, site.SourceURL)
 
 	if err != nil {
 		site.Cleanup()
@@ -170,4 +175,25 @@ func CaptureStdOut() func() string {
 
 func setLetterBytes(lb string) {
 	letterBytes = lb
+}
+
+// ClearDockerEnv unsets env vars set in platform DockerEnv() so that
+// they can be set by another test run.
+func ClearDockerEnv() {
+	envVars := []string{
+		"COMPOSE_PROJECT_NAME",
+		"DDEV_SITENAME",
+		"DDEV_DBIMAGE",
+		"DDEV_WEBIMAGE",
+		"DDEV_APPROOT",
+		"DDEV_DOCROOT",
+		"DDEV_URL",
+		"DDEV_HOSTNAME",
+	}
+	for _, env := range envVars {
+		err := os.Unsetenv(env)
+		if err != nil {
+			log.Printf("failed to unset %s: %v\n", env, err)
+		}
+	}
 }

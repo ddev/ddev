@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -25,6 +27,12 @@ var StartCmd = &cobra.Command{
 	Short:   "Start the local development environment for a site.",
 	Long:    `Start initializes and configures the web server and database containers to provide a working environment for development.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
+		if len(args) > 0 {
+			err := cmd.Usage()
+			util.CheckErr(err)
+			os.Exit(0)
+		}
+
 		client, err := platform.GetDockerClient()
 		if err != nil {
 			log.Fatal(err)

@@ -102,6 +102,36 @@ Other Services
 MailHog:	http://drupal8.ddev.local:8025
 ```
 
+## Importing an existing site
+Two commands are provided for importing assets from an existing site, `ddev import-db` and `ddev import-files`. Running either of these commands will provide a prompt to enter the location of the assets to import. You can also skip the prompt by specifying the location using the `--src` flag.
+
+### import-db
+
+```
+➜  ddev import-db
+Provide the path to the database you wish to import.
+Import path:
+~/Downloads/db.sql
+Importing database...
+Generating settings.php file for database connection.
+Successfully imported database for drupal8
+```
+
+The `import-db` command allows you to specify the location of a SQL dump to be imported as the active database for your site. The database may be provided as a `.sql` file, `.sql.gz` or tar archive. The provided dump will be imported into the database named `data` in the database container for your site. A database connection file will be generated for your site if one does not exist (`settings.php` for Drupal, `wp-config.php` for WordPress). If you have already created a connection file, you will need to ensure your connection credentials match the ones provided in `ddev describe`.
+
+
+### import-files
+
+```
+➜  ddev import-files
+Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.
+Import path:
+~/Downloads/files.tar.gz
+Successfully imported files for drupal8
+```
+
+The `import-files` command allows you to specify the location of uploaded file assets to import for your site. For Drupal, this is the public files directory, located at `sites/default/files` by default. For WordPress, this is the uploads directory, located at `wp-content/uploads` by default. The files may be provided as a directory or tar archive containing the contents of the uploads folder. The contents of the directory or archive provided will be copied to the default location of the upload directory for your site.
+
 ## Removing a site
 
 You can remove a site by going to the working directory for the site and running `ddev rm`.

@@ -1,6 +1,7 @@
 package platform
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -9,10 +10,12 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/util/files"
+	"github.com/drud/ddev/pkg/util/prompt"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/stringutil"
@@ -105,6 +108,11 @@ func (l *LocalApp) AppRoot() string {
 	return l.AppConfig.AppRoot
 }
 
+// Docroot returns the docroot path for local app
+func (l LocalApp) Docroot() string {
+	return l.AppConfig.Docroot
+}
+
 // GetName returns the  name for local app
 func (l *LocalApp) GetName() string {
 	return l.AppConfig.Name
@@ -120,28 +128,123 @@ func (l *LocalApp) ContainerName() string {
 	return fmt.Sprintf("%s-%s", l.ContainerPrefix(), l.GetName())
 }
 
-// GetResources downloads external data for this app
-func (l *LocalApp) GetResources() error {
+// ImportDB takes a source sql dump and imports it to an active site's database container.
+func (l *LocalApp) ImportDB(imPath string) error {
+	l.DockerEnv()
+	container := fmt.Sprintf("%s-db", l.ContainerName())
+	dbPath := path.Join(l.AppRoot(), ".ddev", "data")
 
-	fmt.Println("Getting Resources.")
-	err := l.GetArchive()
+	if imPath == "" {
+		fmt.Println("Provide the path to the database you wish to import.")
+		fmt.Println("Import path: ")
+
+		imPath = prompt.GetInput("")
+	}
+
+	importPath, err := appimport.ValidateAsset(imPath, "db")
 	if err != nil {
-		log.Println(err)
-		fmt.Println(fmt.Errorf("Error retrieving site resources: %s", err))
+		if err.Error() == "is archive" {
+			if strings.HasSuffix(importPath, "sql.gz") {
+				err := files.Ungzip(importPath, dbPath)
+				if err != nil {
+					return fmt.Errorf("failed to extract provided archive: %v", err)
+				}
+			} else {
+				err := files.Untar(importPath, dbPath)
+				if err != nil {
+					return fmt.Errorf("failed to extract provided archive: %v", err)
+				}
+			}
+			// empty the path so we don't try to copy
+			importPath = ""
+		} else {
+			return err
+		}
+	}
+
+	// an archive was not extracted, we need to copy
+	if importPath != "" {
+		err = files.CopyFile(importPath, path.Join(dbPath, "db.sql"))
+		if err != nil {
+			return err
+		}
+	}
+
+	err = appimport.ImportSQLDump(l.DockerComposeYAMLPath(), container)
+	if err != nil {
+		return err
+	}
+
+	err = l.Config()
+	if err != nil {
+		if err.Error() != "app config exists" {
+			return fmt.Errorf("failed to write configuration file for %s: %v", l.GetName(), err)
+		}
+		fmt.Println("A settings file already exists for your application, so ddev did not generate one.")
+		fmt.Println("Run 'ddev describe' to find the database credentials for this application.")
 	}
 
 	return nil
 }
 
-// GetArchive downloads external data
-func (l *LocalApp) GetArchive() error {
-	name := fmt.Sprintf("production-%s.tar.gz", l.GetName())
-	basePath := l.AppRoot()
-	archive := path.Join(basePath, ".ddev", name)
+// ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
+func (l *LocalApp) ImportFiles(imPath string) error {
+	var uploadDir string
+	l.DockerEnv()
 
-	if system.FileExists(archive) {
-		l.Archive = archive
+	if imPath == "" {
+		fmt.Println("Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.")
+		fmt.Println("Import path: ")
+
+		imPath = prompt.GetInput("")
 	}
+
+	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
+		uploadDir = "sites/default/files"
+	}
+
+	if l.GetType() == "wordpress" {
+		uploadDir = "wp-content/uploads"
+	}
+
+	destPath := path.Join(l.AppRoot(), l.Docroot(), uploadDir)
+
+	// parent of destination dir should exist
+	if !system.FileExists(path.Dir(destPath)) {
+		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
+	}
+
+	// parent of destination dir should be writable
+	err := os.Chmod(path.Dir(destPath), 0755)
+	if err != nil {
+		return err
+	}
+
+	// destination dir should not exist
+	if system.FileExists(destPath) {
+		err := os.RemoveAll(destPath)
+		if err != nil {
+			return err
+		}
+	}
+
+	importPath, err := appimport.ValidateAsset(imPath, "files")
+	if err != nil {
+		if err.Error() != "is archive" {
+			return err
+		}
+		err = files.Untar(importPath, destPath)
+		if err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
+		}
+		return nil
+	}
+
+	err = files.CopyDir(importPath, destPath)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -149,75 +252,6 @@ func (l *LocalApp) GetArchive() error {
 // This is a bit redundant, but is here to avoid having to expose too many details of AppConfig.
 func (l *LocalApp) DockerComposeYAMLPath() string {
 	return l.AppConfig.DockerComposeYAMLPath()
-}
-
-// UnpackResources takes the archive from the GetResources method and
-// unarchives it. Then the contents are moved to their proper locations.
-func (l *LocalApp) UnpackResources() error {
-	basePath := l.AppRoot()
-	fileDir := ""
-
-	if l.GetType() == "wordpress" {
-		fileDir = "content/uploads"
-	} else if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
-		fileDir = "sites/default/files"
-	}
-
-	out, err := system.RunCommand(
-		"tar",
-		[]string{
-			"-xzvf",
-			l.Archive,
-			"-C", path.Join(basePath, ".ddev", "files"),
-			"--exclude=sites/default/settings.php",
-			"--exclude=docroot/wp-config.php",
-		},
-	)
-	if err != nil {
-		fmt.Println(out)
-		return err
-	}
-
-	err = os.Rename(
-		path.Join(basePath, ".ddev", "files", l.GetName()+".sql"),
-		path.Join(basePath, ".ddev", "data", "data.sql"),
-	)
-	if err != nil {
-		return err
-	}
-
-	// Ensure sites/default is readable.
-	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
-		err := os.Chmod(path.Join(basePath, ".ddev", "files", "docroot", "sites", "default"), 0755)
-		if err != nil {
-			return err
-		}
-	}
-
-	rsyncFrom := path.Join(basePath, ".ddev", "files", "docroot", fileDir)
-	rsyncTo := path.Join(basePath, "docroot", fileDir)
-	out, err = system.RunCommand(
-		"rsync",
-		[]string{"-avz", "--recursive", rsyncFrom + "/", rsyncTo},
-	)
-	if err != nil {
-		return fmt.Errorf("%s - %s", err.Error(), string(out))
-	}
-
-	// Ensure extracted files are writable so they can be removed when we're done.
-	out, err = system.RunCommand(
-		"chmod",
-		[]string{"-R", "ugo+rw", path.Join(basePath, ".ddev", "files")},
-	)
-	if err != nil {
-		return fmt.Errorf("%s - %s", err.Error(), string(out))
-	}
-	defer func() {
-		err := os.RemoveAll(path.Join(basePath, ".ddev", "files"))
-		util.CheckErr(err)
-	}()
-
-	return nil
 }
 
 // Start initiates docker-compose up
@@ -325,16 +359,28 @@ func (l *LocalApp) FindPorts() error {
 // as well as other sensitive data like salts.
 func (l *LocalApp) Config() error {
 	basePath := l.AppRoot()
+	docroot := l.Docroot()
+	settingsFilePath := path.Join(basePath, docroot)
 
 	err := l.FindPorts()
 	if err != nil {
 		return err
 	}
 
-	settingsFilePath := ""
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
-		log.Printf("Drupal site. Creating settings.php file.")
-		settingsFilePath = path.Join(basePath, "docroot/sites/default/settings.php")
+		settingsFilePath = path.Join(settingsFilePath, "sites/default/settings.php")
+	}
+
+	if l.GetType() == "wordpress" {
+		settingsFilePath = path.Join(settingsFilePath, "wp-config.php")
+	}
+
+	if system.FileExists(settingsFilePath) {
+		return errors.New("app config exists")
+	}
+
+	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
+		fmt.Println("Generating settings.php file for database connection.")
 		drupalConfig := model.NewDrupalConfig()
 		drupalConfig.DatabaseHost = "db"
 		if drupalConfig.HashSalt == "" {
@@ -368,8 +414,7 @@ func (l *LocalApp) Config() error {
 			log.Fatalln(err)
 		}
 	} else if l.GetType() == "wordpress" {
-		log.Printf("WordPress site. Creating wp-config.php file.")
-		settingsFilePath = path.Join(basePath, "docroot/wp-config.php")
+		fmt.Println("Generating wp-config.php file for database connection.")
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DatabaseHost = "db"
 		wpConfig.DeployURL = l.URL()

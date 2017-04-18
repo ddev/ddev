@@ -25,6 +25,11 @@ func TestWriteDrupalConfig(t *testing.T) {
 	err = WriteDrupalConfig(drupalConfig, file.Name())
 	assert.NoError(t, err)
 
+	err = os.Chmod(dir, 0755)
+	assert.NoError(t, err)
+	err = os.Chmod(file.Name(), 0666)
+	assert.NoError(t, err)
+
 	err = os.RemoveAll(dir)
 	assert.NoError(t, err)
 }
@@ -42,6 +47,11 @@ func TestWriteDrushConfig(t *testing.T) {
 	err = WriteDrushConfig(drushConfig, file.Name())
 	assert.NoError(t, err)
 
+	err = os.Chmod(dir, 0755)
+	assert.NoError(t, err)
+	err = os.Chmod(file.Name(), 0666)
+	assert.NoError(t, err)
+
 	err = os.RemoveAll(dir)
 	assert.NoError(t, err)
 }
@@ -57,6 +67,11 @@ func TestWriteWordpressConfig(t *testing.T) {
 
 	wpConfig := model.NewWordpressConfig()
 	err = WriteWordpressConfig(wpConfig, file.Name())
+	assert.NoError(t, err)
+
+	err = os.Chmod(dir, 0755)
+	assert.NoError(t, err)
+	err = os.Chmod(file.Name(), 0666)
 	assert.NoError(t, err)
 
 	err = os.RemoveAll(dir)
