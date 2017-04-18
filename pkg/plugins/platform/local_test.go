@@ -9,6 +9,7 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -253,4 +254,41 @@ func TestLocalRemove(t *testing.T) {
 
 		cleanup()
 	}
+}
+
+// TestGetContainerHealth tests the function for processing container readiness.
+func TestGetContainerHealth(t *testing.T) {
+	assert := assert.New(t)
+	container := docker.APIContainers{
+		Status: "Up 24 seconds (health: starting)",
+	}
+	out := GetContainerHealth(container)
+	assert.Equal(out, "starting")
+
+	container = docker.APIContainers{
+		Status: "Up 14 minutes (healthy)",
+	}
+	out = GetContainerHealth(container)
+	assert.Equal(out, "healthy")
+}
+
+// TestContainerWait tests the error cases for the container check wait loop.
+func TestContainerWait(t *testing.T) {
+	assert := assert.New(t)
+	appconf, err := ddevapp.NewConfig("")
+	if err != nil {
+		log.Fatalf("failed appconfig %v", err)
+	}
+	l := LocalApp{
+		AppBase:   AppBase{},
+		AppConfig: appconf,
+	}
+
+	err = l.ContainerWait(0, "db")
+	assert.Error(err)
+	assert.Equal("health check timed out", err.Error())
+
+	err = l.ContainerWait(5, "boot")
+	assert.Error(err)
+	assert.Equal("failed to query container", err.Error())
 }
