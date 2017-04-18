@@ -107,11 +107,7 @@ func WriteDrupalConfig(drupalConfig *model.DrupalConfig, filePath string) error 
 	if err != nil {
 		return err
 	}
-	// Ensure filePath is writable.
-	err = os.Chmod(filePath, 0644)
-	if err != nil {
-		return err
-	}
+
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
@@ -135,11 +131,7 @@ func WriteDrushConfig(drushConfig *model.DrushConfig, filePath string) error {
 	if err != nil {
 		return err
 	}
-	// Ensure filePath is writable.
-	err = os.Chmod(filePath, 0644)
-	if err != nil {
-		return err
-	}
+
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
