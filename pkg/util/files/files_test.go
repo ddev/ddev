@@ -34,13 +34,13 @@ func TestMain(m *testing.M) {
 	os.Exit(testRun)
 }
 
-func TestUntargz(t *testing.T) {
+func TestUntar(t *testing.T) {
 	assert := assert.New(t)
 	exDir := path.Join(temp, "extract")
 	err := os.Mkdir(exDir, 0755)
 	assert.NoError(err)
 
-	err = Untargz(testArchivePath, exDir)
+	err = Untar(testArchivePath, exDir)
 	assert.NoError(err)
 
 	os.RemoveAll(exDir)
