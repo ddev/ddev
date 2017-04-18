@@ -58,7 +58,7 @@ TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 DDEV_BINARY_FULLPATH=$(shell pwd)/bin/$(TESTOS)/ddev
 
 # Override test section with tests specific to ddev
-test: testcmd testpkg
+test: testpkg testcmd
 
 testcmd: build setup
 	PATH=$$PWD/bin/$(TESTOS):$$PATH CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -p 1 -timeout 20m -v -installsuffix 'static' -ldflags "$(LDFLAGS)" ./cmd/... $(TESTARGS)
