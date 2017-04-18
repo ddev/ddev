@@ -12,6 +12,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/util/prompt"
 	"github.com/drud/ddev/pkg/version"
@@ -201,8 +202,8 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		"docroot":     filepath.Join("../", c.Docroot),
 		"plugin":      c.Platform,
 		"appType":     c.AppType,
-		"mailhogport": version.MailHogPort,
-		"dbaport":     version.DBAPort,
+		"mailhogport": appports.GetPort("mailhog"),
+		"dbaport":     appports.GetPort("dba"),
 	}
 
 	err = templ.Execute(&doc, templateVars)
