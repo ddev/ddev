@@ -14,7 +14,7 @@ services:
     environment:
       - TCP_PORT=$DDEV_HOSTNAME:{{ .dbport }}
     ports:
-      - {{ .dbport }}:3306
+      - 3306
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.container-type: db
