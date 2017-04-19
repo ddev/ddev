@@ -126,8 +126,10 @@ func GetApps() map[string][]App {
 					apps[platformType] = []App{}
 				}
 
-				site.Init(approot)
-				apps[platformType] = append(apps[platformType], site)
+				err := site.Init(approot)
+				if err == nil {
+					apps[platformType] = append(apps[platformType], site)
+				}
 			}
 		}
 	}
