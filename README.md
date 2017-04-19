@@ -10,10 +10,10 @@ You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev sta
 - MacOS Sierra or Linux*
 - [docker](https://www.docker.com/community-edition)
 
-* *Currently only tested on Ubuntu, please let us know if you hit an issue on another flavor.*
+* *Currently only tested on Ubuntu, please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue on another flavor.*
 
 ## Installation
-- Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for system. 
+- Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 - Make ddev executable: `chmod ugo+x ddev`
 - Move ddev to /usr/local/bin: `sudo mv ddev /usr/local/bin/`
 - Run `ddev` to test your installation. You should see usage output similar to below.
