@@ -40,7 +40,7 @@ services:
     environment:
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - VIRTUAL_PORT=80,{{ .MailHogPort }}
+      - VIRTUAL_PORT=80,{{ .mailhogport }}
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.container-type: web
@@ -62,7 +62,7 @@ services:
       - PMA_USER=root
       - PMA_PASSWORD=root
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - VIRTUAL_PORT={{ .mailhogport }}
+      - VIRTUAL_PORT={{ .dbaport }}
 networks:
   default:
     external:
