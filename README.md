@@ -6,15 +6,23 @@ The purpose of *ddev* is to support developers with a local copy of a site for d
 
 You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev start -h`, etc.
 
-## Key prerequisites
-- A working [docker install](https://www.docker.com/community-edition)
-- The [ddev binary](https://github.com/drud/ddev/releases)
+## System Requirements
+- MacOS Sierra or Linux*
+- [docker](https://www.docker.com/community-edition)
+
+* *Currently only tested on Ubuntu, please let us know if you hit an issue on another flavor.*
+
+## Installation
+- Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for system. 
+- Make ddev executable: `chmod ugo+x ddev`
+- Move ddev to /usr/local/bin: `sudo mv ddev /usr/local/bin/`
+- Run `ddev` to test your installation. You should see usage output similar to below.
 
 ---
 
 ## Usage
 ```
-➜  .drud ddev --help
+➜  ddev
 This Command Line Interface (CLI) gives you the ability to interact with the ddev to create a local development environment.
 
 Usage:
@@ -45,7 +53,7 @@ Check out the git repository for the site you want to work on. `cd` into the dir
 ```
 $ cd ~/Projects
 $ git clone git@github.com:drud/drupal8.git
-$ cd drud-d8
+$ cd drupal8
 $ ddev config
 Creating a new ddev project config in the current directory (/Users/username/Projects/drupal8)
 Once completed, your configuration will be written to /Users/username/Projects/drupal8/.ddev/config.yaml
