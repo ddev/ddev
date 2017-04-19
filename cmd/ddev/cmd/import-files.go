@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -23,12 +22,12 @@ var ImportFileCmd = &cobra.Command{
 			os.Exit(0)
 		}
 
-		client, err := platform.GetDockerClient()
+		client, err := util.GetDockerClient()
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = EnsureNetwork(client, netName)
+		err = util.EnsureNetwork(client, netName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -42,9 +41,9 @@ var ImportFileCmd = &cobra.Command{
 
 		err = app.ImportFiles(fileSource)
 		if err != nil {
-			Failed("Failed to import files for %s: %s", app.GetName(), err)
+			util.Failed("Failed to import files for %s: %s", app.GetName(), err)
 		}
-		Success("Successfully imported files for %s", app.GetName())
+		util.Success("Successfully imported files for %s", app.GetName())
 	},
 }
 
