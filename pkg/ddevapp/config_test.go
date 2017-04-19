@@ -36,6 +36,7 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(newConfig.Platform, DDevDefaultPlatform)
 	assert.Equal(newConfig.DBImage, version.DBImg+":"+version.DBTag)
 	assert.Equal(newConfig.WebImage, version.WebImg+":"+version.WebTag)
+	assert.Equal(newConfig.DBAImage, version.DBAImg+":"+version.DBATag)
 	newConfig.Name = testcommon.RandString(32)
 	newConfig.AppType = "drupal8"
 

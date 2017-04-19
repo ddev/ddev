@@ -13,6 +13,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/docker/docker/pkg/homedir"
+	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -255,6 +256,8 @@ func EnsureDockerRouter() {
 	templateVars := map[string]string{
 		"router_image": version.RouterImage,
 		"router_tag":   version.RouterTag,
+		"mailhogport":  appports.GetPort("mailhog"),
+		"dbaport":      appports.GetPort("dba"),
 	}
 
 	err = templ.Execute(&doc, templateVars)

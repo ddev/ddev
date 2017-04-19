@@ -20,6 +20,7 @@ var versionCmd = &cobra.Command{
 		table.AddRow("cli:", version.DdevVersion)
 		table.AddRow("web:", version.WebImg+":"+version.WebTag)
 		table.AddRow("db:", version.DBImg+":"+version.DBTag)
+		table.AddRow("dba:", version.DBAImg+":"+version.DBATag)
 		table.AddRow("router:", version.RouterImage+":"+version.RouterTag)
 		table.AddRow("commit:", version.VERSION)
 

@@ -12,6 +12,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
+	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/util/prompt"
 	"github.com/drud/ddev/pkg/version"
@@ -39,6 +40,7 @@ type Config struct {
 	Docroot    string `yaml:"docroot"`
 	WebImage   string `yaml:"webimage"`
 	DBImage    string `yaml:"dbimage"`
+	DBAImage   string `yaml:"dbaimage"`
 	ConfigPath string `yaml:"-"`
 	AppRoot    string `yaml:"-"`
 	Platform   string `yaml:"-"`
@@ -58,6 +60,7 @@ func NewConfig(AppRoot string) (*Config, error) {
 	// These should always default to the latest image/tag names from the Version package.
 	c.WebImage = version.WebImg + ":" + version.WebTag
 	c.DBImage = version.DBImg + ":" + version.DBTag
+	c.DBAImage = version.DBAImg + ":" + version.DBATag
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
@@ -195,10 +198,12 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 	templateVars := map[string]string{
-		"name":    c.Name,
-		"docroot": filepath.Join("../", c.Docroot),
-		"plugin":  c.Platform,
-		"appType": c.AppType,
+		"name":        c.Name,
+		"docroot":     filepath.Join("../", c.Docroot),
+		"plugin":      c.Platform,
+		"appType":     c.AppType,
+		"mailhogport": appports.GetPort("mailhog"),
+		"dbaport":     appports.GetPort("dba"),
 	}
 
 	err = templ.Execute(&doc, templateVars)

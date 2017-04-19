@@ -4,6 +4,7 @@ import (
 	"log"
 	"testing"
 
+	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/system"
@@ -33,13 +34,22 @@ func TestDevAddSites(t *testing.T) {
 
 		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-web"))
 		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-db"))
+		assert.Equal(true, dockerutil.IsRunning(app.ContainerName()+"-dba"))
 
-		o := network.NewHTTPOptions("http://127.0.0.1/core/install.php")
-		o.ExpectedStatus = 200
-		o.Timeout = 180
-		o.Headers["Host"] = app.HostName()
-		err = network.EnsureHTTPStatus(o)
-		assert.NoError(err)
+		urls := []string{
+			"http://127.0.0.1/core/install.php",
+			"http://127.0.0.1:" + appports.GetPort("mailhog"),
+			"http://127.0.0.1:" + appports.GetPort("dba"),
+		}
+
+		for _, url := range urls {
+			o := network.NewHTTPOptions(url)
+			o.ExpectedStatus = 200
+			o.Timeout = 180
+			o.Headers["Host"] = app.HostName()
+			err = network.EnsureHTTPStatus(o)
+			assert.NoError(err)
+		}
 
 		cleanup()
 	}

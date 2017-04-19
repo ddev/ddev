@@ -11,6 +11,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/appimport"
+	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -97,8 +98,8 @@ func (l *LocalApp) Describe() (string, error) {
 
 	output = output + "\n\nOther Services\n--------------\n"
 	other := uitable.New()
-	other.AddRow("MailHog:", l.URL()+":8025")
-
+	other.AddRow("MailHog:", l.URL()+":"+appports.GetPort("mailhog"))
+	other.AddRow("phpMyAdmin:", l.URL()+":"+appports.GetPort("dba"))
 	output = output + fmt.Sprint(other)
 	return output, nil
 }
@@ -289,6 +290,7 @@ func (l *LocalApp) DockerEnv() {
 		"COMPOSE_PROJECT_NAME": "ddev-" + l.AppConfig.Name,
 		"DDEV_SITENAME":        l.AppConfig.Name,
 		"DDEV_DBIMAGE":         l.AppConfig.DBImage,
+		"DDEV_DBAIMAGE":        l.AppConfig.DBAImage,
 		"DDEV_WEBIMAGE":        l.AppConfig.WebImage,
 		"DDEV_APPROOT":         l.AppConfig.AppRoot,
 		"DDEV_DOCROOT":         filepath.Join(l.AppConfig.AppRoot, l.AppConfig.Docroot),
