@@ -72,7 +72,7 @@ services:
       - "80:80"
       - {{ .mailhogport }}:{{ .mailhogport }}
       - {{ .dbaport }}:{{ .dbaport }}
-      - "3306:3306"
+      - {{ .dbport }}:{{ .dbport }}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
 networks:

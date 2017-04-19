@@ -124,11 +124,19 @@ func ProcessContainer(l map[string]map[string]string, plugin string, containerNa
 
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.
 func FindContainerByLabels(labels map[string]string) (docker.APIContainers, error) {
+	containers, err := FindContainersByLabels(labels)
+	return containers[0], err
+}
+
+// FindContainersByLabels takes a map of label names and values and returns any docker containers which match all labels.
+func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, error) {
+	var returnError error
 	client, _ := dockerutil.GetDockerClient()
 	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
+	containerMatches := []docker.APIContainers{}
 
 	if len(labels) < 1 {
-		return docker.APIContainers{}, fmt.Errorf("the provided list of labels was empty")
+		return []docker.APIContainers{}, fmt.Errorf("the provided list of labels was empty")
 	}
 
 	// First, ensure a site name is set and matches the current application.
@@ -149,11 +157,17 @@ func FindContainerByLabels(labels map[string]string) (docker.APIContainers, erro
 		}
 
 		if matched {
-			return containers[i], nil
+			containerMatches = append(containerMatches, containers[i])
 		}
 	}
 
-	return docker.APIContainers{}, fmt.Errorf("could not find containers which matched search criteria: %+v", labels)
+	// If we couldn't find a match return a list with a single (empty) element alongside the error.
+	if len(containerMatches) < 1 {
+		containerMatches = []docker.APIContainers{docker.APIContainers{}}
+		returnError = fmt.Errorf("could not find containers which matched search criteria: %+v", labels)
+	}
+
+	return containerMatches, returnError
 }
 
 // NetExists checks to see if the docker network for ddev exists.

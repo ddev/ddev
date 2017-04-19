@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 
 	"strings"
 
@@ -91,7 +92,7 @@ func (l *LocalApp) Describe() (string, error) {
 	dbTable.AddRow("Username:", "root")
 	dbTable.AddRow("Password:", "root")
 	dbTable.AddRow("Database name:", "data")
-	dbTable.AddRow("Connection Info:", l.HostName()+":3306")
+	dbTable.AddRow("Connection Info:", l.HostName()+":"+appports.GetPort("db"))
 	output = output + fmt.Sprint(dbTable)
 
 	output = output + "\n\nOther Services\n--------------\n"
@@ -405,7 +406,7 @@ func (l *LocalApp) Config() error {
 
 		drushSettingsPath := path.Join(basePath, "drush.settings.php")
 		drushConfig := model.NewDrushConfig()
-		drushConfig.DatabasePort = dbPort
+		drushConfig.DatabasePort = strconv.FormatInt(dbPort, 10)
 		if l.GetType() == "drupal8" {
 			drushConfig.IsDrupal8 = true
 		}
