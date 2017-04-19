@@ -133,6 +133,22 @@ func TestLocalStart(t *testing.T) {
 	}
 }
 
+func TestGetApps(t *testing.T) {
+	assert := assert.New(t)
+	apps := GetApps()
+	assert.Equal(len(apps["local"]), len(TestSites))
+
+	for _, site := range TestSites {
+		var found bool
+		for _, siteInList := range apps["local"] {
+			if site.Name == siteInList.GetName() {
+				found = true
+			}
+		}
+		assert.True(found, "Found site %s in list", site.Name)
+	}
+}
+
 // TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed
 func TestLocalImportDB(t *testing.T) {
 	assert := assert.New(t)
@@ -253,4 +269,10 @@ func TestLocalRemove(t *testing.T) {
 
 		cleanup()
 	}
+}
+
+func TestGetAppsEmpty(t *testing.T) {
+	assert := assert.New(t)
+	apps := GetApps()
+	assert.Equal(len(apps["local"]), 0)
 }
