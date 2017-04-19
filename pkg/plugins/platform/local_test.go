@@ -275,7 +275,7 @@ func TestGetContainerHealth(t *testing.T) {
 // TestContainerWait tests the error cases for the container check wait loop.
 func TestContainerWait(t *testing.T) {
 	assert := assert.New(t)
-	appconf, err := ddevapp.NewConfig("")
+	appconf, err := ddevapp.NewConfig(TestSites[0].Dir)
 	if err != nil {
 		log.Fatalf("failed appconfig %v", err)
 	}
