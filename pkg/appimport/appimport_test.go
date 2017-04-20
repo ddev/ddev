@@ -48,7 +48,9 @@ func TestMain(m *testing.M) {
 	}
 
 	// ensure we have docker network
-	_, err = system.RunCommand("docker", []string{"network", "create", "ddev_default"})
+	client, err := dockerutil.GetDockerClient()
+	util.CheckErr(err)
+	err = util.EnsureNetwork(client, "ddev_default")
 	util.CheckErr(err)
 
 	// prep db container for import testing
@@ -126,6 +128,7 @@ func TestImportSQLDump(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "container is not currently running")
 
+	// test import
 	labels := map[string]string{
 		"com.ddev.site-name":      "test",
 		"com.ddev.container-type": "db",
