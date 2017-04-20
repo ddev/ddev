@@ -129,8 +129,12 @@ func (c *Config) Read() error {
 	}
 
 	log.WithFields(log.Fields{
-		"Existing config": awsutil.Prettify(c),
+		"Read config": awsutil.Prettify(fromFile),
 	}).Debug("Finished config read")
+
+	log.WithFields(log.Fields{
+		"Active config": awsutil.Prettify(c),
+	}).Debug("Finished config set")
 	return nil
 }
 
