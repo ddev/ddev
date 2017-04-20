@@ -1,0 +1,16 @@
+[submodule "containers/docker.php7"]
+	path = containers/docker.php7
+	url = git@github.com:drud/docker.php7.git
+	branch = 20170411_php7_experiment
+[submodule "containers/docker.nginx-php-fpm"]
+	path = containers/docker.nginx-php-fpm
+	url = git@github.com:drud/docker.nginx-php-fpm.git
+[submodule "containers/docker.nginx-php-fpm-local"]
+	path = containers/docker.nginx-php-fpm-local
+	url = git@github.com:drud/docker.nginx-php-fpm-local.git
+[submodule "containers/mysql-docker-local"]
+	path = containers/mysql-docker-local
+	url = git@github.com:drud/mysql-docker-local.git
+[submodule "containers/nginx-proxy"]
+	path = containers/nginx-proxy
+	url = git@github.com:drud/nginx-proxy.git
