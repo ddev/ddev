@@ -12,6 +12,9 @@ services:
       MYSQL_ROOT_PASSWORD: root
     ports:
       - "3306"
+    labels:
+      com.ddev.site-name: test
+      com.ddev.container-type: db
 networks:
   default:
     external:

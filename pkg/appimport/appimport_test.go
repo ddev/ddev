@@ -24,7 +24,7 @@ import (
 var (
 	testArchiveURL  = "https://github.com/drud/wordpress/releases/download/v0.1.0/db.tar.gz"
 	testArchivePath = path.Join(testcommon.CreateTmpDir("appimport"), "db.tar.gz")
-	composePath     = path.Join(".ddev", "docker-compose.yaml")
+	composePath     = path.Join("testing", "db-compose.yaml")
 	cwd             string
 )
 
@@ -32,6 +32,14 @@ func TestMain(m *testing.M) {
 	err := system.DownloadFile(testArchivePath, testArchiveURL)
 	if err != nil {
 		log.Fatalf("archive download failed: %s", err)
+	}
+
+	err = os.Mkdir(path.Join("testing", "data"), 0755)
+	util.CheckErr(err)
+
+	err = files.Untar(testArchivePath, path.Join("testing", "data"))
+	if err != nil {
+		log.Fatalf("archive extraction failed: %s", err)
 	}
 
 	cwd, err = os.Getwd()
@@ -47,12 +55,7 @@ func TestMain(m *testing.M) {
 	dbimg := fmt.Sprintf("%s:%s", version.DBImg, version.DBTag)
 	err = os.Setenv("DDEV_DBIMAGE", dbimg)
 	util.CheckErr(err)
-	err = os.MkdirAll(path.Join(".ddev", "data"), 0755)
-	if err != nil {
-		log.Fatalf("failed to make dir: %s", err)
-	}
-	err = files.CopyFile(path.Join("testing", "db-compose.yaml"), composePath)
-	util.CheckErr(err)
+
 	err = dockerutil.DockerCompose("-f", composePath, "up", "-d")
 	if err != nil {
 		log.Fatalf("failed to start db container: %s", err)
@@ -66,9 +69,9 @@ func TestMain(m *testing.M) {
 		log.Fatalf("failed to remove db container: %s", err)
 	}
 
-	err = os.Remove(testArchivePath)
+	err = os.RemoveAll(path.Dir(testArchivePath))
 	util.CheckErr(err)
-	err = os.RemoveAll(".ddev")
+	err = os.RemoveAll(path.Join("testing", "data"))
 	util.CheckErr(err)
 
 	os.Exit(testRun)
@@ -114,24 +117,23 @@ func TestValidateAsset(t *testing.T) {
 	assert.Contains(err.Error(), "provided path is not a directory or archive")
 }
 
-// // TestImportSQLDump tests import of db to container.
-// func TestImportSQLDump(t *testing.T) {
-// 	assert := assert.New(t)
-// 	importFile := path.Join(temp, "extract", "wp-db.sql")
+// TestImportSQLDump tests import of db to container.
+func TestImportSQLDump(t *testing.T) {
+	assert := assert.New(t)
 
-// 	// test no sql dump provided
-// 	err := ImportSQLDump("appimport.go", temp, "invalid")
-// 	assert.Error(err)
-// 	msg := fmt.Sprintf("%v", err)
-// 	assert.Contains(msg, "a database dump in .sql format must be provided")
+	// test container is not running
+	err := ImportSQLDump(composePath, "invalid")
+	assert.Error(err)
+	assert.Contains(err.Error(), "container is not currently running")
 
-// 	// test container is not running
-// 	err = ImportSQLDump(importFile, temp, "invalid")
-// 	assert.Error(err)
-// 	msg = fmt.Sprintf("%v", err)
-// 	assert.Contains(msg, "container is not currently running")
+	labels := map[string]string{
+		"com.ddev.site-name":      "test",
+		"com.ddev.container-type": "db",
+	}
 
-// 	// test import
-// 	// err = ImportSQLDump(importFile, cwd, "local-test-db")
-// 	// assert.NoError(err)
-// }
+	err = util.ContainerWait(90, labels)
+	assert.NoError(err)
+
+	err = ImportSQLDump(composePath, "local-test-db")
+	assert.NoError(err)
+}

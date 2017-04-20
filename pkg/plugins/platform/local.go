@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"time"
 
 	"strings"
 
@@ -334,8 +333,12 @@ func (l *LocalApp) Stop() error {
 }
 
 // Wait ensures that the app appears to be read before returning
-func (l *LocalApp) Wait() (string, error) {
-	err := l.ContainerWait(90, "web")
+func (l *LocalApp) Wait(containerType string) (string, error) {
+	labels := map[string]string{
+		"com.ddev.site-name":      l.GetName(),
+		"com.ddev.container-type": containerType,
+	}
+	err := util.ContainerWait(90, labels)
 	if err != nil {
 		return "", err
 	}
@@ -478,25 +481,4 @@ func (l *LocalApp) AddHostsEntry() error {
 	hostnameArgs := []string{"ddev", "hostname", l.HostName(), "127.0.0.1"}
 	err = system.RunCommandPipe("sudo", hostnameArgs)
 	return err
-}
-
-// ContainerWait provides a wait loop to check for container in "healthy" status.
-func (l *LocalApp) ContainerWait(timeout time.Duration, containerType string) error {
-	timedOut := time.After(timeout * time.Second)
-	tick := time.Tick(500 * time.Millisecond)
-	for {
-		select {
-		case <-timedOut:
-			return errors.New("health check timed out")
-		case <-tick:
-			container, err := l.FindContainerByType(containerType)
-			if err != nil {
-				return errors.New("failed to query container")
-			}
-			status := GetContainerHealth(container)
-			if status == "healthy" {
-				return nil
-			}
-		}
-	}
 }

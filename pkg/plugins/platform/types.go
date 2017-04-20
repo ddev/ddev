@@ -15,7 +15,7 @@ type App interface {
 	DockerComposeYAMLPath() string
 	Down() error
 	Config() error
-	Wait() (string, error)
+	Wait(string) (string, error)
 	HostName() string
 	URL() string
 	ImportDB(string) error
