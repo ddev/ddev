@@ -114,7 +114,7 @@ func TestLocalStart(t *testing.T) {
 		err = app.Start()
 		assert.NoError(err)
 
-		_, err = app.Wait("web")
+		err = app.Wait("web")
 		assert.NoError(err)
 
 		// ensure docker-compose.yaml exists inside .ddev site folder
@@ -235,7 +235,7 @@ func TestLocalRemove(t *testing.T) {
 		err = app.Start()
 		assert.NoError(err)
 
-		_, err = app.Wait("web")
+		err = app.Wait("web")
 		assert.NoError(err)
 
 		if err == nil {
