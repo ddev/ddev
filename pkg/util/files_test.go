@@ -1,4 +1,4 @@
-package files
+package util
 
 import (
 	"log"
@@ -6,7 +6,9 @@ import (
 	"path"
 	"testing"
 
-	"github.com/drud/ddev/pkg/testcommon"
+	"io/ioutil"
+	"path/filepath"
+
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
@@ -15,11 +17,18 @@ var (
 	temp            = os.TempDir()
 	cwd             string
 	testArchiveURL  = "https://github.com/drud/wordpress/releases/download/v0.1.0/files.tar.gz"
-	testArchivePath = path.Join(testcommon.CreateTmpDir("filetest"), "files.tar.gz")
+	testArchivePath string
 )
 
 func TestMain(m *testing.M) {
-	err := system.DownloadFile(testArchivePath, testArchiveURL)
+	testPath, err := ioutil.TempDir("", "filetest")
+	CheckErr(err)
+	testPath, err = filepath.EvalSymlinks(testPath)
+	CheckErr(err)
+	testPath = filepath.Clean(testPath)
+	testArchivePath = path.Join(testPath, "files.tar.gz")
+
+	err = system.DownloadFile(testArchivePath, testArchiveURL)
 	if err != nil {
 		log.Fatalf("archive download failed: %s", err)
 	}

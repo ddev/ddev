@@ -13,7 +13,6 @@ import (
 
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/util/files"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
@@ -37,7 +36,7 @@ func TestMain(m *testing.M) {
 	err = os.Mkdir(path.Join("testing", "data"), 0755)
 	util.CheckErr(err)
 
-	err = files.Untar(testArchivePath, path.Join("testing", "data"))
+	err = util.Untar(testArchivePath, path.Join("testing", "data"))
 	if err != nil {
 		log.Fatalf("archive extraction failed: %s", err)
 	}

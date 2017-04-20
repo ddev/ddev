@@ -16,8 +16,6 @@ import (
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/util/files"
-	"github.com/drud/ddev/pkg/util/prompt"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/drud/drud-go/utils/system"
@@ -139,19 +137,19 @@ func (l *LocalApp) ImportDB(imPath string) error {
 		fmt.Println("Provide the path to the database you wish to import.")
 		fmt.Println("Import path: ")
 
-		imPath = prompt.GetInput("")
+		imPath = util.GetInput("")
 	}
 
 	importPath, err := appimport.ValidateAsset(imPath, "db")
 	if err != nil {
 		if err.Error() == "is archive" {
 			if strings.HasSuffix(importPath, "sql.gz") {
-				err := files.Ungzip(importPath, dbPath)
+				err := util.Ungzip(importPath, dbPath)
 				if err != nil {
 					return fmt.Errorf("failed to extract provided archive: %v", err)
 				}
 			} else {
-				err := files.Untar(importPath, dbPath)
+				err := util.Untar(importPath, dbPath)
 				if err != nil {
 					return fmt.Errorf("failed to extract provided archive: %v", err)
 				}
@@ -165,7 +163,7 @@ func (l *LocalApp) ImportDB(imPath string) error {
 
 	// an archive was not extracted, we need to copy
 	if importPath != "" {
-		err = files.CopyFile(importPath, path.Join(dbPath, "db.sql"))
+		err = util.CopyFile(importPath, path.Join(dbPath, "db.sql"))
 		if err != nil {
 			return err
 		}
@@ -197,7 +195,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		fmt.Println("Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.")
 		fmt.Println("Import path: ")
 
-		imPath = prompt.GetInput("")
+		imPath = util.GetInput("")
 	}
 
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
@@ -234,14 +232,14 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		if err.Error() != "is archive" {
 			return err
 		}
-		err = files.Untar(importPath, destPath)
+		err = util.Untar(importPath, destPath)
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 		return nil
 	}
 
-	err = files.CopyDir(importPath, destPath)
+	err = util.CopyDir(importPath, destPath)
 	if err != nil {
 		return err
 	}

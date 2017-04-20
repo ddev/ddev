@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/util/prompt"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
@@ -139,7 +138,7 @@ func (c *Config) Config() error {
 	namePrompt = fmt.Sprintf("%s (%s)", namePrompt, c.Name)
 	// Define an application name.
 	fmt.Print(namePrompt + ": ")
-	c.Name = prompt.GetInput(c.Name)
+	c.Name = util.GetInput(c.Name)
 
 	err := c.docrootPrompt()
 	util.CheckErr(err)
@@ -220,7 +219,7 @@ func (c *Config) docrootPrompt() error {
 	}
 
 	fmt.Print(docrootPrompt + ": ")
-	c.Docroot = prompt.GetInput(c.Docroot)
+	c.Docroot = util.GetInput(c.Docroot)
 
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(c.AppRoot, c.Docroot)
@@ -261,7 +260,7 @@ func (c *Config) appTypePrompt() error {
 
 	for isAllowedAppType(appType) != true {
 		fmt.Printf(typePrompt + ": ")
-		appType = strings.ToLower(prompt.GetInput(c.AppType))
+		appType = strings.ToLower(util.GetInput(c.AppType))
 
 		if isAllowedAppType(appType) != true {
 			fmt.Printf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(allowedAppTypes, ", "))
