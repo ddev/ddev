@@ -15,6 +15,7 @@ import (
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/util/files"
 	"github.com/drud/ddev/pkg/util/prompt"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -61,7 +62,7 @@ func (l *LocalApp) FindContainerByType(containerType string) (docker.APIContaine
 		"com.ddev.container-type": containerType,
 	}
 
-	return FindContainerByLabels(labels)
+	return util.FindContainerByLabels(labels)
 }
 
 // Describe returns a string which provides detailed information on services associated with the running site.
@@ -348,12 +349,12 @@ func (l *LocalApp) Wait() (string, error) {
 // FindPorts retrieves the public ports for db and web containers
 func (l *LocalApp) FindPorts() error {
 	var err error
-	l.WebPublicPort, err = GetPodPort(l.ContainerName() + "-web")
+	l.WebPublicPort, err = util.GetPodPort(l.ContainerName() + "-web")
 	if err != nil {
 		return err
 	}
 
-	l.DbPublicPort, err = GetPodPort(l.ContainerName() + "-db")
+	l.DbPublicPort, err = util.GetPodPort(l.ContainerName() + "-db")
 	return err
 }
 
@@ -399,7 +400,7 @@ func (l *LocalApp) Config() error {
 		}
 
 		// Setup a custom settings file for use with drush.
-		dbPort, err := GetPodPort(l.ContainerName() + "-db")
+		dbPort, err := util.GetPodPort(l.ContainerName() + "-db")
 		if err != nil {
 			return err
 		}

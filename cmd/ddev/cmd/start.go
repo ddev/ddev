@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -33,12 +32,12 @@ var StartCmd = &cobra.Command{
 			os.Exit(0)
 		}
 
-		client, err := platform.GetDockerClient()
+		client, err := util.GetDockerClient()
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = EnsureNetwork(client, netName)
+		err = util.EnsureNetwork(client, netName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -54,17 +53,17 @@ var StartCmd = &cobra.Command{
 
 		err = app.Start()
 		if err != nil {
-			Failed("Failed to start %s: %s", app.GetName(), err)
+			util.Failed("Failed to start %s: %s", app.GetName(), err)
 		}
 
 		fmt.Println("Waiting for the environment to become ready. This may take a couple of minutes...")
 		siteURL, err := app.Wait()
 		if err != nil {
-			Failed("The environment for %s never became ready: %s", app.GetName(), err)
+			util.Failed("The environment for %s never became ready: %s", app.GetName(), err)
 		}
 
-		Success("Successfully started %s", app.GetName())
-		Success("Your application can be reached at: %s", siteURL)
+		util.Success("Successfully started %s", app.GetName())
+		util.Success("Your application can be reached at: %s", siteURL)
 
 	},
 }

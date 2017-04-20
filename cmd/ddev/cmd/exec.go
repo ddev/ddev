@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
@@ -29,7 +30,7 @@ var LocalDevExecCmd = &cobra.Command{
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 		if !dockerutil.IsRunning(nameContainer) {
-			Failed("App not running locally. Try `ddev start`.")
+			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
 		app.DockerEnv()
@@ -49,7 +50,7 @@ var LocalDevExecCmd = &cobra.Command{
 		err = dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
 			log.Println(err)
-			Failed("Could not execute command.")
+			util.Failed("Could not execute command.")
 		}
 	},
 	PreRun: func(cmd *cobra.Command, args []string) {

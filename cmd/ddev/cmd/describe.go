@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -48,7 +49,7 @@ func describeApp(appName string) (string, error) {
 			"com.ddev.container-type": "web",
 		}
 
-		webContainer, err := platform.FindContainerByLabels(labels)
+		webContainer, err := util.FindContainerByLabels(labels)
 		if err != nil {
 			return "", err
 		}

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -14,12 +14,12 @@ var LocalDevReconfigCmd = &cobra.Command{
 	Short: "Restart the local development environment for a site.",
 	Long:  `Restart stops the containers for site's environment and starts them back up again.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		client, err := platform.GetDockerClient()
+		client, err := util.GetDockerClient()
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		err = EnsureNetwork(client, netName)
+		err = util.EnsureNetwork(client, netName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -35,23 +35,23 @@ var LocalDevReconfigCmd = &cobra.Command{
 		err = app.Stop()
 		if err != nil {
 			log.Println(err)
-			Failed("Failed to stop application.")
+			util.Failed("Failed to stop application.")
 		}
 
 		err = app.Start()
 		if err != nil {
 			log.Println(err)
-			Failed("Failed to start application.")
+			util.Failed("Failed to start application.")
 		}
 
 		fmt.Println("Waiting for the environment to become ready. This may take a couple of minutes...")
 		siteURL, err := app.Wait()
 		if err != nil {
-			Failed("The environment for %s never became ready: %s", app.GetName(), err)
+			util.Failed("The environment for %s never became ready: %s", app.GetName(), err)
 		}
 
-		Success("Successfully restarted %s", app.GetName())
-		Success("Your application can be reached at: %s", siteURL)
+		util.Success("Successfully restarted %s", app.GetName())
+		util.Success("Your application can be reached at: %s", siteURL)
 	},
 }
 

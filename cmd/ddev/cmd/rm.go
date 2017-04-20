@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
@@ -22,20 +23,20 @@ var LocalDevRMCmd = &cobra.Command{
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
 		if !dockerutil.IsRunning(nameContainer) {
-			Failed("App not running locally. Try `ddev start`.")
+			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
 		if !platform.ComposeFileExists(app) {
-			Failed("No docker-compose.yaml could be found for this application.")
+			util.Failed("No docker-compose.yaml could be found for this application.")
 		}
 
 		err = app.Down()
 		if err != nil {
 			log.Println(err)
-			Failed("Could not remove site: %s", app.ContainerName())
+			util.Failed("Could not remove site: %s", app.ContainerName())
 		}
 
-		Success("Successfully removed the %s application.\n", app.GetName())
+		util.Success("Successfully removed the %s application.\n", app.GetName())
 	},
 }
 
