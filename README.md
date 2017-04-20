@@ -29,20 +29,21 @@ Usage:
   ddev [command]
 
 Available Commands:
-  config      Create or modify a ddev application config in the current directory
-  describe    Get a detailed description of a running ddev site.
-  exec        Execute a Linux shell command in the webserver container.
-  hostname    Manage your hostfile entries.
-  import      Import an existing site to the local dev environment
-  list        List applications that exist locally
-  logs        Get the logs from your running services.
-  restart     Restart the local development environment for a site.
-  rm          Remove an application's local services.
-  sequelpro   Easily connect local site to sequelpro
-  ssh         SSH to an app container.
-  start       Start the local development environment for a site.
-  stop        Stop an application's local services.
-  version     print ddev version and component versions
+  config       Create or modify a ddev application config in the current directory
+  describe     Get a detailed description of a running ddev site.
+  exec         Execute a Linux shell command in the webserver container.
+  hostname     Manage your hostfile entries.
+  import-db    Import the database of an existing site to the local dev environment.
+  import-files Import the uploaded files directory of an existing site to the default public upload directory of your application.
+  list         List applications that exist locally
+  logs         Get the logs from your running services.
+  restart      Restart the local development environment for a site.
+  rm           Remove an application's local services.
+  sequelpro    Easily connect local site to sequelpro
+  ssh          SSH to an app container.
+  start        Start the local development environment for a site.
+  stop         Stop an application's local services.
+  version      print ddev version and component versions
 
 Use "ddev [command] --help" for more information about a command.
 ```
