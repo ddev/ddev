@@ -114,15 +114,13 @@ func GetApps() map[string][]App {
 
 		if err == nil {
 			for _, siteContainer := range sites {
-
-				site := PluginMap[platformType]
+				site := GetPluginApp(platformType)
 				approot, ok := siteContainer.Labels["com.ddev.approot"]
 				if !ok {
 					break
 				}
 				_, ok = apps[platformType]
 				if !ok {
-					fmt.Println("creating slice for " + platformType)
 					apps[platformType] = []App{}
 				}
 

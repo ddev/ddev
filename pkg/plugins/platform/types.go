@@ -1,5 +1,7 @@
 package platform
 
+import "log"
+
 // App is an interface apps for Drud Local must implement to use shared functionality
 type App interface {
 	Init(string) error
@@ -34,4 +36,16 @@ type AppBase struct {
 // PluginMap maps the name of the plugins to their implementation.
 var PluginMap = map[string]App{
 	"local": &LocalApp{},
+}
+
+// GetPluginApp will return an application of the type specified by pluginType
+func GetPluginApp(pluginType string) App {
+	switch pluginType {
+	case "local":
+		return &LocalApp{}
+	default:
+		log.Fatalf("Could not find plugin type %s", pluginType)
+	}
+
+	return nil
 }
