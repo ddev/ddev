@@ -15,6 +15,7 @@ import (
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/oleiade/reflections"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -56,6 +57,9 @@ func NewConfig(AppRoot string) (*Config, error) {
 	// Default platform for now.
 	c.Platform = DDevDefaultPlatform
 
+	// If name is not provided, use name of the directory the site is in.
+	c.Name = path.Base(AppRoot)
+
 	// These should always default to the latest image/tag names from the Version package.
 	c.WebImage = version.WebImg + ":" + version.WebTag
 	c.DBImage = version.DBImg + ":" + version.DBTag
@@ -94,16 +98,34 @@ func (c *Config) Write() error {
 	return nil
 }
 
-// Read app configuration from a specified location on disk.
+// Read app configuration from a specified location on disk, falling back to defaults for config
+// values not defined in the read config file.
 func (c *Config) Read() error {
 	source, err := ioutil.ReadFile(c.ConfigPath)
 	if err != nil {
 		return err
 	}
 
-	err = yaml.Unmarshal(source, c)
+	// Read config values from file into its own empty struct.
+	fromFile := &Config{}
+	err = yaml.Unmarshal(source, fromFile)
 	if err != nil {
 		return err
+	}
+
+	// Reflect non-empty values fromFile into c *Config.
+	fields, err := reflections.Items(fromFile)
+	if err != nil {
+		return err
+	}
+
+	for field, val := range fields {
+		if val != "" {
+			err := reflections.SetField(c, field, val)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	log.WithFields(log.Fields{
