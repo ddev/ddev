@@ -331,17 +331,17 @@ func (l *LocalApp) Stop() error {
 }
 
 // Wait ensures that the app appears to be read before returning
-func (l *LocalApp) Wait(containerType string) (string, error) {
+func (l *LocalApp) Wait(containerType string) error {
 	labels := map[string]string{
 		"com.ddev.site-name":      l.GetName(),
 		"com.ddev.container-type": containerType,
 	}
 	err := util.ContainerWait(90, labels)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return l.URL(), nil
+	return nil
 }
 
 // FindPorts retrieves the public ports for db and web containers
