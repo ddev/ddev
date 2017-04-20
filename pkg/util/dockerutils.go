@@ -84,44 +84,6 @@ func GetDockerClient() (*docker.Client, error) {
 	return client, err
 }
 
-// ProcessContainer will process a docker container for an app listing.
-// Since apps contain multiple containers, ProcessContainer will be called once per container.
-func ProcessContainer(l map[string]map[string]string, plugin string, containerName string, container docker.APIContainers) {
-	label := container.Labels
-	appName := label["com.ddev.site-name"]
-	appType := label["com.ddev.app-type"]
-	containerType := label["com.ddev.container-type"]
-	appRoot := label["com.ddev.approot"]
-	url := label["com.ddev.app-url"]
-
-	_, exists := l[appName]
-	if exists == false {
-		l[appName] = map[string]string{
-			"name":    appName,
-			"status":  container.State,
-			"url":     url,
-			"type":    appType,
-			"approot": appRoot,
-		}
-	}
-
-	var publicPort int64
-	for _, port := range container.Ports {
-		if port.PublicPort != 0 {
-			publicPort = port.PublicPort
-		}
-	}
-
-	if containerType == "web" {
-		l[appName]["WebPublicPort"] = fmt.Sprintf("%d", publicPort)
-	}
-
-	if containerType == "db" {
-		l[appName]["DbPublicPort"] = fmt.Sprintf("%d", publicPort)
-	}
-
-}
-
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.
 func FindContainerByLabels(labels map[string]string) (docker.APIContainers, error) {
 	containers, err := FindContainersByLabels(labels)
