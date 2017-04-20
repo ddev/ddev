@@ -11,6 +11,10 @@ stages:
       - type: checkout
 
       - type: shell
+        command: sudo apt-get update && sudo apt-get install mysql-client
+        name: Basic tool installation
+
+      - type: shell
         command: |
           sudo apt-get remove golang &&
           wget -q -O /tmp/golang.tgz https://storage.googleapis.com/golang/go1.7.5.linux-amd64.tar.gz &&
@@ -62,7 +66,6 @@ stages:
           make GOPATH=~/ errcheck
         name: Static analysis targets govet/gofmt/golint
 
-
       # Example: Run just one test in ddev by name
 #      - type: shell
 #        command: |
@@ -74,8 +77,23 @@ stages:
       # Run the built-in ddev tests
       - type: shell
         command: |
-          cd ~/src/github.com/drud/ddev &&
-          make GOPATH=~/ test
-        name: ddev tests
+          if [ ! -n "${RUN_NIGHTLY_BUILD}" ]; then
+            cd ~/src/github.com/drud/ddev &&
+            make GOPATH=~/ test
+          fi
+        name: ddev tests (not nightly build)
 
+
+      - type: shell
+        command: |
+          if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
+            cd ~/src/github.com/drud/ddev && make clean
+            export VERSION=nightly.$(date +%Y%m%d%H%M%S)
+            echo VERSION=$VERSION
+            git submodule update --init && git submodule update --remote
+            cd ~/src/github.com/drud/ddev && make -f nightly_build.mak clean
+            cd ~/src/github.com/drud/ddev && make -f nightly_build.mak --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
+            ~/src/github.com/drud/ddev/bin/linux/ddev version
+          fi
+        name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
 
