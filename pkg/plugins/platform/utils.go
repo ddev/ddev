@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gosuri/uitable"
@@ -19,7 +18,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/system"
-	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -40,66 +38,6 @@ func PrepLocalSiteDirs(base string) error {
 	}
 
 	return nil
-}
-
-// GetPort determines and returns the public port for a given container.
-func GetPort(name string) (int64, error) {
-	client, _ := GetDockerClient()
-	var publicPort int64
-
-	containers, err := client.ListContainers(docker.ListContainersOptions{All: false})
-	if err != nil {
-		return publicPort, err
-	}
-
-	for _, ctr := range containers {
-		if strings.Contains(ctr.Names[0][1:], name) {
-			for _, port := range ctr.Ports {
-				if port.PublicPort != 0 {
-					publicPort = port.PublicPort
-					return publicPort, nil
-				}
-			}
-		}
-	}
-	return publicPort, fmt.Errorf("%s container not ready", name)
-}
-
-// GetPodPort provides a wait loop to help in successfully returning the public port for a given container.
-func GetPodPort(name string) (int64, error) {
-	var publicPort int64
-
-	err := try.Do(func(attempt int) (bool, error) {
-		var err error
-		publicPort, err = GetPort(name)
-		if err != nil {
-			time.Sleep(2 * time.Second) // wait a couple seconds
-		}
-		return attempt < 70, err
-	})
-	if err != nil {
-		return publicPort, err
-	}
-
-	return publicPort, nil
-}
-
-// GetDockerClient returns a docker client for a docker-machine.
-func GetDockerClient() (*docker.Client, error) {
-	// Create a new docker client talking to the default docker-machine.
-	client, err := docker.NewClient("unix:///var/run/docker.sock")
-	if err != nil {
-		log.Fatal(err)
-	}
-	return client, err
-}
-
-// FormatPlural is a simple wrapper which returns different strings based on the count value.
-func FormatPlural(count int, single string, plural string) string {
-	if count == 1 {
-		return single
-	}
-	return plural
 }
 
 // GetApps returns a list of ddev applictions keyed by platform.
@@ -138,7 +76,7 @@ func GetApps() map[string][]App {
 // RenderAppTable will format a table for user display based on a list of apps.
 func RenderAppTable(platform string, apps []App) {
 	if len(apps) > 0 {
-		fmt.Printf("%v %s %v found.\n", len(apps), platform, FormatPlural(len(apps), "site", "sites"))
+		fmt.Printf("%v %s %v found.\n", len(apps), platform, util.FormatPlural(len(apps), "site", "sites"))
 		table := uitable.New()
 		table.MaxColWidth = 200
 		table.AddRow("NAME", "TYPE", "LOCATION", "URL", "DATABASE URL")
@@ -154,35 +92,6 @@ func RenderAppTable(platform string, apps []App) {
 		fmt.Println(table)
 	}
 
-}
-
-// DetermineAppType uses some predetermined file checks to determine if a local app
-// is of any of the known types
-func DetermineAppType(basePath string) (string, error) {
-	defaultLocations := map[string]string{
-		"docroot/scripts/drupal.sh":      "drupal",
-		"docroot/core/scripts/drupal.sh": "drupal8",
-		"docroot/wp":                     "wp",
-	}
-
-	for k, v := range defaultLocations {
-		if FileExists(path.Join(basePath, k)) {
-			return v, nil
-		}
-	}
-
-	return "", fmt.Errorf("unable to determine the application type")
-}
-
-// FileExists checks a file's existence
-// @todo replace this with drud-go/utils version when merged
-func FileExists(name string) bool {
-	if _, err := os.Stat(name); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-	}
-	return true
 }
 
 // EnsureDockerRouter ensures the router is running.
