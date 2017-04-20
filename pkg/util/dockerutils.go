@@ -1,13 +1,16 @@
 package util
 
 import (
+	"errors"
 	"fmt"
+	"log"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
-	"log"
-	"strings"
-	"time"
 )
 
 // EnsureNetwork will ensure the docker network for ddev is created.
@@ -174,4 +177,40 @@ func NetExists(client *docker.Client, name string) bool {
 		}
 	}
 	return false
+}
+
+// ContainerWait provides a wait loop to check for container in "healthy" status.
+func ContainerWait(timeout time.Duration, labels map[string]string) error {
+	timedOut := time.After(timeout * time.Second)
+	tick := time.Tick(500 * time.Millisecond)
+	for {
+		select {
+		case <-timedOut:
+			return errors.New("health check timed out")
+		case <-tick:
+			container, err := FindContainerByLabels(labels)
+			if err != nil {
+				return errors.New("failed to query container")
+			}
+			status := GetContainerHealth(container)
+			if status == "healthy" {
+				return nil
+			}
+		}
+	}
+}
+
+// GetContainerHealth retrieves the status of a given container. The status string returned
+// by docker contains uptime and the health status in parenths. This function will filter the uptime and
+// return only the health status.
+func GetContainerHealth(container docker.APIContainers) string {
+	status := container.Status
+	re := regexp.MustCompile(`\(([^\)]+)\)`)
+	match := re.FindString(status)
+	match = strings.Trim(match, "()")
+	pre := "health: "
+	if strings.HasPrefix(match, pre) {
+		match = strings.TrimPrefix(match, pre)
+	}
+	return match
 }
