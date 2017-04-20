@@ -45,13 +45,13 @@ var LocalDevReconfigCmd = &cobra.Command{
 		}
 
 		fmt.Println("Waiting for the environment to become ready. This may take a couple of minutes...")
-		siteURL, err := app.Wait()
+		err = app.Wait("web")
 		if err != nil {
 			util.Failed("The environment for %s never became ready: %s", app.GetName(), err)
 		}
 
 		util.Success("Successfully restarted %s", app.GetName())
-		util.Success("Your application can be reached at: %s", siteURL)
+		util.Success("Your application can be reached at: %s", app.URL())
 	},
 }
 

@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util/prompt"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/stretchr/testify/assert"
 )
@@ -172,7 +172,7 @@ func TestConfigCommand(t *testing.T) {
 	// an invalid app type, and finally a valid site type (drupal8)
 	input := fmt.Sprintf("%s\n%s\ndocroot\n%s\ndrupal8", name, invalidDir, invalidAppType)
 	scanner := bufio.NewScanner(strings.NewReader(input))
-	prompt.SetInputScanner(scanner)
+	util.SetInputScanner(scanner)
 
 	restoreOutput := testcommon.CaptureStdOut()
 	err = config.Config()
