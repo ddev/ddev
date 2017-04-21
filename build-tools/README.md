@@ -36,13 +36,14 @@ cd build-tools
 Using this base will allow you to build with standard targets like build, test, container, push, clean:
 
 ```
-make 
+make
 make linux
 make darwin
-make gofmt 
+make gofmt
 make govet
 make govendor
 make golint
+make codecoroner
 make static (gofmt, govet, golint, govendor)
 make test
 make container
