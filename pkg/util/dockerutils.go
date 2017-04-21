@@ -155,19 +155,6 @@ func FindContainerByLabels(labels map[string]string) (docker.APIContainers, erro
 	return docker.APIContainers{}, fmt.Errorf("could not find containers which matched search criteria: %+v", labels)
 }
 
-// SubTag replaces current tag on an image or adds one if one does not exist
-func SubTag(image string, tag string) string {
-	if strings.HasSuffix(image, ":"+tag) {
-		return image
-	}
-	if !strings.Contains(image, ":") || (strings.HasPrefix(image, "http") && strings.Count(image, ":") == 1) {
-		return image + ":" + tag
-	}
-	parts := strings.Split(image, ":")
-	parts[len(parts)-1] = tag
-	return strings.Join(parts, ":")
-}
-
 // NetExists checks to see if the docker network for ddev exists.
 func NetExists(client *docker.Client, name string) bool {
 	nets, _ := client.ListNetworks()

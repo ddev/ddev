@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"fmt"
+
 	"github.com/fatih/color"
 	"github.com/gosuri/uitable"
 )
@@ -17,11 +18,6 @@ func Failed(format string, a ...interface{}) {
 // Success will indicate an operation succeeded with colored confirmation text.
 func Success(format string, a ...interface{}) {
 	color.Cyan(format, a...)
-}
-
-// Warning will present the user with warning text.
-func Warning(format string, a ...interface{}) {
-	color.Yellow(format, a...)
 }
 
 // FormatPlural is a simple wrapper which returns different strings based on the count value.
