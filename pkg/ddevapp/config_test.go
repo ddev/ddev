@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -192,4 +193,31 @@ func TestConfigCommand(t *testing.T) {
 	err = prepDDevDirectory(testDir)
 	assert.NoError(err)
 
+}
+
+// TestRead tests reading config values from file and fallback to defaults for values not exposed.
+func TestRead(t *testing.T) {
+	assert := assert.New(t)
+
+	// This closely resembles the values one would have from NewConfig()
+	c := &Config{
+		ConfigPath: path.Join("testing", "config.yaml"),
+		AppRoot:    "testing",
+		APIVersion: CurrentAppVersion,
+		Platform:   DDevDefaultPlatform,
+		Name:       "testing",
+		WebImage:   version.WebImg + ":" + version.WebTag,
+		DBImage:    version.DBImg + ":" + version.DBTag,
+		DBAImage:   version.DBAImg + ":" + version.DBATag,
+	}
+
+	c.Read()
+
+	// Values not defined in file, we should still have default values
+	assert.Equal(c.Name, "testing")
+	assert.Equal(c.DBImage, version.DBImg+":"+version.DBTag)
+
+	// Values defined in file, we should have values from file
+	assert.Equal(c.AppType, "drupal8")
+	assert.Equal(c.WebImage, "test/testimage:latest")
 }
