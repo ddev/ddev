@@ -304,12 +304,6 @@
 			"revisionTime": "2016-08-08T18:12:53Z"
 		},
 		{
-			"checksumSHA1": "R8z+BOS81hOWgcqymuVWHNta/yc=",
-			"path": "github.com/oleiade/reflections",
-			"revision": "0e86b3c98b2ff33e30c85cfe97d9a63d439fe7eb",
-			"revisionTime": "2016-08-17T07:03:35Z"
-		},
-		{
 			"checksumSHA1": "R93mnw63M+513kttRwG4YDp62oM=",
 			"path": "github.com/opencontainers/runc/libcontainer/system",
 			"revision": "3597b7b743c18b9813cba347d67dfbba69373842",

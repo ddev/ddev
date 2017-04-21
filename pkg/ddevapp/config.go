@@ -15,7 +15,6 @@ import (
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/oleiade/reflections"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -56,9 +55,6 @@ func NewConfig(AppRoot string) (*Config, error) {
 
 	// Default platform for now.
 	c.Platform = DDevDefaultPlatform
-
-	// If name is not provided, use name of the directory the site is in.
-	c.Name = path.Base(AppRoot)
 
 	// These should always default to the latest image/tag names from the Version package.
 	c.WebImage = version.WebImg + ":" + version.WebTag
@@ -106,31 +102,29 @@ func (c *Config) Read() error {
 		return err
 	}
 
-	// Read config values from file into its own empty struct.
-	fromFile := &Config{}
-	err = yaml.Unmarshal(source, fromFile)
+	// Read config values from file.
+	err = yaml.Unmarshal(source, c)
 	if err != nil {
 		return err
-	}
-
-	// Reflect non-empty values fromFile into c *Config.
-	fields, err := reflections.Items(fromFile)
-	if err != nil {
-		return err
-	}
-
-	for field, val := range fields {
-		if val != "" {
-			err := reflections.SetField(c, field, val)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	log.WithFields(log.Fields{
-		"Read config": awsutil.Prettify(fromFile),
+		"Read config": awsutil.Prettify(c),
 	}).Debug("Finished config read")
+
+	// If any of these values aren't defined in the config file, set them to defaults.
+	if c.Name == "" {
+		c.Name = path.Base(c.AppRoot)
+	}
+	if c.WebImage == "" {
+		c.WebImage = version.WebImg + ":" + version.WebTag
+	}
+	if c.DBImage == "" {
+		c.DBImage = version.DBImg + ":" + version.DBTag
+	}
+	if c.DBImage == "" {
+		c.DBAImage = version.DBAImg + ":" + version.DBATag
+	}
 
 	log.WithFields(log.Fields{
 		"Active config": awsutil.Prettify(c),
