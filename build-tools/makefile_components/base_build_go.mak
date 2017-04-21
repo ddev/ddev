@@ -11,7 +11,7 @@ SHELL := /bin/bash
 
 GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
 
-BUILD_IMAGE ?= drud/golang-build-container:v0.2.0
+BUILD_IMAGE ?= drud/golang-build-container:v0.3.0
 
 BUILD_BASE_DIR ?= $$PWD
 
@@ -111,6 +111,16 @@ unused:
 		-w /go/src/$(PKG)                                                  \
 		$(BUILD_IMAGE)                                                     \
 		unused $(SRC_AND_UNDER)
+
+codecoroner:
+	@echo -n "Checking codecoroner for unused functions: "
+	docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
+		-v $$(pwd)/.go:/go                                                 \
+		-v $$(pwd):/go/src/$(PKG)                                          \
+		-w /go/src/$(PKG)                                                  \
+		$(BUILD_IMAGE) \
+		bash -c 'OUT=$$(codecoroner -tests -ignore vendor funcs $(SRC_AND_UNDER)); if [ -n "$$OUT" ]; then echo "$$OUT"; exit 1; fi'                                             \
+
 
 varcheck:
 	@echo -n "Checking unused globals and struct members: "
