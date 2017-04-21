@@ -211,7 +211,8 @@ func TestRead(t *testing.T) {
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
 	}
 
-	c.Read()
+	err := c.Read()
+	assert.NoError(err)
 
 	// Values not defined in file, we should still have default values
 	assert.Equal(c.Name, "testing")
