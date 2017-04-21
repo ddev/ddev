@@ -96,7 +96,6 @@ func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, e
 	client, _ := dockerutil.GetDockerClient()
 	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
 	containerMatches := []docker.APIContainers{}
-
 	if len(labels) < 1 {
 		return []docker.APIContainers{}, fmt.Errorf("the provided list of labels was empty")
 	}
@@ -189,7 +188,7 @@ outer:
 // return only the health status.
 func GetContainerHealth(container docker.APIContainers) string {
 	// If the container is not running, then return exited as the health.
-	if container.State == "exited" {
+	if container.State == "exited" || container.State == "restarting" {
 		return container.State
 	}
 
