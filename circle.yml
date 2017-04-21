@@ -83,6 +83,14 @@ stages:
           fi
         name: ddev tests (not nightly build)
 
+      # Run codecoroner after tests. We care about dead code, but we still want tests to run for WIP branches.
+      - type: shell
+        command: |
+          cd  ~/src/github.com/drud/ddev &&
+          make GOPATH=~/ codecoroner
+        name: Run codecoroner
+
+
 
       - type: shell
         command: |
