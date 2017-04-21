@@ -80,11 +80,9 @@ func (l *LocalApp) Describe() (string, error) {
 	}
 
 	var output string
-	app := uitable.New()
-	app.MaxColWidth = maxWidth
-	app.AddRow("NAME", "LOCATION", "TYPE", "URL", "STATUS")
-	app.AddRow(l.GetName(), l.AppRoot(), l.GetType(), l.URL(), "running")
-	output = fmt.Sprint(app)
+	appTable := CreateAppTable()
+	RenderAppRow(appTable, l)
+	output = fmt.Sprint(appTable)
 
 	output = output + "\n\nMySQL Credentials\n-----------------\n"
 	dbTable := uitable.New()

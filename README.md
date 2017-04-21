@@ -92,15 +92,15 @@ To see a list of your current sites you can use `ddev list`.
 ```
 ➜  ddev list
 1 local site found.
-NAME   	TYPE   	LOCATION                        URL                      	DATABASE URL
-drupal8	drupal8	/Users/username/drupal8/docroot	http://drupal8.ddev.local	drupal8.ddev.local:3306
+NAME   	TYPE   	LOCATION               	URL                      	DATABASE URL           	STATUS
+drupal8	drupal8	~/Projects/ddev/drupal8	http://drupal8.ddev.local	drupal8.ddev.local:3306	running
 ```
 
 You can also see more detailed information about a site by running `ddev describe` or `ddev describe [site-name]`.
 
 ```
-NAME   	DOCROOT                                         	TYPE   	URL                      	STATUS
-drupal8	/Users/username/drupal8/docroot                  	drupal8	http://drupal8.ddev.local	running
+NAME   	TYPE   	LOCATION               	URL                      	DATABASE URL           	STATUS
+drupal8	drupal8	~/Projects/ddev/drupal8	http://drupal8.ddev.local	drupal8.ddev.local:3306	running
 
 MySQL Credentials
 -----------------

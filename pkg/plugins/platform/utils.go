@@ -78,29 +78,39 @@ func RenderAppTable(platform string, apps []App) {
 
 	if len(apps) > 0 {
 		fmt.Printf("%v %s %v found.\n", len(apps), platform, util.FormatPlural(len(apps), "site", "sites"))
-		table := uitable.New()
-		table.MaxColWidth = 200
-
-		table.AddRow("NAME", "TYPE", "LOCATION", "URL", "DATABASE URL", "STATUS")
+		table := CreateAppTable()
 		for _, site := range apps {
-			// test tilde expansion
-			appRoot := site.AppRoot()
-			userDir, err := homedir.Dir()
-			if err == nil {
-				appRoot = strings.Replace(appRoot, userDir, "~", 1)
-			}
-			table.AddRow(
-				site.GetName(),
-				site.GetType(),
-				appRoot,
-				site.URL(),
-				fmt.Sprintf("%s:%s", site.HostName(), appports.GetPort("db")),
-				site.SiteStatus(),
-			)
+			RenderAppRow(table, site)
 		}
 		fmt.Println(table)
 	}
 
+}
+
+// CreateAppTable will create a new app table for describe and list output
+func CreateAppTable() *uitable.Table {
+	table := uitable.New()
+	table.MaxColWidth = 200
+	table.AddRow("NAME", "TYPE", "LOCATION", "URL", "DATABASE URL", "STATUS")
+	return table
+}
+
+// RenderAppRow will add an application row to an existing table for describe and list output.
+func RenderAppRow(table *uitable.Table, site App) {
+	// test tilde expansion
+	appRoot := site.AppRoot()
+	userDir, err := homedir.Dir()
+	if err == nil {
+		appRoot = strings.Replace(appRoot, userDir, "~", 1)
+	}
+	table.AddRow(
+		site.GetName(),
+		site.GetType(),
+		appRoot,
+		site.URL(),
+		fmt.Sprintf("%s:%s", site.HostName(), appports.GetPort("db")),
+		site.SiteStatus(),
+	)
 }
 
 // EnsureDockerRouter ensures the router is running.
