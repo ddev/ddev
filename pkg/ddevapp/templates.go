@@ -56,9 +56,12 @@ services:
     restart: always
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.container-type: db
+      com.ddev.container-type: dba
       com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
+      com.ddev.docroot: $DDEV_DOCROOT
+      com.ddev.approot: $DDEV_APPROOT
+      com.ddev.app-url: $DDEV_URL
     depends_on:
       - local-${DDEV_SITENAME}-db
     links:
