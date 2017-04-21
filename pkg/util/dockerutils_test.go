@@ -21,6 +21,12 @@ func TestGetContainerHealth(t *testing.T) {
 	}
 	out = GetContainerHealth(container)
 	assert.Equal(out, "healthy")
+
+	container = docker.APIContainers{
+		State: "exited",
+	}
+	out = GetContainerHealth(container)
+	assert.Equal(out, container.State)
 }
 
 // TestContainerWait tests the error cases for the container check wait loop.
