@@ -22,6 +22,7 @@ type App interface {
 	URL() string
 	ImportDB(string) error
 	ImportFiles(string) error
+	SiteStatus() string
 }
 
 // AppBase is the parent type for all local app implementations

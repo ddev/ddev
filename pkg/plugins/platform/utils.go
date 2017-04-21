@@ -13,12 +13,12 @@ import (
 
 	"errors"
 
-	"github.com/docker/docker/pkg/homedir"
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/fsouza/go-dockerclient"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 // PrepLocalSiteDirs creates a site's directories for local dev in .ddev
@@ -75,18 +75,27 @@ func GetApps() map[string][]App {
 
 // RenderAppTable will format a table for user display based on a list of apps.
 func RenderAppTable(platform string, apps []App) {
+
 	if len(apps) > 0 {
 		fmt.Printf("%v %s %v found.\n", len(apps), platform, util.FormatPlural(len(apps), "site", "sites"))
 		table := uitable.New()
 		table.MaxColWidth = 200
-		table.AddRow("NAME", "TYPE", "LOCATION", "URL", "DATABASE URL")
+
+		table.AddRow("NAME", "TYPE", "LOCATION", "URL", "DATABASE URL", "STATUS")
 		for _, site := range apps {
+			// test tilde expansion
+			appRoot := site.AppRoot()
+			userDir, err := homedir.Dir()
+			if err == nil {
+				appRoot = strings.Replace(appRoot, userDir, "~", 1)
+			}
 			table.AddRow(
 				site.GetName(),
 				site.GetType(),
-				site.AppRoot(),
+				appRoot,
 				site.URL(),
 				fmt.Sprintf("%s:%s", site.HostName(), appports.GetPort("db")),
+				site.SiteStatus(),
 			)
 		}
 		fmt.Println(table)
@@ -96,9 +105,11 @@ func RenderAppTable(platform string, apps []App) {
 
 // EnsureDockerRouter ensures the router is running.
 func EnsureDockerRouter() {
-	userHome := homedir.Get()
+	userHome, err := homedir.Dir()
+	util.CheckErr(err)
+
 	routerdir := path.Join(userHome, ".ddev")
-	err := os.MkdirAll(routerdir, 0755)
+	err = os.MkdirAll(routerdir, 0755)
 	if err != nil {
 		log.Fatalf("unable to create directory for ddev router: %s", err)
 	}
