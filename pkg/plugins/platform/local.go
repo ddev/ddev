@@ -187,14 +187,22 @@ func (l *LocalApp) ImportDB(imPath string) error {
 	return nil
 }
 
+// SiteStatus returns the current status of an application based on the web container.
 func (l *LocalApp) SiteStatus() string {
 	webContainer, err := l.FindContainerByType("web")
-
 	if err != nil {
-		return "Not Found"
+		return "not found"
 	}
 
-	return "Running"
+	status := util.GetContainerHealth(webContainer)
+	if status == "exited" {
+		return "stopped"
+	}
+	if status == "healthy" {
+		return "running"
+	}
+
+	return status
 }
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.

@@ -188,6 +188,12 @@ outer:
 // by docker contains uptime and the health status in parenths. This function will filter the uptime and
 // return only the health status.
 func GetContainerHealth(container docker.APIContainers) string {
+	// If the container is not running, then return exited as the health.
+	if container.State == "exited" {
+		return container.State
+	}
+
+	// Otherwise parse the container status.
 	status := container.Status
 	re := regexp.MustCompile(`\(([^\)]+)\)`)
 	match := re.FindString(status)
