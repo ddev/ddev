@@ -177,7 +177,7 @@ func ContainerWait(timeout time.Duration, labels map[string]string) error {
 	timeoutChan := time.After(timeout * time.Second)
 
 	// Default error is that it timed out
-	var containerErr error = errors.New("health check timed out")
+	var containerErr = errors.New("health check timed out")
 
 	go func() {
 		for range ticker.C {
