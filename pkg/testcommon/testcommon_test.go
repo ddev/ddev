@@ -22,7 +22,7 @@ func TestTmpDir(t *testing.T) {
 
 	// Clean up tempoary directory and ensure it no longer exists.
 	CleanupDir(testDir)
-	dirStat, err = os.Stat(testDir)
+	_, err = os.Stat(testDir)
 	assert.Error(err, "Could not stat temporary directory")
 	assert.True(os.IsNotExist(err), "Error is of type IsNotExists")
 }
@@ -42,6 +42,7 @@ func TestChdir(t *testing.T) {
 	// Change to the temporary directory.
 	cleanupFunc := Chdir(testDir)
 	currentDir, err := os.Getwd()
+	assert.NoError(err)
 
 	// On OSX this are created under /var, but /var is a symlink to /var/private, so we cannot ensure complete equality of these strings.
 	assert.Contains(currentDir, testDir, "Ensure the current directory is the temporary directory we created")
@@ -107,7 +108,7 @@ func TestValidTestSite(t *testing.T) {
 	assert.Equal(startingDir, currentDir, "Able to return to our original starting directory")
 
 	ts.Cleanup()
-	dirStat, err = os.Stat(ts.Dir)
+	_, err = os.Stat(ts.Dir)
 	assert.Error(err, "Could not stat temporary directory after cleanup")
 
 }

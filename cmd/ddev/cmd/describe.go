@@ -60,6 +60,9 @@ func describeApp(appName string) (string, error) {
 			}
 			app = platform.PluginMap[strings.ToLower(plugin)]
 			err = app.Init(dir)
+			if (err != nil) {
+				return "", err
+			}
 		}
 	}
 
