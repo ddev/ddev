@@ -1,0 +1,3 @@
+#!/bin/sh
+
+make -s gofmt && make -s govet && make -s golint && make -s errcheck && make -s staticcheck
