@@ -1,0 +1,4 @@
+APIVersion: "1"
+type: drupal8
+docroot: test
+webimage: test/testimage:latest

@@ -94,21 +94,41 @@ func (c *Config) Write() error {
 	return nil
 }
 
-// Read app configuration from a specified location on disk.
+// Read app configuration from a specified location on disk, falling back to defaults for config
+// values not defined in the read config file.
 func (c *Config) Read() error {
 	source, err := ioutil.ReadFile(c.ConfigPath)
 	if err != nil {
 		return err
 	}
 
+	// Read config values from file.
 	err = yaml.Unmarshal(source, c)
 	if err != nil {
 		return err
 	}
 
 	log.WithFields(log.Fields{
-		"Existing config": awsutil.Prettify(c),
+		"Read config": awsutil.Prettify(c),
 	}).Debug("Finished config read")
+
+	// If any of these values aren't defined in the config file, set them to defaults.
+	if c.Name == "" {
+		c.Name = path.Base(c.AppRoot)
+	}
+	if c.WebImage == "" {
+		c.WebImage = version.WebImg + ":" + version.WebTag
+	}
+	if c.DBImage == "" {
+		c.DBImage = version.DBImg + ":" + version.DBTag
+	}
+	if c.DBAImage == "" {
+		c.DBAImage = version.DBAImg + ":" + version.DBATag
+	}
+
+	log.WithFields(log.Fields{
+		"Active config": awsutil.Prettify(c),
+	}).Debug("Finished config set")
 	return nil
 }
 
