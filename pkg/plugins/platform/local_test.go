@@ -142,6 +142,7 @@ func TestGetApps(t *testing.T) {
 		for _, siteInList := range apps["local"] {
 			if site.Name == siteInList.GetName() {
 				found = true
+				break
 			}
 		}
 		assert.True(found, "Found site %s in list", site.Name)
