@@ -115,7 +115,7 @@ func RenderAppRow(table *uitable.Table, site App) {
 // EnsureDockerRouter ensures the router is running.
 func EnsureDockerRouter() {
 	userHome, err := homedir.Dir()
-	util.CheckErr(err)
+	log.Fatal("could not get home directory for current user. is it set?")
 
 	routerdir := path.Join(userHome, ".ddev")
 	err = os.MkdirAll(routerdir, 0755)
@@ -167,8 +167,7 @@ func ComposeFileExists(app App) bool {
 
 // Cleanup will clean up ddev apps even if the composer file has been deleted.
 func Cleanup(app App) error {
-
-	containers, err := util.GetDockerContainers()
+	containers, err := util.GetDockerContainers(true)
 	if err != nil {
 		return err
 	}

@@ -132,6 +132,7 @@ func TestLocalStart(t *testing.T) {
 	}
 }
 
+// TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
 	assert := assert.New(t)
 	apps := GetApps()
@@ -271,6 +272,7 @@ func TestLocalRemove(t *testing.T) {
 	}
 }
 
+// TestGetappsEmpty ensures that GetApps returns an empty list when no applications are running.
 func TestGetAppsEmpty(t *testing.T) {
 	assert := assert.New(t)
 	apps := GetApps()
