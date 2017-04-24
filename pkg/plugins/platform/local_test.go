@@ -13,7 +13,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
-	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -71,7 +70,7 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 		log.Fatal(err)
 	}
 
-	containers, err := client.ListContainers(docker.ListContainersOptions{All: true})
+	containers, err := util.GetDockerContainers(true)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -34,10 +34,9 @@ func EnsureNetwork(client *docker.Client, name string) error {
 
 // GetPort determines and returns the public port for a given container.
 func GetPort(name string) (int64, error) {
-	client, _ := GetDockerClient()
 	var publicPort int64
 
-	containers, err := client.ListContainers(docker.ListContainersOptions{All: false})
+	containers, err := GetDockerContainers(false)
 	if err != nil {
 		return publicPort, err
 	}
@@ -90,14 +89,26 @@ func FindContainerByLabels(labels map[string]string) (docker.APIContainers, erro
 	return containers[0], err
 }
 
+// GetDockerContainers returns a slice of all docker containers on the host system.
+func GetDockerContainers(allContainers bool) ([]docker.APIContainers, error) {
+	client, err := dockerutil.GetDockerClient()
+	if err != nil {
+		log.Fatal("could not get docker client. is docker running?")
+	}
+	containers, err := client.ListContainers(docker.ListContainersOptions{All: allContainers})
+	return containers, err
+}
+
 // FindContainersByLabels takes a map of label names and values and returns any docker containers which match all labels.
 func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, error) {
 	var returnError error
-	client, _ := dockerutil.GetDockerClient()
-	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
+	containers, err := GetDockerContainers(true)
+	if err != nil {
+		return []docker.APIContainers{docker.APIContainers{}}, err
+	}
 	containerMatches := []docker.APIContainers{}
 	if len(labels) < 1 {
-		return []docker.APIContainers{}, fmt.Errorf("the provided list of labels was empty")
+		return []docker.APIContainers{docker.APIContainers{}}, fmt.Errorf("the provided list of labels was empty")
 	}
 
 	// First, ensure a site name is set and matches the current application.

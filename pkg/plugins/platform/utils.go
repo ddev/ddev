@@ -17,7 +17,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/system"
-	"github.com/fsouza/go-dockerclient"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -168,9 +167,8 @@ func ComposeFileExists(app App) bool {
 
 // Cleanup will clean up ddev apps even if the composer file has been deleted.
 func Cleanup(app App) error {
-	client, _ := util.GetDockerClient()
 
-	containers, err := client.ListContainers(docker.ListContainersOptions{All: false})
+	containers, err := util.GetDockerContainers()
 	if err != nil {
 		return err
 	}
