@@ -2,12 +2,14 @@ version: 2
 jobs:
   build:
     machine: true
-    working_directory: ~/src/github.com/drud/ddev
+    working_directory: ~/go/src/github.com/drud/ddev
     environment:
-      GOPATH: ~/
+      GOPATH: ~/go
       DRUD_DEBUG: "true"
 
     steps:
+      - run: mkdir -p ~/go/lib && mkdir ~/go/pkg && mkdir -p ~/go/src/github.com/drud/ddev
+
       - run:
           command: sudo apt-get update && sudo apt-get install mysql-client
           name: Basic tool installation
@@ -39,48 +41,32 @@ jobs:
           command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
           name: Installed tool versions
 
-      # Create environment which respects GOPATH
-      - run:
-          command: |
-            mkdir -p ~/src/github.com/drud &&
-            ln -s ~/ddev ~/src/github.com/drud/ddev &&
-            cd  ~/src/github.com/drud/ddev &&
-            pwd
-          name: Set up directory structure with $GOPATH
-
       - checkout
 
       - run:
-          command: |
-            make GOPATH=~/ linux
+          command: make linux
           name: Build the linux ddev executable binary
-          working_directory: ~/src/github.com/drud/ddev
 
       - run:
           command: |
-            make GOPATH=~/ gofmt &&
-            make GOPATH=~/ govet &&
-            make GOPATH=~/ golint &&
-            make GOPATH=~/ errcheck
+            make gofmt &&
+            make govet &&
+            make golint &&
+            make errcheck
           name: Static analysis targets gofmt/govet/golint/errcheck
-          working_directory: ~/src/github.com/drud/ddev
 
       # Run the built-in ddev tests
       - run:
-          working_directory: ~/src/github.com/drud/ddev
           command: |
             if [ ! -n "${RUN_NIGHTLY_BUILD}" ]; then
-              pwd && make GOPATH=~/ test
+              pwd && make test
             fi
           name: ddev tests (not nightly build)
 
       # Run codecoroner after tests. We care about dead code, but we still want tests to run for WIP branches.
       - run:
-          command: |
-            cd  ~/src/github.com/drud/ddev &&
-            make GOPATH=~/ codecoroner
+          command: make codecoroner
           name: Run codecoroner
-          working_directory: ~/src/github.com/drud/ddev
 
       - run:
           command: |
@@ -91,8 +77,7 @@ jobs:
               git submodule update --init && git submodule update --remote
               make -f nightly_build.mak clean
               make -f nightly_build.mak --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
-              ~/src/github.com/drud/ddev/bin/linux/ddev version
+              $GOPATH/src/github.com/drud/ddev/bin/linux/ddev version
             fi
           name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
-          working_directory: ~/src/github.com/drud/ddev
 
