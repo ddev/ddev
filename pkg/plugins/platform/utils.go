@@ -115,8 +115,9 @@ func RenderAppRow(table *uitable.Table, site App) {
 // EnsureDockerRouter ensures the router is running.
 func EnsureDockerRouter() {
 	userHome, err := homedir.Dir()
-	log.Fatal("could not get home directory for current user. is it set?")
-
+	if err != nil {
+		log.Fatal("could not get home directory for current user. is it set?")
+	}
 	routerdir := path.Join(userHome, ".ddev")
 	err = os.MkdirAll(routerdir, 0755)
 	if err != nil {
