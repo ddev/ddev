@@ -461,7 +461,7 @@ func (l *LocalApp) Down() error {
 		"down",
 	)
 	if err != nil {
-		return Cleanup(l)
+		log.Fatal("Failed DockerCompose 'down' command", err)
 	}
 
 	return nil
