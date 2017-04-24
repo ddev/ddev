@@ -170,21 +170,3 @@ func CheckForConf(confPath string) (string, error) {
 
 	return "", errors.New("no .ddev/config.yaml file was found in this directory or any parent")
 }
-
-// DetermineAppType uses some predetermined file checks to determine if a local app
-// is of any of the known types
-func DetermineAppType(basePath string) (string, error) {
-	defaultLocations := map[string]string{
-		"docroot/scripts/drupal.sh":      "drupal",
-		"docroot/core/scripts/drupal.sh": "drupal8",
-		"docroot/wp":                     "wp",
-	}
-
-	for k, v := range defaultLocations {
-		if system.FileExists(path.Join(basePath, k)) {
-			return v, nil
-		}
-	}
-
-	return "", fmt.Errorf("unable to determine the application type")
-}
