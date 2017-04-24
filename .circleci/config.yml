@@ -10,12 +10,12 @@ jobs:
       - run: mkdir -p ~/go/lib && mkdir ~/go/pkg && mkdir -p ~/go/src/github.com/drud/ddev
 
       - run:
-          command: sudo apt-get update && sudo apt-get install mysql-client realpath
+          command: sudo apt-get update -qq && sudo apt-get install -qq mysql-client realpath
           name: Basic tool installation
 
       - run:
           command: |
-            sudo apt-get remove golang &&
+            sudo apt-get remove -qq golang &&
             wget -q -O /tmp/golang.tgz https://storage.googleapis.com/golang/go1.8.1.linux-amd64.tar.gz &&
             cd /tmp && tar -xf golang.tgz &&
             sudo rm -rf /usr/local/go && sudo mv go /usr/local
@@ -23,13 +23,13 @@ jobs:
 
       - run:
           command: |
-            sudo apt-get remove docker docker-engine &&
-            sudo apt-get update &&
-            sudo apt-get install  apt-transport-https ca-certificates  curl software-properties-common &&
+            sudo apt-get remove -qq docker docker-engine &&
+            sudo apt-get update -qq &&
+            sudo apt-get install -qq apt-transport-https ca-certificates  curl software-properties-common &&
             curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &&
-            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" &&
-            sudo apt-get update &&
-            sudo apt-get install docker-ce
+            sudo add-apt-repository -qq "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" &&
+            sudo apt-get update -qq &&
+            sudo apt-get install -qq docker-ce
           name: Install docker
 
       - run:
