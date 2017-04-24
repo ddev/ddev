@@ -137,6 +137,17 @@ func TestLocalStart(t *testing.T) {
 
 	err = app.Start()
 	assert.EqualError(err, fmt.Sprintf("a site with the name %s is already running", TestSites[0].Name))
+
+	// try to start a site of same name at different path
+	another := TestSites[0]
+	err = another.Prepare()
+	if err != nil {
+		log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
+	}
+
+	err = app.Init(another.Dir)
+	assert.EqualError(err, fmt.Sprintf("a container in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
+	another.Cleanup()
 }
 
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
