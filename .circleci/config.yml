@@ -4,20 +4,19 @@ jobs:
     machine: true
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
-      GOPATH: ~/go
       DRUD_DEBUG: "true"
 
     steps:
       - run: mkdir -p ~/go/lib && mkdir ~/go/pkg && mkdir -p ~/go/src/github.com/drud/ddev
 
       - run:
-          command: sudo apt-get update && sudo apt-get install mysql-client
+          command: sudo apt-get update && sudo apt-get install mysql-client realpath
           name: Basic tool installation
 
       - run:
           command: |
             sudo apt-get remove golang &&
-            wget -q -O /tmp/golang.tgz https://storage.googleapis.com/golang/go1.7.5.linux-amd64.tar.gz &&
+            wget -q -O /tmp/golang.tgz https://storage.googleapis.com/golang/go1.8.1.linux-amd64.tar.gz &&
             cd /tmp && tar -xf golang.tgz &&
             sudo rm -rf /usr/local/go && sudo mv go /usr/local
           name: Upgrade golang
@@ -30,11 +29,11 @@ jobs:
             curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &&
             sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" &&
             sudo apt-get update &&
-            sudo apt-get install docker-ce=17.03.0~ce-0~ubuntu-trusty
+            sudo apt-get install docker-ce=17.04.0~ce-0~ubuntu-trusty
           name: Install docker
 
       - run:
-          command: sudo apt-get -qq update && sudo curl -L "https://github.com/docker/compose/releases/download/1.11.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose
+          command: sudo apt-get -qq update && sudo curl -L "https://github.com/docker/compose/releases/download/1.12.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose
           name: docker-compose install
 
       - run:
