@@ -197,6 +197,8 @@ Instructions for IDE setup are in [step-debugging](docs/step-debugging.md).
  make test
  make clean
  ```
+ 
+ Note that although this git repository contains submodules (in the containers/ directory) they are not used in a normal build, but rather by the nightly build. You can safely ignore the git submodules and the containers/ directory.
 
 ## Testing
 Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...`
