@@ -166,30 +166,6 @@ func ComposeFileExists(app App) bool {
 	return true
 }
 
-// Cleanup will clean up ddev apps even if the composer file has been deleted.
-func Cleanup(app App) error {
-	containers, err := util.GetDockerContainers(true)
-	if err != nil {
-		return err
-	}
-
-	actions := []string{"stop", "rm"}
-	for _, c := range containers {
-		if strings.Contains(c.Names[0], app.ContainerName()) {
-			for _, action := range actions {
-				args := []string{action, c.ID}
-				_, err := system.RunCommand("docker", args)
-				if err != nil {
-					return fmt.Errorf("Could not %s container %s: %s", action, c.Names[0], err)
-				}
-			}
-		}
-
-	}
-
-	return nil
-}
-
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.
 func CheckForConf(confPath string) (string, error) {
 	if system.FileExists(confPath + "/.ddev/config.yaml") {
