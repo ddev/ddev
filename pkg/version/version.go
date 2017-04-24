@@ -24,7 +24,7 @@ var DBTag = "v0.3.0" // Note that this is overridden by make
 var DBAImg = "drud/phpmyadmin"
 
 // DBATag defines the default phpmyadmin image tag used for applications.
-var DBATag = "v0.1.0"
+var DBATag = "v0.2.0"
 
 // RouterImage defines the image used for the router.
 var RouterImage = "drud/nginx-proxy" // Note that this is overridden by make
