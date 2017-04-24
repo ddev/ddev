@@ -89,8 +89,8 @@ func RenderAppTable(platform string, apps []App) {
 // CreateAppTable will create a new app table for describe and list output
 func CreateAppTable() *uitable.Table {
 	table := uitable.New()
-	table.MaxColWidth = 200
-	table.AddRow("NAME", "TYPE", "LOCATION", "URL", "DATABASE URL", "STATUS")
+	table.MaxColWidth = 140
+	table.AddRow("NAME", "TYPE", "LOCATION", "URL", "STATUS")
 	return table
 }
 
@@ -107,7 +107,6 @@ func RenderAppRow(table *uitable.Table, site App) {
 		site.GetType(),
 		appRoot,
 		site.URL(),
-		fmt.Sprintf("%s:%s", site.HostName(), appports.GetPort("db")),
 		site.SiteStatus(),
 	)
 }
