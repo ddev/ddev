@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -17,7 +16,7 @@ var LocalDevSSHCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+			util.Failed("Failed to ssh %s: %s", app.GetName(), err)
 		}
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
@@ -32,7 +31,7 @@ var LocalDevSSHCmd = &cobra.Command{
 			"bash",
 		)
 		if err != nil {
-			util.Failed("Failed DockerCompose exec bash command: %v", err)
+			util.Failed("Failed to ssh %s: %s", app.GetName(), err)
 		}
 
 	},

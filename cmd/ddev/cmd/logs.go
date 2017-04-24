@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"path"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
@@ -25,7 +24,7 @@ var LocalDevLogsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+			util.Failed("Failed to retrieve logs for %s: %s", app.GetName(), err)
 		}
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
@@ -57,9 +56,8 @@ var LocalDevLogsCmd = &cobra.Command{
 		app.DockerEnv()
 		err = dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
-			log.Fatalln(err)
+			util.Failed("Failed to retrieve logs for %s: %s", app.GetName(), err)
 		}
-
 	},
 }
 

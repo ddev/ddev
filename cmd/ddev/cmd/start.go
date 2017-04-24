@@ -43,7 +43,7 @@ var StartCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+			util.Failed("Failed to start %s: %s", app.GetName(), err)
 		}
 
 		fmt.Printf("Starting environment for %s...\n", app.GetName())

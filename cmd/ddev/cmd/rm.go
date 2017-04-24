@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
@@ -17,7 +16,7 @@ var LocalDevRMCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+			util.Failed("Failed to remove %s: %s", app.GetName(), err)
 		}
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
@@ -27,7 +26,7 @@ var LocalDevRMCmd = &cobra.Command{
 
 		err = app.Down()
 		if err != nil {
-			util.Failed("Could not remove site: %s", app.ContainerName())
+			util.Failed("Failed to remove %s: %s", app.GetName(), err)
 		}
 
 		util.Success("Successfully removed the %s application.\n", app.GetName())

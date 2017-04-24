@@ -33,7 +33,7 @@ var ImportFileCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+			util.Failed("Failed to import files for %s: %s", app.GetName(), err)
 		}
 
 		err = app.ImportFiles(fileSource)
