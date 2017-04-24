@@ -5,7 +5,7 @@ jobs:
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       DRUD_DEBUG: "true"
-
+      GOPATH: /home/circleci/go
     steps:
       - run: mkdir -p ~/go/lib && mkdir ~/go/pkg && mkdir -p ~/go/src/github.com/drud/ddev
 
@@ -27,7 +27,7 @@ jobs:
             sudo apt-get update -qq &&
             sudo apt-get install -qq apt-transport-https ca-certificates  curl software-properties-common &&
             curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &&
-            sudo add-apt-repository -qq "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" &&
+            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" &&
             sudo apt-get update -qq &&
             sudo apt-get install -qq docker-ce
           name: Install docker
