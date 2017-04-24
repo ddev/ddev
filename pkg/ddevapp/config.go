@@ -122,7 +122,7 @@ func (c *Config) Read() error {
 	if c.DBImage == "" {
 		c.DBImage = version.DBImg + ":" + version.DBTag
 	}
-	if c.DBImage == "" {
+	if c.DBAImage == "" {
 		c.DBAImage = version.DBAImg + ":" + version.DBATag
 	}
 
