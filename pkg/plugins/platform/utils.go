@@ -186,7 +186,7 @@ func Cleanup(app App) error {
 			fmt.Printf("Stopping container: %s\n", containerName)
 			err = client.StopContainer(containers[i].ID, 60)
 			if err != nil {
-				return fmt.Errorf("could not stop container %s: %v\n", containerName, err)
+				return fmt.Errorf("could not stop container %s: %v", containerName, err)
 			}
 		}
 	}
