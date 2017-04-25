@@ -24,7 +24,7 @@ var LocalDevLogsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			util.Failed("Failed to retrieve logs for %s: %s", app.GetName(), err)
+			util.Failed("Failed to retrieve logs: %v", err)
 		}
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
@@ -56,7 +56,7 @@ var LocalDevLogsCmd = &cobra.Command{
 		app.DockerEnv()
 		err = dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
-			util.Failed("Failed to retrieve logs for %s: %s", app.GetName(), err)
+			util.Failed("Failed to retrieve logs for %s: %v", app.GetName(), err)
 		}
 	},
 }

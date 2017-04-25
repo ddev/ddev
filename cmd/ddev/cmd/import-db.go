@@ -34,14 +34,14 @@ var ImportDBCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			util.Failed("Failed to import database for %s: %s", app.GetName(), err)
+			util.Failed("Failed to import database: %v", app.GetName(), err)
 		}
 
 		err = app.ImportDB(dbSource)
 		if err != nil {
-			util.Failed("Failed to import database for %s: %s", app.GetName(), err)
+			util.Failed("Failed to import database for %s: %v", app.GetName(), err)
 		}
-		util.Success("Successfully imported database for %s", app.GetName())
+		util.Success("Successfully imported database for %v", app.GetName())
 	},
 }
 

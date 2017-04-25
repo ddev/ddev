@@ -16,7 +16,7 @@ var LocalDevSSHCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			util.Failed("Failed to ssh %s: %s", app.GetName(), err)
+			util.Failed("Failed to ssh: %v", err)
 		}
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)

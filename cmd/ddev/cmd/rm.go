@@ -16,7 +16,7 @@ var LocalDevRMCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			util.Failed("Failed to remove %s: %s", app.GetName(), err)
+			util.Failed("Failed to remove: %v", err)
 		}
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)

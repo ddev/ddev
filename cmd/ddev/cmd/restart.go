@@ -25,24 +25,24 @@ var LocalDevReconfigCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			util.Failed("Failed to restart %s: %s", app.GetName(), err)
+			util.Failed("Failed to restart: %v", err)
 		}
 
 		fmt.Printf("Restarting environment for %s...", app.GetName())
 		err = app.Stop()
 		if err != nil {
-			util.Failed("Failed to restart %s: %s", app.GetName(), err)
+			util.Failed("Failed to restart %s: %v", app.GetName(), err)
 		}
 
 		err = app.Start()
 		if err != nil {
-			util.Failed("Failed to restart %s: %s", app.GetName(), err)
+			util.Failed("Failed to restart %s: %v", app.GetName(), err)
 		}
 
 		fmt.Println("Waiting for the environment to become ready. This may take a couple of minutes...")
 		err = app.Wait("web")
 		if err != nil {
-			util.Failed("Failed to restart %s: %s", app.GetName(), err)
+			util.Failed("Failed to restart %s: %v", app.GetName(), err)
 		}
 
 		util.Success("Successfully restarted %s", app.GetName())

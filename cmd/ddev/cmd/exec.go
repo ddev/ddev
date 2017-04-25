@@ -25,7 +25,7 @@ var LocalDevExecCmd = &cobra.Command{
 
 		app, err := getActiveApp()
 		if err != nil {
-			util.Failed("Failed to exec command for %s: %s", app.GetName(), err)
+			util.Failed("Failed to exec command: %v", err)
 		}
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)

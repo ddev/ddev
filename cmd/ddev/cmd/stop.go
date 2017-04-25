@@ -13,7 +13,7 @@ var LocalDevStopCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			util.Failed("Failed to stop %s: %s", app.GetName(), err)
+			util.Failed("Failed to stop: %v", err)
 		}
 
 		err = app.Stop()
