@@ -492,8 +492,14 @@ func (l *LocalApp) AddHostsEntry() error {
 		return nil
 	}
 
-	fmt.Println("\n\n\nAdding hostfile entry. You will be prompted for your password.")
-	hostnameArgs := []string{"ddev", "hostname", l.HostName(), "127.0.0.1"}
+	ddevFullpath, err := os.Executable()
+	util.CheckErr(err)
+
+	fmt.Println("ddev needs to add an entry to your hostfile.\nIt will require root privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
+	hostnameArgs := []string{ddevFullpath, "hostname", l.HostName(), "127.0.0.1"}
+	command := strings.Join(hostnameArgs, " ")
+	util.Warning(fmt.Sprintf("    sudo %s", command))
+	fmt.Println("Please enter your password if prompted.")
 	err = system.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }
