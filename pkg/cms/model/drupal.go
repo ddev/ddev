@@ -1,5 +1,7 @@
 package model
 
+import "github.com/drud/ddev/pkg/appports"
+
 // DrupalConfig encapsulates all the configurations for a Drupal site.
 type DrupalConfig struct {
 	DeployName       string
@@ -9,7 +11,7 @@ type DrupalConfig struct {
 	DatabasePassword string
 	DatabaseHost     string
 	DatabaseDriver   string
-	DatabasePort     int
+	DatabasePort     string
 	DatabasePrefix   string
 	HashSalt         string
 	IsDrupal8        bool
@@ -23,7 +25,7 @@ func NewDrupalConfig() *DrupalConfig {
 		DatabasePassword: "root",
 		DatabaseHost:     "127.0.0.1",
 		DatabaseDriver:   "mysql",
-		DatabasePort:     3306,
+		DatabasePort:     appports.GetPort("db"),
 		DatabasePrefix:   "",
 		IsDrupal8:        false,
 	}
@@ -31,7 +33,7 @@ func NewDrupalConfig() *DrupalConfig {
 
 // DrushConfig encapsulates configuration for a drush settings file.
 type DrushConfig struct {
-	DatabasePort int64
+	DatabasePort string
 	DatabaseHost string
 	IsDrupal8    bool
 }
@@ -40,7 +42,7 @@ type DrushConfig struct {
 func NewDrushConfig() *DrushConfig {
 	return &DrushConfig{
 		DatabaseHost: "127.0.0.1",
-		DatabasePort: 3306,
+		DatabasePort: appports.GetPort("db"),
 		IsDrupal8:    false,
 	}
 }

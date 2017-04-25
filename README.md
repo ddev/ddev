@@ -92,15 +92,15 @@ To see a list of your current sites you can use `ddev list`.
 ```
 ➜  ddev list
 1 local site found.
-NAME   	TYPE   	URL                      	DATABASE URL   	STATUS
-drupal8	drupal8	http://drupal8.ddev.local	127.0.0.1:32852	running
+NAME     TYPE     LOCATION                 URL                        STATUS
+drupal8  drupal8  ~/Projects/ddev/drupal8  http://drupal8.ddev.local  running
 ```
 
 You can also see more detailed information about a site by running `ddev describe` or `ddev describe [site-name]`.
 
 ```
-NAME   	DOCROOT                                         	TYPE   	URL                      	STATUS
-drupal8	/Users/username/drupal8/docroot                  	drupal8	http://drupal8.ddev.local	running
+NAME     TYPE     LOCATION                 URL                        STATUS
+drupal8  drupal8  ~/Projects/ddev/drupal8  http://drupal8.ddev.local  running
 
 MySQL Credentials
 -----------------
@@ -197,7 +197,7 @@ Instructions for IDE setup are in [step-debugging](docs/step-debugging.md).
  make test
  make clean
  ```
- 
+
  Note that although this git repository contains submodules (in the containers/ directory) they are not used in a normal build, but rather by the nightly build. You can safely ignore the git submodules and the containers/ directory.
 
 ## Testing

@@ -12,12 +12,13 @@ services:
       - "./data:/db"
     restart: always
     environment:
-      - TCP_PORT=$DDEV_HOSTNAME:3306
+      - TCP_PORT=$DDEV_HOSTNAME:{{ .dbport }}
     ports:
-      - "3306"
+      - 3306
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.container-type: db
+      com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
       com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
@@ -44,6 +45,7 @@ services:
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.container-type: web
+      com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
       com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
@@ -52,6 +54,14 @@ services:
     container_name: local-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
     restart: always
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.container-type: dba
+      com.ddev.platform: {{ .plugin }}
+      com.ddev.app-type: {{ .appType }}
+      com.ddev.docroot: $DDEV_DOCROOT
+      com.ddev.approot: $DDEV_APPROOT
+      com.ddev.app-url: $DDEV_URL
     depends_on:
       - local-${DDEV_SITENAME}-db
     links:

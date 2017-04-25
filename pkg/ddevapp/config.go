@@ -223,6 +223,7 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		"appType":     c.AppType,
 		"mailhogport": appports.GetPort("mailhog"),
 		"dbaport":     appports.GetPort("dba"),
+		"dbport":      appports.GetPort("db"),
 	}
 
 	err = templ.Execute(&doc, templateVars)

@@ -9,15 +9,15 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/gosuri/uitable"
 
 	"errors"
 
-	"github.com/docker/docker/pkg/homedir"
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/system"
-	"github.com/fsouza/go-dockerclient"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 // PrepLocalSiteDirs creates a site's directories for local dev in .ddev
@@ -39,50 +39,87 @@ func PrepLocalSiteDirs(base string) error {
 	return nil
 }
 
-// SiteList will prepare and render a list of ddev sites running locally.
-func SiteList(containers []docker.APIContainers) error {
-	apps := map[string]map[string]map[string]string{}
-	var appsFound bool
+// GetApps returns a list of ddev applictions keyed by platform.
+func GetApps() map[string][]App {
+	apps := make(map[string][]App)
+	for platformType, instance := range PluginMap {
+		labels := map[string]string{
+			"com.ddev.platform":       instance.ContainerPrefix(),
+			"com.ddev.container-type": "web",
+		}
+		sites, err := util.FindContainersByLabels(labels)
 
-	for pName := range PluginMap {
-		apps[pName] = map[string]map[string]string{}
-	}
-
-	for _, container := range containers {
-		for _, containerName := range container.Names {
-			for pName, plugin := range PluginMap {
-				if strings.HasPrefix(containerName[1:], plugin.ContainerPrefix()) {
-					util.ProcessContainer(apps[pName], pName, containerName[1:], container)
+		if err == nil {
+			for _, siteContainer := range sites {
+				site := GetPluginApp(platformType)
+				approot, ok := siteContainer.Labels["com.ddev.approot"]
+				if !ok {
 					break
+				}
+				_, ok = apps[platformType]
+				if !ok {
+					apps[platformType] = []App{}
+				}
+
+				err := site.Init(approot)
+				if err == nil {
+					apps[platformType] = append(apps[platformType], site)
 				}
 			}
 		}
 	}
 
+	return apps
+}
+
+// RenderAppTable will format a table for user display based on a list of apps.
+func RenderAppTable(platform string, apps []App) {
+
 	if len(apps) > 0 {
-		for k, v := range apps {
-			util.RenderAppTable(v, k)
+		fmt.Printf("%v %s %v found.\n", len(apps), platform, util.FormatPlural(len(apps), "site", "sites"))
+		table := CreateAppTable()
+		for _, site := range apps {
+			RenderAppRow(table, site)
 		}
+		fmt.Println(table)
 	}
 
-	for _, appList := range apps {
-		if len(appList) > 0 {
-			appsFound = true
-		}
-	}
+}
 
-	if appsFound == false {
-		fmt.Println("No Applications Found.")
-	}
+// CreateAppTable will create a new app table for describe and list output
+func CreateAppTable() *uitable.Table {
+	table := uitable.New()
+	table.MaxColWidth = 140
+	table.Separator = "  "
+	table.AddRow("NAME", "TYPE", "LOCATION", "URL", "STATUS")
+	return table
+}
 
-	return nil
+// RenderAppRow will add an application row to an existing table for describe and list output.
+func RenderAppRow(table *uitable.Table, site App) {
+	// test tilde expansion
+	appRoot := site.AppRoot()
+	userDir, err := homedir.Dir()
+	if err == nil {
+		appRoot = strings.Replace(appRoot, userDir, "~", 1)
+	}
+	table.AddRow(
+		site.GetName(),
+		site.GetType(),
+		appRoot,
+		site.URL(),
+		site.SiteStatus(),
+	)
 }
 
 // EnsureDockerRouter ensures the router is running.
 func EnsureDockerRouter() {
-	userHome := homedir.Get()
+	userHome, err := homedir.Dir()
+	if err != nil {
+		log.Fatal("could not get home directory for current user. is it set?")
+	}
 	routerdir := path.Join(userHome, ".ddev")
-	err := os.MkdirAll(routerdir, 0755)
+	err = os.MkdirAll(routerdir, 0755)
 	if err != nil {
 		log.Fatalf("unable to create directory for ddev router: %s", err)
 	}
@@ -106,6 +143,7 @@ func EnsureDockerRouter() {
 		"router_tag":   version.RouterTag,
 		"mailhogport":  appports.GetPort("mailhog"),
 		"dbaport":      appports.GetPort("dba"),
+		"dbport":       appports.GetPort("db"),
 	}
 
 	err = templ.Execute(&doc, templateVars)
@@ -130,9 +168,7 @@ func ComposeFileExists(app App) bool {
 
 // Cleanup will clean up ddev apps even if the composer file has been deleted.
 func Cleanup(app App) error {
-	client, _ := util.GetDockerClient()
-
-	containers, err := client.ListContainers(docker.ListContainersOptions{All: false})
+	containers, err := util.GetDockerContainers(true)
 	if err != nil {
 		return err
 	}

@@ -3,10 +3,7 @@ package util
 import (
 	"os"
 
-	"fmt"
-
 	"github.com/fatih/color"
-	"github.com/gosuri/uitable"
 )
 
 // Failed will print an red error message and exit with failure.
@@ -26,26 +23,4 @@ func FormatPlural(count int, single string, plural string) string {
 		return single
 	}
 	return plural
-}
-
-// RenderAppTable will format a table for user display based on a list of apps.
-func RenderAppTable(apps map[string]map[string]string, name string) {
-	if len(apps) > 0 {
-		fmt.Printf("%v %s %v found.\n", len(apps), name, FormatPlural(len(apps), "site", "sites"))
-		table := uitable.New()
-		table.MaxColWidth = 200
-		table.AddRow("NAME", "TYPE", "URL", "DATABASE URL", "STATUS")
-
-		for _, site := range apps {
-			table.AddRow(
-				site["name"],
-				site["type"],
-				site["url"],
-				fmt.Sprintf("127.0.0.1:%s", site["DbPublicPort"]),
-				site["status"],
-			)
-		}
-		fmt.Println(table)
-	}
-
 }

@@ -134,6 +134,12 @@ func Chdir(path string) func() {
 
 var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+// setLetterBytes exists solely so that tests can override the default characters used by
+// RandString. It should probably be avoided for 'normal' operations.
+func setLetterBytes(lb string) {
+	letterBytes = lb
+}
+
 // RandString returns a random string of given length n.
 func RandString(n int) string {
 	b := make([]byte, n)
@@ -171,10 +177,6 @@ func CaptureStdOut() func() string {
 		return out
 	}
 
-}
-
-func setLetterBytes(lb string) {
-	letterBytes = lb
 }
 
 // ClearDockerEnv unsets env vars set in platform DockerEnv() so that

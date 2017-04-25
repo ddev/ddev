@@ -13,7 +13,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
-	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -71,7 +70,7 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 		log.Fatal(err)
 	}
 
-	containers, err := client.ListContainers(docker.ListContainersOptions{All: true})
+	containers, err := util.GetDockerContainers(true)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -130,6 +129,24 @@ func TestLocalStart(t *testing.T) {
 		assert.True(check)
 
 		cleanup()
+	}
+}
+
+// TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
+func TestGetApps(t *testing.T) {
+	assert := assert.New(t)
+	apps := GetApps()
+	assert.Equal(len(apps["local"]), len(TestSites))
+
+	for _, site := range TestSites {
+		var found bool
+		for _, siteInList := range apps["local"] {
+			if site.Name == siteInList.GetName() {
+				found = true
+				break
+			}
+		}
+		assert.True(found, "Found site %s in list", site.Name)
 	}
 }
 
@@ -253,4 +270,11 @@ func TestLocalRemove(t *testing.T) {
 
 		cleanup()
 	}
+}
+
+// TestGetappsEmpty ensures that GetApps returns an empty list when no applications are running.
+func TestGetAppsEmpty(t *testing.T) {
+	assert := assert.New(t)
+	apps := GetApps()
+	assert.Equal(len(apps["local"]), 0)
 }

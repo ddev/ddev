@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 
 	"strings"
 
@@ -79,11 +80,9 @@ func (l *LocalApp) Describe() (string, error) {
 	}
 
 	var output string
-	app := uitable.New()
-	app.MaxColWidth = maxWidth
-	app.AddRow("NAME", "LOCATION", "TYPE", "URL", "STATUS")
-	app.AddRow(l.GetName(), l.AppRoot(), l.GetType(), l.URL(), "running")
-	output = fmt.Sprint(app)
+	appTable := CreateAppTable()
+	RenderAppRow(appTable, l)
+	output = fmt.Sprint(appTable)
 
 	output = output + "\n\nMySQL Credentials\n-----------------\n"
 	dbTable := uitable.New()
@@ -91,7 +90,7 @@ func (l *LocalApp) Describe() (string, error) {
 	dbTable.AddRow("Username:", "root")
 	dbTable.AddRow("Password:", "root")
 	dbTable.AddRow("Database name:", "data")
-	dbTable.AddRow("Connection Info:", l.HostName()+":3306")
+	dbTable.AddRow("Connection Info:", l.HostName()+":"+appports.GetPort("db"))
 	output = output + fmt.Sprint(dbTable)
 
 	output = output + "\n\nOther Services\n--------------\n"
@@ -184,6 +183,24 @@ func (l *LocalApp) ImportDB(imPath string) error {
 	}
 
 	return nil
+}
+
+// SiteStatus returns the current status of an application based on the web container.
+func (l *LocalApp) SiteStatus() string {
+	webContainer, err := l.FindContainerByType("web")
+	if err != nil {
+		return "not found"
+	}
+
+	status := util.GetContainerHealth(webContainer)
+	if status == "exited" {
+		return "stopped"
+	}
+	if status == "healthy" {
+		return "running"
+	}
+
+	return status
 }
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
@@ -405,7 +422,7 @@ func (l *LocalApp) Config() error {
 
 		drushSettingsPath := path.Join(basePath, "drush.settings.php")
 		drushConfig := model.NewDrushConfig()
-		drushConfig.DatabasePort = dbPort
+		drushConfig.DatabasePort = strconv.FormatInt(dbPort, 10)
 		if l.GetType() == "drupal8" {
 			drushConfig.IsDrupal8 = true
 		}

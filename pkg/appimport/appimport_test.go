@@ -20,6 +20,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const netName = "ddev_default"
+
 var (
 	testArchiveURL  = "https://github.com/drud/wordpress/releases/download/v0.1.0/db.tar.gz"
 	testArchivePath = path.Join(testcommon.CreateTmpDir("appimport"), "db.tar.gz")

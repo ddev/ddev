@@ -34,10 +34,9 @@ func EnsureNetwork(client *docker.Client, name string) error {
 
 // GetPort determines and returns the public port for a given container.
 func GetPort(name string) (int64, error) {
-	client, _ := GetDockerClient()
 	var publicPort int64
 
-	containers, err := client.ListContainers(docker.ListContainersOptions{All: false})
+	containers, err := GetDockerContainers(false)
 	if err != nil {
 		return publicPort, err
 	}
@@ -84,51 +83,32 @@ func GetDockerClient() (*docker.Client, error) {
 	return client, err
 }
 
-// ProcessContainer will process a docker container for an app listing.
-// Since apps contain multiple containers, ProcessContainer will be called once per container.
-func ProcessContainer(l map[string]map[string]string, plugin string, containerName string, container docker.APIContainers) {
-	label := container.Labels
-	appName := label["com.ddev.site-name"]
-	appType := label["com.ddev.app-type"]
-	containerType := label["com.ddev.container-type"]
-	appRoot := label["com.ddev.approot"]
-	url := label["com.ddev.app-url"]
-
-	_, exists := l[appName]
-	if exists == false {
-		l[appName] = map[string]string{
-			"name":    appName,
-			"status":  container.State,
-			"url":     url,
-			"type":    appType,
-			"approot": appRoot,
-		}
-	}
-
-	var publicPort int64
-	for _, port := range container.Ports {
-		if port.PublicPort != 0 {
-			publicPort = port.PublicPort
-		}
-	}
-
-	if containerType == "web" {
-		l[appName]["WebPublicPort"] = fmt.Sprintf("%d", publicPort)
-	}
-
-	if containerType == "db" {
-		l[appName]["DbPublicPort"] = fmt.Sprintf("%d", publicPort)
-	}
-
-}
-
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.
 func FindContainerByLabels(labels map[string]string) (docker.APIContainers, error) {
-	client, _ := dockerutil.GetDockerClient()
-	containers, _ := client.ListContainers(docker.ListContainersOptions{All: true})
+	containers, err := FindContainersByLabels(labels)
+	return containers[0], err
+}
 
+// GetDockerContainers returns a slice of all docker containers on the host system.
+func GetDockerContainers(allContainers bool) ([]docker.APIContainers, error) {
+	client, err := dockerutil.GetDockerClient()
+	if err != nil {
+		log.Fatal("could not get docker client. is docker running?")
+	}
+	containers, err := client.ListContainers(docker.ListContainersOptions{All: allContainers})
+	return containers, err
+}
+
+// FindContainersByLabels takes a map of label names and values and returns any docker containers which match all labels.
+func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, error) {
+	var returnError error
+	containers, err := GetDockerContainers(true)
+	if err != nil {
+		return []docker.APIContainers{docker.APIContainers{}}, err
+	}
+	containerMatches := []docker.APIContainers{}
 	if len(labels) < 1 {
-		return docker.APIContainers{}, fmt.Errorf("the provided list of labels was empty")
+		return []docker.APIContainers{docker.APIContainers{}}, fmt.Errorf("the provided list of labels was empty")
 	}
 
 	// First, ensure a site name is set and matches the current application.
@@ -149,11 +129,17 @@ func FindContainerByLabels(labels map[string]string) (docker.APIContainers, erro
 		}
 
 		if matched {
-			return containers[i], nil
+			containerMatches = append(containerMatches, containers[i])
 		}
 	}
 
-	return docker.APIContainers{}, fmt.Errorf("could not find containers which matched search criteria: %+v", labels)
+	// If we couldn't find a match return a list with a single (empty) element alongside the error.
+	if len(containerMatches) < 1 {
+		containerMatches = []docker.APIContainers{docker.APIContainers{}}
+		returnError = fmt.Errorf("could not find containers which matched search criteria: %+v", labels)
+	}
+
+	return containerMatches, returnError
 }
 
 // NetExists checks to see if the docker network for ddev exists.
@@ -170,6 +156,7 @@ func NetExists(client *docker.Client, name string) bool {
 // ContainerWait provides a wait loop to check for container in "healthy" status.
 // timeout is in seconds.
 func ContainerWait(timeout time.Duration, labels map[string]string) error {
+
 	ticker := time.NewTicker(500 * time.Millisecond)
 	// doneChan is triggered when we find containers or have an error trying
 	doneChan := make(chan bool)
@@ -187,6 +174,9 @@ func ContainerWait(timeout time.Duration, labels map[string]string) error {
 				doneChan <- true
 			}
 			status := GetContainerHealth(container)
+			if status == "restarting" {
+				containerErr = fmt.Errorf("container %s: detected container restart; invalid configuration or container. consider using `docker logs %s` to debug", container.Names[0], container.ID)
+			}
 			if status == "healthy" {
 				containerErr = nil
 				doneChan <- true
@@ -212,6 +202,12 @@ outer:
 // by docker contains uptime and the health status in parenths. This function will filter the uptime and
 // return only the health status.
 func GetContainerHealth(container docker.APIContainers) string {
+	// If the container is not running, then return exited as the health.
+	if container.State == "exited" || container.State == "restarting" {
+		return container.State
+	}
+
+	// Otherwise parse the container status.
 	status := container.Status
 	re := regexp.MustCompile(`\(([^\)]+)\)`)
 	match := re.FindString(status)
