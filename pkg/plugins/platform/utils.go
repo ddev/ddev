@@ -90,6 +90,7 @@ func RenderAppTable(platform string, apps []App) {
 func CreateAppTable() *uitable.Table {
 	table := uitable.New()
 	table.MaxColWidth = 140
+	table.Separator = "  "
 	table.AddRow("NAME", "TYPE", "LOCATION", "URL", "STATUS")
 	return table
 }
