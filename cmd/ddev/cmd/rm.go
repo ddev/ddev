@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
@@ -26,19 +25,11 @@ var LocalDevRMCmd = &cobra.Command{
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
-		if !platform.ComposeFileExists(app) {
-			fmt.Println("No docker-compose file exists for this site. Attempting manual cleanup.")
-			err = platform.Cleanup(app)
-			if err != nil {
-				util.Failed("Could not clean up site: %v", err)
-			}
-		} else {
-			err = app.Down()
-			if err != nil {
-				log.Println(err)
-				util.Failed("Could not remove site: %s", app.ContainerName())
-			}
+		err = app.Down()
+		if err != nil {
+			util.Failed("Could not remove site: %s", app.ContainerName())
 		}
+
 		util.Success("Successfully removed the %s application.\n", app.GetName())
 	},
 }
