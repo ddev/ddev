@@ -64,6 +64,7 @@ func init() {
 	log.SetLevel(logLevel)
 }
 
+// getActiveAppRoot returns the fully rooted directory of the active app, or an error
 func getActiveAppRoot() (string, error) {
 	cwd, err := os.Getwd()
 	if err != nil {
