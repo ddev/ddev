@@ -49,7 +49,7 @@ var LocalDevExecCmd = &cobra.Command{
 		cmdArgs = append(cmdArgs, cmdSplit...)
 		err = dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
-			util.Failed("Could not execute command.", cmdString, err)
+			util.Failed("Could not execute command %s: %v", cmdString, err)
 		}
 	},
 	PreRun: func(cmd *cobra.Command, args []string) {
