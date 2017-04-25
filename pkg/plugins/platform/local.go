@@ -182,6 +182,10 @@ func (l *LocalApp) ImportDB(imPath string) error {
 		fmt.Println("Run 'ddev describe' to find the database credentials for this application.")
 	}
 
+	if l.GetType() == "wordpress" {
+		util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec 'wp search-replace [http://www.myproductionsite.example] %s'\" to update the URLs acroos your database.", l.URL())
+	}
+
 	return nil
 }
 
