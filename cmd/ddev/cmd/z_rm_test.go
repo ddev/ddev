@@ -23,11 +23,11 @@ func TestDevRm(t *testing.T) {
 			assert.Fail("Could not find an active ddev configuration: %v", err)
 		}
 		format := fmt.Sprintf
-		assert.Contains(string(out), format("Stopping %s-web ... done", app.ContainerName()))
-		assert.Contains(string(out), format("Stopping %s-db ... done", app.ContainerName()))
-		assert.Contains(string(out), format("Stopping %s-dba ... done", app.ContainerName()))
-		assert.Contains(string(out), format("Removing %s-web ... done", app.ContainerName()))
-		assert.Contains(string(out), format("Removing %s-db ... done", app.ContainerName()))
-		assert.Contains(string(out), format("Removing %s-dba ... done", app.ContainerName()))
+		assert.Contains(string(out), format("Stopping %s-web", app.ContainerName()))
+		assert.Contains(string(out), format("Stopping %s-db", app.ContainerName()))
+		assert.Contains(string(out), format("Stopping %s-dba", app.ContainerName()))
+		assert.Contains(string(out), format("Removing %s-web", app.ContainerName()))
+		assert.Contains(string(out), format("Removing %s-db", app.ContainerName()))
+		assert.Contains(string(out), format("Removing %s-dba", app.ContainerName()))
 	}
 }

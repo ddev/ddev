@@ -1,0 +1,82 @@
+version: 2
+jobs:
+  build:
+    machine: true
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      DRUD_DEBUG: "true"
+      GOPATH: /home/circleci/go
+    steps:
+      - run: mkdir -p ~/go/lib && mkdir ~/go/pkg && mkdir -p ~/go/src/github.com/drud/ddev
+
+      - run:
+          command: sudo apt-get update -qq && sudo apt-get install -qq mysql-client realpath
+          name: Basic tool installation
+
+      - run:
+          command: |
+            sudo apt-get remove -qq golang &&
+            wget -q -O /tmp/golang.tgz https://storage.googleapis.com/golang/go1.8.1.linux-amd64.tar.gz &&
+            cd /tmp && tar -xf golang.tgz &&
+            sudo rm -rf /usr/local/go && sudo mv go /usr/local
+          name: Upgrade golang
+
+      - run:
+          command: |
+            sudo apt-get remove -qq docker docker-engine &&
+            sudo apt-get update -qq &&
+            sudo apt-get install -qq apt-transport-https ca-certificates  curl software-properties-common &&
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &&
+            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" &&
+            sudo apt-get update -qq &&
+            sudo apt-get install -qq docker-ce
+          name: Install docker
+
+      - run:
+          command: sudo curl -s -L "https://github.com/docker/compose/releases/download/1.12.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose
+          name: docker-compose install
+
+      - run:
+          command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
+          name: Installed tool versions
+
+      - checkout
+
+      - run:
+          command: make linux
+          name: Build the linux ddev executable binary
+
+      - run:
+          command: |
+            make gofmt &&
+            make govet &&
+            make golint &&
+            make errcheck
+          name: Static analysis targets gofmt/govet/golint/errcheck
+
+      # Run the built-in ddev tests
+      - run:
+          command: |
+            if [ ! -n "${RUN_NIGHTLY_BUILD}" ]; then
+              pwd && make test
+            fi
+          name: ddev tests (not nightly build)
+
+      # Run codecoroner after tests. We care about dead code, but we still want tests to run for WIP branches.
+      - run:
+          command: make codecoroner
+          name: Run codecoroner
+
+      - run:
+          command: |
+            if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
+              make clean
+              export VERSION=nightly.$(date +%Y%m%d%H%M%S)
+              echo VERSION=$VERSION
+              git submodule update --init && git submodule update --remote
+              make -f nightly_build.mak clean
+              make -f nightly_build.mak --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
+              $GOPATH/src/github.com/drud/ddev/bin/linux/ddev version
+            fi
+          name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
+
