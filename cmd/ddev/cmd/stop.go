@@ -20,8 +20,7 @@ var LocalDevStopCmd = &cobra.Command{
 
 		err = app.Stop()
 		if err != nil {
-			log.Println(err)
-			util.Failed("Failed to stop containers for %s. Run `ddev list` to ensure your site exists. error=", app.ContainerName(), err)
+			util.Failed("Failed to stop containers for %s. Run `ddev list` to ensure your site exists: %v", app.ContainerName(), err)
 		}
 
 		util.Success("Application has been stopped.")

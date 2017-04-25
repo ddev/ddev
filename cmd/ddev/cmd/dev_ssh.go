@@ -32,7 +32,7 @@ var LocalDevSSHCmd = &cobra.Command{
 			"bash",
 		)
 		if err != nil {
-			log.Fatal("Failed DockerCompose exec bash command", err)
+			util.Failed("Failed DockerCompose exec bash command: %v", err)
 		}
 
 	},
