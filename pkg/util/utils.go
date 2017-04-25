@@ -15,6 +15,11 @@ func Failed(format string, a ...interface{}) {
 	os.Exit(1)
 }
 
+// Warning will present the user with warning text.
+func Warning(format string, a ...interface{}) {
+	color.Yellow(format, a...)
+}
+
 // Success will indicate an operation succeeded with colored confirmation text.
 func Success(format string, a ...interface{}) {
 	color.Cyan(format, a...)
