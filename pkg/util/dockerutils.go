@@ -156,6 +156,7 @@ func NetExists(client *docker.Client, name string) bool {
 // ContainerWait provides a wait loop to check for container in "healthy" status.
 // timeout is in seconds.
 func ContainerWait(timeout time.Duration, labels map[string]string) error {
+
 	ticker := time.NewTicker(500 * time.Millisecond)
 	// doneChan is triggered when we find containers or have an error trying
 	doneChan := make(chan bool)
@@ -174,7 +175,7 @@ func ContainerWait(timeout time.Duration, labels map[string]string) error {
 			}
 			status := GetContainerHealth(container)
 			if status == "restarting" {
-				return fmt.Errorf("container %s: detected container restart; invalid configuration or container. consider using `docker logs %s` to debug", container.Names[0], container.ID)
+				containerErr = fmt.Errorf("container %s: detected container restart; invalid configuration or container. consider using `docker logs %s` to debug", container.Names[0], container.ID)
 			}
 			if status == "healthy" {
 				containerErr = nil
