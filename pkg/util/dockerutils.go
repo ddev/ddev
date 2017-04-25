@@ -77,7 +77,7 @@ func GetDockerClient() *docker.Client {
 	// Create a new docker client talking to the default docker-machine.
 	client, err := docker.NewClient("unix:///var/run/docker.sock")
 	if err != nil {
-		log.Fatalf("could not get docker client. is docker running?:", err)
+		log.Fatalf("could not get docker client. is docker running?: %v", err)
 	}
 	return client
 }
