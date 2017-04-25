@@ -171,15 +171,16 @@ func ComposeFileExists(app App) bool {
 func Cleanup(app App) error {
 	client := util.GetDockerClient()
 
+	// Find all containers which match the current site name.
 	labels := map[string]string{
 		"com.ddev.site-name": app.GetName(),
 	}
-
 	containers, err := util.FindContainersByLabels(labels)
 	if err != nil {
 		return err
 	}
 
+	// First, try stopping the listed containers if they are running.
 	for i := range containers {
 		if containers[i].State == "running" || containers[i].State == "restarting" || containers[i].State == "paused" {
 			containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
@@ -191,6 +192,7 @@ func Cleanup(app App) error {
 		}
 	}
 
+	// Try to remove the containers once they are stopped.
 	for i := range containers {
 		containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
 		removeOpts := docker.RemoveContainerOptions{
