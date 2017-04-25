@@ -283,15 +283,6 @@ func (l *LocalApp) Start() error {
 	composePath := l.DockerComposeYAMLPath()
 	l.DockerEnv()
 
-	existing, err := l.FindContainerByType("web")
-	if err != nil && !strings.Contains(err.Error(), "could not find containers which matched") {
-		return err
-	}
-
-	if existing.State == "running" {
-		return fmt.Errorf("a site with the name %s is already running", l.GetName())
-	}
-
 	// Write docker-compose.yaml (if it doesn't exist).
 	// If the user went through the `ddev config` process it will be written already, but
 	// we also do it here in the case of a manually created `.ddev/config.yaml` file.
@@ -304,7 +295,7 @@ func (l *LocalApp) Start() error {
 
 	EnsureDockerRouter()
 
-	err = l.AddHostsEntry()
+	err := l.AddHostsEntry()
 	if err != nil {
 		log.Fatal(err)
 	}
