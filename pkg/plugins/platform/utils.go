@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 
 	"errors"
@@ -164,6 +165,45 @@ func ComposeFileExists(app App) bool {
 		return false
 	}
 	return true
+}
+
+// Cleanup will clean up ddev apps even if the composer file has been deleted.
+func Cleanup(app App) error {
+	client := util.GetDockerClient()
+
+	labels := map[string]string{
+		"com.ddev.site-name": app.GetName(),
+	}
+
+	containers, err := util.FindContainersByLabels(labels)
+	if err != nil {
+		return err
+	}
+
+	for i := range containers {
+		if containers[i].State == "running" || containers[i].State == "restarting" || containers[i].State == "paused" {
+			containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
+			fmt.Printf("Stopping container: %s\n", containerName)
+			err = client.StopContainer(containers[i].ID, 60)
+			if err != nil {
+				return fmt.Errorf("could not stop container %s: %v\n", containerName, err)
+			}
+		}
+	}
+
+	for i := range containers {
+		containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
+		removeOpts := docker.RemoveContainerOptions{
+			ID:    containers[i].ID,
+			Force: true,
+		}
+		fmt.Printf("Removing container: %s\n", containerName)
+		if err := client.RemoveContainer(removeOpts); err != nil {
+			return fmt.Errorf("could not remove container %s: %v", containerName, err)
+		}
+	}
+
+	return nil
 }
 
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.

@@ -14,12 +14,9 @@ var LocalDevReconfigCmd = &cobra.Command{
 	Short: "Restart the local development environment for a site.",
 	Long:  `Restart stops the containers for site's environment and starts them back up again.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		client, err := util.GetDockerClient()
-		if err != nil {
-			log.Fatal(err)
-		}
+		client := util.GetDockerClient()
 
-		err = util.EnsureNetwork(client, netName)
+		err := util.EnsureNetwork(client, netName)
 		if err != nil {
 			log.Fatal(err)
 		}

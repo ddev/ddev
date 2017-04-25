@@ -27,15 +27,18 @@ var LocalDevRMCmd = &cobra.Command{
 		}
 
 		if !platform.ComposeFileExists(app) {
-			util.Failed("No docker-compose.yaml could be found for this application.")
+			fmt.Println("No docker-compose file exists for this site. Attempting manual cleanup.")
+			err = platform.Cleanup(app)
+			if err != nil {
+				util.Failed("Could not clean up site: %v", err)
+			}
+		} else {
+			err = app.Down()
+			if err != nil {
+				log.Println(err)
+				util.Failed("Could not remove site: %s", app.ContainerName())
+			}
 		}
-
-		err = app.Down()
-		if err != nil {
-			log.Println(err)
-			util.Failed("Could not remove site: %s", app.ContainerName())
-		}
-
 		util.Success("Successfully removed the %s application.\n", app.GetName())
 	},
 }
