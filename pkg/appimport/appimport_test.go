@@ -103,7 +103,7 @@ func TestValidateAsset(t *testing.T) {
 	assert.Contains(testPath, upTwo)
 
 	// archive
-	testPath, err = ValidateAsset(testArchivePath, "db")
+	_, err = ValidateAsset(testArchivePath, "db")
 	assert.Error(err)
 	assert.Equal(err.Error(), "is archive")
 

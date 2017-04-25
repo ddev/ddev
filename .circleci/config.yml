@@ -51,8 +51,9 @@ jobs:
             make gofmt &&
             make govet &&
             make golint &&
-            make errcheck
-          name: Static analysis targets gofmt/govet/golint/errcheck
+            make errcheck &&
+            make staticcheck
+          name: Static analysis targets gofmt/govet/golint/errcheck/staticcheck
 
       # Run the built-in ddev tests
       - run:

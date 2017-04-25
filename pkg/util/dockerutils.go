@@ -3,10 +3,11 @@ package util
 import (
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/try"
@@ -167,24 +168,44 @@ func NetExists(client *docker.Client, name string) bool {
 }
 
 // ContainerWait provides a wait loop to check for container in "healthy" status.
+// timeout is in seconds.
 func ContainerWait(timeout time.Duration, labels map[string]string) error {
-	timedOut := time.After(timeout * time.Second)
-	tick := time.Tick(500 * time.Millisecond)
-	for {
-		select {
-		case <-timedOut:
-			return errors.New("health check timed out")
-		case <-tick:
+	ticker := time.NewTicker(500 * time.Millisecond)
+	// doneChan is triggered when we find containers or have an error trying
+	doneChan := make(chan bool)
+	// timeoutChan is triggered if we are still waiting after timeout seconds
+	timeoutChan := time.After(timeout * time.Second)
+
+	// Default error is that it timed out
+	var containerErr = errors.New("health check timed out")
+
+	go func() {
+		for range ticker.C {
 			container, err := FindContainerByLabels(labels)
 			if err != nil {
-				return errors.New("failed to query container")
+				containerErr = errors.New("failed to query container")
+				doneChan <- true
 			}
 			status := GetContainerHealth(container)
 			if status == "healthy" {
-				return nil
+				containerErr = nil
+				doneChan <- true
 			}
 		}
+	}()
+
+outer:
+	for {
+		select {
+
+		case <-doneChan:
+			break outer
+		case <-timeoutChan:
+			break outer
+		}
 	}
+	ticker.Stop()
+	return containerErr
 }
 
 // GetContainerHealth retrieves the status of a given container. The status string returned

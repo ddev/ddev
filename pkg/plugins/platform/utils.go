@@ -96,7 +96,7 @@ func EnsureDockerRouter() {
 	defer util.CheckClose(f)
 
 	templ := template.New("compose template")
-	templ, err = templ.Parse(fmt.Sprintf(DrudRouterTemplate))
+	templ, err = templ.Parse(DrudRouterTemplate)
 	if err != nil {
 		log.Fatal(ferr)
 	}
