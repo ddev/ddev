@@ -461,6 +461,7 @@ func (l *LocalApp) Down() error {
 		"down",
 	)
 	if err != nil {
+		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
 		return Cleanup(l)
 	}
 

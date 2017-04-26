@@ -23,12 +23,9 @@ var ImportDBCmd = &cobra.Command{
 			os.Exit(0)
 		}
 
-		client, err := util.GetDockerClient()
-		if err != nil {
-			log.Fatal(err)
-		}
+		client := util.GetDockerClient()
 
-		err = util.EnsureNetwork(client, netName)
+		err := util.EnsureNetwork(client, netName)
 		if err != nil {
 			log.Fatal(err)
 		}

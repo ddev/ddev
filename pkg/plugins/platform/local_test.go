@@ -236,7 +236,7 @@ func TestLocalStop(t *testing.T) {
 func TestLocalRemove(t *testing.T) {
 	assert := assert.New(t)
 
-	app := PluginMap["local"]
+	app := GetPluginApp("local")
 
 	for _, site := range TestSites {
 		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
@@ -270,6 +270,41 @@ func TestLocalRemove(t *testing.T) {
 
 		cleanup()
 	}
+}
+
+// TestCleanupWithoutCompose
+func TestCleanupWithoutCompose(t *testing.T) {
+	assert := assert.New(t)
+	site := TestSites[0]
+
+	webContainer := fmt.Sprintf(localWebContainerName, site.Name)
+	dbContainer := fmt.Sprintf(localDBContainerName, site.Name)
+	revertDir := site.Chdir()
+	app := GetPluginApp("local")
+	testcommon.ClearDockerEnv()
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	// Start a site so we have something to cleanup
+	err = app.Start()
+	assert.NoError(err)
+
+	err = app.Wait("web")
+	assert.NoError(err)
+
+	// Call the Cleanup command()
+	err = Cleanup(app)
+	assert.NoError(err)
+
+	check, err := ContainerCheck(webContainer, "running")
+	assert.Error(err)
+	assert.False(check)
+
+	check, err = ContainerCheck(dbContainer, "running")
+	assert.Error(err)
+	assert.False(check)
+
+	revertDir()
 }
 
 // TestGetappsEmpty ensures that GetApps returns an empty list when no applications are running.

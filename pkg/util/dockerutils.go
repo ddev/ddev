@@ -9,7 +9,6 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
 )
@@ -74,13 +73,13 @@ func GetPodPort(name string) (int64, error) {
 }
 
 // GetDockerClient returns a docker client for a docker-machine.
-func GetDockerClient() (*docker.Client, error) {
+func GetDockerClient() *docker.Client {
 	// Create a new docker client talking to the default docker-machine.
 	client, err := docker.NewClient("unix:///var/run/docker.sock")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("could not get docker client. is docker running?: %v", err)
 	}
-	return client, err
+	return client
 }
 
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.
@@ -91,10 +90,7 @@ func FindContainerByLabels(labels map[string]string) (docker.APIContainers, erro
 
 // GetDockerContainers returns a slice of all docker containers on the host system.
 func GetDockerContainers(allContainers bool) ([]docker.APIContainers, error) {
-	client, err := dockerutil.GetDockerClient()
-	if err != nil {
-		log.Fatal("could not get docker client. is docker running?")
-	}
+	client := GetDockerClient()
 	containers, err := client.ListContainers(docker.ListContainersOptions{All: allContainers})
 	return containers, err
 }
