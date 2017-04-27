@@ -210,6 +210,7 @@ func TestLocalStop(t *testing.T) {
 	assert := assert.New(t)
 
 	app, err := GetPluginApp("local")
+	assert.NoError(err)
 
 	for _, site := range TestSites {
 		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
