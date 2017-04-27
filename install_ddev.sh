@@ -6,6 +6,8 @@ GREEN=$(tput setaf 2)
 YELLOW=$(tput setaf 3)
 RESET=$(tput sgr0)
 OS=$(uname)
+BINOWNER=$(ls -ld /usr/local/bin | awk '{print $3}')
+USER=$(whoami)
 SHACMD=""
 FILE=""
 LATEST_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/drud/ddev/releases/latest)
@@ -31,9 +33,14 @@ cd /tmp; $SHACMD -c "$FILE.sha256"; cd -;
 tar -xzf "/tmp/$FILE.tar.gz" -C /tmp
 chmod ugo+x /tmp/ddev
 
-echo "Download verified. Ready to place ddev in your /usr/local/bin. This will require sudo privileges."
-echo "${YELLOW}Running \"sudo mv /tmp/ddev /usr/local/bin/\" Please enter your password if prompted.${RESET}"
-sudo mv /tmp/ddev /usr/local/bin/
+echo "Download verified. Ready to place ddev in your /usr/local/bin."
+
+if [[ "$BINOWNER" == "$USER" ]]; then
+    mv /tmp/ddev /usr/local/bin/
+else
+    echo "${YELLOW}Running \"sudo mv /tmp/ddev /usr/local/bin/\" Please enter your password if prompted.${RESET}"
+    sudo mv /tmp/ddev /usr/local/bin/
+fi
 
 rm "/tmp/$FILE.tar.gz"
 rm "/tmp/$FILE.sha256"
