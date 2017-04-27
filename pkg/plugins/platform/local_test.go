@@ -284,9 +284,11 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	webContainer := fmt.Sprintf(localWebContainerName, site.Name)
 	dbContainer := fmt.Sprintf(localDBContainerName, site.Name)
 	revertDir := site.Chdir()
-	app := GetPluginApp("local")
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
+
 	testcommon.ClearDockerEnv()
-	err := app.Init(site.Dir)
+	err = app.Init(site.Dir)
 	assert.NoError(err)
 
 	// Start a site so we have something to cleanup
