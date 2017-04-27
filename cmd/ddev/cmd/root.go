@@ -35,8 +35,8 @@ var RootCmd = &cobra.Command{
 		}
 
 		if !skip {
-			plugin = strings.ToLower(plugin)
-			if _, ok := platform.PluginMap[plugin]; !ok {
+			_, err := platform.GetPluginApp(plugin)
+			if err != nil {
 				util.Failed("Plugin %s is not registered", plugin)
 			}
 		}
@@ -80,7 +80,10 @@ func getActiveAppRoot() (string, error) {
 
 // getActiveApp returns the active platform.App based on the current working directory.
 func getActiveApp() (platform.App, error) {
-	app := platform.PluginMap[strings.ToLower(plugin)]
+	app, err := platform.GetPluginApp(plugin)
+	if err != nil {
+		return app, err
+	}
 	activeAppRoot, err := getActiveAppRoot()
 	if err != nil {
 		return app, err

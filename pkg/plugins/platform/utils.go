@@ -52,7 +52,11 @@ func GetApps() map[string][]App {
 
 		if err == nil {
 			for _, siteContainer := range sites {
-				site := GetPluginApp(platformType)
+				site, err := GetPluginApp(platformType)
+				// This should absolutely never happen, so just fatal on the off chance it does.
+				if err != nil {
+					log.Fatalf("could not get application for plugin type %s", platformType)
+				}
 				approot, ok := siteContainer.Labels["com.ddev.approot"]
 				if !ok {
 					break
@@ -62,7 +66,7 @@ func GetApps() map[string][]App {
 					apps[platformType] = []App{}
 				}
 
-				err := site.Init(approot)
+				err = site.Init(approot)
 				if err == nil {
 					apps[platformType] = append(apps[platformType], site)
 				}

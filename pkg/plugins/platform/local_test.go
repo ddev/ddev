@@ -99,7 +99,8 @@ func TestLocalStart(t *testing.T) {
 	}
 
 	assert := assert.New(t)
-	app := PluginMap["local"]
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
 
 	for _, site := range TestSites {
 		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
@@ -153,7 +154,8 @@ func TestGetApps(t *testing.T) {
 // TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed
 func TestLocalImportDB(t *testing.T) {
 	assert := assert.New(t)
-	app := PluginMap["local"]
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
@@ -179,7 +181,8 @@ func TestLocalImportDB(t *testing.T) {
 // TestLocalImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestLocalImportFiles(t *testing.T) {
 	assert := assert.New(t)
-	app := PluginMap["local"]
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
@@ -206,7 +209,7 @@ func TestLocalImportFiles(t *testing.T) {
 func TestLocalStop(t *testing.T) {
 	assert := assert.New(t)
 
-	app := PluginMap["local"]
+	app, err := GetPluginApp("local")
 
 	for _, site := range TestSites {
 		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
@@ -236,7 +239,8 @@ func TestLocalStop(t *testing.T) {
 func TestLocalRemove(t *testing.T) {
 	assert := assert.New(t)
 
-	app := GetPluginApp("local")
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
 
 	for _, site := range TestSites {
 		webContainer := fmt.Sprintf(localWebContainerName, site.Name)

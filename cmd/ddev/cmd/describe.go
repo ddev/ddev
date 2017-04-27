@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
@@ -58,7 +57,11 @@ func describeApp(appName string) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			app = platform.PluginMap[strings.ToLower(plugin)]
+			app, err := platform.GetPluginApp(plugin)
+			if err != nil {
+				log.Fatalf("Could not find application type %s: %v", plugin, err)
+			}
+
 			err = app.Init(dir)
 			if err != nil {
 				return "", err
