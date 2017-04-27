@@ -37,7 +37,6 @@ func TestDevLogs(t *testing.T) {
 		out, err := system.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.Contains(string(out), "Server started")
-		assert.Contains(string(out), "GET")
 
 		cleanup()
 	}
