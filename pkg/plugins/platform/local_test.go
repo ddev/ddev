@@ -76,7 +76,7 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 	}
 
 	for _, container := range containers {
-		name := container.Names[0][1:]
+		name := util.ContainerName(container)
 		if name == checkName {
 			if container.State == checkState {
 				return true, nil
@@ -99,7 +99,8 @@ func TestLocalStart(t *testing.T) {
 	}
 
 	assert := assert.New(t)
-	app := PluginMap["local"]
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
 
 	for _, site := range TestSites {
 		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
@@ -153,7 +154,8 @@ func TestGetApps(t *testing.T) {
 // TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed
 func TestLocalImportDB(t *testing.T) {
 	assert := assert.New(t)
-	app := PluginMap["local"]
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
@@ -179,7 +181,8 @@ func TestLocalImportDB(t *testing.T) {
 // TestLocalImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestLocalImportFiles(t *testing.T) {
 	assert := assert.New(t)
-	app := PluginMap["local"]
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
@@ -206,7 +209,8 @@ func TestLocalImportFiles(t *testing.T) {
 func TestLocalStop(t *testing.T) {
 	assert := assert.New(t)
 
-	app := PluginMap["local"]
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
 
 	for _, site := range TestSites {
 		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
@@ -236,7 +240,8 @@ func TestLocalStop(t *testing.T) {
 func TestLocalRemove(t *testing.T) {
 	assert := assert.New(t)
 
-	app := GetPluginApp("local")
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
 
 	for _, site := range TestSites {
 		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
@@ -280,9 +285,11 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	webContainer := fmt.Sprintf(localWebContainerName, site.Name)
 	dbContainer := fmt.Sprintf(localDBContainerName, site.Name)
 	revertDir := site.Chdir()
-	app := GetPluginApp("local")
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
+
 	testcommon.ClearDockerEnv()
-	err := app.Init(site.Dir)
+	err = app.Init(site.Dir)
 	assert.NoError(err)
 
 	// Start a site so we have something to cleanup
