@@ -25,7 +25,7 @@ var LocalDevExecCmd = &cobra.Command{
 
 		app, err := getActiveApp()
 		if err != nil {
-			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+			util.Failed("Failed to exec command: %v", err)
 		}
 
 		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
@@ -49,7 +49,7 @@ var LocalDevExecCmd = &cobra.Command{
 		cmdArgs = append(cmdArgs, cmdSplit...)
 		err = dockerutil.DockerCompose(cmdArgs...)
 		if err != nil {
-			util.Failed("Could not execute command %s: %v", cmdString, err)
+			util.Failed("Failed to execute command %s: %v", cmdString, err)
 		}
 	},
 	PreRun: func(cmd *cobra.Command, args []string) {

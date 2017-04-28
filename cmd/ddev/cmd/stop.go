@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +13,7 @@ var LocalDevStopCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+			util.Failed("Failed to stop: %v", err)
 		}
 
 		err = app.Stop()

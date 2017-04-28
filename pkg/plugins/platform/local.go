@@ -40,7 +40,7 @@ func (l *LocalApp) GetType() string {
 func (l *LocalApp) Init(basePath string) error {
 	config, err := ddevapp.NewConfig(basePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
 	}
 
 	l.AppConfig = config
@@ -48,6 +48,14 @@ func (l *LocalApp) Init(basePath string) error {
 	err = PrepLocalSiteDirs(basePath)
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	web, err := l.FindContainerByType("web")
+	if err == nil {
+		containerApproot := web.Labels["com.ddev.approot"]
+		if containerApproot != l.AppConfig.AppRoot {
+			return fmt.Errorf("a container in %s state already exists for %s that was created at %s", web.State, l.AppConfig.Name, containerApproot)
+		}
 	}
 
 	return nil

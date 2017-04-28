@@ -43,20 +43,20 @@ var StartCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
-			log.Fatalf("Could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+			util.Failed("Failed to start: %s", err)
 		}
 
 		fmt.Printf("Starting environment for %s...\n", app.GetName())
 
 		err = app.Start()
 		if err != nil {
-			util.Failed("Failed to start %s: %s", app.GetName(), err)
+			util.Failed("Failed to start %s: %v", app.GetName(), err)
 		}
 
 		fmt.Println("Waiting for the environment to become ready. This may take a couple of minutes...")
 		err = app.Wait("web")
 		if err != nil {
-			util.Failed("The environment for %s never became ready: %s", app.GetName(), err)
+			util.Failed("The environment for %s never became ready: %v", app.GetName(), err)
 		}
 
 		util.Success("Successfully started %s", app.GetName())
