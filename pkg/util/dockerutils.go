@@ -171,7 +171,7 @@ func ContainerWait(timeout time.Duration, labels map[string]string) error {
 			}
 			status := GetContainerHealth(container)
 			if status == "restarting" {
-				containerErr = fmt.Errorf("container %s: detected container restart; invalid configuration or container. consider using `docker logs %s` to debug", container.Names[0], container.ID)
+				containerErr = fmt.Errorf("container %s: detected container restart; invalid configuration or container. consider using `docker logs %s` to debug", ContainerName(container), container.ID)
 			}
 			if status == "healthy" {
 				containerErr = nil
@@ -192,6 +192,11 @@ outer:
 	}
 	ticker.Stop()
 	return containerErr
+}
+
+// ContainerName returns the containers human readable name.
+func ContainerName(container docker.APIContainers) string {
+	return container.Names[0][1:]
 }
 
 // GetContainerHealth retrieves the status of a given container. The status string returned

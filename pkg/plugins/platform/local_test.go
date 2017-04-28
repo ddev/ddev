@@ -76,7 +76,7 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 	}
 
 	for _, container := range containers {
-		name := container.Names[0][1:]
+		name := ContainerName(container)
 		if name == checkName {
 			if container.State == checkState {
 				return true, nil
