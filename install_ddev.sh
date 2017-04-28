@@ -26,6 +26,10 @@ else
     exit 1
 fi
 
+if ! docker --version >/dev/null 2>&1; then
+    echo "${YELLOW}Docker is required for ddev. Download and install docker at https://www.docker.com/community-edition#/download before attempting to use ddev.${RESET}"
+fi
+
 curl -sSL "$URL/$FILE.tar.gz" -o "/tmp/$FILE.tar.gz"
 curl -sSL "$URL/$FILE.sha256" -o "/tmp/$FILE.sha256"
 
