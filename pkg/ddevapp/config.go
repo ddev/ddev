@@ -246,6 +246,7 @@ func (c *Config) docrootPrompt() error {
 	fullPath := filepath.Join(c.AppRoot, c.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		fmt.Printf("No directory could be found at %s. Please enter a valid docroot", fullPath)
+		c.Docroot = ""
 		return c.docrootPrompt()
 	}
 	return nil
