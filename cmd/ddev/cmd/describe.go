@@ -28,11 +28,11 @@ var DescribeCommand = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Could not describe app: %v", err)
 		}
-
 		fmt.Println(out)
 	},
 }
 
+// describeApp will load and describe the app specified by appName. You may leave appName blank to use the app from the current working directory.
 func describeApp(appName string) (string, error) {
 	var app platform.App
 	var err error
@@ -53,22 +53,22 @@ func describeApp(appName string) (string, error) {
 			return "", err
 		}
 
-		if dir, ok := webContainer.Labels["com.ddev.approot"]; ok {
-			if err != nil {
-				return "", err
-			}
-			app, err := platform.GetPluginApp(plugin)
-			if err != nil {
-				log.Fatalf("Could not find application type %s: %v", plugin, err)
-			}
-
-			err = app.Init(dir)
-			if err != nil {
-				return "", err
-			}
+		dir, ok := webContainer.Labels["com.ddev.approot"]
+		if !ok {
+			return "", fmt.Errorf("could not find webroot on container: %s", util.ContainerName(webContainer))
 		}
-	}
 
+		app, err = platform.GetPluginApp(plugin)
+		if err != nil {
+			log.Fatalf("Could not find application type %s: %v", plugin, err)
+		}
+
+		err = app.Init(dir)
+		if err != nil {
+			return "", err
+		}
+
+	}
 	out, err := app.Describe()
 	return out, err
 }
