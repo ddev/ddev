@@ -1,3 +1,11 @@
-#!/bin/sh
+#!/bin/bash
+set -o errexit
 
+# Look for uncommitted files, http://stackoverflow.com/a/2659808/215713
+git diff-index --quiet HEAD || (echo "There are uncommitted files" && exit 1)
+
+# Look for unstaged files
+test -z "$(git ls-files --exclude-standard --others)" || (echo "There are unstaged files" && exit 2)
+
+# Make sure gofmt has been done
 make -s gofmt
