@@ -46,27 +46,13 @@ jobs:
           command: make linux
           name: Build the linux ddev executable binary
 
-      - run:
-          command: |
-            make gofmt &&
-            make govet &&
-            make golint &&
-            make errcheck &&
-            make staticcheck
-          name: Static analysis targets gofmt/govet/golint/errcheck/staticcheck
-
       # Run the built-in ddev tests
       - run:
           command: |
             if [ ! -n "${RUN_NIGHTLY_BUILD}" ]; then
-              pwd && make test
+              make test
             fi
           name: ddev tests (not nightly build)
-
-      # Run codecoroner after tests. We care about dead code, but we still want tests to run for WIP branches.
-      - run:
-          command: make codecoroner
-          name: Run codecoroner
 
       - run:
           command: |
@@ -81,3 +67,12 @@ jobs:
             fi
           name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
 
+      - run:
+          command: |
+            make gofmt &&
+            make govet &&
+            make golint &&
+            make errcheck &&
+            make staticcheck &&
+            make codecoroner
+          name: Static analysis targets gofmt/govet/golint/errcheck/staticcheck

@@ -31,3 +31,9 @@ var RouterImage = "drud/nginx-proxy" // Note that this is overridden by make
 
 // RouterTag defines the tag used for the router.
 var RouterTag = "v0.3.0" // Note that this is overridden by make
+
+// COMMIT is the actual committish, supplied by make
+var COMMIT = "COMMIT should be overridden"
+
+// BUILDINFO is information with date and context, supplied by make
+var BUILDINFO = "BUILDINFO should have new info"
