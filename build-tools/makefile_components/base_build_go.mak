@@ -19,9 +19,12 @@ BUILD_BASE_DIR ?= $$PWD
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
 
 
-VERSION_VARIABLES += VERSION
+COMMIT := $(shell git describe --tags --always --dirty)
+BUILDINFO = $(shell echo Built $$(date) $$USER@$$(hostname) $(BUILD_IMAGE) )
 
-VERSION_LDFLAGS := $(foreach v,$(VERSION_VARIABLES),-X $(PKG)/pkg/version.$(v)=$($(v)))
+VERSION_VARIABLES += VERSION COMMIT BUILDINFO
+
+VERSION_LDFLAGS := $(foreach v,$(VERSION_VARIABLES),-X "$(PKG)/pkg/version.$(v)=$($(v))")
 
 LDFLAGS := -extldflags -static $(VERSION_LDFLAGS)
 
@@ -38,12 +41,10 @@ linux darwin: $(GOFILES)
 	    -v $$(pwd)/bin/$@:/go/bin/$@                      \
 	    -v $$(pwd)/.go/std/$@:/usr/local/go/pkg/$@_amd64_static  \
 	    -e CGO_ENABLED=0                  \
+	    -e GOOS=$@						  \
 	    -w /go/src/$(PKG)                 \
 	    $(BUILD_IMAGE)                    \
-	    /bin/sh -c '                      \
-	        GOOS=$@                       \
-	        go install -installsuffix static -ldflags "$(LDFLAGS)" $(SRC_AND_UNDER)  \
-	    '
+        go install -installsuffix static -ldflags ' $(LDFLAGS) ' $(SRC_AND_UNDER)
 	@touch $@
 	@echo $(VERSION) >VERSION.txt
 
