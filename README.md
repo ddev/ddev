@@ -155,14 +155,16 @@ All of the commands can be performed by explicitly specifying the sitename or, t
 ### Retrieve Site Metadata
 To view information about a specific site (such as URL, MySQL credentials, mailhog credentials), run `ddev describe` from within the working directory of the site. To view information for any site, use `ddev describe sitename`.
 
-### Viewing Webserver Logs
-To follow the webserver  error log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. If you only want to view the most recent events, omit the `-f` flag.
-
 ### Executing Commands
 To run a command against your site use `ddev exec`. e.g. `ddev exec 'drush core-status'` would execute `drush core-status` against your site root. Commands ran in this way are executed in the webserver docroot. You are free to use any of [the tools included in the container](#tools-included-in-the-container).
 
 ### SSH Into The Container
-To interact with the site more fully, `ddev ssh` will drop you into a bash shell for your container.
+The `ddev ssh` command will open a bash shell session to the web container of your site. You can also access the database container with `ddev ssh -s db`.
+
+### Log Access
+The `ddev logs` command allows you to easily retrieve error logs from the web server. To follow the webserver  error log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail.
+
+Additional logging can be accessed by using `ddev ssh` to manually retrieve the log files you are after. The web server stores access logs at `/var/log/nginx/access.log`, and PHP-FPM logs at `/var/log/php7.0-fpm.log`.
 
 ## Tools Included in the Container
 We have included several useful tools for Developers in our containers.

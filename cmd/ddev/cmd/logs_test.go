@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"path"
 	"testing"
 
 	"os"
 
+	"io/ioutil"
+
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/drud-go/utils/network"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,11 +37,23 @@ func TestDevLogs(t *testing.T) {
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
 
+		confByte := []byte("<?php trigger_error(\"Fatal error\", E_USER_ERROR);")
+		err := ioutil.WriteFile(path.Join(v.Dir, "docroot", "index.php"), confByte, 0644)
+		assert.NoError(err)
+
+		o := network.NewHTTPOptions("http://127.0.0.1/index.php")
+		o.ExpectedStatus = 500
+		o.Timeout = 30
+		o.Headers["Host"] = v.Name + ".ddev.local"
+		err = network.EnsureHTTPStatus(o)
+		assert.NoError(err)
+
 		args := []string{"logs"}
 		out, err := system.RunCommand(DdevBin, args)
+
 		assert.NoError(err)
 		assert.Contains(string(out), "Server started")
-		assert.Contains(string(out), "GET")
+		assert.Contains(string(out), "PHP message: PHP Stack trace:")
 
 		cleanup()
 	}
