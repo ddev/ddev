@@ -3,6 +3,8 @@ package util
 import (
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -218,4 +220,23 @@ func GetContainerHealth(container docker.APIContainers) string {
 		match = strings.TrimPrefix(match, pre)
 	}
 	return match
+}
+
+// ComposeCmd executes docker-compose commands via shell.
+func ComposeCmd(composeFiles []string, action ...string) error {
+	var arg []string
+
+	for _, file := range composeFiles {
+		arg = append(arg, "-f")
+		arg = append(arg, file)
+	}
+
+	arg = append(arg, action...)
+
+	proc := exec.Command("docker-compose", arg...)
+	proc.Stdout = os.Stdout
+	proc.Stdin = os.Stdin
+	proc.Stderr = os.Stderr
+
+	return proc.Run()
 }

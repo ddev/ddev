@@ -17,7 +17,6 @@ import (
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/fsouza/go-dockerclient"
@@ -281,9 +280,13 @@ func (l *LocalApp) DockerComposeYAMLPath() string {
 	return l.AppConfig.DockerComposeYAMLPath()
 }
 
+// ComposeFiles returns a list of compose files for a project.
+func (l *LocalApp) ComposeFiles() []string {
+	return []string{l.AppConfig.DockerComposeYAMLPath()}
+}
+
 // Start initiates docker-compose up
 func (l *LocalApp) Start() error {
-	composePath := l.DockerComposeYAMLPath()
 	l.DockerEnv()
 
 	// Write docker-compose.yaml (if it doesn't exist).
@@ -303,11 +306,7 @@ func (l *LocalApp) Start() error {
 		log.Fatal(err)
 	}
 
-	return dockerutil.DockerCompose(
-		"-f", composePath,
-		"up",
-		"-d",
-	)
+	return util.ComposeCmd(l.ComposeFiles(), "up", "-d")
 }
 
 // DockerEnv sets environment variables for a docker-compose run.
@@ -345,17 +344,13 @@ func (l *LocalApp) DockerEnv() {
 
 // Stop initiates docker-compose stop
 func (l *LocalApp) Stop() error {
-	composePath := l.DockerComposeYAMLPath()
 	l.DockerEnv()
 
-	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(l) {
-		return fmt.Errorf("site does not exist or is malformed")
+	if l.SiteStatus() != "running" {
+		return fmt.Errorf("site does not appear to be running")
 	}
 
-	return dockerutil.DockerCompose(
-		"-f", composePath,
-		"stop",
-	)
+	return util.ComposeCmd(l.ComposeFiles(), "stop")
 }
 
 // Wait ensures that the app appears to be read before returning
@@ -448,12 +443,8 @@ func (l *LocalApp) Config() error {
 
 // Down stops the docker containers for the local project.
 func (l *LocalApp) Down() error {
-	composePath := l.DockerComposeYAMLPath()
 	l.DockerEnv()
-	err := dockerutil.DockerCompose(
-		"-f", composePath,
-		"down",
-	)
+	err := util.ComposeCmd(l.ComposeFiles(), "down")
 	if err != nil {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
 		return Cleanup(l)
