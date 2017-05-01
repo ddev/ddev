@@ -26,15 +26,6 @@ type App interface {
 	SiteStatus() string
 }
 
-// AppBase is the parent type for all local app implementations
-type AppBase struct {
-	Plugin        string
-	Archive       string //absolute path to the downloaded archive
-	WebPublicPort int64
-	DbPublicPort  int64
-	Status        string
-}
-
 // PluginMap maps the name of the plugins to their implementation.
 var PluginMap = map[string]App{
 	"local": &LocalApp{},

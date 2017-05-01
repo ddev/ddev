@@ -27,7 +27,6 @@ import (
 
 // LocalApp implements the AppBase interface local development apps
 type LocalApp struct {
-	AppBase
 	AppConfig *ddevapp.Config
 }
 
@@ -369,29 +368,12 @@ func (l *LocalApp) Wait(containerType string) error {
 	return nil
 }
 
-// FindPorts retrieves the public ports for db and web containers
-func (l *LocalApp) FindPorts() error {
-	var err error
-	l.WebPublicPort, err = util.GetPodPort(l.ContainerName() + "-web")
-	if err != nil {
-		return err
-	}
-
-	l.DbPublicPort, err = util.GetPodPort(l.ContainerName() + "-db")
-	return err
-}
-
 // Config creates the apps config file adding things like database host, name, and password
 // as well as other sensitive data like salts.
 func (l *LocalApp) Config() error {
 	basePath := l.AppRoot()
 	docroot := l.Docroot()
 	settingsFilePath := path.Join(basePath, docroot)
-
-	err := l.FindPorts()
-	if err != nil {
-		return err
-	}
 
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
 		settingsFilePath = path.Join(settingsFilePath, "sites/default/settings.php")
@@ -417,7 +399,7 @@ func (l *LocalApp) Config() error {
 		}
 
 		drupalConfig.DeployURL = l.URL()
-		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
+		err := config.WriteDrupalConfig(drupalConfig, settingsFilePath)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -452,7 +434,7 @@ func (l *LocalApp) Config() error {
 		wpConfig.NonceSalt = stringutil.RandomString(64)
 		wpConfig.SecureAuthKey = stringutil.RandomString(64)
 		wpConfig.SecureAuthSalt = stringutil.RandomString(64)
-		err = config.WriteWordpressConfig(wpConfig, settingsFilePath)
+		err := config.WriteWordpressConfig(wpConfig, settingsFilePath)
 		if err != nil {
 			log.Fatalln(err)
 		}
