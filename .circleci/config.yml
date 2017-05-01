@@ -62,6 +62,7 @@ jobs:
               pwd && make test
             fi
           name: ddev tests (not nightly build)
+          no_output_timeout: "20m"
 
       # Run codecoroner after tests. We care about dead code, but we still want tests to run for WIP branches.
       - run:
@@ -79,5 +80,6 @@ jobs:
               make -f nightly_build.mak --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION DBATag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
               $GOPATH/src/github.com/drud/ddev/bin/linux/ddev version
             fi
+          no_output_timeout: "20m"
           name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
 
