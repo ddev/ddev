@@ -205,7 +205,7 @@ func TestRead(t *testing.T) {
 		AppRoot:    "testing",
 		APIVersion: CurrentAppVersion,
 		Platform:   DDevDefaultPlatform,
-		Name:       "testing",
+		Name:       "TestRead",
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
@@ -215,7 +215,7 @@ func TestRead(t *testing.T) {
 	assert.NoError(err)
 
 	// Values not defined in file, we should still have default values
-	assert.Equal(c.Name, "testing")
+	assert.Equal(c.Name, "TestRead")
 	assert.Equal(c.DBImage, version.DBImg+":"+version.DBTag)
 
 	// Values defined in file, we should have values from file
