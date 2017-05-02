@@ -23,7 +23,7 @@ import (
 const netName = "ddev_default"
 
 var (
-	testArchiveURL  = "https://github.com/drud/wordpress/releases/download/v0.1.0/db.tar.gz"
+	testArchiveURL  = "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz"
 	testArchivePath = path.Join(testcommon.CreateTmpDir("appimport"), "db.tar.gz")
 	composePath     = path.Join("testing", "db-compose.yaml")
 	cwd             string
