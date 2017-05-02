@@ -125,7 +125,7 @@ func TestImportSQLDump(t *testing.T) {
 	assert := assert.New(t)
 
 	// test container is not running
-	err := ImportSQLDump(composePath, "invalid")
+	err := ImportSQLDump("invalid")
 	assert.Error(err)
 	assert.Contains(err.Error(), "container is not currently running")
 
@@ -138,6 +138,6 @@ func TestImportSQLDump(t *testing.T) {
 	err = util.ContainerWait(90, labels)
 	assert.NoError(err)
 
-	err = ImportSQLDump(composePath, "local-test-db")
+	err = ImportSQLDump("local-test-db")
 	assert.NoError(err)
 }

@@ -9,6 +9,7 @@ import (
 
 	"path/filepath"
 
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	homedir "github.com/mitchellh/go-homedir"
 )
@@ -59,19 +60,12 @@ func ValidateAsset(assetPath string, assetType string) (string, error) {
 }
 
 // ImportSQLDump places a provided sql dump into the app data mount, and executes mysql import to the container.
-func ImportSQLDump(composePath string, container string) error {
+func ImportSQLDump(container string) error {
 	if !dockerutil.IsRunning(container) {
 		return fmt.Errorf("the %s container is not currently running", container)
 	}
 
-	cmdArgs := []string{
-		"-f", composePath,
-		"exec",
-		"-T", container,
-		"./import.sh",
-	}
-
-	err := dockerutil.DockerCompose(cmdArgs...)
+	err := util.ContainerExec(container, []string{"./import.sh"})
 	if err != nil {
 		return fmt.Errorf("failed to execute import: %v", err)
 	}

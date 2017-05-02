@@ -174,7 +174,7 @@ func (l *LocalApp) ImportDB(imPath string) error {
 		}
 	}
 
-	err = appimport.ImportSQLDump(l.DockerComposeYAMLPath(), container)
+	err = appimport.ImportSQLDump(container)
 	if err != nil {
 		return err
 	}

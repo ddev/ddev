@@ -11,7 +11,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
@@ -62,7 +61,7 @@ func TestMain(m *testing.M) {
 // ContainerCheck determines if a given container name exists and matches a given state
 func ContainerCheck(checkName string, checkState string) (bool, error) {
 	// ensure we have docker network
-	client, _ := dockerutil.GetDockerClient()
+	client := util.GetDockerClient()
 	err := util.EnsureNetwork(client, netName)
 	if err != nil {
 		log.Fatal(err)
@@ -90,7 +89,7 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 func TestLocalStart(t *testing.T) {
 
 	// ensure we have docker network
-	client, _ := dockerutil.GetDockerClient()
+	client := util.GetDockerClient()
 	err := util.EnsureNetwork(client, netName)
 	if err != nil {
 		log.Fatal(err)
