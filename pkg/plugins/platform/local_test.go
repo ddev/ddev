@@ -183,6 +183,48 @@ func TestLocalImportFiles(t *testing.T) {
 	}
 }
 
+// TestLocalExec tests the execution of commands inside a docker container of a site.
+func TestLocalExec(t *testing.T) {
+	assert := assert.New(t)
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
+
+	for _, site := range TestSites {
+		cleanup := site.Chdir()
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		stdout := testcommon.CaptureStdOut()
+		err = app.Exec("web", true, "pwd")
+		assert.NoError(err)
+		out := stdout()
+		assert.Contains(out, "/var/www/html/docroot")
+
+		stdout = testcommon.CaptureStdOut()
+		if app.GetType() == "drupal7" || app.GetType() == "drupal8" {
+			err := app.Exec("web", true, "drush", "status")
+			assert.NoError(err)
+		}
+		if app.GetType() == "wordpress" {
+			err = app.Exec("web", true, "wp", "--info")
+			assert.NoError(err)
+		}
+		out = stdout()
+
+		if app.GetType() == "drupal7" || app.GetType() == "drupal8" {
+			assert.Contains(string(out), "Connected")
+			assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
+		}
+		if app.GetType() == "wordpress" {
+			assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
+		}
+
+		cleanup()
+
+	}
+}
+
 // TestLocalStop tests the functionality that is called when "ddev stop" is executed
 func TestLocalStop(t *testing.T) {
 	assert := assert.New(t)
