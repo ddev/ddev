@@ -26,7 +26,8 @@ type TestSite struct {
 	FileURL string
 	// DBURL is the URL of the database dump tarball used for testing database import.
 	DBURL string
-	Dir   string
+	// Dir is the rooted full path of the test site
+	Dir string
 }
 
 func (site *TestSite) createArchivePath() string {
