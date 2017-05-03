@@ -1,12 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-	"path"
-
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
 
@@ -27,9 +23,7 @@ var LocalDevLogsCmd = &cobra.Command{
 			util.Failed("Failed to retrieve logs: %v", err)
 		}
 
-		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
-
-		if !dockerutil.IsRunning(nameContainer) {
+		if app.SiteStatus() != "running" {
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
@@ -37,10 +31,7 @@ var LocalDevLogsCmd = &cobra.Command{
 			util.Failed("No docker-compose yaml for this site. Try `ddev start`.")
 		}
 
-		cmdArgs := []string{
-			"-f", path.Join(app.DockerComposeYAMLPath()),
-			"logs",
-		}
+		cmdArgs := []string{"logs"}
 
 		if tail != "" {
 			cmdArgs = append(cmdArgs, "--tail="+tail)
@@ -51,10 +42,10 @@ var LocalDevLogsCmd = &cobra.Command{
 		if timestamp {
 			cmdArgs = append(cmdArgs, "-t")
 		}
-		cmdArgs = append(cmdArgs, nameContainer)
+		cmdArgs = append(cmdArgs, serviceType)
 
 		app.DockerEnv()
-		err = dockerutil.DockerCompose(cmdArgs...)
+		err = util.ComposeCmd([]string{app.DockerComposeYAMLPath()}, cmdArgs...)
 		if err != nil {
 			util.Failed("Failed to retrieve logs for %s: %v", app.GetName(), err)
 		}
