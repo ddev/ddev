@@ -17,9 +17,7 @@ import (
 )
 
 var (
-	localDBContainerName  = "local-%s-db"
-	localWebContainerName = "local-%s-web"
-	TestSites             = []testcommon.TestSite{
+	TestSites = []testcommon.TestSite{
 		{
 			Name:      "pkgTestMainDrupal8",
 			SourceURL: "https://github.com/drud/drupal8/archive/v0.5.0.tar.gz",
@@ -103,8 +101,6 @@ func TestLocalStart(t *testing.T) {
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
-		dbContainer := fmt.Sprintf(localDBContainerName, site.Name)
 		cleanup := site.Chdir()
 
 		testcommon.ClearDockerEnv()
@@ -121,13 +117,12 @@ func TestLocalStart(t *testing.T) {
 		composeFile := system.FileExists(app.DockerComposeYAMLPath())
 		assert.True(composeFile)
 
-		check, err := ContainerCheck(webContainer, "running")
-		assert.NoError(err)
-		assert.True(check)
-
-		check, err = ContainerCheck(dbContainer, "running")
-		assert.NoError(err)
-		assert.True(check)
+		for _, containerType := range [3]string{"web", "db", "dba"} {
+			containerName := constructContainerName(containerType, app.GetName())
+			check, err := ContainerCheck(containerName, "running")
+			assert.NoError(err)
+			assert.True(check, containerType, "container is running")
+		}
 
 		cleanup()
 	}
@@ -136,7 +131,8 @@ func TestLocalStart(t *testing.T) {
 	another := TestSites[0]
 	err = another.Prepare()
 	if err != nil {
-		log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
+		assert.FailNow("Prepare() should have failed on TestSite.Prepare(), err=%v", err)
+		return
 	}
 
 	err = app.Init(another.Dir)
@@ -224,8 +220,6 @@ func TestLocalStop(t *testing.T) {
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
-		dbContainer := fmt.Sprintf(localDBContainerName, site.Name)
 		cleanup := site.Chdir()
 
 		testcommon.ClearDockerEnv()
@@ -235,13 +229,12 @@ func TestLocalStop(t *testing.T) {
 		err = app.Stop()
 		assert.NoError(err)
 
-		check, err := ContainerCheck(webContainer, "exited")
-		assert.NoError(err)
-		assert.True(check)
-
-		check, err = ContainerCheck(dbContainer, "exited")
-		assert.NoError(err)
-		assert.True(check)
+		for _, containerType := range [3]string{"web", "db", "dba"} {
+			containerName := constructContainerName(containerType, app.GetName())
+			check, err := ContainerCheck(containerName, "exited")
+			assert.NoError(err)
+			assert.True(check, containerType, "container has exited")
+		}
 
 		cleanup()
 	}
@@ -255,8 +248,6 @@ func TestLocalRemove(t *testing.T) {
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
-		dbContainer := fmt.Sprintf(localDBContainerName, site.Name)
 		cleanup := site.Chdir()
 
 		testcommon.ClearDockerEnv()
@@ -276,13 +267,12 @@ func TestLocalRemove(t *testing.T) {
 			assert.NoError(err)
 		}
 
-		check, err := ContainerCheck(webContainer, "running")
-		assert.Error(err)
-		assert.False(check)
-
-		check, err = ContainerCheck(dbContainer, "running")
-		assert.Error(err)
-		assert.False(check)
+		for _, containerType := range [3]string{"web", "db", "dba"} {
+			containerName := constructContainerName(containerType, app.GetName())
+			check, err := ContainerCheck(containerName, "running")
+			assert.Error(err)
+			assert.True(check, "%s container for %s is not running", containerType, app.GetName())
+		}
 
 		cleanup()
 	}
@@ -293,8 +283,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert := assert.New(t)
 	site := TestSites[0]
 
-	webContainer := fmt.Sprintf(localWebContainerName, site.Name)
-	dbContainer := fmt.Sprintf(localDBContainerName, site.Name)
 	revertDir := site.Chdir()
 	app, err := GetPluginApp("local")
 	assert.NoError(err)
@@ -314,13 +302,12 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = Cleanup(app)
 	assert.NoError(err)
 
-	check, err := ContainerCheck(webContainer, "running")
-	assert.Error(err)
-	assert.False(check)
-
-	check, err = ContainerCheck(dbContainer, "running")
-	assert.Error(err)
-	assert.False(check)
+	for _, containerType := range [3]string{"web", "db", "dba"} {
+		containerName := constructContainerName(containerType, app.GetName())
+		check, err := ContainerCheck(containerName, "running")
+		assert.Error(err)
+		assert.True(check, "%s container for %s is not running", containerType, app.GetName())
+	}
 
 	revertDir()
 }

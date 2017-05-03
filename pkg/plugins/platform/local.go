@@ -53,7 +53,7 @@ func (l *LocalApp) Init(basePath string) error {
 	if err == nil {
 		containerApproot := web.Labels["com.ddev.approot"]
 		if containerApproot != l.AppConfig.AppRoot {
-			return fmt.Errorf("a container in %s state already exists for %s that was created at %s", web.State, l.AppConfig.Name, containerApproot)
+			return fmt.Errorf("a web container in %s state already exists for %s that was created at %s", web.State, l.AppConfig.Name, containerApproot)
 		}
 	}
 
@@ -497,4 +497,9 @@ func (l *LocalApp) AddHostsEntry() error {
 	fmt.Println("Please enter your password if prompted.")
 	err = system.RunCommandPipe("sudo", hostnameArgs)
 	return err
+}
+
+// constructContainerName builds a container name given the type (web/db/dba) and the appName
+func constructContainerName(containerType string, appName string) string {
+	return "local-" + appName + "-" + containerType
 }
