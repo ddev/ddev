@@ -330,21 +330,14 @@ func (l *LocalApp) Start() error {
 }
 
 // Exec executes a given command in the container of given type.
-func (l *LocalApp) Exec(serviceType string, tty bool, cmd ...string) error {
+func (l *LocalApp) Exec(service string, tty bool, cmd ...string) error {
 	l.DockerEnv()
-
-	container, err := l.FindContainerByType(serviceType)
-	if err != nil {
-		return err
-	}
-
-	containerName := util.ContainerName(container)
 
 	var exec []string
 	if tty {
-		exec = []string{"exec", "-T", containerName}
+		exec = []string{"exec", "-T", service}
 	} else {
-		exec = []string{"exec", containerName}
+		exec = []string{"exec", service}
 	}
 	exec = append(exec, cmd...)
 
