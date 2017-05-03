@@ -1,7 +1,6 @@
 package platform
 
 import (
-	"errors"
 	"fmt"
 	"path"
 	"testing"
@@ -58,33 +57,6 @@ func TestMain(m *testing.M) {
 	os.Exit(testRun)
 }
 
-// ContainerCheck determines if a given container name exists and matches a given state
-func ContainerCheck(checkName string, checkState string) (bool, error) {
-	// ensure we have docker network
-	client := util.GetDockerClient()
-	err := util.EnsureNetwork(client, netName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	containers, err := util.GetDockerContainers(true)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, container := range containers {
-		name := util.ContainerName(container)
-		if name == checkName {
-			if container.State == checkState {
-				return true, nil
-			}
-			return false, errors.New("container " + name + " returned " + container.State)
-		}
-	}
-
-	return false, errors.New("unable to find container " + checkName)
-}
-
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
 func TestLocalStart(t *testing.T) {
 
@@ -119,7 +91,7 @@ func TestLocalStart(t *testing.T) {
 		for _, containerType := range [3]string{"web", "db", "dba"} {
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
-			check, err := ContainerCheck(containerName, "running")
+			check, err := testcommon.ContainerCheck(containerName, "running")
 			assert.NoError(err)
 			assert.True(check, containerType, "container is running")
 		}
@@ -233,7 +205,7 @@ func TestLocalStop(t *testing.T) {
 		for _, containerType := range [3]string{"web", "db", "dba"} {
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
-			check, err := ContainerCheck(containerName, "exited")
+			check, err := testcommon.ContainerCheck(containerName, "exited")
 			assert.NoError(err)
 			assert.True(check, containerType, "container has exited")
 		}

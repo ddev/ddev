@@ -2,6 +2,7 @@ package testcommon
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -31,6 +32,9 @@ type TestSite struct {
 	// Dir is the rooted full path of the test site
 	Dir string
 }
+
+// NetName provides the default network name for testing.
+const NetName = "ddev_default"
 
 func (site *TestSite) createArchivePath() string {
 	dir := CreateTmpDir(site.Name + "download")
@@ -218,4 +222,31 @@ func ClearDockerEnv() {
 			log.Printf("failed to unset %s: %v\n", env, err)
 		}
 	}
+}
+
+// ContainerCheck determines if a given container name exists and matches a given state
+func ContainerCheck(checkName string, checkState string) (bool, error) {
+	// ensure we have docker network
+	client := util.GetDockerClient()
+	err := util.EnsureNetwork(client, NetName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	containers, err := util.GetDockerContainers(true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, container := range containers {
+		name := util.ContainerName(container)
+		if name == checkName {
+			if container.State == checkState {
+				return true, nil
+			}
+			return false, errors.New("container " + name + " returned " + container.State)
+		}
+	}
+
+	return false, errors.New("unable to find container " + checkName)
 }
