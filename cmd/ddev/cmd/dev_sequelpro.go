@@ -27,7 +27,7 @@ var localDevSequelproCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		out, err := handleSequelProCommand(SequelproLoc)
 		if err != nil {
-			log.Fatalf("Could not handle sequelpro command", err)
+			log.Fatalf("Could not handle sequelpro command %s", err)
 		}
 		util.Success(out)
 	},
