@@ -240,34 +240,3 @@ func ComposeCmd(composeFiles []string, action ...string) error {
 
 	return proc.Run()
 }
-
-// ContainerExec facilitates execution of commands in a given container
-func ContainerExec(containerName string, cmd []string) error {
-	client := GetDockerClient()
-	config := docker.CreateExecOptions{
-		Container:    containerName,
-		AttachStdin:  false,
-		AttachStdout: true,
-		AttachStderr: true,
-		Tty:          true,
-		Cmd:          cmd,
-	}
-	exec, err := client.CreateExec(config)
-	if err != nil {
-		return err
-	}
-
-	startConf := docker.StartExecOptions{
-		OutputStream: os.Stdout,
-		ErrorStream:  os.Stderr,
-		Detach:       false,
-		Tty:          true,
-		RawTerminal:  true,
-	}
-	err = client.StartExec(exec.ID, startConf)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
