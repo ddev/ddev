@@ -281,7 +281,28 @@ func (l *LocalApp) DockerComposeYAMLPath() string {
 
 // ComposeFiles returns a list of compose files for a project.
 func (l *LocalApp) ComposeFiles() []string {
-	return []string{l.AppConfig.DockerComposeYAMLPath()}
+	files, err := util.FindFiles(path.Join(l.AppRoot(), ".ddev"), "docker-compose")
+	if err != nil {
+		log.Fatalf("Failed to load compose files: %v", err)
+	}
+
+	for i, file := range files {
+		// ensure main docker-compose is first
+		if file == "docker-compose.yml" || file == "docker-compose.yaml" {
+			files = append(files[:i], files[i+1:]...)
+			// prepend as absolute path
+			files = append([]string{path.Join(l.AppRoot(), ".ddev", file)}, files...)
+		}
+		// ensure override is last
+		if file == "docker-compose.override.yml" || file == "docker-compose.override.yaml" {
+			files = append(files, file)
+			files = append(files[:i], files[i+1:]...)
+		}
+		// ensure files are absolute paths
+		files[i] = path.Join(l.AppRoot(), ".ddev", file)
+	}
+
+	return files
 }
 
 // Start initiates docker-compose up
