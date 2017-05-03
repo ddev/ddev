@@ -37,8 +37,6 @@ var (
 	}
 )
 
-const netName = "ddev_default"
-
 func TestMain(m *testing.M) {
 	for i := range TestSites {
 		err := TestSites[i].Prepare()
@@ -62,7 +60,7 @@ func TestLocalStart(t *testing.T) {
 
 	// ensure we have docker network
 	client := util.GetDockerClient()
-	err := util.EnsureNetwork(client, netName)
+	err := util.EnsureNetwork(client, testcommon.NetName)
 	if err != nil {
 		log.Fatal(err)
 	}
