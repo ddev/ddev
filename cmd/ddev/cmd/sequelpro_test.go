@@ -22,7 +22,7 @@ func TestSequelproOperation(t *testing.T) {
 	_, err := getActiveApp()
 	assert.NoError(err)
 
-	out, err := handleSequelProCommand(SequelproLoc, []string{})
+	out, err := handleSequelProCommand(SequelproLoc)
 	assert.NoError(err)
 	assert.Contains(string(out), "sequelpro command finished successfully")
 

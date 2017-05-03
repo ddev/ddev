@@ -7,13 +7,14 @@ import (
 	"os/exec"
 	"path"
 
+	"runtime"
+
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"runtime"
 )
 
 // SequelproLoc is where we expect to find the sequel pro.app
@@ -51,11 +52,6 @@ func handleSequelProCommand(appLocation string) (string, error) {
 		return "", errors.New("app not running locally. Try `ddev start`")
 	}
 
-	mysqlContainer, err := dockerutil.GetContainer(nameContainer)
-	if err != nil {
-		return "", err
-	}
-
 	dbPort := appports.GetPort("db")
 
 	tmpFilePath := path.Join(app.AppRoot(), ".ddev/sequelpro.spf")
@@ -67,12 +63,12 @@ func handleSequelProCommand(appLocation string) (string, error) {
 
 	_, err = tmpFile.WriteString(fmt.Sprintf(
 		platform.SequelproTemplate,
-		"data",                  //dbname
-		app.HostName(),          //host
-		mysqlContainer.Names[0], //container name
-		"root",                  // dbpass
-		dbPort,                  // port
-		"root",                  //dbuser
+		"data",         //dbname
+		app.HostName(), //host
+		app.HostName(), //connection name
+		"root",         // dbpass
+		dbPort,         // port
+		"root",         //dbuser
 	))
 	util.CheckErr(err)
 
