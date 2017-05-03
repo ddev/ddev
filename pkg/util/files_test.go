@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -100,4 +101,17 @@ func TestCopyDir(t *testing.T) {
 
 	err = os.RemoveAll(dest)
 	assert.NoError(err)
+}
+
+// TestFindFiles tests filename search
+func TestFindFiles(t *testing.T) {
+	assert := assert.New(t)
+
+	match, err := FindFiles(cwd, "potato")
+	assert.EqualError(err, fmt.Sprintf("no files found in %s matching potato", cwd))
+	assert.True(len(match) < 1)
+
+	match, err = FindFiles(cwd, ".go")
+	assert.NoError(err)
+	assert.True(len(match) > 1)
 }
