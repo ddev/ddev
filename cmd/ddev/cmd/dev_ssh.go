@@ -16,20 +16,13 @@ var LocalDevSSHCmd = &cobra.Command{
 			util.Failed("Failed to ssh: %v", err)
 		}
 
-		labels := map[string]string{
-			"com.ddev.site-name":      app.GetName(),
-			"com.ddev.container-type": serviceType,
-		}
-		container, err := util.FindContainerByLabels(labels)
-		nameContainer := util.ContainerName(container)
-
 		if app.SiteStatus() != "running" {
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
 		app.DockerEnv()
 
-		err = util.ContainerExec(nameContainer, []string{"bash"})
+		err = app.Exec(serviceType, false, "bash")
 		if err != nil {
 			util.Failed("Failed to ssh %s: %s", app.GetName(), err)
 		}

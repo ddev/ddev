@@ -26,13 +26,6 @@ var LocalDevExecCmd = &cobra.Command{
 			util.Failed("Failed to exec command: %v", err)
 		}
 
-		labels := map[string]string{
-			"com.ddev.site-name":      app.GetName(),
-			"com.ddev.container-type": serviceType,
-		}
-		container, err := util.FindContainerByLabels(labels)
-		nameContainer := util.ContainerName(container)
-
 		if app.SiteStatus() != "running" {
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
@@ -41,7 +34,7 @@ var LocalDevExecCmd = &cobra.Command{
 
 		cmdSplit := strings.Split(cmdString, " ")
 
-		err = util.ContainerExec(nameContainer, cmdSplit)
+		err = app.Exec(serviceType, true, cmdSplit...)
 		if err != nil {
 			util.Failed("Failed to execute command %s: %v", cmdString, err)
 		}

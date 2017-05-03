@@ -135,7 +135,6 @@ func (l *LocalApp) ContainerName() string {
 // ImportDB takes a source sql dump and imports it to an active site's database container.
 func (l *LocalApp) ImportDB(imPath string) error {
 	l.DockerEnv()
-	container := fmt.Sprintf("%s-db", l.ContainerName())
 	dbPath := path.Join(l.AppRoot(), ".ddev", "data")
 
 	if imPath == "" {
@@ -174,9 +173,9 @@ func (l *LocalApp) ImportDB(imPath string) error {
 		}
 	}
 
-	err = appimport.ImportSQLDump(container)
+	err = l.Exec("db", true, "./import.sh")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to execute import: %v", err)
 	}
 
 	err = l.Config()
@@ -307,6 +306,28 @@ func (l *LocalApp) Start() error {
 	}
 
 	return util.ComposeCmd(l.ComposeFiles(), "up", "-d")
+}
+
+// Exec executes a given command in the container of given type.
+func (l *LocalApp) Exec(serviceType string, tty bool, cmd ...string) error {
+	l.DockerEnv()
+
+	container, err := l.FindContainerByType(serviceType)
+	if err != nil {
+		return err
+	}
+
+	containerName := util.ContainerName(container)
+
+	var exec []string
+	if tty {
+		exec = []string{"exec", "-T", containerName}
+	} else {
+		exec = []string{"exec", containerName}
+	}
+	exec = append(exec, cmd...)
+
+	return util.ComposeCmd(l.ComposeFiles(), exec...)
 }
 
 // DockerEnv sets environment variables for a docker-compose run.
