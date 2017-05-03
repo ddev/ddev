@@ -30,10 +30,10 @@ services:
       - "{{ .docroot }}/:/var/www/html/docroot"
     restart: always
     depends_on:
-      - {{ .plugin }}-${DDEV_SITENAME}-db
+      - db
     links:
-      - {{ .plugin }}-${DDEV_SITENAME}-db:$DDEV_HOSTNAME
-      - {{ .plugin }}-${DDEV_SITENAME}-db:db
+      - db:$DDEV_HOSTNAME
+      - db:db
     ports:
       - "80"
       - {{ .mailhogport }}
@@ -63,9 +63,9 @@ services:
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
     depends_on:
-      - local-${DDEV_SITENAME}-db
+      - db
     links:
-      - local-${DDEV_SITENAME}-db:db
+      - db:db
     ports:
       - "80"
     environment:
