@@ -22,7 +22,7 @@ func TestSequelproOperation(t *testing.T) {
 	_, err := getActiveApp()
 	assert.NoError(err)
 
-	out, err := handleSequelProCommand(SequelproLoc)
+	out, err := handleSequelProCommand(SequelproLoc, []string{})
 	assert.NoError(err)
 	assert.Contains(string(out), "sequelpro command finished successfully")
 
@@ -47,12 +47,12 @@ func TestSequelproBadArgs(t *testing.T) {
 	defer testcommon.CleanupDir(tmpdir)
 
 	// Ensure it fails if we run outside of an application root.
-	_, err := handleSequelProCommand(SequelproLoc)
+	_, err := handleSequelProCommand(SequelproLoc, []string{})
 	assert.Error(err)
 	assert.Contains(err, "unable to determine the application for this command")
 
 	// Ensure we get a failure if using arguments
-	_, err = handleSequelProCommand(SequelproLoc, testcommon.RandString(16))
+	_, err = handleSequelProCommand(SequelproLoc, []string{testcommon.RandString(16)})
 	assert.Error(err)
 	assert.Contains(err, "Invalid arguments")
 }

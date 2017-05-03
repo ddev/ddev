@@ -25,16 +25,16 @@ var localDevSequelproCmd = &cobra.Command{
 	Short: "Easily connect local site to sequelpro",
 	Long:  `A helper command for easily using sequelpro (OSX database browser) with a ddev app that has been initialized locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		out, err := handleSequelProCommand(SequelproLoc)
+		out, err := handleSequelProCommand(SequelproLoc, args)
 		if err != nil {
-			log.Fatalf("Could not handle sequelpro command %s", err)
+			log.Fatalf("Could not handle sequelpro command: %s", err)
 		}
 		util.Success(out)
 	},
 }
 
 // handleSequelProCommand() is the "real" handler for the real command
-func handleSequelProCommand(appLocation string, args ...string) (string, error) {
+func handleSequelProCommand(appLocation string, args []string) (string, error) {
 	app, err := getActiveApp()
 	if err != nil {
 		return "", err
