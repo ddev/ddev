@@ -13,6 +13,7 @@ import (
 	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"runtime"
 )
 
 // SequelproLoc is where we expect to find the sequel pro.app
@@ -27,7 +28,7 @@ var localDevSequelproCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		out, err := handleSequelProCommand(SequelproLoc, args)
 		if err != nil {
-			log.Fatalf("Could not handle sequelpro command: %s", err)
+			log.Fatalf("Could not run sequelpro command: %s", err)
 		}
 		util.Success(out)
 	},
@@ -55,9 +56,6 @@ func handleSequelProCommand(appLocation string, args []string) (string, error) {
 	}
 
 	dbPort := appports.GetPort("db")
-	if err != nil {
-		return "", err
-	}
 
 	tmpFilePath := path.Join(app.AppRoot(), ".ddev/sequelpro.spf")
 	tmpFile, err := os.Create(tmpFilePath)
@@ -69,7 +67,7 @@ func handleSequelProCommand(appLocation string, args []string) (string, error) {
 	_, err = tmpFile.WriteString(fmt.Sprintf(
 		platform.SequelproTemplate,
 		"data",                  //dbname
-		"127.0.0.1",             //host
+		app.HostName(),          //host
 		mysqlContainer.Names[0], //container name
 		"root",                  // dbpass
 		dbPort,                  // port
@@ -95,11 +93,12 @@ var dummyDevSequelproCmd = &cobra.Command{
 	},
 }
 
-// init installs the real command if it's available, otherwise dummy command
+// init installs the real command if it's available, otherwise dummy command (if on OSX), otherwise no command
 func init() {
-	if detectSequelpro() {
+	switch {
+	case detectSequelpro():
 		RootCmd.AddCommand(localDevSequelproCmd)
-	} else {
+	case runtime.GOOS == "darwin":
 		RootCmd.AddCommand(dummyDevSequelproCmd)
 	}
 }

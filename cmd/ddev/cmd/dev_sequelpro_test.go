@@ -30,11 +30,16 @@ func TestSequelproOperation(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(true, system.FileExists(path.Join(dir, ".ddev/sequelpro.spf")))
 
+	// Ensure we get a failure if using arguments
+	_, err = handleSequelProCommand(SequelproLoc, []string{testcommon.RandString(16)})
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid arguments")
+
 	cleanup()
 }
 
-// TestSequelproBadArgs tests non-site operation and bad args
-func TestSequelproBadArgs(t *testing.T) {
+// TestSequelproBadApp tests non-site operation and bad args
+func TestSequelproBadApp(t *testing.T) {
 	if !detectSequelpro() {
 		t.SkipNow()
 	}
@@ -49,10 +54,6 @@ func TestSequelproBadArgs(t *testing.T) {
 	// Ensure it fails if we run outside of an application root.
 	_, err := handleSequelProCommand(SequelproLoc, []string{})
 	assert.Error(err)
-	assert.Contains(err, "unable to determine the application for this command")
+	assert.Contains(err.Error(), "unable to determine the application")
 
-	// Ensure we get a failure if using arguments
-	_, err = handleSequelProCommand(SequelproLoc, []string{testcommon.RandString(16)})
-	assert.Error(err)
-	assert.Contains(err, "Invalid arguments")
 }
