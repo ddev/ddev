@@ -30,11 +30,6 @@ func TestSequelproOperation(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(true, system.FileExists(path.Join(dir, ".ddev/sequelpro.spf")))
 
-	// Ensure we get a failure if using arguments
-	_, err = handleSequelProCommand(SequelproLoc, []string{testcommon.RandString(16)})
-	assert.Error(err)
-	assert.Contains(err.Error(), "invalid arguments")
-
 	cleanup()
 }
 
@@ -52,7 +47,7 @@ func TestSequelproBadApp(t *testing.T) {
 	defer testcommon.CleanupDir(tmpdir)
 
 	// Ensure it fails if we run outside of an application root.
-	_, err := handleSequelProCommand(SequelproLoc, []string{})
+	_, err := handleSequelProCommand(SequelproLoc)
 	assert.Error(err)
 	assert.Contains(err.Error(), "unable to determine the application")
 

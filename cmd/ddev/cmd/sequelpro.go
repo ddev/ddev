@@ -26,7 +26,11 @@ var localDevSequelproCmd = &cobra.Command{
 	Short: "Easily connect local site to sequelpro",
 	Long:  `A helper command for easily using sequelpro (OSX database browser) with a ddev app that has been initialized locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		out, err := handleSequelProCommand(SequelproLoc, args)
+		if len(args) != 0 {
+			log.Fatalf("invalid arguments to sequelpro command: %v", args)
+		}
+
+		out, err := handleSequelProCommand(SequelproLoc)
 		if err != nil {
 			log.Fatalf("Could not run sequelpro command: %s", err)
 		}
@@ -35,15 +39,12 @@ var localDevSequelproCmd = &cobra.Command{
 }
 
 // handleSequelProCommand() is the "real" handler for the real command
-func handleSequelProCommand(appLocation string, args []string) (string, error) {
+func handleSequelProCommand(appLocation string) (string, error) {
 	app, err := getActiveApp()
 	if err != nil {
 		return "", err
 	}
 
-	if len(args) != 0 {
-		return "", fmt.Errorf("invalid arguments to sequelpro command: %v", args)
-	}
 	nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
 
 	if !dockerutil.IsRunning(nameContainer) {
