@@ -15,9 +15,17 @@ You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev sta
 * *Currently only tested on Ubuntu, please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue on another flavor.*
 
 ## Installation
+### Installation Script
+You can paste this line of code to your terminal to download, verify, and install ddev using our install script:
+```
+curl https://raw.githubusercontent.com/drud/ddev/master/install_ddev.sh | bash
+```
+
+### Manual Installation
+You can also easily perform the installation manually if preferred:
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 - Make ddev executable: `chmod ugo+x ddev`
-- Move ddev to /usr/local/bin: `sudo mv ddev /usr/local/bin/`
+- Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo)
 - Run `ddev` to test your installation. You should see usage output similar to below.
 
 ---
