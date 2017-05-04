@@ -163,14 +163,6 @@ func EnsureDockerRouter() {
 	}
 }
 
-// ComposeFileExists determines if a docker-compose.yml exists for a given app.
-func ComposeFileExists(app App) bool {
-	if _, err := os.Stat(app.DockerComposeYAMLPath()); os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
 // Cleanup will clean up ddev apps even if the composer file has been deleted.
 func Cleanup(app App) error {
 	client := util.GetDockerClient()
