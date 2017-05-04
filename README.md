@@ -16,7 +16,7 @@ You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev sta
 
 ## Installation
 ### Installation Script
-You can paste this line of code to your terminal to download, verify, and install ddev using our install script:
+You can paste this line of code to your terminal to download, verify, and install ddev using our [install script](https://github.com/drud/ddev/blob/master/install_ddev.sh):
 ```
 curl https://raw.githubusercontent.com/drud/ddev/master/install_ddev.sh | bash
 ```
