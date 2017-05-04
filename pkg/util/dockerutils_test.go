@@ -3,6 +3,9 @@ package util
 import (
 	"testing"
 
+	"path"
+
+	"github.com/drud/ddev/pkg/testcommon"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
 )
@@ -51,4 +54,32 @@ func TestContainerWait(t *testing.T) {
 	err = ContainerWait(5, labels)
 	assert.Error(err)
 	assert.Equal("failed to query container", err.Error())
+}
+
+// TestComposeCmd tests execution of docker-compose commands.
+func TestComposeCmd(t *testing.T) {
+	assert := assert.New(t)
+
+	composeFiles := []string{path.Join("testing", "docker-compose.yml")}
+
+	stdout := testcommon.CaptureStdOut()
+	err := ComposeCmd(composeFiles, "config", "--services")
+	assert.NoError(err)
+	out := stdout()
+	assert.Contains(out, "web")
+	assert.Contains(out, "db")
+
+	composeFiles = append(composeFiles, path.Join("testing", "docker-compose.override.yml"))
+
+	stdout = testcommon.CaptureStdOut()
+	err = ComposeCmd(composeFiles, "config", "--services")
+	assert.NoError(err)
+	out = stdout()
+	assert.Contains(out, "web")
+	assert.Contains(out, "db")
+	assert.Contains(out, "foo")
+
+	composeFiles = []string{"invalid.yml"}
+	err = ComposeCmd(composeFiles, "config", "--services")
+	assert.Error(err)
 }
