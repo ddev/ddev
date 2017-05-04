@@ -60,7 +60,7 @@ func TestLocalStart(t *testing.T) {
 
 	// ensure we have docker network
 	client := util.GetDockerClient()
-	err := util.EnsureNetwork(client, testcommon.NetName)
+	err := util.EnsureNetwork(client, util.NetName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func TestLocalStart(t *testing.T) {
 		for _, containerType := range [3]string{"web", "db", "dba"} {
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
-			check, err := testcommon.ContainerCheck(containerName, "running")
+			check, err := util.ContainerCheck(containerName, "running")
 			assert.NoError(err)
 			assert.True(check, containerType, "container is running")
 		}
@@ -245,7 +245,7 @@ func TestLocalStop(t *testing.T) {
 		for _, containerType := range [3]string{"web", "db", "dba"} {
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
-			check, err := testcommon.ContainerCheck(containerName, "exited")
+			check, err := util.ContainerCheck(containerName, "exited")
 			assert.NoError(err)
 			assert.True(check, containerType, "container has exited")
 		}
