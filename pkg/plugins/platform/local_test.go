@@ -136,7 +136,8 @@ func TestLocalStart(t *testing.T) {
 	}
 
 	err = app.Init(another.Dir)
-	assert.EqualError(err, fmt.Sprintf("a container in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
+	assert.Error(err)
+	assert.Contains(err.Error(), fmt.Sprintf("container in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
 	another.Cleanup()
 }
 
@@ -271,7 +272,7 @@ func TestLocalRemove(t *testing.T) {
 			containerName := constructContainerName(containerType, app.GetName())
 			check, err := ContainerCheck(containerName, "running")
 			assert.Error(err)
-			assert.True(check, "%s container for %s is not running", containerType, app.GetName())
+			assert.False(check, "%s container for %s is not running, err: %s", containerType, app.GetName(), err.Error())
 		}
 
 		cleanup()
@@ -306,7 +307,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 		containerName := constructContainerName(containerType, app.GetName())
 		check, err := ContainerCheck(containerName, "running")
 		assert.Error(err)
-		assert.True(check, "%s container for %s is not running", containerType, app.GetName())
+		assert.False(check, "%s container for %s is not running, err: %s", containerType, app.GetName(), err.Error())
 	}
 
 	revertDir()
