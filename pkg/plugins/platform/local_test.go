@@ -7,6 +7,8 @@ import (
 
 	"os"
 
+	"strings"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
@@ -222,6 +224,42 @@ func TestLocalExec(t *testing.T) {
 
 		cleanup()
 
+	}
+}
+
+// TestLocalLogs tests the container log output functionality.
+func TestLocalLogs(t *testing.T) {
+	assert := assert.New(t)
+
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
+
+	for _, site := range TestSites {
+		cleanup := site.Chdir()
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		stdout := testcommon.CaptureStdOut()
+		err = app.Logs("web", false, false, "")
+		assert.NoError(err)
+		out := stdout()
+		assert.Contains(out, "Server started")
+
+		stdout = testcommon.CaptureStdOut()
+		err = app.Logs("db", false, false, "")
+		assert.NoError(err)
+		out = stdout()
+		assert.Contains(out, "Database initialized")
+
+		stdout = testcommon.CaptureStdOut()
+		err = app.Logs("db", false, false, "2")
+		assert.NoError(err)
+		out = stdout()
+		assert.Contains(out, "MySQL init process done. Ready for start up.")
+		assert.False(strings.Contains(out, "Database initialized"))
+
+		cleanup()
 	}
 }
 

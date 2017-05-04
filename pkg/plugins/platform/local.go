@@ -344,6 +344,37 @@ func (l *LocalApp) Exec(service string, tty bool, cmd ...string) error {
 	return util.ComposeCmd(l.ComposeFiles(), exec...)
 }
 
+// Logs returns logs for a site's given container.
+func (l *LocalApp) Logs(service string, follow bool, timestamps bool, tail string) error {
+	container, err := l.FindContainerByType(service)
+	if err != nil {
+		return err
+	}
+
+	logOpts := docker.LogsOptions{
+		Container:    container.ID,
+		Stdout:       true,
+		Stderr:       true,
+		OutputStream: os.Stdout,
+		ErrorStream:  os.Stderr,
+		Follow:       follow,
+		Timestamps:   timestamps,
+	}
+
+	if tail != "" {
+		logOpts.Tail = tail
+	}
+
+	client := util.GetDockerClient()
+
+	err = client.Logs(logOpts)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DockerEnv sets environment variables for a docker-compose run.
 func (l *LocalApp) DockerEnv() {
 	envVars := map[string]string{
