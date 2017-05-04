@@ -12,7 +12,6 @@ import (
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -46,9 +45,7 @@ func handleSequelProCommand(appLocation string) (string, error) {
 		return "", err
 	}
 
-	nameContainer := fmt.Sprintf("%s-db", app.ContainerName())
-
-	if !dockerutil.IsRunning(nameContainer) {
+	if app.SiteStatus() != "running" {
 		return "", errors.New("app not running locally. Try `ddev start`")
 	}
 
