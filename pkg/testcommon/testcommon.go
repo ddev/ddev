@@ -74,16 +74,16 @@ func (site *TestSite) Prepare() error {
 	if site.Name != "" {
 		config, err := ddevapp.NewConfig(site.Dir)
 		if err != nil {
-			return errors.Errorf("Failed to read site config for site %s, dir %s, err:", site.Name, site.Dir, err)
+			return errors.Errorf("Failed to read site config for site %s, dir %s, err:%v", site.Name, site.Dir, err)
 		}
 		err = config.Read()
 		if err != nil {
-			return errors.Errorf("Failed to read site config for site %s, dir %s, err:", site.Name, site.Dir, err)
+			return errors.Errorf("Failed to read site config for site %s, dir %s, err: %v", site.Name, site.Dir, err)
 		}
 		config.Name = site.Name
 		config.Write()
 		if err != nil {
-			return errors.Errorf("Failed to write site config for site %s, dir %s, err:", site.Name, site.Dir, err)
+			return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", site.Name, site.Dir, err)
 		}
 	}
 
