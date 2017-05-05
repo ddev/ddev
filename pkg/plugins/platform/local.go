@@ -415,15 +415,8 @@ func (l *LocalApp) Stop() error {
 	if err != nil {
 		return err
 	}
-	containersRunning, err := ddevContainersRunning()
-	if err != nil {
-		return err
-	}
 
-	if !containersRunning {
-		return StopRouter()
-	}
-	return nil
+	return StopRouter()
 }
 
 // Wait ensures that the app appears to be read before returning
@@ -522,16 +515,8 @@ func (l *LocalApp) Down() error {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
 		return Cleanup(l)
 	}
-	containersRunning, err := ddevContainersRunning()
-	if err != nil {
-		return err
-	}
 
-	if !containersRunning {
-		return StopRouter()
-	}
-
-	return nil
+	return StopRouter()
 }
 
 // URL returns the URL for a given application.

@@ -30,10 +30,19 @@ func RouterComposeYAMLPath() string {
 	return dest
 }
 
-// StopRouter stops the local router.
+// StopRouter stops the local router if there are no ddev containers running.
 func StopRouter() error {
-	dest := RouterComposeYAMLPath()
-	return util.ComposeCmd([]string{dest}, "-p", routerProjectName, "down")
+
+	containersRunning, err := ddevContainersRunning()
+	if err != nil {
+		return err
+	}
+
+	if !containersRunning {
+		dest := RouterComposeYAMLPath()
+		return util.ComposeCmd([]string{dest}, "-p", routerProjectName, "down")
+	}
+	return nil
 }
 
 // StartDockerRouter ensures the router is running.

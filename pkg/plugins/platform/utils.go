@@ -208,7 +208,7 @@ func Cleanup(app App) error {
 		}
 	}
 
-	return nil
+	return StopRouter()
 }
 
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.
