@@ -3,6 +3,8 @@ package platform
 import (
 	"fmt"
 	"path/filepath"
+	"sync"
+
 	"testing"
 
 	"os"
@@ -40,21 +42,118 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	for i := range TestSites {
-		err := TestSites[i].Prepare()
-		if err != nil {
-			log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
-		}
-	}
+
+	// Add sites required by tests.
+	addSites()
 
 	log.Debugln("Running tests.")
 	testRun := m.Run()
 
+	removeSites()
+
+	os.Exit(testRun)
+}
+
+// addSites performs test setup by adding sites which are used during testing
+func addSites() {
+
+	var wg sync.WaitGroup
+	wg.Add(len(TestSites))
+
+	// ensure we have docker network
+	client := util.GetDockerClient()
+	err := util.EnsureNetwork(client, util.NetName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for i, site := range TestSites {
+		go func(i int, site testcommon.TestSite) {
+			defer wg.Done()
+			err := TestSites[i].Prepare()
+			if err != nil {
+				log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
+			}
+
+			app, err := GetPluginApp("local")
+			util.CheckErr(err)
+
+			cleanup := site.Chdir()
+
+			testcommon.ClearDockerEnv()
+			err = app.Init(site.Dir)
+			util.CheckErr(err)
+
+			err = app.Start()
+			util.CheckErr(err)
+
+			err = app.Wait("web")
+			util.CheckErr(err)
+
+			// ensure docker-compose.yaml exists inside .ddev site folder
+			composeFile := system.FileExists(app.DockerComposeYAMLPath())
+			if !composeFile {
+				log.Fatalf("no docker-compose file exists at %s\n", app.DockerComposeYAMLPath())
+			}
+
+			for _, containerType := range [3]string{"web", "db", "dba"} {
+				containerName, err := constructContainerName(containerType, app)
+				util.CheckErr(err)
+				check, err := testcommon.ContainerCheck(containerName, "running")
+				util.CheckErr(err)
+				if !check {
+					log.Fatalf("Cotainer %s for site %s is not running", containerType, site.Name)
+				}
+			}
+
+			cleanup()
+		}(i, site)
+	}
+
+	wg.Wait()
+}
+
+func removeSites() {
+
+	var wg sync.WaitGroup
+	wg.Add(len(TestSites))
+
+	// ensure we have docker network
+	client := util.GetDockerClient()
+	err := util.EnsureNetwork(client, util.NetName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for i, site := range TestSites {
+		go func(i int, site testcommon.TestSite) {
+			defer wg.Done()
+			app, err := GetPluginApp("local")
+			util.CheckErr(err)
+			cleanup := site.Chdir()
+
+			testcommon.ClearDockerEnv()
+			err = app.Init(site.Dir)
+			util.CheckErr(err)
+
+			err = app.Down()
+			util.CheckErr(err)
+
+			for _, containerType := range [3]string{"web", "db", "dba"} {
+				_, err := constructContainerName(containerType, app)
+				util.CheckErr(err)
+			}
+
+			cleanup()
+
+		}(i, site)
+	}
+
+	wg.Wait()
+
 	for i := range TestSites {
 		TestSites[i].Cleanup()
 	}
-
-	os.Exit(testRun)
 }
 
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
@@ -70,34 +169,6 @@ func TestLocalStart(t *testing.T) {
 	assert := assert.New(t)
 	app, err := GetPluginApp("local")
 	assert.NoError(err)
-
-	for _, site := range TestSites {
-		cleanup := site.Chdir()
-
-		testcommon.ClearDockerEnv()
-		err = app.Init(site.Dir)
-		assert.NoError(err)
-
-		err = app.Start()
-		assert.NoError(err)
-
-		err = app.Wait("web")
-		assert.NoError(err)
-
-		// ensure docker-compose.yaml exists inside .ddev site folder
-		composeFile := system.FileExists(app.DockerComposeYAMLPath())
-		assert.True(composeFile)
-
-		for _, containerType := range [3]string{"web", "db", "dba"} {
-			containerName, err := constructContainerName(containerType, app)
-			assert.NoError(err)
-			check, err := testcommon.ContainerCheck(containerName, "running")
-			assert.NoError(err)
-			assert.True(check, containerType, "container is running")
-		}
-
-		cleanup()
-	}
 
 	// try to start a site of same name at different path
 	another := TestSites[0]
