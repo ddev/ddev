@@ -421,7 +421,7 @@ func (l *LocalApp) Stop() error {
 	}
 
 	if !containersRunning {
-		StopRouter()
+		return StopRouter()
 	}
 	return nil
 }
@@ -528,7 +528,7 @@ func (l *LocalApp) Down() error {
 	}
 
 	if !containersRunning {
-		StopRouter()
+		return StopRouter()
 	}
 
 	return nil
