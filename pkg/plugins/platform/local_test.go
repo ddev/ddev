@@ -42,6 +42,12 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	for i := range TestSites {
+		err := TestSites[i].Prepare()
+		if err != nil {
+			log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
+		}
+	}
 
 	// Add sites required by tests.
 	addSites()
@@ -50,6 +56,10 @@ func TestMain(m *testing.M) {
 	testRun := m.Run()
 
 	removeSites()
+
+	for i := range TestSites {
+		TestSites[i].Cleanup()
+	}
 
 	os.Exit(testRun)
 }
@@ -128,6 +138,7 @@ func removeSites() {
 	for i, site := range TestSites {
 		go func(i int, site testcommon.TestSite) {
 			defer wg.Done()
+
 			app, err := GetPluginApp("local")
 			util.CheckErr(err)
 			cleanup := site.Chdir()
@@ -147,6 +158,7 @@ func removeSites() {
 			cleanup()
 
 		}(i, site)
+
 	}
 
 	wg.Wait()
