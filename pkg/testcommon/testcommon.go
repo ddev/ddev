@@ -81,7 +81,7 @@ func (site *TestSite) Prepare() error {
 			return errors.Errorf("Failed to read site config for site %s, dir %s, err: %v", site.Name, site.Dir, err)
 		}
 		config.Name = site.Name
-		config.Write()
+		err = config.Write()
 		if err != nil {
 			return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", site.Name, site.Dir, err)
 		}

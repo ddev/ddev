@@ -29,6 +29,7 @@ const DDevDefaultPlatform = "local"
 // DDevTLD defines the tld to use for DDev site URLs.
 const DDevTLD = "ddev.local"
 
+// AllowedAppTypes lists the types of site/app that can be used.
 var AllowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
 
 // Config defines the yaml config file format for ddev applications
