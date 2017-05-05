@@ -66,17 +66,13 @@ func TestMain(m *testing.M) {
 
 // addSites performs test setup by adding sites which are used during testing
 func addSites() {
-
-	var wg sync.WaitGroup
-	wg.Add(len(TestSites))
-
 	// ensure we have docker network
 	client := util.GetDockerClient()
 	err := util.EnsureNetwork(client, util.NetName)
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	var wg sync.WaitGroup
 	for i, site := range TestSites {
 		go func(i int, site testcommon.TestSite) {
 			defer wg.Done()
@@ -123,6 +119,7 @@ func addSites() {
 	wg.Wait()
 }
 
+// removeSites removes all sites used during testing.
 func removeSites() {
 
 	var wg sync.WaitGroup
@@ -141,6 +138,7 @@ func removeSites() {
 
 			app, err := GetPluginApp("local")
 			util.CheckErr(err)
+
 			cleanup := site.Chdir()
 
 			testcommon.ClearDockerEnv()
@@ -174,10 +172,10 @@ func TestLocalStart(t *testing.T) {
 	// ensure we have docker network
 	client := util.GetDockerClient()
 	err := util.EnsureNetwork(client, util.NetName)
+
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	assert := assert.New(t)
 	app, err := GetPluginApp("local")
 	assert.NoError(err)
@@ -194,6 +192,17 @@ func TestLocalStart(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), fmt.Sprintf("container in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
 	another.Cleanup()
+
+	containers, err := util.GetDockerContainers(true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, container := range containers {
+		name := util.ContainerName(container)
+		testcommon.ContainerCheck(name, "running")
+	}
+
 }
 
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
