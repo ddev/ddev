@@ -313,11 +313,11 @@ func (l *LocalApp) Start() error {
 		}
 	}
 
-	EnsureDockerRouter()
+	StartDockerRouter()
 
 	err := l.AddHostsEntry()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	return util.ComposeCmd(l.ComposeFiles(), "up", "-d")
@@ -410,7 +410,20 @@ func (l *LocalApp) Stop() error {
 		return fmt.Errorf("site does not appear to be running - web container %s", l.SiteStatus())
 	}
 
-	return util.ComposeCmd(l.ComposeFiles(), "stop")
+	err := util.ComposeCmd(l.ComposeFiles(), "stop")
+
+	if err != nil {
+		return err
+	}
+	containersRunning, err := ddevContainersRunning()
+	if err != nil {
+		return err
+	}
+
+	if !containersRunning {
+		StopRouter()
+	}
+	return nil
 }
 
 // Wait ensures that the app appears to be read before returning
@@ -508,6 +521,14 @@ func (l *LocalApp) Down() error {
 	if err != nil {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
 		return Cleanup(l)
+	}
+	containersRunning, err := ddevContainersRunning()
+	if err != nil {
+		return err
+	}
+
+	if !containersRunning {
+		StopRouter()
 	}
 
 	return nil

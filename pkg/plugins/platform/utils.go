@@ -79,7 +79,6 @@ func GetApps() map[string][]App {
 
 // RenderAppTable will format a table for user display based on a list of apps.
 func RenderAppTable(platform string, apps []App) {
-
 	if len(apps) > 0 {
 		fmt.Printf("%v %s %v found.\n", len(apps), platform, util.FormatPlural(len(apps), "site", "sites"))
 		table := CreateAppTable()
@@ -163,6 +162,14 @@ func EnsureDockerRouter() {
 	}
 }
 
+// ComposeFileExists determines if a docker-compose.yml exists for a given app.
+func ComposeFileExists(app App) bool {
+	if _, err := os.Stat(app.DockerComposeYAMLPath()); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
 // Cleanup will clean up ddev apps even if the composer file has been deleted.
 func Cleanup(app App) error {
 	client := util.GetDockerClient()
@@ -219,4 +226,19 @@ func CheckForConf(confPath string) (string, error) {
 	}
 
 	return "", errors.New("no .ddev/config.yaml file was found in this directory or any parent")
+}
+
+// ddevContainersRunning determines if any ddev-controlled containers are currently running.
+func ddevContainersRunning() (bool, error) {
+	containers, err := util.GetDockerContainers(false)
+	if err != nil {
+		return false, err
+	}
+
+	for _, container := range containers {
+		if _, ok := container.Labels["com.ddev.platform"]; ok {
+			return true, nil
+		}
+	}
+	return false, nil
 }
