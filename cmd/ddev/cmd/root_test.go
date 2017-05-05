@@ -102,6 +102,8 @@ func addSites() {
 			cleanup()
 		}()
 	}
+
+	wg.Wait()
 }
 
 // removeSites runs `drud legacy rm` on the test apps
@@ -126,4 +128,6 @@ func removeSites() {
 			}
 		}()
 	}
+
+	wg.Wait()
 }
