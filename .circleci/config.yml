@@ -69,12 +69,4 @@ jobs:
           no_output_timeout: "20m"
           name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
 
-      - run:
-          command: |
-            make gofmt &&
-            make govet &&
-            make golint &&
-            make errcheck &&
-            make staticcheck &&
-            make codecoroner
-          name: Static analysis targets gofmt/govet/golint/errcheck/staticcheck
+      - run: make -s staticrequired

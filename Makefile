@@ -54,7 +54,7 @@ include build-tools/makefile_components/base_build_go.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
-.PHONY: test testcmd testpkg build setup
+.PHONY: test testcmd testpkg build setup staticrequired
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 DDEV_BINARY_FULLPATH=$(shell pwd)/bin/$(TESTOS)/ddev
@@ -72,3 +72,6 @@ setup:
 	@mkdir -p bin/darwin bin/linux
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
 	@if [ ! -L $$PWD/bin/darwin/ddev ] ; then ln -s $$PWD/bin/darwin/darwin_amd64/ddev $$PWD/bin/darwin/ddev; fi
+
+# Required static analysis targets used in circleci - these cause fail if they don't work
+staticrequired: gofmt govet golint errcheck staticcheck codecoroner
