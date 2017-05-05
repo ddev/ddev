@@ -29,7 +29,7 @@ const DDevDefaultPlatform = "local"
 // DDevTLD defines the tld to use for DDev site URLs.
 const DDevTLD = "ddev.local"
 
-var allowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
+var AllowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
@@ -73,7 +73,7 @@ func NewConfig(AppRoot string) (*Config, error) {
 
 // Write the app configuration to the .ddev folder.
 func (c *Config) Write() error {
-	err := prepDDevDirectory(filepath.Dir(c.ConfigPath))
+	err := PrepDdevDirectory(filepath.Dir(c.ConfigPath))
 	if err != nil {
 		return err
 	}
@@ -263,7 +263,7 @@ func (c *Config) ConfigExists() bool {
 // appTypePrompt handles the AppType workflow.
 func (c *Config) appTypePrompt() error {
 	var appType string
-	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(allowedAppTypes, ", "))
+	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(AllowedAppTypes, ", "))
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
 	absDocroot := filepath.Join(c.AppRoot, c.Docroot)
@@ -280,21 +280,21 @@ func (c *Config) appTypePrompt() error {
 	}
 	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, c.AppType)
 
-	for isAllowedAppType(appType) != true {
+	for IsAllowedAppType(appType) != true {
 		fmt.Printf(typePrompt + ": ")
 		appType = strings.ToLower(util.GetInput(c.AppType))
 
-		if isAllowedAppType(appType) != true {
-			fmt.Printf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(allowedAppTypes, ", "))
+		if IsAllowedAppType(appType) != true {
+			fmt.Printf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(AllowedAppTypes, ", "))
 		}
 		c.AppType = appType
 	}
 	return nil
 }
 
-// isAllowedAppType determines if a given string exists in the allowedAppTypes slice.
-func isAllowedAppType(appType string) bool {
-	for _, t := range allowedAppTypes {
+// IsAllowedAppType determines if a given string exists in the AllowedAppTypes slice.
+func IsAllowedAppType(appType string) bool {
+	for _, t := range AllowedAppTypes {
 		if appType == t {
 			return true
 		}
@@ -302,8 +302,8 @@ func isAllowedAppType(appType string) bool {
 	return false
 }
 
-// prepDDevDirectory creates a .ddev directory in the current working
-func prepDDevDirectory(dir string) error {
+// PrepDdevDirectory creates a .ddev directory in the current working
+func PrepDdevDirectory(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 
 		log.WithFields(log.Fields{
