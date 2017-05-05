@@ -72,6 +72,10 @@ func addSites() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// We need to ensure the router before we start other sites, so they don't conflict with each other.
+	EnsureDockerRouter()
+
 	var wg sync.WaitGroup
 	for i, site := range TestSites {
 		go func(i int, site testcommon.TestSite) {
