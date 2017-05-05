@@ -18,7 +18,7 @@ var (
 	DdevBin      = "ddev"
 	DevTestSites = []testcommon.TestSite{
 		{
-			Name:      "cmdrootD8",
+			Name:      "TestMainCmdDrupal8",
 			SourceURL: "https://github.com/drud/drupal8/archive/v0.5.0.tar.gz",
 			FileURL:   "https://github.com/drud/drupal8/releases/download/v0.5.0/files.tar.gz",
 			DBURL:     "https://github.com/drud/drupal8/releases/download/v0.5.0/db.tar.gz",

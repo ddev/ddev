@@ -19,19 +19,19 @@ import (
 var (
 	TestSites = []testcommon.TestSite{
 		{
-			Name:      "pkgTestMainDrupal8",
+			Name:      "TestMainPkgDrupal8",
 			SourceURL: "https://github.com/drud/drupal8/archive/v0.5.0.tar.gz",
 			FileURL:   "https://github.com/drud/drupal8/releases/download/v0.5.0/files.tar.gz",
 			DBURL:     "https://github.com/drud/drupal8/releases/download/v0.5.0/db.tar.gz",
 		},
 		{
-			Name:      "pkgTestMainWordpress",
+			Name:      "TestMainPkgWordpress",
 			SourceURL: "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
 			FileURL:   "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
 			DBURL:     "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		},
 		{
-			Name:      "pkgTestMainDrupalKickstart",
+			Name:      "TestMainPkgDrupalKickstart",
 			SourceURL: "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
 			FileURL:   "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
 			DBURL:     "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
