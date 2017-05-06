@@ -70,3 +70,16 @@ jobs:
           name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
 
       - run: make -s staticrequired
+
+      - run:
+          command: bin/linux/ddev version
+          name: ddev version information
+
+      - store_artifacts:
+          path: bin/darwin/darwin_amd64/ddev
+          destination: darwin/ddev
+          name: Upload ddev (darwin)
+      - store_artifacts:
+          path: bin/linux/ddev
+          destination: linux/ddev
+          name: Upload ddev (linux)
