@@ -232,23 +232,3 @@ func CopyDir(src string, dst string) error {
 
 	return nil
 }
-
-// FindFiles walks a given directory and returns a list of file names containing the provided search string.
-func FindFiles(dirpath string, search string) ([]string, error) {
-	var match []string
-	err := filepath.Walk(dirpath, func(path string, f os.FileInfo, _ error) error {
-		if !f.IsDir() && strings.Contains(f.Name(), search) {
-			match = append(match, f.Name())
-		}
-		return nil
-	})
-	if err != nil {
-		return []string{}, err
-	}
-
-	if len(match) < 1 {
-		return match, fmt.Errorf("no files found in %s matching %s", dirpath, search)
-	}
-
-	return match, nil
-}

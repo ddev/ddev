@@ -112,6 +112,11 @@ func (l *LocalApp) AppRoot() string {
 	return l.AppConfig.AppRoot
 }
 
+// AppConfDir returns the full path to the app's .ddev configuration directory
+func (l *LocalApp) AppConfDir() string {
+	return path.Join(l.AppConfig.AppRoot, ".ddev")
+}
+
 // Docroot returns the docroot path for local app
 func (l LocalApp) Docroot() string {
 	return l.AppConfig.Docroot
@@ -281,25 +286,24 @@ func (l *LocalApp) DockerComposeYAMLPath() string {
 
 // ComposeFiles returns a list of compose files for a project.
 func (l *LocalApp) ComposeFiles() []string {
-	files, err := util.FindFiles(path.Join(l.AppRoot(), ".ddev"), "docker-compose")
+	files, err := filepath.Glob(filepath.Join(l.AppConfDir(), "docker-compose*"))
 	if err != nil {
 		log.Fatalf("Failed to load compose files: %v", err)
 	}
 
 	for i, file := range files {
 		// ensure main docker-compose is first
-		if file == "docker-compose.yml" || file == "docker-compose.yaml" {
+		match, err := filepath.Match(filepath.Join(l.AppConfDir(), "docker-compose.y*l"), file)
+		if err == nil && match {
 			files = append(files[:i], files[i+1:]...)
-			// prepend as absolute path
-			files = append([]string{path.Join(l.AppRoot(), ".ddev", file)}, files...)
+			files = append([]string{file}, files...)
 		}
 		// ensure override is last
-		if file == "docker-compose.override.yml" || file == "docker-compose.override.yaml" {
+		match, err = filepath.Match(filepath.Join(l.AppConfDir(), "docker-compose.override.y*l"), file)
+		if err == nil && match {
 			files = append(files, file)
 			files = append(files[:i], files[i+1:]...)
 		}
-		// ensure files are absolute paths
-		files[i] = path.Join(l.AppRoot(), ".ddev", file)
 	}
 
 	return files
@@ -413,7 +417,7 @@ func (l *LocalApp) Stop() error {
 	l.DockerEnv()
 
 	if l.SiteStatus() != "running" {
-		return fmt.Errorf("site does not appear to be running")
+		return fmt.Errorf("site does not appear to be running - web container %s", l.SiteStatus())
 	}
 
 	return util.ComposeCmd(l.ComposeFiles(), "stop")
