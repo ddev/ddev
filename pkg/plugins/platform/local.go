@@ -43,11 +43,6 @@ func (l *LocalApp) Init(basePath string) error {
 
 	l.AppConfig = config
 
-	err = PrepLocalSiteDirs(basePath)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	web, err := l.FindContainerByType("web")
 	if err == nil {
 		containerApproot := web.Labels["com.ddev.approot"]
