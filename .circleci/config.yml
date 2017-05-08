@@ -69,12 +69,17 @@ jobs:
           no_output_timeout: "20m"
           name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
 
+      - run: make -s staticrequired
+
       - run:
-          command: |
-            make gofmt &&
-            make govet &&
-            make golint &&
-            make errcheck &&
-            make staticcheck &&
-            make codecoroner
-          name: Static analysis targets gofmt/govet/golint/errcheck/staticcheck
+          command: bin/linux/ddev version
+          name: ddev version information
+
+      - store_artifacts:
+          path: bin/darwin/darwin_amd64/ddev
+          destination: darwin/ddev
+          name: Upload ddev (darwin)
+      - store_artifacts:
+          path: bin/linux/ddev
+          destination: linux/ddev
+          name: Upload ddev (linux)
