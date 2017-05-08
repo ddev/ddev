@@ -22,6 +22,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 	"github.com/lextoumbourou/goodhosts"
+	"os/exec"
 )
 
 // LocalApp implements the AppBase interface local development apps
@@ -526,8 +527,9 @@ func (l *LocalApp) HostName() string {
 
 // AddHostsEntry will add the local site URL to the local hostfile.
 func (l *LocalApp) AddHostsEntry() error {
-	if os.Getenv("DRUD_NONINTERACTIVE") != "" {
-		fmt.Printf("DRUD_NONINTERACTIVE is set. If this message is not in a test you may want to add the following entry to your host file:\n127.0.0.1 %s\n", l.HostName())
+	_, err := exec.Command("sudo", "-h").Output()
+	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
+		fmt.Printf("You mmust manually add the following entry to your host file:\n127.0.0.1 %s\n", l.HostName())
 		return nil
 	}
 
