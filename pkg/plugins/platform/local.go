@@ -310,14 +310,30 @@ func (l *LocalApp) Start() error {
 		}
 	}
 
-	StartDockerRouter()
-
 	err := l.AddHostsEntry()
 	if err != nil {
 		return err
 	}
 
-	return util.ComposeCmd(l.ComposeFiles(), "up", "-d")
+	err = util.ComposeCmd(l.ComposeFiles(), "up", "-d")
+	if err != nil {
+		return err
+	}
+
+	// Retrieve ports from containers to expose in router
+	var exposePorts []string
+	siteContainers := util.GetAppContainers(l.GetName())
+	for _, container := range siteContainers {
+		expose := util.GetContainerEnv("VIRTUAL_PORT", container)
+		if expose != "" {
+			ports := strings.Split(expose, ",")
+			exposePorts = append(exposePorts, ports...)
+		}
+	}
+
+	StartDockerRouter(exposePorts)
+
+	return nil
 }
 
 // Exec executes a given command in the container of given type.

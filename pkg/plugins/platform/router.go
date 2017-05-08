@@ -2,13 +2,13 @@ package platform
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"log"
 	"os"
 	"path"
 	"path/filepath"
 
-	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	homedir "github.com/mitchellh/go-homedir"
@@ -44,7 +44,20 @@ func StopRouter() error {
 }
 
 // StartDockerRouter ensures the router is running.
-func StartDockerRouter() {
+func StartDockerRouter(ports []string) {
+	exposedPorts := GetCurrentRouterPorts()
+	for _, port := range ports {
+		var match bool
+		for _, exposed := range exposedPorts {
+			if port == exposed {
+				match = true
+			}
+		}
+		if !match {
+			exposedPorts = append(exposedPorts, port)
+		}
+	}
+
 	dest := RouterComposeYAMLPath()
 	routerdir := filepath.Dir(dest)
 	err := os.MkdirAll(routerdir, 0755)
@@ -65,12 +78,10 @@ func StartDockerRouter() {
 		log.Fatal(ferr)
 	}
 
-	templateVars := map[string]string{
+	templateVars := map[string]interface{}{
 		"router_image": version.RouterImage,
 		"router_tag":   version.RouterTag,
-		"mailhogport":  appports.GetPort("mailhog"),
-		"dbaport":      appports.GetPort("dba"),
-		"dbport":       appports.GetPort("db"),
+		"ports":        exposedPorts,
 	}
 
 	err = templ.Execute(&doc, templateVars)
@@ -83,4 +94,20 @@ func StartDockerRouter() {
 	if err != nil {
 		log.Fatalf("Could not start router: %v", err)
 	}
+}
+
+// GetCurrentRouterPorts retrieves the ports currently exposed on the router if it is running.
+func GetCurrentRouterPorts() []string {
+	var exposedPorts []string
+	label := map[string]string{"com.docker.compose.project": "ddevrouter"}
+	router, err := util.FindContainerByLabels(label)
+	if err == nil {
+		ports := router.Ports
+		for _, port := range ports {
+			if port.PublicPort != 0 {
+				exposedPorts = append(exposedPorts, fmt.Sprint(port.PublicPort))
+			}
+		}
+	}
+	return exposedPorts
 }

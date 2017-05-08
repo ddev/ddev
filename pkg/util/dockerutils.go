@@ -243,3 +243,31 @@ func ComposeCmd(composeFiles []string, action ...string) error {
 
 	return proc.Run()
 }
+
+// GetAppContainers retrieves docker containers for a given sitename.
+func GetAppContainers(sitename string) []docker.APIContainers {
+	label := map[string]string{"com.ddev.site-name": sitename}
+	sites, err := FindContainersByLabels(label)
+	if err != nil {
+		log.Fatal("failed to retrieve containers for ", sitename, err)
+	}
+	return sites
+}
+
+// GetContainerEnv returns the value of a given environment variable from a given container.
+func GetContainerEnv(key string, container docker.APIContainers) string {
+	client := GetDockerClient()
+	inspect, err := client.InspectContainer(container.ID)
+	if err != nil {
+		log.Debug("failed to retreive container ", ContainerName(container))
+	}
+	envVars := inspect.Config.Env
+
+	for i, env := range envVars {
+		fmt.Printf("%v %s\n", i, env)
+		if strings.HasPrefix(env, key) {
+			return strings.TrimPrefix(env, key+"=")
+		}
+	}
+	return ""
+}
