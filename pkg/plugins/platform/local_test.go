@@ -206,12 +206,14 @@ func TestLocalExec(t *testing.T) {
 		stdout = testcommon.CaptureStdOut()
 		switch app.GetType() {
 		case "drupal7":
+			fallthrough
 		case "drupal8":
 			err := app.Exec("web", true, "drush", "status")
 			assert.NoError(err)
 		case "wordpress":
 			err = app.Exec("web", true, "wp", "--info")
 			assert.NoError(err)
+		default:
 		}
 		out = stdout()
 
