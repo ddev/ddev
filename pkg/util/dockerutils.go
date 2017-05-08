@@ -13,6 +13,7 @@ import (
 
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
+	"os"
 )
 
 // NetName provides the default network name for ddev.
@@ -80,10 +81,26 @@ func GetPodPort(name string) (int64, error) {
 // GetDockerClient returns a docker client for a docker-machine.
 func GetDockerClient() *docker.Client {
 	// Create a new docker client talking to the default docker-machine.
-	client, err := docker.NewClient("unix:///var/run/docker.sock")
-	if err != nil {
-		log.Fatalf("could not get docker client. is docker running?: %v", err)
+	endpoint := os.Getenv("DOCKER_HOST")
+	certPath := os.Getenv("DOCKER_CERT_PATH")
+	var client *docker.Client
+	var err error
+	if endpoint == "" {
+		endpoint = "unix:///var/run/docker.sock"
 	}
+	if certPath != "" {
+		ca := fmt.Sprintf("%s/ca.pem", certPath)
+		cert := fmt.Sprintf("%s/cert.pem", certPath)
+		key := fmt.Sprintf("%s/key.pem", certPath)
+
+		client, err = docker.NewTLSClient(endpoint, cert, key, ca)
+	} else {
+		client, err = docker.NewClient(endpoint)
+	}
+	if err != nil {
+		log.Fatalf("could not get docker client. is docker running? error: %v", err)
+	}
+
 	return client
 }
 
