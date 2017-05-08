@@ -91,7 +91,7 @@ func TestLocalStart(t *testing.T) {
 		for _, containerType := range [3]string{"web", "db", "dba"} {
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
-			check, err := util.ContainerCheck(containerName, "running")
+			check, err := testcommon.ContainerCheck(containerName, "running")
 			assert.NoError(err)
 			assert.True(check, containerType, "container is running")
 		}
@@ -204,23 +204,18 @@ func TestLocalExec(t *testing.T) {
 		assert.Contains(out, "/var/www/html/docroot")
 
 		stdout = testcommon.CaptureStdOut()
-		if app.GetType() == "drupal7" || app.GetType() == "drupal8" {
+		switch app.GetType() {
+		case "drupal7":
+		case "drupal8":
 			err := app.Exec("web", true, "drush", "status")
 			assert.NoError(err)
-		}
-		if app.GetType() == "wordpress" {
+		case "wordpress":
 			err = app.Exec("web", true, "wp", "--info")
 			assert.NoError(err)
 		}
 		out = stdout()
 
-		if app.GetType() == "drupal7" || app.GetType() == "drupal8" {
-			assert.Contains(string(out), "Connected")
-			assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
-		}
-		if app.GetType() == "wordpress" {
-			assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
-		}
+		assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
 
 		cleanup()
 
@@ -283,7 +278,7 @@ func TestLocalStop(t *testing.T) {
 		for _, containerType := range [3]string{"web", "db", "dba"} {
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
-			check, err := util.ContainerCheck(containerName, "exited")
+			check, err := testcommon.ContainerCheck(containerName, "exited")
 			assert.NoError(err)
 			assert.True(check, containerType, "container has exited")
 		}
@@ -321,7 +316,7 @@ func TestLocalRemove(t *testing.T) {
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
 			_, err := constructContainerName(containerType, app)
-			assert.Error(err, "Received error on containerName search: %v", err)
+			assert.Error(err, "Received error on containerName search: ", err)
 		}
 
 		cleanup()

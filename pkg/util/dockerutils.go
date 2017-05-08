@@ -243,30 +243,3 @@ func ComposeCmd(composeFiles []string, action ...string) error {
 
 	return proc.Run()
 }
-
-// ContainerCheck determines if a given container name exists and matches a given state
-func ContainerCheck(checkName string, checkState string) (bool, error) {
-	// ensure we have docker network
-	client := GetDockerClient()
-	err := EnsureNetwork(client, NetName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	containers, err := GetDockerContainers(true)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, container := range containers {
-		name := ContainerName(container)
-		if name == checkName {
-			if container.State == checkState {
-				return true, nil
-			}
-			return false, errors.New("container " + name + " returned " + container.State)
-		}
-	}
-
-	return false, errors.New("unable to find container " + checkName)
-}

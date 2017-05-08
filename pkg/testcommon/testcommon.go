@@ -12,6 +12,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/pkg/errors"
 )
@@ -42,7 +43,7 @@ func (site *TestSite) Prepare() error {
 	site.Dir = testDir
 	log.Debugf("Prepping test for %s.\n", site.Name)
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
-	checkErr(err)
+	util.CheckErr(err)
 
 	log.Debugln("Downloading file:", site.SourceURL)
 	site.ArchivePath = site.createArchivePath()
@@ -97,7 +98,7 @@ func (site *TestSite) Chdir() func() {
 // Cleanup removes the archive and codebase extraction for a site after a test run has completed.
 func (site *TestSite) Cleanup() {
 	err := os.Remove(site.ArchivePath)
-	checkErr(err)
+	util.CheckErr(err)
 	// CleanupDir checks its own errors.
 	CleanupDir(site.Dir)
 }
@@ -105,7 +106,7 @@ func (site *TestSite) Cleanup() {
 // CleanupDir removes a directory specified by string.
 func CleanupDir(dir string) {
 	err := os.RemoveAll(dir)
-	checkErr(err)
+	util.CheckErr(err)
 }
 
 // OsTempDir gets os.TempDir() (usually provided by $TMPDIR) but expands any symlinks found within it.
@@ -185,12 +186,12 @@ func CaptureStdOut() func() string {
 		go func() {
 			var buf bytes.Buffer
 			_, err := io.Copy(&buf, r)
-			checkErr(err)
+			util.CheckErr(err)
 			outC <- buf.String()
 		}()
 
 		// back to normal state
-		checkClose(w)
+		util.CheckClose(w)
 		os.Stdout = old // restoring the real stdout
 		out := <-outC
 		return out
@@ -219,18 +220,29 @@ func ClearDockerEnv() {
 	}
 }
 
-// checkErr exits with a log.Fatal() if an error is encountered.
-// It is normally used for errors that we never expect to happen, and don't have any normal handling technique.
-// From https://davidnix.io/post/error-handling-in-go/
-func checkErr(err error) {
+// ContainerCheck determines if a given container name exists and matches a given state
+func ContainerCheck(checkName string, checkState string) (bool, error) {
+	// ensure we have docker network
+	client := util.GetDockerClient()
+	err := util.EnsureNetwork(client, util.NetName)
 	if err != nil {
-		log.Fatal("ERROR:", err)
+		log.Fatal(err)
 	}
-}
 
-// checkClose is used to check the return from Close in a defer statement.
-// From https://groups.google.com/d/msg/golang-nuts/-eo7navkp10/BY3ym_vMhRcJ
-func checkClose(c io.Closer) {
-	err := c.Close()
-	checkErr(err)
+	containers, err := util.GetDockerContainers(true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, container := range containers {
+		name := util.ContainerName(container)
+		if name == checkName {
+			if container.State == checkState {
+				return true, nil
+			}
+			return false, errors.New("container " + name + " returned " + container.State)
+		}
+	}
+
+	return false, errors.New("unable to find container " + checkName)
 }

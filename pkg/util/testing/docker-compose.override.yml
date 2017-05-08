@@ -16,3 +16,4 @@ services:
       com.ddev.container-type: foo
       com.ddev.platform: local
       com.ddev.app-type: wordpress
+      

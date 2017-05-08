@@ -1,4 +1,4 @@
-package util
+package util_test
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/drud/ddev/pkg/testcommon"
+	. "github.com/drud/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
 )
