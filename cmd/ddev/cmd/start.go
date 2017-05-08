@@ -36,7 +36,7 @@ var StartCmd = &cobra.Command{
 
 		err := util.EnsureNetwork(client, netName)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Unable to create/ensure docker network %s, error: %v", netName, err)
 		}
 
 	},
