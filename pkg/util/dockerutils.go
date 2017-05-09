@@ -13,7 +13,6 @@ import (
 
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
-	"os"
 )
 
 // NetName provides the default network name for ddev.
