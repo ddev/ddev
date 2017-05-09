@@ -118,7 +118,8 @@ func TestLocalStart(t *testing.T) {
 		assert.True(composeFile)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
-			containerName := constructContainerName(containerType, app)
+			containerName, err := constructContainerName(containerType, app)
+			assert.NoError(err)
 			check, err := ContainerCheck(containerName, "running")
 			assert.NoError(err)
 			assert.True(check, containerType, "container is running")
@@ -231,7 +232,8 @@ func TestLocalStop(t *testing.T) {
 		assert.NoError(err)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
-			containerName := constructContainerName(containerType, app)
+			containerName, err := constructContainerName(containerType, app)
+			assert.NoError(err)
 			check, err := ContainerCheck(containerName, "exited")
 			assert.NoError(err)
 			assert.True(check, containerType, "container has exited")
@@ -269,10 +271,8 @@ func TestLocalRemove(t *testing.T) {
 		}
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
-			containerName := constructContainerName(containerType, app)
-			check, err := ContainerCheck(containerName, "running")
-			assert.Error(err)
-			assert.False(check, "%s container for %s is not running, err: %s", containerType, app.GetName(), err.Error())
+			_, err := constructContainerName(containerType, app)
+			assert.Error(err, "Received error on containerName search: %v", err)
 		}
 
 		cleanup()
@@ -304,10 +304,8 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
-		containerName := constructContainerName(containerType, app)
-		check, err := ContainerCheck(containerName, "running")
+		_, err := constructContainerName(containerType, app)
 		assert.Error(err)
-		assert.False(check, "%s container for %s is not running, err: %s", containerType, app.GetName(), err.Error())
 	}
 
 	revertDir()
@@ -321,9 +319,11 @@ func TestGetAppsEmpty(t *testing.T) {
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app
-func constructContainerName(containerType string, app App) string {
+func constructContainerName(containerType string, app App) (string, error) {
 	container, err := app.FindContainerByType(containerType)
-	util.CheckErr(err)
+	if err != nil {
+		return "", err
+	}
 	name := util.ContainerName(container)
-	return name
+	return name, nil
 }
