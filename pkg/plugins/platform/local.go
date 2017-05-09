@@ -10,6 +10,9 @@ import (
 
 	"strings"
 
+	"net/url"
+	"os/exec"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
@@ -22,7 +25,6 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 	"github.com/lextoumbourou/goodhosts"
-	"os/exec"
 )
 
 // LocalApp implements the AppBase interface local development apps
@@ -527,9 +529,19 @@ func (l *LocalApp) HostName() string {
 
 // AddHostsEntry will add the local site URL to the local hostfile.
 func (l *LocalApp) AddHostsEntry() error {
+	dockerIp := "127.0.0.1"
+	dockerhostUrl := os.Getenv("DOCKER_HOST")
+	if dockerhostUrl != "" {
+		url, err := url.Parse(dockerhostUrl)
+		if err != nil {
+			return errors.New(fmt.Sprintf("Failed to parse $DOCKER_HOST: %v, err: %v", dockerhostUrl, err))
+		}
+		dockerIp = url.Host
+	}
+
 	_, err := exec.Command("sudo", "-h").Output()
 	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
-		fmt.Printf("You mmust manually add the following entry to your host file:\n127.0.0.1 %s\n", l.HostName())
+		fmt.Printf("You mmust manually add the following entry to your host file:\n%s %s\n", dockerIp, l.HostName())
 		return nil
 	}
 
@@ -537,7 +549,7 @@ func (l *LocalApp) AddHostsEntry() error {
 	if err != nil {
 		log.Fatalf("could not open hostfile. %s", err)
 	}
-	if hosts.Has("127.0.0.1", l.HostName()) {
+	if hosts.Has(dockerIp, l.HostName()) {
 		return nil
 	}
 
@@ -545,7 +557,7 @@ func (l *LocalApp) AddHostsEntry() error {
 	util.CheckErr(err)
 
 	fmt.Println("ddev needs to add an entry to your hostfile.\nIt will require root privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
-	hostnameArgs := []string{ddevFullpath, "hostname", l.HostName(), "127.0.0.1"}
+	hostnameArgs := []string{ddevFullpath, "hostname", l.HostName(), dockerIp}
 	command := strings.Join(hostnameArgs, " ")
 	util.Warning(fmt.Sprintf("    sudo %s", command))
 	fmt.Println("Please enter your password if prompted.")
