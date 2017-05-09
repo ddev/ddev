@@ -5,16 +5,16 @@ For many simpler web applications, `ddev` provides everything you need to succes
 The majority of `ddev`'s customization ability and extensibility comes from leveraging features and functionality provided by [Docker](https://docs.docker.com/) and [Docker Compose](https://docs.docker.com/compose/overview/). Some working knowledge of these tools is required in order to customize or extend the environment `ddev` provides.
 
 ## Extending with additional docker-compose files
-Under the hood, `ddev` uses docker-compose to define and run the multiple containers that make up the local environment for a web application. Docker compose supports defining multiple compose files to facilitate [sharing Compose configurations between files and projects](https://docs.docker.com/compose/extends/), and `ddev` is designed to leverage this ability. Additional services can be added to your project by creating additonal docker-compose files in the `.ddev` directory for your project. Any files using the `docker-compose.foo.yml` naming convention will be automatically processed by `ddev` to include them in executing docker-compose functionality. A `docker-compose.override.yml` can additonally be created to override any configurations from the main docker-compose file or any service compose files added to your project. 
+Under the hood, `ddev` uses docker-compose to define and run the multiple containers that make up the local environment for a web application. Docker compose supports defining multiple compose files to facilitate [sharing Compose configurations between files and projects](https://docs.docker.com/compose/extends/), and `ddev` is designed to leverage this ability. Additional services can be added to your project by creating additonal docker-compose files in the `.ddev` directory for your project. Any files using the `docker-compose.[servicename].yml` naming convention will be automatically processed by `ddev` to include them in executing docker-compose functionality. A `docker-compose.override.yml` can additonally be created to override any configurations from the main docker-compose file or any service compose files added to your project. 
 
 ## Conventions for defining additonal services
 When defining additional services for your project, it is recommended to follow these conventions to ensure your service is handled by `ddev` the same way the default services are.
-- Containers should be follow the naming convention `local-sitename-servicename`
+- Containers should be follow the naming convention `local-[sitename]-[servicename]`
 - Containers should be provided the following labels:
   - `com.ddev.site-name: ${DDEV_SITENAME}`
   - `com.ddev.approot: $DDEV_APPROOT`
   - `com.ddev.app-url: $DDEV_URL`
-  - `com.ddev.platform: {{ .plugin }}`
+  - `com.ddev.container-type: [servicename]`
 - Exposing ports for service: you can expose the port for a service to be accessible as `sitename.ddev.local:portNum` while your project is running. This is achieved by the following for the container(s) being added:
   - Define only the internal port in the `ports` section for docker-compose. The `externalPort:internalPort` convention normally used to expose ports in docker should not be used here, since we are leveraging the ddev router to expose the ports.
   - Define the following environment variables in the `environment` section for docker-compose:
