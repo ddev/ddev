@@ -358,15 +358,15 @@ func prepLocalSiteDirs(base string) error {
 	for _, d := range dirs {
 		dirPath := path.Join(base, d)
 		fileInfo, err := os.Stat(dirPath)
-		if fileInfo.IsDir() {
+		if fileInfo.IsDir() { // If the directory exists, we're fine and don't have to create it.
 			continue
-		} else if os.IsNotExist(err) {
+		} else if os.IsNotExist(err) { // If it doesn't exist, create it.
 			err := os.MkdirAll(dirPath, os.FileMode(int(0774)))
 			if err != nil {
-				return errors.New(fmt.Sprintf("Failed to create directory %s, err: %v", dirPath, err))
+				return fmt.Errorf("Failed to create directory %s, err: %v", dirPath, err)
 			}
-		} else {
-			return errors.New(fmt.Sprintf("File exists where trying to create directory %s", dirPath))
+		} else { // But otherwise it must have existed as a file, so bail
+			return fmt.Errorf("File exists where trying to create directory %s", dirPath)
 		}
 	}
 
