@@ -117,10 +117,6 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	config.AppType = AllowedAppTypes[0]
 	config.Docroot = testcommon.RandString(16)
 
-	err = config.WriteDockerComposeConfig()
-	// We should get an error here since no config or directory path exists.
-	assert.Error(err)
-
 	// Write a config to create/prep necessary directories.
 	err = config.Write()
 	assert.NoError(err)
