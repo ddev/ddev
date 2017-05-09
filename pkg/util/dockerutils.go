@@ -263,8 +263,7 @@ func GetContainerEnv(key string, container docker.APIContainers) string {
 	}
 	envVars := inspect.Config.Env
 
-	for i, env := range envVars {
-		fmt.Printf("%v %s\n", i, env)
+	for _, env := range envVars {
 		if strings.HasPrefix(env, key) {
 			return strings.TrimPrefix(env, key+"=")
 		}
