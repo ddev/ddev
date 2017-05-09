@@ -44,8 +44,8 @@ func TestContainerWait(t *testing.T) {
 	assert := assert.New(t)
 
 	labels := map[string]string{
-		"com.ddev.site-name":      "foo",
-		"com.ddev.container-type": "web",
+		"com.ddev.site-name":         "foo",
+		"com.docker.compose.service": "web",
 	}
 
 	err := ContainerWait(0, labels)

@@ -62,8 +62,8 @@ func (l *LocalApp) Init(basePath string) error {
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
 func (l *LocalApp) FindContainerByType(containerType string) (docker.APIContainers, error) {
 	labels := map[string]string{
-		"com.ddev.site-name":      l.GetName(),
-		"com.ddev.container-type": containerType,
+		"com.ddev.site-name":         l.GetName(),
+		"com.docker.compose.service": containerType,
 	}
 
 	return util.FindContainerByLabels(labels)
@@ -416,8 +416,8 @@ func (l *LocalApp) Stop() error {
 // Wait ensures that the app appears to be read before returning
 func (l *LocalApp) Wait(containerType string) error {
 	labels := map[string]string{
-		"com.ddev.site-name":      l.GetName(),
-		"com.ddev.container-type": containerType,
+		"com.ddev.site-name":         l.GetName(),
+		"com.docker.compose.service": containerType,
 	}
 	err := util.ContainerWait(90, labels)
 	if err != nil {
