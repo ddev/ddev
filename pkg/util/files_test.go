@@ -16,7 +16,7 @@ import (
 var (
 	temp            = os.TempDir()
 	cwd             string
-	testArchiveURL  = "https://github.com/drud/wordpress/releases/download/v0.1.0/files.tar.gz"
+	testArchiveURL  = "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz"
 	testArchivePath string
 )
 

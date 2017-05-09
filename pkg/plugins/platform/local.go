@@ -53,7 +53,7 @@ func (l *LocalApp) Init(basePath string) error {
 	if err == nil {
 		containerApproot := web.Labels["com.ddev.approot"]
 		if containerApproot != l.AppConfig.AppRoot {
-			return fmt.Errorf("a container in %s state already exists for %s that was created at %s", web.State, l.AppConfig.Name, containerApproot)
+			return fmt.Errorf("a web container in %s state already exists for %s that was created at %s", web.State, l.AppConfig.Name, containerApproot)
 		}
 	}
 

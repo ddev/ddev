@@ -17,26 +17,24 @@ import (
 )
 
 var (
-	localDBContainerName  = "local-%s-db"
-	localWebContainerName = "local-%s-web"
-	TestSites             = []testcommon.TestSite{
+	TestSites = []testcommon.TestSite{
 		{
-			Name:      "drupal8",
-			SourceURL: "https://github.com/drud/drupal8/archive/v0.4.0.tar.gz",
-			FileURL:   "https://github.com/drud/drupal8/releases/download/v0.4.0/files.tar.gz",
-			DBURL:     "https://github.com/drud/drupal8/releases/download/v0.4.0/db.tar.gz",
+			Name:      "TestMainPkgDrupal8",
+			SourceURL: "https://github.com/drud/drupal8/archive/v0.5.0.tar.gz",
+			FileURL:   "https://github.com/drud/drupal8/releases/download/v0.5.0/files.tar.gz",
+			DBURL:     "https://github.com/drud/drupal8/releases/download/v0.5.0/db.tar.gz",
 		},
 		{
-			Name:      "wordpress",
-			SourceURL: "https://github.com/drud/wordpress/archive/v0.3.0.tar.gz",
-			FileURL:   "https://github.com/drud/wordpress/releases/download/v0.3.0/files.tar.gz",
-			DBURL:     "https://github.com/drud/wordpress/releases/download/v0.3.0/db.tar.gz",
+			Name:      "TestMainPkgWordpress",
+			SourceURL: "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
+			FileURL:   "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
+			DBURL:     "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		},
 		{
-			Name:      "kickstart",
-			SourceURL: "https://github.com/drud/drupal-kickstart/archive/v0.3.0.tar.gz",
-			FileURL:   "https://github.com/drud/drupal-kickstart/releases/download/v0.3.0/files.tar.gz",
-			DBURL:     "https://github.com/drud/drupal-kickstart/releases/download/v0.3.0/db.tar.gz",
+			Name:      "TestMainPkgDrupalKickstart",
+			SourceURL: "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
+			FileURL:   "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
+			DBURL:     "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
 		},
 	}
 )
@@ -103,8 +101,6 @@ func TestLocalStart(t *testing.T) {
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
-		dbContainer := fmt.Sprintf(localDBContainerName, site.Name)
 		cleanup := site.Chdir()
 
 		testcommon.ClearDockerEnv()
@@ -121,13 +117,13 @@ func TestLocalStart(t *testing.T) {
 		composeFile := system.FileExists(app.DockerComposeYAMLPath())
 		assert.True(composeFile)
 
-		check, err := ContainerCheck(webContainer, "running")
-		assert.NoError(err)
-		assert.True(check)
-
-		check, err = ContainerCheck(dbContainer, "running")
-		assert.NoError(err)
-		assert.True(check)
+		for _, containerType := range [3]string{"web", "db", "dba"} {
+			containerName, err := constructContainerName(containerType, app)
+			assert.NoError(err)
+			check, err := ContainerCheck(containerName, "running")
+			assert.NoError(err)
+			assert.True(check, containerType, "container is running")
+		}
 
 		cleanup()
 	}
@@ -136,11 +132,13 @@ func TestLocalStart(t *testing.T) {
 	another := TestSites[0]
 	err = another.Prepare()
 	if err != nil {
-		log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
+		assert.FailNow("Prepare() should have failed on TestSite.Prepare(), err=%v", err)
+		return
 	}
 
 	err = app.Init(another.Dir)
-	assert.EqualError(err, fmt.Sprintf("a container in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
+	assert.Error(err)
+	assert.Contains(err.Error(), fmt.Sprintf("container in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
 	another.Cleanup()
 }
 
@@ -224,8 +222,6 @@ func TestLocalStop(t *testing.T) {
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
-		dbContainer := fmt.Sprintf(localDBContainerName, site.Name)
 		cleanup := site.Chdir()
 
 		testcommon.ClearDockerEnv()
@@ -235,13 +231,13 @@ func TestLocalStop(t *testing.T) {
 		err = app.Stop()
 		assert.NoError(err)
 
-		check, err := ContainerCheck(webContainer, "exited")
-		assert.NoError(err)
-		assert.True(check)
-
-		check, err = ContainerCheck(dbContainer, "exited")
-		assert.NoError(err)
-		assert.True(check)
+		for _, containerType := range [3]string{"web", "db", "dba"} {
+			containerName, err := constructContainerName(containerType, app)
+			assert.NoError(err)
+			check, err := ContainerCheck(containerName, "exited")
+			assert.NoError(err)
+			assert.True(check, containerType, "container has exited")
+		}
 
 		cleanup()
 	}
@@ -255,8 +251,6 @@ func TestLocalRemove(t *testing.T) {
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		webContainer := fmt.Sprintf(localWebContainerName, site.Name)
-		dbContainer := fmt.Sprintf(localDBContainerName, site.Name)
 		cleanup := site.Chdir()
 
 		testcommon.ClearDockerEnv()
@@ -276,13 +270,10 @@ func TestLocalRemove(t *testing.T) {
 			assert.NoError(err)
 		}
 
-		check, err := ContainerCheck(webContainer, "running")
-		assert.Error(err)
-		assert.False(check)
-
-		check, err = ContainerCheck(dbContainer, "running")
-		assert.Error(err)
-		assert.False(check)
+		for _, containerType := range [3]string{"web", "db", "dba"} {
+			_, err := constructContainerName(containerType, app)
+			assert.Error(err, "Received error on containerName search: %v", err)
+		}
 
 		cleanup()
 	}
@@ -293,8 +284,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert := assert.New(t)
 	site := TestSites[0]
 
-	webContainer := fmt.Sprintf(localWebContainerName, site.Name)
-	dbContainer := fmt.Sprintf(localDBContainerName, site.Name)
 	revertDir := site.Chdir()
 	app, err := GetPluginApp("local")
 	assert.NoError(err)
@@ -314,13 +303,10 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = Cleanup(app)
 	assert.NoError(err)
 
-	check, err := ContainerCheck(webContainer, "running")
-	assert.Error(err)
-	assert.False(check)
-
-	check, err = ContainerCheck(dbContainer, "running")
-	assert.Error(err)
-	assert.False(check)
+	for _, containerType := range [3]string{"web", "db", "dba"} {
+		_, err := constructContainerName(containerType, app)
+		assert.Error(err)
+	}
 
 	revertDir()
 }
@@ -330,4 +316,14 @@ func TestGetAppsEmpty(t *testing.T) {
 	assert := assert.New(t)
 	apps := GetApps()
 	assert.Equal(len(apps["local"]), 0)
+}
+
+// constructContainerName builds a container name given the type (web/db/dba) and the app
+func constructContainerName(containerType string, app App) (string, error) {
+	container, err := app.FindContainerByType(containerType)
+	if err != nil {
+		return "", err
+	}
+	name := util.ContainerName(container)
+	return name, nil
 }

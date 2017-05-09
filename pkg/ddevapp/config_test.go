@@ -1,4 +1,4 @@
-package ddevapp
+package ddevapp_test
 
 import (
 	"bufio"
@@ -11,6 +11,7 @@ import (
 
 	"io/ioutil"
 
+	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -54,16 +55,16 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(newConfig.AppType, loadedConfig.AppType)
 }
 
-// TestAllowedAppType tests the isAllowedAppType function.
+// TestAllowedAppType tests the IsAllowedAppType function.
 func TestAllowedAppTypes(t *testing.T) {
 	assert := assert.New(t)
-	for _, v := range allowedAppTypes {
-		assert.True(isAllowedAppType(v))
+	for _, v := range AllowedAppTypes {
+		assert.True(IsAllowedAppType(v))
 	}
 
 	for i := 1; i <= 50; i++ {
 		randomType := testcommon.RandString(32)
-		assert.False(isAllowedAppType(randomType))
+		assert.False(IsAllowedAppType(randomType))
 	}
 }
 
@@ -80,7 +81,7 @@ func TestPrepDirectory(t *testing.T) {
 	assert.Error(err)
 
 	// Prep the directory.
-	err = prepDDevDirectory(filepath.Dir(config.ConfigPath))
+	err = PrepDdevDirectory(filepath.Dir(config.ConfigPath))
 	assert.NoError(err)
 
 	// Read directory info an ensure it exists.
@@ -113,7 +114,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	config, err := NewConfig(testDir)
 	assert.Error(err)
 	config.Name = testcommon.RandString(32)
-	config.AppType = allowedAppTypes[0]
+	config.AppType = AllowedAppTypes[0]
 	config.Docroot = testcommon.RandString(16)
 
 	err = config.WriteDockerComposeConfig()
@@ -190,7 +191,7 @@ func TestConfigCommand(t *testing.T) {
 	assert.Equal(name, config.Name)
 	assert.Equal("drupal8", config.AppType)
 	assert.Equal("docroot", config.Docroot)
-	err = prepDDevDirectory(testDir)
+	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
 
 }
@@ -205,7 +206,7 @@ func TestRead(t *testing.T) {
 		AppRoot:    "testing",
 		APIVersion: CurrentAppVersion,
 		Platform:   DDevDefaultPlatform,
-		Name:       "testing",
+		Name:       "TestRead",
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
@@ -215,7 +216,7 @@ func TestRead(t *testing.T) {
 	assert.NoError(err)
 
 	// Values not defined in file, we should still have default values
-	assert.Equal(c.Name, "testing")
+	assert.Equal(c.Name, "TestRead")
 	assert.Equal(c.DBImage, version.DBImg+":"+version.DBTag)
 
 	// Values defined in file, we should have values from file

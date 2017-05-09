@@ -12,7 +12,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/util"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/drud-go/utils/system"
+	"github.com/pkg/errors"
 )
 
 // TestSite describes a site for testing, with name, URL of tarball, and optional dir.
@@ -66,6 +68,23 @@ func (site *TestSite) Prepare() error {
 		// If we had an error extracting the archive, we should go ahead and clean up the temporary directory, since this
 		// testsite is useless.
 		site.Cleanup()
+	}
+
+	// If our test site has a Name: then update the config file to reflect that.
+	if site.Name != "" {
+		config, err := ddevapp.NewConfig(site.Dir)
+		if err != nil {
+			return errors.Errorf("Failed to read site config for site %s, dir %s, err:%v", site.Name, site.Dir, err)
+		}
+		err = config.Read()
+		if err != nil {
+			return errors.Errorf("Failed to read site config for site %s, dir %s, err: %v", site.Name, site.Dir, err)
+		}
+		config.Name = site.Name
+		err = config.Write()
+		if err != nil {
+			return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", site.Name, site.Dir, err)
+		}
 	}
 
 	return err
