@@ -7,6 +7,7 @@
 /.push*
 /linux
 /darwin
+/windows
 /.dockerfile
 /VERSION.txt
 /.docker_image
