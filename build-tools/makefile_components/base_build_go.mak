@@ -11,12 +11,14 @@ SHELL := /bin/bash
 
 GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
 
-BUILD_IMAGE ?= drud/golang-build-container:v0.3.0
+BUILD_IMAGE ?= drud/golang-build-container:v0.4.1
 
 BUILD_BASE_DIR ?= $$PWD
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
+
+GOMETALINTER_ARGS ?= --vendored-linters --disable=gocyclo --disable=gotype --disable=goconst --disable=gas --deadline=2m
 
 
 COMMIT := $(shell git describe --tags --always --dirty)
@@ -30,7 +32,7 @@ LDFLAGS := -extldflags -static $(VERSION_LDFLAGS)
 
 build: linux darwin
 
-linux darwin: $(GOFILES)
+linux darwin windows: $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
 	@rm -f VERSION.txt
 	@mkdir -p bin/$@ .go/std/$@ .go/bin .go/src/$(PKG)
@@ -52,7 +54,7 @@ static: govendor gofmt govet lint
 
 govendor:
 	@echo -n "Using govendor to check for missing dependencies and unused dependencies: "
-	docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
@@ -61,7 +63,7 @@ govendor:
 
 gofmt:
 	@echo "Checking gofmt: "
-	docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
@@ -69,8 +71,8 @@ gofmt:
 		bash -c 'export OUT=$$(gofmt -l $(SRC_DIRS))  && if [ -n "$$OUT" ]; then echo "These files need gofmt -w: $$OUT"; exit 1; fi'
 
 govet:
-	@echo -n "Checking go vet: "
-	docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
+	@echo "Checking go vet: "
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
@@ -78,8 +80,8 @@ govet:
 		bash -c 'go vet $(SRC_AND_UNDER)'
 
 golint:
-	@echo -n "Checking golint: "
-	docker run -t --rm -u $(shell id -u):$(shell id -g)                   \
+	@echo "Checking golint: "
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                   \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
@@ -87,8 +89,8 @@ golint:
 		bash -c 'export OUT=$$(golint $(SRC_AND_UNDER)) && if [ -n "$$OUT" ]; then echo "Golint problems discovered: $$OUT"; exit 1; fi'
 
 errcheck:
-	@echo -n "Checking errcheck: "
-	docker run -t --rm -u $(shell id -u):$(shell id -g)                   \
+	@echo "Checking errcheck: "
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                   \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
@@ -96,8 +98,8 @@ errcheck:
 		errcheck $(SRC_AND_UNDER)
 
 staticcheck:
-	@echo -n "Checking staticcheck: "
-	docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
+	@echo "Checking staticcheck: "
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
@@ -105,8 +107,8 @@ staticcheck:
 		staticcheck $(SRC_AND_UNDER)
 
 unused:
-	@echo -n "Checking unused variables and functions: "
-	docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
+	@echo "Checking unused variables and functions: "
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
@@ -114,8 +116,8 @@ unused:
 		unused $(SRC_AND_UNDER)
 
 codecoroner:
-	@echo -n "Checking codecoroner for unused functions: "
-	docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
+	@echo "Checking codecoroner for unused functions: "
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
@@ -124,14 +126,31 @@ codecoroner:
 
 
 varcheck:
-	@echo -n "Checking unused globals and struct members: "
-	docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
+	@echo "Checking unused globals and struct members: "
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
 		-v $$(pwd)/.go:/go                                                 \
 		-v $$(pwd):/go/src/$(PKG)                                          \
 		-w /go/src/$(PKG)                                                  \
 		$(BUILD_IMAGE)                                                     \
 		varcheck $(SRC_AND_UNDER) && structcheck $(SRC_AND_UNDER)
 
+misspell:
+	@echo "Checking for misspellings: "
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
+		-v $$(pwd)/.go:/go                                                 \
+		-v $$(pwd):/go/src/$(PKG)                                          \
+		-w /go/src/$(PKG)                                                  \
+		$(BUILD_IMAGE)                                                     \
+		misspell $(SRC_DIRS)
+
+gometalinter:
+	@echo "gometalinter: "
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                         \
+		-v $$(pwd)/.go:/go                                                 \
+		-v $$(pwd):/go/src/$(PKG)                                          \
+		-w /go/src/$(PKG)                                                  \
+		$(BUILD_IMAGE)                                                     \
+		gometalinter $(GOMETALINTER_ARGS) $(SRC_AND_UNDER)
 
 version:
 	@echo VERSION:$(VERSION)
@@ -139,7 +158,7 @@ version:
 clean: container-clean bin-clean
 
 container-clean:
-	rm -rf .container-* .dockerfile* .push-* linux darwin container VERSION.txt .docker_image
+	rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
 
 bin-clean:
 	rm -rf .go bin .tmp
