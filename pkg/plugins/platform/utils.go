@@ -43,9 +43,9 @@ func PrepLocalSiteDirs(base string) error {
 // GetApps returns a list of ddev applictions keyed by platform.
 func GetApps() map[string][]App {
 	apps := make(map[string][]App)
-	for platformType, instance := range PluginMap {
+	for platformType := range PluginMap {
 		labels := map[string]string{
-			"com.ddev.platform":       instance.ContainerPrefix(),
+			"com.ddev.platform":       platformType,
 			"com.ddev.container-type": "web",
 		}
 		sites, err := util.FindContainersByLabels(labels)
@@ -161,14 +161,6 @@ func EnsureDockerRouter() {
 	if err != nil {
 		fmt.Println(fmt.Errorf("%s - %s", err.Error(), string(out)))
 	}
-}
-
-// ComposeFileExists determines if a docker-compose.yml exists for a given app.
-func ComposeFileExists(app App) bool {
-	if _, err := os.Stat(app.DockerComposeYAMLPath()); os.IsNotExist(err) {
-		return false
-	}
-	return true
 }
 
 // Cleanup will clean up ddev apps even if the composer file has been deleted.

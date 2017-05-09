@@ -1,17 +1,17 @@
 package platform
 
 import (
-	"errors"
 	"fmt"
 	"path"
 	"testing"
 
 	"os"
 
+	"strings"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
@@ -39,8 +39,6 @@ var (
 	}
 )
 
-const netName = "ddev_default"
-
 func TestMain(m *testing.M) {
 	for i := range TestSites {
 		err := TestSites[i].Prepare()
@@ -59,39 +57,12 @@ func TestMain(m *testing.M) {
 	os.Exit(testRun)
 }
 
-// ContainerCheck determines if a given container name exists and matches a given state
-func ContainerCheck(checkName string, checkState string) (bool, error) {
-	// ensure we have docker network
-	client, _ := dockerutil.GetDockerClient()
-	err := util.EnsureNetwork(client, netName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	containers, err := util.GetDockerContainers(true)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, container := range containers {
-		name := util.ContainerName(container)
-		if name == checkName {
-			if container.State == checkState {
-				return true, nil
-			}
-			return false, errors.New("container " + name + " returned " + container.State)
-		}
-	}
-
-	return false, errors.New("unable to find container " + checkName)
-}
-
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
 func TestLocalStart(t *testing.T) {
 
 	// ensure we have docker network
-	client, _ := dockerutil.GetDockerClient()
-	err := util.EnsureNetwork(client, netName)
+	client := util.GetDockerClient()
+	err := util.EnsureNetwork(client, util.NetName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -120,7 +91,7 @@ func TestLocalStart(t *testing.T) {
 		for _, containerType := range [3]string{"web", "db", "dba"} {
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
-			check, err := ContainerCheck(containerName, "running")
+			check, err := testcommon.ContainerCheck(containerName, "running")
 			assert.NoError(err)
 			assert.True(check, containerType, "container is running")
 		}
@@ -214,6 +185,81 @@ func TestLocalImportFiles(t *testing.T) {
 	}
 }
 
+// TestLocalExec tests the execution of commands inside a docker container of a site.
+func TestLocalExec(t *testing.T) {
+	assert := assert.New(t)
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
+
+	for _, site := range TestSites {
+		cleanup := site.Chdir()
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		stdout := testcommon.CaptureStdOut()
+		err = app.Exec("web", true, "pwd")
+		assert.NoError(err)
+		out := stdout()
+		assert.Contains(out, "/var/www/html/docroot")
+
+		stdout = testcommon.CaptureStdOut()
+		switch app.GetType() {
+		case "drupal7":
+			fallthrough
+		case "drupal8":
+			err := app.Exec("web", true, "drush", "status")
+			assert.NoError(err)
+		case "wordpress":
+			err = app.Exec("web", true, "wp", "--info")
+			assert.NoError(err)
+		default:
+		}
+		out = stdout()
+
+		assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
+
+		cleanup()
+
+	}
+}
+
+// TestLocalLogs tests the container log output functionality.
+func TestLocalLogs(t *testing.T) {
+	assert := assert.New(t)
+
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
+
+	for _, site := range TestSites {
+		cleanup := site.Chdir()
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		stdout := testcommon.CaptureStdOut()
+		err = app.Logs("web", false, false, "")
+		assert.NoError(err)
+		out := stdout()
+		assert.Contains(out, "Server started")
+
+		stdout = testcommon.CaptureStdOut()
+		err = app.Logs("db", false, false, "")
+		assert.NoError(err)
+		out = stdout()
+		assert.Contains(out, "Database initialized")
+
+		stdout = testcommon.CaptureStdOut()
+		err = app.Logs("db", false, false, "2")
+		assert.NoError(err)
+		out = stdout()
+		assert.Contains(out, "MySQL init process done. Ready for start up.")
+		assert.False(strings.Contains(out, "Database initialized"))
+
+		cleanup()
+	}
+}
+
 // TestLocalStop tests the functionality that is called when "ddev stop" is executed
 func TestLocalStop(t *testing.T) {
 	assert := assert.New(t)
@@ -234,7 +280,7 @@ func TestLocalStop(t *testing.T) {
 		for _, containerType := range [3]string{"web", "db", "dba"} {
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
-			check, err := ContainerCheck(containerName, "exited")
+			check, err := testcommon.ContainerCheck(containerName, "exited")
 			assert.NoError(err)
 			assert.True(check, containerType, "container has exited")
 		}
@@ -272,7 +318,7 @@ func TestLocalRemove(t *testing.T) {
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
 			_, err := constructContainerName(containerType, app)
-			assert.Error(err, "Received error on containerName search: %v", err)
+			assert.Error(err, "Received error on containerName search: ", err)
 		}
 
 		cleanup()

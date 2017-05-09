@@ -139,7 +139,6 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	assert.NoError(err)
 	contentString := string(composeBytes)
 	assert.Contains(contentString, config.Docroot)
-	assert.Contains(contentString, config.Name)
 	assert.Contains(contentString, config.Platform)
 	assert.Contains(contentString, config.AppType)
 }

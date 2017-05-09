@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+  foo:
+    container_name: local-test-foo
+    image: DDEV_FOOIMAGE
+    volumes:
+      - "./data:/db"
+    restart: always
+    environment:
+      - TCP_PORT=DDEV_HOSTNAME:3306
+    ports:
+      - 3306
+    labels:
+      com.ddev.site-name: test
+      com.ddev.container-type: foo
+      com.ddev.platform: local
+      com.ddev.app-type: wordpress

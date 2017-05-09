@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
 
@@ -28,26 +26,15 @@ var LocalDevExecCmd = &cobra.Command{
 			util.Failed("Failed to exec command: %v", err)
 		}
 
-		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
-		if !dockerutil.IsRunning(nameContainer) {
+		if app.SiteStatus() != "running" {
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
 		app.DockerEnv()
-		cmdArgs := []string{
-			"-f", app.DockerComposeYAMLPath(),
-			"exec",
-			"-T", nameContainer,
-		}
-
-		if strings.Contains(cmdString, "drush dl") {
-			// do we want to add a -y here?
-			cmdString = strings.Replace(cmdString, "drush dl", "drush --root=/src/docroot dl", 1)
-		}
 
 		cmdSplit := strings.Split(cmdString, " ")
-		cmdArgs = append(cmdArgs, cmdSplit...)
-		err = dockerutil.DockerCompose(cmdArgs...)
+
+		err = app.Exec(serviceType, true, cmdSplit...)
 		if err != nil {
 			util.Failed("Failed to execute command %s: %v", cmdString, err)
 		}

@@ -10,9 +10,9 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/drud/ddev/pkg/util"
 
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/pkg/errors"
 )
@@ -218,4 +218,31 @@ func ClearDockerEnv() {
 			log.Printf("failed to unset %s: %v\n", env, err)
 		}
 	}
+}
+
+// ContainerCheck determines if a given container name exists and matches a given state
+func ContainerCheck(checkName string, checkState string) (bool, error) {
+	// ensure we have docker network
+	client := util.GetDockerClient()
+	err := util.EnsureNetwork(client, util.NetName)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	containers, err := util.GetDockerContainers(true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, container := range containers {
+		name := util.ContainerName(container)
+		if name == checkName {
+			if container.State == checkState {
+				return true, nil
+			}
+			return false, errors.New("container " + name + " returned " + container.State)
+		}
+	}
+
+	return false, errors.New("unable to find container " + checkName)
 }

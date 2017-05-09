@@ -5,7 +5,7 @@ package ddevapp
 const DDevComposeTemplate = `version: '2'
 
 services:
-  {{ .plugin }}-{{.name }}-db:
+  db:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-db
     image: $DDEV_DBIMAGE
     volumes:
@@ -23,17 +23,17 @@ services:
       com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
-  {{ .plugin }}-{{ .name }}-web:
+  web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
     volumes:
       - "{{ .docroot }}/:/var/www/html/docroot"
     restart: always
     depends_on:
-      - {{ .plugin }}-${DDEV_SITENAME}-db
+      - db
     links:
-      - {{ .plugin }}-${DDEV_SITENAME}-db:$DDEV_HOSTNAME
-      - {{ .plugin }}-${DDEV_SITENAME}-db:db
+      - db:$DDEV_HOSTNAME
+      - db:db
     ports:
       - "80"
       - {{ .mailhogport }}
@@ -50,7 +50,7 @@ services:
       com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
-  {{ .plugin }}-{{ .name }}-dba:
+  dba:
     container_name: local-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
     restart: always
@@ -63,9 +63,9 @@ services:
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
     depends_on:
-      - local-${DDEV_SITENAME}-db
+      - db
     links:
-      - local-${DDEV_SITENAME}-db:db
+      - db:db
     ports:
       - "80"
     environment:

@@ -12,8 +12,6 @@ type App interface {
 	Init(string) error
 	Describe() (string, error)
 	GetType() string
-	ContainerPrefix() string
-	ContainerName() string
 	AppRoot() string
 	GetName() string
 	Start() error
@@ -29,6 +27,8 @@ type App interface {
 	ImportFiles(string) error
 	SiteStatus() string
 	FindContainerByType(containerType string) (docker.APIContainers, error)
+	Exec(service string, tty bool, cmd ...string) error
+	Logs(service string, follow bool, timestamps bool, tail string) error
 }
 
 // PluginMap maps the name of the plugins to their implementation.

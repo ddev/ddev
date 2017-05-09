@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
 
@@ -19,8 +16,7 @@ var LocalDevRMCmd = &cobra.Command{
 			util.Failed("Failed to remove: %v", err)
 		}
 
-		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
-		if !dockerutil.IsRunning(nameContainer) {
+		if app.SiteStatus() == "not found" {
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 

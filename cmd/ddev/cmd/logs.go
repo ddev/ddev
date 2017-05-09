@@ -1,12 +1,7 @@
 package cmd
 
 import (
-	"fmt"
-	"path"
-
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/spf13/cobra"
 )
 
@@ -27,34 +22,11 @@ var LocalDevLogsCmd = &cobra.Command{
 			util.Failed("Failed to retrieve logs: %v", err)
 		}
 
-		nameContainer := fmt.Sprintf("%s-%s", app.ContainerName(), serviceType)
-
-		if !dockerutil.IsRunning(nameContainer) {
+		if app.SiteStatus() != "running" {
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
-		if !platform.ComposeFileExists(app) {
-			util.Failed("No docker-compose yaml for this site. Try `ddev start`.")
-		}
-
-		cmdArgs := []string{
-			"-f", path.Join(app.DockerComposeYAMLPath()),
-			"logs",
-		}
-
-		if tail != "" {
-			cmdArgs = append(cmdArgs, "--tail="+tail)
-		}
-		if follow {
-			cmdArgs = append(cmdArgs, "-f")
-		}
-		if timestamp {
-			cmdArgs = append(cmdArgs, "-t")
-		}
-		cmdArgs = append(cmdArgs, nameContainer)
-
-		app.DockerEnv()
-		err = dockerutil.DockerCompose(cmdArgs...)
+		err = app.Logs(serviceType, follow, timestamp, tail)
 		if err != nil {
 			util.Failed("Failed to retrieve logs for %s: %v", app.GetName(), err)
 		}
@@ -63,8 +35,9 @@ var LocalDevLogsCmd = &cobra.Command{
 
 func init() {
 	LocalDevLogsCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Follow the logs in real time.")
-	LocalDevLogsCmd.Flags().BoolVarP(&timestamp, "time", "s", false, "Add timestamps to logs")
-	LocalDevLogsCmd.Flags().StringVarP(&tail, "tail", "t", "", "How many lines to show")
+	LocalDevLogsCmd.Flags().BoolVarP(&timestamp, "time", "t", false, "Add timestamps to logs")
+	LocalDevLogsCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Which service to send the command to. [web, db]")
+	LocalDevLogsCmd.Flags().StringVarP(&tail, "tail", "", "", "How many lines to show")
 	RootCmd.AddCommand(LocalDevLogsCmd)
 
 }

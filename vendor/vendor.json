@@ -146,12 +146,6 @@
 			"revisionTime": "2017-02-13T20:31:38Z"
 		},
 		{
-			"checksumSHA1": "z87uUOC3fjhtYdc2o9pgBKNbAXE=",
-			"path": "github.com/drud/drud-go/utils/dockerutil",
-			"revision": "a2be5bb0f689026434244fe1404638c075406533",
-			"revisionTime": "2017-02-14T02:40:55Z"
-		},
-		{
 			"checksumSHA1": "8ZdXPfz2MhN0Ho2qneeBNoQqGak=",
 			"path": "github.com/drud/drud-go/utils/network",
 			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",

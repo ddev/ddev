@@ -3,6 +3,8 @@ package util
 import (
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 	"time"
@@ -12,6 +14,9 @@ import (
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
 )
+
+// NetName provides the default network name for ddev.
+const NetName = "ddev_default"
 
 // EnsureNetwork will ensure the docker network for ddev is created.
 func EnsureNetwork(client *docker.Client, name string) error {
@@ -218,4 +223,23 @@ func GetContainerHealth(container docker.APIContainers) string {
 		match = strings.TrimPrefix(match, pre)
 	}
 	return match
+}
+
+// ComposeCmd executes docker-compose commands via shell.
+func ComposeCmd(composeFiles []string, action ...string) error {
+	var arg []string
+
+	for _, file := range composeFiles {
+		arg = append(arg, "-f")
+		arg = append(arg, file)
+	}
+
+	arg = append(arg, action...)
+
+	proc := exec.Command("docker-compose", arg...)
+	proc.Stdout = os.Stdout
+	proc.Stdin = os.Stdin
+	proc.Stderr = os.Stderr
+
+	return proc.Run()
 }

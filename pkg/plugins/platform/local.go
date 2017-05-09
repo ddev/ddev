@@ -17,7 +17,6 @@ import (
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/dockerutil"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/fsouza/go-dockerclient"
@@ -113,6 +112,11 @@ func (l *LocalApp) AppRoot() string {
 	return l.AppConfig.AppRoot
 }
 
+// AppConfDir returns the full path to the app's .ddev configuration directory
+func (l *LocalApp) AppConfDir() string {
+	return path.Join(l.AppConfig.AppRoot, ".ddev")
+}
+
 // Docroot returns the docroot path for local app
 func (l LocalApp) Docroot() string {
 	return l.AppConfig.Docroot
@@ -123,20 +127,9 @@ func (l *LocalApp) GetName() string {
 	return l.AppConfig.Name
 }
 
-// ContainerPrefix returns the base name for local app containers
-func (l *LocalApp) ContainerPrefix() string {
-	return "local"
-}
-
-// ContainerName returns the base name for local app containers
-func (l *LocalApp) ContainerName() string {
-	return fmt.Sprintf("%s-%s", l.ContainerPrefix(), l.GetName())
-}
-
 // ImportDB takes a source sql dump and imports it to an active site's database container.
 func (l *LocalApp) ImportDB(imPath string) error {
 	l.DockerEnv()
-	container := fmt.Sprintf("%s-db", l.ContainerName())
 	dbPath := path.Join(l.AppRoot(), ".ddev", "data")
 
 	if imPath == "" {
@@ -175,9 +168,9 @@ func (l *LocalApp) ImportDB(imPath string) error {
 		}
 	}
 
-	err = appimport.ImportSQLDump(l.DockerComposeYAMLPath(), container)
+	err = l.Exec("db", true, "./import.sh")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to execute import: %v", err)
 	}
 
 	err = l.Config()
@@ -281,9 +274,33 @@ func (l *LocalApp) DockerComposeYAMLPath() string {
 	return l.AppConfig.DockerComposeYAMLPath()
 }
 
+// ComposeFiles returns a list of compose files for a project.
+func (l *LocalApp) ComposeFiles() []string {
+	files, err := filepath.Glob(filepath.Join(l.AppConfDir(), "docker-compose*"))
+	if err != nil {
+		log.Fatalf("Failed to load compose files: %v", err)
+	}
+
+	for i, file := range files {
+		// ensure main docker-compose is first
+		match, err := filepath.Match(filepath.Join(l.AppConfDir(), "docker-compose.y*l"), file)
+		if err == nil && match {
+			files = append(files[:i], files[i+1:]...)
+			files = append([]string{file}, files...)
+		}
+		// ensure override is last
+		match, err = filepath.Match(filepath.Join(l.AppConfDir(), "docker-compose.override.y*l"), file)
+		if err == nil && match {
+			files = append(files, file)
+			files = append(files[:i], files[i+1:]...)
+		}
+	}
+
+	return files
+}
+
 // Start initiates docker-compose up
 func (l *LocalApp) Start() error {
-	composePath := l.DockerComposeYAMLPath()
 	l.DockerEnv()
 
 	// Write docker-compose.yaml (if it doesn't exist).
@@ -303,11 +320,53 @@ func (l *LocalApp) Start() error {
 		log.Fatal(err)
 	}
 
-	return dockerutil.DockerCompose(
-		"-f", composePath,
-		"up",
-		"-d",
-	)
+	return util.ComposeCmd(l.ComposeFiles(), "up", "-d")
+}
+
+// Exec executes a given command in the container of given type.
+func (l *LocalApp) Exec(service string, tty bool, cmd ...string) error {
+	l.DockerEnv()
+
+	var exec []string
+	if tty {
+		exec = []string{"exec", "-T", service}
+	} else {
+		exec = []string{"exec", service}
+	}
+	exec = append(exec, cmd...)
+
+	return util.ComposeCmd(l.ComposeFiles(), exec...)
+}
+
+// Logs returns logs for a site's given container.
+func (l *LocalApp) Logs(service string, follow bool, timestamps bool, tail string) error {
+	container, err := l.FindContainerByType(service)
+	if err != nil {
+		return err
+	}
+
+	logOpts := docker.LogsOptions{
+		Container:    container.ID,
+		Stdout:       true,
+		Stderr:       true,
+		OutputStream: os.Stdout,
+		ErrorStream:  os.Stderr,
+		Follow:       follow,
+		Timestamps:   timestamps,
+	}
+
+	if tail != "" {
+		logOpts.Tail = tail
+	}
+
+	client := util.GetDockerClient()
+
+	err = client.Logs(logOpts)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // DockerEnv sets environment variables for a docker-compose run.
@@ -345,17 +404,13 @@ func (l *LocalApp) DockerEnv() {
 
 // Stop initiates docker-compose stop
 func (l *LocalApp) Stop() error {
-	composePath := l.DockerComposeYAMLPath()
 	l.DockerEnv()
 
-	if !dockerutil.IsRunning(l.ContainerName()+"-db") && !dockerutil.IsRunning(l.ContainerName()+"-web") && !ComposeFileExists(l) {
-		return fmt.Errorf("site does not exist or is malformed")
+	if l.SiteStatus() != "running" {
+		return fmt.Errorf("site does not appear to be running - web container %s", l.SiteStatus())
 	}
 
-	return dockerutil.DockerCompose(
-		"-f", composePath,
-		"stop",
-	)
+	return util.ComposeCmd(l.ComposeFiles(), "stop")
 }
 
 // Wait ensures that the app appears to be read before returning
@@ -409,7 +464,7 @@ func (l *LocalApp) Config() error {
 		}
 
 		// Setup a custom settings file for use with drush.
-		dbPort, err := util.GetPodPort(l.ContainerName() + "-db")
+		dbPort, err := util.GetPodPort("local-" + l.GetName() + "-db")
 		if err != nil {
 			return err
 		}
@@ -448,12 +503,8 @@ func (l *LocalApp) Config() error {
 
 // Down stops the docker containers for the local project.
 func (l *LocalApp) Down() error {
-	composePath := l.DockerComposeYAMLPath()
 	l.DockerEnv()
-	err := dockerutil.DockerCompose(
-		"-f", composePath,
-		"down",
-	)
+	err := util.ComposeCmd(l.ComposeFiles(), "down")
 	if err != nil {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
 		return Cleanup(l)
