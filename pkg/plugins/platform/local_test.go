@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"testing"
+	"time"
 
 	"os"
 
@@ -77,7 +78,10 @@ func addSites() {
 	EnsureDockerRouter()
 
 	var wg sync.WaitGroup
+	wg.Add(len(TestSites))
+
 	for i, site := range TestSites {
+		time.Sleep(5000 * time.Millisecond)
 		go func(i int, site testcommon.TestSite) {
 			defer wg.Done()
 			err := TestSites[i].Prepare()
@@ -93,7 +97,6 @@ func addSites() {
 			testcommon.ClearDockerEnv()
 			err = app.Init(site.Dir)
 			util.CheckErr(err)
-
 			err = app.Start()
 			util.CheckErr(err)
 
