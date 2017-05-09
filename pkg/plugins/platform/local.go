@@ -127,16 +127,6 @@ func (l *LocalApp) GetName() string {
 	return l.AppConfig.Name
 }
 
-// ContainerPrefix returns the base name for local app containers
-func (l *LocalApp) ContainerPrefix() string {
-	return "local"
-}
-
-// ContainerName returns the base name for local app containers
-func (l *LocalApp) ContainerName() string {
-	return fmt.Sprintf("%s-%s", l.ContainerPrefix(), l.GetName())
-}
-
 // ImportDB takes a source sql dump and imports it to an active site's database container.
 func (l *LocalApp) ImportDB(imPath string) error {
 	l.DockerEnv()
@@ -474,7 +464,7 @@ func (l *LocalApp) Config() error {
 		}
 
 		// Setup a custom settings file for use with drush.
-		dbPort, err := util.GetPodPort(l.ContainerName() + "-db")
+		dbPort, err := util.GetPodPort("local-" + l.GetName() + "-db")
 		if err != nil {
 			return err
 		}

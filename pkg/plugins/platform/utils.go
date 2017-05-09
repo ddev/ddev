@@ -43,9 +43,9 @@ func PrepLocalSiteDirs(base string) error {
 // GetApps returns a list of ddev applictions keyed by platform.
 func GetApps() map[string][]App {
 	apps := make(map[string][]App)
-	for platformType, instance := range PluginMap {
+	for platformType := range PluginMap {
 		labels := map[string]string{
-			"com.ddev.platform":       instance.ContainerPrefix(),
+			"com.ddev.platform":       platformType,
 			"com.ddev.container-type": "web",
 		}
 		sites, err := util.FindContainersByLabels(labels)

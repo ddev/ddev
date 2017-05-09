@@ -12,8 +12,6 @@ type App interface {
 	Init(string) error
 	Describe() (string, error)
 	GetType() string
-	ContainerPrefix() string
-	ContainerName() string
 	AppRoot() string
 	GetName() string
 	Start() error
