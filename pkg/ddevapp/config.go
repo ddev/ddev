@@ -50,6 +50,8 @@ type Config struct {
 func NewConfig(AppRoot string) (*Config, error) {
 	// Set defaults.
 	c := &Config{}
+	err := prepLocalSiteDirs(AppRoot)
+	util.CheckErr(err)
 	c.ConfigPath = path.Join(AppRoot, ".ddev", "config.yaml")
 	c.AppRoot = AppRoot
 	c.APIVersion = CurrentAppVersion
@@ -64,7 +66,7 @@ func NewConfig(AppRoot string) (*Config, error) {
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
-	err := c.Read()
+	err = c.Read()
 	if err != nil {
 		return c, err
 	}
@@ -345,4 +347,25 @@ func determineAppType(basePath string) (string, error) {
 	}
 
 	return "", errors.New("determineAppType() couldn't determine app's type")
+}
+
+// prepLocalSiteDirs creates a site's directories for local dev in .ddev
+func prepLocalSiteDirs(base string) error {
+	dirs := []string{
+		".ddev",
+		".ddev/data",
+	}
+	for _, d := range dirs {
+		dirPath := path.Join(base, d)
+		err := os.Mkdir(dirPath, os.FileMode(int(0774)))
+		if err != nil {
+			log.Print("Failed mkdir on ", dirPath, " err: ", err)
+			if !strings.Contains(err.Error(), "file exists") {
+				log.Print("prepLocalSiteDirs() returning err: Failed mkdir on ", dirPath, " err: ", err)
+				return err
+			}
+		}
+	}
+
+	return nil
 }
