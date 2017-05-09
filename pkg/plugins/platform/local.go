@@ -498,8 +498,3 @@ func (l *LocalApp) AddHostsEntry() error {
 	err = system.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }
-
-// constructContainerName builds a container name given the type (web/db/dba) and the appName
-func constructContainerName(containerType string, appName string) string {
-	return "local-" + appName + "-" + containerType
-}

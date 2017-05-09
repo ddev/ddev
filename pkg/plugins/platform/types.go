@@ -1,7 +1,11 @@
 package platform
 
 import "fmt"
-import "strings"
+import (
+	"strings"
+
+	"github.com/fsouza/go-dockerclient"
+)
 
 // App is an interface apps for Drud Local must implement to use shared functionality
 type App interface {
@@ -24,6 +28,7 @@ type App interface {
 	ImportDB(string) error
 	ImportFiles(string) error
 	SiteStatus() string
+	FindContainerByType(containerType string) (docker.APIContainers, error)
 }
 
 // PluginMap maps the name of the plugins to their implementation.
