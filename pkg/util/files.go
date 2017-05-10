@@ -7,9 +7,9 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
+	"path"
 )
 
 // Ungzip accepts a gzipped file and uncompresses it to the provided destination path.
@@ -36,7 +36,8 @@ func Ungzip(source string, dest string) error {
 		}
 	}()
 
-	fname := strings.TrimSuffix(path.Base(f.Name()), ".gz")
+
+	fname := strings.TrimSuffix(filepath.Base(f.Name()), ".gz")
 	exFile, err := os.Create(path.Join(dest, fname))
 	if err != nil {
 		return err
