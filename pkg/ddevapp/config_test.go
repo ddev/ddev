@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -197,7 +196,7 @@ func TestRead(t *testing.T) {
 
 	// This closely resembles the values one would have from NewConfig()
 	c := &Config{
-		ConfigPath: path.Join("testing", "config.yaml"),
+		ConfigPath: filepath.Join("testing", "config.yaml"),
 		AppRoot:    "testing",
 		APIVersion: CurrentAppVersion,
 		Platform:   DDevDefaultPlatform,

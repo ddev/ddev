@@ -2,8 +2,7 @@ package platform
 
 import (
 	"fmt"
-	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -93,6 +92,7 @@ func RenderAppRow(table *uitable.Table, site App) {
 	)
 }
 
+
 // Cleanup will clean up ddev apps even if the composer file has been deleted.
 func Cleanup(app App) error {
 	client := util.GetDockerClient()
@@ -142,7 +142,7 @@ func CheckForConf(confPath string) (string, error) {
 	pathList := strings.Split(confPath, "/")
 
 	for _ = range pathList {
-		confPath = path.Dir(confPath)
+		confPath = filepath.Dir(confPath)
 		if system.FileExists(confPath + "/.ddev/config.yaml") {
 			return confPath, nil
 		}

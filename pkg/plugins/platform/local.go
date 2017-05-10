@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 
@@ -112,7 +111,7 @@ func (l *LocalApp) AppRoot() string {
 
 // AppConfDir returns the full path to the app's .ddev configuration directory
 func (l *LocalApp) AppConfDir() string {
-	return path.Join(l.AppConfig.AppRoot, ".ddev")
+	return filepath.Join(l.AppConfig.AppRoot, ".ddev")
 }
 
 // Docroot returns the docroot path for local app
@@ -128,7 +127,7 @@ func (l *LocalApp) GetName() string {
 // ImportDB takes a source sql dump and imports it to an active site's database container.
 func (l *LocalApp) ImportDB(imPath string) error {
 	l.DockerEnv()
-	dbPath := path.Join(l.AppRoot(), ".ddev", "data")
+	dbPath := filepath.Join(l.AppRoot(), ".ddev", "data")
 
 	if imPath == "" {
 		fmt.Println("Provide the path to the database you wish to import.")
@@ -160,7 +159,7 @@ func (l *LocalApp) ImportDB(imPath string) error {
 
 	// an archive was not extracted, we need to copy
 	if importPath != "" {
-		err = util.CopyFile(importPath, path.Join(dbPath, "db.sql"))
+		err = util.CopyFile(importPath, filepath.Join(dbPath, "db.sql"))
 		if err != nil {
 			return err
 		}
@@ -225,15 +224,15 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		uploadDir = "wp-content/uploads"
 	}
 
-	destPath := path.Join(l.AppRoot(), l.Docroot(), uploadDir)
+	destPath := filepath.Join(l.AppRoot(), l.Docroot(), uploadDir)
 
 	// parent of destination dir should exist
-	if !system.FileExists(path.Dir(destPath)) {
+	if !system.FileExists(filepath.Dir(destPath)) {
 		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
 	}
 
 	// parent of destination dir should be writable
-	err := os.Chmod(path.Dir(destPath), 0755)
+	err := os.Chmod(filepath.Dir(destPath), 0755)
 	if err != nil {
 		return err
 	}
@@ -436,14 +435,14 @@ func (l *LocalApp) Wait(containerType string) error {
 func (l *LocalApp) Config() error {
 	basePath := l.AppRoot()
 	docroot := l.Docroot()
-	settingsFilePath := path.Join(basePath, docroot)
+	settingsFilePath := filepath.Join(basePath, docroot)
 
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
-		settingsFilePath = path.Join(settingsFilePath, "sites/default/settings.php")
+		settingsFilePath = filepath.Join(settingsFilePath, "sites/default/settings.php")
 	}
 
 	if l.GetType() == "wordpress" {
-		settingsFilePath = path.Join(settingsFilePath, "wp-config.php")
+		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
 	}
 
 	if system.FileExists(settingsFilePath) {
@@ -473,7 +472,7 @@ func (l *LocalApp) Config() error {
 			return err
 		}
 
-		drushSettingsPath := path.Join(basePath, "drush.settings.php")
+		drushSettingsPath := filepath.Join(basePath, "drush.settings.php")
 		drushConfig := model.NewDrushConfig()
 		drushConfig.DatabasePort = strconv.FormatInt(dbPort, 10)
 		if l.GetType() == "drupal8" {

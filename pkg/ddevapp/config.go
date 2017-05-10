@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -52,7 +51,7 @@ func NewConfig(AppRoot string) (*Config, error) {
 	c := &Config{}
 	err := prepLocalSiteDirs(AppRoot)
 	util.CheckErr(err)
-	c.ConfigPath = path.Join(AppRoot, ".ddev", "config.yaml")
+	c.ConfigPath = filepath.Join(AppRoot, ".ddev", "config.yaml")
 	c.AppRoot = AppRoot
 	c.APIVersion = CurrentAppVersion
 
@@ -117,7 +116,7 @@ func (c *Config) Read() error {
 
 	// If any of these values aren't defined in the config file, set them to defaults.
 	if c.Name == "" {
-		c.Name = path.Base(c.AppRoot)
+		c.Name = filepath.Base(c.AppRoot)
 	}
 	if c.WebImage == "" {
 		c.WebImage = version.WebImg + ":" + version.WebTag
@@ -154,7 +153,7 @@ func (c *Config) Config() error {
 	if c.Name == "" {
 		dir, err := os.Getwd()
 		if err == nil {
-			c.Name = path.Base(dir)
+			c.Name = filepath.Base(dir)
 		}
 	}
 
@@ -181,7 +180,7 @@ func (c *Config) Config() error {
 
 // DockerComposeYAMLPath returns the absolute path to where the docker-compose.yaml should exist for this app configuration.
 func (c *Config) DockerComposeYAMLPath() string {
-	return path.Join(c.AppRoot, ".ddev", "docker-compose.yaml")
+	return filepath.Join(c.AppRoot, ".ddev", "docker-compose.yaml")
 }
 
 // Hostname returns the hostname to the app controlled by this config.
@@ -332,7 +331,7 @@ func determineAppType(basePath string) (string, error) {
 	}
 
 	for k, v := range defaultLocations {
-		fp := path.Join(basePath, k)
+		fp := filepath.Join(basePath, k)
 		log.WithFields(log.Fields{
 			"file": fp,
 		}).Debug("Looking for app fingerprint.")
@@ -356,7 +355,7 @@ func prepLocalSiteDirs(base string) error {
 		".ddev/data",
 	}
 	for _, d := range dirs {
-		dirPath := path.Join(base, d)
+		dirPath := filepath.Join(base, d)
 		fileInfo, err := os.Stat(dirPath)
 
 		if os.IsNotExist(err) { // If it doesn't exist, create it.

@@ -1,7 +1,7 @@
 package appimport
 
 import (
-	"path"
+	"path/filepath"
 	"testing"
 
 	"strings"
@@ -20,7 +20,7 @@ import (
 func TestValidateAsset(t *testing.T) {
 	assert := assert.New(t)
 
-	testArchivePath := path.Join(testcommon.CreateTmpDir("appimport"), "db.tar.gz")
+	testArchivePath := filepath.Join(testcommon.CreateTmpDir("appimport"), "db.tar.gz")
 
 	testFile, err := os.Create(testArchivePath)
 	if err != nil {
@@ -38,7 +38,7 @@ func TestValidateAsset(t *testing.T) {
 
 	// test tilde expansion
 	userDir, err := homedir.Dir()
-	testDir := path.Join(userDir, "testpath")
+	testDir := filepath.Join(userDir, "testpath")
 	assert.NoError(err)
 	err = os.Mkdir(testDir, 0755)
 	assert.NoError(err)
@@ -71,6 +71,6 @@ func TestValidateAsset(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "provided path is not a directory or archive")
 
-	err = os.RemoveAll(path.Dir(testArchivePath))
+	err = os.RemoveAll(filepath.Dir(testArchivePath))
 	util.CheckErr(err)
 }
