@@ -258,14 +258,13 @@ func GetAppContainers(sitename string) ([]docker.APIContainers, error) {
 func GetContainerEnv(key string, container docker.APIContainers) string {
 	client := GetDockerClient()
 	inspect, err := client.InspectContainer(container.ID)
-	if err != nil {
-		log.Debug("failed to retreive container ", ContainerName(container))
-	}
-	envVars := inspect.Config.Env
+	if err == nil {
+		envVars := inspect.Config.Env
 
-	for _, env := range envVars {
-		if strings.HasPrefix(env, key) {
-			return strings.TrimPrefix(env, key+"=")
+		for _, env := range envVars {
+			if strings.HasPrefix(env, key) {
+				return strings.TrimPrefix(env, key+"=")
+			}
 		}
 	}
 	return ""

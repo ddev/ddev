@@ -134,6 +134,14 @@ func TestGetApps(t *testing.T) {
 	}
 }
 
+func TestGetCurrentRouterPorts(t *testing.T) {
+	assert := assert.New(t)
+	ports := GetCurrentRouterPorts()
+	assert.Contains(ports, "80")
+	assert.Contains(ports, "8025")
+	assert.Contains(ports, "3306")
+}
+
 // TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed
 func TestLocalImportDB(t *testing.T) {
 	assert := assert.New(t)

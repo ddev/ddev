@@ -7,6 +7,7 @@ import (
 
 	"github.com/drud/ddev/pkg/testcommon"
 	. "github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
 )
@@ -83,4 +84,25 @@ func TestComposeCmd(t *testing.T) {
 	composeFiles = []string{"invalid.yml"}
 	err = ComposeCmd(composeFiles, "config", "--services")
 	assert.Error(err)
+}
+
+func TestGetAppContainers(t *testing.T) {
+	assert := assert.New(t)
+	sites, err := GetAppContainers("dockertest")
+	assert.NoError(err)
+	assert.Equal(sites[0].Image, version.RouterImage+":"+version.RouterTag)
+}
+
+func TestGetContainerEnv(t *testing.T) {
+	assert := assert.New(t)
+
+	container, err := FindContainerByLabels(map[string]string{"com.docker.compose.service": "test"})
+	assert.NoError(err)
+
+	env := GetContainerEnv("HOTDOG", container)
+	assert.Equal("superior-to-corndog", env)
+	env = GetContainerEnv("POTATO", container)
+	assert.Equal("future-fry", env)
+	env = GetContainerEnv("NONEXISTENT", container)
+	assert.Equal("", env)
 }

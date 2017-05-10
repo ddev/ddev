@@ -1,0 +1,65 @@
+package util_test
+
+import (
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
+	"github.com/drud/drud-go/utils/system"
+	docker "github.com/fsouza/go-dockerclient"
+)
+
+var (
+	TestArchiveURL        = "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz"
+	TestArchivePath       string
+	TestArchiveExtractDir = "wordpress-0.4.0/"
+)
+
+func TestMain(m *testing.M) {
+	// prep assets for files tests
+	testPath, err := ioutil.TempDir("", "filetest")
+	util.CheckErr(err)
+	testPath, err = filepath.EvalSymlinks(testPath)
+	util.CheckErr(err)
+	testPath = filepath.Clean(testPath)
+	TestArchivePath = filepath.Join(testPath, "files.tar.gz")
+
+	err = system.DownloadFile(TestArchivePath, TestArchiveURL)
+	if err != nil {
+		log.Fatalf("archive download failed: %s", err)
+	}
+
+	// prep docker container for docker util tests
+	client := util.GetDockerClient()
+	container, err := client.CreateContainer(docker.CreateContainerOptions{
+		Name: "envtest",
+		Config: &docker.Config{
+			Image: version.RouterImage + ":" + version.RouterTag,
+			Labels: map[string]string{
+				"com.docker.compose.service": "ddevrouter",
+				"com.ddev.site-name":         "dockertest",
+			},
+			Env: []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
+		},
+	})
+	if err != nil {
+		log.Fatal("failed to start docker container ", err)
+	}
+
+	testRun := m.Run()
+
+	// teardown docker container from docker util tests
+	err = client.RemoveContainer(docker.RemoveContainerOptions{
+		ID:    container.ID,
+		Force: true,
+	})
+
+	// cleanup test file
+	os.Remove(TestArchivePath)
+
+	os.Exit(testRun)
+}
