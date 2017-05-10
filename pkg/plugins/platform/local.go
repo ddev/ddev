@@ -322,7 +322,10 @@ func (l *LocalApp) Start() error {
 
 	// Retrieve ports from containers to expose in router
 	var exposePorts []string
-	siteContainers := util.GetAppContainers(l.GetName())
+	siteContainers, err := util.GetAppContainers(l.GetName())
+	if err != nil {
+		return err
+	}
 	for _, container := range siteContainers {
 		expose := util.GetContainerEnv("VIRTUAL_PORT", container)
 		if expose != "" {

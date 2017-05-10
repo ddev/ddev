@@ -245,13 +245,13 @@ func ComposeCmd(composeFiles []string, action ...string) error {
 }
 
 // GetAppContainers retrieves docker containers for a given sitename.
-func GetAppContainers(sitename string) []docker.APIContainers {
+func GetAppContainers(sitename string) ([]docker.APIContainers, error) {
 	label := map[string]string{"com.ddev.site-name": sitename}
 	sites, err := FindContainersByLabels(label)
 	if err != nil {
-		log.Fatal("failed to retrieve containers for ", sitename, err)
+		return sites, err
 	}
-	return sites
+	return sites, nil
 }
 
 // GetContainerEnv returns the value of a given environment variable from a given container.
