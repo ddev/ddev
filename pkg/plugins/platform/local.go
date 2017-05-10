@@ -313,11 +313,11 @@ func (l *LocalApp) Start() error {
 		}
 	}
 
-	EnsureDockerRouter()
+	StartDockerRouter()
 
 	err := l.AddHostsEntry()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	return util.ComposeCmd(l.ComposeFiles(), "up", "-d")
@@ -410,7 +410,13 @@ func (l *LocalApp) Stop() error {
 		return fmt.Errorf("site does not appear to be running - web container %s", l.SiteStatus())
 	}
 
-	return util.ComposeCmd(l.ComposeFiles(), "stop")
+	err := util.ComposeCmd(l.ComposeFiles(), "stop")
+
+	if err != nil {
+		return err
+	}
+
+	return StopRouter()
 }
 
 // Wait ensures that the app appears to be read before returning
@@ -510,7 +516,7 @@ func (l *LocalApp) Down() error {
 		return Cleanup(l)
 	}
 
-	return nil
+	return StopRouter()
 }
 
 // URL returns the URL for a given application.

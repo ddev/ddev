@@ -1,9 +1,7 @@
 package platform
 
 import (
-	"bytes"
 	"fmt"
-	"html/template"
 	"os"
 	"path"
 	"strings"
@@ -14,9 +12,7 @@ import (
 
 	"errors"
 
-	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/system"
 	homedir "github.com/mitchellh/go-homedir"
 )
@@ -79,7 +75,6 @@ func GetApps() map[string][]App {
 
 // RenderAppTable will format a table for user display based on a list of apps.
 func RenderAppTable(platform string, apps []App) {
-
 	if len(apps) > 0 {
 		fmt.Printf("%v %s %v found.\n", len(apps), platform, util.FormatPlural(len(apps), "site", "sites"))
 		table := CreateAppTable()
@@ -115,52 +110,6 @@ func RenderAppRow(table *uitable.Table, site App) {
 		site.URL(),
 		site.SiteStatus(),
 	)
-}
-
-// EnsureDockerRouter ensures the router is running.
-func EnsureDockerRouter() {
-	userHome, err := homedir.Dir()
-	if err != nil {
-		log.Fatal("could not get home directory for current user. is it set?")
-	}
-	routerdir := path.Join(userHome, ".ddev")
-	err = os.MkdirAll(routerdir, 0755)
-	if err != nil {
-		log.Fatalf("unable to create directory for ddev router: %s", err)
-	}
-
-	var doc bytes.Buffer
-	dest := path.Join(routerdir, "router-compose.yaml")
-	f, ferr := os.Create(dest)
-	if ferr != nil {
-		log.Fatal(ferr)
-	}
-	defer util.CheckClose(f)
-
-	templ := template.New("compose template")
-	templ, err = templ.Parse(DrudRouterTemplate)
-	if err != nil {
-		log.Fatal(ferr)
-	}
-
-	templateVars := map[string]string{
-		"router_image": version.RouterImage,
-		"router_tag":   version.RouterTag,
-		"mailhogport":  appports.GetPort("mailhog"),
-		"dbaport":      appports.GetPort("dba"),
-		"dbport":       appports.GetPort("db"),
-	}
-
-	err = templ.Execute(&doc, templateVars)
-	util.CheckErr(err)
-	_, err = f.WriteString(doc.String())
-	util.CheckErr(err)
-
-	// run docker-compose up -d in the newly created directory
-	out, err := system.RunCommand("docker-compose", []string{"-p", "ddev-router", "-f", dest, "up", "-d"})
-	if err != nil {
-		fmt.Println(fmt.Errorf("%s - %s", err.Error(), string(out)))
-	}
 }
 
 // Cleanup will clean up ddev apps even if the composer file has been deleted.
@@ -201,7 +150,7 @@ func Cleanup(app App) error {
 		}
 	}
 
-	return nil
+	return StopRouter()
 }
 
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.
@@ -219,4 +168,19 @@ func CheckForConf(confPath string) (string, error) {
 	}
 
 	return "", errors.New("no .ddev/config.yaml file was found in this directory or any parent")
+}
+
+// ddevContainersRunning determines if any ddev-controlled containers are currently running.
+func ddevContainersRunning() (bool, error) {
+	containers, err := util.GetDockerContainers(false)
+	if err != nil {
+		return false, err
+	}
+
+	for _, container := range containers {
+		if _, ok := container.Labels["com.ddev.platform"]; ok {
+			return true, nil
+		}
+	}
+	return false, nil
 }

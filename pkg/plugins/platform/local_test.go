@@ -325,7 +325,7 @@ func TestLocalRemove(t *testing.T) {
 	}
 }
 
-// TestCleanupWithoutCompose
+// TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
 func TestCleanupWithoutCompose(t *testing.T) {
 	assert := assert.New(t)
 	site := TestSites[0]
@@ -362,6 +362,17 @@ func TestGetAppsEmpty(t *testing.T) {
 	assert := assert.New(t)
 	apps := GetApps()
 	assert.Equal(len(apps["local"]), 0)
+}
+
+// TestRouterNotRunning ensures the router is shut down after all sites are stopped.
+func TestRouterNotRunning(t *testing.T) {
+	assert := assert.New(t)
+	containers, err := util.GetDockerContainers(false)
+	assert.NoError(err)
+
+	for _, container := range containers {
+		assert.NotEqual(util.ContainerName(container), "nginx-proxy", "Found nginx proxy running")
+	}
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app
