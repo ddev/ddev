@@ -139,7 +139,7 @@ func TestGetCurrentRouterPorts(t *testing.T) {
 	ports := GetCurrentRouterPorts()
 	assert.Contains(ports, "80")
 	assert.Contains(ports, "8025")
-	assert.Contains(ports, "3306")
+	assert.Contains(ports, "8036")
 }
 
 // TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed

@@ -96,7 +96,7 @@ func TestGetAppContainers(t *testing.T) {
 func TestGetContainerEnv(t *testing.T) {
 	assert := assert.New(t)
 
-	container, err := FindContainerByLabels(map[string]string{"com.docker.compose.service": "test"})
+	container, err := FindContainerByLabels(map[string]string{"com.docker.compose.service": "ddevrouter"})
 	assert.NoError(err)
 
 	env := GetContainerEnv("HOTDOG", container)
