@@ -135,9 +135,7 @@ func TestInvalidTestSite(t *testing.T) {
 		ts := testSites[i]
 		// Create a testsite and ensure the prepare() method extracts files into a temporary directory.
 		err := ts.Prepare()
-		assert.Error(err)
-		_, err = os.Stat(ts.Dir)
-		assert.Error(err, "Stat for site directory fails after invalid download")
+		assert.Error(err, "ts.Prepare() fails because of missing config.yml or untar failure")
 	}
 }
 
