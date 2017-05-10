@@ -2,7 +2,6 @@ package platform
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"log"
 	"os"
@@ -12,7 +11,6 @@ import (
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/drud/drud-go/utils/system"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -81,8 +79,8 @@ func StartDockerRouter() {
 	util.CheckErr(err)
 
 	// run docker-compose up -d in the newly created directory
-	out, err := system.RunCommand("docker-compose", []string{"-p", routerProjectName, "-f", dest, "up", "-d"})
+	err = util.ComposeCmd([]string{dest}, "-p", routerProjectName, "up", "-d")
 	if err != nil {
-		fmt.Println(fmt.Errorf("%s - %s", err.Error(), string(out)))
+		log.Fatalf("Could not start router: %v", err)
 	}
 }
