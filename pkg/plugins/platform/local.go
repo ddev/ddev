@@ -530,18 +530,18 @@ func (l *LocalApp) HostName() string {
 // AddHostsEntry will add the local site URL to the local hostfile.
 func (l *LocalApp) AddHostsEntry() error {
 	dockerIP := "127.0.0.1"
-	dockerHostURL := os.Getenv("DOCKER_HOST")
-	if dockerHostURL != "" {
-		url, err := url.Parse(dockerHostURL)
+	dockerHostRawURL := os.Getenv("DOCKER_HOST")
+	if dockerHostRawURL != "" {
+		dockerHostURL, err := url.Parse(dockerHostRawURL)
 		if err != nil {
-			return fmt.Errorf("Failed to parse $DOCKER_HOST: %v, err: %v", dockerHostURL, err)
+			return fmt.Errorf("Failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
 		}
-		dockerIP = url.Host
+		dockerIP = dockerHostURL.Hostname()
 	}
 
 	_, err := exec.Command("sudo", "-h").Output()
 	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
-		fmt.Printf("You mmust manually add the following entry to your host file:\n%s %s\n", dockerIP, l.HostName())
+		fmt.Printf("You must manually add the following entry to your host file:\n%s %s\n", dockerIP, l.HostName())
 		return nil
 	}
 
