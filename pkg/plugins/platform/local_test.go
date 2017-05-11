@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/system"
@@ -138,8 +139,8 @@ func TestGetCurrentRouterPorts(t *testing.T) {
 	assert := assert.New(t)
 	ports := GetCurrentRouterPorts()
 	assert.Contains(ports, "80")
-	assert.Contains(ports, "8025")
-	assert.Contains(ports, "8036")
+	assert.Contains(ports, appports.GetPort("mailhog"))
+	assert.Contains(ports, appports.GetPort("dba"))
 }
 
 // TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed

@@ -65,6 +65,9 @@ func TestMain(m *testing.M) {
 		ID:    container.ID,
 		Force: true,
 	})
+	if err != nil {
+		log.Fatal("failed to remove test container: ", err)
+	}
 
 	// cleanup test file
 	err = os.Remove(TestArchivePath)
