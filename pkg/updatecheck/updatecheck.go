@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-github/github"
 )
 
+// AvailableUpdates returns true (along with a release URL) if there is an update available in the specified repo which is newer than the currentVersion string.
 func AvailableUpdates(repoOrg string, repoName string, currentVersion string) (bool, string, error) {
 	client := github.NewClient(nil)
 	opt := &github.ListOptions{Page: 1}
@@ -40,6 +41,7 @@ func AvailableUpdates(repoOrg string, repoName string, currentVersion string) (b
 	return false, "", nil
 }
 
+// IsUpdateNeeded returns true if the modification date on filepath is older than the duration specified.
 func IsUpdateNeeded(filepath string, updateInterval time.Duration) (bool, error) {
 	info, err := os.Stat(filepath)
 	if os.IsNotExist(err) {
@@ -51,13 +53,13 @@ func IsUpdateNeeded(filepath string, updateInterval time.Duration) (bool, error)
 	timeSinceMod := time.Since(info.ModTime())
 
 	if timeSinceMod >= updateInterval {
-
 		return true, nil
 	}
 
 	return false, nil
 }
 
+// ResetUpdateTime resets the file modification date on filepath by removing and re-creating the file.
 func ResetUpdateTime(filepath string) error {
 	err := os.Remove(filepath)
 	_ = err // We don't actually care if remove failed. All we care about is that the create succeeds.
@@ -65,6 +67,7 @@ func ResetUpdateTime(filepath string) error {
 	return err
 }
 
+// isReleaseVersion does a (very naive) check on whether a version string consistutes a release version or a dev build.
 func isReleaseVersion(version string) bool {
 	parts := strings.Split(version, "-")
 
