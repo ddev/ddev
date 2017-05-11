@@ -43,7 +43,7 @@ jobs:
       - checkout
 
       - run:
-          command: make linux
+          command: make linux darwin windows
           name: Build the linux ddev executable binary
 
       # Run the built-in ddev tests
@@ -83,3 +83,7 @@ jobs:
           path: bin/linux/ddev
           destination: linux/ddev
           name: Upload ddev (linux)
+      - store_artifacts:
+          path: bin/windows/windows_amd64/ddev.exe
+          destination: windows/ddev.exe
+          name: Upload ddev (windows)

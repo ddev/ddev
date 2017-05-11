@@ -2,8 +2,7 @@ package platform
 
 import (
 	"fmt"
-	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -16,25 +15,6 @@ import (
 	"github.com/drud/drud-go/utils/system"
 	homedir "github.com/mitchellh/go-homedir"
 )
-
-// PrepLocalSiteDirs creates a site's directories for local dev in .ddev
-func PrepLocalSiteDirs(base string) error {
-	dirs := []string{
-		".ddev",
-		".ddev/data",
-	}
-	for _, d := range dirs {
-		dirPath := path.Join(base, d)
-		err := os.Mkdir(dirPath, os.FileMode(int(0774)))
-		if err != nil {
-			if !strings.Contains(err.Error(), "file exists") {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
 
 // GetApps returns a list of ddev applictions keyed by platform.
 func GetApps() map[string][]App {
@@ -161,7 +141,7 @@ func CheckForConf(confPath string) (string, error) {
 	pathList := strings.Split(confPath, "/")
 
 	for _ = range pathList {
-		confPath = path.Dir(confPath)
+		confPath = filepath.Dir(confPath)
 		if system.FileExists(confPath + "/.ddev/config.yaml") {
 			return confPath, nil
 		}

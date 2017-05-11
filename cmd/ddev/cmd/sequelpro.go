@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 
 	"runtime"
 
@@ -51,7 +51,7 @@ func handleSequelProCommand(appLocation string) (string, error) {
 
 	dbPort := appports.GetPort("db")
 
-	tmpFilePath := path.Join(app.AppRoot(), ".ddev/sequelpro.spf")
+	tmpFilePath := filepath.Join(app.AppRoot(), ".ddev/sequelpro.spf")
 	tmpFile, err := os.Create(tmpFilePath)
 	if err != nil {
 		log.Fatalln(err)

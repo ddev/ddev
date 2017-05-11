@@ -10,7 +10,7 @@ import (
 
 // LocalDevExecCmd allows users to execute arbitrary bash commands within a container.
 var LocalDevExecCmd = &cobra.Command{
-	Use:   "exec '[cmd]'",
+	Use:   "exec \"[cmd]\"",
 	Short: "Execute a Linux shell command in the webserver container.",
 	Long:  `Execute a Linux shell command in the webserver container.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -41,7 +41,7 @@ var LocalDevExecCmd = &cobra.Command{
 	},
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
-			log.Fatalf("Invalid arguments detected. Please use a command in the form of `ddev exec '[cmd]'`")
+			log.Fatalf("Invalid arguments detected. Please use a command in the form of `ddev exec \"[cmd]\"`")
 		}
 	},
 }

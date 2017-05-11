@@ -164,7 +164,7 @@ All of the commands can be performed by explicitly specifying the sitename or, t
 To view information about a specific site (such as URL, MySQL credentials, mailhog credentials), run `ddev describe` from within the working directory of the site. To view information for any site, use `ddev describe sitename`.
 
 ### Executing Commands
-To run a command against your site use `ddev exec`. e.g. `ddev exec 'drush core-status'` would execute `drush core-status` against your site root. Commands ran in this way are executed in the webserver docroot. You are free to use any of [the tools included in the container](#tools-included-in-the-container).
+To run a command against your site use `ddev exec`. e.g. `ddev exec "drush core-status"` would execute `drush core-status` against your site root. Commands ran in this way are executed in the webserver docroot. You are free to use any of [the tools included in the container](#tools-included-in-the-container).
 
 ### SSH Into The Container
 The `ddev ssh` command will open a bash shell session to the web container of your site. You can also access the database container with `ddev ssh -s db`.

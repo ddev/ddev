@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -117,10 +116,6 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	config.AppType = AllowedAppTypes[0]
 	config.Docroot = testcommon.RandString(16)
 
-	err = config.WriteDockerComposeConfig()
-	// We should get an error here since no config or directory path exists.
-	assert.Error(err)
-
 	// Write a config to create/prep necessary directories.
 	err = config.Write()
 	assert.NoError(err)
@@ -201,7 +196,7 @@ func TestRead(t *testing.T) {
 
 	// This closely resembles the values one would have from NewConfig()
 	c := &Config{
-		ConfigPath: path.Join("testing", "config.yaml"),
+		ConfigPath: filepath.Join("testing", "config.yaml"),
 		AppRoot:    "testing",
 		APIVersion: CurrentAppVersion,
 		Platform:   DDevDefaultPlatform,

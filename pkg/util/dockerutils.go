@@ -79,11 +79,11 @@ func GetPodPort(name string) (int64, error) {
 
 // GetDockerClient returns a docker client for a docker-machine.
 func GetDockerClient() *docker.Client {
-	// Create a new docker client talking to the default docker-machine.
-	client, err := docker.NewClient("unix:///var/run/docker.sock")
+	client, err := docker.NewClientFromEnv()
 	if err != nil {
-		log.Fatalf("could not get docker client. is docker running?: %v", err)
+		log.Fatalf("could not get docker client. is docker running? error: %v", err)
 	}
+
 	return client
 }
 

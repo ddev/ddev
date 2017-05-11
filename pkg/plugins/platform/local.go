@@ -4,11 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 
 	"strings"
+
+	"net/url"
+	"os/exec"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/appimport"
@@ -42,11 +44,6 @@ func (l *LocalApp) Init(basePath string) error {
 	}
 
 	l.AppConfig = config
-
-	err = PrepLocalSiteDirs(basePath)
-	if err != nil {
-		log.Fatalln(err)
-	}
 
 	web, err := l.FindContainerByType("web")
 	if err == nil {
@@ -114,7 +111,7 @@ func (l *LocalApp) AppRoot() string {
 
 // AppConfDir returns the full path to the app's .ddev configuration directory
 func (l *LocalApp) AppConfDir() string {
-	return path.Join(l.AppConfig.AppRoot, ".ddev")
+	return filepath.Join(l.AppConfig.AppRoot, ".ddev")
 }
 
 // Docroot returns the docroot path for local app
@@ -130,7 +127,7 @@ func (l *LocalApp) GetName() string {
 // ImportDB takes a source sql dump and imports it to an active site's database container.
 func (l *LocalApp) ImportDB(imPath string) error {
 	l.DockerEnv()
-	dbPath := path.Join(l.AppRoot(), ".ddev", "data")
+	dbPath := filepath.Join(l.AppRoot(), ".ddev", "data")
 
 	if imPath == "" {
 		fmt.Println("Provide the path to the database you wish to import.")
@@ -162,7 +159,7 @@ func (l *LocalApp) ImportDB(imPath string) error {
 
 	// an archive was not extracted, we need to copy
 	if importPath != "" {
-		err = util.CopyFile(importPath, path.Join(dbPath, "db.sql"))
+		err = util.CopyFile(importPath, filepath.Join(dbPath, "db.sql"))
 		if err != nil {
 			return err
 		}
@@ -227,15 +224,15 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		uploadDir = "wp-content/uploads"
 	}
 
-	destPath := path.Join(l.AppRoot(), l.Docroot(), uploadDir)
+	destPath := filepath.Join(l.AppRoot(), l.Docroot(), uploadDir)
 
 	// parent of destination dir should exist
-	if !system.FileExists(path.Dir(destPath)) {
+	if !system.FileExists(filepath.Dir(destPath)) {
 		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
 	}
 
 	// parent of destination dir should be writable
-	err := os.Chmod(path.Dir(destPath), 0755)
+	err := os.Chmod(filepath.Dir(destPath), 0755)
 	if err != nil {
 		return err
 	}
@@ -438,14 +435,14 @@ func (l *LocalApp) Wait(containerType string) error {
 func (l *LocalApp) Config() error {
 	basePath := l.AppRoot()
 	docroot := l.Docroot()
-	settingsFilePath := path.Join(basePath, docroot)
+	settingsFilePath := filepath.Join(basePath, docroot)
 
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
-		settingsFilePath = path.Join(settingsFilePath, "sites/default/settings.php")
+		settingsFilePath = filepath.Join(settingsFilePath, "sites/default/settings.php")
 	}
 
 	if l.GetType() == "wordpress" {
-		settingsFilePath = path.Join(settingsFilePath, "wp-config.php")
+		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
 	}
 
 	if system.FileExists(settingsFilePath) {
@@ -475,7 +472,7 @@ func (l *LocalApp) Config() error {
 			return err
 		}
 
-		drushSettingsPath := path.Join(basePath, "drush.settings.php")
+		drushSettingsPath := filepath.Join(basePath, "drush.settings.php")
 		drushConfig := model.NewDrushConfig()
 		drushConfig.DatabasePort = strconv.FormatInt(dbPort, 10)
 		if l.GetType() == "drupal8" {
@@ -531,8 +528,19 @@ func (l *LocalApp) HostName() string {
 
 // AddHostsEntry will add the local site URL to the local hostfile.
 func (l *LocalApp) AddHostsEntry() error {
-	if os.Getenv("DRUD_NONINTERACTIVE") != "" {
-		fmt.Printf("DRUD_NONINTERACTIVE is set. If this message is not in a test you may want to add the following entry to your host file:\n127.0.0.1 %s\n", l.HostName())
+	dockerIP := "127.0.0.1"
+	dockerHostRawURL := os.Getenv("DOCKER_HOST")
+	if dockerHostRawURL != "" {
+		dockerHostURL, err := url.Parse(dockerHostRawURL)
+		if err != nil {
+			return fmt.Errorf("Failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
+		}
+		dockerIP = dockerHostURL.Hostname()
+	}
+
+	_, err := exec.Command("sudo", "-h").Output()
+	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
+		fmt.Printf("You must manually add the following entry to your host file:\n%s %s\n", dockerIP, l.HostName())
 		return nil
 	}
 
@@ -540,7 +548,7 @@ func (l *LocalApp) AddHostsEntry() error {
 	if err != nil {
 		log.Fatalf("could not open hostfile. %s", err)
 	}
-	if hosts.Has("127.0.0.1", l.HostName()) {
+	if hosts.Has(dockerIP, l.HostName()) {
 		return nil
 	}
 
@@ -548,7 +556,7 @@ func (l *LocalApp) AddHostsEntry() error {
 	util.CheckErr(err)
 
 	fmt.Println("ddev needs to add an entry to your hostfile.\nIt will require root privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
-	hostnameArgs := []string{ddevFullpath, "hostname", l.HostName(), "127.0.0.1"}
+	hostnameArgs := []string{ddevFullpath, "hostname", l.HostName(), dockerIP}
 	command := strings.Join(hostnameArgs, " ")
 	util.Warning(fmt.Sprintf("    sudo %s", command))
 	fmt.Println("Please enter your password if prompted.")

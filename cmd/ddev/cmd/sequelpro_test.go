@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"path"
+	"path/filepath"
 
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/drud-go/utils/system"
@@ -28,7 +28,7 @@ func TestSequelproOperation(t *testing.T) {
 
 	dir, err := getActiveAppRoot()
 	assert.NoError(err)
-	assert.Equal(true, system.FileExists(path.Join(dir, ".ddev/sequelpro.spf")))
+	assert.Equal(true, system.FileExists(filepath.Join(dir, ".ddev/sequelpro.spf")))
 
 	cleanup()
 }

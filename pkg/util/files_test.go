@@ -3,7 +3,6 @@ package util
 import (
 	"log"
 	"os"
-	"path"
 	"testing"
 
 	"io/ioutil"
@@ -26,7 +25,7 @@ func TestMain(m *testing.M) {
 	testPath, err = filepath.EvalSymlinks(testPath)
 	CheckErr(err)
 	testPath = filepath.Clean(testPath)
-	testArchivePath = path.Join(testPath, "files.tar.gz")
+	testArchivePath = filepath.Join(testPath, "files.tar.gz")
 
 	err = system.DownloadFile(testArchivePath, testArchiveURL)
 	if err != nil {
@@ -45,7 +44,7 @@ func TestMain(m *testing.M) {
 
 func TestUntar(t *testing.T) {
 	assert := assert.New(t)
-	exDir := path.Join(temp, "extract")
+	exDir := filepath.Join(temp, "extract")
 
 	err := Untar(testArchivePath, exDir)
 	assert.NoError(err)
@@ -57,7 +56,7 @@ func TestUntar(t *testing.T) {
 // TestCopyFile tests copying a file.
 func TestCopyFile(t *testing.T) {
 	assert := assert.New(t)
-	dest := path.Join(temp, "testfile2")
+	dest := filepath.Join(temp, "testfile2")
 
 	err := os.Chmod(testArchivePath, 0644)
 	assert.NoError(err)
@@ -76,7 +75,7 @@ func TestCopyFile(t *testing.T) {
 // TestCopyDir tests copying a directory.
 func TestCopyDir(t *testing.T) {
 	assert := assert.New(t)
-	dest := path.Join(temp, "copy")
+	dest := filepath.Join(temp, "copy")
 	err := os.Mkdir(dest, 0755)
 	assert.NoError(err)
 
@@ -95,8 +94,8 @@ func TestCopyDir(t *testing.T) {
 	// copy a directory.
 	err = CopyDir(cwd, dest)
 	assert.NoError(err)
-	assert.True(system.FileExists(path.Join(dest, "files.go")))
-	assert.True(system.FileExists(path.Join(dest, "files_test.go")))
+	assert.True(system.FileExists(filepath.Join(dest, "files.go")))
+	assert.True(system.FileExists(filepath.Join(dest, "files_test.go")))
 
 	err = os.RemoveAll(dest)
 	assert.NoError(err)

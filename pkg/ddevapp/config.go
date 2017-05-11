@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -50,7 +49,9 @@ type Config struct {
 func NewConfig(AppRoot string) (*Config, error) {
 	// Set defaults.
 	c := &Config{}
-	c.ConfigPath = path.Join(AppRoot, ".ddev", "config.yaml")
+	err := prepLocalSiteDirs(AppRoot)
+	util.CheckErr(err)
+	c.ConfigPath = filepath.Join(AppRoot, ".ddev", "config.yaml")
 	c.AppRoot = AppRoot
 	c.APIVersion = CurrentAppVersion
 
@@ -64,7 +65,7 @@ func NewConfig(AppRoot string) (*Config, error) {
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
-	err := c.Read()
+	err = c.Read()
 	if err != nil {
 		return c, err
 	}
@@ -115,7 +116,7 @@ func (c *Config) Read() error {
 
 	// If any of these values aren't defined in the config file, set them to defaults.
 	if c.Name == "" {
-		c.Name = path.Base(c.AppRoot)
+		c.Name = filepath.Base(c.AppRoot)
 	}
 	if c.WebImage == "" {
 		c.WebImage = version.WebImg + ":" + version.WebTag
@@ -152,7 +153,7 @@ func (c *Config) Config() error {
 	if c.Name == "" {
 		dir, err := os.Getwd()
 		if err == nil {
-			c.Name = path.Base(dir)
+			c.Name = filepath.Base(dir)
 		}
 	}
 
@@ -179,7 +180,7 @@ func (c *Config) Config() error {
 
 // DockerComposeYAMLPath returns the absolute path to where the docker-compose.yaml should exist for this app configuration.
 func (c *Config) DockerComposeYAMLPath() string {
-	return path.Join(c.AppRoot, ".ddev", "docker-compose.yaml")
+	return filepath.Join(c.AppRoot, ".ddev", "docker-compose.yaml")
 }
 
 // Hostname returns the hostname to the app controlled by this config.
@@ -330,7 +331,7 @@ func determineAppType(basePath string) (string, error) {
 	}
 
 	for k, v := range defaultLocations {
-		fp := path.Join(basePath, k)
+		fp := filepath.Join(basePath, k)
 		log.WithFields(log.Fields{
 			"file": fp,
 		}).Debug("Looking for app fingerprint.")
@@ -345,4 +346,29 @@ func determineAppType(basePath string) (string, error) {
 	}
 
 	return "", errors.New("determineAppType() couldn't determine app's type")
+}
+
+// prepLocalSiteDirs creates a site's directories for local dev in .ddev
+func prepLocalSiteDirs(base string) error {
+	dirs := []string{
+		".ddev",
+		".ddev/data",
+	}
+	for _, d := range dirs {
+		dirPath := filepath.Join(base, d)
+		fileInfo, err := os.Stat(dirPath)
+
+		if os.IsNotExist(err) { // If it doesn't exist, create it.
+			err := os.MkdirAll(dirPath, os.FileMode(int(0774)))
+			if err != nil {
+				return fmt.Errorf("Failed to create directory %s, err: %v", dirPath, err)
+			}
+		} else if err == nil && fileInfo.IsDir() { // If the directory exists, we're fine and don't have to create it.
+			continue
+		} else { // But otherwise it must have existed as a file, so bail
+			return fmt.Errorf("Error where trying to create directory %s, err: %v", dirPath, err)
+		}
+	}
+
+	return nil
 }

@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 )
@@ -36,8 +35,8 @@ func Ungzip(source string, dest string) error {
 		}
 	}()
 
-	fname := strings.TrimSuffix(path.Base(f.Name()), ".gz")
-	exFile, err := os.Create(path.Join(dest, fname))
+	fname := strings.TrimSuffix(filepath.Base(f.Name()), ".gz")
+	exFile, err := os.Create(filepath.Join(dest, fname))
 	if err != nil {
 		return err
 	}
@@ -103,12 +102,12 @@ func Untar(source string, dest string) error {
 		}
 
 		if file.Typeflag == tar.TypeDir {
-			err = os.Mkdir(path.Join(dest, file.Name), 0755)
+			err = os.Mkdir(filepath.Join(dest, file.Name), 0755)
 			if err != nil {
 				return err
 			}
 		} else {
-			exFile, err := os.Create(path.Join(dest, file.Name))
+			exFile, err := os.Create(filepath.Join(dest, file.Name))
 			if err != nil {
 				return err
 			}

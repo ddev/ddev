@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"path"
+	"path/filepath"
 	"testing"
 
 	"os"
@@ -38,7 +38,7 @@ func TestDevLogs(t *testing.T) {
 		cleanup := v.Chdir()
 
 		confByte := []byte("<?php trigger_error(\"Fatal error\", E_USER_ERROR);")
-		err := ioutil.WriteFile(path.Join(v.Dir, "docroot", "index.php"), confByte, 0644)
+		err := ioutil.WriteFile(filepath.Join(v.Dir, "docroot", "index.php"), confByte, 0644)
 		assert.NoError(err)
 
 		o := network.NewHTTPOptions("http://127.0.0.1/index.php")

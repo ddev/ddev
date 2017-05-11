@@ -2,7 +2,7 @@ package platform
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"os"
@@ -139,7 +139,7 @@ func TestLocalImportDB(t *testing.T) {
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
-		dbPath := path.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
+		dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
 
 		err := system.DownloadFile(dbPath, site.DBURL)
 		assert.NoError(err)
@@ -166,7 +166,7 @@ func TestLocalImportFiles(t *testing.T) {
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
-		filePath := path.Join(testcommon.CreateTmpDir("local-files"), "files.tar.gz")
+		filePath := filepath.Join(testcommon.CreateTmpDir("local-files"), "files.tar.gz")
 
 		err := system.DownloadFile(filePath, site.FileURL)
 		assert.NoError(err)
