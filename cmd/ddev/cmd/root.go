@@ -3,11 +3,16 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -15,6 +20,8 @@ import (
 var (
 	logLevel = log.WarnLevel
 	plugin   = "local"
+	// 1 week
+	updateInterval = time.Hour * 24 * 7
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -38,6 +45,31 @@ var RootCmd = &cobra.Command{
 			_, err := platform.GetPluginApp(plugin)
 			if err != nil {
 				util.Failed("Plugin %s is not registered", plugin)
+			}
+		}
+
+		usr, err := homedir.Dir()
+		if err != nil {
+			log.Fatal("Could not detect users home directory. Is it set?")
+		}
+
+		updateFile := filepath.Join(usr, ".ddev", ".update")
+		// Do periodic detection of whether ran update is available for drud users.
+		timeToCheckForUpdates, err := updatecheck.IsUpdateNeeded(updateFile, updateInterval)
+		if err != nil {
+			util.Warning("Could not perform update check")
+		}
+
+		if timeToCheckForUpdates {
+			updateNeeded, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version.DdevVersion)
+			if err != nil {
+				util.Warning("Could not check for updates: %v", err)
+			} else if updateNeeded {
+				util.Warning("\n\nA new update is available! please visit %s to download the update!\n\n", updateURL)
+				err = updatecheck.ResetUpdateTime(updateFile)
+				if err != nil {
+					util.Warning("Could not reset automated update checking interval: %v", err)
+				}
 			}
 		}
 	},
