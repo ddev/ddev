@@ -79,23 +79,7 @@ func GetPodPort(name string) (int64, error) {
 
 // GetDockerClient returns a docker client for a docker-machine.
 func GetDockerClient() *docker.Client {
-	// Create a new docker client talking to the default docker-machine.
-	endpoint := os.Getenv("DOCKER_HOST")
-	certPath := os.Getenv("DOCKER_CERT_PATH")
-	var client *docker.Client
-	var err error
-	if endpoint == "" {
-		endpoint = "unix:///var/run/docker.sock"
-	}
-	if certPath != "" {
-		ca := fmt.Sprintf("%s/ca.pem", certPath)
-		cert := fmt.Sprintf("%s/cert.pem", certPath)
-		key := fmt.Sprintf("%s/key.pem", certPath)
-
-		client, err = docker.NewTLSClient(endpoint, cert, key, ca)
-	} else {
-		client, err = docker.NewClient(endpoint)
-	}
+	client, err := docker.NewClientFromEnv()
 	if err != nil {
 		log.Fatalf("could not get docker client. is docker running? error: %v", err)
 	}
