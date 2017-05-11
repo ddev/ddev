@@ -67,7 +67,10 @@ func TestMain(m *testing.M) {
 	})
 
 	// cleanup test file
-	os.Remove(TestArchivePath)
+	err = os.Remove(TestArchivePath)
+	if err != nil {
+		log.Fatal("failed to remove test asset: ", err)
+	}
 
 	os.Exit(testRun)
 }
