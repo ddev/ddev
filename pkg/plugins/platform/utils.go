@@ -92,7 +92,6 @@ func RenderAppRow(table *uitable.Table, site App) {
 	)
 }
 
-
 // Cleanup will clean up ddev apps even if the composer file has been deleted.
 func Cleanup(app App) error {
 	client := util.GetDockerClient()
