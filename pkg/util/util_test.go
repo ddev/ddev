@@ -35,6 +35,14 @@ func TestMain(m *testing.M) {
 
 	// prep docker container for docker util tests
 	client := util.GetDockerClient()
+	err = client.PullImage(docker.PullImageOptions{
+		Repository: version.RouterImage,
+		Tag:        version.RouterTag,
+	}, docker.AuthConfiguration{})
+	if err != nil {
+		log.Fatal("failed to pull test image ", err)
+	}
+
 	container, err := client.CreateContainer(docker.CreateContainerOptions{
 		Name: "envtest",
 		Config: &docker.Config{
