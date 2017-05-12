@@ -44,8 +44,8 @@ func describeApp(appName string) (string, error) {
 		}
 	} else {
 		labels := map[string]string{
-			"com.ddev.site-name":      appName,
-			"com.ddev.container-type": "web",
+			"com.ddev.site-name":         appName,
+			"com.docker.compose.service": "web",
 		}
 
 		webContainer, err := util.FindContainerByLabels(labels)

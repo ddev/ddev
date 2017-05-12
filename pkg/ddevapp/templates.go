@@ -17,7 +17,6 @@ services:
       - 3306
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.container-type: db
       com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
       com.ddev.docroot: $DDEV_DOCROOT
@@ -44,7 +43,6 @@ services:
       - VIRTUAL_PORT=80,{{ .mailhogport }}
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.container-type: web
       com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
       com.ddev.docroot: $DDEV_DOCROOT
@@ -56,7 +54,6 @@ services:
     restart: always
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.container-type: dba
       com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
       com.ddev.docroot: $DDEV_DOCROOT
