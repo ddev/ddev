@@ -9,10 +9,18 @@ The purpose of *ddev* is to support developers with a local copy of a site for d
 You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev start -h`, etc.
 
 ## System Requirements
-- MacOS Sierra or Linux*
-- [docker](https://www.docker.com/community-edition)
 
-* *Currently only tested on Ubuntu, please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue on another flavor.*
+- [docker](https://www.docker.com/community-edition)
+- OS Support
+  - macOS Sierra (fully supported with automated tests)
+  - Linux
+    * Ubuntu 16.04 LTS (fully supported with automated tests)
+    * Debian Jessie (tested manually with automated tests planned)
+    * Fedora 25 (tested manually with automated tests planned)
+  - Windows 10 Pro (**experimental support!**)
+    * See [Decisions and Plan for Linux & Windows Support](https://github.com/drud/ddev/issues/196#issuecomment-300178008) for more information and the various options on getting ddev operational on Windows 10.
+
+We are open to expanding this list to include additional OSs as well as improve our existing support for the 
 
 ## Installation
 ### Installation Script
