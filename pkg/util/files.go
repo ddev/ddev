@@ -153,25 +153,15 @@ func CopyFile(src string, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if e := in.Close(); e != nil {
-			err = e
-		}
-	}()
-
+	defer CheckClose(in)
 	out, err := os.Create(dst)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to create file %v, err: %v", src, err)
 	}
-	defer func() {
-		if e := out.Close(); e != nil {
-			err = e
-		}
-	}()
-
+	defer CheckClose(out)
 	_, err = io.Copy(out, in)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to copy file from %v to %v err:", src, dst, err)
 	}
 
 	err = out.Sync()
@@ -185,7 +175,7 @@ func CopyFile(src string, dst string) error {
 	}
 	err = os.Chmod(dst, si.Mode())
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to chmod file %v to mode %v", dst, si.Mode())
 	}
 
 	return nil

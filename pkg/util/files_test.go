@@ -76,21 +76,19 @@ func TestUntar(t *testing.T) {
 // TestCopyFile tests copying a file.
 func TestCopyFile(t *testing.T) {
 	assert := assert.New(t)
-	temp := testcommon.CreateTmpDir("TestCopyFile")
+	tmpTargetDir := testcommon.CreateTmpDir("TestCopyFile")
+	tmpTargetFile := filepath.Join(tmpTargetDir, filepath.Base(testArchivePath))
 
-	dest := filepath.Join(temp, "testfile2")
-
-	err := os.Chmod(testArchivePath, 0644)
+	err := util.CopyFile(testArchivePath, tmpTargetFile)
 	assert.NoError(err)
 
-	err = util.CopyFile(testArchivePath, dest)
+	file, err := os.Stat(tmpTargetFile)
 	assert.NoError(err)
 
-	file, err := os.Stat(dest)
-	assert.NoError(err)
-	assert.Equal(int(file.Mode()), 0644)
-
-	err = os.RemoveAll(dest)
+	if err != nil {
+		assert.False(file.IsDir())
+	}
+	err = os.RemoveAll(tmpTargetDir)
 	assert.NoError(err)
 }
 
