@@ -78,8 +78,9 @@ func TestValidTestSite(t *testing.T) {
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
 	//not need to be updated over time.
 	ts := TestSite{
-		Name:      "TestValidTestSiteDrupal8",
-		SourceURL: "https://github.com/drud/drupal8/archive/v0.5.0.tar.gz",
+		Name:                          "TestValidTestSiteDrupal8",
+		SourceURL:                     "https://github.com/drud/drupal8/archive/v0.5.0.tar.gz",
+		ArchiveInternalExtractionPath: "drupal8-0.5.0/",
 	}
 
 	// Create a testsite and ensure the prepare() method extracts files into a temporary directory.

@@ -19,22 +19,25 @@ import (
 var (
 	TestSites = []testcommon.TestSite{
 		{
-			Name:      "TestMainPkgDrupal8",
-			SourceURL: "https://github.com/drud/drupal8/archive/v0.5.0.tar.gz",
-			FileURL:   "https://github.com/drud/drupal8/releases/download/v0.5.0/files.tar.gz",
-			DBURL:     "https://github.com/drud/drupal8/releases/download/v0.5.0/db.tar.gz",
+			Name:                          "TestMainPkgDrupal8",
+			SourceURL:                     "https://github.com/drud/drupal8/archive/v0.5.0.tar.gz",
+			ArchiveInternalExtractionPath: "drupal8-0.5.0/",
+			FileURL: "https://github.com/drud/drupal8/releases/download/v0.5.0/files.tar.gz",
+			DBURL:   "https://github.com/drud/drupal8/releases/download/v0.5.0/db.tar.gz",
 		},
 		{
-			Name:      "TestMainPkgWordpress",
-			SourceURL: "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
-			FileURL:   "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-			DBURL:     "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+			Name:                          "TestMainPkgWordpress",
+			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
+			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
+			FileURL: "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
+			DBURL:   "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		},
 		{
-			Name:      "TestMainPkgDrupalKickstart",
-			SourceURL: "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
-			FileURL:   "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
-			DBURL:     "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
+			Name:                          "TestMainPkgDrupalKickstart",
+			SourceURL:                     "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-kickstart-0.4.0/",
+			FileURL: "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
+			DBURL:   "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
 		},
 	}
 )
@@ -103,7 +106,7 @@ func TestLocalStart(t *testing.T) {
 	another := TestSites[0]
 	err = another.Prepare()
 	if err != nil {
-		assert.FailNow("Prepare() should have failed on TestSite.Prepare(), err=%v", err)
+		assert.FailNow("TestLocalStart: Prepare() failed on another.Prepare(), err=%v", err)
 		return
 	}
 
