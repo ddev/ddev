@@ -23,12 +23,12 @@ func TestUpdateNeeded(t *testing.T) {
 
 	// Ensure updates are required when the update file doesn't exist yet.
 	updateRequired, err := IsUpdateNeeded(updateFile, time.Duration(60)*time.Second)
-	assert.True(updateRequired, "Update is not required when the update file does not exist")
+	assert.True(updateRequired, "Update is required when the update file does not exist")
 	assert.NoError(err)
 
 	// Ensure updates are not required when the update duration is impossibly far in the future.
 	updateRequired, err = IsUpdateNeeded(updateFile, time.Duration(9999999)*time.Second)
-	assert.False(updateRequired, "Update is not required when the update file does not exist")
+	assert.False(updateRequired, "Update is not required when the update interval has not been met")
 	assert.NoError(err)
 
 	// Sleep for 2 seconds.
@@ -36,7 +36,7 @@ func TestUpdateNeeded(t *testing.T) {
 
 	// Ensure updates are required for a duration lower than the sleep.
 	updateRequired, err = IsUpdateNeeded(updateFile, time.Duration(1)*time.Second)
-	assert.True(updateRequired, "Update is not required when the update file does not exist")
+	assert.True(updateRequired, "Update is equired after the update interval has passed")
 	assert.NoError(err)
 
 	testcommon.CleanupDir(tmpdir)

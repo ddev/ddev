@@ -50,21 +50,26 @@ var RootCmd = &cobra.Command{
 
 		usr, err := homedir.Dir()
 		if err != nil {
-			log.Fatal("Could not detect users home directory. Is it set?")
+			log.Fatal("Could not detect user's home directory: %v", err)
 		}
 
 		updateFile := filepath.Join(usr, ".ddev", ".update")
-		// Do periodic detection of whether ran update is available for drud users.
+		// Do periodic detection of whether an update is available for ddev users.
 		timeToCheckForUpdates, err := updatecheck.IsUpdateNeeded(updateFile, updateInterval)
 		if err != nil {
-			util.Warning("Could not perform update check")
+			util.Warning("Could not perform update check: %v", err)
 		}
 
 		if timeToCheckForUpdates {
 			updateNeeded, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version.DdevVersion)
+
 			if err != nil {
-				util.Warning("Could not check for updates: %v", err)
-			} else if updateNeeded {
+				util.Warning("Could not check for updates. this is most often caused by a networking issue.")
+				log.Debug(err)
+				return
+			}
+
+			if updateNeeded {
 				util.Warning("\n\nA new update is available! please visit %s to download the update!\n\n", updateURL)
 				err = updatecheck.ResetUpdateTime(updateFile)
 				if err != nil {
