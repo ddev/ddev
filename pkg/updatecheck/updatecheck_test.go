@@ -36,7 +36,7 @@ func TestUpdateNeeded(t *testing.T) {
 
 	// Ensure updates are required for a duration lower than the sleep.
 	updateRequired, err = IsUpdateNeeded(updateFile, time.Duration(1)*time.Second)
-	assert.True(updateRequired, "Update is equired after the update interval has passed")
+	assert.True(updateRequired, "Update is required after the update interval has passed")
 	assert.NoError(err)
 
 	testcommon.CleanupDir(tmpdir)
