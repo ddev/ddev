@@ -10,9 +10,11 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/fsouza/go-dockerclient"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/system"
 	"github.com/pkg/errors"
 )
@@ -245,4 +247,27 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 	}
 
 	return false, errors.New("unable to find container " + checkName)
+}
+
+// PrepDockerImages will issue a docker pull on docker images required by tests
+func PrepDockerImages(client *docker.Client) {
+	var containers = []struct {
+		image string
+		tag   string
+	}{
+		{version.RouterImage, version.RouterTag},
+		{version.DBImg, version.DBATag},
+		{version.WebImg, version.WebTag},
+		{version.DBAImg, version.DBATag},
+	}
+
+	for _, container := range containers {
+		err := client.PullImage(docker.PullImageOptions{
+			Repository: container.image,
+			Tag:        container.tag,
+		}, docker.AuthConfiguration{})
+		if err != nil {
+			log.Fatalf("failed to pull test image %v", err)
+		}
+	}
 }

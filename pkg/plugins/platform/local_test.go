@@ -75,8 +75,10 @@ func addSites() {
 	}
 
 	// We need to ensure the router before we start other sites, so they don't conflict with each other.
-	EnsureDockerRouter()
+	StartDockerRouter()
 
+	// prep docker container for docker util tests
+	testcommon.PrepDockerImages(util.GetDockerClient())
 	var wg sync.WaitGroup
 	wg.Add(len(TestSites))
 
