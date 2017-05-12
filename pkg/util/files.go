@@ -161,7 +161,7 @@ func CopyFile(src string, dst string) error {
 	defer CheckClose(out)
 	_, err = io.Copy(out, in)
 	if err != nil {
-		return fmt.Errorf("Failed to copy file from %v to %v err:", src, dst, err)
+		return fmt.Errorf("Failed to copy file from %v to %v err: %v", src, dst, err)
 	}
 
 	err = out.Sync()
