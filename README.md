@@ -20,7 +20,7 @@ You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev sta
   - Windows 10 Pro (**experimental support!**)
     * See [Decisions and Plan for Linux & Windows Support](https://github.com/drud/ddev/issues/196#issuecomment-300178008) for more information and the various options on getting ddev operational on Windows 10.
 
-We are open to expanding this list to include additional OSs as well as improve our existing support for the 
+We are open to expanding this list to include additional OSs as well as improve our existing support for the ones listed above. Please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue!
 
 ## Installation
 ### Installation Script
