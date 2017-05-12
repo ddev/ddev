@@ -169,7 +169,7 @@ The `import-files` command allows you to specify the location of uploaded file a
 
 ## Removing a site
 
-You can remove a site by going to the working directory for the site and running `ddev rm`.
+You can remove a site by going to the working directory for the site and running `ddev remove`.
 
 ## Interacting with your Site
 All of the commands can be performed by explicitly specifying the sitename or, to save time, you can execute commands from the site directory. All of the following examples assume you are in the working directory of your site.
