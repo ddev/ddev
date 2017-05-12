@@ -23,19 +23,24 @@ You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev sta
 We are open to expanding this list to include additional OSs as well as improve our existing support for the ones listed above. Please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue!
 
 ## Installation
-### Installation Script
+### Installation Script - Linux and macOS
 
 Linux and macOS end-users can use this line of code to your terminal to download, verify, and install ddev using our [install script](https://github.com/drud/ddev/blob/master/install_ddev.sh):
 ```
 curl https://raw.githubusercontent.com/drud/ddev/master/install_ddev.sh | bash
 ```
 
-### Manual Installation
+### Manual Installation - Linux and macOS
 You can also easily perform the installation manually if preferred:
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 - Make ddev executable: `chmod ugo+x ddev`
 - Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo)
 - Run `ddev` to test your installation. You should see usage output similar to below.
+
+### Manual Installation - Windows
+- Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for Windows.
+- Copy `ddev.exe` into `%HOMEPATH%\AppData\Local\Microsoft\WindowsApps`, or otherwise add `ddev.exe` to a folder defined in your `PATH`
+- Run `ddev` from a Command Prompt or PowerShell to test your installation. You should see usage output similar to below.
 
 ---
 
