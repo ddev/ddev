@@ -62,18 +62,16 @@ func Ungzip(source string, dest string) error {
 }
 
 // Untar accepts a tar or tar.gz file and extracts the contents to the provided destination path.
-func Untar(source string, dest string) error {
+// extractionDir is the path at which extraction should start; nothing will be extracted except the contents of
+// extractionDir
+func Untar(source string, dest string, extractionDir string) error {
 	var tf *tar.Reader
 	f, err := os.Open(source)
 	if err != nil {
 		return err
 	}
 
-	defer func() {
-		if e := f.Close(); e != nil {
-			err = e
-		}
-	}()
+	defer CheckClose(f)
 
 	if strings.HasSuffix(source, "gz") {
 		gf, err := gzip.NewReader(f)
@@ -81,15 +79,12 @@ func Untar(source string, dest string) error {
 			return err
 		}
 
-		defer func() {
-			if e := gf.Close(); e != nil {
-				err = e
-			}
-		}()
+		defer CheckClose(gf)
 
 		tf = tar.NewReader(gf)
 	} else {
 		tf = tar.NewReader(f)
+		defer CheckClose(f)
 	}
 
 	for {
@@ -98,28 +93,49 @@ func Untar(source string, dest string) error {
 			break
 		}
 		if err != nil {
-			return err
+			return fmt.Errorf("Error during read of tar archive %v, err: %v", source, err)
 		}
 
-		if file.Typeflag == tar.TypeDir {
-			err = os.Mkdir(filepath.Join(dest, file.Name), 0755)
-			if err != nil {
-				return err
-			}
-		} else {
-			exFile, err := os.Create(filepath.Join(dest, file.Name))
-			if err != nil {
-				return err
-			}
-			defer func() {
-				if e := exFile.Close(); e != nil {
-					err = e
-				}
-			}()
+		// If we have an extractionDir and this doesn't match, skip it.
+		if !strings.HasPrefix(file.Name, extractionDir) {
+			continue
+		}
+		// Now transform the filename to skip the extractionDir
+		file.Name = strings.TrimPrefix(file.Name, extractionDir)
 
-			_, err = io.Copy(exFile, tf)
+		// If file.Name is now empty this is the root directory we want to extract, and need not do anything.
+		if file.Name == "" && file.Typeflag == tar.TypeDir {
+			continue
+		}
+
+		fullPath := filepath.Join(dest, file.Name)
+
+		// At this point only directories and block-files are handled. Symlinks and the like are ignored.
+		switch file.Typeflag {
+		case tar.TypeDir:
+			// For a directory, if it doesn't exist, we create it.
+			finfo, err := os.Stat(fullPath)
+			if err == nil && finfo.IsDir() {
+				continue
+			}
+
+			err = os.Mkdir(fullPath, 0755)
 			if err != nil {
 				return err
+			}
+
+		case tar.TypeReg:
+			fallthrough
+		case tar.TypeRegA:
+			// For a regular file, create and copy the file.
+			exFile, err := os.Create(fullPath)
+			if err != nil {
+				return fmt.Errorf("Failed to create file %v, err: %v", fullPath, err)
+			}
+			_, err = io.Copy(exFile, tf)
+			_ = exFile.Close()
+			if err != nil {
+				return fmt.Errorf("Failed to copy to file %v, err: %v", fullPath, err)
 			}
 		}
 	}

@@ -24,6 +24,8 @@ type TestSite struct {
 	ArchivePath string
 	// SourceURL is the URL of the source code tarball to be used for building the site.
 	SourceURL string
+	// ArchiveExtractionPath is the relative path within the tarball which should be extracted, ending with /
+	ArchiveInternalExtractionPath string
 	// FileURL is the URL of the archive of file uploads used for testing file import.
 	FileURL string
 	// DBURL is the URL of the database dump tarball used for testing database import.
@@ -55,14 +57,7 @@ func (site *TestSite) Prepare() error {
 	}
 	log.Debugln("File downloaded:", site.ArchivePath)
 
-	_, err = system.RunCommand("tar",
-		[]string{
-			"-xzf",
-			site.ArchivePath,
-			"--strip", "1",
-			"-C",
-			site.Dir,
-		})
+	err = util.Untar(site.ArchivePath, site.Dir, site.ArchiveInternalExtractionPath)
 	if err != nil {
 		log.Errorf("Tar extraction failed err=%v\n", err)
 		// If we had an error extracting the archive, we should go ahead and clean up the temporary directory, since this

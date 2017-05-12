@@ -145,7 +145,7 @@ func (l *LocalApp) ImportDB(imPath string) error {
 					return fmt.Errorf("failed to extract provided archive: %v", err)
 				}
 			} else {
-				err := util.Untar(importPath, dbPath)
+				err := util.Untar(importPath, dbPath, "")
 				if err != nil {
 					return fmt.Errorf("failed to extract provided archive: %v", err)
 				}
@@ -250,7 +250,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		if err.Error() != "is archive" {
 			return err
 		}
-		err = util.Untar(importPath, destPath)
+		err = util.Untar(importPath, destPath, "")
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
