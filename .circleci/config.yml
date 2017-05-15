@@ -60,6 +60,7 @@ jobs:
             if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
               make clean
               export VERSION=nightly.$(date +%Y%m%d%H%M%S)
+              export VERSION="$(git describe --tags --always --dirty)-nightly.$(date +%Y%m%d%H%M%S)"
               echo VERSION=$VERSION
               git submodule update --init && git submodule update --remote
               make -f nightly_build.mak clean
