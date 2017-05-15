@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
@@ -60,56 +61,74 @@ func TestMain(m *testing.M) {
 
 // addSites tests a `drud Dev add`
 func addSites() {
+
+	var wg sync.WaitGroup
+	wg.Add(len(DevTestSites))
+
 	for _, site := range DevTestSites {
-		cleanup := site.Chdir()
+		go func() {
+			defer wg.Done()
 
-		// test that you get an error when you run with no args
-		args := []string{"start"}
-		out, err := system.RunCommand(DdevBin, args)
-		if err != nil {
-			log.Fatalln("Error Output from ddev start:", out, "err:", err)
-		}
+			cleanup := site.Chdir()
 
-		app, err := getActiveApp()
-		if err != nil {
-			log.Fatalln("Could not find an active ddev configuration:", err)
-		}
-
-		urls := []string{
-			"http://127.0.0.1/core/install.php",
-			"http://127.0.0.1:" + appports.GetPort("mailhog"),
-			"http://127.0.0.1:" + appports.GetPort("dba"),
-		}
-
-		for _, url := range urls {
-			o := network.NewHTTPOptions(url)
-			o.ExpectedStatus = 200
-			o.Timeout = 180
-			o.Headers["Host"] = app.HostName()
-			err = network.EnsureHTTPStatus(o)
+			// test that you get an error when you run with no args
+			args := []string{"start"}
+			out, err := system.RunCommand(DdevBin, args)
 			if err != nil {
-				log.Fatalln("Failed to ensureHTTPStatus on", app.HostName(), url)
+				log.Fatalln("Error Output from ddev start:", out, "err:", err)
 			}
-		}
 
-		cleanup()
+			app, err := getActiveApp()
+			if err != nil {
+				log.Fatalln("Could not find an active ddev configuration:", err)
+			}
+
+			urls := []string{
+				"http://127.0.0.1/core/install.php",
+				"http://127.0.0.1:" + appports.GetPort("mailhog"),
+				"http://127.0.0.1:" + appports.GetPort("dba"),
+			}
+
+			for _, url := range urls {
+				o := network.NewHTTPOptions(url)
+				o.ExpectedStatus = 200
+				o.Timeout = 180
+				o.Headers["Host"] = app.HostName()
+				err = network.EnsureHTTPStatus(o)
+				if err != nil {
+					log.Fatalln("Failed to ensureHTTPStatus on", app.HostName(), url)
+				}
+			}
+
+			cleanup()
+		}()
 	}
+
+	wg.Wait()
 }
 
 // removeSites runs `drud legacy rm` on the test apps
 func removeSites() {
+	var wg sync.WaitGroup
+	wg.Add(len(DevTestSites))
+
 	for _, site := range DevTestSites {
-		_ = site.Chdir()
+		go func() {
+			defer wg.Done()
+			_ = site.Chdir()
 
-		args := []string{"rm"}
-		out, err := system.RunCommand(DdevBin, args)
-		if err != nil {
-			log.Fatalln("Failed to runCommand ddev", args, "err:", err, "output:", out)
-		}
+			args := []string{"rm"}
+			out, err := system.RunCommand(DdevBin, args)
+			if err != nil {
+				log.Fatalln("Failed to runCommand ddev", args, "err:", err, "output:", out)
+			}
 
-		_, err = getActiveApp()
-		if err != nil {
-			log.Println("Could not find an active ddev configuration:", err)
-		}
+			_, err = getActiveApp()
+			if err != nil {
+				log.Println("Could not find an active ddev configuration:", err)
+			}
+		}()
 	}
+
+	wg.Wait()
 }
