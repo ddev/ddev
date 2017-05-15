@@ -58,7 +58,7 @@ func TestMain(m *testing.M) {
 
 }
 
-// addSites tests a `drud Dev add`
+// addSites runs `ddev start` on the test apps
 func addSites() {
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
@@ -96,12 +96,12 @@ func addSites() {
 	}
 }
 
-// removeSites runs `drud legacy rm` on the test apps
+// removeSites runs `ddev remove` on the test apps
 func removeSites() {
 	for _, site := range DevTestSites {
 		_ = site.Chdir()
 
-		args := []string{"rm"}
+		args := []string{"remove"}
 		out, err := system.RunCommand(DdevBin, args)
 		if err != nil {
 			log.Fatalln("Failed to runCommand ddev", args, "err:", err, "output:", out)

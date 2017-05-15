@@ -7,9 +7,10 @@ import (
 
 // LocalDevRMCmd represents the stop command
 var LocalDevRMCmd = &cobra.Command{
-	Use:   "rm",
-	Short: "Remove an application's local services.",
-	Long:  `Remove will delete the local service containers from this machine..`,
+	Use:     "remove",
+	Aliases: []string{"rm"},
+	Short:   "Remove an application's local services.",
+	Long:    `Remove will delete the local service containers from this machine.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {

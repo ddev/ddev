@@ -62,7 +62,7 @@ Available Commands:
   list         List applications that exist locally
   logs         Get the logs from your running services.
   restart      Restart the local development environment for a site.
-  rm           Remove an application's local services.
+  remove       Remove an application's local services.
   sequelpro    Easily connect local site to sequelpro
   ssh          SSH to an app container.
   start        Start the local development environment for a site.
@@ -169,7 +169,7 @@ The `import-files` command allows you to specify the location of uploaded file a
 
 ## Removing a site
 
-You can remove a site by going to the working directory for the site and running `ddev rm`.
+You can remove a site by going to the working directory for the site and running `ddev remove`.
 
 ## Interacting with your Site
 All of the commands can be performed by explicitly specifying the sitename or, to save time, you can execute commands from the site directory. All of the following examples assume you are in the working directory of your site.
