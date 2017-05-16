@@ -101,15 +101,10 @@ func removeSites() {
 	for _, site := range DevTestSites {
 		_ = site.Chdir()
 
-		args := []string{"remove"}
-		out, err := system.RunCommand(DdevBin, args)
+		cmd := fmt.Sprintf("echo y | %s remove", DdevBin)
+		out, err := system.RunCommand("sh", []string{"-c", cmd})
 		if err != nil {
-			log.Fatalln("Failed to runCommand ddev", args, "err:", err, "output:", out)
-		}
-
-		_, err = getActiveApp()
-		if err != nil {
-			log.Println("Could not find an active ddev configuration:", err)
+			log.Fatalln("Failed to run ddev remove comand %s err:%v, output:", cmd, err, out)
 		}
 	}
 }
