@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	TestArchiveURL        = "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz"
+	TestArchiveURL        = "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz"
 	TestArchivePath       string
 	TestArchiveExtractDir = "wordpress-0.4.0/"
 )
