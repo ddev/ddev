@@ -16,10 +16,10 @@ When defining additional services for your project, it is recommended to follow 
   - `com.ddev.app-url: $DDEV_URL`
   - `com.ddev.container-type: [servicename]`
 - Exposing ports for service: you can expose the port for a service to be accessible as `sitename.ddev.local:portNum` while your project is running. This is achieved by the following for the container(s) being added:
-  - Define only the internal port in the `ports` section for docker-compose. The `externalPort:internalPort` convention normally used to expose ports in docker should not be used here, since we are leveraging the ddev router to expose the ports.
+  - Define only the internal port in the `ports` section for docker-compose. The `hostPort:containerPort` convention normally used to expose ports in docker should not be used here, since we are leveraging the ddev router to expose the ports.
   - Define the following environment variables in the `environment` section for docker-compose:
     - `VIRTUAL_HOST=$DDEV_HOSTNAME`
-    - `VIRTUAL_PORT=portNum` To expose multiple ports for a single container, define the ports as comma-separated values.
+    - `VIRTUAL_PORT=portNum` The `hostPort:containerPort` convention may be used here to expose a container's port to a different external port. To expose multiple ports for a single container, define the ports as comma-separated values.
 
 ## Interacting with additional services
 Certain ddev commands, namely `ddev exec`, `ddev ssh`, and `ddev logs` interact with containers on an individual basis. By default, these commands interact with the web container for a project. All of these commands, however, provide a `--service` or `-s` flag allowing you to specify the service name of the container you want to interact with. For example, if you added a service to provide Apache Solr, and the service was named `solr`, you would be able to run `ddev logs --service solr` to retrieve the logs of the solr container.
