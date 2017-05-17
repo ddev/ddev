@@ -3,8 +3,7 @@ edit_uri: edit/master/docs/
 copyright: DRUD Technology, LLC
 theme: readthedocs
 markdown_extensions:
-  - toc:
-    permalink: True
+  - markdown.extensions.toc
 pages:
   - 'Home': 'index.md'
   - 'User Documentation':
