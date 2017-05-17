@@ -69,18 +69,6 @@ func (l *LocalApp) FindContainerByType(containerType string) (docker.APIContaine
 // Describe returns a string which provides detailed information on services associated with the running site.
 func (l *LocalApp) Describe() (string, error) {
 	maxWidth := uint(200)
-	web, err := l.FindContainerByType("web")
-	if err != nil {
-		return "", err
-	}
-	db, err := l.FindContainerByType("db")
-	if err != nil {
-		return "", err
-	}
-
-	if db.State != "running" || web.State != "running" {
-		return "", fmt.Errorf("ddev site is configured but not currently running")
-	}
 
 	var output string
 	appTable := CreateAppTable()

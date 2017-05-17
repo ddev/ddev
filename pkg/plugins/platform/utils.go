@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 
@@ -83,12 +84,18 @@ func RenderAppRow(table *uitable.Table, site App) {
 	if err == nil {
 		appRoot = strings.Replace(appRoot, userDir, "~", 1)
 	}
+	status := site.SiteStatus()
+	if status == "stopped" {
+		status = color.YellowString(status)
+	} else {
+		status = color.CyanString(status)
+	}
 	table.AddRow(
 		site.GetName(),
 		site.GetType(),
 		appRoot,
 		site.URL(),
-		site.SiteStatus(),
+		status,
 	)
 }
 
