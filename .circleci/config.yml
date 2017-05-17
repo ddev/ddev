@@ -44,7 +44,7 @@ jobs:
 
       - run:
           command: make linux darwin windows
-          name: Build the linux ddev executable binary
+          name: Build the ddev executables
 
       # Run the built-in ddev tests
       - run:
@@ -64,7 +64,7 @@ jobs:
               echo VERSION=$VERSION
               git submodule update --init && git submodule update --remote
               make -f nightly_build.mak clean
-              make -f nightly_build.mak --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION DBATag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
+              make -f nightly_build.mak --print-directory linux darwin windows VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION DBATag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
               $GOPATH/src/github.com/drud/ddev/bin/linux/ddev version
             fi
           no_output_timeout: "20m"
