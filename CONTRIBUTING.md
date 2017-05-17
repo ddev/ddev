@@ -1,4 +1,4 @@
-# Contrributing
+# Contributing
 
 The general workflow for contributing to this project is outlined in this document.
 
