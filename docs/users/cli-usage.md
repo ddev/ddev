@@ -1,4 +1,4 @@
-# Using the ddev command line interface (CLI)
+<h1>Using the ddev command line interface (CLI)</h1>
 
 Type `ddev` in a terminal to see the available ddev commands:
 

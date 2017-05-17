@@ -2,3 +2,10 @@ site_name: ddev Documentation
 edit_uri: edit/master/docs/
 copyright: DRUD Technology, LLC
 theme: readthedocs
+pages:
+  - 'Home': 'index.md'
+  - 'User Documentation':
+    - 'Using the CLI': 'users/cli-usage.md'
+    - 'PHP Step Debugging': 'users/step-debugging.md'
+  - 'Developer Documentation':
+    - 'Adding containers to nightly build': 'developers/adding-container.md'
