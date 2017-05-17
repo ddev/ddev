@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var skipConfirmation bool
+
 // LocalDevRMCmd represents the stop command
 var LocalDevRMCmd = &cobra.Command{
 	Use:     "remove",
@@ -23,10 +25,12 @@ var LocalDevRMCmd = &cobra.Command{
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
-		fmt.Printf("Is it ok to remove the site %s with all of its containers? All data will be lost. (y/N): ", app.GetName())
-		if !util.AskForConfirmation() {
-			util.Failed("Not removing site.")
-			return
+		if !skipConfirmation {
+			fmt.Printf("Is it ok to remove the site %s with all of its containers? All data will be lost. (y/N): ", app.GetName())
+			if !util.AskForConfirmation() {
+				util.Failed("Not removing site.")
+				return
+			}
 		}
 		err = app.Down()
 		if err != nil {
@@ -38,5 +42,6 @@ var LocalDevRMCmd = &cobra.Command{
 }
 
 func init() {
+	LocalDevRMCmd.Flags().BoolVarP(&skipConfirmation, "skip-confirmation", "y", false, "Skip confirmation step.")
 	RootCmd.AddCommand(LocalDevRMCmd)
 }
