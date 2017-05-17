@@ -2,6 +2,9 @@ site_name: ddev Documentation
 edit_uri: edit/master/docs/
 copyright: DRUD Technology, LLC
 theme: readthedocs
+markdown_extensions:
+  - toc:
+    permalink: True
 pages:
   - 'Home': 'index.md'
   - 'User Documentation':
