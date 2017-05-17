@@ -9,6 +9,8 @@ import (
 	"path"
 	"path/filepath"
 
+	"strings"
+
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	homedir "github.com/mitchellh/go-homedir"
@@ -45,18 +47,7 @@ func StopRouter() error {
 
 // StartDockerRouter ensures the router is running.
 func StartDockerRouter(ports []string) {
-	exposedPorts := GetCurrentRouterPorts()
-	for _, port := range ports {
-		var match bool
-		for _, exposed := range exposedPorts {
-			if port == exposed {
-				match = true
-			}
-		}
-		if !match {
-			exposedPorts = append(exposedPorts, port)
-		}
-	}
+	exposedPorts := SetRouterPorts(ports)
 
 	dest := RouterComposeYAMLPath()
 	routerdir := filepath.Dir(dest)
@@ -105,8 +96,34 @@ func GetCurrentRouterPorts() []string {
 		ports := router.Ports
 		for _, port := range ports {
 			if port.PublicPort != 0 {
-				exposedPorts = append(exposedPorts, fmt.Sprint(port.PublicPort))
+				exposedPorts = append(exposedPorts, fmt.Sprintf("%v:%v", port.PublicPort, port.PrivatePort))
 			}
+		}
+	}
+	return exposedPorts
+}
+
+// SetRouterPorts determines the router port configuration based on port definitions from
+// site containers and any current configuration from a running router.
+func SetRouterPorts(ports []string) []string {
+	// Ensure all port values format as hostPort:containerPort
+	for i, port := range ports {
+		if !strings.Contains(port, ":") {
+			ports[i] = port + ":" + port
+		}
+	}
+
+	// Get any existing router ports and add any from containers not present
+	exposedPorts := GetCurrentRouterPorts()
+	for _, port := range ports {
+		var match bool
+		for _, exposed := range exposedPorts {
+			if port == exposed {
+				match = true
+			}
+		}
+		if !match {
+			exposedPorts = append(exposedPorts, port)
 		}
 	}
 	return exposedPorts
