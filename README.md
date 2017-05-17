@@ -4,9 +4,13 @@
 
 # ddev
 
-The purpose of *ddev* is to support developers with a local copy of a site for development purposes. It runs the site in Docker containers.
+The purpose of *ddev* is to help Drupal and WordPress abstract away the complexity and effort of adopting and maintaining a docker based local development stack. You can see all "ddev" usages using the help commands, like ddev -h, ddev start -h, etc.
 
-You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev start -h`, etc.
+## Roadmap
+
+Each DRUD product has a dedicated product owner, who serves as the primary advocate for customers and end-users when making decisions regaring the public roadmap. For the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap), @rickmanelius is currently serving as the product owner.
+
+The purpose of our roadmaps is to balance high level, 1-6 month targets with short term fluidity that occurs within our weekly sprints. Feedback from customers and end-users does help shape both our short and long-term focus, so please review the roadmap and the [ddev issue queue](https://github.com/drud/ddev/issues) to see what's on the horizon as well as submit bugs and requests.
 
 ## System Requirements
 
