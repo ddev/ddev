@@ -1,4 +1,4 @@
-# Adding a container to the build
+<h1>Adding a container to the build</h1>
 
 Adding a container to the build/nightly build requires a few steps:
 

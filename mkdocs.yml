@@ -8,6 +8,7 @@ pages:
   - 'Home': 'index.md'
   - 'User Documentation':
     - 'Using the CLI': 'users/cli-usage.md'
+    - 'Developer Tools Included in the Container': 'users/included-tools.md'
     - 'PHP Step Debugging': 'users/step-debugging.md'
   - 'Developer Documentation':
     - 'Adding containers to nightly build': 'developers/adding-container.md'

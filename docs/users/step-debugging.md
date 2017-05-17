@@ -1,4 +1,4 @@
-# Step-debugging with ddev and xdebug
+<h1>Step-debugging with ddev and xdebug</h1>
 
 Every ddev site is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code.
 
