@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"os"
+
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -28,8 +30,8 @@ var LocalDevRMCmd = &cobra.Command{
 		if !skipConfirmation {
 			fmt.Printf("Is it ok to remove the site %s with all of its containers? All data will be lost. (y/N): ", app.GetName())
 			if !util.AskForConfirmation() {
-				util.Failed("Not removing site.")
-				return
+				util.Warning("App removal canceled by user.")
+				os.Exit(2)
 			}
 		}
 		err = app.Down()
