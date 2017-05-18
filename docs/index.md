@@ -1,23 +1,23 @@
 <h1>ddev Documentation</h1>
 
-[ddev](https://github.com/drud/ddev) is a local web development environment management system powered by Docker and Docker Compose. It provides rapid, repeatable, and destructable environments geared for Drupal and WordPress development.
+[ddev](https://github.com/drud/ddev) is a local web development environment management system powered by Docker and Docker Compose. It provides rapid, repeatable, and destructible environments geared for Drupal and WordPress development.
 
 ## System Requirements
 
 - [docker](https://www.docker.com/community-edition)
 - OS Support
-  - macOS Sierra (fully supported with automated tests)
+  - macOS Sierra
   - Linux
-    * Ubuntu 16.04 LTS (fully supported with automated tests)
-    * Debian Jessie (tested manually with automated tests planned)
-    * Fedora 25 (tested manually with automated tests planned)
+    * Ubuntu 16.04 LTS
+    * Debian Jessie
+    * Fedora 25
   - Windows 10 Pro (**experimental support!**)
     * See [Decisions and Plan for Linux & Windows Support](https://github.com/drud/ddev/issues/196#issuecomment-300178008) for more information and the various options on getting ddev operational on Windows 10.
 
 We are open to expanding this list to include additional OSs as well as improve our existing support for the ones listed above. Please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue!
 
 ### Using ddev with other development environments
-ddev requires ports 80 and 3306 to be available for use on your system when sites are running. If you are using another local development environment along side ddev, please ensure the other environment is turned off or otherwise not occupying ports 80 and 3306.
+ddev requires ports 80 and 3306 to be available for use on your system when sites are running. If you are using another local development environment alongside ddev, please ensure the other environment is turned off or otherwise not occupying ports 80 and 3306.
 
 If you need to use another environment after using ddev, simply ensure all of your ddev sites are stopped or removed. ddev only occupies system ports when at least one site is running.
 
@@ -34,14 +34,14 @@ You can also easily perform the installation manually if preferred:
 
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 - Make ddev executable: `chmod ugo+x ddev`
-- Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo)
-- Run `ddev` to test your installation. You should see usage output similar to below.
+- Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
+- Run `ddev` to test your installation. You should see ddev's command usage output.
 
 ### Manual Installation - Windows
 
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for Windows.
 - Copy `ddev.exe` into `%HOMEPATH%\AppData\Local\Microsoft\WindowsApps`, or otherwise add `ddev.exe` to a folder defined in your `PATH`
-- Run `ddev` from a Command Prompt or PowerShell to test your installation. You should see usage output similar to below.
+- Run `ddev` from a Command Prompt or PowerShell to test your installation. You should see ddev's command usage output.
 
 ## Support
 If you've encountered trouble using ddev, please use these resources to get help with your issue:

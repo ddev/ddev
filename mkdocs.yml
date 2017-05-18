@@ -12,4 +12,3 @@ pages:
     - 'PHP Step Debugging': 'users/step-debugging.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'
-    - 'Adding containers to nightly build': 'developers/adding-container.md'

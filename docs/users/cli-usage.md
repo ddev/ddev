@@ -29,7 +29,6 @@ Available Commands:
 Use "ddev [command] --help" for more information about a command.
 ```
 
-
 ## Getting Started
 Check out the git repository for the site you want to work on. `cd` into the directory and run `ddev config` and follow the prompts.
 
@@ -52,6 +51,7 @@ Found a drupal8 codebase at /Users/username/Projects/drupal8/docroot
 
 Configuration files have now been created for your site. (Available for inspection/modification at .ddev/ddev.yaml).
 Now that the configuration has been created, you can start your site with `ddev start` (still from within the project working directory):
+
 ```
 $ ddev start
 
@@ -62,9 +62,10 @@ Waiting for the environment to become ready. This may take a couple of minutes..
 Successfully started drupal8
 Your application can be reached at: http://drupal8.ddev.local
 ```
+
 And you can now visit your working site. Enjoy!
 
-## Listing sites
+## Listing site information
 
 To see a list of your current sites you can use `ddev list`.
 
@@ -75,7 +76,7 @@ NAME     TYPE     LOCATION                 URL                        STATUS
 drupal8  drupal8  ~/Projects/ddev/drupal8  http://drupal8.ddev.local  running
 ```
 
-You can also see more detailed information about a site by running `ddev describe` or `ddev describe [site-name]`.
+You can also see more detailed information about a site by running `ddev describe` from its working directory. You can also run `ddev describe [site-name]` from any location to see the detailed information for a running site.
 
 ```
 NAME     TYPE     LOCATION                 URL                        STATUS
@@ -124,18 +125,11 @@ Successfully imported files for drupal8
 
 The `import-files` command allows you to specify the location of uploaded file assets to import for your site. For Drupal, this is the public files directory, located at `sites/default/files` by default. For WordPress, this is the uploads directory, located at `wp-content/uploads` by default. The files may be provided as a directory or tar archive containing the contents of the uploads folder. The contents of the directory or archive provided will be copied to the default location of the upload directory for your site.
 
-## Removing a site
-
-You can remove a site by going to the working directory for the site and running `ddev remove`.
-
-## Interacting with your Site
-All of the commands can be performed by explicitly specifying the sitename or, to save time, you can execute commands from the site directory. All of the following examples assume you are in the working directory of your site.
-
-### Retrieve Site Metadata
-To view information about a specific site (such as URL, MySQL credentials, mailhog credentials), run `ddev describe` from within the working directory of the site. To view information for any site, use `ddev describe sitename`.
+## Interacting with your site
+ddev provides several commands to facilitate interacting with your site in the development environment. These commands can be run within the working directory of your project while the site is running in ddev. 
 
 ### Executing Commands
-To run a command against your site use `ddev exec`. e.g. `ddev exec "drush core-status"` would execute `drush core-status` against your site root. Commands ran in this way are executed in the webserver docroot. You are free to use any of [the tools included in the container](#tools-included-in-the-container).
+To run a command against your site use `ddev exec`. e.g. `ddev exec "drush core-status"` would execute `drush core-status` against your site root. Commands that are run in this way are executed in the webserver docroot. You are free to use any of [the tools included in the container](included-tools.md).
 
 ### SSH Into The Container
 The `ddev ssh` command will open a bash shell session to the web container of your site. You can also access the database container with `ddev ssh -s db`.
@@ -143,4 +137,7 @@ The `ddev ssh` command will open a bash shell session to the web container of yo
 ### Log Access
 The `ddev logs` command allows you to easily retrieve error logs from the web server. To follow the webserver  error log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail.
 
-Additional logging can be accessed by using `ddev ssh` to manually retrieve the log files you are after. The web server stores access logs at `/var/log/nginx/access.log`, and PHP-FPM logs at `/var/log/php7.0-fpm.log`.
+Additional logging can be accessed by using `ddev ssh` to manually review the log files you are after. The web server stores access logs at `/var/log/nginx/access.log`, and PHP-FPM logs at `/var/log/php7.0-fpm.log`.
+
+## Removing a site
+You can remove a site by going to the working directory for the site and running `ddev remove`. `ddev remove` destroys all data and containers associated with the site.

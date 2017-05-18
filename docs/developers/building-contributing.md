@@ -6,6 +6,7 @@
  make
  make linux
  make darwin
+ make windows
  make test
  make clean
  ```
