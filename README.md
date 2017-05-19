@@ -10,7 +10,7 @@ The purpose of *ddev* is to help Drupal and WordPress abstract away the complexi
 
 Each DRUD product has a dedicated product owner, who serves as the primary advocate for customers and end-users when making decisions regaring the public roadmap. For the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap), @rickmanelius is currently serving as the product owner.
 
-The purpose of our roadmaps is to balance high level, 1-6 month targets with short term fluidity that occurs within our weekly sprints. Feedback from customers and end-users does help shape both our short and long-term focus, so please review the roadmap and the [ddev issue queue](https://github.com/drud/ddev/issues) to see what's on the horizon as well as submit bugs and requests.
+We use the longer-term roadmap to prioritize short-term sprints. Please review the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap) and [ddev issue queue](https://github.com/drud/ddev/issues) to see what's on the horizon.
 
 ## System Requirements
 
