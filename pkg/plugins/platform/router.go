@@ -2,7 +2,6 @@ package platform
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"log"
 	"os"
@@ -46,8 +45,8 @@ func StopRouter() error {
 }
 
 // StartDockerRouter ensures the router is running.
-func StartDockerRouter(ports []string) {
-	exposedPorts := SetRouterPorts(ports)
+func StartDockerRouter() {
+	exposedPorts := determineRouterPorts()
 
 	dest := RouterComposeYAMLPath()
 	routerdir := filepath.Dir(dest)
@@ -87,44 +86,44 @@ func StartDockerRouter(ports []string) {
 	}
 }
 
-// GetCurrentRouterPorts retrieves the ports currently exposed on the router if it is running.
-func GetCurrentRouterPorts() []string {
-	var exposedPorts []string
-	label := map[string]string{"com.docker.compose.project": "ddevrouter"}
-	router, err := util.FindContainerByLabels(label)
-	if err == nil {
-		ports := router.Ports
-		for _, port := range ports {
-			if port.PublicPort != 0 {
-				exposedPorts = append(exposedPorts, fmt.Sprintf("%v:%v", port.PublicPort, port.PrivatePort))
+// determineRouterPorts returns a list of port mappings retrieved from running site
+// containers defining VIRTUAL_PORT env var
+func determineRouterPorts() []string {
+	var routerPorts []string
+	containers, err := util.GetDockerContainers(false)
+	if err != nil {
+		log.Fatal("failed to retreive containers for determining port mappings", err)
+	}
+
+	// loop through all containers with site-name label
+	for _, container := range containers {
+		if _, ok := container.Labels["com.ddev.site-name"]; ok {
+			var exposePorts []string
+			expose := util.GetContainerEnv("VIRTUAL_PORT", container)
+			if expose != "" {
+				ports := strings.Split(expose, ",")
+				exposePorts = append(exposePorts, ports...)
+			}
+
+			for _, exposePort := range exposePorts {
+				// ports defined without : are 1:1 mapping
+				if !strings.Contains(exposePort, ":") {
+					exposePort = exposePort + ":" + exposePort
+				}
+
+				var match bool
+				for _, routerPort := range routerPorts {
+					if exposePort == routerPort {
+						match = true
+					}
+				}
+
+				// if no match, we are adding a new port mapping
+				if !match {
+					routerPorts = append(routerPorts, exposePort)
+				}
 			}
 		}
 	}
-	return exposedPorts
-}
-
-// SetRouterPorts determines the router port configuration based on port definitions from
-// site containers and any current configuration from a running router.
-func SetRouterPorts(ports []string) []string {
-	// Ensure all port values format as hostPort:containerPort
-	for i, port := range ports {
-		if !strings.Contains(port, ":") {
-			ports[i] = port + ":" + port
-		}
-	}
-
-	// Get any existing router ports and add any from containers not present
-	exposedPorts := GetCurrentRouterPorts()
-	for _, port := range ports {
-		var match bool
-		for _, exposed := range exposedPorts {
-			if port == exposed {
-				match = true
-			}
-		}
-		if !match {
-			exposedPorts = append(exposedPorts, port)
-		}
-	}
-	return exposedPorts
+	return routerPorts
 }

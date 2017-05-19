@@ -320,21 +320,7 @@ func (l *LocalApp) Start() error {
 		return err
 	}
 
-	// Retrieve ports from containers to expose in router
-	var exposePorts []string
-	siteContainers, err := util.GetAppContainers(l.GetName())
-	if err != nil {
-		return err
-	}
-	for _, container := range siteContainers {
-		expose := util.GetContainerEnv("VIRTUAL_PORT", container)
-		if expose != "" {
-			ports := strings.Split(expose, ",")
-			exposePorts = append(exposePorts, ports...)
-		}
-	}
-
-	StartDockerRouter(exposePorts)
+	StartDockerRouter()
 
 	return nil
 }
