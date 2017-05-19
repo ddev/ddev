@@ -14,8 +14,11 @@ import (
 )
 
 var (
-	TestArchiveURL        = "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz"
-	TestArchivePath       string
+	// TestArchiveURL provides the URL of the test tar.gz asset
+	TestArchiveURL = "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz"
+	// TestArchivePath provides the path the test tar.gz asset is downloaded to
+	TestArchivePath string
+	// TestArchiveExtractDir is the directory in the archive to extract
 	TestArchiveExtractDir = "wordpress-0.4.0/"
 )
 

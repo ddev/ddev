@@ -139,9 +139,9 @@ func TestGetApps(t *testing.T) {
 func TestGetCurrentRouterPorts(t *testing.T) {
 	assert := assert.New(t)
 	ports := GetCurrentRouterPorts()
-	assert.Contains(ports, "80:80")
-	assert.Contains(ports, appports.GetPort("mailhog")+":"+appports.GetPort("mailhog"))
-	assert.Contains(ports, appports.GetPort("dba")+":"+appports.GetPort("dba"))
+	assert.Contains(ports, "80:80", "port 80 not retrieved from existing router config")
+	assert.Contains(ports, appports.GetPort("mailhog")+":"+appports.GetPort("mailhog"), "mailhog port not retrieved from existing router config")
+	assert.Contains(ports, appports.GetPort("dba")+":"+appports.GetPort("dba"), "dba port not retrieved from existing router config")
 }
 
 // TestSetRouterPorts tests determination of router ports from current router and site container definitions.
@@ -149,9 +149,9 @@ func TestSetRouterPorts(t *testing.T) {
 	assert := assert.New(t)
 	ports := []string{"8080", "8050:8025"}
 	exposedPorts := SetRouterPorts(ports)
-	assert.Contains(exposedPorts, "80:80")
-	assert.Contains(exposedPorts, "8080:8080")
-	assert.Contains(exposedPorts, "8050:8025")
+	assert.Contains(exposedPorts, "80:80", "port 80 not present from existing router config")
+	assert.Contains(exposedPorts, "8080:8080", "port 8080 not added to new router ports")
+	assert.Contains(exposedPorts, "8050:8025", "port 8050:8025 mapping not added to new router ports")
 }
 
 // TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed
