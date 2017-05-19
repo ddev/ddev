@@ -1,12 +1,14 @@
 [![CircleCI](https://circleci.com/gh/drud/ddev.svg?style=shield)](https://circleci.com/gh/drud/ddev) [![Go Report Card](https://goreportcard.com/badge/github.com/drud/ddev)](https://goreportcard.com/report/github.com/drud/ddev) ![project is maintained](https://img.shields.io/maintenance/yes/2017.svg)
 
-
-
 # ddev
 
-The purpose of *ddev* is to support developers with a local copy of a site for development purposes. It runs the site in Docker containers.
+The purpose of *ddev* is to help Drupal and WordPress developers abstract away the complexity and effort of adopting and maintaining a docker based local development stack. You can see all "ddev" usages using the help commands, like ddev -h, ddev start -h, etc.
 
-You can see all "ddev" usages using the help commands, like `ddev -h`, `ddev start -h`, etc.
+## Roadmap
+
+Each DRUD product has a dedicated product owner, who serves as the primary advocate for customers and end-users when making decisions regaring the public roadmap. For the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap), @rickmanelius is currently serving as the product owner.
+
+We use the longer-term roadmap to prioritize short-term sprints. Please review the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap) and [ddev issue queue](https://github.com/drud/ddev/issues) to see what's on the horizon.
 
 ## System Requirements
 
