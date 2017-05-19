@@ -1,0 +1,14 @@
+site_name: ddev Documentation
+edit_uri: edit/master/docs/
+copyright: DRUD Technology, LLC
+theme: readthedocs
+markdown_extensions:
+  - markdown.extensions.toc
+pages:
+  - 'Home': 'index.md'
+  - 'User Documentation':
+    - 'Using the CLI': 'users/cli-usage.md'
+    - 'Developer Tools Included in the Container': 'users/included-tools.md'
+    - 'PHP Step Debugging': 'users/step-debugging.md'
+  - 'Developer Documentation':
+    - 'Building, Testing, and Contributing': 'developers/building-contributing.md'

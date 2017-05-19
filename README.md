@@ -6,7 +6,7 @@ The purpose of *ddev* is to help Drupal and WordPress developers abstract away t
 
 ## Roadmap
 
-Each DRUD product has a dedicated product owner, who serves as the primary advocate for customers and end-users when making decisions regaring the public roadmap. For the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap), @rickmanelius is currently serving as the product owner.
+Each DRUD product has a dedicated product owner, who serves as the primary advocate for customers and end-users when making decisions regarding the public roadmap. For the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap), @rickmanelius is currently serving as the product owner.
 
 We use the longer-term roadmap to prioritize short-term sprints. Please review the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap) and [ddev issue queue](https://github.com/drud/ddev/issues) to see what's on the horizon.
 
@@ -14,15 +14,20 @@ We use the longer-term roadmap to prioritize short-term sprints. Please review t
 
 - [docker](https://www.docker.com/community-edition)
 - OS Support
-  - macOS Sierra (fully supported with automated tests)
+  - macOS Sierra
   - Linux
-    * Ubuntu 16.04 LTS (fully supported with automated tests)
-    * Debian Jessie (tested manually with automated tests planned)
-    * Fedora 25 (tested manually with automated tests planned)
+    * Ubuntu 16.04 LTS
+    * Debian Jessie
+    * Fedora 25
   - Windows 10 Pro (**experimental support!**)
     * See [Decisions and Plan for Linux & Windows Support](https://github.com/drud/ddev/issues/196#issuecomment-300178008) for more information and the various options on getting ddev operational on Windows 10.
 
 We are open to expanding this list to include additional OSs as well as improve our existing support for the ones listed above. Please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue!
+
+### Using ddev with other development environments
+ddev requires ports 80 and 3306 to be available for use on your system when sites are running. If you are using another local development environment alongside ddev, please ensure the other environment is turned off or otherwise not using ports 80 and 3306.
+
+If you need to use another environment after using ddev, simply ensure all of your ddev sites are stopped or removed. ddev only uses system ports when at least one site is running.
 
 ## Installation
 ### Installation Script - Linux and macOS
@@ -36,13 +41,13 @@ curl https://raw.githubusercontent.com/drud/ddev/master/install_ddev.sh | bash
 You can also easily perform the installation manually if preferred:
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 - Make ddev executable: `chmod ugo+x ddev`
-- Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo)
-- Run `ddev` to test your installation. You should see usage output similar to below.
+- Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
+- Run `ddev` to test your installation. You should see ddev's command usage output.
 
 ### Manual Installation - Windows
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for Windows.
 - Copy `ddev.exe` into `%HOMEPATH%\AppData\Local\Microsoft\WindowsApps`, or otherwise add `ddev.exe` to a folder defined in your `PATH`
-- Run `ddev` from a Command Prompt or PowerShell to test your installation. You should see usage output similar to below.
+- Run `ddev` from a Command Prompt or PowerShell to test your installation. You should see ddev's command usage output.
 
 ---
 
@@ -74,159 +79,15 @@ Available Commands:
 Use "ddev [command] --help" for more information about a command.
 ```
 
+## Getting Started - Documentation
+Once you've installed ddev, check out the [ddev Documentation Site](https://ddev.readthedocs.io) for information on how to get started and how to use ddev.
 
-## Getting Started
-Check out the git repository for the site you want to work on. `cd` into the directory and run `ddev config` and follow the prompts.
+## Support
+If you've encountered trouble using ddev, please use these resources to get help with your issue:
 
-```
-$ cd ~/Projects
-$ git clone git@github.com:drud/drupal8.git
-$ cd drupal8
-$ ddev config
-Creating a new ddev project config in the current directory (/Users/username/Projects/drupal8)
-Once completed, your configuration will be written to /Users/username/Projects/drupal8/.ddev/config.yaml
+1. Please review the [ddev Documentation](https://ddev.readthedocs.io) to ensure your question isn't answered there.
+2. Review the [ddev issue queue](https://github.com/drud/ddev/issues) to see if an issue similar to yours already exists.
+3. If you've exhausted these options and still need help, please [file an issue](https://github.com/drud/ddev/issues/new) following the pre-populated guidelines and our [Contributing Guidelines](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md) as best as possible.
 
-
-Project name (drupal8):
-
-The docroot is the directory from which your site is served. This is a relative path from your application root (/Users/username/Projects/drupal8)
-You may leave this value blank if your site files are in the application root
-Docroot Location: docroot
-Found a drupal8 codebase at /Users/username/Projects/drupal8/docroot
-```
-
-Configuration files have now been created for your site. (Available for inspection/modification at .ddev/ddev.yaml).
-Now that the configuration has been created, you can start your site with `ddev start` (still from within the project working directory):
-```
-$ ddev start
-
-Starting environment for drupal8...
-Creating local-drupal8-db
-Creating local-drupal8-web
-Waiting for the environment to become ready. This may take a couple of minutes...
-Successfully started drupal8
-Your application can be reached at: http://drupal8.ddev.local
-```
-And you can now visit your working site. Enjoy!
-
-## Listing sites
-
-To see a list of your current sites you can use `ddev list`.
-
-```
-➜  ddev list
-1 local site found.
-NAME     TYPE     LOCATION                 URL                        STATUS
-drupal8  drupal8  ~/Projects/ddev/drupal8  http://drupal8.ddev.local  running
-```
-
-You can also see more detailed information about a site by running `ddev describe` or `ddev describe [site-name]`.
-
-```
-NAME     TYPE     LOCATION                 URL                        STATUS
-drupal8  drupal8  ~/Projects/ddev/drupal8  http://drupal8.ddev.local  running
-
-MySQL Credentials
------------------
-Username:       	root
-Password:       	root
-Database name:  	data
-Connection Info:	drupal8.ddev.local:3306
-
-Other Services
---------------
-MailHog:   	http://drupal8.ddev.local:8025
-phpMyAdmin:	http://drupal8.ddev.local:8036
-```
-
-## Importing an existing site
-Two commands are provided for importing assets from an existing site, `ddev import-db` and `ddev import-files`. Running either of these commands will provide a prompt to enter the location of the assets to import. You can also skip the prompt by specifying the location using the `--src` flag.
-
-### import-db
-
-```
-➜  ddev import-db
-Provide the path to the database you wish to import.
-Import path:
-~/Downloads/db.sql
-Importing database...
-Generating settings.php file for database connection.
-Successfully imported database for drupal8
-```
-
-The `import-db` command allows you to specify the location of a SQL dump to be imported as the active database for your site. The database may be provided as a `.sql` file, `.sql.gz` or tar archive. The provided dump will be imported into the database named `data` in the database container for your site. A database connection file will be generated for your site if one does not exist (`settings.php` for Drupal, `wp-config.php` for WordPress). If you have already created a connection file, you will need to ensure your connection credentials match the ones provided in `ddev describe`.
-
-
-### import-files
-
-```
-➜  ddev import-files
-Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.
-Import path:
-~/Downloads/files.tar.gz
-Successfully imported files for drupal8
-```
-
-The `import-files` command allows you to specify the location of uploaded file assets to import for your site. For Drupal, this is the public files directory, located at `sites/default/files` by default. For WordPress, this is the uploads directory, located at `wp-content/uploads` by default. The files may be provided as a directory or tar archive containing the contents of the uploads folder. The contents of the directory or archive provided will be copied to the default location of the upload directory for your site.
-
-## Removing a site
-
-You can remove a site by going to the working directory for the site and running `ddev remove`.
-
-## Interacting with your Site
-All of the commands can be performed by explicitly specifying the sitename or, to save time, you can execute commands from the site directory. All of the following examples assume you are in the working directory of your site.
-
-### Retrieve Site Metadata
-To view information about a specific site (such as URL, MySQL credentials, mailhog credentials), run `ddev describe` from within the working directory of the site. To view information for any site, use `ddev describe sitename`.
-
-### Executing Commands
-To run a command against your site use `ddev exec`. e.g. `ddev exec "drush core-status"` would execute `drush core-status` against your site root. Commands ran in this way are executed in the webserver docroot. You are free to use any of [the tools included in the container](#tools-included-in-the-container).
-
-### SSH Into The Container
-The `ddev ssh` command will open a bash shell session to the web container of your site. You can also access the database container with `ddev ssh -s db`.
-
-### Log Access
-The `ddev logs` command allows you to easily retrieve error logs from the web server. To follow the webserver  error log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail.
-
-Additional logging can be accessed by using `ddev ssh` to manually retrieve the log files you are after. The web server stores access logs at `/var/log/nginx/access.log`, and PHP-FPM logs at `/var/log/php7.0-fpm.log`.
-
-## Tools Included in the Container
-We have included several useful tools for Developers in our containers.
-
-### Command-line Tools
-- [Composer](https://getcomposer.org/) - Dependency Manager for PHP
-- [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
-- [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations.
-
-### Email
-[MailHog](https://github.com/mailhog/MailHog) is a mail catcher we have installed and configured to catch emails sent by PHP.
-
-Its web interface can be accessed at its default port after your site has been started. e.g.:
-```
-http://mysite.ddev.local:8025
-```
-
-Please note this will not intercept emails if your application is configured to use SMTP or a 3rd-party ESP integration. If you are using SMTP for outgoing mail handling ([Swiftmailer](https://www.drupal.org/project/swiftmailer) or [SMTP](https://www.drupal.org/project/smtp) modules for example), update your application configuration to use `localhost:1025` as the SMTP server locally in order to use MailHog.
-
-MailHog provides several [configuration options](https://github.com/mailhog/MailHog/blob/master/docs/CONFIG.md). If you need to alter its configuration, you can do so by adding the desired environment variable to the `environment` section for the web container in the `.ddev/docker-compose.yaml` for your site.
-
-### PHP Step-Debugging with an IDE and ddev site
-
-Instructions for IDE setup are in [step-debugging](docs/step-debugging.md).
-
-## Building
-
- ```
- make
- make linux
- make darwin
- make test
- make clean
- ```
-
- Note that although this git repository contains submodules (in the containers/ directory) they are not used in a normal build, but rather by the nightly build. You can safely ignore the git submodules and the containers/ directory.
-
-## Testing
-Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...`
-
-If you set the environment variable DRUD_DEBUG=true you can see what ddev commands are being executed in the tests.
+## Contributing
+Interested in contributing to ddev? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!

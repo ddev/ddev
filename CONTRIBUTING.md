@@ -1,15 +1,15 @@
-# Contrributing
+# Contributing
 
 The general workflow for contributing to this project is outlined in this document.
 
 ## Create an Issue
 
-If you find a bug in this project, have trouble following the documentation or have a question about the project – create an issue! There’s nothing to it and whatever issue you’re having, you’re likely not the only one, so others will find your issue helpful, too. For more information on how issues work, check out Github's [Issues guide](http://guides.github.com/features/issues).
+If you find a bug in this project, have trouble following the documentation, or have a question about the project, create an issue! There’s nothing to it and whatever issue you’re having, you’re likely not the only one, so others will find your issue helpful, too. For more information on how issues work, check out GitHub's [Issues guide](http://guides.github.com/features/issues).
 
 ### Issues Pro Tips
 
-- **Check existing issues** for your issue. Duplicating an issue is slower for both parties so search through open and closed issues to see if what you’re running into has been addressed already.
-- **Be clear** about what your problem is: what was the expected outcome, what happened instead? Detail how someone else can recreate the problem.
+- **Check existing issues** for your issue. Duplicating an issue is slower for both parties, so search through open and closed issues to see if what you’re running into has been addressed already.
+- **Be clear** about what your problem is: What was the expected outcome? What happened instead? Detail how someone else can recreate the problem.
 - **Link to examples** recreate or display the problem with screenshots, screencasts, or code examples using [The Go Playground](https://play.golang.org). The better you can demonstrate the problem, the more attention your issue is likely to get.
 - **Include system details** like what the browser, library or operating system you’re using and its version.
 - **Paste error output** or logs in your issue or in a [Gist](http://gist.github.com/). If pasting them in the issue, wrap it in three backticks: ` ``` ` so that it renders nicely.
@@ -27,17 +27,17 @@ If you’re able to patch the bug or add the feature yourself – fantastic, mak
 
 ## Open Pull Requests
 
-Once you’ve opened a pull request a discussion will start around your proposed changes. Other contributors and users may chime in, but ultimately the decision is made by the maintainer(s). You may be asked to make some changes to your pull request, if so, add more commits to your branch and push them – they’ll automatically go into the existing pull request.
+Once you’ve opened a pull request, a discussion will start around your proposed changes. Other contributors and users may chime in, but ultimately the decision is made by the maintainer(s). You may be asked to make some changes to your pull request. If so, add more commits to your branch and push them – they’ll automatically go into the existing pull request.
 
 If your pull request is merged – great! If it is not, no sweat, it may not be what the project maintainer had in mind, or they were already working on it. This happens, so our recommendation is to take any feedback you’ve received and go forth and pull request again – or create your own open source project.
 
-Adapted from [Github Guides](https://guides.github.com/activities/contributing-to-open-source/)
+Adapted from [GitHub Guides](https://guides.github.com/activities/contributing-to-open-source/)
 
 ## Coding Style
 
 Unless explicitly stated, we follow all coding guidelines from the Go community. While some of these standards may seem arbitrary, they somehow seem to result in a solid, consistent codebase.
 
-It is possible that the code base does not currently comply with these guidelines. We are not looking for a massive PR that fixes this since that goes against the spirit of the guidelines. All new contributions should make a best effort to clean up and make the code base better than they left it. Obviously, apply your best judgement. Remember, the goal here is to make the code base easier for humans to navigate and understand. Always keep that in mind when nudging others to comply.
+It is possible that the code base does not currently comply with these guidelines. We are not looking for a massive PR that fixes this since that goes against the spirit of the guidelines. All new contributions should make a best effort to clean up and make the code base better than they left it. Obviously, apply your best judgment. Remember, the goal here is to make the code base easier for humans to navigate and understand. Always keep that in mind when nudging others to comply.
 
 The rules:
 
