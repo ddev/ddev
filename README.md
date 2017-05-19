@@ -1,10 +1,8 @@
 [![CircleCI](https://circleci.com/gh/drud/ddev.svg?style=shield)](https://circleci.com/gh/drud/ddev) [![Go Report Card](https://goreportcard.com/badge/github.com/drud/ddev)](https://goreportcard.com/report/github.com/drud/ddev) ![project is maintained](https://img.shields.io/maintenance/yes/2017.svg)
 
-
-
 # ddev
 
-The purpose of *ddev* is to help Drupal and WordPress abstract away the complexity and effort of adopting and maintaining a docker based local development stack. You can see all "ddev" usages using the help commands, like ddev -h, ddev start -h, etc.
+The purpose of *ddev* is to help Drupal and WordPress developers abstract away the complexity and effort of adopting and maintaining a docker based local development stack. You can see all "ddev" usages using the help commands, like ddev -h, ddev start -h, etc.
 
 ## Roadmap
 
