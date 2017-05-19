@@ -69,7 +69,7 @@ services:
     image: {{ .router_image }}:{{ .router_tag }}
     container_name: nginx-proxy
     ports:
-      {{ range $port := .ports }}- "{{ $port }}"
+      {{ range $port := .ports }}- "{{ $port }}:{{ $port }}"
       {{ end }}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
