@@ -99,9 +99,16 @@ func determineRouterPorts() []string {
 	for _, container := range containers {
 		if _, ok := container.Labels["com.ddev.site-name"]; ok {
 			var exposePorts []string
-			expose := util.GetContainerEnv("VIRTUAL_PORT", container)
-			if expose != "" {
-				ports := strings.Split(expose, ",")
+
+			httpPorts := util.GetContainerEnv("VIRTUAL_PORT", container)
+			if httpPorts != "" {
+				ports := strings.Split(httpPorts, ",")
+				exposePorts = append(exposePorts, ports...)
+			}
+
+			tcpPorts := util.GetContainerEnv("TCP_PORT", container)
+			if tcpPorts != "" {
+				ports := strings.Split(tcpPorts, ",")
 				exposePorts = append(exposePorts, ports...)
 			}
 
@@ -111,7 +118,7 @@ func determineRouterPorts() []string {
 				// should be hostPort:hostPort so router can determine what port a request came from
 				// and route the request to the correct upstream
 				if strings.Contains(exposePort, ":") {
-					ports := strings.Split(expose, ":")
+					ports := strings.Split(exposePort, ":")
 					exposePort = ports[0]
 				}
 

@@ -12,7 +12,7 @@ services:
       - "./data:/db"
     restart: always
     environment:
-      - TCP_PORT=$DDEV_HOSTNAME:{{ .dbport }}
+      - TCP_PORT={{ .dbport }}
     ports:
       - 3306
     labels:
