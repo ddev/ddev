@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"os"
+
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/gosuri/uitable"
@@ -15,9 +17,10 @@ var versionCmd = &cobra.Command{
 	Short: "print ddev version and component versions",
 	Long:  `Display the version of this ddev binary and its components.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 0 {
-			util.Failed("invalid arguments to version command: %v", args)
-			return
+		if len(args) > 0 {
+			err := cmd.Usage()
+			util.CheckErr(err)
+			os.Exit(1)
 		}
 		out := handleVersionCommand()
 		fmt.Println(out)
