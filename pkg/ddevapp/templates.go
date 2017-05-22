@@ -12,7 +12,8 @@ services:
       - "./data:/db"
     restart: always
     environment:
-      - TCP_PORT={{ .dbport }}
+      # TCP_EXPOSE allows for TCP ports to be accessible from <site>.ddev.local:<port>
+      - TCP_EXPOSE={{ .dbport }}
     ports:
       - 3306
     labels:
@@ -40,7 +41,8 @@ services:
     environment:
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - VIRTUAL_PORT=80,{{ .mailhogport }}
+      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
+      - HTTP_EXPOSE=80,{{ .mailhogport }}
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .plugin }}
@@ -69,7 +71,8 @@ services:
       - PMA_USER=root
       - PMA_PASSWORD=root
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - VIRTUAL_PORT={{ .dbaport }}
+      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
+      - HTTP_EXPOSE={{ .dbaport }}
 networks:
   default:
     external:

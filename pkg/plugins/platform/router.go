@@ -100,13 +100,13 @@ func determineRouterPorts() []string {
 		if _, ok := container.Labels["com.ddev.site-name"]; ok {
 			var exposePorts []string
 
-			httpPorts := util.GetContainerEnv("VIRTUAL_PORT", container)
+			httpPorts := util.GetContainerEnv("HTTP_EXPOSE", container)
 			if httpPorts != "" {
 				ports := strings.Split(httpPorts, ",")
 				exposePorts = append(exposePorts, ports...)
 			}
 
-			tcpPorts := util.GetContainerEnv("TCP_PORT", container)
+			tcpPorts := util.GetContainerEnv("TCP_EXPOSE", container)
 			if tcpPorts != "" {
 				ports := strings.Split(tcpPorts, ",")
 				exposePorts = append(exposePorts, ports...)
