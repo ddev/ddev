@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"os/exec"
 	"strings"
 	"testing"
 
@@ -11,9 +10,8 @@ import (
 
 func TestVersion(t *testing.T) {
 	assert := assert.New(t)
-	v, err := exec.Command(DdevBin, "version").Output()
-	assert.NoError(err)
-	output := strings.TrimSpace(string(v))
+	v := handleVersionCommand().String()
+	output := strings.TrimSpace(v)
 	assert.Contains(output, version.DdevVersion)
 	assert.Contains(output, version.WebImg)
 	assert.Contains(output, version.WebTag)
