@@ -65,7 +65,7 @@ test: testpkg testcmd
 testcmd: build setup
 	PATH=$$PWD/bin/$(TESTOS):$$PATH CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -p 1 -timeout 20m -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
 
-testpkg: build setup
+testpkg: 
 	PATH=$$PWD/bin/$(TESTOS):$$PATH CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) DRUD_DEBUG=true go test -timeout 20m -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
 
 setup:
