@@ -69,26 +69,35 @@ func (l *LocalApp) FindContainerByType(containerType string) (docker.APIContaine
 // Describe returns a string which provides detailed information on services associated with the running site.
 func (l *LocalApp) Describe() (string, error) {
 	maxWidth := uint(200)
-
 	var output string
+	siteStatus := l.SiteStatus()
+
+	// Do not show any describe output if we can't find the site.
+	if siteStatus == SiteNotFound {
+		return "", fmt.Errorf("no site found. have you ran `ddev start`?")
+	}
 	appTable := CreateAppTable()
+
 	RenderAppRow(appTable, l)
 	output = fmt.Sprint(appTable)
 
-	output = output + "\n\nMySQL Credentials\n-----------------\n"
-	dbTable := uitable.New()
-	dbTable.MaxColWidth = maxWidth
-	dbTable.AddRow("Username:", "root")
-	dbTable.AddRow("Password:", "root")
-	dbTable.AddRow("Database name:", "data")
-	dbTable.AddRow("Connection Info:", l.HostName()+":"+appports.GetPort("db"))
-	output = output + fmt.Sprint(dbTable)
+	// Only show extended status for running sites.
+	if siteStatus == SiteRunning {
+		output = output + "\n\nMySQL Credentials\n-----------------\n"
+		dbTable := uitable.New()
+		dbTable.MaxColWidth = maxWidth
+		dbTable.AddRow("Username:", "root")
+		dbTable.AddRow("Password:", "root")
+		dbTable.AddRow("Database name:", "data")
+		dbTable.AddRow("Connection Info:", l.HostName()+":"+appports.GetPort("db"))
+		output = output + fmt.Sprint(dbTable)
 
-	output = output + "\n\nOther Services\n--------------\n"
-	other := uitable.New()
-	other.AddRow("MailHog:", l.URL()+":"+appports.GetPort("mailhog"))
-	other.AddRow("phpMyAdmin:", l.URL()+":"+appports.GetPort("dba"))
-	output = output + fmt.Sprint(other)
+		output = output + "\n\nOther Services\n--------------\n"
+		other := uitable.New()
+		other.AddRow("MailHog:", l.URL()+":"+appports.GetPort("mailhog"))
+		other.AddRow("phpMyAdmin:", l.URL()+":"+appports.GetPort("dba"))
+		output = output + fmt.Sprint(other)
+	}
 	return output, nil
 }
 
@@ -178,15 +187,15 @@ func (l *LocalApp) ImportDB(imPath string) error {
 func (l *LocalApp) SiteStatus() string {
 	webContainer, err := l.FindContainerByType("web")
 	if err != nil {
-		return "not found"
+		return SiteNotFound
 	}
 
 	status := util.GetContainerHealth(webContainer)
 	if status == "exited" {
-		return "stopped"
+		return SiteStopped
 	}
 	if status == "healthy" {
-		return "running"
+		return SiteRunning
 	}
 
 	return status
@@ -391,7 +400,7 @@ func (l *LocalApp) DockerEnv() {
 func (l *LocalApp) Stop() error {
 	l.DockerEnv()
 
-	if l.SiteStatus() != "running" {
+	if l.SiteStatus() != SiteRunning {
 		return fmt.Errorf("site does not appear to be running - web container %s", l.SiteStatus())
 	}
 

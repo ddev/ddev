@@ -308,7 +308,7 @@ func TestDescribeStopped(t *testing.T) {
 		out, err := app.Describe()
 		assert.NoError(err)
 
-		assert.Contains(out, "stopped", "describe correctly reports stopped on a non-running site.")
+		assert.Contains(out, SiteStopped, "Output did not include the word stopped when describing a stopped site.")
 		cleanup()
 	}
 }

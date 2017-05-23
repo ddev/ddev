@@ -7,6 +7,10 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
+const SiteRunning = "running"
+const SiteNotFound = "not found"
+const SiteStopped = "stopped"
+
 // App is an interface apps for Drud Local must implement to use shared functionality
 type App interface {
 	Init(string) error
