@@ -310,14 +310,19 @@ func (l *LocalApp) Start() error {
 		}
 	}
 
-	StartDockerRouter()
-
 	err := l.AddHostsEntry()
 	if err != nil {
 		return err
 	}
 
-	return util.ComposeCmd(l.ComposeFiles(), "up", "-d")
+	err = util.ComposeCmd(l.ComposeFiles(), "up", "-d")
+	if err != nil {
+		return err
+	}
+
+	StartDockerRouter()
+
+	return nil
 }
 
 // Exec executes a given command in the container of given type.

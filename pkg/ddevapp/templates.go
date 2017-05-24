@@ -12,7 +12,10 @@ services:
       - "./data:/db"
     restart: always
     environment:
-      - TCP_PORT=$DDEV_HOSTNAME:{{ .dbport }}
+      # TCP_EXPOSE allows for TCP ports to be accessible from <site>.ddev.local:<port>
+      # To expose a container port to a different host port, define the port as hostPort:containerPort
+      # e.g., to expose db traffic on port 8086, define port as 8086:3036
+      - TCP_EXPOSE={{ .dbport }}
     ports:
       - 3306
     labels:
@@ -40,7 +43,9 @@ services:
     environment:
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - VIRTUAL_PORT=80,{{ .mailhogport }}
+      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
+      # To expose a container port to a different host port, define the port as hostPort:containerPort
+      - HTTP_EXPOSE=80,{{ .mailhogport }}
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .plugin }}
@@ -69,7 +74,8 @@ services:
       - PMA_USER=root
       - PMA_PASSWORD=root
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - VIRTUAL_PORT={{ .dbaport }}
+      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
+      - HTTP_EXPOSE={{ .dbaport }}
 networks:
   default:
     external:

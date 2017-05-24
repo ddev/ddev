@@ -8,7 +8,8 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/drud/ddev/pkg/appports"
+	"strings"
+
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	homedir "github.com/mitchellh/go-homedir"
@@ -45,6 +46,8 @@ func StopRouter() error {
 
 // StartDockerRouter ensures the router is running.
 func StartDockerRouter() {
+	exposedPorts := determineRouterPorts()
+
 	dest := RouterComposeYAMLPath()
 	routerdir := filepath.Dir(dest)
 	err := os.MkdirAll(routerdir, 0755)
@@ -65,12 +68,10 @@ func StartDockerRouter() {
 		log.Fatal(ferr)
 	}
 
-	templateVars := map[string]string{
+	templateVars := map[string]interface{}{
 		"router_image": version.RouterImage,
 		"router_tag":   version.RouterTag,
-		"mailhogport":  appports.GetPort("mailhog"),
-		"dbaport":      appports.GetPort("dba"),
-		"dbport":       appports.GetPort("db"),
+		"ports":        exposedPorts,
 	}
 
 	err = templ.Execute(&doc, templateVars)
@@ -83,4 +84,57 @@ func StartDockerRouter() {
 	if err != nil {
 		log.Fatalf("Could not start router: %v", err)
 	}
+}
+
+// determineRouterPorts returns a list of port mappings retrieved from running site
+// containers defining VIRTUAL_PORT env var
+func determineRouterPorts() []string {
+	var routerPorts []string
+	containers, err := util.GetDockerContainers(false)
+	if err != nil {
+		log.Fatal("failed to retreive containers for determining port mappings", err)
+	}
+
+	// loop through all containers with site-name label
+	for _, container := range containers {
+		if _, ok := container.Labels["com.ddev.site-name"]; ok {
+			var exposePorts []string
+
+			httpPorts := util.GetContainerEnv("HTTP_EXPOSE", container)
+			if httpPorts != "" {
+				ports := strings.Split(httpPorts, ",")
+				exposePorts = append(exposePorts, ports...)
+			}
+
+			tcpPorts := util.GetContainerEnv("TCP_EXPOSE", container)
+			if tcpPorts != "" {
+				ports := strings.Split(tcpPorts, ",")
+				exposePorts = append(exposePorts, ports...)
+			}
+
+			for _, exposePort := range exposePorts {
+				// ports defined as hostPort:containerPort allow for router to configure upstreams
+				// for containerPort, with server listening on hostPort. exposed ports for router
+				// should be hostPort:hostPort so router can determine what port a request came from
+				// and route the request to the correct upstream
+				if strings.Contains(exposePort, ":") {
+					ports := strings.Split(exposePort, ":")
+					exposePort = ports[0]
+				}
+
+				var match bool
+				for _, routerPort := range routerPorts {
+					if exposePort == routerPort {
+						match = true
+					}
+				}
+
+				// if no match, we are adding a new port mapping
+				if !match {
+					routerPorts = append(routerPorts, exposePort)
+				}
+			}
+		}
+	}
+	return routerPorts
 }

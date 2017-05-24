@@ -1,8 +1,6 @@
 package util_test
 
 import (
-	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"testing"
@@ -13,43 +11,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	testArchiveURL        = "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz"
-	testArchiveExtractDir = "wordpress-0.4.0/"
-	testArchivePath       string
-)
-
-func TestMain(m *testing.M) {
-	testPath, err := ioutil.TempDir("", "filetest")
-	util.CheckErr(err)
-	testPath, err = filepath.EvalSymlinks(testPath)
-	util.CheckErr(err)
-	testPath = filepath.Clean(testPath)
-	testArchivePath = filepath.Join(testPath, "files.tar.gz")
-
-	err = system.DownloadFile(testArchivePath, testArchiveURL)
-	if err != nil {
-		log.Fatalf("archive download failed: %s", err)
-	}
-
-	testRun := m.Run()
-
-	os.Exit(testRun)
-}
-
 // TestUntar tests untar functionality, including the starting directory
 func TestUntar(t *testing.T) {
 	assert := assert.New(t)
 	exDir := testcommon.CreateTmpDir("TestUnTar1")
 
-	err := util.Untar(testArchivePath, exDir, "")
+	err := util.Untar(TestArchivePath, exDir, "")
 	assert.NoError(err)
 
 	// Make sure that our base extraction directory is there
-	finfo, err := os.Stat(filepath.Join(exDir, testArchiveExtractDir))
+	finfo, err := os.Stat(filepath.Join(exDir, TestArchiveExtractDir))
 	assert.NoError(err)
 	assert.True(err == nil && finfo.IsDir())
-	finfo, err = os.Stat(filepath.Join(exDir, testArchiveExtractDir, ".ddev/config.yaml"))
+	finfo, err = os.Stat(filepath.Join(exDir, TestArchiveExtractDir, ".ddev/config.yaml"))
 	assert.NoError(err)
 	assert.True(err == nil && !finfo.IsDir())
 
@@ -58,7 +32,7 @@ func TestUntar(t *testing.T) {
 
 	// Now do the untar with an extraction root
 	exDir = testcommon.CreateTmpDir("TestUnTar2")
-	err = util.Untar(testArchivePath, exDir, testArchiveExtractDir)
+	err = util.Untar(TestArchivePath, exDir, TestArchiveExtractDir)
 	assert.NoError(err)
 
 	finfo, err = os.Stat(filepath.Join(exDir, ".ddev"))
@@ -77,9 +51,9 @@ func TestUntar(t *testing.T) {
 func TestCopyFile(t *testing.T) {
 	assert := assert.New(t)
 	tmpTargetDir := testcommon.CreateTmpDir("TestCopyFile")
-	tmpTargetFile := filepath.Join(tmpTargetDir, filepath.Base(testArchivePath))
+	tmpTargetFile := filepath.Join(tmpTargetDir, filepath.Base(TestArchivePath))
 
-	err := util.CopyFile(testArchivePath, tmpTargetFile)
+	err := util.CopyFile(TestArchivePath, tmpTargetFile)
 	assert.NoError(err)
 
 	file, err := os.Stat(tmpTargetFile)
@@ -103,7 +77,7 @@ func TestCopyDir(t *testing.T) {
 	assert.NoError(err)
 
 	// test source not a directory
-	err = util.CopyDir(testArchivePath, sourceDir)
+	err = util.CopyDir(TestArchivePath, sourceDir)
 	assert.Error(err)
 	assert.Contains(err.Error(), "source is not a directory")
 

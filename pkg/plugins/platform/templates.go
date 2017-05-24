@@ -69,10 +69,8 @@ services:
     image: {{ .router_image }}:{{ .router_tag }}
     container_name: nginx-proxy
     ports:
-      - "80:80"
-      - {{ .mailhogport }}:{{ .mailhogport }}
-      - {{ .dbaport }}:{{ .dbaport }}
-      - {{ .dbport }}:{{ .dbport }}
+      {{ range $port := .ports }}- "{{ $port }}:{{ $port }}"
+      {{ end }}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
 networks:
