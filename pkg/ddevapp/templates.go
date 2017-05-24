@@ -28,6 +28,7 @@ services:
   web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
+    user: $DDEV_UID:$DDEV_GID
     volumes:
       - "{{ .docroot }}/:/var/www/html/docroot"
     restart: always
@@ -41,6 +42,8 @@ services:
       - {{ .mailhogport }}
     working_dir: "/var/www/html/docroot"
     environment:
+      - DDEV_UID=$DDEV_UID
+      - DDEV_GID=$DDEV_GID
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
