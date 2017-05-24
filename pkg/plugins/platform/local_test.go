@@ -292,6 +292,27 @@ func TestLocalStop(t *testing.T) {
 	}
 }
 
+// TestDescribeStopped tests that the describe command works properly on a stopped site.
+func TestDescribeStopped(t *testing.T) {
+	assert := assert.New(t)
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
+
+	for _, site := range TestSites {
+		cleanup := site.Chdir()
+
+		testcommon.ClearDockerEnv()
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		out, err := app.Describe()
+		assert.NoError(err)
+
+		assert.Contains(out, SiteStopped, "Output did not include the word stopped when describing a stopped site.")
+		cleanup()
+	}
+}
+
 // TestLocalRemove tests the functionality that is called when "ddev rm" is executed
 func TestLocalRemove(t *testing.T) {
 	assert := assert.New(t)

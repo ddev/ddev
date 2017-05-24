@@ -7,6 +7,15 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
+// SiteRunning defines the string used to denote running sites.
+const SiteRunning = "running"
+
+// SiteNotFound defines the string used to denote a site where the containers were not found/do not exist.
+const SiteNotFound = "not found"
+
+// SiteStopped defines the string used to denote when a site is in the stopped state.
+const SiteStopped = "stopped"
+
 // App is an interface apps for Drud Local must implement to use shared functionality
 type App interface {
 	Init(string) error
