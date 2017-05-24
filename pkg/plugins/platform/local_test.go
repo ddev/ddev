@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"os"
 
@@ -76,6 +77,7 @@ func TestLocalStart(t *testing.T) {
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalStart", site.Name))
 
 		testcommon.ClearDockerEnv()
 		err = app.Init(site.Dir)
@@ -99,6 +101,7 @@ func TestLocalStart(t *testing.T) {
 			assert.True(check, containerType, "container is running")
 		}
 
+		runTime()
 		cleanup()
 	}
 
@@ -142,6 +145,7 @@ func TestLocalImportDB(t *testing.T) {
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportDB", site.Name))
 		dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
 
 		err := system.DownloadFile(dbPath, site.DBURL)
@@ -157,6 +161,7 @@ func TestLocalImportDB(t *testing.T) {
 		err = os.Remove(dbPath)
 		assert.NoError(err)
 
+		runTime()
 		cleanup()
 	}
 }
@@ -169,6 +174,7 @@ func TestLocalImportFiles(t *testing.T) {
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportFiles", site.Name))
 		filePath := filepath.Join(testcommon.CreateTmpDir("local-files"), "files.tar.gz")
 
 		err := system.DownloadFile(filePath, site.FileURL)
@@ -184,6 +190,7 @@ func TestLocalImportFiles(t *testing.T) {
 		err = os.Remove(filePath)
 		assert.NoError(err)
 
+		runTime()
 		cleanup()
 	}
 }
@@ -196,6 +203,7 @@ func TestLocalExec(t *testing.T) {
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalExec", site.Name))
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
@@ -222,6 +230,7 @@ func TestLocalExec(t *testing.T) {
 
 		assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
 
+		runTime()
 		cleanup()
 
 	}
@@ -236,6 +245,7 @@ func TestLocalLogs(t *testing.T) {
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalLogs", site.Name))
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
@@ -259,6 +269,7 @@ func TestLocalLogs(t *testing.T) {
 		assert.Contains(out, "MySQL init process done. Ready for start up.")
 		assert.False(strings.Contains(out, "Database initialized"))
 
+		runTime()
 		cleanup()
 	}
 }
@@ -272,6 +283,7 @@ func TestLocalStop(t *testing.T) {
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalStop", site.Name))
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
@@ -288,6 +300,7 @@ func TestLocalStop(t *testing.T) {
 			assert.True(check, containerType, "container has exited")
 		}
 
+		runTime()
 		cleanup()
 	}
 }
@@ -335,16 +348,16 @@ func TestLocalRemove(t *testing.T) {
 		err = app.Wait("web")
 		assert.NoError(err)
 
-		if err == nil {
-			err = app.Down()
-			assert.NoError(err)
-		}
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalRemove", site.Name))
+		err = app.Down()
+		assert.NoError(err)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
 			_, err := constructContainerName(containerType, app)
 			assert.Error(err, "Received error on containerName search: ", err)
 		}
 
+		runTime()
 		cleanup()
 	}
 }
