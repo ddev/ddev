@@ -28,7 +28,6 @@ services:
   web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
-    user: $DDEV_UID:$DDEV_GID
     volumes:
       - "{{ .docroot }}/:/var/www/html/docroot"
     restart: always

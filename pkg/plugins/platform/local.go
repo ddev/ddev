@@ -383,6 +383,8 @@ func (l *LocalApp) DockerEnv() {
 		"DDEV_DOCROOT":         filepath.Join(l.AppConfig.AppRoot, l.AppConfig.Docroot),
 		"DDEV_URL":             l.URL(),
 		"DDEV_HOSTNAME":        l.HostName(),
+		"DDEV_UID":             "",
+		"DDEV_GID":             "",
 	}
 	if runtime.GOOS == "linux" {
 		curUser, err := user.Current()
