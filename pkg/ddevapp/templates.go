@@ -13,6 +13,8 @@ services:
     restart: always
     environment:
       # TCP_EXPOSE allows for TCP ports to be accessible from <site>.ddev.local:<port>
+      # To expose a container port to a different host port, define the port as hostPort:containerPort
+      # e.g., to expose db traffic on port 8086, define port as 8086:3036
       - TCP_EXPOSE={{ .dbport }}
     ports:
       - 3306
@@ -42,6 +44,7 @@ services:
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
+      # To expose a container port to a different host port, define the port as hostPort:containerPort
       - HTTP_EXPOSE=80,{{ .mailhogport }}
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
