@@ -247,6 +247,6 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 func TimeTrack(start time.Time, name string) func() {
 	return func() {
 		elapsed := time.Since(start)
-		log.Printf("%s took %s", name, elapsed)
+		log.Printf("PERF: %s took %s", name, elapsed)
 	}
 }
