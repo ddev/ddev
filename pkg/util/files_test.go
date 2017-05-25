@@ -11,19 +11,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	// TestTarArchiveURL provides the URL of the test tar.gz asset
+	TestTarArchiveURL = "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz"
+	// TestTarArchivePath provides the path the test tar.gz asset is downloaded to
+	TestTarArchivePath string
+	// TestTarArchiveExtractDir is the directory in the archive to extract
+	TestTarArchiveExtractDir = "wordpress-0.4.0/"
+)
+
 // TestUntar tests untar functionality, including the starting directory
 func TestUntar(t *testing.T) {
 	assert := assert.New(t)
 	exDir := testcommon.CreateTmpDir("TestUnTar1")
 
-	err := util.Untar(TestArchivePath, exDir, "")
+	err := util.Untar(TestTarArchivePath, exDir, "")
 	assert.NoError(err)
 
 	// Make sure that our base extraction directory is there
-	finfo, err := os.Stat(filepath.Join(exDir, TestArchiveExtractDir))
+	finfo, err := os.Stat(filepath.Join(exDir, TestTarArchiveExtractDir))
 	assert.NoError(err)
 	assert.True(err == nil && finfo.IsDir())
-	finfo, err = os.Stat(filepath.Join(exDir, TestArchiveExtractDir, ".ddev/config.yaml"))
+	finfo, err = os.Stat(filepath.Join(exDir, TestTarArchiveExtractDir, ".ddev/config.yaml"))
 	assert.NoError(err)
 	assert.True(err == nil && !finfo.IsDir())
 
@@ -32,7 +41,7 @@ func TestUntar(t *testing.T) {
 
 	// Now do the untar with an extraction root
 	exDir = testcommon.CreateTmpDir("TestUnTar2")
-	err = util.Untar(TestArchivePath, exDir, TestArchiveExtractDir)
+	err = util.Untar(TestTarArchivePath, exDir, TestTarArchiveExtractDir)
 	assert.NoError(err)
 
 	finfo, err = os.Stat(filepath.Join(exDir, ".ddev"))
@@ -47,13 +56,52 @@ func TestUntar(t *testing.T) {
 
 }
 
+// TestUnzip tests unzip functionality, including the starting extraction-skip directory
+func TestUnzip(t *testing.T) {
+
+	// testZipExtractDir is the directory we may want to use to start extracting.
+	testZipExtractDir := "dir2/"
+
+	assert := assert.New(t)
+	exDir := testcommon.CreateTmpDir("TestUnzip1")
+
+	zipfilePath := filepath.Join("testing", "testfile.zip")
+
+	err := util.Unzip(zipfilePath, exDir, "")
+	assert.NoError(err)
+
+	// Make sure that our base extraction directory is there
+	finfo, err := os.Stat(filepath.Join(exDir, testZipExtractDir))
+	assert.NoError(err)
+	assert.True(err == nil && finfo.IsDir())
+	finfo, err = os.Stat(filepath.Join(exDir, testZipExtractDir, "dir2_file.txt"))
+	assert.NoError(err)
+	assert.True(err == nil && !finfo.IsDir())
+
+	err = os.RemoveAll(exDir)
+	assert.NoError(err)
+
+	// Now do the unzip with an extraction root
+	exDir = testcommon.CreateTmpDir("TestUnzip2")
+	err = util.Unzip(zipfilePath, exDir, testZipExtractDir)
+	assert.NoError(err)
+
+	// Only the dir2_file should remain
+	finfo, err = os.Stat(filepath.Join(exDir, "dir2_file.txt"))
+	assert.NoError(err)
+	assert.True(err == nil && !finfo.IsDir())
+
+	err = os.RemoveAll(exDir)
+	assert.NoError(err)
+}
+
 // TestCopyFile tests copying a file.
 func TestCopyFile(t *testing.T) {
 	assert := assert.New(t)
 	tmpTargetDir := testcommon.CreateTmpDir("TestCopyFile")
-	tmpTargetFile := filepath.Join(tmpTargetDir, filepath.Base(TestArchivePath))
+	tmpTargetFile := filepath.Join(tmpTargetDir, filepath.Base(TestTarArchivePath))
 
-	err := util.CopyFile(TestArchivePath, tmpTargetFile)
+	err := util.CopyFile(TestTarArchivePath, tmpTargetFile)
 	assert.NoError(err)
 
 	file, err := os.Stat(tmpTargetFile)
@@ -77,7 +125,7 @@ func TestCopyDir(t *testing.T) {
 	assert.NoError(err)
 
 	// test source not a directory
-	err = util.CopyDir(TestArchivePath, sourceDir)
+	err = util.CopyDir(TestTarArchivePath, sourceDir)
 	assert.Error(err)
 	assert.Contains(err.Error(), "source is not a directory")
 
