@@ -21,8 +21,8 @@ var (
 	TestArchiveExtractDir = "wordpress-0.4.0/"
 
 	// The image here can be any image, it just has to exist so it can be used for labels, etc.
-	TestRouterImage = "drud/nginx-proxy"
-	TestRouterTag   = "test-do-not-delete"
+	TestRouterImage = "busybox"
+	TestRouterTag   = "1"
 )
 
 func TestMain(m *testing.M) {
