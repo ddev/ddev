@@ -8,8 +8,8 @@ import (
 // LocalDevSSHCmd represents the ssh command.
 var LocalDevSSHCmd = &cobra.Command{
 	Use:   "ssh",
-	Short: "SSH to an app container.",
-	Long:  `Connects user to the running container.`,
+	Short: "Starts a shell session in the container for a service. Uses web service by default.",
+	Long:  `Starts a shell session in the container for a service. Uses web service by default. To start a shell session for another service, run "ddev ssh --service <service>`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp()
 		if err != nil {
@@ -31,6 +31,6 @@ var LocalDevSSHCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevSSHCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Which service to send the command to. [web, db]")
+	LocalDevSSHCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
 	RootCmd.AddCommand(LocalDevSSHCmd)
 }

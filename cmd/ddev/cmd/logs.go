@@ -36,7 +36,7 @@ var LocalDevLogsCmd = &cobra.Command{
 func init() {
 	LocalDevLogsCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Follow the logs in real time.")
 	LocalDevLogsCmd.Flags().BoolVarP(&timestamp, "time", "t", false, "Add timestamps to logs")
-	LocalDevLogsCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Which service to send the command to. [web, db]")
+	LocalDevLogsCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to retrieve logs from. [e.g. web, db]")
 	LocalDevLogsCmd.Flags().StringVarP(&tail, "tail", "", "", "How many lines to show")
 	RootCmd.AddCommand(LocalDevLogsCmd)
 
