@@ -220,7 +220,7 @@ func (c *Config) RenderComposeYAML() (string, error) {
 	}
 	templateVars := map[string]string{
 		"name":        c.Name,
-		"docroot":     filepath.Join("../", c.Docroot),
+		"docroot":     "../" + c.Docroot,
 		"plugin":      c.Platform,
 		"appType":     c.AppType,
 		"mailhogport": appports.GetPort("mailhog"),
