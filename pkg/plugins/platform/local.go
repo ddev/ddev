@@ -440,7 +440,7 @@ func (l *LocalApp) Config() error {
 	settingsFilePath := filepath.Join(basePath, docroot)
 
 	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
-		settingsFilePath = filepath.Join(settingsFilePath, "sites/default/settings.php")
+		settingsFilePath = filepath.Join(settingsFilePath, "sites", "default", "settings.php")
 	}
 
 	if l.GetType() == "wordpress" {
