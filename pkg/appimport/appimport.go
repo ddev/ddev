@@ -16,7 +16,7 @@ import (
 // If the path provided is a tarball, it will extract, validate, and return the extracted asset path.
 func ValidateAsset(assetPath string, assetType string) (string, error) {
 	var invalidAssetError = "%v. Please provide a valid asset path."
-	extensions := []string{"tar", "gz", "tgz"}
+	extensions := []string{"tar", "gz", "tgz", "zip"}
 
 	// Input provided via prompt or "--flag=value" is not expanded by shell. This will help ensure ~ is expanded to the user home directory.
 	assetPath, err := homedir.Expand(assetPath)
