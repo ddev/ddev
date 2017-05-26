@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -220,7 +221,7 @@ func (c *Config) RenderComposeYAML() (string, error) {
 	}
 	templateVars := map[string]string{
 		"name":        c.Name,
-		"docroot":     "../" + c.Docroot,
+		"docroot":     path.Join("../", c.Docroot),
 		"plugin":      c.Platform,
 		"appType":     c.AppType,
 		"mailhogport": appports.GetPort("mailhog"),
