@@ -44,6 +44,10 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	if len(GetApps()) > 0 {
+		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", len(GetApps()))
+	}
+
 	for i := range TestSites {
 		err := TestSites[i].Prepare()
 		if err != nil {
