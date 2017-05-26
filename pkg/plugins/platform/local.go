@@ -249,29 +249,40 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		return err
 	}
 
-	// destination dir should not exist
-	if system.FileExists(destPath) {
-		err := os.RemoveAll(destPath)
+	// destination dir must exist
+	if !system.FileExists(destPath) {
+		err := os.MkdirAll(destPath, 0755)
 		if err != nil {
 			return err
 		}
 	}
 
 	importPath, err := appimport.ValidateAsset(imPath, "files")
-	if err != nil {
-		if err.Error() != "is archive" {
-			return err
-		}
+	if err != nil && err.Error() != "is archive" {
+		return err
+	}
+	switch {
+	case strings.HasSuffix(importPath, "tar"):
+		fallthrough
+	case strings.HasSuffix(importPath, "tar.gz"):
+		fallthrough
+	case strings.HasSuffix(importPath, "tgz"):
 		err = util.Untar(importPath, destPath, "")
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
-		return nil
-	}
+	case strings.HasSuffix(importPath, "zip"):
+		err = util.Unzip(importPath, destPath, "")
+		if err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
+		}
 
-	err = util.CopyDir(importPath, destPath)
-	if err != nil {
-		return err
+	default:
+		// Simple file copy if none of the archive formats
+		err = util.CopyDir(importPath, destPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
