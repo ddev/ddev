@@ -30,7 +30,7 @@ var ImportFileCmd = &cobra.Command{
 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := getActiveApp()
+		app, err := getActiveApp("")
 		if err != nil {
 			util.Failed("Failed to import files: %v", err)
 		}

@@ -23,7 +23,11 @@ var (
 	plugin   = "local"
 	// 1 week
 	updateInterval = time.Hour * 24 * 7
+	siteName       string
+	serviceType    string
 )
+
+const netName = "ddev_default"
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -51,7 +55,7 @@ var RootCmd = &cobra.Command{
 
 		usr, err := homedir.Dir()
 		if err != nil {
-			log.Fatalf("Could not detect user's home directory: %v", err)
+			log.Fatal("Could not detect user's home directory: ", err)
 		}
 
 		updateFile := filepath.Join(usr, ".ddev", ".update")
@@ -108,13 +112,35 @@ func init() {
 }
 
 // getActiveAppRoot returns the fully rooted directory of the active app, or an error
-func getActiveAppRoot() (string, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "", fmt.Errorf("error determining the current directory: %s", err)
+func getActiveAppRoot(siteName string) (string, error) {
+	var siteDir string
+	var err error
+
+	if siteName == "" {
+		siteDir, err = os.Getwd()
+		if err != nil {
+			return "", fmt.Errorf("error determining the current directory: %s", err)
+		}
+	} else {
+		var ok bool
+
+		labels := map[string]string{
+			"com.ddev.site-name":         siteName,
+			"com.docker.compose.service": "web",
+		}
+
+		webContainer, err := dockerutil.FindContainerByLabels(labels)
+		if err != nil {
+			return "", err
+		}
+
+		siteDir, ok = webContainer.Labels["com.ddev.approot"]
+		if !ok {
+			return "", fmt.Errorf("could not find webroot on container: %s", dockerutil.ContainerName(webContainer))
+		}
 	}
 
-	appRoot, err := platform.CheckForConf(cwd)
+	appRoot, err := platform.CheckForConf(siteDir)
 	if err != nil {
 		return "", fmt.Errorf("unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
 	}
@@ -122,13 +148,13 @@ func getActiveAppRoot() (string, error) {
 	return appRoot, nil
 }
 
-// getActiveApp returns the active platform.App based on the current working directory.
-func getActiveApp() (platform.App, error) {
+// getActiveApp returns the active platform.App based on the current working directory or running siteName provided.
+func getActiveApp(siteName string) (platform.App, error) {
 	app, err := platform.GetPluginApp(plugin)
 	if err != nil {
 		return app, err
 	}
-	activeAppRoot, err := getActiveAppRoot()
+	activeAppRoot, err := getActiveAppRoot(siteName)
 	if err != nil {
 		return app, err
 	}

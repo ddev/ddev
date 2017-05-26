@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -15,16 +15,14 @@ var DescribeCommand = &cobra.Command{
 	Short: "Get a detailed description of a running ddev site.",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
-			log.Fatal("Too many arguments detected. Please use `ddev describe` or `ddev describe [appname]`")
+			util.Failed("Too many arguments provided. Please use `ddev describe` or `ddev describe [appname]`")
 		}
-
-		appName := ""
 
 		if len(args) == 1 {
-			appName = args[0]
+			siteName = args[0]
 		}
 
-		out, err := describeApp(appName)
+		out, err := describeApp(siteName)
 		if err != nil {
 			log.Fatalf("Could not describe app: %v", err)
 		}
@@ -37,38 +35,11 @@ func describeApp(appName string) (string, error) {
 	var app platform.App
 	var err error
 
-	if appName == "" {
-		app, err = getActiveApp()
-		if err != nil {
-			return "", err
-		}
-	} else {
-		labels := map[string]string{
-			"com.ddev.site-name":         appName,
-			"com.docker.compose.service": "web",
-		}
-
-		webContainer, err := dockerutil.FindContainerByLabels(labels)
-		if err != nil {
-			return "", err
-		}
-
-		dir, ok := webContainer.Labels["com.ddev.approot"]
-		if !ok {
-			return "", fmt.Errorf("could not find webroot on container: %s", dockerutil.ContainerName(webContainer))
-		}
-
-		app, err = platform.GetPluginApp(plugin)
-		if err != nil {
-			log.Fatalf("Could not find application type %s: %v", plugin, err)
-		}
-
-		err = app.Init(dir)
-		if err != nil {
-			return "", err
-		}
-
+	app, err = getActiveApp(appName)
+	if err != nil {
+		return "", err
 	}
+
 	out, err := app.Describe()
 	return out, err
 }

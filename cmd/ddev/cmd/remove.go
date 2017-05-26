@@ -18,7 +18,15 @@ var LocalDevRMCmd = &cobra.Command{
 	Short:   "Remove an application's local services.",
 	Long:    `Remove will delete the local service containers from this machine.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := getActiveApp()
+		if len(args) > 1 {
+			util.Failed("Too many arguments provided. Please use `ddev remove` or `ddev remove [appname]`")
+		}
+
+		if len(args) == 1 {
+			siteName = args[0]
+		}
+
+		app, err := getActiveApp(siteName)
 		if err != nil {
 			util.Failed("Failed to get active app: %v", err)
 		}
