@@ -21,8 +21,8 @@ var (
 			Name:                          "TestMainCmdDrupal8",
 			SourceURL:                     "https://github.com/drud/drupal8/archive/v0.6.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal8-0.6.0/",
-			FileURL: "https://github.com/drud/drupal8/releases/download/v0.6.0/files.tar.gz",
-			DBURL:   "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
 		},
 	}
 )

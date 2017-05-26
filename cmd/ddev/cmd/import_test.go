@@ -19,7 +19,7 @@ func TestImportTilde(t *testing.T) {
 
 		usr, err := homedir.Dir()
 		assert.NoError(err)
-		err = system.DownloadFile(filepath.Join(usr, "files.tar.gz"), site.FileURL)
+		err = system.DownloadFile(filepath.Join(usr, "files.tar.gz"), site.FilesTarballURL)
 		assert.NoError(err)
 
 		// this ~ should be expanded by shell

@@ -23,23 +23,24 @@ var (
 			Name:                          "TestMainPkgDrupal8",
 			SourceURL:                     "https://github.com/drud/drupal8/archive/v0.6.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal8-0.6.0/",
-			FileURL:  "https://github.com/drud/drupal8/releases/download/v0.6.0/files.tar.gz",
-			DBURL:    "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
-			DBZipURL: "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
+			FilesTarballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.tar.gz",
+			FilesZipballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.zip",
+			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
+			DBZipURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
 		},
 		{
 			Name:                          "TestMainPkgWordpress",
 			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
 			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-			FileURL: "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-			DBURL:   "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		},
 		{
 			Name:                          "TestMainPkgDrupalKickstart",
 			SourceURL:                     "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-kickstart-0.4.0/",
-			FileURL: "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
-			DBURL:   "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
 		},
 	}
 )
@@ -156,9 +157,9 @@ func TestLocalImportDB(t *testing.T) {
 		err = app.Init(site.Dir)
 		assert.NoError(err)
 
-		if site.DBURL != "" {
+		if site.DBTarURL != "" {
 			dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
-			err := system.DownloadFile(dbPath, site.DBURL)
+			err := system.DownloadFile(dbPath, site.DBTarURL)
 			assert.NoError(err)
 			err = app.ImportDB(dbPath)
 			assert.NoError(err)
@@ -190,20 +191,30 @@ func TestLocalImportFiles(t *testing.T) {
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportFiles", site.Name))
-		filePath := filepath.Join(testcommon.CreateTmpDir("local-files"), "files.tar.gz")
-
-		err := system.DownloadFile(filePath, site.FileURL)
-		assert.NoError(err)
 
 		testcommon.ClearDockerEnv()
 		err = app.Init(site.Dir)
 		assert.NoError(err)
 
-		err = app.ImportFiles(filePath)
-		assert.NoError(err)
+		if site.FilesTarballURL != "" {
+			filePath := filepath.Join(testcommon.CreateTmpDir("local-tarball-files"), "files.tar.gz")
+			err := system.DownloadFile(filePath, site.FilesTarballURL)
+			assert.NoError(err)
+			err = app.ImportFiles(filePath)
+			assert.NoError(err)
+			err = os.Remove(filePath)
+			assert.NoError(err)
+		}
 
-		err = os.Remove(filePath)
-		assert.NoError(err)
+		if site.FilesZipballURL != "" {
+			filePath := filepath.Join(testcommon.CreateTmpDir("local-zipball-files"), "files.zip")
+			err := system.DownloadFile(filePath, site.FilesZipballURL)
+			assert.NoError(err)
+			err = app.ImportFiles(filePath)
+			assert.NoError(err)
+			err = os.Remove(filePath)
+			assert.NoError(err)
+		}
 
 		runTime()
 		cleanup()
