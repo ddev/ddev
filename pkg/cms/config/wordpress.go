@@ -2,8 +2,9 @@ package config
 
 import (
 	"os"
-	"strings"
 	"text/template"
+
+	"path/filepath"
 
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/cms/model"
@@ -82,11 +83,12 @@ require_once(ABSPATH . '/wp-settings.php');
 // object with a data-driven template.
 func WriteWordpressConfig(wordpressConfig *model.WordpressConfig, filePath string) error {
 	tmpl, err := template.New("wordpressConfig").Funcs(sprig.TxtFuncMap()).Parse(wordpressTemplate)
-	dir := strings.TrimSuffix(filePath, "/wp-config.php")
 	if err != nil {
 		return err
 	}
+
 	// Ensure target directory is writable.
+	dir := filepath.Dir(filePath)
 	err = os.Chmod(dir, 0755)
 	if err != nil {
 		return err
