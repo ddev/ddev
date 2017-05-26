@@ -62,13 +62,13 @@ func TestMain(m *testing.M) {
 func TestGetActiveAppRoot(t *testing.T) {
 	assert := assert.New(t)
 
-	appRoot, err := getActiveAppRoot("")
+	_, err := getActiveAppRoot("")
 	assert.Contains(err.Error(), "unable to determine the application for this command")
 
-	appRoot, err = getActiveAppRoot("potato")
+	_, err = getActiveAppRoot("potato")
 	assert.Error(err)
 
-	appRoot, err = getActiveAppRoot(DevTestSites[0].Name)
+	appRoot, err := getActiveAppRoot(DevTestSites[0].Name)
 	assert.NoError(err)
 	assert.Equal(DevTestSites[0].Dir, appRoot)
 
