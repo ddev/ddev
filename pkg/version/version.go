@@ -12,7 +12,7 @@ var DdevVersion = "v0.3.0-dev" // Note that this is overridden by make
 var WebImg = "drud/nginx-php-fpm7-local" // Note that this is overridden by make
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "v0.4.0" // Note that this is overridden by make
+var WebTag = "v0.5.0" // Note that this is overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/mysql-docker-local-57" // Note that this is overridden by make

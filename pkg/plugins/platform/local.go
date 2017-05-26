@@ -12,6 +12,9 @@ import (
 	"net/url"
 	"os/exec"
 
+	"os/user"
+	"runtime"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
@@ -380,6 +383,15 @@ func (l *LocalApp) DockerEnv() {
 		"DDEV_DOCROOT":         filepath.Join(l.AppConfig.AppRoot, l.AppConfig.Docroot),
 		"DDEV_URL":             l.URL(),
 		"DDEV_HOSTNAME":        l.HostName(),
+		"DDEV_UID":             "",
+		"DDEV_GID":             "",
+	}
+	if runtime.GOOS == "linux" {
+		curUser, err := user.Current()
+		util.CheckErr(err)
+
+		envVars["DDEV_UID"] = curUser.Uid
+		envVars["DDEV_GID"] = curUser.Gid
 	}
 
 	// Only set values if they don't already exist in env.

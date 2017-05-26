@@ -7,7 +7,7 @@
 - [docker](https://www.docker.com/community-edition)
 - OS Support
   - macOS Sierra
-  - Linux
+  - Linux (See [Linux notes](users/linux_notes.md))
     * Ubuntu 16.04 LTS
     * Debian Jessie
     * Fedora 25
