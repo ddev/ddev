@@ -30,6 +30,8 @@ type TestSite struct {
 	FileURL string
 	// DBURL is the URL of the database dump tarball used for testing database import.
 	DBURL string
+	// DBZipURL is the URL of an optional zip-style db dump.
+	DBZipURL string
 	// Dir is the rooted full path of the test site
 	Dir string
 }

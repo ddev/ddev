@@ -156,6 +156,10 @@ func (l *LocalApp) ImportDB(imPath string) error {
 			}
 
 		case strings.HasSuffix(importPath, "tar"):
+			fallthrough
+		case strings.HasSuffix(importPath, "tar.gz"):
+			fallthrough
+		case strings.HasSuffix(importPath, "tgz"):
 			err := util.Untar(importPath, dbPath, "")
 			if err != nil {
 				return fmt.Errorf("failed to extract provided archive: %v", err)

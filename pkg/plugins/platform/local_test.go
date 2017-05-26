@@ -23,8 +23,9 @@ var (
 			Name:                          "TestMainPkgDrupal8",
 			SourceURL:                     "https://github.com/drud/drupal8/archive/v0.6.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal8-0.6.0/",
-			FileURL: "https://github.com/drud/drupal8/releases/download/v0.6.0/files.tar.gz",
-			DBURL:   "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
+			FileURL:  "https://github.com/drud/drupal8/releases/download/v0.6.0/files.tar.gz",
+			DBURL:    "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
+			DBZipURL: "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
 		},
 		{
 			Name:                          "TestMainPkgWordpress",
@@ -150,20 +151,30 @@ func TestLocalImportDB(t *testing.T) {
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportDB", site.Name))
-		dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
-
-		err := system.DownloadFile(dbPath, site.DBURL)
-		assert.NoError(err)
 
 		testcommon.ClearDockerEnv()
 		err = app.Init(site.Dir)
 		assert.NoError(err)
 
-		err = app.ImportDB(dbPath)
-		assert.NoError(err)
+		if site.DBURL != "" {
+			dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
+			err := system.DownloadFile(dbPath, site.DBURL)
+			assert.NoError(err)
+			err = app.ImportDB(dbPath)
+			assert.NoError(err)
+			err = os.Remove(dbPath)
+			assert.NoError(err)
+		}
 
-		err = os.Remove(dbPath)
-		assert.NoError(err)
+		if site.DBZipURL != "" {
+			dbZipPath := filepath.Join(testcommon.CreateTmpDir("local-db-zip"), "db.zip")
+			err = system.DownloadFile(dbZipPath, site.DBZipURL)
+			assert.NoError(err)
+			err = app.ImportDB(dbZipPath)
+			assert.NoError(err)
+			err = os.Remove(dbZipPath)
+			assert.NoError(err)
+		}
 
 		runTime()
 		cleanup()
