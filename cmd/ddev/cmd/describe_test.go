@@ -33,7 +33,7 @@ func TestDescribeBadArgs(t *testing.T) {
 	args = []string{"describe", testcommon.RandString(16), testcommon.RandString(16)}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Too many arguments detected")
+	assert.Contains(string(out), "Too many arguments provided")
 
 }
 
@@ -77,7 +77,7 @@ func TestDescribeAppFunction(t *testing.T) {
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
 
-		app, err := getActiveApp()
+		app, err := getActiveApp("")
 		assert.NoError(err)
 
 		out, err := describeApp("")

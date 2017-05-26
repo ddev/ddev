@@ -19,14 +19,14 @@ func TestSequelproOperation(t *testing.T) {
 	v := DevTestSites[0]
 	cleanup := v.Chdir()
 
-	_, err := getActiveApp()
+	_, err := getActiveApp("")
 	assert.NoError(err)
 
 	out, err := handleSequelProCommand(SequelproLoc)
 	assert.NoError(err)
 	assert.Contains(string(out), "sequelpro command finished successfully")
 
-	dir, err := getActiveAppRoot()
+	dir, err := getActiveAppRoot("")
 	assert.NoError(err)
 	assert.Equal(true, fileutil.FileExists(filepath.Join(dir, ".ddev/sequelpro.spf")))
 
