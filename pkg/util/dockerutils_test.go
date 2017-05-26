@@ -7,7 +7,6 @@ import (
 
 	"github.com/drud/ddev/pkg/testcommon"
 	. "github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
 )
@@ -90,7 +89,7 @@ func TestGetAppContainers(t *testing.T) {
 	assert := assert.New(t)
 	sites, err := GetAppContainers("dockertest")
 	assert.NoError(err)
-	assert.Equal(sites[0].Image, version.RouterImage+":"+version.RouterTag)
+	assert.Equal(sites[0].Image, TestRouterImage+":"+TestRouterTag)
 }
 
 func TestGetContainerEnv(t *testing.T) {

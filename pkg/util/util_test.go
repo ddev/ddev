@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
 	"github.com/drud/drud-go/utils/system"
 	docker "github.com/fsouza/go-dockerclient"
 )
@@ -20,6 +19,10 @@ var (
 	TestArchivePath string
 	// TestArchiveExtractDir is the directory in the archive to extract
 	TestArchiveExtractDir = "wordpress-0.4.0/"
+
+	// The image here can be any image, it just has to exist so it can be used for labels, etc.
+	TestRouterImage = "busybox"
+	TestRouterTag   = "1"
 )
 
 func TestMain(m *testing.M) {
@@ -38,9 +41,10 @@ func TestMain(m *testing.M) {
 
 	// prep docker container for docker util tests
 	client := util.GetDockerClient()
+
 	err = client.PullImage(docker.PullImageOptions{
-		Repository: version.RouterImage,
-		Tag:        version.RouterTag,
+		Repository: TestRouterImage,
+		Tag:        TestRouterTag,
 	}, docker.AuthConfiguration{})
 	if err != nil {
 		log.Fatal("failed to pull test image ", err)
@@ -49,7 +53,7 @@ func TestMain(m *testing.M) {
 	container, err := client.CreateContainer(docker.CreateContainerOptions{
 		Name: "envtest",
 		Config: &docker.Config{
-			Image: version.RouterImage + ":" + version.RouterTag,
+			Image: TestRouterImage + ":" + TestRouterTag,
 			Labels: map[string]string{
 				"com.docker.compose.service": "ddevrouter",
 				"com.ddev.site-name":         "dockertest",
@@ -58,7 +62,7 @@ func TestMain(m *testing.M) {
 		},
 	})
 	if err != nil {
-		log.Fatal("failed to start docker container ", err)
+		log.Fatal("failed to create/start docker container ", err)
 	}
 
 	testRun := m.Run()
