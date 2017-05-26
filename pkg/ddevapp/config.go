@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -219,8 +220,10 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 	templateVars := map[string]string{
-		"name":        c.Name,
-		"docroot":     filepath.Join("../", c.Docroot),
+		"name": c.Name,
+		// path.Join is desired over filepath.Join here,
+		// as we always want a unix-style path for the mount.
+		"docroot":     path.Join("../", c.Docroot),
 		"plugin":      c.Platform,
 		"appType":     c.AppType,
 		"mailhogport": appports.GetPort("mailhog"),
