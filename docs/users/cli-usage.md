@@ -139,9 +139,12 @@ Commands can also be executed using the shorter `ddev . <cmd>` alias.
 The `ddev ssh` command will open a bash shell session to the container for a ddev service. The web service is connected to by default. To connect to another service, use the `--service` flag to specify the service you want to connect to. For example, to connect to the database container, you would run `ddev ssh --service db`.
 
 ### Log Access
-The `ddev logs` command allows you to easily retrieve error logs from the web server. To follow the webserver  error log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail.
+The `ddev logs` command allows you to easily retrieve error logs from the web server. To follow the web server error log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail.
 
 Additional logging can be accessed by using `ddev ssh` to manually review the log files you are after. The web server stores access logs at `/var/log/nginx/access.log`, and PHP-FPM logs at `/var/log/php7.0-fpm.log`.
 
+## Stopping a site
+You can stop a site's containers without losing data by using `ddev stop` in the working directory of the site. You can also stop any running site's containers by providing the site name as an argument, e.g. `ddev stop <sitename>`.
+
 ## Removing a site
-You can remove a site by going to the working directory for the site and running `ddev remove`. `ddev remove` destroys all data and containers associated with the site.
+You can remove a site's containers by running `ddev remove` in the working directory of the site. You can also remove any running site's containers by providing the site name as an argument, e.g. `ddev rm <sitename>`. **Note:** this operation is destructive. It will remove all containers for the site, destroying database contents in the process. Your project code base and files will not be affected.
