@@ -87,6 +87,12 @@ func (l *LocalApp) Describe() (string, error) {
 	RenderAppRow(appTable, l)
 	output = fmt.Sprint(appTable)
 
+	db, err := l.FindContainerByType("db")
+	if err != nil {
+		return "", err
+	}
+	dbPort := fmt.Sprint(dockerutil.GetPublishedPort(3306, db))
+
 	// Only show extended status for running sites.
 	if siteStatus == SiteRunning {
 		output = output + "\n\nMySQL Credentials\n-----------------\n"
@@ -95,8 +101,10 @@ func (l *LocalApp) Describe() (string, error) {
 		dbTable.AddRow("Username:", "root")
 		dbTable.AddRow("Password:", "root")
 		dbTable.AddRow("Database name:", "data")
-		dbTable.AddRow("Connection Info:", l.HostName()+":"+appports.GetPort("db"))
+		dbTable.AddRow("Host:", "db")
+		dbTable.AddRow("Port:", appports.GetPort("db"))
 		output = output + fmt.Sprint(dbTable)
+		output = output + "\nTo connect to mysql from your host machine, use localhost on port " + dbPort
 
 		output = output + "\n\nOther Services\n--------------\n"
 		other := uitable.New()
@@ -500,10 +508,12 @@ func (l *LocalApp) Config() error {
 		}
 
 		// Setup a custom settings file for use with drush.
-		dbPort, err := dockerutil.GetPodPort("local-" + l.GetName() + "-db")
+		db, err := l.FindContainerByType("db")
 		if err != nil {
 			return err
 		}
+
+		dbPort := dockerutil.GetPublishedPort(3306, db)
 
 		drushSettingsPath := filepath.Join(basePath, "drush.settings.php")
 		drushConfig := model.NewDrushConfig()
