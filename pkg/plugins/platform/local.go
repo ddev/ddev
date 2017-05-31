@@ -103,9 +103,9 @@ func (l *LocalApp) Describe() (string, error) {
 		output = output + "\n\nMySQL Credentials\n-----------------\n"
 		dbTable := uitable.New()
 		dbTable.MaxColWidth = maxWidth
-		dbTable.AddRow("Username:", "root")
-		dbTable.AddRow("Password:", "root")
-		dbTable.AddRow("Database name:", "data")
+		dbTable.AddRow("Username:", "db")
+		dbTable.AddRow("Password:", "db")
+		dbTable.AddRow("Database name:", "db")
 		dbTable.AddRow("Host:", "db")
 		dbTable.AddRow("Port:", appports.GetPort("db"))
 		output = output + fmt.Sprint(dbTable)

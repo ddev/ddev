@@ -23,9 +23,9 @@ type DrupalConfig struct {
 // NewDrupalConfig produces a DrupalConfig object with default.
 func NewDrupalConfig() *DrupalConfig {
 	return &DrupalConfig{
-		DatabaseName:     "data",
-		DatabaseUsername: "root",
-		DatabasePassword: "root",
+		DatabaseName:     "db",
+		DatabaseUsername: "db",
+		DatabasePassword: "db",
 		DatabaseHost:     "db",
 		DatabaseDriver:   "mysql",
 		DatabasePort:     appports.GetPort("db"),

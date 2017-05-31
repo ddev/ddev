@@ -70,12 +70,12 @@ func handleSequelProCommand(appLocation string) (string, error) {
 
 	_, err = tmpFile.WriteString(fmt.Sprintf(
 		platform.SequelproTemplate,
-		"data",         //dbname
+		"db",           //dbname
 		"127.0.0.1",    //host
 		app.HostName(), //connection name
-		"root",         // dbpass
+		"db",           // dbpass
 		dbPublishPort,  // port
-		"root",         //dbuser
+		"db",           //dbuser
 	))
 	util.CheckErr(err)
 

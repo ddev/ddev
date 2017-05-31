@@ -29,7 +29,6 @@ services:
     depends_on:
       - db
     links:
-      - db:$DDEV_HOSTNAME
       - db:db
     ports:
       - "80"
@@ -68,8 +67,8 @@ services:
     ports:
       - "80"
     environment:
-      - PMA_USER=root
-      - PMA_PASSWORD=root
+      - PMA_USER=db
+      - PMA_PASSWORD=db
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
       - HTTP_EXPOSE={{ .dbaport }}

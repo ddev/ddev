@@ -27,9 +27,9 @@ type WordpressConfig struct {
 func NewWordpressConfig() *WordpressConfig {
 	return &WordpressConfig{
 		WPGeneric:        false,
-		DatabaseName:     "data",
-		DatabaseUsername: "root",
-		DatabasePassword: "root",
+		DatabaseName:     "db",
+		DatabaseUsername: "db",
+		DatabasePassword: "db",
 		DatabaseHost:     "db",
 		Docroot:          "/var/www/html/docroot",
 		TablePrefix:      "wp_",
