@@ -76,3 +76,15 @@ setup:
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: gofmt govet golint errcheck staticcheck codecoroner
 
+# Pulls down windows, mac and linux artifacts from a CircleCI build that should
+# be triggered after tagging a release.  In order to run this you will need to 
+# log into CircleCI and obtain the root url for the artifacts that are generated.
+# A successful call would look something like:
+#
+# make ddevrelease DDEV_CIRCLE_BUILD=https://900-80669528-gh.circle-artifacts.com/0
+#
+# You will be left with a versioned folder in the release directory that 
+# contains the assets that should be uploaded to GitHub to accompany the
+# release.
+ddevrelease:
+	./release/ddevrelease.sh $(DDEV_CIRCLE_BUILD)
