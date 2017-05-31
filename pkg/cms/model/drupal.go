@@ -1,6 +1,9 @@
 package model
 
-import "github.com/drud/ddev/pkg/appports"
+import (
+	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/drud-go/utils/stringutil"
+)
 
 // DrupalConfig encapsulates all the configurations for a Drupal site.
 type DrupalConfig struct {
@@ -23,11 +26,12 @@ func NewDrupalConfig() *DrupalConfig {
 		DatabaseName:     "data",
 		DatabaseUsername: "root",
 		DatabasePassword: "root",
-		DatabaseHost:     "127.0.0.1",
+		DatabaseHost:     "db",
 		DatabaseDriver:   "mysql",
 		DatabasePort:     appports.GetPort("db"),
 		DatabasePrefix:   "",
 		IsDrupal8:        false,
+		HashSalt:         stringutil.RandomString(64),
 	}
 }
 
