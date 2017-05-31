@@ -84,10 +84,12 @@ drupal8  drupal8  ~/Projects/ddev/drupal8  http://drupal8.ddev.local  running
 
 MySQL Credentials
 -----------------
-Username:       	root
-Password:       	root
-Database name:  	data
-Connection Info:	drupal8.ddev.local:3306
+Username:     	root
+Password:     	root
+Database name:	data
+Host:         	db
+Port:         	3306
+To connect to mysql from your host machine, use port 32834 on 127.0.0.1
 
 Other Services
 --------------
@@ -125,18 +127,18 @@ Successfully imported files for drupal8
 
 The `import-files` command allows you to specify the location of uploaded file assets to import for your site. For Drupal, this is the public files directory, located at `sites/default/files` by default. For WordPress, this is the uploads directory, located at `wp-content/uploads` by default. The files may be provided as a directory or tar archive containing the contents of the uploads folder. The contents of the directory or archive provided will be copied to the default location of the upload directory for your site.
 
-## Interacting with your site
+## Interacting with your Site
 ddev provides several commands to facilitate interacting with your site in the development environment. These commands can be run within the working directory of your project while the site is running in ddev. 
 
-### Executing Commands
-The `ddev exec` command allows you to run shell commands in the container for a ddev service. By default, commands are executed against the web service container, in the docroot path of your site. This allows you to use [the developer tools included in the web container](included-tools.md). For example, to run the Drush CLI in the web container, you would run `ddev exec drush`.
+### Executing Commands in Containers
+The `ddev exec` command allows you to run shell commands in the container for a ddev service. By default, commands are executed against the web service container, in the docroot path of your site. This allows you to use [the developer tools included in the web container](developer-tools.md). For example, to run the Drush CLI in the web container, you would run `ddev exec drush`.
 
 To run a shell command in the container for a different service, use the `--service` flag at the beginning of your exec command to specify the service the command should be run against. For example, to run the mysql client in the database, container, you would run `ddev exec --service db mysql`.
 
 Commands can also be executed using the shorter `ddev . <cmd>` alias.
 
-### SSH Into The Container
-The `ddev ssh` command will open a bash shell session to the container for a ddev service. The web service is connected to by default. To connect to another service, use the `--service` flag to specify the service you want to connect to. For example, to connect to the database container, you would run `ddev ssh --service db`.
+### SSH Into Containers
+The `ddev ssh` command will open an interactive bash shell session to the container for a ddev service. The web service is connected to by default. The session can be ended by typing `exit`. To connect to another service, use the `--service` flag to specify the service you want to connect to. For example, to connect to the database container, you would run `ddev ssh --service db`.
 
 ### Log Access
 The `ddev logs` command allows you to easily retrieve error logs from the web server. To follow the webserver  error log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail.
