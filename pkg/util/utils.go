@@ -1,7 +1,9 @@
 package util
 
 import (
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/fatih/color"
 )
@@ -28,4 +30,15 @@ func FormatPlural(count int, single string, plural string) string {
 		return single
 	}
 	return plural
+}
+
+// RandomString returns a random string of len strlen
+func RandomString(strlen int) string {
+	rand.Seed(time.Now().UTC().UnixNano())
+	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+	result := make([]byte, strlen)
+	for i := 0; i < strlen; i++ {
+		result[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(result)
 }

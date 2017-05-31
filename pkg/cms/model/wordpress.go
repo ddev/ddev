@@ -1,6 +1,6 @@
 package model
 
-import "github.com/drud/drud-go/utils/stringutil"
+import "github.com/drud/ddev/pkg/util"
 
 // WordpressConfig encapsulates all the configurations for a WordPress site.
 type WordpressConfig struct {
@@ -33,13 +33,13 @@ func NewWordpressConfig() *WordpressConfig {
 		DatabaseHost:     "db",
 		Docroot:          "/var/www/html/docroot",
 		TablePrefix:      "wp_",
-		AuthKey:          stringutil.RandomString(64),
-		AuthSalt:         stringutil.RandomString(64),
-		LoggedInKey:      stringutil.RandomString(64),
-		LoggedInSalt:     stringutil.RandomString(64),
-		NonceKey:         stringutil.RandomString(64),
-		NonceSalt:        stringutil.RandomString(64),
-		SecureAuthKey:    stringutil.RandomString(64),
-		SecureAuthSalt:   stringutil.RandomString(64),
+		AuthKey:          util.RandomString(64),
+		AuthSalt:         util.RandomString(64),
+		LoggedInKey:      util.RandomString(64),
+		LoggedInSalt:     util.RandomString(64),
+		NonceKey:         util.RandomString(64),
+		NonceSalt:        util.RandomString(64),
+		SecureAuthKey:    util.RandomString(64),
+		SecureAuthSalt:   util.RandomString(64),
 	}
 }
