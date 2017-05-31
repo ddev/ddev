@@ -11,13 +11,8 @@ services:
     volumes:
       - "./data:/db"
     restart: always
-    environment:
-      # TCP_EXPOSE allows for TCP ports to be accessible from <site>.ddev.local:<port>
-      # To expose a container port to a different host port, define the port as hostPort:containerPort
-      # e.g., to expose db traffic on port 8086, define port as 8086:3036
-      - TCP_EXPOSE={{ .dbport }}
     ports:
-      - 3306
+      - "3306"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .plugin }}
@@ -38,7 +33,7 @@ services:
       - db:db
     ports:
       - "80"
-      - {{ .mailhogport }}
+      - "{{ .mailhogport }}"
     working_dir: "/var/www/html/docroot"
     environment:
       - DDEV_UID=$DDEV_UID
