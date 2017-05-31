@@ -16,13 +16,7 @@ func TestDevExecBadArgs(t *testing.T) {
 	args := []string{"exec"}
 	out, err := system.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Invalid arguments detected.")
-
-	// Try with an invalid number of args
-	args = []string{"exec", "RandomValue", "pwd"}
-	out, err = system.RunCommand(DdevBin, args)
-	assert.Error(err)
-	assert.Contains(string(out), "Invalid arguments detected")
+	assert.Contains(string(out), "Usage:")
 }
 
 // TestDevExec run `ddev exec pwd` with proper args
@@ -36,6 +30,11 @@ func TestDevExec(t *testing.T) {
 		out, err := system.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.Contains(string(out), "/var/www/html/docroot")
+
+		args = []string{"-s", "db", "exec", "pwd"}
+		out, err = system.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		assert.Contains(string(out), "/")
 
 		cleanup()
 	}
