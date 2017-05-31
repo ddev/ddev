@@ -148,6 +148,7 @@ func TestLocalImportDB(t *testing.T) {
 	assert := assert.New(t)
 	app, err := GetPluginApp("local")
 	assert.NoError(err)
+	testDir, _ := os.Getwd()
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
@@ -156,6 +157,13 @@ func TestLocalImportDB(t *testing.T) {
 		testcommon.ClearDockerEnv()
 		err = app.Init(site.Dir)
 		assert.NoError(err)
+
+		// Test simple db loads.
+		for _, file := range []string{"users.sql", "users.sql.gz", "users.sql.tar.gz", "users.sql.tgz", "users.sql.zip"} {
+			path := filepath.Join(testDir, "testing", file)
+			err = app.ImportDB(path)
+			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+		}
 
 		if site.DBTarURL != "" {
 			dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
