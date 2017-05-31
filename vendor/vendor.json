@@ -164,12 +164,6 @@
 			"revisionTime": "2017-02-13T20:31:38Z"
 		},
 		{
-			"checksumSHA1": "2R63ApwuyAQtMhWv7EhO21SZniQ=",
-			"path": "github.com/drud/drud-go/utils/try",
-			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
-			"revisionTime": "2017-02-13T20:31:38Z"
-		},
-		{
 			"checksumSHA1": "Yn+Uxp0Vz4WiGdrYLLwYX9lzD5I=",
 			"path": "github.com/fatih/color",
 			"revision": "a360acfe359f146180cfc1c6ea6f4397f5c133ec",
