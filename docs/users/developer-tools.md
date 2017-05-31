@@ -44,9 +44,9 @@ If you have Drush installed on your host system, you can use it to interact with
 <?php
 
 $databases['default']['default'] = array(
-  'database' => "data",
-  'username' => "root",
-  'password' => "root",
+  'database' => "db",
+  'username' => "db",
+  'password' => "db",
   'host' => "127.0.0.1",
   'driver' => "mysql",
   'port' => <YOUR_SITE_DB_PORT>,

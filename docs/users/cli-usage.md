@@ -84,12 +84,12 @@ drupal8  drupal8  ~/Projects/ddev/drupal8  http://drupal8.ddev.local  running
 
 MySQL Credentials
 -----------------
-Username:     	root
-Password:     	root
-Database name:	data
+Username:     	db
+Password:     	db
+Database name:	db
 Host:         	db
 Port:         	3306
-To connect to mysql from your host machine, use port 32834 on 127.0.0.1
+To connect to mysql from your host machine, use port 32894 on 127.0.0.1
 
 Other Services
 --------------
