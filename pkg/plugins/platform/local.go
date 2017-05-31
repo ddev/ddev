@@ -140,37 +140,30 @@ func (l *LocalApp) ImportDB(imPath string) error {
 	if err != nil && err.Error() != "is archive" {
 		return err
 	}
-	if err.Error() == "is archive" {
-
-		switch {
-		case strings.HasSuffix(importPath, "sql.gz"):
-			err = util.Ungzip(importPath, dbPath)
-			if err != nil {
-				return fmt.Errorf("failed to extract provided archive: %v", err)
-			}
-
-		case strings.HasSuffix(importPath, "zip"):
-			err = util.Unzip(importPath, dbPath, "")
-			if err != nil {
-				return fmt.Errorf("failed to extract provided archive: %v", err)
-			}
-
-		case strings.HasSuffix(importPath, "tar"):
-			fallthrough
-		case strings.HasSuffix(importPath, "tar.gz"):
-			fallthrough
-		case strings.HasSuffix(importPath, "tgz"):
-			err := util.Untar(importPath, dbPath, "")
-			if err != nil {
-				return fmt.Errorf("failed to extract provided archive: %v", err)
-			}
-		default:
-			return fmt.Errorf("Unable to handle archive file %s", importPath)
+	switch {
+	case strings.HasSuffix(importPath, "sql.gz"):
+		err = util.Ungzip(importPath, dbPath)
+		if err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 
-	} else {
+	case strings.HasSuffix(importPath, "zip"):
+		err = util.Unzip(importPath, dbPath, "")
+		if err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
+		}
 
-		// an archive was not extracted, we need to copy
+	case strings.HasSuffix(importPath, "tar"):
+		fallthrough
+	case strings.HasSuffix(importPath, "tar.gz"):
+		fallthrough
+	case strings.HasSuffix(importPath, "tgz"):
+		err := util.Untar(importPath, dbPath, "")
+		if err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
+		}
+
+	default:
 		err = util.CopyFile(importPath, filepath.Join(dbPath, "db.sql"))
 		if err != nil {
 			return err
