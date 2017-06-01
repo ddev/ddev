@@ -31,7 +31,7 @@ jobs:
             sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" &&
             sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge" &&
             sudo apt-get update -qq &&
-            sudo apt-get install -qq docker-ce=17.0.5~ce-0~ubuntu-$(lsb_release -cs)
+            sudo apt-get install -qq docker-ce=17.05.0~ce-0~ubuntu-$(lsb_release -cs)
           name: Install docker
 
       - run:
