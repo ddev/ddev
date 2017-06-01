@@ -14,6 +14,8 @@ var DescribeCommand = &cobra.Command{
 	Use:   "describe",
 	Short: "Get a detailed description of a running ddev site.",
 	Run: func(cmd *cobra.Command, args []string) {
+		var siteName string
+
 		if len(args) > 1 {
 			util.Failed("Too many arguments provided. Please use `ddev describe` or `ddev describe [appname]`")
 		}

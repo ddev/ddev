@@ -23,7 +23,6 @@ var (
 	plugin   = "local"
 	// 1 week
 	updateInterval = time.Hour * 24 * 7
-	siteName       string
 	serviceType    string
 )
 
@@ -55,7 +54,7 @@ var RootCmd = &cobra.Command{
 
 		usr, err := homedir.Dir()
 		if err != nil {
-			log.Fatal("Could not detect user's home directory: ", err)
+			util.Failed("Could not detect user's home directory: ", err)
 		}
 
 		updateFile := filepath.Join(usr, ".ddev", ".update")

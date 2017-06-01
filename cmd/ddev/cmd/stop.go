@@ -11,6 +11,8 @@ var LocalDevStopCmd = &cobra.Command{
 	Short: "Stop an application's local services.",
 	Long:  `Stop will turn off the local containers and not remove them.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		var siteName string
+
 		if len(args) > 1 {
 			util.Failed("Too many arguments provided. Please use `ddev stop` or `ddev stop [appname]`")
 		}
