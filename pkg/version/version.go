@@ -8,6 +8,11 @@ var VERSION = ""
 // DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
 var DdevVersion = "v0.3.0-dev" // Note that this is overridden by make
 
+// DockerVersionConstraint is the current minimum version of docker required for ddev.
+// See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
+// for examples defining version constraints.
+var DockerVersionConstraint = ">= 17.05.0-ce"
+
 // WebImg defines the default web image used for applications.
 var WebImg = "drud/nginx-php-fpm7-local" // Note that this is overridden by make
 

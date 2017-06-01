@@ -11,6 +11,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
+	"github.com/Masterminds/semver"
 	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
 )
@@ -268,4 +269,36 @@ func GetContainerEnv(key string, container docker.APIContainers) string {
 		}
 	}
 	return ""
+}
+
+// CheckDockerVersion determines if the docker version of the host system meets the provided version
+// constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
+// for examples defining version constraints.
+func CheckDockerVersion(versionConstraint string) error {
+	client := GetDockerClient()
+	version, err := client.Version()
+	if err != nil {
+		return err
+	}
+
+	currentVersion := version.Get("Version")
+
+	dockerVersion, err := semver.NewVersion(currentVersion)
+	if err != nil {
+		return err
+	}
+
+	constraint, err := semver.NewConstraint(versionConstraint)
+	if err != nil {
+		return err
+	}
+
+	match, errs := constraint.Validate(dockerVersion)
+	if !match {
+		var msgs string
+		for _, err := range errs {
+			msgs = fmt.Sprint(msgs, err, "\n")
+		}
+	}
+	return nil
 }
