@@ -4,7 +4,7 @@
 
 ## System Requirements
 
-- [docker](https://www.docker.com/community-edition)
+- [Docker](https://www.docker.com/community-edition) version 17.05 or greater
 - OS Support
   - macOS Sierra
   - Linux (See [Linux notes](users/linux_notes.md))
