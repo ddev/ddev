@@ -2,6 +2,7 @@ package util
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"compress/gzip"
 	"fmt"
 	"io"
@@ -137,6 +138,59 @@ func Untar(source string, dest string, extractionDir string) error {
 			if err != nil {
 				return fmt.Errorf("Failed to copy to file %v, err: %v", fullPath, err)
 			}
+		}
+	}
+
+	return nil
+}
+
+// Unzip accepts a zip file and extracts the contents to the provided destination path.
+// extractionDir is the path at which extraction should szipt; nothing will be extracted except the contents of
+// extractionDir
+func Unzip(source string, dest string, extractionDir string) error {
+	zf, err := zip.OpenReader(source)
+	if err != nil {
+		return fmt.Errorf("Failed to open zipfile %s, err:%v", source, err)
+	}
+	defer CheckClose(zf)
+
+	for _, file := range zf.File {
+		// If we have an extractionDir and this doesn't match, skip it.
+		if !strings.HasPrefix(file.Name, extractionDir) {
+			continue
+		}
+
+		// Now transform the filename to skip the extractionDir
+		file.Name = strings.TrimPrefix(file.Name, extractionDir)
+		fullPath := filepath.Join(dest, file.Name)
+
+		if strings.HasSuffix(file.Name, "/") {
+			err = os.MkdirAll(fullPath, 0777)
+			if err != nil {
+				return fmt.Errorf("Failed to mkdir %s, err:%v", fullPath, err)
+			}
+			continue
+		}
+
+		// If file.Name is now empty this is the root directory we want to extract, and need not do anything.
+		if file.Name == "" {
+			continue
+		}
+
+		rc, err := file.Open()
+		if err != nil {
+			return err
+		}
+
+		// create and copy the file.
+		exFile, err := os.Create(fullPath)
+		if err != nil {
+			return fmt.Errorf("Failed to create file %v, err: %v", fullPath, err)
+		}
+		_, err = io.Copy(exFile, rc)
+		_ = exFile.Close()
+		if err != nil {
+			return fmt.Errorf("Failed to copy to file %v, err: %v", fullPath, err)
 		}
 	}
 

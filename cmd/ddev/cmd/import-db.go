@@ -15,7 +15,7 @@ var dbSource string
 var ImportDBCmd = &cobra.Command{
 	Use:   "import-db",
 	Short: "Import the database of an existing site to the local dev environment.",
-	Long:  "Import the database of an existing site to the local development environment. The database can be provided as a SQL dump in a .sql, .sql.gz, or .tar.gz format. For the .tar.gz format, a SQL dump in .sql format must be present at the root of the archive.",
+	Long:  "Import the database of an existing site to the local development environment. The database can be provided as a SQL dump in a .sql, .sql.gz, .zip, or .tar.gz format. For the .zip and .tar.gz formats, a SQL dump in .sql format must be present at the root of the archive.",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()

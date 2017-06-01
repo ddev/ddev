@@ -26,10 +26,14 @@ type TestSite struct {
 	SourceURL string
 	// ArchiveExtractionPath is the relative path within the tarball which should be extracted, ending with /
 	ArchiveInternalExtractionPath string
-	// FileURL is the URL of the archive of file uploads used for testing file import.
-	FileURL string
-	// DBURL is the URL of the database dump tarball used for testing database import.
-	DBURL string
+	// FilesTarballURL is the URL of the tarball of file uploads used for testing file import.
+	FilesTarballURL string
+	// FilesZipballURL is the URL of the zipball of file uploads used for testing file import.
+	FilesZipballURL string
+	// DBTarURL is the URL of the database dump tarball used for testing database import.
+	DBTarURL string
+	// DBZipURL is the URL of an optional zip-style db dump.
+	DBZipURL string
 	// Dir is the rooted full path of the test site
 	Dir string
 }
