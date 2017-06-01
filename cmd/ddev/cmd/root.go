@@ -80,7 +80,7 @@ var RootCmd = &cobra.Command{
 
 		err = util.CheckDockerVersion(version.DockerVersionConstraint)
 		if err != nil {
-			util.Failed("The docker version currently installed does not meet ddev's requirements: ", err)
+			util.Failed("The docker version currently installed does not meet ddev's requirements: %v", err)
 		}
 	},
 }

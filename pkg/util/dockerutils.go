@@ -295,10 +295,15 @@ func CheckDockerVersion(versionConstraint string) error {
 
 	match, errs := constraint.Validate(dockerVersion)
 	if !match {
-		var msgs string
+		if len(errs) <= 1 {
+			return errs[0]
+		}
+
+		msgs := "\n"
 		for _, err := range errs {
 			msgs = fmt.Sprint(msgs, err, "\n")
 		}
+		return fmt.Errorf(msgs)
 	}
 	return nil
 }
