@@ -130,12 +130,12 @@ func getActiveAppRoot(siteName string) (string, error) {
 
 		webContainer, err := dockerutil.FindContainerByLabels(labels)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("could not find a site named '%s'. Run 'ddev list' to see currently active sites", siteName)
 		}
 
 		siteDir, ok = webContainer.Labels["com.ddev.approot"]
 		if !ok {
-			return "", fmt.Errorf("could not find webroot on container: %s", dockerutil.ContainerName(webContainer))
+			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(webContainer))
 		}
 	}
 
