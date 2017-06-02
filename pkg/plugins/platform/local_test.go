@@ -28,32 +28,24 @@ var (
 			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
 		},
+		{
+			Name:                          "TestMainPkgWordpress",
+			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
+			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
+			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+		},
+		{
+			Name:                          "TestMainPkgDrupalKickstart",
+			SourceURL:                     "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-kickstart-0.4.0/",
+			FilesTarballURL:               "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
+		},
 	}
 )
 
 func TestMain(m *testing.M) {
-	// Allow tests to run in "short" mode, which will only test a single site. This keeps test runtimes low.
-	if !testing.Short() {
-		// If we're doing full tests, add additional sites to the TestSites slice.
-		additionalSites := []testcommon.TestSite{
-			{
-				Name:                          "TestMainPkgWordpress",
-				SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
-				ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-				FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-				DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
-			},
-			{
-				Name:                          "TestMainPkgDrupalKickstart",
-				SourceURL:                     "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
-				ArchiveInternalExtractionPath: "drupal-kickstart-0.4.0/",
-				FilesTarballURL:               "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
-				DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
-			},
-		}
-
-		TestSites = append(TestSites, additionalSites...)
-	}
 
 	if len(GetApps()) > 0 {
 		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", len(GetApps()))
@@ -74,6 +66,15 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(testRun)
+}
+
+// TestLocalSetup reduces the TestSite list on shorter test runs.
+func TestLocalSetup(t *testing.T) {
+	// Allow tests to run in "short" mode, which will only test a single site. This keeps test runtimes low.
+	// We would much prefer to do this in TestMain, but the Short() flag is not yet available at that point.
+	if testing.Short() {
+		TestSites = []testcommon.TestSite{TestSites[0]}
+	}
 }
 
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
