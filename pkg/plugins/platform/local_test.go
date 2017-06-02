@@ -46,6 +46,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
+
 	if len(GetApps()) > 0 {
 		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", len(GetApps()))
 	}
@@ -65,6 +66,15 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(testRun)
+}
+
+// TestLocalSetup reduces the TestSite list on shorter test runs.
+func TestLocalSetup(t *testing.T) {
+	// Allow tests to run in "short" mode, which will only test a single site. This keeps test runtimes low.
+	// We would much prefer to do this in TestMain, but the Short() flag is not yet available at that point.
+	if testing.Short() {
+		TestSites = []testcommon.TestSite{TestSites[0]}
+	}
 }
 
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
