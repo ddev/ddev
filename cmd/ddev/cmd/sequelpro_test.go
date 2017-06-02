@@ -3,11 +3,10 @@ package cmd
 import (
 	"testing"
 
-	"k8s.io/kubernetes/pkg/util"
-
 	"path/filepath"
 
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
