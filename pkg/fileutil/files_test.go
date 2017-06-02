@@ -58,6 +58,7 @@ func TestCopyDir(t *testing.T) {
 
 }
 
+// TestCopyFile tests copying a file.
 func TestCopyFile(t *testing.T) {
 	assert := assert.New(t)
 	tmpTargetDir := testcommon.CreateTmpDir("TestCopyFile")
