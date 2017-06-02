@@ -180,8 +180,18 @@ func TestLocalImportDB(t *testing.T) {
 			dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
 			err := util.DownloadFile(dbPath, site.DBTarURL)
 			assert.NoError(err)
+
 			err = app.ImportDB(dbPath)
 			assert.NoError(err)
+
+			stdout := testcommon.CaptureStdOut()
+			err = app.Exec("db", true, "mysql", "-e", "SHOW TABLES;")
+			assert.NoError(err)
+			out := stdout()
+
+			assert.Contains(string(out), "Tables_in_db")
+			assert.False(strings.Contains(string(out), "Empty set"))
+
 			err = os.Remove(dbPath)
 			assert.NoError(err)
 		}
@@ -190,8 +200,18 @@ func TestLocalImportDB(t *testing.T) {
 			dbZipPath := filepath.Join(testcommon.CreateTmpDir("local-db-zip"), "db.zip")
 			err = util.DownloadFile(dbZipPath, site.DBZipURL)
 			assert.NoError(err)
+
 			err = app.ImportDB(dbZipPath)
 			assert.NoError(err)
+
+			stdout := testcommon.CaptureStdOut()
+			err = app.Exec("db", true, "mysql", "-e", "SHOW TABLES;")
+			assert.NoError(err)
+			out := stdout()
+
+			assert.Contains(string(out), "Tables_in_db")
+			assert.False(strings.Contains(string(out), "Empty set"))
+
 			err = os.Remove(dbZipPath)
 			assert.NoError(err)
 		}
