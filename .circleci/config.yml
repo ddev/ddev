@@ -45,11 +45,6 @@ jobs:
       - checkout
 
       - run:
-          command: make clean linux darwin windows
-          name: Build the ddev executables
-
-
-      - run:
           command: |
             if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
               make clean
@@ -63,6 +58,10 @@ jobs:
             fi
           no_output_timeout: "20m"
           name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
+
+      - run:
+          command: make clean linux darwin windows
+          name: Build the ddev executables
 
       # Run the built-in ddev tests
       - run:
