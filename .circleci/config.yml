@@ -44,6 +44,8 @@ jobs:
 
       - checkout
 
+      # The nightly build builds a ddev that can't be run elsewhere because the containers built in are not pushed.
+      # Therefore we build this full nightly first, and then throw it away.
       - run:
           command: |
             if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
@@ -59,11 +61,12 @@ jobs:
           no_output_timeout: "20m"
           name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
 
+      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
           command: make clean linux darwin windows
           name: Build the ddev executables
 
-      # Run the built-in ddev tests
+      # Run the built-in ddev tests with the executables just built.
       - run:
           command: |
             if [ ! -n "${RUN_NIGHTLY_BUILD}" ]; then
@@ -78,6 +81,7 @@ jobs:
           command: bin/linux/ddev version
           name: ddev version information
 
+      # Now we store the artifacts, which are the ones built by the *normal* build (not the nightly, in case of nightly)
       - store_artifacts:
           path: bin/darwin/darwin_amd64/ddev
           destination: darwin/ddev
