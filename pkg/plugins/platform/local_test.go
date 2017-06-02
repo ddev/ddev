@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
@@ -80,8 +81,8 @@ func TestLocalSetup(t *testing.T) {
 func TestLocalStart(t *testing.T) {
 
 	// ensure we have docker network
-	client := util.GetDockerClient()
-	err := util.EnsureNetwork(client, util.NetName)
+	client := dockerutil.GetDockerClient()
+	err := dockerutil.EnsureNetwork(client, dockerutil.NetName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -447,11 +448,11 @@ func TestGetAppsEmpty(t *testing.T) {
 // TestRouterNotRunning ensures the router is shut down after all sites are stopped.
 func TestRouterNotRunning(t *testing.T) {
 	assert := assert.New(t)
-	containers, err := util.GetDockerContainers(false)
+	containers, err := dockerutil.GetDockerContainers(false)
 	assert.NoError(err)
 
 	for _, container := range containers {
-		assert.NotEqual(util.ContainerName(container), "nginx-proxy", "Found nginx proxy running")
+		assert.NotEqual(dockerutil.ContainerName(container), "nginx-proxy", "Found nginx proxy running")
 	}
 }
 
@@ -461,6 +462,6 @@ func constructContainerName(containerType string, app App) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	name := util.ContainerName(container)
+	name := dockerutil.ContainerName(container)
 	return name, nil
 }

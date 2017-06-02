@@ -18,10 +18,13 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/fsouza/go-dockerclient"
@@ -66,7 +69,7 @@ func (l *LocalApp) FindContainerByType(containerType string) (docker.APIContaine
 		"com.docker.compose.service": containerType,
 	}
 
-	return util.FindContainerByLabels(labels)
+	return dockerutil.FindContainerByLabels(labels)
 }
 
 // Describe returns a string which provides detailed information on services associated with the running site.
@@ -142,13 +145,13 @@ func (l *LocalApp) ImportDB(imPath string) error {
 	}
 	switch {
 	case strings.HasSuffix(importPath, "sql.gz"):
-		err = util.Ungzip(importPath, dbPath)
+		err = archive.Ungzip(importPath, dbPath)
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 
 	case strings.HasSuffix(importPath, "zip"):
-		err = util.Unzip(importPath, dbPath, "")
+		err = archive.Unzip(importPath, dbPath, "")
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
@@ -158,13 +161,13 @@ func (l *LocalApp) ImportDB(imPath string) error {
 	case strings.HasSuffix(importPath, "tar.gz"):
 		fallthrough
 	case strings.HasSuffix(importPath, "tgz"):
-		err := util.Untar(importPath, dbPath, "")
+		err := archive.Untar(importPath, dbPath, "")
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 
 	default:
-		err = util.CopyFile(importPath, filepath.Join(dbPath, "db.sql"))
+		err = fileutil.CopyFile(importPath, filepath.Join(dbPath, "db.sql"))
 		if err != nil {
 			return err
 		}
@@ -198,7 +201,7 @@ func (l *LocalApp) SiteStatus() string {
 		return SiteNotFound
 	}
 
-	status := util.GetContainerHealth(webContainer)
+	status := dockerutil.GetContainerHealth(webContainer)
 	if status == "exited" {
 		return SiteStopped
 	}
@@ -260,19 +263,19 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 	case strings.HasSuffix(importPath, "tar.gz"):
 		fallthrough
 	case strings.HasSuffix(importPath, "tgz"):
-		err = util.Untar(importPath, destPath, "")
+		err = archive.Untar(importPath, destPath, "")
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 	case strings.HasSuffix(importPath, "zip"):
-		err = util.Unzip(importPath, destPath, "")
+		err = archive.Unzip(importPath, destPath, "")
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 
 	default:
 		// Simple file copy if none of the archive formats
-		err = util.CopyDir(importPath, destPath)
+		err = fileutil.CopyDir(importPath, destPath)
 		if err != nil {
 			return err
 		}
@@ -331,7 +334,7 @@ func (l *LocalApp) Start() error {
 		return err
 	}
 
-	err = util.ComposeCmd(l.ComposeFiles(), "up", "-d")
+	err = dockerutil.ComposeCmd(l.ComposeFiles(), "up", "-d")
 	if err != nil {
 		return err
 	}
@@ -353,7 +356,7 @@ func (l *LocalApp) Exec(service string, tty bool, cmd ...string) error {
 	}
 	exec = append(exec, cmd...)
 
-	return util.ComposeCmd(l.ComposeFiles(), exec...)
+	return dockerutil.ComposeCmd(l.ComposeFiles(), exec...)
 }
 
 // Logs returns logs for a site's given container.
@@ -377,7 +380,7 @@ func (l *LocalApp) Logs(service string, follow bool, timestamps bool, tail strin
 		logOpts.Tail = tail
 	}
 
-	client := util.GetDockerClient()
+	client := dockerutil.GetDockerClient()
 
 	err = client.Logs(logOpts)
 	if err != nil {
@@ -437,7 +440,7 @@ func (l *LocalApp) Stop() error {
 		return fmt.Errorf("site does not appear to be running - web container %s", l.SiteStatus())
 	}
 
-	err := util.ComposeCmd(l.ComposeFiles(), "stop")
+	err := dockerutil.ComposeCmd(l.ComposeFiles(), "stop")
 
 	if err != nil {
 		return err
@@ -452,7 +455,7 @@ func (l *LocalApp) Wait(containerType string) error {
 		"com.ddev.site-name":         l.GetName(),
 		"com.docker.compose.service": containerType,
 	}
-	err := util.ContainerWait(90, labels)
+	err := dockerutil.ContainerWait(90, labels)
 	if err != nil {
 		return err
 	}
@@ -497,7 +500,7 @@ func (l *LocalApp) Config() error {
 		}
 
 		// Setup a custom settings file for use with drush.
-		dbPort, err := util.GetPodPort("local-" + l.GetName() + "-db")
+		dbPort, err := dockerutil.GetPodPort("local-" + l.GetName() + "-db")
 		if err != nil {
 			return err
 		}
@@ -537,7 +540,7 @@ func (l *LocalApp) Config() error {
 // Down stops the docker containers for the local project.
 func (l *LocalApp) Down() error {
 	l.DockerEnv()
-	err := util.ComposeCmd(l.ComposeFiles(), "down")
+	err := dockerutil.ComposeCmd(l.ComposeFiles(), "down")
 	if err != nil {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
 		return Cleanup(l)
