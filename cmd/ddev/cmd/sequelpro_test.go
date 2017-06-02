@@ -3,9 +3,10 @@ package cmd
 import (
 	"testing"
 
+	"k8s.io/kubernetes/pkg/util"
+
 	"path/filepath"
 
-	"github.com/drud/ddev/pkg/system"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,7 +29,7 @@ func TestSequelproOperation(t *testing.T) {
 
 	dir, err := getActiveAppRoot()
 	assert.NoError(err)
-	assert.Equal(true, system.FileExists(filepath.Join(dir, ".ddev/sequelpro.spf")))
+	assert.Equal(true, util.FileExists(filepath.Join(dir, ".ddev/sequelpro.spf")))
 
 	cleanup()
 }

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/drud/ddev/pkg/system"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/util"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
@@ -25,7 +25,7 @@ func TestImportTilde(t *testing.T) {
 
 		// this ~ should be expanded by shell
 		args := []string{"import-files", "--src", "~/files.tar.gz"}
-		out, err := system.RunCommand(DdevBin, args)
+		out, err := exec.RunCommand(DdevBin, args)
 		if err != nil {
 			log.Println("Error Output from ddev import-files:", out, site)
 		}
@@ -34,7 +34,7 @@ func TestImportTilde(t *testing.T) {
 
 		// this ~ is not expanded by shell, ddev should convert it to a valid path
 		args = []string{"import-files", "--src=~/files.tar.gz"}
-		out, err = system.RunCommand(DdevBin, args)
+		out, err = exec.RunCommand(DdevBin, args)
 		if err != nil {
 			log.Println("Error Output from ddev import-files:", out, site)
 		}

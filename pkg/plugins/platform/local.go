@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"net/url"
-	"os/exec"
+	osexec "os/exec"
 
 	"os/user"
 	"runtime"
@@ -21,7 +21,7 @@ import (
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/system"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/fsouza/go-dockerclient"
@@ -232,7 +232,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 	destPath := filepath.Join(l.AppRoot(), l.Docroot(), uploadDir)
 
 	// parent of destination dir should exist
-	if !system.FileExists(filepath.Dir(destPath)) {
+	if !util.FileExists(filepath.Dir(destPath)) {
 		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
 	}
 
@@ -243,7 +243,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 	}
 
 	// destination dir must exist
-	if !system.FileExists(destPath) {
+	if !util.FileExists(destPath) {
 		err := os.MkdirAll(destPath, 0755)
 		if err != nil {
 			return err
@@ -319,7 +319,7 @@ func (l *LocalApp) Start() error {
 	// Write docker-compose.yaml (if it doesn't exist).
 	// If the user went through the `ddev config` process it will be written already, but
 	// we also do it here in the case of a manually created `.ddev/config.yaml` file.
-	if !system.FileExists(l.AppConfig.DockerComposeYAMLPath()) {
+	if !util.FileExists(l.AppConfig.DockerComposeYAMLPath()) {
 		err := l.AppConfig.WriteDockerComposeConfig()
 		if err != nil {
 			return err
@@ -475,7 +475,7 @@ func (l *LocalApp) Config() error {
 		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
 	}
 
-	if system.FileExists(settingsFilePath) {
+	if util.FileExists(settingsFilePath) {
 		return errors.New("app config exists")
 	}
 
@@ -568,7 +568,7 @@ func (l *LocalApp) AddHostsEntry() error {
 		dockerIP = dockerHostURL.Hostname()
 	}
 
-	_, err := exec.Command("sudo", "-h").Output()
+	_, err := osexec.Command("sudo", "-h").Output()
 	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
 		fmt.Printf("You must manually add the following entry to your host file:\n%s %s\n", dockerIP, l.HostName())
 		return nil
@@ -590,6 +590,6 @@ func (l *LocalApp) AddHostsEntry() error {
 	command := strings.Join(hostnameArgs, " ")
 	util.Warning(fmt.Sprintf("    sudo %s", command))
 	fmt.Println("Please enter your password if prompted.")
-	err = system.RunCommandPipe("sudo", hostnameArgs)
+	err = exec.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }

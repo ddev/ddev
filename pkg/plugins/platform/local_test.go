@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/drud/ddev/pkg/system"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
@@ -106,7 +105,7 @@ func TestLocalStart(t *testing.T) {
 		assert.NoError(err)
 
 		// ensure docker-compose.yaml exists inside .ddev site folder
-		composeFile := system.FileExists(app.DockerComposeYAMLPath())
+		composeFile := util.FileExists(app.DockerComposeYAMLPath())
 		assert.True(composeFile)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
