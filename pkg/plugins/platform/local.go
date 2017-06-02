@@ -109,7 +109,7 @@ func (l *LocalApp) Describe() (string, error) {
 		dbTable.AddRow("Host:", "db")
 		dbTable.AddRow("Port:", appports.GetPort("db"))
 		output = output + fmt.Sprint(dbTable)
-		output = output + "\nTo connect to mysql from your host machine, use port " + dbPublishPort + " on 127.0.0.1"
+		output = output + fmt.Sprintf("\nTo connect to mysql from your host machine, use port %[1]v on 127.0.0.1. For example: mysql --host 127.0.0.1 --port %[1]v", dbPublishPort)
 
 		output = output + "\n\nOther Services\n--------------\n"
 		other := uitable.New()
