@@ -39,10 +39,6 @@ $settings['file_scan_ignore_directories'] = [
   'bower_components',
 ];
 
- $config_directories = array(
-   CONFIG_SYNC_DIRECTORY => '/var/www/html/sync',
- );
-
 
 {{ else }}
 
@@ -83,15 +79,6 @@ $databases['default']['default'] = array(
   'port' => {{ $config.DatabasePort }},
   'prefix' => "",
 );
-
-{{ if $config.IsDrupal8 }}
-// This reconciles the pathing required for drupal, drush in docker, and drush on host system to all
-// be able to interact with the CMI directory.
-$config_directories = array(
-   CONFIG_SYNC_DIRECTORY => __DIR__ . '/sync',
- );
-{{ end }}
-
 `
 
 // WriteDrupalConfig dynamically produces valid settings.php file by combining a configuration

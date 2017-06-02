@@ -4,14 +4,14 @@
 We have included several useful developer tools in our containers.
 
 ### Command-line Tools
-- MySQL Client - Command-line interface for interacting with MySQL.
+- MySQL Client (mysql) - Command-line interface for interacting with MySQL.
 - [Composer](https://getcomposer.org/) - Dependency Manager for PHP.
 - [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 - [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations.
 
 These tools can be accessed for single commands using [`ddev exec <command>`](cli-usage.md#executing-commands-in-containers) or [`ddev ssh`](cli-usage.md#ssh-into-containers) for an interactive bash session.
 
-### Email Catching
+### Email Capture and Review
 [MailHog](https://github.com/mailhog/MailHog) is a mail catcher which is configured to capture and display emails sent by PHP in the development environment.
 
 Its web interface can be accessed at its default port after your site has been started. e.g.:
@@ -31,6 +31,7 @@ If you need to connect to the database of your site from the host machine, run `
 
 ```
 To connect to mysql from your host machine, use port 32838 on 127.0.0.1
+For example: mysql --host 127.0.0.1 --port 32838
 ```
 
 The port referenced is unique per running site, and randomly chosen from available ports on your system when `ddev start` is ran.

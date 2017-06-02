@@ -90,6 +90,7 @@ Database name:	db
 Host:         	db
 Port:         	3306
 To connect to mysql from your host machine, use port 32894 on 127.0.0.1
+For example: mysql --host 127.0.0.1 --port 32894
 
 Other Services
 --------------
@@ -131,7 +132,7 @@ The `import-files` command allows you to specify the location of uploaded file a
 ddev provides several commands to facilitate interacting with your site in the development environment. These commands can be run within the working directory of your project while the site is running in ddev. 
 
 ### Executing Commands in Containers
-The `ddev exec` command allows you to run shell commands in the container for a ddev service. By default, commands are executed against the web service container, in the docroot path of your site. This allows you to use [the developer tools included in the web container](developer-tools.md). For example, to run the Drush CLI in the web container, you would run `ddev exec drush`.
+The `ddev exec` command allows you to run shell commands in the container for a ddev service. By default, commands are executed on the web service container, in the docroot path of your site. This allows you to use [the developer tools included in the web container](developer-tools.md). For example, to run the Drush CLI in the web container, you would run `ddev exec drush status`.
 
 To run a shell command in the container for a different service, use the `--service` flag at the beginning of your exec command to specify the service the command should be run against. For example, to run the mysql client in the database, container, you would run `ddev exec --service db mysql`.
 
