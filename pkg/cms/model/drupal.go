@@ -31,7 +31,7 @@ func NewDrupalConfig() *DrupalConfig {
 		DatabasePort:     appports.GetPort("db"),
 		DatabasePrefix:   "",
 		IsDrupal8:        false,
-		HashSalt:         util.RandomString(64),
+		HashSalt:         util.RandString(64),
 	}
 }
 

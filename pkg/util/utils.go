@@ -32,13 +32,23 @@ func FormatPlural(count int, single string, plural string) string {
 	return plural
 }
 
-// RandomString returns a random string of len strlen
-func RandomString(strlen int) string {
-	rand.Seed(time.Now().UTC().UnixNano())
-	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
-	result := make([]byte, strlen)
-	for i := 0; i < strlen; i++ {
-		result[i] = chars[rand.Intn(len(chars))]
+var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+// setLetterBytes exists solely so that tests can override the default characters used by
+// RandString. It should probably be avoided for 'normal' operations.
+func setLetterBytes(lb string) {
+	letterBytes = lb
+}
+
+// RandString returns a random string of given length n.
+func RandString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
-	return string(result)
+	return string(b)
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
 }
