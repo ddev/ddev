@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drud/ddev/pkg/system"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
 

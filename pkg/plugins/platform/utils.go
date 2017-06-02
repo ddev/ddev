@@ -12,8 +12,8 @@ import (
 
 	"errors"
 
+	"github.com/drud/ddev/pkg/system"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/system"
 	homedir "github.com/mitchellh/go-homedir"
 )
 

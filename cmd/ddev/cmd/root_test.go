@@ -9,8 +9,8 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 
 	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/ddev/pkg/system"
 	"github.com/drud/drud-go/utils/network"
-	"github.com/drud/drud-go/utils/system"
 )
 
 var (
