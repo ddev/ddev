@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/system"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +20,7 @@ func TestImportTilde(t *testing.T) {
 
 		usr, err := homedir.Dir()
 		assert.NoError(err)
-		err = system.DownloadFile(filepath.Join(usr, "files.tar.gz"), site.FilesTarballURL)
+		err = util.DownloadFile(filepath.Join(usr, "files.tar.gz"), site.FilesTarballURL)
 		assert.NoError(err)
 
 		// this ~ should be expanded by shell

@@ -177,7 +177,7 @@ func TestLocalImportDB(t *testing.T) {
 
 		if site.DBTarURL != "" {
 			dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
-			err := system.DownloadFile(dbPath, site.DBTarURL)
+			err := util.DownloadFile(dbPath, site.DBTarURL)
 			assert.NoError(err)
 			err = app.ImportDB(dbPath)
 			assert.NoError(err)
@@ -187,7 +187,7 @@ func TestLocalImportDB(t *testing.T) {
 
 		if site.DBZipURL != "" {
 			dbZipPath := filepath.Join(testcommon.CreateTmpDir("local-db-zip"), "db.zip")
-			err = system.DownloadFile(dbZipPath, site.DBZipURL)
+			err = util.DownloadFile(dbZipPath, site.DBZipURL)
 			assert.NoError(err)
 			err = app.ImportDB(dbZipPath)
 			assert.NoError(err)
@@ -216,7 +216,7 @@ func TestLocalImportFiles(t *testing.T) {
 
 		if site.FilesTarballURL != "" {
 			filePath := filepath.Join(testcommon.CreateTmpDir("local-tarball-files"), "files.tar.gz")
-			err := system.DownloadFile(filePath, site.FilesTarballURL)
+			err := util.DownloadFile(filePath, site.FilesTarballURL)
 			assert.NoError(err)
 			err = app.ImportFiles(filePath)
 			assert.NoError(err)
@@ -226,7 +226,7 @@ func TestLocalImportFiles(t *testing.T) {
 
 		if site.FilesZipballURL != "" {
 			filePath := filepath.Join(testcommon.CreateTmpDir("local-zipball-files"), "files.zip")
-			err := system.DownloadFile(filePath, site.FilesZipballURL)
+			err := util.DownloadFile(filePath, site.FilesZipballURL)
 			assert.NoError(err)
 			err = app.ImportFiles(filePath)
 			assert.NoError(err)
