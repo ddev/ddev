@@ -8,7 +8,7 @@ import (
 
 	"io/ioutil"
 
-	"github.com/drud/ddev/pkg/system"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/drud-go/utils/network"
 	"github.com/stretchr/testify/assert"
@@ -25,7 +25,7 @@ func TestDevLogsBadArgs(t *testing.T) {
 	}
 
 	args := []string{"logs"}
-	out, err := system.RunCommand(DdevBin, args)
+	out, err := exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "unable to determine the application for this command")
 }
@@ -49,7 +49,7 @@ func TestDevLogs(t *testing.T) {
 		assert.NoError(err)
 
 		args := []string{"logs"}
-		out, err := system.RunCommand(DdevBin, args)
+		out, err := exec.RunCommand(DdevBin, args)
 
 		assert.NoError(err)
 		assert.Contains(string(out), "Server started")
