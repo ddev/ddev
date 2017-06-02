@@ -147,4 +147,4 @@ Additional logging can be accessed by using `ddev ssh` to manually review the lo
 You can stop a site's containers without losing data by using `ddev stop` in the working directory of the site. You can also stop any running site's containers by providing the site name as an argument, e.g. `ddev stop <sitename>`.
 
 ## Removing a site
-You can remove a site's containers by running `ddev remove` in the working directory of the site. You can also remove any running site's containers by providing the site name as an argument, e.g. `ddev rm <sitename>`. **Note:** this operation is destructive. It will remove all containers for the site, destroying database contents in the process. Your project code base and files will not be affected.
+You can remove a site's containers by running `ddev remove` in the working directory of the site. You can also remove any running site's containers by providing the site name as an argument, e.g. `ddev remove <sitename>`. **Note:** `ddev remove` is destructive. It will remove all containers for the site, destroying database contents in the process. Your project code base and files will not be affected.

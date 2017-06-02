@@ -11,8 +11,14 @@ import (
 
 // DescribeCommand represents the `ddev config` command
 var DescribeCommand = &cobra.Command{
-	Use:   "describe",
+	Use:   "describe [sitename]",
 	Short: "Get a detailed description of a running ddev site.",
+	Long: `Get a detailed description of a running ddev site. Describe provides basic
+information about a ddev site, including its name, location, url, and status.
+It also provides details for MySQL connections, and connection information for
+additional services like MailHog and phpMyAdmin. You can run 'ddev describe' from
+a site directory to stop that site, or you can specify a site to describe by
+running 'ddev stop <sitename>.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var siteName string
 

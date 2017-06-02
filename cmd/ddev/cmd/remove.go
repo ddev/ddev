@@ -15,8 +15,12 @@ var skipConfirmation bool
 var LocalDevRMCmd = &cobra.Command{
 	Use:     "remove",
 	Aliases: []string{"rm"},
-	Short:   "Remove an application's local services.",
-	Long:    `Remove will delete the local service containers from this machine.`,
+	Short:   "Remove the local development environment for a site. (Destructive)",
+	Long: `Remove the local development environment for a site. You can run 'ddev remove'
+from a site directory to remove that site, or you can specify a site to remove
+by running 'ddev stop <sitename>. Remove is a destructive operation. It will
+remove all containers for the site, destroying database contents in the process.
+Your project code base and files will not be affected.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var siteName string
 

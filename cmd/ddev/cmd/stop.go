@@ -7,14 +7,16 @@ import (
 
 // LocalDevStopCmd represents the stop command
 var LocalDevStopCmd = &cobra.Command{
-	Use:   "stop",
-	Short: "Stop an application's local services.",
-	Long:  `Stop will turn off the local containers and not remove them.`,
+	Use:   "stop [sitename]",
+	Short: "Stop the local development environment for a site.",
+	Long: `Stop the local development environment for a site. You can run 'ddev stop'
+from a site directory to stop that site, or you can specify a running site
+to stop by running 'ddev stop <sitename>.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var siteName string
 
 		if len(args) > 1 {
-			util.Failed("Too many arguments provided. Please use `ddev stop` or `ddev stop [appname]`")
+			util.Failed("Too many arguments provided. Please use `ddev stop` or `ddev stop [sitename]`")
 		}
 
 		if len(args) == 1 {
