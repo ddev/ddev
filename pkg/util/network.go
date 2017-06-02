@@ -14,14 +14,14 @@ func DownloadFile(filepath string, url string) (err error) {
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer CheckClose(out)
 
 	// Get the data
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer CheckClose(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("download link %s returned wrong status code: got %v want %v", url, resp.StatusCode, http.StatusOK)
