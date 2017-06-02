@@ -32,4 +32,4 @@ submodules:
 	git fetch --all && git submodule update --init && git submodule update --remote
 
 test:
-	$(MAKE) && $(MAKE) test
+	$(MAKE) && TESTLENGTH="-v" $(MAKE) test
