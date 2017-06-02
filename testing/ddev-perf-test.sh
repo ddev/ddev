@@ -80,7 +80,7 @@ END
 	fi
 
 	# drush si - if it fails we continue to next site.
-	$TIMEIT ddev exec "drush si $PROFILE -y --db-url=mysql://root:root@db/data" >>$log 2>&1 || (echo "Failed drush si" && continue)
+	$TIMEIT ddev exec drush si $PROFILE -y --db-url=mysql://root:root@db/data >>$log 2>&1 || (echo "Failed drush si" && continue)
     echo "${BLUE}$site: drush site-install: $(cat time.out) ${RESET}"
 
     elapsed=$($CURLIT -fL $base_url)
@@ -89,7 +89,7 @@ END
     elapsed=$($CURLIT -fL $base_url)
     echo "${BLUE}$site: anon curl ($?) again after site install: $elapsed ${RESET}"
 
-	$TIMEIT ddev exec "drush uli -l $site.ddev.local" >$site.uli.txt 2>&1 || (echo "Failed drush uli" && continue)
+	$TIMEIT ddev exec drush uli -l $site.ddev.local >$site.uli.txt 2>&1 || (echo "Failed drush uli" && continue)
 	echo "${BLUE}$site: ddev uli: $(cat time.out) ${RESET}"
 
 	# This technique doesn't work on d8 due to some new form fields on the uli page.
@@ -99,8 +99,8 @@ END
 
 	# Create user adminuser password adminuser, in administrator group
 	# Note that this doesn't work with the 'minimal' profile since there is no 'administrator' role created.
-    ddev exec "drush ucrt adminuser --password=adminuser" >>$log 2>&1 || echo "Failed drush ucrt"
-    ddev exec "drush urol administrator adminuser" >>$log 2>&1 || echo "Failed drush urol"
+    ddev exec drush ucrt adminuser --password=adminuser >>$log 2>&1 || echo "Failed drush ucrt"
+    ddev exec drush urol administrator adminuser >>$log 2>&1 || echo "Failed drush urol"
 
 	form=user_login
 	if [ ${types[i]} = "drupal8" ] ; then
@@ -124,7 +124,7 @@ END
     elapsed=$($CURLIT --cookie $cookiefile $base_url/admin/modules)
     echo "${BLUE}$site: admin/modules ($?): $elapsed ${RESET}"
 
-    $TIMEIT ddev exec "drush pml" >>$log 2>&1 || echo "Failed drush pml"
+    $TIMEIT ddev exec drush pml >>$log 2>&1 || echo "Failed drush pml"
     echo "${BLUE}$site: drush pml: $(cat time.out) ${RESET}"
 
     echo "Tests completed for $site."
