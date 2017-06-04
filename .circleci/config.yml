@@ -1,5 +1,6 @@
 version: 2
 jobs:
+  # 'build' is the default build, the only one triggered automatically by github or anything else.
   build:
     machine: true
     working_directory: ~/go/src/github.com/drud/ddev
@@ -13,7 +14,7 @@ jobs:
 
       - run:
           command: ./.circleci/circle_vm_setup.sh
-          name: Circle VM setup - tools, docker, golang
+          name: NORMAL Circle VM setup - tools, docker, golang
 
       - run:
           command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
@@ -50,6 +51,7 @@ jobs:
           destination: windows/ddev.exe
           name: Upload ddev (windows)
 
+  # nightly is triggered only with nightly_build_trigger.sh
   nightly_build:
     machine: true
     working_directory: ~/go/src/github.com/drud/ddev
@@ -57,13 +59,13 @@ jobs:
       DRUD_DEBUG: "true"
       GOPATH: /home/circleci/go
     steps:
-      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
+#      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
 
       - checkout
 
       - run:
           command: ./.circleci/circle_vm_setup.sh
-          name: Circle VM setup - tools, docker, golang
+          name: NIGHTLY BUILD Circle VM setup - tools, docker, golang
 
       - run:
           command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"

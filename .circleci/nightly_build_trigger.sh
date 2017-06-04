@@ -1,28 +1,15 @@
 #!/bin/bash
 
 # from https://circleci.com/docs/1.0/nightly-builds/
+# See also https://circleci.com/docs/2.0/defining-multiple-jobs/
 
-_project=drud/ddev
-_branch=master
-_circle_token=$1
+# nightly_build_trigger.sh $circle_token $project_optional $branch_optional
 
-trigger_build_url=https://circleci.com/api/v1.1/project/github/$_project/tree/$_branch?circle-token=$_circle_token
+CIRCLE_TOKEN=$1
+JOB=${2:-nightly_build}
+PROJECT=${3:-drud/ddev}
+BRANCH=${4:-master}
 
-post_data=$(cat <<EOF
-{
-  "build_parameters": {
-    "RUN_NIGHTLY_BUILD": "true"
-  }
-}
-EOF
-)
+trigger_build_url=https://circleci.com/api/v1.1/project/github/$PROJECT/tree/$BRANCH?circle-token=$CIRCLE_TOKEN
 
-echo "trigger_build_url=$trigger_build_url"
-echo "json body=$post_data"
-
-
-curl \
-	--header "Accept: application/json" \
-	--header "Content-Type: application/json" \
-	--data "$post_data" \
-	--request POST "$trigger_build_url"
+curl --data "build_parameters[CIRCLE_JOB]=$JOB" $trigger_build_url
