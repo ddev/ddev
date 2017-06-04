@@ -3,7 +3,7 @@
 # from https://circleci.com/docs/1.0/nightly-builds/
 # See also https://circleci.com/docs/2.0/defining-multiple-jobs/
 
-# nightly_build_trigger.sh $circle_token $project_optional $branch_optional
+# trigger_build.sh $circle_token $project_optional $branch_optional
 
 CIRCLE_TOKEN=$1
 JOB=${2:-nightly_build}

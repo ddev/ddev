@@ -126,3 +126,42 @@ jobs:
           path: bin/windows/windows_amd64/ddev.exe
           destination: windows/ddev.exe
           name: Upload ddev (windows)
+
+  # 'tag_build' is used to build a tag for release.
+  tag_build:
+    machine: true
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      DRUD_DEBUG: "true"
+      GOPATH: /home/circleci/go
+    steps:
+      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
+
+      - checkout
+
+      - run:
+          command: ./.circleci/circle_vm_setup.sh
+          name: TAG BUILD Circle VM setup - tools, docker, golang
+
+      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+      - run:
+          command: make clean linux darwin windows
+          name: Build the ddev executables
+
+      - run:
+          command: bin/linux/ddev version
+          name: ddev version information
+
+      # Now we store the artifacts, which are the ones built by the *normal* build (not the nightly, in case of nightly)
+      - store_artifacts:
+          path: bin/darwin/darwin_amd64/ddev
+          destination: darwin/ddev
+          name: Upload ddev (darwin)
+      - store_artifacts:
+          path: bin/linux/ddev
+          destination: linux/ddev
+          name: Upload ddev (linux)
+      - store_artifacts:
+          path: bin/windows/windows_amd64/ddev.exe
+          destination: windows/ddev.exe
+          name: Upload ddev (windows)
