@@ -38,19 +38,29 @@ jobs:
           command: bin/linux/ddev version
           name: ddev version information
 
-      # Now we store the artifacts, which are the ones built by the *normal* build (not the nightly, in case of nightly)
+      - run:
+          command: |
+            BASE_DIR=$PWD
+            sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
+            export VERSION=$(git describe --tags --always --dirty)
+            cd $BASE_DIR/bin/darwin/darwin_amd64
+            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_osx.$VERSION.zip ddev
+            cd $BASE_DIR/bin/linux
+            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev
+            cd $BASE_DIR/bin/windows/windows_amd64
+            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe
+            zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe
+            cd $ARTIFACTS
+            for item in *.tar.gz *.zip; do
+              sha256sum $item > $item.sha256.txt
+            done
+          name: tar/zip up artifacts and make hashes
+
       - store_artifacts:
-          path: bin/darwin/darwin_amd64/ddev
-          destination: darwin/ddev
-          name: Upload ddev (darwin)
-      - store_artifacts:
-          path: bin/linux/ddev
-          destination: linux/ddev
-          name: Upload ddev (linux)
-      - store_artifacts:
-          path: bin/windows/windows_amd64/ddev.exe
-          destination: windows/ddev.exe
-          name: Upload ddev (windows)
+          path: /artifacts
+          name: Artifact storage
 
   # nightly is triggered only with nightly_build_trigger.sh
   nightly_build:
@@ -114,19 +124,29 @@ jobs:
           command: bin/linux/ddev version
           name: ddev version information (clean binaries, not nightlies)
 
-      # Now we store the artifacts, which are the ones built by the *normal* build (not the nightly, in case of nightly)
+      - run:
+          command: |
+            BASE_DIR=$PWD
+            sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
+            export VERSION=$(git describe --tags --always --dirty)
+            cd $BASE_DIR/bin/darwin/darwin_amd64
+            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_osx.$VERSION.zip ddev
+            cd $BASE_DIR/bin/linux
+            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev
+            cd $BASE_DIR/bin/windows/windows_amd64
+            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe
+            zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe
+            cd $ARTIFACTS
+            for item in *.tar.gz *.zip; do
+              sha256sum $item > $item.sha256.txt
+            done
+          name: tar/zip up artifacts and make hashes
+
       - store_artifacts:
-          path: bin/darwin/darwin_amd64/ddev
-          destination: darwin/ddev
-          name: Upload ddev (darwin)
-      - store_artifacts:
-          path: bin/linux/ddev
-          destination: linux/ddev
-          name: Upload ddev (linux)
-      - store_artifacts:
-          path: bin/windows/windows_amd64/ddev.exe
-          destination: windows/ddev.exe
-          name: Upload ddev (windows)
+          path: /artifacts
+          name: Artifact storage
 
   # 'tag_build' is used to build a tag for release.
   tag_build:
