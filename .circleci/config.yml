@@ -152,6 +152,20 @@ jobs:
           command: bin/linux/ddev version
           name: ddev version information
 
+      - run:
+          command: |
+            mkdir /tmp/bin/{linux, darwin, windows} &&
+            cp bin/darwin/darwin_amd64/ddev /tmp/bin/darwin/ &&
+            cp bin/linux/ddev /tmp/bin/linux/ &&
+            cp bin/windows/windows_amd64/ddev.exe /tmp/bin/windows
+
+      - store_artifacts:
+        path: /tmp/bin
+        destination: all
+        name: "Upload all artifacts together"
+
+
+
       # Now we store the artifacts, which are the ones built by the *normal* build (not the nightly, in case of nightly)
       - store_artifacts:
           path: bin/darwin/darwin_amd64/ddev
@@ -165,3 +179,60 @@ jobs:
           path: bin/windows/windows_amd64/ddev.exe
           destination: windows/ddev.exe
           name: Upload ddev (windows)
+
+
+  # experimental test_build is used to build a tag for release.
+  test_build:
+    machine: true
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      DRUD_DEBUG: "true"
+      GOPATH: /home/circleci/go
+      ARTIFACTS: /artifacts
+    steps:
+      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
+
+      - checkout
+
+      - run:
+          command: ./.circleci/circle_vm_setup.sh
+          name: TEST BUILD Circle VM setup - tools, docker, golang
+
+      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+      - run:
+          command: make clean linux darwin windows
+          name: Build the ddev executables
+
+      - run:
+          command: bin/linux/ddev version
+          name: ddev version information
+
+      - run:
+          command: |
+            mkdir -p /tmp/bin/{linux,darwin,windows} &&
+            cp bin/darwin/darwin_amd64/ddev /tmp/bin/darwin/ &&
+            cp bin/linux/ddev /tmp/bin/linux/ &&
+            cp bin/windows/windows_amd64/ddev.exe /tmp/bin/windows
+
+      - run:
+          command: |
+            sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS &&
+            export VERSION=$(git describe --tags --always --dirty) &&
+            tar -czf artifacts/ddev_osx.$VERSION.tar.gz bin/darwin/darwin_amd64/ddev &&
+            zip artifacts/ddev_osx.$VERSION.zip bin/darwin/darwin_amd64/ddev &&
+            tar -czf artifacts/ddev_linux.$VERSION.tar.gz bin/linux/ddev &&
+            zip artifacts/ddev_linux.$VERSION.zip bin/linux/ddev &&
+            tar -czf artifacts/ddev_windows.$VERSION.tar.gz bin/windows/windows_amd64/ddev.exe &&
+            zip artifacts/ddev_windows.$VERSION.zip bin/windows/windows_amd64/ddev.exe
+          name: tar/zip up artifacts
+      - run:
+          command: |
+            cd $ARTIFACTS &&
+            for item in *.tar.gz *.zip; do
+              sha256sum $item > $item.sha256.txt
+            done
+          name: create sha256
+
+      - store_artifacts:
+          path: $ARTIFACTS
+          name: Upload all artifacts together
