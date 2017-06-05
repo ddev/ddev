@@ -22,8 +22,8 @@ import (
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/drud-go/utils/stringutil"
@@ -235,7 +235,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 	destPath := filepath.Join(l.AppRoot(), l.Docroot(), uploadDir)
 
 	// parent of destination dir should exist
-	if !util.FileExists(filepath.Dir(destPath)) {
+	if !fileutil.FileExists(filepath.Dir(destPath)) {
 		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
 	}
 
@@ -246,7 +246,7 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 	}
 
 	// destination dir must exist
-	if !util.FileExists(destPath) {
+	if !fileutil.FileExists(destPath) {
 		err := os.MkdirAll(destPath, 0755)
 		if err != nil {
 			return err
@@ -322,7 +322,7 @@ func (l *LocalApp) Start() error {
 	// Write docker-compose.yaml (if it doesn't exist).
 	// If the user went through the `ddev config` process it will be written already, but
 	// we also do it here in the case of a manually created `.ddev/config.yaml` file.
-	if !util.FileExists(l.AppConfig.DockerComposeYAMLPath()) {
+	if !fileutil.FileExists(l.AppConfig.DockerComposeYAMLPath()) {
 		err := l.AppConfig.WriteDockerComposeConfig()
 		if err != nil {
 			return err
@@ -478,7 +478,7 @@ func (l *LocalApp) Config() error {
 		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
 	}
 
-	if util.FileExists(settingsFilePath) {
+	if fileutil.FileExists(settingsFilePath) {
 		return errors.New("app config exists")
 	}
 

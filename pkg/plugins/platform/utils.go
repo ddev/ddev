@@ -13,6 +13,7 @@ import (
 	"errors"
 
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	homedir "github.com/mitchellh/go-homedir"
 )
@@ -142,14 +143,14 @@ func Cleanup(app App) error {
 
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.
 func CheckForConf(confPath string) (string, error) {
-	if util.FileExists(confPath + "/.ddev/config.yaml") {
+	if fileutil.FileExists(confPath + "/.ddev/config.yaml") {
 		return confPath, nil
 	}
 	pathList := strings.Split(confPath, "/")
 
 	for _ = range pathList {
 		confPath = filepath.Dir(confPath)
-		if util.FileExists(confPath + "/.ddev/config.yaml") {
+		if fileutil.FileExists(confPath + "/.ddev/config.yaml") {
 			return confPath, nil
 		}
 	}
