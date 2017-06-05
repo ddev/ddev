@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 	testPath = filepath.Clean(testPath)
 	TestTarArchivePath = filepath.Join(testPath, "files.tar.gz")
 
-	err = system.DownloadFile(TestTarArchivePath, TestTarArchiveURL)
+	err = util.DownloadFile(TestTarArchivePath, TestTarArchiveURL)
 	if err != nil {
 		log.Fatalf("archive download failed: %s", err)
 	}
