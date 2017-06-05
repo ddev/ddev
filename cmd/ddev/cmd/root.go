@@ -8,6 +8,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
@@ -50,7 +51,7 @@ var RootCmd = &cobra.Command{
 
 		usr, err := homedir.Dir()
 		if err != nil {
-			log.Fatal("Could not detect user's home directory: %v", err)
+			log.Fatalf("Could not detect user's home directory: %v", err)
 		}
 
 		updateFile := filepath.Join(usr, ".ddev", ".update")
@@ -78,7 +79,7 @@ var RootCmd = &cobra.Command{
 			}
 		}
 
-		err = util.CheckDockerVersion(version.DockerVersionConstraint)
+		err = dockerutil.CheckDockerVersion(version.DockerVersionConstraint)
 		if err != nil {
 			util.Failed("The docker version currently installed does not meet ddev's requirements: %v", err)
 		}
