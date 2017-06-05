@@ -27,7 +27,7 @@ jobs:
 
       # Run the built-in ddev tests with the executables just built.
       - run:
-          command: make test
+          command: make -s test
           name: ddev tests
           no_output_timeout: "20m"
 
@@ -81,8 +81,7 @@ jobs:
             echo VERSION=$VERSION
             git submodule update --init && git submodule update --remote
             make -f nightly_build.mak clean
-            make -f nightly_build.mak --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION DBATag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
-            $GOPATH/src/github.com/drud/ddev/bin/linux/ddev version
+            make -f nightly_build.mak -s --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION DBATag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
           no_output_timeout: "20m"
           name: Run full nightly build
 
@@ -145,7 +144,7 @@ jobs:
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
-          command: make clean linux darwin windows
+          command: make -s clean linux darwin windows
           name: Build the ddev executables
 
       - run:
@@ -218,21 +217,34 @@ jobs:
           command: |
             sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS &&
             export VERSION=$(git describe --tags --always --dirty) &&
-            tar -czf artifacts/ddev_osx.$VERSION.tar.gz bin/darwin/darwin_amd64/ddev &&
-            zip artifacts/ddev_osx.$VERSION.zip bin/darwin/darwin_amd64/ddev &&
-            tar -czf artifacts/ddev_linux.$VERSION.tar.gz bin/linux/ddev &&
-            zip artifacts/ddev_linux.$VERSION.zip bin/linux/ddev &&
-            tar -czf artifacts/ddev_windows.$VERSION.tar.gz bin/windows/windows_amd64/ddev.exe &&
-            zip artifacts/ddev_windows.$VERSION.zip bin/windows/windows_amd64/ddev.exe
-          name: tar/zip up artifacts
-      - run:
-          command: |
+            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz bin/darwin/darwin_amd64/ddev &&
+            zip $ARTIFACTS/ddev_osx.$VERSION.zip bin/darwin/darwin_amd64/ddev &&
+            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz bin/linux/ddev &&
+            zip $ARTIFACTS/ddev_linux.$VERSION.zip bin/linux/ddev &&
+            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz bin/windows/windows_amd64/ddev.exe &&
+            zip $ARTIFACTS/ddev_windows.$VERSION.zip bin/windows/windows_amd64/ddev.exe
             cd $ARTIFACTS &&
             for item in *.tar.gz *.zip; do
               sha256sum $item > $item.sha256.txt
             done
-          name: create sha256
+          name: tar/zip up artifacts
 
       - store_artifacts:
-          path: $ARTIFACTS
-          name: Upload all artifacts together
+          path: /artifacts
+          name: Artifact storage
+
+  junk_build:
+    machine: true
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      DRUD_DEBUG: "true"
+      GOPATH: /home/circleci/go
+      ARTIFACTS: /artifacts
+    steps:
+      - run:
+        command: |
+          echo "Does it work as is?"
+          echo "Do we need to do the && thing?"
+          echo " I don't think so"
+          make -s linux
+        name: JUNK BUILD
