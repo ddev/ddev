@@ -7,6 +7,7 @@ import (
 
 	"github.com/drud/ddev/pkg/testcommon"
 	. "github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
 )
@@ -104,4 +105,15 @@ func TestGetContainerEnv(t *testing.T) {
 	assert.Equal("future-fry", env)
 	env = GetContainerEnv("NONEXISTENT", container)
 	assert.Equal("", env)
+}
+
+func TestCheckDockerVersion(t *testing.T) {
+	assert := assert.New(t)
+
+	err := CheckDockerVersion(">= 50.0.0")
+	assert.Error(err)
+	assert.Contains(err.Error(), "is less than 50.0.0")
+
+	err = CheckDockerVersion(version.DockerVersionConstraint)
+	assert.NoError(err)
 }

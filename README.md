@@ -12,7 +12,7 @@ We use the longer-term roadmap to prioritize short-term sprints. Please review t
 
 ## System Requirements
 
-- [docker](https://www.docker.com/community-edition)
+- [Docker](https://www.docker.com/community-edition) version 17.05 or greater
 - OS Support
   - macOS Sierra
   - Linux
