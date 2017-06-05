@@ -215,14 +215,18 @@ jobs:
 
       - run:
           command: |
+            BASE_DIR=$PWD
             sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
             export VERSION=$(git describe --tags --always --dirty)
-            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz bin/darwin/darwin_amd64/ddev
-            zip $ARTIFACTS/ddev_osx.$VERSION.zip bin/darwin/darwin_amd64/ddev
-            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz bin/linux/ddev
-            zip $ARTIFACTS/ddev_linux.$VERSION.zip bin/linux/ddev
-            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz bin/windows/windows_amd64/ddev.exe
-            zip $ARTIFACTS/ddev_windows.$VERSION.zip bin/windows/windows_amd64/ddev.exe
+            cd $BASE_DIR/bin/darwin/darwin_amd64
+            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_osx.$VERSION.zip ddev
+            cd $BASE_DIR/bin/linux
+            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev
+            cd $BASE_DIR/bin/windows/windows_amd64
+            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe
+            zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe
             cd $ARTIFACTS
             for item in *.tar.gz *.zip; do
               sha256sum $item > $item.sha256.txt
