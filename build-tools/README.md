@@ -1,6 +1,6 @@
 # Build tools for standard makefile
 
-**These build tools live at https://github.com/drud/build-tools**. If you are viewing this README in any other repository, it's important to know that modifications should **never** be made directly, and instead should be made to the base repository and pulled in via the subtree merge instructions below.
+**These build tools live at https://github.com/drud/build-tools**. If you are viewing this README in any other repository, it's important to know that modifications should **never** be made directly, and instead should be made to the base repository and pulled in via the instructions below.
 
 These tools add standard components (sub-makefiles and build scripts) as well as example starters for the Makefile and .circleci/config.yml.
 

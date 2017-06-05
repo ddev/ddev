@@ -30,4 +30,4 @@ container-clean:
 	rm -rf .container-* .dockerfile* .push-* linux darwin container VERSION.txt .docker_image
 
 bin-clean:
-	rm -rf .go bin .tmp
+	rm -rf .go $(GOTMP) bin .tmp
