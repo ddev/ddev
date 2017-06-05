@@ -13,7 +13,6 @@ import (
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/system"
 	"github.com/pkg/errors"
 )
 
@@ -53,7 +52,7 @@ func (site *TestSite) Prepare() error {
 
 	log.Debugln("Downloading file:", site.SourceURL)
 	site.ArchivePath = site.createArchivePath()
-	err = system.DownloadFile(site.ArchivePath, site.SourceURL)
+	err = util.DownloadFile(site.ArchivePath, site.SourceURL)
 
 	if err != nil {
 		site.Cleanup()

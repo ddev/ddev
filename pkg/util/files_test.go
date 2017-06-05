@@ -7,7 +7,6 @@ import (
 
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -149,8 +148,8 @@ func TestCopyDir(t *testing.T) {
 
 	err = util.CopyDir(sourceDir, targetDir)
 	assert.NoError(err)
-	assert.True(system.FileExists(filepath.Join(targetDir, "touch1.txt")))
-	assert.True(system.FileExists(filepath.Join(targetDir, "touch2.txt")))
+	assert.True(util.FileExists(filepath.Join(targetDir, "touch1.txt")))
+	assert.True(util.FileExists(filepath.Join(targetDir, "touch2.txt")))
 
 	err = os.RemoveAll(sourceDir)
 	assert.NoError(err)

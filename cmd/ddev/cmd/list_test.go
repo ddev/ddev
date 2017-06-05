@@ -3,14 +3,14 @@ package cmd
 import (
 	"testing"
 
-	"github.com/drud/drud-go/utils/system"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDevList(t *testing.T) {
 	assert := assert.New(t)
 	args := []string{"list"}
-	out, err := system.RunCommand(DdevBin, args)
+	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()

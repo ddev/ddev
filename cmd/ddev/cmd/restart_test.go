@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/drud/drud-go/utils/system"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +15,7 @@ func TestDevRestart(t *testing.T) {
 		cleanup := site.Chdir()
 
 		args := []string{"restart"}
-		out, err := system.RunCommand(DdevBin, args)
+		out, err := exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 
 		app, err := getActiveApp()

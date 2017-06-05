@@ -3,8 +3,8 @@ package cmd
 import (
 	"testing"
 
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/drud-go/utils/system"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,19 +19,19 @@ func TestDescribeBadArgs(t *testing.T) {
 
 	// Ensure it fails if we run the vanilla describe outside of an application root.
 	args := []string{"describe"}
-	out, err := system.RunCommand(DdevBin, args)
+	out, err := exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "unable to determine the application for this command")
 
 	// Ensure we get a failure if we run a describe on a named application which does not exist.
 	args = []string{"describe", testcommon.RandString(16)}
-	out, err = system.RunCommand(DdevBin, args)
+	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Could not describe app")
 
 	// Ensure we get a failure if using too many arguments.
 	args = []string{"describe", testcommon.RandString(16), testcommon.RandString(16)}
-	out, err = system.RunCommand(DdevBin, args)
+	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Too many arguments detected")
 
@@ -48,7 +48,7 @@ func TestDescribe(t *testing.T) {
 		defer testcommon.CleanupDir(tmpdir)
 
 		args := []string{"describe", v.Name}
-		out, err := system.RunCommand(DdevBin, args)
+		out, err := exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.Contains(string(out), "NAME")
 		assert.Contains(string(out), "LOCATION")
@@ -60,7 +60,7 @@ func TestDescribe(t *testing.T) {
 		cleanup = v.Chdir()
 
 		args = []string{"describe"}
-		out, err = system.RunCommand(DdevBin, args)
+		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.Contains(string(out), "NAME")
 		assert.Contains(string(out), "LOCATION")

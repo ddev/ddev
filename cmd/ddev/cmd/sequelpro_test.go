@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/drud-go/utils/system"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,7 +28,7 @@ func TestSequelproOperation(t *testing.T) {
 
 	dir, err := getActiveAppRoot()
 	assert.NoError(err)
-	assert.Equal(true, system.FileExists(filepath.Join(dir, ".ddev/sequelpro.spf")))
+	assert.Equal(true, util.FileExists(filepath.Join(dir, ".ddev/sequelpro.spf")))
 
 	cleanup()
 }

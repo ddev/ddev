@@ -9,8 +9,8 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 
 	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/drud-go/utils/network"
-	"github.com/drud/drud-go/utils/system"
 )
 
 var (
@@ -65,7 +65,7 @@ func addSites() {
 
 		// test that you get an error when you run with no args
 		args := []string{"start"}
-		out, err := system.RunCommand(DdevBin, args)
+		out, err := exec.RunCommand(DdevBin, args)
 		if err != nil {
 			log.Fatalln("Error Output from ddev start:", out, "err:", err)
 		}
@@ -102,7 +102,7 @@ func removeSites() {
 		_ = site.Chdir()
 
 		args := []string{"remove", "-y"}
-		out, err := system.RunCommand(DdevBin, args)
+		out, err := exec.RunCommand(DdevBin, args)
 		if err != nil {
 			log.Fatalln("Failed to run ddev remove -y command, err: %v, output: %s", err, out)
 		}

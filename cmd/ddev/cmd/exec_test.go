@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/drud/drud-go/utils/system"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +14,7 @@ func TestDevExecBadArgs(t *testing.T) {
 	assert := assert.New(t)
 
 	args := []string{"exec"}
-	out, err := system.RunCommand(DdevBin, args)
+	out, err := exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Usage:")
 }
@@ -27,12 +27,12 @@ func TestDevExec(t *testing.T) {
 		cleanup := v.Chdir()
 
 		args := []string{"exec", "pwd"}
-		out, err := system.RunCommand(DdevBin, args)
+		out, err := exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.Contains(string(out), "/var/www/html/docroot")
 
 		args = []string{"-s", "db", "exec", "pwd"}
-		out, err = system.RunCommand(DdevBin, args)
+		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.Contains(string(out), "/")
 
