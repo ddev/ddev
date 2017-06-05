@@ -47,8 +47,8 @@ func TestCopyDir(t *testing.T) {
 
 	err = fileutil.CopyDir(sourceDir, targetDir)
 	assert.NoError(err)
-	assert.True(FileExists(filepath.Join(targetDir, "touch1.txt")))
-	assert.True(FileExists(filepath.Join(targetDir, "touch2.txt")))
+	assert.True(fileutil.FileExists(filepath.Join(targetDir, "touch1.txt")))
+	assert.True(fileutil.FileExists(filepath.Join(targetDir, "touch2.txt")))
 
 	err = os.RemoveAll(sourceDir)
 	assert.NoError(err)
