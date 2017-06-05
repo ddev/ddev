@@ -1,78 +1,35 @@
 version: 2
 jobs:
+  # 'build' is the default build, the only one triggered automatically by github or anything else.
   build:
     machine: true
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       DRUD_DEBUG: "true"
       GOPATH: /home/circleci/go
+      ARTIFACTS: /artifacts
     steps:
-      - run: mkdir -p ~/go/lib && mkdir ~/go/pkg && mkdir -p ~/go/src/github.com/drud/ddev
+      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
+
+      - checkout
 
       - run:
-          command: sudo apt-get update -qq && sudo apt-get install -qq mysql-client realpath
-          name: Basic tool installation
-
-      - run:
-          command: |
-            sudo apt-get remove -qq golang &&
-            wget -q -O /tmp/golang.tgz https://storage.googleapis.com/golang/go1.8.1.linux-amd64.tar.gz &&
-            cd /tmp && tar -xf golang.tgz &&
-            sudo rm -rf /usr/local/go && sudo mv go /usr/local
-          name: Upgrade golang
-
-      - run:
-          command: |
-            sudo apt-get remove -qq docker docker-engine &&
-            sudo apt-get update -qq &&
-            sudo apt-get install -qq apt-transport-https ca-certificates  curl software-properties-common &&
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &&
-            # Per docker docs, you always need the stable repository, even if you want to install edge builds as well.
-            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" &&
-            sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge" &&
-            sudo apt-get update -qq &&
-            sudo apt-get install -qq docker-ce=17.05.0~ce-0~ubuntu-$(lsb_release -cs)
-          name: Install docker
-
-      - run:
-          command: sudo curl -s -L "https://github.com/docker/compose/releases/download/1.12.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose
-          name: docker-compose install
+          command: ./.circleci/circle_vm_setup.sh
+          name: NORMAL Circle VM setup - tools, docker, golang
 
       - run:
           command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
           name: Installed tool versions
 
-      - checkout
-
-      # The nightly build builds a ddev that can't be run elsewhere because the containers built in are not pushed.
-      # Therefore we build this full nightly first, and then throw it away.
-      - run:
-          command: |
-            if [ -n "${RUN_NIGHTLY_BUILD}" ]; then
-              make clean
-              export VERSION=nightly.$(date +%Y%m%d%H%M%S)
-              export VERSION="$(git describe --tags --always --dirty)-nightly.$(date +%Y%m%d%H%M%S)"
-              echo VERSION=$VERSION
-              git submodule update --init && git submodule update --remote
-              make -f nightly_build.mak clean
-              make -f nightly_build.mak --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION DBATag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
-              $GOPATH/src/github.com/drud/ddev/bin/linux/ddev version
-            fi
-          no_output_timeout: "20m"
-          name: Run full nightly build  and tests if $RUN_NIGHTLY_BUILD
-
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
-          command: make clean linux darwin windows
+          command: make -s clean linux darwin windows
           name: Build the ddev executables
 
       # Run the built-in ddev tests with the executables just built.
       - run:
-          command: |
-            if [ ! -n "${RUN_NIGHTLY_BUILD}" ]; then
-              make test
-            fi
-          name: ddev tests (not nightly build)
+          command: make -s test
+          name: ddev tests
           no_output_timeout: "20m"
 
       - run: make -s staticrequired
@@ -81,16 +38,163 @@ jobs:
           command: bin/linux/ddev version
           name: ddev version information
 
-      # Now we store the artifacts, which are the ones built by the *normal* build (not the nightly, in case of nightly)
+      - run:
+          command: |
+            BASE_DIR=$PWD
+            sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
+            export VERSION=$(git describe --tags --always --dirty)
+            cd $BASE_DIR/bin/darwin/darwin_amd64
+            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_osx.$VERSION.zip ddev
+            cd $BASE_DIR/bin/linux
+            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev
+            cd $BASE_DIR/bin/windows/windows_amd64
+            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe
+            zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe
+            cd $ARTIFACTS
+            for item in *.tar.gz *.zip; do
+              sha256sum $item > $item.sha256.txt
+            done
+          name: tar/zip up artifacts and make hashes
+
       - store_artifacts:
-          path: bin/darwin/darwin_amd64/ddev
-          destination: darwin/ddev
-          name: Upload ddev (darwin)
+          path: /artifacts
+          name: Artifact storage
+
+  # nightly is triggered only with nightly_build_trigger.sh
+  nightly_build:
+    machine: true
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      DRUD_DEBUG: "true"
+      GOPATH: /home/circleci/go
+      ARTIFACTS: /artifacts
+    steps:
+#      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
+
+      - checkout
+
+      - run:
+          command: ./.circleci/circle_vm_setup.sh
+          name: NIGHTLY BUILD Circle VM setup - tools, docker, golang
+
+      - run:
+          command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
+          name: Installed tool versions
+
+      # The nightly build builds a ddev that can't be run elsewhere because the containers built in are not pushed.
+      # Therefore we build this full nightly first, and then throw it away.
+      - run:
+          command: |
+            make clean
+            export VERSION=nightly.$(date +%Y%m%d%H%M%S)
+            export VERSION="$(git describe --tags --always --dirty)-nightly.$(date +%Y%m%d%H%M%S)"
+            echo VERSION=$VERSION
+            git submodule update --init && git submodule update --remote
+            make -f nightly_build.mak clean
+            make -f nightly_build.mak -s --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION DBATag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
+          no_output_timeout: "20m"
+          name: Run full nightly build
+
+      - run:
+          command: bin/linux/ddev version
+          name:  nightly-build ddev version information
+
+      # Run the built-in ddev tests with the executables just built.
+      - run:
+          command: make -s test
+          name: ddev tests
+          no_output_timeout: "20m"
+
+      - run: make -s staticrequired
+
+      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+      - run:
+          command: make -s clean linux darwin windows
+          name: Build the ddev executables
+
+      # Run the built-in ddev tests with the clean binaries just built.
+      - run:
+          command: make -s test
+          name: ddev tests
+          no_output_timeout: "20m"
+
+      - run:
+          command: bin/linux/ddev version
+          name: ddev version information (clean binaries, not nightlies)
+
+      - run:
+          command: |
+            BASE_DIR=$PWD
+            sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
+            export VERSION=$(git describe --tags --always --dirty)
+            cd $BASE_DIR/bin/darwin/darwin_amd64
+            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_osx.$VERSION.zip ddev
+            cd $BASE_DIR/bin/linux
+            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev
+            cd $BASE_DIR/bin/windows/windows_amd64
+            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe
+            zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe
+            cd $ARTIFACTS
+            for item in *.tar.gz *.zip; do
+              sha256sum $item > $item.sha256.txt
+            done
+          name: tar/zip up artifacts and make hashes
+
       - store_artifacts:
-          path: bin/linux/ddev
-          destination: linux/ddev
-          name: Upload ddev (linux)
+          path: /artifacts
+          name: Artifact storage
+
+  # 'tag_build' is used to build a tag for release.
+  tag_build:
+    machine: true
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      DRUD_DEBUG: "true"
+      GOPATH: /home/circleci/go
+      ARTIFACTS: /artifacts
+    steps:
+      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
+
+      - checkout
+
+      - run:
+          command: ./.circleci/circle_vm_setup.sh
+          name: TAG BUILD Circle VM setup - tools, docker, golang
+
+      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+      - run:
+          command: make -s clean linux darwin windows
+          name: Build the ddev executables
+
+      - run:
+          command: bin/linux/ddev version
+          name: ddev version information
+
+      - run:
+          command: |
+            BASE_DIR=$PWD
+            sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
+            export VERSION=$(git describe --tags --always --dirty)
+            cd $BASE_DIR/bin/darwin/darwin_amd64
+            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_osx.$VERSION.zip ddev
+            cd $BASE_DIR/bin/linux
+            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev
+            zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev
+            cd $BASE_DIR/bin/windows/windows_amd64
+            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe
+            zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe
+            cd $ARTIFACTS
+            for item in *.tar.gz *.zip; do
+              sha256sum $item > $item.sha256.txt
+            done
+          name: tar/zip up artifacts and make hashes
+
       - store_artifacts:
-          path: bin/windows/windows_amd64/ddev.exe
-          destination: windows/ddev.exe
-          name: Upload ddev (windows)
+          path: /artifacts
+          name: Artifact storage
+
