@@ -91,7 +91,7 @@ jobs:
 
       # Run the built-in ddev tests with the executables just built.
       - run:
-          command: make test
+          command: make -s test
           name: ddev tests
           no_output_timeout: "20m"
 
@@ -104,7 +104,7 @@ jobs:
 
       # Run the built-in ddev tests with the clean binaries just built.
       - run:
-          command: make test
+          command: make -s test
           name: ddev tests
           no_output_timeout: "20m"
 
@@ -199,7 +199,7 @@ jobs:
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
-          command: make clean linux darwin windows
+          command: make -s clean linux darwin windows
           name: Build the ddev executables
 
       - run:
@@ -215,15 +215,15 @@ jobs:
 
       - run:
           command: |
-            sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS &&
-            export VERSION=$(git describe --tags --always --dirty) &&
-            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz bin/darwin/darwin_amd64/ddev &&
-            zip $ARTIFACTS/ddev_osx.$VERSION.zip bin/darwin/darwin_amd64/ddev &&
-            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz bin/linux/ddev &&
-            zip $ARTIFACTS/ddev_linux.$VERSION.zip bin/linux/ddev &&
-            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz bin/windows/windows_amd64/ddev.exe &&
+            sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
+            export VERSION=$(git describe --tags --always --dirty)
+            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz bin/darwin/darwin_amd64/ddev
+            zip $ARTIFACTS/ddev_osx.$VERSION.zip bin/darwin/darwin_amd64/ddev
+            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz bin/linux/ddev
+            zip $ARTIFACTS/ddev_linux.$VERSION.zip bin/linux/ddev
+            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz bin/windows/windows_amd64/ddev.exe
             zip $ARTIFACTS/ddev_windows.$VERSION.zip bin/windows/windows_amd64/ddev.exe
-            cd $ARTIFACTS &&
+            cd $ARTIFACTS
             for item in *.tar.gz *.zip; do
               sha256sum $item > $item.sha256.txt
             done
@@ -241,10 +241,11 @@ jobs:
       GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
     steps:
+      - checkout
       - run:
         command: |
           echo "Does it work as is?"
           echo "Do we need to do the && thing?"
-          echo " I don't think so"
+          echo "I don't think so"
           make -s linux
         name: JUNK BUILD
