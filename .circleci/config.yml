@@ -110,8 +110,11 @@ jobs:
       - run: make -s staticrequired
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+      # Earlier process updated submodules so now we clean them up to continue.
       - run:
-          command: make -s clean linux darwin windows
+          command: |
+            git submodule update --init &&
+            make -s clean linux darwin windows
           name: Build the ddev executables
 
       # Run the built-in ddev tests with the clean binaries just built.
