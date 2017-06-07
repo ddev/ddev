@@ -102,8 +102,14 @@ func Untar(source string, dest string, extractionDir string) error {
 		if !strings.HasPrefix(file.Name, extractionDir) {
 			continue
 		}
-		// Now transform the filename to skip the extractionDir
-		file.Name = strings.TrimPrefix(file.Name, extractionDir)
+
+		// If extractionDir matches file name and isn't a directory, we should be extracting a specific file.
+		if file.Name == extractionDir && file.Typeflag != tar.TypeDir {
+			file.Name = filepath.Base(file.Name)
+		} else {
+			// Transform the filename to skip the extractionDir
+			file.Name = strings.TrimPrefix(file.Name, extractionDir)
+		}
 
 		// If file.Name is now empty this is the root directory we want to extract, and need not do anything.
 		if file.Name == "" && file.Typeflag == tar.TypeDir {
@@ -161,8 +167,15 @@ func Unzip(source string, dest string, extractionDir string) error {
 			continue
 		}
 
-		// Now transform the filename to skip the extractionDir
-		file.Name = strings.TrimPrefix(file.Name, extractionDir)
+		// If extractionDir matches file name and isn't a directory, we should be extracting a specific file.
+		fileInfo := file.FileInfo()
+		if file.Name == extractionDir && !fileInfo.IsDir() {
+			file.Name = filepath.Base(file.Name)
+		} else {
+			// Transform the filename to skip the extractionDir
+			file.Name = strings.TrimPrefix(file.Name, extractionDir)
+		}
+
 		fullPath := filepath.Join(dest, file.Name)
 
 		if strings.HasSuffix(file.Name, "/") {
