@@ -32,8 +32,8 @@ type App interface {
 	Wait(string) error
 	HostName() string
 	URL() string
-	ImportDB(string) error
-	ImportFiles(string) error
+	ImportDB(imPath string, extPath string) error
+	ImportFiles(imPath string, extPath string) error
 	SiteStatus() string
 	FindContainerByType(containerType string) (docker.APIContainers, error)
 	Exec(service string, tty bool, cmd ...string) error

@@ -10,6 +10,7 @@ import (
 )
 
 var fileSource string
+var fileExtPath string
 
 // ImportFileCmd represents the `ddev import-db` command.
 var ImportFileCmd = &cobra.Command{
@@ -40,7 +41,7 @@ will be replaced with the assets being imported.`,
 			util.Failed("Failed to import files: %v", err)
 		}
 
-		err = app.ImportFiles(fileSource)
+		err = app.ImportFiles(fileSource, fileExtPath)
 		if err != nil {
 			util.Failed("Failed to import files for %s: %v", app.GetName(), err)
 		}
@@ -50,5 +51,6 @@ will be replaced with the assets being imported.`,
 
 func init() {
 	ImportFileCmd.Flags().StringVarP(&fileSource, "src", "", "", "Provide the path to a directory or .tar.gz archive of files to import")
+	ImportFileCmd.Flags().StringVarP(&fileExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
 	RootCmd.AddCommand(ImportFileCmd)
 }

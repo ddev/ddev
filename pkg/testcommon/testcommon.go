@@ -26,6 +26,8 @@ type TestSite struct {
 	SourceURL string
 	// ArchiveExtractionPath is the relative path within the tarball which should be extracted, ending with /
 	ArchiveInternalExtractionPath string
+	// FullSiteTarballURL is the URL of the tarball of a full site archive used for testing import.
+	FullSiteTarballURL string
 	// FilesTarballURL is the URL of the tarball of file uploads used for testing file import.
 	FilesTarballURL string
 	// FilesZipballURL is the URL of the zipball of file uploads used for testing file import.

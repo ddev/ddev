@@ -42,6 +42,7 @@ var (
 			ArchiveInternalExtractionPath: "drupal-kickstart-0.4.0/",
 			FilesTarballURL:               "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
+			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
 		},
 	}
 )
@@ -172,7 +173,7 @@ func TestLocalImportDB(t *testing.T) {
 		// Test simple db loads.
 		for _, file := range []string{"users.sql", "users.sql.gz", "users.sql.tar.gz", "users.sql.tgz", "users.sql.zip"} {
 			path := filepath.Join(testDir, "testing", file)
-			err = app.ImportDB(path)
+			err = app.ImportDB(path, "")
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 		}
 
@@ -180,8 +181,7 @@ func TestLocalImportDB(t *testing.T) {
 			dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
 			err := util.DownloadFile(dbPath, site.DBTarURL)
 			assert.NoError(err)
-
-			err = app.ImportDB(dbPath)
+			err = app.ImportDB(dbPath, "")
 			assert.NoError(err)
 
 			stdout := testcommon.CaptureStdOut()
@@ -200,8 +200,7 @@ func TestLocalImportDB(t *testing.T) {
 			dbZipPath := filepath.Join(testcommon.CreateTmpDir("local-db-zip"), "db.zip")
 			err = util.DownloadFile(dbZipPath, site.DBZipURL)
 			assert.NoError(err)
-
-			err = app.ImportDB(dbZipPath)
+			err = app.ImportDB(dbZipPath, "")
 			assert.NoError(err)
 
 			stdout := testcommon.CaptureStdOut()
@@ -214,6 +213,15 @@ func TestLocalImportDB(t *testing.T) {
 
 			err = os.Remove(dbZipPath)
 			assert.NoError(err)
+		}
+
+		if site.FullSiteTarballURL != "" {
+			siteTarPath := filepath.Join(testcommon.CreateTmpDir("local-site-tar"), "site.tar.gz")
+			err = util.DownloadFile(siteTarPath, site.FullSiteTarballURL)
+			assert.NoError(err)
+			err = app.ImportDB(siteTarPath, "data.sql")
+			assert.NoError(err)
+			err = os.Remove(siteTarPath)
 		}
 
 		runTime()
@@ -239,7 +247,7 @@ func TestLocalImportFiles(t *testing.T) {
 			filePath := filepath.Join(testcommon.CreateTmpDir("local-tarball-files"), "files.tar.gz")
 			err := util.DownloadFile(filePath, site.FilesTarballURL)
 			assert.NoError(err)
-			err = app.ImportFiles(filePath)
+			err = app.ImportFiles(filePath, "")
 			assert.NoError(err)
 			err = os.Remove(filePath)
 			assert.NoError(err)
@@ -249,10 +257,19 @@ func TestLocalImportFiles(t *testing.T) {
 			filePath := filepath.Join(testcommon.CreateTmpDir("local-zipball-files"), "files.zip")
 			err := util.DownloadFile(filePath, site.FilesZipballURL)
 			assert.NoError(err)
-			err = app.ImportFiles(filePath)
+			err = app.ImportFiles(filePath, "")
 			assert.NoError(err)
 			err = os.Remove(filePath)
 			assert.NoError(err)
+		}
+
+		if site.FullSiteTarballURL != "" {
+			siteTarPath := filepath.Join(testcommon.CreateTmpDir("local-site-tar"), "site.tar.gz")
+			err = util.DownloadFile(siteTarPath, site.FullSiteTarballURL)
+			assert.NoError(err)
+			err = app.ImportFiles(siteTarPath, "docroot/sites/default/files")
+			assert.NoError(err)
+			err = os.Remove(siteTarPath)
 		}
 
 		runTime()
