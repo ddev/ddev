@@ -11,6 +11,7 @@ import (
 	"runtime"
 
 	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
@@ -59,7 +60,7 @@ func handleSequelProCommand(appLocation string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	dbPublishPort := fmt.Sprint(util.GetPublishedPort(dbPrivatePort, db))
+	dbPublishPort := fmt.Sprint(dockerutil.GetPublishedPort(dbPrivatePort, db))
 
 	tmpFilePath := filepath.Join(app.AppRoot(), ".ddev/sequelpro.spf")
 	tmpFile, err := os.Create(tmpFilePath)
