@@ -3,7 +3,7 @@
 # from https://circleci.com/docs/1.0/nightly-builds/
 # See also https://circleci.com/docs/2.0/defining-multiple-jobs/
 
-# ag_build.sh $circle_token $tag $project_optional
+# tag_build.sh $circle_token $tag $project_optional
 
 CIRCLE_TOKEN=$1
 TAG=$2

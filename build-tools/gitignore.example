@@ -2,6 +2,7 @@
 
 # Temporary build-tools artifacts to be ignored
 /.go/
+/.gotmp/
 /bin/
 /.container*
 /.push*
