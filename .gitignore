@@ -12,3 +12,4 @@
 /.docker_image
 /debug
 /debug.test
+/release/v*
