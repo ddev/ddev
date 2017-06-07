@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
-	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -48,14 +48,14 @@ func describeApp(appName string) (string, error) {
 			"com.docker.compose.service": "web",
 		}
 
-		webContainer, err := util.FindContainerByLabels(labels)
+		webContainer, err := dockerutil.FindContainerByLabels(labels)
 		if err != nil {
 			return "", err
 		}
 
 		dir, ok := webContainer.Labels["com.ddev.approot"]
 		if !ok {
-			return "", fmt.Errorf("could not find webroot on container: %s", util.ContainerName(webContainer))
+			return "", fmt.Errorf("could not find webroot on container: %s", dockerutil.ContainerName(webContainer))
 		}
 
 		app, err = platform.GetPluginApp(plugin)

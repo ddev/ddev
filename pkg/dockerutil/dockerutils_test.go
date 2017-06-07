@@ -1,16 +1,60 @@
-package util_test
+package dockerutil_test
 
 import (
+	"log"
 	"testing"
 
 	"path/filepath"
 
+	. "github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/testcommon"
-	. "github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
 )
+
+var (
+	// The image here can be any image, it just has to exist so it can be used for labels, etc.
+	TestRouterImage = "busybox"
+	TestRouterTag   = "1"
+)
+
+func TestMain(m *testing.M) {
+	// prep docker container for docker util tests
+	client := GetDockerClient()
+
+	err := client.PullImage(docker.PullImageOptions{
+		Repository: TestRouterImage,
+		Tag:        TestRouterTag,
+	}, docker.AuthConfiguration{})
+	if err != nil {
+		log.Fatal("failed to pull test image ", err)
+	}
+
+	container, err := client.CreateContainer(docker.CreateContainerOptions{
+		Name: "envtest",
+		Config: &docker.Config{
+			Image: TestRouterImage + ":" + TestRouterTag,
+			Labels: map[string]string{
+				"com.docker.compose.service": "ddevrouter",
+				"com.ddev.site-name":         "dockertest",
+			},
+			Env: []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
+		},
+	})
+	if err != nil {
+		log.Fatal("failed to create/start docker container ", err)
+	}
+
+	// teardown docker container from docker util tests
+	err = client.RemoveContainer(docker.RemoveContainerOptions{
+		ID:    container.ID,
+		Force: true,
+	})
+	if err != nil {
+		log.Fatal("failed to remove test container: ", err)
+	}
+
+}
 
 // TestGetContainerHealth tests the function for processing container readiness.
 func TestGetContainerHealth(t *testing.T) {
@@ -105,15 +149,4 @@ func TestGetContainerEnv(t *testing.T) {
 	assert.Equal("future-fry", env)
 	env = GetContainerEnv("NONEXISTENT", container)
 	assert.Equal("", env)
-}
-
-func TestCheckDockerVersion(t *testing.T) {
-	assert := assert.New(t)
-
-	err := CheckDockerVersion(">= 50.0.0")
-	assert.Error(err)
-	assert.Contains(err.Error(), "is less than 50.0.0")
-
-	err = CheckDockerVersion(version.DockerVersionConstraint)
-	assert.NoError(err)
 }

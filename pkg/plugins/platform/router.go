@@ -10,8 +10,10 @@ import (
 
 	"strings"
 
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -39,7 +41,7 @@ func StopRouter() error {
 
 	if !containersRunning {
 		dest := RouterComposeYAMLPath()
-		return util.ComposeCmd([]string{dest}, "-p", routerProjectName, "down")
+		return dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "down")
 	}
 	return nil
 }
@@ -80,7 +82,7 @@ func StartDockerRouter() {
 	util.CheckErr(err)
 
 	// run docker-compose up -d in the newly created directory
-	err = util.ComposeCmd([]string{dest}, "-p", routerProjectName, "up", "-d")
+	err = dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "up", "-d")
 	if err != nil {
 		log.Fatalf("Could not start router: %v", err)
 	}
@@ -90,7 +92,7 @@ func StartDockerRouter() {
 // containers defining VIRTUAL_PORT env var
 func determineRouterPorts() []string {
 	var routerPorts []string
-	containers, err := util.GetDockerContainers(false)
+	containers, err := dockerutil.GetDockerContainers(false)
 	if err != nil {
 		log.Fatal("failed to retreive containers for determining port mappings", err)
 	}
@@ -100,13 +102,13 @@ func determineRouterPorts() []string {
 		if _, ok := container.Labels["com.ddev.site-name"]; ok {
 			var exposePorts []string
 
-			httpPorts := util.GetContainerEnv("HTTP_EXPOSE", container)
+			httpPorts := dockerutil.GetContainerEnv("HTTP_EXPOSE", container)
 			if httpPorts != "" {
 				ports := strings.Split(httpPorts, ",")
 				exposePorts = append(exposePorts, ports...)
 			}
 
-			tcpPorts := util.GetContainerEnv("TCP_EXPOSE", container)
+			tcpPorts := dockerutil.GetContainerEnv("TCP_EXPOSE", container)
 			if tcpPorts != "" {
 				ports := strings.Split(tcpPorts, ",")
 				exposePorts = append(exposePorts, ports...)

@@ -11,7 +11,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
+	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
 )
@@ -60,7 +62,7 @@ func (site *TestSite) Prepare() error {
 	}
 	log.Debugln("File downloaded:", site.ArchivePath)
 
-	err = util.Untar(site.ArchivePath, site.Dir, site.ArchiveInternalExtractionPath)
+	err = archive.Untar(site.ArchivePath, site.Dir, site.ArchiveInternalExtractionPath)
 	if err != nil {
 		log.Errorf("Tar extraction failed err=%v\n", err)
 		// If we had an error extracting the archive, we should go ahead and clean up the temporary directory, since this
@@ -221,19 +223,19 @@ func ClearDockerEnv() {
 // ContainerCheck determines if a given container name exists and matches a given state
 func ContainerCheck(checkName string, checkState string) (bool, error) {
 	// ensure we have docker network
-	client := util.GetDockerClient()
-	err := util.EnsureNetwork(client, util.NetName)
+	client := dockerutil.GetDockerClient()
+	err := dockerutil.EnsureNetwork(client, dockerutil.NetName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	containers, err := util.GetDockerContainers(true)
+	containers, err := dockerutil.GetDockerContainers(true)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, container := range containers {
-		name := util.ContainerName(container)
+		name := dockerutil.ContainerName(container)
 		if name == checkName {
 			if container.State == checkState {
 				return true, nil

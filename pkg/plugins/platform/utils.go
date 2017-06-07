@@ -12,6 +12,8 @@ import (
 
 	"errors"
 
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	homedir "github.com/mitchellh/go-homedir"
 )
@@ -24,7 +26,7 @@ func GetApps() map[string][]App {
 			"com.ddev.platform":          platformType,
 			"com.docker.compose.service": "web",
 		}
-		sites, err := util.FindContainersByLabels(labels)
+		sites, err := dockerutil.FindContainersByLabels(labels)
 
 		if err == nil {
 			for _, siteContainer := range sites {
@@ -100,13 +102,13 @@ func RenderAppRow(table *uitable.Table, site App) {
 
 // Cleanup will clean up ddev apps even if the composer file has been deleted.
 func Cleanup(app App) error {
-	client := util.GetDockerClient()
+	client := dockerutil.GetDockerClient()
 
 	// Find all containers which match the current site name.
 	labels := map[string]string{
 		"com.ddev.site-name": app.GetName(),
 	}
-	containers, err := util.FindContainersByLabels(labels)
+	containers, err := dockerutil.FindContainersByLabels(labels)
 	if err != nil {
 		return err
 	}
@@ -141,14 +143,14 @@ func Cleanup(app App) error {
 
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.
 func CheckForConf(confPath string) (string, error) {
-	if util.FileExists(confPath + "/.ddev/config.yaml") {
+	if fileutil.FileExists(confPath + "/.ddev/config.yaml") {
 		return confPath, nil
 	}
 	pathList := strings.Split(confPath, "/")
 
 	for _ = range pathList {
 		confPath = filepath.Dir(confPath)
-		if util.FileExists(confPath + "/.ddev/config.yaml") {
+		if fileutil.FileExists(confPath + "/.ddev/config.yaml") {
 			return confPath, nil
 		}
 	}
@@ -158,7 +160,7 @@ func CheckForConf(confPath string) (string, error) {
 
 // ddevContainersRunning determines if any ddev-controlled containers are currently running.
 func ddevContainersRunning() (bool, error) {
-	containers, err := util.GetDockerContainers(false)
+	containers, err := dockerutil.GetDockerContainers(false)
 	if err != nil {
 		return false, err
 	}

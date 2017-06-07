@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -21,10 +22,8 @@ var ImportFileCmd = &cobra.Command{
 			util.CheckErr(err)
 			os.Exit(0)
 		}
-
-		client := util.GetDockerClient()
-
-		err := util.EnsureNetwork(client, netName)
+		client := dockerutil.GetDockerClient()
+		err := dockerutil.EnsureNetwork(client, netName)
 		if err != nil {
 			log.Fatal(err)
 		}
