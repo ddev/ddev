@@ -159,15 +159,15 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	}
 
 	importPath, err := appimport.ValidateAsset(imPath, "db")
-	if err != nil && err.Error() != "is archive" {
-		return err
-	}
+	if err != nil {
+		if err.Error() == "is archive" && extPathPrompt {
+			fmt.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
+			fmt.Println("Archive extraction path:")
 
-	if err.Error() == "is archive" && extPathPrompt {
-		fmt.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
-		fmt.Println("Archive extraction path:")
-
-		extPath = util.GetInput("")
+			extPath = util.GetInput("")
+		} else {
+			return err
+		}
 	}
 
 	switch {
@@ -288,15 +288,15 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 	}
 
 	importPath, err := appimport.ValidateAsset(imPath, "files")
-	if err != nil && err.Error() != "is archive" {
-		return err
-	}
+	if err != nil {
+		if err.Error() == "is archive" && extPathPrompt {
+			fmt.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
+			fmt.Println("Archive extraction path:")
 
-	if err.Error() == "is archive" && extPathPrompt {
-		fmt.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
-		fmt.Println("Archive extraction path:")
-
-		extPath = util.GetInput("")
+			extPath = util.GetInput("")
+		} else {
+			return err
+		}
 	}
 
 	switch {
