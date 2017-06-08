@@ -165,7 +165,8 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 			fmt.Println("Archive extraction path:")
 
 			extPath = util.GetInput("")
-		} else {
+		}
+		if err.Error() != "is archive" {
 			return err
 		}
 	}
@@ -294,7 +295,8 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 			fmt.Println("Archive extraction path:")
 
 			extPath = util.GetInput("")
-		} else {
+		}
+		if err.Error() != "is archive" {
 			return err
 		}
 	}
