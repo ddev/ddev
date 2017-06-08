@@ -11,6 +11,7 @@ import (
 // TestDevRestart runs `drud legacy restart` on the test apps
 func TestDevRestart(t *testing.T) {
 	assert := assert.New(t)
+	containerPrefix := "ddev"
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
 
@@ -24,12 +25,12 @@ func TestDevRestart(t *testing.T) {
 		}
 
 		format := fmt.Sprintf
-		assert.Contains(string(out), format("Stopping %s-%s-web", plugin, app.GetName()))
-		assert.Contains(string(out), format("Stopping %s-%s-db", plugin, app.GetName()))
-		assert.Contains(string(out), format("Stopping %s-%s-dba", plugin, app.GetName()))
-		assert.Contains(string(out), format("Starting %s-%s-web", plugin, app.GetName()))
-		assert.Contains(string(out), format("Starting %s-%s-db", plugin, app.GetName()))
-		assert.Contains(string(out), format("Starting %s-%s-dba", plugin, app.GetName()))
+		assert.Contains(string(out), format("Stopping %s-%s-web", containerPrefix, app.GetName()))
+		assert.Contains(string(out), format("Stopping %s-%s-db", containerPrefix, app.GetName()))
+		assert.Contains(string(out), format("Stopping %s-%s-dba", containerPrefix, app.GetName()))
+		assert.Contains(string(out), format("Starting %s-%s-web", containerPrefix, app.GetName()))
+		assert.Contains(string(out), format("Starting %s-%s-db", containerPrefix, app.GetName()))
+		assert.Contains(string(out), format("Starting %s-%s-dba", containerPrefix, app.GetName()))
 		assert.Contains(string(out), "Your application can be reached at")
 		assert.Contains(string(out), app.URL())
 

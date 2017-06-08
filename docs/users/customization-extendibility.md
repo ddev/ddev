@@ -53,7 +53,7 @@ version: '2'
 
 services:
   solr: # This is the service name used when running ddev commands accepting the --service flag
-    container_name: local-${DDEV_SITENAME}-solr # This is the name of the container. It is recommended to follow the same name convention used in the main docker-compose.yml file.
+    container_name: ddev-${DDEV_SITENAME}-solr # This is the name of the container. It is recommended to follow the same name convention used in the main docker-compose.yml file.
     image: solr:5.4
     restart: always
     ports:

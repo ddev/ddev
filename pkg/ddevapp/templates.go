@@ -50,7 +50,7 @@ services:
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
   dba:
-    container_name: local-${DDEV_SITENAME}-dba
+    container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
     restart: always
     labels:
