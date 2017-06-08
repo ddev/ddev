@@ -86,6 +86,7 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 		select {
 		case <-queryTicker:
 			req, err := http.NewRequest("GET", o.URL, nil)
+			CheckErr(err)
 			if o.Username != "" && o.Password != "" {
 				req.SetBasicAuth(o.Username, o.Password)
 			}
