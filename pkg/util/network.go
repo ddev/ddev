@@ -103,7 +103,7 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 			resp, err := client.Do(req)
 
 			if err == nil {
-				defer resp.Body.Close()
+				defer CheckClose(resp.Body)
 				if resp.StatusCode == o.ExpectedStatus {
 					// Log expected vs. actual if we do not get a match.
 					log.WithFields(log.Fields{
