@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
@@ -15,6 +16,12 @@ var LocalDevReconfigCmd = &cobra.Command{
 	Short: "Restart the local development environment for a site.",
 	Long:  `Restart stops the containers for site's environment and starts them back up again.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
+		if len(args) > 0 {
+			err := cmd.Usage()
+			util.CheckErr(err)
+			os.Exit(0)
+		}
+
 		client := dockerutil.GetDockerClient()
 
 		err := dockerutil.EnsureNetwork(client, netName)

@@ -13,7 +13,7 @@ var skipConfirmation bool
 
 // LocalDevRMCmd represents the stop command
 var LocalDevRMCmd = &cobra.Command{
-	Use:     "remove",
+	Use:     "remove [sitename]",
 	Aliases: []string{"rm"},
 	Short:   "Remove the local development environment for a site. (Destructive)",
 	Long: `Remove the local development environment for a site. You can run 'ddev remove'
