@@ -339,7 +339,7 @@ func (l *LocalApp) Start() error {
 		return err
 	}
 
-	StartDockerRouter()
+	StartDdevRouter()
 
 	return nil
 }

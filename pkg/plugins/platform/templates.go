@@ -62,8 +62,8 @@ var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 </dict>
 </plist>`
 
-// DrudRouterTemplate is the template for the generic router container.
-const DrudRouterTemplate = `version: '2'
+// DdevRouterTemplate is the template for the generic router container.
+const DdevRouterTemplate = `version: '2'
 services:
   nginx-proxy:
     image: {{ .router_image }}:{{ .router_tag }}
