@@ -7,10 +7,10 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/drud-go/utils/network"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -105,11 +105,11 @@ func addSites() {
 		}
 
 		for _, url := range urls {
-			o := network.NewHTTPOptions(url)
+			o := util.NewHTTPOptions(url)
 			o.ExpectedStatus = 200
 			o.Timeout = 180
 			o.Headers["Host"] = app.HostName()
-			err = network.EnsureHTTPStatus(o)
+			err = util.EnsureHTTPStatus(o)
 			if err != nil {
 				log.Fatalln("Failed to ensureHTTPStatus on", app.HostName(), url)
 			}

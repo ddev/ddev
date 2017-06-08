@@ -10,7 +10,7 @@ import (
 
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/drud-go/utils/network"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,11 +41,11 @@ func TestDevLogs(t *testing.T) {
 		err := ioutil.WriteFile(filepath.Join(v.Dir, "docroot", "index.php"), confByte, 0644)
 		assert.NoError(err)
 
-		o := network.NewHTTPOptions("http://127.0.0.1/index.php")
+		o := util.NewHTTPOptions("http://127.0.0.1/index.php")
 		o.ExpectedStatus = 500
 		o.Timeout = 30
 		o.Headers["Host"] = v.Name + ".ddev.local"
-		err = network.EnsureHTTPStatus(o)
+		err = util.EnsureHTTPStatus(o)
 		assert.NoError(err)
 
 		args := []string{"logs"}

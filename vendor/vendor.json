@@ -146,18 +146,6 @@
 			"revisionTime": "2016-09-08T21:06:52Z"
 		},
 		{
-			"checksumSHA1": "yOfsAVJspLZMx7Kcb+ITgvORrHQ=",
-			"path": "github.com/drud/drud-go/utils/cache",
-			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
-			"revisionTime": "2017-02-13T20:31:38Z"
-		},
-		{
-			"checksumSHA1": "8ZdXPfz2MhN0Ho2qneeBNoQqGak=",
-			"path": "github.com/drud/drud-go/utils/network",
-			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
-			"revisionTime": "2017-02-13T20:31:38Z"
-		},
-		{
 			"checksumSHA1": "Yn+Uxp0Vz4WiGdrYLLwYX9lzD5I=",
 			"path": "github.com/fatih/color",
 			"revision": "a360acfe359f146180cfc1c6ea6f4397f5c133ec",
