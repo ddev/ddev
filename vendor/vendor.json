@@ -146,14 +146,14 @@
 			"revisionTime": "2016-09-08T21:06:52Z"
 		},
 		{
-			"checksumSHA1": "yOfsAVJspLZMx7Kcb+ITgvORrHQ=",
-			"path": "github.com/drud/drud-go/utils/cache",
+			"checksumSHA1": "iAwuw+lHePVbzI7mb80cdsO5Le4=",
+			"path": "github.com/drud/drud-go/utils/stringutil",
 			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
 			"revisionTime": "2017-02-13T20:31:38Z"
 		},
 		{
-			"checksumSHA1": "8ZdXPfz2MhN0Ho2qneeBNoQqGak=",
-			"path": "github.com/drud/drud-go/utils/network",
+			"checksumSHA1": "2R63ApwuyAQtMhWv7EhO21SZniQ=",
+			"path": "github.com/drud/drud-go/utils/try",
 			"revision": "fec9f88bce6afcde83da8cf5c707efc74625ef9f",
 			"revisionTime": "2017-02-13T20:31:38Z"
 		},
