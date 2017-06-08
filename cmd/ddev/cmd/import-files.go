@@ -18,10 +18,10 @@ var ImportFileCmd = &cobra.Command{
 	Short: "Import the uploaded files directory of an existing site to the default public upload directory of your application.",
 	Long: `Import the uploaded files directory of an existing site to the default public
 upload directory of your application. The files can be provided as a directory
-path or an archive in .tar, .tar.gz, .tgz, or .zip format. The contents at the
-root of the archive or directory will be the contents of the default public
-upload directory of your application. If the destination directory exists, it
-will be replaced with the assets being imported.`,
+path or an archive in .tar, .tar.gz, .tgz, or .zip format. For the .zip and .tar.gz formats,
+the path to a directory within the archive can be provided if it is not located at the
+top-level of the archive. If the destination directory exists, it will be replaced with
+the assets being imported.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()
