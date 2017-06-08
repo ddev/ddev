@@ -6,10 +6,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 
 	"runtime"
 
 	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
@@ -49,7 +51,16 @@ func handleSequelProCommand(appLocation string) (string, error) {
 		return "", errors.New("app not running locally. Try `ddev start`")
 	}
 
-	dbPort := appports.GetPort("db")
+	db, err := app.FindContainerByType("db")
+	if err != nil {
+		return "", err
+	}
+
+	dbPrivatePort, err := strconv.ParseInt(appports.GetPort("db"), 10, 64)
+	if err != nil {
+		return "", err
+	}
+	dbPublishPort := fmt.Sprint(dockerutil.GetPublishedPort(dbPrivatePort, db))
 
 	tmpFilePath := filepath.Join(app.AppRoot(), ".ddev/sequelpro.spf")
 	tmpFile, err := os.Create(tmpFilePath)
@@ -60,12 +71,12 @@ func handleSequelProCommand(appLocation string) (string, error) {
 
 	_, err = tmpFile.WriteString(fmt.Sprintf(
 		platform.SequelproTemplate,
-		"data",         //dbname
-		app.HostName(), //host
+		"db",           //dbname
+		"127.0.0.1",    //host
 		app.HostName(), //connection name
-		"root",         // dbpass
-		dbPort,         // port
-		"root",         //dbuser
+		"db",           // dbpass
+		dbPublishPort,  // port
+		"db",           //dbuser
 	))
 	util.CheckErr(err)
 

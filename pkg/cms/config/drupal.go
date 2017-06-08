@@ -39,10 +39,6 @@ $settings['file_scan_ignore_directories'] = [
   'bower_components',
 ];
 
- $config_directories = array(
-   CONFIG_SYNC_DIRECTORY => '/var/www/html/sync',
- );
-
 
 {{ else }}
 
@@ -67,7 +63,7 @@ if (isset($_ENV['DEPLOY_NAME']) && $_ENV['DEPLOY_NAME'] == 'local' && file_exist
 // This is super ugly but it determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
 if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
-  include __DIR__ . '../../../../drush.settings.php';
+  include __DIR__ . '../../../drush.settings.php';
 }
 `
 )
@@ -83,15 +79,6 @@ $databases['default']['default'] = array(
   'port' => {{ $config.DatabasePort }},
   'prefix' => "",
 );
-
-{{ if $config.IsDrupal8 }}
-// This reconciles the pathing required for drupal, drush in docker, and drush on host system to all
-// be able to interact with the CMI directory.
-$config_directories = array(
-   CONFIG_SYNC_DIRECTORY => __DIR__ . '/sync',
- );
-{{ end }}
-
 `
 
 // WriteDrupalConfig dynamically produces valid settings.php file by combining a configuration

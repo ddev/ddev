@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -60,7 +61,7 @@ func TestChdir(t *testing.T) {
 func TestCaptureStdOut(t *testing.T) {
 	assert := assert.New(t)
 	restoreOutput := CaptureStdOut()
-	text := RandString(128)
+	text := util.RandString(128)
 	fmt.Print(text)
 	out := restoreOutput()
 
@@ -138,20 +139,4 @@ func TestInvalidTestSite(t *testing.T) {
 		err := ts.Prepare()
 		assert.Error(err, "ts.Prepare() fails because of missing config.yml or untar failure")
 	}
-}
-
-// TestRandString ensures that RandString only generates string of the correct value and characters.
-func TestRandString(t *testing.T) {
-	assert := assert.New(t)
-	stringLengths := []int{2, 4, 8, 16, 23, 47}
-
-	for _, stringLength := range stringLengths {
-		testString := RandString(stringLength)
-		assert.Equal(len(testString), stringLength, fmt.Sprintf("Generated string is of length %d", stringLengths))
-	}
-
-	lb := "a"
-	setLetterBytes(lb)
-	testString := RandString(1)
-	assert.Equal(testString, lb)
 }

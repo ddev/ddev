@@ -108,12 +108,6 @@ func determineRouterPorts() []string {
 				exposePorts = append(exposePorts, ports...)
 			}
 
-			tcpPorts := dockerutil.GetContainerEnv("TCP_EXPOSE", container)
-			if tcpPorts != "" {
-				ports := strings.Split(tcpPorts, ",")
-				exposePorts = append(exposePorts, ports...)
-			}
-
 			for _, exposePort := range exposePorts {
 				// ports defined as hostPort:containerPort allow for router to configure upstreams
 				// for containerPort, with server listening on hostPort. exposed ports for router

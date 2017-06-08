@@ -26,7 +26,6 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/drud-go/utils/stringutil"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 	"github.com/lextoumbourou/goodhosts"
@@ -87,16 +86,30 @@ func (l *LocalApp) Describe() (string, error) {
 	RenderAppRow(appTable, l)
 	output = fmt.Sprint(appTable)
 
+	db, err := l.FindContainerByType("db")
+	if err != nil {
+		return "", err
+	}
+
+	dbPrivatePort, err := strconv.ParseInt(appports.GetPort("db"), 10, 64)
+	if err != nil {
+		return "", err
+	}
+
+	dbPublishPort := fmt.Sprint(dockerutil.GetPublishedPort(dbPrivatePort, db))
+
 	// Only show extended status for running sites.
 	if siteStatus == SiteRunning {
 		output = output + "\n\nMySQL Credentials\n-----------------\n"
 		dbTable := uitable.New()
 		dbTable.MaxColWidth = maxWidth
-		dbTable.AddRow("Username:", "root")
-		dbTable.AddRow("Password:", "root")
-		dbTable.AddRow("Database name:", "data")
-		dbTable.AddRow("Connection Info:", l.HostName()+":"+appports.GetPort("db"))
+		dbTable.AddRow("Username:", "db")
+		dbTable.AddRow("Password:", "db")
+		dbTable.AddRow("Database name:", "db")
+		dbTable.AddRow("Host:", "db")
+		dbTable.AddRow("Port:", appports.GetPort("db"))
 		output = output + fmt.Sprint(dbTable)
+		output = output + fmt.Sprintf("\nTo connect to mysql from your host machine, use port %[1]v on 127.0.0.1.\nFor example: mysql --host 127.0.0.1 --port %[1]v", dbPublishPort)
 
 		output = output + "\n\nOther Services\n--------------\n"
 		other := uitable.New()
@@ -470,68 +483,62 @@ func (l *LocalApp) Config() error {
 	docroot := l.Docroot()
 	settingsFilePath := filepath.Join(basePath, docroot)
 
-	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
+	switch l.GetType() {
+	case "drupal8":
+		fallthrough
+	case "drupal7":
 		settingsFilePath = filepath.Join(settingsFilePath, "sites", "default", "settings.php")
-	}
-
-	if l.GetType() == "wordpress" {
-		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
-	}
-
-	if fileutil.FileExists(settingsFilePath) {
-		return errors.New("app config exists")
-	}
-
-	if l.GetType() == "drupal7" || l.GetType() == "drupal8" {
-		fmt.Println("Generating settings.php file for database connection.")
-		drupalConfig := model.NewDrupalConfig()
-		drupalConfig.DatabaseHost = "db"
-		if drupalConfig.HashSalt == "" {
-			drupalConfig.HashSalt = stringutil.RandomString(64)
-		}
-		if l.GetType() == "drupal8" {
-			drupalConfig.IsDrupal8 = true
+		if fileutil.FileExists(settingsFilePath) {
+			return errors.New("app config exists")
 		}
 
-		drupalConfig.DeployURL = l.URL()
-		err := config.WriteDrupalConfig(drupalConfig, settingsFilePath)
-		if err != nil {
-			log.Fatalln(err)
-		}
+		drushSettingsPath := filepath.Join(basePath, "drush.settings.php")
 
-		// Setup a custom settings file for use with drush.
-		dbPort, err := dockerutil.GetPodPort("local-" + l.GetName() + "-db")
+		// Retrieve published mysql port for drush settings file.
+		db, err := l.FindContainerByType("db")
 		if err != nil {
 			return err
 		}
 
-		drushSettingsPath := filepath.Join(basePath, "drush.settings.php")
+		dbPrivatePort, err := strconv.ParseInt(appports.GetPort("db"), 10, 64)
+		if err != nil {
+			return err
+		}
+		dbPublishPort := dockerutil.GetPublishedPort(dbPrivatePort, db)
+
+		fmt.Println("Generating settings.php file for database connection.")
+
+		drupalConfig := model.NewDrupalConfig()
 		drushConfig := model.NewDrushConfig()
-		drushConfig.DatabasePort = strconv.FormatInt(dbPort, 10)
+
 		if l.GetType() == "drupal8" {
+			drupalConfig.IsDrupal8 = true
 			drushConfig.IsDrupal8 = true
 		}
-		err = config.WriteDrushConfig(drushConfig, drushSettingsPath)
 
+		drupalConfig.DeployURL = l.URL()
+		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
-	} else if l.GetType() == "wordpress" {
+
+		drushConfig.DatabasePort = strconv.FormatInt(dbPublishPort, 10)
+		err = config.WriteDrushConfig(drushConfig, drushSettingsPath)
+		if err != nil {
+			return err
+		}
+	case "wordpress":
+		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
+		if fileutil.FileExists(settingsFilePath) {
+			return errors.New("app config exists")
+		}
+
 		fmt.Println("Generating wp-config.php file for database connection.")
 		wpConfig := model.NewWordpressConfig()
-		wpConfig.DatabaseHost = "db"
 		wpConfig.DeployURL = l.URL()
-		wpConfig.AuthKey = stringutil.RandomString(64)
-		wpConfig.AuthSalt = stringutil.RandomString(64)
-		wpConfig.LoggedInKey = stringutil.RandomString(64)
-		wpConfig.LoggedInSalt = stringutil.RandomString(64)
-		wpConfig.NonceKey = stringutil.RandomString(64)
-		wpConfig.NonceSalt = stringutil.RandomString(64)
-		wpConfig.SecureAuthKey = stringutil.RandomString(64)
-		wpConfig.SecureAuthSalt = stringutil.RandomString(64)
 		err := config.WriteWordpressConfig(wpConfig, settingsFilePath)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 	}
 	return nil

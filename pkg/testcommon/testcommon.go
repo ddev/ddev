@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"time"
@@ -150,27 +149,6 @@ func Chdir(path string) func() {
 			log.Fatalf("Failed to change directory to original dir=%s, err=%v", curDir, err)
 		}
 	}
-}
-
-var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-// setLetterBytes exists solely so that tests can override the default characters used by
-// RandString. It should probably be avoided for 'normal' operations.
-func setLetterBytes(lb string) {
-	letterBytes = lb
-}
-
-// RandString returns a random string of given length n.
-func RandString(n int) string {
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-	return string(b)
-}
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }
 
 // CaptureStdOut captures Stdout to a string. Capturing starts when it is called. It returns an anonymous function that when called, will return a string

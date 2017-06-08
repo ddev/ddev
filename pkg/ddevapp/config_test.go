@@ -38,7 +38,7 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(newConfig.DBImage, version.DBImg+":"+version.DBTag)
 	assert.Equal(newConfig.WebImage, version.WebImg+":"+version.WebTag)
 	assert.Equal(newConfig.DBAImage, version.DBAImg+":"+version.DBATag)
-	newConfig.Name = testcommon.RandString(32)
+	newConfig.Name = util.RandString(32)
 	newConfig.AppType = "drupal8"
 
 	// Write the newConfig.
@@ -62,7 +62,7 @@ func TestAllowedAppTypes(t *testing.T) {
 	}
 
 	for i := 1; i <= 50; i++ {
-		randomType := testcommon.RandString(32)
+		randomType := util.RandString(32)
 		assert.False(IsAllowedAppType(randomType))
 	}
 }
@@ -96,7 +96,7 @@ func TestHostName(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	config, err := NewConfig(testDir)
 	assert.Error(err)
-	config.Name = testcommon.RandString(32)
+	config.Name = util.RandString(32)
 
 	assert.Equal(config.Hostname(), config.Name+"."+DDevTLD)
 }
@@ -112,9 +112,9 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	// Create a config
 	config, err := NewConfig(testDir)
 	assert.Error(err)
-	config.Name = testcommon.RandString(32)
+	config.Name = util.RandString(32)
 	config.AppType = AllowedAppTypes[0]
-	config.Docroot = testcommon.RandString(16)
+	config.Docroot = util.RandString(16)
 
 	// Write a config to create/prep necessary directories.
 	err = config.Write()
@@ -160,9 +160,9 @@ func TestConfigCommand(t *testing.T) {
 	assert.Error(err)
 
 	// Randomize some values to use for Stdin during testing.
-	name := strings.ToLower(testcommon.RandString(16))
-	invalidDir := strings.ToLower(testcommon.RandString(16))
-	invalidAppType := strings.ToLower(testcommon.RandString(8))
+	name := strings.ToLower(util.RandString(16))
+	invalidDir := strings.ToLower(util.RandString(16))
+	invalidAppType := strings.ToLower(util.RandString(8))
 
 	// This is a bit hard to follow, but we create an example input buffer that writes the sitename, a (invalid) document root, a valid document root,
 	// an invalid app type, and finally a valid site type (drupal8)

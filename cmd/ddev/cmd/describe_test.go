@@ -5,6 +5,7 @@ import (
 
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,13 +25,13 @@ func TestDescribeBadArgs(t *testing.T) {
 	assert.Contains(string(out), "unable to determine the application for this command")
 
 	// Ensure we get a failure if we run a describe on a named application which does not exist.
-	args = []string{"describe", testcommon.RandString(16)}
+	args = []string{"describe", util.RandString(16)}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Could not describe app")
 
 	// Ensure we get a failure if using too many arguments.
-	args = []string{"describe", testcommon.RandString(16), testcommon.RandString(16)}
+	args = []string{"describe", util.RandString(16), util.RandString(16)}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Too many arguments detected")
@@ -122,12 +123,12 @@ func TestDescribeAppWithInvalidParams(t *testing.T) {
 	assert.Error(err)
 
 	// Ensure describeApp fails with invalid site-names.
-	_, err = describeApp(testcommon.RandString(16))
+	_, err = describeApp(util.RandString(16))
 	assert.Error(err)
 
 	// Change to a sites working directory and ensure a failure still occurs with a invalid site name.
 	cleanup := DevTestSites[0].Chdir()
-	_, err = describeApp(testcommon.RandString(16))
+	_, err = describeApp(util.RandString(16))
 	assert.Error(err)
 	cleanup()
 

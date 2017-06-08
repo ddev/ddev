@@ -12,7 +12,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 
 	"github.com/Masterminds/semver"
-	"github.com/drud/drud-go/utils/try"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -35,47 +34,6 @@ func EnsureNetwork(client *docker.Client, name string) error {
 
 	}
 	return nil
-}
-
-// GetPort determines and returns the public port for a given container.
-func GetPort(name string) (int64, error) {
-	var publicPort int64
-
-	containers, err := GetDockerContainers(false)
-	if err != nil {
-		return publicPort, err
-	}
-
-	for _, ctr := range containers {
-		if strings.Contains(ctr.Names[0][1:], name) {
-			for _, port := range ctr.Ports {
-				if port.PublicPort != 0 {
-					publicPort = port.PublicPort
-					return publicPort, nil
-				}
-			}
-		}
-	}
-	return publicPort, fmt.Errorf("%s container not ready", name)
-}
-
-// GetPodPort provides a wait loop to help in successfully returning the public port for a given container.
-func GetPodPort(name string) (int64, error) {
-	var publicPort int64
-
-	err := try.Do(func(attempt int) (bool, error) {
-		var err error
-		publicPort, err = GetPort(name)
-		if err != nil {
-			time.Sleep(2 * time.Second) // wait a couple seconds
-		}
-		return attempt < 70, err
-	})
-	if err != nil {
-		return publicPort, err
-	}
-
-	return publicPort, nil
 }
 
 // GetDockerClient returns a docker client for a docker-machine.
@@ -306,4 +264,14 @@ func CheckDockerVersion(versionConstraint string) error {
 		return fmt.Errorf(msgs)
 	}
 	return nil
+}
+
+// GetPublishedPort returns the published port for a given private port.
+func GetPublishedPort(privatePort int64, container docker.APIContainers) int64 {
+	for _, port := range container.Ports {
+		if port.PrivatePort == privatePort {
+			return port.PublicPort
+		}
+	}
+	return 0
 }
