@@ -129,8 +129,9 @@ func Cleanup(app App) error {
 	for i := range containers {
 		containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
 		removeOpts := docker.RemoveContainerOptions{
-			ID:    containers[i].ID,
-			Force: true,
+			ID:            containers[i].ID,
+			RemoveVolumes: true,
+			Force:         true,
 		}
 		fmt.Printf("Removing container: %s\n", containerName)
 		if err := client.RemoveContainer(removeOpts); err != nil {
