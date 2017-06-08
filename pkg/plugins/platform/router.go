@@ -41,13 +41,13 @@ func StopRouter() error {
 
 	if !containersRunning {
 		dest := RouterComposeYAMLPath()
-		return dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "down")
+		return dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "down", "-v")
 	}
 	return nil
 }
 
-// StartDockerRouter ensures the router is running.
-func StartDockerRouter() {
+// StartDdevRouter ensures the router is running.
+func StartDdevRouter() {
 	exposedPorts := determineRouterPorts()
 
 	dest := RouterComposeYAMLPath()
@@ -65,7 +65,7 @@ func StartDockerRouter() {
 	defer util.CheckClose(f)
 
 	templ := template.New("compose template")
-	templ, err = templ.Parse(DrudRouterTemplate)
+	templ, err = templ.Parse(DdevRouterTemplate)
 	if err != nil {
 		log.Fatal(ferr)
 	}
