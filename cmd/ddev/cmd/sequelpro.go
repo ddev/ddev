@@ -42,7 +42,7 @@ var localDevSequelproCmd = &cobra.Command{
 
 // handleSequelProCommand() is the "real" handler for the real command
 func handleSequelProCommand(appLocation string) (string, error) {
-	app, err := getActiveApp()
+	app, err := getActiveApp("")
 	if err != nil {
 		return "", err
 	}

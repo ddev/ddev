@@ -13,12 +13,26 @@ var skipConfirmation bool
 
 // LocalDevRMCmd represents the stop command
 var LocalDevRMCmd = &cobra.Command{
-	Use:     "remove",
+	Use:     "remove [sitename]",
 	Aliases: []string{"rm"},
-	Short:   "Remove an application's local services.",
-	Long:    `Remove will delete the local service containers from this machine.`,
+	Short:   "Remove the local development environment for a site. (Destructive)",
+	Long: `Remove the local development environment for a site. You can run 'ddev remove'
+from a site directory to remove that site, or you can specify a site to remove
+by running 'ddev stop <sitename>. Remove is a destructive operation. It will
+remove all containers for the site, destroying database contents in the process.
+Your project code base and files will not be affected.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := getActiveApp()
+		var siteName string
+
+		if len(args) > 1 {
+			util.Failed("Too many arguments provided. Please use `ddev remove` or `ddev remove [appname]`")
+		}
+
+		if len(args) == 1 {
+			siteName = args[0]
+		}
+
+		app, err := getActiveApp(siteName)
 		if err != nil {
 			util.Failed("Failed to get active app: %v", err)
 		}

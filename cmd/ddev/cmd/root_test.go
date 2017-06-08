@@ -11,6 +11,7 @@ import (
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/drud-go/utils/network"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -58,6 +59,28 @@ func TestMain(m *testing.M) {
 
 }
 
+func TestGetActiveAppRoot(t *testing.T) {
+	assert := assert.New(t)
+
+	_, err := getActiveAppRoot("")
+	assert.Contains(err.Error(), "unable to determine the application for this command")
+
+	_, err = getActiveAppRoot("potato")
+	assert.Error(err)
+
+	appRoot, err := getActiveAppRoot(DevTestSites[0].Name)
+	assert.NoError(err)
+	assert.Equal(DevTestSites[0].Dir, appRoot)
+
+	switchDir := DevTestSites[0].Chdir()
+
+	appRoot, err = getActiveAppRoot("")
+	assert.NoError(err)
+	assert.Equal(DevTestSites[0].Dir, appRoot)
+
+	switchDir()
+}
+
 // addSites runs `ddev start` on the test apps
 func addSites() {
 	for _, site := range DevTestSites {
@@ -70,7 +93,7 @@ func addSites() {
 			log.Fatalln("Error Output from ddev start:", out, "err:", err)
 		}
 
-		app, err := getActiveApp()
+		app, err := getActiveApp("")
 		if err != nil {
 			log.Fatalln("Could not find an active ddev configuration:", err)
 		}
