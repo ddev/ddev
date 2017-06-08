@@ -10,6 +10,7 @@ import (
 
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
