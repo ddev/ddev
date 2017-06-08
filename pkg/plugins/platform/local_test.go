@@ -222,6 +222,7 @@ func TestLocalImportDB(t *testing.T) {
 			err = app.ImportDB(siteTarPath, "data.sql")
 			assert.NoError(err)
 			err = os.Remove(siteTarPath)
+			assert.NoError(err)
 		}
 
 		runTime()
@@ -270,6 +271,7 @@ func TestLocalImportFiles(t *testing.T) {
 			err = app.ImportFiles(siteTarPath, "docroot/sites/default/files")
 			assert.NoError(err)
 			err = os.Remove(siteTarPath)
+			assert.NoError(err)
 		}
 
 		runTime()
