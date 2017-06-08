@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	log "github.com/Sirupsen/logrus"
 )
 
 // DownloadFile retreives a file.
