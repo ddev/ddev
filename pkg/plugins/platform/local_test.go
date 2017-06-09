@@ -179,6 +179,11 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.DBTarURL != "" {
+			err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
+			assert.NoError(err)
+			err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
+			assert.NoError(err)
+
 			dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
 			err := util.DownloadFile(dbPath, site.DBTarURL)
 			assert.NoError(err)
@@ -198,6 +203,11 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.DBZipURL != "" {
+			err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
+			assert.NoError(err)
+			err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
+			assert.NoError(err)
+
 			dbZipPath := filepath.Join(testcommon.CreateTmpDir("local-db-zip"), "db.zip")
 			err = util.DownloadFile(dbZipPath, site.DBZipURL)
 			assert.NoError(err)
@@ -217,6 +227,11 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.FullSiteTarballURL != "" {
+			err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
+			assert.NoError(err)
+			err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
+			assert.NoError(err)
+
 			siteTarPath := filepath.Join(testcommon.CreateTmpDir("local-site-tar"), "site.tar.gz")
 			err = util.DownloadFile(siteTarPath, site.FullSiteTarballURL)
 			assert.NoError(err)
