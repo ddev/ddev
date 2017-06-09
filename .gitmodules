@@ -13,3 +13,6 @@
 [submodule "containers/docker.phpmyadmin"]
 	path = containers/docker.phpmyadmin
 	url = git@github.com:drud/docker.phpmyadmin.git
+[submodule "containers/docker.ddev-router"]
+	path = containers/docker.ddev-router
+	url = git@github.com:drud/docker.ddev-router.git
