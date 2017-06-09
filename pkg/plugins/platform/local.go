@@ -201,9 +201,23 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 		}
 	}
 
-	err = l.Exec("db", true, "./import.sh")
+	matches, err := filepath.Glob(filepath.Join(dbPath, "*.sql"))
 	if err != nil {
-		return fmt.Errorf("failed to execute import: %v", err)
+		return err
+	}
+
+	if len(matches) < 1 {
+		err = fileutil.PurgeDirectory(dbPath)
+		if err != nil {
+			return fmt.Errorf("no .sql files found to import, failed to cleanup .ddev/data: %v", err)
+		}
+		return fmt.Errorf("no .sql files found to import")
+	}
+
+	fmt.Println("Importing database...")
+	err = l.Exec("db", true, "bash", "-c", "cat /db/*.sql | mysql")
+	if err != nil {
+		return err
 	}
 
 	err = l.Config()
@@ -217,6 +231,11 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 
 	if l.GetType() == "wordpress" {
 		util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec 'wp search-replace [http://www.myproductionsite.example] %s'\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", l.URL())
+	}
+
+	err = fileutil.PurgeDirectory(dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to cleanup .ddev/data after import: %v", err)
 	}
 
 	return nil
