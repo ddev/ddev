@@ -28,6 +28,7 @@ var (
 			FilesZipballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.zip",
 			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
+			FullSiteTarballURL:            "https://github.com/drud/drupal8/releases/download/v0.6.0/site.tar.gz",
 		},
 		{
 			Name:                          "TestMainPkgWordpress",
