@@ -3,6 +3,9 @@
 set -o errexit
 
 # Basic tools
+
+# mysql - old key is expired, so get the new one
+sudo apt-key adv --keyserver pgp.mit.edu --recv-keys 5072E1F5 >/dev/null 2>&1
 sudo apt-get update -qq
 sudo apt-get install -qq mysql-client realpath zip
 
