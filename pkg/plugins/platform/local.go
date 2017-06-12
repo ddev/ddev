@@ -146,6 +146,11 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	var extPathPrompt bool
 	dbPath := filepath.Join(l.AppRoot(), ".ddev", "data")
 
+	err := fileutil.PurgeDirectory(dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to cleanup .ddev/data before import: %v", err)
+	}
+
 	if imPath == "" {
 		// ensure we prompt for extraction path if an archive is provided, while still allowing
 		// non-interactive use of --src flag without providing a --extract-path flag.
@@ -207,10 +212,6 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	}
 
 	if len(matches) < 1 {
-		err = fileutil.PurgeDirectory(dbPath)
-		if err != nil {
-			return fmt.Errorf("no .sql files found to import, failed to cleanup .ddev/data: %v", err)
-		}
 		return fmt.Errorf("no .sql files found to import")
 	}
 
@@ -299,8 +300,14 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 		return err
 	}
 
-	// destination dir must exist
-	if !fileutil.FileExists(destPath) {
+	if fileutil.FileExists(destPath) {
+		// ensure existing directory is empty
+		err := fileutil.PurgeDirectory(destPath)
+		if err != nil {
+			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
+		}
+	} else {
+		// create destination directory
 		err := os.MkdirAll(destPath, 0755)
 		if err != nil {
 			return err
