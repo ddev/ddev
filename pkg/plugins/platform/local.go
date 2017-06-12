@@ -141,11 +141,22 @@ func (l *LocalApp) GetName() string {
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
-func (l *LocalApp) ImportDB(imPath string) error {
+func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	l.DockerEnv()
+	var extPathPrompt bool
 	dbPath := filepath.Join(l.AppRoot(), ".ddev", "data")
 
+	err := fileutil.PurgeDirectory(dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to cleanup .ddev/data before import: %v", err)
+	}
+
 	if imPath == "" {
+		// ensure we prompt for extraction path if an archive is provided, while still allowing
+		// non-interactive use of --src flag without providing a --extract-path flag.
+		if extPath == "" {
+			extPathPrompt = true
+		}
 		fmt.Println("Provide the path to the database you wish to import.")
 		fmt.Println("Import path: ")
 
@@ -153,9 +164,18 @@ func (l *LocalApp) ImportDB(imPath string) error {
 	}
 
 	importPath, err := appimport.ValidateAsset(imPath, "db")
-	if err != nil && err.Error() != "is archive" {
-		return err
+	if err != nil {
+		if err.Error() == "is archive" && extPathPrompt {
+			fmt.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
+			fmt.Println("Archive extraction path:")
+
+			extPath = util.GetInput("")
+		}
+		if err.Error() != "is archive" {
+			return err
+		}
 	}
+
 	switch {
 	case strings.HasSuffix(importPath, "sql.gz"):
 		err = archive.Ungzip(importPath, dbPath)
@@ -164,7 +184,7 @@ func (l *LocalApp) ImportDB(imPath string) error {
 		}
 
 	case strings.HasSuffix(importPath, "zip"):
-		err = archive.Unzip(importPath, dbPath, "")
+		err = archive.Unzip(importPath, dbPath, extPath)
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
@@ -174,7 +194,7 @@ func (l *LocalApp) ImportDB(imPath string) error {
 	case strings.HasSuffix(importPath, "tar.gz"):
 		fallthrough
 	case strings.HasSuffix(importPath, "tgz"):
-		err := archive.Untar(importPath, dbPath, "")
+		err := archive.Untar(importPath, dbPath, extPath)
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
@@ -186,9 +206,19 @@ func (l *LocalApp) ImportDB(imPath string) error {
 		}
 	}
 
-	err = l.Exec("db", true, "./import.sh")
+	matches, err := filepath.Glob(filepath.Join(dbPath, "*.sql"))
 	if err != nil {
-		return fmt.Errorf("failed to execute import: %v", err)
+		return err
+	}
+
+	if len(matches) < 1 {
+		return fmt.Errorf("no .sql files found to import")
+	}
+
+	fmt.Println("Importing database...")
+	err = l.Exec("db", true, "bash", "-c", "cat /db/*.sql | mysql")
+	if err != nil {
+		return err
 	}
 
 	err = l.Config()
@@ -202,6 +232,11 @@ func (l *LocalApp) ImportDB(imPath string) error {
 
 	if l.GetType() == "wordpress" {
 		util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec 'wp search-replace [http://www.myproductionsite.example] %s'\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", l.URL())
+	}
+
+	err = fileutil.PurgeDirectory(dbPath)
+	if err != nil {
+		return fmt.Errorf("failed to cleanup .ddev/data after import: %v", err)
 	}
 
 	return nil
@@ -226,11 +261,18 @@ func (l *LocalApp) SiteStatus() string {
 }
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
-func (l *LocalApp) ImportFiles(imPath string) error {
+func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 	var uploadDir string
+	var extPathPrompt bool
+
 	l.DockerEnv()
 
 	if imPath == "" {
+		// ensure we prompt for extraction path if an archive is provided, while still allowing
+		// non-interactive use of --src flag without providing a --extract-path flag.
+		if extPath == "" {
+			extPathPrompt = true
+		}
 		fmt.Println("Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.")
 		fmt.Println("Import path: ")
 
@@ -258,8 +300,14 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 		return err
 	}
 
-	// destination dir must exist
-	if !fileutil.FileExists(destPath) {
+	if fileutil.FileExists(destPath) {
+		// ensure existing directory is empty
+		err := fileutil.PurgeDirectory(destPath)
+		if err != nil {
+			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
+		}
+	} else {
+		// create destination directory
 		err := os.MkdirAll(destPath, 0755)
 		if err != nil {
 			return err
@@ -267,21 +315,30 @@ func (l *LocalApp) ImportFiles(imPath string) error {
 	}
 
 	importPath, err := appimport.ValidateAsset(imPath, "files")
-	if err != nil && err.Error() != "is archive" {
-		return err
+	if err != nil {
+		if err.Error() == "is archive" && extPathPrompt {
+			fmt.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
+			fmt.Println("Archive extraction path:")
+
+			extPath = util.GetInput("")
+		}
+		if err.Error() != "is archive" {
+			return err
+		}
 	}
+
 	switch {
 	case strings.HasSuffix(importPath, "tar"):
 		fallthrough
 	case strings.HasSuffix(importPath, "tar.gz"):
 		fallthrough
 	case strings.HasSuffix(importPath, "tgz"):
-		err = archive.Untar(importPath, destPath, "")
+		err = archive.Untar(importPath, destPath, extPath)
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}
 	case strings.HasSuffix(importPath, "zip"):
-		err = archive.Unzip(importPath, destPath, "")
+		err = archive.Unzip(importPath, destPath, extPath)
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
 		}

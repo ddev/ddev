@@ -114,3 +114,31 @@ func FileExists(name string) bool {
 	}
 	return true
 }
+
+// PurgeDirectory removes all of the contents of a given
+// directory, leaving the directory itself intact.
+func PurgeDirectory(path string) error {
+	dir, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	defer util.CheckClose(dir)
+
+	files, err := dir.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		err = os.Chmod(filepath.Join(path, file), 0777)
+		if err != nil {
+			return err
+		}
+		err = os.RemoveAll(filepath.Join(path, file))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

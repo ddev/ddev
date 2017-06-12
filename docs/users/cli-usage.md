@@ -98,10 +98,11 @@ MailHog:   	http://drupal8.ddev.local:8025
 phpMyAdmin:	http://drupal8.ddev.local:8036
 ```
 
-## Importing an existing site
-Two commands are provided for importing assets from an existing site, `ddev import-db` and `ddev import-files`. Running either of these commands will provide a prompt to enter the location of the assets to import. You can also skip the prompt by specifying the location using the `--src` flag.
+## Importing assets for an existing site
+An important aspect of local web development is the ability to have a precise recreation of the site you are working on locally, including up-to-date database contents and static assets such as uploaded images and files. ddev provides functionality to help with importing assets to your local environment with two commands.
 
-### import-db
+### Importing a database
+The `ddev import-db` command is provided for importing the MySQL database for a site. Running this command will provide a prompt for you to specify the location of your database import.
 
 ```
 ➜  ddev import-db
@@ -113,10 +114,38 @@ Generating settings.php file for database connection.
 Successfully imported database for drupal8
 ```
 
-The `import-db` command allows you to specify the location of a SQL dump to be imported as the active database for your site. The database may be provided as a `.sql` file, `.sql.gz` or tar archive. The provided dump will be imported into the database named `data` in the database container for your site. A database connection file will be generated for your site if one does not exist (`settings.php` for Drupal, `wp-config.php` for WordPress). If you have already created a connection file, you will need to ensure your connection credentials match the ones provided in `ddev describe`.
+A database connection file will be generated for your site if one does not exist (`settings.php` for Drupal, `wp-config.php` for WordPress). If you have already created a connection file, you will need to ensure your connection credentials match the ones provided in `ddev describe`.
 
+<h4>Supported file types</h4>
 
-### import-files
+Database import supports the following file types:
+
+- Raw SQL Dump (.sql)
+- Gzipped SQL Dump (.sql.gz)
+- (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
+- Zip Archive (.zip)
+
+If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. The specified path should provide a Raw SQL Dump (.sql). In the following example, the database we want to import is named data.sql and resides at the top-level of the archive:
+
+```
+➜  ddev import-db
+Provide the path to the database you wish to import.
+Import path:
+~/Downloads/site-backup.tar.gz
+You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents
+Archive extraction path:
+data.sql
+Importing database...
+A settings file already exists for your application, so ddev did not generate one.
+Run 'ddev describe' to find the database credentials for this application.
+Successfully imported database for drupal8
+```
+
+<h4>Non-interactive usage</h4>
+If you want to use import-db without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag.
+
+### Importing static file assets
+The `ddev import-files` command is provided for importing the static file assets for a site, such as uploaded images and documents. Running this command will provide a prompt for you to specify the location of your asset import. The assets will then be imported to the default public upload directory of the platform for the site. For Drupal sites, this is the "sites/default/files" directory. For WordPress sites, this is the "wp-content/uploads" directory. 
 
 ```
 ➜  ddev import-files
@@ -126,7 +155,29 @@ Import path:
 Successfully imported files for drupal8
 ```
 
-The `import-files` command allows you to specify the location of uploaded file assets to import for your site. For Drupal, this is the public files directory, located at `sites/default/files` by default. For WordPress, this is the uploads directory, located at `wp-content/uploads` by default. The files may be provided as a directory or tar archive containing the contents of the uploads folder. The contents of the directory or archive provided will be copied to the default location of the upload directory for your site.
+<h4>Supported file types</h4>
+
+Static asset import supports the following file types:
+
+- A directory containing static assets
+- (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
+- Zip Archive (.zip)
+
+If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. In the following example, the assets we want to import reside at "docroot/sites/default/files":
+
+```
+➜  ddev import-files
+Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.
+Import path:
+~/Downloads/site-backup.tar.gz
+You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents
+Archive extraction path:
+docroot/sites/default/files
+Successfully imported files for drupal8
+```
+
+<h4>Non-interactive usage</h4>
+If you want to use import-files without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag.
 
 ## Interacting with your Site
 ddev provides several commands to facilitate interacting with your site in the development environment. These commands can be run within the working directory of your project while the site is running in ddev. 

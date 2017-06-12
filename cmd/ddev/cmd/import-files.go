@@ -10,6 +10,7 @@ import (
 )
 
 var fileSource string
+var fileExtPath string
 
 // ImportFileCmd represents the `ddev import-db` command.
 var ImportFileCmd = &cobra.Command{
@@ -17,10 +18,10 @@ var ImportFileCmd = &cobra.Command{
 	Short: "Import the uploaded files directory of an existing site to the default public upload directory of your application.",
 	Long: `Import the uploaded files directory of an existing site to the default public
 upload directory of your application. The files can be provided as a directory
-path or an archive in .tar, .tar.gz, .tgz, or .zip format. The contents at the
-root of the archive or directory will be the contents of the default public
-upload directory of your application. If the destination directory exists, it
-will be replaced with the assets being imported.`,
+path or an archive in .tar, .tar.gz, .tgz, or .zip format. For the .zip and .tar.gz formats,
+the path to a directory within the archive can be provided if it is not located at the
+top-level of the archive. If the destination directory exists, it will be replaced with
+the assets being imported.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()
@@ -40,7 +41,7 @@ will be replaced with the assets being imported.`,
 			util.Failed("Failed to import files: %v", err)
 		}
 
-		err = app.ImportFiles(fileSource)
+		err = app.ImportFiles(fileSource, fileExtPath)
 		if err != nil {
 			util.Failed("Failed to import files for %s: %v", app.GetName(), err)
 		}
@@ -50,5 +51,6 @@ will be replaced with the assets being imported.`,
 
 func init() {
 	ImportFileCmd.Flags().StringVarP(&fileSource, "src", "", "", "Provide the path to a directory or .tar.gz archive of files to import")
+	ImportFileCmd.Flags().StringVarP(&fileExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
 	RootCmd.AddCommand(ImportFileCmd)
 }

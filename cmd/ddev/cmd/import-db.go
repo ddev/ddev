@@ -11,6 +11,7 @@ import (
 )
 
 var dbSource string
+var dbExtPath string
 
 // ImportDBCmd represents the `ddev import-db` command.
 var ImportDBCmd = &cobra.Command{
@@ -18,8 +19,8 @@ var ImportDBCmd = &cobra.Command{
 	Short: "Import the database of an existing site to the local dev environment.",
 	Long: `Import the database of an existing site to the local development environment.
 The database can be provided as a SQL dump in a .sql, .sql.gz, .zip, or .tar.gz
-format. For the .zip and .tar.gz formats, a SQL dump in .sql format must be
-present at the root of the archive.`,
+format. For the .zip and .tar.gz formats, the path to a .sql file within the archive
+can be provided if it is not located at the top-level of the archive.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()
@@ -41,7 +42,7 @@ present at the root of the archive.`,
 			util.Failed("Failed to import database: %v", app.GetName(), err)
 		}
 
-		err = app.ImportDB(dbSource)
+		err = app.ImportDB(dbSource, dbExtPath)
 		if err != nil {
 			util.Failed("Failed to import database for %s: %v", app.GetName(), err)
 		}
@@ -51,5 +52,6 @@ present at the root of the archive.`,
 
 func init() {
 	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "", "", "Provide the path to a sql dump in .sql or .tar.gz format")
+	ImportDBCmd.Flags().StringVarP(&dbExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
 	RootCmd.AddCommand(ImportDBCmd)
 }
