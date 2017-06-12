@@ -1,7 +1,7 @@
 package ddevapp
 
-// DDevComposeTemplate is used to create the docker-compose.yaml for
-// legacy sites in the ddev env
+// DDevComposeTemplate is used to create the main docker-compose.yaml
+// file for a ddev site.
 const DDevComposeTemplate = `version: '3'
 
 services:
@@ -17,14 +17,13 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
-      com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
   web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
     volumes:
-      - "{{ .docroot }}/:/var/www/html/docroot:cached"
+      - "./:/var/www/html/docroot:cached"
     restart: always
     depends_on:
       - db
@@ -33,10 +32,11 @@ services:
     ports:
       - "80"
       - "{{ .mailhogport }}"
-    working_dir: "/var/www/html/docroot"
+    working_dir: "/var/www/html"
     environment:
       - DDEV_UID=$DDEV_UID
       - DDEV_GID=$DDEV_GID
+      - DOCROOT=$DDEV_DOCROOT
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
@@ -46,7 +46,6 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
-      com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
   dba:
@@ -57,7 +56,6 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
-      com.ddev.docroot: $DDEV_DOCROOT
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
     depends_on:
