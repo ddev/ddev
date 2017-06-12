@@ -469,7 +469,7 @@ func (l *LocalApp) DockerEnv() {
 		"DDEV_DBAIMAGE":        l.AppConfig.DBAImage,
 		"DDEV_WEBIMAGE":        l.AppConfig.WebImage,
 		"DDEV_APPROOT":         l.AppConfig.AppRoot,
-		"DDEV_DOCROOT":         filepath.Join(l.AppConfig.AppRoot, l.AppConfig.Docroot),
+		"DDEV_DOCROOT":         l.AppConfig.Docroot,
 		"DDEV_URL":             l.URL(),
 		"DDEV_HOSTNAME":        l.HostName(),
 		"DDEV_UID":             "",
