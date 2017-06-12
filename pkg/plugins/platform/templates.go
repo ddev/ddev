@@ -65,9 +65,9 @@ var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 // DdevRouterTemplate is the template for the generic router container.
 const DdevRouterTemplate = `version: '2'
 services:
-  nginx-proxy:
+  ddev-router:
     image: {{ .router_image }}:{{ .router_tag }}
-    container_name: nginx-proxy
+    container_name: ddev-router
     ports:
       {{ range $port := .ports }}- "{{ $port }}:{{ $port }}"
       {{ end }}

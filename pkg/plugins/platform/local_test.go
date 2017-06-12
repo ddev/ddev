@@ -473,7 +473,7 @@ func TestRouterNotRunning(t *testing.T) {
 	assert.NoError(err)
 
 	for _, container := range containers {
-		assert.NotEqual(dockerutil.ContainerName(container), "nginx-proxy", "Found nginx proxy running")
+		assert.NotEqual(dockerutil.ContainerName(container), "ddev-router", "Failed to find ddev-router container running")
 	}
 }
 

@@ -106,7 +106,7 @@ func TestContainerWait(t *testing.T) {
 func TestComposeCmd(t *testing.T) {
 	assert := assert.New(t)
 
-	composeFiles := []string{filepath.Join("testing", "docker-compose.yml")}
+	composeFiles := []string{filepath.Join("testdata", "docker-compose.yml")}
 
 	stdout := testcommon.CaptureStdOut()
 	err := ComposeCmd(composeFiles, "config", "--services")
@@ -115,7 +115,7 @@ func TestComposeCmd(t *testing.T) {
 	assert.Contains(out, "web")
 	assert.Contains(out, "db")
 
-	composeFiles = append(composeFiles, filepath.Join("testing", "docker-compose.override.yml"))
+	composeFiles = append(composeFiles, filepath.Join("testdata", "docker-compose.override.yml"))
 
 	stdout = testcommon.CaptureStdOut()
 	err = ComposeCmd(composeFiles, "config", "--services")

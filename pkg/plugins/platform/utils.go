@@ -23,7 +23,7 @@ func GetApps() map[string][]App {
 	apps := make(map[string][]App)
 	for platformType := range PluginMap {
 		labels := map[string]string{
-			"com.ddev.platform":          platformType,
+			"com.ddev.platform":          "ddev",
 			"com.docker.compose.service": "web",
 		}
 		sites, err := dockerutil.FindContainersByLabels(labels)

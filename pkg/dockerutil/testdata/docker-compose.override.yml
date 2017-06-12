@@ -2,7 +2,7 @@ version: '2'
 
 services:
   foo:
-    container_name: local-test-foo
+    container_name: ddev-test-foo
     image: DDEV_FOOIMAGE
     volumes:
       - "./data:/db"
