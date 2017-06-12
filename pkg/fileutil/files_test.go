@@ -75,3 +75,31 @@ func TestCopyFile(t *testing.T) {
 	err = os.RemoveAll(tmpTargetDir)
 	assert.NoError(err)
 }
+
+// TestPurgeDirectory tests removal of directory contents without removing
+// the directory itself.
+func TestPurgeDirectory(t *testing.T) {
+	assert := assert.New(t)
+	tmpPurgeDir := testcommon.CreateTmpDir("TestPurgeDirectory")
+	tmpPurgeFile := filepath.Join(tmpPurgeDir, "regular_file")
+	tmpPurgeSubFile := filepath.Join(tmpPurgeDir, "subdir", "regular_file")
+
+	err := fileutil.CopyFile(testFileLocation, tmpPurgeFile)
+	assert.NoError(err)
+
+	err = os.Mkdir(filepath.Join(tmpPurgeDir, "subdir"), 0755)
+	assert.NoError(err)
+
+	err = fileutil.CopyFile(testFileLocation, tmpPurgeSubFile)
+	assert.NoError(err)
+
+	err = os.Chmod(tmpPurgeSubFile, 0444)
+	assert.NoError(err)
+
+	err = fileutil.PurgeDirectory(tmpPurgeDir)
+	assert.NoError(err)
+
+	assert.True(fileutil.FileExists(tmpPurgeDir))
+	assert.False(fileutil.FileExists(tmpPurgeFile))
+	assert.False(fileutil.FileExists(tmpPurgeSubFile))
+}
