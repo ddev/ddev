@@ -172,8 +172,8 @@ func TestLocalImportDB(t *testing.T) {
 		assert.NoError(err)
 
 		// Test simple db loads.
-		for _, file := range []string{"users.sql", "users.sql.gz", "users.sql.tar.gz", "users.sql.tgz", "users.sql.zip"} {
-			path := filepath.Join(testDir, "testing", file)
+		for _, file := range []string{"users.sql", "users.sql.gz", "users.sql.tar", "users.sql.tar.gz", "users.sql.tgz", "users.sql.zip"} {
+			path := filepath.Join(testDir, "testdata", file)
 			err = app.ImportDB(path, "")
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 		}
