@@ -51,6 +51,15 @@ else
     sudo mv /tmp/ddev /usr/local/bin/
 fi
 
+if which brew &&  [ -f `brew --prefix`/etc/bash_completion ]; then
+	bash_completion_dir=$(brew --prefix)/etc/bash_completion.d
+    cp /tmp/ddev_bash_completion.sh $bash_completion_dir/ddev
+    echo "$(GREEN)Installed ddev bash completions in $bash_completion_dir$(RESET)"
+    rm /tmp/ddev_bash_completion.sh
+else
+	echo "$(YELLOW)Bash completion for ddev was not installed. You may manually install /tmp/ddev_bash_completions.sh in your bash_completions.d directory.$(RESET)"
+fi
+
 rm /tmp/$TARBALL /tmp/$SHAFILE
 
 echo "${GREEN}ddev is now installed. Run \"ddev\" to verify your installation and see usage.${RESET}"
