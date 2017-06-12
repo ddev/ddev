@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/drud/ddev/cmd/ddev/cmd"
-	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
+
+	"github.com/drud/ddev/cmd/ddev/cmd"
+	"github.com/drud/ddev/pkg/util"
 )
 
-var targetDir string = "bin"
+var targetDir = "bin"
 
 func main() {
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
