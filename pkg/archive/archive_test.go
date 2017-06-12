@@ -83,41 +83,49 @@ func TestUntar(t *testing.T) {
 
 }
 
-// TestUnzip tests unzip functionality, including the starting extraction-skip directory
-func TestUnzip(t *testing.T) {
+// TestUnarchive tests unzip/tar/tar.gz/tgz functionality, including the starting extraction-skip directory
+func TestUnarchive(t *testing.T) {
 
-	// testZipExtractDir is the directory we may want to use to start extracting.
-	testZipExtractDir := "dir2/"
+	// testUnarchiveDir is the directory we may want to use to start extracting.
+	testUnarchiveDir := "dir2/"
 
 	assert := assert.New(t)
-	exDir := testcommon.CreateTmpDir("TestUnzip1")
 
-	zipfilePath := filepath.Join("testdata", "testfile.zip")
+	for _, suffix := range []string{"zip", "tar", "tar.gz", "tgz"} {
+		source := filepath.Join("testdata", "testfile"+"."+suffix)
+		exDir := testcommon.CreateTmpDir("testfile" + suffix)
 
-	err := archive.Unzip(zipfilePath, exDir, "")
-	assert.NoError(err)
+		// default function to untar
+		unarchiveFunc := archive.Untar
+		if suffix == "zip" {
+			unarchiveFunc = archive.Unzip
+		}
 
-	// Make sure that our base extraction directory is there
-	finfo, err := os.Stat(filepath.Join(exDir, testZipExtractDir))
-	assert.NoError(err)
-	assert.True(err == nil && finfo.IsDir())
-	finfo, err = os.Stat(filepath.Join(exDir, testZipExtractDir, "dir2_file.txt"))
-	assert.NoError(err)
-	assert.True(err == nil && !finfo.IsDir())
+		err := unarchiveFunc(source, exDir, "")
+		// Make sure that our base extraction directory is there
+		finfo, err := os.Stat(filepath.Join(exDir, testUnarchiveDir))
+		assert.NoError(err)
+		assert.True(err == nil && finfo.IsDir())
+		finfo, err = os.Stat(filepath.Join(exDir, testUnarchiveDir, "dir2_file.txt"))
+		assert.NoError(err)
+		assert.True(err == nil && !finfo.IsDir())
 
-	err = os.RemoveAll(exDir)
-	assert.NoError(err)
+		err = os.RemoveAll(exDir)
+		assert.NoError(err)
 
-	// Now do the unzip with an extraction root
-	exDir = testcommon.CreateTmpDir("TestUnzip2")
-	err = archive.Unzip(zipfilePath, exDir, testZipExtractDir)
-	assert.NoError(err)
+		// Now do the unarchive with an extraction root
+		exDir = testcommon.CreateTmpDir("testfile" + suffix + "2")
 
-	// Only the dir2_file should remain
-	finfo, err = os.Stat(filepath.Join(exDir, "dir2_file.txt"))
-	assert.NoError(err)
-	assert.True(err == nil && !finfo.IsDir())
+		err = unarchiveFunc(source, exDir, testUnarchiveDir)
+		assert.NoError(err)
 
-	err = os.RemoveAll(exDir)
-	assert.NoError(err)
+		// Only the dir2_file should remain
+		finfo, err = os.Stat(filepath.Join(exDir, "dir2_file.txt"))
+		assert.NoError(err)
+		assert.True(err == nil && !finfo.IsDir())
+
+		err = os.RemoveAll(exDir)
+		assert.NoError(err)
+	}
+
 }
