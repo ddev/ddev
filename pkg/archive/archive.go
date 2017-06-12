@@ -127,7 +127,7 @@ func Untar(source string, dest string, extractionDir string) error {
 				continue
 			}
 
-			err = os.Mkdir(fullPath, 0755)
+			err = os.MkdirAll(fullPath, 0755)
 			if err != nil {
 				return err
 			}
