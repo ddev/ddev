@@ -92,7 +92,7 @@ func TestUnzip(t *testing.T) {
 	assert := assert.New(t)
 	exDir := testcommon.CreateTmpDir("TestUnzip1")
 
-	zipfilePath := filepath.Join("test", "testfile.zip")
+	zipfilePath := filepath.Join("testdata", "testfile.zip")
 
 	err := archive.Unzip(zipfilePath, exDir, "")
 	assert.NoError(err)
