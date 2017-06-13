@@ -32,7 +32,7 @@ services:
     ports:
       - "80"
       - "{{ .mailhogport }}"
-    working_dir: "/var/www/html"
+    working_dir: /var/www/html/${DDEV_DOCROOT}
     environment:
       - DDEV_UID=$DDEV_UID
       - DDEV_GID=$DDEV_GID
