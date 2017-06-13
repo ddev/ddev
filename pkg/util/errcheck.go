@@ -10,7 +10,7 @@ import (
 // From https://davidnix.io/post/error-handling-in-go/
 func CheckErr(err error) {
 	if err != nil {
-		log.Fatal("ERROR:", err)
+		log.Panic("ERROR:", err)
 	}
 }
 
@@ -18,5 +18,7 @@ func CheckErr(err error) {
 // From https://groups.google.com/d/msg/golang-nuts/-eo7navkp10/BY3ym_vMhRcJ
 func CheckClose(c io.Closer) {
 	err := c.Close()
-	CheckErr(err)
+	if err != nil {
+		log.Println("Failed to close deferred io.Closer, err: ", err)
+	}
 }
