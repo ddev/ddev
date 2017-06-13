@@ -29,7 +29,7 @@ func TestDevExec(t *testing.T) {
 		args := []string{"exec", "pwd"}
 		out, err := exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		assert.Contains(string(out), "/var/www/html/docroot")
+		assert.Contains(string(out), "/var/www/html")
 
 		args = []string{"-s", "db", "exec", "pwd"}
 		out, err = exec.RunCommand(DdevBin, args)
