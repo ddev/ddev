@@ -86,7 +86,6 @@ func Untar(source string, dest string, extractionDir string) error {
 		tf = tar.NewReader(gf)
 	} else {
 		tf = tar.NewReader(f)
-		defer util.CheckClose(f)
 	}
 
 	for {

@@ -18,7 +18,7 @@ var ImportFileCmd = &cobra.Command{
 	Short: "Import the uploaded files directory of an existing site to the default public upload directory of your application.",
 	Long: `Import the uploaded files directory of an existing site to the default public
 upload directory of your application. The files can be provided as a directory
-path or an archive in .tar, .tar.gz, .tgz, or .zip format. For the .zip and .tar.gz formats,
+path or an archive in .tar, .tar.gz, .tgz, or .zip format. For the .zip and tar formats,
 the path to a directory within the archive can be provided if it is not located at the
 top-level of the archive. If the destination directory exists, it will be replaced with
 the assets being imported.`,
@@ -50,7 +50,7 @@ the assets being imported.`,
 }
 
 func init() {
-	ImportFileCmd.Flags().StringVarP(&fileSource, "src", "", "", "Provide the path to a directory or .tar.gz archive of files to import")
+	ImportFileCmd.Flags().StringVarP(&fileSource, "src", "", "", "Provide the path to a directory or tar/tar.gz/tgz/zip archive of files to import")
 	ImportFileCmd.Flags().StringVarP(&fileExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
 	RootCmd.AddCommand(ImportFileCmd)
 }
