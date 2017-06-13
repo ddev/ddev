@@ -102,6 +102,8 @@ func TestUnarchive(t *testing.T) {
 		}
 
 		err := unarchiveFunc(source, exDir, "")
+		assert.NoError(err)
+
 		// Make sure that our base extraction directory is there
 		finfo, err := os.Stat(filepath.Join(exDir, testUnarchiveDir))
 		assert.NoError(err)
