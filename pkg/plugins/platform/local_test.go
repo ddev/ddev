@@ -312,7 +312,7 @@ func TestLocalExec(t *testing.T) {
 		err = app.Exec("web", true, "pwd")
 		assert.NoError(err)
 		out := stdout()
-		assert.Contains(out, "/var/www/html/docroot")
+		assert.Contains(out, "/var/www/html")
 
 		stdout = testcommon.CaptureStdOut()
 		switch app.GetType() {

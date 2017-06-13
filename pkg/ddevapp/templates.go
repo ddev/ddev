@@ -23,7 +23,7 @@ services:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
     volumes:
-      - "./:/var/www/html/docroot:cached"
+      - "../:/var/www/html:cached"
     restart: always
     depends_on:
       - db
