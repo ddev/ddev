@@ -39,23 +39,7 @@ jobs:
           name: ddev version information
 
       - run:
-          command: |
-            BASE_DIR=$PWD
-            sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
-            export VERSION=$(git describe --tags --always --dirty)
-            cd $BASE_DIR/bin/darwin/darwin_amd64
-            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz ddev
-            zip $ARTIFACTS/ddev_osx.$VERSION.zip ddev
-            cd $BASE_DIR/bin/linux
-            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev
-            zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev
-            cd $BASE_DIR/bin/windows/windows_amd64
-            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe
-            zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe
-            cd $ARTIFACTS
-            for item in *.tar.gz *.zip; do
-              sha256sum $item > $item.sha256.txt
-            done
+          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
           name: tar/zip up artifacts and make hashes
 
       - store_artifacts:
@@ -71,8 +55,6 @@ jobs:
       GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
     steps:
-#      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
-
       - checkout
 
       - run:
@@ -128,23 +110,7 @@ jobs:
           name: ddev version information (clean binaries, not nightlies)
 
       - run:
-          command: |
-            BASE_DIR=$PWD
-            sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
-            export VERSION=$(git describe --tags --always --dirty)
-            cd $BASE_DIR/bin/darwin/darwin_amd64
-            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz ddev
-            zip $ARTIFACTS/ddev_osx.$VERSION.zip ddev
-            cd $BASE_DIR/bin/linux
-            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev
-            zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev
-            cd $BASE_DIR/bin/windows/windows_amd64
-            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe
-            zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe
-            cd $ARTIFACTS
-            for item in *.tar.gz *.zip; do
-              sha256sum $item > $item.sha256.txt
-            done
+          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
           name: tar/zip up artifacts and make hashes
 
       - store_artifacts:
@@ -178,23 +144,7 @@ jobs:
           name: ddev version information
 
       - run:
-          command: |
-            BASE_DIR=$PWD
-            sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
-            export VERSION=$(git describe --tags --always --dirty)
-            cd $BASE_DIR/bin/darwin/darwin_amd64
-            tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz ddev
-            zip $ARTIFACTS/ddev_osx.$VERSION.zip ddev
-            cd $BASE_DIR/bin/linux
-            tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev
-            zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev
-            cd $BASE_DIR/bin/windows/windows_amd64
-            tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe
-            zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe
-            cd $ARTIFACTS
-            for item in *.tar.gz *.zip; do
-              sha256sum $item > $item.sha256.txt
-            done
+          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
           name: tar/zip up artifacts and make hashes
 
       - store_artifacts:
