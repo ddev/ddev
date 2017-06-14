@@ -13,7 +13,10 @@ import (
 const (
 	drupalTemplate = `<?php
 {{ $config := . }}
-/* Automatically generated Drupal settings.php file. */
+/**
+ #ddev-generated: Automatically generated Drupal settings.php file.
+ ddev manages this file and may delete the file unless this comment is removed.
+ */
 
 $databases['default']['default'] = array(
   'database' => "{{ $config.DatabaseName }}",

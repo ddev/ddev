@@ -13,7 +13,10 @@ import (
 const (
 	wordpressTemplate = `<?php
 {{ $config := . }}
-/* Automatically generated WordPress wp-config.php file. */
+/**
+ #ddev-generated: Automatically generated WordPress wp-config.php file.
+ ddev manages this file and may delete the file unless this comment is removed.
+ */
 
 // ** MySQL settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */

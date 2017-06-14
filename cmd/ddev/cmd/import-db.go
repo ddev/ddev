@@ -39,7 +39,7 @@ can be provided if it is not located at the top-level of the archive.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := getActiveApp("")
 		if err != nil {
-			util.Failed("Failed to import database: %v", app.GetName(), err)
+			util.Failed("Failed to find active app to import database to: %v", app.GetName(), err)
 		}
 
 		err = app.ImportDB(dbSource, dbExtPath)

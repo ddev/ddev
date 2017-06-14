@@ -1,7 +1,6 @@
 package platform
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +13,8 @@ import (
 
 	"os/user"
 	"runtime"
+
+	"errors"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/appimport"
@@ -30,6 +31,10 @@ import (
 	"github.com/gosuri/uitable"
 	"github.com/lextoumbourou/goodhosts"
 )
+
+// DDEV_SETTINGS_FILE_SIGNATURE is the text we use to detect whether a settings file is managed by us.
+// If this string is found, we assume we can replace/update the settings file.
+const DDEV_SETTINGS_FILE_SIGNATURE = "#ddev-generated"
 
 // LocalApp implements the AppBase interface local development apps
 type LocalApp struct {
@@ -226,8 +231,8 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 		if err.Error() != "app config exists" {
 			return fmt.Errorf("failed to write configuration file for %s: %v", l.GetName(), err)
 		}
-		fmt.Println("A settings file already exists for your application, so ddev did not generate one.")
-		fmt.Println("Run 'ddev describe' to find the database credentials for this application.")
+		util.Warning("A custom settings file exists for your application, so ddev did not generate one.")
+		util.Warning("Run 'ddev describe' to find the database credentials for this application.")
 	}
 
 	if l.GetType() == "wordpress" {
@@ -546,7 +551,12 @@ func (l *LocalApp) Config() error {
 	case "drupal7":
 		settingsFilePath = filepath.Join(settingsFilePath, "sites", "default", "settings.php")
 		if fileutil.FileExists(settingsFilePath) {
-			return errors.New("app config exists")
+			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DDEV_SETTINGS_FILE_SIGNATURE)
+			util.CheckErr(err) // Really can't happen as we already checked for the file existence
+			if !signatureFound {
+				return errors.New("app config exists")
+			}
+			// Otherwise we'll go on our way and recreate the settings file.
 		}
 
 		drushSettingsPath := filepath.Join(basePath, "drush.settings.php")
@@ -587,7 +597,12 @@ func (l *LocalApp) Config() error {
 	case "wordpress":
 		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
 		if fileutil.FileExists(settingsFilePath) {
-			return errors.New("app config exists")
+			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DDEV_SETTINGS_FILE_SIGNATURE)
+			util.CheckErr(err) // Really can't happen as we already checked for the file existence
+			if !signatureFound {
+				return errors.New("app config exists")
+			}
+			// Otherwise we'll go on our way and recreate the settings file.
 		}
 
 		fmt.Println("Generating wp-config.php file for database connection.")
