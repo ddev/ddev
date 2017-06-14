@@ -63,7 +63,7 @@ var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 </plist>`
 
 // DdevRouterTemplate is the template for the generic router container.
-const DdevRouterTemplate = `version: '2'
+const DdevRouterTemplate = `version: '3'
 services:
   ddev-router:
     image: {{ .router_image }}:{{ .router_tag }}
@@ -73,6 +73,7 @@ services:
       {{ end }}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
+    restart: always
 networks:
    default:
      external:

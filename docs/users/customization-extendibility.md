@@ -49,7 +49,7 @@ This file would be saved as `docker-compose.solr.yml` in your project's `.ddev` 
 # you would copy the solr-conf/5.x/ contents into .ddev/solr/conf. The configuration
 # files must be present before running `ddev start`.
 
-version: '2'
+version: '3'
 
 services:
   solr: # This is the service name used when running ddev commands accepting the --service flag
