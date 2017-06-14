@@ -32,10 +32,6 @@ import (
 	"github.com/lextoumbourou/goodhosts"
 )
 
-// DDEV_SETTINGS_FILE_SIGNATURE is the text we use to detect whether a settings file is managed by us.
-// If this string is found, we assume we can replace/update the settings file.
-const DDEV_SETTINGS_FILE_SIGNATURE = "#ddev-generated"
-
 // LocalApp implements the AppBase interface local development apps
 type LocalApp struct {
 	AppConfig *ddevapp.Config
@@ -551,7 +547,7 @@ func (l *LocalApp) Config() error {
 	case "drupal7":
 		settingsFilePath = filepath.Join(settingsFilePath, "sites", "default", "settings.php")
 		if fileutil.FileExists(settingsFilePath) {
-			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DDEV_SETTINGS_FILE_SIGNATURE)
+			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
 			util.CheckErr(err) // Really can't happen as we already checked for the file existence
 			if !signatureFound {
 				return errors.New("app config exists")
@@ -597,7 +593,7 @@ func (l *LocalApp) Config() error {
 	case "wordpress":
 		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
 		if fileutil.FileExists(settingsFilePath) {
-			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DDEV_SETTINGS_FILE_SIGNATURE)
+			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
 			util.CheckErr(err) // Really can't happen as we already checked for the file existence
 			if !signatureFound {
 				return errors.New("app config exists")

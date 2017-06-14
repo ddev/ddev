@@ -1,6 +1,8 @@
 package model
 
-import "github.com/drud/ddev/pkg/util"
+import (
+	"github.com/drud/ddev/pkg/util"
+)
 
 // WordpressConfig encapsulates all the configurations for a WordPress site.
 type WordpressConfig struct {
@@ -21,6 +23,7 @@ type WordpressConfig struct {
 	NonceSalt        string
 	Docroot          string
 	TablePrefix      string
+	Signature        string
 }
 
 // NewWordpressConfig produces a WordpressConfig object with defaults.
@@ -41,5 +44,6 @@ func NewWordpressConfig() *WordpressConfig {
 		NonceSalt:        util.RandString(64),
 		SecureAuthKey:    util.RandString(64),
 		SecureAuthSalt:   util.RandString(64),
+		Signature:        DdevSettingsFileSignature,
 	}
 }

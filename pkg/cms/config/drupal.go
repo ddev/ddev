@@ -14,7 +14,7 @@ const (
 	drupalTemplate = `<?php
 {{ $config := . }}
 /**
- #ddev-generated: Automatically generated Drupal settings.php file.
+ {{ $config.Signature }}: Automatically generated Drupal settings.php file.
  ddev manages this file and may delete the file unless this comment is removed.
  */
 

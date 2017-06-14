@@ -14,7 +14,7 @@ const (
 	wordpressTemplate = `<?php
 {{ $config := . }}
 /**
- #ddev-generated: Automatically generated WordPress wp-config.php file.
+ {{ $config.Signature }}: Automatically generated WordPress wp-config.php file.
  ddev manages this file and may delete the file unless this comment is removed.
  */
 
