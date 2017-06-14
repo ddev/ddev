@@ -14,6 +14,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/fatih/color"
 
 	homedir "github.com/mitchellh/go-homedir"
 )
@@ -90,12 +91,42 @@ func StartDdevRouter() error {
 
 	// ensure we have a happy router
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
-	err = dockerutil.ContainerWait(90, label)
+	err = dockerutil.ContainerWait(35, label)
 	if err != nil {
 		return fmt.Errorf("ddev-router failed to become ready: %v", err)
 	}
 
 	return nil
+}
+
+// PrintRouterStatus outputs router status and warning if not
+// running or healthy, as applicable.
+func PrintRouterStatus() string {
+	var status string
+
+	badRouter := "\nThe router is not currently running. Your sites are likely inaccessible at this time.\nTry running 'ddev start' on a site to recreate the router."
+
+	label := map[string]string{"com.docker.compose.service": "ddev-router"}
+	container, err := dockerutil.FindContainerByLabels(label)
+
+	if err != nil {
+		status = color.RedString("not running") + badRouter
+	}
+
+	status = dockerutil.GetContainerHealth(container)
+
+	switch status {
+	case "exited":
+		status = color.YellowString(SiteStopped) + badRouter
+	case "restarting":
+		status = color.RedString(status) + badRouter
+	case "healthy":
+		status = color.CyanString(SiteRunning)
+	default:
+		status = color.CyanString(status)
+	}
+
+	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", status)
 }
 
 // determineRouterPorts returns a list of port mappings retrieved from running site

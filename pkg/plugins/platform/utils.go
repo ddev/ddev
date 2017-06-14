@@ -64,6 +64,7 @@ func RenderAppTable(platform string, apps []App) {
 			RenderAppRow(table, site)
 		}
 		fmt.Println(table)
+		fmt.Println(PrintRouterStatus())
 	}
 
 }

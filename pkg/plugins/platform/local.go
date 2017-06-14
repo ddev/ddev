@@ -118,6 +118,9 @@ func (l *LocalApp) Describe() (string, error) {
 		other.AddRow("phpMyAdmin:", l.URL()+":"+appports.GetPort("dba"))
 		output = output + fmt.Sprint(other)
 	}
+
+	output = output + "\n" + PrintRouterStatus()
+
 	return output, nil
 }
 
@@ -529,7 +532,7 @@ func (l *LocalApp) Wait(containerType string) error {
 		"com.ddev.site-name":         l.GetName(),
 		"com.docker.compose.service": containerType,
 	}
-	err := dockerutil.ContainerWait(90, labels)
+	err := dockerutil.ContainerWait(35, labels)
 	if err != nil {
 		return err
 	}
