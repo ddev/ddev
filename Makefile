@@ -24,7 +24,7 @@ WebTag ?= v0.7.3
 DBImg ?= drud/mysql-local-57
 DBTag ?= v0.5.0
 RouterImage ?= drud/ddev-router
-RouterTag ?= v0.4.2
+RouterTag ?= v0.4.3
 DBAImg ?= drud/phpmyadmin
 DBATag ?= v0.2.0
 
