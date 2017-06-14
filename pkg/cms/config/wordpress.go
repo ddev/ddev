@@ -31,18 +31,6 @@ define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
 /** MySQL hostname */
 define('DB_HOST', '{{ $config.DatabaseHost }}');
 
-// This allows you to provide a configuration file in your site's code base for
-// configurations that should be present in any environment.
-if (file_exists(__DIR__ . '/wp-config.custom.php')) {
-  include __DIR__ . '/wp-config.custom.php';
-}
-
-// This allows you to provide a configuration file in your site's code base for
-// configurations that should be present for a local development environment.
-if (file_exists(__DIR__ . '/wp-config.local.php')) {
-  include __DIR__ . '/wp-config.local.php';
-}
-
 /** Database Charset to use in creating database tables. */
 define('DB_CHARSET', 'utf8mb4');
 

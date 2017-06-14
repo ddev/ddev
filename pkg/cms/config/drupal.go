@@ -54,14 +54,6 @@ if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
 }
 {{ end }}
 
-if (file_exists(__DIR__ . '/custom.settings.php')) {
-  include __DIR__ . '/custom.settings.php';
-}
-
-if (isset($_ENV['DEPLOY_NAME']) && $_ENV['DEPLOY_NAME'] == 'local' && file_exists(__DIR__ . '/settings.local.php')) {
-  include __DIR__ . '/settings.local.php';
-}
-
 
 // This is super ugly but it determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
