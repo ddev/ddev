@@ -2,6 +2,7 @@ package platform
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"log"
 	"os"
@@ -47,27 +48,27 @@ func StopRouter() error {
 }
 
 // StartDdevRouter ensures the router is running.
-func StartDdevRouter() {
+func StartDdevRouter() error {
 	exposedPorts := determineRouterPorts()
 
 	dest := RouterComposeYAMLPath()
 	routerdir := filepath.Dir(dest)
 	err := os.MkdirAll(routerdir, 0755)
 	if err != nil {
-		log.Fatalf("unable to create directory for ddev router: %s", err)
+		return fmt.Errorf("unable to create directory for ddev router: %s", err)
 	}
 
 	var doc bytes.Buffer
 	f, ferr := os.Create(dest)
 	if ferr != nil {
-		log.Fatal(ferr)
+		return ferr
 	}
 	defer util.CheckClose(f)
 
 	templ := template.New("compose template")
 	templ, err = templ.Parse(DdevRouterTemplate)
 	if err != nil {
-		log.Fatal(ferr)
+		return err
 	}
 
 	templateVars := map[string]interface{}{
@@ -84,8 +85,17 @@ func StartDdevRouter() {
 	// run docker-compose up -d in the newly created directory
 	err = dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "up", "-d")
 	if err != nil {
-		log.Fatalf("Could not start router: %v", err)
+		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
+
+	// ensure we have a happy router
+	label := map[string]string{"com.docker.compose.service": "ddev-router"}
+	err = dockerutil.ContainerWait(90, label)
+	if err != nil {
+		return fmt.Errorf("ddev-router failed to become ready: %v", err)
+	}
+
+	return nil
 }
 
 // determineRouterPorts returns a list of port mappings retrieved from running site
