@@ -114,7 +114,6 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	assert.Error(err)
 	config.Name = util.RandString(32)
 	config.AppType = AllowedAppTypes[0]
-	config.Docroot = util.RandString(16)
 
 	// Write a config to create/prep necessary directories.
 	err = config.Write()
@@ -133,7 +132,6 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	composeBytes, err := ioutil.ReadFile(config.DockerComposeYAMLPath())
 	assert.NoError(err)
 	contentString := string(composeBytes)
-	assert.Contains(contentString, config.Docroot)
 	assert.Contains(contentString, config.Platform)
 	assert.Contains(contentString, config.AppType)
 }

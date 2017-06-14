@@ -6,7 +6,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -223,7 +222,6 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		"name": c.Name,
 		// path.Join is desired over filepath.Join here,
 		// as we always want a unix-style path for the mount.
-		"docroot":     path.Join("../", c.Docroot),
 		"plugin":      "ddev",
 		"appType":     c.AppType,
 		"mailhogport": appports.GetPort("mailhog"),
