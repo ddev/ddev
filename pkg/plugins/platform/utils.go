@@ -87,11 +87,16 @@ func RenderAppRow(table *uitable.Table, site App) {
 		appRoot = strings.Replace(appRoot, userDir, "~", 1)
 	}
 	status := site.SiteStatus()
-	if status == "stopped" {
+
+	switch {
+	case strings.Contains(status, SiteStopped):
 		status = color.YellowString(status)
-	} else {
+	case strings.Contains(status, SiteNotFound):
+		status = color.RedString(status)
+	default:
 		status = color.CyanString(status)
 	}
+
 	table.AddRow(
 		site.GetName(),
 		site.GetType(),

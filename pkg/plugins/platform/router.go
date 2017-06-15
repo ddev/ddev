@@ -89,6 +89,8 @@ func StartDdevRouter() error {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
 
+	fmt.Println("Starting service health checks...")
+
 	// ensure we have a happy router
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
 	err = dockerutil.ContainerWait(35, label)

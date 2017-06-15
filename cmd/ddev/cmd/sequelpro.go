@@ -47,8 +47,8 @@ func handleSequelProCommand(appLocation string) (string, error) {
 		return "", err
 	}
 
-	if app.SiteStatus() != "running" {
-		return "", errors.New("app not running locally. Try `ddev start`")
+	if app.SiteStatus() != platform.SiteRunning {
+		return "", errors.New("App not running locally. Try `ddev start`")
 	}
 
 	db, err := app.FindContainerByType("db")

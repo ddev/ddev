@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"strings"
+
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -16,8 +19,12 @@ var LocalDevSSHCmd = &cobra.Command{
 			util.Failed("Failed to ssh: %v", err)
 		}
 
-		if app.SiteStatus() != "running" {
+		if strings.Contains(app.SiteStatus(), platform.SiteNotFound) {
 			util.Failed("App not running locally. Try `ddev start`.")
+		}
+
+		if strings.Contains(app.SiteStatus(), platform.SiteStopped) {
+			util.Failed("App is stopped. Run `ddev start` to start the environment.")
 		}
 
 		app.DockerEnv()

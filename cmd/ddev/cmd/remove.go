@@ -5,6 +5,7 @@ import (
 
 	"os"
 
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -37,7 +38,7 @@ Your project code base and files will not be affected.`,
 			util.Failed("Failed to get active app: %v", err)
 		}
 
-		if app.SiteStatus() == "not found" {
+		if app.SiteStatus() == platform.SiteNotFound {
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
