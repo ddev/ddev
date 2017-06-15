@@ -20,10 +20,10 @@ var WebImg = "drud/nginx-php-fpm7-local" // Note that this is overridden by make
 var WebTag = "v0.7.3" // Note that this is overridden by make
 
 // DBImg defines the default db image used for applications.
-var DBImg = "drud/mysql-docker-local-57" // Note that this is overridden by make
+var DBImg = "drud/mysql-local-57" // Note that this is overridden by make
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "v0.4.1" // Note that this is overridden by make
+var DBTag = "v0.5.0" // Note that this is overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
