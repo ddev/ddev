@@ -43,7 +43,7 @@ Your project code base and files will not be affected.`,
 		}
 
 		if !skipConfirmation {
-			fmt.Printf("Is it ok to remove the site %s with all of its containers? All data will be lost. (y/N): ", app.GetName())
+			fmt.Printf("Is it ok to remove the site %s with all of its containers? (Your database and files will be retained). (y/N): ", app.GetName())
 			if !util.AskForConfirmation() {
 				util.Warning("App removal canceled by user.")
 				os.Exit(2)
