@@ -32,6 +32,8 @@ import (
 	"github.com/lextoumbourou/goodhosts"
 )
 
+const containerWaitTimeout = 35
+
 // LocalApp implements the AppBase interface local development apps
 type LocalApp struct {
 	AppConfig *ddevapp.Config
@@ -558,7 +560,7 @@ func (l *LocalApp) Wait(containerTypes ...string) error {
 			"com.ddev.site-name":         l.GetName(),
 			"com.docker.compose.service": containerType,
 		}
-		err := dockerutil.ContainerWait(35, labels)
+		err := dockerutil.ContainerWait(containerWaitTimeout, labels)
 		if err != nil {
 			return fmt.Errorf("%s service %v", containerType, err)
 		}

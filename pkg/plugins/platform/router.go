@@ -93,7 +93,7 @@ func StartDdevRouter() error {
 
 	// ensure we have a happy router
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
-	err = dockerutil.ContainerWait(35, label)
+	err = dockerutil.ContainerWait(containerWaitTimeout, label)
 	if err != nil {
 		return fmt.Errorf("ddev-router failed to become ready: %v", err)
 	}
