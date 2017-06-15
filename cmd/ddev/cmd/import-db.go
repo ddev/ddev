@@ -44,7 +44,7 @@ can be provided if it is not located at the top-level of the archive.`,
 		}
 
 		if app.SiteStatus() != platform.SiteRunning {
-			util.Failed("App not running locally. Try `ddev start`.")
+			util.Failed("The site is not running. The site must be running in order to import a database.")
 		}
 
 		err = app.ImportDB(dbSource, dbExtPath)
