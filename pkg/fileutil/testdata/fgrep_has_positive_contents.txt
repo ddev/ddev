@@ -1,0 +1,2 @@
+This file contains the phrase "some needle we're looking for".
+In fact it contains the phrase "some needle we're looking for" more than once.
