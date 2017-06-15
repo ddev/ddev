@@ -7,9 +7,6 @@
 [submodule "containers/docker.nginx-php-fpm-local"]
 	path = containers/docker.nginx-php-fpm-local
 	url = git@github.com:drud/docker.nginx-php-fpm-local.git
-[submodule "containers/mysql-docker-local"]
-	path = containers/mysql-docker-local
-	url = git@github.com:drud/mysql-docker-local.git
 [submodule "containers/docker.phpmyadmin"]
 	path = containers/docker.phpmyadmin
 	url = git@github.com:drud/docker.phpmyadmin.git
