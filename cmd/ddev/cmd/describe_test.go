@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -87,13 +88,13 @@ func TestDescribeAppFunction(t *testing.T) {
 		assert.Contains(string(out), app.GetName())
 		assert.Contains(string(out), "running")
 		assert.Contains(string(out), v.Dir)
-		assert.Contains(string(out), "DDEV ROUTER STATUS: running")
+		assert.Contains(string(out), "DDEV ROUTER STATUS: "+color.CyanString("running"))
 
 		_, err = exec.RunCommand("docker", []string{"stop", "ddev-router"})
 		assert.NoError(err)
 		out, err = describeApp("")
 		assert.NoError(err)
-		assert.Contains(string(out), "DDEV ROUTER STATUS: stopped")
+		assert.Contains(string(out), "DDEV ROUTER STATUS: "+color.YellowString("stopped"))
 		assert.Contains(string(out), "The router is not currently running")
 		_, err = exec.RunCommand("docker", []string{"start", "ddev-router"})
 		assert.NoError(err)
