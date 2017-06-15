@@ -10,6 +10,7 @@ services:
     image: $DDEV_DBIMAGE
     volumes:
       - "./import:/db"
+      - "./mysql:/var/lib/mysql"
     restart: always
     ports:
       - "3306"
