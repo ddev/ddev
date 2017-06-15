@@ -18,6 +18,7 @@ type DrupalConfig struct {
 	DatabasePrefix   string
 	HashSalt         string
 	IsDrupal8        bool
+	Signature        string
 }
 
 // NewDrupalConfig produces a DrupalConfig object with default.
@@ -32,6 +33,7 @@ func NewDrupalConfig() *DrupalConfig {
 		DatabasePrefix:   "",
 		IsDrupal8:        false,
 		HashSalt:         util.RandString(64),
+		Signature:        DdevSettingsFileSignature,
 	}
 }
 

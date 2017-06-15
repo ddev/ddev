@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/drud/ddev/pkg/util"
+	"strings"
 )
 
 // CopyFile copies the contents of the file named src to the file named
@@ -141,4 +142,16 @@ func PurgeDirectory(path string) error {
 		}
 	}
 	return nil
+}
+
+// FgrepStringInFile is a small hammer for looking for a literal string in a file.
+// It should only be used against very modest sized files, as the entire file is read
+// into a string.
+func FgrepStringInFile(fullPath string, needle string) (bool, error) {
+	fullFileBytes, err := ioutil.ReadFile(fullPath)
+	if err != nil {
+		return false, fmt.Errorf("Fail to open file %s, err:%v ", fullPath, err)
+	}
+	fullFileString := string(fullFileBytes)
+	return strings.Contains(fullFileString, needle), nil
 }

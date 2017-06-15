@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var testFileLocation = "test/regular_file"
+var testFileLocation = "testdata/regular_file"
 
 // TestCopyDir tests copying a directory.
 func TestCopyDir(t *testing.T) {
@@ -102,4 +102,15 @@ func TestPurgeDirectory(t *testing.T) {
 	assert.True(fileutil.FileExists(tmpPurgeDir))
 	assert.False(fileutil.FileExists(tmpPurgeFile))
 	assert.False(fileutil.FileExists(tmpPurgeSubFile))
+}
+
+// TestFgrepStringInFile tests the FgrepStringInFile utility function.
+func TestFgrepStringInFile(t *testing.T) {
+	assert := assert.New(t)
+	result, err := fileutil.FgrepStringInFile("testdata/fgrep_has_positive_contents.txt", "some needle we're looking for")
+	assert.NoError(err)
+	assert.True(result)
+	result, err = fileutil.FgrepStringInFile("testdata/fgrep_negative_contents.txt", "some needle we're looking for")
+	assert.NoError(err)
+	assert.False(result)
 }
