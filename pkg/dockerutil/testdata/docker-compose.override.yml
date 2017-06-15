@@ -5,7 +5,7 @@ services:
     container_name: ddev-test-foo
     image: DDEV_FOOIMAGE
     volumes:
-      - "./data:/db"
+      - "./import:/db"
     restart: always
     environment:
       - TCP_PORT=DDEV_HOSTNAME:3306

@@ -400,7 +400,7 @@ func determineAppType(basePath string) (string, error) {
 func prepLocalSiteDirs(base string) error {
 	dirs := []string{
 		".ddev",
-		".ddev/data",
+		".ddev/import",
 	}
 	for _, d := range dirs {
 		dirPath := filepath.Join(base, d)
