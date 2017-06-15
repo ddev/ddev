@@ -401,6 +401,7 @@ func prepLocalSiteDirs(base string) error {
 	dirs := []string{
 		".ddev",
 		".ddev/import",
+		".ddev/mysql",
 	}
 	for _, d := range dirs {
 		dirPath := filepath.Join(base, d)
