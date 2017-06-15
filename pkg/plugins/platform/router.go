@@ -112,10 +112,10 @@ func PrintRouterStatus() string {
 	container, err := dockerutil.FindContainerByLabels(label)
 
 	if err != nil {
-		status = color.RedString("not running") + badRouter
+		status = color.RedString(SiteNotFound) + badRouter
+	} else {
+		status = dockerutil.GetContainerHealth(container)
 	}
-
-	status = dockerutil.GetContainerHealth(container)
 
 	switch status {
 	case "exited":
