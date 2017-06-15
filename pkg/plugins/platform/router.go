@@ -118,14 +118,12 @@ func PrintRouterStatus() string {
 	}
 
 	switch status {
-	case "exited":
-		status = color.YellowString(SiteStopped) + badRouter
-	case "restarting":
-		status = color.RedString(status) + badRouter
 	case "healthy":
 		status = color.CyanString(SiteRunning)
+	case "exited":
+		status = color.RedString(SiteStopped) + badRouter
 	default:
-		status = color.CyanString(status)
+		status = color.RedString(status) + badRouter
 	}
 
 	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", status)

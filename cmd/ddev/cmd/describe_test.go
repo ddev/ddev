@@ -94,7 +94,7 @@ func TestDescribeAppFunction(t *testing.T) {
 		assert.NoError(err)
 		out, err = describeApp("")
 		assert.NoError(err)
-		assert.Contains(string(out), "DDEV ROUTER STATUS: "+color.YellowString("stopped"))
+		assert.Contains(string(out), "DDEV ROUTER STATUS: "+color.RedString("stopped"))
 		assert.Contains(string(out), "The router is not currently running")
 		_, err = exec.RunCommand("docker", []string{"start", "ddev-router"})
 		assert.NoError(err)
