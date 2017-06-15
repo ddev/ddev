@@ -256,18 +256,18 @@ func (l *LocalApp) SiteStatus() string {
 		if err != nil {
 			services[service] = SiteNotFound
 			siteStatus = service + " service " + SiteNotFound
-		}
+		} else {
+			status := dockerutil.GetContainerHealth(container)
 
-		status := dockerutil.GetContainerHealth(container)
-
-		switch status {
-		case "exited":
-			services[service] = SiteStopped
-			siteStatus = service + " service " + SiteStopped
-		case "healthy":
-			services[service] = SiteRunning
-		default:
-			services[service] = status
+			switch status {
+			case "exited":
+				services[service] = SiteStopped
+				siteStatus = service + " service " + SiteStopped
+			case "healthy":
+				services[service] = SiteRunning
+			default:
+				services[service] = status
+			}
 		}
 	}
 
