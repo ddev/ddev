@@ -13,6 +13,7 @@ import (
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
 )
@@ -98,7 +99,11 @@ func (site *TestSite) Chdir() func() {
 
 // Cleanup removes the archive and codebase extraction for a site after a test run has completed.
 func (site *TestSite) Cleanup() {
-	err := os.Remove(site.ArchivePath)
+	app, err := platform.GetActiveApp("")
+	util.CheckErr(err)
+	err = app.Down()
+	util.CheckErr(err)
+	err = os.Remove(site.ArchivePath)
 	util.CheckErr(err)
 	// CleanupDir checks its own errors.
 	CleanupDir(site.Dir)

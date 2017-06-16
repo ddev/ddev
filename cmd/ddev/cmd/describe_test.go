@@ -79,7 +79,7 @@ func TestDescribeAppFunction(t *testing.T) {
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
 
-		app, err := getActiveApp("")
+		app, err := platform.GetActiveApp("")
 		assert.NoError(err)
 
 		out, err := describeApp("")

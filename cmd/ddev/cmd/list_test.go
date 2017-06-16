@@ -15,7 +15,7 @@ func TestDevList(t *testing.T) {
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
 
-		app, err := getActiveApp("")
+		app, err := platform.GetActiveApp("")
 		if err != nil {
 			assert.Fail("Could not find an active ddev configuration: %v", err)
 		}

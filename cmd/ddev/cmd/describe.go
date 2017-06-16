@@ -39,10 +39,9 @@ running 'ddev stop <sitename>.`,
 
 // describeApp will load and describe the app specified by appName. You may leave appName blank to use the app from the current working directory.
 func describeApp(appName string) (string, error) {
-	var app platform.App
 	var err error
 
-	app, err = getActiveApp(appName)
+	app, err := platform.GetActiveApp(appName)
 	if err != nil {
 		return "", err
 	}

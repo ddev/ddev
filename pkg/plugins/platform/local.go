@@ -711,3 +711,55 @@ func (l *LocalApp) AddHostsEntry() error {
 	err = exec.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }
+
+// getActiveAppRoot returns the fully rooted directory of the active app, or an error
+func getActiveAppRoot(siteName string) (string, error) {
+	var siteDir string
+	var err error
+
+	if siteName == "" {
+		siteDir, err = os.Getwd()
+		if err != nil {
+			return "", fmt.Errorf("error determining the current directory: %s", err)
+		}
+	} else {
+		var ok bool
+
+		labels := map[string]string{
+			"com.ddev.site-name":         siteName,
+			"com.docker.compose.service": "web",
+		}
+
+		webContainer, err := dockerutil.FindContainerByLabels(labels)
+		if err != nil {
+			return "", fmt.Errorf("could not find a site named '%s'. Run 'ddev list' to see currently active sites", siteName)
+		}
+
+		siteDir, ok = webContainer.Labels["com.ddev.approot"]
+		if !ok {
+			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(webContainer))
+		}
+	}
+
+	appRoot, err := CheckForConf(siteDir)
+	if err != nil {
+		return "", fmt.Errorf("unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
+	}
+
+	return appRoot, nil
+}
+
+// GetActiveApp returns the active App based on the current working directory or running siteName provided.
+func GetActiveApp(siteName string) (App, error) {
+	app, err := GetPluginApp("local")
+	if err != nil {
+		return app, err
+	}
+	activeAppRoot, err := getActiveAppRoot(siteName)
+	if err != nil {
+		return app, err
+	}
+
+	err = app.Init(activeAppRoot)
+	return app, err
+}

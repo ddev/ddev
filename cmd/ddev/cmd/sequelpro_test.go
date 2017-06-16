@@ -19,7 +19,7 @@ func TestSequelproOperation(t *testing.T) {
 	v := DevTestSites[0]
 	cleanup := v.Chdir()
 
-	_, err := getActiveApp("")
+	_, err := platform.GetActiveApp("")
 	assert.NoError(err)
 
 	out, err := handleSequelProCommand(SequelproLoc)

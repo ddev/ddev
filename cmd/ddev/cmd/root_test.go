@@ -93,7 +93,7 @@ func addSites() {
 			log.Fatalln("Error Output from ddev start:", out, "err:", err)
 		}
 
-		app, err := getActiveApp("")
+		app, err := platform.GetActiveApp("")
 		if err != nil {
 			log.Fatalln("Could not find an active ddev configuration:", err)
 		}

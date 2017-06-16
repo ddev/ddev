@@ -33,7 +33,7 @@ Your project code base and files will not be affected.`,
 			siteName = args[0]
 		}
 
-		app, err := getActiveApp(siteName)
+		app, err := platform.GetActiveApp(siteName)
 		if err != nil {
 			util.Failed("Failed to get active app: %v", err)
 		}

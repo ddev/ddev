@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -108,56 +107,4 @@ func init() {
 	}
 
 	log.SetLevel(logLevel)
-}
-
-// getActiveAppRoot returns the fully rooted directory of the active app, or an error
-func getActiveAppRoot(siteName string) (string, error) {
-	var siteDir string
-	var err error
-
-	if siteName == "" {
-		siteDir, err = os.Getwd()
-		if err != nil {
-			return "", fmt.Errorf("error determining the current directory: %s", err)
-		}
-	} else {
-		var ok bool
-
-		labels := map[string]string{
-			"com.ddev.site-name":         siteName,
-			"com.docker.compose.service": "web",
-		}
-
-		webContainer, err := dockerutil.FindContainerByLabels(labels)
-		if err != nil {
-			return "", fmt.Errorf("could not find a site named '%s'. Run 'ddev list' to see currently active sites", siteName)
-		}
-
-		siteDir, ok = webContainer.Labels["com.ddev.approot"]
-		if !ok {
-			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(webContainer))
-		}
-	}
-
-	appRoot, err := platform.CheckForConf(siteDir)
-	if err != nil {
-		return "", fmt.Errorf("unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
-	}
-
-	return appRoot, nil
-}
-
-// getActiveApp returns the active platform.App based on the current working directory or running siteName provided.
-func getActiveApp(siteName string) (platform.App, error) {
-	app, err := platform.GetPluginApp(plugin)
-	if err != nil {
-		return app, err
-	}
-	activeAppRoot, err := getActiveAppRoot(siteName)
-	if err != nil {
-		return app, err
-	}
-
-	err = app.Init(activeAppRoot)
-	return app, err
 }
