@@ -45,12 +45,6 @@ provide a working environment for development.`,
 			util.Failed("Failed to start %s: %v", app.GetName(), err)
 		}
 
-		fmt.Println("Waiting for the environment to become ready. This may take a couple of minutes...")
-		err = app.Wait("web")
-		if err != nil {
-			util.Failed("The environment for %s never became ready: %v", app.GetName(), err)
-		}
-
 		util.Success("Successfully started %s", app.GetName())
 		util.Success("Your application can be reached at: %s", app.URL())
 

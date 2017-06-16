@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
@@ -32,7 +31,7 @@ running 'ddev stop <sitename>.`,
 
 		out, err := describeApp(siteName)
 		if err != nil {
-			log.Fatalf("Could not describe app: %v", err)
+			util.Failed("Could not describe app: %v", err)
 		}
 		fmt.Println(out)
 	},

@@ -2,6 +2,7 @@ package platform
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"log"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/fatih/color"
 
 	homedir "github.com/mitchellh/go-homedir"
 )
@@ -47,27 +49,27 @@ func StopRouter() error {
 }
 
 // StartDdevRouter ensures the router is running.
-func StartDdevRouter() {
+func StartDdevRouter() error {
 	exposedPorts := determineRouterPorts()
 
 	dest := RouterComposeYAMLPath()
 	routerdir := filepath.Dir(dest)
 	err := os.MkdirAll(routerdir, 0755)
 	if err != nil {
-		log.Fatalf("unable to create directory for ddev router: %s", err)
+		return fmt.Errorf("unable to create directory for ddev router: %s", err)
 	}
 
 	var doc bytes.Buffer
 	f, ferr := os.Create(dest)
 	if ferr != nil {
-		log.Fatal(ferr)
+		return ferr
 	}
 	defer util.CheckClose(f)
 
 	templ := template.New("compose template")
 	templ, err = templ.Parse(DdevRouterTemplate)
 	if err != nil {
-		log.Fatal(ferr)
+		return err
 	}
 
 	templateVars := map[string]interface{}{
@@ -84,8 +86,47 @@ func StartDdevRouter() {
 	// run docker-compose up -d in the newly created directory
 	err = dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "up", "-d")
 	if err != nil {
-		log.Fatalf("Could not start router: %v", err)
+		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
+
+	fmt.Println("Starting service health checks...")
+
+	// ensure we have a happy router
+	label := map[string]string{"com.docker.compose.service": "ddev-router"}
+	err = dockerutil.ContainerWait(containerWaitTimeout, label)
+	if err != nil {
+		return fmt.Errorf("ddev-router failed to become ready: %v", err)
+	}
+
+	return nil
+}
+
+// PrintRouterStatus outputs router status and warning if not
+// running or healthy, as applicable.
+func PrintRouterStatus() string {
+	var status string
+
+	badRouter := "\nThe router is not currently running. Your sites are likely inaccessible at this time.\nTry running 'ddev start' on a site to recreate the router."
+
+	label := map[string]string{"com.docker.compose.service": "ddev-router"}
+	container, err := dockerutil.FindContainerByLabels(label)
+
+	if err != nil {
+		status = color.RedString(SiteNotFound) + badRouter
+	} else {
+		status = dockerutil.GetContainerHealth(container)
+	}
+
+	switch status {
+	case "healthy":
+		status = color.CyanString(SiteRunning)
+	case "exited":
+		status = color.RedString(SiteStopped) + badRouter
+	default:
+		status = color.RedString(status) + badRouter
+	}
+
+	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", status)
 }
 
 // determineRouterPorts returns a list of port mappings retrieved from running site

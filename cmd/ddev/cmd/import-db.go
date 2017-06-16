@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -40,6 +41,10 @@ can be provided if it is not located at the top-level of the archive.`,
 		app, err := getActiveApp("")
 		if err != nil {
 			util.Failed("Failed to find active app to import database to: %v", app.GetName(), err)
+		}
+
+		if app.SiteStatus() != platform.SiteRunning {
+			util.Failed("The site is not running. The site must be running in order to import a database.")
 		}
 
 		err = app.ImportDB(dbSource, dbExtPath)

@@ -105,9 +105,6 @@ func TestLocalStart(t *testing.T) {
 		err = app.Start()
 		assert.NoError(err)
 
-		err = app.Wait("web")
-		assert.NoError(err)
-
 		// ensure docker-compose.yaml exists inside .ddev site folder
 		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 		assert.True(composeFile)
@@ -445,9 +442,6 @@ func TestLocalRemove(t *testing.T) {
 		err = app.Start()
 		assert.NoError(err)
 
-		err = app.Wait("web")
-		assert.NoError(err)
-
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalRemove", site.Name))
 		err = app.Down()
 		assert.NoError(err)
@@ -477,9 +471,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 
 	// Start a site so we have something to cleanup
 	err = app.Start()
-	assert.NoError(err)
-
-	err = app.Wait("web")
 	assert.NoError(err)
 
 	// Call the Cleanup command()

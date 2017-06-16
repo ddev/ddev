@@ -32,6 +32,8 @@ import (
 	"github.com/lextoumbourou/goodhosts"
 )
 
+const containerWaitTimeout = 35
+
 // LocalApp implements the AppBase interface local development apps
 type LocalApp struct {
 	AppConfig *ddevapp.Config
@@ -118,6 +120,9 @@ func (l *LocalApp) Describe() (string, error) {
 		other.AddRow("phpMyAdmin:", l.URL()+":"+appports.GetPort("dba"))
 		output = output + fmt.Sprint(other)
 	}
+
+	output = output + "\n" + PrintRouterStatus()
+
 	return output, nil
 }
 
@@ -243,22 +248,42 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	return nil
 }
 
-// SiteStatus returns the current status of an application based on the web container.
+// SiteStatus returns the current status of an application determined from web and db service health.
 func (l *LocalApp) SiteStatus() string {
-	webContainer, err := l.FindContainerByType("web")
-	if err != nil {
-		return SiteNotFound
+	var siteStatus string
+	services := map[string]string{"web": "", "db": ""}
+
+	for service := range services {
+		container, err := l.FindContainerByType(service)
+		if err != nil {
+			services[service] = SiteNotFound
+			siteStatus = service + " service " + SiteNotFound
+		} else {
+			status := dockerutil.GetContainerHealth(container)
+
+			switch status {
+			case "exited":
+				services[service] = SiteStopped
+				siteStatus = service + " service " + SiteStopped
+			case "healthy":
+				services[service] = SiteRunning
+			default:
+				services[service] = status
+			}
+		}
 	}
 
-	status := dockerutil.GetContainerHealth(webContainer)
-	if status == "exited" {
-		return SiteStopped
-	}
-	if status == "healthy" {
-		return SiteRunning
+	if services["web"] == services["db"] {
+		siteStatus = services["web"]
+	} else {
+		for service, status := range services {
+			if status != SiteRunning {
+				siteStatus = service + " service " + status
+			}
+		}
 	}
 
-	return status
+	return siteStatus
 }
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
@@ -410,7 +435,15 @@ func (l *LocalApp) Start() error {
 		return err
 	}
 
-	StartDdevRouter()
+	err = StartDdevRouter()
+	if err != nil {
+		return err
+	}
+
+	err = l.Wait("web", "db")
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -520,15 +553,17 @@ func (l *LocalApp) Stop() error {
 	return StopRouter()
 }
 
-// Wait ensures that the app appears to be read before returning
-func (l *LocalApp) Wait(containerType string) error {
-	labels := map[string]string{
-		"com.ddev.site-name":         l.GetName(),
-		"com.docker.compose.service": containerType,
-	}
-	err := dockerutil.ContainerWait(90, labels)
-	if err != nil {
-		return err
+// Wait ensures that the app service containers are healthy.
+func (l *LocalApp) Wait(containerTypes ...string) error {
+	for _, containerType := range containerTypes {
+		labels := map[string]string{
+			"com.ddev.site-name":         l.GetName(),
+			"com.docker.compose.service": containerType,
+		}
+		err := dockerutil.ContainerWait(containerWaitTimeout, labels)
+		if err != nil {
+			return fmt.Errorf("%s service %v", containerType, err)
+		}
 	}
 
 	return nil
