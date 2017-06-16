@@ -11,6 +11,7 @@ import (
 
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -62,19 +63,19 @@ func TestMain(m *testing.M) {
 func TestGetActiveAppRoot(t *testing.T) {
 	assert := assert.New(t)
 
-	_, err := getActiveAppRoot("")
+	_, err := platform.GetActiveAppRoot("")
 	assert.Contains(err.Error(), "unable to determine the application for this command")
 
-	_, err = getActiveAppRoot("potato")
+	_, err = platform.GetActiveAppRoot("potato")
 	assert.Error(err)
 
-	appRoot, err := getActiveAppRoot(DevTestSites[0].Name)
+	appRoot, err := platform.GetActiveAppRoot(DevTestSites[0].Name)
 	assert.NoError(err)
 	assert.Equal(DevTestSites[0].Dir, appRoot)
 
 	switchDir := DevTestSites[0].Chdir()
 
-	appRoot, err = getActiveAppRoot("")
+	appRoot, err = platform.GetActiveAppRoot("")
 	assert.NoError(err)
 	assert.Equal(DevTestSites[0].Dir, appRoot)
 

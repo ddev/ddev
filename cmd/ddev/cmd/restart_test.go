@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/stretchr/testify/assert"
 )
 

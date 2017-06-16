@@ -712,8 +712,8 @@ func (l *LocalApp) AddHostsEntry() error {
 	return err
 }
 
-// getActiveAppRoot returns the fully rooted directory of the active app, or an error
-func getActiveAppRoot(siteName string) (string, error) {
+// GetActiveAppRoot returns the fully rooted directory of the active app, or an error
+func GetActiveAppRoot(siteName string) (string, error) {
 	var siteDir string
 	var err error
 
@@ -755,7 +755,7 @@ func GetActiveApp(siteName string) (App, error) {
 	if err != nil {
 		return app, err
 	}
-	activeAppRoot, err := getActiveAppRoot(siteName)
+	activeAppRoot, err := GetActiveAppRoot(siteName)
 	if err != nil {
 		return app, err
 	}
