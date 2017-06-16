@@ -38,7 +38,7 @@ func TestValidateAsset(t *testing.T) {
 
 	// test tilde expansion
 	userDir, err := homedir.Dir()
-	testDirName := "testpath-" + util.RandString(4)
+	testDirName := "tmp.ddev.testpath-" + util.RandString(4)
 	testDir := filepath.Join(userDir, testDirName)
 	assert.NoError(err)
 	err = os.Mkdir(testDir, 0755)
