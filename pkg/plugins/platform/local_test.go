@@ -65,17 +65,7 @@ func TestMain(m *testing.M) {
 	log.Debugln("Running tests.")
 	testRun := m.Run()
 
-	for i, site := range TestSites {
-		err := os.Chdir(site.Dir)
-		util.CheckErr(err)
-
-		// If there is an active app, rm the containers.
-		app, err := platform.GetActiveApp("")
-		if err == nil {
-			err = app.Down()
-			util.CheckErr(err)
-		}
-
+	for i := range TestSites {
 		TestSites[i].Cleanup()
 	}
 
