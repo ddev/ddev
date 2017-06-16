@@ -33,7 +33,7 @@ const DDevTLD = "ddev.local"
 // AllowedAppTypes lists the types of site/app that can be used.
 var AllowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
 
-// Regexp pattern for alphanumeric + dashes
+// Regexp pattern to match any non-alphanumeric characters (except dashes) so they can be replaced.
 var re = regexp.MustCompile(`[^a-zA-Z0-9_-]+`)
 
 // Config defines the yaml config file format for ddev applications
