@@ -9,7 +9,7 @@ services:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-db
     image: $DDEV_DBIMAGE
     volumes:
-      - "./import:/db"
+      - "./import-db:/db"
       - "./mysql:/var/lib/mysql"
     restart: always
     ports:

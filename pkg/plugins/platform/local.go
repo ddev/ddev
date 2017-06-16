@@ -155,11 +155,11 @@ func (l *LocalApp) GetName() string {
 func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	l.DockerEnv()
 	var extPathPrompt bool
-	dbPath := filepath.Join(l.AppRoot(), ".ddev", "import")
+	dbPath := filepath.Join(l.AppRoot(), ".ddev", "import-db")
 
 	err := fileutil.PurgeDirectory(dbPath)
 	if err != nil {
-		return fmt.Errorf("failed to cleanup .ddev/import before import: %v", err)
+		return fmt.Errorf("failed to cleanup .ddev/import-db before import: %v", err)
 	}
 
 	if imPath == "" {
@@ -247,7 +247,7 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 
 	err = fileutil.PurgeDirectory(dbPath)
 	if err != nil {
-		return fmt.Errorf("failed to cleanup .ddev/import after import: %v", err)
+		return fmt.Errorf("failed to cleanup .ddev/import-db after import: %v", err)
 	}
 
 	return nil

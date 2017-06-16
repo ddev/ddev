@@ -400,7 +400,7 @@ func determineAppType(basePath string) (string, error) {
 func prepLocalSiteDirs(base string) error {
 	dirs := []string{
 		".ddev",
-		".ddev/import",
+		".ddev/import-db",
 		".ddev/mysql",
 	}
 	for _, d := range dirs {

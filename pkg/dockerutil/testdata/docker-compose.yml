@@ -5,7 +5,7 @@ services:
     container_name: ddev-test-db
     image: DDEV_DBIMAGE
     volumes:
-      - "./import:/db"
+      - "./import-db:/db"
     restart: always
     environment:
       - TCP_PORT=DDEV_HOSTNAME:3306
