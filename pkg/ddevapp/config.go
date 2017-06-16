@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"regexp"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/appports"
@@ -30,6 +32,9 @@ const DDevTLD = "ddev.local"
 
 // AllowedAppTypes lists the types of site/app that can be used.
 var AllowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
+
+// Regexp pattern for alphanumeric + dashes
+var re = regexp.MustCompile(`[^a-zA-Z0-9_-]+`)
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
@@ -128,6 +133,9 @@ func (c *Config) Read() error {
 		c.DBAImage = version.DBAImg + ":" + version.DBATag
 	}
 
+	// Ensure sitename is alphanumberic + dashes
+	c.Name = re.ReplaceAllString(c.Name, "")
+
 	log.WithFields(log.Fields{
 		"Active config": awsutil.Prettify(c),
 	}).Debug("Finished config set")
@@ -154,6 +162,7 @@ func (c *Config) Config() error {
 		dir, err := os.Getwd()
 		if err == nil {
 			c.Name = filepath.Base(dir)
+			c.Name = re.ReplaceAllString(c.Name, "")
 		}
 	}
 
@@ -161,9 +170,12 @@ func (c *Config) Config() error {
 	// Define an application name.
 	fmt.Print(namePrompt + ": ")
 	c.Name = util.GetInput(c.Name)
+	c.Name = re.ReplaceAllString(c.Name, "")
 
 	err := c.docrootPrompt()
-	util.CheckErr(err)
+	if err != nil {
+		return err
+	}
 
 	err = c.appTypePrompt()
 	if err != nil {

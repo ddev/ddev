@@ -38,7 +38,7 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(newConfig.DBImage, version.DBImg+":"+version.DBTag)
 	assert.Equal(newConfig.WebImage, version.WebImg+":"+version.WebTag)
 	assert.Equal(newConfig.DBAImage, version.DBAImg+":"+version.DBATag)
-	newConfig.Name = util.RandString(32)
+	newConfig.Name = util.RandString(32) + "-awesome!"
 	newConfig.AppType = "drupal8"
 
 	// Write the newConfig.
@@ -50,7 +50,8 @@ func TestNewConfig(t *testing.T) {
 	loadedConfig, err := NewConfig(testDir)
 	// There should be no error this time, since the config should be available for loading.
 	assert.NoError(err)
-	assert.Equal(newConfig.Name, loadedConfig.Name)
+	// Site name should only be alphanumeric + dashes
+	assert.Equal(strings.TrimSuffix(newConfig.Name, "!"), loadedConfig.Name)
 	assert.Equal(newConfig.AppType, loadedConfig.AppType)
 }
 
@@ -198,7 +199,7 @@ func TestRead(t *testing.T) {
 		AppRoot:    "testing",
 		APIVersion: CurrentAppVersion,
 		Platform:   DDevDefaultPlatform,
-		Name:       "TestRead",
+		Name:       "Test-Read!",
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
@@ -208,7 +209,7 @@ func TestRead(t *testing.T) {
 	assert.NoError(err)
 
 	// Values not defined in file, we should still have default values
-	assert.Equal(c.Name, "TestRead")
+	assert.Equal(c.Name, "Test-Read")
 	assert.Equal(c.DBImage, version.DBImg+":"+version.DBTag)
 
 	// Values defined in file, we should have values from file
