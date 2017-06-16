@@ -38,12 +38,13 @@ func TestValidateAsset(t *testing.T) {
 
 	// test tilde expansion
 	userDir, err := homedir.Dir()
-	testDir := filepath.Join(userDir, "testpath")
+	testDirName := "testpath-" + util.RandString(4)
+	testDir := filepath.Join(userDir, testDirName)
 	assert.NoError(err)
 	err = os.Mkdir(testDir, 0755)
 	assert.NoError(err)
 
-	testPath, err := ValidateAsset("~/testpath", "files")
+	testPath, err := ValidateAsset("~/"+testDirName, "files")
 	assert.NoError(err)
 	assert.Contains(testPath, userDir)
 	assert.False(strings.Contains(testPath, "~"))
