@@ -1,16 +1,10 @@
 package cmd
 
 import (
-	"fmt"
-
-	"os"
-
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
-
-var skipConfirmation bool
 
 // LocalDevRMCmd represents the stop command
 var LocalDevRMCmd = &cobra.Command{
@@ -42,13 +36,6 @@ Your project code base and files will not be affected.`,
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
-		if !skipConfirmation {
-			fmt.Printf("Is it ok to remove the site %s with all of its containers? All data will be lost. (y/N): ", app.GetName())
-			if !util.AskForConfirmation() {
-				util.Warning("App removal canceled by user.")
-				os.Exit(2)
-			}
-		}
 		err = app.Down()
 		if err != nil {
 			util.Failed("Failed to remove %s: %s", app.GetName(), err)
@@ -59,6 +46,5 @@ Your project code base and files will not be affected.`,
 }
 
 func init() {
-	LocalDevRMCmd.Flags().BoolVarP(&skipConfirmation, "skip-confirmation", "y", false, "Skip confirmation step.")
 	RootCmd.AddCommand(LocalDevRMCmd)
 }
