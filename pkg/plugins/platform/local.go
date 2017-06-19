@@ -650,7 +650,7 @@ func (l *LocalApp) Config() error {
 // Down stops the docker containers for the local project.
 func (l *LocalApp) Down() error {
 	l.DockerEnv()
-	err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
+	err := dockerutil.ComposeCmd(l.ComposeFiles(), "down")
 	if err != nil {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
 		return Cleanup(l)

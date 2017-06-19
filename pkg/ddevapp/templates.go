@@ -10,6 +10,7 @@ services:
     image: $DDEV_DBIMAGE
     volumes:
       - "./data:/db"
+      - mysql:/var/lib/mysql
     restart: always
     ports:
       - "3306"
@@ -74,4 +75,6 @@ networks:
   default:
     external:
       name: ddev_default
+volumes:
+  mysql:
 `
