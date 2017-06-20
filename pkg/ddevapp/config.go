@@ -38,18 +38,19 @@ var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-z
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
-	APIVersion string `yaml:"APIVersion"`
-	Name       string `yaml:"name"`
-	AppType    string `yaml:"type"`
-	Docroot    string `yaml:"docroot"`
-	WebImage   string `yaml:"webimage"`
-	DBImage    string `yaml:"dbimage"`
-	DBAImage   string `yaml:"dbaimage"`
-	ConfigPath string `yaml:"-"`
-	AppRoot    string `yaml:"-"`
-	Platform   string `yaml:"-"`
-	DataDir    string `yaml:"-"`
-	ImportDir  string `yaml:"-"`
+	APIVersion       string `yaml:"APIVersion"`
+	Name             string `yaml:"name"`
+	AppType          string `yaml:"type"`
+	Docroot          string `yaml:"docroot"`
+	WebImage         string `yaml:"webimage"`
+	DBImage          string `yaml:"dbimage"`
+	DBAImage         string `yaml:"dbaimage"`
+	ConfigPath       string `yaml:"-"`
+	AppRoot          string `yaml:"-"`
+	Platform         string `yaml:"-"`
+	DataDir          string `yaml:"-"`
+	ImportDir        string `yaml:"-"`
+	SiteSettingsPath string `yaml:"-"`
 }
 
 // NewConfig creates a new Config struct with defaults set. It is preferred to using new() directly.
@@ -132,6 +133,8 @@ func (c *Config) Read() error {
 	if c.DBAImage == "" {
 		c.DBAImage = version.DBAImg + ":" + version.DBATag
 	}
+
+	c.setSiteSettingsPath(c.AppType)
 
 	log.WithFields(log.Fields{
 		"Active config": awsutil.Prettify(c),
@@ -392,4 +395,20 @@ func determineAppType(basePath string) (string, error) {
 	}
 
 	return "", errors.New("determineAppType() couldn't determine app's type")
+}
+
+// setSiteSettingsPath determines the location for site's db settings file based on apptype.
+func (c *Config) setSiteSettingsPath(appType string) {
+	settingsFilePath := filepath.Join(c.AppRoot, c.Docroot)
+
+	switch appType {
+	case "drupal8":
+		fallthrough
+	case "drupal7":
+		settingsFilePath = filepath.Join(settingsFilePath, "sites", "default", "settings.php")
+	case "wordpress":
+		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
+	}
+
+	c.SiteSettingsPath = settingsFilePath
 }
