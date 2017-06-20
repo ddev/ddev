@@ -11,6 +11,8 @@ pages:
     - 'Using Developer Tools with ddev': 'users/developer-tools.md'
     - 'PHP Step Debugging': 'users/step-debugging.md'
     - 'Extending and Customizing Environments': 'users/customization-extendibility.md'
+      - 'Additional Services': 'users/extend/additional-services.md'
+      - 'Defining Custom Services': 'users/extend/custom-compose-files.md'
     - 'Notes for Linux Users': 'users/linux_notes.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'
