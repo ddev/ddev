@@ -51,6 +51,11 @@ func (l *LocalApp) Init(basePath string) error {
 		return fmt.Errorf("could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
 	}
 
+	err = config.Validate()
+	if err != nil {
+		return err
+	}
+
 	l.AppConfig = config
 
 	web, err := l.FindContainerByType("web")
