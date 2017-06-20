@@ -275,3 +275,8 @@ func GetPublishedPort(privatePort int64, container docker.APIContainers) int64 {
 	}
 	return 0
 }
+
+func GetVolumes() ([]docker.Volume, error) {
+	client := GetDockerClient()
+	return client.ListVolumes(docker.ListVolumesOptions{})
+}
