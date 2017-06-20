@@ -25,6 +25,7 @@ services:
     image: $DDEV_WEBIMAGE
     volumes:
       - "../:/var/www/html:cached"
+      - "nginx-logs:/var/log/nginx"
     restart: always
     depends_on:
       - db
@@ -77,4 +78,5 @@ networks:
       name: ddev_default
 volumes:
   mysql:
+  nginx-logs:
 `

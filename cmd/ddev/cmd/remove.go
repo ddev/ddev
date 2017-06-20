@@ -6,6 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var removeData bool
+
 // LocalDevRMCmd represents the stop command
 var LocalDevRMCmd = &cobra.Command{
 	Use:     "remove [sitename]",
@@ -13,9 +15,10 @@ var LocalDevRMCmd = &cobra.Command{
 	Short:   "Remove the local development environment for a site. (Destructive)",
 	Long: `Remove the local development environment for a site. You can run 'ddev remove'
 from a site directory to remove that site, or you can specify a site to remove
-by running 'ddev stop <sitename>. Remove is a destructive operation. It will
-remove all containers for the site, destroying database contents in the process.
-Your project code base and files will not be affected.`,
+by running 'ddev rm <sitename>. By default, remove is a non-destructive operation and will
+leave database contents intact.
+
+To remove database contents, you may use the --remove-data flag with remove.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var siteName string
 
@@ -36,7 +39,7 @@ Your project code base and files will not be affected.`,
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
-		err = app.Down()
+		err = app.Down(removeData)
 		if err != nil {
 			util.Failed("Failed to remove %s: %s", app.GetName(), err)
 		}
@@ -46,5 +49,6 @@ Your project code base and files will not be affected.`,
 }
 
 func init() {
+	LocalDevRMCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored application data (MySQL, logs, etc.)")
 	RootCmd.AddCommand(LocalDevRMCmd)
 }
