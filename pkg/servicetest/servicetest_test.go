@@ -62,6 +62,7 @@ func TestServicesSetup(t *testing.T) {
 			}
 			return nil
 		})
+		assert.NoError(err)
 	} else {
 		fmt.Println("services tests skipped in short mode")
 	}
