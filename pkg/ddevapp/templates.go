@@ -10,6 +10,7 @@ services:
     image: $DDEV_DBIMAGE
     volumes:
       - "./data:/db"
+      - mysql:/var/lib/mysql
     restart: always
     ports:
       - "3306"
@@ -24,6 +25,7 @@ services:
     image: $DDEV_WEBIMAGE
     volumes:
       - "../:/var/www/html:cached"
+      - "nginx-logs:/var/log/nginx"
     restart: always
     depends_on:
       - db
@@ -74,4 +76,7 @@ networks:
   default:
     external:
       name: ddev_default
+volumes:
+  mysql:
+  nginx-logs:
 `
