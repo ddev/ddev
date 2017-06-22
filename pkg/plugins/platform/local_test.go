@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
@@ -377,13 +378,50 @@ func TestLocalLogs(t *testing.T) {
 // TestProcessHooks tests execution of commands defined in config
 func TestProcessHooks(t *testing.T) {
 	assert := assert.New(t)
-
-	app, err := GetPluginApp("local")
-	assert.NoError(err)
+	testDir, _ := os.Getwd()
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
+
+		testcommon.ClearDockerEnv()
+		conf, err := ddevapp.NewConfig(site.Dir)
+		assert.NoError(err)
+
+		conf.Commands = map[string][]ddevapp.Command{
+			"hook-test": []ddevapp.Command{
+				ddevapp.Command{
+					Exec: "pwd",
+				},
+				ddevapp.Command{},
+				ddevapp.Command{},
+			},
+		}
+
+		testImport := filepath.Join(testDir, "testdata", "users.sql.tar.gz")
+		log.Debug(testImport)
+		testImport, err = filepath.Abs(testImport)
+		assert.NoError(err)
+		assert.True(fileutil.FileExists(testImport))
+		conf.Commands["hook-test"][1].ImportDB.Src = testImport
+		conf.Commands["hook-test"][2].ImportFiles.Src = testImport
+
+		l := &LocalApp{
+			AppConfig: conf,
+		}
+
+		stdout := testcommon.CaptureStdOut()
+		err = l.ProcessHooks(l.AppConfig.Commands["hook-test"])
+		assert.NoError(err)
+		out := stdout()
+
+		assert.Contains(out, "--Runing exec:  pwd --")
+		assert.Contains(out, fmt.Sprintf("--Importing database from  %s --", testImport))
+		assert.Contains(out, fmt.Sprintf("--Importing files from  %s --", testImport))
+
+		runTime()
+		cleanup()
+
 	}
 }
 

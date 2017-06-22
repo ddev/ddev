@@ -460,7 +460,7 @@ func (l *LocalApp) ProcessHooks(commands []ddevapp.Command) error {
 			fmt.Println("--Importing database from ", c.ImportDB.Src, "--")
 			err = l.ImportDB(c.ImportDB.Src, c.ImportDB.ExtractPath)
 			if err != nil {
-				return err
+				return fmt.Errorf("Database import failed: %v", err)
 			}
 			util.Success("--Database import succeeded--")
 		}
@@ -468,7 +468,7 @@ func (l *LocalApp) ProcessHooks(commands []ddevapp.Command) error {
 			fmt.Println("--Importing files from ", c.ImportFiles.Src, "--")
 			err = l.ImportFiles(c.ImportFiles.Src, c.ImportFiles.ExtractPath)
 			if err != nil {
-				return err
+				return fmt.Errorf("File import failed: %v", err)
 			}
 			util.Success("--File import succeeded--")
 		}
@@ -477,7 +477,7 @@ func (l *LocalApp) ProcessHooks(commands []ddevapp.Command) error {
 			args := strings.Split(c.Exec, " ")
 			err = l.Exec("web", true, args...)
 			if err != nil {
-				return err
+				return fmt.Errorf("Exec failed: %v", err)
 			}
 			util.Success("--Exec command succeeded--")
 		}
