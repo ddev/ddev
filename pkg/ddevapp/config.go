@@ -39,19 +39,28 @@ var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-z
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
-	APIVersion       string `yaml:"APIVersion"`
-	Name             string `yaml:"name"`
-	AppType          string `yaml:"type"`
-	Docroot          string `yaml:"docroot"`
-	WebImage         string `yaml:"webimage"`
-	DBImage          string `yaml:"dbimage"`
-	DBAImage         string `yaml:"dbaimage"`
-	ConfigPath       string `yaml:"-"`
-	AppRoot          string `yaml:"-"`
-	Platform         string `yaml:"-"`
-	DataDir          string `yaml:"-"`
-	ImportDir        string `yaml:"-"`
-	SiteSettingsPath string `yaml:"-"`
+	APIVersion       string               `yaml:"APIVersion"`
+	Name             string               `yaml:"name"`
+	AppType          string               `yaml:"type"`
+	Docroot          string               `yaml:"docroot"`
+	WebImage         string               `yaml:"webimage"`
+	DBImage          string               `yaml:"dbimage"`
+	DBAImage         string               `yaml:"dbaimage"`
+	ConfigPath       string               `yaml:"-"`
+	AppRoot          string               `yaml:"-"`
+	Platform         string               `yaml:"-"`
+	DataDir          string               `yaml:"-"`
+	ImportDir        string               `yaml:"-"`
+	SiteSettingsPath string               `yaml:"-"`
+	Commands         map[string][]Command `yaml:"extend_commands"`
+}
+
+// Command defines commands to be run as pre/post hooks
+type Command struct {
+	ImportDB struct {
+		Src string `yaml:"src"`
+	} `yaml:"import-db,omitempty"`
+	Exec string `yaml:"exec,omitempty"`
 }
 
 // NewConfig creates a new Config struct with defaults set. It is preferred to using new() directly.
@@ -149,6 +158,7 @@ func (c *Config) Read() error {
 	log.WithFields(log.Fields{
 		"Active config": awsutil.Prettify(c),
 	}).Debug("Finished config set")
+
 	return nil
 }
 
