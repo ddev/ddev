@@ -443,7 +443,7 @@ func TestLocalRemove(t *testing.T) {
 		assert.NoError(err)
 
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalRemove", site.Name))
-		err = app.Down(true)
+		err = app.Down()
 		assert.NoError(err)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {

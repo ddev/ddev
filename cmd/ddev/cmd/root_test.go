@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 
@@ -125,28 +124,10 @@ func removeSites() {
 	for _, site := range DevTestSites {
 		_ = site.Chdir()
 
-		args := []string{"remove", "--remove-data"}
+		args := []string{"remove", "-y"}
 		out, err := exec.RunCommand(DdevBin, args)
 		if err != nil {
 			log.Fatalln("Failed to run ddev remove -y command, err: %v, output: %s", err, out)
-		}
-
-		allVolumes, err := dockerutil.GetVolumes()
-		if err != nil {
-			log.Fatalf("Could not ensure volumes are empty for site %s during teardown", site.Name)
-		}
-
-		removedNames := []string{
-			fmt.Sprintf("ddev%s_mysql", site.Name),
-			fmt.Sprintf("ddev%s_nginx-logs", site.Name),
-		}
-
-		for _, remainingVolume := range allVolumes {
-			for _, removedName := range removedNames {
-				if removedName == remainingVolume.Name {
-					log.Fatalf("Volume %s still remaining after site removal", remainingVolume.Name)
-				}
-			}
 		}
 	}
 }
