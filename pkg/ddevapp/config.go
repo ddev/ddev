@@ -58,8 +58,13 @@ type Config struct {
 // Command defines commands to be run as pre/post hooks
 type Command struct {
 	ImportDB struct {
-		Src string `yaml:"src"`
+		Src         string `yaml:"src"`
+		ExtractPath string `yaml:"extract-path"`
 	} `yaml:"import-db,omitempty"`
+	ImportFiles struct {
+		Src         string `yaml:"src"`
+		ExtractPath string `yaml:"extract-path"`
+	} `yaml:"import-files,omitempty"`
 	Exec string `yaml:"exec,omitempty"`
 }
 

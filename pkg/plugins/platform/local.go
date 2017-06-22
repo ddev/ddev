@@ -160,7 +160,7 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	preCmds := l.AppConfig.Commands["pre-import-db"]
 	if len(preCmds) > 0 {
 		fmt.Println("Executing pre-import commands...")
-		err := l.ProcessHook(preCmds)
+		err := l.ProcessHooks(preCmds)
 		if err != nil {
 			return err
 		}
@@ -262,7 +262,7 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	postCmds := l.AppConfig.Commands["post-import-db"]
 	if len(postCmds) > 0 {
 		fmt.Println("Executing post-import commands...")
-		err := l.ProcessHook(postCmds)
+		err := l.ProcessHooks(postCmds)
 		if err != nil {
 			return err
 		}
@@ -319,7 +319,7 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 	preCmds := l.AppConfig.Commands["pre-import-files"]
 	if len(preCmds) > 0 {
 		fmt.Println("Executing pre-start commands...")
-		err := l.ProcessHook(preCmds)
+		err := l.ProcessHooks(preCmds)
 		if err != nil {
 			return err
 		}
@@ -412,7 +412,7 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 	postCmds := l.AppConfig.Commands["post-import-files"]
 	if len(postCmds) > 0 {
 		fmt.Println("Executing post-import commands...")
-		err := l.ProcessHook(postCmds)
+		err := l.ProcessHooks(postCmds)
 		if err != nil {
 			return err
 		}
@@ -453,16 +453,24 @@ func (l *LocalApp) ComposeFiles() []string {
 }
 
 // ProcessHook executes commands defined in a ddevapp.Command
-func (l *LocalApp) ProcessHook(commands []ddevapp.Command) error {
+func (l *LocalApp) ProcessHooks(commands []ddevapp.Command) error {
 	var err error
 	for _, c := range commands {
 		if c.ImportDB.Src != "" {
 			fmt.Println("--Importing database from ", c.ImportDB.Src, "--")
-			err = l.ImportDB(c.ImportDB.Src, "")
+			err = l.ImportDB(c.ImportDB.Src, c.ImportDB.ExtractPath)
 			if err != nil {
 				return err
 			}
 			util.Success("--Database import succeeded--")
+		}
+		if c.ImportFiles.Src != "" {
+			fmt.Println("--Importing files from ", c.ImportFiles.Src, "--")
+			err = l.ImportFiles(c.ImportFiles.Src, c.ImportFiles.ExtractPath)
+			if err != nil {
+				return err
+			}
+			util.Success("--File import succeeded--")
 		}
 		if c.Exec != "" {
 			fmt.Println("--Runing exec: ", c.Exec, "--")
@@ -485,7 +493,7 @@ func (l *LocalApp) Start() error {
 	preCmds := l.AppConfig.Commands["pre-start"]
 	if len(preCmds) > 0 {
 		fmt.Println("Executing pre-start commands...")
-		err := l.ProcessHook(preCmds)
+		err := l.ProcessHooks(preCmds)
 		if err != nil {
 			return err
 		}
@@ -529,7 +537,7 @@ func (l *LocalApp) Start() error {
 	postCmds := l.AppConfig.Commands["post-start"]
 	if len(postCmds) > 0 {
 		fmt.Println("Executing post-start commands...")
-		err := l.ProcessHook(postCmds)
+		err := l.ProcessHooks(postCmds)
 		if err != nil {
 			return err
 		}

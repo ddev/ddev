@@ -374,6 +374,19 @@ func TestLocalLogs(t *testing.T) {
 	}
 }
 
+// TestProcessHooks tests execution of commands defined in config
+func TestProcessHooks(t *testing.T) {
+	assert := assert.New(t)
+
+	app, err := GetPluginApp("local")
+	assert.NoError(err)
+
+	for _, site := range TestSites {
+		cleanup := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
+	}
+}
+
 // TestLocalStop tests the functionality that is called when "ddev stop" is executed
 func TestLocalStop(t *testing.T) {
 	assert := assert.New(t)
