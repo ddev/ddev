@@ -572,23 +572,25 @@ func (l *LocalApp) Wait(containerTypes ...string) error {
 // Config creates the apps config file adding things like database host, name, and password
 // as well as other sensitive data like salts.
 func (l *LocalApp) Config() error {
-	settingsFilePath := l.AppConfig.SiteSettingsPath
-
-	if fileutil.FileExists(settingsFilePath) {
-		signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
-		util.CheckErr(err) // Really can't happen as we already checked for the file existence
-		if !signatureFound {
-			return errors.New("app config exists")
-		}
-		// Otherwise we'll go on our way and recreate the settings file.
-	}
+	basePath := l.AppRoot()
+	docroot := l.Docroot()
+	settingsFilePath := filepath.Join(basePath, docroot)
 
 	switch l.GetType() {
 	case "drupal8":
 		fallthrough
 	case "drupal7":
-		fmt.Println("Generating settings.php file for database connection.")
-		drushSettingsPath := filepath.Join(l.AppRoot(), "drush.settings.php")
+		settingsFilePath = filepath.Join(settingsFilePath, "sites", "default", "settings.php")
+		if fileutil.FileExists(settingsFilePath) {
+			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
+			util.CheckErr(err) // Really can't happen as we already checked for the file existence
+			if !signatureFound {
+				return errors.New("app config exists")
+			}
+			// Otherwise we'll go on our way and recreate the settings file.
+		}
+
+		drushSettingsPath := filepath.Join(basePath, "drush.settings.php")
 
 		// Retrieve published mysql port for drush settings file.
 		db, err := l.FindContainerByType("db")
@@ -601,6 +603,8 @@ func (l *LocalApp) Config() error {
 			return err
 		}
 		dbPublishPort := dockerutil.GetPublishedPort(dbPrivatePort, db)
+
+		fmt.Println("Generating settings.php file for database connection.")
 
 		drupalConfig := model.NewDrupalConfig()
 		drushConfig := model.NewDrushConfig()
@@ -622,6 +626,16 @@ func (l *LocalApp) Config() error {
 			return err
 		}
 	case "wordpress":
+		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
+		if fileutil.FileExists(settingsFilePath) {
+			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
+			util.CheckErr(err) // Really can't happen as we already checked for the file existence
+			if !signatureFound {
+				return errors.New("app config exists")
+			}
+			// Otherwise we'll go on our way and recreate the settings file.
+		}
+
 		fmt.Println("Generating wp-config.php file for database connection.")
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DeployURL = l.URL()
@@ -634,31 +648,9 @@ func (l *LocalApp) Config() error {
 }
 
 // Down stops the docker containers for the local project.
-func (l *LocalApp) Down(removeData bool) error {
+func (l *LocalApp) Down() error {
 	l.DockerEnv()
-	settingsFilePath := l.AppConfig.SiteSettingsPath
-
-	args := []string{"down"}
-	if removeData {
-		args = append(args, "-v")
-		if fileutil.FileExists(settingsFilePath) {
-			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
-			util.CheckErr(err) // Really can't happen as we already checked for the file existence
-			if signatureFound {
-				err = os.Chmod(settingsFilePath, 0644)
-				if err != nil {
-					return err
-				}
-				err = os.Remove(settingsFilePath)
-				if err != nil {
-					return err
-				}
-			}
-			// Otherwise we'll go on our way and recreate the settings file.
-		}
-	}
-
-	err := dockerutil.ComposeCmd(l.ComposeFiles(), args...)
+	err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
 	if err != nil {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
 		return Cleanup(l)

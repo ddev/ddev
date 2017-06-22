@@ -1,24 +1,27 @@
 package cmd
 
 import (
+	"fmt"
+
+	"os"
+
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
-var removeData bool
+var skipConfirmation bool
 
 // LocalDevRMCmd represents the stop command
 var LocalDevRMCmd = &cobra.Command{
 	Use:     "remove [sitename]",
 	Aliases: []string{"rm"},
-	Short:   "Remove the local development environment for a site.",
+	Short:   "Remove the local development environment for a site. (Destructive)",
 	Long: `Remove the local development environment for a site. You can run 'ddev remove'
 from a site directory to remove that site, or you can specify a site to remove
-by running 'ddev rm <sitename>. By default, remove is a non-destructive operation and will
-leave database contents intact.
-
-To remove database contents, you may use the --remove-data flag with remove.`,
+by running 'ddev stop <sitename>. Remove is a destructive operation. It will
+remove all containers for the site, destroying database contents in the process.
+Your project code base and files will not be affected.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var siteName string
 
@@ -39,7 +42,14 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
-		err = app.Down(removeData)
+		if !skipConfirmation {
+			fmt.Printf("Is it ok to remove the site %s with all of its containers? All data will be lost. (y/N): ", app.GetName())
+			if !util.AskForConfirmation() {
+				util.Warning("App removal canceled by user.")
+				os.Exit(2)
+			}
+		}
+		err = app.Down()
 		if err != nil {
 			util.Failed("Failed to remove %s: %s", app.GetName(), err)
 		}
@@ -49,6 +59,6 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 }
 
 func init() {
-	LocalDevRMCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored application data (MySQL, logs, etc.)")
+	LocalDevRMCmd.Flags().BoolVarP(&skipConfirmation, "skip-confirmation", "y", false, "Skip confirmation step.")
 	RootCmd.AddCommand(LocalDevRMCmd)
 }

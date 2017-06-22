@@ -18,12 +18,12 @@ Available Commands:
   import-files Import the uploaded files directory of an existing site to the default public upload directory of your application.
   list         List applications that exist locally
   logs         Get the logs from your running services.
-  remove       Remove the local development environment for a site.
   restart      Restart the local development environment for a site.
+  remove       Remove an application's local services.
   sequelpro    Easily connect local site to sequelpro
-  ssh          Starts a shell session in the container for a service. Uses web service by default.
+  ssh          Starts a shell session in the container for a service. Uses the web service by default.
   start        Start the local development environment for a site.
-  stop         Stop the local development environment for a site.
+  stop         Stop an application's local services.
   version      print ddev version and component versions
 
 Use "ddev [command] --help" for more information about a command.
@@ -145,7 +145,7 @@ Successfully imported database for drupal8
 If you want to use import-db without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag.
 
 ### Importing static file assets
-The `ddev import-files` command is provided for importing the static file assets for a site, such as uploaded images and documents. Running this command will provide a prompt for you to specify the location of your asset import. The assets will then be imported to the default public upload directory of the platform for the site. For Drupal sites, this is the "sites/default/files" directory. For WordPress sites, this is the "wp-content/uploads" directory.
+The `ddev import-files` command is provided for importing the static file assets for a site, such as uploaded images and documents. Running this command will provide a prompt for you to specify the location of your asset import. The assets will then be imported to the default public upload directory of the platform for the site. For Drupal sites, this is the "sites/default/files" directory. For WordPress sites, this is the "wp-content/uploads" directory. 
 
 ```
 ➜  ddev import-files
@@ -180,7 +180,7 @@ Successfully imported files for drupal8
 If you want to use import-files without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag.
 
 ## Interacting with your Site
-ddev provides several commands to facilitate interacting with your site in the development environment. These commands can be run within the working directory of your project while the site is running in ddev.
+ddev provides several commands to facilitate interacting with your site in the development environment. These commands can be run within the working directory of your project while the site is running in ddev. 
 
 ### Executing Commands in Containers
 The `ddev exec` command allows you to run shell commands in the container for a ddev service. By default, commands are executed on the web service container, in the docroot path of your site. This allows you to use [the developer tools included in the web container](developer-tools.md). For example, to run the Drush CLI in the web container, you would run `ddev exec drush status`.
@@ -201,7 +201,7 @@ Additional logging can be accessed by using `ddev ssh` to manually review the lo
 You can stop a site's containers without losing data by using `ddev stop` in the working directory of the site. You can also stop any running site's containers by providing the site name as an argument, e.g. `ddev stop <sitename>`.
 
 ## Removing a site
-You can remove a site's containers by running `ddev remove` in the working directory of the site. You can also remove any running site's containers by providing the site name as an argument, e.g. `ddev remove <sitename>`. **Note:** `ddev remove` is non-destructive. It will remove all containers for the site, but will retain the database contents unless the `--remove-data` flag is used. Your project code base and files will not be affected.
+You can remove a site's containers by running `ddev remove` in the working directory of the site. You can also remove any running site's containers by providing the site name as an argument, e.g. `ddev remove <sitename>`. **Note:** `ddev remove` is destructive. It will remove all containers for the site, destroying database contents in the process. Your project code base and files will not be affected.
 
 ## ddev Command Auto-Completion
 ddev bash auto-completion is available. If you have installed ddev via homebrew (on OSX) it will already be installed. Otherwise, you can download the [latest release](https://github.com/drud/ddev/releases) tarball for your platform and the ddev_bash_completions.sh inside it can be installed wherever your bash_completions.d is. For example, `cp ddev_bash_completions.sh /etc/bash_completion.d/ddev`
