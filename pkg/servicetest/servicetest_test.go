@@ -30,24 +30,6 @@ var (
 	ServiceDir   string
 )
 
-func TestMain(m *testing.M) {
-	for i := range TestSites {
-		err := TestSites[i].Prepare()
-		if err != nil {
-			log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
-		}
-	}
-
-	log.Debugln("Running tests.")
-	testRun := m.Run()
-
-	for i := range TestSites {
-		TestSites[i].Cleanup()
-	}
-
-	os.Exit(testRun)
-}
-
 func TestServicesSetup(t *testing.T) {
 	if !testing.Short() {
 		var err error
@@ -64,7 +46,7 @@ func TestServicesSetup(t *testing.T) {
 		})
 		assert.NoError(err)
 	} else {
-		fmt.Println("services tests skipped in short mode")
+		log.Info("services tests skipped in short mode")
 	}
 }
 
@@ -74,63 +56,71 @@ func TestServicesSetup(t *testing.T) {
 func TestServices(t *testing.T) {
 	assert := assert.New(t)
 
-	for _, site := range TestSites {
-		app, err := platform.GetPluginApp("local")
-		assert.NoError(err)
-
-		err = app.Init(site.Dir)
-		assert.NoError(err)
-
-		for _, service := range ServiceFiles {
-			confdir := filepath.Join(app.AppRoot(), ".ddev")
-			err = fileutil.CopyFile(filepath.Join(ServiceDir, service), filepath.Join(confdir, service))
-			assert.NoError(err)
-		}
-
-		err = app.Start()
-		assert.NoError(err)
-
-		for _, service := range ServiceFiles {
-			log.Info("Checking containers for ", service)
-			serviceName := strings.TrimPrefix(service, "docker-compose.")
-			serviceName = strings.TrimSuffix(serviceName, ".yaml")
-
-			labels := map[string]string{
-				"com.ddev.site-name":         app.GetName(),
-				"com.docker.compose.service": serviceName,
+	if len(ServiceFiles) > 0 {
+		for _, site := range TestSites {
+			err := site.Prepare()
+			if err != nil {
+				log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
 			}
 
-			container, err := dockerutil.FindContainerByLabels(labels)
+			app, err := platform.GetPluginApp("local")
 			assert.NoError(err)
-			name := dockerutil.ContainerName(container)
-			check, err := testcommon.ContainerCheck(name, "running")
-			assert.NoError(err)
-			assert.True(check, serviceName, "container is running")
 
-			// check container env for HTTP_EXPOSE ports to check
-			expose := dockerutil.GetContainerEnv("HTTP_EXPOSE", container)
-			if expose != "" {
-				if strings.Contains(expose, ":") {
-					ports := strings.Split(expose, ":")
-					expose = ports[1]
+			err = app.Init(site.Dir)
+			assert.NoError(err)
+
+			for _, service := range ServiceFiles {
+				confdir := filepath.Join(app.AppRoot(), ".ddev")
+				err = fileutil.CopyFile(filepath.Join(ServiceDir, service), filepath.Join(confdir, service))
+				assert.NoError(err)
+			}
+
+			err = app.Start()
+			assert.NoError(err)
+
+			for _, service := range ServiceFiles {
+				log.Info("Checking containers for ", service)
+				serviceName := strings.TrimPrefix(service, "docker-compose.")
+				serviceName = strings.TrimSuffix(serviceName, ".yaml")
+
+				labels := map[string]string{
+					"com.ddev.site-name":         app.GetName(),
+					"com.docker.compose.service": serviceName,
 				}
 
-				containerPorts := container.Ports
-				for _, port := range containerPorts {
-					if string(port.PrivatePort) == expose && port.PublicPort != 0 {
-						fmt.Println("Checking for 200 status for port ", port.PrivatePort)
-						o := util.NewHTTPOptions("http://127.0.0.1:" + string(port.PublicPort))
-						o.ExpectedStatus = 200
-						o.Timeout = 30
-						err = util.EnsureHTTPStatus(o)
-						assert.NoError(err)
+				container, err := dockerutil.FindContainerByLabels(labels)
+				assert.NoError(err)
+				name := dockerutil.ContainerName(container)
+				check, err := testcommon.ContainerCheck(name, "running")
+				assert.NoError(err)
+				assert.True(check, serviceName, "container is running")
+
+				// check container env for HTTP_EXPOSE ports to check
+				expose := dockerutil.GetContainerEnv("HTTP_EXPOSE", container)
+				if expose != "" {
+					if strings.Contains(expose, ":") {
+						ports := strings.Split(expose, ":")
+						expose = ports[1]
+					}
+
+					containerPorts := container.Ports
+					for _, port := range containerPorts {
+						if string(port.PrivatePort) == expose && port.PublicPort != 0 {
+							fmt.Println("Checking for 200 status for port ", port.PrivatePort)
+							o := util.NewHTTPOptions("http://127.0.0.1:" + string(port.PublicPort))
+							o.ExpectedStatus = 200
+							o.Timeout = 30
+							err = util.EnsureHTTPStatus(o)
+							assert.NoError(err)
+						}
 					}
 				}
+
 			}
 
+			err = app.Down()
+			assert.NoError(err)
+			site.Cleanup()
 		}
-
-		err = app.Down()
-		assert.NoError(err)
 	}
 }
