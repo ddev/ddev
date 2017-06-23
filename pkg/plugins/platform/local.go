@@ -452,7 +452,7 @@ func (l *LocalApp) ComposeFiles() []string {
 	return files
 }
 
-// ProcessHook executes commands defined in a ddevapp.Command
+// ProcessHooks executes commands defined in a ddevapp.Command
 func (l *LocalApp) ProcessHooks(commands []ddevapp.Command) error {
 	var err error
 	for _, c := range commands {
