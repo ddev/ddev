@@ -21,7 +21,7 @@ import (
 var (
 	TestSites = []testcommon.TestSite{
 		{
-			Name:                          "TestMainPkgDrupal8",
+			Name:                          "TestServicesDrupal8",
 			SourceURL:                     "https://github.com/drud/drupal8/archive/v0.6.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal8-0.6.0/",
 		},
