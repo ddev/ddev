@@ -57,7 +57,7 @@ func NewHTTPOptions(URL string) *HTTPOptions {
 		URL:            URL,
 		TickerInterval: 20,
 		Timeout:        60,
-		ExpectedStatus: 200,
+		ExpectedStatus: http.StatusOK,
 		Headers:        make(map[string]string),
 	}
 	return &o

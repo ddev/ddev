@@ -74,25 +74,26 @@ func TestServicesSetup(t *testing.T) {
 func TestServices(t *testing.T) {
 	assert := assert.New(t)
 
-	for _, service := range ServiceFiles {
-		fmt.Println("Service tests for ", service)
+	for _, site := range TestSites {
+		app, err := platform.GetPluginApp("local")
+		assert.NoError(err)
 
-		serviceName := strings.TrimPrefix(service, "docker-compose.")
-		serviceName = strings.TrimSuffix(serviceName, ".yaml")
+		err = app.Init(site.Dir)
+		assert.NoError(err)
 
-		for _, site := range TestSites {
-			app, err := platform.GetPluginApp("local")
-			assert.NoError(err)
-
-			err = app.Init(site.Dir)
-			assert.NoError(err)
-
+		for _, service := range ServiceFiles {
 			confdir := filepath.Join(app.AppRoot(), ".ddev")
 			err = fileutil.CopyFile(filepath.Join(ServiceDir, service), filepath.Join(confdir, service))
 			assert.NoError(err)
+		}
 
-			err = app.Start()
-			assert.NoError(err)
+		err = app.Start()
+		assert.NoError(err)
+
+		for _, service := range ServiceFiles {
+			log.Info("Checking containers for ", service)
+			serviceName := strings.TrimPrefix(service, "docker-compose.")
+			serviceName = strings.TrimSuffix(serviceName, ".yaml")
 
 			labels := map[string]string{
 				"com.ddev.site-name":         app.GetName(),
@@ -127,9 +128,9 @@ func TestServices(t *testing.T) {
 				}
 			}
 
-			err = app.Down()
-			assert.NoError(err)
-
 		}
+
+		err = app.Down()
+		assert.NoError(err)
 	}
 }
