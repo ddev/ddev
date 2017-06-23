@@ -247,3 +247,41 @@ func TestValidate(t *testing.T) {
 	err = c.Validate()
 	assert.EqualError(err, fmt.Sprintf("%s is not a valid apptype", c.AppType))
 }
+
+// TestWrite tests writing config values to file
+func TestWrite(t *testing.T) {
+	assert := assert.New(t)
+	testDir := testcommon.CreateTmpDir("TestConfigWrite")
+
+	// This closely resembles the values one would have from NewConfig()
+	c := &Config{
+		ConfigPath: filepath.Join(testDir, "config.yaml"),
+		AppRoot:    testDir,
+		APIVersion: CurrentAppVersion,
+		Platform:   DDevDefaultPlatform,
+		Name:       "TestWrite",
+		WebImage:   version.WebImg + ":" + version.WebTag,
+		DBImage:    version.DBImg + ":" + version.DBTag,
+		DBAImage:   version.DBAImg + ":" + version.DBATag,
+		AppType:    "drupal8",
+	}
+
+	err := c.Write()
+	assert.NoError(err)
+
+	out, err := ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))
+	assert.NoError(err)
+	assert.Contains(string(out), "TestWrite")
+	assert.Contains(string(out), "exec: drush cr")
+
+	c.AppType = "wordpress"
+	err = c.Write()
+	assert.NoError(err)
+
+	out, err = ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))
+	assert.NoError(err)
+	assert.Contains(string(out), "exec: wp search-replace")
+
+	err = os.RemoveAll(testDir)
+	assert.NoError(err)
+}
