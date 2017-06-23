@@ -82,8 +82,8 @@ networks:
 
 // HookTemplate is used to add example extend-commands usage
 const HookTemplate = `
-# Certain ddev commands can be extended to run tasks before or after the
-# the ddev command is executed. See <docurl> for more information on the
+# Certain ddev commands can be extended to run tasks before or after the ddev command is executed.
+# See https://ddev.readthedocs.io/en/latest/users/extending-commands/ for more information on the
 # commands that can be extended and the tasks you can define for them.
 extend-commands:
   post-import-db:`
