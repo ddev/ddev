@@ -181,7 +181,7 @@ func (c *Config) Read() error {
 func (c *Config) Config() error {
 
 	if c.ConfigExists() {
-		fmt.Printf("Editing existing ddev project at %s\n\n", c.AppRoot)
+		util.Warning("You are re-configuring %s. The existing configuration will be replaced.\n\n", c.AppRoot)
 	} else {
 		fmt.Printf("Creating a new ddev project config in the current directory (%s)\n", c.AppRoot)
 		fmt.Printf("Once completed, your configuration will be written to %s\n\n\n", c.ConfigPath)

@@ -85,16 +85,16 @@ const HookTemplate = `
 # Certain ddev commands can be extended to run tasks before or after the ddev command is executed.
 # See https://ddev.readthedocs.io/en/latest/users/extending-commands/ for more information on the
 # commands that can be extended and the tasks you can define for them.
-extend-commands:
-  post-import-db:`
+# extend-commands:
+#   post-import-db:`
 
 // Drupal8Hooks adds a d8-specific extend-commands example for post-import-db
 const Drupal8Hooks = `
-    - exec: drush cr`
+#     - exec: drush cr`
 
 // Drupal7Hooks adds a d7-specific extend-commands example for post-import-db
 const Drupal7Hooks = `
-    - exec: drush cc all`
+#     - exec: drush cc all`
 
 // WordPressHooks adds a wp-specific extend-commands example for post-import-db
 const WordPressHooks = `
