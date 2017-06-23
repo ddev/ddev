@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"regexp"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/appports"
@@ -30,6 +32,9 @@ const DDevTLD = "ddev.local"
 
 // AllowedAppTypes lists the types of site/app that can be used.
 var AllowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
+
+// Regexp pattern to determine if a hostname is valid per RFC 1123.
+var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
@@ -149,21 +154,15 @@ func (c *Config) Config() error {
 		"Existing config": awsutil.Prettify(c),
 	}).Debug("Configuring application")
 
-	namePrompt := "Project name"
-	if c.Name == "" {
-		dir, err := os.Getwd()
-		if err == nil {
-			c.Name = filepath.Base(dir)
-		}
+	err := c.namePrompt()
+	if err != nil {
+		return err
 	}
 
-	namePrompt = fmt.Sprintf("%s (%s)", namePrompt, c.Name)
-	// Define an application name.
-	fmt.Print(namePrompt + ": ")
-	c.Name = util.GetInput(c.Name)
-
-	err := c.docrootPrompt()
-	util.CheckErr(err)
+	err = c.docrootPrompt()
+	if err != nil {
+		return err
+	}
 
 	err = c.appTypePrompt()
 	if err != nil {
@@ -174,6 +173,29 @@ func (c *Config) Config() error {
 	log.WithFields(log.Fields{
 		"Config": awsutil.Prettify(c),
 	}).Debug("Configuration completed")
+
+	return nil
+}
+
+// Validate ensures the configuraton meets ddev's requirements.
+func (c *Config) Validate() error {
+	// validate docroot
+	fullPath := filepath.Join(c.AppRoot, c.Docroot)
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		return fmt.Errorf("no directory could be found at %s. Please enter a valid docroot in your configuration", fullPath)
+	}
+
+	// validate hostname
+	match := hostRegex.MatchString(c.Hostname())
+	if !match {
+		return fmt.Errorf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", c.Hostname())
+	}
+
+	// validate apptype
+	match = IsAllowedAppType(c.AppType)
+	if !match {
+		return fmt.Errorf("%s is not a valid apptype", c.AppType)
+	}
 
 	return nil
 }
@@ -233,8 +255,33 @@ func (c *Config) RenderComposeYAML() (string, error) {
 	return doc.String(), err
 }
 
+// Define an application name.
+func (c *Config) namePrompt() error {
+	namePrompt := "Project name"
+	if c.Name == "" {
+		dir, err := os.Getwd()
+		// if working directory name is invalid for hostnames, we shouldn't suggest it
+		if err == nil && hostRegex.MatchString(filepath.Base(dir)) {
+			c.Name = filepath.Base(dir)
+		}
+	}
+
+	namePrompt = fmt.Sprintf("%s (%s)", namePrompt, c.Name)
+	fmt.Print(namePrompt + ": ")
+	c.Name = util.GetInput(c.Name)
+
+	match := hostRegex.MatchString(c.Hostname())
+	if !match {
+		fmt.Printf("%s is not a valid hostname. Please enter a site name that will allow for a valid hostname.\n See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements \n", c.Hostname())
+		c.Name = ""
+		return c.namePrompt()
+	}
+
+	return nil
+}
+
+// Determine the document root.
 func (c *Config) docrootPrompt() error {
-	// Determine the document root.
 	fmt.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)\n", c.AppRoot)
 	fmt.Println("You may leave this value blank if your site files are in the application root")
 	var docrootPrompt = "Docroot Location"

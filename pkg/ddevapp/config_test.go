@@ -215,3 +215,35 @@ func TestRead(t *testing.T) {
 	assert.Equal(c.AppType, "drupal8")
 	assert.Equal(c.WebImage, "test/testimage:latest")
 }
+
+// TestValidate tests validation of configuration values.
+func TestValidate(t *testing.T) {
+	assert := assert.New(t)
+
+	cwd, err := os.Getwd()
+	assert.NoError(err)
+
+	c := &Config{
+		Name:    "TestValidate",
+		AppRoot: cwd,
+		Docroot: "testing",
+		AppType: "wordpress",
+	}
+
+	err = c.Validate()
+	assert.NoError(err)
+
+	c.Name = "Invalid!"
+	err = c.Validate()
+	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", c.Hostname()))
+
+	c.Name = "valid"
+	c.Docroot = "invalid"
+	err = c.Validate()
+	assert.EqualError(err, fmt.Sprintf("no directory could be found at %s. Please enter a valid docroot in your configuration", filepath.Join(cwd, c.Docroot)))
+
+	c.Docroot = "testing"
+	c.AppType = "potato"
+	err = c.Validate()
+	assert.EqualError(err, fmt.Sprintf("%s is not a valid apptype", c.AppType))
+}
