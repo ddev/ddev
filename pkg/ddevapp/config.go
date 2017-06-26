@@ -65,7 +65,8 @@ type Command struct {
 		Src         string `yaml:"src"`
 		ExtractPath string `yaml:"extract-path"`
 	} `yaml:"import-files,omitempty"`
-	Exec string `yaml:"exec,omitempty"`
+	Exec     string `yaml:"exec,omitempty"`
+	ExecHost string `yaml:"exec-host,omitempty"`
 }
 
 // NewConfig creates a new Config struct with defaults set. It is preferred to using new() directly.

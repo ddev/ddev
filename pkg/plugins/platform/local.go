@@ -457,29 +457,49 @@ func (l *LocalApp) ProcessHooks(commands []ddevapp.Command) error {
 	var err error
 	for _, c := range commands {
 		if c.ImportDB.Src != "" {
-			fmt.Println("--Importing database from ", c.ImportDB.Src, "--")
+			fmt.Printf("--- Importing database from %s ---\n", c.ImportDB.Src)
 			err = l.ImportDB(c.ImportDB.Src, c.ImportDB.ExtractPath)
 			if err != nil {
 				return fmt.Errorf("Database import failed: %v", err)
 			}
-			util.Success("--Database import succeeded--")
+			util.Success("--- Database import succeeded ---")
 		}
 		if c.ImportFiles.Src != "" {
-			fmt.Println("--Importing files from ", c.ImportFiles.Src, "--")
+			fmt.Printf("--- Importing files from %s ---\n", c.ImportFiles.Src)
 			err = l.ImportFiles(c.ImportFiles.Src, c.ImportFiles.ExtractPath)
 			if err != nil {
 				return fmt.Errorf("File import failed: %v", err)
 			}
-			util.Success("--File import succeeded--")
+			util.Success("--- File import succeeded ---\n")
 		}
 		if c.Exec != "" {
-			fmt.Println("--Runing exec: ", c.Exec, "--")
+			fmt.Printf("--- Runing exec command: %s ---\n", c.Exec)
 			args := strings.Split(c.Exec, " ")
 			err = l.Exec("web", true, args...)
 			if err != nil {
 				return fmt.Errorf("Exec failed: %v", err)
 			}
-			util.Success("--Exec command succeeded--")
+			util.Success("--- Exec command succeeded ---")
+		}
+		if c.ExecHost != "" {
+			fmt.Printf("--- Runing host command: %s ---\n", c.ExecHost)
+			args := strings.Split(c.ExecHost, " ")
+			cmd := args[0]
+			args = append(args[:0], args[1:]...)
+
+			// ensure exec-host runs from consistent location
+			cwd, err := os.Getwd()
+			util.CheckErr(err)
+			err = os.Chdir(l.AppRoot())
+			util.CheckErr(err)
+
+			err = exec.RunCommandPipe(cmd, args)
+			dirErr := os.Chdir(cwd)
+			util.CheckErr(dirErr)
+			if err != nil {
+				return fmt.Errorf("Host command failed: %v", err)
+			}
+			util.Success("--- Host command succeeded ---")
 		}
 	}
 
