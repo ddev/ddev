@@ -12,7 +12,7 @@ extend-commands:
 
 ## Supported Command Hooks
 
-- `pre-start`: Hooks into "ddev start". Execute tasks before the site environment starts.
+- `pre-start`: Hooks into "ddev start". Execute tasks before the site environment starts. **Note:** Only `exec-host` tasks can be run successfully for pre-start. See Supported Tasks below for more info.
 - `post-start`: Hooks into "ddev start". Execute tasks after the site environment has started
 - `pre-import-db`: Hooks into "ddev import-db". Execute tasks before database import
 - `post-import-db`: Hooks into "ddev import-db". Execute tasks after database import
@@ -33,6 +33,20 @@ _Use drush to clear the drupal cache after database import_
 extend-commands:
   post-import-db:
     - exec: "drush cc all"
+```
+
+- `exec-host`: Execute a shell command on your system.
+
+Value: string providing the command to run.
+
+Example:
+
+_Run a git pull before starting the site_
+
+```
+extend-commands:
+  pre-start:
+    - exec: "git pull origin master"
 ```
 
 - `import-db`: Import the database of an existing site to the local environment.
