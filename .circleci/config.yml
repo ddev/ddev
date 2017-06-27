@@ -76,8 +76,6 @@ jobs:
             git submodule update --init && git submodule update --remote
             make -f nightly_build.mak clean
             make -f nightly_build.mak -s --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION DBATag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
-            docker volume list
-            docker volume prune -f
           no_output_timeout: "20m"
           name: Run full nightly build
 
@@ -87,7 +85,10 @@ jobs:
 
       # Run the built-in ddev tests with the executables just built.
       - run:
-          command: make -s test
+          command: |
+            docker volume list
+            docker volume prune -f
+            make -s test
           name: ddev tests
           no_output_timeout: "20m"
 
@@ -103,7 +104,10 @@ jobs:
 
       # Run the built-in ddev tests with the clean binaries just built.
       - run:
-          command: make -s test
+          command: |
+            docker volume list
+            docker volume prune -f
+            make -s test
           name: ddev tests
           no_output_timeout: "20m"
 
