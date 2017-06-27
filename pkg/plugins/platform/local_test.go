@@ -474,7 +474,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	// Call the Cleanup command()
-	err = Cleanup(app)
+	err = Cleanup(app, true)
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {

@@ -661,7 +661,7 @@ func (l *LocalApp) Down(removeData bool) error {
 	err := dockerutil.ComposeCmd(l.ComposeFiles(), args...)
 	if err != nil {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
-		return Cleanup(l)
+		return Cleanup(l, removeData)
 	}
 
 	return StopRouter()

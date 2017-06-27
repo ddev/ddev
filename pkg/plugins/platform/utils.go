@@ -107,7 +107,7 @@ func RenderAppRow(table *uitable.Table, site App) {
 }
 
 // Cleanup will clean up ddev apps even if the composer file has been deleted.
-func Cleanup(app App) error {
+func Cleanup(app App, removeData bool) error {
 	client := dockerutil.GetDockerClient()
 
 	// Find all containers which match the current site name.
@@ -145,16 +145,18 @@ func Cleanup(app App) error {
 		}
 	}
 
-	volumes, err := dockerutil.GetVolumes()
-	if err != nil {
-		return err
-	}
+	if removeData {
+		volumes, err := dockerutil.GetVolumes()
+		if err != nil {
+			return err
+		}
 
-	for _, volume := range volumes {
-		if volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()) {
-			err := client.RemoveVolume(volume.Name)
-			if err != nil {
-				return fmt.Errorf("could not remove volume %s: %v", volume.Name, err)
+		for _, volume := range volumes {
+			if volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()) {
+				err := client.RemoveVolume(volume.Name)
+				if err != nil {
+					return fmt.Errorf("could not remove volume %s: %v", volume.Name, err)
+				}
 			}
 		}
 	}
