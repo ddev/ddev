@@ -483,6 +483,13 @@ func TestCleanupWithoutCompose(t *testing.T) {
 		assert.Error(err)
 	}
 
+	// Ensure there are no volumes associated with this project
+	volumes, err := dockerutil.GetVolumes()
+	assert.NoError(err)
+	for _, volume := range volumes {
+		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
+	}
+
 	revertDir()
 }
 
