@@ -145,6 +145,20 @@ func Cleanup(app App) error {
 		}
 	}
 
+	volumes, err := dockerutil.GetVolumes()
+	if err != nil {
+		return err
+	}
+
+	for _, volume := range volumes {
+		if volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()) {
+			err := client.RemoveVolume(volume.Name)
+			if err != nil {
+				return fmt.Errorf("could not remove volume %s: %v", volume.Name, err)
+			}
+		}
+	}
+
 	return StopRouter()
 }
 
