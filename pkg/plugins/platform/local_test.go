@@ -443,7 +443,7 @@ func TestLocalRemove(t *testing.T) {
 		assert.NoError(err)
 
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalRemove", site.Name))
-		err = app.Down()
+		err = app.Down(true)
 		assert.NoError(err)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
@@ -474,12 +474,19 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	// Call the Cleanup command()
-	err = Cleanup(app)
+	err = Cleanup(app, true)
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
 		_, err := constructContainerName(containerType, app)
 		assert.Error(err)
+	}
+
+	// Ensure there are no volumes associated with this project
+	volumes, err := dockerutil.GetVolumes()
+	assert.NoError(err)
+	for _, volume := range volumes {
+		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
 
 	revertDir()

@@ -275,3 +275,9 @@ func GetPublishedPort(privatePort int64, container docker.APIContainers) int64 {
 	}
 	return 0
 }
+
+// GetVolumes returns a list of all docker volumes on the host.
+func GetVolumes() ([]docker.Volume, error) {
+	client := GetDockerClient()
+	return client.ListVolumes(docker.ListVolumesOptions{})
+}
