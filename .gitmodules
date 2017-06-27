@@ -15,4 +15,4 @@
 	url = git@github.com:drud/docker.ddev-router.git
 [submodule "containers/docker.mysql-local"]
 	path = containers/docker.mysql-local
-	url = git@github.com:drud/docker.mysql-local.git
+	url = git@github.com:tannerjfco/mysql-local-test.git
