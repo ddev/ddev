@@ -9,7 +9,7 @@ This recipe adds an Apache Solr 5.4 container to a project. It will setup a solr
 
 **Installation:**
 
-- Copy [docker-compose.solr.yaml]() to the .ddev folder for your project.
+- Copy [docker-compose.solr.yaml](https://github.com/drud/ddev/tree/master/services/docker-compose.solr.yaml) to the .ddev folder for your project.
 - Create the folder path .ddev/solr/conf.
 - Copy the solr configuration files for your project to .ddev/solr/conf. _e.g., using Drupal Search API Solr, you would copy the solr-conf/5.x/ contents from the module code base into .ddev/solr/conf._
 - Ensure the configuration files must be present before running `ddev start`.
