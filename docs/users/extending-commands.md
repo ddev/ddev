@@ -23,7 +23,7 @@ extend-commands:
 
 - `exec`: Execute a shell command in the web service container.
 
-Value: string providing the command to run.
+Value: string providing the command to run. Commands requiring user interaction are not supported.
 
 Example:
 
@@ -37,7 +37,7 @@ extend-commands:
 
 - `exec-host`: Execute a shell command on your system.
 
-Value: string providing the command to run.
+Value: string providing the command to run. Commands requiring user interaction are not supported.
 
 Example:
 
