@@ -157,10 +157,9 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	var extPathPrompt bool
 	dbPath := l.AppConfig.ImportDir
 
-	preCmds := l.AppConfig.Commands["pre-import-db"]
-	if len(preCmds) > 0 {
+	if preCmds := l.AppConfig.Commands["pre-import-db"]; len(preCmds) > 0 {
 		fmt.Println("Executing pre-import commands...")
-		err := l.ProcessHooks(preCmds)
+		err := l.ProcessHooks("pre-import-db")
 		if err != nil {
 			return err
 		}
@@ -259,10 +258,9 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 		return fmt.Errorf("failed to clean up %s after import: %v", dbPath, err)
 	}
 
-	postCmds := l.AppConfig.Commands["post-import-db"]
-	if len(postCmds) > 0 {
+	if postCmds := l.AppConfig.Commands["post-import-db"]; len(postCmds) > 0 {
 		fmt.Println("Executing post-import commands...")
-		err := l.ProcessHooks(postCmds)
+		err := l.ProcessHooks("post-import-db")
 		if err != nil {
 			return err
 		}
@@ -316,10 +314,9 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 
 	l.DockerEnv()
 
-	preCmds := l.AppConfig.Commands["pre-import-files"]
-	if len(preCmds) > 0 {
-		fmt.Println("Executing pre-start commands...")
-		err := l.ProcessHooks(preCmds)
+	if preCmds := l.AppConfig.Commands["pre-import-files"]; len(preCmds) > 0 {
+		fmt.Println("Executing pre-import-files commands...")
+		err := l.ProcessHooks("pre-import-files")
 		if err != nil {
 			return err
 		}
@@ -409,10 +406,9 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 		}
 	}
 
-	postCmds := l.AppConfig.Commands["post-import-files"]
-	if len(postCmds) > 0 {
+	if postCmds := l.AppConfig.Commands["post-import-files"]; len(postCmds) > 0 {
 		fmt.Println("Executing post-import commands...")
-		err := l.ProcessHooks(postCmds)
+		err := l.ProcessHooks("post-import-files")
 		if err != nil {
 			return err
 		}
@@ -453,33 +449,34 @@ func (l *LocalApp) ComposeFiles() []string {
 }
 
 // ProcessHooks executes commands defined in a ddevapp.Command
-func (l *LocalApp) ProcessHooks(commands []ddevapp.Command) error {
+func (l *LocalApp) ProcessHooks(hookName string) error {
 	var err error
-	for _, c := range commands {
+
+	for _, c := range l.AppConfig.Commands[hookName] {
 		if c.ImportDB.Src != "" {
 			fmt.Printf("--- Importing database from %s ---\n", c.ImportDB.Src)
 			err = l.ImportDB(c.ImportDB.Src, c.ImportDB.ExtractPath)
 			if err != nil {
-				return fmt.Errorf("Database import failed: %v", err)
+				return fmt.Errorf("%s database import failed: %v", hookName, err)
 			}
-			util.Success("--- Database import succeeded ---")
+			util.Success("--- %s database import succeeded ---", hookName)
 		}
 		if c.ImportFiles.Src != "" {
 			fmt.Printf("--- Importing files from %s ---\n", c.ImportFiles.Src)
 			err = l.ImportFiles(c.ImportFiles.Src, c.ImportFiles.ExtractPath)
 			if err != nil {
-				return fmt.Errorf("File import failed: %v", err)
+				return fmt.Errorf("%s file import failed: %v", hookName, err)
 			}
-			util.Success("--- File import succeeded ---\n")
+			util.Success("--- %s file import succeeded ---\n", hookName)
 		}
 		if c.Exec != "" {
 			fmt.Printf("--- Runing exec command: %s ---\n", c.Exec)
 			args := strings.Split(c.Exec, " ")
 			err = l.Exec("web", true, args...)
 			if err != nil {
-				return fmt.Errorf("Exec failed: %v", err)
+				return fmt.Errorf("%s exec failed: %v", hookName, err)
 			}
-			util.Success("--- Exec command succeeded ---")
+			util.Success("--- %s exec command succeeded ---", hookName)
 		}
 		if c.ExecHost != "" {
 			fmt.Printf("--- Runing host command: %s ---\n", c.ExecHost)
@@ -497,9 +494,9 @@ func (l *LocalApp) ProcessHooks(commands []ddevapp.Command) error {
 			dirErr := os.Chdir(cwd)
 			util.CheckErr(dirErr)
 			if err != nil {
-				return fmt.Errorf("Host command failed: %v", err)
+				return fmt.Errorf("%s host command failed: %v", hookName, err)
 			}
-			util.Success("--- Host command succeeded ---")
+			util.Success("--- %s host command succeeded ---", hookName)
 		}
 	}
 
@@ -510,10 +507,9 @@ func (l *LocalApp) ProcessHooks(commands []ddevapp.Command) error {
 func (l *LocalApp) Start() error {
 	l.DockerEnv()
 
-	preCmds := l.AppConfig.Commands["pre-start"]
-	if len(preCmds) > 0 {
+	if preCmds := l.AppConfig.Commands["pre-start"]; len(preCmds) > 0 {
 		fmt.Println("Executing pre-start commands...")
-		err := l.ProcessHooks(preCmds)
+		err := l.ProcessHooks("pre-start")
 		if err != nil {
 			return err
 		}
@@ -554,10 +550,9 @@ func (l *LocalApp) Start() error {
 		return err
 	}
 
-	postCmds := l.AppConfig.Commands["post-start"]
-	if len(postCmds) > 0 {
+	if postCmds := l.AppConfig.Commands["post-start"]; len(postCmds) > 0 {
 		fmt.Println("Executing post-start commands...")
-		err := l.ProcessHooks(postCmds)
+		err := l.ProcessHooks("post-start")
 		if err != nil {
 			return err
 		}
