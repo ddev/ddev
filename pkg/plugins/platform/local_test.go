@@ -412,7 +412,7 @@ func TestProcessHooks(t *testing.T) {
 		}
 
 		stdout := testcommon.CaptureStdOut()
-		err = l.ProcessHooks(l.AppConfig.Commands["hook-test"])
+		err = l.ProcessHooks("hook-test")
 		assert.NoError(err)
 		out := stdout()
 

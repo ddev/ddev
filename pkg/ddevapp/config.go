@@ -136,6 +136,12 @@ func (c *Config) Read() error {
 		return err
 	}
 
+	// validate extend command keys
+	err = validateCommandYaml(source)
+	if err != nil {
+		return err
+	}
+
 	// Read config values from file.
 	err = yaml.Unmarshal(source, c)
 	if err != nil {
@@ -447,4 +453,61 @@ func (c *Config) setSiteSettingsPath(appType string) {
 	}
 
 	c.SiteSettingsPath = settingsFilePath
+}
+
+// validateCommandYaml validates command hooks and tasks defined in extend-commands for config.yaml
+func validateCommandYaml(source []byte) error {
+	validHooks := []string{
+		"pre-start",
+		"post-start",
+		"pre-import-db",
+		"post-import-db",
+		"pre-import-files",
+		"post-import-files",
+	}
+
+	validTasks := []string{
+		"exec",
+		"exec-host",
+		"import-db",
+		"import-files",
+	}
+
+	type Validate struct {
+		Commands map[string][]map[string]interface{} `yaml:"extend-commands,omitempty"`
+	}
+	val := &Validate{}
+
+	err := yaml.Unmarshal(source, val)
+	if err != nil {
+		return err
+	}
+
+	for command, tasks := range val.Commands {
+		var match bool
+		for _, hook := range validHooks {
+			if command == hook {
+				match = true
+			}
+		}
+		if !match {
+			return fmt.Errorf("invalid command hook %s defined for extend-commands in config.yaml", command)
+		}
+		match = false
+		for _, taskSet := range tasks {
+			for taskName := range taskSet {
+				for _, validTask := range validTasks {
+					if taskName == validTask {
+						match = true
+					}
+				}
+				if !match {
+					return fmt.Errorf("invalid task '%s' defined for %s extend-commands in config.yaml", taskName, command)
+				}
+			}
+		}
+
+	}
+
+	return nil
 }
