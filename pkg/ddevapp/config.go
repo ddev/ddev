@@ -48,14 +48,14 @@ type Config struct {
 	ConfigPath string `yaml:"-"`
 	AppRoot    string `yaml:"-"`
 	Platform   string `yaml:"-"`
+	DataDir    string `yaml:"-"`
+	ImportDir  string `yaml:"-"`
 }
 
 // NewConfig creates a new Config struct with defaults set. It is preferred to using new() directly.
 func NewConfig(AppRoot string) (*Config, error) {
 	// Set defaults.
 	c := &Config{}
-	err := prepLocalSiteDirs(AppRoot)
-	util.CheckErr(err)
 	c.ConfigPath = filepath.Join(AppRoot, ".ddev", "config.yaml")
 	c.AppRoot = AppRoot
 	c.APIVersion = CurrentAppVersion
@@ -70,7 +70,7 @@ func NewConfig(AppRoot string) (*Config, error) {
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
-	err = c.Read()
+	err := c.Read()
 	if err != nil {
 		return c, err
 	}
@@ -241,9 +241,7 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 	templateVars := map[string]string{
-		"name": c.Name,
-		// path.Join is desired over filepath.Join here,
-		// as we always want a unix-style path for the mount.
+		"name":        c.Name,
 		"plugin":      "ddev",
 		"appType":     c.AppType,
 		"mailhogport": appports.GetPort("mailhog"),
@@ -394,30 +392,4 @@ func determineAppType(basePath string) (string, error) {
 	}
 
 	return "", errors.New("determineAppType() couldn't determine app's type")
-}
-
-// prepLocalSiteDirs creates a site's directories for local dev in .ddev
-func prepLocalSiteDirs(base string) error {
-	dirs := []string{
-		".ddev",
-		".ddev/import-db",
-		".ddev/mysql",
-	}
-	for _, d := range dirs {
-		dirPath := filepath.Join(base, d)
-		fileInfo, err := os.Stat(dirPath)
-
-		if os.IsNotExist(err) { // If it doesn't exist, create it.
-			err := os.MkdirAll(dirPath, os.FileMode(int(0774)))
-			if err != nil {
-				return fmt.Errorf("Failed to create directory %s, err: %v", dirPath, err)
-			}
-		} else if err == nil && fileInfo.IsDir() { // If the directory exists, we're fine and don't have to create it.
-			continue
-		} else { // But otherwise it must have existed as a file, so bail
-			return fmt.Errorf("Error where trying to create directory %s, err: %v", dirPath, err)
-		}
-	}
-
-	return nil
 }

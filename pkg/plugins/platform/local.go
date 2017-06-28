@@ -30,6 +30,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 	"github.com/lextoumbourou/goodhosts"
+	homedir "github.com/mitchellh/go-homedir"
 )
 
 const containerWaitTimeout = 35
@@ -430,7 +431,12 @@ func (l *LocalApp) Start() error {
 		}
 	}
 
-	err := l.AddHostsEntry()
+	err := l.prepSiteDirs()
+	if err != nil {
+		return err
+	}
+
+	err = l.AddHostsEntry()
 	if err != nil {
 		return err
 	}
@@ -509,6 +515,8 @@ func (l *LocalApp) DockerEnv() {
 		"DDEV_WEBIMAGE":        l.AppConfig.WebImage,
 		"DDEV_APPROOT":         l.AppConfig.AppRoot,
 		"DDEV_DOCROOT":         l.AppConfig.Docroot,
+		"DDEV_DATADIR":         l.AppConfig.DataDir,
+		"DDEV_IMPORTDIR":       l.AppConfig.ImportDir,
 		"DDEV_URL":             l.URL(),
 		"DDEV_HOSTNAME":        l.HostName(),
 		"DDEV_UID":             "",
@@ -710,6 +718,42 @@ func (l *LocalApp) AddHostsEntry() error {
 	fmt.Println("Please enter your password if prompted.")
 	err = exec.RunCommandPipe("sudo", hostnameArgs)
 	return err
+}
+
+// prepSiteDirs creates a site's directories for db container mounts
+func (l *LocalApp) prepSiteDirs() error {
+	home, err := homedir.Dir()
+	if err != nil {
+		return err
+	}
+
+	dirs := []string{
+		"import-db",
+		"mysql",
+	}
+
+	dirPath := filepath.Join(home, ".ddev", l.GetName())
+
+	for _, dir := range dirs {
+		dirPath := filepath.Join(dirPath, dir)
+		fileInfo, err := os.Stat(dirPath)
+
+		if os.IsNotExist(err) { // If it doesn't exist, create it.
+			err := os.MkdirAll(dirPath, os.FileMode(int(0774)))
+			if err != nil {
+				return fmt.Errorf("Failed to create directory %s, err: %v", dirPath, err)
+			}
+		} else if err == nil && fileInfo.IsDir() { // If the directory exists, we're fine and don't have to create it.
+			continue
+		} else { // But otherwise it must have existed as a file, so bail
+			return fmt.Errorf("Error where trying to create directory %s, err: %v", dirPath, err)
+		}
+	}
+
+	l.AppConfig.DataDir = filepath.Join(dirPath, "mysql")
+	l.AppConfig.ImportDir = filepath.Join(dirPath, "import-db")
+
+	return nil
 }
 
 // GetActiveAppRoot returns the fully rooted directory of the active app, or an error
