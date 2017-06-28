@@ -661,8 +661,18 @@ func (l *LocalApp) Config() error {
 }
 
 // Down stops the docker containers for the local project.
-func (l *LocalApp) Down() error {
+func (l *LocalApp) Down(removeData bool) error {
 	l.DockerEnv()
+
+	if removeData {
+		dir := filepath.Dir(l.AppConfig.DataDir)
+		err := os.RemoveAll(dir)
+		if err != nil {
+			return fmt.Errorf("failed to remove data directories: %v", err)
+		}
+		util.Success("Application data removed")
+	}
+
 	err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
 	if err != nil {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
