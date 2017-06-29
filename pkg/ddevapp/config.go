@@ -16,6 +16,7 @@ import (
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -133,6 +134,15 @@ func (c *Config) Read() error {
 	if c.DBAImage == "" {
 		c.DBAImage = version.DBAImg + ":" + version.DBATag
 	}
+
+	dirPath, err := homedir.Dir()
+	if err != nil {
+		return err
+	}
+
+	dirPath = filepath.Join(dirPath, ".ddev", c.Name)
+	c.DataDir = filepath.Join(dirPath, "mysql")
+	c.ImportDir = filepath.Join(dirPath, "import-db")
 
 	c.setSiteSettingsPath(c.AppType)
 

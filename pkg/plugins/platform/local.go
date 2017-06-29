@@ -30,7 +30,6 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 	"github.com/lextoumbourou/goodhosts"
-	homedir "github.com/mitchellh/go-homedir"
 )
 
 const containerWaitTimeout = 35
@@ -156,11 +155,11 @@ func (l *LocalApp) GetName() string {
 func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	l.DockerEnv()
 	var extPathPrompt bool
-	dbPath := filepath.Join(l.AppRoot(), ".ddev", "import-db")
+	dbPath := l.AppConfig.ImportDir
 
 	err := fileutil.PurgeDirectory(dbPath)
 	if err != nil {
-		return fmt.Errorf("failed to cleanup .ddev/import-db before import: %v", err)
+		return fmt.Errorf("failed to cleanup %s before import: %v", dbPath, err)
 	}
 
 	if imPath == "" {
@@ -733,36 +732,26 @@ func (l *LocalApp) AddHostsEntry() error {
 
 // prepSiteDirs creates a site's directories for db container mounts
 func (l *LocalApp) prepSiteDirs() error {
-	home, err := homedir.Dir()
-	if err != nil {
-		return err
-	}
 
 	dirs := []string{
-		"import-db",
-		"mysql",
+		l.AppConfig.DataDir,
+		l.AppConfig.ImportDir,
 	}
 
-	dirPath := filepath.Join(home, ".ddev", l.GetName())
-
 	for _, dir := range dirs {
-		dirPath := filepath.Join(dirPath, dir)
-		fileInfo, err := os.Stat(dirPath)
+		fileInfo, err := os.Stat(dir)
 
 		if os.IsNotExist(err) { // If it doesn't exist, create it.
-			err := os.MkdirAll(dirPath, os.FileMode(int(0774)))
+			err := os.MkdirAll(dir, os.FileMode(int(0774)))
 			if err != nil {
-				return fmt.Errorf("Failed to create directory %s, err: %v", dirPath, err)
+				return fmt.Errorf("Failed to create directory %s, err: %v", dir, err)
 			}
 		} else if err == nil && fileInfo.IsDir() { // If the directory exists, we're fine and don't have to create it.
 			continue
 		} else { // But otherwise it must have existed as a file, so bail
-			return fmt.Errorf("Error where trying to create directory %s, err: %v", dirPath, err)
+			return fmt.Errorf("Error where trying to create directory %s, err: %v", dir, err)
 		}
 	}
-
-	l.AppConfig.DataDir = filepath.Join(dirPath, "mysql")
-	l.AppConfig.ImportDir = filepath.Join(dirPath, "import-db")
 
 	return nil
 }

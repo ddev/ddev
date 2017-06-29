@@ -16,6 +16,8 @@ import (
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
+	docker "github.com/fsouza/go-dockerclient"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -444,7 +446,7 @@ func TestLocalRemove(t *testing.T) {
 		assert.NoError(err)
 
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalRemove", site.Name))
-		err = app.Down()
+		err = app.Down(true)
 		assert.NoError(err)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
@@ -474,6 +476,13 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
+	// Cleanup the site data dirs - this would occur before Cleanup() in real usage
+	home, err := homedir.Dir()
+	assert.NoError(err)
+	dir := filepath.Join(home, ".ddev", site.Name)
+	err = os.RemoveAll(dir)
+	assert.NoError(err)
+
 	// Call the Cleanup command()
 	err = platform.Cleanup(app)
 	assert.NoError(err)
@@ -484,7 +493,8 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	}
 
 	// Ensure there are no volumes associated with this project
-	volumes, err := dockerutil.GetVolumes()
+	client := dockerutil.GetDockerClient()
+	volumes, err := client.ListVolumes(docker.ListVolumesOptions{})
 	assert.NoError(err)
 	for _, volume := range volumes {
 		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))

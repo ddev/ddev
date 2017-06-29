@@ -145,7 +145,7 @@ func Cleanup(app App) error {
 		}
 	}
 
-	volumes, err := dockerutil.GetVolumes()
+	volumes, err := client.ListVolumes(docker.ListVolumesOptions{})
 	if err != nil {
 		return err
 	}
