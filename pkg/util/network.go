@@ -81,6 +81,7 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 		return errors.New("Redirect")
 	}
 
+	var respCode int
 	queryTicker := time.NewTicker(time.Second * tickerInt).C
 	for {
 		select {
@@ -105,7 +106,7 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 
 			if err == nil {
 				defer CheckClose(resp.Body)
-				if resp.StatusCode == o.ExpectedStatus {
+				if o.ExpectedStatus != 0 && resp.StatusCode == o.ExpectedStatus {
 					// Log expected vs. actual if we do not get a match.
 					log.WithFields(log.Fields{
 						"URL":      o.URL,
@@ -121,10 +122,12 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 					"expected": o.ExpectedStatus,
 					"got":      resp.StatusCode,
 				}).Info("HTTP Status could not be matched")
+
+				respCode = resp.StatusCode
 			}
 
 		case <-giveUp:
-			return fmt.Errorf("No deployment found after waiting %d seconds", o.Timeout)
+			return fmt.Errorf("timed out after %d seconds. Got status %d, wanted %d", o.Timeout, respCode, o.ExpectedStatus)
 		}
 	}
 }
