@@ -666,7 +666,14 @@ func (l *LocalApp) Down(removeData bool) error {
 			}
 		}
 		dir := filepath.Dir(l.AppConfig.DataDir)
-		err := os.RemoveAll(dir)
+		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
+		// are writable before we attempt to remove them.
+		err := fileutil.PurgeDirectory(dir)
+		if err != nil {
+			return fmt.Errorf("failed to remove data directories: %v", err)
+		}
+		// PurgeDirectory leaves the directory itself in place, so we remove it here.
+		err = os.RemoveAll(dir)
 		if err != nil {
 			return fmt.Errorf("failed to remove data directories: %v", err)
 		}
