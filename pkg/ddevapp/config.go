@@ -133,13 +133,13 @@ func (c *Config) Write() error {
 func (c *Config) Read() error {
 	source, err := ioutil.ReadFile(c.ConfigPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not find an active ddev configuration, have you run 'ddev config'? %v", err)
 	}
 
 	// validate extend command keys
 	err = validateCommandYaml(source)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid configuration: %v", err)
 	}
 
 	// Read config values from file.

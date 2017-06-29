@@ -48,7 +48,7 @@ func (l *LocalApp) GetType() string {
 func (l *LocalApp) Init(basePath string) error {
 	config, err := ddevapp.NewConfig(basePath)
 	if err != nil {
-		return fmt.Errorf("could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+		return err
 	}
 
 	err = config.Validate()
