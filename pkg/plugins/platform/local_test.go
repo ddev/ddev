@@ -416,8 +416,8 @@ func TestProcessHooks(t *testing.T) {
 		assert.NoError(err)
 		out := stdout()
 
-		assert.Contains(out, "--- Runing exec command: pwd ---")
-		assert.Contains(out, "--- Runing host command: pwd ---")
+		assert.Contains(out, "--- Running exec command: pwd ---")
+		assert.Contains(out, "--- Running host command: pwd ---")
 		assert.Contains(out, fmt.Sprintf("--- Importing database from %s ---", testImport))
 		assert.Contains(out, fmt.Sprintf("--- Importing files from %s ---", testImport))
 
