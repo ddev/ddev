@@ -41,12 +41,12 @@ Value: string providing the command to run. Commands requiring user interaction 
 
 Example:
 
-_Run a git pull before starting the site_
+_Run "composer install" from your system before starting the site (composer would nee to be installed on your system)_
 
 ```
 extend-commands:
   pre-start:
-    - exec: "git pull origin master"
+    - exec: "composer install"
 ```
 
 - `import-db`: Import the database of an existing site to the local environment.
@@ -76,14 +76,12 @@ Values:
 
 Example:
 
-_Import files after importing database_
+_Perform a search-replace on the database of a WordPress site after import to update its URL_
 
 ```
 extend-commands:
   post-import-db:
-    - import-files:
-        src: "~/Downloads/site-archive.tar.gz"
-        extract-path: "docroot/sites/default/files"
+    - exec: "wp search-replace https://www.myproductionsite.com http://mylocalsite.ddev.local"
 ```
 
 ## Full Example
