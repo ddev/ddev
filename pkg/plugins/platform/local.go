@@ -157,15 +157,12 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	var extPathPrompt bool
 	dbPath := l.AppConfig.ImportDir
 
-	if preCmds := l.AppConfig.Commands["pre-import-db"]; len(preCmds) > 0 {
-		fmt.Println("Executing pre-import commands...")
-		err := l.ProcessHooks("pre-import-db")
-		if err != nil {
-			return err
-		}
+	err := l.ProcessHooks("pre-import-db")
+	if err != nil {
+		return err
 	}
 
-	err := fileutil.PurgeDirectory(dbPath)
+	err = fileutil.PurgeDirectory(dbPath)
 	if err != nil {
 		return fmt.Errorf("failed to cleanup %s before import: %v", dbPath, err)
 	}
@@ -258,12 +255,9 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 		return fmt.Errorf("failed to clean up %s after import: %v", dbPath, err)
 	}
 
-	if postCmds := l.AppConfig.Commands["post-import-db"]; len(postCmds) > 0 {
-		fmt.Println("Executing post-import commands...")
-		err := l.ProcessHooks("post-import-db")
-		if err != nil {
-			return err
-		}
+	err = l.ProcessHooks("post-import-db")
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -314,12 +308,9 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 
 	l.DockerEnv()
 
-	if preCmds := l.AppConfig.Commands["pre-import-files"]; len(preCmds) > 0 {
-		fmt.Println("Executing pre-import-files commands...")
-		err := l.ProcessHooks("pre-import-files")
-		if err != nil {
-			return err
-		}
+	err := l.ProcessHooks("pre-import-files")
+	if err != nil {
+		return err
 	}
 
 	if imPath == "" {
@@ -350,7 +341,7 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 	}
 
 	// parent of destination dir should be writable
-	err := os.Chmod(filepath.Dir(destPath), 0755)
+	err = os.Chmod(filepath.Dir(destPath), 0755)
 	if err != nil {
 		return err
 	}
@@ -406,12 +397,9 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 		}
 	}
 
-	if postCmds := l.AppConfig.Commands["post-import-files"]; len(postCmds) > 0 {
-		fmt.Println("Executing post-import commands...")
-		err := l.ProcessHooks("post-import-files")
-		if err != nil {
-			return err
-		}
+	err = l.ProcessHooks("post-import-files")
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -452,6 +440,10 @@ func (l *LocalApp) ComposeFiles() []string {
 func (l *LocalApp) ProcessHooks(hookName string) error {
 	var err error
 
+	if cmds := l.AppConfig.Commands[hookName]; len(cmds) > 0 {
+		fmt.Printf("Executing %s commands...\n", hookName)
+	}
+
 	for _, c := range l.AppConfig.Commands[hookName] {
 		if c.ImportDB.Src != "" {
 			fmt.Printf("--- Importing database from %s ---\n", c.ImportDB.Src)
@@ -470,7 +462,7 @@ func (l *LocalApp) ProcessHooks(hookName string) error {
 			util.Success("--- %s file import succeeded ---\n", hookName)
 		}
 		if c.Exec != "" {
-			fmt.Printf("--- Runing exec command: %s ---\n", c.Exec)
+			fmt.Printf("--- Running exec command: %s ---\n", c.Exec)
 			args := strings.Split(c.Exec, " ")
 			err = l.Exec("web", true, args...)
 			if err != nil {
@@ -479,7 +471,7 @@ func (l *LocalApp) ProcessHooks(hookName string) error {
 			util.Success("--- %s exec command succeeded ---", hookName)
 		}
 		if c.ExecHost != "" {
-			fmt.Printf("--- Runing host command: %s ---\n", c.ExecHost)
+			fmt.Printf("--- Running host command: %s ---\n", c.ExecHost)
 			args := strings.Split(c.ExecHost, " ")
 			cmd := args[0]
 			args = append(args[:0], args[1:]...)
@@ -507,12 +499,9 @@ func (l *LocalApp) ProcessHooks(hookName string) error {
 func (l *LocalApp) Start() error {
 	l.DockerEnv()
 
-	if preCmds := l.AppConfig.Commands["pre-start"]; len(preCmds) > 0 {
-		fmt.Println("Executing pre-start commands...")
-		err := l.ProcessHooks("pre-start")
-		if err != nil {
-			return err
-		}
+	err := l.ProcessHooks("pre-start")
+	if err != nil {
+		return err
 	}
 
 	// Write docker-compose.yaml (if it doesn't exist).
@@ -525,7 +514,7 @@ func (l *LocalApp) Start() error {
 		}
 	}
 
-	err := l.prepSiteDirs()
+	err = l.prepSiteDirs()
 	if err != nil {
 		return err
 	}
@@ -550,12 +539,9 @@ func (l *LocalApp) Start() error {
 		return err
 	}
 
-	if postCmds := l.AppConfig.Commands["post-start"]; len(postCmds) > 0 {
-		fmt.Println("Executing post-start commands...")
-		err := l.ProcessHooks("post-start")
-		if err != nil {
-			return err
-		}
+	err = l.ProcessHooks("post-start")
+	if err != nil {
+		return err
 	}
 
 	return nil
