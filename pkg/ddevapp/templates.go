@@ -20,6 +20,9 @@ services:
       com.ddev.app-type: {{ .appType }}
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
+    environment:
+      - DDEV_UID=$DDEV_UID
+      - DDEV_GID=$DDEV_GID
   web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
