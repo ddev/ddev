@@ -4,7 +4,10 @@
 ## What you expected to happen:
 
 
-## How to reproduce it (as minimally and precisely as possible):
+## Version: Please include the output of `ddev version` and the project's .ddev/config.yaml.
+
+
+## How to reproduce this:
 
 
 ## Anything else do we need to know:
