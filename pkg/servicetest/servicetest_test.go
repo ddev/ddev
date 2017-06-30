@@ -45,6 +45,9 @@ func TestServicesSetup(t *testing.T) {
 			return nil
 		})
 		assert.NoError(err)
+
+		err = dockerutil.EnsureNetwork(dockerutil.GetDockerClient(), dockerutil.NetName)
+		assert.NoError(err)
 	} else {
 		log.Info("services tests skipped in short mode")
 	}
@@ -90,6 +93,9 @@ func TestServices(t *testing.T) {
 
 				container, err := dockerutil.FindContainerByLabels(labels)
 				assert.NoError(err)
+				if err != nil {
+					t.Fatalf("Could not find running container for service %s. Skipping remainder of test.", serviceName)
+				}
 				name := dockerutil.ContainerName(container)
 				check, err := testcommon.ContainerCheck(name, "running")
 				assert.NoError(err)
