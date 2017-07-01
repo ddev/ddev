@@ -22,7 +22,7 @@ DdevVersion ?= $(VERSION)
 WebImg ?= drud/nginx-php-fpm7-local
 WebTag ?= v0.7.3
 DBImg ?= drud/mysql-local-57
-DBTag ?= v0.6.0
+DBTag ?= v0.6.1
 RouterImage ?= drud/ddev-router
 RouterTag ?= v0.4.3
 DBAImg ?= drud/phpmyadmin
@@ -79,4 +79,3 @@ setup:
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: gofmt govet golint errcheck staticcheck codecoroner
-
