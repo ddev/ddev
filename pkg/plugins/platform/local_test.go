@@ -117,7 +117,7 @@ func TestLocalStart(t *testing.T) {
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "running")
 			assert.NoError(err)
-			assert.True(check, containerType, "container is running")
+			assert.True(check, "Container check on %s failed", containerType)
 		}
 
 		runTime()
