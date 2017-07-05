@@ -1,4 +1,4 @@
-package platform
+package platform_test
 
 import (
 	"fmt"
@@ -13,8 +13,11 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
+	docker "github.com/fsouza/go-dockerclient"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,8 +53,8 @@ var (
 
 func TestMain(m *testing.M) {
 
-	if len(GetApps()) > 0 {
-		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", len(GetApps()))
+	if len(platform.GetApps()) > 0 {
+		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", len(platform.GetApps()))
 	}
 
 	for i := range TestSites {
@@ -91,7 +94,7 @@ func TestLocalStart(t *testing.T) {
 	}
 
 	assert := assert.New(t)
-	app, err := GetPluginApp("local")
+	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
 	for _, site := range TestSites {
@@ -114,7 +117,7 @@ func TestLocalStart(t *testing.T) {
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "running")
 			assert.NoError(err)
-			assert.True(check, containerType, "container is running")
+			assert.True(check, "Container check on %s failed", containerType)
 		}
 
 		runTime()
@@ -138,7 +141,7 @@ func TestLocalStart(t *testing.T) {
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
 	assert := assert.New(t)
-	apps := GetApps()
+	apps := platform.GetApps()
 	assert.Equal(len(apps["local"]), len(TestSites))
 
 	for _, site := range TestSites {
@@ -156,7 +159,7 @@ func TestGetApps(t *testing.T) {
 // TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed
 func TestLocalImportDB(t *testing.T) {
 	assert := assert.New(t)
-	app, err := GetPluginApp("local")
+	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 	testDir, _ := os.Getwd()
 
@@ -246,7 +249,7 @@ func TestLocalImportDB(t *testing.T) {
 // TestLocalImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestLocalImportFiles(t *testing.T) {
 	assert := assert.New(t)
-	app, err := GetPluginApp("local")
+	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
 	for _, site := range TestSites {
@@ -295,7 +298,7 @@ func TestLocalImportFiles(t *testing.T) {
 // TestLocalExec tests the execution of commands inside a docker container of a site.
 func TestLocalExec(t *testing.T) {
 	assert := assert.New(t)
-	app, err := GetPluginApp("local")
+	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
 	for _, site := range TestSites {
@@ -337,7 +340,7 @@ func TestLocalExec(t *testing.T) {
 func TestLocalLogs(t *testing.T) {
 	assert := assert.New(t)
 
-	app, err := GetPluginApp("local")
+	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
 	for _, site := range TestSites {
@@ -375,7 +378,7 @@ func TestLocalLogs(t *testing.T) {
 func TestLocalStop(t *testing.T) {
 	assert := assert.New(t)
 
-	app, err := GetPluginApp("local")
+	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
 	for _, site := range TestSites {
@@ -405,7 +408,7 @@ func TestLocalStop(t *testing.T) {
 // TestDescribeStopped tests that the describe command works properly on a stopped site.
 func TestDescribeStopped(t *testing.T) {
 	assert := assert.New(t)
-	app, err := GetPluginApp("local")
+	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
 	for _, site := range TestSites {
@@ -418,7 +421,7 @@ func TestDescribeStopped(t *testing.T) {
 		out, err := app.Describe()
 		assert.NoError(err)
 
-		assert.Contains(out, SiteStopped, "Output did not include the word stopped when describing a stopped site.")
+		assert.Contains(out, platform.SiteStopped, "Output did not include the word stopped when describing a stopped site.")
 		cleanup()
 	}
 }
@@ -427,7 +430,7 @@ func TestDescribeStopped(t *testing.T) {
 func TestLocalRemove(t *testing.T) {
 	assert := assert.New(t)
 
-	app, err := GetPluginApp("local")
+	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
 	for _, site := range TestSites {
@@ -443,7 +446,7 @@ func TestLocalRemove(t *testing.T) {
 		assert.NoError(err)
 
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalRemove", site.Name))
-		err = app.Down()
+		err = app.Down(true)
 		assert.NoError(err)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
@@ -462,7 +465,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	site := TestSites[0]
 
 	revertDir := site.Chdir()
-	app, err := GetPluginApp("local")
+	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
 	testcommon.ClearDockerEnv()
@@ -473,13 +476,28 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
+	// Cleanup the site data dirs - this would occur before Cleanup() in real usage
+	home, err := homedir.Dir()
+	assert.NoError(err)
+	dir := filepath.Join(home, ".ddev", site.Name)
+	err = os.RemoveAll(dir)
+	assert.NoError(err)
+
 	// Call the Cleanup command()
-	err = Cleanup(app)
+	err = platform.Cleanup(app)
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
 		_, err := constructContainerName(containerType, app)
 		assert.Error(err)
+	}
+
+	// Ensure there are no volumes associated with this project
+	client := dockerutil.GetDockerClient()
+	volumes, err := client.ListVolumes(docker.ListVolumesOptions{})
+	assert.NoError(err)
+	for _, volume := range volumes {
+		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
 
 	revertDir()
@@ -488,7 +506,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 // TestGetappsEmpty ensures that GetApps returns an empty list when no applications are running.
 func TestGetAppsEmpty(t *testing.T) {
 	assert := assert.New(t)
-	apps := GetApps()
+	apps := platform.GetApps()
 	assert.Equal(len(apps["local"]), 0)
 }
 
@@ -504,7 +522,7 @@ func TestRouterNotRunning(t *testing.T) {
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app
-func constructContainerName(containerType string, app App) (string, error) {
+func constructContainerName(containerType string, app platform.App) (string, error) {
 	container, err := app.FindContainerByType(containerType)
 	if err != nil {
 		return "", err

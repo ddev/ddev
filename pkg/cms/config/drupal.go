@@ -66,9 +66,9 @@ if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_
 const drushTemplate = `<?php
 {{ $config := . }}
 $databases['default']['default'] = array(
-  'database' => "data",
-  'username' => "root",
-  'password' => "root",
+  'database' => "db",
+  'username' => "db",
+  'password' => "db",
   'host' => "127.0.0.1",
   'driver' => "mysql",
   'port' => {{ $config.DatabasePort }},

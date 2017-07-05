@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -36,7 +37,7 @@ the assets being imported.`,
 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := getActiveApp("")
+		app, err := platform.GetActiveApp("")
 		if err != nil {
 			util.Failed("Failed to import files: %v", err)
 		}

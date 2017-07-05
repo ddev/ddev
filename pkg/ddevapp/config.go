@@ -16,6 +16,7 @@ import (
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -38,24 +39,25 @@ var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-z
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
-	APIVersion string `yaml:"APIVersion"`
-	Name       string `yaml:"name"`
-	AppType    string `yaml:"type"`
-	Docroot    string `yaml:"docroot"`
-	WebImage   string `yaml:"webimage"`
-	DBImage    string `yaml:"dbimage"`
-	DBAImage   string `yaml:"dbaimage"`
-	ConfigPath string `yaml:"-"`
-	AppRoot    string `yaml:"-"`
-	Platform   string `yaml:"-"`
+	APIVersion       string `yaml:"APIVersion"`
+	Name             string `yaml:"name"`
+	AppType          string `yaml:"type"`
+	Docroot          string `yaml:"docroot"`
+	WebImage         string `yaml:"webimage"`
+	DBImage          string `yaml:"dbimage"`
+	DBAImage         string `yaml:"dbaimage"`
+	ConfigPath       string `yaml:"-"`
+	AppRoot          string `yaml:"-"`
+	Platform         string `yaml:"-"`
+	DataDir          string `yaml:"-"`
+	ImportDir        string `yaml:"-"`
+	SiteSettingsPath string `yaml:"-"`
 }
 
 // NewConfig creates a new Config struct with defaults set. It is preferred to using new() directly.
 func NewConfig(AppRoot string) (*Config, error) {
 	// Set defaults.
 	c := &Config{}
-	err := prepLocalSiteDirs(AppRoot)
-	util.CheckErr(err)
 	c.ConfigPath = filepath.Join(AppRoot, ".ddev", "config.yaml")
 	c.AppRoot = AppRoot
 	c.APIVersion = CurrentAppVersion
@@ -70,7 +72,7 @@ func NewConfig(AppRoot string) (*Config, error) {
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
-	err = c.Read()
+	err := c.Read()
 	if err != nil {
 		return c, err
 	}
@@ -132,6 +134,17 @@ func (c *Config) Read() error {
 	if c.DBAImage == "" {
 		c.DBAImage = version.DBAImg + ":" + version.DBATag
 	}
+
+	dirPath, err := homedir.Dir()
+	if err != nil {
+		return err
+	}
+
+	dirPath = filepath.Join(dirPath, ".ddev", c.Name)
+	c.DataDir = filepath.Join(dirPath, "mysql")
+	c.ImportDir = filepath.Join(dirPath, "import-db")
+
+	c.setSiteSettingsPath(c.AppType)
 
 	log.WithFields(log.Fields{
 		"Active config": awsutil.Prettify(c),
@@ -241,9 +254,7 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 	templateVars := map[string]string{
-		"name": c.Name,
-		// path.Join is desired over filepath.Join here,
-		// as we always want a unix-style path for the mount.
+		"name":        c.Name,
 		"plugin":      "ddev",
 		"appType":     c.AppType,
 		"mailhogport": appports.GetPort("mailhog"),
@@ -396,27 +407,18 @@ func determineAppType(basePath string) (string, error) {
 	return "", errors.New("determineAppType() couldn't determine app's type")
 }
 
-// prepLocalSiteDirs creates a site's directories for local dev in .ddev
-func prepLocalSiteDirs(base string) error {
-	dirs := []string{
-		".ddev",
-		".ddev/data",
-	}
-	for _, d := range dirs {
-		dirPath := filepath.Join(base, d)
-		fileInfo, err := os.Stat(dirPath)
+// setSiteSettingsPath determines the location for site's db settings file based on apptype.
+func (c *Config) setSiteSettingsPath(appType string) {
+	settingsFilePath := filepath.Join(c.AppRoot, c.Docroot)
 
-		if os.IsNotExist(err) { // If it doesn't exist, create it.
-			err := os.MkdirAll(dirPath, os.FileMode(int(0774)))
-			if err != nil {
-				return fmt.Errorf("Failed to create directory %s, err: %v", dirPath, err)
-			}
-		} else if err == nil && fileInfo.IsDir() { // If the directory exists, we're fine and don't have to create it.
-			continue
-		} else { // But otherwise it must have existed as a file, so bail
-			return fmt.Errorf("Error where trying to create directory %s, err: %v", dirPath, err)
-		}
+	switch appType {
+	case "drupal8":
+		fallthrough
+	case "drupal7":
+		settingsFilePath = filepath.Join(settingsFilePath, "sites", "default", "settings.php")
+	case "wordpress":
+		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
 	}
 
-	return nil
+	c.SiteSettingsPath = settingsFilePath
 }

@@ -124,7 +124,7 @@ func TestServices(t *testing.T) {
 
 			}
 
-			err = app.Down()
+			err = app.Down(true)
 			assert.NoError(err)
 			site.Cleanup()
 		}

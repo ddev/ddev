@@ -23,7 +23,7 @@ var LocalDevExecCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		app, err := getActiveApp("")
+		app, err := platform.GetActiveApp("")
 		if err != nil {
 			util.Failed("Failed to exec command: %v", err)
 		}

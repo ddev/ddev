@@ -5,10 +5,10 @@ services:
     container_name: ddev-test-db
     image: DDEV_DBIMAGE
     volumes:
-      - "./data:/db"
+      - "${DDEV_IMPORTDIR}:/db"
     restart: always
     environment:
-      - TCP_PORT=DDEV_HOSTNAME:3306
+      - SOME_ENV=env_value_goes_here
     ports:
       - 3306
     labels:
@@ -19,12 +19,11 @@ services:
     container_name: ddev-test-web
     image: DDEV_WEBIMAGE
     volumes:
-      - "../htdocs/:/var/www/html/docroot"
+      - "../htdocs/:/var/www/html/docroot:cached"
     restart: always
     depends_on:
       - db
     links:
-      - db:DDEV_HOSTNAME
       - db:db
     ports:
       - "80"
@@ -32,7 +31,7 @@ services:
     working_dir: "/var/www/html/docroot"
     environment:
       - DEPLOY_NAME=local
-      - VIRTUAL_HOST=DDEV_HOSTNAME
+      - VIRTUAL_HOST=${DDEV_HOSTNAME}
       - VIRTUAL_PORT=80,8025
     labels:
       com.ddev.site-name: test

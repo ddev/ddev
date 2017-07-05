@@ -155,11 +155,11 @@ func (l *LocalApp) GetName() string {
 func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	l.DockerEnv()
 	var extPathPrompt bool
-	dbPath := filepath.Join(l.AppRoot(), ".ddev", "data")
+	dbPath := l.AppConfig.ImportDir
 
 	err := fileutil.PurgeDirectory(dbPath)
 	if err != nil {
-		return fmt.Errorf("failed to cleanup .ddev/data before import: %v", err)
+		return fmt.Errorf("failed to cleanup %s before import: %v", dbPath, err)
 	}
 
 	if imPath == "" {
@@ -247,7 +247,7 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 
 	err = fileutil.PurgeDirectory(dbPath)
 	if err != nil {
-		return fmt.Errorf("failed to cleanup .ddev/data after import: %v", err)
+		return fmt.Errorf("failed to clean up %s after import: %v", dbPath, err)
 	}
 
 	return nil
@@ -430,7 +430,12 @@ func (l *LocalApp) Start() error {
 		}
 	}
 
-	err := l.AddHostsEntry()
+	err := l.prepSiteDirs()
+	if err != nil {
+		return err
+	}
+
+	err = l.AddHostsEntry()
 	if err != nil {
 		return err
 	}
@@ -509,6 +514,8 @@ func (l *LocalApp) DockerEnv() {
 		"DDEV_WEBIMAGE":        l.AppConfig.WebImage,
 		"DDEV_APPROOT":         l.AppConfig.AppRoot,
 		"DDEV_DOCROOT":         l.AppConfig.Docroot,
+		"DDEV_DATADIR":         l.AppConfig.DataDir,
+		"DDEV_IMPORTDIR":       l.AppConfig.ImportDir,
 		"DDEV_URL":             l.URL(),
 		"DDEV_HOSTNAME":        l.HostName(),
 		"DDEV_UID":             "",
@@ -577,25 +584,23 @@ func (l *LocalApp) Wait(containerTypes ...string) error {
 // Config creates the apps config file adding things like database host, name, and password
 // as well as other sensitive data like salts.
 func (l *LocalApp) Config() error {
-	basePath := l.AppRoot()
-	docroot := l.Docroot()
-	settingsFilePath := filepath.Join(basePath, docroot)
+	settingsFilePath := l.AppConfig.SiteSettingsPath
+
+	if fileutil.FileExists(settingsFilePath) {
+		signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
+		util.CheckErr(err) // Really can't happen as we already checked for the file existence
+		if !signatureFound {
+			return errors.New("app config exists")
+		}
+		// Otherwise we'll go on our way and recreate the settings file.
+	}
 
 	switch l.GetType() {
 	case "drupal8":
 		fallthrough
 	case "drupal7":
-		settingsFilePath = filepath.Join(settingsFilePath, "sites", "default", "settings.php")
-		if fileutil.FileExists(settingsFilePath) {
-			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
-			util.CheckErr(err) // Really can't happen as we already checked for the file existence
-			if !signatureFound {
-				return errors.New("app config exists")
-			}
-			// Otherwise we'll go on our way and recreate the settings file.
-		}
-
-		drushSettingsPath := filepath.Join(basePath, "drush.settings.php")
+		fmt.Println("Generating settings.php file for database connection.")
+		drushSettingsPath := filepath.Join(l.AppRoot(), "drush.settings.php")
 
 		// Retrieve published mysql port for drush settings file.
 		db, err := l.FindContainerByType("db")
@@ -608,8 +613,6 @@ func (l *LocalApp) Config() error {
 			return err
 		}
 		dbPublishPort := dockerutil.GetPublishedPort(dbPrivatePort, db)
-
-		fmt.Println("Generating settings.php file for database connection.")
 
 		drupalConfig := model.NewDrupalConfig()
 		drushConfig := model.NewDrushConfig()
@@ -631,16 +634,6 @@ func (l *LocalApp) Config() error {
 			return err
 		}
 	case "wordpress":
-		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
-		if fileutil.FileExists(settingsFilePath) {
-			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
-			util.CheckErr(err) // Really can't happen as we already checked for the file existence
-			if !signatureFound {
-				return errors.New("app config exists")
-			}
-			// Otherwise we'll go on our way and recreate the settings file.
-		}
-
 		fmt.Println("Generating wp-config.php file for database connection.")
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DeployURL = l.URL()
@@ -653,8 +646,40 @@ func (l *LocalApp) Config() error {
 }
 
 // Down stops the docker containers for the local project.
-func (l *LocalApp) Down() error {
+func (l *LocalApp) Down(removeData bool) error {
 	l.DockerEnv()
+	settingsFilePath := l.AppConfig.SiteSettingsPath
+
+	if removeData {
+		if fileutil.FileExists(settingsFilePath) {
+			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
+			util.CheckErr(err) // Really can't happen as we already checked for the file existence
+			if signatureFound {
+				err = os.Chmod(settingsFilePath, 0644)
+				if err != nil {
+					return err
+				}
+				err = os.Remove(settingsFilePath)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		dir := filepath.Dir(l.AppConfig.DataDir)
+		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
+		// are writable before we attempt to remove them.
+		err := fileutil.PurgeDirectory(dir)
+		if err != nil {
+			return fmt.Errorf("failed to remove data directories: %v", err)
+		}
+		// PurgeDirectory leaves the directory itself in place, so we remove it here.
+		err = os.RemoveAll(dir)
+		if err != nil {
+			return fmt.Errorf("failed to remove data directories: %v", err)
+		}
+		util.Success("Application data removed")
+	}
+
 	err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
 	if err != nil {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
@@ -710,4 +735,82 @@ func (l *LocalApp) AddHostsEntry() error {
 	fmt.Println("Please enter your password if prompted.")
 	err = exec.RunCommandPipe("sudo", hostnameArgs)
 	return err
+}
+
+// prepSiteDirs creates a site's directories for db container mounts
+func (l *LocalApp) prepSiteDirs() error {
+
+	dirs := []string{
+		l.AppConfig.DataDir,
+		l.AppConfig.ImportDir,
+	}
+
+	for _, dir := range dirs {
+		fileInfo, err := os.Stat(dir)
+
+		if os.IsNotExist(err) { // If it doesn't exist, create it.
+			err := os.MkdirAll(dir, os.FileMode(int(0774)))
+			if err != nil {
+				return fmt.Errorf("Failed to create directory %s, err: %v", dir, err)
+			}
+		} else if err == nil && fileInfo.IsDir() { // If the directory exists, we're fine and don't have to create it.
+			continue
+		} else { // But otherwise it must have existed as a file, so bail
+			return fmt.Errorf("Error where trying to create directory %s, err: %v", dir, err)
+		}
+	}
+
+	return nil
+}
+
+// GetActiveAppRoot returns the fully rooted directory of the active app, or an error
+func GetActiveAppRoot(siteName string) (string, error) {
+	var siteDir string
+	var err error
+
+	if siteName == "" {
+		siteDir, err = os.Getwd()
+		if err != nil {
+			return "", fmt.Errorf("error determining the current directory: %s", err)
+		}
+	} else {
+		var ok bool
+
+		labels := map[string]string{
+			"com.ddev.site-name":         siteName,
+			"com.docker.compose.service": "web",
+		}
+
+		webContainer, err := dockerutil.FindContainerByLabels(labels)
+		if err != nil {
+			return "", fmt.Errorf("could not find a site named '%s'. Run 'ddev list' to see currently active sites", siteName)
+		}
+
+		siteDir, ok = webContainer.Labels["com.ddev.approot"]
+		if !ok {
+			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(webContainer))
+		}
+	}
+
+	appRoot, err := CheckForConf(siteDir)
+	if err != nil {
+		return "", fmt.Errorf("unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
+	}
+
+	return appRoot, nil
+}
+
+// GetActiveApp returns the active App based on the current working directory or running siteName provided.
+func GetActiveApp(siteName string) (App, error) {
+	app, err := GetPluginApp("local")
+	if err != nil {
+		return app, err
+	}
+	activeAppRoot, err := GetActiveAppRoot(siteName)
+	if err != nil {
+		return app, err
+	}
+
+	err = app.Init(activeAppRoot)
+	return app, err
 }

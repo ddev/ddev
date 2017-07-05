@@ -20,7 +20,7 @@ var LocalDevLogsCmd = &cobra.Command{
 	Short: "Get the logs from your running services.",
 	Long:  `Uses 'docker logs' to display stdout from the running services.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := getActiveApp("")
+		app, err := platform.GetActiveApp("")
 		if err != nil {
 			util.Failed("Failed to retrieve logs: %v", err)
 		}

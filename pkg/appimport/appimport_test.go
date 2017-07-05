@@ -1,4 +1,4 @@
-package appimport
+package appimport_test
 
 import (
 	"path/filepath"
@@ -10,6 +10,7 @@ import (
 
 	"log"
 
+	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	homedir "github.com/mitchellh/go-homedir"
@@ -44,7 +45,7 @@ func TestValidateAsset(t *testing.T) {
 	err = os.Mkdir(testDir, 0755)
 	assert.NoError(err)
 
-	testPath, err := ValidateAsset("~/"+testDirName, "files")
+	testPath, err := appimport.ValidateAsset("~/"+testDirName, "files")
 	assert.NoError(err)
 	assert.Contains(testPath, userDir)
 	assert.False(strings.Contains(testPath, "~"))
@@ -52,23 +53,23 @@ func TestValidateAsset(t *testing.T) {
 	assert.NoError(err)
 
 	// test a relative path
-	testPath, err = ValidateAsset("../../vendor", "files")
+	testPath, err = appimport.ValidateAsset("../../vendor", "files")
 	assert.NoError(err)
 	upTwo := strings.TrimSuffix(cwd, "/pkg/appimport")
 	assert.Contains(testPath, upTwo)
 
 	// archive
-	_, err = ValidateAsset(testArchivePath, "db")
+	_, err = appimport.ValidateAsset(testArchivePath, "db")
 	assert.Error(err)
 	assert.Equal(err.Error(), "is archive")
 
 	// db no sql
-	_, err = ValidateAsset("appimport.go", "db")
+	_, err = appimport.ValidateAsset("appimport.go", "db")
 	assert.Contains(err.Error(), "provided path is not a .sql file or archive")
 	assert.Error(err)
 
 	// files not a directory
-	_, err = ValidateAsset("appimport.go", "files")
+	_, err = appimport.ValidateAsset("appimport.go", "files")
 	assert.Error(err)
 	assert.Contains(err.Error(), "provided path is not a directory or archive")
 

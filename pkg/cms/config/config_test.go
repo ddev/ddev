@@ -1,4 +1,4 @@
-package config
+package config_test
 
 import (
 	"testing"
@@ -7,6 +7,7 @@ import (
 
 	"io/ioutil"
 
+	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +20,7 @@ func TestWriteDrupalConfig(t *testing.T) {
 	assert.NoError(t, err)
 
 	drupalConfig := model.NewDrupalConfig()
-	err = WriteDrupalConfig(drupalConfig, file.Name())
+	err = config.WriteDrupalConfig(drupalConfig, file.Name())
 	assert.NoError(t, err)
 
 	err = os.Chmod(dir, 0755)
@@ -38,7 +39,7 @@ func TestWriteDrushConfig(t *testing.T) {
 	assert.NoError(t, err)
 
 	drushConfig := model.NewDrushConfig()
-	err = WriteDrushConfig(drushConfig, file.Name())
+	err = config.WriteDrushConfig(drushConfig, file.Name())
 	assert.NoError(t, err)
 
 	err = os.Chmod(dir, 0755)
@@ -57,7 +58,7 @@ func TestWriteWordpressConfig(t *testing.T) {
 	assert.NoError(t, err)
 
 	wpConfig := model.NewWordpressConfig()
-	err = WriteWordpressConfig(wpConfig, file.Name())
+	err = config.WriteWordpressConfig(wpConfig, file.Name())
 	assert.NoError(t, err)
 
 	err = os.Chmod(dir, 0755)

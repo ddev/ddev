@@ -27,7 +27,7 @@ type App interface {
 	Stop() error
 	DockerEnv()
 	DockerComposeYAMLPath() string
-	Down() error
+	Down(removeData bool) error
 	Config() error
 	HostName() string
 	URL() string

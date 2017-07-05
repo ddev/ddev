@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/fatih/color"
@@ -79,7 +80,7 @@ func TestDescribeAppFunction(t *testing.T) {
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
 
-		app, err := getActiveApp("")
+		app, err := platform.GetActiveApp("")
 		assert.NoError(err)
 
 		out, err := describeApp("")

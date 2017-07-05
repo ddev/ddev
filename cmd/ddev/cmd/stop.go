@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +24,7 @@ to stop by running 'ddev stop <sitename>.`,
 			siteName = args[0]
 		}
 
-		app, err := getActiveApp(siteName)
+		app, err := platform.GetActiveApp(siteName)
 		if err != nil {
 			util.Failed("Failed to stop: %v", err)
 		}

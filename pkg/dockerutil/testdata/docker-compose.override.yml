@@ -3,12 +3,12 @@ version: '2'
 services:
   foo:
     container_name: ddev-test-foo
-    image: DDEV_FOOIMAGE
+    image: some/image:1.1.0
     volumes:
-      - "./data:/db"
+      - "${DDEV_IMPORTDIR}:/db"
     restart: always
     environment:
-      - TCP_PORT=DDEV_HOSTNAME:3306
+      - HTTP_EXPOSE=3306
     ports:
       - 3306
     labels:

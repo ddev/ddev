@@ -14,7 +14,7 @@ var LocalDevSSHCmd = &cobra.Command{
 	Short: "Starts a shell session in the container for a service. Uses web service by default.",
 	Long:  `Starts a shell session in the container for a service. Uses web service by default. To start a shell session for another service, run "ddev ssh --service <service>`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := getActiveApp("")
+		app, err := platform.GetActiveApp("")
 		if err != nil {
 			util.Failed("Failed to ssh: %v", err)
 		}
