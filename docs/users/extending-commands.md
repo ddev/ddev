@@ -1,4 +1,4 @@
-<h1>Extending ddev Commands<h1>
+<h1>Extending ddev Commands</h1>
 
 Certain ddev commands provide hooks to run tasks before or after the main command executes. These tasks can be defined in the config.yml for your site, and allow for you to automate setup tasks specific to your site. To define command tasks in your configuration, specify the desired command hook as a subfield to `extend-commands`, then provide a list of tasks to run.
 
