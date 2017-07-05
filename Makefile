@@ -40,9 +40,6 @@ DBATag ?= v0.2.0
 # VERSION can be overridden on make commandline: make VERSION=0.9.1 push
 VERSION := $(shell git describe --tags --always --dirty)
 
-# Run tests with -short by default, for faster run times.
-TESTARGS ?= -short
-
 #
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
