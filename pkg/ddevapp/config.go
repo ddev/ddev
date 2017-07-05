@@ -493,9 +493,10 @@ func validateCommandYaml(source []byte) error {
 		if !match {
 			return fmt.Errorf("invalid command hook %s defined for extend-commands in config.yaml", command)
 		}
-		match = false
+
 		for _, taskSet := range tasks {
 			for taskName := range taskSet {
+				var match bool
 				for _, validTask := range validTasks {
 					if taskName == validTask {
 						match = true
