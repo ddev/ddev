@@ -30,6 +30,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 	"github.com/lextoumbourou/goodhosts"
+	shellwords "github.com/mattn/go-shellwords"
 )
 
 const containerWaitTimeout = 35
@@ -463,7 +464,12 @@ func (l *LocalApp) ProcessHooks(hookName string) error {
 		}
 		if c.Exec != "" {
 			fmt.Printf("--- Running exec command: %s ---\n", c.Exec)
-			args := strings.Split(c.Exec, " ")
+
+			args, err := shellwords.Parse(c.Exec)
+			if err != nil {
+				return fmt.Errorf("%s exec failed: %v", hookName, err)
+			}
+
 			err = l.Exec("web", true, args...)
 			if err != nil {
 				return fmt.Errorf("%s exec failed: %v", hookName, err)
