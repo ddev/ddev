@@ -247,7 +247,7 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 
 	err = fileutil.PurgeDirectory(dbPath)
 	if err != nil {
-		return fmt.Errorf("failed to cleanup .ddev/import-db after import: %v", err)
+		return fmt.Errorf("failed to clean up %s after import: %v", dbPath, err)
 	}
 
 	return nil
