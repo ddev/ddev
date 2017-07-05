@@ -407,7 +407,7 @@ func TestProcessHooks(t *testing.T) {
 		conf.Commands["hook-test"][2].ImportDB.Src = testImport
 		conf.Commands["hook-test"][3].ImportFiles.Src = testImport
 
-		l := &LocalApp{
+		l := &platform.LocalApp{
 			AppConfig: conf,
 		}
 
