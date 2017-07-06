@@ -57,14 +57,6 @@ type Config struct {
 
 // Command defines commands to be run as pre/post hooks
 type Command struct {
-	ImportDB struct {
-		Src         string `yaml:"src"`
-		ExtractPath string `yaml:"extract-path"`
-	} `yaml:"import-db,omitempty"`
-	ImportFiles struct {
-		Src         string `yaml:"src"`
-		ExtractPath string `yaml:"extract-path"`
-	} `yaml:"import-files,omitempty"`
 	Exec     string `yaml:"exec,omitempty"`
 	ExecHost string `yaml:"exec-host,omitempty"`
 }
@@ -469,8 +461,6 @@ func validateCommandYaml(source []byte) error {
 	validTasks := []string{
 		"exec",
 		"exec-host",
-		"import-db",
-		"import-files",
 	}
 
 	type Validate struct {

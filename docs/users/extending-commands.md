@@ -49,41 +49,6 @@ extend-commands:
     - exec: "composer install"
 ```
 
-- `import-db`: Import the database of an existing site to the local environment.
-
-Values:
-- `src`: Required. Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format
-- `extract-path`: Optional. If provided asset is an archive, provide the path to extract within the archive.
-
-Example:
-
-_Import a database after environment starts_
-
-```
-extend-commands:
-  post-start:
-    - import-db:
-        src: "~/Downloads/site-archive.tar.gz"
-        extract-path: "data.sql"
-```
-
-- `import-files`: Import the uploaded files directory of an existing site to the default public
-upload directory of your application.
-
-Values:
-- `src`: Required. Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format
-- `extract-path`: Optional. If provided asset is an archive, provide the path to extract within the archive.
-
-Example:
-
-_Perform a search-replace on the database of a WordPress site after import to update its URL_
-
-```
-extend-commands:
-  post-import-db:
-    - exec: "wp search-replace https://www.myproductionsite.com http://mylocalsite.ddev.local"
-```
-
 ## Full Example
 
 The following example would import database and files from a full site archive, and clear the cache for a drupal site when "ddev start" is run.

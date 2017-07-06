@@ -439,29 +439,11 @@ func (l *LocalApp) ComposeFiles() []string {
 
 // ProcessHooks executes commands defined in a ddevapp.Command
 func (l *LocalApp) ProcessHooks(hookName string) error {
-	var err error
-
 	if cmds := l.AppConfig.Commands[hookName]; len(cmds) > 0 {
 		fmt.Printf("Executing %s commands...\n", hookName)
 	}
 
 	for _, c := range l.AppConfig.Commands[hookName] {
-		if c.ImportDB.Src != "" {
-			fmt.Printf("--- Importing database from %s ---\n", c.ImportDB.Src)
-			err = l.ImportDB(c.ImportDB.Src, c.ImportDB.ExtractPath)
-			if err != nil {
-				return fmt.Errorf("%s database import failed: %v", hookName, err)
-			}
-			util.Success("--- %s database import succeeded ---", hookName)
-		}
-		if c.ImportFiles.Src != "" {
-			fmt.Printf("--- Importing files from %s ---\n", c.ImportFiles.Src)
-			err = l.ImportFiles(c.ImportFiles.Src, c.ImportFiles.ExtractPath)
-			if err != nil {
-				return fmt.Errorf("%s file import failed: %v", hookName, err)
-			}
-			util.Success("--- %s file import succeeded ---\n", hookName)
-		}
 		if c.Exec != "" {
 			fmt.Printf("--- Running exec command: %s ---\n", c.Exec)
 

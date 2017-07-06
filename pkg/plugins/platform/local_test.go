@@ -378,7 +378,6 @@ func TestLocalLogs(t *testing.T) {
 // TestProcessHooks tests execution of commands defined in config
 func TestProcessHooks(t *testing.T) {
 	assert := assert.New(t)
-	testDir, _ := os.Getwd()
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
@@ -390,22 +389,14 @@ func TestProcessHooks(t *testing.T) {
 
 		conf.Commands = map[string][]ddevapp.Command{
 			"hook-test": []ddevapp.Command{
-				ddevapp.Command{},
-				ddevapp.Command{},
-				ddevapp.Command{},
-				ddevapp.Command{},
+				ddevapp.Command{
+					Exec: "pwd",
+				},
+				ddevapp.Command{
+					ExecHost: "pwd",
+				},
 			},
 		}
-
-		testImport := filepath.Join(testDir, "testdata", "users.sql.tar.gz")
-		log.Debug(testImport)
-		testImport, err = filepath.Abs(testImport)
-		assert.NoError(err)
-		assert.True(fileutil.FileExists(testImport))
-		conf.Commands["hook-test"][0].Exec = "pwd"
-		conf.Commands["hook-test"][1].ExecHost = "pwd"
-		conf.Commands["hook-test"][2].ImportDB.Src = testImport
-		conf.Commands["hook-test"][3].ImportFiles.Src = testImport
 
 		l := &platform.LocalApp{
 			AppConfig: conf,
@@ -418,8 +409,6 @@ func TestProcessHooks(t *testing.T) {
 
 		assert.Contains(out, "--- Running exec command: pwd ---")
 		assert.Contains(out, "--- Running host command: pwd ---")
-		assert.Contains(out, fmt.Sprintf("--- Importing database from %s ---", testImport))
-		assert.Contains(out, fmt.Sprintf("--- Importing files from %s ---", testImport))
 
 		runTime()
 		cleanup()
