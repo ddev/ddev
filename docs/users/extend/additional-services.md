@@ -1,4 +1,4 @@
-<h1> Additional Service Configurations for ddev<h1>
+<h1> Additional Service Configurations for ddev</h1>
 
 Site environments in ddev can be extended to provide additional services. This is achieved by adding docker compose files to a project's .ddev directory that defines the added service(s). This page provides configurations for services that are ready to be added to your project with minimal setup.
 

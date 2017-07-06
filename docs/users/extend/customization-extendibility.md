@@ -4,9 +4,9 @@ ddev provides several ways in which the environment for a project using ddev can
 ## Adding services to a project
 For most standard web applications, ddev provides everything you need to successfully provision and develop a web application on your local machine out of the box. More complex and sophisticated web applications, however, often require integration with services beyond the standard requirements of a web and database server. Examples of these additional services are Apache Solr, Redis, Varnish, etc. While ddev likely won't ever provide all of these additional services out of the box, it is designed to provide simple ways for the environment to be customized and extended to meet the needs of your application.
 
-A collection of vetted service configurations is available in the [Additional Services Documentation](extend/additional-services.md).
+A collection of vetted service configurations is available in the [Additional Services Documentation](additional-services.md).
 
-If you need to create a service configuration for your project, see [Defining an additional service with Docker Compose](extend/custom-compose-files.md)
+If you need to create a service configuration for your project, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
 ## Providing custom nginx configuration
 The default web container for ddev uses NGINX as the web server. A default configuration is provided in the web container that should work for most Drupal 7+ and WordPress sites. Some sites may require custom configuration, for example to support a module or plugin requiring special rules. To accommodate these needs, ddev provides a way to replace the default configuration with a custom version.
