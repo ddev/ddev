@@ -1,6 +1,6 @@
 <h1>Extending ddev Commands</h1>
 
-Certain ddev commands provide hooks to run tasks before or after the main command executes. These tasks can be defined in the config.yml for your site, and allow for you to automate setup tasks specific to your site. To define command tasks in your configuration, specify the desired command hook as a subfield to `extend-commands`, then provide a list of tasks to run.
+Certain ddev commands provide hooks to run tasks before or after the main command executes. These tasks can be defined in the config.yaml for your site, and allow for you to automate setup tasks specific to your site. To define command tasks in your configuration, specify the desired command hook as a subfield to `extend-commands`, then provide a list of tasks to run.
 
 Example:
 
@@ -21,13 +21,13 @@ extend-commands:
 
 ## Supported Tasks
 
-- `exec`: Execute a shell command in the web service container.
+### `exec`: Execute a shell command in the web service container.
 
 Value: string providing the command to run. Commands requiring user interaction are not supported.
 
 Example:
 
-_Use drush to clear the drupal cache after database import_
+_Use drush to clear the Drupal cache after database import_
 
 ```
 extend-commands:
@@ -35,7 +35,17 @@ extend-commands:
     - exec: "drush cc all"
 ```
 
-- `exec-host`: Execute a shell command on your system.
+Example:
+
+_Use wp-cli to replace the production URL with development URL in the database of a WordPress site_
+
+```
+extend-commands:
+  post-import-db:
+    - exec: "wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.local"
+```
+
+### `exec-host`: Execute a shell command on your system.
 
 Value: string providing the command to run. Commands requiring user interaction are not supported.
 
@@ -49,18 +59,54 @@ extend-commands:
     - exec: "composer install"
 ```
 
-## Full Example
-
-The following example would import database and files from a full site archive, and clear the cache for a drupal site when "ddev start" is run.
+## Drupal 7 Example
 
 ```
 extend-commands:
   post-start:
-    - import-db:
-        src: "~/Downloads/site-archive.tar.gz"
-        extract-path: "data.sql"
-    - import-files:
-        src: "~/Downloads/site-archive.tar.gz"
-        extract-path: "docroot/sites/default/files"
+    # Install Drupal after start
+    - exec: "drush site-install -y --db-url=db:db@db/db"
+    # Generate a one-time login link for the admin account.
+    - exec: "drush uli 1"
+  post-import-db:
+    # Set the site name
+    - exec: "drush vset site_name MyDevSite"
+    # Enable the environment indicator module
+    - exec: "drush en -y environment_indicator"
+    # Clear the cache
     - exec: "drush cc all"
+```
+
+## Drupal 8 Example
+
+```
+extend-commands:
+  pre-start:
+    # Install composer dependencies using composer on host system
+    - exec-host: "composer install"
+  post-start:
+    # Install Drupal after start
+    - exec: "drush site-install -y --db-url=mysql://db:db@db/db"
+    # Generate a one-time login link for the admin account.
+    - exec: "drush uli 1"
+  post-import-db:
+    # Set the site name
+    - exec: "drush config-set system.site name MyDevSite"
+    # Enable the environment indicator module
+    - exec: "drush en -y environment_indicator"
+    # Clear the cache
+    - exec: "drush cr"
+```
+
+## WordPress Example
+
+```
+extend-commands:
+  post-start:
+    # Install WordPress after start
+    - exec: "wp config create --dbname=db --dbuser=db --dbpass=db --dbhost=db"
+    - exec: "wp core install --url=http://mysite.ddev.local --title=MySite --admin_user=admin --admin_email=admin@mail.test"
+  post-import-db:
+    # Update the URL of your site throughout your database after import
+    - exec: "wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.local"
 ```
