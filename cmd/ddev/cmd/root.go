@@ -51,12 +51,21 @@ var RootCmd = &cobra.Command{
 			}
 		}
 
-		usr, err := homedir.Dir()
+		homedir, err := homedir.Dir()
 		if err != nil {
 			util.Failed("Could not detect user's home directory: ", err)
 		}
 
-		updateFile := filepath.Join(usr, ".ddev", ".update")
+		// Verify that the ~/.ddev exists
+		homeddev := filepath.Join(homedir, ".ddev")
+		if _, err := os.Stat(homeddev); os.IsNotExist(err) {
+			err = os.MkdirAll(homeddev, 0700)
+			if err != nil {
+				util.Failed("Failed to create required directory %s, err: %v", homeddev, err)
+			}
+		}
+
+		updateFile := filepath.Join(homeddev, ".update")
 		// Do periodic detection of whether an update is available for ddev users.
 		timeToCheckForUpdates, err := updatecheck.IsUpdateNeeded(updateFile, updateInterval)
 		if err != nil {
