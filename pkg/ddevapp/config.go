@@ -131,7 +131,7 @@ func (c *Config) Read() error {
 	// validate extend command keys
 	err = validateCommandYaml(source)
 	if err != nil {
-		return fmt.Errorf("invalid configuration: %v", err)
+		return fmt.Errorf("invalid configuration in %s: %v", c.ConfigPath, err)
 	}
 
 	// Read config values from file.
