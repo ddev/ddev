@@ -8,6 +8,7 @@ pages:
   - 'Home': 'index.md'
   - 'User Documentation':
     - 'Using the CLI': 'users/cli-usage.md'
+    - 'Extending ddev Commands': 'users/extending-commands.md'
     - 'Using Developer Tools with ddev': 'users/developer-tools.md'
     - 'PHP Step Debugging': 'users/step-debugging.md'
     - 'Extending ddev':

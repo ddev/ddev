@@ -39,19 +39,26 @@ var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-z
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
-	APIVersion       string `yaml:"APIVersion"`
-	Name             string `yaml:"name"`
-	AppType          string `yaml:"type"`
-	Docroot          string `yaml:"docroot"`
-	WebImage         string `yaml:"webimage"`
-	DBImage          string `yaml:"dbimage"`
-	DBAImage         string `yaml:"dbaimage"`
-	ConfigPath       string `yaml:"-"`
-	AppRoot          string `yaml:"-"`
-	Platform         string `yaml:"-"`
-	DataDir          string `yaml:"-"`
-	ImportDir        string `yaml:"-"`
-	SiteSettingsPath string `yaml:"-"`
+	APIVersion       string               `yaml:"APIVersion"`
+	Name             string               `yaml:"name"`
+	AppType          string               `yaml:"type"`
+	Docroot          string               `yaml:"docroot"`
+	WebImage         string               `yaml:"webimage"`
+	DBImage          string               `yaml:"dbimage"`
+	DBAImage         string               `yaml:"dbaimage"`
+	ConfigPath       string               `yaml:"-"`
+	AppRoot          string               `yaml:"-"`
+	Platform         string               `yaml:"-"`
+	DataDir          string               `yaml:"-"`
+	ImportDir        string               `yaml:"-"`
+	SiteSettingsPath string               `yaml:"-"`
+	Commands         map[string][]Command `yaml:"hooks,omitempty"`
+}
+
+// Command defines commands to be run as pre/post hooks
+type Command struct {
+	Exec     string `yaml:"exec,omitempty"`
+	ExecHost string `yaml:"exec-host,omitempty"`
 }
 
 // NewConfig creates a new Config struct with defaults set. It is preferred to using new() directly.
@@ -92,6 +99,16 @@ func (c *Config) Write() error {
 		return err
 	}
 
+	cfgbytes = append(cfgbytes, []byte(HookTemplate)...)
+	switch c.AppType {
+	case "drupal8":
+		cfgbytes = append(cfgbytes, []byte(Drupal8Hooks)...)
+	case "drupal7":
+		cfgbytes = append(cfgbytes, []byte(Drupal7Hooks)...)
+	case "wordpress":
+		cfgbytes = append(cfgbytes, []byte(WordPressHooks)...)
+	}
+
 	log.WithFields(log.Fields{
 		"location": c.ConfigPath,
 	}).Debug("Writing Config")
@@ -108,7 +125,13 @@ func (c *Config) Write() error {
 func (c *Config) Read() error {
 	source, err := ioutil.ReadFile(c.ConfigPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not find an active ddev configuration, have you run 'ddev config'? %v", err)
+	}
+
+	// validate extend command keys
+	err = validateCommandYaml(source)
+	if err != nil {
+		return fmt.Errorf("invalid configuration in %s: %v", c.ConfigPath, err)
 	}
 
 	// Read config values from file.
@@ -149,6 +172,7 @@ func (c *Config) Read() error {
 	log.WithFields(log.Fields{
 		"Active config": awsutil.Prettify(c),
 	}).Debug("Finished config set")
+
 	return nil
 }
 
@@ -156,7 +180,7 @@ func (c *Config) Read() error {
 func (c *Config) Config() error {
 
 	if c.ConfigExists() {
-		fmt.Printf("Editing existing ddev project at %s\n\n", c.AppRoot)
+		util.Warning("You are re-configuring %s. The existing configuration will be replaced.\n\n", c.AppRoot)
 	} else {
 		fmt.Printf("Creating a new ddev project config in the current directory (%s)\n", c.AppRoot)
 		fmt.Printf("Once completed, your configuration will be written to %s\n\n\n", c.ConfigPath)
@@ -421,4 +445,60 @@ func (c *Config) setSiteSettingsPath(appType string) {
 	}
 
 	c.SiteSettingsPath = settingsFilePath
+}
+
+// validateCommandYaml validates command hooks and tasks defined in hooks for config.yaml
+func validateCommandYaml(source []byte) error {
+	validHooks := []string{
+		"pre-start",
+		"post-start",
+		"pre-import-db",
+		"post-import-db",
+		"pre-import-files",
+		"post-import-files",
+	}
+
+	validTasks := []string{
+		"exec",
+		"exec-host",
+	}
+
+	type Validate struct {
+		Commands map[string][]map[string]interface{} `yaml:"hooks,omitempty"`
+	}
+	val := &Validate{}
+
+	err := yaml.Unmarshal(source, val)
+	if err != nil {
+		return err
+	}
+
+	for command, tasks := range val.Commands {
+		var match bool
+		for _, hook := range validHooks {
+			if command == hook {
+				match = true
+			}
+		}
+		if !match {
+			return fmt.Errorf("invalid command hook %s defined in config.yaml", command)
+		}
+
+		for _, taskSet := range tasks {
+			for taskName := range taskSet {
+				var match bool
+				for _, validTask := range validTasks {
+					if taskName == validTask {
+						match = true
+					}
+				}
+				if !match {
+					return fmt.Errorf("invalid task '%s' defined for %s hook in config.yaml", taskName, command)
+				}
+			}
+		}
+
+	}
+
+	return nil
 }

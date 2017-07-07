@@ -268,6 +268,12 @@
 			"revisionTime": "2016-03-15T04:07:12Z"
 		},
 		{
+			"checksumSHA1": "3yckDt/xIreJZ/spvI+MvHOCmcY=",
+			"path": "github.com/mattn/go-shellwords",
+			"revision": "02e3cf038dcea8290e44424da473dd12be796a8a",
+			"revisionTime": "2017-04-11T07:14:55Z"
+		},
+		{
 			"checksumSHA1": "V/quM7+em2ByJbWBLOsEwnY3j/Q=",
 			"path": "github.com/mitchellh/go-homedir",
 			"revision": "b8bc1bf767474819792c23f32d8286a45736f1c6",

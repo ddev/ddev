@@ -30,6 +30,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 	"github.com/lextoumbourou/goodhosts"
+	shellwords "github.com/mattn/go-shellwords"
 )
 
 const containerWaitTimeout = 35
@@ -48,7 +49,7 @@ func (l *LocalApp) GetType() string {
 func (l *LocalApp) Init(basePath string) error {
 	config, err := ddevapp.NewConfig(basePath)
 	if err != nil {
-		return fmt.Errorf("could not find an active ddev configuration, have you run 'ddev config'?: %v", err)
+		return err
 	}
 
 	err = config.Validate()
@@ -157,7 +158,12 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	var extPathPrompt bool
 	dbPath := l.AppConfig.ImportDir
 
-	err := fileutil.PurgeDirectory(dbPath)
+	err := l.ProcessHooks("pre-import-db")
+	if err != nil {
+		return err
+	}
+
+	err = fileutil.PurgeDirectory(dbPath)
 	if err != nil {
 		return fmt.Errorf("failed to cleanup %s before import: %v", dbPath, err)
 	}
@@ -250,6 +256,11 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 		return fmt.Errorf("failed to clean up %s after import: %v", dbPath, err)
 	}
 
+	err = l.ProcessHooks("post-import-db")
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -298,6 +309,11 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 
 	l.DockerEnv()
 
+	err := l.ProcessHooks("pre-import-files")
+	if err != nil {
+		return err
+	}
+
 	if imPath == "" {
 		// ensure we prompt for extraction path if an archive is provided, while still allowing
 		// non-interactive use of --src flag without providing a --extract-path flag.
@@ -326,7 +342,7 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 	}
 
 	// parent of destination dir should be writable
-	err := os.Chmod(filepath.Dir(destPath), 0755)
+	err = os.Chmod(filepath.Dir(destPath), 0755)
 	if err != nil {
 		return err
 	}
@@ -382,6 +398,11 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 		}
 	}
 
+	err = l.ProcessHooks("post-import-files")
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -416,9 +437,60 @@ func (l *LocalApp) ComposeFiles() []string {
 	return files
 }
 
+// ProcessHooks executes commands defined in a ddevapp.Command
+func (l *LocalApp) ProcessHooks(hookName string) error {
+	if cmds := l.AppConfig.Commands[hookName]; len(cmds) > 0 {
+		fmt.Printf("Executing %s commands...\n", hookName)
+	}
+
+	for _, c := range l.AppConfig.Commands[hookName] {
+		if c.Exec != "" {
+			fmt.Printf("--- Running exec command: %s ---\n", c.Exec)
+
+			args, err := shellwords.Parse(c.Exec)
+			if err != nil {
+				return fmt.Errorf("%s exec failed: %v", hookName, err)
+			}
+
+			err = l.Exec("web", true, args...)
+			if err != nil {
+				return fmt.Errorf("%s exec failed: %v", hookName, err)
+			}
+			util.Success("--- %s exec command succeeded ---", hookName)
+		}
+		if c.ExecHost != "" {
+			fmt.Printf("--- Running host command: %s ---\n", c.ExecHost)
+			args := strings.Split(c.ExecHost, " ")
+			cmd := args[0]
+			args = append(args[:0], args[1:]...)
+
+			// ensure exec-host runs from consistent location
+			cwd, err := os.Getwd()
+			util.CheckErr(err)
+			err = os.Chdir(l.AppRoot())
+			util.CheckErr(err)
+
+			err = exec.RunCommandPipe(cmd, args)
+			dirErr := os.Chdir(cwd)
+			util.CheckErr(dirErr)
+			if err != nil {
+				return fmt.Errorf("%s host command failed: %v", hookName, err)
+			}
+			util.Success("--- %s host command succeeded ---", hookName)
+		}
+	}
+
+	return nil
+}
+
 // Start initiates docker-compose up
 func (l *LocalApp) Start() error {
 	l.DockerEnv()
+
+	err := l.ProcessHooks("pre-start")
+	if err != nil {
+		return err
+	}
 
 	// Write docker-compose.yaml (if it doesn't exist).
 	// If the user went through the `ddev config` process it will be written already, but
@@ -430,7 +502,7 @@ func (l *LocalApp) Start() error {
 		}
 	}
 
-	err := l.prepSiteDirs()
+	err = l.prepSiteDirs()
 	if err != nil {
 		return err
 	}
@@ -451,6 +523,11 @@ func (l *LocalApp) Start() error {
 	}
 
 	err = l.Wait("web", "db")
+	if err != nil {
+		return err
+	}
+
+	err = l.ProcessHooks("post-start")
 	if err != nil {
 		return err
 	}

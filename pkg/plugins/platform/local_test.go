@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
@@ -371,6 +372,47 @@ func TestLocalLogs(t *testing.T) {
 
 		runTime()
 		cleanup()
+	}
+}
+
+// TestProcessHooks tests execution of commands defined in config
+func TestProcessHooks(t *testing.T) {
+	assert := assert.New(t)
+
+	for _, site := range TestSites {
+		cleanup := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
+
+		testcommon.ClearDockerEnv()
+		conf, err := ddevapp.NewConfig(site.Dir)
+		assert.NoError(err)
+
+		conf.Commands = map[string][]ddevapp.Command{
+			"hook-test": []ddevapp.Command{
+				ddevapp.Command{
+					Exec: "pwd",
+				},
+				ddevapp.Command{
+					ExecHost: "pwd",
+				},
+			},
+		}
+
+		l := &platform.LocalApp{
+			AppConfig: conf,
+		}
+
+		stdout := testcommon.CaptureStdOut()
+		err = l.ProcessHooks("hook-test")
+		assert.NoError(err)
+		out := stdout()
+
+		assert.Contains(out, "--- Running exec command: pwd ---")
+		assert.Contains(out, "--- Running host command: pwd ---")
+
+		runTime()
+		cleanup()
+
 	}
 }
 

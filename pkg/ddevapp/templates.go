@@ -79,3 +79,27 @@ networks:
     external:
       name: ddev_default
 `
+
+// HookTemplate is used to add example hooks usage
+const HookTemplate = `
+# Certain ddev commands can be extended to run tasks before or after the ddev
+# command is executed.
+# See https://ddev.readthedocs.io/en/latest/users/extending-commands/ for more
+# information on the commands that can be extended and the tasks you can define
+# for them.
+# hooks:
+#   post-import-db:`
+
+// Drupal8Hooks adds a d8-specific hooks example for post-import-db
+const Drupal8Hooks = `
+#     - exec: "drush cr"`
+
+// Drupal7Hooks adds a d7-specific hooks example for post-import-db
+const Drupal7Hooks = `
+#     - exec: "drush cc all"`
+
+// WordPressHooks adds a wp-specific hooks example for post-import-db
+const WordPressHooks = `
+    # Un-comment and enter the production url and local url
+    # to replace in your database after import.
+    # - exec: "wp search-replace <production-url> <local-url>"`
