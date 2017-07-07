@@ -52,7 +52,7 @@ type Config struct {
 	DataDir          string               `yaml:"-"`
 	ImportDir        string               `yaml:"-"`
 	SiteSettingsPath string               `yaml:"-"`
-	Commands         map[string][]Command `yaml:"extend-commands,omitempty"`
+	Commands         map[string][]Command `yaml:"hooks,omitempty"`
 }
 
 // Command defines commands to be run as pre/post hooks
@@ -447,7 +447,7 @@ func (c *Config) setSiteSettingsPath(appType string) {
 	c.SiteSettingsPath = settingsFilePath
 }
 
-// validateCommandYaml validates command hooks and tasks defined in extend-commands for config.yaml
+// validateCommandYaml validates command hooks and tasks defined in hooks for config.yaml
 func validateCommandYaml(source []byte) error {
 	validHooks := []string{
 		"pre-start",
@@ -464,7 +464,7 @@ func validateCommandYaml(source []byte) error {
 	}
 
 	type Validate struct {
-		Commands map[string][]map[string]interface{} `yaml:"extend-commands,omitempty"`
+		Commands map[string][]map[string]interface{} `yaml:"hooks,omitempty"`
 	}
 	val := &Validate{}
 
@@ -481,7 +481,7 @@ func validateCommandYaml(source []byte) error {
 			}
 		}
 		if !match {
-			return fmt.Errorf("invalid command hook %s defined for extend-commands in config.yaml", command)
+			return fmt.Errorf("invalid command hook %s defined in config.yaml", command)
 		}
 
 		for _, taskSet := range tasks {
@@ -493,7 +493,7 @@ func validateCommandYaml(source []byte) error {
 					}
 				}
 				if !match {
-					return fmt.Errorf("invalid task '%s' defined for %s extend-commands in config.yaml", taskName, command)
+					return fmt.Errorf("invalid task '%s' defined for %s hook in config.yaml", taskName, command)
 				}
 			}
 		}
