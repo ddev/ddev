@@ -52,6 +52,12 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	// ensure we have docker network
+	client := dockerutil.GetDockerClient()
+	err := dockerutil.EnsureNetwork(client, dockerutil.NetName)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if len(platform.GetApps()) > 0 {
 		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", len(platform.GetApps()))
@@ -62,13 +68,56 @@ func TestMain(m *testing.M) {
 		if err != nil {
 			log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
 		}
+
+		switchDir := TestSites[i].Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s Start", TestSites[i].Name))
+
+		testcommon.ClearDockerEnv()
+
+		app, err := platform.GetPluginApp("local")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = app.Init(TestSites[i].Dir)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = app.Start()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		runTime()
+		switchDir()
 	}
 
 	log.Debugln("Running tests.")
 	testRun := m.Run()
 
-	for i := range TestSites {
-		TestSites[i].Cleanup()
+	for _, site := range TestSites {
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s Remove", site.Name))
+
+		testcommon.ClearDockerEnv()
+
+		app, err := platform.GetPluginApp("local")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = app.Init(site.Dir)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = app.Down(true)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		runTime()
+		site.Cleanup()
 	}
 
 	os.Exit(testRun)
@@ -85,14 +134,6 @@ func TestLocalSetup(t *testing.T) {
 
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
 func TestLocalStart(t *testing.T) {
-
-	// ensure we have docker network
-	client := dockerutil.GetDockerClient()
-	err := dockerutil.EnsureNetwork(client, dockerutil.NetName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	assert := assert.New(t)
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
@@ -101,11 +142,7 @@ func TestLocalStart(t *testing.T) {
 		cleanup := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalStart", site.Name))
 
-		testcommon.ClearDockerEnv()
 		err = app.Init(site.Dir)
-		assert.NoError(err)
-
-		err = app.Start()
 		assert.NoError(err)
 
 		// ensure docker-compose.yaml exists inside .ddev site folder
@@ -440,8 +477,7 @@ func TestLocalRemove(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		// start the previously stopped containers -
-		// stopped/removed have the same state
+		// Ensure we have a site started
 		err = app.Start()
 		assert.NoError(err)
 
@@ -472,7 +508,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = app.Init(site.Dir)
 	assert.NoError(err)
 
-	// Start a site so we have something to cleanup
+	// Ensure we have a site started so we have something to cleanup
 	err = app.Start()
 	assert.NoError(err)
 
