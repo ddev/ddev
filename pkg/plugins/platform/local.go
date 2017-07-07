@@ -668,16 +668,20 @@ func (l *LocalApp) Down(removeData bool) error {
 		dir := filepath.Dir(l.AppConfig.DataDir)
 		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
 		// are writable before we attempt to remove them.
-		err := fileutil.PurgeDirectory(dir)
-		if err != nil {
-			return fmt.Errorf("failed to remove data directories: %v", err)
+		if !fileutil.FileExists(dir) {
+			util.Warning("No application data to remove")
+		} else {
+			err := fileutil.PurgeDirectory(dir)
+			if err != nil {
+				return fmt.Errorf("failed to remove data directories: %v", err)
+			}
+			// PurgeDirectory leaves the directory itself in place, so we remove it here.
+			err = os.RemoveAll(dir)
+			if err != nil {
+				return fmt.Errorf("failed to remove data directories: %v", err)
+			}
+			util.Success("Application data removed")
 		}
-		// PurgeDirectory leaves the directory itself in place, so we remove it here.
-		err = os.RemoveAll(dir)
-		if err != nil {
-			return fmt.Errorf("failed to remove data directories: %v", err)
-		}
-		util.Success("Application data removed")
 	}
 
 	err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
