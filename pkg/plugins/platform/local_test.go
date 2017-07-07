@@ -216,11 +216,6 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.DBTarURL != "" {
-			err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
-			assert.NoError(err)
-			err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
-			assert.NoError(err)
-
 			dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
 			err := util.DownloadFile(dbPath, site.DBTarURL)
 			assert.NoError(err)
@@ -240,11 +235,6 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.DBZipURL != "" {
-			err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
-			assert.NoError(err)
-			err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
-			assert.NoError(err)
-
 			dbZipPath := filepath.Join(testcommon.CreateTmpDir("local-db-zip"), "db.zip")
 			err = util.DownloadFile(dbZipPath, site.DBZipURL)
 			assert.NoError(err)
@@ -264,11 +254,6 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.FullSiteTarballURL != "" {
-			err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
-			assert.NoError(err)
-			err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
-			assert.NoError(err)
-
 			siteTarPath := filepath.Join(testcommon.CreateTmpDir("local-site-tar"), "site.tar.gz")
 			err = util.DownloadFile(siteTarPath, site.FullSiteTarballURL)
 			assert.NoError(err)
@@ -350,6 +335,20 @@ func TestLocalExec(t *testing.T) {
 		assert.NoError(err)
 		out := stdout()
 		assert.Contains(out, "/var/www/html")
+
+		err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
+		assert.NoError(err)
+		err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
+		assert.NoError(err)
+
+		dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
+		err = util.DownloadFile(dbPath, site.DBTarURL)
+		assert.NoError(err)
+		err = app.ImportDB(dbPath, "")
+		assert.NoError(err)
+
+		err = os.Remove(dbPath)
+		assert.NoError(err)
 
 		stdout = testcommon.CaptureStdOut()
 		switch app.GetType() {
@@ -453,6 +452,9 @@ func TestDescribeStopped(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Stop()
 		assert.NoError(err)
 
 		out, err := app.Describe()
