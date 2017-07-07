@@ -552,8 +552,8 @@ func (l *LocalApp) DockerEnv() {
 func (l *LocalApp) Stop() error {
 	l.DockerEnv()
 
-	if l.SiteStatus() != SiteRunning {
-		return fmt.Errorf("site does not appear to be running - web container %s", l.SiteStatus())
+	if l.SiteStatus() == SiteNotFound {
+		return fmt.Errorf("no site to remove")
 	}
 
 	err := dockerutil.ComposeCmd(l.ComposeFiles(), "stop")
