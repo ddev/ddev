@@ -19,6 +19,7 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
+	"fmt"
 )
 
 // TestSite describes a site for testing, with name, URL of tarball, and optional dir.
@@ -106,7 +107,7 @@ func (site *TestSite) Cleanup() {
 func CleanupDir(dir string) {
 	err := os.RemoveAll(dir)
 	if err != nil {
-		log.Warn("Failed to remove directory %s, err: %v", dir, err)
+		log.Warn(fmt.Sprintf("Failed to remove directory %s, err: %v", dir, err))
 	}
 }
 
