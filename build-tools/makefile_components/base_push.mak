@@ -6,7 +6,7 @@
 
 push: .push-$(DOTFILE_IMAGE) push-name
 .push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
-	@gcloud docker -- push $(DOCKER_REPO):$(VERSION)
+	docker push $(DOCKER_REPO):$(VERSION)
 	@docker images -q $(DOCKER_REPO):$(VERSION) > $@
 
 push-name:
