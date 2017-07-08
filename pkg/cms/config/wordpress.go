@@ -8,6 +8,7 @@ import (
 
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/cms/model"
+	"github.com/drud/ddev/pkg/util"
 )
 
 const (
@@ -93,5 +94,6 @@ func WriteWordpressConfig(wordpressConfig *model.WordpressConfig, filePath strin
 	if err != nil {
 		return err
 	}
+	util.CheckClose(file)
 	return nil
 }

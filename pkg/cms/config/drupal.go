@@ -8,6 +8,7 @@ import (
 
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/cms/model"
+	"github.com/drud/ddev/pkg/util"
 )
 
 const (
@@ -99,6 +100,7 @@ func WriteDrupalConfig(drupalConfig *model.DrupalConfig, filePath string) error 
 	if err != nil {
 		return err
 	}
+	util.CheckClose(file)
 	return nil
 }
 
@@ -124,5 +126,6 @@ func WriteDrushConfig(drushConfig *model.DrushConfig, filePath string) error {
 	if err != nil {
 		return err
 	}
+	util.CheckClose(file)
 	return nil
 }
