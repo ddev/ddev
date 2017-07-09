@@ -10,6 +10,7 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/google/go-github/github"
+	"github.com/drud/ddev/pkg/util"
 )
 
 // AvailableUpdates returns true (along with a release URL) if there is an update available in the specified repo which is newer than the currentVersion string.
@@ -63,7 +64,8 @@ func IsUpdateNeeded(filepath string, updateInterval time.Duration) (bool, error)
 func ResetUpdateTime(filepath string) error {
 	err := os.Remove(filepath)
 	_ = err // We don't actually care if remove failed. All we care about is that the create succeeds.
-	_, err = os.Create(filepath)
+	file, err := os.Create(filepath)
+	util.CheckClose(file)
 	return err
 }
 
