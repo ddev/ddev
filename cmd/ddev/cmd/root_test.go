@@ -102,7 +102,7 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	err = os.Setenv("HOME", tmpDir)
 	assert.NoError(t, err)
 
-	args := []string{}
+	args := []string{"list"}
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(t, err)
 
