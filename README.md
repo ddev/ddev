@@ -2,7 +2,7 @@
 
 # ddev
 
-ddev is an open source tool that makes it dead simple to get local PHP development environments up and running within minutes. With shareable and extendable environment configurations for every project, ddev aims to allow development teams to leverage the power and flexibility of Docker in their workflow without having to invest significant time and effort when addressing its upfront complexities.
+ddev is an open source tool that makes it dead simple to get local PHP development environments up and running within minutes. It's powerful and flexible as a result of its per-project environment configurations, which can be extended, version controlled, and shared. In short, ddev aims to allow development teams to use Docker in their workflow without the complexities of bespoke configuration.
 
 ## Roadmap
 
