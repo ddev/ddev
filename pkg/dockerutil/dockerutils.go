@@ -236,7 +236,7 @@ func CheckDockerVersion(versionConstraint string) error {
 	client := GetDockerClient()
 	version, err := client.Version()
 	if err != nil {
-		return err
+		return fmt.Errorf("no docker")
 	}
 
 	currentVersion := version.Get("Version")

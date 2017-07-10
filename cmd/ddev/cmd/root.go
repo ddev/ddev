@@ -67,7 +67,7 @@ var RootCmd = &cobra.Command{
 			updateNeeded, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version.DdevVersion)
 
 			if err != nil {
-				util.Warning("Could not check for updates. this is most often caused by a networking issue.")
+				util.Warning("Could not check for updates. This is most often caused by a networking issue.")
 				log.Debug(err)
 				return
 			}
@@ -83,7 +83,13 @@ var RootCmd = &cobra.Command{
 
 		err = dockerutil.CheckDockerVersion(version.DockerVersionConstraint)
 		if err != nil {
-			util.Failed("The docker version currently installed does not meet ddev's requirements: %v", err)
+			if err.Error() == "no docker" {
+				if os.Args[1] != "version" && os.Args[1] != "config" {
+					util.Failed("Could not connect to docker. Please ensure Docker is installed and running.")
+				}
+			} else {
+				util.Failed("The docker version currently installed does not meet ddev's requirements: %v", err)
+			}
 		}
 	},
 }
