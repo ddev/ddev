@@ -61,7 +61,7 @@ TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 BUILD_ARCH = $(shell go env GOARCH)
 ifeq ($(BUILD_OS),linux)
-    DDEV_BINARY_FULLPATH=$(shell pwd)/bin/$(BUILD_OS)/$(BUILD_OS)_$(BUILD_ARCH)/ddev
+    DDEV_BINARY_FULLPATH=$(shell pwd)/bin/$(BUILD_OS)/$(BUILD_OS)/ddev
 endif
 
 ifeq ($(BUILD_OS),windows)
@@ -69,7 +69,7 @@ ifeq ($(BUILD_OS),windows)
 endif
 
 ifeq ($BUILD_OS),darwin)
-    DDEV_BINARY_FULLPATH=$(shell pwd)/bin/$(BUILD_OS)/$(BUILD_OS)/ddev
+    DDEV_BINARY_FULLPATH=$(shell pwd)/bin/$(BUILD_OS)/$(BUILD_OS)_$(BUILD_ARCH)/ddev
 endif
 
 
