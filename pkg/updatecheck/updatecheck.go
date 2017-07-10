@@ -9,8 +9,8 @@ import (
 	"os"
 
 	"github.com/Masterminds/semver"
-	"github.com/google/go-github/github"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/google/go-github/github"
 )
 
 // AvailableUpdates returns true (along with a release URL) if there is an update available in the specified repo which is newer than the currentVersion string.

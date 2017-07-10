@@ -50,7 +50,6 @@ func TestValidateAsset(t *testing.T) {
 
 	assert.Contains(testPath, "dirlevel1")
 
-
 	// archive
 	testArchivePath := filepath.Join(testdata, "somedb.sql.gz")
 	_, err = appimport.ValidateAsset(testArchivePath, "db")

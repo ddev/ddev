@@ -13,13 +13,13 @@ import (
 	"fmt"
 	"path"
 
+	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
-	"fmt"
 )
 
 // TestSite describes a site for testing, with name, URL of tarball, and optional dir.

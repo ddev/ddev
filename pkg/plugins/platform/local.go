@@ -727,12 +727,11 @@ func (l *LocalApp) Down(removeData bool) error {
 	l.DockerEnv()
 	settingsFilePath := l.AppConfig.SiteSettingsPath
 
-
 	err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
 	if err != nil {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
 		err = Cleanup(l)
-		if (err != nil) {
+		if err != nil {
 			util.Warning("Received error from Cleanup, err=", err)
 		}
 	}
