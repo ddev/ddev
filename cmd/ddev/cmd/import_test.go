@@ -5,8 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"os"
+
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/fileutil"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,12 +18,16 @@ func TestImportTilde(t *testing.T) {
 	assert := assert.New(t)
 
 	for _, site := range DevTestSites {
-		cleanup := site.Chdir()
 
-		usr, err := homedir.Dir()
+		homedir, err := homedir.Dir()
 		assert.NoError(err)
-		err = util.DownloadFile(filepath.Join(usr, "files.tar.gz"), site.FilesTarballURL)
+		cwd, _ := os.Getwd()
+		testFile := filepath.Join(homedir, "testfile.tar.gz")
+		err = fileutil.CopyFile(filepath.Join(cwd, "testdata", "testfile.tar.gz"), testFile)
 		assert.NoError(err)
+
+		cleanup := site.Chdir()
+		defer os.Remove(testFile)
 
 		// this ~ should be expanded by shell
 		args := []string{"import-files", "--src", "~/files.tar.gz"}

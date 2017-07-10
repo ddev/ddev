@@ -49,7 +49,7 @@ type TestSite struct {
 func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
-	log.Debugf("Prepping test for %s.\n", site.Name)
+	log.Debugf("Prepping test for site %s", site.Name)
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
 	util.CheckErr(err)
 
