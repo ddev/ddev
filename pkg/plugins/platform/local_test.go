@@ -53,40 +53,6 @@ var (
 )
 
 func TestMain(m *testing.M) {
-
-	if len(platform.GetApps()) > 0 {
-		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", len(platform.GetApps()))
-	}
-
-	for i := range TestSites {
-		err := TestSites[i].Prepare()
-		if err != nil {
-			log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
-		}
-	}
-
-	log.Debugln("Running tests.")
-	testRun := m.Run()
-
-	for i := range TestSites {
-		TestSites[i].Cleanup()
-	}
-
-	os.Exit(testRun)
-}
-
-// TestLocalSetup reduces the TestSite list on shorter test runs.
-func TestLocalSetup(t *testing.T) {
-	// Allow tests to run in "short" mode, which will only test a single site. This keeps test runtimes low.
-	// We would much prefer to do this in TestMain, but the Short() flag is not yet available at that point.
-	if testing.Short() {
-		TestSites = []testcommon.TestSite{TestSites[0]}
-	}
-}
-
-// TestLocalStart tests the functionality that is called when "ddev start" is executed
-func TestLocalStart(t *testing.T) {
-
 	// ensure we have docker network
 	client := dockerutil.GetDockerClient()
 	err := dockerutil.EnsureNetwork(client, dockerutil.NetName)
@@ -94,19 +60,85 @@ func TestLocalStart(t *testing.T) {
 		log.Fatal(err)
 	}
 
+	if len(platform.GetApps()) > 0 {
+		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", len(platform.GetApps()))
+	}
+
+	if os.Getenv("GOTEST_SHORT") != "" {
+		TestSites = []testcommon.TestSite{TestSites[0]}
+	}
+
+	for i := range TestSites {
+		err := TestSites[i].Prepare()
+		if err != nil {
+			log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
+		}
+
+		switchDir := TestSites[i].Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s Start", TestSites[i].Name))
+
+		testcommon.ClearDockerEnv()
+
+		app, err := platform.GetPluginApp("local")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = app.Init(TestSites[i].Dir)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = app.Start()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		runTime()
+		switchDir()
+	}
+
+	log.Debugln("Running tests.")
+	testRun := m.Run()
+
+	for _, site := range TestSites {
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s Remove", site.Name))
+
+		testcommon.ClearDockerEnv()
+
+		app, err := platform.GetPluginApp("local")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = app.Init(site.Dir)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = app.Down(true)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		runTime()
+		site.Cleanup()
+	}
+
+	os.Exit(testRun)
+}
+
+// TestLocalStart tests the functionality that is called when "ddev start" is executed
+func TestLocalStart(t *testing.T) {
 	assert := assert.New(t)
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		cleanup := site.Chdir()
+		switchDir := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalStart", site.Name))
 
-		testcommon.ClearDockerEnv()
 		err = app.Init(site.Dir)
-		assert.NoError(err)
-
-		err = app.Start()
 		assert.NoError(err)
 
 		// ensure docker-compose.yaml exists inside .ddev site folder
@@ -122,7 +154,7 @@ func TestLocalStart(t *testing.T) {
 		}
 
 		runTime()
-		cleanup()
+		switchDir()
 	}
 
 	// try to start a site of same name at different path
@@ -136,7 +168,7 @@ func TestLocalStart(t *testing.T) {
 	err = app.Init(another.Dir)
 	assert.Error(err)
 	assert.Contains(err.Error(), fmt.Sprintf("container in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
-	another.Cleanup()
+	testcommon.CleanupDir(another.Dir)
 }
 
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
@@ -165,7 +197,7 @@ func TestLocalImportDB(t *testing.T) {
 	testDir, _ := os.Getwd()
 
 	for _, site := range TestSites {
-		cleanup := site.Chdir()
+		switchDir := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportDB", site.Name))
 
 		testcommon.ClearDockerEnv()
@@ -180,11 +212,6 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.DBTarURL != "" {
-			err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
-			assert.NoError(err)
-			err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
-			assert.NoError(err)
-
 			dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
 			err := util.DownloadFile(dbPath, site.DBTarURL)
 			assert.NoError(err)
@@ -204,11 +231,6 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.DBZipURL != "" {
-			err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
-			assert.NoError(err)
-			err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
-			assert.NoError(err)
-
 			dbZipPath := filepath.Join(testcommon.CreateTmpDir("local-db-zip"), "db.zip")
 			err = util.DownloadFile(dbZipPath, site.DBZipURL)
 			assert.NoError(err)
@@ -228,11 +250,6 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.FullSiteTarballURL != "" {
-			err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
-			assert.NoError(err)
-			err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
-			assert.NoError(err)
-
 			siteTarPath := filepath.Join(testcommon.CreateTmpDir("local-site-tar"), "site.tar.gz")
 			err = util.DownloadFile(siteTarPath, site.FullSiteTarballURL)
 			assert.NoError(err)
@@ -243,7 +260,7 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		runTime()
-		cleanup()
+		switchDir()
 	}
 }
 
@@ -254,7 +271,7 @@ func TestLocalImportFiles(t *testing.T) {
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		cleanup := site.Chdir()
+		switchDir := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportFiles", site.Name))
 
 		testcommon.ClearDockerEnv()
@@ -292,7 +309,7 @@ func TestLocalImportFiles(t *testing.T) {
 		}
 
 		runTime()
-		cleanup()
+		switchDir()
 	}
 }
 
@@ -303,7 +320,7 @@ func TestLocalExec(t *testing.T) {
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		cleanup := site.Chdir()
+		switchDir := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalExec", site.Name))
 
 		err := app.Init(site.Dir)
@@ -314,6 +331,11 @@ func TestLocalExec(t *testing.T) {
 		assert.NoError(err)
 		out := stdout()
 		assert.Contains(out, "/var/www/html")
+
+		err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
+		assert.NoError(err)
+		err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
+		assert.NoError(err)
 
 		stdout = testcommon.CaptureStdOut()
 		switch app.GetType() {
@@ -332,7 +354,7 @@ func TestLocalExec(t *testing.T) {
 		assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
 
 		runTime()
-		cleanup()
+		switchDir()
 
 	}
 }
@@ -345,7 +367,7 @@ func TestLocalLogs(t *testing.T) {
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		cleanup := site.Chdir()
+		switchDir := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalLogs", site.Name))
 
 		err := app.Init(site.Dir)
@@ -371,7 +393,7 @@ func TestLocalLogs(t *testing.T) {
 		assert.False(strings.Contains(out, "Database initialized"))
 
 		runTime()
-		cleanup()
+		switchDir()
 	}
 }
 
@@ -424,7 +446,7 @@ func TestLocalStop(t *testing.T) {
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		cleanup := site.Chdir()
+		switchDir := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalStop", site.Name))
 
 		testcommon.ClearDockerEnv()
@@ -443,7 +465,7 @@ func TestLocalStop(t *testing.T) {
 		}
 
 		runTime()
-		cleanup()
+		switchDir()
 	}
 }
 
@@ -454,50 +476,20 @@ func TestDescribeStopped(t *testing.T) {
 	assert.NoError(err)
 
 	for _, site := range TestSites {
-		cleanup := site.Chdir()
+		switchDir := site.Chdir()
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Stop()
 		assert.NoError(err)
 
 		out, err := app.Describe()
 		assert.NoError(err)
 
 		assert.Contains(out, platform.SiteStopped, "Output did not include the word stopped when describing a stopped site.")
-		cleanup()
-	}
-}
-
-// TestLocalRemove tests the functionality that is called when "ddev rm" is executed
-func TestLocalRemove(t *testing.T) {
-	assert := assert.New(t)
-
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
-
-	for _, site := range TestSites {
-		cleanup := site.Chdir()
-
-		testcommon.ClearDockerEnv()
-		err := app.Init(site.Dir)
-		assert.NoError(err)
-
-		// start the previously stopped containers -
-		// stopped/removed have the same state
-		err = app.Start()
-		assert.NoError(err)
-
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalRemove", site.Name))
-		err = app.Down(true)
-		assert.NoError(err)
-
-		for _, containerType := range [3]string{"web", "db", "dba"} {
-			_, err := constructContainerName(containerType, app)
-			assert.Error(err, "Received error on containerName search: ", err)
-		}
-
-		runTime()
-		cleanup()
+		switchDir()
 	}
 }
 
@@ -514,7 +506,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = app.Init(site.Dir)
 	assert.NoError(err)
 
-	// Start a site so we have something to cleanup
+	// Ensure we have a site started so we have something to cleanup
 	err = app.Start()
 	assert.NoError(err)
 
@@ -548,6 +540,24 @@ func TestCleanupWithoutCompose(t *testing.T) {
 // TestGetappsEmpty ensures that GetApps returns an empty list when no applications are running.
 func TestGetAppsEmpty(t *testing.T) {
 	assert := assert.New(t)
+
+	// Ensure test sites are removed
+	for _, site := range TestSites {
+		app, err := platform.GetPluginApp("local")
+		assert.NoError(err)
+
+		switchDir := site.Chdir()
+
+		testcommon.ClearDockerEnv()
+		err = app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Down(true)
+		assert.NoError(err)
+
+		switchDir()
+	}
+
 	apps := platform.GetApps()
 	assert.Equal(len(apps["local"]), 0)
 }

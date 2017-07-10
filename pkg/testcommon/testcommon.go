@@ -9,10 +9,12 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	homedir "github.com/mitchellh/go-homedir"
 
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
 )
@@ -102,6 +104,14 @@ func (site *TestSite) Cleanup() {
 	util.CheckErr(err)
 	// CleanupDir checks its own errors.
 	CleanupDir(site.Dir)
+
+	home, err := homedir.Dir()
+	util.CheckErr(err)
+
+	siteData := filepath.Join(home, ".ddev", site.Name)
+	if fileutil.FileExists(siteData) {
+		CleanupDir(siteData)
+	}
 }
 
 // CleanupDir removes a directory specified by string.
