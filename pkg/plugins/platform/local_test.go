@@ -211,7 +211,7 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.DBTarURL != "" {
-			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteArchive", "", site.DBTarURL)
+			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
 			err = app.ImportDB(cachedArchive, "")
 			assert.NoError(err)
@@ -228,10 +228,10 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.DBZipURL != "" {
-			dbZipPath := filepath.Join(testcommon.CreateTmpDir("local-db-zip"), "db.zip")
-			err = util.DownloadFile(dbZipPath, site.DBZipURL)
+			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteZipArchive", "", site.DBZipURL)
+
 			assert.NoError(err)
-			err = app.ImportDB(dbZipPath, "")
+			err = app.ImportDB(cachedArchive, "")
 			assert.NoError(err)
 
 			stdout := testcommon.CaptureStdOut()
@@ -241,9 +241,6 @@ func TestLocalImportDB(t *testing.T) {
 
 			assert.Contains(string(out), "Tables_in_db")
 			assert.False(strings.Contains(string(out), "Empty set"))
-
-			err = os.Remove(dbZipPath)
-			assert.NoError(err)
 		}
 
 		if site.FullSiteTarballURL != "" {

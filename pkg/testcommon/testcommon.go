@@ -271,11 +271,15 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 
 	log.Debugf("Downloaded %s into %s", sourceURL, fileNameFullPath)
 
-	err = archive.Untar(fileNameFullPath, extractPath, internalExtractionPath)
+	if filepath.Ext(fileNameFullPath) == ".zip" {
+		err = archive.Unzip(fileNameFullPath, extractPath, internalExtractionPath)
+	} else {
+		err = archive.Untar(fileNameFullPath, extractPath, internalExtractionPath)
+	}
 	if err != nil {
 		_ = fileutil.PurgeDirectory(extractPath)
 		_ = os.RemoveAll(extractPath)
-		return "", "", fmt.Errorf("Tar extraction of %s failed err=%v\n", fileNameFullPath, err)
+		return "", "", fmt.Errorf("Archive extraction of %s failed err=%v\n", fileNameFullPath, err)
 	}
 	return extractPath, fileNameFullPath, nil
 }
