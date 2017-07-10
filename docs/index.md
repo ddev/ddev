@@ -1,6 +1,8 @@
 <h1>ddev Documentation</h1>
 
-[ddev](https://github.com/drud/ddev) is a local web development environment management system powered by Docker and Docker Compose. It provides rapid, repeatable, and destructible environments geared for Drupal and WordPress development.
+[ddev](https://github.com/drud/ddev) is an open source tool that makes it dead simple to get local PHP development environments up and running within minutes. With shareable and extendable environment configurations for every project, ddev aims to allow development teams to leverage the power and flexibility of Docker in their workflow without having to invest significant time and effort when addressing its upfront complexities.
+
+
 
 ## System Requirements
 
