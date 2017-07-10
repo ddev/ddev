@@ -53,10 +53,10 @@ func (site *TestSite) Prepare() error {
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
 	util.CheckErr(err)
 
-	cachedSrcDir, err := GetCachedExtractedArchive(site.Name, site.Name+"_siteArchive", site.ArchiveInternalExtractionPath, site.SourceURL)
+	cachedSrcDir, _, err := GetCachedArchive(site.Name, site.Name+"_siteArchive", site.ArchiveInternalExtractionPath, site.SourceURL)
 	if err != nil {
 		site.Cleanup()
-		return fmt.Errorf("Failed to GetCachedExtractedArchive, err=%v", err)
+		return fmt.Errorf("Failed to GetCachedArchive, err=%v", err)
 	}
 	// We must copy into a directory that does not yet exist :(
 	err = os.Remove(site.Dir)
@@ -243,13 +243,13 @@ func TimeTrack(start time.Time, name string) func() {
 	}
 }
 
-// GetCachedExtractedArchive returns a directory populated with the contents of the specified archive, either from cache or
+// GetCachedArchive returns a directory populated with the contents of the specified archive, either from cache or
 // from downloading and creating cache.
 // siteName is the site.Name used for storage
 // prefixString is the prefix used to disambiguate downloads and extracts
 // internalExtractionPath is the place in the archive to start extracting
 // sourceURL is the actual URL to download.
-func GetCachedExtractedArchive(siteName string, prefixString string, internalExtractionPath string, sourceURL string) (string, error) {
+func GetCachedArchive(siteName string, prefixString string, internalExtractionPath string, sourceURL string) (string, string, error) {
 	uniqueName := prefixString + "_" + path.Base(sourceURL)
 	testCache := filepath.Join(platform.GetGlobalDdevDir(), "testcache", siteName)
 	fileNameFullPath := filepath.Join(testCache, "tarballs", uniqueName)
@@ -257,15 +257,16 @@ func GetCachedExtractedArchive(siteName string, prefixString string, internalExt
 	extractPath := filepath.Join(testCache, prefixString)
 
 	// Check to see if we have it cached, if so just return it.
-	stat, err := os.Stat(extractPath)
-	if err == nil && stat.IsDir() {
-		return extractPath, nil
+	dStat, dErr := os.Stat(extractPath)
+	aStat, aErr := os.Stat(fileNameFullPath)
+	if dErr == nil && dStat.IsDir() && aErr == nil && !aStat.IsDir() {
+		return extractPath, fileNameFullPath, nil
 	}
 
 	_ = os.MkdirAll(extractPath, 0777)
-	err = util.DownloadFile(fileNameFullPath, sourceURL)
+	err := util.DownloadFile(fileNameFullPath, sourceURL)
 	if err != nil {
-		return "", fmt.Errorf("Failed to download url=%s into %s, err=%v", sourceURL, fileNameFullPath, err)
+		return "", "", fmt.Errorf("Failed to download url=%s into %s, err=%v", sourceURL, fileNameFullPath, err)
 	}
 
 	log.Debugf("Downloaded %s into %s", sourceURL, fileNameFullPath)
@@ -274,7 +275,7 @@ func GetCachedExtractedArchive(siteName string, prefixString string, internalExt
 	if err != nil {
 		_ = fileutil.PurgeDirectory(extractPath)
 		_ = os.RemoveAll(extractPath)
-		return "", fmt.Errorf("Tar extraction of %s failed err=%v\n", fileNameFullPath, err)
+		return "", "", fmt.Errorf("Tar extraction of %s failed err=%v\n", fileNameFullPath, err)
 	}
-	return extractPath, nil
+	return extractPath, fileNameFullPath, nil
 }
