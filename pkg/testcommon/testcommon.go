@@ -9,7 +9,6 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	homedir "github.com/mitchellh/go-homedir"
 
 	"fmt"
 	"path"
@@ -98,10 +97,7 @@ func (site *TestSite) Cleanup() {
 	// CleanupDir checks its own errors.
 	CleanupDir(site.Dir)
 
-	home, err := homedir.Dir()
-	util.CheckErr(err)
-
-	siteData := filepath.Join(home, ".ddev", site.Name)
+	siteData := filepath.Join(platform.GetGlobalDdevDir(), site.Name)
 	if fileutil.FileExists(siteData) {
 		CleanupDir(siteData)
 	}

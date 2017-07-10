@@ -66,6 +66,7 @@ var RootCmd = &cobra.Command{
 		}
 
 		updateFile := filepath.Join(homeddev, ".update")
+
 		// Do periodic detection of whether an update is available for ddev users.
 		timeToCheckForUpdates, err := updatecheck.IsUpdateNeeded(updateFile, updateInterval)
 		if err != nil {
