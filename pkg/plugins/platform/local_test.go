@@ -520,9 +520,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	}
 
 	// Cleanup the global site database dirs
-	dir := filepath.Join(platform.GetGlobalDdevDir(), site.Name)
-	err = os.RemoveAll(dir)
-	assert.NoError(err)
+	site.Cleanup()
 
 	revertDir()
 }
