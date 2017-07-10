@@ -21,7 +21,7 @@ const routerProjectName = "ddev-router"
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
-	ddevDir := GetGlobalDdevDir()
+	ddevDir := util.GetGlobalDdevDir()
 	dest := path.Join(ddevDir, "router-compose.yaml")
 	return dest
 }

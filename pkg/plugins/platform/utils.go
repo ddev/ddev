@@ -12,8 +12,6 @@ import (
 
 	"errors"
 
-	"path"
-
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
@@ -194,14 +192,4 @@ func ddevContainersRunning() (bool, error) {
 		}
 	}
 	return false, nil
-}
-
-// GetGlobalDdevDir returns ~/.ddev, the global caching directory
-func GetGlobalDdevDir() string {
-	userHome, err := homedir.Dir()
-	if err != nil {
-		log.Fatal("could not get home directory for current user. is it set?")
-	}
-	ddevDir := path.Join(userHome, ".ddev")
-	return ddevDir
 }

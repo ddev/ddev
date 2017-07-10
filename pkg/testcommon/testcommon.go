@@ -17,7 +17,6 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
 )
@@ -97,7 +96,7 @@ func (site *TestSite) Cleanup() {
 	// CleanupDir checks its own errors.
 	CleanupDir(site.Dir)
 
-	siteData := filepath.Join(platform.GetGlobalDdevDir(), site.Name)
+	siteData := filepath.Join(util.GetGlobalDdevDir(), site.Name)
 	if fileutil.FileExists(siteData) {
 		CleanupDir(siteData)
 	}
@@ -247,7 +246,7 @@ func TimeTrack(start time.Time, name string) func() {
 // sourceURL is the actual URL to download.
 func GetCachedArchive(siteName string, prefixString string, internalExtractionPath string, sourceURL string) (string, string, error) {
 	uniqueName := prefixString + "_" + path.Base(sourceURL)
-	testCache := filepath.Join(platform.GetGlobalDdevDir(), "testcache", siteName)
+	testCache := filepath.Join(util.GetGlobalDdevDir(), "testcache", siteName)
 	fileNameFullPath := filepath.Join(testCache, "tarballs", uniqueName)
 	_ = os.MkdirAll(filepath.Dir(fileNameFullPath), 0777)
 	extractPath := filepath.Join(testCache, prefixString)
