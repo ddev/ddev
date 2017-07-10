@@ -18,7 +18,6 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -510,13 +509,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	// Cleanup the site data dirs - this would occur before Cleanup() in real usage
-	home, err := homedir.Dir()
-	assert.NoError(err)
-	dir := filepath.Join(home, ".ddev", site.Name)
-	err = os.RemoveAll(dir)
-	assert.NoError(err)
-
 	// Call the Cleanup command()
 	err = platform.Cleanup(app)
 	assert.NoError(err)
@@ -533,6 +525,11 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	for _, volume := range volumes {
 		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
+
+	// Cleanup the global site database dirs
+	dir := filepath.Join(platform.GetGlobalDdevDir(), site.Name)
+	err = os.RemoveAll(dir)
+	assert.NoError(err)
 
 	revertDir()
 }
