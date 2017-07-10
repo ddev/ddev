@@ -232,7 +232,7 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 		return fmt.Errorf("no .sql files found to import")
 	}
 
-	fmt.Printf("Importing database from %s...\n", importPath)
+	fmt.Println("Importing database...")
 	err = l.Exec("db", true, "bash", "-c", "cat /db/*.sql | mysql")
 	if err != nil {
 		return err
