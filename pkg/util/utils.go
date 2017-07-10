@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"path"
-	"log"
 	"github.com/mitchellh/go-homedir"
+	"log"
+	"path"
 )
 
 // Failed will print an red error message and exit with failure.
@@ -51,7 +51,6 @@ func RandString(n int) string {
 	}
 	return string(b)
 }
-
 
 // GetGlobalDdevDir returns ~/.ddev, the global caching directory
 func GetGlobalDdevDir() string {
