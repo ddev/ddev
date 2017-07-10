@@ -6,10 +6,7 @@ YELLOW=$(tput setaf 3)
 RESET=$(tput sgr0)
 
 TIMECMD=gtime
-if [ $(which $TIMECMD) = "" ]; then
-  echo "please install gnu time with \"brew install gnu-time\"."
-  exit 1
-fi
+command -v $TIMECMD >/dev/null 2>&1 || { echo >&2 "please install gnu time with \"brew install gnu-time\"."; exit 1; }
 TIMEFMT='-f %e'
 TIMEIT="$TIMECMD $TIMEFMT -o time.out"
 CURLIT='curl  -o /dev/null --fail -sfL -w %{time_total}'
@@ -41,7 +38,7 @@ for ((i=0; i<${#sites[@]}; ++i)); do
 
 
 	if [ ! -d "$site" ] ; then
-		drush dl -y ${downloads[$i]} --drupal-project-rename=$site >>$log 2>&1
+		drush dl -y ${downloads[$i]} --drupal-project-rename=$site > /dev/null 2>&1
 	fi
 
 	PROFILE=standard
@@ -80,7 +77,7 @@ END
 	fi
 
 	# drush si - if it fails we continue to next site.
-	$TIMEIT ddev exec drush si $PROFILE -y --db-url=mysql://root:root@db/data >>$log 2>&1 || (echo "Failed drush si" && continue)
+	$TIMEIT ddev exec drush si $PROFILE -y --db-url=mysql://db:db@db/db >>$log 2>&1 || (echo "Failed drush si" && continue)
     echo "${BLUE}$site: drush site-install: $(cat time.out) ${RESET}"
 
     elapsed=$($CURLIT -fL $base_url)
