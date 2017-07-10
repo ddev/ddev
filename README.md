@@ -2,7 +2,7 @@
 
 # ddev
 
-The purpose of *ddev* is to help Drupal and WordPress developers abstract away the complexity and effort of adopting and maintaining a docker based local development stack. You can see all "ddev" usages using the help commands, like ddev -h, ddev start -h, etc.
+ddev is an open source tool that makes it dead simple to get local PHP development environments up and running within minutes. With shareable and extendable environment configurations for every project, ddev aims to allow development teams to leverage the power and flexibility of Docker in their workflow without having to invest significant time and effort when addressing its upfront complexities.
 
 ## Roadmap
 
