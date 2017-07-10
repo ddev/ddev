@@ -27,7 +27,7 @@ func TestImportTilde(t *testing.T) {
 		assert.NoError(err)
 
 		cleanup := site.Chdir()
-		defer os.Remove(testFile)
+		defer rmFile(testFile)
 
 		// this ~ should be expanded by shell
 		args := []string{"import-files", "--src", "~/testfile.tar.gz"}
@@ -51,4 +51,9 @@ func TestImportTilde(t *testing.T) {
 	}
 
 	assert.NoError(nil)
+}
+
+// rmFile simply allows us to defer os.Remove while ignoring the error return.
+func rmFile(fullPath string) {
+	_ = os.Remove(fullPath)
 }

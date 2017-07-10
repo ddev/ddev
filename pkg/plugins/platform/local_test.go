@@ -245,6 +245,7 @@ func TestLocalImportDB(t *testing.T) {
 
 		if site.FullSiteTarballURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_FullSiteTarballURL", "", site.FullSiteTarballURL)
+			assert.NoError(err)
 
 			err = app.ImportDB(cachedArchive, "data.sql")
 			assert.NoError(err)

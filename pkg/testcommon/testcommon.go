@@ -279,7 +279,7 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 	if err != nil {
 		_ = fileutil.PurgeDirectory(extractPath)
 		_ = os.RemoveAll(extractPath)
-		return "", "", fmt.Errorf("Archive extraction of %s failed err=%v\n", fileNameFullPath, err)
+		return "", "", fmt.Errorf("archive extraction of %s failed err=%v", fileNameFullPath, err)
 	}
 	return extractPath, fileNameFullPath, nil
 }
