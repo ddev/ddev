@@ -71,7 +71,7 @@ func TestMain(m *testing.M) {
 	for i := range TestSites {
 		err := TestSites[i].Prepare()
 		if err != nil {
-			log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
+			log.Fatalf("Prepare() failed on TestSite.Prepare(%d) site=%s, err=%v", i, TestSites[i].Name, err)
 		}
 
 		switchDir := TestSites[i].Chdir()
@@ -81,17 +81,17 @@ func TestMain(m *testing.M) {
 
 		app, err := platform.GetPluginApp("local")
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("TestMain startup: Platform.GetPluginApp(local) failed for site %s, err=%s", TestSites[i].Name, err)
 		}
 
 		err = app.Init(TestSites[i].Dir)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
 		err = app.Start()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", TestSites[i].Name, err)
 		}
 
 		runTime()
@@ -101,24 +101,24 @@ func TestMain(m *testing.M) {
 	log.Debugln("Running tests.")
 	testRun := m.Run()
 
-	for _, site := range TestSites {
+	for i, site := range TestSites {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s Remove", site.Name))
 
 		testcommon.ClearDockerEnv()
 
 		app, err := platform.GetPluginApp("local")
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("TestMain shutdown: Platform.GetPluginApp(local) failed for site %s, err=%s", TestSites[i].Name, err)
 		}
 
 		err = app.Init(site.Dir)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("TestMain shutdown: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
 		err = app.Down(true)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("TestMain startup: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
 		}
 
 		runTime()
