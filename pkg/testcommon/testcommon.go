@@ -10,10 +10,10 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"fmt"
 	"path"
 
 	"fmt"
+
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
