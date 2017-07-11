@@ -18,7 +18,6 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -212,10 +211,9 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.DBTarURL != "" {
-			dbPath := filepath.Join(testcommon.CreateTmpDir("local-db"), "db.tar.gz")
-			err := util.DownloadFile(dbPath, site.DBTarURL)
+			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
-			err = app.ImportDB(dbPath, "")
+			err = app.ImportDB(cachedArchive, "")
 			assert.NoError(err)
 
 			stdout := testcommon.CaptureStdOut()
@@ -226,15 +224,14 @@ func TestLocalImportDB(t *testing.T) {
 			assert.Contains(string(out), "Tables_in_db")
 			assert.False(strings.Contains(string(out), "Empty set"))
 
-			err = os.Remove(dbPath)
 			assert.NoError(err)
 		}
 
 		if site.DBZipURL != "" {
-			dbZipPath := filepath.Join(testcommon.CreateTmpDir("local-db-zip"), "db.zip")
-			err = util.DownloadFile(dbZipPath, site.DBZipURL)
+			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteZipArchive", "", site.DBZipURL)
+
 			assert.NoError(err)
-			err = app.ImportDB(dbZipPath, "")
+			err = app.ImportDB(cachedArchive, "")
 			assert.NoError(err)
 
 			stdout := testcommon.CaptureStdOut()
@@ -244,18 +241,13 @@ func TestLocalImportDB(t *testing.T) {
 
 			assert.Contains(string(out), "Tables_in_db")
 			assert.False(strings.Contains(string(out), "Empty set"))
-
-			err = os.Remove(dbZipPath)
-			assert.NoError(err)
 		}
 
 		if site.FullSiteTarballURL != "" {
-			siteTarPath := filepath.Join(testcommon.CreateTmpDir("local-site-tar"), "site.tar.gz")
-			err = util.DownloadFile(siteTarPath, site.FullSiteTarballURL)
+			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_FullSiteTarballURL", "", site.FullSiteTarballURL)
 			assert.NoError(err)
-			err = app.ImportDB(siteTarPath, "data.sql")
-			assert.NoError(err)
-			err = os.Remove(siteTarPath)
+
+			err = app.ImportDB(cachedArchive, "data.sql")
 			assert.NoError(err)
 		}
 
@@ -510,13 +502,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	// Cleanup the site data dirs - this would occur before Cleanup() in real usage
-	home, err := homedir.Dir()
-	assert.NoError(err)
-	dir := filepath.Join(home, ".ddev", site.Name)
-	err = os.RemoveAll(dir)
-	assert.NoError(err)
-
 	// Call the Cleanup command()
 	err = platform.Cleanup(app)
 	assert.NoError(err)
@@ -533,6 +518,12 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	for _, volume := range volumes {
 		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
+
+	// Cleanup the global site database dirs. This does the work instead of running site.Cleanup()
+	// because site.Cleanup() removes site directories that we'll need in other tests.
+	dir := filepath.Join(util.GetGlobalDdevDir(), site.Name)
+	err = os.RemoveAll(dir)
+	assert.NoError(err)
 
 	revertDir()
 }

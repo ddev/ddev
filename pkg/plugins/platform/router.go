@@ -15,21 +15,14 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/fatih/color"
-
-	homedir "github.com/mitchellh/go-homedir"
 )
 
 const routerProjectName = "ddev-router"
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
-	userHome, err := homedir.Dir()
-	if err != nil {
-		log.Fatal("could not get home directory for current user. is it set?")
-	}
-	routerdir := path.Join(userHome, ".ddev")
-	dest := path.Join(routerdir, "router-compose.yaml")
-
+	ddevDir := util.GetGlobalDdevDir()
+	dest := path.Join(ddevDir, "router-compose.yaml")
 	return dest
 }
 

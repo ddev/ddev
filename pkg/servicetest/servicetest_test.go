@@ -31,7 +31,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	if os.Getenv("GOTEST_SHORT") != "" {
+	if os.Getenv("GOTEST_SHORT") == "" {
 		var err error
 
 		ServiceDir, err = filepath.Abs("../../services")

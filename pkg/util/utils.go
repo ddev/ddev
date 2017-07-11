@@ -6,6 +6,9 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/mitchellh/go-homedir"
+	"log"
+	"path"
 )
 
 // Failed will print an red error message and exit with failure.
@@ -47,6 +50,16 @@ func RandString(n int) string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
+}
+
+// GetGlobalDdevDir returns ~/.ddev, the global caching directory
+func GetGlobalDdevDir() string {
+	userHome, err := homedir.Dir()
+	if err != nil {
+		log.Fatal("could not get home directory for current user. is it set?")
+	}
+	ddevDir := path.Join(userHome, ".ddev")
+	return ddevDir
 }
 
 func init() {
