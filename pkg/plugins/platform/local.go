@@ -727,6 +727,20 @@ func (l *LocalApp) Down(removeData bool) error {
 	l.DockerEnv()
 	settingsFilePath := l.AppConfig.SiteSettingsPath
 
+	err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
+	if err != nil {
+		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
+		err = Cleanup(l)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = StopRouter()
+	if err != nil {
+		return err
+	}
+
 	if removeData {
 		if fileutil.FileExists(settingsFilePath) {
 			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
@@ -760,14 +774,7 @@ func (l *LocalApp) Down(removeData bool) error {
 			util.Success("Application data removed")
 		}
 	}
-
-	err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
-	if err != nil {
-		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
-		return Cleanup(l)
-	}
-
-	return StopRouter()
+	return nil
 }
 
 // URL returns the URL for a given application.
