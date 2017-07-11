@@ -5,7 +5,6 @@ jobs:
     machine: true
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
-      DRUD_DEBUG: "true"
       GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
     steps:

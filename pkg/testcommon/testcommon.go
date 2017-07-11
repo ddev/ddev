@@ -10,8 +10,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"fmt"
 	"path"
+
+	"fmt"
 
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -106,7 +107,7 @@ func (site *TestSite) Cleanup() {
 func CleanupDir(dir string) {
 	err := os.RemoveAll(dir)
 	if err != nil {
-		log.Warn("Failed to remove directory %s, err: %v", dir, err)
+		log.Warn(fmt.Sprintf("Failed to remove directory %s, err: %v", dir, err))
 	}
 }
 

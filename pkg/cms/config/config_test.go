@@ -10,6 +10,7 @@ import (
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,6 +24,7 @@ func TestWriteDrupalConfig(t *testing.T) {
 	err = config.WriteDrupalConfig(drupalConfig, file.Name())
 	assert.NoError(t, err)
 
+	util.CheckClose(file)
 	err = os.Chmod(dir, 0755)
 	assert.NoError(t, err)
 	err = os.Chmod(file.Name(), 0666)
@@ -41,6 +43,8 @@ func TestWriteDrushConfig(t *testing.T) {
 	drushConfig := model.NewDrushConfig()
 	err = config.WriteDrushConfig(drushConfig, file.Name())
 	assert.NoError(t, err)
+
+	util.CheckClose(file)
 
 	err = os.Chmod(dir, 0755)
 	assert.NoError(t, err)
@@ -61,6 +65,7 @@ func TestWriteWordpressConfig(t *testing.T) {
 	err = config.WriteWordpressConfig(wpConfig, file.Name())
 	assert.NoError(t, err)
 
+	util.CheckClose(file)
 	err = os.Chmod(dir, 0755)
 	assert.NoError(t, err)
 	err = os.Chmod(file.Name(), 0666)

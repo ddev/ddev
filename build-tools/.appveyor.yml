@@ -1,0 +1,50 @@
+# At this time the appveyor.yml doesn't help us much because we use
+# Linux docker containers extensively, and appveyor is unable to use them.
+# So even building (not to mention testing) isn't possible.
+version: "{build}"
+image: Visual Studio 2017
+
+# Source Config
+clone_folder: c:\gopath\src\github.com\drud\build-tools
+
+# Build host
+
+environment:
+  GOPATH: c:\gopath
+  GOVERSION: 1.8.3
+  BASH: "C:/Program Files/git/bin/bash"
+
+init:
+  - git config --global core.autocrlf input
+
+# Build
+
+install:
+  - ps: Stop-Service docker
+  - ps: Remove-Item -Force -Recurse $env:ProgramFiles\docker
+  - ps: Invoke-WebRequest -Uri "https://download.docker.com/win/static/test/x86_64/docker-17.06.0-ce.zip" -OutFile "docker.zip"
+  - ps: Expand-Archive -Path "docker.zip" -DestinationPath $env:ProgramFiles -Force
+  - ps: Remove-Item docker.zip
+  - ps: Start-Service docker
+  - ps: Invoke-WebRequest "https://github.com/docker/compose/releases/download/1.14.0/docker-compose-Windows-x86_64.exe" -UseBasicParsing -OutFile $Env:ProgramFiles\docker\docker-compose.exe
+  - docker run -it -v C:/gopath:/junk busybox ls
+
+  - docker version
+  - docker-compose version
+  # Install the specific Go version.
+  - rmdir c:\go /s /q
+  - curl -fsS -o golang.msi https://storage.googleapis.com/golang/go%GOVERSION%.windows-amd64.msi
+  - msiexec /i golang.msi /q
+  - go version
+  - choco install -y git make
+  - make --version
+
+build_script:
+  - cd tests
+  - '"%BASH%" -c "make windows"'
+
+deploy: false
+
+test_script:
+  - cd tests
+  - '"%BASH%" -c "make test"'

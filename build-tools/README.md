@@ -52,6 +52,38 @@ make VERSION=0.3.0 push
 make clean
 ```
 
+On Windows, using the tools described below, use the command:
+
+```
+"C:\Program Files\git\bin\bash" -c "make"
+"C:\Program Files\git\bin\bash" -c "make test"
+"C:\Program Files\git\bin\bash" -c "make test TESTARGS='-run TestSomething'"
+"C:\Program Files\git\bin\bash" -c "make gofmt"
+```
+
+If you're using Powershell instead of cmd, just prepend an `&` on the command, as in:
+
+```
+&"C:\Program Files\git\bin\bash" -c "make"
+```
+
+(Note that if you're working with the code, you can just run git bash and do make (and anything else you want) from inside it.)
+
+## Installed requirements
+
+You'll need:
+* docker-ce (will work with move versions and platforms)
+* gnu make
+* golang
+
+On windows the building is somewhat more difficult due to the build being bash/linux/make-oriented, but support is provided. You need:
+* [chocolatey](https://chocolatey.org/install) installed
+* make for Windows 3.81 (Recommended package [choco install make](https://chocolatey.org/packages/make) on chocolatey.org)
+* git for windows (Recommended package [choco install git](https://chocolatey.org/packages/git.install))
+* docker for windows.
+
+(You can certainly install the base gnu make package, and the traditional git for windows package should work fine. Chocolatey installs are recommended here because there are many, many ways to get mixes of unix-style components that absolutely don't work. Microsoft's lovely bash-for-windows is a great tool, but it's an actual Ubuntu environment so isn't a good place for testing Windows builds.)
+
 ## Golang compiler component
 
 golang projects and static analysis functions like gofmt are built in a container from drud/golang-build-container (from https://github.com/drud/golang-build-container). The version of the container is specified in build-tools.

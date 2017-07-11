@@ -11,7 +11,6 @@ import (
 	"log"
 
 	"github.com/drud/ddev/pkg/appimport"
-	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
@@ -21,21 +20,11 @@ import (
 func TestValidateAsset(t *testing.T) {
 	assert := assert.New(t)
 
-	testArchivePath := filepath.Join(testcommon.CreateTmpDir("appimport"), "db.tar.gz")
-
-	testFile, err := os.Create(testArchivePath)
-	if err != nil {
-		log.Fatalf("failed to create dummy test file: %v", err)
-	}
-	err = testFile.Close()
-	if err != nil {
-		log.Fatalf("failed to create dummy test file: %v", err)
-	}
-
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("failed to get cwd: %s", err)
 	}
+	testdata := filepath.Join(cwd, "testdata")
 
 	// test tilde expansion
 	userDir, err := homedir.Dir()
@@ -53,26 +42,28 @@ func TestValidateAsset(t *testing.T) {
 	assert.NoError(err)
 
 	// test a relative path
-	testPath, err = appimport.ValidateAsset("../../vendor", "files")
+	deepDir := filepath.Join(testdata, "dirlevel1", "dirlevel2")
+	err = os.Chdir(deepDir)
 	assert.NoError(err)
-	upTwo := strings.TrimSuffix(cwd, "/pkg/appimport")
-	assert.Contains(testPath, upTwo)
+	testPath, err = appimport.ValidateAsset("../../dirlevel1", "files")
+	assert.NoError(err)
+
+	assert.Contains(testPath, "dirlevel1")
 
 	// archive
+	testArchivePath := filepath.Join(testdata, "somedb.sql.gz")
 	_, err = appimport.ValidateAsset(testArchivePath, "db")
 	assert.Error(err)
 	assert.Equal(err.Error(), "is archive")
 
 	// db no sql
-	_, err = appimport.ValidateAsset("appimport.go", "db")
+	gofilePath := filepath.Join(testdata, "junk.go")
+	_, err = appimport.ValidateAsset(gofilePath, "db")
 	assert.Contains(err.Error(), "provided path is not a .sql file or archive")
 	assert.Error(err)
 
 	// files not a directory
-	_, err = appimport.ValidateAsset("appimport.go", "files")
+	_, err = appimport.ValidateAsset(gofilePath, "files")
 	assert.Error(err)
 	assert.Contains(err.Error(), "provided path is not a directory or archive")
-
-	err = os.RemoveAll(filepath.Dir(testArchivePath))
-	util.CheckErr(err)
 }

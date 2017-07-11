@@ -17,7 +17,7 @@ func TestDevRemove(t *testing.T) {
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
 
-		out, err := exec.RunCommand("ddev", []string{"remove"})
+		out, err := exec.RunCommand(DdevBin, []string{"remove"})
 		assert.NoError(err, "ddev remove should succeed but failed, err: %v, output: %s", err, out)
 		assert.Contains(out, "Successfully removed")
 

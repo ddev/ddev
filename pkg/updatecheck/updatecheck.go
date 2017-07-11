@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/Masterminds/semver"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/google/go-github/github"
 )
 
@@ -63,7 +64,8 @@ func IsUpdateNeeded(filepath string, updateInterval time.Duration) (bool, error)
 func ResetUpdateTime(filepath string) error {
 	err := os.Remove(filepath)
 	_ = err // We don't actually care if remove failed. All we care about is that the create succeeds.
-	_, err = os.Create(filepath)
+	file, err := os.Create(filepath)
+	util.CheckClose(file)
 	return err
 }
 

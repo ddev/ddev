@@ -23,8 +23,8 @@ func TestNewConfig(t *testing.T) {
 	// Create a temporary directory and change to it for the duration of this test.
 	testDir := testcommon.CreateTmpDir("TestNewConfig")
 
-	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
 
 	// Load a new Config
 	newConfig, err := NewConfig(testDir)
@@ -52,6 +52,7 @@ func TestNewConfig(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(newConfig.Name, loadedConfig.Name)
 	assert.Equal(newConfig.AppType, loadedConfig.AppType)
+
 }
 
 // TestAllowedAppType tests the IsAllowedAppType function.
@@ -72,8 +73,8 @@ func TestPrepDirectory(t *testing.T) {
 	assert := assert.New(t)
 	// Create a temporary directory and change to it for the duration of this test.
 	testDir := testcommon.CreateTmpDir("TestPrepDirectory")
-	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
 
 	config, err := NewConfig(testDir)
 	// We should get an error here, since no config exists.
@@ -92,8 +93,8 @@ func TestPrepDirectory(t *testing.T) {
 func TestHostName(t *testing.T) {
 	assert := assert.New(t)
 	testDir := testcommon.CreateTmpDir("TestHostName")
-	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
 	config, err := NewConfig(testDir)
 	assert.Error(err)
 	config.Name = util.RandString(32)
@@ -106,8 +107,8 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := assert.New(t)
 	testDir := testcommon.CreateTmpDir("TestWriteDockerCompose")
-	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
 
 	// Create a config
 	config, err := NewConfig(testDir)
@@ -143,8 +144,8 @@ func TestConfigCommand(t *testing.T) {
 	testDir := testcommon.CreateTmpDir("TestConfigCommand")
 
 	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
 
 	// Create a docroot folder.
 	err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
