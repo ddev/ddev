@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -14,9 +14,9 @@ import (
 )
 
 // DownloadFile retreives a file.
-func DownloadFile(filepath string, url string, progressBar bool) (err error) {
+func DownloadFile(fp string, url string, progressBar bool) (err error) {
 	// Create the file
-	out, err := os.Create(filepath)
+	out, err := os.Create(fp)
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,8 @@ func DownloadFile(filepath string, url string, progressBar bool) (err error) {
 	}
 	reader := resp.Body
 	if progressBar {
-		bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES).Prefix(path.Base(filepath))
+
+		bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES).Prefix(filepath.Base(fp))
 		bar.Start()
 
 		// create proxy reader

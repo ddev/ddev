@@ -14,7 +14,7 @@ var skipConfirmation bool
 var PullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Import files and database using a configured provider plugin.",
-	Long: `Import files and databased using a configured provider plugin.
+	Long: `Import files and database using a configured provider plugin.
 	Running pull will connect to the configured provider and download + import the
 	latest backups.`,
 	PreRun: func(cmd *cobra.Command, args []string) {

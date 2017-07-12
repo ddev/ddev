@@ -299,7 +299,7 @@ func (l *LocalApp) SiteStatus() string {
 	return siteStatus
 }
 
-// Import performs an import from a local
+// Import performs an import from the a configured provider plugin, if one exists.
 func (l *LocalApp) Import() error {
 	provider, err := l.AppConfig.GetProvider()
 	if err != nil {
@@ -312,7 +312,7 @@ func (l *LocalApp) Import() error {
 	}
 
 	if l.SiteStatus() != SiteRunning {
-		util.Warning("Site is not currently running. Starting site before performing import.")
+		fmt.Println("Site is not currently running. Starting site before performing import.")
 		err := l.Start()
 		if err != nil {
 			return err
@@ -341,7 +341,6 @@ func (l *LocalApp) Import() error {
 		return err
 	}
 
-	util.Success("\nImport successful, restarting application.\n")
 	return nil
 }
 
