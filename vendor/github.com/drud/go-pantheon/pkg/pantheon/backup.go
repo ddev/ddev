@@ -11,23 +11,23 @@ import (
 
 // Backup represents a single backup in the pantheon system.
 type Backup struct {
-	ID              string `json:"-"`
-	ArchiveType     string `json:"-"`
-	DownloadURL     string `json:"url,omitempty"`
-	SiteID          string `json:"-"`
-	FileName        string `json:"filename,omitempty"`
-	EnvironmentName string `json:"-"`
-	BuildTag        string `json:"BUILD_TAG"`
-	BuildURL        string `json:"BUILD_URL"`
-	EndpointUUID    string `json:"endpoint_uuid"`
-	Folder          string `json:"folder"`
-	Size            int64  `json:"size"`
-	Timestamp       int64  `json:"timestamp"`
-	TotalDirs       int64  `json:"total_dirs"`
-	TotalEntries    int64  `json:"total_entries"`
-	TotalFiles      int64  `json:"total_files"`
-	TotalSize       int64  `json:"total_size"`
-	TTL             int64  `json:"ttl"`
+	ID              string    `json:"-"`
+	ArchiveType     string    `json:"-"`
+	DownloadURL     string    `json:"url,omitempty"`
+	SiteID          string    `json:"-"`
+	FileName        string    `json:"filename,omitempty"`
+	EnvironmentName string    `json:"-"`
+	BuildTag        string    `json:"BUILD_TAG"`
+	BuildURL        string    `json:"BUILD_URL"`
+	EndpointUUID    string    `json:"endpoint_uuid"`
+	Folder          string    `json:"folder"`
+	Size            jsonInt64 `json:"size"`
+	Timestamp       jsonInt64 `json:"timestamp"`
+	TotalDirs       jsonInt64 `json:"total_dirs"`
+	TotalEntries    jsonInt64 `json:"total_entries"`
+	TotalFiles      jsonInt64 `json:"total_files"`
+	TotalSize       jsonInt64 `json:"total_size"`
+	TTL             jsonInt64 `json:"ttl"`
 }
 
 // BackupList represents a list of all backups taken for a given site and environment combination.

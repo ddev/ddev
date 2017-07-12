@@ -17,10 +17,10 @@ type Site struct {
 		Attributes struct {
 			Label string `json:"label"`
 		} `json:"attributes"`
-		Created         int64  `json:"created"`
-		CreatedByUserID string `json:"created_by_user_id"`
-		Framework       string `json:"framework"`
-		Frozen          bool   `json:"frozen"`
+		Created         jsonInt64 `json:"created"`
+		CreatedByUserID string    `json:"created_by_user_id"`
+		Framework       string    `json:"framework"`
+		Frozen          bool      `json:"frozen"`
 		Holder          struct {
 			Email   string `json:"email"`
 			ID      string `json:"id"`
@@ -34,28 +34,28 @@ type Site struct {
 				Experiments                 struct{}    `json:"experiments"`
 				Firstname                   string      `json:"firstname"`
 				FullName                    string      `json:"full_name"`
-				GoogleAdwordsPushedCodeSent int64       `json:"google_adwords_pushed_code_sent"`
+				GoogleAdwordsPushedCodeSent jsonInt64   `json:"google_adwords_pushed_code_sent"`
 				GuiltyOfAbuse               interface{} `json:"guilty_of_abuse"`
 				InitialIdentityName         interface{} `json:"initial_identity_name"`
 				InitialIdentityStrategy     interface{} `json:"initial_identity_strategy"`
-				InvitesSent                 int64       `json:"invites_sent"`
-				InvitesToSite               int64       `json:"invites_to_site"`
-				InvitesToUser               int64       `json:"invites_to_user"`
+				InvitesSent                 jsonInt64   `json:"invites_sent"`
+				InvitesToSite               jsonInt64   `json:"invites_to_site"`
+				InvitesToUser               jsonInt64   `json:"invites_to_user"`
 				LastOrgSpinup               string      `json:"last-org-spinup"`
 				Lastname                    string      `json:"lastname"`
-				Maxdevsites                 int64       `json:"maxdevsites"`
+				Maxdevsites                 jsonInt64   `json:"maxdevsites"`
 				MinimizeJitDocs             bool        `json:"minimize_jit_docs"`
-				Modified                    int64       `json:"modified"`
+				Modified                    jsonInt64   `json:"modified"`
 				Organization                string      `json:"organization"`
 				Seens                       struct {
 					NewSiteSupportInterface bool `json:"new-site-support-interface"`
 				} `json:"seens"`
-				TrackingFirstCodePush       int64 `json:"tracking_first_code_push"`
-				TrackingFirstSiteCreate     int64 `json:"tracking_first_site_create"`
-				TrackingFirstTeamInvite     int64 `json:"tracking_first_team_invite"`
-				TrackingFirstWorkflowInLive int64 `json:"tracking_first_workflow_in_live"`
-				Verify                      int64 `json:"verify"`
-				WebServicesBusiness         bool  `json:"web_services_business"`
+				TrackingFirstCodePush       jsonInt64 `json:"tracking_first_code_push"`
+				TrackingFirstSiteCreate     jsonInt64 `json:"tracking_first_site_create"`
+				TrackingFirstTeamInvite     jsonInt64 `json:"tracking_first_team_invite"`
+				TrackingFirstWorkflowInLive jsonInt64 `json:"tracking_first_workflow_in_live"`
+				Verify                      jsonInt64 `json:"verify"`
+				WebServicesBusiness         bool      `json:"web_services_business"`
 			} `json:"profile"`
 		} `json:"holder"`
 		HolderID     string `json:"holder_id"`
@@ -65,10 +65,11 @@ type Site struct {
 			Timestamp string      `json:"timestamp"`
 			UserUUID  interface{} `json:"user_uuid"`
 		} `json:"last_code_push"`
-		LastFrozenAt  int64  `json:"last_frozen_at"`
-		Name          string `json:"name"`
-		Owner         string `json:"owner"`
-		PreferredZone string `json:"preferred_zone"`
+		LastFrozenAt  jsonInt64 `json:"last_frozen_at"`
+		Name          string    `json:"name"`
+		Owner         string    `json:"owner"`
+		PhpVersion    jsonInt64 `json:"php_version"`
+		PreferredZone string    `json:"preferred_zone"`
 		Product       struct {
 			ID       string `json:"id"`
 			Longname string `json:"longname"`
@@ -96,28 +97,28 @@ type Site struct {
 				Experiments                 struct{}    `json:"experiments"`
 				Firstname                   string      `json:"firstname"`
 				FullName                    string      `json:"full_name"`
-				GoogleAdwordsPushedCodeSent int64       `json:"google_adwords_pushed_code_sent"`
+				GoogleAdwordsPushedCodeSent jsonInt64   `json:"google_adwords_pushed_code_sent"`
 				GuiltyOfAbuse               interface{} `json:"guilty_of_abuse"`
 				InitialIdentityName         interface{} `json:"initial_identity_name"`
 				InitialIdentityStrategy     interface{} `json:"initial_identity_strategy"`
-				InvitesSent                 int64       `json:"invites_sent"`
-				InvitesToSite               int64       `json:"invites_to_site"`
-				InvitesToUser               int64       `json:"invites_to_user"`
+				InvitesSent                 jsonInt64   `json:"invites_sent"`
+				InvitesToSite               jsonInt64   `json:"invites_to_site"`
+				InvitesToUser               jsonInt64   `json:"invites_to_user"`
 				LastOrgSpinup               string      `json:"last-org-spinup"`
 				Lastname                    string      `json:"lastname"`
-				Maxdevsites                 int64       `json:"maxdevsites"`
+				Maxdevsites                 jsonInt64   `json:"maxdevsites"`
 				MinimizeJitDocs             bool        `json:"minimize_jit_docs"`
-				Modified                    int64       `json:"modified"`
+				Modified                    jsonInt64   `json:"modified"`
 				Organization                string      `json:"organization"`
 				Seens                       struct {
 					NewSiteSupportInterface bool `json:"new-site-support-interface"`
 				} `json:"seens"`
-				TrackingFirstCodePush       int64 `json:"tracking_first_code_push"`
-				TrackingFirstSiteCreate     int64 `json:"tracking_first_site_create"`
-				TrackingFirstTeamInvite     int64 `json:"tracking_first_team_invite"`
-				TrackingFirstWorkflowInLive int64 `json:"tracking_first_workflow_in_live"`
-				Verify                      int64 `json:"verify"`
-				WebServicesBusiness         bool  `json:"web_services_business"`
+				TrackingFirstCodePush       jsonInt64 `json:"tracking_first_code_push"`
+				TrackingFirstSiteCreate     jsonInt64 `json:"tracking_first_site_create"`
+				TrackingFirstTeamInvite     jsonInt64 `json:"tracking_first_team_invite"`
+				TrackingFirstWorkflowInLive jsonInt64 `json:"tracking_first_workflow_in_live"`
+				Verify                      jsonInt64 `json:"verify"`
+				WebServicesBusiness         bool      `json:"web_services_business"`
 			} `json:"profile"`
 		} `json:"user_in_charge"`
 		UserInChargeID string `json:"user_in_charge_id"`

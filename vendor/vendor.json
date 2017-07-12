@@ -152,11 +152,10 @@
 			"revisionTime": "2016-09-08T21:06:52Z"
 		},
 		{
-
-			"checksumSHA1": "auQ/Akiflnn0kozpOD3cdilBQd8=",
+			"checksumSHA1": "CyDrvckSL+RTYvT4PAkySbyjuHA=",
 			"path": "github.com/drud/go-pantheon/pkg/pantheon",
-			"revision": "202f5416371ef6c522c49beae17a8d41e8841b7f",
-			"revisionTime": "2017-06-20T12:57:25Z"
+			"revision": "82b298bb9e4699cbc698f33b11dfbdcd6408aeda",
+			"revisionTime": "2017-06-30T17:10:26Z"
 		},
 		{
 			"checksumSHA1": "Yn+Uxp0Vz4WiGdrYLLwYX9lzD5I=",

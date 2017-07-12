@@ -7,9 +7,9 @@ import (
 
 // Environment contains meta-data about a specific environment
 type Environment struct {
-	Name               string `json:"-"`
-	DNSZone            string `json:"dns_zone"`
-	EnvironmentCreated int64  `json:"environment_created"`
+	Name               string    `json:"-"`
+	DNSZone            string    `json:"dns_zone"`
+	EnvironmentCreated jsonInt64 `json:"environment_created"`
 	Lock               struct {
 		Locked   bool        `json:"locked"`
 		Password interface{} `json:"password"`
