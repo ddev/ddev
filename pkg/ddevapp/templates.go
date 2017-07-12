@@ -40,6 +40,7 @@ services:
     environment:
       - DDEV_UID=$DDEV_UID
       - DDEV_GID=$DDEV_GID
+      - DDEV_URL=$DDEV_URL
       - DOCROOT=$DDEV_DOCROOT
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME

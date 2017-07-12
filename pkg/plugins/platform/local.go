@@ -14,8 +14,6 @@ import (
 	"os/user"
 	"runtime"
 
-	"errors"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
@@ -47,7 +45,7 @@ func (l *LocalApp) GetType() string {
 
 // Init populates LocalApp settings based on the current working directory.
 func (l *LocalApp) Init(basePath string) error {
-	config, err := ddevapp.NewConfig(basePath)
+	config, err := ddevapp.NewConfig(basePath, "")
 	if err != nil {
 		return err
 	}
@@ -232,7 +230,6 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 		return fmt.Errorf("no .sql files found to import")
 	}
 
-	fmt.Println("Importing database...")
 	err = l.Exec("db", true, "bash", "-c", "cat /db/*.sql | mysql")
 	if err != nil {
 		return err
@@ -300,6 +297,52 @@ func (l *LocalApp) SiteStatus() string {
 	}
 
 	return siteStatus
+}
+
+// Import performs an import from a local
+func (l *LocalApp) Import() error {
+	provider, err := l.AppConfig.GetProvider()
+	if err != nil {
+		return err
+	}
+
+	err = provider.Validate()
+	if err != nil {
+		return err
+	}
+
+	if l.SiteStatus() != SiteRunning {
+		util.Warning("Site is not currently running. Starting site before performing import.")
+		err := l.Start()
+		if err != nil {
+			return err
+		}
+	}
+
+	fileLocation, importPath, err := provider.GetBackup("database")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Importing database...")
+	err = l.ImportDB(fileLocation, importPath)
+	if err != nil {
+		return err
+	}
+
+	fileLocation, importPath, err = provider.GetBackup("files")
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Importing files...")
+	err = l.ImportFiles(fileLocation, importPath)
+	if err != nil {
+		return err
+	}
+
+	util.Success("\nImport successful, restarting application.\n")
+	return nil
 }
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
@@ -495,11 +538,9 @@ func (l *LocalApp) Start() error {
 	// Write docker-compose.yaml (if it doesn't exist).
 	// If the user went through the `ddev config` process it will be written already, but
 	// we also do it here in the case of a manually created `.ddev/config.yaml` file.
-	if !fileutil.FileExists(l.AppConfig.DockerComposeYAMLPath()) {
-		err := l.AppConfig.WriteDockerComposeConfig()
-		if err != nil {
-			return err
-		}
+	err = l.AppConfig.WriteDockerComposeConfig()
+	if err != nil {
+		return err
 	}
 
 	err = l.prepSiteDirs()
@@ -658,25 +699,46 @@ func (l *LocalApp) Wait(containerTypes ...string) error {
 	return nil
 }
 
+func (l *LocalApp) determineConfigLocation() (string, error) {
+	possibleLocations := []string{l.AppConfig.SiteSettingsPath, l.AppConfig.SiteLocalSettingsPath}
+	for _, loc := range possibleLocations {
+		// If the file is found we need to check for a signature to determine if it's safe to use.
+		if fileutil.FileExists(loc) {
+			signatureFound, err := fileutil.FgrepStringInFile(loc, model.DdevSettingsFileSignature)
+			util.CheckErr(err) // Really can't happen as we already checked for the file existence
+
+			if signatureFound {
+				return loc, nil
+			}
+		} else {
+			// If the file is not found it's safe to use.
+			return loc, nil
+		}
+	}
+
+	return "", fmt.Errorf("settings files already exist and are being manged by the user")
+}
+
 // Config creates the apps config file adding things like database host, name, and password
 // as well as other sensitive data like salts.
 func (l *LocalApp) Config() error {
-	settingsFilePath := l.AppConfig.SiteSettingsPath
-
-	if fileutil.FileExists(settingsFilePath) {
-		signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
-		util.CheckErr(err) // Really can't happen as we already checked for the file existence
-		if !signatureFound {
-			return errors.New("app config exists")
-		}
-		// Otherwise we'll go on our way and recreate the settings file.
+	// If neither settings file options are set, then
+	if l.AppConfig.SiteLocalSettingsPath == "" && l.AppConfig.SiteSettingsPath == "" {
+		return nil
 	}
+
+	settingsFilePath, err := l.determineConfigLocation()
+	if err != nil {
+		return err
+	}
+
+	fileName := filepath.Base(settingsFilePath)
 
 	switch l.GetType() {
 	case "drupal8":
 		fallthrough
 	case "drupal7":
-		fmt.Println("Generating settings.php file for database connection.")
+		fmt.Printf("Generating %s file for database connection.\n", fileName)
 		drushSettingsPath := filepath.Join(l.AppRoot(), "drush.settings.php")
 
 		// Retrieve published mysql port for drush settings file.
@@ -711,7 +773,7 @@ func (l *LocalApp) Config() error {
 			return err
 		}
 	case "wordpress":
-		fmt.Println("Generating wp-config.php file for database connection.")
+		fmt.Printf("Generating %s file for database connection.\n", fileName)
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DeployURL = l.URL()
 		err := config.WriteWordpressConfig(wpConfig, settingsFilePath)

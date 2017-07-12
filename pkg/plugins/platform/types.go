@@ -31,6 +31,7 @@ type App interface {
 	Config() error
 	HostName() string
 	URL() string
+	Import() error
 	ImportDB(imPath string, extPath string) error
 	ImportFiles(imPath string, extPath string) error
 	SiteStatus() string

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"log"
 	"os"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -10,15 +11,27 @@ import (
 
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
-	Use:   "config",
+	Use:   "config [provider]",
 	Short: "Create or modify a ddev application config in the current directory",
 	Run: func(cmd *cobra.Command, args []string) {
+
 		appRoot, err := os.Getwd()
 		if err != nil {
 			util.Failed("Could not determine current working directory: %v\n", err)
+
 		}
 
-		c, err := ddevapp.NewConfig(appRoot)
+		provider := ""
+
+		if len(args) > 1 {
+			log.Fatal("Invalid argument detected. Please use 'ddev config' or 'ddev config [provider]' to configure a site.")
+		}
+
+		if len(args) == 1 {
+			provider = args[0]
+		}
+
+		c, err := ddevapp.NewConfig(appRoot, provider)
 		if err != nil {
 			// If there is an error reading the config and the file exists, we're not sure
 			// how to proceed.
@@ -35,6 +48,12 @@ var ConfigCommand = &cobra.Command{
 		err = c.Write()
 		if err != nil {
 			util.Failed("Could not write ddev config file: %v\n", err)
+
+		}
+
+		// If a provider is specified, prompt about whether to do an import after config.
+		if provider != "" {
+			util.Success("Configuration complete. You may now run `ddev start` or `ddev pull`")
 		}
 		util.Success("Initial configuration file written successfully. See the configuration file for additional configuration options.")
 	},

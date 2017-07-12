@@ -277,7 +277,7 @@ func TestLocalImportFiles(t *testing.T) {
 
 		if site.FilesTarballURL != "" {
 			filePath := filepath.Join(testcommon.CreateTmpDir("local-tarball-files"), "files.tar.gz")
-			err := util.DownloadFile(filePath, site.FilesTarballURL)
+			err := util.DownloadFile(filePath, site.FilesTarballURL, false)
 			assert.NoError(err)
 			err = app.ImportFiles(filePath, "")
 			assert.NoError(err)
@@ -287,7 +287,7 @@ func TestLocalImportFiles(t *testing.T) {
 
 		if site.FilesZipballURL != "" {
 			filePath := filepath.Join(testcommon.CreateTmpDir("local-zipball-files"), "files.zip")
-			err := util.DownloadFile(filePath, site.FilesZipballURL)
+			err := util.DownloadFile(filePath, site.FilesZipballURL, false)
 			assert.NoError(err)
 			err = app.ImportFiles(filePath, "")
 			assert.NoError(err)
@@ -297,7 +297,7 @@ func TestLocalImportFiles(t *testing.T) {
 
 		if site.FullSiteTarballURL != "" {
 			siteTarPath := filepath.Join(testcommon.CreateTmpDir("local-site-tar"), "site.tar.gz")
-			err = util.DownloadFile(siteTarPath, site.FullSiteTarballURL)
+			err = util.DownloadFile(siteTarPath, site.FullSiteTarballURL, false)
 			assert.NoError(err)
 			err = app.ImportFiles(siteTarPath, "docroot/sites/default/files")
 			assert.NoError(err)
@@ -406,7 +406,7 @@ func TestProcessHooks(t *testing.T) {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
 		testcommon.ClearDockerEnv()
-		conf, err := ddevapp.NewConfig(site.Dir)
+		conf, err := ddevapp.NewConfig(site.Dir, ddevapp.DDevDefaultPlatform)
 		assert.NoError(err)
 
 		conf.Commands = map[string][]ddevapp.Command{

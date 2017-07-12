@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"log"
 	"os"
 
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -29,12 +27,7 @@ the assets being imported.`,
 			util.CheckErr(err)
 			os.Exit(0)
 		}
-		client := dockerutil.GetDockerClient()
-		err := dockerutil.EnsureNetwork(client, netName)
-		if err != nil {
-			log.Fatal(err)
-		}
-
+		dockerNetworkPreRun()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := platform.GetActiveApp("")
