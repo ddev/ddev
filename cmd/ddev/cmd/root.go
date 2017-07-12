@@ -52,12 +52,6 @@ var RootCmd = &cobra.Command{
 
 		// Verify that the ~/.ddev exists
 		userDdevDir := util.GetGlobalDdevDir()
-		if _, err := os.Stat(userDdevDir); os.IsNotExist(err) {
-			err = os.MkdirAll(userDdevDir, 0700)
-			if err != nil {
-				util.Failed("Failed to create required directory %s, err: %v", userDdevDir, err)
-			}
-		}
 
 		updateFile := filepath.Join(userDdevDir, ".update")
 

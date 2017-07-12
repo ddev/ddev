@@ -13,24 +13,12 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
-	homedir, err := homedir.Dir()
-	if err != nil {
-		util.Failed("Could not detect user's home directory: ", err)
-	}
-
-	// Verify that the ~/.ddev exists
-	homeddev := filepath.Join(homedir, ".ddev")
-	if _, err := os.Stat(homeddev); os.IsNotExist(err) {
-		err = os.MkdirAll(homeddev, 0700)
-		if err != nil {
-			util.Failed("Failed to create required directory %s, err: %v", homeddev, err)
-		}
-	}
+	// Ensure the ddev directory is created before tests run.
+	_ = util.GetGlobalDdevDir()
 }
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
