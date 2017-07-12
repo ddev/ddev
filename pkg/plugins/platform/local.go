@@ -795,17 +795,17 @@ func (l *LocalApp) AddHostsEntry() error {
 		dockerIP = dockerHostURL.Hostname()
 	}
 
-	_, err := osexec.Command("sudo", "-h").Output()
-	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
-		fmt.Printf("You must manually add the following entry to your host file:\n%s %s\n", dockerIP, l.HostName())
-		return nil
-	}
-
 	hosts, err := goodhosts.NewHosts()
 	if err != nil {
 		log.Fatalf("could not open hostfile. %s", err)
 	}
 	if hosts.Has(dockerIP, l.HostName()) {
+		return nil
+	}
+
+	_, err = osexec.Command("sudo", "-h").Output()
+	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
+		fmt.Printf("You must manually add the following entry to your host file:\n%s %s\n", dockerIP, l.HostName())
 		return nil
 	}
 
