@@ -10,7 +10,6 @@ import (
 	"log"
 	"path"
 
-	"github.com/drud/ddev/pkg/util"
 	"github.com/fatih/color"
 	"github.com/mitchellh/go-homedir"
 )
@@ -77,7 +76,7 @@ func GetGlobalDdevDir() string {
 	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
 		err = os.MkdirAll(ddevDir, 0700)
 		if err != nil {
-			util.Failed("Failed to create required directory %s, err: %v", ddevDir, err)
+			Failed("Failed to create required directory %s, err: %v", ddevDir, err)
 		}
 	}
 	return ddevDir
