@@ -95,13 +95,16 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 	c.WebImage = version.WebImg + ":" + version.WebTag
 	c.DBImage = version.DBImg + ":" + version.DBTag
 	c.DBAImage = version.DBAImg + ":" + version.DBATag
-	c.Provider = provider
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
 	err := c.Read()
 	if err != nil {
 		return c, err
+	}
+
+	if c.Provider == "" {
+		c.Provider = DefaultProviderName
 	}
 
 	return c, err
