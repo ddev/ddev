@@ -23,7 +23,7 @@ func TestDevList(t *testing.T) {
 		assert.Contains(string(out), v.Name)
 		assert.Contains(string(out), app.URL())
 		assert.Contains(string(out), app.GetType())
-		assert.Contains(string(out), app.AppRoot())
+		assert.Contains(string(out), platform.RenderHomeRootedDir(app.AppRoot()))
 		cleanup()
 	}
 
