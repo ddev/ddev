@@ -1,6 +1,7 @@
 package ddevapp
 
 import "errors"
+import "os"
 
 // DefaultProvider provides a no-op for the provider plugin interface methods.
 type DefaultProvider struct{}
@@ -22,7 +23,14 @@ func (p *DefaultProvider) Config() error {
 
 // Write provides a no-op for the Write operation.
 func (p *DefaultProvider) Write(configPath string) error {
-	return nil
+	// Check if the file exists and can be read and just return nil if it doesn't.
+	_, err := os.Stat(configPath)
+	if err != nil {
+		return nil
+	}
+
+	// Attempt to remove any import config for another provider which may be present.
+	return os.Remove(configPath)
 }
 
 // Read provides a no-op for the Read operation.
