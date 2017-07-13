@@ -88,7 +88,7 @@ func (l *LocalApp) Describe() (string, error) {
 
 	// Do not show any describe output if we can't find the site.
 	if siteStatus == SiteNotFound {
-		return "", fmt.Errorf("no site found. have you ran `ddev start`?")
+		return "", fmt.Errorf("no site found. have you run `ddev start`?")
 	}
 	appTable := CreateAppTable()
 
