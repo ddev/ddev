@@ -87,7 +87,7 @@ func TestDescribeAppFunction(t *testing.T) {
 		assert.Contains(string(out), app.URL())
 		assert.Contains(string(out), app.GetName())
 		assert.Regexp("DDEV ROUTER STATUS.*running", string(out))
-		assert.Contains(string(out), v.Dir)
+		assert.Contains(string(out), platform.RenderHomeRootedDir(v.Dir))
 
 		_, err = exec.RunCommand("docker", []string{"stop", "ddev-router"})
 		assert.NoError(err)
@@ -115,7 +115,7 @@ func TestDescribeAppUsingSitename(t *testing.T) {
 		out, err := describeApp(v.Name)
 		assert.NoError(err)
 		assert.Contains(string(out), "running")
-		assert.Contains(string(out), v.Dir)
+		assert.Contains(string(out), platform.RenderHomeRootedDir(v.Dir))
 	}
 }
 
