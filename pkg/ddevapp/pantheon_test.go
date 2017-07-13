@@ -14,6 +14,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+/**
+ * These tests rely on an external test account managed by DRUD. To run them, you'll
+ * need to set an environment variable called "PANTHEON_API_KEY" with credentials for
+ * this account. If no such environment variable is present, these tests will be skipped.
+ */
+
 var pantheonTestSiteName = "ddev-test-site-do-not-delete"
 var pantheonTestEnvName = "bbowman"
 
