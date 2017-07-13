@@ -95,11 +95,8 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 	c.WebImage = version.WebImg + ":" + version.WebTag
 	c.DBImage = version.DBImg + ":" + version.DBTag
 	c.DBAImage = version.DBAImg + ":" + version.DBATag
-
 	c.Provider = provider
-	if c.Provider == "" {
-		c.Provider = DefaultProviderName
-	}
+
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
 	err := c.Read()
@@ -117,7 +114,7 @@ func (c *Config) GetProvider() (Provider, error) {
 	}
 
 	var provider Provider
-	err := fmt.Errorf("unknown provider type: %s", provider)
+	err := fmt.Errorf("unknown provider type: %s", c.Provider)
 
 	switch c.Provider {
 	case "pantheon":
@@ -226,8 +223,6 @@ func (c *Config) Read() error {
 	log.WithFields(log.Fields{
 		"Active config": awsutil.Prettify(c),
 	}).Debug("Finished config set")
-
-	_, err = c.GetProvider()
 
 	return err
 }

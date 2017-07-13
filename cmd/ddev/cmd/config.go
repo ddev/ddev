@@ -21,7 +21,7 @@ var ConfigCommand = &cobra.Command{
 
 		}
 
-		provider := ""
+		provider := ddevapp.DefaultProviderName
 
 		if len(args) > 1 {
 			log.Fatal("Invalid argument detected. Please use 'ddev config' or 'ddev config [provider]' to configure a site.")
@@ -39,6 +39,10 @@ var ConfigCommand = &cobra.Command{
 				util.Failed("Could not read config: %v", err)
 			}
 		}
+
+		// Set the provider value after load so we can ensure we use the passed in provider value
+		// for this configuration.
+		c.Provider = provider
 
 		err = c.Config()
 		if err != nil {
