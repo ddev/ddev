@@ -54,6 +54,9 @@ func TestMain(m *testing.M) {
 	testRun := m.Run()
 
 	removeSites()
+
+	// Avoid being in any of the directories we're cleaning up.
+	_ = os.Chdir(os.TempDir())
 	for i := range DevTestSites {
 		DevTestSites[i].Cleanup()
 	}

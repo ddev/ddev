@@ -16,8 +16,8 @@ func TestDescribeBadArgs(t *testing.T) {
 
 	// Create a temporary directory and switch to it for the duration of this test.
 	tmpdir := testcommon.CreateTmpDir("badargs")
-	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
 
 	// Ensure it fails if we run the vanilla describe outside of an application root.
 	args := []string{"describe"}
@@ -108,8 +108,8 @@ func TestDescribeAppUsingSitename(t *testing.T) {
 
 	// Create a temporary directory and switch to it for the duration of this test.
 	tmpdir := testcommon.CreateTmpDir("describeAppUsingSitename")
-	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
 
 	for _, v := range DevTestSites {
 		out, err := describeApp(v.Name)
@@ -125,8 +125,8 @@ func TestDescribeAppWithInvalidParams(t *testing.T) {
 
 	// Create a temporary directory and switch to it for the duration of this test.
 	tmpdir := testcommon.CreateTmpDir("TestDescribeAppWithInvalidParams")
-	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
 
 	// Ensure describeApp fails from an invalid working directory.
 	_, err := describeApp("")
