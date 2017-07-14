@@ -78,14 +78,18 @@ func CreateAppTable() *uitable.Table {
 	return table
 }
 
+// RenderHomeRootedDir shortens a directory name to replace homedir with ~
+func RenderHomeRootedDir(path string) string {
+	userDir, err := homedir.Dir()
+	util.CheckErr(err)
+	result := strings.Replace(path, userDir, "~", 1)
+	result = strings.Replace(result, "\\", "/", -1)
+	return result
+}
+
 // RenderAppRow will add an application row to an existing table for describe and list output.
 func RenderAppRow(table *uitable.Table, site App) {
-	// test tilde expansion
-	appRoot := site.AppRoot()
-	userDir, err := homedir.Dir()
-	if err == nil {
-		appRoot = strings.Replace(appRoot, userDir, "~", 1)
-	}
+	shortRoot := RenderHomeRootedDir(site.AppRoot())
 	status := site.SiteStatus()
 
 	switch {
@@ -100,7 +104,7 @@ func RenderAppRow(table *uitable.Table, site App) {
 	table.AddRow(
 		site.GetName(),
 		site.GetType(),
-		appRoot,
+		shortRoot,
 		site.URL(),
 		status,
 	)

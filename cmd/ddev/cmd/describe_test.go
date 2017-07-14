@@ -7,7 +7,6 @@ import (
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,8 +16,8 @@ func TestDescribeBadArgs(t *testing.T) {
 
 	// Create a temporary directory and switch to it for the duration of this test.
 	tmpdir := testcommon.CreateTmpDir("badargs")
-	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
 
 	// Ensure it fails if we run the vanilla describe outside of an application root.
 	args := []string{"describe"}
@@ -87,15 +86,14 @@ func TestDescribeAppFunction(t *testing.T) {
 		assert.NoError(err)
 		assert.Contains(string(out), app.URL())
 		assert.Contains(string(out), app.GetName())
-		assert.Contains(string(out), "running")
-		assert.Contains(string(out), v.Dir)
-		assert.Contains(string(out), "DDEV ROUTER STATUS: "+color.CyanString("running"))
+		assert.Regexp("DDEV ROUTER STATUS.*running", string(out))
+		assert.Contains(string(out), platform.RenderHomeRootedDir(v.Dir))
 
 		_, err = exec.RunCommand("docker", []string{"stop", "ddev-router"})
 		assert.NoError(err)
 		out, err = describeApp("")
 		assert.NoError(err)
-		assert.Contains(string(out), "DDEV ROUTER STATUS: "+color.RedString("stopped"))
+		assert.Regexp("DDEV ROUTER STATUS.*stopped", string(out))
 		assert.Contains(string(out), "The router is not currently running")
 		_, err = exec.RunCommand("docker", []string{"start", "ddev-router"})
 		assert.NoError(err)
@@ -110,14 +108,14 @@ func TestDescribeAppUsingSitename(t *testing.T) {
 
 	// Create a temporary directory and switch to it for the duration of this test.
 	tmpdir := testcommon.CreateTmpDir("describeAppUsingSitename")
-	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
 
 	for _, v := range DevTestSites {
 		out, err := describeApp(v.Name)
 		assert.NoError(err)
 		assert.Contains(string(out), "running")
-		assert.Contains(string(out), v.Dir)
+		assert.Contains(string(out), platform.RenderHomeRootedDir(v.Dir))
 	}
 }
 
@@ -127,8 +125,8 @@ func TestDescribeAppWithInvalidParams(t *testing.T) {
 
 	// Create a temporary directory and switch to it for the duration of this test.
 	tmpdir := testcommon.CreateTmpDir("TestDescribeAppWithInvalidParams")
-	defer testcommon.Chdir(tmpdir)()
 	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
 
 	// Ensure describeApp fails from an invalid working directory.
 	_, err := describeApp("")
