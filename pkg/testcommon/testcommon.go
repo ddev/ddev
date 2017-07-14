@@ -42,6 +42,10 @@ type TestSite struct {
 	DBZipURL string
 	// Dir is the rooted full path of the test site
 	Dir string
+	// HTTPProbeURI is the URI that can be probed to look for a working web container
+	HTTPProbeURI string
+	// DocrootBase is the subdirectory witin the site that is the root/index.php
+	DocrootBase string
 }
 
 // Prepare downloads and extracts a site codebase to a temporary directory.

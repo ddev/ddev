@@ -20,14 +20,15 @@ import (
 var (
 	// DdevBin is the full path to the drud binary
 	DdevBin      = "ddev"
-	DevTestSites = []testcommon.TestSite{
-		{
-			Name:                          "TestMainCmdDrupal8",
-			SourceURL:                     "https://github.com/drud/drupal8/archive/v0.6.0.tar.gz",
-			ArchiveInternalExtractionPath: "drupal8-0.6.0/",
-			FilesTarballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
-		},
+	DevTestSites = []testcommon.TestSite{{
+		Name:                          "TestMainCmdWordpress",
+		SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
+		ArchiveInternalExtractionPath: "wordpress-0.4.0/",
+		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
+		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+		HTTPProbeURI:                  "wp-admin/setup-config.php",
+		DocrootBase:                   "htdocs",
+	},
 	}
 )
 
@@ -137,8 +138,9 @@ func addSites() {
 			log.Fatalln("Could not find an active ddev configuration:", err)
 		}
 
+		// Warning: assumes web at port 80, will need adjustment in the future.
 		urls := []string{
-			"http://127.0.0.1/core/install.php",
+			"http://127.0.0.1/" + site.HTTPProbeURI,
 			"http://127.0.0.1:" + appports.GetPort("mailhog"),
 			"http://127.0.0.1:" + appports.GetPort("dba"),
 		}

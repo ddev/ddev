@@ -10,6 +10,8 @@ import (
 
 	"strings"
 
+	"runtime"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -19,11 +21,18 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/stretchr/testify/assert"
-	"runtime"
 )
 
 var (
 	TestSites = []testcommon.TestSite{
+		{
+			Name:                          "TestMainPkgWordpress",
+			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
+			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
+			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+			DocrootBase:                   "htdocs",
+		},
 		{
 			Name:                          "TestMainPkgDrupal8",
 			SourceURL:                     "https://github.com/drud/drupal8/archive/v0.6.0.tar.gz",
@@ -33,13 +42,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
 			FullSiteTarballURL:            "https://github.com/drud/drupal8/releases/download/v0.6.0/site.tar.gz",
-		},
-		{
-			Name:                          "TestMainPkgWordpress",
-			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
-			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+			DocrootBase:                   "docroot",
 		},
 		{
 			Name:                          "TestMainPkgDrupalKickstart",
@@ -48,6 +51,7 @@ var (
 			FilesTarballURL:               "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
 			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
+			DocrootBase:                   "docroot",
 		},
 	}
 )
