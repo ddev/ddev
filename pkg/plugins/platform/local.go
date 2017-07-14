@@ -875,7 +875,7 @@ func (l *LocalApp) AddHostsEntry() error {
 
 	_, err := osexec.Command("sudo", "-h").Output()
 	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
-		util.Warning(fmt.Sprintf("You must manually add the following entry to your hosts file:\n%s %s", dockerIP, l.HostName()))
+		util.Warning("You must manually add the following entry to your hosts file:\n%s %s", dockerIP, l.HostName())
 		return nil
 	}
 
