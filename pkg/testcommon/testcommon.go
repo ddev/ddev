@@ -42,6 +42,8 @@ type TestSite struct {
 	DBZipURL string
 	// Dir is the rooted full path of the test site
 	Dir string
+	// HttpProbeURI is the URI that can be probed to look for a working web container
+	HttpProbeURI string
 }
 
 // Prepare downloads and extracts a site codebase to a temporary directory.
