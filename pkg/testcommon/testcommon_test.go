@@ -93,9 +93,13 @@ func TestValidTestSite(t *testing.T) {
 		t.FailNow()
 	}
 	assert.NotNil(ts.Dir, "Directory is set.")
-	docroot := filepath.Join(ts.Dir, "docroot")
+	// Our wordpress setup site has an 'htdocs' dir, not 'docroot'
+	docroot := filepath.Join(ts.Dir, "htdocs")
 	dirStat, err := os.Stat(docroot)
 	assert.NoError(err, "Docroot exists after prepare()")
+	if err != nil {
+		t.Fatalf("Directory did not exist after prepare(): %s", docroot)
+	}
 	assert.True(dirStat.IsDir(), "Docroot is a directory")
 
 	cleanup := ts.Chdir()
