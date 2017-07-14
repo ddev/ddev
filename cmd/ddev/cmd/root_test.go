@@ -26,7 +26,7 @@ var (
 		ArchiveInternalExtractionPath: "wordpress-0.4.0/",
 		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
-		HttpProbeURI:                  "wp-admin/setup-config.php",
+		HTTPProbeURI:                  "wp-admin/setup-config.php",
 		DocrootBase:                   "htdocs",
 	},
 	}
@@ -140,7 +140,7 @@ func addSites() {
 
 		// Warning: assumes web at port 80, will need adjustment in the future.
 		urls := []string{
-			"http://127.0.0.1/" + site.HttpProbeURI,
+			"http://127.0.0.1/" + site.HTTPProbeURI,
 			"http://127.0.0.1:" + appports.GetPort("mailhog"),
 			"http://127.0.0.1:" + appports.GetPort("dba"),
 		}
