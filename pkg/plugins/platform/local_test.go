@@ -25,6 +25,13 @@ import (
 var (
 	TestSites = []testcommon.TestSite{
 		{
+			Name:                          "TestMainPkgWordpress",
+			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
+			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
+			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+		},
+		{
 			Name:                          "TestMainPkgDrupal8",
 			SourceURL:                     "https://github.com/drud/drupal8/archive/v0.6.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal8-0.6.0/",
@@ -33,13 +40,6 @@ var (
 			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
 			FullSiteTarballURL:            "https://github.com/drud/drupal8/releases/download/v0.6.0/site.tar.gz",
-		},
-		{
-			Name:                          "TestMainPkgWordpress",
-			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
-			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		},
 		{
 			Name:                          "TestMainPkgDrupalKickstart",
