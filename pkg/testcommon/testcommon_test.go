@@ -84,6 +84,7 @@ func TestValidTestSite(t *testing.T) {
 		ArchiveInternalExtractionPath: "wordpress-0.4.0/",
 		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+		DocrootBase:                   "htdocs",
 	}
 
 	// Create a testsite and ensure the prepare() method extracts files into a temporary directory.
@@ -93,8 +94,7 @@ func TestValidTestSite(t *testing.T) {
 		t.FailNow()
 	}
 	assert.NotNil(ts.Dir, "Directory is set.")
-	// Our wordpress setup site has an 'htdocs' dir, not 'docroot'
-	docroot := filepath.Join(ts.Dir, "htdocs")
+	docroot := filepath.Join(ts.Dir, ts.DocrootBase)
 	dirStat, err := os.Stat(docroot)
 	assert.NoError(err, "Docroot exists after prepare()")
 	if err != nil {

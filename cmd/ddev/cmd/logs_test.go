@@ -38,7 +38,7 @@ func TestDevLogs(t *testing.T) {
 		cleanup := v.Chdir()
 
 		confByte := []byte("<?php trigger_error(\"Fatal error\", E_USER_ERROR);")
-		err := ioutil.WriteFile(filepath.Join(v.Dir, "docroot", "index.php"), confByte, 0644)
+		err := ioutil.WriteFile(filepath.Join(v.Dir, v.DocrootBase, "index.php"), confByte, 0644)
 		assert.NoError(err)
 
 		o := util.NewHTTPOptions("http://127.0.0.1/index.php")

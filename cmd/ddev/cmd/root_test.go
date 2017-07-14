@@ -27,6 +27,7 @@ var (
 		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		HttpProbeURI:                  "wp-admin/setup-config.php",
+		DocrootBase:                   "htdocs",
 	},
 	}
 )

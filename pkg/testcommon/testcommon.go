@@ -44,6 +44,8 @@ type TestSite struct {
 	Dir string
 	// HttpProbeURI is the URI that can be probed to look for a working web container
 	HttpProbeURI string
+	// DocrootBase is the subdirectory witin the site that is the root/index.php
+	DocrootBase string
 }
 
 // Prepare downloads and extracts a site codebase to a temporary directory.
