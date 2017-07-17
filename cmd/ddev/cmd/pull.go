@@ -41,7 +41,8 @@ func appImport(skipConfirmation bool) {
 	if !skipConfirmation {
 		// Unfortunately we cannot use util.Warning here as it automatically adds a newline, which is awkward when dealing with prompts.
 		d := color.New(color.FgYellow)
-		d.Printf("You're about to delete the current database and files and replace with a fresh import. Would you like to continue (y/N): ")
+		_, err := d.Printf("You're about to delete the current database and files and replace with a fresh import. Would you like to continue (y/N): ")
+		util.CheckErr(err)
 		if !util.AskForConfirmation() {
 			util.Warning("Import cancelled.")
 			os.Exit(2)

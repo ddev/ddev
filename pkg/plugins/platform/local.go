@@ -731,6 +731,20 @@ func (l *LocalApp) Config() error {
 		return err
 	}
 
+	// Drupal and WordPress love to change settings files to be unwriteable. Chmod them to something we can work with
+	// in the event that they already exist.
+	chmodTargets := []string{filepath.Dir(settingsFilePath), settingsFilePath}
+	for _, fp := range chmodTargets {
+		if fileInfo, err := os.Stat(fp); !os.IsNotExist(err) {
+			perms := 0644
+			if fileInfo.IsDir() {
+				perms = 0755
+			}
+
+			os.Chmod(fp, os.FileMode(perms))
+		}
+	}
+
 	fileName := filepath.Base(settingsFilePath)
 
 	switch l.GetType() {
