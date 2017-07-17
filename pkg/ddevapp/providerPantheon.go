@@ -302,7 +302,7 @@ func getPantheonSession() *pantheon.AuthSession {
 	util.CheckErr(err)
 	sessionLocation := filepath.Join(userDir, ".ddev", "pantheonconfig.json")
 
-	// Generate a session object based on the PANTHEON_API_TOKEN environment var.
+	// Generate a session object based on the DDEV_PANTHEON_API_TOKEN environment var.
 	session := &pantheon.AuthSession{}
 
 	// Read a previously saved session.
@@ -310,11 +310,11 @@ func getPantheonSession() *pantheon.AuthSession {
 
 	if err != nil {
 		// If we can't read a previous session fall back to using the API token.
-		apiToken := os.Getenv("PANTHEON_API_TOKEN")
+		apiToken := os.Getenv("DDEV_PANTHEON_API_TOKEN")
 		if apiToken == "" {
-			util.Failed("No saved session could be found and the environment variable PANTHEON_API_TOKEN is not set. Please use ddev auth-pantheon or set a PANTHEON_API_TOKEN. https://pantheon.io/docs/machine-tokens/ provides instructions on creating a token.")
+			util.Failed("No saved session could be found and the environment variable DDEV_PANTHEON_API_TOKEN is not set. Please use ddev auth-pantheon or set a DDEV_PANTHEON_API_TOKEN. https://pantheon.io/docs/machine-tokens/ provides instructions on creating a token.")
 		}
-		session = pantheon.NewAuthSession(os.Getenv("PANTHEON_API_TOKEN"))
+		session = pantheon.NewAuthSession(os.Getenv("DDEV_PANTHEON_API_TOKEN"))
 	}
 
 	err = session.Auth()

@@ -16,17 +16,19 @@ import (
 
 /**
  * These tests rely on an external test account managed by DRUD. To run them, you'll
- * need to set an environment variable called "PANTHEON_API_KEY" with credentials for
+ * need to set an environment variable called "DDEV_PANTHEON_API_TOKEN" with credentials for
  * this account. If no such environment variable is present, these tests will be skipped.
+ *
+ * A valid site (with backups) must be present which matches the test site and environment name
+ * defined in the constants below.
  */
-
-var pantheonTestSiteName = "ddev-test-site-do-not-delete"
-var pantheonTestEnvName = "bbowman"
+const pantheonTestSiteName = "ddev-test-site-do-not-delete"
+const pantheonTestEnvName = "bbowman"
 
 // TestConfigCommand tests the interactive config options.
 func TestPantheonConfigCommand(t *testing.T) {
-	if os.Getenv("PANTHEON_API_KEY") == "" {
-		t.Skip("No PANTHEON_API_KEY env var has been set. Skipping Pantheon specific test.")
+	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
+		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
 	}
 
 	// Set up tests and give ourselves a working directory.
@@ -94,8 +96,8 @@ func TestPantheonConfigCommand(t *testing.T) {
 
 // TestPantheonBackupLinks ensures we can get backups from pantheon for a configured environment.
 func TestPantheonBackupLinks(t *testing.T) {
-	if os.Getenv("PANTHEON_API_KEY") == "" {
-		t.Skip("No PANTHEON_API_KEY env var has been set. Skipping Pantheon specific test.")
+	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
+		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
 	}
 
 	// Set up tests and give ourselves a working directory.
