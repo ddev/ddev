@@ -741,7 +741,10 @@ func (l *LocalApp) Config() error {
 				perms = 0755
 			}
 
-			os.Chmod(fp, os.FileMode(perms))
+			err = os.Chmod(fp, os.FileMode(perms))
+			if err != nil {
+				return fmt.Errorf("could not change permissions on %s to make the file writeable", fp)
+			}
 		}
 	}
 
