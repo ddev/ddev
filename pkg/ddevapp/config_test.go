@@ -3,12 +3,11 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"io/ioutil"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -16,6 +15,12 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	// Ensure the ddev directory is created before tests run.
+	_ = util.GetGlobalDdevDir()
+	os.Exit(m.Run())
+}
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
 func TestNewConfig(t *testing.T) {
@@ -27,7 +32,7 @@ func TestNewConfig(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	// Load a new Config
-	newConfig, err := NewConfig(testDir)
+	newConfig, err := NewConfig(testDir, DefaultProviderName)
 
 	// An error should be returned because no config file is present.
 	assert.Error(err)
@@ -47,7 +52,7 @@ func TestNewConfig(t *testing.T) {
 	_, err = os.Stat(newConfig.ConfigPath)
 	assert.NoError(err)
 
-	loadedConfig, err := NewConfig(testDir)
+	loadedConfig, err := NewConfig(testDir, DefaultProviderName)
 	// There should be no error this time, since the config should be available for loading.
 	assert.NoError(err)
 	assert.Equal(newConfig.Name, loadedConfig.Name)
@@ -76,7 +81,7 @@ func TestPrepDirectory(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	config, err := NewConfig(testDir)
+	config, err := NewConfig(testDir, DefaultProviderName)
 	// We should get an error here, since no config exists.
 	assert.Error(err)
 
@@ -95,7 +100,7 @@ func TestHostName(t *testing.T) {
 	testDir := testcommon.CreateTmpDir("TestHostName")
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
-	config, err := NewConfig(testDir)
+	config, err := NewConfig(testDir, DefaultProviderName)
 	assert.Error(err)
 	config.Name = util.RandString(32)
 
@@ -111,7 +116,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	// Create a config
-	config, err := NewConfig(testDir)
+	config, err := NewConfig(testDir, DefaultProviderName)
 	assert.Error(err)
 	config.Name = util.RandString(32)
 	config.AppType = AllowedAppTypes[0]
@@ -155,7 +160,7 @@ func TestConfigCommand(t *testing.T) {
 
 	// Create the ddevapp we'll use for testing.
 	// This should return an error, since no existing config can be read.
-	config, err := NewConfig(testDir)
+	config, err := NewConfig(testDir, DefaultProviderName)
 	assert.Error(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -203,6 +208,7 @@ func TestRead(t *testing.T) {
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
+		Provider:   DefaultProviderName,
 	}
 
 	err := c.Read()
@@ -265,6 +271,7 @@ func TestWrite(t *testing.T) {
 		DBImage:    version.DBImg + ":" + version.DBTag,
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
 		AppType:    "drupal8",
+		Provider:   DefaultProviderName,
 	}
 
 	err := c.Write()

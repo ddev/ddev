@@ -14,11 +14,15 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"
 )
+
+// DefaultProviderName contains the name of the default provider which will be used if one is not otherwise specified.
+const DefaultProviderName = "default"
 
 // CurrentAppVersion sets the current YAML config file version.
 // We're not doing anything with AppVersion, so just default it to 1 for now.
@@ -38,20 +42,23 @@ var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-z
 
 // Config defines the yaml config file format for ddev applications
 type Config struct {
-	APIVersion       string               `yaml:"APIVersion"`
-	Name             string               `yaml:"name"`
-	AppType          string               `yaml:"type"`
-	Docroot          string               `yaml:"docroot"`
-	WebImage         string               `yaml:"webimage"`
-	DBImage          string               `yaml:"dbimage"`
-	DBAImage         string               `yaml:"dbaimage"`
-	ConfigPath       string               `yaml:"-"`
-	AppRoot          string               `yaml:"-"`
-	Platform         string               `yaml:"-"`
-	DataDir          string               `yaml:"-"`
-	ImportDir        string               `yaml:"-"`
-	SiteSettingsPath string               `yaml:"-"`
-	Commands         map[string][]Command `yaml:"hooks,omitempty"`
+	APIVersion            string               `yaml:"APIVersion"`
+	Name                  string               `yaml:"name"`
+	AppType               string               `yaml:"type"`
+	Docroot               string               `yaml:"docroot"`
+	WebImage              string               `yaml:"webimage"`
+	DBImage               string               `yaml:"dbimage"`
+	DBAImage              string               `yaml:"dbaimage"`
+	ConfigPath            string               `yaml:"-"`
+	AppRoot               string               `yaml:"-"`
+	Platform              string               `yaml:"-"`
+	Provider              string               `yaml:"provider,omitempty"`
+	DataDir               string               `yaml:"-"`
+	ImportDir             string               `yaml:"-"`
+	SiteSettingsPath      string               `yaml:"-"`
+	SiteLocalSettingsPath string               `yaml:"-"`
+	providerInstance      Provider             `yaml:"-"`
+	Commands              map[string][]Command `yaml:"hooks,omitempty"`
 }
 
 // Command defines commands to be run as pre/post hooks
@@ -60,12 +67,25 @@ type Command struct {
 	ExecHost string `yaml:"exec-host,omitempty"`
 }
 
+// Provider in the interface which all provider plugins must implement.
+type Provider interface {
+	Init(*Config) error
+	ValidateField(string, string) error
+	Config() error
+	Write(string) error
+	Read(string) error
+	Validate() error
+	GetBackup(string) (fileLocation string, importPath string, err error)
+}
+
 // NewConfig creates a new Config struct with defaults set. It is preferred to using new() directly.
-func NewConfig(AppRoot string) (*Config, error) {
+func NewConfig(AppRoot string, provider string) (*Config, error) {
 	// Set defaults.
 	c := &Config{}
 	c.ConfigPath = filepath.Join(AppRoot, ".ddev", "config.yaml")
+
 	c.AppRoot = AppRoot
+	c.ConfigPath = c.GetPath("config.yaml")
 	c.APIVersion = CurrentAppVersion
 
 	// Default platform for now.
@@ -76,6 +96,11 @@ func NewConfig(AppRoot string) (*Config, error) {
 	c.DBImage = version.DBImg + ":" + version.DBTag
 	c.DBAImage = version.DBAImg + ":" + version.DBATag
 
+	c.Provider = provider
+
+	if c.Provider == "" {
+		c.Provider = DefaultProviderName
+	}
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
 	err := c.Read()
@@ -83,11 +108,41 @@ func NewConfig(AppRoot string) (*Config, error) {
 		return c, err
 	}
 
-	return c, nil
+	return c, err
+}
+
+// GetProvider returns a pointer to the provider instance interface.
+func (c *Config) GetProvider() (Provider, error) {
+	if c.providerInstance != nil {
+		return c.providerInstance, nil
+	}
+
+	var provider Provider
+	err := fmt.Errorf("unknown provider type: %s", c.Provider)
+
+	switch c.Provider {
+	case "pantheon":
+		provider = &PantheonProvider{}
+		err = provider.Init(c)
+	case DefaultProviderName:
+		provider = &DefaultProvider{}
+		err = nil
+	default:
+		provider = &DefaultProvider{}
+		// Use the default error from above.
+	}
+	c.providerInstance = provider
+	return c.providerInstance, err
+}
+
+// GetPath returns the path to an application config file specified by filename.
+func (c *Config) GetPath(filename string) string {
+	return filepath.Join(c.AppRoot, ".ddev", filename)
 }
 
 // Write the app configuration to the .ddev folder.
 func (c *Config) Write() error {
+
 	err := PrepDdevDirectory(filepath.Dir(c.ConfigPath))
 	if err != nil {
 		return err
@@ -116,12 +171,18 @@ func (c *Config) Write() error {
 		return err
 	}
 
-	return nil
+	provider, err := c.GetProvider()
+	if err != nil {
+		return err
+	}
+
+	return provider.Write(c.GetPath("import.yaml"))
 }
 
 // Read app configuration from a specified location on disk, falling back to defaults for config
 // values not defined in the read config file.
 func (c *Config) Read() error {
+
 	source, err := ioutil.ReadFile(c.ConfigPath)
 	if err != nil {
 		return fmt.Errorf("could not find an active ddev configuration, have you run 'ddev config'? %v", err)
@@ -161,13 +222,13 @@ func (c *Config) Read() error {
 	c.DataDir = filepath.Join(dirPath, "mysql")
 	c.ImportDir = filepath.Join(dirPath, "import-db")
 
-	c.setSiteSettingsPath(c.AppType)
+	c.setSiteSettingsPaths(c.AppType)
 
 	log.WithFields(log.Fields{
 		"Active config": awsutil.Prettify(c),
 	}).Debug("Finished config set")
 
-	return nil
+	return err
 }
 
 // Config goes through a set of prompts to receive user input and generate an Config struct.
@@ -185,27 +246,39 @@ func (c *Config) Config() error {
 		"Existing config": awsutil.Prettify(c),
 	}).Debug("Configuring application")
 
-	err := c.namePrompt()
+	for {
+		err := c.namePrompt()
+
+		if err == nil {
+			break
+		}
+
+		fmt.Printf("%v\n", err)
+	}
+
+	for {
+		err := c.docrootPrompt()
+
+		if err == nil {
+			break
+		}
+
+		fmt.Printf("%v\n", err)
+	}
+
+	err := c.appTypePrompt()
 	if err != nil {
 		return err
 	}
 
-	err = c.docrootPrompt()
-	if err != nil {
-		return err
-	}
-
-	err = c.appTypePrompt()
-	if err != nil {
-		return err
-	}
+	err = c.providerInstance.Config()
 
 	// Log the resulting config, for debugging purposes.
 	log.WithFields(log.Fields{
 		"Config": awsutil.Prettify(c),
 	}).Debug("Configuration completed")
 
-	return nil
+	return err
 }
 
 // Validate ensures the configuraton meets ddev's requirements.
@@ -233,7 +306,7 @@ func (c *Config) Validate() error {
 
 // DockerComposeYAMLPath returns the absolute path to where the docker-compose.yaml should exist for this app configuration.
 func (c *Config) DockerComposeYAMLPath() string {
-	return filepath.Join(c.AppRoot, ".ddev", "docker-compose.yaml")
+	return c.GetPath("docker-compose.yaml")
 }
 
 // Hostname returns the hostname to the app controlled by this config.
@@ -243,22 +316,28 @@ func (c *Config) Hostname() string {
 
 // WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.
 func (c *Config) WriteDockerComposeConfig() error {
-	log.WithFields(log.Fields{
-		"Location": c.DockerComposeYAMLPath(),
-	}).Debug("Writing docker-compose.yaml")
+	var err error
 
-	f, err := os.Create(c.DockerComposeYAMLPath())
-	if err != nil {
-		return err
+	if !fileutil.FileExists(c.DockerComposeYAMLPath()) {
+		log.WithFields(log.Fields{
+			"Location": c.DockerComposeYAMLPath(),
+		}).Debug("Writing docker-compose.yaml")
+
+		f, err := os.Create(c.DockerComposeYAMLPath())
+		if err != nil {
+			return err
+		}
+		defer util.CheckClose(f)
+
+		rendered, err := c.RenderComposeYAML()
+		if err != nil {
+			return err
+		}
+		_, err = f.WriteString(rendered)
+		if err != nil {
+			return err
+		}
 	}
-	defer util.CheckClose(f)
-
-	rendered, err := c.RenderComposeYAML()
-	if err != nil {
-		return err
-	}
-	_, err = f.WriteString(rendered)
-
 	return err
 }
 
@@ -286,11 +365,17 @@ func (c *Config) RenderComposeYAML() (string, error) {
 
 // Define an application name.
 func (c *Config) namePrompt() error {
+	provider, err := c.GetProvider()
+	if err != nil {
+		return err
+	}
+
 	namePrompt := "Project name"
 	if c.Name == "" {
 		dir, err := os.Getwd()
 		// if working directory name is invalid for hostnames, we shouldn't suggest it
 		if err == nil && hostRegex.MatchString(filepath.Base(dir)) {
+
 			c.Name = filepath.Base(dir)
 		}
 	}
@@ -298,19 +383,17 @@ func (c *Config) namePrompt() error {
 	namePrompt = fmt.Sprintf("%s (%s)", namePrompt, c.Name)
 	fmt.Print(namePrompt + ": ")
 	c.Name = util.GetInput(c.Name)
-
-	match := hostRegex.MatchString(c.Hostname())
-	if !match {
-		fmt.Printf("%s is not a valid hostname. Please enter a site name that will allow for a valid hostname.\n See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements \n", c.Hostname())
-		c.Name = ""
-		return c.namePrompt()
-	}
-
-	return nil
+	return provider.ValidateField("Name", c.Name)
 }
 
 // Determine the document root.
 func (c *Config) docrootPrompt() error {
+	provider, err := c.GetProvider()
+	if err != nil {
+		return err
+	}
+
+	// Determine the document root.
 	fmt.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)\n", c.AppRoot)
 	fmt.Println("You may leave this value blank if your site files are in the application root")
 	var docrootPrompt = "Docroot Location"
@@ -324,11 +407,11 @@ func (c *Config) docrootPrompt() error {
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(c.AppRoot, c.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		fmt.Printf("No directory could be found at %s. Please enter a valid docroot", fullPath)
+		fmt.Printf("No directory could be found at %s. Please enter a valid docroot\n", fullPath)
 		c.Docroot = ""
 		return c.docrootPrompt()
 	}
-	return nil
+	return provider.ValidateField("Docroot", c.Docroot)
 }
 
 // ConfigExists determines if a ddev config file exists for this application.
@@ -341,6 +424,10 @@ func (c *Config) ConfigExists() bool {
 
 // appTypePrompt handles the AppType workflow.
 func (c *Config) appTypePrompt() error {
+	provider, err := c.GetProvider()
+	if err != nil {
+		return err
+	}
 	var appType string
 	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(AllowedAppTypes, ", "))
 
@@ -350,12 +437,12 @@ func (c *Config) appTypePrompt() error {
 		"Location": absDocroot,
 	}).Debug("Attempting to auto-determine application type")
 
-	appType, err := determineAppType(absDocroot)
+	appType, err = determineAppType(absDocroot)
 	if err == nil {
 		// If we found an application type just set it and inform the user.
-		fmt.Printf("Found a %s codebase at %s\n", appType, filepath.Join(c.AppRoot, c.Docroot))
+		util.Success("Found a %s codebase at %s\n", appType, filepath.Join(c.AppRoot, c.Docroot))
 		c.AppType = appType
-		return nil
+		return provider.ValidateField("AppType", c.AppType)
 	}
 	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, c.AppType)
 
@@ -368,7 +455,7 @@ func (c *Config) appTypePrompt() error {
 		}
 		c.AppType = appType
 	}
-	return nil
+	return provider.ValidateField("AppType", c.AppType)
 }
 
 // IsAllowedAppType determines if a given string exists in the AllowedAppTypes slice.
@@ -426,19 +513,22 @@ func determineAppType(basePath string) (string, error) {
 }
 
 // setSiteSettingsPath determines the location for site's db settings file based on apptype.
-func (c *Config) setSiteSettingsPath(appType string) {
-	settingsFilePath := filepath.Join(c.AppRoot, c.Docroot)
-
+func (c *Config) setSiteSettingsPaths(appType string) {
+	settingsFileBasePath := filepath.Join(c.AppRoot, c.Docroot)
+	var settingsFilePath, localSettingsFilePath string
 	switch appType {
 	case "drupal8":
 		fallthrough
 	case "drupal7":
-		settingsFilePath = filepath.Join(settingsFilePath, "sites", "default", "settings.php")
+		settingsFilePath = filepath.Join(settingsFileBasePath, "sites", "default", "settings.php")
+		localSettingsFilePath = filepath.Join(settingsFileBasePath, "sites", "default", "settings.local.php")
 	case "wordpress":
-		settingsFilePath = filepath.Join(settingsFilePath, "wp-config.php")
+		settingsFilePath = filepath.Join(settingsFileBasePath, "wp-config.php")
+		localSettingsFilePath = filepath.Join(settingsFileBasePath, "wp-config-local.php")
 	}
 
 	c.SiteSettingsPath = settingsFilePath
+	c.SiteLocalSettingsPath = localSettingsFilePath
 }
 
 // validateCommandYaml validates command hooks and tasks defined in hooks for config.yaml

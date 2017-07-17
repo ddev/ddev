@@ -1,20 +1,32 @@
 package util
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
+
+	"log"
+	"path"
 
 	"github.com/fatih/color"
 	"github.com/mitchellh/go-homedir"
-	"log"
-	"path"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 // Failed will print an red error message and exit with failure.
 func Failed(format string, a ...interface{}) {
-	color.Red(format, a...)
+	Error(format, a...)
 	os.Exit(1)
+}
+
+// Error will print an red error message but will not exit.
+func Error(format string, a ...interface{}) {
+	color.Red(format, a...)
 }
 
 // Warning will present the user with warning text.
@@ -59,9 +71,46 @@ func GetGlobalDdevDir() string {
 		log.Fatal("could not get home directory for current user. is it set?")
 	}
 	ddevDir := path.Join(userHome, ".ddev")
+
+	// Create the directory if it is not already present.
+	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
+		err = os.MkdirAll(ddevDir, 0700)
+		if err != nil {
+			Failed("Failed to create required directory %s, err: %v", ddevDir, err)
+		}
+	}
 	return ddevDir
 }
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
+// AskForConfirmation requests a y/n from user.
+func AskForConfirmation() bool {
+	response := GetInput("")
+	okayResponses := []string{"y", "yes"}
+	nokayResponses := []string{"n", "no", ""}
+	responseLower := strings.ToLower(response)
+
+	if containsString(okayResponses, responseLower) {
+		return true
+	} else if containsString(nokayResponses, responseLower) {
+		return false
+	} else {
+		fmt.Println("Please type yes or no and then press enter:")
+		return AskForConfirmation()
+	}
+}
+
+// containsString returns true if slice contains element
+func containsString(slice []string, element string) bool {
+	return !(posString(slice, element) == -1)
+}
+
+// posString returns the first index of element in slice.
+// If slice does not contain element, returns -1.
+func posString(slice []string, element string) int {
+	for index, elem := range slice {
+		if elem == element {
+			return index
+		}
+	}
+	return -1
 }

@@ -16,7 +16,7 @@ const (
 {{ $config := . }}
 /**
  {{ $config.Signature }}: Automatically generated Drupal settings.php file.
- ddev manages this file and may delete the file unless this comment is removed.
+ ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
 $databases['default']['default'] = array(

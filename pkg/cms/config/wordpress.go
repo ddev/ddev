@@ -16,7 +16,7 @@ const (
 {{ $config := . }}
 /**
  {{ $config.Signature }}: Automatically generated WordPress wp-config.php file.
- ddev manages this file and may delete the file unless this comment is removed.
+ ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
 // ** MySQL settings - You can get this info from your web host ** //
@@ -66,8 +66,15 @@ define( 'NONCE_SALT',       '{{ $config.NonceSalt }}' );
 if ( !defined('ABSPATH') )
 	define('ABSPATH', dirname(__FILE__) . '/');
 
-/** Sets up WordPress vars and included files. */
-require_once(ABSPATH . '/wp-settings.php');
+/**
+Sets up WordPress vars and included files.
+
+wp-settings.php is typically included in wp-config.php. This check ensures it is not
+included again if this file is written to wp-config-local.php.
+*/
+if (__FILE__ == "wp-config.php") {
+	require_once(ABSPATH . '/wp-settings.php');
+}
 `
 )
 

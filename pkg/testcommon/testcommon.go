@@ -57,6 +57,7 @@ func (site *TestSite) Prepare() error {
 	util.CheckErr(err)
 
 	cachedSrcDir, _, err := GetCachedArchive(site.Name, site.Name+"_siteArchive", site.ArchiveInternalExtractionPath, site.SourceURL)
+
 	if err != nil {
 		site.Cleanup()
 		return fmt.Errorf("Failed to GetCachedArchive, err=%v", err)
@@ -73,7 +74,7 @@ func (site *TestSite) Prepare() error {
 
 	// If our test site has a Name: then update the config file to reflect that.
 	if site.Name != "" {
-		config, err := ddevapp.NewConfig(site.Dir)
+		config, err := ddevapp.NewConfig(site.Dir, "")
 		if err != nil {
 			return errors.Errorf("Failed to read site config for site %s, dir %s, err:%v", site.Name, site.Dir, err)
 		}
@@ -264,7 +265,7 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 	}
 
 	_ = os.MkdirAll(extractPath, 0777)
-	err := util.DownloadFile(fileNameFullPath, sourceURL)
+	err := util.DownloadFile(fileNameFullPath, sourceURL, false)
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to download url=%s into %s, err=%v", sourceURL, fileNameFullPath, err)
 	}
