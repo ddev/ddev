@@ -2,6 +2,7 @@ package dockerutil_test
 
 import (
 	"log"
+	"os"
 	"testing"
 
 	"path/filepath"
@@ -44,7 +45,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal("failed to create/start docker container ", err)
 	}
-
+	os.Exit(m.Run())
 	// teardown docker container from docker util tests
 	err = client.RemoveContainer(docker.RemoveContainerOptions{
 		ID:    container.ID,

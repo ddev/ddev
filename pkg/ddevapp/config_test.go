@@ -19,6 +19,7 @@ import (
 func TestMain(m *testing.M) {
 	// Ensure the ddev directory is created before tests run.
 	_ = util.GetGlobalDdevDir()
+	os.Exit(m.Run())
 }
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
