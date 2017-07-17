@@ -5,6 +5,7 @@ import (
 
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +39,9 @@ func appImport(skipConfirmation bool) {
 	}
 
 	if !skipConfirmation {
-		util.Warning("You're about to delete the current database and files and replace with a fresh import. Would you like to continue (y/N): ")
+		// Unfortunately we cannot use util.Warning here as it automatically adds a newline, which is awkward when dealing with prompts.
+		d := color.New(color.FgYellow)
+		d.Printf("You're about to delete the current database and files and replace with a fresh import. Would you like to continue (y/N): ")
 		if !util.AskForConfirmation() {
 			util.Warning("Import cancelled.")
 			os.Exit(2)
