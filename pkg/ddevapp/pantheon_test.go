@@ -34,8 +34,8 @@ func TestPantheonConfigCommand(t *testing.T) {
 	testDir := testcommon.CreateTmpDir("TestPantheonConfigCommand")
 
 	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
 
 	// Create a docroot folder.
 	err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
@@ -92,6 +92,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 	assert.NoError(err)
 }
 
+// TestPantheonBackupLinks ensures we can get backups from pantheon for a configured environment.
 func TestPantheonBackupLinks(t *testing.T) {
 	if os.Getenv("PANTHEON_API_KEY") == "" {
 		t.Skip("No PANTHEON_API_KEY env var has been set. Skipping Pantheon specific test.")
@@ -102,8 +103,8 @@ func TestPantheonBackupLinks(t *testing.T) {
 	testDir := testcommon.CreateTmpDir("TestPantheonBackupLinks")
 
 	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.Chdir(testDir)()
 	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
 
 	config, err := NewConfig(testDir, "pantheon")
 	// No config should exist so this will result in an error
