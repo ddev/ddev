@@ -271,6 +271,7 @@ func TestWrite(t *testing.T) {
 		DBImage:    version.DBImg + ":" + version.DBTag,
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
 		AppType:    "drupal8",
+		Provider:   DefaultProviderName,
 	}
 
 	err := c.Write()
