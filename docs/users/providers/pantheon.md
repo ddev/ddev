@@ -2,6 +2,8 @@
 
 ddev provides an integration with the [Pantheon Website Management Platform](https://pantheon.io/), which allows for Pantheon users to quickly and easily download and provision a site from Pantheon in a local ddev-managed environment.
 
+ddev's Pantheon integration pulls an existing backup from an existing Pantheon site/environment into your local system so you can develop locally. Of course that means you must already have a Pantheon site with a backup in order to use it.
+
 ## Quick Start
 
 If you have ddev installed, and have an active Pantheon account with an active WordPress, Drupal 7, or Drupal 8 site, you can follow this quick start guide to spin up a pantheon site locally.
@@ -10,13 +12,11 @@ If you have ddev installed, and have an active Pantheon account with an active W
 
     a. Login to your Pantheon Dashboard, and [Generate a Machine Token](https://pantheon.io/docs/machine-tokens/) for ddev to use.
 
-    b. Run `ddev auth-pantheon <YOUR TOKEN>`
+    b. Run `ddev auth-pantheon <YOUR TOKEN>` (This is a one-time operation, and configures ddev to work with all the sites on your account.)
 
-2. Select the site you want to provision locally from your Pantheon Dashboard.
+2. Choose a Pantheon site and environment you want to use with ddev.
 
-3. Select the environment you want to provision locally.
-
-3. Get a copy of the site code base from Pantheon. We recommend enabling the "Git Connection Mode" if not already enabled, and using `git clone` to checkout the code locally.
+3. Get a copy of the site codebase from Pantheon. We recommend enabling the "Git Connection Mode" if not already enabled, and using `git clone` to check out the code locally.
 
 4. Create a new backup of the site. This can be done by navigating to Backups->Backup Log->Create New Backup. _Note: this must be done every time you want the latest state of your Pantheon environment provisioned locally._
 
@@ -24,22 +24,19 @@ If you have ddev installed, and have an active Pantheon account with an active W
 
     a. Navigate in your terminal to your checkout of the site codebase.
 
-    b. Run `ddev config pantheon`
+    b. Run `ddev config pantheon`. When asked for the project name you must use the exact name of the Pantheon project.
 
-    c. Follow the configuration prompts, selecting the Pantheon environment you want to sync from.
+    c. Configuration prompts will allow you to choose a Pantheon environment, suggesting "dev" as the default.
 
 6. Run `ddev pull`. The ddev environment will spin up, download the latest backup from Pantheon, and import the database and files into the ddev environment. You should now be able to access the site locally.
 
 ## Requirements
 
-In order to use ddev with Pantheon.io, you need to meet the following requirements:
+In order to use ddev with Pantheon.io, you need the following:
 
+- A [Pantheon.io](https://pantheon.io/) account. You can create a basic free account if you don't have one.
 
-- ddev is installed on your system. See [Installation instructions](../../index.md#installation) if you haven't installed yet.
-
-- A [Pantheon.io](https://pantheon.io/) account. You can create a dev version for free.
-
-- Authentication with Pantheon. See instructions below.
+- A Pantheon authentication token. See instructions below.
 
 ## Authentication
 
@@ -53,7 +50,7 @@ After you copy your Pantheon site’s codebase locally, you can use `ddev config
 
 ### Imports
 
-Running `ddev pull` will connect to Pantheon through their API to find the latest versions of the database and files backups from the specified environment. If new versions are available on Pantheon, they are downloaded and stored in ~/.ddev. If the stored copies in ~/.ddev are the latest copies, ddev will use these cached copies instead of downloading them over again.
+Running `ddev pull` will connect to Pantheon through their API to find the latest versions of the database and files backups from the specified environment. If new versions are available on Pantheon, they are downloaded and stored in ~/.ddev/pantheon. If the stored copies there are the latest copies, ddev will use these cached copies instead of downloading them again.
 
 _**Note for WordPress Users:** In order for your local site to load file assets from your local environment rather than the Pantheon environment it was pulled from, the URL of the site must be changed in the database by performing a search and replace. ddev provides an example `wp search-replace` as a post-pull hook in the config.yaml for your site. It is recommended to populate and uncomment this example so that replacement is done any time a backup is pulled from Pantheon._
 
