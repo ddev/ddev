@@ -138,7 +138,7 @@ func Untar(source string, dest string, extractionDir string) error {
 			fullPathDir := filepath.Dir(fullPath)
 			err = os.MkdirAll(fullPathDir, 0755)
 			if err != nil {
-				return err
+				return fmt.Errorf("Failed to create the directory %s, err: %v", fullPathDir, err)
 			}
 
 			// For a regular file, create and copy the file.
