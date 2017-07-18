@@ -650,11 +650,6 @@ func (l *LocalApp) DockerEnv() {
 	for k, v := range envVars {
 		if os.Getenv(k) == "" {
 
-			log.WithFields(log.Fields{
-				"Key":   k,
-				"Value": v,
-			}).Debug("Setting DockerEnv variable")
-
 			err := os.Setenv(k, v)
 			// @ TODO: I have no idea what a Setenv error would even look like, so I'm not sure what
 			// to do other than notify the user.

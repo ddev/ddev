@@ -12,7 +12,6 @@ import (
 	"regexp"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
@@ -163,9 +162,6 @@ func (c *Config) Write() error {
 		cfgbytes = append(cfgbytes, []byte(WordPressHooks)...)
 	}
 
-	log.WithFields(log.Fields{
-		"location": c.ConfigPath,
-	}).Debug("Writing Config")
 	err = ioutil.WriteFile(c.ConfigPath, cfgbytes, 0644)
 	if err != nil {
 		return err
@@ -200,10 +196,6 @@ func (c *Config) Read() error {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"Read config": awsutil.Prettify(c),
-	}).Debug("Finished config read")
-
 	// If any of these values aren't defined in the config file, set them to defaults.
 	if c.Name == "" {
 		c.Name = filepath.Base(c.AppRoot)
@@ -224,10 +216,6 @@ func (c *Config) Read() error {
 
 	c.setSiteSettingsPaths(c.AppType)
 
-	log.WithFields(log.Fields{
-		"Active config": awsutil.Prettify(c),
-	}).Debug("Finished config set")
-
 	return err
 }
 
@@ -240,11 +228,6 @@ func (c *Config) Config() error {
 		fmt.Printf("Creating a new ddev project config in the current directory (%s)\n", c.AppRoot)
 		fmt.Printf("Once completed, your configuration will be written to %s\n\n\n", c.ConfigPath)
 	}
-
-	// Log what the starting config is, for debugging purposes.
-	log.WithFields(log.Fields{
-		"Existing config": awsutil.Prettify(c),
-	}).Debug("Configuring application")
 
 	for {
 		err := c.namePrompt()
@@ -272,11 +255,6 @@ func (c *Config) Config() error {
 	}
 
 	err = c.providerInstance.Config()
-
-	// Log the resulting config, for debugging purposes.
-	log.WithFields(log.Fields{
-		"Config": awsutil.Prettify(c),
-	}).Debug("Configuration completed")
 
 	return err
 }
@@ -319,9 +297,6 @@ func (c *Config) WriteDockerComposeConfig() error {
 	var err error
 
 	if !fileutil.FileExists(c.DockerComposeYAMLPath()) {
-		log.WithFields(log.Fields{
-			"Location": c.DockerComposeYAMLPath(),
-		}).Debug("Writing docker-compose.yaml")
 
 		f, err := os.Create(c.DockerComposeYAMLPath())
 		if err != nil {
