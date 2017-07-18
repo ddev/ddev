@@ -23,4 +23,4 @@ docker rm -f $(docker ps -aq) 2>/dev/null || true
 make testcmd
 RV=$?
 echo "build.sh completed with status=$RV"
-exit $?
+exit $RV
