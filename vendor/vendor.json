@@ -34,12 +34,6 @@
 			"revisionTime": "2015-01-07T20:56:47Z"
 		},
 		{
-			"checksumSHA1": "yyYr41HZ1Aq0hWc3J5ijXwYEcac=",
-			"path": "github.com/aws/aws-sdk-go/aws/awsutil",
-			"revision": "744a71d4f73aeecb509ed9cf3e5dfa650d03d03e",
-			"revisionTime": "2016-11-18T22:00:42Z"
-		},
-		{
 			"path": "github.com/aws/aws-sdk-go/tree/master/aws/awsutil",
 			"revision": ""
 		},
