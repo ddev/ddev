@@ -253,7 +253,7 @@ func TestLocalImportDB(t *testing.T) {
 			assert.NoError(err)
 
 			err = app.ImportDB(cachedArchive, "data.sql")
-			assert.NoError(err)
+			assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
 		}
 
 		runTime()
