@@ -67,7 +67,7 @@ endif
 
 ifeq ($(BUILD_OS),windows)
     DDEV_BINARY_FULLPATH=$(PWD)/bin/$(BUILD_OS)/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
-    TEST_TIMEOUT=60m
+    TEST_TIMEOUT=120m
 endif
 
 ifeq ($(BUILD_OS),darwin)
