@@ -19,8 +19,8 @@ export GOTEST_SHORT=1
 echo "Warning: deleting all docker containers"
 docker rm -f $(docker ps -aq) 2>/dev/null || true
 
-
-make testcmd
+echo "Running tests..."
+make test
 RV=$?
 echo "build.sh completed with status=$RV"
 exit $RV
