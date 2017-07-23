@@ -276,32 +276,23 @@ func TestLocalImportFiles(t *testing.T) {
 		assert.NoError(err)
 
 		if site.FilesTarballURL != "" {
-			filePath := filepath.Join(testcommon.CreateTmpDir("local-tarball-files"), "files.tar.gz")
-			err := util.DownloadFile(filePath, site.FilesTarballURL, false)
+			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			assert.NoError(err)
-			err = app.ImportFiles(filePath, "")
-			assert.NoError(err)
-			err = os.Remove(filePath)
+			err = app.ImportFiles(tarballPath, "")
 			assert.NoError(err)
 		}
 
 		if site.FilesZipballURL != "" {
-			filePath := filepath.Join(testcommon.CreateTmpDir("local-zipball-files"), "files.zip")
-			err := util.DownloadFile(filePath, site.FilesZipballURL, false)
+			_, zipballPath, err := testcommon.GetCachedArchive(site.Name, "local-zipballs-files", "", site.FilesZipballURL)
 			assert.NoError(err)
-			err = app.ImportFiles(filePath, "")
-			assert.NoError(err)
-			err = os.Remove(filePath)
+			err = app.ImportFiles(zipballPath, "")
 			assert.NoError(err)
 		}
 
 		if site.FullSiteTarballURL != "" {
-			siteTarPath := filepath.Join(testcommon.CreateTmpDir("local-site-tar"), "site.tar.gz")
-			err = util.DownloadFile(siteTarPath, site.FullSiteTarballURL, false)
+			_, siteTarPath, err := testcommon.GetCachedArchive(site.Name, "local-site-tar", "", site.FullSiteTarballURL)
 			assert.NoError(err)
 			err = app.ImportFiles(siteTarPath, "docroot/sites/default/files")
-			assert.NoError(err)
-			err = os.Remove(siteTarPath)
 			assert.NoError(err)
 		}
 
