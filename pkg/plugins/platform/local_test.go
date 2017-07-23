@@ -10,8 +10,6 @@ import (
 
 	"strings"
 
-	"runtime"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -351,9 +349,6 @@ func TestLocalExec(t *testing.T) {
 func TestLocalLogs(t *testing.T) {
 	assert := assert.New(t)
 
-	if runtime.GOOS == "windows" {
-		t.Skipf("Skipping TestLocalLogs since pipes are not supported on Windows")
-	}
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
