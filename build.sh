@@ -14,7 +14,7 @@ if [ ! -z "$SURF_REF" ]; then
 	echo "Surf building on $(hostname) for OS=$(go env GOOS) in $DRUDSRC/ddev"
 fi
 
-export GOTEST_SHORT=1
+#export GOTEST_SHORT=1
 
 echo "Warning: deleting all docker containers"
 docker rm -f $(docker ps -aq) 2>/dev/null || true
