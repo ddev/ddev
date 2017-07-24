@@ -43,7 +43,7 @@ func CopyFile(src string, dst string) error {
 	}
 	err = os.Chmod(dst, si.Mode())
 	if err != nil {
-		return fmt.Errorf("Failed to chmod file %v to mode %v", dst, si.Mode())
+		return fmt.Errorf("Failed to chmod file %v to mode %v, err=%v", dst, si.Mode(), err)
 	}
 
 	return nil
