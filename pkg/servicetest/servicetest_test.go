@@ -67,7 +67,7 @@ func TestServices(t *testing.T) {
 		for _, site := range TestSites {
 			err := site.Prepare()
 			if err != nil {
-				log.Fatalf("Prepare() failed on TestSite.Prepare(), err=%v", err)
+				t.Fatalf("Prepare() failed on TestSite.Prepare() for site=%s, err=%v", site.Name, err)
 			}
 
 			app, err := platform.GetPluginApp("local")
