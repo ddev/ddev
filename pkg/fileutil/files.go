@@ -7,8 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/drud/ddev/pkg/util"
 	"strings"
+
+	"github.com/drud/ddev/pkg/util"
 )
 
 // CopyFile copies the contents of the file named src to the file named
@@ -41,9 +42,13 @@ func CopyFile(src string, dst string) error {
 	if err != nil {
 		return err
 	}
+	so, err := os.Stat(dst)
+	if err != nil {
+		return fmt.Errorf("Failed to stat destination after copy, dst=%s, err=%v, so=%v", dst, err, so)
+	}
 	err = os.Chmod(dst, si.Mode())
 	if err != nil {
-		return fmt.Errorf("Failed to chmod file %v to mode %v, err=%v", dst, si.Mode(), err)
+		return fmt.Errorf("Failed to chmod file %v to mode %v, err=%v (si=%v, so=%v)", dst, si.Mode(), err, si, so)
 	}
 
 	return nil

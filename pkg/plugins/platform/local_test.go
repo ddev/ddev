@@ -73,7 +73,7 @@ func TestMain(m *testing.M) {
 	for i := range TestSites {
 		err := TestSites[i].Prepare()
 		if err != nil {
-			log.Fatalf("Prepare() failed on TestSite.Prepare(%d) site=%s, err=%v", i, TestSites[i].Name, err)
+			log.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", TestSites[i].Name, err)
 		}
 
 		switchDir := TestSites[i].Chdir()
