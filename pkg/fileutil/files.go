@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/util"
+	"runtime"
 )
 
 // CopyFile copies the contents of the file named src to the file named
@@ -38,17 +39,17 @@ func CopyFile(src string, dst string) error {
 		return err
 	}
 
-	si, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-	so, err := os.Stat(dst)
-	if err != nil {
-		return fmt.Errorf("Failed to stat destination after copy, dst=%s, err=%v, so.Size=%v", dst, err, so.Size())
-	}
-	err = os.Chmod(dst, si.Mode())
-	if err != nil {
-		return fmt.Errorf("Failed to chmod file %v to mode %v, err=%v (si.Size=%v, so.Size=%v)", dst, si.Mode(), err, si.Size(), so.Size())
+	// chmod seems to fail on long path (> 256 characters) on windows
+	if runtime.GOOS != "windows" {
+		si, err := os.Stat(src)
+		if err != nil {
+			return err
+		}
+
+		err = os.Chmod(dst, si.Mode())
+		if err != nil {
+			return fmt.Errorf("Failed to chmod file %v to mode %v, err=%v", dst, si.Mode(), err)
+		}
 	}
 
 	return nil
