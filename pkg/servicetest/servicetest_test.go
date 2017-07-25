@@ -31,10 +31,10 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	if os.Getenv("GOTEST_SHORT") == "" {
-		var err error
-
-		ServiceDir, err = filepath.Abs("../../services")
+	if os.Getenv("GOTEST_SHORT") != "" {
+		log.Info("services tests skipped in short mode")
+	} else {
+		ServiceDir, err := filepath.Abs("../../services")
 		util.CheckErr(err)
 
 		err = filepath.Walk(ServiceDir, func(path string, f os.FileInfo, _ error) error {
@@ -47,14 +47,11 @@ func TestMain(m *testing.M) {
 
 		err = dockerutil.EnsureNetwork(dockerutil.GetDockerClient(), dockerutil.NetName)
 		util.CheckErr(err)
-	} else {
-		log.Info("services tests skipped in short mode")
+		log.Debugln("Running tests in servicetest...")
+		testRun := m.Run()
+
+		os.Exit(testRun)
 	}
-
-	log.Debugln("Running tests.")
-	testRun := m.Run()
-
-	os.Exit(testRun)
 }
 
 // TestServices tests each service compose file in the services folder.
