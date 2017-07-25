@@ -30,28 +30,31 @@ var (
 	ServiceDir   string
 )
 
+// TestMain runs the tests in servicetest
 func TestMain(m *testing.M) {
 	if os.Getenv("GOTEST_SHORT") != "" {
-		log.Info("services tests skipped in short mode")
-	} else {
-		ServiceDir, err := filepath.Abs("../../services")
-		util.CheckErr(err)
-
-		err = filepath.Walk(ServiceDir, func(path string, f os.FileInfo, _ error) error {
-			if !f.IsDir() && strings.HasPrefix(f.Name(), "docker-compose") {
-				ServiceFiles = append(ServiceFiles, f.Name())
-			}
-			return nil
-		})
-		util.CheckErr(err)
-
-		err = dockerutil.EnsureNetwork(dockerutil.GetDockerClient(), dockerutil.NetName)
-		util.CheckErr(err)
-		log.Debugln("Running tests in servicetest...")
-		testRun := m.Run()
-
-		os.Exit(testRun)
+		log.Info("servicetest skipped in short mode because GOTEST_SHORT is set")
+		os.Exit(0)
 	}
+
+	var err error
+	ServiceDir, err = filepath.Abs("../../services")
+	util.CheckErr(err)
+
+	err = filepath.Walk(ServiceDir, func(path string, f os.FileInfo, _ error) error {
+		if !f.IsDir() && strings.HasPrefix(f.Name(), "docker-compose") {
+			ServiceFiles = append(ServiceFiles, f.Name())
+		}
+		return nil
+	})
+	util.CheckErr(err)
+
+	err = dockerutil.EnsureNetwork(dockerutil.GetDockerClient(), dockerutil.NetName)
+	util.CheckErr(err)
+	log.Debugln("Running tests in servicetest...")
+	testRun := m.Run()
+
+	os.Exit(testRun)
 }
 
 // TestServices tests each service compose file in the services folder.
