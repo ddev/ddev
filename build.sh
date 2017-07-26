@@ -20,10 +20,13 @@ fi
 export GOTEST_SHORT=1
 
 echo "Warning: deleting all docker containers"
-docker rm -f $(docker ps -aq) 2>/dev/null || true
+if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
+	docker rm -f $(docker ps -aq)
+fi
 
 echo "Running tests..."
 time make test
 RV=$?
 echo "build.sh completed with status=$RV"
 exit $RV
+
