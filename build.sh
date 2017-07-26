@@ -29,4 +29,3 @@ time make test
 RV=$?
 echo "build.sh completed with status=$RV"
 exit $RV
-
