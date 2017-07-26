@@ -53,7 +53,7 @@ func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
 	log.Debugf("Preparing test site %s", site.Name)
-	runTime := TimeTrack(time.Now(), fmt.Sprintf("PERF: Prepare() site %s (CopyDir etc.)", site.Name))
+	runTime := TimeTrack(time.Now(), fmt.Sprintf("Prepare() site %s (CopyDir etc.)", site.Name))
 
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
 	util.CheckErr(err)
