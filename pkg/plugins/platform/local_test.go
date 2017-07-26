@@ -214,19 +214,14 @@ func TestLocalImportDB(t *testing.T) {
 		}
 
 		if site.DBTarURL != "" {
-			log.Info("Preparing to GetCachedArchive for %s", site.Name)
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
-			log.Info("Got CachedArchive for %s (%s)", site.Name, cachedArchive)
 			err = app.ImportDB(cachedArchive, "")
 			assert.NoError(err)
-			log.Info("Completed ImportDB for site=%s", site.Name)
 
 			stdout := testcommon.CaptureStdOut()
-			log.Info("stdout captured for %s", site.Name)
 			err = app.Exec("db", true, "mysql", "-e", "SHOW TABLES;")
 			assert.NoError(err)
-			log.Info("app.Exec db returned for site=%s", site.Name)
 			out := stdout()
 
 			assert.Contains(string(out), "Tables_in_db")
