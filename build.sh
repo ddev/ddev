@@ -17,7 +17,7 @@ if [ ! -z "$SURF_REF" ]; then
 		surf-build -s $SURF_SHA1 -r https://github.com/drud/ddev -n surf-$(go env GOOS)"
 fi
 
-#export GOTEST_SHORT=1
+export GOTEST_SHORT=1
 
 echo "Warning: deleting all docker containers"
 docker rm -f $(docker ps -aq) 2>/dev/null || true
