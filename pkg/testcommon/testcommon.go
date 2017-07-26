@@ -250,37 +250,38 @@ func TimeTrack(start time.Time, name string) func() {
 // prefixString is the prefix used to disambiguate downloads and extracts
 // internalExtractionPath is the place in the archive to start extracting
 // sourceURL is the actual URL to download.
+// Returns the extracted path, the tarball path (both possibly cached), and an error value.
 func GetCachedArchive(siteName string, prefixString string, internalExtractionPath string, sourceURL string) (string, string, error) {
 	uniqueName := prefixString + "_" + path.Base(sourceURL)
 	testCache := filepath.Join(util.GetGlobalDdevDir(), "testcache", siteName)
-	fileNameFullPath := filepath.Join(testCache, "tarballs", uniqueName)
-	_ = os.MkdirAll(filepath.Dir(fileNameFullPath), 0777)
+	archiveFullPath := filepath.Join(testCache, "tarballs", uniqueName)
+	_ = os.MkdirAll(filepath.Dir(archiveFullPath), 0777)
 	extractPath := filepath.Join(testCache, prefixString)
 
 	// Check to see if we have it cached, if so just return it.
 	dStat, dErr := os.Stat(extractPath)
-	aStat, aErr := os.Stat(fileNameFullPath)
+	aStat, aErr := os.Stat(archiveFullPath)
 	if dErr == nil && dStat.IsDir() && aErr == nil && !aStat.IsDir() {
-		return extractPath, fileNameFullPath, nil
+		return extractPath, archiveFullPath, nil
 	}
 
 	_ = os.MkdirAll(extractPath, 0777)
-	err := util.DownloadFile(fileNameFullPath, sourceURL, false)
+	err := util.DownloadFile(archiveFullPath, sourceURL, false)
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to download url=%s into %s, err=%v", sourceURL, fileNameFullPath, err)
+		return "", "", fmt.Errorf("Failed to download url=%s into %s, err=%v", sourceURL, archiveFullPath, err)
 	}
 
-	log.Debugf("Downloaded %s into %s", sourceURL, fileNameFullPath)
+	log.Debugf("Downloaded %s into %s", sourceURL, archiveFullPath)
 
-	if filepath.Ext(fileNameFullPath) == ".zip" {
-		err = archive.Unzip(fileNameFullPath, extractPath, internalExtractionPath)
+	if filepath.Ext(archiveFullPath) == ".zip" {
+		err = archive.Unzip(archiveFullPath, extractPath, internalExtractionPath)
 	} else {
-		err = archive.Untar(fileNameFullPath, extractPath, internalExtractionPath)
+		err = archive.Untar(archiveFullPath, extractPath, internalExtractionPath)
 	}
 	if err != nil {
 		_ = fileutil.PurgeDirectory(extractPath)
 		_ = os.RemoveAll(extractPath)
-		return "", "", fmt.Errorf("archive extraction of %s failed err=%v", fileNameFullPath, err)
+		return "", "", fmt.Errorf("archive extraction of %s failed err=%v", archiveFullPath, err)
 	}
-	return extractPath, fileNameFullPath, nil
+	return extractPath, archiveFullPath, nil
 }
