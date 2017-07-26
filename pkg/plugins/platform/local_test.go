@@ -381,7 +381,6 @@ func TestLocalLogs(t *testing.T) {
 		assert.NoError(err)
 		out = stdout()
 		assert.Contains(out, "MySQL init process done. Ready for start up.")
-		assert.False(strings.Contains(out, "Database initialized"))
 
 		runTime()
 		switchDir()
