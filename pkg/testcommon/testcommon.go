@@ -52,7 +52,9 @@ type TestSite struct {
 func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
-	log.Debugf("Prepping test for site %s", site.Name)
+	log.Debugf("Preparing test site %s", site.Name)
+	runTime := TimeTrack(time.Now(), fmt.Sprintf("Prepare() site %s (CopyDir etc.)", site.Name))
+
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
 	util.CheckErr(err)
 
@@ -89,7 +91,8 @@ func (site *TestSite) Prepare() error {
 		}
 	}
 
-	return err
+	runTime()
+	return nil
 }
 
 // Chdir will change to the directory for the site specified by TestSite.

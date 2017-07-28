@@ -59,6 +59,7 @@ include build-tools/makefile_components/base_build_go.mak
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
+TEST_TIMEOUT=20m
 BUILD_ARCH = $(shell go env GOARCH)
 ifeq ($(BUILD_OS),linux)
     DDEV_BINARY_FULLPATH=$(PWD)/bin/$(BUILD_OS)/ddev
@@ -66,6 +67,7 @@ endif
 
 ifeq ($(BUILD_OS),windows)
     DDEV_BINARY_FULLPATH=$(PWD)/bin/$(BUILD_OS)/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
+    TEST_TIMEOUT=40m
 endif
 
 ifeq ($(BUILD_OS),darwin)
@@ -77,10 +79,10 @@ endif
 test: testpkg testcmd
 
 testcmd: $(BUILD_OS) setup
-	CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -p 1 -timeout 20m -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
+	CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
 
 testpkg:
-	CGO_ENABLED=0 go test -p 1 -timeout 20m -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
+	CGO_ENABLED=0 go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
 
 setup:
 	@mkdir -p bin/darwin bin/linux

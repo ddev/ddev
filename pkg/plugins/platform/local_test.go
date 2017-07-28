@@ -10,8 +10,6 @@ import (
 
 	"strings"
 
-	"runtime"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -75,7 +73,7 @@ func TestMain(m *testing.M) {
 	for i := range TestSites {
 		err := TestSites[i].Prepare()
 		if err != nil {
-			log.Fatalf("Prepare() failed on TestSite.Prepare(%d) site=%s, err=%v", i, TestSites[i].Name, err)
+			log.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", TestSites[i].Name, err)
 		}
 
 		switchDir := TestSites[i].Chdir()
@@ -351,9 +349,6 @@ func TestLocalExec(t *testing.T) {
 func TestLocalLogs(t *testing.T) {
 	assert := assert.New(t)
 
-	if runtime.GOOS == "windows" {
-		t.Skipf("Skipping TestLocalLogs since pipes are not supported on Windows")
-	}
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
@@ -381,7 +376,6 @@ func TestLocalLogs(t *testing.T) {
 		assert.NoError(err)
 		out = stdout()
 		assert.Contains(out, "MySQL init process done. Ready for start up.")
-		assert.False(strings.Contains(out, "Database initialized"))
 
 		runTime()
 		switchDir()
@@ -549,7 +543,7 @@ func TestGetAppsEmpty(t *testing.T) {
 	}
 
 	apps := platform.GetApps()
-	assert.Equal(len(apps["local"]), 0)
+	assert.Equal(len(apps["local"]), 0, "Expected to find no apps but found %d apps=%v", len(apps["local"]), apps["local"])
 }
 
 // TestRouterNotRunning ensures the router is shut down after all sites are stopped.
@@ -559,7 +553,7 @@ func TestRouterNotRunning(t *testing.T) {
 	assert.NoError(err)
 
 	for _, container := range containers {
-		assert.NotEqual(dockerutil.ContainerName(container), "ddev-router", "Failed to find ddev-router container running")
+		assert.NotEqual(dockerutil.ContainerName(container), "ddev-router", "ddev-router was not supposed to be running but it was")
 	}
 }
 

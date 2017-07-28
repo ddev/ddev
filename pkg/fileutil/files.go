@@ -7,8 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/drud/ddev/pkg/util"
 	"strings"
+
+	"runtime"
+
+	"github.com/drud/ddev/pkg/util"
 )
 
 // CopyFile copies the contents of the file named src to the file named
@@ -37,13 +40,19 @@ func CopyFile(src string, dst string) error {
 		return err
 	}
 
-	si, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-	err = os.Chmod(dst, si.Mode())
-	if err != nil {
-		return fmt.Errorf("Failed to chmod file %v to mode %v", dst, si.Mode())
+	// os.Chmod fails on long path (> 256 characters) on windows.
+	// A description of this problem with golang is at https://github.com/golang/dep/issues/774#issuecomment-311560825
+	// It could end up fixed in a future version of golang.
+	if runtime.GOOS != "windows" {
+		si, err := os.Stat(src)
+		if err != nil {
+			return err
+		}
+
+		err = os.Chmod(dst, si.Mode())
+		if err != nil {
+			return fmt.Errorf("Failed to chmod file %v to mode %v, err=%v", dst, si.Mode(), err)
+		}
 	}
 
 	return nil
