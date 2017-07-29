@@ -16,7 +16,7 @@ pages:
       - 'Additional Services': 'users/extend/additional-services.md'
       - 'Defining Custom Services': 'users/extend/custom-compose-files.md'
     - 'Integration with Hosting Providers'
-      - 'Pantheon': 'providers/pantheon.md'
+      - 'Pantheon': 'users/providers/pantheon.md'
     - 'Notes for Linux Users': 'users/linux_notes.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'
