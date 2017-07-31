@@ -10,6 +10,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/stretchr/testify/assert"
+	"os"
 )
 
 const testOrg = "drud"
@@ -64,6 +65,9 @@ func TestIsReleaseVersion(t *testing.T) {
 // TestAvailableUpdates tests isReleaseVersion to ensure it correctly picks up on release builds vs dev builds
 func TestAvailableUpdates(t *testing.T) {
 	assert := assert.New(t)
+	if os.Getenv("GOTEST_SHORT") != "" {
+		t.Skip("Skipping TestAvailableUpdates because GOTEST_SHORT env var is set")
+	}
 	var versionTests = []struct {
 		in  string
 		out bool
