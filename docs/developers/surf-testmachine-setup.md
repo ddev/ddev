@@ -30,10 +30,11 @@ where `surf-windows-ddev` is the name of the job on the windows machine (it's fr
 1. Install [homebrew](https://brew.sh/)
 2. Install golang/git/docker with `brew install golang git docker`
 3. Install nosleep `brew cask install nosleep`
-4. Run nosleep and configure with "Never sleep on AC Adapter", "Never sleep on Battery", "Start nosleep utility on system startup" 
-5. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476). 
-6. Install surf from https://github.com/surf-build/surf/releases
-7. In a shell, 
+4. Enable nosleep using its shortcut in the Mac status bar.
+5. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
+6. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476). 
+7. Install surf from https://github.com/surf-build/surf/releases
+8. In a shell, 
 ```
 export GITHUB_TOKEN=012345...
 export DDEV_PANTHEON_API_TOKEN=012356...
@@ -42,4 +43,4 @@ surf-install -e DDEV_PANTHEON_API_TOKEN -n surf-darwin-ddev -c "surf-run -r http
 ```
 where `surf-darwin-ddev` is the name of the job on the mac machine (it's free-form) and `surf-darwin` is the identifier used on github when the build changes statuses; it's also free-form.
 
-8. Reboot the machine and do a test run. Alternately test with `surf-build -r https://github.com/drud/ddev -s <some_sha>`
+9. Reboot the machine and do a test run. Alternatively, test with `surf-build -r https://github.com/drud/ddev -s <some_sha>`
