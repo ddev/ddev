@@ -1,13 +1,17 @@
 version: 2
 jobs:
   # 'build' is the default build, the only one triggered automatically by github or anything else.
-  build:
+  normal_build_and_test:
     machine: true
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
     steps:
+      - run:
+          command: "if [ ! -z \"$DDEV_PANTHEON_API_TOKEN\" ] ; then echo \"DDEV_PANTHEON_API_TOKEN is set and is $(echo $DDEV_PANTHEON_API_TOKEN | wc -c) characters long\"; fi"
+          name: "Check pantheon token existence"
+
       - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
 
       - checkout
@@ -149,4 +153,22 @@ jobs:
       - store_artifacts:
           path: /artifacts
           name: Artifact storage
+
+workflows:
+  version: 2
+  normal_build_and_test:
+    jobs:
+      - normal_build_and_test:
+            context: org-global
+
+  tag_build:
+    jobs:
+      - tag_build:
+          filters:
+            tags:
+              only:
+                - "/.*/"
+            branches:
+              ignore: /.*/
+
 
