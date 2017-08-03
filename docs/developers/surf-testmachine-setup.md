@@ -23,7 +23,7 @@ set DDEV_PANTHEON_API_TOKEN=012356...
 surf-install -e DDEV_PANTHEON_API_TOKEN -n surf-windows-ddev -c "surf-run -r https://github.com/drud/ddev -j 1 -- surf-build -n  surf-windows"
 
 ```
-where `surf-windows-ddev` is the name of the job on the windows machine (it's free-form) and `surf-windows` is the identifier used on github when the build changes statuses; it's also free-form.
+where `surf-windows-ddev` is the name of the job on the windows machine (it's free-form) and `surf-windows` is the identifier used on github when the build changes statuses; it's also free-form. **Note that current versions of surf-install will fail claiming that schtasks failed, but it seems to work fine anyway. See [issue](https://github.com/surf-build/surf/issues/64).**
 
 ### OSX Test Machine Setup
 
