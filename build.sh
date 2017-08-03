@@ -18,7 +18,7 @@ fi
 
 export GOTEST_SHORT=1
 
-echo "Warning: deleting all docker containers and deleting ~/.ddev/*"
+echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
 if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq)
 fi
