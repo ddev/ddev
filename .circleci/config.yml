@@ -8,7 +8,9 @@ jobs:
       GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
     steps:
-      - run: echo "DRUD_PANTHEON_API_TOKEN=$DRUD_PANTHEON_API_TOKEN"
+      - run:
+          command: "if [ ! -z \"$DDEV_PANTHEON_API_TOKEN\" ] ; then echo \"DDEV_PANTHEON_API_TOKEN is set and is $(echo $DDEV_PANTHEON_API_TOKEN | wc -c) characters long\"; fi"
+          name: "Check pantheon token existence"
 
       - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
 
