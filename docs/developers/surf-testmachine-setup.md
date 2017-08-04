@@ -14,7 +14,10 @@ Before beginning:
 4. In docker config, share the "C" drive  (this must also be done after any docker reset)
 5. Set the "lid closing" setting in settings to do nothing.
 6. Set the "Sleep after time" setting in settings to never.
-7. Install surf from https://github.com/surf-build/surf/releases
+7. Install Surf:
+    - The quickest way to install Surf is with NPM:
+    `npm install -g surf-build`
+    - OR you can download a release from https://github.com/surf-build/surf/releases.
 8. Configure the windows machine to [automatically log in on boot](https://www.howtogeek.com/112919/how-to-make-your-windows-8-computer-logon-automatically/). 
 9. In an *administrative cmd shell*, 
 ```
@@ -33,13 +36,15 @@ where `surf-windows-ddev` is the name of the job on the windows machine (it's fr
 4. Enable nosleep using its shortcut in the Mac status bar.
 5. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
 6. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476). 
-7. Install surf from https://github.com/surf-build/surf/releases
+7. Install Surf:
+    - The quickest way to install Surf is with NPM:
+    `npm install -g surf-build`
+    - OR you can download a release from https://github.com/surf-build/surf/releases.
 8. In a shell, 
 ```
 export GITHUB_TOKEN=012345...
 export DDEV_PANTHEON_API_TOKEN=012356...
 surf-install -e DDEV_PANTHEON_API_TOKEN -n surf-darwin-ddev -c "surf-run -r https://github.com/drud/ddev -j 1 -- surf-build -n  surf-darwin"
-
 ```
 where `surf-darwin-ddev` is the name of the job on the mac machine (it's free-form) and `surf-darwin` is the identifier used on github when the build changes statuses; it's also free-form.
 
