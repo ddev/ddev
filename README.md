@@ -1,5 +1,7 @@
 <p align="center"><img src="images/ddev_logo.png" width="426" height="100" alt="ddev"></p>
+
 ---
+
 [![CircleCI](https://circleci.com/gh/drud/ddev.svg?style=shield)](https://circleci.com/gh/drud/ddev) [![Go Report Card](https://goreportcard.com/badge/github.com/drud/ddev)](https://goreportcard.com/report/github.com/drud/ddev) ![project is maintained](https://img.shields.io/maintenance/yes/2017.svg)
 
 # ddev
