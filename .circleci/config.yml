@@ -8,10 +8,6 @@ jobs:
       GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
     steps:
-      - run:
-          command: "if [ ! -z \"$DDEV_PANTHEON_API_TOKEN\" ] ; then echo \"DDEV_PANTHEON_API_TOKEN is set and is $(echo $DDEV_PANTHEON_API_TOKEN | wc -c) characters long\"; fi"
-          name: "Check pantheon token existence"
-
       - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
 
       - checkout
@@ -158,9 +154,7 @@ workflows:
   version: 2
   normal_build_and_test:
     jobs:
-      - normal_build_and_test:
-            context: org-global
-
+      - normal_build_and_test
   tag_build:
     jobs:
       - tag_build:
