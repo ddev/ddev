@@ -1,7 +1,7 @@
 version: 2
 jobs:
   # 'build' is the default build, the only one triggered automatically by github or anything else.
-  build:
+  normal_build_and_test:
     machine: true
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
@@ -149,4 +149,20 @@ jobs:
       - store_artifacts:
           path: /artifacts
           name: Artifact storage
+
+workflows:
+  version: 2
+  normal_build_and_test:
+    jobs:
+      - normal_build_and_test
+  tag_build:
+    jobs:
+      - tag_build:
+          filters:
+            tags:
+              only:
+                - "/.*/"
+            branches:
+              ignore: /.*/
+
 
