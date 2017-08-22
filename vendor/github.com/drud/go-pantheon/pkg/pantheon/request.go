@@ -13,6 +13,12 @@ import (
 // APIHost in the Hostname + basepath for the pantheon API endpoint.
 var APIHost = "https://terminus.pantheon.io:443/api"
 
+// Default HTTP header values
+const (
+	contentType = "application/json"
+	userAgent   = "Terminus/1.3.1-dev (php_version=7.1.5&script=bin/terminus)"
+)
+
 // RequestEntity provides an interface for making requests to the Pantheon API and marshaling/unmarshaling JSON data. Any object which
 // wishes to use the Request type must implement this interface.
 type RequestEntity interface {
@@ -23,8 +29,8 @@ type RequestEntity interface {
 
 // setRequestHeaders sets default headers that should be used for all HTTP requests.
 func setRequestHeaders(req *http.Request) {
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "Terminus/1.3.1-dev (php_version=7.1.5&script=bin/terminus)")
+	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("User-Agent", userAgent)
 }
 
 // httpRequest performs a HTTP request for a given resource.
