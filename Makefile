@@ -2,6 +2,8 @@
 
 ##### These variables need to be adjusted in most repositories #####
 
+BUILD_IMAGE := drud/golang-build-container:20170830_upgrade_go_1_9_0
+
 # This repo's root import path (under GOPATH).
 PKG := github.com/drud/ddev
 
