@@ -33,6 +33,9 @@ var PantheonAuthCommand = &cobra.Command{
 		}
 
 		err = session.Write(sessionLocation)
+		if (err != nil) {
+			util.Failed("Failed session.Write(), err=%v", err)
+		}
 		util.Success("Authentication successful!\nYou may now use the `ddev config pantheon` command when configuring sites!")
 	},
 }
