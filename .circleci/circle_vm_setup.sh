@@ -11,7 +11,7 @@ sudo apt-get install -qq mysql-client realpath zip
 
 # golang of the version we want
 sudo apt-get remove -qq golang &&
-wget -q -O /tmp/golang.tgz https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz &&
+wget -q -O /tmp/golang.tgz https://storage.googleapis.com/golang/go1.9.linux-amd64.tar.gz &&
 cd /tmp && tar -xf golang.tgz &&
 sudo rm -rf /usr/local/go && sudo mv go /usr/local
 
