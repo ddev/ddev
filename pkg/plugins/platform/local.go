@@ -47,6 +47,7 @@ func (l *LocalApp) GetType() string {
 func (l *LocalApp) Init(basePath string) error {
 	config, err := ddevapp.NewConfig(basePath, "")
 	if err != nil {
+		l.AppConfig = config
 		return err
 	}
 
@@ -266,6 +267,10 @@ func (l *LocalApp) SiteStatus() string {
 	var siteStatus string
 	services := map[string]string{"web": "", "db": ""}
 
+	if (!fileutil.FileExists(l.AppRoot())) {
+		siteStatus := fmt.Sprintf("Ooops, app directory was killed: %v", l.AppRoot())
+		return siteStatus
+	}
 	for service := range services {
 		container, err := l.FindContainerByType(service)
 		if err != nil {
