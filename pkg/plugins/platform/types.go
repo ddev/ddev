@@ -13,6 +13,9 @@ const SiteRunning = "running"
 // SiteNotFound defines the string used to denote a site where the containers were not found/do not exist.
 const SiteNotFound = "not found"
 
+// SiteDirMissing defines the string used to denote when a site is missing its application directory.
+const SiteDirMissing = "app directory missing"
+
 // SiteStopped defines the string used to denote when a site is in the stopped state.
 const SiteStopped = "stopped"
 
@@ -46,7 +49,7 @@ var PluginMap = map[string]App{
 }
 
 // GetPluginApp will return an application of the type specified by pluginType
-func GetPluginApp(pluginType string) (App, error) {
+func GetPluginApp(pluginType string) (*LocalApp, error) {
 	switch strings.ToLower(pluginType) {
 	case "local":
 		return &LocalApp{}, nil

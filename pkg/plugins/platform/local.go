@@ -69,6 +69,12 @@ func (l *LocalApp) Init(basePath string) error {
 	return nil
 }
 
+// InitFromMissingDirectory populates local app settings based on manually given arguments.
+func (l *LocalApp) InitFromMissingDirectory(name string, appType string) {
+	l.AppConfig.Name = name
+	l.AppConfig.AppType = appType
+}
+
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
 func (l *LocalApp) FindContainerByType(containerType string) (docker.APIContainers, error) {
 	labels := map[string]string{
@@ -267,8 +273,8 @@ func (l *LocalApp) SiteStatus() string {
 	var siteStatus string
 	services := map[string]string{"web": "", "db": ""}
 
-	if (!fileutil.FileExists(l.AppRoot())) {
-		siteStatus := fmt.Sprintf("Ooops, app directory was killed: %v", l.AppRoot())
+	if !fileutil.FileExists(l.AppRoot()) {
+		siteStatus := fmt.Sprintf("%s: %v", SiteDirMissing, l.AppRoot())
 		return siteStatus
 	}
 	for service := range services {
