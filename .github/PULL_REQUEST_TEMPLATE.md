@@ -1,10 +1,10 @@
-## The Problem:
+## The Problem/Issue/Bug:
 
-## The Fix:
+## How this PR Solves The Problem:
 
-## The Test:
+## Manual Testing Instructions:
 
-## Automation Overview:
+## Automated Testing Overview:
 <!-- Please provide an overview of tests introduced by this PR, or an explanation for why no tests are needed. -->
 
 ## Related Issue Link(s):

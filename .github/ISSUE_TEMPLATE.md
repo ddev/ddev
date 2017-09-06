@@ -4,10 +4,10 @@
 ## What you expected to happen:
 
 
-## Version: Please include the output of `ddev version` and the project's .ddev/config.yaml.
-
-
 ## How to reproduce this:
+
+
+## Version: Please include the output of `ddev version`, `docker version` and the project's .ddev/config.yaml.
 
 
 ## Anything else do we need to know:
