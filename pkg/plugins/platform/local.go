@@ -70,6 +70,12 @@ func (l *LocalApp) Init(basePath string) error {
 	return nil
 }
 
+// InitFromMissingDirectory populates local app settings based on manually given arguments.
+func (l *LocalApp) InitFromMissingDirectory(name string, appType string) {
+	l.AppConfig.Name = name
+	l.AppConfig.AppType = appType
+}
+
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
 func (l *LocalApp) FindContainerByType(containerType string) (docker.APIContainers, error) {
 	labels := map[string]string{

@@ -19,8 +19,8 @@ import (
 )
 
 // GetApps returns a list of ddev applictions keyed by platform.
-func GetApps() map[string][]App {
-	apps := make(map[string][]App)
+func        GetApps() map[string][]App {
+ 	apps := make(map[string][]App)
 	for platformType := range PluginMap {
 		labels := map[string]string{
 			"com.ddev.platform":          "ddev",
