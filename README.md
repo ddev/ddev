@@ -32,6 +32,18 @@ ddev requires ports 80 and 3306 to be available for use on your system when site
 If you need to use another environment after using ddev, simply ensure all of your ddev sites are stopped or removed. ddev only uses system ports when at least one site is running.
 
 ## Installation
+### Homebrew - macOS
+
+For macOS users, we recommend downloading and installing ddev via homebrew:
+```
+brew tap drud/ddev && brew install ddev
+```
+To upgrade to the latest version of ddev, simply run:
+```
+brew upgrade ddev
+```
+If you need to install homebrew, instructions can be found [here](https://brew.sh/).
+  
 ### Installation Script - Linux and macOS
 
 Linux and macOS end-users can use this line of code to your terminal to download, verify, and install ddev using our [install script](https://github.com/drud/ddev/blob/master/install_ddev.sh):

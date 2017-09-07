@@ -19,8 +19,8 @@ import (
 )
 
 // GetApps returns a list of ddev applictions keyed by platform.
-func GetApps() map[string][]App {
-	apps := make(map[string][]App)
+func        GetApps() map[string][]App {
+ 	apps := make(map[string][]App)
 	for platformType := range PluginMap {
 		labels := map[string]string{
 			"com.ddev.platform":          "ddev",
@@ -45,9 +45,10 @@ func GetApps() map[string][]App {
 				}
 
 				err = site.Init(approot)
-				if err == nil {
-					apps[platformType] = append(apps[platformType], site)
+				if (err != nil) {
+					log.Printf("Failed to init %v err=%v", approot, err)
 				}
+				apps[platformType] = append(apps[platformType], site)
 			}
 		}
 	}
