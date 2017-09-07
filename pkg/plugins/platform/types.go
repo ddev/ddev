@@ -49,7 +49,7 @@ var PluginMap = map[string]App{
 }
 
 // GetPluginApp will return an application of the type specified by pluginType
-func GetPluginApp(pluginType string) (*LocalApp, error) {
+func GetPluginApp(pluginType string) (App, error) {
 	switch strings.ToLower(pluginType) {
 	case "local":
 		return &LocalApp{}, nil

@@ -47,6 +47,7 @@ func (l *LocalApp) GetType() string {
 func (l *LocalApp) Init(basePath string) error {
 	config, err := ddevapp.NewConfig(basePath, "")
 	if err != nil {
+		// Save config to l.AppConfig so we can capture and display the site's status.
 		l.AppConfig = config
 		return err
 	}
@@ -67,12 +68,6 @@ func (l *LocalApp) Init(basePath string) error {
 	}
 
 	return nil
-}
-
-// InitFromMissingDirectory populates local app settings based on manually given arguments.
-func (l *LocalApp) InitFromMissingDirectory(name string, appType string) {
-	l.AppConfig.Name = name
-	l.AppConfig.AppType = appType
 }
 
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
