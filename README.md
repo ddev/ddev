@@ -42,6 +42,7 @@ To upgrade to the latest version of ddev, simply run:
 ```
 brew upgrade ddev
 ```
+If you need to install homebrew, instructions can be found [here](https://brew.sh/).
   
 ### Installation Script - Linux and macOS
 
