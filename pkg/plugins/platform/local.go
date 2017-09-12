@@ -272,6 +272,13 @@ func (l *LocalApp) SiteStatus() string {
 		siteStatus := fmt.Sprintf("%s: %v", SiteDirMissing, l.AppRoot())
 		return siteStatus
 	}
+
+	_, err := CheckForConf(l.AppRoot())
+	if err != nil {
+		siteStatus := fmt.Sprintf("%s", SiteConfigMissing)
+		return siteStatus
+	}
+
 	for service := range services {
 		container, err := l.FindContainerByType(service)
 		if err != nil {

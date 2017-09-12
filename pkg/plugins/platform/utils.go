@@ -106,6 +106,8 @@ func RenderAppRow(table *uitable.Table, site App) {
 		status = color.RedString(status)
 	case strings.Contains(status, SiteDirMissing):
 		status = color.RedString(status)
+	case strings.Contains(status, SiteConfigMissing):
+		status = color.RedString(status)
 	default:
 		status = color.CyanString(status)
 	}
