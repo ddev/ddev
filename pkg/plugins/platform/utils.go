@@ -49,7 +49,7 @@ func GetApps() map[string][]App {
 					// Cast 'site' from type App to type LocalApp, so we can manually enter AppConfig values.
 					siteStruct, ok := site.(*LocalApp)
 					if !ok {
-						log.Fatalf("Failed to init %v err=%v", approot, err)
+						log.Fatalf("Failed to cast siteStruct(type App) to *LocalApp{}: %v", siteStruct)
 					}
 
 					siteStruct.AppConfig.Name = siteContainer.Labels["com.ddev.site-name"]
