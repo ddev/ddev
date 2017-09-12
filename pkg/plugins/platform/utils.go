@@ -45,9 +45,17 @@ func GetApps() map[string][]App {
 				}
 
 				err = site.Init(approot)
-				if err == nil {
-					apps[platformType] = append(apps[platformType], site)
+				if err != nil {
+					// Cast 'site' from type App to type LocalApp, so we can manually enter AppConfig values.
+					siteStruct, ok := site.(*LocalApp)
+					if !ok {
+						log.Fatalf("Failed to cast siteStruct(type App) to *LocalApp{}. site=%v", site)
+					}
+
+					siteStruct.AppConfig.Name = siteContainer.Labels["com.ddev.site-name"]
+					siteStruct.AppConfig.AppType = siteContainer.Labels["com.ddev.app-type"]
 				}
+				apps[platformType] = append(apps[platformType], site)
 			}
 		}
 	}
@@ -66,7 +74,6 @@ func RenderAppTable(platform string, apps []App) {
 		fmt.Println(table)
 		fmt.Println(PrintRouterStatus())
 	}
-
 }
 
 // CreateAppTable will create a new app table for describe and list output
@@ -96,6 +103,10 @@ func RenderAppRow(table *uitable.Table, site App) {
 	case strings.Contains(status, SiteStopped):
 		status = color.YellowString(status)
 	case strings.Contains(status, SiteNotFound):
+		status = color.RedString(status)
+	case strings.Contains(status, SiteDirMissing):
+		status = color.RedString(status)
+	case strings.Contains(status, SiteConfigMissing):
 		status = color.RedString(status)
 	default:
 		status = color.CyanString(status)

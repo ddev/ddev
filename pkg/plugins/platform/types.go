@@ -13,6 +13,12 @@ const SiteRunning = "running"
 // SiteNotFound defines the string used to denote a site where the containers were not found/do not exist.
 const SiteNotFound = "not found"
 
+// SiteDirMissing defines the string used to denote when a site is missing its application directory.
+const SiteDirMissing = "app directory missing"
+
+// SiteConfigMissing defines the string used to denote when a site is missing its .ddev/config.yml file.
+const SiteConfigMissing = ".ddev/config.yml missing"
+
 // SiteStopped defines the string used to denote when a site is in the stopped state.
 const SiteStopped = "stopped"
 

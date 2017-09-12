@@ -47,6 +47,8 @@ func (l *LocalApp) GetType() string {
 func (l *LocalApp) Init(basePath string) error {
 	config, err := ddevapp.NewConfig(basePath, "")
 	if err != nil {
+		// Save config to l.AppConfig so we can capture and display the site's status.
+		l.AppConfig = config
 		return err
 	}
 
@@ -265,6 +267,17 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 func (l *LocalApp) SiteStatus() string {
 	var siteStatus string
 	services := map[string]string{"web": "", "db": ""}
+
+	if !fileutil.FileExists(l.AppRoot()) {
+		siteStatus := fmt.Sprintf("%s: %v", SiteDirMissing, l.AppRoot())
+		return siteStatus
+	}
+
+	_, err := CheckForConf(l.AppRoot())
+	if err != nil {
+		siteStatus := fmt.Sprintf("%s", SiteConfigMissing)
+		return siteStatus
+	}
 
 	for service := range services {
 		container, err := l.FindContainerByType(service)

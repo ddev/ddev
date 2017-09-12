@@ -104,7 +104,7 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 	// and it is up to the caller to determine if that's an issue.
 	err := c.Read()
 	if err != nil {
-		return c, err
+		return c, fmt.Errorf("Unable to read config.yaml, %v, err=%v", c.ConfigPath, err)
 	}
 
 	return c, err
