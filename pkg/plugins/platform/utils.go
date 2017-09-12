@@ -47,10 +47,13 @@ func GetApps() map[string][]App {
 				err = site.Init(approot)
 				if err != nil {
 					// Cast 'site' from type App to type LocalApp, so we can manually enter AppConfig values.
-					site := site.(*LocalApp)
-					site.AppConfig.Name = siteContainer.Labels["com.ddev.site-name"]
-					site.AppConfig.AppType = siteContainer.Labels["com.ddev.app-type"]
-					log.Printf("Failed to init %v err=%v", approot, err)
+					siteStruct, ok := site.(*LocalApp)
+					if !ok {
+						log.Fatalf("Failed to init %v err=%v", approot, err)
+					}
+
+					siteStruct.AppConfig.Name = siteContainer.Labels["com.ddev.site-name"]
+					siteStruct.AppConfig.AppType = siteContainer.Labels["com.ddev.app-type"]
 				}
 				apps[platformType] = append(apps[platformType], site)
 			}
