@@ -971,6 +971,10 @@ func GetActiveApp(siteName string) (App, error) {
 	}
 	activeAppRoot, err := GetActiveAppRoot(siteName)
 	if err != nil {
+		// Return a config so we may delete the app in the case of a missing directory or config.
+		webContainer := dockerutil.FindContainerByLabels()
+		siteStruct := app.(*LocalApp)
+		siteStruct.AppConfig.SiteSettingsPath =
 		return app, err
 	}
 
