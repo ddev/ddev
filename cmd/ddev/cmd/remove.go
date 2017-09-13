@@ -32,7 +32,6 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 
 		app, err := platform.GetActiveApp(siteName)
 		if err != nil {
-			app.Down(removeData)
 			util.Failed("Failed to remove: %v", err)
 		}
 

@@ -953,10 +953,10 @@ func GetActiveAppRoot(siteName string) (string, error) {
 			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(webContainer))
 		}
 	}
-
 	appRoot, err := CheckForConf(siteDir)
 	if err != nil {
-		return "", fmt.Errorf("unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
+		// In the case of a missing .ddev/config.yml just return the site directory.
+		return siteDir, nil
 	}
 
 	return appRoot, nil
@@ -971,13 +971,15 @@ func GetActiveApp(siteName string) (App, error) {
 	}
 	activeAppRoot, err := GetActiveAppRoot(siteName)
 	if err != nil {
-		// Return a config so we may delete the app in the case of a missing directory or config.
-		webContainer := dockerutil.FindContainerByLabels()
-		siteStruct := app.(*LocalApp)
-		siteStruct.AppConfig.SiteSettingsPath =
 		return app, err
 	}
 
-	err = app.Init(activeAppRoot)
-	return app, err
+	app.Init(activeAppRoot)
+	// Make sure AppConfig.Name is set in case this is app is being used for Cleanup().
+	if app.GetName() == "" {
+		app, _ := app.(*LocalApp)
+		app.AppConfig.Name = siteName
+	}
+
+	return app, nil
 }
