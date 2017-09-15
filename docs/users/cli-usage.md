@@ -34,7 +34,7 @@ Check out the git repository for the site you want to work on. `cd` into the dir
 
 ```
 $ cd ~/Projects
-$ git clone git@github.com:drud/drupal8.git
+$ composer create-project drupal-composer/drupal-project:8.x-dev drupal8 --stability dev --no-interaction
 $ cd drupal8
 $ ddev config
 Creating a new ddev project config in the current directory (/Users/username/Projects/drupal8)
@@ -45,8 +45,8 @@ Project name (drupal8):
 
 The docroot is the directory from which your site is served. This is a relative path from your application root (/Users/username/Projects/drupal8)
 You may leave this value blank if your site files are in the application root
-Docroot Location: docroot
-Found a drupal8 codebase at /Users/username/Projects/drupal8/docroot
+Docroot Location: web
+Found a drupal8 codebase at /Users/username/Projects/drupal8/web
 ```
 
 Configuration files have now been created for your site. (Available for inspection/modification at .ddev/ddev.yaml).
@@ -163,7 +163,7 @@ Static asset import supports the following file types:
 - (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
 - Zip Archive (.zip)
 
-If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. In the following example, the assets we want to import reside at "docroot/sites/default/files":
+If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. In the following example, the assets we want to import reside at "web/sites/default/files":
 
 ```
 ➜  ddev import-files
@@ -172,7 +172,7 @@ Import path:
 ~/Downloads/site-backup.tar.gz
 You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents
 Archive extraction path:
-docroot/sites/default/files
+web/sites/default/files
 Successfully imported files for drupal8
 ```
 
