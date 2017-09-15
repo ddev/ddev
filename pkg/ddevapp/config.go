@@ -259,7 +259,7 @@ func (c *Config) Config() error {
 	return err
 }
 
-// Validate ensures the configuraton meets ddev's requirements.
+// Validate ensures the configuration meets ddev's requirements.
 func (c *Config) Validate() error {
 	// validate docroot
 	fullPath := filepath.Join(c.AppRoot, c.Docroot)
