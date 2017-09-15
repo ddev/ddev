@@ -72,7 +72,7 @@ func TestGetActiveAppRoot(t *testing.T) {
 	assert := asrt.New(t)
 
 	_, err := platform.GetActiveAppRoot("")
-	assert.Contains(err.Error(), "unable to determine the application for this command")
+	assert.Contains(err.Error(), "could not find containers which matched search criteria")
 
 	_, err = platform.GetActiveAppRoot("potato")
 	assert.Error(err)
