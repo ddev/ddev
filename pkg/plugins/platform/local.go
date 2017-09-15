@@ -805,13 +805,26 @@ func (l *LocalApp) CreateSettingsFile() error {
 func (l *LocalApp) Down(removeData bool) error {
 	l.DockerEnv()
 	settingsFilePath := l.AppConfig.SiteSettingsPath
+	_, missingConfig := CheckForConf(l.AppRoot())
 
-	_, _, err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
-	if err != nil {
-		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
-		err = Cleanup(l)
+	if !fileutil.FileExists(l.AppRoot()) {
+		err := Cleanup(l)
 		if err != nil {
-			util.Warning("Received error from Cleanup, err=", err)
+			util.Failed("Failed to remove %s: %s", l.GetName(), err)
+		}
+	} else if missingConfig != nil {
+		err := Cleanup(l)
+		if err != nil {
+			util.Failed("Failed to remove %s: %s", l.GetName(), err)
+		}
+	} else {
+		err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
+		if err != nil {
+			util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
+			err = Cleanup(l)
+			if err != nil {
+				util.Warning("Received error from Cleanup, err=", err)
+			}
 		}
 	}
 

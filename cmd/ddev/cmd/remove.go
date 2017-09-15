@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -40,16 +39,9 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 			util.Failed("App not running locally. Try `ddev start`.")
 		}
 
-		if fileutil.FileExists(app.AppRoot()) {
-			err = app.Down(removeData)
-			if err != nil {
-				util.Failed("Failed to remove %s: %s", app.GetName(), err)
-			}
-		} else {
-			err = platform.Cleanup(app)
-			if err != nil {
-				util.Failed("Failed to remove %s: %s", app.GetName(), err)
-			}
+		err = app.Down(removeData)
+		if err != nil {
+			util.Failed("Failed to remove %s: %s", app.GetName(), err)
 		}
 
 		util.Success("Successfully removed the %s application.", app.GetName())
