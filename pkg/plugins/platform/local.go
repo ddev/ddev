@@ -948,6 +948,10 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error determining the current directory: %s", err)
 		}
+		_, err := CheckForConf(siteDir)
+		if err != nil {
+			return "", fmt.Errorf("Could not find a site in %s. Please specify a site name or change directories.", siteDir)
+		}
 	} else {
 		var ok bool
 
