@@ -8,7 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestSequelproOperation tests basic operation.
@@ -16,7 +16,7 @@ func TestSequelproOperation(t *testing.T) {
 	if !detectSequelpro() {
 		t.SkipNow()
 	}
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	v := DevTestSites[0]
 	cleanup := v.Chdir()
 
@@ -40,7 +40,7 @@ func TestSequelproBadApp(t *testing.T) {
 		t.SkipNow()
 	}
 
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
 	tmpdir := testcommon.CreateTmpDir("sequelpro_badargs")

@@ -11,7 +11,7 @@ import (
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 /**
@@ -32,7 +32,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 	}
 
 	// Set up tests and give ourselves a working directory.
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestPantheonConfigCommand")
 
 	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
@@ -101,7 +101,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 	}
 
 	// Set up tests and give ourselves a working directory.
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestPantheonBackupLinks")
 
 	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)

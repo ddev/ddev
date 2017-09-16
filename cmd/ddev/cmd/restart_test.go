@@ -6,12 +6,12 @@ import (
 
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/plugins/platform"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestDevRestart runs `drud legacy restart` on the test apps
 func TestDevRestart(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	containerPrefix := "ddev"
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()

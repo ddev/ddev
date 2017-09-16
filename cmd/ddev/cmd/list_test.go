@@ -5,11 +5,11 @@ import (
 
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/plugins/platform"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 func TestDevList(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	args := []string{"list"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)

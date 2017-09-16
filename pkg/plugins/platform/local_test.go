@@ -18,7 +18,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 var (
@@ -132,7 +132,7 @@ func TestMain(m *testing.M) {
 
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
 func TestLocalStart(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
@@ -175,7 +175,7 @@ func TestLocalStart(t *testing.T) {
 
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	apps := platform.GetApps()
 	assert.Equal(len(apps["local"]), len(TestSites))
 
@@ -193,7 +193,7 @@ func TestGetApps(t *testing.T) {
 
 // TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed
 func TestLocalImportDB(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 	testDir, _ := os.Getwd()
@@ -261,7 +261,7 @@ func TestLocalImportDB(t *testing.T) {
 
 // TestLocalImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestLocalImportFiles(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
@@ -301,7 +301,7 @@ func TestLocalImportFiles(t *testing.T) {
 
 // TestLocalExec tests the execution of commands inside a docker container of a site.
 func TestLocalExec(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
@@ -347,7 +347,7 @@ func TestLocalExec(t *testing.T) {
 
 // TestLocalLogs tests the container log output functionality.
 func TestLocalLogs(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
@@ -384,7 +384,7 @@ func TestLocalLogs(t *testing.T) {
 
 // TestProcessHooks tests execution of commands defined in config
 func TestProcessHooks(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
@@ -425,7 +425,7 @@ func TestProcessHooks(t *testing.T) {
 
 // TestLocalStop tests the functionality that is called when "ddev stop" is executed
 func TestLocalStop(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
@@ -456,7 +456,7 @@ func TestLocalStop(t *testing.T) {
 
 // TestDescribeStopped tests that the describe command works properly on a stopped site.
 func TestDescribeStopped(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
@@ -480,7 +480,7 @@ func TestDescribeStopped(t *testing.T) {
 
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
 func TestCleanupWithoutCompose(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	site := TestSites[0]
 
 	revertDir := site.Chdir()
@@ -523,7 +523,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 
 // TestGetappsEmpty ensures that GetApps returns an empty list when no applications are running.
 func TestGetAppsEmpty(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	// Ensure test sites are removed
 	for _, site := range TestSites {
@@ -548,7 +548,7 @@ func TestGetAppsEmpty(t *testing.T) {
 
 // TestRouterNotRunning ensures the router is shut down after all sites are stopped.
 func TestRouterNotRunning(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	containers, err := dockerutil.GetDockerContainers(false)
 	assert.NoError(err)
 

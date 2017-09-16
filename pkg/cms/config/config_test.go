@@ -35,6 +35,7 @@ func TestWriteDrupalConfig(t *testing.T) {
 }
 
 func TestWriteDrushConfig(t *testing.T) {
+
 	dir := testcommon.CreateTmpDir("example")
 
 	file, err := ioutil.TempFile(dir, "file")

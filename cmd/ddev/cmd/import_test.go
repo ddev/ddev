@@ -10,12 +10,12 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestImportTilde tests passing paths to import-files that use ~ to represent home dir.
 func TestImportTilde(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	for _, site := range DevTestSites {
 

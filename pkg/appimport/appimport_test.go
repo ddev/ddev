@@ -13,12 +13,12 @@ import (
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/util"
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestValidateAsset tests validation of asset paths.
 func TestValidateAsset(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	cwd, err := os.Getwd()
 	if err != nil {

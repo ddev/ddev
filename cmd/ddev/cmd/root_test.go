@@ -14,7 +14,7 @@ import (
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/plugins/platform"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 var (
@@ -67,7 +67,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestGetActiveAppRoot(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	_, err := platform.GetActiveAppRoot("")
 	assert.Contains(err.Error(), "unable to determine the application for this command")
@@ -90,35 +90,37 @@ func TestGetActiveAppRoot(t *testing.T) {
 
 // TestCreateGlobalDdevDir checks to make sure that ddev will create a ~/.ddev (and updatecheck)
 func TestCreateGlobalDdevDir(t *testing.T) {
+	assert := asrt.New(t)
+
 	tmpDir := testcommon.CreateTmpDir("globalDdevCheck")
 	origHome := os.Getenv("HOME")
 
 	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist before we run ddev.
 	_, err := os.Stat(filepath.Join(tmpDir, ".ddev"))
-	assert.Error(t, err)
-	assert.True(t, os.IsNotExist(err))
+	assert.Error(err)
+	assert.True(os.IsNotExist(err))
 
 	_, err = os.Stat(filepath.Join(tmpDir, ".ddev", ".update"))
-	assert.Error(t, err)
-	assert.True(t, os.IsNotExist(err))
+	assert.Error(err)
+	assert.True(os.IsNotExist(err))
 
 	// Change the homedir temporarily
 	err = os.Setenv("HOME", tmpDir)
-	assert.NoError(t, err)
+	assert.NoError(err)
 
 	args := []string{"list"}
 	_, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(t, err)
+	assert.NoError(err)
 
 	_, err = os.Stat(filepath.Join(tmpDir, ".ddev", ".update"))
-	assert.NoError(t, err)
+	assert.NoError(err)
 
 	// Cleanup our tmp homedir
 	err = os.RemoveAll(tmpDir)
-	assert.NoError(t, err)
+	assert.NoError(err)
 
 	err = os.Setenv("HOME", origHome)
-	assert.NoError(t, err)
+	assert.NoError(err)
 }
 
 // addSites runs `ddev start` on the test apps

@@ -13,7 +13,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 func TestMain(m *testing.M) {
@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
 func TestNewConfig(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	// Create a temporary directory and change to it for the duration of this test.
 	testDir := testcommon.CreateTmpDir("TestNewConfig")
 
@@ -62,7 +62,7 @@ func TestNewConfig(t *testing.T) {
 
 // TestAllowedAppType tests the IsAllowedAppType function.
 func TestAllowedAppTypes(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	for _, v := range AllowedAppTypes {
 		assert.True(IsAllowedAppType(v))
 	}
@@ -75,7 +75,7 @@ func TestAllowedAppTypes(t *testing.T) {
 
 // TestPrepDirectory ensures the configuration directory can be created with the correct permissions.
 func TestPrepDirectory(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	// Create a temporary directory and change to it for the duration of this test.
 	testDir := testcommon.CreateTmpDir("TestPrepDirectory")
 	defer testcommon.CleanupDir(testDir)
@@ -96,7 +96,7 @@ func TestPrepDirectory(t *testing.T) {
 
 // TestHostName tests that the TestSite.Hostname() field returns the hostname as expected.
 func TestHostName(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestHostName")
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
@@ -110,7 +110,7 @@ func TestHostName(t *testing.T) {
 // TestWriteDockerComposeYaml tests the writing of a docker-compose.yaml file.
 func TestWriteDockerComposeYaml(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestWriteDockerCompose")
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
@@ -145,7 +145,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 // TestConfigCommand tests the interactive config options.
 func TestConfigCommand(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestConfigCommand")
 
 	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
@@ -196,7 +196,7 @@ func TestConfigCommand(t *testing.T) {
 
 // TestRead tests reading config values from file and fallback to defaults for values not exposed.
 func TestRead(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	// This closely resembles the values one would have from NewConfig()
 	c := &Config{
@@ -225,7 +225,7 @@ func TestRead(t *testing.T) {
 
 // TestValidate tests validation of configuration values.
 func TestValidate(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	cwd, err := os.Getwd()
 	assert.NoError(err)
@@ -257,7 +257,7 @@ func TestValidate(t *testing.T) {
 
 // TestWrite tests writing config values to file
 func TestWrite(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestConfigWrite")
 
 	// This closely resembles the values one would have from NewConfig()

@@ -11,11 +11,11 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 func TestDevLogsBadArgs(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	testDir := testcommon.CreateTmpDir("no-valid-ddev-config")
 
@@ -32,7 +32,7 @@ func TestDevLogsBadArgs(t *testing.T) {
 
 // TestDevLogs tests that the Dev logs functionality is working.
 func TestDevLogs(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
