@@ -184,7 +184,7 @@ func CheckForConf(confPath string) (string, error) {
 	}
 	pathList := strings.Split(confPath, "/")
 
-	for _ = range pathList {
+	for range pathList {
 		confPath = filepath.Dir(confPath)
 		if fileutil.FileExists(confPath + "/.ddev/config.yaml") {
 			return confPath, nil
