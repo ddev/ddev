@@ -64,11 +64,11 @@ func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, e
 	var returnError error
 	containers, err := GetDockerContainers(true)
 	if err != nil {
-		return []docker.APIContainers{docker.APIContainers{}}, err
+		return []docker.APIContainers{{}}, err
 	}
 	containerMatches := []docker.APIContainers{}
 	if len(labels) < 1 {
-		return []docker.APIContainers{docker.APIContainers{}}, fmt.Errorf("the provided list of labels was empty")
+		return []docker.APIContainers{{}}, fmt.Errorf("the provided list of labels was empty")
 	}
 
 	// First, ensure a site name is set and matches the current application.
@@ -95,7 +95,7 @@ func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, e
 
 	// If we couldn't find a match return a list with a single (empty) element alongside the error.
 	if len(containerMatches) < 1 {
-		containerMatches = []docker.APIContainers{docker.APIContainers{}}
+		containerMatches = []docker.APIContainers{{}}
 		returnError = fmt.Errorf("could not find containers which matched search criteria: %+v", labels)
 	}
 
