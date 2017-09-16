@@ -395,11 +395,11 @@ func TestProcessHooks(t *testing.T) {
 		assert.NoError(err)
 
 		conf.Commands = map[string][]ddevapp.Command{
-			"hook-test": []ddevapp.Command{
-				ddevapp.Command{
+			"hook-test": {
+				{
 					Exec: "pwd",
 				},
-				ddevapp.Command{
+				{
 					ExecHost: "pwd",
 				},
 			},
