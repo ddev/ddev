@@ -127,13 +127,13 @@ func TestInvalidTestSite(t *testing.T) {
 
 	testSites := []TestSite{
 		// This should generate a 404 page on github, which will be downloaded, but cannot be extracted (as it's not a true tar.gz)
-		TestSite{
+		{
 			Name:      "TestInvalidTestSite404",
 			SourceURL: "https://github.com/drud/drupal8/archive/somevaluethatdoesnotexist.tar.gz",
 		},
 		// This is an invalid domain, so it can't even be downloaded. This tests error handling in the case of
 		// a site URL which does not exist
-		TestSite{
+		{
 			Name:      "TestInvalidTestSiteInvalidDomain",
 			SourceURL: "http://invalid_domain/somefilethatdoesnotexists",
 		},
