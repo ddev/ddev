@@ -1,5 +1,7 @@
 # Makefile for a standard golang repo with associated container
 
+GOMETALINTER_ARGS := --vendored-linters --disable-all --enable=gofmt --enable=vet --enable vetshadow --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode --deadline=2m
+
 ##### These variables need to be adjusted in most repositories #####
 
 # This repo's root import path (under GOPATH).
