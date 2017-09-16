@@ -16,5 +16,5 @@ stages:
 
       - run: make test
 
-      - run: make -s gofmt golint
+      - run: make -s gometalinter
 
