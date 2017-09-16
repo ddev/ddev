@@ -298,6 +298,7 @@ func (c *Config) WriteDockerComposeConfig() error {
 
 	if !fileutil.FileExists(c.DockerComposeYAMLPath()) {
 
+		// nolint: vetshadow
 		f, err := os.Create(c.DockerComposeYAMLPath())
 		if err != nil {
 			return err

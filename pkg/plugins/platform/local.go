@@ -269,13 +269,13 @@ func (l *LocalApp) SiteStatus() string {
 	services := map[string]string{"web": "", "db": ""}
 
 	if !fileutil.FileExists(l.AppRoot()) {
-		siteStatus := fmt.Sprintf("%s: %v", SiteDirMissing, l.AppRoot())
+		siteStatus = fmt.Sprintf("%s: %v", SiteDirMissing, l.AppRoot())
 		return siteStatus
 	}
 
 	_, err := CheckForConf(l.AppRoot())
 	if err != nil {
-		siteStatus := fmt.Sprintf("%s", SiteConfigMissing)
+		siteStatus = fmt.Sprintf("%s", SiteConfigMissing)
 		return siteStatus
 	}
 
@@ -410,7 +410,7 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 		}
 	} else {
 		// create destination directory
-		err := os.MkdirAll(destPath, 0755)
+		err = os.MkdirAll(destPath, 0755)
 		if err != nil {
 			return err
 		}
@@ -918,7 +918,7 @@ func (l *LocalApp) prepSiteDirs() error {
 		fileInfo, err := os.Stat(dir)
 
 		if os.IsNotExist(err) { // If it doesn't exist, create it.
-			err := os.MkdirAll(dir, os.FileMode(int(0774)))
+			err = os.MkdirAll(dir, os.FileMode(int(0774)))
 			if err != nil {
 				return fmt.Errorf("Failed to create directory %s, err: %v", dir, err)
 			}

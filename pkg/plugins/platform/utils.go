@@ -155,7 +155,7 @@ func Cleanup(app App) error {
 			Force:         true,
 		}
 		fmt.Printf("Removing container: %s\n", containerName)
-		if err := client.RemoveContainer(removeOpts); err != nil {
+		if err = client.RemoveContainer(removeOpts); err != nil {
 			return fmt.Errorf("could not remove container %s: %v", containerName, err)
 		}
 	}
