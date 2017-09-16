@@ -31,7 +31,7 @@ jobs:
           name: ddev tests
           no_output_timeout: "20m"
 
-      - run: make -s staticrequired
+      - run: make -s gometalinter
 
       - run:
           command: bin/linux/ddev version
@@ -88,7 +88,7 @@ jobs:
           name: ddev tests
           no_output_timeout: "20m"
 
-      - run: make -s staticrequired
+      - run: make -s gometalinter
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       # Earlier process updated submodules so now we clean them up to continue.
