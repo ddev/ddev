@@ -12,7 +12,7 @@ import (
 
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/util"
-	homedir "github.com/mitchellh/go-homedir"
+	gohomedir "github.com/mitchellh/go-homedir"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +27,7 @@ func TestValidateAsset(t *testing.T) {
 	testdata := filepath.Join(cwd, "testdata")
 
 	// test tilde expansion
-	userDir, err := homedir.Dir()
+	userDir, err := gohomedir.Dir()
 	testDirName := "tmp.ddev.testpath-" + util.RandString(4)
 	testDir := filepath.Join(userDir, testDirName)
 	assert.NoError(err)

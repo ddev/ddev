@@ -11,7 +11,7 @@ import (
 	"path"
 
 	"github.com/fatih/color"
-	"github.com/mitchellh/go-homedir"
+	gohomedir "github.com/mitchellh/go-homedir"
 )
 
 func init() {
@@ -68,7 +68,7 @@ func RandString(n int) string {
 
 // GetGlobalDdevDir returns ~/.ddev, the global caching directory
 func GetGlobalDdevDir() string {
-	userHome, err := homedir.Dir()
+	userHome, err := gohomedir.Dir()
 	if err != nil {
 		log.Fatal("could not get home directory for current user. is it set?")
 	}

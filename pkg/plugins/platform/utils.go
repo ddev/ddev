@@ -15,7 +15,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
-	homedir "github.com/mitchellh/go-homedir"
+	gohomedir "github.com/mitchellh/go-homedir"
 )
 
 // GetApps returns a list of ddev applictions keyed by platform.
@@ -87,7 +87,7 @@ func CreateAppTable() *uitable.Table {
 
 // RenderHomeRootedDir shortens a directory name to replace homedir with ~
 func RenderHomeRootedDir(path string) string {
-	userDir, err := homedir.Dir()
+	userDir, err := gohomedir.Dir()
 	util.CheckErr(err)
 	result := strings.Replace(path, userDir, "~", 1)
 	result = strings.Replace(result, "\\", "/", -1)

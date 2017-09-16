@@ -9,7 +9,7 @@ import (
 
 	"path/filepath"
 
-	homedir "github.com/mitchellh/go-homedir"
+	gohomedir "github.com/mitchellh/go-homedir"
 )
 
 // ValidateAsset determines if a given asset matches the required criteria for a given asset type.
@@ -19,7 +19,7 @@ func ValidateAsset(assetPath string, assetType string) (string, error) {
 	extensions := []string{"tar", "gz", "tgz", "zip"}
 
 	// Input provided via prompt or "--flag=value" is not expanded by shell. This will help ensure ~ is expanded to the user home directory.
-	assetPath, err := homedir.Expand(assetPath)
+	assetPath, err := gohomedir.Expand(assetPath)
 	if err != nil {
 		return "", fmt.Errorf(invalidAssetError, err)
 	}
