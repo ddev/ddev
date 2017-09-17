@@ -1,0 +1,54 @@
+{
+  "1489769609_backup_manifest": {
+    "total_dirs": 6,
+    "total_size": 1365379,
+    "endpoint_uuid": "aaaaaaaaaaaaaaa",
+    "BUILD_URL": "https://127.0.0.1:8090/jenkins/job/backup_priority/1234/",
+    "BUILD_TAG": "jenkins-backup_priority-1234",
+    "ttl": 31536000,
+    "total_files": 42,
+    "folder": "1489769609_backup",
+    "total_entries": 48,
+    "size": 0,
+    "timestamp": 1489769625
+  },
+  "1489769609_backup_files": {
+    "task_id": "task-id-bbbbbbbb",
+    "finish_time": 1489769617.116685,
+    "endpoint_uuid": "bbbbbbbbbbbbbbbbbbbbbbbb",
+    "BUILD_URL": "https://127.0.0.1:8090/jenkins/job/backup_priority/1234/",
+    "filename": "mysite_dev_2017-03-17T16-53-29_UTC_files.tar.gz",
+    "BUILD_TAG": "jenkins-backup_priority-1234",
+    "ttl": 31536000,
+    "folder": "1489769609_backup",
+    "start_time": 1489769611.493874,
+    "size": 1341232,
+    "timestamp": 1489769625
+  },
+  "1489769609_backup_database": {
+    "task_id": "task-id-ccccccccccc",
+    "finish_time": 1489769616.65699,
+    "endpoint_uuid": "cccccccccccccccccccccccccc",
+    "BUILD_URL": "https://127.0.0.1:8090/jenkins/job/backup_priority/12345678/",
+    "filename": "mysite_dev_2017-03-17T16-53-29_UTC_database.sql.gz",
+    "BUILD_TAG": "jenkins-backup_priority-12345678",
+    "ttl": 31536000,
+    "folder": "1489769609_backup",
+    "start_time": 1489769614.456166,
+    "size": 126686,
+    "timestamp": 1489769625
+  },
+  "1489769609_backup_code": {
+    "task_id": "task-id-ddddddddddddddd",
+    "finish_time": 1489769620.322641,
+    "endpoint_uuid": "dddddddddddddddddddddd",
+    "BUILD_URL": "https://127.0.0.1:8090/jenkins/job/backup_priority/987654/",
+    "filename": "mysite_dev_2017-03-17T16-53-29_UTC_code.tar.gz",
+    "BUILD_TAG": "jenkins-backup_priority-987654",
+    "ttl": 31536000,
+    "folder": "1489769609_backup",
+    "start_time": 1489769611.408626,
+    "size": 37896050,
+    "timestamp": 1489769625
+  }
+}

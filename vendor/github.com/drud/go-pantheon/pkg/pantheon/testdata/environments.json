@@ -1,0 +1,53 @@
+{
+  "test": {
+    "environment_created": 1458580107,
+    "dns_zone": "pantheonsite.io",
+    "randseed": "aaaaaaaaaaa",
+    "target_ref": "refs/tags/pantheon_test_2",
+    "maintenance": {
+      "enabled": false
+    },
+    "lock": {
+      "username": null,
+      "password": null,
+      "locked": false
+    },
+    "target_commit": "4835b01bd49793b8b5d428347d2a74cbe208d0a4",
+    "styx_cluster": "styx-fe2.pantheon.io"
+  },
+  "live": {
+    "environment_created": 1458580111,
+    "dns_zone": "pantheonsite.io",
+    "randseed": "bbbbbbbbbbb",
+    "target_ref": "refs/tags/pantheon_live_1",
+    "maintenance": {
+      "enabled": false
+    },
+    "lock": {
+      "username": null,
+      "password": null,
+      "locked": false
+    },
+    "target_commit": "e0e5c4cba8b1d8b77c56ae31b13acf613e5457ab",
+    "styx_cluster": "styx-fe3.pantheon.io"
+  },
+  "dev": {
+    "watchers": 1,
+    "diffstat": {},
+    "on_server_development": false,
+    "environment_created": 1458580101,
+    "dns_zone": "pantheonsite.io",
+    "randseed": "ccccccccccc",
+    "target_ref": "refs/heads/master",
+    "maintenance": {
+      "enabled": false
+    },
+    "lock": {
+      "username": null,
+      "password": null,
+      "locked": false
+    },
+    "target_commit": "4835b01bd49793b8b5d428347d2a74cbe208d0a4",
+    "styx_cluster": "styx-fe4.pantheon.io"
+  }
+}

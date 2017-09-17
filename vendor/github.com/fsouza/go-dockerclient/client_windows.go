@@ -1,20 +1,18 @@
 // +build windows
+
 // Copyright 2016 go-dockerclient authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package docker provides a client for the Docker remote API.
-//
-// See https://goo.gl/G3plxW for more details on the remote API.
 package docker
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/Microsoft/go-winio"
-	"github.com/hashicorp/go-cleanhttp"
 )
 
 const namedPipeConnectTimeout = 2 * time.Second
@@ -37,8 +35,11 @@ func (c *Client) initializeNativeClient() {
 		timeout := namedPipeConnectTimeout
 		return winio.DialPipe(namedPipePath, &timeout)
 	}
-	tr := cleanhttp.DefaultTransport()
+	tr := defaultTransport()
 	tr.Dial = dialFunc
+	tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return dialFunc(network, addr)
+	}
 	c.Dialer = &pipeDialer{dialFunc}
 	c.nativeHTTPClient = &http.Client{Transport: tr}
 }

@@ -1,0 +1,113 @@
+[
+  {
+    "archived": true,
+    "id": "1d",
+    "invited_by_id": "1nv1t3d-by-1d",
+    "key": "123456-78910",
+    "role": "bar",
+    "site": {
+      "attributes": {
+        "label": "foo-label"
+      },
+      "created": 123456789,
+      "created_by_user_id": "x34x5x6x4-7x7x6x7-000-9999-ddd3d3",
+      "framework": "framework",
+      "frozen": false,
+      "holder": {
+        "email": "test@example.com",
+        "id": "foobar",
+        "profile": {
+          "activity_level": "low",
+          "code": "foo",
+          "dashboard_visits": [{
+            "date": "foo 2020",
+            "site": "site-name"
+          }],
+          "experiments": {},
+          "firstname": "Bob",
+          "full_name": "Bob McBoberson",
+          "google_adwords_pushed_code_sent": 123456789,
+          "guilty_of_abuse": {},
+          "initial_identity_name": {},
+          "initial_identity_strategy": {},
+          "last-org-spinup": "some date",
+          "lastname": "McBoberson",
+          "minimize_jit_docs": false,
+          "modified": 1234567,
+          "organization": "some org",
+          "seens": {
+            "new-site-support-interface": false
+          },
+          "tracking_first_code_push": 1234567,
+          "tracking_first_site_create": 1234567,
+          "tracking_first_team_invite": 1234567,
+          "tracking_first_workflow_in_live": 1234567,
+          "verify": "Th15 5h0u1d br3ak",
+          "web_services_business": false
+        }
+      },
+      "holder_id": "x34x5x6x4-7x7x6x7-000-9999-ddd3d3",
+      "holder_type": "foobar",
+      "id": "x34x5x6x4-7x7x6x7-000-9999-ddd3d3",
+      "last_code_push": {
+        "timestamp": "some date",
+        "user_uuid": {}
+      },
+      "name": "Chaos Mock Pantheon API Response",
+      "owner": "Bob McBoberton",
+      "php_version": 55,
+      "preferred_zone": "foo",
+      "product": {
+        "id": "x34x5x6x4dd3d3",
+        "longname": "foobar"
+      },
+      "product_id": "x34x5x6x4-7x7x6x7-000-9999-ddd3d3",
+      "service_level": "free",
+      "upstream": {
+        "branch": "master",
+        "product_id": "x34x5x6x4-7x7x6x7-000-9999-ddd3d3",
+        "url": "https://example.com/foo/bar"
+      },
+      "upstream_updates_by_environment": {
+        "has_code": true
+      },
+      "user_in_charge": {
+        "email": "test@example.com",
+        "id": "x34x5x6x4-7x7x6x7-000-9999-ddd3d3",
+        "profile": {
+          "activity_level": "low",
+          "code": "foo",
+          "dashboard_visits": [{
+            "date": "foo 2020",
+            "site": "site-name"
+          }],
+          "experiments": {},
+          "firstname": "Bob",
+          "full_name": "Bob McBoberson",
+          "google_adwords_pushed_code_sent": 123456789,
+          "guilty_of_abuse": {},
+          "initial_identity_name": {},
+          "initial_identity_strategy": {},
+          "last-org-spinup": "some date",
+          "lastname": "McBoberson",
+          "minimize_jit_docs": false,
+          "modified": 1234567,
+          "organization": "some org",
+          "seens": {
+            "new-site-support-interface": false
+          },
+          "tracking_first_code_push": 1234567,
+          "tracking_first_site_create": 1234567,
+          "tracking_first_team_invite": 1234567,
+          "tracking_first_workflow_in_live": 1234567,
+          "verify": "Th15 5h0u1d br3ak",
+          "web_services_business": false
+        }
+      },
+      "user_in_charge_id": "x34x5x6x4-7x7x6x7-000-9999-ddd3d3"
+    },
+    "site_id": "51t31d",
+    "user_id": "u53r1d"
+  }
+]
+

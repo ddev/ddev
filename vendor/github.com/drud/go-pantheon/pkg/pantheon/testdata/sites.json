@@ -1,0 +1,284 @@
+[
+  {
+    "archived": false,
+    "invited_by_id": "aaaaa-bbbb-cccc-ddddd-eeeee",
+    "role": "team_member",
+    "id": "site-id1",
+    "key": "user-id1",
+    "site_id": "site-id1",
+    "user_id": "user-id1",
+    "site": {
+      "upstream_updates_by_environment": {
+        "has_code": false
+      },
+      "last_frozen_at": 1489769625,
+      "owner": "aaaaa-bbbb-cccc-ddddd-eeeee",
+      "id": "site-id1",
+      "created_by_user_id": "aaaaa-bbbb-cccc-ddddd-eeeee",
+      "php_version": 55,
+      "user_in_charge_id": "aaaaa-bbbb-cccc-ddddd-eeeee",
+      "product": {
+        "id": "5758ea6a-bfda-4d56-bc0c-38584ec1a448",
+        "longname": "WordPress"
+      },
+      "service_level": "free",
+      "user_in_charge": {
+        "profile": {
+          "code": "PUSH11-Y4UC5",
+          "experiments": {},
+          "full_name": "Bill Johnson",
+          "initial_identity_strategy": null,
+          "tracking_first_site_create": 1417648043,
+          "verify": 1,
+          "tracking_first_code_push": 1409346048,
+          "invites_to_user": 1,
+          "dashboard_visits": [
+            {
+              "date": "2014-04-07T16:08:00.063Z",
+              "site": "site-hash-aaaaa-bbbb-cccc-dddd"
+            },
+            {
+              "date": "2014-04-08T13:50:20.650Z",
+              "site": "site-hash-aaaaa-bbbb-cccc-dddd"
+            },
+            {
+              "date": "2014-04-08T13:50:38.023Z",
+              "site": "site-hash-aaaaa-bbbb-cccc-dddd"
+            },
+            {
+              "date": "2014-04-09T05:25:45.601Z",
+              "site": "site-hash-aaaaa-bbbb-cccc-dddd"
+            }
+          ],
+          "google_adwords_pushed_code_sent": 1409346071,
+          "tracking_first_workflow_in_live": 1419445445,
+          "tracking_first_team_invite": 1412969653,
+          "firstname": "Bill",
+          "invites_to_site": 1,
+          "lastname": "Johnson",
+          "last-org-spinup": "none",
+          "web_services_business": false,
+          "initial_identity_name": null,
+          "guilty_of_abuse": null,
+          "invites_sent": 1,
+          "minimize_jit_docs": true,
+          "seens": {
+            "new-site-support-interface": true
+          },
+          "modified": 1396727031,
+          "activity_level": "low",
+          "maxdevsites": 4,
+          "organization": ""
+        },
+        "id": "aaaaa-bbbb-cccc-ddddd-eeeee",
+        "email": "someemail@example.com"
+      },
+      "framework": "wordpress",
+      "upstream": {
+        "url": "https://github.com/pantheon-systems/WordPress",
+        "product_id": "e8fe8550-1ab9-4964-8838-2b9abdccf4bf",
+        "branch": "master"
+      },
+      "holder": {
+        "profile": {
+          "code": "PUSH11-Y4UC5",
+          "experiments": {},
+          "full_name": "Bill Johnson",
+          "initial_identity_strategy": null,
+          "tracking_first_site_create": 1417648043,
+          "verify": 1,
+          "tracking_first_code_push": 1409346048,
+          "invites_to_user": 1,
+          "dashboard_visits": [
+            {
+              "date": "2014-04-07T16:08:00.063Z",
+              "site": "site-hash-aaaaa-bbbb-cccc-dddd"
+            },
+            {
+              "date": "2014-04-08T13:50:20.650Z",
+              "site": "site-hash-aaaaa-bbbb-cccc-dddd"
+            },
+            {
+              "date": "2014-04-08T13:50:38.023Z",
+              "site": "site-hash-aaaaa-bbbb-cccc-dddd"
+            },
+            {
+              "date": "2014-04-09T05:25:45.601Z",
+              "site": "site-hash-aaaaa-bbbb-cccc-dddd"
+            }
+          ],
+          "google_adwords_pushed_code_sent": 1409346071,
+          "tracking_first_workflow_in_live": 1419445445,
+          "tracking_first_team_invite": 1412969653,
+          "firstname": "Bill",
+          "invites_to_site": 1,
+          "lastname": "Johson",
+          "last-org-spinup": "none",
+          "web_services_business": false,
+          "initial_identity_name": null,
+          "guilty_of_abuse": null,
+          "invites_sent": 1,
+          "minimize_jit_docs": true,
+          "seens": {
+            "new-site-support-interface": true
+          },
+          "modified": 1396727031,
+          "activity_level": "low",
+          "maxdevsites": 4,
+          "organization": ""
+        },
+        "id": "aaaaa-bbbb-cccc-ddddd-eeeee",
+        "email": "someemail@example.com"
+      },
+      "preferred_zone": "chios",
+      "product_id": "5758ea6a-bfda-4d56-bc0c-38584ec1a448",
+      "holder_id": "aaaaa-bbbb-cccc-ddddd-eeeee",
+      "name": "sitename1",
+      "created": 1458580100,
+      "frozen": true,
+      "holder_type": "user",
+      "attributes": {
+        "label": "sitename1"
+      },
+      "last_code_push": {
+        "timestamp": "2016-07-20T16:05:28",
+        "user_uuid": null
+      }
+    }
+  },
+  {
+    "archived": false,
+    "invited_by_id": "aaaaaaa-bbbbbb-cccccc-dddddd-eeeee",
+    "role": "team_member",
+    "id": "site-id2",
+    "key": "user-id1",
+    "site_id": "site-id2",
+    "user_id": "user-id1",
+    "site": {
+      "user_in_charge_id": "aaaaaaa-bbbbbb-cccccc-dddddd-eeeee",
+      "product": {
+        "id": "21e1fada-199c-492b-97bd-0b36b53a9da0",
+        "longname": "Drupal 7"
+      },
+      "service_level": "pro",
+      "user_in_charge": {
+        "profile": {
+          "invites_to_nonuser": 4,
+          "seen_first_time_user_popover": true,
+          "created_agency_name": "Some Agency",
+          "experiments": {
+            "welcome_video": "shown"
+          },
+          "full_name": "Bob McBoberson",
+          "pullFromLive": false,
+          "web_services_business": true,
+          "initial_identity_strategy": null,
+          "utm_campaign": "(organic)",
+          "tracking_first_site_create": 1426889650,
+          "tracking_first_ally_reg": 1426130570,
+          "tracking_first_code_push": 1430884957,
+          "invites_to_user": 11,
+          "dashboard_visits": [
+            {
+              "date": "2014-05-07T13:43:01.749Z",
+              "site": "25bbf3a7-ca2e-460e-8c86-282f2f3cb3e8"
+            }
+          ],
+          "role": "Owner Developer",
+          "job_function": "developer",
+          "utm_medium": "organic",
+          "watched_welcome_video": true,
+          "tracking_first_workflow_in_live": 1427526331,
+          "tracking_first_team_invite": 1430885779,
+          "tos_agreement": 1398236743,
+          "firstname": "Bob",
+          "invites_to_site": 15,
+          "lastname": "McBoberson",
+          "code_push": 0,
+          "copyCodeUpdatePhp": true,
+          "utm_source": "google",
+          "google_adwords_pushed_code_sent": 1430886177,
+          "last-org-spinup": "b4170aa7-9867-4042-bd3a-d7c8f3cd9068",
+          "utm_keyword": "(not provided)",
+          "initial_identity_name": null,
+          "created_organization_name": "Some Agency",
+          "copyCodeClearCache": true,
+          "guilty_of_abuse": null,
+          "invites_sent": 15,
+          "seens": {
+            "new-site-support-interface": true,
+            "terminus-1": true
+          },
+          "phone": "123-456-7890",
+          "modified": 1398755390,
+          "activity_level": "low",
+          "maxdevsites": 15,
+          "verify": 1,
+          "organization": "Organization"
+        },
+        "id": "aaaaaaa-bbbbbb-cccccc-dddddd-eeeee",
+        "email": "someemail2@example.com"
+      },
+      "upstream_updates_by_environment": {
+        "remote_head": "3c499770ad05b37a1cb5d83e61db46a7d028d4a9",
+        "ahead": 2,
+        "remote_branch": "refs/remotes/origin/master",
+        "live": {
+          "has_code": true,
+          "is_up_to_date_with_upstream": true
+        },
+        "dev": {
+          "has_code": true,
+          "is_up_to_date_with_upstream": true
+        },
+        "behind": 0,
+        "has_code": true,
+        "test": {
+          "has_code": true,
+          "is_up_to_date_with_upstream": true
+        },
+        "has_remote_head": true,
+        "remote_url": "https://github.com/pantheon-systems/drops-7"
+      },
+      "purchased_at": 1458685573,
+      "framework": "drupal",
+      "upstream": {
+        "url": "https://github.com/pantheon-systems/drops-7",
+        "branch": "master"
+      },
+      "owner": "aaaaaaa-bbbbbb-cccccc-dddddd-eeeee",
+      "attributes": {
+        "status_check_last_run": "2015-06-25T10:22:42.283Z",
+        "global_edge_https_upgrade_available": true,
+        "label": "sitename2"
+      },
+      "holder": {
+        "profile": {
+          "machine_name": null,
+          "change_service_url": null,
+          "name": "Developer Community Projects",
+          "email_domain": null,
+          "base_domain": null,
+          "billing_url": null,
+          "terms_of_service": null
+        },
+        "id": "aaaaa-bbbbb-ccccc-ddddd"
+      },
+      "id": "site-id2",
+      "preferred_zone": "us-central1",
+      "product_id": "21e1fada-199c-492b-97bd-0b36b53a9da0",
+      "holder_id": "aaaaa-bbbbb-ccccc-ddddd",
+      "name": "sitename2",
+      "created": 1430814231,
+      "instrument": "8a8f2216-5d97-4901-9879-298ba9e7bf5e",
+      "holder_type": "organization",
+      "php_version": "55",
+      "allow_cacheserver": true,
+      "organization": "aaaa-bbbb-cccc-dddd",
+      "last_code_push": {
+        "timestamp": "2017-02-24T06:10:32",
+        "user_uuid": "aaaaa-bbbb-cccc-ddddd"
+      }
+    }
+  }
+]
