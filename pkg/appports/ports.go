@@ -3,7 +3,7 @@ package appports
 import (
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // Define the DBA and MailHog ports as variables so that we can override them with ldflags if required.

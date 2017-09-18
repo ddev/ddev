@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
+	log "github.com/sirupsen/logrus"
 
 	"path/filepath"
 
