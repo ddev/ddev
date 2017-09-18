@@ -26,7 +26,7 @@ func TestDescribeBadArgs(t *testing.T) {
 	args := []string{"describe"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "could not find containers which matched search criteria")
+	assert.Contains(string(out), "Please specify a site name or change directories")
 
 	// Ensure we get a failure if we run a describe on a named application which does not exist.
 	args = []string{"describe", util.RandString(16)}
