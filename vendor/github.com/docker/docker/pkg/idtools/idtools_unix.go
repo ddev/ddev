@@ -29,11 +29,8 @@ func mkdirAs(path string, mode os.FileMode, ownerUID, ownerGID int, mkAll, chown
 	if _, err := os.Stat(path); err != nil && os.IsNotExist(err) {
 		paths = []string{path}
 	} else if err == nil && chownExisting {
-		if err := os.Chown(path, ownerUID, ownerGID); err != nil {
-			return err
-		}
 		// short-circuit--we were called with an existing directory and chown was requested
-		return nil
+		return os.Chown(path, ownerUID, ownerGID)
 	} else if err == nil {
 		// nothing to do; directory path fully exists already and chown was NOT requested
 		return nil
@@ -52,7 +49,7 @@ func mkdirAs(path string, mode os.FileMode, ownerUID, ownerGID int, mkAll, chown
 				paths = append(paths, dirPath)
 			}
 		}
-		if err := system.MkdirAll(path, mode); err != nil && !os.IsExist(err) {
+		if err := system.MkdirAll(path, mode, ""); err != nil && !os.IsExist(err) {
 			return err
 		}
 	} else {
@@ -72,15 +69,15 @@ func mkdirAs(path string, mode os.FileMode, ownerUID, ownerGID int, mkAll, chown
 
 // CanAccess takes a valid (existing) directory and a uid, gid pair and determines
 // if that uid, gid pair has access (execute bit) to the directory
-func CanAccess(path string, uid, gid int) bool {
+func CanAccess(path string, pair IDPair) bool {
 	statInfo, err := system.Stat(path)
 	if err != nil {
 		return false
 	}
 	fileMode := os.FileMode(statInfo.Mode())
 	permBits := fileMode.Perm()
-	return accessible(statInfo.UID() == uint32(uid),
-		statInfo.GID() == uint32(gid), permBits)
+	return accessible(statInfo.UID() == uint32(pair.UID),
+		statInfo.GID() == uint32(pair.GID), permBits)
 }
 
 func accessible(isOwner, isGroup bool, perms os.FileMode) bool {
