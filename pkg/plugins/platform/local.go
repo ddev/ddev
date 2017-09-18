@@ -991,10 +991,8 @@ func GetActiveApp(siteName string) (App, error) {
 		return app, err
 	}
 
-	err = app.Init(activeAppRoot)
-	if err != nil {
-		return app, err
-	}
+	_ = app.Init(activeAppRoot)
+
 	// Make sure AppConfig.Name is set in case this is app is being used for Cleanup().
 	if app.GetName() == "" {
 		app, _ := app.(*LocalApp)
