@@ -948,7 +948,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error determining the current directory: %s", err)
 		}
-		_, err := CheckForConf(siteDir)
+		_, err = CheckForConf(siteDir)
 		if err != nil {
 			return "", fmt.Errorf("Could not find a site in %s. Please specify a site name or change directories: %s", siteDir, err)
 		}
@@ -991,7 +991,10 @@ func GetActiveApp(siteName string) (App, error) {
 		return app, err
 	}
 
-	app.Init(activeAppRoot)
+	err = app.Init(activeAppRoot)
+	if err != nil {
+		return app, err
+	}
 	// Make sure AppConfig.Name is set in case this is app is being used for Cleanup().
 	if app.GetName() == "" {
 		app, _ := app.(*LocalApp)
