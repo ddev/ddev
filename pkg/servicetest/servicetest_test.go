@@ -15,7 +15,7 @@ import (
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 var (
@@ -61,7 +61,7 @@ func TestMain(m *testing.M) {
 // It tests that a site can fully start w/ the compose file present, and
 // checks that any exposed HTTP ports return 200.
 func TestServices(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	if len(ServiceFiles) > 0 {
 		for _, site := range TestSites {

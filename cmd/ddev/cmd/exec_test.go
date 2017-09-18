@@ -4,14 +4,14 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestDevExecBadArgs run `ddev exec` without the proper args
 func TestDevExecBadArgs(t *testing.T) {
 	// Change to the first DevTestSite for the duration of this test.
 	defer DevTestSites[0].Chdir()()
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	args := []string{"exec"}
 	out, err := exec.RunCommand(DdevBin, args)
@@ -22,7 +22,7 @@ func TestDevExecBadArgs(t *testing.T) {
 // TestDevExec run `ddev exec pwd` with proper args
 func TestDevExec(t *testing.T) {
 
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
 

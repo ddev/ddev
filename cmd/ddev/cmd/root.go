@@ -62,6 +62,7 @@ var RootCmd = &cobra.Command{
 		}
 
 		if timeToCheckForUpdates {
+			// nolint: vetshadow
 			updateNeeded, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version.DdevVersion)
 
 			if err != nil {

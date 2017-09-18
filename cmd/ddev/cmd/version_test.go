@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/version"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 func TestVersion(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	v := handleVersionCommand().String()
 	output := strings.TrimSpace(v)
 	assert.Contains(output, version.DdevVersion)

@@ -7,7 +7,7 @@ import (
 
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestUnarchive tests unzip/tar/tar.gz/tgz functionality, including the starting extraction-skip directory
@@ -16,7 +16,7 @@ func TestUnarchive(t *testing.T) {
 	// testUnarchiveDir is the directory we may want to use to start extracting.
 	testUnarchiveDir := "dir2/"
 
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	for _, suffix := range []string{"zip", "tar", "tar.gz", "tgz"} {
 		source := filepath.Join("testdata", "testfile"+"."+suffix)

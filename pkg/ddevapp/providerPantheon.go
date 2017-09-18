@@ -9,7 +9,7 @@ import (
 
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/mitchellh/go-homedir"
+	gohomedir "github.com/mitchellh/go-homedir"
 
 	"fmt"
 
@@ -127,7 +127,7 @@ func (p *PantheonProvider) prepDownloadDir() {
 }
 
 func (p *PantheonProvider) getDownloadDir() string {
-	userDir, err := homedir.Dir()
+	userDir, err := gohomedir.Dir()
 	util.CheckErr(err)
 	destDir := filepath.Join(userDir, ".ddev", "pantheon", p.config.Name)
 	return destDir
@@ -298,7 +298,7 @@ func findPantheonSite(name string) (pantheon.Site, error) {
 
 // getPantheonSession loads the pantheon API config from disk and returns a pantheon session struct.
 func getPantheonSession() *pantheon.AuthSession {
-	userDir, err := homedir.Dir()
+	userDir, err := gohomedir.Dir()
 	util.CheckErr(err)
 	sessionLocation := filepath.Join(userDir, ".ddev", "pantheonconfig.json")
 

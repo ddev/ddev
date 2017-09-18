@@ -8,12 +8,12 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/util"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestTmpDir tests the ability to create a temporary directory.
 func TestTmpDir(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	// Create a temporary directory and ensure it exists.
 	testDir := CreateTmpDir("TestTmpDir")
@@ -31,7 +31,7 @@ func TestTmpDir(t *testing.T) {
 // TestChdir tests the Chdir function and ensures it will change to a temporary directory and then properly return
 // to the original directory when cleaned up.
 func TestChdir(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	// Get the current working directory.
 	startingDir, err := os.Getwd()
 	assert.NoError(err)
@@ -59,7 +59,7 @@ func TestChdir(t *testing.T) {
 
 // TestCaptureStdOut ensures capturing of standard out works as expected.
 func TestCaptureStdOut(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	restoreOutput := CaptureStdOut()
 	text := util.RandString(128)
 	fmt.Print(text)
@@ -70,7 +70,7 @@ func TestCaptureStdOut(t *testing.T) {
 
 // TestValidTestSite tests the TestSite struct behavior in the case of a valid configuration.
 func TestValidTestSite(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	// Get the current working directory.
 	startingDir, err := os.Getwd()
 	assert.NoError(err, "Could not get current directory.")
@@ -123,17 +123,17 @@ func TestValidTestSite(t *testing.T) {
 
 // TestInvalidTestSite ensures that errors are returned in cases where Prepare() can't download or extract an archive.
 func TestInvalidTestSite(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	testSites := []TestSite{
 		// This should generate a 404 page on github, which will be downloaded, but cannot be extracted (as it's not a true tar.gz)
-		TestSite{
+		{
 			Name:      "TestInvalidTestSite404",
 			SourceURL: "https://github.com/drud/drupal8/archive/somevaluethatdoesnotexist.tar.gz",
 		},
 		// This is an invalid domain, so it can't even be downloaded. This tests error handling in the case of
 		// a site URL which does not exist
-		TestSite{
+		{
 			Name:      "TestInvalidTestSiteInvalidDomain",
 			SourceURL: "http://invalid_domain/somefilethatdoesnotexists",
 		},

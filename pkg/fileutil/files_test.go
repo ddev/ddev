@@ -7,14 +7,14 @@ import (
 
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 var testFileLocation = "testdata/regular_file"
 
 // TestCopyDir tests copying a directory.
 func TestCopyDir(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	sourceDir := testcommon.CreateTmpDir("TestCopyDir_source")
 	targetDir := testcommon.CreateTmpDir("TestCopyDir_target")
 
@@ -59,7 +59,7 @@ func TestCopyDir(t *testing.T) {
 
 // TestCopyFile tests copying a file.
 func TestCopyFile(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	tmpTargetDir := testcommon.CreateTmpDir("TestCopyFile")
 	tmpTargetFile := filepath.Join(tmpTargetDir, filepath.Base(testFileLocation))
 
@@ -79,7 +79,7 @@ func TestCopyFile(t *testing.T) {
 // TestPurgeDirectory tests removal of directory contents without removing
 // the directory itself.
 func TestPurgeDirectory(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	tmpPurgeDir := testcommon.CreateTmpDir("TestPurgeDirectory")
 	tmpPurgeFile := filepath.Join(tmpPurgeDir, "regular_file")
 	tmpPurgeSubFile := filepath.Join(tmpPurgeDir, "subdir", "regular_file")
@@ -106,7 +106,7 @@ func TestPurgeDirectory(t *testing.T) {
 
 // TestFgrepStringInFile tests the FgrepStringInFile utility function.
 func TestFgrepStringInFile(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	result, err := fileutil.FgrepStringInFile("testdata/fgrep_has_positive_contents.txt", "some needle we're looking for")
 	assert.NoError(err)
 	assert.True(result)

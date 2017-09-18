@@ -7,12 +7,12 @@ import (
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestDescribeBadArgs ensures the binary behaves as expected when used with invalid arguments or working directories.
 func TestDescribeBadArgs(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
 	tmpdir := testcommon.CreateTmpDir("badargs")
@@ -41,7 +41,7 @@ func TestDescribeBadArgs(t *testing.T) {
 
 // TestDescribe tests that the describe command works properly when using the binary.
 func TestDescribe(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	for _, v := range DevTestSites {
 		// First, try to do a describe from another directory.
@@ -75,7 +75,7 @@ func TestDescribe(t *testing.T) {
 
 // TestDescribeAppFunction performs unit tests on the describeApp function from the working directory.
 func TestDescribeAppFunction(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
 
@@ -104,7 +104,7 @@ func TestDescribeAppFunction(t *testing.T) {
 
 // TestDescribeAppUsingSitename performs unit tests on the describeApp function using the sitename as an argument.
 func TestDescribeAppUsingSitename(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
 	tmpdir := testcommon.CreateTmpDir("describeAppUsingSitename")
@@ -121,7 +121,7 @@ func TestDescribeAppUsingSitename(t *testing.T) {
 
 // TestDescribeAppWithInvalidParams performs unit tests on the describeApp function using a variety of invalid parameters.
 func TestDescribeAppWithInvalidParams(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
 	tmpdir := testcommon.CreateTmpDir("TestDescribeAppWithInvalidParams")

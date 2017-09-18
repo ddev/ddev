@@ -11,7 +11,7 @@ import (
 	"path"
 
 	"github.com/fatih/color"
-	"github.com/mitchellh/go-homedir"
+	gohomedir "github.com/mitchellh/go-homedir"
 )
 
 func init() {
@@ -51,6 +51,8 @@ var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 // setLetterBytes exists solely so that tests can override the default characters used by
 // RandString. It should probably be avoided for 'normal' operations.
+// this is actually used in utils_test.go (test only) so we set nolint on it.
+// nolint: deadcode
 func setLetterBytes(lb string) {
 	letterBytes = lb
 }
@@ -66,7 +68,7 @@ func RandString(n int) string {
 
 // GetGlobalDdevDir returns ~/.ddev, the global caching directory
 func GetGlobalDdevDir() string {
-	userHome, err := homedir.Dir()
+	userHome, err := gohomedir.Dir()
 	if err != nil {
 		log.Fatal("could not get home directory for current user. is it set?")
 	}

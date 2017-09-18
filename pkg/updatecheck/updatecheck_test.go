@@ -7,10 +7,11 @@ import (
 
 	"time"
 
+	"os"
+
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/stretchr/testify/assert"
-	"os"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 const testOrg = "drud"
@@ -18,7 +19,7 @@ const testRepo = "ddev"
 
 // TestGetContainerHealth tests the function for processing container readiness.
 func TestUpdateNeeded(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	tmpdir := testcommon.CreateTmpDir("TestUpdateNeeded")
 	updateFile := filepath.Join(tmpdir, ".update")
 
@@ -44,7 +45,7 @@ func TestUpdateNeeded(t *testing.T) {
 
 // TestIsReleaseVersion tests isReleaseVersion to ensure it correctly picks up on release builds vs dev builds
 func TestIsReleaseVersion(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	var versionTests = []struct {
 		in  string
 		out bool
@@ -64,7 +65,7 @@ func TestIsReleaseVersion(t *testing.T) {
 
 // TestAvailableUpdates tests isReleaseVersion to ensure it correctly picks up on release builds vs dev builds
 func TestAvailableUpdates(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	if os.Getenv("GOTEST_SHORT") != "" {
 		t.Skip("Skipping TestAvailableUpdates because GOTEST_SHORT env var is set")
 	}

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestRandString ensures that RandString only generates string of the correct value and characters.
 func TestRandString(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	stringLengths := []int{2, 4, 8, 16, 23, 47}
 
 	for _, stringLength := range stringLengths {

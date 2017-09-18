@@ -15,7 +15,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
-	homedir "github.com/mitchellh/go-homedir"
+	gohomedir "github.com/mitchellh/go-homedir"
 )
 
 // GetApps returns a list of ddev applictions keyed by platform.
@@ -87,7 +87,7 @@ func CreateAppTable() *uitable.Table {
 
 // RenderHomeRootedDir shortens a directory name to replace homedir with ~
 func RenderHomeRootedDir(path string) string {
-	userDir, err := homedir.Dir()
+	userDir, err := gohomedir.Dir()
 	util.CheckErr(err)
 	result := strings.Replace(path, userDir, "~", 1)
 	result = strings.Replace(result, "\\", "/", -1)
@@ -155,7 +155,7 @@ func Cleanup(app App) error {
 			Force:         true,
 		}
 		fmt.Printf("Removing container: %s\n", containerName)
-		if err := client.RemoveContainer(removeOpts); err != nil {
+		if err = client.RemoveContainer(removeOpts); err != nil {
 			return fmt.Errorf("could not remove container %s: %v", containerName, err)
 		}
 	}
@@ -184,7 +184,7 @@ func CheckForConf(confPath string) (string, error) {
 	}
 	pathList := strings.Split(confPath, "/")
 
-	for _ = range pathList {
+	for range pathList {
 		confPath = filepath.Dir(confPath)
 		if fileutil.FileExists(confPath + "/.ddev/config.yaml") {
 			return confPath, nil

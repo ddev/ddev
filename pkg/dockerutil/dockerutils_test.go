@@ -10,7 +10,7 @@ import (
 	. "github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	docker "github.com/fsouza/go-dockerclient"
-	"github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 var (
@@ -60,7 +60,7 @@ func TestMain(m *testing.M) {
 
 // TestGetContainerHealth tests the function for processing container readiness.
 func TestGetContainerHealth(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	container := docker.APIContainers{
 		Status: "Up 24 seconds (health: starting)",
 	}
@@ -88,7 +88,7 @@ func TestGetContainerHealth(t *testing.T) {
 
 // TestContainerWait tests the error cases for the container check wait loop.
 func TestContainerWait(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	labels := map[string]string{
 		"com.ddev.site-name":         "foo",
@@ -106,7 +106,7 @@ func TestContainerWait(t *testing.T) {
 
 // TestComposeCmd tests execution of docker-compose commands.
 func TestComposeCmd(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	composeFiles := []string{filepath.Join("testdata", "docker-compose.yml")}
 
@@ -133,14 +133,14 @@ func TestComposeCmd(t *testing.T) {
 }
 
 func TestGetAppContainers(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 	sites, err := GetAppContainers("dockertest")
 	assert.NoError(err)
 	assert.Equal(sites[0].Image, TestRouterImage+":"+TestRouterTag)
 }
 
 func TestGetContainerEnv(t *testing.T) {
-	assert := assert.New(t)
+	assert := asrt.New(t)
 
 	container, err := FindContainerByLabels(map[string]string{"com.docker.compose.service": "ddevrouter"})
 	assert.NoError(err)
