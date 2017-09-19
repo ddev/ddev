@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
+	log "github.com/sirupsen/logrus"
 
 	"errors"
 

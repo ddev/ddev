@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/* 
+/*
 Package goutils provides utility functions to manipulate strings in various ways.
-The code snippets below show examples of how to use goutils. Some functions return 
+The code snippets below show examples of how to use goutils. Some functions return
 errors while others do not, so usage would vary as a result.
 
 Example:
@@ -36,21 +36,21 @@ Example:
 
 
         // EXAMPLE 2: A goutils function which returns an error
-        rand1, err1 := goutils.Random (-1, 0, 0, true, true)  
+        rand1, err1 := goutils.Random (-1, 0, 0, true, true)
 
-        if err1 != nil { 
+        if err1 != nil {
             fmt.Println(err1) // Prints out error message because -1 was entered as the first parameter in goutils.Random(...)
         } else {
-            fmt.Println(rand1) 
+            fmt.Println(rand1)
         }
     }
 */
 package goutils
 
 import (
-	"bytes"   
+	"bytes"
 	"strings"
-	"unicode" 
+	"unicode"
 )
 
 // VERSION indicates the current version of goutils
@@ -68,8 +68,8 @@ Parameters:
 Returns:
     a line with newlines inserted
 */
-func Wrap (str string, wrapLength int) string {
-	return WrapCustom (str, wrapLength, "", false)
+func Wrap(str string, wrapLength int) string {
+	return WrapCustom(str, wrapLength, "", false)
 }
 
 /*
@@ -85,75 +85,74 @@ Parameters:
 Returns:
     a line with newlines inserted
 */
-func WrapCustom (str string, wrapLength int, newLineStr string, wrapLongWords bool) string {
+func WrapCustom(str string, wrapLength int, newLineStr string, wrapLongWords bool) string {
 
 	if str == "" {
 		return ""
 	}
 	if newLineStr == "" {
-		newLineStr = "\n" // TODO Assumes "\n" is seperator. Explore SystemUtils.LINE_SEPARATOR from Apache Commons 
+		newLineStr = "\n" // TODO Assumes "\n" is seperator. Explore SystemUtils.LINE_SEPARATOR from Apache Commons
 	}
 	if wrapLength < 1 {
 		wrapLength = 1
 	}
 
-	inputLineLength := len(str) 
-	offset := 0                 
+	inputLineLength := len(str)
+	offset := 0
 
-	var wrappedLine bytes.Buffer 
+	var wrappedLine bytes.Buffer
 
-	for inputLineLength-offset > wrapLength { 
-		
-		if rune(str[offset]) == ' ' { 
+	for inputLineLength-offset > wrapLength {
+
+		if rune(str[offset]) == ' ' {
 			offset++
 			continue
 		}
 
 		end := wrapLength + offset + 1
-		spaceToWrapAt := strings.LastIndex(str[offset:end], " ") + offset 
+		spaceToWrapAt := strings.LastIndex(str[offset:end], " ") + offset
 
-		if spaceToWrapAt >= offset { 
+		if spaceToWrapAt >= offset {
 			// normal word (not longer than wrapLength)
-			wrappedLine.WriteString(str[offset:spaceToWrapAt]) 
-			wrappedLine.WriteString(newLineStr) 
+			wrappedLine.WriteString(str[offset:spaceToWrapAt])
+			wrappedLine.WriteString(newLineStr)
 			offset = spaceToWrapAt + 1
 
-		   } else {
-		       // long word or URL
-		       if wrapLongWords { 
-		       	   end := wrapLength + offset
-		           // long words are wrapped one line at a time
-		           wrappedLine.WriteString(str[offset:end]) 
-		           wrappedLine.WriteString(newLineStr)
-		           offset += wrapLength 
-		       } else {
-		           // long words aren't wrapped, just extended beyond limit
-		       	   end := wrapLength + offset
-		           spaceToWrapAt =  strings.IndexRune(str[end:len(str)], ' ') + end 
-		           if spaceToWrapAt >= 0 {
-		               wrappedLine.WriteString(str[offset:spaceToWrapAt]) 
-		               wrappedLine.WriteString(newLineStr) 
-		               offset = spaceToWrapAt + 1 
-		           } else {
-		               wrappedLine.WriteString(str[offset:len(str)]) 
-		               offset = inputLineLength 
-		           }
-		       }
+		} else {
+			// long word or URL
+			if wrapLongWords {
+				end := wrapLength + offset
+				// long words are wrapped one line at a time
+				wrappedLine.WriteString(str[offset:end])
+				wrappedLine.WriteString(newLineStr)
+				offset += wrapLength
+			} else {
+				// long words aren't wrapped, just extended beyond limit
+				end := wrapLength + offset
+				spaceToWrapAt = strings.IndexRune(str[end:len(str)], ' ') + end
+				if spaceToWrapAt >= 0 {
+					wrappedLine.WriteString(str[offset:spaceToWrapAt])
+					wrappedLine.WriteString(newLineStr)
+					offset = spaceToWrapAt + 1
+				} else {
+					wrappedLine.WriteString(str[offset:len(str)])
+					offset = inputLineLength
+				}
+			}
 		}
 	}
 
-	wrappedLine.WriteString(str[offset:len(str)]) 
+	wrappedLine.WriteString(str[offset:len(str)])
 
-	return wrappedLine.String() 
+	return wrappedLine.String()
 
 }
 
-
 /*
-Capitalize capitalizes all the delimiter separated words in a string. Only the first letter of each word is changed. 
+Capitalize capitalizes all the delimiter separated words in a string. Only the first letter of each word is changed.
 To convert the rest of each word to lowercase at the same time, use CapitalizeFully(str string, delimiters ...rune).
-The delimiters represent a set of characters understood to separate words. The first string character 
-and the first non-delimiter character after a delimiter will be capitalized. A "" input string returns "". 
+The delimiters represent a set of characters understood to separate words. The first string character
+and the first non-delimiter character after a delimiter will be capitalized. A "" input string returns "".
 Capitalization uses the Unicode title case, normally equivalent to upper case.
 
 Parameters:
@@ -163,41 +162,39 @@ Parameters:
 Returns:
     capitalized string
 */
-func Capitalize (str string, delimiters ...rune) string {
+func Capitalize(str string, delimiters ...rune) string {
 
 	var delimLen int
-	
-	if delimiters == nil {	
+
+	if delimiters == nil {
 		delimLen = -1
 	} else {
 		delimLen = len(delimiters)
 	}
 
-    if str == "" || delimLen == 0 { 
-        return str;
-    }
+	if str == "" || delimLen == 0 {
+		return str
+	}
 
-    buffer := []rune(str)	
-    capitalizeNext := true	
-    for i := 0; i < len(buffer); i++ { 
-        ch := buffer[i]	
-        if isDelimiter(ch, delimiters...) {	
-            capitalizeNext = true
-        } else if capitalizeNext {
-            buffer[i] = unicode.ToTitle(ch) 
-            capitalizeNext = false
-        }
-    }
-    return string(buffer)
+	buffer := []rune(str)
+	capitalizeNext := true
+	for i := 0; i < len(buffer); i++ {
+		ch := buffer[i]
+		if isDelimiter(ch, delimiters...) {
+			capitalizeNext = true
+		} else if capitalizeNext {
+			buffer[i] = unicode.ToTitle(ch)
+			capitalizeNext = false
+		}
+	}
+	return string(buffer)
 
 }
 
-
-
 /*
-CapitalizeFully converts all the delimiter separated words in a string into capitalized words, that is each word is made up of a 
-titlecase character and then a series of lowercase characters. The delimiters represent a set of characters understood 
-to separate words. The first string character and the first non-delimiter character after a delimiter will be capitalized. 
+CapitalizeFully converts all the delimiter separated words in a string into capitalized words, that is each word is made up of a
+titlecase character and then a series of lowercase characters. The delimiters represent a set of characters understood
+to separate words. The first string character and the first non-delimiter character after a delimiter will be capitalized.
 Capitalization uses the Unicode title case, normally equivalent to upper case.
 
 Parameters:
@@ -207,29 +204,27 @@ Parameters:
 Returns:
     capitalized string
 */
-func CapitalizeFully (str string, delimiters ...rune) string {
+func CapitalizeFully(str string, delimiters ...rune) string {
 
-    var delimLen int
+	var delimLen int
 
-    if delimiters == nil {
-	  delimLen = -1
-	} else  {
+	if delimiters == nil {
+		delimLen = -1
+	} else {
 		delimLen = len(delimiters)
 	}
 
-
-    if str == "" || delimLen == 0 {
-        return str;
-    }
-    str = strings.ToLower(str)
-    return Capitalize(str, delimiters...);
+	if str == "" || delimLen == 0 {
+		return str
+	}
+	str = strings.ToLower(str)
+	return Capitalize(str, delimiters...)
 }
-
 
 /*
 Uncapitalize uncapitalizes all the whitespace separated words in a string. Only the first letter of each word is changed.
-The delimiters represent a set of characters understood to separate words. The first string character and the first non-delimiter 
-character after a delimiter will be uncapitalized. Whitespace is defined by unicode.IsSpace(char). 
+The delimiters represent a set of characters understood to separate words. The first string character and the first non-delimiter
+character after a delimiter will be uncapitalized. Whitespace is defined by unicode.IsSpace(char).
 
 Parameters:
     str - the string to uncapitalize fully
@@ -238,46 +233,45 @@ Parameters:
 Returns:
     uncapitalized string
 */
-func Uncapitalize (str string, delimiters ...rune) string {
+func Uncapitalize(str string, delimiters ...rune) string {
 
 	var delimLen int
-	
-	if delimiters == nil {	
+
+	if delimiters == nil {
 		delimLen = -1
 	} else {
 		delimLen = len(delimiters)
 	}
 
-    if str == "" || delimLen == 0 { 
-        return str;
-    }
+	if str == "" || delimLen == 0 {
+		return str
+	}
 
-    buffer := []rune(str)	
-    uncapitalizeNext := true	// TODO Always makes capitalize/un apply to first char. 
-    for i := 0; i < len(buffer); i++ { 
-        ch := buffer[i]	
-        if isDelimiter(ch, delimiters...) {	
-            uncapitalizeNext = true
-        } else if uncapitalizeNext {
-            buffer[i] = unicode.ToLower(ch) 
-            uncapitalizeNext = false
-        }
-    }
-    return string(buffer) 
+	buffer := []rune(str)
+	uncapitalizeNext := true // TODO Always makes capitalize/un apply to first char.
+	for i := 0; i < len(buffer); i++ {
+		ch := buffer[i]
+		if isDelimiter(ch, delimiters...) {
+			uncapitalizeNext = true
+		} else if uncapitalizeNext {
+			buffer[i] = unicode.ToLower(ch)
+			uncapitalizeNext = false
+		}
+	}
+	return string(buffer)
 }
-
 
 /*
 SwapCase swaps the case of a string using a word based algorithm.
 
 Conversion algorithm:
 
-    Upper case character converts to Lower case 
-    Title case character converts to Lower case 
-    Lower case character after Whitespace or at start converts to Title case 
-    Other Lower case character converts to Upper case 
+    Upper case character converts to Lower case
+    Title case character converts to Lower case
+    Lower case character after Whitespace or at start converts to Title case
+    Other Lower case character converts to Upper case
     Whitespace is defined by unicode.IsSpace(char).
- 
+
 Parameters:
     str - the string to swap case
 
@@ -285,39 +279,38 @@ Returns:
     the changed string
 */
 func SwapCase(str string) string {
-    if str == "" {
-        return str
-    }
-    buffer := []rune(str) 
+	if str == "" {
+		return str
+	}
+	buffer := []rune(str)
 
-    whitespace := true
+	whitespace := true
 
-    for i := 0; i < len(buffer); i++ {
-        ch := buffer[i]
-        if unicode.IsUpper(ch) {
-            buffer[i] = unicode.ToLower(ch)
-            whitespace = false
-        } else if unicode.IsTitle(ch) {
-            buffer[i] = unicode.ToLower(ch)
-            whitespace = false
-        } else if unicode.IsLower(ch) {
-            if whitespace {
-                buffer[i] = unicode.ToTitle(ch)
-                whitespace = false
-            } else {
-                buffer[i] = unicode.ToUpper(ch)
-            }
-        } else {
-            whitespace = unicode.IsSpace(ch)
-        }
-    }
-    return string(buffer);
+	for i := 0; i < len(buffer); i++ {
+		ch := buffer[i]
+		if unicode.IsUpper(ch) {
+			buffer[i] = unicode.ToLower(ch)
+			whitespace = false
+		} else if unicode.IsTitle(ch) {
+			buffer[i] = unicode.ToLower(ch)
+			whitespace = false
+		} else if unicode.IsLower(ch) {
+			if whitespace {
+				buffer[i] = unicode.ToTitle(ch)
+				whitespace = false
+			} else {
+				buffer[i] = unicode.ToUpper(ch)
+			}
+		} else {
+			whitespace = unicode.IsSpace(ch)
+		}
+	}
+	return string(buffer)
 }
 
-
 /*
-Initials extracts the initial letters from each word in the string. The first letter of the string and all first 
-letters after the defined delimiters are returned as a new string. Their case is not changed. If the delimiters 
+Initials extracts the initial letters from each word in the string. The first letter of the string and all first
+letters after the defined delimiters are returned as a new string. Their case is not changed. If the delimiters
 parameter is excluded, then Whitespace is used. Whitespace is defined by unicode.IsSpacea(char). An empty delimiter array returns an empty string.
 
 Parameters:
@@ -327,39 +320,37 @@ Returns:
     string of initial letters
 */
 func Initials(str string, delimiters ...rune) string {
-        if str == "" {
-            return str
-        }
-        if delimiters != nil && len(delimiters) == 0 {
-            return ""
-        }
-        strLen := len(str)
-        var buf bytes.Buffer
-        lastWasGap := true
-        for i := 0; i < strLen; i++ {
-            ch := rune(str[i])
+	if str == "" {
+		return str
+	}
+	if delimiters != nil && len(delimiters) == 0 {
+		return ""
+	}
+	strLen := len(str)
+	var buf bytes.Buffer
+	lastWasGap := true
+	for i := 0; i < strLen; i++ {
+		ch := rune(str[i])
 
-            if isDelimiter(ch, delimiters...) {	
-                lastWasGap = true
-            } else if lastWasGap {
-            	buf.WriteRune(ch)
-                lastWasGap = false
-            } 
-        }
-        return buf.String() 
-    }
+		if isDelimiter(ch, delimiters...) {
+			lastWasGap = true
+		} else if lastWasGap {
+			buf.WriteRune(ch)
+			lastWasGap = false
+		}
+	}
+	return buf.String()
+}
 
- 
-
- // private function (lower case func name)
+// private function (lower case func name)
 func isDelimiter(ch rune, delimiters ...rune) bool {
-    if delimiters == nil {
-        return unicode.IsSpace(ch) 
-    }
-    for _, delimiter := range delimiters { 
-        if ch == delimiter { 
-            return true
-        }
-    }
-    return false
+	if delimiters == nil {
+		return unicode.IsSpace(ch)
+	}
+	for _, delimiter := range delimiters {
+		if ch == delimiter {
+			return true
+		}
+	}
+	return false
 }

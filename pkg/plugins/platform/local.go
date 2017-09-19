@@ -14,7 +14,6 @@ import (
 	"os/user"
 	"runtime"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/archive"
@@ -29,6 +28,7 @@ import (
 	"github.com/gosuri/uitable"
 	"github.com/lextoumbourou/goodhosts"
 	shellwords "github.com/mattn/go-shellwords"
+	log "github.com/sirupsen/logrus"
 )
 
 const containerWaitTimeout = 35

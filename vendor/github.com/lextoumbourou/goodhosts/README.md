@@ -16,21 +16,14 @@ Simple [hosts file](http://en.wikipedia.org/wiki/Hosts_%28file%29) (```/etc/host
 
 ### Installation
 
-#### Linux
-
-Download the [binary](https://github.com/lextoumbourou/goodhosts/releases/download/v2.1.0/goodhosts-linux) and put it in your path.
+Download the [binary](http://github.com/lextoumbourou/goodhosts/releases/latest) and put it in your path.
 
 ```bash
-$ wget -O goodhosts https://github.com/lextoumbourou/goodhosts/releases/download/v2.1.0/goodhosts-linux
+$ wget https://github.com/lextoumbourou/goodhosts/releases/download/v2.0.0/goodhosts
 $ chmod +x goodhosts
 $ export PATH=$(pwd):$PATH
 $ goodhosts --help
 ```
-
-#### Windows
-
-Download the [binary](https://github.com/lextoumbourou/goodhosts/releases/download/v2.1.0/goodhosts-windows) and do Windowsy stuff with it (doc PR welcome).
-
 
 ### List entries
 
@@ -46,31 +39,31 @@ Add ```--all``` flag to include comments.
 ### Check for an entry
 
 ```bash
-$ goodhosts check 127.0.0.1 facebook.com
+$ goodhosts check 127.0.0.1 facebook
 ```
 
 ### Add an entry
 
 ```bash
-$ goodhosts add 127.0.0.1 facebook.com
+$ goodhosts add 127.0.0.1 facebook
 ```
 
 Or *entries*.
 
 ```bash
-$ goodhosts add 127.0.0.1 facebook.com twitter.com gmail.com
+$ goodhosts add 127.0.0.1 facebook twitter gmail
 ```
 
 ### Remove an entry
 
 ```bash
-$ goodhosts rm 127.0.0.1 facebook.com
+$ goodhosts rm 127.0.0.1 facebook
 ```
 
 Or *entries*.
 
 ```bash
-$ goodhosts rm 127.0.0.1 facebook.com twitter.com gmail.com
+$ goodhosts rm 127.0.0.1 facebook twitter gmail
 ```
 
 ### More
@@ -119,7 +112,7 @@ import (
 func main() {
     hosts := goodhosts.NewHosts()
 
-    if hosts.Has("127.0.0.1", "facebook.com") {
+    if hosts.Has("127.0.0.1", "facebook") {
         fmt.Println("Entry exists!")
         return
     }
@@ -142,7 +135,7 @@ func main() {
     hosts := goodhosts.NewHosts()
 
     // Note that nothing will be added to the hosts file until ``hosts.Flush`` is called.
-    hosts.Add("127.0.0.1", "facebook.com", "twitter.com")
+    hosts.Add("127.0.0.1", "facebook.com", "twitter")
 
     if err := hosts.Flush(); err != nil {
         panic(err)
@@ -164,7 +157,7 @@ func main() {
     hosts := goodhosts.NewHosts()
 
     // Same deal, yo: call hosts.Flush() to make permanent.
-    hosts.Remove("127.0.0.1", "facebook.com", "twitter.com")
+    hosts.Remove("127.0.0.1", "facebook", "twitter")
 
     if err := hosts.Flush(); err != nil {
         panic(err)
@@ -175,11 +168,6 @@ func main() {
 ### [More](API.md)
 
 ## Changelog
-
-### 2.1.0 (2015-06-08)
-
-* Added Windows support.
-* Added command-line docs.
 
 ### 2.0.0 (2015-05-04)
 

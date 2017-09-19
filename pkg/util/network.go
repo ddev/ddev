@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/cheggaaa/pb"
+	log "github.com/sirupsen/logrus"
 )
 
 // DownloadFile retreives a file.
