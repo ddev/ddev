@@ -472,7 +472,38 @@ func TestLocalStop(t *testing.T) {
 	}
 }
 
-// TestDescribe tests that the describe command works properly on a started or stopped site.
+// TestLocalStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or ddev configs.
+func TestLocalStopMissingDirectory(t *testing.T) {
+	assert := asrt.New(t)
+	app, err := platform.GetPluginApp("local")
+	assert.NoError(err)
+
+	site := TestSites[0]
+	tempPath := testcommon.CreateTmpDir("site-copy")
+	siteCopyDest := filepath.Join(tempPath, "site")
+
+	app, err = platform.GetActiveApp(site.Name)
+	assert.NoError(err)
+	// Restart the site since it was stopped in the previous test.
+	if app.SiteStatus() != platform.SiteRunning {
+		err = app.Start()
+		assert.NoError(err)
+	}
+	// Move the site directory to a temp location to mimick a missing directory.
+	err = os.Rename(site.Dir, siteCopyDest)
+	assert.NoError(err)
+
+	err = app.Stop()
+	assert.Contains(err, "If you would like to continue using ddev to manage this site please restore your files to that directory.")
+	// Move the site directory back to its original location.
+	err = os.Rename(siteCopyDest, site.Dir)
+	assert.NoError(err)
+	// Cleanup the temp directory
+	err = os.RemoveAll(tempPath)
+	assert.NoError(err)
+}
+
+// TestDescribe tests that the describe command works properly on a stopped site.
 func TestDescribe(t *testing.T) {
 	assert := asrt.New(t)
 	app, err := platform.GetPluginApp("local")
