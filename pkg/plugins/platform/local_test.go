@@ -153,7 +153,7 @@ func TestLocalStart(t *testing.T) {
 		assert.True(composeFile)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
-			containerName, err := constructContainerName(containerType, app)
+			containerName, err := getContainerByType(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "running")
 			assert.NoError(err)
@@ -460,7 +460,7 @@ func TestLocalStop(t *testing.T) {
 		assert.NoError(err)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
-			containerName, err := constructContainerName(containerType, app)
+			containerName, err := getContainerByType(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "exited")
 			assert.NoError(err)
@@ -511,15 +511,25 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
-	for _, site := range TestSites {
-		site.Cleanup()
-		app, err = platform.GetActiveApp(site.Name)
-		assert.NoError(err)
+	site := TestSites[0]
+	tempPath := testcommon.CreateTmpDir("site-copy")
+	siteCopyDest := filepath.Join(tempPath, "site")
 
-		out, err := app.Describe()
-		assert.NoError(err)
-		assert.Contains(out, platform.SiteDirMissing, "Output did not include the phrase 'app directory missing' when describing a site with missing directories.")
-	}
+	app, err = platform.GetActiveApp(site.Name)
+	assert.NoError(err)
+	// Move the site directory to a temp location to mimick a missing directory.
+	err = os.Rename(site.Dir, siteCopyDest)
+	assert.NoError(err)
+
+	out, err := app.Describe()
+	assert.NoError(err)
+	assert.Contains(out, platform.SiteDirMissing, "Output did not include the phrase 'app directory missing' when describing a site with missing directories.")
+	// Move the site directory back to its original location.
+	err = os.Rename(siteCopyDest, site.Dir)
+	assert.NoError(err)
+	// Cleanup the temp directory
+	err = os.RemoveAll(tempPath)
+	assert.NoError(err)
 }
 
 
@@ -597,13 +607,19 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	// Ensure we have a site started so we have something to cleanup
 	err = app.Start()
 	assert.NoError(err)
+	// Setup by creating temp directory and nesting a folder for our site.
+	tempPath := testcommon.CreateTmpDir("site-copy")
+	siteCopyDest := filepath.Join(tempPath, "site")
+	// Move site directory to a temp directory to mimick a missing directory.
+	err = os.Rename(site.Dir, siteCopyDest)
+	assert.NoError(err)
 
-	// Call the Cleanup command()
-	err = platform.Cleanup(app)
+	// Call the Down command()
+	err = app.Down(false)
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
-		_, err := constructContainerName(containerType, app)
+		_, err := getContainerByType(containerType, app)
 		assert.Error(err)
 	}
 
@@ -622,6 +638,12 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	revertDir()
+	// Move the site directory back to its original location.
+	err = os.Rename(siteCopyDest, site.Dir)
+	assert.NoError(err)
+	// Cleanup the temp directory
+	err = os.RemoveAll(tempPath)
+	assert.NoError(err)
 }
 
 // TestGetappsEmpty ensures that GetApps returns an empty list when no applications are running.
@@ -729,8 +751,8 @@ func TestListWithoutDir(t *testing.T) {
 	assert.NoError(err)
 }
 
-// constructContainerName builds a container name given the type (web/db/dba) and the app
-func constructContainerName(containerType string, app platform.App) (string, error) {
+// getContainerByType builds a container name given the type (web/db/dba) and the app
+func getContainerByType(containerType string, app platform.App) (string, error) {
 	container, err := app.FindContainerByType(containerType)
 	if err != nil {
 		return "", err
