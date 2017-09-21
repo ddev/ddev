@@ -479,11 +479,15 @@ func TestLocalStopMissingDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	site := TestSites[0]
+	app, err := platform.GetPluginApp("local")
+	assert.NoError(err)
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
 	defer removeAllErrCheck(tempPath, assert)
 
-	app, err := platform.GetActiveApp(site.Name)
 	assert.NoError(err)
 	// Restart the site since it was stopped in the previous test.
 	if app.SiteStatus() != platform.SiteRunning {
