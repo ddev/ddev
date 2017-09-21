@@ -484,16 +484,16 @@ func TestLocalStopMissingDirectory(t *testing.T) {
 	err = app.Init(site.Dir)
 	assert.NoError(err)
 
-	tempPath := testcommon.CreateTmpDir("site-copy")
-	siteCopyDest := filepath.Join(tempPath, "site")
-	defer removeAllErrCheck(tempPath, assert)
-
-	assert.NoError(err)
 	// Restart the site since it was stopped in the previous test.
 	if app.SiteStatus() != platform.SiteRunning {
 		err = app.Start()
 		assert.NoError(err)
 	}
+
+	tempPath := testcommon.CreateTmpDir("site-copy")
+	siteCopyDest := filepath.Join(tempPath, "site")
+	defer removeAllErrCheck(tempPath, assert)
+
 	// Move the site directory to a temp location to mimic a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
