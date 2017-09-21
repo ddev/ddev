@@ -475,16 +475,16 @@ func TestLocalStop(t *testing.T) {
 // TestLocalStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or ddev configs.
 func TestLocalStopMissingDirectory(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
+	_, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
 	site := TestSites[0]
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
 	// Cleanup the temp directory
-	defer os.RemoveAll(tempPath)
+	defer assert.NoError(os.RemoveAll(tempPath))
 
-	app, err = platform.GetActiveApp(site.Name)
+	app, err := platform.GetActiveApp(site.Name)
 	assert.NoError(err)
 	// Restart the site since it was stopped in the previous test.
 	if app.SiteStatus() != platform.SiteRunning {
@@ -539,16 +539,16 @@ func TestDescribe(t *testing.T) {
 // TestDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or ddev configs.
 func TestDescribeMissingDirectory(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
+	_, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 
 	site := TestSites[0]
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
 	// Cleanup the temp directory.
-	defer os.RemoveAll(tempPath)
+	defer assert.NoError(os.RemoveAll(tempPath))
 
-	app, err = platform.GetActiveApp(site.Name)
+	app, err := platform.GetActiveApp(site.Name)
 	assert.NoError(err)
 	// Move the site directory to a temp location to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
@@ -644,7 +644,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 	// Cleanup the temp directory
-	defer os.RemoveAll(tempPath)
+	defer assert.NoError(os.RemoveAll(tempPath))
 
 	// Call the Down command()
 	err = app.Down(false)
