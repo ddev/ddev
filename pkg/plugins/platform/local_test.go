@@ -546,8 +546,11 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	siteCopyDest := filepath.Join(tempPath, "site")
 	defer removeAllErrCheck(tempPath, assert)
 
-	app, err := platform.GetActiveApp(site.Name)
+	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+
 	// Move the site directory to a temp location to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
@@ -638,10 +641,11 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	// Setup by creating temp directory and nesting a folder for our site.
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
+	defer removeAllErrCheck(tempPath, assert)
+
 	// Move site directory to a temp directory to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
-	defer removeAllErrCheck(tempPath, assert)
 
 	// Call the Down command()
 	err = app.Down(false)
