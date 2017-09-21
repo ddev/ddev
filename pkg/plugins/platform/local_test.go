@@ -475,10 +475,9 @@ func TestLocalStop(t *testing.T) {
 // TestLocalStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or ddev configs.
 func TestLocalStopMissingDirectory(t *testing.T) {
 	assert := asrt.New(t)
-	_, err := platform.GetPluginApp("local")
-	assert.NoError(err)
 
 	site := TestSites[0]
+	testcommon.ClearDockerEnv()
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
 	err = app.Init(site.Dir)
@@ -504,6 +503,7 @@ func TestLocalStopMissingDirectory(t *testing.T) {
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
+
 }
 
 // TestDescribe tests that the describe command works properly on a stopped site.
@@ -542,9 +542,6 @@ func TestDescribe(t *testing.T) {
 // TestDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or ddev configs.
 func TestDescribeMissingDirectory(t *testing.T) {
 	assert := asrt.New(t)
-	_, err := platform.GetPluginApp("local")
-	assert.NoError(err)
-
 	site := TestSites[0]
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
