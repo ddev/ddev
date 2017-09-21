@@ -494,7 +494,8 @@ func TestLocalStopMissingDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	out := app.Stop()
-	assert.Contains(out, "If you would like to continue using ddev to manage this site please restore your files to that directory.")
+	assert.Error(out)
+	assert.Contains(out.Error(), "If you would like to continue using ddev to manage this site please restore your files to that directory.")
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
