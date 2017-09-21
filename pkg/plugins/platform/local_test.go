@@ -481,6 +481,7 @@ func TestLocalStopMissingDirectory(t *testing.T) {
 	site := TestSites[0]
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
+	defer removeAllErrCheck(tempPath, assert)
 
 	app, err := platform.GetActiveApp(site.Name)
 	assert.NoError(err)
@@ -498,9 +499,6 @@ func TestLocalStopMissingDirectory(t *testing.T) {
 	assert.Contains(out.Error(), "If you would like to continue using ddev to manage this site please restore your files to that directory.")
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
-	assert.NoError(err)
-	// Cleanup the temp directory.
-	err = os.RemoveAll(tempPath)
 	assert.NoError(err)
 }
 
@@ -546,6 +544,7 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	site := TestSites[0]
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
+	defer removeAllErrCheck(tempPath, assert)
 
 	app, err := platform.GetActiveApp(site.Name)
 	assert.NoError(err)
@@ -558,9 +557,6 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	assert.Contains(out, platform.SiteDirMissing, "Output did not include the phrase 'app directory missing' when describing a site with missing directories.")
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
-	assert.NoError(err)
-	// Cleanup the temp directory.
-	err = os.RemoveAll(tempPath)
 	assert.NoError(err)
 }
 
@@ -645,6 +641,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	// Move site directory to a temp directory to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
+	defer removeAllErrCheck(tempPath, assert)
 
 	// Call the Down command()
 	err = app.Down(false)
@@ -672,9 +669,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	revertDir()
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
-	assert.NoError(err)
-	// Cleanup the temp directory.
-	err = os.RemoveAll(tempPath)
 	assert.NoError(err)
 }
 
@@ -791,4 +785,9 @@ func getContainerByType(containerType string, app platform.App) (string, error) 
 	}
 	name := dockerutil.ContainerName(container)
 	return name, nil
+}
+
+func removeAllErrCheck(path string, assert *asrt.Assertions) {
+	err := os.RemoveAll(path)
+	assert.NoError(err)
 }
