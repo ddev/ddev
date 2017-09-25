@@ -2,11 +2,11 @@ package platform_test
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
-
-	"os"
 
 	"strings"
 
@@ -626,6 +626,12 @@ func TestRouterPortsCheck(t *testing.T) {
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
 func TestCleanupWithoutCompose(t *testing.T) {
 	assert := asrt.New(t)
+	// Skip test because we can't rename folders while they're in use if running on Windows.
+	if runtime.GOOS == "windows" {
+		log.Println("Skipping test TestCleanupWithoutCompose on Windows")
+		t.Skip()
+	}
+
 	site := TestSites[0]
 
 	revertDir := site.Chdir()
