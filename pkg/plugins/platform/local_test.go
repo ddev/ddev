@@ -655,7 +655,10 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	// Call the Down command()
-	err = app.Down(false)
+	// Notice that we set the removeData parameter to true.
+	// This gives us added test coverage over sites with missing directories
+	// by ensuring any associated database files get cleaned up as well.
+	err = app.Down(true)
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
