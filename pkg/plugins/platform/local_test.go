@@ -12,6 +12,7 @@ import (
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -476,6 +477,61 @@ func TestDescribeStopped(t *testing.T) {
 		assert.Contains(out, platform.SiteStopped, "Output did not include the word stopped when describing a stopped site.")
 		switchDir()
 	}
+}
+
+// TestRouterPortsCheck makes sure that we can detect if the ports are available before starting the router.
+func TestRouterPortsCheck(t *testing.T) {
+	assert := asrt.New(t)
+
+	// First, stop any sites that might be running
+	app, err := platform.GetPluginApp("local")
+	assert.NoError(err)
+
+	// Stop all sites, which should get the router out of there.
+	for _, site := range TestSites {
+		switchDir := site.Chdir()
+
+		testcommon.ClearDockerEnv()
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Stop()
+		assert.NoError(err)
+
+		switchDir()
+	}
+
+	// Now start one site, it's hard to get router to behave without one site.
+	site := TestSites[0]
+	app, err = platform.GetActiveApp(site.Name)
+	if err != nil {
+		t.Fatalf("Failed to GetActiveApp(%s), err:%v", site.Name, err)
+	}
+	err = app.Start()
+	assert.NoError(err, "app.Start(%s) failed, err: %v", app.GetName(), err)
+
+	// Stop the router using code from platform.StopRouter().
+	// platform.StopRouter can't be used here because it checks to see if containers are running
+	// and doesn't do its job as a result.
+	dest := platform.RouterComposeYAMLPath()
+	err = dockerutil.ComposeCmd([]string{dest}, "-p", platform.RouterProjectName, "down", "-v")
+	assert.NoError(err, "Failed to stop router using docker-compose, err=%v", err)
+
+	// Occupy port 80 using docker busybox trick, then see if we can start router.
+	// This is done with docker so that we don't have to use explicit sudo
+	containerId, err := exec.RunCommand("docker", []string{"run", "-d", "-p80:80", "--rm", "busybox", "sleep", "100"})
+	if err != nil {
+		t.Fatalf("Failed to run docker command to occupy port 80, err=%v output=%v", err, containerId)
+	}
+	containerId = strings.TrimSpace(containerId)
+
+	// Now try to start the router. It should fail because the port is occupied.
+	err = platform.StartDdevRouter()
+	assert.Error(err, "Failure: router started even though port 80 was occupied")
+
+	// Remove our dummy busybox docker container.
+	out, err := exec.RunCommand("docker", []string{"rm", "-f", containerId})
+	assert.NoError(err, "Failed to docker rm the port-occupier container, err=%v output=%v", err, out)
 }
 
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.

@@ -19,7 +19,7 @@ import (
 	"github.com/fatih/color"
 )
 
-const routerProjectName = "ddev-router"
+const RouterProjectName = "ddev-router"
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
@@ -38,7 +38,7 @@ func StopRouter() error {
 
 	if !containersRunning {
 		dest := RouterComposeYAMLPath()
-		return dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "down", "-v")
+		return dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "down", "-v")
 	}
 	return nil
 }
@@ -79,7 +79,7 @@ func StartDdevRouter() error {
 	util.CheckErr(err)
 
 	// Stop router so we can test port. Of course, it may not be running.
-	err = dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "down")
+	err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "down")
 	if err != nil {
 		return fmt.Errorf("failed to stop ddev-router: %v", err)
 	}
@@ -91,7 +91,7 @@ func StartDdevRouter() error {
 	log.Println("starting ddev router with docker-compose")
 
 	// run docker-compose up -d in the newly created directory
-	err = dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "up", "-d")
+	err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "up", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
@@ -184,11 +184,12 @@ func determineRouterPorts() []string {
 	return routerPorts
 }
 
-// CheckRouterPorts() tries to connect to ports 80/443 as a heuristic to find out
+// CheckRouterPorts tries to connect to ports 80/443 as a heuristic to find out
 // if they're available for docker to bind to. Returns an error if either one results
 // in a successful connection.
 func CheckRouterPorts() error {
-	for _, port := range [2]int{80, 443} {
+	// TODO: When we allow configurable ports, we'll want to use an array of configured ports here.
+	for _, port := range []int{80, 443} {
 		target := fmt.Sprintf("127.0.0.1:%d", port)
 		conn, err := net.Dial("tcp", target)
 		// We want an error (inability to connect), that's the success case.
