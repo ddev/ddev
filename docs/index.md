@@ -56,6 +56,19 @@ You can also easily perform the installation manually if preferred:
 - Copy `ddev.exe` into `%HOMEPATH%\AppData\Local\Microsoft\WindowsApps`, or otherwise add `ddev.exe` to a folder defined in your `PATH`
 - Run `ddev` from a Command Prompt or PowerShell to test your installation. You should see ddev's command usage output.
 
+## Quickstart
+ddev is designed to be as simple as possible to incorporate into existing Wordpress and Drupal workflows. You can start using ddev with any site just by running a few commands.
+
+Below are quickstart instructions for each app type; Wordpress, Drupal 7, and Drupal 8.
+
+**Note:** Before following the quickstart instructions please make sure ddev is [installed](https://ddev.readthedocs.io/en/latest/#installation). 
+### Wordpress
+
+
+### Drupal 7
+
+### Drupal 8
+
 ## Support
 If you've encountered trouble using ddev, please use these resources to get help with your issue:
 
