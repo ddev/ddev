@@ -32,28 +32,9 @@ ddev requires ports 80 and 3306 to be available for use on your system when site
 If you need to use another environment after using ddev, simply ensure all of your ddev sites are stopped or removed. ddev only uses system ports when at least one site is running.
 
 ## Quickstart
-ddev is designed to be as simple as possible to incorporate into existing Wordpress and Drupal workflows. You can start using ddev with any site just by running a few commands.
-
-Start by installing ddev.
-```
-brew tap install drud/ddev && brew install ddev
-```
-After installing, go to your site directory and configure ddev. You'll be prompted to confirm or edit a couple of settings. 
-```
-cd myrepo && ddev config
-```
-Then, ddev is ready to run your site.
-```
-ddev start
-```
-ddev can automatically import database dumps. The following file extensions are currently supported by ddev: zip, tar, tar.gz, .sql, and sql.gz.
-```
-ddev import-db --src=dumpfile.sql.gz
-```
-Finally, you can monitor the site using the `describe` command.
-```
-ddev describe
-```
+- [Wordpress]()
+- [Drupal 7]()
+- [Drupal 8]()
 
 ## Installation
 ### Homebrew - macOS
