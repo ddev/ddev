@@ -17,7 +17,7 @@ const SiteNotFound = "not found"
 const SiteDirMissing = "app directory missing"
 
 // SiteConfigMissing defines the string used to denote when a site is missing its .ddev/config.yml file.
-const SiteConfigMissing = ".ddev/config.yml missing"
+const SiteConfigMissing = ".ddev/config.yaml missing"
 
 // SiteStopped defines the string used to denote when a site is in the stopped state.
 const SiteStopped = "stopped"
