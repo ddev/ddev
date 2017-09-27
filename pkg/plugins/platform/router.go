@@ -85,7 +85,7 @@ func StartDdevRouter() error {
 	}
 	err = CheckRouterPorts()
 	if err != nil {
-		return fmt.Errorf("Unable to claim and use necessary ports, %v", err)
+		return fmt.Errorf("Unable to listen on required ports, %v", err)
 	}
 
 	log.Println("starting ddev router with docker-compose")
