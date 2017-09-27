@@ -847,19 +847,8 @@ func (l *LocalApp) Down(removeData bool) error {
 				}
 			}
 		}
-		// Check to see if the AppRoot exists.
-		// If it does not exist, manually set the data directory to remove.
-		var dir string
-		if fileutil.FileExists(l.AppConfig.AppRoot) {
-			dir = filepath.Dir(l.AppConfig.DataDir)
-		} else {
-			user, err := user.Current()
-			if err != nil {
-				return err
-			}
-			dir = fmt.Sprintf("%s/.ddev/%s", user.HomeDir, l.GetName())
-		}
-
+		// Convenience identifier
+		dir := l.AppConfig.DataDir
 		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
 		// are writable before we attempt to remove them.
 		if !fileutil.FileExists(dir) {
@@ -1008,11 +997,16 @@ func GetActiveApp(siteName string) (App, error) {
 	}
 
 	_ = app.Init(activeAppRoot)
-
 	// Make sure AppConfig.Name is set in case this is app is being used for Cleanup().
 	if app.GetName() == "" {
 		app, _ := app.(*LocalApp)
 		app.AppConfig.Name = siteName
+		// Since the site may be used for Cleanup(), also check that AppConfig.DataDir is set.
+		// This ensures that the sites data can be removed with the containers.
+		if app.AppConfig.DataDir == "" {
+			dataDir := fmt.Sprintf("%s/%s", util.GetGlobalDdevDir(), app.AppConfig.Name)
+			app.AppConfig.DataDir = dataDir
+		}
 	}
 
 	return app, nil
