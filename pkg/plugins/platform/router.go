@@ -11,6 +11,8 @@ import (
 
 	"strings"
 
+	"net"
+
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -76,6 +78,18 @@ func StartDdevRouter() error {
 	_, err = f.WriteString(doc.String())
 	util.CheckErr(err)
 
+	// Stop router so we can test port. Of course, it may not be running.
+	err = dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "down")
+	if err != nil {
+		return fmt.Errorf("failed to stop ddev-router: %v", err)
+	}
+	err = CheckRouterPorts()
+	if err != nil {
+		return fmt.Errorf("Unable to claim and use necessary ports, %v", err)
+	}
+
+	log.Println("starting ddev router with docker-compose")
+
 	// run docker-compose up -d in the newly created directory
 	err = dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "up", "-d")
 	if err != nil {
@@ -96,6 +110,7 @@ func StartDdevRouter() error {
 
 // PrintRouterStatus outputs router status and warning if not
 // running or healthy, as applicable.
+// An easy way to make these ports unavailable: sudo netcat -l -p 80  (brew install netcat)
 func PrintRouterStatus() string {
 	var status string
 
@@ -167,4 +182,22 @@ func determineRouterPorts() []string {
 		}
 	}
 	return routerPorts
+}
+
+// CheckRouterPorts() tries to connect to ports 80/443 as a heuristic to find out
+// if they're available for docker to bind to. Returns an error if either one results
+// in a successful connection.
+func CheckRouterPorts() error {
+	for _, port := range [2]int{80, 443} {
+		target := fmt.Sprintf("127.0.0.1:%d", port)
+		conn, err := net.Dial("tcp", target)
+		// We want an error (inability to connect), that's the success case.
+		// If we don't get one, return err. This will normally be "getsockopt: connection refused"
+		// For simplicity we're not actually studying the err value.
+		if err == nil {
+			_ = conn.Close()
+			return fmt.Errorf("Localhost port %d is in use", port)
+		}
+	}
+	return nil
 }
