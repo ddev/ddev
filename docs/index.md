@@ -61,9 +61,46 @@ ddev is designed to be as simple as possible to incorporate into existing Wordpr
 
 Below are quickstart instructions for each app type; Wordpress, Drupal 7, and Drupal 8.
 
-**Note:** Before following the quickstart instructions please make sure ddev is [installed](https://ddev.readthedocs.io/en/latest/#installation). 
+**Note:** If you do not have ddev already on your machine, please follow the [installation instructions](https://ddev.readthedocs.io/en/latest/#installation) before beginning the quickstart tutorial. 
 ### Wordpress
+To get started using ddev with a Wordpress site, simply clone the site's repository and checkout its directory.
+```
+git clone https://github.com/user/worpress_site
+cd wordpress_site
+```
+Time to start setting up ddev. Inside of your site's working directory, enter the command:
+```
+ddev config
+```
 
+_Note: ddev config will prompt you for a site name and docroot._
+
+After you've run `ddev config` you're ready to start running your site. Run ddev using a simple:
+```
+ddev start
+``` 
+When running `ddev start` you should see output informing you that the site's environment is being started. If startup is successful, you'll see a message like the one below telling you where the site can be reached.
+```
+Successfully started wordpress_site
+Your application can be reached at: http://wordpress_site.ddev.local
+```
+
+##### Databases
+**Important:** Before importing any databases for your site, please remove its' wp-config.php file (if there is one). 
+
+_ddev will create its own wp-config.php automatically._
+
+We're happy to say that importing a database into a site running on ddev is painless. 
+
+Database imports can be accomplished using one command. And we currently offer support for several file types. Including: **.sql, sql.gz, tar, tar.gz, and zip**.
+
+Here's an example of a database import using ddev:
+```
+ddev import-db --src=dumpfile.sql.gz
+```
+The `import-db` command will produce output so you can monitor the progress of the database import. 
+
+For more in depth application monitoring, use the `ddev describe` command to see details about the status of your ddev app.
 
 ### Drupal 7
 
