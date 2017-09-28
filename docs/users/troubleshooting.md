@@ -17,7 +17,7 @@ Probably the most common reason for this is that Apache is running locally. It c
 sudo apachectl stop
 ```
 
-To dig deeper, you can use a number of tools to find out what process is listening. On OSX and Linux, try the lsof tool:
+To dig deeper, you can use a number of tools to find out what process is listening. On macOS and Linux, try the lsof tool:
 
 ```
 $ sudo lsof -i :80 -sTCP:LISTEN
@@ -29,11 +29,11 @@ nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 As you see, the command that's running is listed, and its pid. You then need to use the appropriate technique to stop the other server. 
 
 Some suggestions:
-* MAMP (OSX): [Stop MAMP](http://documentation.mamp.info/en/MAMP-Mac/Preferences/Start-Stop/)
-* nginx (OSX Homebrew): `sudo brew services stop nginx`
+* MAMP (macOS): [Stop MAMP](http://documentation.mamp.info/en/MAMP-Mac/Preferences/Start-Stop/)
+* nginx (macOS Homebrew): `sudo brew services stop nginx`
 or `sudo launchctl stop homebrew.mxcl.nginx`
 * nginx (Ubuntu): `sudo service nginx stop`
 * apache (often named "httpd") (many environments): `sudo apachectl stop` or on Ubuntu `sudo service apache2 stop`
-* vpnkit (OSX): You likely have a docker container bound to port 80, do you have containers up for Kalabox or another docker-based development environment? If so, stop the other environment.
+* vpnkit (macOS): You likely have a docker container bound to port 80, do you have containers up for Kalabox or another docker-based development environment? If so, stop the other environment.
 
 We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
