@@ -809,27 +809,10 @@ func (l *LocalApp) CreateSettingsFile() error {
 func (l *LocalApp) Down(removeData bool) error {
 	l.DockerEnv()
 	settingsFilePath := l.AppConfig.SiteSettingsPath
-	_, missingConfig := CheckForConf(l.AppRoot())
 
-	if !fileutil.FileExists(l.AppRoot()) {
-		err := Cleanup(l)
-		if err != nil {
-			util.Failed("Failed to remove %s: %s", l.GetName(), err)
-		}
-	} else if missingConfig != nil {
-		err := Cleanup(l)
-		if err != nil {
-			util.Failed("Failed to remove %s: %s", l.GetName(), err)
-		}
-	} else {
-		err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
-		if err != nil {
-			util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
-			err = Cleanup(l)
-			if err != nil {
-				util.Warning("Received error from Cleanup, err=", err)
-			}
-		}
+	err := Cleanup(l)
+	if err != nil {
+		util.Failed("Failed to remove %s: %s", l.GetName(), err)
 	}
 
 	if removeData {
@@ -847,19 +830,22 @@ func (l *LocalApp) Down(removeData bool) error {
 				}
 			}
 		}
-		// Convenience identifier
-		dir := l.AppConfig.DataDir
+		// Check that l.AppConfig.DataDir is a directory that is safe to remove.
+		err = ValidateDataDirRemoval(l.AppConfig.DataDir)
+		if err != nil {
+			return fmt.Errorf("failed to remove data directories: %v", err)
+		}
 		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
 		// are writable before we attempt to remove them.
-		if !fileutil.FileExists(dir) {
+		if !fileutil.FileExists(l.AppConfig.DataDir) {
 			util.Warning("No application data to remove")
 		} else {
-			err := fileutil.PurgeDirectory(dir)
+			err := fileutil.PurgeDirectory(l.AppConfig.DataDir)
 			if err != nil {
 				return fmt.Errorf("failed to remove data directories: %v", err)
 			}
 			// PurgeDirectory leaves the directory itself in place, so we remove it here.
-			err = os.RemoveAll(dir)
+			err = os.RemoveAll(l.AppConfig.DataDir)
 			if err != nil {
 				return fmt.Errorf("failed to remove data directories: %v", err)
 			}
@@ -997,17 +983,65 @@ func GetActiveApp(siteName string) (App, error) {
 	}
 
 	_ = app.Init(activeAppRoot)
-	// Make sure AppConfig.Name is set in case this app is being used for Cleanup().
-	if app.GetName() == "" {
-		app, _ := app.(*LocalApp)
-		app.AppConfig.Name = siteName
-		// Since the site may be used for Cleanup(), also check that AppConfig.DataDir is set.
-		// This ensures that the sites data can be removed with the containers.
-		if app.AppConfig.DataDir == "" {
-			dataDir := fmt.Sprintf("%s/%s", util.GetGlobalDdevDir(), app.AppConfig.Name)
-			app.AppConfig.DataDir = dataDir
+	// Check to see if there are any missing AppConfig values that still need to be restored.
+	if RestoreIsNeeded(app) {
+		err = RestoreApp(app, siteName)
+		if err != nil {
+			return app, err
 		}
 	}
 
 	return app, nil
+}
+
+// RestoreApp manually restores an AppConfig's Name and/or DataDir and returns an error if it cannot manually restore.
+func RestoreApp(app App, siteName string) error {
+	localApp, _ := app.(*LocalApp)
+	if siteName == "" {
+		return fmt.Errorf("error manually restoring AppConfig: no siteName given")
+	}
+	localApp.AppConfig.Name = siteName
+	// Ensure that AppConfig.DataDir is set so that site data can be removed if necessary.
+	dataDir := fmt.Sprintf("%s/%s", util.GetGlobalDdevDir(), localApp.AppConfig.Name)
+	localApp.AppConfig.DataDir = dataDir
+
+	return nil
+}
+
+// RestoreIsNeeded returns a boolean indicating whether or not an AppConfig has necessary values set (currently Name and DataDir).
+func RestoreIsNeeded(app App) bool {
+	localApp, _ := app.(*LocalApp)
+	// Make sure AppConfig.Name is set in case this app is being used for Cleanup().
+	if localApp.AppConfig.Name == "" {
+		return true
+	}
+	if localApp.AppConfig.DataDir == "" {
+		return true
+	}
+	return false
+}
+
+// ValidateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
+func ValidateDataDirRemoval(dataDir string) error {
+	unsafeFilePathErr := fmt.Errorf("filepath: %s unsafe for removal", dataDir)
+	// Get the current working directory.
+	currDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	// Check that dataDir is not the current directory.
+	if dataDir == currDir {
+		return unsafeFilePathErr
+	}
+	// Get all but the last element of dataDir and check that it is equal to the GlobalDdevDir.
+	pathHead := filepath.Dir(dataDir)
+	if pathHead != util.GetGlobalDdevDir() {
+		return unsafeFilePathErr
+	}
+	// Get the last element of dataDir and use it to check that there is something after GlobalDdevDir.
+	pathTail := filepath.Base(dataDir)
+	if pathTail == ".ddev" {
+		return unsafeFilePathErr
+	}
+	return nil
 }
