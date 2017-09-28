@@ -29,6 +29,143 @@ Available Commands:
 Use "ddev [command] --help" for more information about a command.
 ```
 
+## Quickstart
+ddev is designed to be as simple as possible to incorporate into existing Wordpress and Drupal workflows. You can start using ddev with any site just by running a few commands.
+
+Below are quickstart instructions for each app type; Wordpress, Drupal 7, and Drupal 8.
+
+**Note:** If you do not have ddev already on your machine, please follow the [installation instructions](https://ddev.readthedocs.io/en/latest/#installation) before beginning the quickstart tutorial. 
+### Wordpress
+To get started using ddev with a Wordpress site, simply clone the site's repository and checkout its directory.
+```
+git clone https://github.com/user/worpress_site
+cd wordpress_site
+```
+Time to start setting up ddev. Inside of your site's working directory, enter the command:
+```
+ddev config
+```
+
+_Note: ddev config will prompt you for a site name and docroot._
+
+After you've run `ddev config` you're ready to start running your site. Run ddev using a simple:
+```
+ddev start
+``` 
+When running `ddev start` you should see output informing you that the site's environment is being started. If startup is successful, you'll see a message like the one below telling you where the site can be reached.
+```
+Successfully started wordpress_site
+Your application can be reached at: http://wordpress_site.ddev.local
+```
+
+##### Databases
+**Important:** Before importing any databases for your site, please remove its' wp-config.php file (if there is one). 
+
+_ddev will create its own wp-config.php automatically._
+
+We're happy to say that importing a database into a site running on ddev is painless. 
+
+Database imports can be accomplished using one command. And we currently offer support for several file types. Including: **.sql, sql.gz, tar, tar.gz, and zip**.
+
+Here's an example of a database import using ddev:
+```
+ddev import-db --src=dumpfile.sql.gz
+```
+The `import-db` command will produce output so you can monitor the progress of the database import. 
+
+For more in depth application monitoring, use the `ddev describe` command to see details about the status of your ddev app.
+
+### Drupal 7
+Beginning to use ddev with a Drupal 7 site is as simple as cloning the site's repository and checking out its directory.
+```
+git clone https://github.com/user/my_drupal7_site
+cd my_drupal7_site
+```
+Now to start working with ddev. Inside of your site's working directory, enter the following command:
+```
+ddev config
+```
+
+_Note: ddev config will prompt you for a site name and docroot._
+
+After you've run `ddev config` you're ready to start running your site. Run ddev using a simple:
+```
+ddev start
+``` 
+When running `ddev start` you should see output informing you that the site's environment is being started. If startup is successful, you'll see a message like the one below telling you where the site can be reached.
+```
+Successfully started my_drupal7_site
+Your application can be reached at: http://my_drupal7_site.ddev.local
+```
+
+##### Databases
+**Important:** Before importing any databases for your site, please remove its' settings.php file (if there is one). 
+
+_ddev will create its own settings.php file automatically._
+
+We're happy to say that importing a database into a site running on ddev is painless. 
+
+Database imports can be accomplished using one command. And we currently offer support for several file types. Including: **.sql, sql.gz, tar, tar.gz, and zip**.
+
+Here's an example of a database import using ddev:
+```
+ddev import-db --src=dumpfile.sql.gz
+```
+The `import-db` command will produce output so you can monitor the progress of the database import. 
+
+For more in depth application monitoring, use the `ddev describe` command to see details about the status of your ddev app.
+
+### Drupal 8
+Getting started with Drupal 8 sites in ddev is a friendly process that can be started by either cloning a git repository or using a new or existing composer project.
+
+**Git**
+```
+git clone https://github.com/user/my_drupal8_site
+cd my_drupal8_site
+```
+
+**Composer**
+```
+composer create-project drupal-composer/drupal-project:8.x-dev my_drupal8_site --stability dev --no-interaction
+cd my_drupal8_site
+```
+_You can find more information on composer and how to use it [here](https://github.com/drupal-composer/drupal-project)._
+
+Now to start working with ddev. Inside of your site's working directory, enter the following command:
+```
+ddev config
+```
+
+_Note: ddev config will prompt you for a site name and docroot._
+
+After you've run `ddev config` you're ready to start running your site. Run ddev using a simple:
+```
+ddev start
+``` 
+When running `ddev start` you should see output informing you that the site's environment is being started. If startup is successful, you'll see a message like the one below telling you where the site can be reached.
+```
+Successfully started my_drupal8_site
+Your application can be reached at: http://my_drupal8_site.ddev.local
+```
+
+##### Databases
+**Important:** Before importing any databases for your site, please remove its' settings.php file (if there is one). 
+
+_ddev will create its own settings.php file automatically._
+
+We're happy to say that importing a database into a site running on ddev is painless. 
+
+Database imports can be accomplished using one command. And we currently offer support for several file types. Including: **.sql, sql.gz, tar, tar.gz, and zip**.
+
+Here's an example of a database import using ddev:
+```
+ddev import-db --src=dumpfile.sql.gz
+```
+The `import-db` command will produce output so you can monitor the progress of the database import. 
+
+For more in depth application monitoring, use the `ddev describe` command to see details about the status of your ddev app.
+
+
 ## Getting Started
 Check out the git repository for the site you want to work on. `cd` into the directory and run `ddev config` and follow the prompts.
 
