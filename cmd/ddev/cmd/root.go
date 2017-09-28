@@ -17,9 +17,8 @@ import (
 )
 
 var (
-	logLevel = log.WarnLevel
-	plugin   = "local"
-	// 1 week
+	logLevel       = log.WarnLevel
+	plugin         = "local"
 	updateInterval = time.Hour * 24 * 7 // One week interval between updates
 	serviceType    string
 )
@@ -50,6 +49,17 @@ var RootCmd = &cobra.Command{
 			}
 		}
 
+		err := dockerutil.CheckDockerVersion(version.DockerVersionConstraint)
+		if err != nil {
+			if err.Error() == "no docker" {
+				if os.Args[1] != "version" && os.Args[1] != "config" {
+					util.Failed("Could not connect to docker. Please ensure Docker is installed and running.")
+				}
+			} else {
+				util.Failed("The docker version currently installed does not meet ddev's requirements: %v", err)
+			}
+		}
+
 		// Verify that the ~/.ddev exists
 		userDdevDir := util.GetGlobalDdevDir()
 
@@ -64,6 +74,10 @@ var RootCmd = &cobra.Command{
 		if timeToCheckForUpdates {
 			// Recreate the updatefile with current time so we won't do this again soon.
 			err = updatecheck.ResetUpdateTime(updateFile)
+			if err != nil {
+				util.Warning("Failed to update updatecheck file %s", updateFile)
+				return // Do not continue as we'll end up with github api violations.
+			}
 
 			// nolint: vetshadow
 			updateNeeded, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version.DdevVersion)
@@ -76,22 +90,9 @@ var RootCmd = &cobra.Command{
 
 			if updateNeeded {
 				util.Warning("\n\nA new update is available! please visit %s to download the update!\n\n", updateURL)
-				if err != nil {
-					util.Warning("Could not reset automated update checking interval: %v", err)
-				}
 			}
 		}
 
-		err = dockerutil.CheckDockerVersion(version.DockerVersionConstraint)
-		if err != nil {
-			if err.Error() == "no docker" {
-				if os.Args[1] != "version" && os.Args[1] != "config" {
-					util.Failed("Could not connect to docker. Please ensure Docker is installed and running.")
-				}
-			} else {
-				util.Failed("The docker version currently installed does not meet ddev's requirements: %v", err)
-			}
-		}
 	},
 }
 
