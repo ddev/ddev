@@ -34,8 +34,8 @@ ddev is designed to be as simple as possible to incorporate into existing Wordpr
 
 Below are quickstart instructions for each app type; Wordpress, Drupal 7, and Drupal 8.
 
-**Note:** If you do not have ddev already on your machine, please follow the [installation instructions](https://ddev.readthedocs.io/en/latest/#installation) before beginning the quickstart tutorial. 
-### Wordpress
+**Note:** If you do not have ddev already on your machine, please follow the [installation instructions](../index.md#installation) before beginning the quickstart tutorial. 
+### Wordpress Quickstart
 To get started using ddev with a Wordpress site, simply clone the site's repository and checkout its directory.
 ```
 git clone https://github.com/user/worpress_site
@@ -46,7 +46,7 @@ From here we can start setting up ddev. Inside of your site's working directory,
 ddev config
 ```
 
-_Note: ddev config will prompt you for a site name and docroot._
+_Note: ddev config will prompt you for a site name, docroot, and app type._
 
 After you've run `ddev config`, you're ready to start running your site. To start running ddev, simply enter:
 ```
@@ -57,8 +57,8 @@ When running `ddev start` you should see output informing you that the site's en
 Successfully started wordpress_site
 Your application can be reached at: http://wordpress_site.ddev.local
 ```
-Quickstart instructions regarding database imports, can be found under [Database Imports](https://ddev.readthedocs.io/en/latest/users/cli-usage/#database-imports).
-### Drupal 7
+Quickstart instructions regarding database imports, can be found under [Database Imports](#database-imports).
+### Drupal 7 Quickstart
 Beginning to use ddev with a Drupal 7 site is as simple as cloning the site's repository and checking out its directory.
 ```
 git clone https://github.com/user/my_drupal7_site
@@ -69,7 +69,7 @@ Now to start working with ddev. Inside of your site's working directory, enter t
 ddev config
 ```
 
-_Note: ddev config will prompt you for a site name and docroot._
+_Note: ddev config will prompt you for a site name, docroot, and app type._
 
 After you've run `ddev config` you're ready to start running your site. Run ddev using a simple:
 ```
@@ -80,17 +80,17 @@ When running `ddev start` you should see output informing you that the site's en
 Successfully started my_drupal7_site
 Your application can be reached at: http://my_drupal7_site.ddev.local
 ```
-Quickstart instructions regarding database imports, can be found under [Database Imports](https://ddev.readthedocs.io/en/latest/users/cli-usage/#database-imports).
-### Drupal 8
-Getting started with Drupal 8 sites in ddev is a friendly process that can be started by either cloning a git repository or using a new or existing composer project.
+Quickstart instructions regarding database imports, can be found under [Database Imports](#database-imports).
+### Drupal 8 Quickstart
+You can get started with Drupal 8 sites on ddev either by cloning a git repository or using a new or existing composer project.
 
-**Git**
+**Git Clone Example**
 ```
 git clone https://github.com/user/my_drupal8_site
 cd my_drupal8_site
 ```
 
-**Composer**
+**Composer Setup Example**
 ```
 composer create-project drupal-composer/drupal-project:8.x-dev my_drupal8_site --stability dev --no-interaction
 cd my_drupal8_site
@@ -102,7 +102,7 @@ The next step is to configure ddev. Inside of your site's working directory, ent
 ddev config
 ```
 
-_Note: ddev config will prompt you for a site name and docroot._
+_Note: ddev config will prompt you for a site name, docroot, and app type._
 
 After you've run `ddev config` you're ready to start running your site. Run ddev using a simple:
 ```
@@ -113,7 +113,7 @@ When running `ddev start` you should see output informing you that the site's en
 Successfully started my_drupal8_site
 Your application can be reached at: http://my_drupal8_site.ddev.local
 ```
-**Next:** Learn how to import a database in the [Database Imports](https://ddev.readthedocs.io/en/latest/users/cli-usage/#database-imports) section.
+**Next:** Learn how to import a database in the [Database Imports](#database-imports) section.
 #### Database Imports
 **Important:** Before importing any databases for your site, please remove its' wp-config.php if using Worpress - or settings.php file in the case of Drupal 7/8, if present. 
 
