@@ -19,6 +19,7 @@ import (
 	"github.com/fatih/color"
 )
 
+// RouterProjectName is the "machine name" of the router docker-compose
 const RouterProjectName = "ddev-router"
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.

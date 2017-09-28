@@ -503,6 +503,8 @@ func TestRouterPortsCheck(t *testing.T) {
 
 	// Now start one site, it's hard to get router to behave without one site.
 	site := TestSites[0]
+	testcommon.ClearDockerEnv()
+
 	app, err = platform.GetActiveApp(site.Name)
 	if err != nil {
 		t.Fatalf("Failed to GetActiveApp(%s), err:%v", site.Name, err)
