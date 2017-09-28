@@ -1024,6 +1024,10 @@ func RestoreIsNeeded(app App) bool {
 // ValidateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
 func ValidateDataDirRemoval(dataDir string) error {
 	unsafeFilePathErr := fmt.Errorf("filepath: %s unsafe for removal", dataDir)
+	// Check for an empty filepath
+	if dataDir == "" {
+		return unsafeFilePathErr
+	}
 	// Get the current working directory.
 	currDir, err := os.Getwd()
 	if err != nil {
@@ -1031,11 +1035,6 @@ func ValidateDataDirRemoval(dataDir string) error {
 	}
 	// Check that dataDir is not the current directory.
 	if dataDir == currDir {
-		return unsafeFilePathErr
-	}
-	// Get all but the last element of dataDir and check that it is equal to the GlobalDdevDir.
-	pathHead := filepath.Dir(dataDir)
-	if pathHead != util.GetGlobalDdevDir() {
 		return unsafeFilePathErr
 	}
 	// Get the last element of dataDir and use it to check that there is something after GlobalDdevDir.
