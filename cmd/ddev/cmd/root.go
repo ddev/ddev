@@ -20,7 +20,7 @@ var (
 	logLevel = log.WarnLevel
 	plugin   = "local"
 	// 1 week
-	updateInterval = time.Hour * 24 * 7
+	updateInterval = time.Hour * 24 * 7 // One week interval between updates
 	serviceType    string
 )
 
@@ -62,6 +62,9 @@ var RootCmd = &cobra.Command{
 		}
 
 		if timeToCheckForUpdates {
+			// Recreate the updatefile with current time so we won't do this again soon.
+			err = updatecheck.ResetUpdateTime(updateFile)
+
 			// nolint: vetshadow
 			updateNeeded, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version.DdevVersion)
 
@@ -73,7 +76,6 @@ var RootCmd = &cobra.Command{
 
 			if updateNeeded {
 				util.Warning("\n\nA new update is available! please visit %s to download the update!\n\n", updateURL)
-				err = updatecheck.ResetUpdateTime(updateFile)
 				if err != nil {
 					util.Warning("Could not reset automated update checking interval: %v", err)
 				}
