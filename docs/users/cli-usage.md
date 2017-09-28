@@ -41,14 +41,14 @@ To get started using ddev with a Wordpress site, simply clone the site's reposit
 git clone https://github.com/user/worpress_site
 cd wordpress_site
 ```
-Time to start setting up ddev. Inside of your site's working directory, enter the command:
+From here we can start setting up ddev. Inside of your site's working directory, enter the command:
 ```
 ddev config
 ```
 
 _Note: ddev config will prompt you for a site name and docroot._
 
-After you've run `ddev config` you're ready to start running your site. Run ddev using a simple:
+After you've run `ddev config`, you're ready to start running your site. To start running ddev, simply enter:
 ```
 ddev start
 ``` 
@@ -57,24 +57,7 @@ When running `ddev start` you should see output informing you that the site's en
 Successfully started wordpress_site
 Your application can be reached at: http://wordpress_site.ddev.local
 ```
-
-##### Databases
-**Important:** Before importing any databases for your site, please remove its' wp-config.php file (if there is one). 
-
-_ddev will create its own wp-config.php automatically._
-
-We're happy to say that importing a database into a site running on ddev is painless. 
-
-Database imports can be accomplished using one command. And we currently offer support for several file types. Including: **.sql, sql.gz, tar, tar.gz, and zip**.
-
-Here's an example of a database import using ddev:
-```
-ddev import-db --src=dumpfile.sql.gz
-```
-The `import-db` command will produce output so you can monitor the progress of the database import. 
-
-For more in depth application monitoring, use the `ddev describe` command to see details about the status of your ddev app.
-
+Quickstart instructions regarding database imports, can be found under [Database Imports](https://ddev.readthedocs.io/en/latest/users/cli-usage/#database-imports).
 ### Drupal 7
 Beginning to use ddev with a Drupal 7 site is as simple as cloning the site's repository and checking out its directory.
 ```
@@ -97,24 +80,7 @@ When running `ddev start` you should see output informing you that the site's en
 Successfully started my_drupal7_site
 Your application can be reached at: http://my_drupal7_site.ddev.local
 ```
-
-##### Databases
-**Important:** Before importing any databases for your site, please remove its' settings.php file (if there is one). 
-
-_ddev will create its own settings.php file automatically._
-
-We're happy to say that importing a database into a site running on ddev is painless. 
-
-Database imports can be accomplished using one command. And we currently offer support for several file types. Including: **.sql, sql.gz, tar, tar.gz, and zip**.
-
-Here's an example of a database import using ddev:
-```
-ddev import-db --src=dumpfile.sql.gz
-```
-The `import-db` command will produce output so you can monitor the progress of the database import. 
-
-For more in depth application monitoring, use the `ddev describe` command to see details about the status of your ddev app.
-
+Quickstart instructions regarding database imports, can be found under [Database Imports](https://ddev.readthedocs.io/en/latest/users/cli-usage/#database-imports).
 ### Drupal 8
 Getting started with Drupal 8 sites in ddev is a friendly process that can be started by either cloning a git repository or using a new or existing composer project.
 
@@ -131,7 +97,7 @@ cd my_drupal8_site
 ```
 _You can find more information on composer and how to use it [here](https://github.com/drupal-composer/drupal-project)._
 
-Now to start working with ddev. Inside of your site's working directory, enter the following command:
+The next step is to configure ddev. Inside of your site's working directory, enter the following command:
 ```
 ddev config
 ```
@@ -147,11 +113,11 @@ When running `ddev start` you should see output informing you that the site's en
 Successfully started my_drupal8_site
 Your application can be reached at: http://my_drupal8_site.ddev.local
 ```
+**Next:** Learn how to import a database in the [Database Imports](https://ddev.readthedocs.io/en/latest/users/cli-usage/#database-imports) section.
+#### Database Imports
+**Important:** Before importing any databases for your site, please remove its' wp-config.php if using Worpress - or settings.php file in the case of Drupal 7/8, if present. 
 
-##### Databases
-**Important:** Before importing any databases for your site, please remove its' settings.php file (if there is one). 
-
-_ddev will create its own settings.php file automatically._
+_ddev will create its own wp_config.php or settings.php file automatically._
 
 We're happy to say that importing a database into a site running on ddev is painless. 
 
