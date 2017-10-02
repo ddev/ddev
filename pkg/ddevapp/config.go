@@ -77,7 +77,7 @@ type Provider interface {
 	GetBackup(string) (fileLocation string, importPath string, err error)
 }
 
-// NewConfig creates a new Config struct with defaults set. It is preferred to using new() directly.
+// NewConfig creates a new Config struct with defaults set and overridden by any existing config.yml.
 func NewConfig(AppRoot string, provider string) (*Config, error) {
 	// Set defaults.
 	c := &Config{}
@@ -102,12 +102,14 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 	}
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
-	err := c.Read()
-	if err != nil {
-		return c, fmt.Errorf("Unable to read config.yaml, %v, err=%v", c.ConfigPath, err)
+	if _, err := os.Stat(c.ConfigPath); !os.IsNotExist(err) {
+		err = c.Read()
+		if err != nil {
+			return c, fmt.Errorf("config.yaml exists but cannot be successfully read, %v, err=%v", c.ConfigPath, err)
+		}
 	}
 
-	return c, err
+	return c, nil
 }
 
 // GetProvider returns a pointer to the provider instance interface.

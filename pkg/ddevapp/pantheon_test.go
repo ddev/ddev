@@ -46,9 +46,8 @@ func TestPantheonConfigCommand(t *testing.T) {
 	}
 
 	// Create the ddevapp we'll use for testing.
-	// This should return an error, since no existing config can be read.
 	config, err := NewConfig(testDir, "pantheon")
-	assert.Error(err)
+	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
 	invalidName := strings.ToLower(util.RandString(16))
@@ -109,8 +108,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	config, err := NewConfig(testDir, "pantheon")
-	// No config should exist so this will result in an error
-	assert.Error(err)
+	assert.NoError(err)
 	config.Name = pantheonTestSiteName
 
 	provider := PantheonProvider{}

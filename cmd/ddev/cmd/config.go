@@ -33,11 +33,7 @@ var ConfigCommand = &cobra.Command{
 
 		c, err := ddevapp.NewConfig(appRoot, provider)
 		if err != nil {
-			// If there is an error reading the config and the file exists, we're not sure
-			// how to proceed.
-			if c.ConfigExists() {
-				util.Failed("Could not read config: %v", err)
-			}
+			util.Failed("Could not create new config: %v", err)
 		}
 
 		// Set the provider value after load so we can ensure we use the passed in provider value
