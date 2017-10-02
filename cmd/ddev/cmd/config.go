@@ -13,6 +13,7 @@ import (
 
 var docrootRelPath string
 var siteName string
+var pantheonEnvironment string
 
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
@@ -53,6 +54,7 @@ var ConfigCommand = &cobra.Command{
 				util.Failed("There was a problem configuring your application: %v\n", err)
 			}
 		} else {
+
 			appType, err := ddevapp.DetermineAppType(c.Docroot)
 			if err != nil {
 				fullPath, _ := filepath.Abs(c.Docroot)
@@ -60,12 +62,19 @@ var ConfigCommand = &cobra.Command{
 			}
 			// If we found an application type just set it and inform the user.
 			util.Success("Found a %s codebase at %s\n", c.AppType, filepath.Join(c.AppRoot, c.Docroot))
-			provider, err := c.GetProvider()
-			err = provider.ValidateField("AppType", appType)
-			if err != nil {
-				util.Failed("Failed to validate appType %s, err: ", appType, err)
-			}
+			prov, err := c.GetProvider()
+
 			c.AppType = appType
+
+			// But pantheon *does* validate "Name"
+			err = prov.ValidateField("Name", c.Name)
+			if err != nil {
+				util.Failed("Failed to validate sitename %v with ddev prov %v err: %v", c.Name, provider, err)
+			}
+			if provider == "pantheon" {
+				pantheonProvider := prov.(*ddevapp.PantheonProvider)
+				pantheonProvider.SetSiteNameAndEnv("dev")
+			}
 		}
 		err = c.Write()
 		if err != nil {
@@ -86,5 +95,6 @@ var ConfigCommand = &cobra.Command{
 func init() {
 	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", "Provide the sitename of site to configure (normally the same as the directory name)")
 	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the site, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
+	ConfigCommand.Flags().StringVarP(&pantheonEnvironment, "pantheon-environment", "", "dev", "Provide the environment for a Pantheon site (Pantheon-only)")
 	RootCmd.AddCommand(ConfigCommand)
 }

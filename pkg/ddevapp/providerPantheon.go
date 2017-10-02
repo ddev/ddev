@@ -56,10 +56,16 @@ func (p *PantheonProvider) ValidateField(field, value string) error {
 	return nil
 }
 
+// SetSiteNameAndEnv sets the environment of the provider (dev/test/live)
+func (p *PantheonProvider) SetSiteNameAndEnv(environment string) {
+	p.Sitename = p.config.Name
+	p.EnvironmentName = environment
+}
+
 // PromptForConfig provides interactive configuration prompts when running `ddev config pantheon`
 func (p *PantheonProvider) PromptForConfig() error {
-	p.Sitename = p.config.Name
 	for {
+		p.SetSiteNameAndEnv("dev")
 		err := p.environmentPrompt()
 
 		if err == nil {
@@ -182,12 +188,12 @@ func (p *PantheonProvider) environmentPrompt() error {
 	fmt.Print(environmentPrompt + ": ")
 	envName := util.GetInput(p.EnvironmentName)
 
-	environment, ok := p.siteEnvironments.Environments[p.Environment]
-	p.environment = environment
+	_, ok := p.siteEnvironments.Environments[envName]
 
 	if !ok {
-		return fmt.Errorf("could not find an environment named '%s'", p.Environment)
+		return fmt.Errorf("could not find an environment named '%s'", envName)
 	}
+	p.SetSiteNameAndEnv(envName)
 	return nil
 }
 
