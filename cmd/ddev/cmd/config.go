@@ -48,13 +48,13 @@ var ConfigCommand = &cobra.Command{
 		c.Name = siteName
 		c.Docroot = docrootRelPath
 
-		if siteName == "" && docrootRelPath == "" {
+		if siteName == "" && docrootRelPath == "" && pantheonEnvironment == "" {
 			err = c.PromptForConfig()
 			if err != nil {
 				util.Failed("There was a problem configuring your application: %v\n", err)
 			}
 		} else {
-
+			// Handle the case where flags have been passed in and we config that way
 			appType, err := ddevapp.DetermineAppType(c.Docroot)
 			if err != nil {
 				fullPath, _ := filepath.Abs(c.Docroot)
@@ -62,7 +62,7 @@ var ConfigCommand = &cobra.Command{
 			}
 			// If we found an application type just set it and inform the user.
 			util.Success("Found a %s codebase at %s\n", c.AppType, filepath.Join(c.AppRoot, c.Docroot))
-			prov, err := c.GetProvider()
+			prov, _ := c.GetProvider()
 
 			c.AppType = appType
 
