@@ -8,7 +8,7 @@
 
 - [Docker](https://www.docker.com/community-edition) version 17.05 or greater
 - OS Support
-  - macOS Sierra
+  - macOS Sierra and higher (macOS 10.12 and higher)
   - Linux (See [Linux notes](users/linux_notes.md))
     * Ubuntu 16.04 LTS
     * Debian Jessie
