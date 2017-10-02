@@ -4,10 +4,15 @@ import (
 	"log"
 	"os"
 
+	"path/filepath"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
+
+var docrootRelPath string
+var siteName string
 
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
@@ -39,12 +44,29 @@ var ConfigCommand = &cobra.Command{
 		// Set the provider value after load so we can ensure we use the passed in provider value
 		// for this configuration.
 		c.Provider = provider
+		c.Name = siteName
+		c.Docroot = docrootRelPath
 
-		err = c.PromptForConfig()
-		if err != nil {
-			util.Failed("There was a problem configuring your application: %v\n", err)
+		if siteName == "" && docrootRelPath == "" {
+			err = c.PromptForConfig()
+			if err != nil {
+				util.Failed("There was a problem configuring your application: %v\n", err)
+			}
+		} else {
+			appType, err := ddevapp.DetermineAppType(c.Docroot)
+			if err != nil {
+				fullPath, _ := filepath.Abs(c.Docroot)
+				util.Failed("Failed to determine app Type (drupal7/drupal8/wordpress), your docroot may be incorrect - looking in directory %v (full path: %v), err: %v", c.Docroot, fullPath, err)
+			}
+			// If we found an application type just set it and inform the user.
+			util.Success("Found a %s codebase at %s\n", c.AppType, filepath.Join(c.AppRoot, c.Docroot))
+			provider, err := c.GetProvider()
+			err = provider.ValidateField("AppType", appType)
+			if err != nil {
+				util.Failed("Failed to validate appType %s, err: ", appType, err)
+			}
+			c.AppType = appType
 		}
-
 		err = c.Write()
 		if err != nil {
 			util.Failed("Could not write ddev config file: %v\n", err)
@@ -62,5 +84,7 @@ var ConfigCommand = &cobra.Command{
 }
 
 func init() {
+	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", "Provide the sitename of site to configure (normally the same as the directory name)")
+	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the site, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
 	RootCmd.AddCommand(ConfigCommand)
 }

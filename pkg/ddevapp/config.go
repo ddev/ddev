@@ -415,7 +415,7 @@ func (c *Config) appTypePrompt() error {
 		"Location": absDocroot,
 	}).Debug("Attempting to auto-determine application type")
 
-	appType, err = determineAppType(absDocroot)
+	appType, err = DetermineAppType(absDocroot)
 	if err == nil {
 		// If we found an application type just set it and inform the user.
 		util.Success("Found a %s codebase at %s\n", appType, filepath.Join(c.AppRoot, c.Docroot))
@@ -465,7 +465,7 @@ func PrepDdevDirectory(dir string) error {
 
 // DetermineAppType uses some predetermined file checks to determine if a local app
 // is of any of the known types
-func determineAppType(basePath string) (string, error) {
+func DetermineAppType(basePath string) (string, error) {
 	defaultLocations := map[string]string{
 		"scripts/drupal.sh":      "drupal7",
 		"core/scripts/drupal.sh": "drupal8",
@@ -487,7 +487,7 @@ func determineAppType(basePath string) (string, error) {
 		}
 	}
 
-	return "", errors.New("determineAppType() couldn't determine app's type")
+	return "", errors.New("DetermineAppType() couldn't determine app's type")
 }
 
 // setSiteSettingsPath determines the location for site's db settings file based on apptype.

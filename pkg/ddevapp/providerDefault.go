@@ -16,7 +16,7 @@ func (p *DefaultProvider) ValidateField(field, value string) error {
 	return nil
 }
 
-// Config provides a no-op for the Config operation.
+// PromptForConfig provides a no-op for the Config operation.
 func (p *DefaultProvider) PromptForConfig() error {
 	return nil
 }
