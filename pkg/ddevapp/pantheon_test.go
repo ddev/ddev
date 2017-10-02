@@ -70,7 +70,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 	util.SetInputScanner(scanner)
 
 	restoreOutput := testcommon.CaptureStdOut()
-	err = config.Config()
+	err = config.PromptForConfig()
 	assert.NoError(err, t)
 	out := restoreOutput()
 

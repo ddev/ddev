@@ -70,7 +70,7 @@ type Command struct {
 type Provider interface {
 	Init(*Config) error
 	ValidateField(string, string) error
-	Config() error
+	PromptForConfig() error
 	Write(string) error
 	Read(string) error
 	Validate() error
@@ -219,8 +219,8 @@ func (c *Config) Read() error {
 	return err
 }
 
-// Config goes through a set of prompts to receive user input and generate an Config struct.
-func (c *Config) Config() error {
+// PromptForConfig goes through a set of prompts to receive user input and generate an Config struct.
+func (c *Config) PromptForConfig() error {
 
 	if c.ConfigExists() {
 		util.Warning("You are re-configuring %s. The existing configuration will be replaced.\n\n", c.AppRoot)
@@ -254,7 +254,7 @@ func (c *Config) Config() error {
 		return err
 	}
 
-	err = c.providerInstance.Config()
+	err = c.providerInstance.PromptForConfig()
 
 	return err
 }

@@ -57,7 +57,7 @@ func (p *PantheonProvider) ValidateField(field, value string) error {
 }
 
 // Config provides interactive configuration prompts when running `ddev config pantheon`
-func (p *PantheonProvider) Config() error {
+func (p *PantheonProvider) PromptForConfig() error {
 	p.Sitename = p.config.Name
 	for {
 		err := p.environmentPrompt()

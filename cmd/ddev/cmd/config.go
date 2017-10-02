@@ -44,7 +44,7 @@ var ConfigCommand = &cobra.Command{
 		// for this configuration.
 		c.Provider = provider
 
-		err = c.Config()
+		err = c.PromptForConfig()
 		if err != nil {
 			util.Failed("There was a problem configuring your application: %v\n", err)
 		}
