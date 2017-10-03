@@ -67,7 +67,7 @@ var ConfigCommand = &cobra.Command{
 				appType, err = ddevapp.DetermineAppType(c.Docroot)
 				if err != nil {
 					fullPath, _ := filepath.Abs(c.Docroot)
-					util.Failed("Failed to determine app type (drupal7/drupal8/wordpress).\nYour docroot %v[docroot] may be incorrect - looking in directory %v[abspath]: %v[err]", c.Docroot, fullPath, err)
+					util.Failed("Failed to determine app type (drupal7/drupal8/wordpress).\nYour docroot %v may be incorrect - looking in directory %v, error=%v", c.Docroot, fullPath, err)
 				}
 			}
 
@@ -80,7 +80,7 @@ var ConfigCommand = &cobra.Command{
 			// But pantheon *does* validate "Name"
 			err = prov.ValidateField("Name", c.Name)
 			if err != nil {
-				util.Failed("Failed to validate sitename %v[sitename] with %v[provider]: %v[err]", c.Name, provider, err)
+				util.Failed("Failed to validate sitename %v with provider %v: %v", c.Name, provider, err)
 			}
 			if provider == "pantheon" {
 				pantheonProvider := prov.(*ddevapp.PantheonProvider)
