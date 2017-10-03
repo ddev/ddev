@@ -29,19 +29,24 @@ Available Commands:
 Use "ddev [command] --help" for more information about a command.
 ```
 
-## Quickstart
+## Quickstart Guides
+
 ddev is designed to be as simple as possible to incorporate into existing Wordpress and Drupal workflows. You can start using ddev with any site just by running a few commands.
 
 Below are quickstart instructions for each app type; Wordpress, Drupal 7, and Drupal 8.
 
 **Note:** If you do not have ddev already on your machine, please follow the [installation instructions](../index.md#installation) before beginning the quickstart tutorial. 
+
 ### Wordpress Quickstart
 To get started using ddev with a Wordpress site, simply clone the site's repository and checkout its directory.
+
 ```
 git clone https://github.com/user/worpress-site
 cd wordpress-site
 ```
+
 From here we can start setting up ddev. Inside of your site's working directory, enter the command:
+
 ```
 ddev config
 ```
@@ -49,22 +54,31 @@ ddev config
 _Note: ddev config will prompt you for a site name, docroot, and app type._
 
 After you've run `ddev config`, you're ready to start running your site. To start running ddev, simply enter:
+
 ```
 ddev start
 ``` 
+
 When running `ddev start` you should see output informing you that the site's environment is being started. If startup is successful, you'll see a message like the one below telling you where the site can be reached.
+
 ```
 Successfully started wordpress-site
 Your application can be reached at: http://wordpress-site.ddev.local
 ```
+
 Quickstart instructions regarding database imports, can be found under [Database Imports](#database-imports).
+
 ### Drupal 7 Quickstart
+
 Beginning to use ddev with a Drupal 7 site is as simple as cloning the site's repository and checking out its directory.
+
 ```
 git clone https://github.com/user/my-drupal7-site
 cd my-drupal7-site
 ```
+
 Now to start working with ddev. Inside of your site's working directory, enter the following command:
+
 ```
 ddev config
 ```
@@ -72,32 +86,42 @@ ddev config
 _Note: ddev config will prompt you for a site name, docroot, and app type._
 
 After you've run `ddev config` you're ready to start running your site. Run ddev using a simple:
+
 ```
 ddev start
 ``` 
+
 When running `ddev start` you should see output informing you that the site's environment is being started. If startup is successful, you'll see a message like the one below telling you where the site can be reached.
+
 ```
 Successfully started my-drupal7-site
 Your application can be reached at: http://my-drupal7-site.ddev.local
 ```
+
 Quickstart instructions regarding database imports, can be found under [Database Imports](#database-imports).
+
 ### Drupal 8 Quickstart
+
 You can get started with Drupal 8 sites on ddev either by cloning a git repository or using a new or existing composer project.
 
 **Git Clone Example**
+
 ```
 git clone https://github.com/user/my-drupal8-site
 cd my-drupal8-site
 ```
 
 **Composer Setup Example**
+
 ```
 composer create-project drupal-composer/drupal-project:8.x-dev my-drupal8-site --stability dev --no-interaction
 cd my-drupal8-site
 ```
+
 _You can find more information on composer and how to use it [here](https://github.com/drupal-composer/drupal-project)._
 
 The next step is to configure ddev. Inside of your site's working directory, enter the following command:
+
 ```
 ddev config
 ```
@@ -105,16 +129,20 @@ ddev config
 _Note: ddev config will prompt you for a site name, docroot, and app type._
 
 After you've run `ddev config` you're ready to start running your site. Run ddev using a simple:
+
 ```
 ddev start
 ``` 
+
 When running `ddev start` you should see output informing you that the site's environment is being started. If startup is successful, you'll see a message like the one below telling you where the site can be reached.
+
 ```
 Successfully started my-drupal8-site
 Your application can be reached at: http://my-drupal8-site.ddev.local
 ```
-**Next:** Learn how to import a database in the [Database Imports](#database-imports) section.
-#### Database Imports
+
+### Database Imports
+
 **Important:** Before importing any databases for your site, please remove its' wp-config.php if using Worpress - or settings.php file in the case of Drupal 7/8, if present. 
 
 _ddev will create its own wp_config.php or settings.php file automatically._
@@ -124,15 +152,18 @@ We're happy to say that importing a database into a site running on ddev is pain
 Database imports can be accomplished using one command. And we currently offer support for several file types. Including: **.sql, sql.gz, tar, tar.gz, and zip**.
 
 Here's an example of a database import using ddev:
+
 ```
 ddev import-db --src=dumpfile.sql.gz
 ```
+
 The `import-db` command will produce output so you can monitor the progress of the database import. 
 
 For more in depth application monitoring, use the `ddev describe` command to see details about the status of your ddev app.
 
 
 ## Getting Started
+
 Check out the git repository for the site you want to work on. `cd` into the directory and run `ddev config` and follow the prompts.
 
 ```
@@ -153,6 +184,7 @@ Found a drupal8 codebase at /Users/username/Projects/drupal8/web
 ```
 
 Configuration files have now been created for your site. (Available for inspection/modification at .ddev/ddev.yaml).
+
 Now that the configuration has been created, you can start your site with `ddev start` (still from within the project working directory):
 
 ```
@@ -202,9 +234,11 @@ phpMyAdmin:	http://drupal8.ddev.local:8036
 ```
 
 ## Importing assets for an existing site
+
 An important aspect of local web development is the ability to have a precise recreation of the site you are working on locally, including up-to-date database contents and static assets such as uploaded images and files. ddev provides functionality to help with importing assets to your local environment with two commands.
 
 ### Importing a database
+
 The `ddev import-db` command is provided for importing the MySQL database for a site. Running this command will provide a prompt for you to specify the location of your database import.
 
 ```
