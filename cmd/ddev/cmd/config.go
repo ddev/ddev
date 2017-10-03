@@ -11,9 +11,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// docrootRelPath is the relative path to the docroot where index.php is
 var docrootRelPath string
+
+// siteName is the name of the site
 var siteName string
+
+// pantheonEnvironment is the environment for pantheon, dev/test/prod
 var pantheonEnvironment string
+
+// appType is the ddev app type, like drupal7/drupal8/wordpress
+var appType string
 
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
@@ -48,18 +56,21 @@ var ConfigCommand = &cobra.Command{
 		c.Name = siteName
 		c.Docroot = docrootRelPath
 
-		if siteName == "" && docrootRelPath == "" && pantheonEnvironment == "" {
+		if siteName == "" && docrootRelPath == "" && pantheonEnvironment == "" && appType == "" {
 			err = c.PromptForConfig()
 			if err != nil {
 				util.Failed("There was a problem configuring your application: %v\n", err)
 			}
 		} else {
 			// Handle the case where flags have been passed in and we config that way
-			appType, err := ddevapp.DetermineAppType(c.Docroot)
-			if err != nil {
-				fullPath, _ := filepath.Abs(c.Docroot)
-				util.Failed("Failed to determine app Type (drupal7/drupal8/wordpress), your docroot may be incorrect - looking in directory %v (full path: %v), err: %v", c.Docroot, fullPath, err)
+			if appType == "" {
+				appType, err = ddevapp.DetermineAppType(c.Docroot)
+				if err != nil {
+					fullPath, _ := filepath.Abs(c.Docroot)
+					util.Failed("Failed to determine app Type (drupal7/drupal8/wordpress), your docroot may be incorrect - looking in directory %v (full path: %v), err: %v", c.Docroot, fullPath, err)
+				}
 			}
+
 			// If we found an application type just set it and inform the user.
 			util.Success("Found a %s codebase at %s\n", c.AppType, filepath.Join(c.AppRoot, c.Docroot))
 			prov, _ := c.GetProvider()
@@ -96,5 +107,7 @@ func init() {
 	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", "Provide the sitename of site to configure (normally the same as the directory name)")
 	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the site, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
 	ConfigCommand.Flags().StringVarP(&pantheonEnvironment, "pantheon-environment", "", "dev", "Provide the environment for a Pantheon site (Pantheon-only)")
+	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "wordpress", "Provide the app type (like wordpress or drupal7 or drupal8). This is normally autodetected and this flag is not necessary")
+
 	RootCmd.AddCommand(ConfigCommand)
 }
