@@ -67,7 +67,7 @@ var ConfigCommand = &cobra.Command{
 				appType, err = ddevapp.DetermineAppType(c.Docroot)
 				if err != nil {
 					fullPath, _ := filepath.Abs(c.Docroot)
-					util.Failed("Failed to determine app Type (drupal7/drupal8/wordpress), your docroot may be incorrect - looking in directory %v (full path: %v), err: %v", c.Docroot, fullPath, err)
+					util.Failed("Failed to determine app type (drupal7/drupal8/wordpress).\nYour docroot %v[docroot] may be incorrect - looking in directory %v[abspath]: %v[err]", c.Docroot, fullPath, err)
 				}
 			}
 
@@ -107,7 +107,7 @@ func init() {
 	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", "Provide the sitename of site to configure (normally the same as the directory name)")
 	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the site, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
 	ConfigCommand.Flags().StringVarP(&pantheonEnvironment, "pantheon-environment", "", "dev", "Provide the environment for a Pantheon site (Pantheon-only)")
-	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "wordpress", "Provide the app type (like wordpress or drupal7 or drupal8). This is normally autodetected and this flag is not necessary")
+	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "", "Provide the app type (like wordpress or drupal7 or drupal8). This is normally autodetected and this flag is not necessary")
 
 	RootCmd.AddCommand(ConfigCommand)
 }
