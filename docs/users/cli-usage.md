@@ -38,8 +38,8 @@ Below are quickstart instructions for each app type; Wordpress, Drupal 7, and Dr
 ### Wordpress Quickstart
 To get started using ddev with a Wordpress site, simply clone the site's repository and checkout its directory.
 ```
-git clone https://github.com/user/worpress_site
-cd wordpress_site
+git clone https://github.com/user/worpress-site
+cd wordpress-site
 ```
 From here we can start setting up ddev. Inside of your site's working directory, enter the command:
 ```
@@ -54,15 +54,15 @@ ddev start
 ``` 
 When running `ddev start` you should see output informing you that the site's environment is being started. If startup is successful, you'll see a message like the one below telling you where the site can be reached.
 ```
-Successfully started wordpress_site
-Your application can be reached at: http://wordpress_site.ddev.local
+Successfully started wordpress-site
+Your application can be reached at: http://wordpress-site.ddev.local
 ```
 Quickstart instructions regarding database imports, can be found under [Database Imports](#database-imports).
 ### Drupal 7 Quickstart
 Beginning to use ddev with a Drupal 7 site is as simple as cloning the site's repository and checking out its directory.
 ```
-git clone https://github.com/user/my_drupal7_site
-cd my_drupal7_site
+git clone https://github.com/user/my-drupal7-site
+cd my-drupal7-site
 ```
 Now to start working with ddev. Inside of your site's working directory, enter the following command:
 ```
@@ -77,8 +77,8 @@ ddev start
 ``` 
 When running `ddev start` you should see output informing you that the site's environment is being started. If startup is successful, you'll see a message like the one below telling you where the site can be reached.
 ```
-Successfully started my_drupal7_site
-Your application can be reached at: http://my_drupal7_site.ddev.local
+Successfully started my-drupal7-site
+Your application can be reached at: http://my-drupal7-site.ddev.local
 ```
 Quickstart instructions regarding database imports, can be found under [Database Imports](#database-imports).
 ### Drupal 8 Quickstart
@@ -86,14 +86,14 @@ You can get started with Drupal 8 sites on ddev either by cloning a git reposito
 
 **Git Clone Example**
 ```
-git clone https://github.com/user/my_drupal8_site
-cd my_drupal8_site
+git clone https://github.com/user/my-drupal8-site
+cd my-drupal8-site
 ```
 
 **Composer Setup Example**
 ```
-composer create-project drupal-composer/drupal-project:8.x-dev my_drupal8_site --stability dev --no-interaction
-cd my_drupal8_site
+composer create-project drupal-composer/drupal-project:8.x-dev my-drupal8-site --stability dev --no-interaction
+cd my-drupal8-site
 ```
 _You can find more information on composer and how to use it [here](https://github.com/drupal-composer/drupal-project)._
 
@@ -110,8 +110,8 @@ ddev start
 ``` 
 When running `ddev start` you should see output informing you that the site's environment is being started. If startup is successful, you'll see a message like the one below telling you where the site can be reached.
 ```
-Successfully started my_drupal8_site
-Your application can be reached at: http://my_drupal8_site.ddev.local
+Successfully started my-drupal8-site
+Your application can be reached at: http://my-drupal8-site.ddev.local
 ```
 **Next:** Learn how to import a database in the [Database Imports](#database-imports) section.
 #### Database Imports
