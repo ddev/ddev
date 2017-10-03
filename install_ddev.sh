@@ -3,10 +3,10 @@ set -e
 
 # Download and install latest ddev release
 
-RED=$(tput setaf 1)
-GREEN=$(tput setaf 2)
-YELLOW=$(tput setaf 3)
-RESET=$(tput sgr0)
+RED='\033[31m'
+GREEN='\033[32m'
+YELLOW='\033[33m'
+RESET='\033[0m'
 OS=$(uname)
 BINOWNER=$(ls -ld /usr/local/bin | awk '{print $3}')
 USER=$(whoami)
@@ -24,12 +24,12 @@ elif [[ "$OS" == "Linux" ]]; then
     SHACMD="sha256sum"
     FILEBASE="ddev_linux"
 else
-    echo "${RED}Sorry, this installer does not support your platform at this time.${RESET}"
+    printf "${RED}Sorry, this installer does not support your platform at this time.${RESET}\n"
     exit 1
 fi
 
 if ! docker --version >/dev/null 2>&1; then
-    echo "${YELLOW}Docker is required for ddev. Download and install docker at https://www.docker.com/community-edition#/download before attempting to use ddev.${RESET}"
+    printf "${YELLOW}Docker is required for ddev. Download and install docker at https://www.docker.com/community-edition#/download before attempting to use ddev.${RESET}\n"
 fi
 
 TARBALL="$FILEBASE.$LATEST_VERSION.tar.gz"
@@ -42,24 +42,24 @@ cd /tmp; $SHACMD -c "$SHAFILE"
 tar -xzf $TARBALL -C /tmp
 chmod ugo+x /tmp/ddev
 
-echo "Download verified. Ready to place ddev in your /usr/local/bin."
+printf "Download verified. Ready to place ddev in your /usr/local/bin.\n"
 
 if [[ "$BINOWNER" == "$USER" ]]; then
     mv /tmp/ddev /usr/local/bin/
 else
-    echo "${YELLOW}Running \"sudo mv /tmp/ddev /usr/local/bin/\" Please enter your password if prompted.${RESET}"
+    printf "${YELLOW}Running \"sudo mv /tmp/ddev /usr/local/bin/\" Please enter your password if prompted.${RESET}\n"
     sudo mv /tmp/ddev /usr/local/bin/
 fi
 
 if which brew &&  [ -f `brew --prefix`/etc/bash_completion ]; then
 	bash_completion_dir=$(brew --prefix)/etc/bash_completion.d
     cp /tmp/ddev_bash_completion.sh $bash_completion_dir/ddev
-    echo "$(GREEN)Installed ddev bash completions in $bash_completion_dir$(RESET)"
+    printf "${GREEN}Installed ddev bash completions in $bash_completion_dir${RESET}\n"
     rm /tmp/ddev_bash_completion.sh
 else
-	echo "$(YELLOW)Bash completion for ddev was not installed. You may manually install /tmp/ddev_bash_completions.sh in your bash_completions.d directory.$(RESET)"
+	printf "${YELLOW}Bash completion for ddev was not installed. You may manually install /tmp/ddev_bash_completions.sh in your bash_completions.d directory.${RESET}\n"
 fi
 
 rm /tmp/$TARBALL /tmp/$SHAFILE
 
-echo "${GREEN}ddev is now installed. Run \"ddev\" to verify your installation and see usage.${RESET}"
+printf "${GREEN}ddev is now installed. Run \"ddev\" to verify your installation and see usage.${RESET}\n"
