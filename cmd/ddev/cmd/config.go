@@ -56,10 +56,12 @@ var ConfigCommand = &cobra.Command{
 		}
 
 		// If a provider is specified, prompt about whether to do an import after config.
-		if provider != "" {
-			util.Success("Configuration complete. You may now run `ddev start` or `ddev pull`")
+		switch provider {
+		case ddevapp.DefaultProviderName:
+			util.Success("Configuration complete. You may now run 'ddev start'.")
+		default:
+			util.Success("Configuration complete. You may now run 'ddev start' or 'ddev pull'")
 		}
-		util.Success("Initial configuration file written successfully. See the configuration file for additional configuration options.")
 	},
 }
 
