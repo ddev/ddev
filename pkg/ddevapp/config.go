@@ -105,7 +105,7 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 	if _, err := os.Stat(c.ConfigPath); !os.IsNotExist(err) {
 		err = c.Read()
 		if err != nil {
-			return c, fmt.Errorf("config.yaml exists but cannot be successfully read, %v, err=%v", c.ConfigPath, err)
+			return c, fmt.Errorf("%v[configPath] exists but cannot be read: %v[err]", c.ConfigPath, err)
 		}
 	}
 

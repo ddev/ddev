@@ -80,7 +80,7 @@ var ConfigCommand = &cobra.Command{
 			// But pantheon *does* validate "Name"
 			err = prov.ValidateField("Name", c.Name)
 			if err != nil {
-				util.Failed("Failed to validate sitename %v with ddev prov %v err: %v", c.Name, provider, err)
+				util.Failed("Failed to validate sitename %v[sitename] with %v[provider]: %v[err]", c.Name, provider, err)
 			}
 			if provider == "pantheon" {
 				pantheonProvider := prov.(*ddevapp.PantheonProvider)
