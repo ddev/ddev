@@ -31,11 +31,11 @@ Use "ddev [command] --help" for more information about a command.
 
 ## Quickstart Guides
 
-ddev is designed to be as simple as possible to incorporate into existing Wordpress and Drupal workflows. You can start using ddev with any site just by running a few commands.
+You can start using ddev with any site just by running a few commands.
 
-Below are quickstart instructions for each app type; Wordpress, Drupal 7, and Drupal 8.
+Below are quickstart instructions Wordpress, Drupal 7, and Drupal 8.
 
-**Note:** If you do not have ddev already on your machine, please follow the [installation instructions](../index.md#installation) before beginning the quickstart tutorial. 
+**Prerequisites:** If you do not have ddev already on your machine, please follow the [installation instructions](../index.md#installation) before beginning the quickstart tutorials. 
 
 ### Wordpress Quickstart
 To get started using ddev with a Wordpress site, simply clone the site's repository and checkout its directory.
