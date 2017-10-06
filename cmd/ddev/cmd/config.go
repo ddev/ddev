@@ -22,6 +22,9 @@ var siteName string
 // pantheonEnvironment is the environment for pantheon, dev/test/prod
 var pantheonEnvironment string
 
+// fallbackPantheonEnvironment is our assumption that "dev" will be available in any case
+const fallbackPantheonEnvironment = "dev"
+
 // appType is the ddev app type, like drupal7/drupal8/wordpress
 var appType string
 
@@ -58,7 +61,7 @@ var ConfigCommand = &cobra.Command{
 		c.Name = siteName
 		c.Docroot = docrootRelPath
 
-		// If they have not given us any flags, we prompt for info. Otherwise, we assume they're in control.
+		// If they have not given us any flags, we prompt for full info. Otherwise, we assume they're in control.
 		if siteName == "" && docrootRelPath == "" && pantheonEnvironment == "" && appType == "" {
 			err = c.PromptForConfig()
 			if err != nil {
@@ -72,6 +75,8 @@ var ConfigCommand = &cobra.Command{
 				util.CheckErr(err)
 				siteName = path.Base(pwd)
 			}
+			c.Name = siteName
+
 			// docrootRelPath must exist
 			if _, err = os.Stat(docrootRelPath); docrootRelPath != "" && os.IsNotExist(err) {
 				util.Failed("The docroot provided (%v) does not exist", docrootRelPath)
@@ -79,9 +84,6 @@ var ConfigCommand = &cobra.Command{
 			// pantheonEnvironment must be appropriate, and can only be used with pantheon provider.
 			if provider != "pantheon" && pantheonEnvironment != "" {
 				util.Failed("--pantheon-environment can only be used with pantheon provider, for example ddev config pantheon --pantheon-environment=dev --docroot=docroot")
-			}
-			if pantheonEnvironment != "" && pantheonEnvironment != "dev" && pantheonEnvironment != "test" && pantheonEnvironment != "prod" {
-				util.Failed("pantheon-environment must be dev or test or prod")
 			}
 			if appType != "" && appType != "drupal7" && appType != "drupal8" && appType != "wordpress" {
 				util.Failed("apptype must be drupal7 or drupal8 or wordpress")
@@ -101,15 +103,19 @@ var ConfigCommand = &cobra.Command{
 
 			c.AppType = appType
 
-			// But pantheon *does* validate "Name"
-			err = prov.ValidateField("Name", c.Name)
-			if err != nil {
-				util.Failed("Failed to validate sitename %v with provider %v: %v", c.Name, provider, err)
-			}
 			if provider == "pantheon" {
 				pantheonProvider := prov.(*ddevapp.PantheonProvider)
-				pantheonProvider.SetSiteNameAndEnv("dev")
+				if pantheonEnvironment == "" {
+					pantheonEnvironment = fallbackPantheonEnvironment // assume a basic default if they haven't provided one.
+				}
+				pantheonProvider.SetSiteNameAndEnv(pantheonEnvironment)
 			}
+			// But pantheon *does* validate "Name"
+			err = prov.Validate()
+			if err != nil {
+				util.Failed("Failed to validate sitename %v and environment %v with provider %v: %v", c.Name, pantheonEnvironment, provider, err)
+			}
+
 		}
 		err = c.Write()
 		if err != nil {

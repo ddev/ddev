@@ -1,6 +1,5 @@
 package ddevapp
 
-import "errors"
 import "os"
 
 // DefaultProvider provides a no-op for the provider plugin interface methods.
@@ -38,9 +37,9 @@ func (p *DefaultProvider) Read(configPath string) error {
 	return nil
 }
 
-// Validate always returns an error from the default provider, as we have no provider to import data from.
+// Validate always succeeds, because the default provider is a fine provider.
 func (p *DefaultProvider) Validate() error {
-	return errors.New("could not perform import because there is no configured provider for this application. please see `ddev config` documentation")
+	return nil
 }
 
 // GetBackup provides a no-op for the GetBackup operation.
