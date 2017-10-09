@@ -31,6 +31,11 @@ ddev requires ports 80 and 3306 to be available for use on your system when site
 
 If you need to use another environment after using ddev, simply ensure all of your ddev sites are stopped or removed. ddev only uses system ports when at least one site is running.
 
+## Quickstart
+- [Wordpress](https://ddev.readthedocs.io/en/latest/users/cli-usage#wordpress-quickstart)
+- [Drupal 7](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-7-quickstart)
+- [Drupal 8](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-8-quickstart)
+
 ## Installation
 ### Homebrew - macOS
 
