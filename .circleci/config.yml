@@ -1,7 +1,23 @@
 version: 2
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - linux_build_and_test
+      - macos_build_and_test
+  tag_build:
+    jobs:
+      - tag_build:
+          filters:
+            tags:
+              only:
+                - "/.*/"
+            branches:
+              ignore: /.*/
+
 jobs:
-  # 'build' is the default build, the only one triggered automatically by github or anything else.
-  normal_build_and_test:
+  linux_build_and_test:
     machine:
       image: circleci/classic:201708-01
     working_directory: ~/go/src/github.com/drud/ddev
@@ -14,8 +30,8 @@ jobs:
       - checkout
 
       - run:
-          command: ./.circleci/circle_vm_setup.sh
-          name: NORMAL Circle VM setup - tools, docker, golang
+          command: ./.circleci/linux_circle_vm_setup.sh
+          name: NORMAL linux Circle VM setup - tools, docker, golang
 
       - run:
           command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
@@ -46,6 +62,49 @@ jobs:
           path: /artifacts
           name: Artifact storage
 
+  macos_build_and_test:
+    macos:
+      xcode: "8.3.3"
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      GOPATH: /users/distiller/go
+    steps:
+      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
+
+      - checkout
+
+      - run:
+          command: ./.circleci/macos_circle_vm_setup.sh
+          name: NORMAL macos Circle VM setup - tools, docker, golang
+
+      - run:
+          command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
+          name: Installed tool versions
+
+      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+      - run:
+          command: make -s clean linux darwin windows
+          name: Build the ddev executables
+
+      # Run the built-in ddev tests with the executables just built.
+      - run:
+          command: make -s test
+          name: ddev tests
+          no_output_timeout: "20m"
+
+      - run: make -s gometalinter
+
+      - run:
+          command: bin/linux/ddev version
+          name: ddev version information
+
+      - run:
+          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
+          name: tar/zip up artifacts and make hashes
+
+      - store_artifacts:
+          path: /artifacts
+          name: Artifact storage
   # nightly is triggered only with nightly_build_trigger.sh
   nightly_build:
     machine:
@@ -59,7 +118,7 @@ jobs:
       - checkout
 
       - run:
-          command: ./.circleci/circle_vm_setup.sh
+          command: ./.circleci/linux_circle_vm_setup.sh
           name: NIGHTLY BUILD Circle VM setup - tools, docker, golang
 
       - run:
@@ -133,7 +192,7 @@ jobs:
       - checkout
 
       - run:
-          command: ./.circleci/circle_vm_setup.sh
+          command: ./.circleci/linux_circle_vm_setup.sh
           name: TAG BUILD Circle VM setup - tools, docker, golang
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
@@ -153,19 +212,5 @@ jobs:
           path: /artifacts
           name: Artifact storage
 
-workflows:
-  version: 2
-  normal_build_and_test:
-    jobs:
-      - normal_build_and_test
-  tag_build:
-    jobs:
-      - tag_build:
-          filters:
-            tags:
-              only:
-                - "/.*/"
-            branches:
-              ignore: /.*/
 
 
