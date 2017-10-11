@@ -58,8 +58,6 @@ var ConfigCommand = &cobra.Command{
 		// Set the provider value after load so we can ensure we use the passed in provider value
 		// for this configuration.
 		c.Provider = provider
-		c.Name = siteName
-		c.Docroot = docrootRelPath
 
 		// If they have not given us any flags, we prompt for full info. Otherwise, we assume they're in control.
 		if siteName == "" && docrootRelPath == "" && pantheonEnvironment == "" && appType == "" {
@@ -68,18 +66,24 @@ var ConfigCommand = &cobra.Command{
 				util.Failed("There was a problem configuring your application: %v\n", err)
 			}
 		} else { // In this case we have to validate the provided items, or set to sane defaults
-			// siteName gets set to basename if not provided
-			if siteName == "" {
+			// c.Name gets set to basename if not provided, or set to sitneName if provided
+			if c.Name != "" && siteName == "" { // If we already have a c.Name and no siteName, leave c.Name alone
+				// Sorry this is empty but it make the logic clearer.
+			} else if siteName != "" { // if we have a siteName passed in, use it for c.Name
+				c.Name = siteName
+			} else { // No siteName passed, c.Name not set: use c.Name from the directory
 				// nolint: vetshadow
 				pwd, err := os.Getwd()
 				util.CheckErr(err)
-				siteName = path.Base(pwd)
+				c.Name = path.Base(pwd)
 			}
-			c.Name = siteName
 
 			// docrootRelPath must exist
-			if _, err = os.Stat(docrootRelPath); docrootRelPath != "" && os.IsNotExist(err) {
-				util.Failed("The docroot provided (%v) does not exist", docrootRelPath)
+			if docrootRelPath != "" {
+				c.Docroot = docrootRelPath
+				if _, err = os.Stat(docrootRelPath); os.IsNotExist(err) {
+					util.Failed("The docroot provided (%v) does not exist", docrootRelPath)
+				}
 			}
 			// pantheonEnvironment must be appropriate, and can only be used with pantheon provider.
 			if provider != "pantheon" && pantheonEnvironment != "" {
