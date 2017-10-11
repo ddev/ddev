@@ -12,8 +12,10 @@ brew update && brew install mariadb coreutils golang && brew cask install docker
 sw_vers
 
 
-# Start docker, wait for daemon
-# From https://stackoverflow.com/a/35979292/215713
+# Install, start docker, wait for daemon
+sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
+
+# Open and wait from https://stackoverflow.com/a/35979292/215713
 open -g -a /Applications/Docker.app || exit 2
 
 # Wait for the server to start up, if applicable.
