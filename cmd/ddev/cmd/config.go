@@ -66,6 +66,10 @@ var ConfigCommand = &cobra.Command{
 				util.Failed("There was a problem configuring your application: %v\n", err)
 			}
 		} else { // In this case we have to validate the provided items, or set to sane defaults
+
+			// Let them know if we're replacing the config.yaml
+			c.WarnIfConfigReplace()
+
 			// c.Name gets set to basename if not provided, or set to sitneName if provided
 			if c.Name != "" && siteName == "" { // If we already have a c.Name and no siteName, leave c.Name alone
 				// Sorry this is empty but it make the logic clearer.

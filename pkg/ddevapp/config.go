@@ -221,15 +221,20 @@ func (c *Config) Read() error {
 	return err
 }
 
+// WarnIfConfigReplace just messages user about whether config is being replaced or created
+func (c *Config) WarnIfConfigReplace() {
+	if c.ConfigExists() {
+		util.Warning("You are re-configuring the app at %s. \nThe existing configuration will be updated and replaced.\n\n", c.AppRoot)
+	} else {
+		util.Success("Creating a new ddev project config in the current directory (%s)", c.AppRoot)
+		util.Success("Once completed, your configuration will be written to %s\n", c.ConfigPath)
+	}
+}
+
 // PromptForConfig goes through a set of prompts to receive user input and generate an Config struct.
 func (c *Config) PromptForConfig() error {
 
-	if c.ConfigExists() {
-		util.Warning("You are re-configuring %s. The existing configuration will be replaced.\n\n", c.AppRoot)
-	} else {
-		fmt.Printf("Creating a new ddev project config in the current directory (%s)\n", c.AppRoot)
-		fmt.Printf("Once completed, your configuration will be written to %s\n\n\n", c.ConfigPath)
-	}
+	c.WarnIfConfigReplace()
 
 	for {
 		err := c.namePrompt()
