@@ -33,7 +33,7 @@ var (
 		},
 		{
 			Name:                          "TestMainPkgDrupal8",
-			SourceURL:                     "https://github.com/drud/drupal8/archive/v0.6.0.tar.gz",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.4.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal8-0.6.0/",
 			FilesTarballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.tar.gz",
 			FilesZipballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.zip",
