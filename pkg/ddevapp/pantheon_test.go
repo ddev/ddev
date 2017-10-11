@@ -80,7 +80,6 @@ func TestPantheonConfigCommand(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure we have expected string values in output.
-	assert.Contains(out, "Creating a new ddev project")
 	assert.Contains(out, testDir)
 	assert.Contains(out, fmt.Sprintf("could not find a pantheon site named %s", invalidName))
 	assert.Contains(out, fmt.Sprintf("could not find an environment named '%s'", invalidEnvironment))

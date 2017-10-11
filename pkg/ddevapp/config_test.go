@@ -176,7 +176,6 @@ func TestConfigCommand(t *testing.T) {
 	out := restoreOutput()
 
 	// Ensure we have expected vales in output.
-	assert.Contains(out, "Creating a new ddev project")
 	assert.Contains(out, testDir)
 	assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
 	assert.Contains(out, fmt.Sprintf("%s is not a valid application type", invalidAppType))
