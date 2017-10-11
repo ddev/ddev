@@ -7,4 +7,5 @@ set -x
 
 brew update && brew install mariadb coreutils golang docker docker-compose
 
-
+# macOS version
+sw_vers

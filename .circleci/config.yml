@@ -74,37 +74,54 @@ jobs:
       - checkout
 
       - run:
-          command: ./.circleci/macos_circle_vm_setup.sh
           name: NORMAL macos Circle VM setup - tools, docker, golang
+          command: ./.circleci/macos_circle_vm_setup.sh
+      - run:
+          name: Start docker
+          command: |
+            # From https://stackoverflow.com/a/35979292/215713
+            open -g -a Docker.app || exit 2
+
+            # Wait for the server to start up, if applicable.
+            i=0
+            while ! docker system info &>/dev/null; do
+              (( i++ == 0 )) && printf %s '-- Waiting for Docker to finish starting up...' || printf '.'
+              sleep 1
+            done
+            (( i )) && printf '\n'
+
+            echo "-- Docker is ready."
+            docker version
 
       - run:
-          command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
           name: Installed tool versions
+          command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
-          command: make -s clean linux darwin windows
           name: Build the ddev executables
+          command: make -s clean linux darwin windows
 
       # Run the built-in ddev tests with the executables just built.
       - run:
-          command: make -s test
           name: ddev tests
+          command: make -s test
           no_output_timeout: "20m"
 
       - run: make -s gometalinter
 
       - run:
-          command: bin/linux/ddev version
           name: ddev version information
+          command: bin/linux/ddev version
 
       - run:
-          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
           name: tar/zip up artifacts and make hashes
+          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
 
       - store_artifacts:
-          path: /artifacts
           name: Artifact storage
+          path: /artifacts
+
   # nightly is triggered only with nightly_build_trigger.sh
   nightly_build:
     machine:
