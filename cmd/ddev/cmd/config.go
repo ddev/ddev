@@ -88,20 +88,22 @@ var ConfigCommand = &cobra.Command{
 			if appType != "" && appType != "drupal7" && appType != "drupal8" && appType != "wordpress" {
 				util.Failed("apptype must be drupal7 or drupal8 or wordpress")
 			}
-			// Handle the case where flags have been passed in and we config that way
-			if appType == "" {
-				appType, err = ddevapp.DetermineAppType(c.Docroot)
-				if err != nil {
-					fullPath, _ := filepath.Abs(c.Docroot)
-					util.Failed("Failed to determine app type (drupal7/drupal8/wordpress).\nYour docroot %v may be incorrect - looking in directory %v, error=%v", c.Docroot, fullPath, err)
-				}
+
+			foundAppType, err := ddevapp.DetermineAppType(c.Docroot)
+			fullPath, _ := filepath.Abs(c.Docroot)
+			if err == nil && (appType == "" || appType == foundAppType) { // Found an app, matches passed-in or no apptype passed
+				appType = foundAppType
+				util.Success("Found a %s codebase at %s\n", foundAppType, fullPath)
+			} else if appType != "" && err != nil { // apptype was passed, but we found no app at all
+				util.Warning("You have specified an apptype of %s but no app of that type is found in %s", appType, fullPath)
+			} else if appType != "" && err == nil && foundAppType != appType { // apptype was passed, app was found, but not the same type
+				util.Warning("You have specified an apptype of %s but an app of type %s was discovered in %s", appType, foundAppType, fullPath)
+			} else {
+				util.Failed("Failed to determine app type (drupal7/drupal8/wordpress).\nYour docroot %v may be incorrect - looking in directory %v, error=%v", c.Docroot, fullPath, err)
 			}
-
-			// If we found an application type just set it and inform the user.
-			util.Success("Found a %s codebase at %s\n", c.AppType, filepath.Join(c.AppRoot, c.Docroot))
-			prov, _ := c.GetProvider()
-
 			c.AppType = appType
+
+			prov, _ := c.GetProvider()
 
 			if provider == "pantheon" {
 				pantheonProvider := prov.(*ddevapp.PantheonProvider)
