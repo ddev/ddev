@@ -120,29 +120,3 @@ func TestValidTestSite(t *testing.T) {
 	assert.Error(err, "Could not stat temporary directory after cleanup")
 
 }
-
-// TestInvalidTestSite ensures that errors are returned in cases where Prepare() can't download or extract an archive.
-func TestInvalidTestSite(t *testing.T) {
-	assert := asrt.New(t)
-
-	testSites := []TestSite{
-		// This should generate a 404 page on github, which will be downloaded, but cannot be extracted (as it's not a true tar.gz)
-		{
-			Name:      "TestInvalidTestSite404",
-			SourceURL: "https://github.com/drud/drupal8/archive/somevaluethatdoesnotexist.tar.gz",
-		},
-		// This is an invalid domain, so it can't even be downloaded. This tests error handling in the case of
-		// a site URL which does not exist
-		{
-			Name:      "TestInvalidTestSiteInvalidDomain",
-			SourceURL: "http://invalid_domain/somefilethatdoesnotexists",
-		},
-	}
-
-	for i := range testSites {
-		ts := testSites[i]
-		// Create a testsite and ensure the prepare() method extracts files into a temporary directory.
-		err := ts.Prepare()
-		assert.Error(err, "ts.Prepare() fails because of missing config.yml or untar failure")
-	}
-}
