@@ -120,3 +120,25 @@ func TestValidTestSite(t *testing.T) {
 	assert.Error(err, "Could not stat temporary directory after cleanup")
 
 }
+
+// TestGetCachedArchive tests download and extraction of archives for test sites
+// to testcache directory.
+func TestGetCachedArchive(t *testing.T) {
+	assert := asrt.New(t)
+
+	sourceURL := "https://raw.githubusercontent.com/drud/ddev/master/.gitignore"
+	exPath, archPath, err := GetCachedArchive("TestInvalidArchive", "test", "", sourceURL)
+	assert.Error(err)
+	assert.Contains(err.Error(), fmt.Sprintf("archive extraction of %s failed", archPath))
+
+	err = os.RemoveAll(filepath.Dir(exPath))
+	assert.NoError(err)
+
+	sourceURL = "http://invalid_domain/somefilethatdoesnotexists"
+	exPath, archPath, err = GetCachedArchive("TestInvalidDownloadURL", "test", "", sourceURL)
+	assert.Error(err)
+	assert.Contains(err.Error(), fmt.Sprintf("Failed to download url=%s into %s", sourceURL, archPath))
+
+	err = os.RemoveAll(filepath.Dir(exPath))
+	assert.NoError(err)
+}

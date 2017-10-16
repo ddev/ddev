@@ -274,7 +274,7 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 	_ = os.MkdirAll(extractPath, 0777)
 	err := util.DownloadFile(archiveFullPath, sourceURL, false)
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to download url=%s into %s, err=%v", sourceURL, archiveFullPath, err)
+		return extractPath, archiveFullPath, fmt.Errorf("Failed to download url=%s into %s, err=%v", sourceURL, archiveFullPath, err)
 	}
 
 	log.Debugf("Downloaded %s into %s", sourceURL, archiveFullPath)
@@ -288,7 +288,7 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 		_ = fileutil.PurgeDirectory(extractPath)
 		_ = os.RemoveAll(extractPath)
 		_ = os.RemoveAll(archiveFullPath)
-		return "", "", fmt.Errorf("archive extraction of %s failed err=%v", archiveFullPath, err)
+		return extractPath, archiveFullPath, fmt.Errorf("archive extraction of %s failed err=%v", archiveFullPath, err)
 	}
 	return extractPath, archiveFullPath, nil
 }
