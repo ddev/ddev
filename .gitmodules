@@ -1,9 +1,3 @@
-[submodule "containers/docker.php7"]
-	path = containers/docker.php7
-	url = git@github.com:drud/docker.php7.git
-[submodule "containers/docker.nginx-php-fpm"]
-	path = containers/docker.nginx-php-fpm
-	url = git@github.com:drud/docker.nginx-php-fpm.git
 [submodule "containers/docker.nginx-php-fpm-local"]
 	path = containers/docker.nginx-php-fpm-local
 	url = git@github.com:drud/docker.nginx-php-fpm-local.git
