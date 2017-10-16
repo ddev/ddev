@@ -337,7 +337,7 @@ func TestLocalExec(t *testing.T) {
 		}
 		out = stdout()
 
-		assert.Contains(string(out), "/etc/php/7.0/cli/php.ini")
+		assert.Contains(string(out), "/etc/php/7.1/cli/php.ini")
 
 		runTime()
 		switchDir()
