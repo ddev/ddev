@@ -121,28 +121,24 @@ func TestValidTestSite(t *testing.T) {
 
 }
 
-// TestInvalidTestSite ensures that errors are returned in cases where Prepare() can't download or extract an archive.
-func TestInvalidTestSite(t *testing.T) {
+// TestGetCachedArchive tests download and extraction of archives for test sites
+// to testcache directory.
+func TestGetCachedArchive(t *testing.T) {
 	assert := asrt.New(t)
 
-	testSites := []TestSite{
-		// This should generate a 404 page on github, which will be downloaded, but cannot be extracted (as it's not a true tar.gz)
-		{
-			Name:      "TestInvalidTestSite404",
-			SourceURL: "https://github.com/drud/drupal8/archive/somevaluethatdoesnotexist.tar.gz",
-		},
-		// This is an invalid domain, so it can't even be downloaded. This tests error handling in the case of
-		// a site URL which does not exist
-		{
-			Name:      "TestInvalidTestSiteInvalidDomain",
-			SourceURL: "http://invalid_domain/somefilethatdoesnotexists",
-		},
-	}
+	sourceURL := "https://raw.githubusercontent.com/drud/ddev/master/.gitignore"
+	exPath, archPath, err := GetCachedArchive("TestInvalidArchive", "test", "", sourceURL)
+	assert.Error(err)
+	assert.Contains(err.Error(), fmt.Sprintf("archive extraction of %s failed", archPath))
 
-	for i := range testSites {
-		ts := testSites[i]
-		// Create a testsite and ensure the prepare() method extracts files into a temporary directory.
-		err := ts.Prepare()
-		assert.Error(err, "ts.Prepare() fails because of missing config.yml or untar failure")
-	}
+	err = os.RemoveAll(filepath.Dir(exPath))
+	assert.NoError(err)
+
+	sourceURL = "http://invalid_domain/somefilethatdoesnotexists"
+	exPath, archPath, err = GetCachedArchive("TestInvalidDownloadURL", "test", "", sourceURL)
+	assert.Error(err)
+	assert.Contains(err.Error(), fmt.Sprintf("Failed to download url=%s into %s", sourceURL, archPath))
+
+	err = os.RemoveAll(filepath.Dir(exPath))
+	assert.NoError(err)
 }
