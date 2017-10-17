@@ -33,9 +33,7 @@ func TestNewConfig(t *testing.T) {
 
 	// Load a new Config
 	newConfig, err := NewConfig(testDir, DefaultProviderName)
-
-	// An error should be returned because no config file is present.
-	assert.Error(err)
+	assert.NoError(err)
 
 	// Ensure the config uses specified defaults.
 	assert.Equal(newConfig.APIVersion, CurrentAppVersion)
@@ -53,7 +51,6 @@ func TestNewConfig(t *testing.T) {
 	assert.NoError(err)
 
 	loadedConfig, err := NewConfig(testDir, DefaultProviderName)
-	// There should be no error this time, since the config should be available for loading.
 	assert.NoError(err)
 	assert.Equal(newConfig.Name, loadedConfig.Name)
 	assert.Equal(newConfig.AppType, loadedConfig.AppType)
@@ -82,8 +79,7 @@ func TestPrepDirectory(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	config, err := NewConfig(testDir, DefaultProviderName)
-	// We should get an error here, since no config exists.
-	assert.Error(err)
+	assert.NoError(err)
 
 	// Prep the directory.
 	err = PrepDdevDirectory(filepath.Dir(config.ConfigPath))
@@ -101,7 +97,7 @@ func TestHostName(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 	config, err := NewConfig(testDir, DefaultProviderName)
-	assert.Error(err)
+	assert.NoError(err)
 	config.Name = util.RandString(32)
 
 	assert.Equal(config.Hostname(), config.Name+"."+DDevTLD)
@@ -117,7 +113,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 
 	// Create a config
 	config, err := NewConfig(testDir, DefaultProviderName)
-	assert.Error(err)
+	assert.NoError(err)
 	config.Name = util.RandString(32)
 	config.AppType = AllowedAppTypes[0]
 
@@ -159,9 +155,9 @@ func TestConfigCommand(t *testing.T) {
 	}
 
 	// Create the ddevapp we'll use for testing.
-	// This should return an error, since no existing config can be read.
+	// This will not return an error, since there is no existing config.
 	config, err := NewConfig(testDir, DefaultProviderName)
-	assert.Error(err)
+	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
 	name := strings.ToLower(util.RandString(16))
@@ -175,12 +171,11 @@ func TestConfigCommand(t *testing.T) {
 	util.SetInputScanner(scanner)
 
 	restoreOutput := testcommon.CaptureStdOut()
-	err = config.Config()
+	err = config.PromptForConfig()
 	assert.NoError(err, t)
 	out := restoreOutput()
 
 	// Ensure we have expected vales in output.
-	assert.Contains(out, "Creating a new ddev project")
 	assert.Contains(out, testDir)
 	assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
 	assert.Contains(out, fmt.Sprintf("%s is not a valid application type", invalidAppType))

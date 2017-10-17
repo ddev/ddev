@@ -46,9 +46,8 @@ func TestPantheonConfigCommand(t *testing.T) {
 	}
 
 	// Create the ddevapp we'll use for testing.
-	// This should return an error, since no existing config can be read.
 	config, err := NewConfig(testDir, "pantheon")
-	assert.Error(err)
+	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
 	invalidName := strings.ToLower(util.RandString(16))
@@ -70,7 +69,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 	util.SetInputScanner(scanner)
 
 	restoreOutput := testcommon.CaptureStdOut()
-	err = config.Config()
+	err = config.PromptForConfig()
 	assert.NoError(err, t)
 	out := restoreOutput()
 
@@ -81,7 +80,6 @@ func TestPantheonConfigCommand(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure we have expected string values in output.
-	assert.Contains(out, "Creating a new ddev project")
 	assert.Contains(out, testDir)
 	assert.Contains(out, fmt.Sprintf("could not find a pantheon site named %s", invalidName))
 	assert.Contains(out, fmt.Sprintf("could not find an environment named '%s'", invalidEnvironment))
@@ -109,8 +107,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	config, err := NewConfig(testDir, "pantheon")
-	// No config should exist so this will result in an error
-	assert.Error(err)
+	assert.NoError(err)
 	config.Name = pantheonTestSiteName
 
 	provider := PantheonProvider{}
@@ -118,7 +115,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 	assert.NoError(err)
 
 	provider.Sitename = pantheonTestSiteName
-	provider.Environment = pantheonTestEnvName
+	provider.EnvironmentName = pantheonTestEnvName
 
 	// Ensure GetBackup triggers an error for unknown backup types.
 	_, _, err = provider.GetBackup(util.RandString(8))

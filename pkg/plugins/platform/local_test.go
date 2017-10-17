@@ -391,7 +391,7 @@ func TestProcessHooks(t *testing.T) {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
 		testcommon.ClearDockerEnv()
-		conf, err := ddevapp.NewConfig(site.Dir, ddevapp.DDevDefaultPlatform)
+		conf, err := ddevapp.NewConfig(site.Dir, ddevapp.DefaultProviderName)
 		assert.NoError(err)
 
 		conf.Commands = map[string][]ddevapp.Command{

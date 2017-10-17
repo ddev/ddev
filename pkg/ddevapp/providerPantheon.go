@@ -24,7 +24,7 @@ type PantheonProvider struct {
 	Sitename         string                   `yaml:"site"`
 	site             pantheon.Site            `yaml:"-"`
 	siteEnvironments pantheon.EnvironmentList `yaml:"-"`
-	Environment      string                   `yaml:"environment"`
+	EnvironmentName  string                   `yaml:"environment"`
 	environment      pantheon.Environment     `yaml:"-"`
 }
 
@@ -56,10 +56,16 @@ func (p *PantheonProvider) ValidateField(field, value string) error {
 	return nil
 }
 
-// Config provides interactive configuration prompts when running `ddev config pantheon`
-func (p *PantheonProvider) Config() error {
+// SetSiteNameAndEnv sets the environment of the provider (dev/test/live)
+func (p *PantheonProvider) SetSiteNameAndEnv(environment string) {
 	p.Sitename = p.config.Name
+	p.EnvironmentName = environment
+}
+
+// PromptForConfig provides interactive configuration prompts when running `ddev config pantheon`
+func (p *PantheonProvider) PromptForConfig() error {
 	for {
+		p.SetSiteNameAndEnv("dev")
 		err := p.environmentPrompt()
 
 		if err == nil {
@@ -88,7 +94,7 @@ func (p *PantheonProvider) GetBackup(backupType string) (fileLocation string, im
 	session := getPantheonSession()
 
 	// Find either a files or database backup, depending on what was asked for.
-	bl := pantheon.NewBackupList(p.site.ID, p.Environment)
+	bl := pantheon.NewBackupList(p.site.ID, p.EnvironmentName)
 	err = session.Request("GET", bl)
 	if err != nil {
 		return "", "", err
@@ -113,7 +119,7 @@ func (p *PantheonProvider) GetBackup(backupType string) (fileLocation string, im
 	}
 
 	if backupType == "files" {
-		importPath = fmt.Sprintf("files_%s", p.Environment)
+		importPath = fmt.Sprintf("files_%s", p.EnvironmentName)
 	}
 
 	return destFile, importPath, nil
@@ -153,7 +159,7 @@ func (p *PantheonProvider) getPantheonBackupLink(archiveType string, bl *pantheo
 	}
 
 	// If no matches were found, just return an empty backup along with an error.
-	return &pantheon.Backup{}, fmt.Errorf("could not find a backup of type %s. please visit your pantheon dashboard and ensure the '%s' environment has a backup available", archiveType, p.Environment)
+	return &pantheon.Backup{}, fmt.Errorf("could not find a backup of type %s. please visit your pantheon dashboard and ensure the '%s' environment has a backup available", archiveType, p.EnvironmentName)
 }
 
 // environmentPrompt contains the user prompts for interactive configuration of the pantheon environment.
@@ -163,8 +169,8 @@ func (p *PantheonProvider) environmentPrompt() error {
 		return err
 	}
 
-	if p.Environment == "" {
-		p.Environment = "dev"
+	if p.EnvironmentName == "" {
+		p.EnvironmentName = "dev"
 	}
 
 	fmt.Println("\nConfigure import environment:")
@@ -175,19 +181,19 @@ func (p *PantheonProvider) environmentPrompt() error {
 	}
 	fmt.Println("\n\t- " + strings.Join(keys, "\n\t- ") + "\n")
 	var environmentPrompt = "Type the name to select an environment to import from"
-	if p.Environment != "" {
-		environmentPrompt = fmt.Sprintf("%s (%s)", environmentPrompt, p.Environment)
+	if p.EnvironmentName != "" {
+		environmentPrompt = fmt.Sprintf("%s (%s)", environmentPrompt, p.EnvironmentName)
 	}
 
 	fmt.Print(environmentPrompt + ": ")
-	p.Environment = util.GetInput(p.Environment)
+	envName := util.GetInput(p.EnvironmentName)
 
-	environment, ok := p.siteEnvironments.Environments[p.Environment]
-	p.environment = environment
+	_, ok := p.siteEnvironments.Environments[envName]
 
 	if !ok {
-		return fmt.Errorf("could not find an environment named '%s'", p.Environment)
+		return fmt.Errorf("could not find an environment named '%s'", envName)
 	}
+	p.SetSiteNameAndEnv(envName)
 	return nil
 }
 
@@ -266,10 +272,10 @@ func (p *PantheonProvider) environmentExists() error {
 		return err
 	}
 
-	_, ok := p.siteEnvironments.Environments[p.Environment]
+	_, ok := p.siteEnvironments.Environments[p.EnvironmentName]
 
 	if !ok {
-		return fmt.Errorf("could not find an environment named '%s'", p.Environment)
+		return fmt.Errorf("could not find an environment named '%s'", p.EnvironmentName)
 	}
 
 	return nil

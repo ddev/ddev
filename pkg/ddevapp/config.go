@@ -70,14 +70,14 @@ type Command struct {
 type Provider interface {
 	Init(*Config) error
 	ValidateField(string, string) error
-	Config() error
+	PromptForConfig() error
 	Write(string) error
 	Read(string) error
 	Validate() error
 	GetBackup(string) (fileLocation string, importPath string, err error)
 }
 
-// NewConfig creates a new Config struct with defaults set. It is preferred to using new() directly.
+// NewConfig creates a new Config struct with defaults set and overridden by any existing config.yml.
 func NewConfig(AppRoot string, provider string) (*Config, error) {
 	// Set defaults.
 	c := &Config{}
@@ -95,19 +95,27 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 	c.DBImage = version.DBImg + ":" + version.DBTag
 	c.DBAImage = version.DBAImg + ":" + version.DBATag
 
-	c.Provider = provider
-
-	if c.Provider == "" {
-		c.Provider = DefaultProviderName
-	}
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
-	err := c.Read()
-	if err != nil {
-		return c, fmt.Errorf("Unable to read config.yaml, %v, err=%v", c.ConfigPath, err)
+	if _, err := os.Stat(c.ConfigPath); !os.IsNotExist(err) {
+		err = c.Read()
+		if err != nil {
+			return c, fmt.Errorf("%v exists but cannot be read: %v", c.ConfigPath, err)
+		}
 	}
 
-	return c, err
+	// Allow override with "pantheon" from function provider arg, but nothing else.
+	// Otherwise we accept whatever might have been in config file if there was anything.
+	switch {
+	case provider == "" || provider == DefaultProviderName:
+		c.Provider = DefaultProviderName
+	case provider == "pantheon":
+		c.Provider = "pantheon"
+	default:
+		return c, fmt.Errorf("Provider '%s' is not implemented", provider)
+	}
+
+	return c, nil
 }
 
 // GetProvider returns a pointer to the provider instance interface.
@@ -219,15 +227,20 @@ func (c *Config) Read() error {
 	return err
 }
 
-// Config goes through a set of prompts to receive user input and generate an Config struct.
-func (c *Config) Config() error {
-
+// WarnIfConfigReplace just messages user about whether config is being replaced or created
+func (c *Config) WarnIfConfigReplace() {
 	if c.ConfigExists() {
-		util.Warning("You are re-configuring %s. The existing configuration will be replaced.\n\n", c.AppRoot)
+		util.Warning("You are re-configuring the app at %s. \nThe existing configuration will be updated and replaced.\n\n", c.AppRoot)
 	} else {
-		fmt.Printf("Creating a new ddev project config in the current directory (%s)\n", c.AppRoot)
-		fmt.Printf("Once completed, your configuration will be written to %s\n\n\n", c.ConfigPath)
+		util.Success("Creating a new ddev project config in the current directory (%s)", c.AppRoot)
+		util.Success("Once completed, your configuration will be written to %s\n", c.ConfigPath)
 	}
+}
+
+// PromptForConfig goes through a set of prompts to receive user input and generate an Config struct.
+func (c *Config) PromptForConfig() error {
+
+	c.WarnIfConfigReplace()
 
 	for {
 		err := c.namePrompt()
@@ -254,7 +267,7 @@ func (c *Config) Config() error {
 		return err
 	}
 
-	err = c.providerInstance.Config()
+	err = c.providerInstance.PromptForConfig()
 
 	return err
 }
@@ -413,7 +426,7 @@ func (c *Config) appTypePrompt() error {
 		"Location": absDocroot,
 	}).Debug("Attempting to auto-determine application type")
 
-	appType, err = determineAppType(absDocroot)
+	appType, err = DetermineAppType(absDocroot)
 	if err == nil {
 		// If we found an application type just set it and inform the user.
 		util.Success("Found a %s codebase at %s\n", appType, filepath.Join(c.AppRoot, c.Docroot))
@@ -463,7 +476,7 @@ func PrepDdevDirectory(dir string) error {
 
 // DetermineAppType uses some predetermined file checks to determine if a local app
 // is of any of the known types
-func determineAppType(basePath string) (string, error) {
+func DetermineAppType(basePath string) (string, error) {
 	defaultLocations := map[string]string{
 		"scripts/drupal.sh":      "drupal7",
 		"core/scripts/drupal.sh": "drupal8",
@@ -485,7 +498,7 @@ func determineAppType(basePath string) (string, error) {
 		}
 	}
 
-	return "", errors.New("determineAppType() couldn't determine app's type")
+	return "", errors.New("DetermineAppType() couldn't determine app's type")
 }
 
 // setSiteSettingsPath determines the location for site's db settings file based on apptype.
