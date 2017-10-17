@@ -90,7 +90,7 @@ var ConfigCommand = &cobra.Command{
 				util.Failed("--pantheon-environment can only be used with pantheon provider, for example ddev config pantheon --pantheon-environment=dev --docroot=docroot")
 			}
 			if appType != "" && appType != "drupal7" && appType != "drupal8" && appType != "wordpress" {
-				util.Failed("apptype must be drupal7 or drupal8 or wordpress")
+				util.Failed("apptype must be drupal7, drupal8, or wordpress")
 			}
 
 			foundAppType, err := ddevapp.DetermineAppType(c.Docroot)
