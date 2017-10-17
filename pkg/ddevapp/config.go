@@ -95,11 +95,6 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 	c.DBImage = version.DBImg + ":" + version.DBTag
 	c.DBAImage = version.DBAImg + ":" + version.DBATag
 
-	c.Provider = provider
-
-	if c.Provider == "" {
-		c.Provider = DefaultProviderName
-	}
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
 	if _, err := os.Stat(c.ConfigPath); !os.IsNotExist(err) {
@@ -107,6 +102,17 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 		if err != nil {
 			return c, fmt.Errorf("%v exists but cannot be read: %v", c.ConfigPath, err)
 		}
+	}
+
+	// Allow override with "pantheon" from function provider arg, but nothing else.
+	// Otherwise we accept whatever might have been in config file if there was anything.
+	switch {
+	case provider == "" || provider == DefaultProviderName:
+		c.Provider = DefaultProviderName
+	case provider == "pantheon":
+		c.Provider = "pantheon"
+	default:
+		return c, fmt.Errorf("Provider '%s' is not implemented", provider)
 	}
 
 	return c, nil

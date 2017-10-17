@@ -55,10 +55,6 @@ var ConfigCommand = &cobra.Command{
 			util.Failed("Could not create new config: %v", err)
 		}
 
-		// Set the provider value after load so we can ensure we use the passed in provider value
-		// for this configuration.
-		c.Provider = provider
-
 		// If they have not given us any flags, we prompt for full info. Otherwise, we assume they're in control.
 		if siteName == "" && docrootRelPath == "" && pantheonEnvironment == "" && appType == "" {
 			err = c.PromptForConfig()
@@ -72,7 +68,7 @@ var ConfigCommand = &cobra.Command{
 
 			// c.Name gets set to basename if not provided, or set to sitneName if provided
 			if c.Name != "" && siteName == "" { // If we already have a c.Name and no siteName, leave c.Name alone
-				// Sorry this is empty but it make the logic clearer.
+				// Sorry this is empty but it makes the logic clearer.
 			} else if siteName != "" { // if we have a siteName passed in, use it for c.Name
 				c.Name = siteName
 			} else { // No siteName passed, c.Name not set: use c.Name from the directory
@@ -130,7 +126,6 @@ var ConfigCommand = &cobra.Command{
 		err = c.Write()
 		if err != nil {
 			util.Failed("Could not write ddev config file: %v\n", err)
-
 		}
 
 		// If a provider is specified, prompt about whether to do an import after config.
