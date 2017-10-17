@@ -120,6 +120,8 @@ var ConfigCommand = &cobra.Command{
 			err = prov.Validate()
 			if err != nil {
 				util.Failed("Failed to validate sitename %v and environment %v with provider %v: %v", c.Name, pantheonEnvironment, provider, err)
+			} else {
+				util.Success("Using pantheon sitename '%s' and environment '%s'.", c.Name, pantheonEnvironment)
 			}
 
 		}
