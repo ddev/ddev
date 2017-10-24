@@ -173,6 +173,12 @@ func determineRouterPorts() []string {
 				exposePorts = append(exposePorts, ports...)
 			}
 
+			httpsPorts := dockerutil.GetContainerEnv("HTTPS_EXPOSE", container)
+			if httpsPorts != "" {
+				ports := strings.Split(httpsPorts, ",")
+				exposePorts = append(exposePorts, ports...)
+			}
+
 			for _, exposePort := range exposePorts {
 				// ports defined as hostPort:containerPort allow for router to configure upstreams
 				// for containerPort, with server listening on hostPort. exposed ports for router

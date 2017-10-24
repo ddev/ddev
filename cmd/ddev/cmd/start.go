@@ -45,7 +45,7 @@ func appStart() {
 	}
 
 	util.Success("Successfully started %s", app.GetName())
-	util.Success("Your application can be reached at: %s", app.URL())
+	util.Success("Your application can be reached at:\nHTTP:  http://%[1]s\nHTTPS: https://%[1]s", app.HostName())
 
 }
 func init() {
