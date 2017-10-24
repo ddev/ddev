@@ -107,12 +107,11 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 
 	// Allow override with "pantheon" from function provider arg, but nothing else.
 	// Otherwise we accept whatever might have been in config file if there was anything.
-	switch {
-	case provider == "" || provider == DefaultProviderName:
-		c.Provider = DefaultProviderName
-	case provider == "pantheon":
-		c.Provider = "pantheon"
-	default:
+	if provider == "" && c.Provider != "" {
+		// Do nothing. This is the case where the config has a provider and no override is provided
+	} else if provider == "pantheon" || provider == DefaultProviderName {
+		c.Provider = provider
+	} else {
 		return c, fmt.Errorf("Provider '%s' is not implemented", provider)
 	}
 
