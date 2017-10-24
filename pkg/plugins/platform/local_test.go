@@ -66,8 +66,9 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	if len(platform.GetApps()) > 0 {
-		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", len(platform.GetApps()))
+	count := len(platform.GetApps()["local"])
+	if count > 0 {
+		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", count)
 	}
 
 	if os.Getenv("GOTEST_SHORT") != "" {
