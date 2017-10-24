@@ -35,7 +35,7 @@ func appImport(skipConfirmation bool) {
 	app, err := platform.GetActiveApp("")
 
 	if err != nil {
-		util.Failed("%v", err)
+		util.Failed("appImport failed: %v", err)
 	}
 
 	if !skipConfirmation {

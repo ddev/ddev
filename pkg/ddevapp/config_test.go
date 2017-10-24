@@ -181,7 +181,7 @@ func TestConfigCommand(t *testing.T) {
 	// Ensure we have expected vales in output.
 	assert.Contains(out, testDir)
 	assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
-	assert.Contains(out, fmt.Sprintf("%s is not a valid application type", invalidAppType))
+	assert.Contains(out, fmt.Sprintf("'%s' is not a valid application type", invalidAppType))
 
 	// Ensure values were properly set on the config struct.
 	assert.Equal(name, config.Name)
@@ -250,7 +250,7 @@ func TestValidate(t *testing.T) {
 	c.Docroot = "testing"
 	c.AppType = "potato"
 	err = c.Validate()
-	assert.EqualError(err, fmt.Sprintf("%s is not a valid apptype", c.AppType))
+	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", c.AppType))
 }
 
 // TestWrite tests writing config values to file

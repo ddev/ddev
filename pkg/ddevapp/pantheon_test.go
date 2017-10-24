@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -126,5 +127,60 @@ func TestPantheonBackupLinks(t *testing.T) {
 
 	assert.Equal(importPath, "")
 	assert.Contains(backupLink, "database.sql.gz")
+	assert.NoError(err)
+}
+
+// TestPantheonPull ensures we can pull backups from pantheon for a configured environment.
+func TestPantheonPull(t *testing.T) {
+	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
+		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
+	}
+
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+	testDir := testcommon.CreateTmpDir("TestPantheonPullBackupLinks")
+
+	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
+	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
+
+	// Move into the properly named pantheon site (must match pantheon sitename)
+	testDir = testDir + "/" + pantheonTestSiteName
+	err := os.MkdirAll(testDir+"/sites/default", 0777)
+	assert.NoError(err)
+	os.Chdir(testDir)
+
+	config, err := NewConfig(testDir, "pantheon")
+	assert.NoError(err)
+	config.Name = pantheonTestSiteName
+	config.AppType = "drupal8"
+	err = config.Write()
+	assert.NoError(err)
+
+	provider := PantheonProvider{}
+	err = provider.Init(config)
+	assert.NoError(err)
+
+	provider.Sitename = pantheonTestSiteName
+	provider.EnvironmentName = pantheonTestEnvName
+	err = provider.Write(config.GetPath("import.yaml"))
+	assert.NoError(err)
+
+	// Ensure GetBackup triggers an error for unknown backup types.
+	_, _, err = provider.GetBackup(util.RandString(8))
+	assert.Error(err)
+
+	// Ensure we can do a pull on the configured site.
+	backupLink, importPath, err := provider.GetBackup("database")
+
+	assert.Equal(importPath, "")
+	assert.Contains(backupLink, "database.sql.gz")
+	assert.NoError(err)
+
+	app, err := platform.GetActiveApp("")
+	assert.NoError(err)
+	err = app.Import()
+	assert.NoError(err)
+	err = app.Down(true)
 	assert.NoError(err)
 }

@@ -291,7 +291,7 @@ func (c *Config) Validate() error {
 	// validate apptype
 	match = IsAllowedAppType(c.AppType)
 	if !match {
-		return fmt.Errorf("%s is not a valid apptype", c.AppType)
+		return fmt.Errorf("'%s' is not a valid apptype", c.AppType)
 	}
 
 	return nil
@@ -459,7 +459,7 @@ func IsAllowedAppType(appType string) bool {
 	return false
 }
 
-// PrepDdevDirectory creates a .ddev directory in the current working
+// PrepDdevDirectory creates a .ddev directory in the current working directory
 func PrepDdevDirectory(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 
