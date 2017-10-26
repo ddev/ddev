@@ -138,24 +138,26 @@ func TestPantheonPull(t *testing.T) {
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	testDir := testcommon.CreateTmpDir("TestPantheonPullBackupLinks")
+	testDir := testcommon.CreateTmpDir("TestPantheonPull")
 
 	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
 	// Move into the properly named pantheon site (must match pantheon sitename)
-	testDir = testDir + "/" + pantheonTestSiteName
-	err := os.MkdirAll(testDir+"/sites/default", 0777)
+	siteDir := testDir + "/" + pantheonTestSiteName
+	err := os.MkdirAll(siteDir+"/sites/default", 0777)
 	assert.NoError(err)
-	os.Chdir(testDir)
+	os.Chdir(siteDir)
 
-	config, err := NewConfig(testDir, "pantheon")
+	config, err := NewConfig(siteDir, "pantheon")
 	assert.NoError(err)
 	config.Name = pantheonTestSiteName
 	config.AppType = "drupal8"
 	err = config.Write()
 	assert.NoError(err)
+
+	testcommon.ClearDockerEnv()
 
 	provider := PantheonProvider{}
 	err = provider.Init(config)
