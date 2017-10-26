@@ -302,6 +302,7 @@ func (l *LocalApp) SiteStatus() string {
 
 // Import performs an import from the a configured provider plugin, if one exists.
 func (l *LocalApp) Import() error {
+	log.Infof("Import() - l.AppConfig=%v", l.AppConfig)
 	provider, err := l.AppConfig.GetProvider()
 	if err != nil {
 		return err

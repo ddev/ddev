@@ -176,8 +176,12 @@ func TestPantheonPull(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure we can do a pull on the configured site.
+	testcommon.LogPwd(t, "About to run GetActiveApp()")
 	app, err := platform.GetActiveApp("")
 	assert.NoError(err)
+	testcommon.LogPwd(t, "About to run app.Import()")
+	appConfig := app.(*platform.LocalApp).AppConfig
+	t.Logf("About to run app.Import() with AppConfig=%v", appConfig)
 	err = app.Import()
 	assert.NoError(err)
 	err = app.Down(true)
