@@ -212,6 +212,9 @@ func TestRead(t *testing.T) {
 	}
 
 	err := c.Read()
+	if err != nil {
+		t.Fatalf("Unable to c.Read(), err: %v", err)
+	}
 	assert.NoError(err)
 
 	// Values not defined in file, we should still have default values
@@ -240,7 +243,9 @@ func TestValidate(t *testing.T) {
 	}
 
 	err = c.Validate()
-	assert.NoError(err)
+	if err != nil {
+		t.Fatalf("Failed to c.Validate(), err=%v", err)
+	}
 
 	c.Name = "Invalid!"
 	err = c.Validate()
