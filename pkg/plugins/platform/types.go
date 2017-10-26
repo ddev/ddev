@@ -34,7 +34,7 @@ type App interface {
 	DockerEnv()
 	DockerComposeYAMLPath() string
 	Down(removeData bool) error
-	Config() error
+	CreateSettingsFile() error
 	HostName() string
 	URL() string
 	Import() error

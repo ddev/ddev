@@ -234,8 +234,8 @@ func (c *Config) WarnIfConfigReplace() {
 	if c.ConfigExists() {
 		util.Warning("You are reconfiguring the app at %s. \nThe existing configuration will be updated and replaced.", c.AppRoot)
 	} else {
-		output.UserOut.Printf("Creating a new ddev project config in the current directory (%s)", c.AppRoot)
-		output.UserOut.Printf("Once completed, your configuration will be written to %s", c.ConfigPath)
+		util.Success("Creating a new ddev project config in the current directory (%s)", c.AppRoot)
+		util.Success("Once completed, your configuration will be written to %s\n", c.ConfigPath)
 	}
 }
 
