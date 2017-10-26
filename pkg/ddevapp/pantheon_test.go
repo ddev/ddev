@@ -180,8 +180,6 @@ func TestPantheonPull(t *testing.T) {
 	app, err := platform.GetActiveApp("")
 	assert.NoError(err)
 	testcommon.LogPwd(t, "About to run app.Import()")
-	appConfig := app.(*platform.LocalApp).AppConfig
-	t.Logf("About to run app.Import() with AppConfig=%v", appConfig)
 	err = app.Import()
 	assert.NoError(err)
 	err = app.Down(true)

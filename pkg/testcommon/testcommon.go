@@ -123,6 +123,8 @@ func CleanupDir(dir string) {
 	err := os.RemoveAll(dir)
 	if err != nil {
 		log.Warn(fmt.Sprintf("Failed to remove directory %s, err: %v", dir, err))
+	} else {
+		log.Infof("testcommon.CleanupDir() removed directory at %s", dir)
 	}
 }
 
@@ -166,6 +168,7 @@ func Chdir(path string) func() {
 		if err != nil {
 			log.Fatalf("Failed to change directory to original dir=%s, err=%v", curDir, err)
 		}
+		log.Infof("testcommon.Chdir restored directory to %s", curDir)
 	}
 }
 
