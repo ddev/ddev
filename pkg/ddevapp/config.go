@@ -191,7 +191,7 @@ func (c *Config) Read() error {
 
 	source, err := ioutil.ReadFile(c.ConfigPath)
 	if err != nil {
-		return fmt.Errorf("could not find an active ddev configuration, have you run 'ddev config'? %v", err)
+		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", c.ConfigPath, err)
 	}
 
 	// validate extend command keys

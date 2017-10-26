@@ -168,17 +168,7 @@ func TestPantheonPull(t *testing.T) {
 	err = provider.Write(config.GetPath("import.yaml"))
 	assert.NoError(err)
 
-	// Ensure GetBackup triggers an error for unknown backup types.
-	_, _, err = provider.GetBackup(util.RandString(8))
-	assert.Error(err)
-
 	// Ensure we can do a pull on the configured site.
-	backupLink, importPath, err := provider.GetBackup("database")
-
-	assert.Equal(importPath, "")
-	assert.Contains(backupLink, "database.sql.gz")
-	assert.NoError(err)
-
 	app, err := platform.GetActiveApp("")
 	assert.NoError(err)
 	err = app.Import()
