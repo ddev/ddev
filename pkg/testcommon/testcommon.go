@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -13,6 +14,8 @@ import (
 	"path"
 
 	"fmt"
+
+	"testing"
 
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -319,4 +322,13 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 		return extractPath, archiveFullPath, fmt.Errorf("archive extraction of %s failed err=%v", archiveFullPath, err)
 	}
 	return extractPath, archiveFullPath, nil
+}
+
+// LogPwd uses t.Logf to log the current directory, with file/line from caller
+func LogPwd(t *testing.T, msg string) {
+	pwd, _ := os.Getwd()
+	_, file, _, _ := runtime.Caller(0)
+	_, _, line, _ := runtime.Caller(0)
+
+	t.Logf("%s pwd = %s (%s:%d)", msg, pwd, file, line)
 }

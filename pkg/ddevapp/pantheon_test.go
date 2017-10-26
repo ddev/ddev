@@ -28,6 +28,8 @@ const pantheonTestEnvName = "bbowman"
 
 // TestConfigCommand tests the interactive config options.
 func TestPantheonConfigCommand(t *testing.T) {
+	testcommon.LogPwd(t, "Entering TestPantheonConfigCommand")
+
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
 		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
 	}
@@ -95,6 +97,8 @@ func TestPantheonConfigCommand(t *testing.T) {
 
 // TestPantheonBackupLinks ensures we can get backups from pantheon for a configured environment.
 func TestPantheonBackupLinks(t *testing.T) {
+	testcommon.LogPwd(t, "Entering TestPantheonBackupLinks")
+
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
 		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
 	}
@@ -132,6 +136,8 @@ func TestPantheonBackupLinks(t *testing.T) {
 
 // TestPantheonPull ensures we can pull backups from pantheon for a configured environment.
 func TestPantheonPull(t *testing.T) {
+	testcommon.LogPwd(t, "Entering TestPantheonPull")
+
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
 		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
 	}
@@ -148,7 +154,8 @@ func TestPantheonPull(t *testing.T) {
 	siteDir := testDir + "/" + pantheonTestSiteName
 	err := os.MkdirAll(siteDir+"/sites/default", 0777)
 	assert.NoError(err)
-	os.Chdir(siteDir)
+	err = os.Chdir(siteDir)
+	assert.NoError(err)
 
 	config, err := NewConfig(siteDir, "pantheon")
 	assert.NoError(err)
