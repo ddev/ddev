@@ -700,7 +700,7 @@ func (l *LocalApp) Wait(containerTypes ...string) error {
 	return nil
 }
 
-func (l *LocalApp) determinSettingsPath() (string, error) {
+func (l *LocalApp) determineSettingsPath() (string, error) {
 	possibleLocations := []string{l.AppConfig.SiteSettingsPath, l.AppConfig.SiteLocalSettingsPath}
 	for _, loc := range possibleLocations {
 		// If the file is found we need to check for a signature to determine if it's safe to use.
@@ -728,7 +728,7 @@ func (l *LocalApp) CreateSettingsFile() error {
 		return nil
 	}
 
-	settingsFilePath, err := l.determinSettingsPath()
+	settingsFilePath, err := l.determineSettingsPath()
 	if err != nil {
 		return err
 	}
