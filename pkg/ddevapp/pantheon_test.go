@@ -28,8 +28,6 @@ const pantheonTestEnvName = "bbowman"
 
 // TestConfigCommand tests the interactive config options.
 func TestPantheonConfigCommand(t *testing.T) {
-	testcommon.LogPwd(t, "Entering TestPantheonConfigCommand")
-
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
 		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
 	}
@@ -97,8 +95,6 @@ func TestPantheonConfigCommand(t *testing.T) {
 
 // TestPantheonBackupLinks ensures we can get backups from pantheon for a configured environment.
 func TestPantheonBackupLinks(t *testing.T) {
-	testcommon.LogPwd(t, "Entering TestPantheonBackupLinks")
-
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
 		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
 	}
@@ -136,8 +132,6 @@ func TestPantheonBackupLinks(t *testing.T) {
 
 // TestPantheonPull ensures we can pull backups from pantheon for a configured environment.
 func TestPantheonPull(t *testing.T) {
-	testcommon.LogPwd(t, "Entering TestPantheonPull")
-
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
 		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
 	}
@@ -181,10 +175,8 @@ func TestPantheonPull(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure we can do a pull on the configured site.
-	testcommon.LogPwd(t, "About to run GetActiveApp()")
 	app, err := platform.GetActiveApp("")
 	assert.NoError(err)
-	testcommon.LogPwd(t, "About to run app.Import()")
 	err = app.Import()
 	assert.NoError(err)
 	err = app.Down(true)

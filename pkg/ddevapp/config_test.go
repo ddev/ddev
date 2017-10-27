@@ -196,8 +196,6 @@ func TestConfigCommand(t *testing.T) {
 func TestRead(t *testing.T) {
 	assert := asrt.New(t)
 
-	testcommon.LogPwd(t, "Entering TestRead")
-
 	// This closely resembles the values one would have from NewConfig()
 	c := &Config{
 		ConfigPath: filepath.Join("testing", "config.yaml"),
@@ -228,8 +226,6 @@ func TestRead(t *testing.T) {
 
 // TestValidate tests validation of configuration values.
 func TestValidate(t *testing.T) {
-	testcommon.LogPwd(t, "Entering TestValidate")
-
 	assert := asrt.New(t)
 
 	cwd, err := os.Getwd()

@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -14,8 +13,6 @@ import (
 	"path"
 
 	"fmt"
-
-	"testing"
 
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -123,8 +120,6 @@ func CleanupDir(dir string) {
 	err := os.RemoveAll(dir)
 	if err != nil {
 		log.Warn(fmt.Sprintf("Failed to remove directory %s, err: %v", dir, err))
-	} else {
-		log.Infof("testcommon.CleanupDir() removed directory at %s", dir)
 	}
 }
 
@@ -168,7 +163,6 @@ func Chdir(path string) func() {
 		if err != nil {
 			log.Fatalf("Failed to change directory to original dir=%s, err=%v", curDir, err)
 		}
-		log.Infof("testcommon.Chdir restored directory to %s", curDir)
 	}
 }
 
@@ -325,13 +319,4 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 		return extractPath, archiveFullPath, fmt.Errorf("archive extraction of %s failed err=%v", archiveFullPath, err)
 	}
 	return extractPath, archiveFullPath, nil
-}
-
-// LogPwd uses t.Logf to log the current directory, with file/line from caller
-func LogPwd(t *testing.T, msg string) {
-	pwd, _ := os.Getwd()
-	_, file, _, _ := runtime.Caller(0)
-	_, _, line, _ := runtime.Caller(0)
-
-	t.Logf("%s pwd = %s (%s:%d)", msg, pwd, file, line)
 }
