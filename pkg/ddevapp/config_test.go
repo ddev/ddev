@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
@@ -22,6 +23,16 @@ func TestMain(m *testing.M) {
 
 	// Ensure the ddev directory is created before tests run.
 	_ = util.GetGlobalDdevDir()
+
+	// Since this test may be first time ddev has been used, we need the
+	// ddev_default network available. This would normally be done in a
+	// TestMain, so can be moved to one when we need one.
+	dockerutil.EnsureDdevNetwork()
+
+	// Avoid having sudo try to add to /etc/hosts.
+	// This is normally done by Testsite.Prepare()
+	_ = os.Setenv("DRUD_NONINTERACTIVE", "true")
+
 	os.Exit(m.Run())
 }
 

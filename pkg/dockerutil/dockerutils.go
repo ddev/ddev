@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -37,6 +38,17 @@ func EnsureNetwork(client *docker.Client, name string) error {
 
 	}
 	return nil
+}
+
+// EnsureDdevNetwork just creates or ensures the ddev_default network exists or
+// exits with fatal.
+func EnsureDdevNetwork() {
+	// ensure we have docker network
+	client := GetDockerClient()
+	err := EnsureNetwork(client, NetName)
+	if err != nil {
+		log.Fatalf("Failed to ensure docker network %s: %v", NetName, err)
+	}
 }
 
 // GetDockerClient returns a docker client for a docker-machine.

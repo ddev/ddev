@@ -110,15 +110,6 @@ func Execute() {
 
 }
 
-func dockerNetworkPreRun() {
-	client := dockerutil.GetDockerClient()
-
-	err := dockerutil.EnsureNetwork(client, netName)
-	if err != nil {
-		util.Failed("Unable to create/ensure docker network %s, error: %v", netName, err)
-	}
-}
-
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 }

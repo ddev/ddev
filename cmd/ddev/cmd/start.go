@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
@@ -23,7 +24,7 @@ provide a working environment for development.`,
 			os.Exit(0)
 		}
 
-		dockerNetworkPreRun()
+		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		appStart()

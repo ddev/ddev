@@ -136,11 +136,6 @@ func TestPantheonPull(t *testing.T) {
 		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
 	}
 
-	// Avoid having sudo try to add hostsfile.
-	// This is normally done by Testsite.Prepare()
-	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
-	util.CheckErr(err)
-
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestPantheonPull")
@@ -151,7 +146,7 @@ func TestPantheonPull(t *testing.T) {
 
 	// Move into the properly named pantheon site (must match pantheon sitename)
 	siteDir := testDir + "/" + pantheonTestSiteName
-	err = os.MkdirAll(siteDir+"/sites/default", 0777)
+	err := os.MkdirAll(siteDir+"/sites/default", 0777)
 	assert.NoError(err)
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
