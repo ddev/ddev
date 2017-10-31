@@ -5,11 +5,12 @@ Things might go wrong!
 ## Webserver ports are already occupied by another webserver
 
 If you get a message from ddev about a port conflict on port 80 or 443, like this:
+
 ```
 Failed to start yoursite: Unable to listen on required ports, Localhost port 80 is in use
 ```
 
-it means that you have another webserver listening on port 80 (or 443, or both), and it needs to be stopped so that ddev can access the port.
+it means that you have another webserver listening on port 80 (or 443, or both), and it needs to be stopped so that ddev can access the port. 
 
 Probably the most common reason for this is that Apache is running locally. It can often be stopped gracefully (but temporarily) with:
 
@@ -18,6 +19,9 @@ sudo apachectl stop
 ```
 
 **Common tools that use port 80:**
+
+There are many processes that could be using port 80. Here are some of the common ones and how to stop them:
+
 * MAMP (macOS): [Stop MAMP](http://documentation.mamp.info/en/MAMP-Mac/Preferences/Start-Stop/)
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
 * nginx (macOS Homebrew): `sudo brew services stop nginx`
