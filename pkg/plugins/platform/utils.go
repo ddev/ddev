@@ -68,7 +68,8 @@ func CreateAppTable() *uitable.Table {
 	table := uitable.New()
 	table.MaxColWidth = 140
 	table.Separator = "  "
-	table.AddRow("NAME", "TYPE", "LOCATION", "URL", "STATUS")
+	table.Wrap = true
+	table.AddRow("NAME", "TYPE", "LOCATION", "URLs", "STATUS")
 	return table
 }
 

@@ -14,10 +14,10 @@ var DdevVersion = "v0.3.0-dev" // Note that this is overridden by make
 var DockerVersionConstraint = ">= 17.05.0-ce"
 
 // WebImg defines the default web image used for applications.
-var WebImg = "drud/nginx-php-fpm7-local" // Note that this is overridden by make
+var WebImg = "drud/nginx-php-fpm-local" // Note that this is overridden by make
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "v0.7.4" // Note that this is overridden by make
+var WebTag = "v0.8.0" // Note that this is overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/mysql-local-57" // Note that this is overridden by make
@@ -35,7 +35,7 @@ var DBATag = "v0.2.0"
 var RouterImage = "drud/ddev-router" // Note that this is overridden by make
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "ssl" // Note that this is overridden by make
+var RouterTag = "v0.4.3" // Note that this is overridden by make
 
 // COMMIT is the actual committish, supplied by make
 var COMMIT = "COMMIT should be overridden"

@@ -47,12 +47,6 @@ $settings['file_scan_ignore_directories'] = [
 {{ else }}
 
 $drupal_hash_salt = '{{ $config.HashSalt }}';
-$base_url = '{{ $config.DeployURL }}';
-
-if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
-  $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
-  $_SERVER['HTTPS'] = 'on';
-}
 {{ end }}
 
 
