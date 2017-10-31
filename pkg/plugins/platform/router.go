@@ -111,7 +111,8 @@ func StartDdevRouter() error {
 
 // PrintRouterStatus outputs router status and warning if not
 // running or healthy, as applicable.
-// An easy way to make these ports unavailable: sudo netcat -l -p 80  (brew install netcat)
+// An easy way to make these ports unavailable in order to test this is:
+// sudo netcat -l -p 80  (brew install netcat)
 func PrintRouterStatus() string {
 	var status string
 
