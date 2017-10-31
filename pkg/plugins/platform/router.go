@@ -122,7 +122,7 @@ func PrintRouterStatus() string {
 	container, err := dockerutil.FindContainerByLabels(label)
 
 	if err != nil {
-		status = color.RedString(SiteNotFound) + badRouter
+		status = color.RedString(SiteNotFound)
 	} else {
 		status = dockerutil.GetContainerHealth(container)
 	}
