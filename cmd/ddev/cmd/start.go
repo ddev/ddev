@@ -33,7 +33,7 @@ provide a working environment for development.`,
 func appStart() {
 	app, err := platform.GetActiveApp("")
 	if err != nil {
-		util.Failed("Failed to GetActiveApp err: %v", err)
+		util.Failed("Failed to start %s, err: %v", app.GetName(), err)
 	}
 
 	fmt.Printf("Starting environment for %s...\n", app.GetName())
