@@ -92,7 +92,6 @@ func (l *LocalApp) Describe() (string, error) {
 	}
 	appTable := CreateAppTable()
 
-	RenderAppRow(appTable, l)
 	output = fmt.Sprint(appTable)
 
 	db, err := l.FindContainerByType("db")

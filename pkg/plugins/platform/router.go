@@ -17,6 +17,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/fatih/color"
+	"github.com/fsouza/go-dockerclient"
 )
 
 // RouterProjectName is the "machine name" of the router docker-compose
@@ -79,25 +80,20 @@ func StartDdevRouter() error {
 	_, err = f.WriteString(doc.String())
 	util.CheckErr(err)
 
-	// Stop router so we can test port. Of course, it may not be running.
-	err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "down")
-	if err != nil {
-		return fmt.Errorf("failed to stop ddev-router: %v", err)
+	container, err := findDdevRouter()
+	// If we have a router running, we don't have to stop and start it.
+	if err != nil || container.State != "running" {
+		err = CheckRouterPorts()
+		if err != nil {
+			return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://github.com/drud/ddev/blob/master/docs/users/troubleshooting.md#unable-listen", err)
+		}
 	}
-	err = CheckRouterPorts()
-	if err != nil {
-		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://github.com/drud/ddev/blob/master/docs/users/troubleshooting.md#unable-listen", err)
-	}
-
-	log.Println("starting ddev router with docker-compose")
 
 	// run docker-compose up -d in the newly created directory
 	err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "up", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
-
-	fmt.Println("Starting service health checks...")
 
 	// ensure we have a happy router
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
@@ -109,6 +105,19 @@ func StartDdevRouter() error {
 	return nil
 }
 
+// findDdevRouter usees FindContainerByLabels to get our router container and
+// return it
+func findDdevRouter() (docker.APIContainers, error) {
+	containerQuery := map[string]string{
+		"com.docker.compose.service": RouterProjectName,
+	}
+	container, err := dockerutil.FindContainerByLabels(containerQuery)
+	if err != nil {
+		return docker.APIContainers{}, fmt.Errorf("Failed to execute findContainersByLabels, %v", err)
+	}
+	return container, nil
+}
+
 // PrintRouterStatus outputs router status and warning if not
 // running or healthy, as applicable.
 // An easy way to make these ports unavailable in order to test this is:
@@ -118,8 +127,7 @@ func PrintRouterStatus() string {
 
 	badRouter := "\nThe router is not currently running. Your sites are likely inaccessible at this time.\nTry running 'ddev start' on a site to recreate the router."
 
-	label := map[string]string{"com.docker.compose.service": "ddev-router"}
-	container, err := dockerutil.FindContainerByLabels(label)
+	container, err := findDdevRouter()
 
 	if err != nil {
 		status = color.RedString(SiteNotFound)
