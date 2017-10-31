@@ -31,7 +31,7 @@ const CurrentAppVersion = "1"
 const DDevDefaultPlatform = "local"
 
 // DDevTLD defines the tld to use for DDev site URLs.
-const DDevTLD = "ddev.local"
+const DDevTLD = "ddev.site"
 
 // AllowedAppTypes lists the types of site/app that can be used.
 var AllowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}

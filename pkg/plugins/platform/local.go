@@ -8,7 +8,6 @@ import (
 
 	"strings"
 
-	"net/url"
 	osexec "os/exec"
 
 	"os/user"
@@ -32,6 +31,8 @@ import (
 )
 
 const containerWaitTimeout = 35
+
+var offlineFile = filepath.Join(util.GetGlobalDdevDir(), ".offline")
 
 // LocalApp implements the AppBase interface local development apps
 type LocalApp struct {
@@ -871,15 +872,11 @@ func (l *LocalApp) HostName() string {
 
 // AddHostsEntry will add the local site URL to the local hostfile.
 func (l *LocalApp) AddHostsEntry() error {
-	dockerIP := "127.0.0.1"
-	dockerHostRawURL := os.Getenv("DOCKER_HOST")
-	if dockerHostRawURL != "" {
-		dockerHostURL, err := url.Parse(dockerHostRawURL)
-		if err != nil {
-			return fmt.Errorf("Failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
-		}
-		dockerIP = dockerHostURL.Hostname()
+	if fileutil.FileExists(offlineFile) {
+		return nil
 	}
+
+	dockerIP := getDockerIP()
 	hosts, err := goodhosts.NewHosts()
 	if err != nil {
 		log.Fatalf("could not open hostfile. %s", err)
@@ -898,7 +895,7 @@ func (l *LocalApp) AddHostsEntry() error {
 	util.CheckErr(err)
 
 	fmt.Println("ddev needs to add an entry to your hostfile.\nIt will require root privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
-	hostnameArgs := []string{ddevFullpath, "hostname", l.HostName(), dockerIP}
+	hostnameArgs := []string{ddevFullpath, "hostname", dockerIP, l.HostName()}
 	command := strings.Join(hostnameArgs, " ")
 	util.Warning(fmt.Sprintf("    sudo %s", command))
 	fmt.Println("Please enter your password if prompted.")

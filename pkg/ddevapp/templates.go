@@ -19,7 +19,6 @@ services:
       com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
       com.ddev.approot: $DDEV_APPROOT
-      com.ddev.app-url: $DDEV_URL
     environment:
       - DDEV_UID=$DDEV_UID
       - DDEV_GID=$DDEV_GID
@@ -52,7 +51,7 @@ services:
       com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
       com.ddev.approot: $DDEV_APPROOT
-      com.ddev.app-url: $DDEV_URL
+      com.ddev.hostname: $DDEV_HOSTNAME
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
@@ -62,7 +61,6 @@ services:
       com.ddev.platform: {{ .plugin }}
       com.ddev.app-type: {{ .appType }}
       com.ddev.approot: $DDEV_APPROOT
-      com.ddev.app-url: $DDEV_URL
     depends_on:
       - db
     links:

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/lextoumbourou/goodhosts"
@@ -10,31 +9,32 @@ import (
 
 // HostNameCmd represents the local command
 var HostNameCmd = &cobra.Command{
-	Use:   "hostname [hostname] [ip]",
+	Use:   "hostname [ip] [hostnames]",
 	Short: "Manage your hostfile entries.",
 	Long:  `Manage your hostfile entries.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 2 {
-			log.Fatal("Invalid arguments supplied. Please use 'drud legacy hostname [hostname] [ip]'")
-		}
+		ip, hostnames := args[0], args[1:]
 
-		hostname, ip := args[0], args[1]
 		hosts, err := goodhosts.NewHosts()
 		if err != nil {
-			log.Fatalf("could not open hostfile. %s", err)
-		}
-		if hosts.Has(ip, hostname) {
-			fmt.Println("Entry exists!")
-			return
+			log.Fatalf("failed to open hosts file: %v", err)
 		}
 
-		err = hosts.Add(ip, hostname)
-		if err != nil {
-			log.Fatal("Could not add hostname")
+		for i, host := range hostnames {
+			if hosts.Has(ip, host) {
+				hostnames = append(hostnames[:i], hostnames[i+1:]...)
+			}
 		}
 
-		if err := hosts.Flush(); err != nil {
-			log.Fatalf("could not write hosts file: %s", err)
+		if len(hostnames) > 0 {
+			err = hosts.Add(ip, hostnames...)
+			if err != nil {
+				log.Fatalf("failed to add hostname: %v", err)
+			}
+
+			if err := hosts.Flush(); err != nil {
+				log.Fatalf("failed to write hosts file: %v", err)
+			}
 		}
 	},
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {},

@@ -2,17 +2,23 @@ package platform
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/url"
+	"os"
+	osexec "os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
+	"github.com/lextoumbourou/goodhosts"
 	log "github.com/sirupsen/logrus"
 
 	"errors"
 
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	gohomedir "github.com/mitchellh/go-homedir"
@@ -207,4 +213,81 @@ func ddevContainersRunning() (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// SetOfflineMode enables offline mode for ddev. When offline mode is
+// set, a tracking file is created and hosts entries are created for
+// currently running sites. Any new sites started during offline mode
+// will prompt for creating host entries.
+func SetOfflineMode() error {
+	var addHostnames []string
+	dockerIP := getDockerIP()
+
+	hosts, err := goodhosts.NewHosts()
+	if err != nil {
+		log.Fatalf("could not open hostfile. %s", err)
+	}
+
+	err = ioutil.WriteFile(offlineFile, []byte(""), 0644)
+	if err != nil {
+		return err
+	}
+
+	labels := map[string]string{
+		"com.ddev.platform":          "ddev",
+		"com.docker.compose.service": "web",
+	}
+	sites, err := dockerutil.FindContainersByLabels(labels)
+	for _, site := range sites {
+		hostname := site.Labels["com.ddev.hostname"]
+		if !hosts.Has(dockerIP, hostname) {
+			addHostnames = append(addHostnames, hostname)
+		}
+	}
+
+	if len(addHostnames) == 0 {
+		util.Success("Offline mode enabled. ddev will use hosts file entries for local development domains.")
+		return nil
+	}
+
+	_, err = osexec.Command("sudo", "-h").Output()
+	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
+		util.Warning("Offline mode enabled. You must manually add the following entry to your hosts file:\n%s %s", dockerIP, strings.Join(addHostnames, " "))
+		return nil
+	}
+
+	ddevFullpath, err := os.Executable()
+	util.CheckErr(err)
+	fmt.Println("ddev needs to add entries to your hostfile for offline mode.\nIt will require root privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
+	hostnameArgs := []string{ddevFullpath, "hostname", dockerIP}
+	hostnameArgs = append(hostnameArgs, addHostnames...)
+	command := strings.Join(hostnameArgs, " ")
+	util.Warning(fmt.Sprintf("    sudo %s", command))
+	fmt.Println("Please enter your password if prompted.")
+	err = exec.RunCommandPipe("sudo", hostnameArgs)
+	return err
+}
+
+// UnsetOfflineMode removes the tracking file for offline mode in order
+// to disable it.
+func UnsetOfflineMode() error {
+	err := os.Remove(offlineFile)
+	if err == nil {
+		util.Success("Offline mode disabled. Hosts entries will no longer be added for sites.")
+		return nil
+	}
+	return err
+}
+
+func getDockerIP() string {
+	dockerIP := "127.0.0.1"
+	dockerHostRawURL := os.Getenv("DOCKER_HOST")
+	if dockerHostRawURL != "" {
+		dockerHostURL, err := url.Parse(dockerHostRawURL)
+		if err != nil {
+			log.Errorf("Failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
+		}
+		dockerIP = dockerHostURL.Hostname()
+	}
+	return dockerIP
 }
