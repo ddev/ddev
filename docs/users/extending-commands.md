@@ -42,7 +42,7 @@ _Use wp-cli to replace the production URL with development URL in the database o
 ```
 hooks:
   post-import-db:
-    - exec: "wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.local"
+    - exec: "wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.site"
 ```
 
 ### `exec-host`: Execute a shell command on your system.
@@ -66,10 +66,10 @@ hooks:
   post-start:
     # Install WordPress after start
     - exec: "wp config create --dbname=db --dbuser=db --dbpass=db --dbhost=db"
-    - exec: "wp core install --url=http://mysite.ddev.local --title=MySite --admin_user=admin --admin_email=admin@mail.test"
+    - exec: "wp core install --url=http://mysite.ddev.site --title=MySite --admin_user=admin --admin_email=admin@mail.test"
   post-import-db:
     # Update the URL of your site throughout your database after import
-    - exec: "wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.local"
+    - exec: "wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.site"
 ```
 
 ## Drupal 7 Example

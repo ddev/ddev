@@ -16,6 +16,6 @@ This recipe adds an Apache Solr 5.4 container to a project. It will setup a solr
 
 **Interacting with Apache Solr**
 
-- The Solr admin interface will be accessible at http://<sitename>.ddev.local:8983
-- The host connection for apache solr will be <sitename>.ddev.local
+- The Solr admin interface will be accessible at http://<sitename>.ddev.site:8983
+- The host connection for apache solr will be <sitename>.ddev.site
 - The Solr core will be "dev"

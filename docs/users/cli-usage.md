@@ -18,6 +18,7 @@ Available Commands:
   import-files Import the uploaded files directory of an existing site to the default public upload directory of your application.
   list         List applications that exist locally
   logs         Get the logs from your running services.
+  offline      Enable or disable offline mode.
   restart      Restart the local development environment for a site.
   remove       Remove an application's local services.
   sequelpro    Easily connect local site to sequelpro
@@ -63,7 +64,7 @@ When running `ddev start` you should see output informing you that the site's en
 
 ```
 Successfully started wordpress-site
-Your application can be reached at: http://wordpress-site.ddev.local
+Your application can be reached at: http://wordpress-site.ddev.site
 ```
 
 Quickstart instructions regarding database imports, can be found under [Database Imports](#database-imports).
@@ -95,7 +96,7 @@ When running `ddev start` you should see output informing you that the site's en
 
 ```
 Successfully started my-drupal7-site
-Your application can be reached at: http://my-drupal7-site.ddev.local
+Your application can be reached at: http://my-drupal7-site.ddev.site
 ```
 
 Quickstart instructions regarding database imports, can be found under [Database Imports](#database-imports).
@@ -138,7 +139,7 @@ When running `ddev start` you should see output informing you that the site's en
 
 ```
 Successfully started my-drupal8-site
-Your application can be reached at: http://my-drupal8-site.ddev.local
+Your application can be reached at: http://my-drupal8-site.ddev.site
 ```
 
 ### Database Imports
@@ -195,7 +196,7 @@ Creating local-drupal8-db
 Creating local-drupal8-web
 Waiting for the environment to become ready. This may take a couple of minutes...
 Successfully started drupal8
-Your application can be reached at: http://drupal8.ddev.local
+Your application can be reached at: http://drupal8.ddev.site
 ```
 
 And you can now visit your working site. Enjoy!
@@ -208,14 +209,14 @@ To see a list of your current sites you can use `ddev list`.
 ➜  ddev list
 1 local site found.
 NAME     TYPE     LOCATION                 URL                        STATUS
-drupal8  drupal8  ~/Projects/ddev/drupal8  http://drupal8.ddev.local  running
+drupal8  drupal8  ~/Projects/ddev/drupal8  http://drupal8.ddev.site  running
 ```
 
 You can also see more detailed information about a site by running `ddev describe` from its working directory. You can also run `ddev describe [site-name]` from any location to see the detailed information for a running site.
 
 ```
 NAME     TYPE     LOCATION                 URL                        STATUS
-drupal8  drupal8  ~/Projects/ddev/drupal8  http://drupal8.ddev.local  running
+drupal8  drupal8  ~/Projects/ddev/drupal8  http://drupal8.ddev.site  running
 
 MySQL Credentials
 -----------------
@@ -229,8 +230,8 @@ For example: mysql --host 127.0.0.1 --port 32894
 
 Other Services
 --------------
-MailHog:   	http://drupal8.ddev.local:8025
-phpMyAdmin:	http://drupal8.ddev.local:8036
+MailHog:   	http://drupal8.ddev.site:8025
+phpMyAdmin:	http://drupal8.ddev.site:8036
 ```
 
 ## Importing assets for an existing site
