@@ -108,7 +108,8 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 
 }
 
-// Cleanup will clean up ddev apps even if the composer file has been deleted.
+// Cleanup will remove ddev containers and volumes even if docker-compose.yml
+// has been deleted.
 func Cleanup(app App) error {
 	client := dockerutil.GetDockerClient()
 
@@ -116,10 +117,8 @@ func Cleanup(app App) error {
 	labels := map[string]string{
 		"com.ddev.site-name": app.GetName(),
 	}
-	containers, err := dockerutil.FindContainersByLabels(labels)
-	if err != nil {
-		return err
-	}
+	containers, findErr := dockerutil.FindContainersByLabels(labels)
+	if findErr == nil {
 
 	// First, try stopping the listed containers if they are running.
 	for i := range containers {
@@ -131,20 +130,26 @@ func Cleanup(app App) error {
 				return fmt.Errorf("could not stop container %s: %v", containerName, err)
 			}
 		}
-	}
 
-	// Try to remove the containers once they are stopped.
-	for i := range containers {
-		containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
-		removeOpts := docker.RemoveContainerOptions{
-			ID:            containers[i].ID,
-			RemoveVolumes: true,
-			Force:         true,
+		// Try to remove the containers once they are stopped.
+		for i := range containers {
+			containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
+			removeOpts := docker.RemoveContainerOptions{
+				ID:            containers[i].ID,
+				RemoveVolumes: true,
+				Force:         true,
+			}
+			fmt.Printf("Removing container: %s\n", containerName)
+			if err := client.RemoveContainer(removeOpts); err != nil {
+				return fmt.Errorf("could not remove container %s: %v", containerName, err)
+			}
 		}
 		output.UserOut.Printf("Removing container: %s", containerName)
 		if err = client.RemoveContainer(removeOpts); err != nil {
 			return fmt.Errorf("could not remove container %s: %v", containerName, err)
 		}
+		} else {
+		log.Warnf("app.Cleanup() did not stop containers because they did not exist: %v", findErr)
 	}
 
 	volumes, err := client.ListVolumes(docker.ListVolumesOptions{})
@@ -154,14 +159,15 @@ func Cleanup(app App) error {
 
 	for _, volume := range volumes {
 		if volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()) {
-			err := client.RemoveVolume(volume.Name)
+			err = client.RemoveVolume(volume.Name)
 			if err != nil {
 				return fmt.Errorf("could not remove volume %s: %v", volume.Name, err)
 			}
 		}
 	}
 
-	return StopRouter()
+	err = StopRouter()
+	return err
 }
 
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.

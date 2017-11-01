@@ -42,7 +42,8 @@ func (l *LocalApp) GetType() string {
 	return strings.ToLower(l.AppConfig.AppType)
 }
 
-// Init populates LocalApp settings based on the current working directory.
+// Init populates LocalApp config based on the current working directory.
+// It does not start the containers.
 func (l *LocalApp) Init(basePath string) error {
 	config, err := ddevapp.NewConfig(basePath, "")
 
@@ -805,16 +806,18 @@ func (l *LocalApp) CreateSettingsFile() error {
 	return nil
 }
 
-// Down stops the docker containers for the local project.
+// Down stops the docker containers for the project in current directory.
 func (l *LocalApp) Down(removeData bool) error {
 	l.DockerEnv()
 	settingsFilePath := l.AppConfig.SiteSettingsPath
 
+	// Remove all the containers and volumes for app.
 	err := Cleanup(l)
 	if err != nil {
-		util.Failed("Failed to remove %s: %s", l.GetName(), err)
+		return fmt.Errorf("Failed to remove %s: %s", l.GetName(), err)
 	}
 
+	// Remove data/database if we need to.
 	if removeData {
 		if fileutil.FileExists(settingsFilePath) {
 			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
@@ -853,7 +856,8 @@ func (l *LocalApp) Down(removeData bool) error {
 		}
 	}
 
-	return StopRouter()
+	err = StopRouter()
+	return err
 }
 
 // URL returns the URL for a given application.

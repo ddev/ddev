@@ -125,7 +125,7 @@ func TestMain(m *testing.M) {
 
 		err = app.Down(true)
 		if err != nil {
-			log.Fatalf("TestMain startup: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
+			log.Fatalf("TestMain shutdown: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
 		}
 
 		runTime()
@@ -564,7 +564,6 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	assert.NoError(err)
 }
 
-
 // TestRouterPortsCheck makes sure that we can detect if the ports are available before starting the router.
 func TestRouterPortsCheck(t *testing.T) {
 	assert := asrt.New(t)
@@ -621,7 +620,6 @@ func TestRouterPortsCheck(t *testing.T) {
 	out, err := exec.RunCommand("docker", []string{"rm", "-f", containerId})
 	assert.NoError(err, "Failed to docker rm the port-occupier container, err=%v output=%v", err, out)
 }
-
 
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
 func TestCleanupWithoutCompose(t *testing.T) {
