@@ -43,7 +43,7 @@ services:
       - DOCROOT=$DDEV_DOCROOT
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
+      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       # To expose a container port to a different host port, define the port as hostPort:containerPort
       - HTTP_EXPOSE=80,{{ .mailhogport }}
     labels:
@@ -71,7 +71,7 @@ services:
       - PMA_USER=db
       - PMA_PASSWORD=db
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
+      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       - HTTP_EXPOSE={{ .dbaport }}
 networks:
   default:

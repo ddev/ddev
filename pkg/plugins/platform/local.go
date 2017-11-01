@@ -872,7 +872,7 @@ func (l *LocalApp) HostName() string {
 
 // AddHostsEntry will add the local site URL to the local hostfile.
 func (l *LocalApp) AddHostsEntry() error {
-	if fileutil.FileExists(offlineFile) {
+	if !fileutil.FileExists(offlineFile) {
 		return nil
 	}
 

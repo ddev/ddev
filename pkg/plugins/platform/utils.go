@@ -223,14 +223,14 @@ func SetOfflineMode() error {
 	var addHostnames []string
 	dockerIP := getDockerIP()
 
+	err := ioutil.WriteFile(offlineFile, []byte(""), 0644)
+	if err != nil {
+		return err
+	}
+
 	hosts, err := goodhosts.NewHosts()
 	if err != nil {
 		log.Fatalf("could not open hostfile. %s", err)
-	}
-
-	err = ioutil.WriteFile(offlineFile, []byte(""), 0644)
-	if err != nil {
-		return err
 	}
 
 	labels := map[string]string{
@@ -246,13 +246,12 @@ func SetOfflineMode() error {
 	}
 
 	if len(addHostnames) == 0 {
-		util.Success("Offline mode enabled. ddev will use hosts file entries for local development domains.")
 		return nil
 	}
 
 	_, err = osexec.Command("sudo", "-h").Output()
 	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
-		util.Warning("Offline mode enabled. You must manually add the following entry to your hosts file:\n%s %s", dockerIP, strings.Join(addHostnames, " "))
+		util.Warning("You must manually add the following entries to your hosts file:\n%s %s", dockerIP, strings.Join(addHostnames, " "))
 		return nil
 	}
 
@@ -272,10 +271,6 @@ func SetOfflineMode() error {
 // to disable it.
 func UnsetOfflineMode() error {
 	err := os.Remove(offlineFile)
-	if err == nil {
-		util.Success("Offline mode disabled. Hosts entries will no longer be added for sites.")
-		return nil
-	}
 	return err
 }
 
