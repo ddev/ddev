@@ -7,7 +7,8 @@ import (
 )
 
 // CheckErr exits with a log.Fatal() if an error is encountered.
-// It is normally used for errors that we never expect to happen, and don't have any normal handling technique.
+// It is normally used for errors that we never expect to happen,
+// and don't have any normal handling technique.
 // From https://davidnix.io/post/error-handling-in-go/
 func CheckErr(err error) {
 	if err != nil {

@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"bytes"
 
 	"github.com/Masterminds/semver"
+	"github.com/drud/ddev/pkg/output"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -32,7 +32,7 @@ func EnsureNetwork(client *docker.Client, name string) error {
 		if err != nil {
 			return err
 		}
-		log.Println("Network", name, "created")
+		output.UserOut.Println("Network", name, "created")
 
 	}
 	return nil
@@ -42,7 +42,7 @@ func EnsureNetwork(client *docker.Client, name string) error {
 func GetDockerClient() *docker.Client {
 	client, err := docker.NewClientFromEnv()
 	if err != nil {
-		log.Fatalf("could not get docker client. is docker running? error: %v", err)
+		util.Failed("could not get docker client. is docker running? error: %v", err)
 	}
 
 	return client

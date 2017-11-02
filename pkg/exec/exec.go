@@ -28,7 +28,7 @@ func RunCommand(command string, args []string) (string, error) {
 
 // RunCommandPipe runs a command on the host system while piping output to stderr and stdout.
 func RunCommandPipe(command string, args []string) error {
-	log.WithFields(log.Fields{
+	output.UserOut.WithFields(log.Fields{
 		"Command": command + " " + strings.Join(args[:], " "),
 	}).Info("Running Command")
 

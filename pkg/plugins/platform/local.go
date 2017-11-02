@@ -28,7 +28,6 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
 	shellwords "github.com/mattn/go-shellwords"
-	log "github.com/sirupsen/logrus"
 )
 
 const containerWaitTimeout = 35
@@ -459,7 +458,7 @@ func (l *LocalApp) DockerComposeYAMLPath() string {
 func (l *LocalApp) ComposeFiles() []string {
 	files, err := filepath.Glob(filepath.Join(l.AppConfDir(), "docker-compose*"))
 	if err != nil {
-		log.Fatalf("Failed to load compose files: %v", err)
+		util.Failed("Failed to load compose files: %v", err)
 	}
 
 	for i, file := range files {
@@ -875,7 +874,7 @@ func (l *LocalApp) AddHostsEntry() error {
 	}
 	hosts, err := goodhosts.NewHosts()
 	if err != nil {
-		log.Fatalf("could not open hostfile. %s", err)
+		util.Failed("could not open hostfile. %s", err)
 	}
 	if hosts.Has(dockerIP, l.HostName()) {
 		return nil
