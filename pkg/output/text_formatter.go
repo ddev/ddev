@@ -131,8 +131,8 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 func (f *TextFormatter) printColored(b *bytes.Buffer, entry *log.Entry, keys []string, timestampFormat string) {
 	var levelColor int
 	switch entry.Level {
-	case log.InfoLevel:
-		levelColor = blue
+	//case log.InfoLevel:
+	//	levelColor = blue
 	case log.DebugLevel:
 		levelColor = gray
 	case log.WarnLevel:
