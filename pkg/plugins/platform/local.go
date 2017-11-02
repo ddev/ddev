@@ -23,9 +23,9 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/gosuri/uitable"
 	"github.com/lextoumbourou/goodhosts"
 	shellwords "github.com/mattn/go-shellwords"
 	log "github.com/sirupsen/logrus"
@@ -80,56 +80,44 @@ func (l *LocalApp) FindContainerByType(containerType string) (docker.APIContaine
 	return dockerutil.FindContainerByLabels(labels)
 }
 
-// Describe returns a string which provides detailed information on services associated with the running site.
-func (l *LocalApp) Describe() (string, error) {
-	maxWidth := uint(200)
-	var output string
-	siteStatus := l.SiteStatus()
+// Describe returns a map which provides detailed information on services associated with the running site.
+func (l *LocalApp) Describe() (map[string]interface{}, error) {
 
-	// Do not show any describe output if we can't find the site.
-	if siteStatus == SiteNotFound {
-		return "", fmt.Errorf("no site found. have you run `ddev start`?")
-	}
-	appTable := CreateAppTable()
+	shortRoot := RenderHomeRootedDir(l.AppRoot())
+	appDesc := make(map[string]interface{})
 
-	RenderAppRow(appTable, l)
-	output = fmt.Sprint(appTable)
+	appDesc["name"] = l.GetName()
+	appDesc["status"] = l.SiteStatus()
+	appDesc["type"] = l.GetType()
+	appDesc["approot"] = shortRoot
+	appDesc["url"] = l.URL()
 
 	db, err := l.FindContainerByType("db")
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("Failed to find container of type db: %v", err)
 	}
-
-	dbPrivatePort, err := strconv.ParseInt(appports.GetPort("db"), 10, 64)
-	if err != nil {
-		return "", err
-	}
-
-	dbPublishPort := fmt.Sprint(dockerutil.GetPublishedPort(dbPrivatePort, db))
 
 	// Only show extended status for running sites.
-	if siteStatus == SiteRunning {
-		output = output + "\n\nMySQL Credentials\n-----------------\n"
-		dbTable := uitable.New()
-		dbTable.MaxColWidth = maxWidth
-		dbTable.AddRow("Username:", "db")
-		dbTable.AddRow("Password:", "db")
-		dbTable.AddRow("Database name:", "db")
-		dbTable.AddRow("Host:", "db")
-		dbTable.AddRow("Port:", appports.GetPort("db"))
-		output = output + fmt.Sprint(dbTable)
-		output = output + fmt.Sprintf("\nTo connect to mysql from your host machine, use port %[1]v on 127.0.0.1.\nFor example: mysql --host=127.0.0.1 --port=%[1]v --user=db --password=db --database=db", dbPublishPort)
+	if l.SiteStatus() == SiteRunning {
+		dbinfo := make(map[string]interface{})
+		dbinfo["username"] = "db"
+		dbinfo["password"] = "db"
+		dbinfo["dbname"] = "db"
+		dbinfo["host"] = "db"
+		port := appports.GetPort("db")
+		dbinfo["port"] = port
+		dbPrivatePort, err := strconv.ParseInt(port, 10, 64)
+		util.CheckErr(err)
+		dbinfo["published_port"] = fmt.Sprint(dockerutil.GetPublishedPort(dbPrivatePort, db))
+		appDesc["dbinfo"] = dbinfo
 
-		output = output + "\n\nOther Services\n--------------\n"
-		other := uitable.New()
-		other.AddRow("MailHog:", l.URL()+":"+appports.GetPort("mailhog"))
-		other.AddRow("phpMyAdmin:", l.URL()+":"+appports.GetPort("dba"))
-		output = output + fmt.Sprint(other)
+		appDesc["mailhog_url"] = l.URL() + ":" + appports.GetPort("mailhog")
+		appDesc["phpmyadmin_url"] = l.URL() + ":" + appports.GetPort("dba")
 	}
 
-	output = output + "\n" + PrintRouterStatus()
+	appDesc["router_status"] = GetRouterStatus()
 
-	return output, nil
+	return appDesc, nil
 }
 
 // AppRoot return the full path from root to the app directory
@@ -174,8 +162,8 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 		if extPath == "" {
 			extPathPrompt = true
 		}
-		fmt.Println("Provide the path to the database you wish to import.")
-		fmt.Println("Import path: ")
+		output.UserOut.Println("Provide the path to the database you wish to import.")
+		fmt.Print("Import path: ")
 
 		imPath = util.GetInput("")
 	}
@@ -183,8 +171,8 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 	importPath, err := appimport.ValidateAsset(imPath, "db")
 	if err != nil {
 		if err.Error() == "is archive" && extPathPrompt {
-			fmt.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
-			fmt.Println("Archive extraction path:")
+			output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
+			fmt.Print("Archive extraction path:")
 
 			extPath = util.GetInput("")
 		}
@@ -232,7 +220,7 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 		return fmt.Errorf("no .sql files found to import")
 	}
 
-	err = l.Exec("db", true, "bash", "-c", "cat /db/*.sql | mysql")
+	_, _, err = l.Exec("db", "bash", "-c", "cat /db/*.sql | mysql")
 	if err != nil {
 		return err
 	}
@@ -325,7 +313,7 @@ func (l *LocalApp) Import() error {
 	}
 
 	if l.SiteStatus() != SiteRunning {
-		fmt.Println("Site is not currently running. Starting site before performing import.")
+		output.UserOut.Println("Site is not currently running. Starting site before performing import.")
 		err := l.Start()
 		if err != nil {
 			return err
@@ -337,7 +325,7 @@ func (l *LocalApp) Import() error {
 		return err
 	}
 
-	fmt.Println("Importing database...")
+	output.UserOut.Println("Importing database...")
 	err = l.ImportDB(fileLocation, importPath)
 	if err != nil {
 		return err
@@ -348,7 +336,7 @@ func (l *LocalApp) Import() error {
 		return err
 	}
 
-	fmt.Println("Importing files...")
+	output.UserOut.Println("Importing files...")
 	err = l.ImportFiles(fileLocation, importPath)
 	if err != nil {
 		return err
@@ -375,8 +363,8 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 		if extPath == "" {
 			extPathPrompt = true
 		}
-		fmt.Println("Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.")
-		fmt.Println("Import path: ")
+		output.UserOut.Println("Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.")
+		fmt.Print("Import path: ")
 
 		imPath = util.GetInput("")
 	}
@@ -419,8 +407,8 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 	importPath, err := appimport.ValidateAsset(imPath, "files")
 	if err != nil {
 		if err.Error() == "is archive" && extPathPrompt {
-			fmt.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
-			fmt.Println("Archive extraction path:")
+			output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
+			fmt.Print("Archive extraction path:")
 
 			extPath = util.GetInput("")
 		}
@@ -495,26 +483,26 @@ func (l *LocalApp) ComposeFiles() []string {
 // ProcessHooks executes commands defined in a ddevapp.Command
 func (l *LocalApp) ProcessHooks(hookName string) error {
 	if cmds := l.AppConfig.Commands[hookName]; len(cmds) > 0 {
-		fmt.Printf("Executing %s commands...\n", hookName)
+		output.UserOut.Printf("Executing %s commands...", hookName)
 	}
 
 	for _, c := range l.AppConfig.Commands[hookName] {
 		if c.Exec != "" {
-			fmt.Printf("--- Running exec command: %s ---\n", c.Exec)
+			output.UserOut.Printf("--- Running exec command: %s ---", c.Exec)
 
 			args, err := shellwords.Parse(c.Exec)
 			if err != nil {
 				return fmt.Errorf("%s exec failed: %v", hookName, err)
 			}
 
-			err = l.Exec("web", true, args...)
+			_, _, err = l.Exec("web", args...)
 			if err != nil {
 				return fmt.Errorf("%s exec failed: %v", hookName, err)
 			}
 			util.Success("--- %s exec command succeeded ---", hookName)
 		}
 		if c.ExecHost != "" {
-			fmt.Printf("--- Running host command: %s ---\n", c.ExecHost)
+			output.UserOut.Printf("--- Running host command: %s ---", c.ExecHost)
 			args := strings.Split(c.ExecHost, " ")
 			cmd := args[0]
 			args = append(args[:0], args[1:]...)
@@ -565,7 +553,7 @@ func (l *LocalApp) Start() error {
 		return err
 	}
 
-	err = dockerutil.ComposeCmd(l.ComposeFiles(), "up", "-d")
+	_, _, err = dockerutil.ComposeCmd(l.ComposeFiles(), "up", "-d")
 	if err != nil {
 		return err
 	}
@@ -588,19 +576,26 @@ func (l *LocalApp) Start() error {
 	return nil
 }
 
-// Exec executes a given command in the container of given type.
-func (l *LocalApp) Exec(service string, tty bool, cmd ...string) error {
+// Exec executes a given command in the container of given type without allocating a pty
+// Returns ComposeCmd results of stdout, stderr, err
+func (l *LocalApp) Exec(service string, cmd ...string) (string, string, error) {
 	l.DockerEnv()
 
-	var exec []string
-	if tty {
-		exec = []string{"exec", "-T", service}
-	} else {
-		exec = []string{"exec", service}
-	}
+	exec := []string{"exec", "-T", service}
 	exec = append(exec, cmd...)
 
 	return dockerutil.ComposeCmd(l.ComposeFiles(), exec...)
+}
+
+// ExecWithTty executes a given command in the container of given type.
+// It allocates a pty for interactive work.
+func (l *LocalApp) ExecWithTty(service string, cmd ...string) error {
+	l.DockerEnv()
+
+	exec := []string{"exec", service}
+	exec = append(exec, cmd...)
+
+	return dockerutil.ComposeNoCapture(l.ComposeFiles(), exec...)
 }
 
 // Logs returns logs for a site's given container.
@@ -614,8 +609,8 @@ func (l *LocalApp) Logs(service string, follow bool, timestamps bool, tail strin
 		Container:    container.ID,
 		Stdout:       true,
 		Stderr:       true,
-		OutputStream: os.Stdout,
-		ErrorStream:  os.Stderr,
+		OutputStream: output.UserOut.Out,
+		ErrorStream:  output.UserOut.Out,
 		Follow:       follow,
 		Timestamps:   timestamps,
 	}
@@ -664,10 +659,8 @@ func (l *LocalApp) DockerEnv() {
 		if os.Getenv(k) == "" {
 
 			err := os.Setenv(k, v)
-			// @ TODO: I have no idea what a Setenv error would even look like, so I'm not sure what
-			// to do other than notify the user.
 			if err != nil {
-				fmt.Printf("Could not set the environment variable %s=%s: %v\n", k, v, err)
+				util.Error("Failed to set the environment variable %s=%s: %v", k, v, err)
 			}
 		}
 	}
@@ -681,7 +674,7 @@ func (l *LocalApp) Stop() error {
 		return fmt.Errorf("no site to remove")
 	}
 
-	err := dockerutil.ComposeCmd(l.ComposeFiles(), "stop")
+	_, _, err := dockerutil.ComposeCmd(l.ComposeFiles(), "stop")
 
 	if err != nil {
 		return err
@@ -762,7 +755,7 @@ func (l *LocalApp) Config() error {
 	case "drupal8":
 		fallthrough
 	case "drupal7":
-		fmt.Printf("Generating %s file for database connection.\n", fileName)
+		output.UserOut.Printf("Generating %s file for database connection.", fileName)
 		drushSettingsPath := filepath.Join(l.AppRoot(), "drush.settings.php")
 
 		// Retrieve published mysql port for drush settings file.
@@ -797,7 +790,7 @@ func (l *LocalApp) Config() error {
 			return err
 		}
 	case "wordpress":
-		fmt.Printf("Generating %s file for database connection.\n", fileName)
+		output.UserOut.Printf("Generating %s file for database connection.", fileName)
 		wpConfig := model.NewWordpressConfig()
 		wpConfig.DeployURL = l.URL()
 		err := config.WriteWordpressConfig(wpConfig, settingsFilePath)
@@ -813,7 +806,7 @@ func (l *LocalApp) Down(removeData bool) error {
 	l.DockerEnv()
 	settingsFilePath := l.AppConfig.SiteSettingsPath
 
-	err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
+	_, _, err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
 	if err != nil {
 		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
 		err = Cleanup(l)
@@ -890,18 +883,18 @@ func (l *LocalApp) AddHostsEntry() error {
 
 	_, err = osexec.Command("sudo", "-h").Output()
 	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
-		util.Warning("You must manually add the following entry to your hosts file:\n%s %s", dockerIP, l.HostName())
+		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s", dockerIP, l.HostName(), l.HostName(), dockerIP)
 		return nil
 	}
 
 	ddevFullpath, err := os.Executable()
 	util.CheckErr(err)
 
-	fmt.Println("ddev needs to add an entry to your hostfile.\nIt will require root privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
+	output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt will require root privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
 	hostnameArgs := []string{ddevFullpath, "hostname", l.HostName(), dockerIP}
 	command := strings.Join(hostnameArgs, " ")
 	util.Warning(fmt.Sprintf("    sudo %s", command))
-	fmt.Println("Please enter your password if prompted.")
+	output.UserOut.Println("Please enter your password if prompted.")
 	err = exec.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }

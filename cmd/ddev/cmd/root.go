@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
@@ -17,7 +18,6 @@ import (
 )
 
 var (
-	logLevel       = log.WarnLevel
 	plugin         = "local"
 	updateInterval = time.Hour * 24 * 7 // One week interval between updates
 	serviceType    string
@@ -31,9 +31,11 @@ var RootCmd = &cobra.Command{
 	Short: "A CLI for interacting with ddev.",
 	Long:  "This Command Line Interface (CLI) gives you the ability to interact with the ddev to create a local development environment.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		ignores := []string{"list", "version", "describe", "config"}
+		ignores := []string{"list", "version", "describe", "config", "hostname"}
 		skip := false
 		command := strings.Join(os.Args, " ")
+
+		output.LogSetUp()
 
 		for _, k := range ignores {
 			if strings.Contains(command, " "+k) {
@@ -89,7 +91,7 @@ var RootCmd = &cobra.Command{
 			}
 
 			if updateNeeded {
-				util.Warning("\n\nA new update is available! please visit %s to download the update!\n\n", updateURL)
+				util.Warning("\n\nA new update is available! please visit %s to download the update.", updateURL)
 			}
 		}
 
@@ -108,15 +110,6 @@ func Execute() {
 
 }
 
-func init() {
-	drudDebug := os.Getenv("DRUD_DEBUG")
-	if drudDebug != "" {
-		logLevel = log.DebugLevel
-	}
-
-	log.SetLevel(logLevel)
-}
-
 func dockerNetworkPreRun() {
 	client := dockerutil.GetDockerClient()
 
@@ -124,4 +117,8 @@ func dockerNetworkPreRun() {
 	if err != nil {
 		util.Failed("Unable to create/ensure docker network %s, error: %v", netName, err)
 	}
+}
+
+func init() {
+	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 }

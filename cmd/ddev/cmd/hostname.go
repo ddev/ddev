@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
-	"log"
+	"github.com/drud/ddev/pkg/output"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/spf13/cobra"
@@ -15,29 +15,28 @@ var HostNameCmd = &cobra.Command{
 	Long:  `Manage your hostfile entries.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 2 {
-			log.Fatal("Invalid arguments supplied. Please use 'drud legacy hostname [hostname] [ip]'")
+			output.UserOut.Fatal("Invalid arguments supplied. Please use 'ddev hostname [hostname] [ip]'")
 		}
 
 		hostname, ip := args[0], args[1]
 		hosts, err := goodhosts.NewHosts()
 		if err != nil {
-			log.Fatalf("could not open hostfile. %s", err)
+			output.UserOut.Fatalf("could not open hosts file. %s", err)
 		}
 		if hosts.Has(ip, hostname) {
-			fmt.Println("Entry exists!")
+			log.Debugf("Hosts file entry %s exists, taking no action", hostname)
 			return
 		}
 
 		err = hosts.Add(ip, hostname)
 		if err != nil {
-			log.Fatal("Could not add hostname")
+			output.UserOut.Fatal("Could not add hostname")
 		}
 
 		if err := hosts.Flush(); err != nil {
-			log.Fatalf("could not write hosts file: %s", err)
+			output.UserOut.Fatalf("could not write hosts file: %s", err)
 		}
 	},
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {},
 }
 
 func init() {

@@ -11,6 +11,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"bytes"
+
 	"github.com/Masterminds/semver"
 	"github.com/fsouza/go-dockerclient"
 )
@@ -184,8 +186,9 @@ func GetContainerHealth(container docker.APIContainers) string {
 	return match
 }
 
-// ComposeCmd executes docker-compose commands via shell.
-func ComposeCmd(composeFiles []string, action ...string) error {
+// ComposeNoCapture executes a docker-compose command while leaving the stdin/stdout/stderr untouched
+// so that people can interact with them directly, for example with ddev ssh.
+func ComposeNoCapture(composeFiles []string, action ...string) error {
 	var arg []string
 
 	for _, file := range composeFiles {
@@ -200,7 +203,36 @@ func ComposeCmd(composeFiles []string, action ...string) error {
 	proc.Stdin = os.Stdin
 	proc.Stderr = os.Stderr
 
-	return proc.Run()
+	err := proc.Run()
+	if err != nil {
+		return fmt.Errorf("Failed to run docker-compose %v: %v", arg, err)
+	}
+	return nil
+}
+
+// ComposeCmd executes docker-compose commands via shell.
+// returns stdout, stderr, error/nil
+func ComposeCmd(composeFiles []string, action ...string) (string, string, error) {
+	var arg []string
+	var stdout, stderr bytes.Buffer
+
+	for _, file := range composeFiles {
+		arg = append(arg, "-f")
+		arg = append(arg, file)
+	}
+
+	arg = append(arg, action...)
+
+	proc := exec.Command("docker-compose", arg...)
+	proc.Stdout = &stdout
+	proc.Stdin = os.Stdin
+	proc.Stderr = &stderr
+
+	err := proc.Run()
+	if err != nil {
+		return stdout.String(), stderr.String(), fmt.Errorf("Failed to run docker-compose %v, err=%v, stdout=%s, stderr=%s", arg, err, stdout.String(), stderr.String())
+	}
+	return stdout.String(), stderr.String(), nil
 }
 
 // GetAppContainers retrieves docker containers for a given sitename.

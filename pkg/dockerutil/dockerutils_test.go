@@ -1,14 +1,15 @@
 package dockerutil_test
 
 import (
-	"log"
 	"os"
 	"testing"
+
+	log "github.com/sirupsen/logrus"
 
 	"path/filepath"
 
 	. "github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/output"
 	docker "github.com/fsouza/go-dockerclient"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -20,6 +21,8 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	output.LogSetUp()
+
 	// prep docker container for docker util tests
 	client := GetDockerClient()
 
@@ -110,25 +113,21 @@ func TestComposeCmd(t *testing.T) {
 
 	composeFiles := []string{filepath.Join("testdata", "docker-compose.yml")}
 
-	stdout := testcommon.CaptureStdOut()
-	err := ComposeCmd(composeFiles, "config", "--services")
+	stdout, _, err := ComposeCmd(composeFiles, "config", "--services")
 	assert.NoError(err)
-	out := stdout()
-	assert.Contains(out, "web")
-	assert.Contains(out, "db")
+	assert.Contains(stdout, "web")
+	assert.Contains(stdout, "db")
 
 	composeFiles = append(composeFiles, filepath.Join("testdata", "docker-compose.override.yml"))
 
-	stdout = testcommon.CaptureStdOut()
-	err = ComposeCmd(composeFiles, "config", "--services")
+	stdout, _, err = ComposeCmd(composeFiles, "config", "--services")
 	assert.NoError(err)
-	out = stdout()
-	assert.Contains(out, "web")
-	assert.Contains(out, "db")
-	assert.Contains(out, "foo")
+	assert.Contains(stdout, "web")
+	assert.Contains(stdout, "db")
+	assert.Contains(stdout, "foo")
 
 	composeFiles = []string{"invalid.yml"}
-	err = ComposeCmd(composeFiles, "config", "--services")
+	_, _, err = ComposeCmd(composeFiles, "config", "--services")
 	assert.Error(err)
 }
 

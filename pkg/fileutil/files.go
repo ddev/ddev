@@ -11,6 +11,7 @@ import (
 
 	"runtime"
 
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 )
 
@@ -103,7 +104,7 @@ func CopyDir(src string, dst string) error {
 		} else {
 			err = CopyFile(srcPath, dstPath)
 			if err != nil && entry.Mode()&os.ModeSymlink != 0 {
-				fmt.Printf("failed to copy symlink %s, skipping...\n", srcPath)
+				output.UserOut.Warnf("failed to copy symlink %s, skipping...\n", srcPath)
 				continue
 			}
 			if err != nil {

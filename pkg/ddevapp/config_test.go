@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -17,6 +18,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	output.LogSetUp()
+
 	// Ensure the ddev directory is created before tests run.
 	_ = util.GetGlobalDdevDir()
 	os.Exit(m.Run())
@@ -170,7 +173,7 @@ func TestConfigCommand(t *testing.T) {
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 
-	restoreOutput := testcommon.CaptureStdOut()
+	restoreOutput := testcommon.CaptureUserOut()
 	err = config.PromptForConfig()
 	assert.NoError(err, t)
 	out := restoreOutput()

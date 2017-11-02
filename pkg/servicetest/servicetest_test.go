@@ -7,10 +7,9 @@ import (
 
 	"path/filepath"
 
-	"fmt"
-
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
@@ -32,6 +31,8 @@ var (
 
 // TestMain runs the tests in servicetest
 func TestMain(m *testing.M) {
+	output.LogSetUp()
+
 	if os.Getenv("GOTEST_SHORT") != "" {
 		log.Info("servicetest skipped in short mode because GOTEST_SHORT is set")
 		os.Exit(0)
@@ -86,7 +87,7 @@ func TestServices(t *testing.T) {
 			assert.NoError(err)
 
 			for _, service := range ServiceFiles {
-				log.Info("Checking containers for ", service)
+				t.Log("Checking containers for ", service)
 				serviceName := strings.TrimPrefix(service, "docker-compose.")
 				serviceName = strings.TrimSuffix(serviceName, ".yaml")
 
@@ -116,7 +117,7 @@ func TestServices(t *testing.T) {
 					containerPorts := container.Ports
 					for _, port := range containerPorts {
 						if string(port.PrivatePort) == expose && port.PublicPort != 0 {
-							fmt.Println("Checking for 200 status for port ", port.PrivatePort)
+							log.Debugln("Checking for 200 status for port ", port.PrivatePort)
 							o := util.NewHTTPOptions("http://127.0.0.1:" + string(port.PublicPort))
 							o.ExpectedStatus = 200
 							o.Timeout = 30

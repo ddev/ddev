@@ -8,8 +8,6 @@ import (
 
 	"os"
 
-	"log"
-
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/util"
 	gohomedir "github.com/mitchellh/go-homedir"
@@ -22,7 +20,7 @@ func TestValidateAsset(t *testing.T) {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("failed to get cwd: %s", err)
+		t.Fatalf("failed to get cwd: %s", err)
 	}
 	testdata := filepath.Join(cwd, "testdata")
 

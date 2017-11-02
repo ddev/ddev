@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -36,7 +36,7 @@ func appStart() {
 		util.Failed("Failed to start %s, err: %v", app.GetName(), err)
 	}
 
-	fmt.Printf("Starting environment for %s...\n", app.GetName())
+	output.UserOut.Printf("Starting environment for %s...", app.GetName())
 
 	err = app.Start()
 	if err != nil {

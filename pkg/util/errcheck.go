@@ -2,7 +2,8 @@ package util
 
 import (
 	"io"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // CheckErr exits with a log.Fatal() if an error is encountered.

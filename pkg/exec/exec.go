@@ -5,12 +5,13 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/drud/ddev/pkg/output"
 	log "github.com/sirupsen/logrus"
 )
 
 // RunCommand runs a command on the host system.
 func RunCommand(command string, args []string) (string, error) {
-	log.WithFields(log.Fields{
+	output.UserOut.WithFields(log.Fields{
 		"Command": command + " " + strings.Join(args[:], " "),
 	}).Info("Running Command")
 
@@ -18,7 +19,7 @@ func RunCommand(command string, args []string) (string, error) {
 		command, args...,
 	).CombinedOutput()
 
-	log.WithFields(log.Fields{
+	output.UserOut.WithFields(log.Fields{
 		"Result": string(out),
 	}).Debug("Command Result")
 

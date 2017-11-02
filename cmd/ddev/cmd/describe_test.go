@@ -3,10 +3,13 @@ package cmd
 import (
 	"testing"
 
+	"encoding/json"
+
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
+	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -29,7 +32,7 @@ func TestDescribeBadArgs(t *testing.T) {
 	args = []string{"describe", util.RandString(16)}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Could not describe app")
+	assert.Contains(string(out), "Unable to find any active site")
 
 	// Ensure we get a failure if using too many arguments.
 	args = []string{"describe", util.RandString(16), util.RandString(16)}
@@ -69,6 +72,19 @@ func TestDescribe(t *testing.T) {
 		assert.Contains(string(out), v.Name)
 		assert.Contains(string(out), "running")
 
+		// Test describe in current directory with json flag
+		args = []string{"describe", "-j"}
+		out, err = exec.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		// Unmarshall the json results results. The describe function only has 4 fields to output
+		data := make(log.Fields, 4)
+		err = json.Unmarshal([]byte(out), &data)
+		assert.NoError(err)
+		raw, ok := data["raw"].(map[string]interface{})
+		assert.True(ok)
+		assert.EqualValues(raw["status"], "running")
+		assert.EqualValues(raw["name"], v.Name)
+		assert.EqualValues(raw["approot"].(string), platform.RenderHomeRootedDir(v.Dir))
 		cleanup()
 	}
 }
@@ -82,19 +98,26 @@ func TestDescribeAppFunction(t *testing.T) {
 		app, err := platform.GetActiveApp("")
 		assert.NoError(err)
 
-		out, err := describeApp("")
+		desc, err := app.Describe()
 		assert.NoError(err)
+		assert.EqualValues(desc["status"], platform.SiteRunning)
+		assert.EqualValues(app.GetName(), desc["name"])
+		assert.EqualValues(platform.RenderHomeRootedDir(v.Dir), desc["approot"].(string))
+
+		out, _ := json.Marshal(desc)
 		assert.Contains(string(out), app.URL())
 		assert.Contains(string(out), app.GetName())
-		assert.Regexp("DDEV ROUTER STATUS.*running", string(out))
+		assert.Contains(string(out), "\"router_status\":\"healthy\"")
 		assert.Contains(string(out), platform.RenderHomeRootedDir(v.Dir))
 
+		// Stop the router using docker and then check the describe
 		_, err = exec.RunCommand("docker", []string{"stop", "ddev-router"})
 		assert.NoError(err)
-		out, err = describeApp("")
+		desc, err = app.Describe()
 		assert.NoError(err)
-		assert.Regexp("DDEV ROUTER STATUS.*stopped", string(out))
-		assert.Contains(string(out), "The router is not currently running")
+		out, _ = json.Marshal(desc)
+		assert.NoError(err)
+		assert.Contains(string(out), "router_status\":\"exited")
 		_, err = exec.RunCommand("docker", []string{"start", "ddev-router"})
 		assert.NoError(err)
 
@@ -112,7 +135,15 @@ func TestDescribeAppUsingSitename(t *testing.T) {
 	defer testcommon.Chdir(tmpdir)()
 
 	for _, v := range DevTestSites {
-		out, err := describeApp(v.Name)
+		app, err := platform.GetActiveApp(v.Name)
+		assert.NoError(err)
+		desc, err := app.Describe()
+		assert.NoError(err)
+		assert.EqualValues(desc["status"], platform.SiteRunning)
+		assert.EqualValues(app.GetName(), desc["name"])
+		assert.EqualValues(platform.RenderHomeRootedDir(v.Dir), desc["approot"].(string))
+
+		out, _ := json.Marshal(desc)
 		assert.NoError(err)
 		assert.Contains(string(out), "running")
 		assert.Contains(string(out), platform.RenderHomeRootedDir(v.Dir))
@@ -129,17 +160,16 @@ func TestDescribeAppWithInvalidParams(t *testing.T) {
 	defer testcommon.Chdir(tmpdir)()
 
 	// Ensure describeApp fails from an invalid working directory.
-	_, err := describeApp("")
+	_, err := platform.GetActiveApp("")
 	assert.Error(err)
 
 	// Ensure describeApp fails with invalid site-names.
-	_, err = describeApp(util.RandString(16))
+	_, err = platform.GetActiveApp(util.RandString(16))
 	assert.Error(err)
 
-	// Change to a sites working directory and ensure a failure still occurs with a invalid site name.
+	// Change to a site's working directory and ensure a failure still occurs with a invalid site name.
 	cleanup := DevTestSites[0].Chdir()
-	_, err = describeApp(util.RandString(16))
+	_, err = platform.GetActiveApp(util.RandString(16))
 	assert.Error(err)
 	cleanup()
-
 }

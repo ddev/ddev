@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"log"
 	"os"
-
-	"path/filepath"
 
 	"path"
 
+	"path/filepath"
+
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -36,14 +36,14 @@ var ConfigCommand = &cobra.Command{
 
 		appRoot, err := os.Getwd()
 		if err != nil {
-			util.Failed("Could not determine current working directory: %v\n", err)
+			util.Failed("Could not determine current working directory: %v", err)
 
 		}
 
 		provider := ddevapp.DefaultProviderName
 
 		if len(args) > 1 {
-			log.Fatal("Invalid argument detected. Please use 'ddev config' or 'ddev config [provider]' to configure a site.")
+			output.UserOut.Fatal("Invalid argument detected. Please use 'ddev config' or 'ddev config [provider]' to configure a site.")
 		}
 
 		if len(args) == 1 {
@@ -59,7 +59,7 @@ var ConfigCommand = &cobra.Command{
 		if siteName == "" && docrootRelPath == "" && pantheonEnvironment == "" && appType == "" {
 			err = c.PromptForConfig()
 			if err != nil {
-				util.Failed("There was a problem configuring your application: %v\n", err)
+				util.Failed("There was a problem configuring your application: %v", err)
 			}
 		} else { // In this case we have to validate the provided items, or set to sane defaults
 
@@ -97,7 +97,7 @@ var ConfigCommand = &cobra.Command{
 			fullPath, _ := filepath.Abs(c.Docroot)
 			if err == nil && (appType == "" || appType == foundAppType) { // Found an app, matches passed-in or no apptype passed
 				appType = foundAppType
-				util.Success("Found a %s codebase at %s\n", foundAppType, fullPath)
+				util.Success("Found a %s codebase at %s", foundAppType, fullPath)
 			} else if appType != "" && err != nil { // apptype was passed, but we found no app at all
 				util.Warning("You have specified an apptype of %s but no app of that type is found in %s", appType, fullPath)
 			} else if appType != "" && err == nil && foundAppType != appType { // apptype was passed, app was found, but not the same type
@@ -127,7 +127,7 @@ var ConfigCommand = &cobra.Command{
 		}
 		err = c.Write()
 		if err != nil {
-			util.Failed("Could not write ddev config file: %v\n", err)
+			util.Failed("Could not write ddev config file: %v", err)
 		}
 
 		// If a provider is specified, prompt about whether to do an import after config.

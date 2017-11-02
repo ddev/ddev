@@ -2,12 +2,12 @@ package ddevapp
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	gohomedir "github.com/mitchellh/go-homedir"
 
@@ -69,13 +69,11 @@ func (p *PantheonProvider) PromptForConfig() error {
 		err := p.environmentPrompt()
 
 		if err == nil {
-			break
+			return nil
 		}
 
-		fmt.Printf("%v\n", err)
+		output.UserOut.Errorf("%v\n", err)
 	}
-
-	return nil
 }
 
 // GetBackup will download the most recent backup specified by backupType. Valid values for backupType are "database" or "files".
@@ -325,7 +323,7 @@ func getPantheonSession() *pantheon.AuthSession {
 
 	err = session.Auth()
 	if err != nil {
-		log.Fatalf("Could not authenticate with pantheon: %v", err)
+		output.UserOut.Fatalf("Could not authenticate with pantheon: %v", err)
 	}
 
 	err = session.Write(sessionLocation)

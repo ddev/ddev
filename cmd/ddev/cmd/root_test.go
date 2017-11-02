@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -13,6 +12,7 @@ import (
 
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -33,14 +33,16 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	output.LogSetUp()
+
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
-	fmt.Println("Running ddev with ddev=", DdevBin)
+	log.Println("Running ddev with ddev=", DdevBin)
 
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
 	if err != nil {
-		fmt.Println("could not set noninteractive mode")
+		log.Errorln("could not set noninteractive mode, failed to Setenv, err: ", err)
 	}
 
 	for i := range DevTestSites {
@@ -51,7 +53,7 @@ func TestMain(m *testing.M) {
 	}
 	addSites()
 
-	fmt.Println("Running tests.")
+	log.Debugln("Running tests.")
 	testRun := m.Run()
 
 	removeSites()

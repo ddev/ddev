@@ -13,6 +13,7 @@ import (
 
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
@@ -230,10 +231,10 @@ func (c *Config) Read() error {
 // WarnIfConfigReplace just messages user about whether config is being replaced or created
 func (c *Config) WarnIfConfigReplace() {
 	if c.ConfigExists() {
-		util.Warning("You are re-configuring the app at %s. \nThe existing configuration will be updated and replaced.\n\n", c.AppRoot)
+		util.Warning("You are reconfiguring the app at %s. \nThe existing configuration will be updated and replaced.", c.AppRoot)
 	} else {
-		util.Success("Creating a new ddev project config in the current directory (%s)", c.AppRoot)
-		util.Success("Once completed, your configuration will be written to %s\n", c.ConfigPath)
+		output.UserOut.Printf("Creating a new ddev project config in the current directory (%s)", c.AppRoot)
+		output.UserOut.Printf("Once completed, your configuration will be written to %s", c.ConfigPath)
 	}
 }
 
@@ -249,7 +250,7 @@ func (c *Config) PromptForConfig() error {
 			break
 		}
 
-		fmt.Printf("%v\n", err)
+		output.UserOut.Printf("%v", err)
 	}
 
 	for {
@@ -259,7 +260,7 @@ func (c *Config) PromptForConfig() error {
 			break
 		}
 
-		fmt.Printf("%v\n", err)
+		output.UserOut.Printf("%v", err)
 	}
 
 	err := c.appTypePrompt()
@@ -383,8 +384,8 @@ func (c *Config) docrootPrompt() error {
 	}
 
 	// Determine the document root.
-	fmt.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)\n", c.AppRoot)
-	fmt.Println("You may leave this value blank if your site files are in the application root")
+	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)", c.AppRoot)
+	output.UserOut.Println("You may leave this value blank if your site files are in the application root")
 	var docrootPrompt = "Docroot Location"
 	if c.Docroot != "" {
 		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, c.Docroot)
@@ -396,7 +397,7 @@ func (c *Config) docrootPrompt() error {
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(c.AppRoot, c.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		fmt.Printf("No directory could be found at %s. Please enter a valid docroot\n", fullPath)
+		output.UserOut.Errorf("No directory could be found at %s. Please enter a valid docroot\n", fullPath)
 		c.Docroot = ""
 		return c.docrootPrompt()
 	}
@@ -429,7 +430,7 @@ func (c *Config) appTypePrompt() error {
 	appType, err = DetermineAppType(absDocroot)
 	if err == nil {
 		// If we found an application type just set it and inform the user.
-		util.Success("Found a %s codebase at %s\n", appType, filepath.Join(c.AppRoot, c.Docroot))
+		util.Success("Found a %s codebase at %s.", appType, filepath.Join(c.AppRoot, c.Docroot))
 		c.AppType = appType
 		return provider.ValidateField("AppType", c.AppType)
 	}
@@ -440,7 +441,7 @@ func (c *Config) appTypePrompt() error {
 		appType = strings.ToLower(util.GetInput(c.AppType))
 
 		if IsAllowedAppType(appType) != true {
-			fmt.Printf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(AllowedAppTypes, ", "))
+			output.UserOut.Errorf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(AllowedAppTypes, ", "))
 		}
 		c.AppType = appType
 	}

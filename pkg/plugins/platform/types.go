@@ -25,7 +25,7 @@ const SiteStopped = "stopped"
 // App is an interface apps for Drud Local must implement to use shared functionality
 type App interface {
 	Init(string) error
-	Describe() (string, error)
+	Describe() (map[string]interface{}, error)
 	GetType() string
 	AppRoot() string
 	GetName() string
@@ -42,7 +42,9 @@ type App interface {
 	ImportFiles(imPath string, extPath string) error
 	SiteStatus() string
 	FindContainerByType(containerType string) (docker.APIContainers, error)
-	Exec(service string, tty bool, cmd ...string) error
+	// Returns err, stdout, stderr
+	Exec(service string, cmd ...string) (string, string, error)
+	ExecWithTty(service string, cmd ...string) error
 	Logs(service string, follow bool, timestamps bool, tail string) error
 }
 

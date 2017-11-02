@@ -3,8 +3,10 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
 )
 
@@ -29,25 +31,64 @@ running 'ddev stop <sitename>.`,
 			siteName = args[0]
 		}
 
-		out, err := describeApp(siteName)
+		site, err := platform.GetActiveApp(siteName)
 		if err != nil {
-			util.Failed("Could not describe app: %v", err)
+			util.Failed("Unable to find any active site named %s: %v", siteName, err)
 		}
-		fmt.Println(out)
+
+		// Do not show any describe output if we can't find the site.
+		if site.SiteStatus() == platform.SiteNotFound {
+			util.Failed("no site found. have you run 'ddev start'?")
+		}
+
+		desc, err := site.Describe()
+		if err != nil {
+			util.Failed("Failed to describe site %s: %v", err)
+		}
+
+		renderedDesc, err := renderAppDescribe(desc)
+		util.CheckErr(err) // We shouldn't ever end up with an unrenderable desc.
+		output.UserOut.WithField("raw", desc).Print(renderedDesc)
 	},
 }
 
-// describeApp will load and describe the app specified by appName. You may leave appName blank to use the app from the current working directory.
-func describeApp(appName string) (string, error) {
-	var err error
+// renderAppDescribe takes the map describing the app and renders it for plain-text output
+func renderAppDescribe(desc map[string]interface{}) (string, error) {
 
-	app, err := platform.GetActiveApp(appName)
-	if err != nil {
-		return "", err
+	maxWidth := uint(200)
+	var output string
+
+	appTable := platform.CreateAppTable()
+	platform.RenderAppRow(appTable, desc)
+	output = fmt.Sprint(appTable)
+
+	// Only show extended status for running sites.
+	if desc["status"] == platform.SiteRunning {
+		output = output + "\n\nMySQL Credentials\n-----------------\n"
+		dbTable := uitable.New()
+
+		dbinfo := desc["dbinfo"].(map[string]interface{})
+
+		if _, ok := dbinfo["username"].(string); ok {
+			dbTable.MaxColWidth = maxWidth
+			dbTable.AddRow("Username:", dbinfo["username"])
+			dbTable.AddRow("Password:", dbinfo["password"])
+			dbTable.AddRow("Database name:", dbinfo["dbname"])
+			dbTable.AddRow("Host:", dbinfo["host"])
+			dbTable.AddRow("Port:", dbinfo["port"])
+			output = output + fmt.Sprint(dbTable)
+			output = output + fmt.Sprintf("\nTo connect to mysql from your host machine, use port %[1]v on 127.0.0.1.\nFor example: mysql --host=127.0.0.1 --port=%[1]v --user=db --password=db --database=db", dbinfo["published_port"])
+		}
+		output = output + "\n\nOther Services\n--------------\n"
+		other := uitable.New()
+		other.AddRow("MailHog:", desc["mailhog_url"])
+		other.AddRow("phpMyAdmin:", desc["phpmyadmin_url"])
+		output = output + fmt.Sprint(other)
 	}
 
-	out, err := app.Describe()
-	return out, err
+	output = output + "\n" + platform.RenderRouterStatus()
+
+	return output, nil
 }
 
 func init() {
