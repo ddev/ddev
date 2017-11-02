@@ -34,7 +34,7 @@ var DevListCmd = &cobra.Command{
 			platform.RenderAppRow(table, desc)
 		}
 
-		output.UserOut.WithField("raw", appDescs).Print(table)
+		output.UserOut.WithField("raw", appDescs).Print(table.String() + "\n" + platform.RenderRouterStatus())
 	},
 }
 
