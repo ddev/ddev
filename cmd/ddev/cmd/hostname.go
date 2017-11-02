@@ -4,6 +4,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/drud/ddev/pkg/util"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +22,7 @@ var HostNameCmd = &cobra.Command{
 		hostname, ip := args[0], args[1]
 		hosts, err := goodhosts.NewHosts()
 		if err != nil {
-			output.UserOut.Fatalf("could not open hosts file. %s", err)
+			util.Failed("could not open hosts file. %s", err)
 		}
 		if hosts.Has(ip, hostname) {
 			log.Debugf("Hosts file entry %s exists, taking no action", hostname)
@@ -30,11 +31,11 @@ var HostNameCmd = &cobra.Command{
 
 		err = hosts.Add(ip, hostname)
 		if err != nil {
-			output.UserOut.Fatal("Could not add hostname")
+			util.Failed("Could not add hostname")
 		}
 
 		if err := hosts.Flush(); err != nil {
-			output.UserOut.Fatalf("could not write hosts file: %s", err)
+			util.Failed("Could not write hosts file: %s", err)
 		}
 	},
 }
