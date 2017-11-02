@@ -85,7 +85,7 @@ func StartDdevRouter() error {
 	if err != nil || container.State != "running" {
 		err = CheckRouterPorts()
 		if err != nil {
-			return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://github.com/drud/ddev/blob/master/docs/users/troubleshooting.md#unable-listen", err)
+			return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/latest/users/troubleshooting/#unable-listen", err)
 		}
 	}
 
