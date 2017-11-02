@@ -1,6 +1,6 @@
 <h1>Surf Test Machine Setup</h1>
 
-We are using [surf](https://github.com/surf-build/surf) for Windows and OSX testing. This is a very simple test setup that uses on-premise machines that have to be configured correctly to run.
+We are using [surf](https://github.com/surf-build/surf) for Windows and macOS testing. This is a very simple test setup that uses on-premise machines that have to be configured correctly to run.
 
 Before beginning:
 1. Obtain a GITHUB_TOKEN with repo and gist privileges (and for a user who has write/push privs on the repo). Currently this GITHUB_TOKEN is associated with drud-test-machine-account and the token is shared in lastpass.
@@ -28,7 +28,7 @@ surf-install -e DDEV_PANTHEON_API_TOKEN -n surf-windows-ddev -c "surf-run -r htt
 ```
 where `surf-windows-ddev` is the name of the job on the windows machine (it's free-form) and `surf-windows` is the identifier used on github when the build changes statuses; it's also free-form. **Note that current versions of surf-install will fail claiming that schtasks failed, but it seems to work fine anyway. See [issue](https://github.com/surf-build/surf/issues/64).**
 
-### OSX Test Machine Setup
+### macOS Test Machine Setup
 
 1. Install [homebrew](https://brew.sh/)
 2. Install golang/git/docker with `brew install golang git docker`

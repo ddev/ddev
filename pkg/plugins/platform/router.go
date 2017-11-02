@@ -11,13 +11,17 @@ import (
 
 	"strings"
 
+	"net"
+
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/fatih/color"
+	"github.com/fsouza/go-dockerclient"
 )
 
-const routerProjectName = "ddev-router"
+// RouterProjectName is the "machine name" of the router docker-compose
+const RouterProjectName = "ddev-router"
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
@@ -36,7 +40,7 @@ func StopRouter() error {
 
 	if !containersRunning {
 		dest := RouterComposeYAMLPath()
-		return dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "down", "-v")
+		return dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "down", "-v")
 	}
 	return nil
 }
@@ -76,13 +80,20 @@ func StartDdevRouter() error {
 	_, err = f.WriteString(doc.String())
 	util.CheckErr(err)
 
+	container, err := findDdevRouter()
+	// If we have a router running, we don't have to stop and start it.
+	if err != nil || container.State != "running" {
+		err = CheckRouterPorts()
+		if err != nil {
+			return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/latest/users/troubleshooting/#unable-listen", err)
+		}
+	}
+
 	// run docker-compose up -d in the newly created directory
-	err = dockerutil.ComposeCmd([]string{dest}, "-p", routerProjectName, "up", "-d")
+	err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "up", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
-
-	fmt.Println("Starting service health checks...")
 
 	// ensure we have a happy router
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
@@ -94,18 +105,32 @@ func StartDdevRouter() error {
 	return nil
 }
 
+// findDdevRouter usees FindContainerByLabels to get our router container and
+// return it
+func findDdevRouter() (docker.APIContainers, error) {
+	containerQuery := map[string]string{
+		"com.docker.compose.service": RouterProjectName,
+	}
+	container, err := dockerutil.FindContainerByLabels(containerQuery)
+	if err != nil {
+		return docker.APIContainers{}, fmt.Errorf("Failed to execute findContainersByLabels, %v", err)
+	}
+	return container, nil
+}
+
 // PrintRouterStatus outputs router status and warning if not
 // running or healthy, as applicable.
+// An easy way to make these ports unavailable in order to test this is:
+// sudo netcat -l -p 80  (brew install netcat)
 func PrintRouterStatus() string {
 	var status string
 
 	badRouter := "\nThe router is not currently running. Your sites are likely inaccessible at this time.\nTry running 'ddev start' on a site to recreate the router."
 
-	label := map[string]string{"com.docker.compose.service": "ddev-router"}
-	container, err := dockerutil.FindContainerByLabels(label)
+	container, err := findDdevRouter()
 
 	if err != nil {
-		status = color.RedString(SiteNotFound) + badRouter
+		status = color.RedString(SiteNotFound)
 	} else {
 		status = dockerutil.GetContainerHealth(container)
 	}
@@ -167,4 +192,23 @@ func determineRouterPorts() []string {
 		}
 	}
 	return routerPorts
+}
+
+// CheckRouterPorts tries to connect to ports 80/443 as a heuristic to find out
+// if they're available for docker to bind to. Returns an error if either one results
+// in a successful connection.
+func CheckRouterPorts() error {
+	// TODO: When we allow configurable ports, we'll want to use an array of configured ports here.
+	for _, port := range []int{80, 443} {
+		target := fmt.Sprintf("127.0.0.1:%d", port)
+		conn, err := net.Dial("tcp", target)
+		// We want an error (inability to connect), that's the success case.
+		// If we don't get one, return err. This will normally be "getsockopt: connection refused"
+		// For simplicity we're not actually studying the err value.
+		if err == nil {
+			_ = conn.Close()
+			return fmt.Errorf("Localhost port %d is in use", port)
+		}
+	}
+	return nil
 }

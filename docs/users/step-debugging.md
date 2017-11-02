@@ -8,7 +8,7 @@ All IDEs basically work the same: They listen on a port and react when they're c
 
 **Key facts:**
 * The debug server port on the IDE must be set to port 11011. Although the xdebug default is port 9000, that port often has conflicts for PHP developers, so 11011 is used with ddev.
-* An IP-address *alias* of 172.28.99.99 must be added to your workstation host's loopback address. On MacOS this is done with the command `sudo ifconfig lo0 alias 172.28.99.99`. **This must currently be done after each reboot.**
+* An IP-address *alias* of 172.28.99.99 must be added to your workstation host's loopback address. On macOS this is done with the command `sudo ifconfig lo0 alias 172.28.99.99`. **This must currently be done after each reboot.**
 
 For more background on XDebug see [XDebug documentation](https://xdebug.org/docs/remote). The intention here is that one won't have to understand XDebug to do debugging.
 

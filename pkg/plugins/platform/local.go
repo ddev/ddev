@@ -970,6 +970,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 }
 
 // GetActiveApp returns the active App based on the current working directory or running siteName provided.
+// To use the current working directory, siteName should be ""
 func GetActiveApp(siteName string) (App, error) {
 	app, err := GetPluginApp("local")
 	if err != nil {
