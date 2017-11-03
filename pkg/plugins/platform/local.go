@@ -86,11 +86,21 @@ func (l *LocalApp) Describe() (map[string]interface{}, error) {
 	shortRoot := RenderHomeRootedDir(l.AppRoot())
 	appDesc := make(map[string]interface{})
 
+	var https bool
+	urlString := fmt.Sprintf("http://%s", l.HostName())
+	webCon, err := l.FindContainerByType("web")
+	if err == nil {
+		https = dockerutil.CheckForHTTPS(webCon)
+	}
+	if https {
+		urlString = fmt.Sprintf("%s\nhttps://%s", urlString, l.HostName())
+	}
+
 	appDesc["name"] = l.GetName()
 	appDesc["status"] = l.SiteStatus()
 	appDesc["type"] = l.GetType()
 	appDesc["approot"] = shortRoot
-	appDesc["url"] = l.URL()
+	appDesc["url"] = urlString
 
 	db, err := l.FindContainerByType("db")
 	if err != nil {

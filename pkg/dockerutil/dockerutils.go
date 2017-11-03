@@ -340,3 +340,13 @@ func GetPublishedPort(privatePort int64, container docker.APIContainers) int64 {
 	}
 	return 0
 }
+
+// CheckForHTTPS determines if a container has the HTTPS_EXPOSE var
+// set to route 443 traffic to 80
+func CheckForHTTPS(container docker.APIContainers) bool {
+	env := GetContainerEnv("HTTPS_EXPOSE", container)
+	if env != "" && strings.Contains(env, "443:80") {
+		return true
+	}
+	return false
+}
