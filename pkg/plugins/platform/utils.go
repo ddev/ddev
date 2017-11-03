@@ -238,6 +238,10 @@ func SetOfflineMode() error {
 		"com.docker.compose.service": "web",
 	}
 	sites, err := dockerutil.FindContainersByLabels(labels)
+	if err != nil {
+		return err
+	}
+
 	for _, site := range sites {
 		hostname := site.Labels["com.ddev.hostname"]
 		if !hosts.Has(dockerIP, hostname) {
