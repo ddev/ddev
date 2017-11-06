@@ -12,7 +12,7 @@ import (
 // From https://davidnix.io/post/error-handling-in-go/
 func CheckErr(err error) {
 	if err != nil {
-		log.Panic("ERROR:", err)
+		log.Panic("CheckErr(): ERROR:", err)
 	}
 }
 

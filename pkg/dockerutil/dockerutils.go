@@ -1,6 +1,7 @@
 package dockerutil
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -9,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"bytes"
+	"bufio"
 
 	"github.com/Masterminds/semver"
 	"github.com/drud/ddev/pkg/output"
@@ -214,7 +215,10 @@ func ComposeNoCapture(composeFiles []string, action ...string) error {
 // returns stdout, stderr, error/nil
 func ComposeCmd(composeFiles []string, action ...string) (string, string, error) {
 	var arg []string
-	var stdout, stderr bytes.Buffer
+	var stdout bytes.Buffer
+	var stderr string
+
+	debugOutput := ("" != os.Getenv("DRUD_DEBUG"))
 
 	for _, file := range composeFiles {
 		arg = append(arg, "-f")
@@ -226,13 +230,35 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	proc := exec.Command("docker-compose", arg...)
 	proc.Stdout = &stdout
 	proc.Stdin = os.Stdin
-	proc.Stderr = &stderr
 
-	err := proc.Run()
-	if err != nil {
-		return stdout.String(), stderr.String(), fmt.Errorf("Failed to run docker-compose %v, err=%v, stdout=%s, stderr=%s", arg, err, stdout.String(), stderr.String())
+	stderrPipe, err := proc.StderrPipe()
+	util.CheckErr(err)
+
+	if err := proc.Start(); err != nil {
+		return "", "", fmt.Errorf("Failed to exec docker-compose: %v", err)
 	}
-	return stdout.String(), stderr.String(), nil
+
+	// read command's stdout line by line
+	in := bufio.NewScanner(stderrPipe)
+
+	for in.Scan() {
+		line := in.Text()
+		stderr = stderr + "\n" + line
+
+		// If we're using debug output, show docker-compose stderr output
+		if !debugOutput {
+			if strings.Contains(line, "done") {
+				fmt.Print(".")
+			}
+		} else {
+			output.UserOut.Println(line)
+		}
+	}
+
+	if err != nil {
+		return stdout.String(), stderr, fmt.Errorf("Failed to run docker-compose %v, err='%v', stdout='%s', stderr='%s'", arg, err, stdout.String(), stderr)
+	}
+	return stdout.String(), stderr, nil
 }
 
 // GetAppContainers retrieves docker containers for a given sitename.
