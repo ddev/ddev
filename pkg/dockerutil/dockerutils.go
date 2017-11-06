@@ -247,7 +247,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 
 		// If we're using debug output, show docker-compose stderr output
 		// but default is to show dots
-		if !debugOutput {
+		if !debugOutput && !output.JSONOutput {
 			if strings.Contains(line, "done") {
 				fmt.Print(".")
 			}
