@@ -246,15 +246,17 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 		stderr = stderr + "\n" + line
 
 		// If we're using debug output, show docker-compose stderr output
+		// but default is to show dots
 		if !debugOutput {
 			if strings.Contains(line, "done") {
 				fmt.Print(".")
 			}
-		} else {
+		} else { // If we are doing debug output, print the line
 			output.UserOut.Println(line)
 		}
 	}
 
+	err = proc.Wait()
 	if err != nil {
 		return stdout.String(), stderr, fmt.Errorf("Failed to run docker-compose %v, err='%v', stdout='%s', stderr='%s'", arg, err, stdout.String(), stderr)
 	}
