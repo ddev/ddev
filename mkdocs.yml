@@ -2,6 +2,7 @@ site_name: ddev Documentation
 edit_uri: edit/master/docs/
 copyright: DRUD Technology, LLC
 theme: readthedocs
+extra_js: [assets/fix-search.js]
 markdown_extensions:
   - markdown.extensions.toc
 pages:
