@@ -45,9 +45,12 @@ func (l *LocalApp) GetType() string {
 // Init populates LocalApp settings based on the current working directory.
 func (l *LocalApp) Init(basePath string) error {
 	config, err := ddevapp.NewConfig(basePath, "")
+
+	// Save config to l.AppConfig so we can capture and display the site's
+	// status regardless of its validity
+	l.AppConfig = config
+
 	if err != nil {
-		// Save config to l.AppConfig so we can capture and display the site's status.
-		l.AppConfig = config
 		return err
 	}
 
@@ -55,8 +58,6 @@ func (l *LocalApp) Init(basePath string) error {
 	if err != nil {
 		return err
 	}
-
-	l.AppConfig = config
 
 	web, err := l.FindContainerByType("web")
 	if err == nil {
