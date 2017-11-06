@@ -16,7 +16,7 @@ These tools can be accessed for single commands using [`ddev exec <command>`](cl
 
 Its web interface can be accessed at its default port after your site has been started. e.g.:
 ```
-http://mysite.ddev.local:8025
+http://mysite.ddev.site:8025
 ```
 
 Please note this will not intercept emails if your application is configured to use SMTP or a 3rd-party ESP integration. If you are using SMTP for outgoing mail handling ([Swiftmailer](https://www.drupal.org/project/swiftmailer) or [SMTP](https://www.drupal.org/project/smtp) modules for example), update your application configuration to use `localhost` on port `1025` as the SMTP server locally in order to use MailHog.

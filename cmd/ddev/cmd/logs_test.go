@@ -4,6 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/drud/ddev/pkg/ddevapp"
+
 	"os"
 
 	"io/ioutil"
@@ -44,7 +46,7 @@ func TestDevLogs(t *testing.T) {
 		o := util.NewHTTPOptions("http://127.0.0.1/index.php")
 		o.ExpectedStatus = 500
 		o.Timeout = 30
-		o.Headers["Host"] = v.Name + ".ddev.local"
+		o.Headers["Host"] = v.Name + "." + ddevapp.DDevTLD
 		err = util.EnsureHTTPStatus(o)
 		assert.NoError(err)
 

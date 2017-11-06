@@ -21,8 +21,8 @@ services:
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
     environment:
-      - VIRTUAL_HOST=$DDEV_HOSTNAME # This defines the host name the service should be accessible from. This will be sitename.ddev.local
-      - HTTP_EXPOSE=8983 # This defines the port the service should be accessible from at sitename.ddev.local
+      - VIRTUAL_HOST=$DDEV_HOSTNAME # This defines the host name the service should be accessible from. This will be sitename.ddev.site
+      - HTTP_EXPOSE=8983 # This defines the port the service should be accessible from at sitename.ddev.site
     volumes:
       - "./solr:/solr-conf" # This exposes a mount to the host system `.ddev/solr-conf` directory.
     entrypoint:
@@ -30,7 +30,7 @@ services:
       - solr-precreate
       - dev
       - /solr-conf
-# This links the solr service to the web service defined in the main docker-compose.yml, allowing applications running in the web service to access the solr service at sitename.ddev.local:8983
+# This links the solr service to the web service defined in the main docker-compose.yml, allowing applications running in the web service to access the solr service at sitename.ddev.site:8983
   web:
     links:
       - solr:$DDEV_HOSTNAME

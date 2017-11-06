@@ -71,7 +71,7 @@ Before, beginning anything else, please set your Debugger Port to 11011. (Prefer
 2. Under "Run as", choose "Local web site (running on local web server)".
 3. Under "Name and Location", give the sources folder of the **docroot/webroot** of your site.
 ![Netbeans project name and location](images/netbeans_project_name_location.png)
-4. Under "Run configuration" the project URL to the full URL of your dev site, for example http://drud-d8.ddev.local/, and choose the index file.
+4. Under "Run configuration" the project URL to the full URL of your dev site, for example http://drud-d8.ddev.site/, and choose the index file.
 ![Netbeans run configuration](images/netbeans_project_run_configuration.png)
 5. Set a breakpoint.
 6. Click the "Debug" button.
