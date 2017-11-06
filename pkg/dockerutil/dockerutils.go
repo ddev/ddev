@@ -234,7 +234,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	stderrPipe, err := proc.StderrPipe()
 	util.CheckErr(err)
 
-	if err := proc.Start(); err != nil {
+	if err = proc.Start(); err != nil {
 		return "", "", fmt.Errorf("Failed to exec docker-compose: %v", err)
 	}
 

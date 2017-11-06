@@ -26,7 +26,7 @@ const (
 	red     = 31
 	green   = 32 // nolint: varcheck
 	yellow  = 33
-	blue    = 36
+	blue    = 36 // nolint: varcheck
 	gray    = 37
 )
 
