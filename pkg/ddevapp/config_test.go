@@ -224,7 +224,6 @@ func TestRead(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to c.Read(), err: %v", err)
 	}
-	assert.NoError(err)
 
 	// Values not defined in file, we should still have default values
 	assert.Equal(c.Name, "TestRead")
