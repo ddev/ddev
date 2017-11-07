@@ -177,6 +177,27 @@ func TestLocalStart(t *testing.T) {
 	testcommon.CleanupDir(another.Dir)
 }
 
+// TestStartWithoutDdev makes sure we don't have a regression where lack of .ddev
+// causes a panic.
+func TestStartWithoutDdevConfig(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+	testDir := testcommon.CreateTmpDir("TestStartWithoutDdevConfig")
+
+	// testcommon.Chdir()() and CleanupDir() check their own errors (and exit)
+	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
+
+	err := os.MkdirAll(testDir+"/sites/default", 0777)
+	assert.NoError(err)
+	err = os.Chdir(testDir)
+	assert.NoError(err)
+
+	_, err = platform.GetActiveApp("")
+	assert.Error(err)
+	assert.Contains(err.Error(), "unable to determine")
+}
+
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
 	assert := asrt.New(t)
