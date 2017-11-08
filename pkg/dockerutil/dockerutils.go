@@ -218,8 +218,6 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	var stdout bytes.Buffer
 	var stderr string
 
-	debugOutput := ("" != os.Getenv("DRUD_DEBUG"))
-
 	for _, file := range composeFiles {
 		arg = append(arg, "-f")
 		arg = append(arg, file)
@@ -243,17 +241,12 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 
 	for in.Scan() {
 		line := in.Text()
-		stderr = stderr + "\n" + line
-
-		// If we're using debug output, show docker-compose stderr output
-		// but default is to show dots
-		if !debugOutput && !output.JSONOutput {
-			if strings.Contains(line, "done") {
-				fmt.Print(".")
-			}
-		} else { // If we are doing debug output, print the line
-			output.UserOut.Println(line)
+		if len(stderr) > 0 {
+			stderr = stderr + "\n"
 		}
+		stderr = stderr + line
+		line = strings.Trim(line, "\n\r")
+		output.UserOut.Println(line)
 	}
 
 	err = proc.Wait()
