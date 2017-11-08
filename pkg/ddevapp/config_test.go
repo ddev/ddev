@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
@@ -22,6 +23,16 @@ func TestMain(m *testing.M) {
 
 	// Ensure the ddev directory is created before tests run.
 	_ = util.GetGlobalDdevDir()
+
+	// Since this test may be first time ddev has been used, we need the
+	// ddev_default network available. This would normally be done in a
+	// TestMain, so can be moved to one when we need one.
+	dockerutil.EnsureDdevNetwork()
+
+	// Avoid having sudo try to add to /etc/hosts.
+	// This is normally done by Testsite.Prepare()
+	_ = os.Setenv("DRUD_NONINTERACTIVE", "true")
+
 	os.Exit(m.Run())
 }
 
@@ -181,7 +192,7 @@ func TestConfigCommand(t *testing.T) {
 	// Ensure we have expected vales in output.
 	assert.Contains(out, testDir)
 	assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
-	assert.Contains(out, fmt.Sprintf("%s is not a valid application type", invalidAppType))
+	assert.Contains(out, fmt.Sprintf("'%s' is not a valid application type", invalidAppType))
 
 	// Ensure values were properly set on the config struct.
 	assert.Equal(name, config.Name)
@@ -210,7 +221,9 @@ func TestRead(t *testing.T) {
 	}
 
 	err := c.Read()
-	assert.NoError(err)
+	if err != nil {
+		t.Fatalf("Unable to c.Read(), err: %v", err)
+	}
 
 	// Values not defined in file, we should still have default values
 	assert.Equal(c.Name, "TestRead")
@@ -236,7 +249,9 @@ func TestValidate(t *testing.T) {
 	}
 
 	err = c.Validate()
-	assert.NoError(err)
+	if err != nil {
+		t.Fatalf("Failed to c.Validate(), err=%v", err)
+	}
 
 	c.Name = "Invalid!"
 	err = c.Validate()
@@ -250,7 +265,7 @@ func TestValidate(t *testing.T) {
 	c.Docroot = "testing"
 	c.AppType = "potato"
 	err = c.Validate()
-	assert.EqualError(err, fmt.Sprintf("%s is not a valid apptype", c.AppType))
+	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", c.AppType))
 }
 
 // TestWrite tests writing config values to file

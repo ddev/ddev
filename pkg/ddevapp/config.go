@@ -107,12 +107,13 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 
 	// Allow override with "pantheon" from function provider arg, but nothing else.
 	// Otherwise we accept whatever might have been in config file if there was anything.
-	switch {
-	case provider == "" || provider == DefaultProviderName:
-		c.Provider = DefaultProviderName
-	case provider == "pantheon":
-		c.Provider = "pantheon"
-	default:
+	if provider == "" && c.Provider != "" {
+		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
+	} else if provider == "pantheon" || provider == DefaultProviderName {
+		c.Provider = provider // Use the provider passed-in. Function argument wins.
+	} else if provider == "" && c.Provider == "" {
+		c.Provider = DefaultProviderName // Nothing passed in, nothing configured. Set c.Provider to default
+	} else {
 		return c, fmt.Errorf("Provider '%s' is not implemented", provider)
 	}
 
@@ -190,7 +191,7 @@ func (c *Config) Read() error {
 
 	source, err := ioutil.ReadFile(c.ConfigPath)
 	if err != nil {
-		return fmt.Errorf("could not find an active ddev configuration, have you run 'ddev config'? %v", err)
+		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", c.ConfigPath, err)
 	}
 
 	// validate extend command keys
@@ -233,8 +234,8 @@ func (c *Config) WarnIfConfigReplace() {
 	if c.ConfigExists() {
 		util.Warning("You are reconfiguring the app at %s. \nThe existing configuration will be updated and replaced.", c.AppRoot)
 	} else {
-		output.UserOut.Printf("Creating a new ddev project config in the current directory (%s)", c.AppRoot)
-		output.UserOut.Printf("Once completed, your configuration will be written to %s", c.ConfigPath)
+		util.Success("Creating a new ddev project config in the current directory (%s)", c.AppRoot)
+		util.Success("Once completed, your configuration will be written to %s\n", c.ConfigPath)
 	}
 }
 
@@ -290,7 +291,7 @@ func (c *Config) Validate() error {
 	// validate apptype
 	match = IsAllowedAppType(c.AppType)
 	if !match {
-		return fmt.Errorf("%s is not a valid apptype", c.AppType)
+		return fmt.Errorf("'%s' is not a valid apptype", c.AppType)
 	}
 
 	return nil
@@ -441,7 +442,7 @@ func (c *Config) appTypePrompt() error {
 		appType = strings.ToLower(util.GetInput(c.AppType))
 
 		if IsAllowedAppType(appType) != true {
-			output.UserOut.Errorf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(AllowedAppTypes, ", "))
+			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(AllowedAppTypes, ", "))
 		}
 		c.AppType = appType
 	}
@@ -458,7 +459,7 @@ func IsAllowedAppType(appType string) bool {
 	return false
 }
 
-// PrepDdevDirectory creates a .ddev directory in the current working
+// PrepDdevDirectory creates a .ddev directory in the current working directory
 func PrepDdevDirectory(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 

@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -25,7 +26,7 @@ can be provided if it is not located at the top-level of the archive.`,
 			util.CheckErr(err)
 			os.Exit(0)
 		}
-		dockerNetworkPreRun()
+		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := platform.GetActiveApp("")

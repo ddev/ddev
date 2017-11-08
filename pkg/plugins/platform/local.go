@@ -32,7 +32,7 @@ import (
 
 const containerWaitTimeout = 35
 
-// LocalApp implements the AppBase interface local development apps
+// LocalApp implements the platform.App interface
 type LocalApp struct {
 	AppConfig *ddevapp.Config
 }
@@ -225,7 +225,7 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 		return err
 	}
 
-	err = l.Config()
+	err = l.CreateSettingsFile()
 	if err != nil {
 		if err.Error() != "app config exists" {
 			return fmt.Errorf("failed to write configuration file for %s: %v", l.GetName(), err)
@@ -699,7 +699,7 @@ func (l *LocalApp) Wait(containerTypes ...string) error {
 	return nil
 }
 
-func (l *LocalApp) determineConfigLocation() (string, error) {
+func (l *LocalApp) determineSettingsPath() (string, error) {
 	possibleLocations := []string{l.AppConfig.SiteSettingsPath, l.AppConfig.SiteLocalSettingsPath}
 	for _, loc := range possibleLocations {
 		// If the file is found we need to check for a signature to determine if it's safe to use.
@@ -719,15 +719,15 @@ func (l *LocalApp) determineConfigLocation() (string, error) {
 	return "", fmt.Errorf("settings files already exist and are being manged by the user")
 }
 
-// Config creates the apps config file adding things like database host, name, and password
-// as well as other sensitive data like salts.
-func (l *LocalApp) Config() error {
+// CreateSettingsFile creates the app's settings.php or equivalent,
+// adding things like database host, name, and password
+func (l *LocalApp) CreateSettingsFile() error {
 	// If neither settings file options are set, then
 	if l.AppConfig.SiteLocalSettingsPath == "" && l.AppConfig.SiteSettingsPath == "" {
 		return nil
 	}
 
-	settingsFilePath, err := l.determineConfigLocation()
+	settingsFilePath, err := l.determineSettingsPath()
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/fatih/color"
@@ -24,7 +25,7 @@ var PullCmd = &cobra.Command{
 			util.CheckErr(err)
 			os.Exit(0)
 		}
-		dockerNetworkPreRun()
+		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		appImport(skipConfirmation)
@@ -35,7 +36,7 @@ func appImport(skipConfirmation bool) {
 	app, err := platform.GetActiveApp("")
 
 	if err != nil {
-		util.Failed("%v", err)
+		util.Failed("appImport failed: %v", err)
 	}
 
 	if !skipConfirmation {

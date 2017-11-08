@@ -23,8 +23,6 @@ var (
 	serviceType    string
 )
 
-const netName = "ddev_default"
-
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "ddev",
@@ -108,15 +106,6 @@ func Execute() {
 		os.Exit(-1)
 	}
 
-}
-
-func dockerNetworkPreRun() {
-	client := dockerutil.GetDockerClient()
-
-	err := dockerutil.EnsureNetwork(client, netName)
-	if err != nil {
-		util.Failed("Unable to create/ensure docker network %s, error: %v", netName, err)
-	}
 }
 
 func init() {
