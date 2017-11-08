@@ -9,6 +9,7 @@ import (
 	"path"
 
 	"github.com/drud/ddev/pkg/output"
+	"github.com/fatih/color"
 	gohomedir "github.com/mitchellh/go-homedir"
 )
 
@@ -45,6 +46,7 @@ func Warning(format string, a ...interface{}) {
 
 // Success will indicate an operation succeeded with colored confirmation text.
 func Success(format string, a ...interface{}) {
+	format = color.CyanString(format)
 	if a != nil {
 		output.UserOut.Infof(format, a...)
 	} else {
