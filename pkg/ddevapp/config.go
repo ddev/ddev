@@ -442,7 +442,7 @@ func (c *Config) appTypePrompt() error {
 		appType = strings.ToLower(util.GetInput(c.AppType))
 
 		if IsAllowedAppType(appType) != true {
-			output.UserOut.Errorf("%s is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(AllowedAppTypes, ", "))
+			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(AllowedAppTypes, ", "))
 		}
 		c.AppType = appType
 	}
