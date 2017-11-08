@@ -676,9 +676,6 @@ func TestListWithoutDir(t *testing.T) {
 	// Make sure we move out of the directory for Windows' sake
 	garbageDir := testcommon.CreateTmpDir("RestingHere")
 	defer testcommon.CleanupDir(garbageDir)
-	// Changing directory must be pushed on defer stack last so it happens
-	// before any cleanups, so windows tests won't break.
-	defer os.Chdir(packageDir)
 
 	err = os.Chdir(garbageDir)
 	assert.NoError(err)
@@ -704,6 +701,11 @@ func TestListWithoutDir(t *testing.T) {
 	assert.Contains(table.String(), fmt.Sprintf("app directory missing: %s", testDir))
 
 	err = app.Down(true)
+	assert.NoError(err)
+
+	// Change back to package dir. Lots of things will have to be cleaned up
+	// in defers, and for windows we have to not be sitting in them.
+	err = os.Chdir(packageDir)
 	assert.NoError(err)
 }
 
