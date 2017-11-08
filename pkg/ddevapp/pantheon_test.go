@@ -68,7 +68,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 
-	restoreOutput := testcommon.CaptureStdOut()
+	restoreOutput := testcommon.CaptureUserOut()
 	err = config.PromptForConfig()
 	assert.NoError(err, t)
 	out := restoreOutput()

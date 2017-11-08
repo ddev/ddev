@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -57,15 +58,26 @@ func TestChdir(t *testing.T) {
 	CleanupDir(testDir)
 }
 
-// TestCaptureStdOut ensures capturing of standard out works as expected.
+// TestCaptureUserOut ensures capturing of stdout works as expected.
+func TestCaptureUserOut(t *testing.T) {
+	assert := asrt.New(t)
+	restoreOutput := CaptureUserOut()
+	text := util.RandString(128)
+	output.UserOut.Println(text)
+	out := restoreOutput()
+
+	assert.Contains(out, text)
+}
+
+// TestCaptureStdOut ensures capturing of stdout works as expected.
 func TestCaptureStdOut(t *testing.T) {
 	assert := asrt.New(t)
 	restoreOutput := CaptureStdOut()
 	text := util.RandString(128)
-	fmt.Print(text)
+	fmt.Println(text)
 	out := restoreOutput()
 
-	assert.Equal(text, out)
+	assert.Contains(out, text)
 }
 
 // TestValidTestSite tests the TestSite struct behavior in the case of a valid configuration.

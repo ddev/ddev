@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -15,15 +16,25 @@ var DevListCmd = &cobra.Command{
 	Long:  `List applications that exist locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		apps := platform.GetApps()
+		var appDescs []map[string]interface{}
 
-		if len(apps) < 1 {
-			fmt.Println("There are no running ddev applications.")
+		sites, ok := apps["local"]
+		if !ok || len(sites) < 1 {
+			output.UserOut.Println("There are no running ddev applications.")
 			os.Exit(0)
 		}
 
-		for platformType, sites := range apps {
-			platform.RenderAppTable(platformType, sites)
+		table := platform.CreateAppTable()
+		for _, site := range sites {
+			desc, err := site.Describe()
+			appDescs = append(appDescs, desc)
+			if err != nil {
+				util.Failed("Failed to describe site %s: %v", site.GetName(), err)
+			}
+			platform.RenderAppRow(table, desc)
 		}
+
+		output.UserOut.WithField("raw", appDescs).Print(table.String() + "\n" + platform.RenderRouterStatus())
 	},
 }
 

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"log"
 	"path/filepath"
 	"testing"
 
@@ -33,7 +32,7 @@ func TestImportTilde(t *testing.T) {
 		args := []string{"import-files", "--src", "~/testfile.tar.gz"}
 		out, err := exec.RunCommand(DdevBin, args)
 		if err != nil {
-			log.Println("Error Output from ddev import-files:", out, site)
+			t.Log("Error Output from ddev import-files:", out, site)
 		}
 		assert.NoError(err)
 		assert.Contains(string(out), "Successfully imported files")
@@ -42,7 +41,7 @@ func TestImportTilde(t *testing.T) {
 		args = []string{"import-files", "--src=~/testfile.tar.gz"}
 		out, err = exec.RunCommand(DdevBin, args)
 		if err != nil {
-			log.Println("Error Output from ddev import-files:", out, site)
+			t.Log("Error Output from ddev import-files:", out, site)
 		}
 		assert.NoError(err)
 		assert.Contains(string(out), "Successfully imported files")

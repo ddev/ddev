@@ -1,10 +1,9 @@
 package cmd
 
 import (
-	"fmt"
-
 	"os"
 
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/gosuri/uitable"
@@ -23,7 +22,7 @@ var versionCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		out := handleVersionCommand()
-		fmt.Println(out)
+		output.UserOut.Println(out)
 	},
 }
 

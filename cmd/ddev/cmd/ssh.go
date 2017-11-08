@@ -29,11 +29,11 @@ var LocalDevSSHCmd = &cobra.Command{
 
 		app.DockerEnv()
 
-		err = app.Exec(serviceType, false, "bash")
+		err = app.ExecWithTty(serviceType, "bash")
+
 		if err != nil {
 			util.Failed("Failed to ssh %s: %s", app.GetName(), err)
 		}
-
 	},
 }
 

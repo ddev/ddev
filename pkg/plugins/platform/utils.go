@@ -8,12 +8,12 @@ import (
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
-	log "github.com/sirupsen/logrus"
 
 	"errors"
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	gohomedir "github.com/mitchellh/go-homedir"
 )
@@ -33,7 +33,7 @@ func GetApps() map[string][]App {
 				site, err := GetPluginApp(platformType)
 				// This should absolutely never happen, so just fatal on the off chance it does.
 				if err != nil {
-					log.Fatalf("could not get application for plugin type %s", platformType)
+					util.Failed("could not get application for plugin type %s", platformType)
 				}
 				approot, ok := siteContainer.Labels["com.ddev.approot"]
 				if !ok {
@@ -49,7 +49,7 @@ func GetApps() map[string][]App {
 					// Cast 'site' from type App to type LocalApp, so we can manually enter AppConfig values.
 					siteStruct, ok := site.(*LocalApp)
 					if !ok {
-						log.Fatalf("Failed to cast siteStruct(type App) to *LocalApp{}. site=%v", site)
+						util.Failed("Failed to cast siteStruct(type App) to *LocalApp{}. site=%v", site)
 					}
 
 					siteStruct.AppConfig.Name = siteContainer.Labels["com.ddev.site-name"]
@@ -61,19 +61,6 @@ func GetApps() map[string][]App {
 	}
 
 	return apps
-}
-
-// RenderAppTable will format a table for user display based on a list of apps.
-func RenderAppTable(platform string, apps []App) {
-	if len(apps) > 0 {
-		fmt.Printf("%v %s %v found.\n", len(apps), platform, util.FormatPlural(len(apps), "site", "sites"))
-		table := CreateAppTable()
-		for _, site := range apps {
-			RenderAppRow(table, site)
-		}
-		fmt.Println(table)
-		fmt.Println(PrintRouterStatus())
-	}
 }
 
 // CreateAppTable will create a new app table for describe and list output
@@ -95,9 +82,8 @@ func RenderHomeRootedDir(path string) string {
 }
 
 // RenderAppRow will add an application row to an existing table for describe and list output.
-func RenderAppRow(table *uitable.Table, site App) {
-	shortRoot := RenderHomeRootedDir(site.AppRoot())
-	status := site.SiteStatus()
+func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
+	status := fmt.Sprint(row["status"])
 
 	switch {
 	case strings.Contains(status, SiteStopped):
@@ -113,12 +99,13 @@ func RenderAppRow(table *uitable.Table, site App) {
 	}
 
 	table.AddRow(
-		site.GetName(),
-		site.GetType(),
-		shortRoot,
-		site.URL(),
+		row["name"],
+		row["type"],
+		row["approot"],
+		row["url"],
 		status,
 	)
+
 }
 
 // Cleanup will clean up ddev apps even if the composer file has been deleted.
@@ -138,7 +125,7 @@ func Cleanup(app App) error {
 	for i := range containers {
 		if containers[i].State == "running" || containers[i].State == "restarting" || containers[i].State == "paused" {
 			containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
-			fmt.Printf("Stopping container: %s\n", containerName)
+			output.UserOut.Printf("Stopping container: %s", containerName)
 			err = client.StopContainer(containers[i].ID, 60)
 			if err != nil {
 				return fmt.Errorf("could not stop container %s: %v", containerName, err)
@@ -154,7 +141,7 @@ func Cleanup(app App) error {
 			RemoveVolumes: true,
 			Force:         true,
 		}
-		fmt.Printf("Removing container: %s\n", containerName)
+		output.UserOut.Printf("Removing container: %s", containerName)
 		if err = client.RemoveContainer(removeOpts); err != nil {
 			return fmt.Errorf("could not remove container %s: %v", containerName, err)
 		}

@@ -5,6 +5,7 @@ import (
 
 	"strings"
 
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -38,10 +39,11 @@ var LocalDevExecCmd = &cobra.Command{
 
 		app.DockerEnv()
 
-		err = app.Exec(serviceType, true, args...)
+		out, _, err := app.Exec(serviceType, args...)
 		if err != nil {
 			util.Failed("Failed to execute command %s: %v", args, err)
 		}
+		output.UserOut.Print(out)
 	},
 }
 

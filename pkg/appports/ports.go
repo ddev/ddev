@@ -3,7 +3,7 @@ package appports
 import (
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/drud/ddev/pkg/util"
 )
 
 // Define the DBA and MailHog ports as variables so that we can override them with ldflags if required.
@@ -29,7 +29,7 @@ func GetPort(service string) string {
 	service = strings.ToLower(service)
 	val, ok := ports[service]
 	if !ok {
-		log.Fatalf("Could not find port for service %s", service)
+		util.Failed("Could not find port for service %s", service)
 	}
 
 	return val

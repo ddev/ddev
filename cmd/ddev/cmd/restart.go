@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -29,7 +29,7 @@ var LocalDevReconfigCmd = &cobra.Command{
 			util.Failed("Failed to restart: %v", err)
 		}
 
-		fmt.Printf("Restarting environment for %s...", app.GetName())
+		output.UserOut.Printf("Restarting environment for %s...", app.GetName())
 		err = app.Stop()
 		if err != nil {
 			util.Failed("Failed to restart %s: %v", app.GetName(), err)

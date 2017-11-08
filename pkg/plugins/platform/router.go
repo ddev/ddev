@@ -4,14 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
 
-	"strings"
-
 	"net"
+	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
@@ -40,7 +38,8 @@ func StopRouter() error {
 
 	if !containersRunning {
 		dest := RouterComposeYAMLPath()
-		return dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "down", "-v")
+		_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "down", "-v")
+		return err
 	}
 	return nil
 }
@@ -90,7 +89,7 @@ func StartDdevRouter() error {
 	}
 
 	// run docker-compose up -d in the newly created directory
-	err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "up", "-d")
+	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "up", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
@@ -113,38 +112,45 @@ func findDdevRouter() (docker.APIContainers, error) {
 	}
 	container, err := dockerutil.FindContainerByLabels(containerQuery)
 	if err != nil {
-		return docker.APIContainers{}, fmt.Errorf("Failed to execute findContainersByLabels, %v", err)
+		return docker.APIContainers{}, fmt.Errorf("failed to execute findContainersByLabels, %v", err)
 	}
 	return container, nil
 }
 
-// PrintRouterStatus outputs router status and warning if not
-// running or healthy, as applicable.
-// An easy way to make these ports unavailable in order to test this is:
-// sudo netcat -l -p 80  (brew install netcat)
-func PrintRouterStatus() string {
-	var status string
-
+// RenderRouterStatus returns a user-friendly string showing router-status
+func RenderRouterStatus() string {
+	status := GetRouterStatus()
+	var renderedStatus string
 	badRouter := "\nThe router is not currently running. Your sites are likely inaccessible at this time.\nTry running 'ddev start' on a site to recreate the router."
 
-	container, err := findDdevRouter()
+	switch status {
+	case SiteNotFound:
+		renderedStatus = color.RedString(status) + badRouter
+	case "healthy":
+		renderedStatus = color.CyanString(status)
+	case "exited":
+		fallthrough
+	default:
+		renderedStatus = color.RedString(status) + badRouter
+	}
+	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", renderedStatus)
+}
+
+// GetRouterStatus outputs router status and warning if not
+// running or healthy, as applicable.
+func GetRouterStatus() string {
+	var status string
+
+	label := map[string]string{"com.docker.compose.service": "ddev-router"}
+	container, err := dockerutil.FindContainerByLabels(label)
 
 	if err != nil {
-		status = color.RedString(SiteNotFound)
+		status = SiteNotFound
 	} else {
 		status = dockerutil.GetContainerHealth(container)
 	}
 
-	switch status {
-	case "healthy":
-		status = color.CyanString(SiteRunning)
-	case "exited":
-		status = color.RedString(SiteStopped) + badRouter
-	default:
-		status = color.RedString(status) + badRouter
-	}
-
-	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", status)
+	return status
 }
 
 // determineRouterPorts returns a list of port mappings retrieved from running site
@@ -153,7 +159,7 @@ func determineRouterPorts() []string {
 	var routerPorts []string
 	containers, err := dockerutil.GetDockerContainers(false)
 	if err != nil {
-		log.Fatal("failed to retrieve containers for determining port mappings", err)
+		util.Failed("failed to retrieve containers for determining port mappings", err)
 	}
 
 	// loop through all containers with site-name label
@@ -207,7 +213,7 @@ func CheckRouterPorts() error {
 		// For simplicity we're not actually studying the err value.
 		if err == nil {
 			_ = conn.Close()
-			return fmt.Errorf("Localhost port %d is in use", port)
+			return fmt.Errorf("localhost port %d is in use", port)
 		}
 	}
 	return nil

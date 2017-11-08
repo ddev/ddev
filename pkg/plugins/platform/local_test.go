@@ -14,6 +14,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
@@ -56,6 +57,8 @@ var (
 )
 
 func TestMain(m *testing.M) {
+	output.LogSetUp()
+
 	// ensure we have docker network
 	client := dockerutil.GetDockerClient()
 	err := dockerutil.EnsureNetwork(client, dockerutil.NetName)
@@ -220,13 +223,11 @@ func TestLocalImportDB(t *testing.T) {
 			err = app.ImportDB(cachedArchive, "")
 			assert.NoError(err)
 
-			stdout := testcommon.CaptureStdOut()
-			err = app.Exec("db", true, "mysql", "-e", "SHOW TABLES;")
+			out, _, err := app.Exec("db", "mysql", "-e", "SHOW TABLES;")
 			assert.NoError(err)
-			out := stdout()
 
-			assert.Contains(string(out), "Tables_in_db")
-			assert.False(strings.Contains(string(out), "Empty set"))
+			assert.Contains(out, "Tables_in_db")
+			assert.False(strings.Contains(out, "Empty set"))
 
 			assert.NoError(err)
 		}
@@ -238,13 +239,11 @@ func TestLocalImportDB(t *testing.T) {
 			err = app.ImportDB(cachedArchive, "")
 			assert.NoError(err)
 
-			stdout := testcommon.CaptureStdOut()
-			err = app.Exec("db", true, "mysql", "-e", "SHOW TABLES;")
+			out, _, err := app.Exec("db", "mysql", "-e", "SHOW TABLES;")
 			assert.NoError(err)
-			out := stdout()
 
-			assert.Contains(string(out), "Tables_in_db")
-			assert.False(strings.Contains(string(out), "Empty set"))
+			assert.Contains(out, "Tables_in_db")
+			assert.False(strings.Contains(out, "Empty set"))
 		}
 
 		if site.FullSiteTarballURL != "" {
@@ -313,32 +312,28 @@ func TestLocalExec(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		stdout := testcommon.CaptureStdOut()
-		err = app.Exec("web", true, "pwd")
+		out, _, err := app.Exec("web", "pwd")
 		assert.NoError(err)
-		out := stdout()
 		assert.Contains(out, "/var/www/html")
 
-		err = app.Exec("db", true, "mysql", "-e", "DROP DATABASE db;")
+		_, _, err = app.Exec("db", "mysql", "-e", "DROP DATABASE db;")
 		assert.NoError(err)
-		err = app.Exec("db", true, "mysql", "information_schema", "-e", "CREATE DATABASE db;")
+		_, _, err = app.Exec("db", "mysql", "information_schema", "-e", "CREATE DATABASE db;")
 		assert.NoError(err)
 
-		stdout = testcommon.CaptureStdOut()
 		switch app.GetType() {
 		case "drupal7":
 			fallthrough
 		case "drupal8":
-			err := app.Exec("web", true, "drush", "status")
+			out, _, err = app.Exec("web", "drush", "status")
 			assert.NoError(err)
 		case "wordpress":
-			err = app.Exec("web", true, "wp", "--info")
+			out, _, err = app.Exec("web", "wp", "--info")
 			assert.NoError(err)
 		default:
 		}
-		out = stdout()
 
-		assert.Contains(string(out), "/etc/php/7.1/cli/php.ini")
+		assert.Regexp("/etc/php.*cli/php.ini", out)
 
 		runTime()
 		switchDir()
@@ -360,19 +355,19 @@ func TestLocalLogs(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		stdout := testcommon.CaptureStdOut()
+		stdout := testcommon.CaptureUserOut()
 		err = app.Logs("web", false, false, "")
 		assert.NoError(err)
 		out := stdout()
 		assert.Contains(out, "Server started")
 
-		stdout = testcommon.CaptureStdOut()
+		stdout = testcommon.CaptureUserOut()
 		err = app.Logs("db", false, false, "")
 		assert.NoError(err)
 		out = stdout()
 		assert.Contains(out, "Database initialized")
 
-		stdout = testcommon.CaptureStdOut()
+		stdout = testcommon.CaptureUserOut()
 		err = app.Logs("db", false, false, "2")
 		assert.NoError(err)
 		out = stdout()
@@ -410,7 +405,7 @@ func TestProcessHooks(t *testing.T) {
 			AppConfig: conf,
 		}
 
-		stdout := testcommon.CaptureStdOut()
+		stdout := testcommon.CaptureUserOut()
 		err = l.ProcessHooks("hook-test")
 		assert.NoError(err)
 		out := stdout()
@@ -455,8 +450,8 @@ func TestLocalStop(t *testing.T) {
 	}
 }
 
-// TestDescribeStopped tests that the describe command works properly on a stopped site.
-func TestDescribeStopped(t *testing.T) {
+// TestDescribe tests that the describe command works properly on a started or stopped site.
+func TestDescribe(t *testing.T) {
 	assert := asrt.New(t)
 	app, err := platform.GetPluginApp("local")
 	assert.NoError(err)
@@ -468,13 +463,22 @@ func TestDescribeStopped(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
+		// It should already be running, but start does no harm.
+		err = app.Start()
+		assert.NoError(err)
+
+		desc, err := app.Describe()
+		assert.NoError(err)
+		assert.EqualValues(desc["status"], platform.SiteRunning)
+		assert.EqualValues(app.GetName(), desc["name"])
+		assert.EqualValues(platform.RenderHomeRootedDir(app.AppRoot()), desc["approot"])
+		// Now stop it and test behavior.
 		err = app.Stop()
 		assert.NoError(err)
 
-		out, err := app.Describe()
+		desc, err = app.Describe()
 		assert.NoError(err)
-
-		assert.Contains(out, platform.SiteStopped, "Output did not include the word stopped when describing a stopped site.")
+		assert.EqualValues(desc["status"], platform.SiteStopped)
 		switchDir()
 	}
 }
@@ -516,7 +520,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	// platform.StopRouter can't be used here because it checks to see if containers are running
 	// and doesn't do its job as a result.
 	dest := platform.RouterComposeYAMLPath()
-	err = dockerutil.ComposeCmd([]string{dest}, "-p", platform.RouterProjectName, "down", "-v")
+	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", platform.RouterProjectName, "down", "-v")
 	assert.NoError(err, "Failed to stop router using docker-compose, err=%v", err)
 
 	// Occupy port 80 using docker busybox trick, then see if we can start router.

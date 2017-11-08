@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"log"
+
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,6 +12,7 @@ import (
 
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
@@ -29,12 +30,12 @@ var localDevSequelproCmd = &cobra.Command{
 	Long:  `A helper command for easily using sequelpro (OSX database browser) with a ddev app that has been initialized locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {
-			log.Fatalf("invalid arguments to sequelpro command: %v", args)
+			output.UserOut.Fatalf("invalid arguments to sequelpro command: %v", args)
 		}
 
 		out, err := handleSequelProCommand(SequelproLoc)
 		if err != nil {
-			log.Fatalf("Could not run sequelpro command: %s", err)
+			output.UserOut.Fatalf("Could not run sequelpro command: %s", err)
 		}
 		util.Success(out)
 	},
@@ -65,7 +66,7 @@ func handleSequelProCommand(appLocation string) (string, error) {
 	tmpFilePath := filepath.Join(app.AppRoot(), ".ddev/sequelpro.spf")
 	tmpFile, err := os.Create(tmpFilePath)
 	if err != nil {
-		log.Fatalln(err)
+		output.UserOut.Fatalln(err)
 	}
 	defer util.CheckClose(tmpFile)
 

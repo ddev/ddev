@@ -7,7 +7,7 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDevRestart runs `drud legacy restart` on the test apps
+// TestDevRemove runs `ddev rm` on the test apps
 func TestDevRemove(t *testing.T) {
 	assert := asrt.New(t)
 

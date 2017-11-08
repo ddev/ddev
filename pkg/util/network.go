@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/cheggaaa/pb"
+	"github.com/drud/ddev/pkg/output"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -92,7 +93,7 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 
 	client := &http.Client{}
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		return errors.New("Redirect")
+		return errors.New("received http redirect")
 	}
 
 	var respCode int
@@ -122,7 +123,7 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 				defer CheckClose(resp.Body)
 				if o.ExpectedStatus != 0 && resp.StatusCode == o.ExpectedStatus {
 					// Log expected vs. actual if we do not get a match.
-					log.WithFields(log.Fields{
+					output.UserOut.WithFields(log.Fields{
 						"URL":      o.URL,
 						"expected": o.ExpectedStatus,
 						"got":      resp.StatusCode,

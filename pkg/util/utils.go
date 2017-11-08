@@ -1,15 +1,14 @@
 package util
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 	"strings"
 	"time"
 
-	"log"
 	"path"
 
+	"github.com/drud/ddev/pkg/output"
 	"github.com/fatih/color"
 	gohomedir "github.com/mitchellh/go-homedir"
 )
@@ -18,25 +17,41 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-// Failed will print an red error message and exit with failure.
+// Failed will print a red error message and exit with failure.
 func Failed(format string, a ...interface{}) {
-	Error(format, a...)
-	os.Exit(1)
+	if a != nil {
+		output.UserOut.Fatalf(format, a...)
+	} else {
+		output.UserOut.Fatal(format)
+	}
 }
 
 // Error will print an red error message but will not exit.
 func Error(format string, a ...interface{}) {
-	color.Red(format, a...)
+	if a != nil {
+		output.UserOut.Errorf(format, a...)
+	} else {
+		output.UserOut.Error(format)
+	}
 }
 
 // Warning will present the user with warning text.
 func Warning(format string, a ...interface{}) {
-	color.Yellow(format, a...)
+	if a != nil {
+		output.UserOut.Warnf(format, a...)
+	} else {
+		output.UserOut.Warn(format)
+	}
 }
 
 // Success will indicate an operation succeeded with colored confirmation text.
 func Success(format string, a ...interface{}) {
-	color.Cyan(format, a...)
+	format = color.CyanString(format)
+	if a != nil {
+		output.UserOut.Infof(format, a...)
+	} else {
+		output.UserOut.Info(format)
+	}
 }
 
 // FormatPlural is a simple wrapper which returns different strings based on the count value.
@@ -70,7 +85,7 @@ func RandString(n int) string {
 func GetGlobalDdevDir() string {
 	userHome, err := gohomedir.Dir()
 	if err != nil {
-		log.Fatal("could not get home directory for current user. is it set?")
+		Failed("could not get home directory for current user. is it set?")
 	}
 	ddevDir := path.Join(userHome, ".ddev")
 
@@ -96,7 +111,7 @@ func AskForConfirmation() bool {
 	} else if containsString(nokayResponses, responseLower) {
 		return false
 	} else {
-		fmt.Println("Please type yes or no and then press enter:")
+		output.UserOut.Println("Please type yes or no and then press enter:")
 		return AskForConfirmation()
 	}
 }

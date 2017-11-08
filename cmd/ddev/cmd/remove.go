@@ -44,7 +44,7 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 			util.Failed("Failed to remove %s: %s", app.GetName(), err)
 		}
 
-		util.Success("Successfully removed the %s application.\n", app.GetName())
+		util.Success("Successfully removed the %s application.", app.GetName())
 	},
 }
 
