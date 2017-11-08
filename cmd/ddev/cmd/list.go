@@ -27,10 +27,10 @@ var DevListCmd = &cobra.Command{
 		table := platform.CreateAppTable()
 		for _, site := range sites {
 			desc, err := site.Describe()
-			appDescs = append(appDescs, desc)
 			if err != nil {
 				util.Failed("Failed to describe site %s: %v", site.GetName(), err)
 			}
+			appDescs = append(appDescs, desc)
 			platform.RenderAppRow(table, desc)
 		}
 

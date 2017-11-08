@@ -646,14 +646,14 @@ func TestListWithoutDir(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	testcommon.ClearDockerEnv()
+	packageDir, _ := os.Getwd()
 
 	// startCount is the count of apps at the start of this adventure
 	apps := platform.GetApps()
 	startCount := len(apps["local"])
 
 	testDir := testcommon.CreateTmpDir("TestStartWithoutDdevConfig")
-
-	defer testcommon.Chdir(testDir)()
+	defer testcommon.CleanupDir(testDir)
 
 	err := os.MkdirAll(testDir+"/sites/default", 0777)
 	assert.NoError(err)
@@ -676,6 +676,9 @@ func TestListWithoutDir(t *testing.T) {
 	// Make sure we move out of the directory for Windows' sake
 	garbageDir := testcommon.CreateTmpDir("RestingHere")
 	defer testcommon.CleanupDir(garbageDir)
+	// Changing directory must be pushed on defer stack last so it happens
+	// before any cleanups, so windows tests won't break.
+	defer os.Chdir(packageDir)
 
 	err = os.Chdir(garbageDir)
 	assert.NoError(err)
@@ -686,9 +689,17 @@ func TestListWithoutDir(t *testing.T) {
 
 	assert.EqualValues(len(apps["local"]), startCount+1)
 
+	// Make a whole table and make sure our app directory missing shows up.
+	// This could be done otherwise, but we'd have to go find the site in the
+	// array first.
 	table := platform.CreateAppTable()
 	for _, site := range apps["local"] {
-		platform.RenderAppRow(table, site)
+		desc, err := site.Describe()
+		if err != nil {
+			t.Fatalf("Failed to describe site %s: %v", site.GetName(), err)
+		}
+
+		platform.RenderAppRow(table, desc)
 	}
 	assert.Contains(table.String(), fmt.Sprintf("app directory missing: %s", testDir))
 
