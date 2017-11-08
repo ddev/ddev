@@ -177,6 +177,27 @@ func TestLocalStart(t *testing.T) {
 	testcommon.CleanupDir(another.Dir)
 }
 
+// TestStartWithoutDdev makes sure we don't have a regression where lack of .ddev
+// causes a panic.
+func TestStartWithoutDdevConfig(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+	testDir := testcommon.CreateTmpDir("TestStartWithoutDdevConfig")
+
+	// testcommon.Chdir()() and CleanupDir() check their own errors (and exit)
+	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
+
+	err := os.MkdirAll(testDir+"/sites/default", 0777)
+	assert.NoError(err)
+	err = os.Chdir(testDir)
+	assert.NoError(err)
+
+	_, err = platform.GetActiveApp("")
+	assert.Error(err)
+	assert.Contains(err.Error(), "unable to determine")
+}
+
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
 	assert := asrt.New(t)
@@ -617,6 +638,75 @@ func TestRouterNotRunning(t *testing.T) {
 	for _, container := range containers {
 		assert.NotEqual(dockerutil.ContainerName(container), "ddev-router", "ddev-router was not supposed to be running but it was")
 	}
+}
+
+// TestListWithoutDir prevents regression where ddev list panics if one of the
+// sites found is missing a directory
+func TestListWithoutDir(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+	testcommon.ClearDockerEnv()
+	packageDir, _ := os.Getwd()
+
+	// startCount is the count of apps at the start of this adventure
+	apps := platform.GetApps()
+	startCount := len(apps["local"])
+
+	testDir := testcommon.CreateTmpDir("TestStartWithoutDdevConfig")
+	defer testcommon.CleanupDir(testDir)
+
+	err := os.MkdirAll(testDir+"/sites/default", 0777)
+	assert.NoError(err)
+	err = os.Chdir(testDir)
+	assert.NoError(err)
+
+	config, err := ddevapp.NewConfig(testDir, "")
+	assert.NoError(err)
+	config.Name = "junk"
+	config.AppType = "drupal7"
+	err = config.Write()
+	assert.NoError(err)
+
+	// Do a start on the configured site.
+	app, err := platform.GetActiveApp("")
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
+	// Make sure we move out of the directory for Windows' sake
+	garbageDir := testcommon.CreateTmpDir("RestingHere")
+	defer testcommon.CleanupDir(garbageDir)
+
+	err = os.Chdir(garbageDir)
+	assert.NoError(err)
+
+	testcommon.CleanupDir(testDir)
+
+	apps = platform.GetApps()
+
+	assert.EqualValues(len(apps["local"]), startCount+1)
+
+	// Make a whole table and make sure our app directory missing shows up.
+	// This could be done otherwise, but we'd have to go find the site in the
+	// array first.
+	table := platform.CreateAppTable()
+	for _, site := range apps["local"] {
+		desc, err := site.Describe()
+		if err != nil {
+			t.Fatalf("Failed to describe site %s: %v", site.GetName(), err)
+		}
+
+		platform.RenderAppRow(table, desc)
+	}
+	assert.Contains(table.String(), fmt.Sprintf("app directory missing: %s", testDir))
+
+	err = app.Down(true)
+	assert.NoError(err)
+
+	// Change back to package dir. Lots of things will have to be cleaned up
+	// in defers, and for windows we have to not be sitting in them.
+	err = os.Chdir(packageDir)
+	assert.NoError(err)
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app
