@@ -834,7 +834,7 @@ func (l *LocalApp) Down(removeData bool) error {
 			}
 		}
 		// Check that l.AppConfig.DataDir is a directory that is safe to remove.
-		err = validateDataDirRemoval(l.AppConfig.DataDir)
+		err = validateDataDirRemoval(l.AppConfig)
 		if err != nil {
 			return fmt.Errorf("failed to remove data directories: %v", err)
 		}
@@ -850,7 +850,7 @@ func (l *LocalApp) Down(removeData bool) error {
 			// PurgeDirectory leaves the directory itself in place, so we remove it here.
 			err = os.RemoveAll(l.AppConfig.DataDir)
 			if err != nil {
-				return fmt.Errorf("failed to remove data directories: %v", err)
+				return fmt.Errorf("failed to remove data directory %s: %v", l.AppConfig.DataDir, err)
 			}
 			util.Success("Application data removed")
 		}
@@ -1026,7 +1026,8 @@ func restoreIsNeeded(app App) bool {
 }
 
 // validateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
-func validateDataDirRemoval(dataDir string) error {
+func validateDataDirRemoval(config *ddevapp.Config) error {
+	dataDir := config.DataDir
 	unsafeFilePathErr := fmt.Errorf("filepath: %s unsafe for removal", dataDir)
 	// Check for an empty filepath
 	if dataDir == "" {
@@ -1043,7 +1044,7 @@ func validateDataDirRemoval(dataDir string) error {
 	}
 	// Get the last element of dataDir and use it to check that there is something after GlobalDdevDir.
 	pathTail := filepath.Base(dataDir)
-	if pathTail == ".ddev" {
+	if pathTail == ".ddev" || pathTail != config.Name || pathTail == "" {
 		return unsafeFilePathErr
 	}
 	return nil
