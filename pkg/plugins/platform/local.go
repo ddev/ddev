@@ -988,7 +988,9 @@ func GetActiveApp(siteName string) (App, error) {
 
 	_ = app.Init(activeAppRoot)
 	// Check to see if there are any missing AppConfig values that still need to be restored.
-	if restoreIsNeeded(app) {
+	localApp, _ := app.(*LocalApp)
+
+	if localApp.AppConfig.Name == "" || localApp.AppConfig.DataDir == "" {
 		err = restoreApp(app, siteName)
 		if err != nil {
 			return app, err
@@ -998,11 +1000,12 @@ func GetActiveApp(siteName string) (App, error) {
 	return app, nil
 }
 
-// restoreApp manually restores an AppConfig's Name and/or DataDir and returns an error if it cannot manually restore.
+// restoreApp recreates an AppConfig's Name and/or DataDir and returns an error
+// if it cannot restore them.
 func restoreApp(app App, siteName string) error {
 	localApp, _ := app.(*LocalApp)
 	if siteName == "" {
-		return fmt.Errorf("error manually restoring AppConfig: no siteName given")
+		return fmt.Errorf("error restoring AppConfig: no siteName given")
 	}
 	localApp.AppConfig.Name = siteName
 	// Ensure that AppConfig.DataDir is set so that site data can be removed if necessary.
@@ -1010,19 +1013,6 @@ func restoreApp(app App, siteName string) error {
 	localApp.AppConfig.DataDir = dataDir
 
 	return nil
-}
-
-// restoreIsNeeded returns a boolean indicating whether or not an AppConfig has necessary values set (currently Name and DataDir).
-func restoreIsNeeded(app App) bool {
-	localApp, _ := app.(*LocalApp)
-	// Make sure AppConfig.Name is set in case this app is being used for Cleanup().
-	if localApp.AppConfig.Name == "" {
-		return true
-	}
-	if localApp.AppConfig.DataDir == "" {
-		return true
-	}
-	return false
 }
 
 // validateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
