@@ -1033,8 +1033,9 @@ func validateDataDirRemoval(config *ddevapp.Config) error {
 		return unsafeFilePathErr
 	}
 	// Get the last element of dataDir and use it to check that there is something after GlobalDdevDir.
-	pathTail := filepath.Base(dataDir)
-	if pathTail == ".ddev" || pathTail != config.Name || pathTail == "" {
+	lastPathElem := filepath.Base(dataDir)
+	nextLastPathElem := filepath.Base(filepath.Dir(dataDir))
+	if lastPathElem == ".ddev" || nextLastPathElem != config.Name || lastPathElem == "" {
 		return unsafeFilePathErr
 	}
 	return nil
