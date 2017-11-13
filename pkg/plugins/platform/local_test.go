@@ -153,7 +153,7 @@ func TestLocalStart(t *testing.T) {
 		assert.True(composeFile)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
-			containerName, err := getContainerByType(containerType, app)
+			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "running")
 			assert.NoError(err)
@@ -460,7 +460,7 @@ func TestLocalStop(t *testing.T) {
 		assert.NoError(err)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
-			containerName, err := getContainerByType(containerType, app)
+			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "exited")
 			assert.NoError(err)
@@ -660,7 +660,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
-		_, err := getContainerByType(containerType, app)
+		_, err := constructContainerName(containerType, app)
 		assert.Error(err)
 	}
 
@@ -789,8 +789,8 @@ func TestListWithoutDir(t *testing.T) {
 	assert.NoError(err)
 }
 
-// getContainerByType builds a container name given the type (web/db/dba) and the app
-func getContainerByType(containerType string, app platform.App) (string, error) {
+// constructContainerName builds a container name given the type (web/db/dba) and the app
+func constructContainerName(containerType string, app platform.App) (string, error) {
 	container, err := app.FindContainerByType(containerType)
 	if err != nil {
 		return "", err
