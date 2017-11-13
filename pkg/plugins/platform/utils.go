@@ -117,49 +117,22 @@ func Cleanup(app App) error {
 	labels := map[string]string{
 		"com.ddev.site-name": app.GetName(),
 	}
-	containers, findErr := dockerutil.FindContainersByLabels(labels)
-	if findErr == nil {
-
-		// First, try stopping the listed containers if they are running.
-		for i := range containers {
-			if containers[i].State == "running" || containers[i].State == "restarting" || containers[i].State == "paused" {
-				containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
-				output.UserOut.Printf("Stopping container: %s", containerName)
-				err := client.StopContainer(containers[i].ID, 60)
-				if err != nil {
-					return fmt.Errorf("could not stop container %s: %v", containerName, err)
-				}
-			}
-
-			// Try to remove the containers once they are stopped.
-			for i := range containers {
-				containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
-				removeOpts := docker.RemoveContainerOptions{
-					ID:            containers[i].ID,
-					RemoveVolumes: true,
-					Force:         true,
-				}
-				output.UserOut.Printf("Removing container: %s", containerName)
-				if err := client.RemoveContainer(removeOpts); err != nil {
-					return fmt.Errorf("could not remove container %s: %v", containerName, err)
-				}
-
-			}
-		}
-	} else {
-		util.Warning("app.Cleanup() did not stop containers because they did not exist: %v", findErr)
-	}
-	volumes, err := client.ListVolumes(docker.ListVolumesOptions{})
+	containers, err := dockerutil.FindContainersByLabels(labels)
 	if err != nil {
 		return err
 	}
 
-	for _, volume := range volumes {
-		if volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()) {
-			err = client.RemoveVolume(volume.Name)
-			if err != nil {
-				return fmt.Errorf("could not remove volume %s: %v", volume.Name, err)
-			}
+	// First, try stopping the listed containers if they are running.
+	for i := range containers {
+		containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
+		removeOpts := docker.RemoveContainerOptions{
+			ID:            containers[i].ID,
+			RemoveVolumes: true,
+			Force:         true,
+		}
+		output.UserOut.Printf("Removing container: %s", containerName)
+		if err = client.RemoveContainer(removeOpts); err != nil {
+			return fmt.Errorf("could not remove container %s: %v", containerName, err)
 		}
 	}
 
