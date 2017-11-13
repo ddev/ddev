@@ -123,9 +123,11 @@ func TestMain(m *testing.M) {
 			log.Fatalf("TestMain shutdown: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
-		err = app.Down(true)
-		if err != nil {
-			log.Fatalf("TestMain shutdown: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
+		if app.SiteStatus() != platform.SiteNotFound {
+			err = app.Down(true)
+			if err != nil {
+				log.Fatalf("TestMain shutdown: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
+			}
 		}
 
 		runTime()
@@ -196,7 +198,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 
 	_, err = platform.GetActiveApp("")
 	assert.Error(err)
-	assert.Contains(err.Error(), "unable to determine")
+	assert.Contains(err.Error(), "Could not find a site")
 }
 
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
@@ -556,9 +558,9 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
-	out, err := app.Describe()
+	desc, err := app.Describe()
 	assert.NoError(err)
-	assert.Contains(out, platform.SiteDirMissing, "Output did not include the phrase 'app directory missing' when describing a site with missing directories.")
+	assert.Contains(desc["status"], platform.SiteDirMissing, "Status did not include the phrase 'app directory missing' when describing a site with missing directories.")
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
@@ -699,9 +701,10 @@ func TestGetAppsEmpty(t *testing.T) {
 		err = app.Init(site.Dir)
 		assert.NoError(err)
 
-		err = app.Down(true)
-		assert.NoError(err)
-
+		if app.SiteStatus() != platform.SiteNotFound {
+			err = app.Down(true)
+			assert.NoError(err)
+		}
 		switchDir()
 	}
 
