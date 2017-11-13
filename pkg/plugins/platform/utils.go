@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 
 	"errors"
@@ -33,7 +33,7 @@ func GetApps() map[string][]App {
 				site, err := GetPluginApp(platformType)
 				// This should absolutely never happen, so just fatal on the off chance it does.
 				if err != nil {
-					util.Failed("could not get application for plugin type %s", platformType)
+					util.Failed("could not get application for plugin type %s: %v", platformType, err)
 				}
 				approot, ok := siteContainer.Labels["com.ddev.approot"]
 				if !ok {
@@ -120,38 +120,35 @@ func Cleanup(app App) error {
 	containers, findErr := dockerutil.FindContainersByLabels(labels)
 	if findErr == nil {
 
-	// First, try stopping the listed containers if they are running.
-	for i := range containers {
-		if containers[i].State == "running" || containers[i].State == "restarting" || containers[i].State == "paused" {
-			containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
-			output.UserOut.Printf("Stopping container: %s", containerName)
-			err = client.StopContainer(containers[i].ID, 60)
-			if err != nil {
-				return fmt.Errorf("could not stop container %s: %v", containerName, err)
-			}
-		}
-
-		// Try to remove the containers once they are stopped.
+		// First, try stopping the listed containers if they are running.
 		for i := range containers {
-			containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
-			removeOpts := docker.RemoveContainerOptions{
-				ID:            containers[i].ID,
-				RemoveVolumes: true,
-				Force:         true,
+			if containers[i].State == "running" || containers[i].State == "restarting" || containers[i].State == "paused" {
+				containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
+				output.UserOut.Printf("Stopping container: %s", containerName)
+				err := client.StopContainer(containers[i].ID, 60)
+				if err != nil {
+					return fmt.Errorf("could not stop container %s: %v", containerName, err)
+				}
 			}
-			fmt.Printf("Removing container: %s\n", containerName)
-			if err := client.RemoveContainer(removeOpts); err != nil {
-				return fmt.Errorf("could not remove container %s: %v", containerName, err)
-			}
-		}
-		output.UserOut.Printf("Removing container: %s", containerName)
-		if err = client.RemoveContainer(removeOpts); err != nil {
-			return fmt.Errorf("could not remove container %s: %v", containerName, err)
-		}
-		} else {
-		log.Warnf("app.Cleanup() did not stop containers because they did not exist: %v", findErr)
-	}
 
+			// Try to remove the containers once they are stopped.
+			for i := range containers {
+				containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
+				removeOpts := docker.RemoveContainerOptions{
+					ID:            containers[i].ID,
+					RemoveVolumes: true,
+					Force:         true,
+				}
+				output.UserOut.Printf("Removing container: %s", containerName)
+				if err := client.RemoveContainer(removeOpts); err != nil {
+					return fmt.Errorf("could not remove container %s: %v", containerName, err)
+				}
+
+			}
+		}
+	} else {
+		util.Warning("app.Cleanup() did not stop containers because they did not exist: %v", findErr)
+	}
 	volumes, err := client.ListVolumes(docker.ListVolumesOptions{})
 	if err != nil {
 		return err
