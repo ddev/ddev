@@ -834,7 +834,7 @@ func (l *LocalApp) Down(removeData bool) error {
 			}
 		}
 		// Check that l.AppConfig.DataDir is a directory that is safe to remove.
-		err = ValidateDataDirRemoval(l.AppConfig.DataDir)
+		err = validateDataDirRemoval(l.AppConfig.DataDir)
 		if err != nil {
 			return fmt.Errorf("failed to remove data directories: %v", err)
 		}
@@ -988,8 +988,8 @@ func GetActiveApp(siteName string) (App, error) {
 
 	_ = app.Init(activeAppRoot)
 	// Check to see if there are any missing AppConfig values that still need to be restored.
-	if RestoreIsNeeded(app) {
-		err = RestoreApp(app, siteName)
+	if restoreIsNeeded(app) {
+		err = restoreApp(app, siteName)
 		if err != nil {
 			return app, err
 		}
@@ -998,8 +998,8 @@ func GetActiveApp(siteName string) (App, error) {
 	return app, nil
 }
 
-// RestoreApp manually restores an AppConfig's Name and/or DataDir and returns an error if it cannot manually restore.
-func RestoreApp(app App, siteName string) error {
+// restoreApp manually restores an AppConfig's Name and/or DataDir and returns an error if it cannot manually restore.
+func restoreApp(app App, siteName string) error {
 	localApp, _ := app.(*LocalApp)
 	if siteName == "" {
 		return fmt.Errorf("error manually restoring AppConfig: no siteName given")
@@ -1012,8 +1012,8 @@ func RestoreApp(app App, siteName string) error {
 	return nil
 }
 
-// RestoreIsNeeded returns a boolean indicating whether or not an AppConfig has necessary values set (currently Name and DataDir).
-func RestoreIsNeeded(app App) bool {
+// restoreIsNeeded returns a boolean indicating whether or not an AppConfig has necessary values set (currently Name and DataDir).
+func restoreIsNeeded(app App) bool {
 	localApp, _ := app.(*LocalApp)
 	// Make sure AppConfig.Name is set in case this app is being used for Cleanup().
 	if localApp.AppConfig.Name == "" {
@@ -1025,8 +1025,8 @@ func RestoreIsNeeded(app App) bool {
 	return false
 }
 
-// ValidateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
-func ValidateDataDirRemoval(dataDir string) error {
+// validateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
+func validateDataDirRemoval(dataDir string) error {
 	unsafeFilePathErr := fmt.Errorf("filepath: %s unsafe for removal", dataDir)
 	// Check for an empty filepath
 	if dataDir == "" {
