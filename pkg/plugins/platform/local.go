@@ -42,7 +42,8 @@ func (l *LocalApp) GetType() string {
 	return strings.ToLower(l.AppConfig.AppType)
 }
 
-// Init populates LocalApp settings based on the current working directory.
+// Init populates LocalApp config based on the current working directory.
+// It does not start the containers.
 func (l *LocalApp) Init(basePath string) error {
 	config, err := ddevapp.NewConfig(basePath, "")
 
@@ -674,6 +675,10 @@ func (l *LocalApp) Stop() error {
 		return fmt.Errorf("no site to remove")
 	}
 
+	if strings.Contains(l.SiteStatus(), SiteDirMissing) || strings.Contains(l.SiteStatus(), SiteConfigMissing) {
+		return fmt.Errorf("ddev can no longer find your application files at %s. If you would like to continue using ddev to manage this site please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev remove %s'", l.AppRoot(), l.GetName())
+	}
+
 	_, _, err := dockerutil.ComposeCmd(l.ComposeFiles(), "stop")
 
 	if err != nil {
@@ -801,20 +806,18 @@ func (l *LocalApp) CreateSettingsFile() error {
 	return nil
 }
 
-// Down stops the docker containers for the local project.
+// Down stops the docker containers for the project in current directory.
 func (l *LocalApp) Down(removeData bool) error {
 	l.DockerEnv()
 	settingsFilePath := l.AppConfig.SiteSettingsPath
 
-	_, _, err := dockerutil.ComposeCmd(l.ComposeFiles(), "down", "-v")
+	// Remove all the containers and volumes for app.
+	err := Cleanup(l)
 	if err != nil {
-		util.Warning("Could not stop site with docker-compose. Attempting manual cleanup.")
-		err = Cleanup(l)
-		if err != nil {
-			util.Warning("Received error from Cleanup, err=", err)
-		}
+		return fmt.Errorf("Failed to remove %s: %s", l.GetName(), err)
 	}
 
+	// Remove data/database if we need to.
 	if removeData {
 		if fileutil.FileExists(settingsFilePath) {
 			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
@@ -830,26 +833,31 @@ func (l *LocalApp) Down(removeData bool) error {
 				}
 			}
 		}
-		dir := filepath.Dir(l.AppConfig.DataDir)
+		// Check that l.AppConfig.DataDir is a directory that is safe to remove.
+		err = validateDataDirRemoval(l.AppConfig)
+		if err != nil {
+			return fmt.Errorf("failed to remove data directories: %v", err)
+		}
 		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
 		// are writable before we attempt to remove them.
-		if !fileutil.FileExists(dir) {
+		if !fileutil.FileExists(l.AppConfig.DataDir) {
 			util.Warning("No application data to remove")
 		} else {
-			err := fileutil.PurgeDirectory(dir)
+			err := fileutil.PurgeDirectory(l.AppConfig.DataDir)
 			if err != nil {
 				return fmt.Errorf("failed to remove data directories: %v", err)
 			}
 			// PurgeDirectory leaves the directory itself in place, so we remove it here.
-			err = os.RemoveAll(dir)
+			err = os.RemoveAll(l.AppConfig.DataDir)
 			if err != nil {
-				return fmt.Errorf("failed to remove data directories: %v", err)
+				return fmt.Errorf("failed to remove data directory %s: %v", l.AppConfig.DataDir, err)
 			}
 			util.Success("Application data removed")
 		}
 	}
 
-	return StopRouter()
+	err = StopRouter()
+	return err
 }
 
 // URL returns the URL for a given application.
@@ -935,6 +943,10 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error determining the current directory: %s", err)
 		}
+		_, err = CheckForConf(siteDir)
+		if err != nil {
+			return "", fmt.Errorf("Could not find a site in %s. Have you run 'ddev config'? Please specify a site name or change directories: %s", siteDir, err)
+		}
 	} else {
 		var ok bool
 
@@ -953,10 +965,10 @@ func GetActiveAppRoot(siteName string) (string, error) {
 			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(webContainer))
 		}
 	}
-
 	appRoot, err := CheckForConf(siteDir)
 	if err != nil {
-		return "", fmt.Errorf("unable to determine the application for this command. Have you run 'ddev config'? Error: %s", err)
+		// In the case of a missing .ddev/config.yml just return the site directory.
+		return siteDir, nil
 	}
 
 	return appRoot, nil
@@ -974,6 +986,60 @@ func GetActiveApp(siteName string) (App, error) {
 		return app, err
 	}
 
-	err = app.Init(activeAppRoot)
-	return app, err
+	// Ignore app.Init() error, since app.Init() fails if no directory found.
+	// We already were successful with *finding* the app, and if we get an
+	// incomplete one we have to add to it.
+	_ = app.Init(activeAppRoot)
+	// Check to see if there are any missing AppConfig values that still need to be restored.
+	localApp, _ := app.(*LocalApp)
+
+	if localApp.AppConfig.Name == "" || localApp.AppConfig.DataDir == "" {
+		err = restoreApp(app, siteName)
+		if err != nil {
+			return app, err
+		}
+	}
+
+	return app, nil
+}
+
+// restoreApp recreates an AppConfig's Name and/or DataDir and returns an error
+// if it cannot restore them.
+func restoreApp(app App, siteName string) error {
+	localApp, _ := app.(*LocalApp)
+	if siteName == "" {
+		return fmt.Errorf("error restoring AppConfig: no siteName given")
+	}
+	localApp.AppConfig.Name = siteName
+	// Ensure that AppConfig.DataDir is set so that site data can be removed if necessary.
+	dataDir := fmt.Sprintf("%s/%s", util.GetGlobalDdevDir(), localApp.AppConfig.Name)
+	localApp.AppConfig.DataDir = dataDir
+
+	return nil
+}
+
+// validateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
+func validateDataDirRemoval(config *ddevapp.Config) error {
+	dataDir := config.DataDir
+	unsafeFilePathErr := fmt.Errorf("filepath: %s unsafe for removal", dataDir)
+	// Check for an empty filepath
+	if dataDir == "" {
+		return unsafeFilePathErr
+	}
+	// Get the current working directory.
+	currDir, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	// Check that dataDir is not the current directory.
+	if dataDir == currDir {
+		return unsafeFilePathErr
+	}
+	// Get the last element of dataDir and use it to check that there is something after GlobalDdevDir.
+	lastPathElem := filepath.Base(dataDir)
+	nextLastPathElem := filepath.Base(filepath.Dir(dataDir))
+	if lastPathElem == ".ddev" || nextLastPathElem != config.Name || lastPathElem == "" {
+		return unsafeFilePathErr
+	}
+	return nil
 }

@@ -2,11 +2,11 @@ package platform_test
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
-
-	"os"
 
 	"strings"
 
@@ -123,9 +123,11 @@ func TestMain(m *testing.M) {
 			log.Fatalf("TestMain shutdown: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
-		err = app.Down(true)
-		if err != nil {
-			log.Fatalf("TestMain startup: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
+		if app.SiteStatus() != platform.SiteNotFound {
+			err = app.Down(true)
+			if err != nil {
+				log.Fatalf("TestMain shutdown: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
+			}
 		}
 
 		runTime()
@@ -196,7 +198,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 
 	_, err = platform.GetActiveApp("")
 	assert.Error(err)
-	assert.Contains(err.Error(), "unable to determine")
+	assert.Contains(err.Error(), "Could not find a site")
 }
 
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
@@ -472,7 +474,41 @@ func TestLocalStop(t *testing.T) {
 	}
 }
 
-// TestDescribe tests that the describe command works properly on a started or stopped site.
+// TestLocalStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or ddev configs.
+func TestLocalStopMissingDirectory(t *testing.T) {
+	assert := asrt.New(t)
+
+	site := TestSites[0]
+	testcommon.ClearDockerEnv()
+	app, err := platform.GetPluginApp("local")
+	assert.NoError(err)
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+
+	// Restart the site since it was stopped in the previous test.
+	if app.SiteStatus() != platform.SiteRunning {
+		err = app.Start()
+		assert.NoError(err)
+	}
+
+	tempPath := testcommon.CreateTmpDir("site-copy")
+	siteCopyDest := filepath.Join(tempPath, "site")
+	defer removeAllErrCheck(tempPath, assert)
+
+	// Move the site directory to a temp location to mimic a missing directory.
+	err = os.Rename(site.Dir, siteCopyDest)
+	assert.NoError(err)
+
+	out := app.Stop()
+	assert.Error(out)
+	assert.Contains(out.Error(), "If you would like to continue using ddev to manage this site please restore your files to that directory.")
+	// Move the site directory back to its original location.
+	err = os.Rename(siteCopyDest, site.Dir)
+	assert.NoError(err)
+
+}
+
+// TestDescribe tests that the describe command works properly on a stopped site.
 func TestDescribe(t *testing.T) {
 	assert := asrt.New(t)
 	app, err := platform.GetPluginApp("local")
@@ -503,6 +539,31 @@ func TestDescribe(t *testing.T) {
 		assert.EqualValues(desc["status"], platform.SiteStopped)
 		switchDir()
 	}
+}
+
+// TestDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or ddev configs.
+func TestDescribeMissingDirectory(t *testing.T) {
+	assert := asrt.New(t)
+	site := TestSites[0]
+	tempPath := testcommon.CreateTmpDir("site-copy")
+	siteCopyDest := filepath.Join(tempPath, "site")
+	defer removeAllErrCheck(tempPath, assert)
+
+	app, err := platform.GetPluginApp("local")
+	assert.NoError(err)
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+
+	// Move the site directory to a temp location to mimick a missing directory.
+	err = os.Rename(site.Dir, siteCopyDest)
+	assert.NoError(err)
+
+	desc, err := app.Describe()
+	assert.NoError(err)
+	assert.Contains(desc["status"], platform.SiteDirMissing, "Status did not include the phrase 'app directory missing' when describing a site with missing directories.")
+	// Move the site directory back to its original location.
+	err = os.Rename(siteCopyDest, site.Dir)
+	assert.NoError(err)
 }
 
 // TestRouterPortsCheck makes sure that we can detect if the ports are available before starting the router.
@@ -565,6 +626,12 @@ func TestRouterPortsCheck(t *testing.T) {
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
 func TestCleanupWithoutCompose(t *testing.T) {
 	assert := asrt.New(t)
+	// Skip test because we can't rename folders while they're in use if running on Windows.
+	if runtime.GOOS == "windows" {
+		log.Println("Skipping test TestCleanupWithoutCompose on Windows")
+		t.Skip()
+	}
+
 	site := TestSites[0]
 
 	revertDir := site.Chdir()
@@ -578,9 +645,20 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	// Ensure we have a site started so we have something to cleanup
 	err = app.Start()
 	assert.NoError(err)
+	// Setup by creating temp directory and nesting a folder for our site.
+	tempPath := testcommon.CreateTmpDir("site-copy")
+	siteCopyDest := filepath.Join(tempPath, "site")
+	defer removeAllErrCheck(tempPath, assert)
 
-	// Call the Cleanup command()
-	err = platform.Cleanup(app)
+	// Move site directory to a temp directory to mimick a missing directory.
+	err = os.Rename(site.Dir, siteCopyDest)
+	assert.NoError(err)
+
+	// Call the Down command()
+	// Notice that we set the removeData parameter to true.
+	// This gives us added test coverage over sites with missing directories
+	// by ensuring any associated database files get cleaned up as well.
+	err = app.Down(true)
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
@@ -603,6 +681,9 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	revertDir()
+	// Move the site directory back to its original location.
+	err = os.Rename(siteCopyDest, site.Dir)
+	assert.NoError(err)
 }
 
 // TestGetappsEmpty ensures that GetApps returns an empty list when no applications are running.
@@ -620,9 +701,10 @@ func TestGetAppsEmpty(t *testing.T) {
 		err = app.Init(site.Dir)
 		assert.NoError(err)
 
-		err = app.Down(true)
-		assert.NoError(err)
-
+		if app.SiteStatus() != platform.SiteNotFound {
+			err = app.Down(true)
+			assert.NoError(err)
+		}
 		switchDir()
 	}
 
@@ -718,4 +800,9 @@ func constructContainerName(containerType string, app platform.App) (string, err
 	}
 	name := dockerutil.ContainerName(container)
 	return name, nil
+}
+
+func removeAllErrCheck(path string, assert *asrt.Assertions) {
+	err := os.RemoveAll(path)
+	assert.NoError(err)
 }

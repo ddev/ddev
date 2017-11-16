@@ -15,7 +15,7 @@ var LocalDevRMCmd = &cobra.Command{
 	Short:   "Remove the local development environment for a site.",
 	Long: `Remove the local development environment for a site. You can run 'ddev remove'
 from a site directory to remove that site, or you can specify a site to remove
-by running 'ddev rm <sitename>'. By default, remove is a non-destructive operation and will
+by running 'ddev remove <sitename>'. By default, remove is a non-destructive operation and will
 leave database contents intact.
 
 To remove database contents, you may use the --remove-data flag with remove.`,

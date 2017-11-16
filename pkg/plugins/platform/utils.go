@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 
 	"errors"
@@ -33,7 +33,7 @@ func GetApps() map[string][]App {
 				site, err := GetPluginApp(platformType)
 				// This should absolutely never happen, so just fatal on the off chance it does.
 				if err != nil {
-					util.Failed("could not get application for plugin type %s", platformType)
+					util.Failed("could not get application for plugin type %s: %v", platformType, err)
 				}
 				approot, ok := siteContainer.Labels["com.ddev.approot"]
 				if !ok {
@@ -108,7 +108,8 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 
 }
 
-// Cleanup will clean up ddev apps even if the composer file has been deleted.
+// Cleanup will remove ddev containers and volumes even if docker-compose.yml
+// has been deleted.
 func Cleanup(app App) error {
 	client := dockerutil.GetDockerClient()
 
@@ -123,18 +124,6 @@ func Cleanup(app App) error {
 
 	// First, try stopping the listed containers if they are running.
 	for i := range containers {
-		if containers[i].State == "running" || containers[i].State == "restarting" || containers[i].State == "paused" {
-			containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
-			output.UserOut.Printf("Stopping container: %s", containerName)
-			err = client.StopContainer(containers[i].ID, 60)
-			if err != nil {
-				return fmt.Errorf("could not stop container %s: %v", containerName, err)
-			}
-		}
-	}
-
-	// Try to remove the containers once they are stopped.
-	for i := range containers {
 		containerName := containers[i].Names[0][1:len(containers[i].Names[0])]
 		removeOpts := docker.RemoveContainerOptions{
 			ID:            containers[i].ID,
@@ -147,21 +136,8 @@ func Cleanup(app App) error {
 		}
 	}
 
-	volumes, err := client.ListVolumes(docker.ListVolumesOptions{})
-	if err != nil {
-		return err
-	}
-
-	for _, volume := range volumes {
-		if volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()) {
-			err := client.RemoveVolume(volume.Name)
-			if err != nil {
-				return fmt.Errorf("could not remove volume %s: %v", volume.Name, err)
-			}
-		}
-	}
-
-	return StopRouter()
+	err = StopRouter()
+	return err
 }
 
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.
