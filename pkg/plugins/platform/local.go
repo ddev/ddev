@@ -986,6 +986,9 @@ func GetActiveApp(siteName string) (App, error) {
 		return app, err
 	}
 
+	// Ignore app.Init() error, since app.Init() fails if no directory found.
+	// We already were successful with *finding* the app, and if we get an
+	// incomplete one we have to add to it.
 	_ = app.Init(activeAppRoot)
 	// Check to see if there are any missing AppConfig values that still need to be restored.
 	localApp, _ := app.(*LocalApp)
