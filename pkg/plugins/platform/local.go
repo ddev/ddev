@@ -676,7 +676,7 @@ func (l *LocalApp) Stop() error {
 	}
 
 	if strings.Contains(l.SiteStatus(), SiteDirMissing) || strings.Contains(l.SiteStatus(), SiteConfigMissing) {
-		return fmt.Errorf("ddev can no longer find your application files at %s. If you would like to continue using ddev to manage this site please restore your files to that directory. If you would like to remove this site from ddev, you may run ddev rm %s", l.AppRoot(), l.GetName())
+		return fmt.Errorf("ddev can no longer find your application files at %s. If you would like to continue using ddev to manage this site please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev remove %s'", l.AppRoot(), l.GetName())
 	}
 
 	_, _, err := dockerutil.ComposeCmd(l.ComposeFiles(), "stop")
