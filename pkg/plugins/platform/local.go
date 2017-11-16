@@ -945,7 +945,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		}
 		_, err = CheckForConf(siteDir)
 		if err != nil {
-			return "", fmt.Errorf("Could not find a site in %s. Please specify a site name or change directories: %s", siteDir, err)
+			return "", fmt.Errorf("Could not find a site in %s. Have you run 'ddev config'? Please specify a site name or change directories: %s", siteDir, err)
 		}
 	} else {
 		var ok bool
