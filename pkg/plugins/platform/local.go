@@ -88,14 +88,14 @@ func (l *LocalApp) Describe() (map[string]interface{}, error) {
 	appDesc := make(map[string]interface{})
 
 	var https bool
-	var httpsUrlString string
-	httpUrlString := fmt.Sprintf("http://%s", l.HostName())
+	var httpsURLString string
+	httpURLString := fmt.Sprintf("http://%s", l.HostName())
 	webCon, err := l.FindContainerByType("web")
 	if err == nil {
 		https = dockerutil.CheckForHTTPS(webCon)
 	}
 	if https {
-		httpsUrlString = fmt.Sprintf("https://%s", l.HostName())
+		httpsURLString = fmt.Sprintf("https://%s", l.HostName())
 	}
 
 	appDesc["name"] = l.GetName()
@@ -103,8 +103,8 @@ func (l *LocalApp) Describe() (map[string]interface{}, error) {
 	appDesc["type"] = l.GetType()
 	appDesc["approot"] = l.AppRoot()
 	appDesc["shortroot"] = shortRoot
-	appDesc["httpurl"] = httpUrlString
-	appDesc["httpsurl"] = httpsUrlString
+	appDesc["httpurl"] = httpURLString
+	appDesc["httpsurl"] = httpsURLString
 
 	db, err := l.FindContainerByType("db")
 	if err != nil {
