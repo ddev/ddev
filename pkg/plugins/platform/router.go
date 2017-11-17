@@ -52,7 +52,15 @@ func StartDdevRouter() error {
 	routerdir := filepath.Dir(dest)
 	err := os.MkdirAll(routerdir, 0755)
 	if err != nil {
-		return fmt.Errorf("unable to create directory for ddev router: %s", err)
+		return fmt.Errorf("unable to create directory for ddev router: %v", err)
+	}
+
+	certDir := filepath.Join(util.GetGlobalDdevDir(), "certs")
+	if _, err = os.Stat(certDir); os.IsNotExist(err) {
+		err = os.MkdirAll(certDir, 0755)
+		if err != nil {
+			return fmt.Errorf("unable to create directory for ddev router: %v", err)
+		}
 	}
 
 	var doc bytes.Buffer
@@ -170,6 +178,12 @@ func determineRouterPorts() []string {
 			httpPorts := dockerutil.GetContainerEnv("HTTP_EXPOSE", container)
 			if httpPorts != "" {
 				ports := strings.Split(httpPorts, ",")
+				exposePorts = append(exposePorts, ports...)
+			}
+
+			httpsPorts := dockerutil.GetContainerEnv("HTTPS_EXPOSE", container)
+			if httpsPorts != "" {
+				ports := strings.Split(httpsPorts, ",")
 				exposePorts = append(exposePorts, ports...)
 			}
 
