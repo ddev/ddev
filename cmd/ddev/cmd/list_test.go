@@ -53,7 +53,8 @@ func TestDevList(t *testing.T) {
 				found = true
 				assert.Contains(item["url"], app.HostName())
 				assert.EqualValues(app.GetType(), item["type"])
-				assert.EqualValues(platform.RenderHomeRootedDir(app.AppRoot()), item["approot"])
+				assert.EqualValues(platform.RenderHomeRootedDir(app.AppRoot()), item["shortroot"])
+				assert.EqualValues(app.AppRoot(), item["approot"])
 				break
 			}
 		}

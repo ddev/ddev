@@ -102,7 +102,7 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 	table.AddRow(
 		row["name"],
 		row["type"],
-		row["approot"],
+		row["shortroot"],
 		row["url"],
 		status,
 	)

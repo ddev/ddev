@@ -100,7 +100,8 @@ func (l *LocalApp) Describe() (map[string]interface{}, error) {
 	appDesc["name"] = l.GetName()
 	appDesc["status"] = l.SiteStatus()
 	appDesc["type"] = l.GetType()
-	appDesc["approot"] = shortRoot
+	appDesc["approot"] = l.AppRoot()
+	appDesc["shortroot"] = shortRoot
 	appDesc["url"] = urlString
 
 	db, err := l.FindContainerByType("db")

@@ -84,7 +84,8 @@ func TestDescribe(t *testing.T) {
 		assert.True(ok)
 		assert.EqualValues(raw["status"], "running")
 		assert.EqualValues(raw["name"], v.Name)
-		assert.EqualValues(raw["approot"].(string), platform.RenderHomeRootedDir(v.Dir))
+		assert.EqualValues(raw["shortroot"].(string), platform.RenderHomeRootedDir(v.Dir))
+		assert.EqualValues(raw["approot"].(string), v.Dir)
 		cleanup()
 	}
 }
@@ -102,7 +103,8 @@ func TestDescribeAppFunction(t *testing.T) {
 		assert.NoError(err)
 		assert.EqualValues(desc["status"], platform.SiteRunning)
 		assert.EqualValues(app.GetName(), desc["name"])
-		assert.EqualValues(platform.RenderHomeRootedDir(v.Dir), desc["approot"].(string))
+		assert.EqualValues(platform.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
+		assert.EqualValues(v.Dir, desc["approot"].(string))
 
 		out, _ := json.Marshal(desc)
 		assert.Contains(string(out), app.URL())
