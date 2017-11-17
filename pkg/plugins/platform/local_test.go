@@ -529,7 +529,9 @@ func TestDescribe(t *testing.T) {
 		assert.NoError(err)
 		assert.EqualValues(desc["status"], platform.SiteRunning)
 		assert.EqualValues(app.GetName(), desc["name"])
-		assert.EqualValues(platform.RenderHomeRootedDir(app.AppRoot()), desc["approot"])
+		assert.EqualValues(platform.RenderHomeRootedDir(app.AppRoot()), desc["shortroot"])
+		assert.EqualValues(app.AppRoot(), desc["approot"])
+
 		// Now stop it and test behavior.
 		err = app.Stop()
 		assert.NoError(err)
