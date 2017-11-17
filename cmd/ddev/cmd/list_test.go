@@ -51,7 +51,8 @@ func TestDevList(t *testing.T) {
 			// Check to see that we can find our item
 			if item["name"] == v.Name {
 				found = true
-				assert.Contains(item["url"], app.HostName())
+				assert.Contains(item["httpurl"], app.HostName())
+				assert.Contains(item["httpsurl"], app.HostName())
 				assert.EqualValues(app.GetType(), item["type"])
 				assert.EqualValues(platform.RenderHomeRootedDir(app.AppRoot()), item["shortroot"])
 				assert.EqualValues(app.AppRoot(), item["approot"])

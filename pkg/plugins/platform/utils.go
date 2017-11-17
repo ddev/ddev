@@ -99,11 +99,12 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 		status = color.CyanString(status)
 	}
 
+	urls := row["httpurl"].(string) + "\n" + row["httpsurl"].(string)
 	table.AddRow(
 		row["name"],
 		row["type"],
 		row["shortroot"],
-		row["url"],
+		urls,
 		status,
 	)
 
