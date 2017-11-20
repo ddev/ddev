@@ -143,7 +143,8 @@ func TestDescribeAppUsingSitename(t *testing.T) {
 		assert.NoError(err)
 		assert.EqualValues(desc["status"], platform.SiteRunning)
 		assert.EqualValues(app.GetName(), desc["name"])
-		assert.EqualValues(platform.RenderHomeRootedDir(v.Dir), desc["approot"].(string))
+		assert.EqualValues(platform.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
+		assert.EqualValues(v.Dir, desc["approot"].(string))
 
 		out, _ := json.Marshal(desc)
 		assert.NoError(err)
