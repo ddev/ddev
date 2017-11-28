@@ -133,6 +133,13 @@ func TestComposeCmd(t *testing.T) {
 	assert.Error(err)
 }
 
+func TestCheckCompose(t *testing.T) {
+	assert := asrt.New(t)
+
+	err := CheckDockerCompose()
+	assert.NoError(err)
+}
+
 func TestGetAppContainers(t *testing.T) {
 	assert := asrt.New(t)
 	sites, err := GetAppContainers("dockertest")

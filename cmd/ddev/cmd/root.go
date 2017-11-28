@@ -60,6 +60,11 @@ var RootCmd = &cobra.Command{
 			}
 		}
 
+		err = dockerutil.CheckDockerCompose()
+		if err != nil {
+			util.Failed("docker-compose does not appear to be installed.")
+		}
+
 		// Verify that the ~/.ddev exists
 		userDdevDir := util.GetGlobalDdevDir()
 
