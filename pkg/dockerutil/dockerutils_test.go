@@ -133,6 +133,7 @@ func TestComposeCmd(t *testing.T) {
 	assert.Error(err)
 }
 
+// TestCheckCompose tests detection of docker-compose.
 func TestCheckCompose(t *testing.T) {
 	assert := asrt.New(t)
 
