@@ -137,7 +137,7 @@ func TestComposeCmd(t *testing.T) {
 func TestCheckCompose(t *testing.T) {
 	assert := asrt.New(t)
 
-	err := CheckDockerCompose()
+	err := CheckDockerCompose(version.DockerComposeVersionConstraint)
 	assert.NoError(err)
 }
 

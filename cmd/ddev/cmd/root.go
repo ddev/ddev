@@ -60,9 +60,13 @@ var RootCmd = &cobra.Command{
 			}
 		}
 
-		err = dockerutil.CheckDockerCompose()
+		err = dockerutil.CheckDockerCompose(version.DockerComposeVersionConstraint)
 		if err != nil {
-			util.Failed("docker-compose does not appear to be installed.")
+			if err.Error() == "no docker-compose" {
+				util.Failed("docker-compose does not appear to be installed.")
+			} else {
+				util.Failed("The docker-compose version currently installed does not meet ddev's requirements: %v", err)
+			}
 		}
 
 		// Verify that the ~/.ddev exists

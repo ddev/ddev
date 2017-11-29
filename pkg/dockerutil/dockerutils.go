@@ -334,15 +334,46 @@ func CheckDockerVersion(versionConstraint string) error {
 
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This
 // relies on docker-compose being somewhere in the user's $PATH.
-func CheckDockerCompose() error {
+func CheckDockerCompose(versionConstraint string) error {
 	executableName := "docker-compose"
 	if runtime.GOOS == "Windows" {
 		executableName = "docker-compose.exe"
 	}
 
-	_, err := exec.LookPath(executableName)
+	path, err := exec.LookPath(executableName)
 	if err != nil {
 		return fmt.Errorf("no docker-compose")
+	}
+
+	out, err := exec.Command(path, "version", "--short").Output()
+	if err != nil {
+		return err
+	}
+
+	version := string(out)
+	version = strings.TrimSuffix(version, "\n")
+
+	dockerComposeVersion, err := semver.NewVersion(version)
+	if err != nil {
+		return err
+	}
+
+	constraint, err := semver.NewConstraint(versionConstraint)
+	if err != nil {
+		return err
+	}
+
+	match, errs := constraint.Validate(dockerComposeVersion)
+	if !match {
+		if len(errs) <= 1 {
+			return errs[0]
+		}
+
+		msgs := "\n"
+		for _, err := range errs {
+			msgs = fmt.Sprint(msgs, err, "\n")
+		}
+		return fmt.Errorf(msgs)
 	}
 
 	return nil

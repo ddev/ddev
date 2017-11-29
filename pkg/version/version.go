@@ -13,6 +13,9 @@ var DdevVersion = "v0.3.0-dev" // Note that this is overridden by make
 // for examples defining version constraints.
 var DockerVersionConstraint = ">= 17.05.0-ce"
 
+// DockerComposeVersionConstraint is the current minimum version of docker-compose required for ddev.
+var DockerComposeVersionConstraint = ">= 1.10.0"
+
 // WebImg defines the default web image used for applications.
 var WebImg = "drud/nginx-php-fpm-local" // Note that this is overridden by make
 
