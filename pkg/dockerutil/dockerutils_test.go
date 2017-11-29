@@ -10,6 +10,7 @@ import (
 
 	. "github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
+	"github.com/drud/ddev/pkg/version"
 	docker "github.com/fsouza/go-dockerclient"
 	asrt "github.com/stretchr/testify/assert"
 )
