@@ -17,7 +17,7 @@ to stop by running 'ddev stop <sitename>.`,
 		var siteName string
 
 		if len(args) > 1 {
-			util.Failed("Too many arguments provided. Please use `ddev stop` or `ddev stop [sitename]`")
+			util.Failed("Too many arguments provided. Please use 'ddev stop' or 'ddev stop [sitename]'")
 		}
 
 		if len(args) == 1 {

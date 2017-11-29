@@ -17,10 +17,10 @@ var PantheonAuthCommand = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) == 0 {
-			util.Failed("You must provide a Pantheon machine token, e.g. `ddev auth-pantheon [token]`. See https://pantheon.io/docs/machine-tokens/ for instructions on creating a token.")
+			util.Failed("You must provide a Pantheon machine token, e.g. 'ddev auth-pantheon [token]'. See https://pantheon.io/docs/machine-tokens/ for instructions on creating a token.")
 		}
 		if len(args) != 1 {
-			util.Failed("Too many arguments detected. Please provide only your Pantheon Machine token., e.g. `ddev auth-pantheon [token]`. See https://pantheon.io/docs/machine-tokens/ for instructions on creating a token.")
+			util.Failed("Too many arguments detected. Please provide only your Pantheon Machine token., e.g. 'ddev auth-pantheon [token]'. See https://pantheon.io/docs/machine-tokens/ for instructions on creating a token.")
 		}
 		userDir, err := gohomedir.Dir()
 		util.CheckErr(err)
@@ -36,7 +36,7 @@ var PantheonAuthCommand = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed session.Write(), err=%v", err)
 		}
-		util.Success("Authentication successful!\nYou may now use the `ddev config pantheon` command when configuring sites!")
+		util.Success("Authentication successful!\nYou may now use the 'ddev config pantheon' command when configuring sites!")
 	},
 }
 

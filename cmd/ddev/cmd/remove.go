@@ -23,7 +23,7 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 		var siteName string
 
 		if len(args) > 1 {
-			util.Failed("Too many arguments provided. Please use `ddev remove` or `ddev remove [appname]`")
+			util.Failed("Too many arguments provided. Please use 'ddev remove' or 'ddev remove [appname]'")
 		}
 
 		if len(args) == 1 {
@@ -36,7 +36,7 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 		}
 
 		if app.SiteStatus() == platform.SiteNotFound {
-			util.Failed("App not running locally. Try `ddev start`.")
+			util.Failed("App not running locally. Try 'ddev start'.")
 		}
 
 		err = app.Down(removeData)
