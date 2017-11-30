@@ -108,3 +108,5 @@ If you've encountered trouble using ddev, please use these resources to get help
 
 ## Contributing
 Interested in contributing to ddev? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!
+
+Dummy pr - ignore this text
