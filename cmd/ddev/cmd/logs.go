@@ -26,11 +26,11 @@ var LocalDevLogsCmd = &cobra.Command{
 		}
 
 		if strings.Contains(app.SiteStatus(), platform.SiteNotFound) {
-			util.Failed("App not running locally. Try `ddev start`.")
+			util.Failed("App not running locally. Try 'ddev start'.")
 		}
 
 		if strings.Contains(app.SiteStatus(), platform.SiteStopped) {
-			util.Failed("App is stopped. Run `ddev start` to start the environment.")
+			util.Failed("App is stopped. Run 'ddev start' to start the environment.")
 		}
 
 		err = app.Logs(serviceType, follow, timestamp, tail)

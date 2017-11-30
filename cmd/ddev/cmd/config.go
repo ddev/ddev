@@ -87,7 +87,7 @@ var ConfigCommand = &cobra.Command{
 			}
 			// pantheonEnvironment must be appropriate, and can only be used with pantheon provider.
 			if provider != "pantheon" && pantheonEnvironment != "" {
-				util.Failed("--pantheon-environment can only be used with pantheon provider, for example ddev config pantheon --pantheon-environment=dev --docroot=docroot")
+				util.Failed("--pantheon-environment can only be used with pantheon provider, for example 'ddev config pantheon --pantheon-environment=dev --docroot=docroot'")
 			}
 			if appType != "" && appType != "drupal7" && appType != "drupal8" && appType != "wordpress" {
 				util.Failed("apptype must be drupal7, drupal8, or wordpress")
