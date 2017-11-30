@@ -162,4 +162,3 @@ func TestGetContainerEnv(t *testing.T) {
 	env = GetContainerEnv("NONEXISTENT", container)
 	assert.Equal("", env)
 }
-
