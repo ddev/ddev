@@ -350,6 +350,9 @@ func CheckDockerCompose(versionConstraint string) error {
 		return err
 	}
 
+	fmt.Println(out)
+	fmt.Println(string(out))
+
 	version := string(out)
 	version = strings.TrimSuffix(version, "\n")
 
