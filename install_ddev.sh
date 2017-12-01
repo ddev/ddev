@@ -32,6 +32,10 @@ if ! docker --version >/dev/null 2>&1; then
     printf "${YELLOW}Docker is required for ddev. Download and install docker at https://www.docker.com/community-edition#/download before attempting to use ddev.${RESET}\n"
 fi
 
+if ! docker-compose --version >/dev/null 2>&1; then
+    printf "${YELLOW}Docker Compose is required for ddev. Download and install docker-compose at https://www.docker.com/community-edition#/download before attempting to use ddev.${RESET}\n"
+fi
+
 TARBALL="$FILEBASE.$LATEST_VERSION.tar.gz"
 SHAFILE="$TARBALL.sha256.txt"
 

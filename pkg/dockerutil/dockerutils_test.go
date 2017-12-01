@@ -10,6 +10,7 @@ import (
 
 	. "github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
+	"github.com/drud/ddev/pkg/version"
 	docker "github.com/fsouza/go-dockerclient"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -131,6 +132,14 @@ func TestComposeCmd(t *testing.T) {
 	composeFiles = []string{"invalid.yml"}
 	_, _, err = ComposeCmd(composeFiles, "config", "--services")
 	assert.Error(err)
+}
+
+// TestCheckCompose tests detection of docker-compose.
+func TestCheckCompose(t *testing.T) {
+	assert := asrt.New(t)
+
+	err := CheckDockerCompose(version.DockerComposeVersionConstraint)
+	assert.NoError(err)
 }
 
 func TestGetAppContainers(t *testing.T) {
