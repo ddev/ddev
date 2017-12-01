@@ -76,7 +76,6 @@ ifeq ($(BUILD_OS),darwin)
     DDEV_BINARY_FULLPATH=$(PWD)/bin/$(BUILD_OS)/$(BUILD_OS)_$(BUILD_ARCH)/ddev
 endif
 
-
 # Override test section with tests specific to ddev
 test: testpkg testcmd
 
