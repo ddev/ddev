@@ -24,6 +24,9 @@ import (
 // DefaultProviderName contains the name of the default provider which will be used if one is not otherwise specified.
 const DefaultProviderName = "default"
 
+// DdevDefaultPHPVersion is the default PHP version, overridden by $DDEV_PHP_VERSION
+const DdevDefaultPHPVersion = "7.1"
+
 // CurrentAppVersion sets the current YAML config file version.
 // We're not doing anything with AppVersion, so just default it to 1 for now.
 const CurrentAppVersion = "1"
@@ -57,6 +60,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.AppRoot = AppRoot
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.APIVersion = CurrentAppVersion
+	app.PHPVersion = DdevDefaultPHPVersion
 
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.WebImg + ":" + version.WebTag
@@ -147,6 +151,10 @@ func (app *DdevApp) ReadConfig() error {
 	if app.Name == "" {
 		app.Name = filepath.Base(app.AppRoot)
 	}
+	if app.PHPVersion == "" {
+		app.PHPVersion = DdevDefaultPHPVersion
+	}
+
 	if app.WebImage == "" {
 		app.WebImage = version.WebImg + ":" + version.WebTag
 	}

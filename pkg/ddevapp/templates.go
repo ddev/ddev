@@ -42,6 +42,7 @@ services:
       - DDEV_GID=$DDEV_GID
       - DDEV_URL=$DDEV_URL
       - DOCROOT=$DDEV_DOCROOT
+      - DDEV_PHP_VERSION=$DDEV_PHP_VERSION
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>

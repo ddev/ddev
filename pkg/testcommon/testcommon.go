@@ -233,6 +233,7 @@ func ClearDockerEnv() {
 		"DDEV_HOSTNAME",
 		"DDEV_IMPORTDIR",
 		"DDEV_DATADIR",
+		"DDEV_PHP_VERSION",
 	}
 	for _, env := range envVars {
 		err := os.Unsetenv(env)

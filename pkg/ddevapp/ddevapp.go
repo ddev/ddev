@@ -55,6 +55,7 @@ type DdevApp struct {
 	Name                  string               `yaml:"name"`
 	Type                  string               `yaml:"type"`
 	Docroot               string               `yaml:"docroot"`
+	PHPVersion            string               `yaml:"php_version"`
 	WebImage              string               `yaml:"webimage"`
 	DBImage               string               `yaml:"dbimage"`
 	DBAImage              string               `yaml:"dbaimage"`
@@ -695,6 +696,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_HOSTNAME":        app.HostName(),
 		"DDEV_UID":             "",
 		"DDEV_GID":             "",
+		"DDEV_PHP_VERSION":     app.PHPVersion,
 	}
 	if runtime.GOOS == "linux" {
 		curUser, err := user.Current()
