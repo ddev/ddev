@@ -350,7 +350,7 @@ func TestDdevExec(t *testing.T) {
 		default:
 		}
 
-		assert.Regexp("/etc/php.*cli/php.ini", out)
+		assert.Regexp("/etc/php.*/php.ini", out)
 
 		runTime()
 		switchDir()
