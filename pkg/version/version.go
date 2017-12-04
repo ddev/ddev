@@ -20,7 +20,7 @@ var DockerComposeVersionConstraint = ">= 1.10.0"
 var WebImg = "drud/nginx-php-fpm-local" // Note that this is overridden by make
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20171120_version_simplification" // Note that this is overridden by make
+var WebTag = "20171204_version_simplification" // Note that this is overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/mysql-local-57" // Note that this is overridden by make
