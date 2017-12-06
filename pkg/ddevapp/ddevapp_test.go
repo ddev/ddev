@@ -90,7 +90,7 @@ func TestMain(m *testing.M) {
 
 		testcommon.ClearDockerEnv()
 
-		app := &ddevapp.LocalApp{}
+		app := &ddevapp.DdevApp{}
 
 		err = app.Init(TestSites[i].Dir)
 		if err != nil {
@@ -114,7 +114,7 @@ func TestMain(m *testing.M) {
 
 		testcommon.ClearDockerEnv()
 
-		app := &ddevapp.LocalApp{}
+		app := &ddevapp.DdevApp{}
 
 		err := app.Init(site.Dir)
 		if err != nil {
@@ -138,7 +138,7 @@ func TestMain(m *testing.M) {
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
 func TestLocalStart(t *testing.T) {
 	assert := asrt.New(t)
-	app := &ddevapp.LocalApp{}
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
@@ -219,7 +219,7 @@ func TestGetApps(t *testing.T) {
 // TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed
 func TestLocalImportDB(t *testing.T) {
 	assert := asrt.New(t)
-	app := &ddevapp.LocalApp{}
+	app := &ddevapp.DdevApp{}
 	testDir, _ := os.Getwd()
 
 	for _, site := range TestSites {
@@ -282,7 +282,7 @@ func TestLocalImportDB(t *testing.T) {
 // TestLocalImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestLocalImportFiles(t *testing.T) {
 	assert := asrt.New(t)
-	app := &ddevapp.LocalApp{}
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
@@ -321,7 +321,7 @@ func TestLocalImportFiles(t *testing.T) {
 // TestLocalExec tests the execution of commands inside a docker container of a site.
 func TestLocalExec(t *testing.T) {
 	assert := asrt.New(t)
-	app := &ddevapp.LocalApp{}
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
@@ -363,7 +363,7 @@ func TestLocalExec(t *testing.T) {
 func TestLocalLogs(t *testing.T) {
 	assert := asrt.New(t)
 
-	app := &ddevapp.LocalApp{}
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
@@ -418,7 +418,7 @@ func TestProcessHooks(t *testing.T) {
 			},
 		}
 
-		l := &ddevapp.LocalApp{
+		l := &ddevapp.DdevApp{
 			AppConfig: conf,
 		}
 
@@ -440,7 +440,7 @@ func TestProcessHooks(t *testing.T) {
 func TestLocalStop(t *testing.T) {
 	assert := asrt.New(t)
 
-	app := &ddevapp.LocalApp{}
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
@@ -472,7 +472,7 @@ func TestLocalStopMissingDirectory(t *testing.T) {
 
 	site := TestSites[0]
 	testcommon.ClearDockerEnv()
-	app := &ddevapp.LocalApp{}
+	app := &ddevapp.DdevApp{}
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
@@ -502,7 +502,7 @@ func TestLocalStopMissingDirectory(t *testing.T) {
 // TestDescribe tests that the describe command works properly on a stopped site.
 func TestDescribe(t *testing.T) {
 	assert := asrt.New(t)
-	app := &ddevapp.LocalApp{}
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
@@ -541,7 +541,7 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	siteCopyDest := filepath.Join(tempPath, "site")
 	defer removeAllErrCheck(tempPath, assert)
 
-	app := &ddevapp.LocalApp{}
+	app := &ddevapp.DdevApp{}
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
@@ -562,7 +562,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	assert := asrt.New(t)
 
 	// First, stop any sites that might be running
-	app := &ddevapp.LocalApp{}
+	app := &ddevapp.DdevApp{}
 
 	// Stop all sites, which should get the router out of there.
 	for _, site := range TestSites {
@@ -625,7 +625,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	site := TestSites[0]
 
 	revertDir := site.Chdir()
-	app := &ddevapp.LocalApp{}
+	app := &ddevapp.DdevApp{}
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
@@ -681,7 +681,7 @@ func TestGetAppsEmpty(t *testing.T) {
 
 	// Ensure test sites are removed
 	for _, site := range TestSites {
-		app := &ddevapp.LocalApp{}
+		app := &ddevapp.DdevApp{}
 
 		switchDir := site.Chdir()
 
@@ -781,7 +781,7 @@ func TestListWithoutDir(t *testing.T) {
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app
-func constructContainerName(containerType string, app *ddevapp.LocalApp) (string, error) {
+func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
 	container, err := app.FindContainerByType(containerType)
 	if err != nil {
 		return "", err

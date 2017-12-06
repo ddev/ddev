@@ -19,8 +19,8 @@ import (
 )
 
 // GetApps returns an array of ddev applications.
-func GetApps() [](*LocalApp) {
-	apps := make([](*LocalApp), 0)
+func GetApps() [](*DdevApp) {
+	apps := make([](*DdevApp), 0)
 	labels := map[string]string{
 		"com.ddev.platform":          "ddev",
 		"com.docker.compose.service": "web",
@@ -29,7 +29,7 @@ func GetApps() [](*LocalApp) {
 
 	if err == nil {
 		for _, siteContainer := range sites {
-			site := &LocalApp{}
+			site := &DdevApp{}
 			approot, ok := siteContainer.Labels["com.ddev.approot"]
 			if !ok {
 				break
@@ -102,7 +102,7 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 
 // Cleanup will remove ddev containers and volumes even if docker-compose.yml
 // has been deleted.
-func Cleanup(app *LocalApp) error {
+func Cleanup(app *DdevApp) error {
 	client := dockerutil.GetDockerClient()
 
 	// Find all containers which match the current site name.
