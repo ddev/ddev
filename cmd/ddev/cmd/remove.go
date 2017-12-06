@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -30,12 +30,12 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 			siteName = args[0]
 		}
 
-		app, err := platform.GetActiveApp(siteName)
+		app, err := ddevapp.GetActiveApp(siteName)
 		if err != nil {
 			util.Failed("Failed to remove: %v", err)
 		}
 
-		if app.SiteStatus() == platform.SiteNotFound {
+		if app.SiteStatus() == ddevapp.SiteNotFound {
 			util.Failed("App not running locally. Try 'ddev start'.")
 		}
 

@@ -13,7 +13,7 @@ import (
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -43,12 +43,12 @@ var localDevSequelproCmd = &cobra.Command{
 
 // handleSequelProCommand() is the "real" handler for the real command
 func handleSequelProCommand(appLocation string) (string, error) {
-	app, err := platform.GetActiveApp("")
+	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		return "", err
 	}
 
-	if app.SiteStatus() != platform.SiteRunning {
+	if app.SiteStatus() != ddevapp.SiteRunning {
 		return "", errors.New("site is not running. The site must be running to create a Sequel Pro connection")
 	}
 
@@ -71,7 +71,7 @@ func handleSequelProCommand(appLocation string) (string, error) {
 	defer util.CheckClose(tmpFile)
 
 	_, err = tmpFile.WriteString(fmt.Sprintf(
-		platform.SequelproTemplate,
+		ddevapp.SequelproTemplate,
 		"db",           //dbname
 		"127.0.0.1",    //host
 		app.HostName(), //connection name

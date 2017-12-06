@@ -13,7 +13,7 @@ import (
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/ddevapp"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -71,19 +71,19 @@ func TestMain(m *testing.M) {
 func TestGetActiveAppRoot(t *testing.T) {
 	assert := asrt.New(t)
 
-	_, err := platform.GetActiveAppRoot("")
+	_, err := ddevapp.GetActiveAppRoot("")
 	assert.Contains(err.Error(), "Please specify a site name or change directories")
 
-	_, err = platform.GetActiveAppRoot("potato")
+	_, err = ddevapp.GetActiveAppRoot("potato")
 	assert.Error(err)
 
-	appRoot, err := platform.GetActiveAppRoot(DevTestSites[0].Name)
+	appRoot, err := ddevapp.GetActiveAppRoot(DevTestSites[0].Name)
 	assert.NoError(err)
 	assert.Equal(DevTestSites[0].Dir, appRoot)
 
 	switchDir := DevTestSites[0].Chdir()
 
-	appRoot, err = platform.GetActiveAppRoot("")
+	appRoot, err = ddevapp.GetActiveAppRoot("")
 	assert.NoError(err)
 	assert.Equal(DevTestSites[0].Dir, appRoot)
 
@@ -137,7 +137,7 @@ func addSites() {
 			log.Fatalln("Error Output from ddev start:", out, "err:", err)
 		}
 
-		app, err := platform.GetActiveApp("")
+		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			log.Fatalln("Could not find an active ddev configuration:", err)
 		}

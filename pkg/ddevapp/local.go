@@ -1,4 +1,4 @@
-package platform
+package ddevapp
 
 import (
 	"fmt"
@@ -19,7 +19,6 @@ import (
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -47,9 +46,8 @@ const SiteConfigMissing = ".ddev/config.yaml missing"
 // SiteStopped defines the string used to denote when a site is in the stopped state.
 const SiteStopped = "stopped"
 
-// LocalApp implements the platform.App interface
 type LocalApp struct {
-	AppConfig *ddevapp.Config
+	AppConfig *Config
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -60,7 +58,7 @@ func (l *LocalApp) GetType() string {
 // Init populates LocalApp config based on the current working directory.
 // It does not start the containers.
 func (l *LocalApp) Init(basePath string) error {
-	config, err := ddevapp.NewConfig(basePath, "")
+	config, err := NewConfig(basePath, "")
 
 	// Save config to l.AppConfig so we can capture and display the site's
 	// status regardless of its validity
@@ -509,7 +507,7 @@ func (l *LocalApp) ComposeFiles() []string {
 	return files
 }
 
-// ProcessHooks executes commands defined in a ddevapp.Command
+// ProcessHooks executes commands defined in a Command
 func (l *LocalApp) ProcessHooks(hookName string) error {
 	if cmds := l.AppConfig.Commands[hookName]; len(cmds) > 0 {
 		output.UserOut.Printf("Executing %s commands...", hookName)
@@ -1041,7 +1039,7 @@ func restoreApp(app *LocalApp, siteName string) error {
 }
 
 // validateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
-func validateDataDirRemoval(config *ddevapp.Config) error {
+func validateDataDirRemoval(config *Config) error {
 	dataDir := config.DataDir
 	unsafeFilePathErr := fmt.Errorf("filepath: %s unsafe for removal", dataDir)
 	// Check for an empty filepath

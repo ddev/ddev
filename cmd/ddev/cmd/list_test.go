@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/ddevapp"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -33,14 +33,14 @@ func TestDevList(t *testing.T) {
 	assert.True(ok)
 
 	for _, v := range DevTestSites {
-		app, err := platform.GetActiveApp(v.Name)
+		app, err := ddevapp.GetActiveApp(v.Name)
 		assert.NoError(err)
 
 		// Look for standard items in the regular ddev list output
 		assert.Contains(string(out), v.Name)
 		assert.Contains(string(out), app.URL())
 		assert.Contains(string(out), app.GetType())
-		assert.Contains(string(out), platform.RenderHomeRootedDir(app.AppRoot()))
+		assert.Contains(string(out), ddevapp.RenderHomeRootedDir(app.AppRoot()))
 
 		// Look through list results in json for this site.
 		found := false
@@ -54,7 +54,7 @@ func TestDevList(t *testing.T) {
 				assert.Contains(item["httpurl"], app.HostName())
 				assert.Contains(item["httpsurl"], app.HostName())
 				assert.EqualValues(app.GetType(), item["type"])
-				assert.EqualValues(platform.RenderHomeRootedDir(app.AppRoot()), item["shortroot"])
+				assert.EqualValues(ddevapp.RenderHomeRootedDir(app.AppRoot()), item["shortroot"])
 				assert.EqualValues(app.AppRoot(), item["approot"])
 				break
 			}

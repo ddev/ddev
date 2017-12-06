@@ -18,24 +18,6 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-func TestMain(m *testing.M) {
-	output.LogSetUp()
-
-	// Ensure the ddev directory is created before tests run.
-	_ = util.GetGlobalDdevDir()
-
-	// Since this test may be first time ddev has been used, we need the
-	// ddev_default network available. This would normally be done in a
-	// TestMain, so can be moved to one when we need one.
-	dockerutil.EnsureDdevNetwork()
-
-	// Avoid having sudo try to add to /etc/hosts.
-	// This is normally done by Testsite.Prepare()
-	_ = os.Setenv("DRUD_NONINTERACTIVE", "true")
-
-	os.Exit(m.Run())
-}
-
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
 func TestNewConfig(t *testing.T) {
 	assert := asrt.New(t)
@@ -209,7 +191,7 @@ func TestRead(t *testing.T) {
 
 	// This closely resembles the values one would have from NewConfig()
 	c := &Config{
-		ConfigPath: filepath.Join("testing", "config.yaml"),
+		ConfigPath: filepath.Join("testdata", "config.yaml"),
 		AppRoot:    "testing",
 		APIVersion: CurrentAppVersion,
 		Platform:   DDevDefaultPlatform,

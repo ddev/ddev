@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -170,7 +169,7 @@ func TestPantheonPull(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure we can do a pull on the configured site.
-	app, err := platform.GetActiveApp("")
+	app, err := GetActiveApp("")
 	assert.NoError(err)
 	err = app.Import()
 	assert.NoError(err)

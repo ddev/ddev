@@ -5,7 +5,7 @@ import (
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +25,7 @@ var LocalDevRestartCmd = &cobra.Command{
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := platform.GetActiveApp("")
+		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed("Failed to restart: %v", err)
 		}

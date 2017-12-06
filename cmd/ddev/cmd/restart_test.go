@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/ddevapp"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -23,7 +23,7 @@ func TestDevRestart(t *testing.T) {
 		out, err := exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 
-		app, err := platform.GetActiveApp("")
+		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			assert.Fail("Could not find an active ddev configuration: %v", err)
 		}
@@ -41,7 +41,7 @@ func TestDevRestartJSON(t *testing.T) {
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
 
-		app, err := platform.GetActiveApp("")
+		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			assert.Fail("Could not find an active ddev configuration: %v", err)
 		}

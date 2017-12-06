@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -24,16 +24,16 @@ var LocalDevExecCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		app, err := platform.GetActiveApp("")
+		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed("Failed to exec command: %v", err)
 		}
 
-		if strings.Contains(app.SiteStatus(), platform.SiteNotFound) {
+		if strings.Contains(app.SiteStatus(), ddevapp.SiteNotFound) {
 			util.Failed("App not running locally. Try 'ddev start'.")
 		}
 
-		if strings.Contains(app.SiteStatus(), platform.SiteStopped) {
+		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
 			util.Failed("App is stopped. Run 'ddev start' to start the environment.")
 		}
 

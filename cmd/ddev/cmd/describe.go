@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
@@ -31,13 +31,13 @@ running 'ddev stop <sitename>.`,
 			siteName = args[0]
 		}
 
-		site, err := platform.GetActiveApp(siteName)
+		site, err := ddevapp.GetActiveApp(siteName)
 		if err != nil {
 			util.Failed("Unable to find any active site named %s: %v", siteName, err)
 		}
 
 		// Do not show any describe output if we can't find the site.
-		if site.SiteStatus() == platform.SiteNotFound {
+		if site.SiteStatus() == ddevapp.SiteNotFound {
 			util.Failed("no site found. have you run 'ddev start'?")
 		}
 
@@ -58,12 +58,12 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 	maxWidth := uint(200)
 	var output string
 
-	appTable := platform.CreateAppTable()
-	platform.RenderAppRow(appTable, desc)
+	appTable := ddevapp.CreateAppTable()
+	ddevapp.RenderAppRow(appTable, desc)
 	output = fmt.Sprint(appTable)
 
 	// Only show extended status for running sites.
-	if desc["status"] == platform.SiteRunning {
+	if desc["status"] == ddevapp.SiteRunning {
 		output = output + "\n\nMySQL Credentials\n-----------------\n"
 		dbTable := uitable.New()
 
@@ -86,7 +86,7 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		output = output + fmt.Sprint(other)
 	}
 
-	output = output + "\n" + platform.RenderRouterStatus()
+	output = output + "\n" + ddevapp.RenderRouterStatus()
 
 	return output, nil
 }
