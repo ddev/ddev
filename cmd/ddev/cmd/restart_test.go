@@ -7,8 +7,8 @@ import (
 
 	"strings"
 
-	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/exec"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )

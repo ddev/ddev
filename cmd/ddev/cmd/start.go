@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )

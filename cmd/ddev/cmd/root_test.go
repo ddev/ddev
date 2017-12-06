@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 
 	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/ddevapp"
 	asrt "github.com/stretchr/testify/assert"
 )
 

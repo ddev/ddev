@@ -3,8 +3,8 @@ package cmd
 import (
 	"os"
 
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )

@@ -5,8 +5,8 @@ import (
 
 	"encoding/json"
 
-	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	log "github.com/sirupsen/logrus"

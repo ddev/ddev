@@ -5,8 +5,8 @@ import (
 
 	"path/filepath"
 
-	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 )
