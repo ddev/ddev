@@ -18,45 +18,32 @@ import (
 	gohomedir "github.com/mitchellh/go-homedir"
 )
 
-// GetApps returns a list of ddev applictions keyed by platform.
-func GetApps() map[string][]App {
-	apps := make(map[string][]App)
-	for platformType := range PluginMap {
-		labels := map[string]string{
-			"com.ddev.platform":          "ddev",
-			"com.docker.compose.service": "web",
-		}
-		sites, err := dockerutil.FindContainersByLabels(labels)
+// GetApps returns an array of ddev applications.
+func GetApps() [](*LocalApp) {
+	apps := make([](*LocalApp), 0)
+	labels := map[string]string{
+		"com.ddev.platform":          "ddev",
+		"com.docker.compose.service": "web",
+	}
+	sites, err := dockerutil.FindContainersByLabels(labels)
 
-		if err == nil {
-			for _, siteContainer := range sites {
-				site, err := GetPluginApp(platformType)
-				// This should absolutely never happen, so just fatal on the off chance it does.
-				if err != nil {
-					util.Failed("could not get application for plugin type %s: %v", platformType, err)
-				}
-				approot, ok := siteContainer.Labels["com.ddev.approot"]
-				if !ok {
-					break
-				}
-				_, ok = apps[platformType]
-				if !ok {
-					apps[platformType] = []App{}
-				}
-
-				err = site.Init(approot)
-				if err != nil {
-					// Cast 'site' from type App to type LocalApp, so we can manually enter AppConfig values.
-					siteStruct, ok := site.(*LocalApp)
-					if !ok {
-						util.Failed("Failed to cast siteStruct(type App) to *LocalApp{}. site=%v", site)
-					}
-
-					siteStruct.AppConfig.Name = siteContainer.Labels["com.ddev.site-name"]
-					siteStruct.AppConfig.AppType = siteContainer.Labels["com.ddev.app-type"]
-				}
-				apps[platformType] = append(apps[platformType], site)
+	if err == nil {
+		for _, siteContainer := range sites {
+			site := GetApp()
+			approot, ok := siteContainer.Labels["com.ddev.approot"]
+			if !ok {
+				break
 			}
+
+			err = site.Init(approot)
+
+			// Artificially populate sitename and apptype based on labels
+			// if site.Init() failed.
+			if err != nil {
+				site.AppConfig.Name = siteContainer.Labels["com.ddev.site-name"]
+				site.AppConfig.AppType = siteContainer.Labels["com.ddev.app-type"]
+			}
+			apps = append(apps, site)
 		}
 	}
 

@@ -989,11 +989,8 @@ func GetActiveAppRoot(siteName string) (string, error) {
 
 // GetActiveApp returns the active App based on the current working directory or running siteName provided.
 // To use the current working directory, siteName should be ""
-func GetActiveApp(siteName string) (App, error) {
-	app, err := GetPluginApp("local")
-	if err != nil {
-		return app, err
-	}
+func GetActiveApp(siteName string) (*LocalApp, error) {
+	app := GetApp()
 	activeAppRoot, err := GetActiveAppRoot(siteName)
 	if err != nil {
 		return app, err
@@ -1003,10 +1000,8 @@ func GetActiveApp(siteName string) (App, error) {
 	// We already were successful with *finding* the app, and if we get an
 	// incomplete one we have to add to it.
 	_ = app.Init(activeAppRoot)
-	// Check to see if there are any missing AppConfig values that still need to be restored.
-	localApp, _ := app.(*LocalApp)
 
-	if localApp.AppConfig.Name == "" || localApp.AppConfig.DataDir == "" {
+	if app.AppConfig.Name == "" || app.AppConfig.DataDir == "" {
 		err = restoreApp(app, siteName)
 		if err != nil {
 			return app, err

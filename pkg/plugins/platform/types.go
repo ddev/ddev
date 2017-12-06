@@ -1,9 +1,6 @@
 package platform
 
-import "fmt"
 import (
-	"strings"
-
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -48,17 +45,7 @@ type App interface {
 	Logs(service string, follow bool, timestamps bool, tail string) error
 }
 
-// PluginMap maps the name of the plugins to their implementation.
-var PluginMap = map[string]App{
-	"local": &LocalApp{},
-}
-
-// GetPluginApp will return an application of the type specified by pluginType
-func GetPluginApp(pluginType string) (App, error) {
-	switch strings.ToLower(pluginType) {
-	case "local":
-		return &LocalApp{}, nil
-	default:
-		return nil, fmt.Errorf("could not find plugin type %s", pluginType)
-	}
+// GetApp will return an empty LocalApp
+func GetApp() *LocalApp {
+	return &LocalApp{}
 }

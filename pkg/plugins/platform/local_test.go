@@ -66,7 +66,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	count := len(platform.GetApps()["local"])
+	count := len(platform.GetApps())
 	if count > 0 {
 		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", count)
 	}
@@ -86,10 +86,7 @@ func TestMain(m *testing.M) {
 
 		testcommon.ClearDockerEnv()
 
-		app, err := platform.GetPluginApp("local")
-		if err != nil {
-			log.Fatalf("TestMain startup: Platform.GetPluginApp(local) failed for site %s, err=%s", TestSites[i].Name, err)
-		}
+		app := platform.GetApp()
 
 		err = app.Init(TestSites[i].Dir)
 		if err != nil {
@@ -113,10 +110,7 @@ func TestMain(m *testing.M) {
 
 		testcommon.ClearDockerEnv()
 
-		app, err := platform.GetPluginApp("local")
-		if err != nil {
-			log.Fatalf("TestMain shutdown: Platform.GetPluginApp(local) failed for site %s, err=%s", TestSites[i].Name, err)
-		}
+		app := platform.GetApp()
 
 		err = app.Init(site.Dir)
 		if err != nil {
@@ -140,14 +134,13 @@ func TestMain(m *testing.M) {
 // TestLocalStart tests the functionality that is called when "ddev start" is executed
 func TestLocalStart(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := platform.GetApp()
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalStart", site.Name))
 
-		err = app.Init(site.Dir)
+		err := app.Init(site.Dir)
 		assert.NoError(err)
 
 		// ensure docker-compose.yaml exists inside .ddev site folder
@@ -168,7 +161,7 @@ func TestLocalStart(t *testing.T) {
 
 	// try to start a site of same name at different path
 	another := TestSites[0]
-	err = another.Prepare()
+	err := another.Prepare()
 	if err != nil {
 		assert.FailNow("TestLocalStart: Prepare() failed on another.Prepare(), err=%v", err)
 		return
@@ -205,25 +198,24 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 func TestGetApps(t *testing.T) {
 	assert := asrt.New(t)
 	apps := platform.GetApps()
-	assert.Equal(len(apps["local"]), len(TestSites))
+	assert.Equal(len(apps), len(TestSites))
 
-	for _, site := range TestSites {
+	for _, testSite := range TestSites {
 		var found bool
-		for _, siteInList := range apps["local"] {
-			if site.Name == siteInList.GetName() {
+		for _, app := range apps {
+			if testSite.Name == app.GetName() {
 				found = true
 				break
 			}
 		}
-		assert.True(found, "Found site %s in list", site.Name)
+		assert.True(found, "Found testSite %s in list", testSite.Name)
 	}
 }
 
 // TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed
 func TestLocalImportDB(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := platform.GetApp()
 	testDir, _ := os.Getwd()
 
 	for _, site := range TestSites {
@@ -231,7 +223,7 @@ func TestLocalImportDB(t *testing.T) {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportDB", site.Name))
 
 		testcommon.ClearDockerEnv()
-		err = app.Init(site.Dir)
+		err := app.Init(site.Dir)
 		assert.NoError(err)
 
 		// Test simple db loads.
@@ -286,15 +278,14 @@ func TestLocalImportDB(t *testing.T) {
 // TestLocalImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestLocalImportFiles(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := platform.GetApp()
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportFiles", site.Name))
 
 		testcommon.ClearDockerEnv()
-		err = app.Init(site.Dir)
+		err := app.Init(site.Dir)
 		assert.NoError(err)
 
 		if site.FilesTarballURL != "" {
@@ -326,8 +317,7 @@ func TestLocalImportFiles(t *testing.T) {
 // TestLocalExec tests the execution of commands inside a docker container of a site.
 func TestLocalExec(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := platform.GetApp()
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
@@ -369,8 +359,7 @@ func TestLocalExec(t *testing.T) {
 func TestLocalLogs(t *testing.T) {
 	assert := asrt.New(t)
 
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := platform.GetApp()
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
@@ -447,8 +436,7 @@ func TestProcessHooks(t *testing.T) {
 func TestLocalStop(t *testing.T) {
 	assert := asrt.New(t)
 
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := platform.GetApp()
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
@@ -480,9 +468,8 @@ func TestLocalStopMissingDirectory(t *testing.T) {
 
 	site := TestSites[0]
 	testcommon.ClearDockerEnv()
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
-	err = app.Init(site.Dir)
+	app := platform.GetApp()
+	err := app.Init(site.Dir)
 	assert.NoError(err)
 
 	// Restart the site since it was stopped in the previous test.
@@ -511,8 +498,7 @@ func TestLocalStopMissingDirectory(t *testing.T) {
 // TestDescribe tests that the describe command works properly on a stopped site.
 func TestDescribe(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := platform.GetApp()
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
@@ -551,9 +537,8 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	siteCopyDest := filepath.Join(tempPath, "site")
 	defer removeAllErrCheck(tempPath, assert)
 
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
-	err = app.Init(site.Dir)
+	app := platform.GetApp()
+	err := app.Init(site.Dir)
 	assert.NoError(err)
 
 	// Move the site directory to a temp location to mimick a missing directory.
@@ -573,8 +558,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	assert := asrt.New(t)
 
 	// First, stop any sites that might be running
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := platform.GetApp()
 
 	// Stop all sites, which should get the router out of there.
 	for _, site := range TestSites {
@@ -594,7 +578,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	site := TestSites[0]
 	testcommon.ClearDockerEnv()
 
-	app, err = platform.GetActiveApp(site.Name)
+	app, err := platform.GetActiveApp(site.Name)
 	if err != nil {
 		t.Fatalf("Failed to GetActiveApp(%s), err:%v", site.Name, err)
 	}
@@ -637,11 +621,10 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	site := TestSites[0]
 
 	revertDir := site.Chdir()
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := platform.GetApp()
 
 	testcommon.ClearDockerEnv()
-	err = app.Init(site.Dir)
+	err := app.Init(site.Dir)
 	assert.NoError(err)
 
 	// Ensure we have a site started so we have something to cleanup
@@ -694,13 +677,12 @@ func TestGetAppsEmpty(t *testing.T) {
 
 	// Ensure test sites are removed
 	for _, site := range TestSites {
-		app, err := platform.GetPluginApp("local")
-		assert.NoError(err)
+		app := platform.GetApp()
 
 		switchDir := site.Chdir()
 
 		testcommon.ClearDockerEnv()
-		err = app.Init(site.Dir)
+		err := app.Init(site.Dir)
 		assert.NoError(err)
 
 		if app.SiteStatus() != platform.SiteNotFound {
@@ -711,7 +693,7 @@ func TestGetAppsEmpty(t *testing.T) {
 	}
 
 	apps := platform.GetApps()
-	assert.Equal(len(apps["local"]), 0, "Expected to find no apps but found %d apps=%v", len(apps["local"]), apps["local"])
+	assert.Equal(len(apps), 0, "Expected to find no apps but found %d apps=%v", len(apps), apps)
 }
 
 // TestRouterNotRunning ensures the router is shut down after all sites are stopped.
@@ -735,7 +717,7 @@ func TestListWithoutDir(t *testing.T) {
 
 	// startCount is the count of apps at the start of this adventure
 	apps := platform.GetApps()
-	startCount := len(apps["local"])
+	startCount := len(apps)
 
 	testDir := testcommon.CreateTmpDir("TestStartWithoutDdevConfig")
 	defer testcommon.CleanupDir(testDir)
@@ -769,13 +751,13 @@ func TestListWithoutDir(t *testing.T) {
 
 	apps = platform.GetApps()
 
-	assert.EqualValues(len(apps["local"]), startCount+1)
+	assert.EqualValues(len(apps), startCount+1)
 
 	// Make a whole table and make sure our app directory missing shows up.
 	// This could be done otherwise, but we'd have to go find the site in the
 	// array first.
 	table := platform.CreateAppTable()
-	for _, site := range apps["local"] {
+	for _, site := range apps {
 		desc, err := site.Describe()
 		if err != nil {
 			t.Fatalf("Failed to describe site %s: %v", site.GetName(), err)

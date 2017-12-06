@@ -18,7 +18,6 @@ import (
 )
 
 var (
-	plugin         = "local"
 	updateInterval = time.Hour * 24 * 7 // One week interval between updates
 	serviceType    string
 )
@@ -43,10 +42,7 @@ var RootCmd = &cobra.Command{
 		}
 
 		if !skip {
-			_, err := platform.GetPluginApp(plugin)
-			if err != nil {
-				util.Failed("Plugin %s is not registered", plugin)
-			}
+			_ = platform.GetApp()
 		}
 
 		err := dockerutil.CheckDockerVersion(version.DockerVersionConstraint)

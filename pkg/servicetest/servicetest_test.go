@@ -71,8 +71,7 @@ func TestServices(t *testing.T) {
 				t.Fatalf("Prepare() failed on TestSite.Prepare() for site=%s, err=%v", site.Name, err)
 			}
 
-			app, err := platform.GetPluginApp("local")
-			assert.NoError(err)
+			app := platform.GetApp()
 
 			err = app.Init(site.Dir)
 			assert.NoError(err)

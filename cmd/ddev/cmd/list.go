@@ -15,11 +15,10 @@ var DevListCmd = &cobra.Command{
 	Short: "List applications that exist locally",
 	Long:  `List applications that exist locally.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		apps := platform.GetApps()
+		sites := platform.GetApps()
 		var appDescs []map[string]interface{}
 
-		sites, ok := apps["local"]
-		if !ok || len(sites) < 1 {
+		if len(sites) < 1 {
 			output.UserOut.Println("There are no running ddev applications.")
 			os.Exit(0)
 		}
