@@ -201,7 +201,10 @@ func GetContainerHealth(container docker.APIContainers) string {
 }
 
 // ComposeNoCapture executes a docker-compose command while leaving the stdin/stdout/stderr untouched
-// so that people can interact with them directly, for example with ddev ssh.
+// so that people can interact with them directly, for example with ddev ssh. Note that this function
+// will never return an actual error because we don't have a way to distinguish between an error
+// representing a failure to connect to the container and an error representing a command failing
+// inside of the interactive session inside the container.
 func ComposeNoCapture(composeFiles []string, action ...string) error {
 	var arg []string
 
@@ -217,10 +220,7 @@ func ComposeNoCapture(composeFiles []string, action ...string) error {
 	proc.Stdin = os.Stdin
 	proc.Stderr = os.Stderr
 
-	err := proc.Run()
-	if err != nil {
-		return fmt.Errorf("Failed to run docker-compose %v: %v", arg, err)
-	}
+	_ = proc.Run()
 	return nil
 }
 
