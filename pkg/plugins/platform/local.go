@@ -1005,7 +1005,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 // GetActiveApp returns the active App based on the current working directory or running siteName provided.
 // To use the current working directory, siteName should be ""
 func GetActiveApp(siteName string) (*LocalApp, error) {
-	app := GetApp()
+	app := &LocalApp{}
 	activeAppRoot, err := GetActiveAppRoot(siteName)
 	if err != nil {
 		return app, err
@@ -1064,9 +1064,4 @@ func validateDataDirRemoval(config *ddevapp.Config) error {
 		return unsafeFilePathErr
 	}
 	return nil
-}
-
-// GetApp will return an empty LocalApp
-func GetApp() *LocalApp {
-	return &LocalApp{}
 }

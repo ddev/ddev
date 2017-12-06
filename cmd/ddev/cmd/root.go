@@ -8,7 +8,6 @@ import (
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -29,20 +28,15 @@ var RootCmd = &cobra.Command{
 	Long:  "This Command Line Interface (CLI) gives you the ability to interact with the ddev to create a local development environment.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		ignores := []string{"list", "version", "describe", "config", "hostname"}
-		skip := false
 		command := strings.Join(os.Args, " ")
 
 		output.LogSetUp()
 
+		// Skip docker validation for any command listed in "ignores"
 		for _, k := range ignores {
 			if strings.Contains(command, " "+k) {
-				skip = true
 				break
 			}
-		}
-
-		if !skip {
-			_ = platform.GetApp()
 		}
 
 		err := dockerutil.CheckDockerVersion(version.DockerVersionConstraint)

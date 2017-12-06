@@ -29,7 +29,7 @@ func GetApps() [](*LocalApp) {
 
 	if err == nil {
 		for _, siteContainer := range sites {
-			site := GetApp()
+			site := &LocalApp{}
 			approot, ok := siteContainer.Labels["com.ddev.approot"]
 			if !ok {
 				break
