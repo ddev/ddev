@@ -32,6 +32,21 @@ import (
 
 const containerWaitTimeout = 35
 
+// SiteRunning defines the string used to denote running sites.
+const SiteRunning = "running"
+
+// SiteNotFound defines the string used to denote a site where the containers were not found/do not exist.
+const SiteNotFound = "not found"
+
+// SiteDirMissing defines the string used to denote when a site is missing its application directory.
+const SiteDirMissing = "app directory missing"
+
+// SiteConfigMissing defines the string used to denote when a site is missing its .ddev/config.yml file.
+const SiteConfigMissing = ".ddev/config.yaml missing"
+
+// SiteStopped defines the string used to denote when a site is in the stopped state.
+const SiteStopped = "stopped"
+
 // LocalApp implements the platform.App interface
 type LocalApp struct {
 	AppConfig *ddevapp.Config
@@ -1013,15 +1028,14 @@ func GetActiveApp(siteName string) (*LocalApp, error) {
 
 // restoreApp recreates an AppConfig's Name and/or DataDir and returns an error
 // if it cannot restore them.
-func restoreApp(app App, siteName string) error {
-	localApp, _ := app.(*LocalApp)
+func restoreApp(app *LocalApp, siteName string) error {
 	if siteName == "" {
 		return fmt.Errorf("error restoring AppConfig: no siteName given")
 	}
-	localApp.AppConfig.Name = siteName
+	app.AppConfig.Name = siteName
 	// Ensure that AppConfig.DataDir is set so that site data can be removed if necessary.
-	dataDir := fmt.Sprintf("%s/%s", util.GetGlobalDdevDir(), localApp.AppConfig.Name)
-	localApp.AppConfig.DataDir = dataDir
+	dataDir := fmt.Sprintf("%s/%s", util.GetGlobalDdevDir(), app.GetName())
+	app.AppConfig.DataDir = dataDir
 
 	return nil
 }
@@ -1050,4 +1064,9 @@ func validateDataDirRemoval(config *ddevapp.Config) error {
 		return unsafeFilePathErr
 	}
 	return nil
+}
+
+// GetApp will return an empty LocalApp
+func GetApp() *LocalApp {
+	return &LocalApp{}
 }

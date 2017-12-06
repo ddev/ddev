@@ -777,7 +777,7 @@ func TestListWithoutDir(t *testing.T) {
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app
-func constructContainerName(containerType string, app platform.App) (string, error) {
+func constructContainerName(containerType string, app platform.LocalApp) (string, error) {
 	container, err := app.FindContainerByType(containerType)
 	if err != nil {
 		return "", err

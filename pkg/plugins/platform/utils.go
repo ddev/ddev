@@ -102,7 +102,7 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 
 // Cleanup will remove ddev containers and volumes even if docker-compose.yml
 // has been deleted.
-func Cleanup(app App) error {
+func Cleanup(app *LocalApp) error {
 	client := dockerutil.GetDockerClient()
 
 	// Find all containers which match the current site name.
