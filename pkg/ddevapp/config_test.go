@@ -190,7 +190,7 @@ func TestRead(t *testing.T) {
 	// This closely resembles the values one would have from NewConfig()
 	c := &Config{
 		ConfigPath: filepath.Join("testdata", "config.yaml"),
-		AppRoot:    "testing",
+		AppRoot:    "testdata",
 		APIVersion: CurrentAppVersion,
 		Platform:   DDevDefaultPlatform,
 		Name:       "TestRead",
@@ -224,7 +224,7 @@ func TestValidate(t *testing.T) {
 	c := &Config{
 		Name:    "TestValidate",
 		AppRoot: cwd,
-		Docroot: "testing",
+		Docroot: "testdata",
 		AppType: "wordpress",
 	}
 
@@ -242,7 +242,7 @@ func TestValidate(t *testing.T) {
 	err = c.Validate()
 	assert.EqualError(err, fmt.Sprintf("no directory could be found at %s. Please enter a valid docroot in your configuration", filepath.Join(cwd, c.Docroot)))
 
-	c.Docroot = "testing"
+	c.Docroot = "testdata"
 	c.AppType = "potato"
 	err = c.Validate()
 	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", c.AppType))
