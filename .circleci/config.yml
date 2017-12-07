@@ -158,6 +158,16 @@ workflows:
   normal_build_and_test:
     jobs:
       - normal_build_and_test
+  nightly_build:
+    triggers:
+      - schedule:
+          cron: "0 3 * * 1-5"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - nightly_build
   tag_build:
     jobs:
       - tag_build:
@@ -167,5 +177,3 @@ workflows:
                 - "/.*/"
             branches:
               ignore: /.*/
-
-
