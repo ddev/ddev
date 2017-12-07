@@ -3,7 +3,7 @@ jobs:
   # 'build' is the default build, the only one triggered automatically by github or anything else.
   normal_build_and_test:
     machine:
-      image: circleci/classic:201708-01
+      image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
@@ -49,7 +49,7 @@ jobs:
   # nightly is triggered only with nightly_build_trigger.sh
   nightly_build:
     machine:
-      image: circleci/classic:201708-01
+      image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       DRUD_DEBUG: "true"
@@ -121,7 +121,7 @@ jobs:
   # 'tag_build' is used to build a tag for release.
   tag_build:
     machine:
-      image: circleci/classic:201708-01
+      image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       DRUD_DEBUG: "true"
