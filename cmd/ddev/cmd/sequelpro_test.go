@@ -5,8 +5,8 @@ import (
 
 	"path/filepath"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -20,14 +20,14 @@ func TestSequelproOperation(t *testing.T) {
 	v := DevTestSites[0]
 	cleanup := v.Chdir()
 
-	_, err := platform.GetActiveApp("")
+	_, err := ddevapp.GetActiveApp("")
 	assert.NoError(err)
 
 	out, err := handleSequelProCommand(SequelproLoc)
 	assert.NoError(err)
 	assert.Contains(string(out), "sequelpro command finished successfully")
 
-	dir, err := platform.GetActiveAppRoot("")
+	dir, err := ddevapp.GetActiveAppRoot("")
 	assert.NoError(err)
 	assert.Equal(true, fileutil.FileExists(filepath.Join(dir, ".ddev/sequelpro.spf")))
 

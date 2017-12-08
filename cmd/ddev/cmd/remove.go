@@ -1,22 +1,22 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/plugins/platform"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
 var removeData bool
 
-// LocalDevRMCmd represents the stop command
-var LocalDevRMCmd = &cobra.Command{
+// DdevRemoveCmd represents the remove command
+var DdevRemoveCmd = &cobra.Command{
 	Use:     "remove [sitename]",
 	Aliases: []string{"rm"},
-	Short:   "Remove the local development environment for a site.",
-	Long: `Remove the local development environment for a site. You can run 'ddev remove'
+	Short:   "Remove the development environment for a site.",
+	Long: `Remove the development environment for a site. You can run 'ddev remove'
 from a site directory to remove that site, or you can specify a site to remove
 by running 'ddev remove <sitename>'. By default, remove is a non-destructive operation and will
-leave database contents intact.
+leave database contents intact. Remove never touches your code or files directories.
 
 To remove database contents, you may use the --remove-data flag with remove.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -30,13 +30,13 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 			siteName = args[0]
 		}
 
-		app, err := platform.GetActiveApp(siteName)
+		app, err := ddevapp.GetActiveApp(siteName)
 		if err != nil {
 			util.Failed("Failed to remove: %v", err)
 		}
 
-		if app.SiteStatus() == platform.SiteNotFound {
-			util.Failed("App not running locally. Try 'ddev start'.")
+		if app.SiteStatus() == ddevapp.SiteNotFound {
+			util.Failed("App not currently running. Try 'ddev start'.")
 		}
 
 		err = app.Down(removeData)
@@ -49,6 +49,6 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 }
 
 func init() {
-	LocalDevRMCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored application data (MySQL, logs, etc.)")
-	RootCmd.AddCommand(LocalDevRMCmd)
+	DdevRemoveCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored application data (MySQL, logs, etc.)")
+	RootCmd.AddCommand(DdevRemoveCmd)
 }

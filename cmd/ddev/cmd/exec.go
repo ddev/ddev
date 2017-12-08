@@ -5,14 +5,14 @@ import (
 
 	"strings"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
-// LocalDevExecCmd allows users to execute arbitrary bash commands within a container.
-var LocalDevExecCmd = &cobra.Command{
+// DdevExecCmd allows users to execute arbitrary bash commands within a container.
+var DdevExecCmd = &cobra.Command{
 	Use:     "exec <command>",
 	Aliases: []string{"."},
 	Short:   "Execute a shell command in the container for a service. Uses the web service by default.",
@@ -24,16 +24,16 @@ var LocalDevExecCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		app, err := platform.GetActiveApp("")
+		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed("Failed to exec command: %v", err)
 		}
 
-		if strings.Contains(app.SiteStatus(), platform.SiteNotFound) {
-			util.Failed("App not running locally. Try 'ddev start'.")
+		if strings.Contains(app.SiteStatus(), ddevapp.SiteNotFound) {
+			util.Failed("App not currently running. Try 'ddev start'.")
 		}
 
-		if strings.Contains(app.SiteStatus(), platform.SiteStopped) {
+		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
 			util.Failed("App is stopped. Run 'ddev start' to start the environment.")
 		}
 
@@ -48,9 +48,9 @@ var LocalDevExecCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
+	DdevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
 	// This requires flags for exec to be specified prior to any arguments, allowing for
 	// flags to be ignored by cobra for commands that are to be executed in a container.
-	LocalDevExecCmd.Flags().SetInterspersed(false)
-	RootCmd.AddCommand(LocalDevExecCmd)
+	DdevExecCmd.Flags().SetInterspersed(false)
+	RootCmd.AddCommand(DdevExecCmd)
 }

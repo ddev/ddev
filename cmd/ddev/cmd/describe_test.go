@@ -5,8 +5,8 @@ import (
 
 	"encoding/json"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	log "github.com/sirupsen/logrus"
@@ -84,7 +84,7 @@ func TestDescribe(t *testing.T) {
 		assert.True(ok)
 		assert.EqualValues(raw["status"], "running")
 		assert.EqualValues(raw["name"], v.Name)
-		assert.EqualValues(raw["shortroot"].(string), platform.RenderHomeRootedDir(v.Dir))
+		assert.EqualValues(raw["shortroot"].(string), ddevapp.RenderHomeRootedDir(v.Dir))
 		assert.EqualValues(raw["approot"].(string), v.Dir)
 		cleanup()
 	}
@@ -96,21 +96,21 @@ func TestDescribeAppFunction(t *testing.T) {
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
 
-		app, err := platform.GetActiveApp("")
+		app, err := ddevapp.GetActiveApp("")
 		assert.NoError(err)
 
 		desc, err := app.Describe()
 		assert.NoError(err)
-		assert.EqualValues(desc["status"], platform.SiteRunning)
+		assert.EqualValues(desc["status"], ddevapp.SiteRunning)
 		assert.EqualValues(app.GetName(), desc["name"])
-		assert.EqualValues(platform.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
+		assert.EqualValues(ddevapp.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
 		assert.EqualValues(v.Dir, desc["approot"].(string))
 
 		out, _ := json.Marshal(desc)
 		assert.Contains(string(out), app.URL())
 		assert.Contains(string(out), app.GetName())
 		assert.Contains(string(out), "\"router_status\":\"healthy\"")
-		assert.Contains(string(out), platform.RenderHomeRootedDir(v.Dir))
+		assert.Contains(string(out), ddevapp.RenderHomeRootedDir(v.Dir))
 
 		// Stop the router using docker and then check the describe
 		_, err = exec.RunCommand("docker", []string{"stop", "ddev-router"})
@@ -137,19 +137,19 @@ func TestDescribeAppUsingSitename(t *testing.T) {
 	defer testcommon.Chdir(tmpdir)()
 
 	for _, v := range DevTestSites {
-		app, err := platform.GetActiveApp(v.Name)
+		app, err := ddevapp.GetActiveApp(v.Name)
 		assert.NoError(err)
 		desc, err := app.Describe()
 		assert.NoError(err)
-		assert.EqualValues(desc["status"], platform.SiteRunning)
+		assert.EqualValues(desc["status"], ddevapp.SiteRunning)
 		assert.EqualValues(app.GetName(), desc["name"])
-		assert.EqualValues(platform.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
+		assert.EqualValues(ddevapp.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
 		assert.EqualValues(v.Dir, desc["approot"].(string))
 
 		out, _ := json.Marshal(desc)
 		assert.NoError(err)
 		assert.Contains(string(out), "running")
-		assert.Contains(string(out), platform.RenderHomeRootedDir(v.Dir))
+		assert.Contains(string(out), ddevapp.RenderHomeRootedDir(v.Dir))
 	}
 }
 
@@ -163,16 +163,16 @@ func TestDescribeAppWithInvalidParams(t *testing.T) {
 	defer testcommon.Chdir(tmpdir)()
 
 	// Ensure describeApp fails from an invalid working directory.
-	_, err := platform.GetActiveApp("")
+	_, err := ddevapp.GetActiveApp("")
 	assert.Error(err)
 
 	// Ensure describeApp fails with invalid site-names.
-	_, err = platform.GetActiveApp(util.RandString(16))
+	_, err = ddevapp.GetActiveApp(util.RandString(16))
 	assert.Error(err)
 
 	// Change to a site's working directory and ensure a failure still occurs with a invalid site name.
 	cleanup := DevTestSites[0].Chdir()
-	_, err = platform.GetActiveApp(util.RandString(16))
+	_, err = ddevapp.GetActiveApp(util.RandString(16))
 	assert.Error(err)
 	cleanup()
 }

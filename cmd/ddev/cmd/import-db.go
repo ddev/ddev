@@ -3,8 +3,8 @@ package cmd
 import (
 	"os"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -15,8 +15,8 @@ var dbExtPath string
 // ImportDBCmd represents the `ddev import-db` command.
 var ImportDBCmd = &cobra.Command{
 	Use:   "import-db",
-	Short: "Import the database of an existing site to the local dev environment.",
-	Long: `Import the database of an existing site to the local development environment.
+	Short: "Import the database of an existing site to the dev environment.",
+	Long: `Import the database of an existing site to the development environment.
 The database can be provided as a SQL dump in a .sql, .sql.gz, .zip, .tgz, or .tar.gz
 format. For the zip and tar formats, the path to a .sql file within the archive
 can be provided if it is not located at the top-level of the archive.`,
@@ -29,12 +29,12 @@ can be provided if it is not located at the top-level of the archive.`,
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := platform.GetActiveApp("")
+		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed("Failed to import database: %v", err)
 		}
 
-		if app.SiteStatus() != platform.SiteRunning {
+		if app.SiteStatus() != ddevapp.SiteRunning {
 			util.Failed("The site is not running. The site must be running in order to import a database.")
 		}
 

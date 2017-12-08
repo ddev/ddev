@@ -7,10 +7,10 @@ import (
 
 	"path/filepath"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	log "github.com/sirupsen/logrus"
@@ -71,8 +71,7 @@ func TestServices(t *testing.T) {
 				t.Fatalf("Prepare() failed on TestSite.Prepare() for site=%s, err=%v", site.Name, err)
 			}
 
-			app, err := platform.GetPluginApp("local")
-			assert.NoError(err)
+			app := &ddevapp.DdevApp{}
 
 			err = app.Init(site.Dir)
 			assert.NoError(err)

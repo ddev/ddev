@@ -10,31 +10,11 @@ import (
 	"testing"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	asrt "github.com/stretchr/testify/assert"
 )
-
-func TestMain(m *testing.M) {
-	output.LogSetUp()
-
-	// Ensure the ddev directory is created before tests run.
-	_ = util.GetGlobalDdevDir()
-
-	// Since this test may be first time ddev has been used, we need the
-	// ddev_default network available. This would normally be done in a
-	// TestMain, so can be moved to one when we need one.
-	dockerutil.EnsureDdevNetwork()
-
-	// Avoid having sudo try to add to /etc/hosts.
-	// This is normally done by Testsite.Prepare()
-	_ = os.Setenv("DRUD_NONINTERACTIVE", "true")
-
-	os.Exit(m.Run())
-}
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
 func TestNewConfig(t *testing.T) {
@@ -51,7 +31,6 @@ func TestNewConfig(t *testing.T) {
 
 	// Ensure the config uses specified defaults.
 	assert.Equal(newConfig.APIVersion, CurrentAppVersion)
-	assert.Equal(newConfig.Platform, DDevDefaultPlatform)
 	assert.Equal(newConfig.DBImage, version.DBImg+":"+version.DBTag)
 	assert.Equal(newConfig.WebImage, version.WebImg+":"+version.WebTag)
 	assert.Equal(newConfig.DBAImage, version.DBAImg+":"+version.DBATag)
@@ -209,10 +188,9 @@ func TestRead(t *testing.T) {
 
 	// This closely resembles the values one would have from NewConfig()
 	c := &Config{
-		ConfigPath: filepath.Join("testing", "config.yaml"),
-		AppRoot:    "testing",
+		ConfigPath: filepath.Join("testdata", "config.yaml"),
+		AppRoot:    "testdata",
 		APIVersion: CurrentAppVersion,
-		Platform:   DDevDefaultPlatform,
 		Name:       "TestRead",
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,
@@ -244,7 +222,7 @@ func TestValidate(t *testing.T) {
 	c := &Config{
 		Name:    "TestValidate",
 		AppRoot: cwd,
-		Docroot: "testing",
+		Docroot: "testdata",
 		AppType: "wordpress",
 	}
 
@@ -262,7 +240,7 @@ func TestValidate(t *testing.T) {
 	err = c.Validate()
 	assert.EqualError(err, fmt.Sprintf("no directory could be found at %s. Please enter a valid docroot in your configuration", filepath.Join(cwd, c.Docroot)))
 
-	c.Docroot = "testing"
+	c.Docroot = "testdata"
 	c.AppType = "potato"
 	err = c.Validate()
 	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", c.AppType))
@@ -278,7 +256,6 @@ func TestWrite(t *testing.T) {
 		ConfigPath: filepath.Join(testDir, "config.yaml"),
 		AppRoot:    testDir,
 		APIVersion: CurrentAppVersion,
-		Platform:   DDevDefaultPlatform,
 		Name:       "TestWrite",
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,

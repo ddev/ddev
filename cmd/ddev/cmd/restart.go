@@ -3,17 +3,17 @@ package cmd
 import (
 	"os"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
-// LocalDevRestartCmd rebuilds an apps settings
-var LocalDevRestartCmd = &cobra.Command{
+// DdevRestartCmd rebuilds an apps settings
+var DdevRestartCmd = &cobra.Command{
 	Use:   "restart",
-	Short: "Restart the local development environment for a site.",
+	Short: "Restart the development environment for a site.",
 	Long:  `Restart stops the containers for site's environment and starts them back up again.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
@@ -25,7 +25,7 @@ var LocalDevRestartCmd = &cobra.Command{
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := platform.GetActiveApp("")
+		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed("Failed to restart: %v", err)
 		}
@@ -47,6 +47,6 @@ var LocalDevRestartCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(LocalDevRestartCmd)
+	RootCmd.AddCommand(DdevRestartCmd)
 
 }

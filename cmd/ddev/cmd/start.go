@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ import (
 var StartCmd = &cobra.Command{
 	Use:     "start",
 	Aliases: []string{"add"},
-	Short:   "Start the local development environment for a site.",
+	Short:   "Start the development environment for a site.",
 	Long: `Start initializes and configures the web server and database containers to
 provide a working environment for development.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -33,7 +33,7 @@ provide a working environment for development.`,
 }
 
 func appStart() {
-	app, err := platform.GetActiveApp("")
+	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		util.Failed("Failed to start: %v", err)
 	}

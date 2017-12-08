@@ -123,7 +123,7 @@ func (p *PantheonProvider) GetBackup(backupType string) (fileLocation string, im
 	return destFile, importPath, nil
 }
 
-// prepDownloadDir ensures the local download cache directories are created and writeable.
+// prepDownloadDir ensures the download cache directories are created and writeable.
 func (p *PantheonProvider) prepDownloadDir() {
 	destDir := p.getDownloadDir()
 	err := os.MkdirAll(destDir, 0755)

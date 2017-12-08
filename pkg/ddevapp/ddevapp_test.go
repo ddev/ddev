@@ -1,4 +1,4 @@
-package platform_test
+package ddevapp_test
 
 import (
 	"fmt"
@@ -8,14 +8,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"strings"
 
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
@@ -59,16 +58,20 @@ var (
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
-	// ensure we have docker network
-	client := dockerutil.GetDockerClient()
-	err := dockerutil.EnsureNetwork(client, dockerutil.NetName)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// Ensure the ddev directory is created before tests run.
+	_ = util.GetGlobalDdevDir()
 
-	count := len(platform.GetApps()["local"])
+	// Since this may be first time ddev has been used, we need the
+	// ddev_default network available.
+	dockerutil.EnsureDdevNetwork()
+
+	// Avoid having sudo try to add to /etc/hosts.
+	// This is normally done by Testsite.Prepare()
+	_ = os.Setenv("DRUD_NONINTERACTIVE", "true")
+
+	count := len(ddevapp.GetApps())
 	if count > 0 {
-		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", count)
+		log.Fatalf("ddevapp tests require no sites running. You have %v site(s) running.", count)
 	}
 
 	if os.Getenv("GOTEST_SHORT") != "" {
@@ -86,10 +89,7 @@ func TestMain(m *testing.M) {
 
 		testcommon.ClearDockerEnv()
 
-		app, err := platform.GetPluginApp("local")
-		if err != nil {
-			log.Fatalf("TestMain startup: Platform.GetPluginApp(local) failed for site %s, err=%s", TestSites[i].Name, err)
-		}
+		app := &ddevapp.DdevApp{}
 
 		err = app.Init(TestSites[i].Dir)
 		if err != nil {
@@ -113,17 +113,14 @@ func TestMain(m *testing.M) {
 
 		testcommon.ClearDockerEnv()
 
-		app, err := platform.GetPluginApp("local")
-		if err != nil {
-			log.Fatalf("TestMain shutdown: Platform.GetPluginApp(local) failed for site %s, err=%s", TestSites[i].Name, err)
-		}
+		app := &ddevapp.DdevApp{}
 
-		err = app.Init(site.Dir)
+		err := app.Init(site.Dir)
 		if err != nil {
 			log.Fatalf("TestMain shutdown: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
-		if app.SiteStatus() != platform.SiteNotFound {
+		if app.SiteStatus() != ddevapp.SiteNotFound {
 			err = app.Down(true)
 			if err != nil {
 				log.Fatalf("TestMain shutdown: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
@@ -137,17 +134,16 @@ func TestMain(m *testing.M) {
 	os.Exit(testRun)
 }
 
-// TestLocalStart tests the functionality that is called when "ddev start" is executed
-func TestLocalStart(t *testing.T) {
+// TestDdevStart tests the functionality that is called when "ddev start" is executed
+func TestDdevStart(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalStart", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
 
-		err = app.Init(site.Dir)
+		err := app.Init(site.Dir)
 		assert.NoError(err)
 
 		// ensure docker-compose.yaml exists inside .ddev site folder
@@ -168,9 +164,9 @@ func TestLocalStart(t *testing.T) {
 
 	// try to start a site of same name at different path
 	another := TestSites[0]
-	err = another.Prepare()
+	err := another.Prepare()
 	if err != nil {
-		assert.FailNow("TestLocalStart: Prepare() failed on another.Prepare(), err=%v", err)
+		assert.FailNow("TestDdevStart: Prepare() failed on another.Prepare(), err=%v", err)
 		return
 	}
 
@@ -196,7 +192,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
-	_, err = platform.GetActiveApp("")
+	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
 	assert.Contains(err.Error(), "Could not find a site")
 }
@@ -204,34 +200,33 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
 	assert := asrt.New(t)
-	apps := platform.GetApps()
-	assert.Equal(len(apps["local"]), len(TestSites))
+	apps := ddevapp.GetApps()
+	assert.Equal(len(apps), len(TestSites))
 
-	for _, site := range TestSites {
+	for _, testSite := range TestSites {
 		var found bool
-		for _, siteInList := range apps["local"] {
-			if site.Name == siteInList.GetName() {
+		for _, app := range apps {
+			if testSite.Name == app.GetName() {
 				found = true
 				break
 			}
 		}
-		assert.True(found, "Found site %s in list", site.Name)
+		assert.True(found, "Found testSite %s in list", testSite.Name)
 	}
 }
 
-// TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed
-func TestLocalImportDB(t *testing.T) {
+// TestDdevImportDB tests the functionality that is called when "ddev import-db" is executed
+func TestDdevImportDB(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := &ddevapp.DdevApp{}
 	testDir, _ := os.Getwd()
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportDB", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevImportDB", site.Name))
 
 		testcommon.ClearDockerEnv()
-		err = app.Init(site.Dir)
+		err := app.Init(site.Dir)
 		assert.NoError(err)
 
 		// Test simple db loads.
@@ -283,18 +278,17 @@ func TestLocalImportDB(t *testing.T) {
 	}
 }
 
-// TestLocalImportFiles tests the functionality that is called when "ddev import-files" is executed
-func TestLocalImportFiles(t *testing.T) {
+// TestDdevImportFiles tests the functionality that is called when "ddev import-files" is executed
+func TestDdevImportFiles(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportFiles", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevImportFiles", site.Name))
 
 		testcommon.ClearDockerEnv()
-		err = app.Init(site.Dir)
+		err := app.Init(site.Dir)
 		assert.NoError(err)
 
 		if site.FilesTarballURL != "" {
@@ -323,15 +317,14 @@ func TestLocalImportFiles(t *testing.T) {
 	}
 }
 
-// TestLocalExec tests the execution of commands inside a docker container of a site.
-func TestLocalExec(t *testing.T) {
+// TestDdevExec tests the execution of commands inside a docker container of a site.
+func TestDdevExec(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalExec", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevExec", site.Name))
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
@@ -365,16 +358,15 @@ func TestLocalExec(t *testing.T) {
 	}
 }
 
-// TestLocalLogs tests the container log output functionality.
-func TestLocalLogs(t *testing.T) {
+// TestDdevLogs tests the container log output functionality.
+func TestDdevLogs(t *testing.T) {
 	assert := asrt.New(t)
 
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalLogs", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevLogs", site.Name))
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
@@ -425,7 +417,7 @@ func TestProcessHooks(t *testing.T) {
 			},
 		}
 
-		l := &platform.LocalApp{
+		l := &ddevapp.DdevApp{
 			AppConfig: conf,
 		}
 
@@ -443,16 +435,15 @@ func TestProcessHooks(t *testing.T) {
 	}
 }
 
-// TestLocalStop tests the functionality that is called when "ddev stop" is executed
-func TestLocalStop(t *testing.T) {
+// TestDdevStop tests the functionality that is called when "ddev stop" is executed
+func TestDdevStop(t *testing.T) {
 	assert := asrt.New(t)
 
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalStop", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStop", site.Name))
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
@@ -474,19 +465,18 @@ func TestLocalStop(t *testing.T) {
 	}
 }
 
-// TestLocalStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or ddev configs.
-func TestLocalStopMissingDirectory(t *testing.T) {
+// TestDdevStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or ddev configs.
+func TestDdevStopMissingDirectory(t *testing.T) {
 	assert := asrt.New(t)
 
 	site := TestSites[0]
 	testcommon.ClearDockerEnv()
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
-	err = app.Init(site.Dir)
+	app := &ddevapp.DdevApp{}
+	err := app.Init(site.Dir)
 	assert.NoError(err)
 
 	// Restart the site since it was stopped in the previous test.
-	if app.SiteStatus() != platform.SiteRunning {
+	if app.SiteStatus() != ddevapp.SiteRunning {
 		err = app.Start()
 		assert.NoError(err)
 	}
@@ -511,8 +501,7 @@ func TestLocalStopMissingDirectory(t *testing.T) {
 // TestDescribe tests that the describe command works properly on a stopped site.
 func TestDescribe(t *testing.T) {
 	assert := asrt.New(t)
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
@@ -527,9 +516,9 @@ func TestDescribe(t *testing.T) {
 
 		desc, err := app.Describe()
 		assert.NoError(err)
-		assert.EqualValues(desc["status"], platform.SiteRunning)
+		assert.EqualValues(desc["status"], ddevapp.SiteRunning)
 		assert.EqualValues(app.GetName(), desc["name"])
-		assert.EqualValues(platform.RenderHomeRootedDir(app.AppRoot()), desc["shortroot"])
+		assert.EqualValues(ddevapp.RenderHomeRootedDir(app.AppRoot()), desc["shortroot"])
 		assert.EqualValues(app.AppRoot(), desc["approot"])
 
 		// Now stop it and test behavior.
@@ -538,7 +527,7 @@ func TestDescribe(t *testing.T) {
 
 		desc, err = app.Describe()
 		assert.NoError(err)
-		assert.EqualValues(desc["status"], platform.SiteStopped)
+		assert.EqualValues(desc["status"], ddevapp.SiteStopped)
 		switchDir()
 	}
 }
@@ -551,9 +540,8 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	siteCopyDest := filepath.Join(tempPath, "site")
 	defer removeAllErrCheck(tempPath, assert)
 
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
-	err = app.Init(site.Dir)
+	app := &ddevapp.DdevApp{}
+	err := app.Init(site.Dir)
 	assert.NoError(err)
 
 	// Move the site directory to a temp location to mimick a missing directory.
@@ -562,7 +550,7 @@ func TestDescribeMissingDirectory(t *testing.T) {
 
 	desc, err := app.Describe()
 	assert.NoError(err)
-	assert.Contains(desc["status"], platform.SiteDirMissing, "Status did not include the phrase 'app directory missing' when describing a site with missing directories.")
+	assert.Contains(desc["status"], ddevapp.SiteDirMissing, "Status did not include the phrase 'app directory missing' when describing a site with missing directories.")
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
@@ -573,8 +561,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	assert := asrt.New(t)
 
 	// First, stop any sites that might be running
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := &ddevapp.DdevApp{}
 
 	// Stop all sites, which should get the router out of there.
 	for _, site := range TestSites {
@@ -594,18 +581,18 @@ func TestRouterPortsCheck(t *testing.T) {
 	site := TestSites[0]
 	testcommon.ClearDockerEnv()
 
-	app, err = platform.GetActiveApp(site.Name)
+	app, err := ddevapp.GetActiveApp(site.Name)
 	if err != nil {
 		t.Fatalf("Failed to GetActiveApp(%s), err:%v", site.Name, err)
 	}
 	err = app.Start()
 	assert.NoError(err, "app.Start(%s) failed, err: %v", app.GetName(), err)
 
-	// Stop the router using code from platform.StopRouter().
-	// platform.StopRouter can't be used here because it checks to see if containers are running
+	// Stop the router using code from StopRouter().
+	// StopRouter can't be used here because it checks to see if containers are running
 	// and doesn't do its job as a result.
-	dest := platform.RouterComposeYAMLPath()
-	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", platform.RouterProjectName, "down", "-v")
+	dest := ddevapp.RouterComposeYAMLPath()
+	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down", "-v")
 	assert.NoError(err, "Failed to stop router using docker-compose, err=%v", err)
 
 	// Occupy port 80 using docker busybox trick, then see if we can start router.
@@ -617,7 +604,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	containerId = strings.TrimSpace(containerId)
 
 	// Now try to start the router. It should fail because the port is occupied.
-	err = platform.StartDdevRouter()
+	err = ddevapp.StartDdevRouter()
 	assert.Error(err, "Failure: router started even though port 80 was occupied")
 
 	// Remove our dummy busybox docker container.
@@ -637,11 +624,10 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	site := TestSites[0]
 
 	revertDir := site.Chdir()
-	app, err := platform.GetPluginApp("local")
-	assert.NoError(err)
+	app := &ddevapp.DdevApp{}
 
 	testcommon.ClearDockerEnv()
-	err = app.Init(site.Dir)
+	err := app.Init(site.Dir)
 	assert.NoError(err)
 
 	// Ensure we have a site started so we have something to cleanup
@@ -694,24 +680,23 @@ func TestGetAppsEmpty(t *testing.T) {
 
 	// Ensure test sites are removed
 	for _, site := range TestSites {
-		app, err := platform.GetPluginApp("local")
-		assert.NoError(err)
+		app := &ddevapp.DdevApp{}
 
 		switchDir := site.Chdir()
 
 		testcommon.ClearDockerEnv()
-		err = app.Init(site.Dir)
+		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		if app.SiteStatus() != platform.SiteNotFound {
+		if app.SiteStatus() != ddevapp.SiteNotFound {
 			err = app.Down(true)
 			assert.NoError(err)
 		}
 		switchDir()
 	}
 
-	apps := platform.GetApps()
-	assert.Equal(len(apps["local"]), 0, "Expected to find no apps but found %d apps=%v", len(apps["local"]), apps["local"])
+	apps := ddevapp.GetApps()
+	assert.Equal(len(apps), 0, "Expected to find no apps but found %d apps=%v", len(apps), apps)
 }
 
 // TestRouterNotRunning ensures the router is shut down after all sites are stopped.
@@ -734,8 +719,8 @@ func TestListWithoutDir(t *testing.T) {
 	packageDir, _ := os.Getwd()
 
 	// startCount is the count of apps at the start of this adventure
-	apps := platform.GetApps()
-	startCount := len(apps["local"])
+	apps := ddevapp.GetApps()
+	startCount := len(apps)
 
 	testDir := testcommon.CreateTmpDir("TestStartWithoutDdevConfig")
 	defer testcommon.CleanupDir(testDir)
@@ -753,7 +738,7 @@ func TestListWithoutDir(t *testing.T) {
 	assert.NoError(err)
 
 	// Do a start on the configured site.
-	app, err := platform.GetActiveApp("")
+	app, err := ddevapp.GetActiveApp("")
 	assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)
@@ -767,21 +752,21 @@ func TestListWithoutDir(t *testing.T) {
 
 	testcommon.CleanupDir(testDir)
 
-	apps = platform.GetApps()
+	apps = ddevapp.GetApps()
 
-	assert.EqualValues(len(apps["local"]), startCount+1)
+	assert.EqualValues(len(apps), startCount+1)
 
 	// Make a whole table and make sure our app directory missing shows up.
 	// This could be done otherwise, but we'd have to go find the site in the
 	// array first.
-	table := platform.CreateAppTable()
-	for _, site := range apps["local"] {
+	table := ddevapp.CreateAppTable()
+	for _, site := range apps {
 		desc, err := site.Describe()
 		if err != nil {
 			t.Fatalf("Failed to describe site %s: %v", site.GetName(), err)
 		}
 
-		platform.RenderAppRow(table, desc)
+		ddevapp.RenderAppRow(table, desc)
 	}
 	assert.Contains(table.String(), fmt.Sprintf("app directory missing: %s", testDir))
 
@@ -795,7 +780,7 @@ func TestListWithoutDir(t *testing.T) {
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app
-func constructContainerName(containerType string, app platform.App) (string, error) {
+func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
 	container, err := app.FindContainerByType(containerType)
 	if err != nil {
 		return "", err

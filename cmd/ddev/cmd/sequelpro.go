@@ -11,9 +11,9 @@ import (
 	"runtime"
 
 	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -23,11 +23,11 @@ import (
 // It's global so it can be mocked in testing.
 var SequelproLoc = "/Applications/sequel pro.app"
 
-// localDevSequelproCmd represents the sequelpro command
-var localDevSequelproCmd = &cobra.Command{
+// DdevSequelproCmd represents the sequelpro command
+var DdevSequelproCmd = &cobra.Command{
 	Use:   "sequelpro",
-	Short: "Easily connect local site to sequelpro",
-	Long:  `A helper command for easily using sequelpro (OSX database browser) with a ddev app that has been initialized locally.`,
+	Short: "Easily connect a dev site to sequelpro",
+	Long:  `A helper command for easily using sequelpro (OSX database browser) with a running ddev app.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {
 			output.UserOut.Fatalf("invalid arguments to sequelpro command: %v", args)
@@ -43,12 +43,12 @@ var localDevSequelproCmd = &cobra.Command{
 
 // handleSequelProCommand() is the "real" handler for the real command
 func handleSequelProCommand(appLocation string) (string, error) {
-	app, err := platform.GetActiveApp("")
+	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		return "", err
 	}
 
-	if app.SiteStatus() != platform.SiteRunning {
+	if app.SiteStatus() != ddevapp.SiteRunning {
 		return "", errors.New("site is not running. The site must be running to create a Sequel Pro connection")
 	}
 
@@ -71,7 +71,7 @@ func handleSequelProCommand(appLocation string) (string, error) {
 	defer util.CheckClose(tmpFile)
 
 	_, err = tmpFile.WriteString(fmt.Sprintf(
-		platform.SequelproTemplate,
+		ddevapp.SequelproTemplate,
 		"db",           //dbname
 		"127.0.0.1",    //host
 		app.HostName(), //connection name
@@ -103,7 +103,7 @@ var dummyDevSequelproCmd = &cobra.Command{
 func init() {
 	switch {
 	case detectSequelpro():
-		RootCmd.AddCommand(localDevSequelproCmd)
+		RootCmd.AddCommand(DdevSequelproCmd)
 	case runtime.GOOS == "darwin":
 		RootCmd.AddCommand(dummyDevSequelproCmd)
 	}

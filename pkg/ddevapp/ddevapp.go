@@ -1,4 +1,4 @@
-package platform
+package ddevapp
 
 import (
 	"fmt"
@@ -19,7 +19,6 @@ import (
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/cms/config"
 	"github.com/drud/ddev/pkg/cms/model"
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -32,20 +31,35 @@ import (
 
 const containerWaitTimeout = 35
 
-// LocalApp implements the platform.App interface
-type LocalApp struct {
-	AppConfig *ddevapp.Config
+// SiteRunning defines the string used to denote running sites.
+const SiteRunning = "running"
+
+// SiteNotFound defines the string used to denote a site where the containers were not found/do not exist.
+const SiteNotFound = "not found"
+
+// SiteDirMissing defines the string used to denote when a site is missing its application directory.
+const SiteDirMissing = "app directory missing"
+
+// SiteConfigMissing defines the string used to denote when a site is missing its .ddev/config.yml file.
+const SiteConfigMissing = ".ddev/config.yaml missing"
+
+// SiteStopped defines the string used to denote when a site is in the stopped state.
+const SiteStopped = "stopped"
+
+// DdevApp is the struct that represents a ddev app
+type DdevApp struct {
+	AppConfig *Config
 }
 
 // GetType returns the application type as a (lowercase) string
-func (l *LocalApp) GetType() string {
+func (l *DdevApp) GetType() string {
 	return strings.ToLower(l.AppConfig.AppType)
 }
 
-// Init populates LocalApp config based on the current working directory.
+// Init populates DdevApp config based on the current working directory.
 // It does not start the containers.
-func (l *LocalApp) Init(basePath string) error {
-	config, err := ddevapp.NewConfig(basePath, "")
+func (l *DdevApp) Init(basePath string) error {
+	config, err := NewConfig(basePath, "")
 
 	// Save config to l.AppConfig so we can capture and display the site's
 	// status regardless of its validity
@@ -72,7 +86,7 @@ func (l *LocalApp) Init(basePath string) error {
 }
 
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
-func (l *LocalApp) FindContainerByType(containerType string) (docker.APIContainers, error) {
+func (l *DdevApp) FindContainerByType(containerType string) (docker.APIContainers, error) {
 	labels := map[string]string{
 		"com.ddev.site-name":         l.GetName(),
 		"com.docker.compose.service": containerType,
@@ -82,7 +96,7 @@ func (l *LocalApp) FindContainerByType(containerType string) (docker.APIContaine
 }
 
 // Describe returns a map which provides detailed information on services associated with the running site.
-func (l *LocalApp) Describe() (map[string]interface{}, error) {
+func (l *DdevApp) Describe() (map[string]interface{}, error) {
 
 	shortRoot := RenderHomeRootedDir(l.AppRoot())
 	appDesc := make(map[string]interface{})
@@ -135,27 +149,27 @@ func (l *LocalApp) Describe() (map[string]interface{}, error) {
 }
 
 // AppRoot return the full path from root to the app directory
-func (l *LocalApp) AppRoot() string {
+func (l *DdevApp) AppRoot() string {
 	return l.AppConfig.AppRoot
 }
 
 // AppConfDir returns the full path to the app's .ddev configuration directory
-func (l *LocalApp) AppConfDir() string {
+func (l *DdevApp) AppConfDir() string {
 	return filepath.Join(l.AppConfig.AppRoot, ".ddev")
 }
 
-// Docroot returns the docroot path for local app
-func (l LocalApp) Docroot() string {
+// Docroot returns the docroot path for ddev app
+func (l DdevApp) Docroot() string {
 	return l.AppConfig.Docroot
 }
 
-// GetName returns the  name for local app
-func (l *LocalApp) GetName() string {
+// GetName returns the app's name
+func (l *DdevApp) GetName() string {
 	return l.AppConfig.Name
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
-func (l *LocalApp) ImportDB(imPath string, extPath string) error {
+func (l *DdevApp) ImportDB(imPath string, extPath string) error {
 	l.DockerEnv()
 	var extPathPrompt bool
 	dbPath := l.AppConfig.ImportDir
@@ -266,7 +280,7 @@ func (l *LocalApp) ImportDB(imPath string, extPath string) error {
 }
 
 // SiteStatus returns the current status of an application determined from web and db service health.
-func (l *LocalApp) SiteStatus() string {
+func (l *DdevApp) SiteStatus() string {
 	var siteStatus string
 	services := map[string]string{"web": "", "db": ""}
 
@@ -315,7 +329,7 @@ func (l *LocalApp) SiteStatus() string {
 }
 
 // Import performs an import from the a configured provider plugin, if one exists.
-func (l *LocalApp) Import() error {
+func (l *DdevApp) Import() error {
 	provider, err := l.AppConfig.GetProvider()
 	if err != nil {
 		return err
@@ -328,7 +342,7 @@ func (l *LocalApp) Import() error {
 
 	if l.SiteStatus() != SiteRunning {
 		output.UserOut.Println("Site is not currently running. Starting site before performing import.")
-		err := l.Start()
+		err = l.Start()
 		if err != nil {
 			return err
 		}
@@ -360,7 +374,7 @@ func (l *LocalApp) Import() error {
 }
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
-func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
+func (l *DdevApp) ImportFiles(imPath string, extPath string) error {
 	var uploadDir string
 	var extPathPrompt bool
 
@@ -465,12 +479,12 @@ func (l *LocalApp) ImportFiles(imPath string, extPath string) error {
 
 // DockerComposeYAMLPath returns the absolute path to where the docker-compose.yaml should exist for this app configuration.
 // This is a bit redundant, but is here to avoid having to expose too many details of AppConfig.
-func (l *LocalApp) DockerComposeYAMLPath() string {
+func (l *DdevApp) DockerComposeYAMLPath() string {
 	return l.AppConfig.DockerComposeYAMLPath()
 }
 
 // ComposeFiles returns a list of compose files for a project.
-func (l *LocalApp) ComposeFiles() []string {
+func (l *DdevApp) ComposeFiles() []string {
 	files, err := filepath.Glob(filepath.Join(l.AppConfDir(), "docker-compose*"))
 	if err != nil {
 		util.Failed("Failed to load compose files: %v", err)
@@ -494,8 +508,8 @@ func (l *LocalApp) ComposeFiles() []string {
 	return files
 }
 
-// ProcessHooks executes commands defined in a ddevapp.Command
-func (l *LocalApp) ProcessHooks(hookName string) error {
+// ProcessHooks executes commands defined in a Command
+func (l *DdevApp) ProcessHooks(hookName string) error {
 	if cmds := l.AppConfig.Commands[hookName]; len(cmds) > 0 {
 		output.UserOut.Printf("Executing %s commands...", hookName)
 	}
@@ -541,7 +555,7 @@ func (l *LocalApp) ProcessHooks(hookName string) error {
 }
 
 // Start initiates docker-compose up
-func (l *LocalApp) Start() error {
+func (l *DdevApp) Start() error {
 	l.DockerEnv()
 
 	err := l.ProcessHooks("pre-start")
@@ -592,7 +606,7 @@ func (l *LocalApp) Start() error {
 
 // Exec executes a given command in the container of given type without allocating a pty
 // Returns ComposeCmd results of stdout, stderr, err
-func (l *LocalApp) Exec(service string, cmd ...string) (string, string, error) {
+func (l *DdevApp) Exec(service string, cmd ...string) (string, string, error) {
 	l.DockerEnv()
 
 	exec := []string{"exec", "-T", service}
@@ -603,7 +617,7 @@ func (l *LocalApp) Exec(service string, cmd ...string) (string, string, error) {
 
 // ExecWithTty executes a given command in the container of given type.
 // It allocates a pty for interactive work.
-func (l *LocalApp) ExecWithTty(service string, cmd ...string) error {
+func (l *DdevApp) ExecWithTty(service string, cmd ...string) error {
 	l.DockerEnv()
 
 	exec := []string{"exec", service}
@@ -613,7 +627,7 @@ func (l *LocalApp) ExecWithTty(service string, cmd ...string) error {
 }
 
 // Logs returns logs for a site's given container.
-func (l *LocalApp) Logs(service string, follow bool, timestamps bool, tail string) error {
+func (l *DdevApp) Logs(service string, follow bool, timestamps bool, tail string) error {
 	container, err := l.FindContainerByType(service)
 	if err != nil {
 		return err
@@ -644,7 +658,7 @@ func (l *LocalApp) Logs(service string, follow bool, timestamps bool, tail strin
 }
 
 // DockerEnv sets environment variables for a docker-compose run.
-func (l *LocalApp) DockerEnv() {
+func (l *DdevApp) DockerEnv() {
 	envVars := map[string]string{
 		"COMPOSE_PROJECT_NAME": "ddev-" + l.AppConfig.Name,
 		"DDEV_SITENAME":        l.AppConfig.Name,
@@ -681,7 +695,7 @@ func (l *LocalApp) DockerEnv() {
 }
 
 // Stop initiates docker-compose stop
-func (l *LocalApp) Stop() error {
+func (l *DdevApp) Stop() error {
 	l.DockerEnv()
 
 	if l.SiteStatus() == SiteNotFound {
@@ -702,7 +716,7 @@ func (l *LocalApp) Stop() error {
 }
 
 // Wait ensures that the app service containers are healthy.
-func (l *LocalApp) Wait(containerTypes ...string) error {
+func (l *DdevApp) Wait(containerTypes ...string) error {
 	for _, containerType := range containerTypes {
 		labels := map[string]string{
 			"com.ddev.site-name":         l.GetName(),
@@ -717,7 +731,7 @@ func (l *LocalApp) Wait(containerTypes ...string) error {
 	return nil
 }
 
-func (l *LocalApp) determineSettingsPath() (string, error) {
+func (l *DdevApp) determineSettingsPath() (string, error) {
 	possibleLocations := []string{l.AppConfig.SiteSettingsPath, l.AppConfig.SiteLocalSettingsPath}
 	for _, loc := range possibleLocations {
 		// If the file is found we need to check for a signature to determine if it's safe to use.
@@ -739,7 +753,7 @@ func (l *LocalApp) determineSettingsPath() (string, error) {
 
 // CreateSettingsFile creates the app's settings.php or equivalent,
 // adding things like database host, name, and password
-func (l *LocalApp) CreateSettingsFile() error {
+func (l *DdevApp) CreateSettingsFile() error {
 	// If neither settings file options are set, then
 	if l.AppConfig.SiteLocalSettingsPath == "" && l.AppConfig.SiteSettingsPath == "" {
 		return nil
@@ -820,7 +834,7 @@ func (l *LocalApp) CreateSettingsFile() error {
 }
 
 // Down stops the docker containers for the project in current directory.
-func (l *LocalApp) Down(removeData bool) error {
+func (l *DdevApp) Down(removeData bool) error {
 	l.DockerEnv()
 	settingsFilePath := l.AppConfig.SiteSettingsPath
 
@@ -874,17 +888,17 @@ func (l *LocalApp) Down(removeData bool) error {
 }
 
 // URL returns the URL for a given application.
-func (l *LocalApp) URL() string {
+func (l *DdevApp) URL() string {
 	return "http://" + l.AppConfig.Hostname()
 }
 
 // HostName returns the hostname of a given application.
-func (l *LocalApp) HostName() string {
+func (l *DdevApp) HostName() string {
 	return l.AppConfig.Hostname()
 }
 
-// AddHostsEntry will add the local site URL to the local hostfile.
-func (l *LocalApp) AddHostsEntry() error {
+// AddHostsEntry will add the site URL to the host's /etc/hosts.
+func (l *DdevApp) AddHostsEntry() error {
 	dockerIP := "127.0.0.1"
 	dockerHostRawURL := os.Getenv("DOCKER_HOST")
 	if dockerHostRawURL != "" {
@@ -921,7 +935,7 @@ func (l *LocalApp) AddHostsEntry() error {
 }
 
 // prepSiteDirs creates a site's directories for db container mounts
-func (l *LocalApp) prepSiteDirs() error {
+func (l *DdevApp) prepSiteDirs() error {
 
 	dirs := []string{
 		l.AppConfig.DataDir,
@@ -989,11 +1003,8 @@ func GetActiveAppRoot(siteName string) (string, error) {
 
 // GetActiveApp returns the active App based on the current working directory or running siteName provided.
 // To use the current working directory, siteName should be ""
-func GetActiveApp(siteName string) (App, error) {
-	app, err := GetPluginApp("local")
-	if err != nil {
-		return app, err
-	}
+func GetActiveApp(siteName string) (*DdevApp, error) {
+	app := &DdevApp{}
 	activeAppRoot, err := GetActiveAppRoot(siteName)
 	if err != nil {
 		return app, err
@@ -1003,10 +1014,8 @@ func GetActiveApp(siteName string) (App, error) {
 	// We already were successful with *finding* the app, and if we get an
 	// incomplete one we have to add to it.
 	_ = app.Init(activeAppRoot)
-	// Check to see if there are any missing AppConfig values that still need to be restored.
-	localApp, _ := app.(*LocalApp)
 
-	if localApp.AppConfig.Name == "" || localApp.AppConfig.DataDir == "" {
+	if app.AppConfig.Name == "" || app.AppConfig.DataDir == "" {
 		err = restoreApp(app, siteName)
 		if err != nil {
 			return app, err
@@ -1018,21 +1027,20 @@ func GetActiveApp(siteName string) (App, error) {
 
 // restoreApp recreates an AppConfig's Name and/or DataDir and returns an error
 // if it cannot restore them.
-func restoreApp(app App, siteName string) error {
-	localApp, _ := app.(*LocalApp)
+func restoreApp(app *DdevApp, siteName string) error {
 	if siteName == "" {
 		return fmt.Errorf("error restoring AppConfig: no siteName given")
 	}
-	localApp.AppConfig.Name = siteName
+	app.AppConfig.Name = siteName
 	// Ensure that AppConfig.DataDir is set so that site data can be removed if necessary.
-	dataDir := fmt.Sprintf("%s/%s", util.GetGlobalDdevDir(), localApp.AppConfig.Name)
-	localApp.AppConfig.DataDir = dataDir
+	dataDir := fmt.Sprintf("%s/%s", util.GetGlobalDdevDir(), app.GetName())
+	app.AppConfig.DataDir = dataDir
 
 	return nil
 }
 
 // validateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
-func validateDataDirRemoval(config *ddevapp.Config) error {
+func validateDataDirRemoval(config *Config) error {
 	dataDir := config.DataDir
 	unsafeFilePathErr := fmt.Errorf("filepath: %s unsafe for removal", dataDir)
 	// Check for an empty filepath

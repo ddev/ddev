@@ -3,8 +3,8 @@ package cmd
 import (
 	"os"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -12,29 +12,28 @@ import (
 // DevListCmd represents the list command
 var DevListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List applications that exist locally",
-	Long:  `List applications that exist locally.`,
+	Short: "List applications",
+	Long:  `List applications.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		apps := platform.GetApps()
+		sites := ddevapp.GetApps()
 		var appDescs []map[string]interface{}
 
-		sites, ok := apps["local"]
-		if !ok || len(sites) < 1 {
+		if len(sites) < 1 {
 			output.UserOut.Println("There are no running ddev applications.")
 			os.Exit(0)
 		}
 
-		table := platform.CreateAppTable()
+		table := ddevapp.CreateAppTable()
 		for _, site := range sites {
 			desc, err := site.Describe()
 			if err != nil {
 				util.Failed("Failed to describe site %s: %v", site.GetName(), err)
 			}
 			appDescs = append(appDescs, desc)
-			platform.RenderAppRow(table, desc)
+			ddevapp.RenderAppRow(table, desc)
 		}
 
-		output.UserOut.WithField("raw", appDescs).Print(table.String() + "\n" + platform.RenderRouterStatus())
+		output.UserOut.WithField("raw", appDescs).Print(table.String() + "\n" + ddevapp.RenderRouterStatus())
 	},
 }
 

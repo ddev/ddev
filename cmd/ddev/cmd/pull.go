@@ -3,8 +3,8 @@ package cmd
 import (
 	"os"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/plugins/platform"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -33,7 +33,7 @@ var PullCmd = &cobra.Command{
 }
 
 func appImport(skipConfirmation bool) {
-	app, err := platform.GetActiveApp("")
+	app, err := ddevapp.GetActiveApp("")
 
 	if err != nil {
 		util.Failed("appImport failed: %v", err)
