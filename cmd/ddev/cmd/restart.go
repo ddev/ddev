@@ -10,10 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// LocalDevRestartCmd rebuilds an apps settings
-var LocalDevRestartCmd = &cobra.Command{
+// DdevRestartCmd rebuilds an apps settings
+var DdevRestartCmd = &cobra.Command{
 	Use:   "restart",
-	Short: "Restart the local development environment for a site.",
+	Short: "Restart the development environment for a site.",
 	Long:  `Restart stops the containers for site's environment and starts them back up again.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
@@ -47,6 +47,6 @@ var LocalDevRestartCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(LocalDevRestartCmd)
+	RootCmd.AddCommand(DdevRestartCmd)
 
 }

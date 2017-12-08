@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// LocalDevExecCmd allows users to execute arbitrary bash commands within a container.
-var LocalDevExecCmd = &cobra.Command{
+// DdevExecCmd allows users to execute arbitrary bash commands within a container.
+var DdevExecCmd = &cobra.Command{
 	Use:     "exec <command>",
 	Aliases: []string{"."},
 	Short:   "Execute a shell command in the container for a service. Uses the web service by default.",
@@ -30,7 +30,7 @@ var LocalDevExecCmd = &cobra.Command{
 		}
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteNotFound) {
-			util.Failed("App not running locally. Try 'ddev start'.")
+			util.Failed("App not currently running. Try 'ddev start'.")
 		}
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
@@ -48,9 +48,9 @@ var LocalDevExecCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
+	DdevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
 	// This requires flags for exec to be specified prior to any arguments, allowing for
 	// flags to be ignored by cobra for commands that are to be executed in a container.
-	LocalDevExecCmd.Flags().SetInterspersed(false)
-	RootCmd.AddCommand(LocalDevExecCmd)
+	DdevExecCmd.Flags().SetInterspersed(false)
+	RootCmd.AddCommand(DdevExecCmd)
 }

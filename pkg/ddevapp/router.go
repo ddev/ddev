@@ -28,7 +28,7 @@ func RouterComposeYAMLPath() string {
 	return dest
 }
 
-// StopRouter stops the local router if there are no ddev containers running.
+// StopRouter stops the router if there are no ddev containers running.
 func StopRouter() error {
 
 	containersRunning, err := ddevContainersRunning()

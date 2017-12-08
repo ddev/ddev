@@ -12,8 +12,8 @@ import (
 // DevListCmd represents the list command
 var DevListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List applications that exist locally",
-	Long:  `List applications that exist locally.`,
+	Short: "List applications",
+	Long:  `List applications.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		sites := ddevapp.GetApps()
 		var appDescs []map[string]interface{}

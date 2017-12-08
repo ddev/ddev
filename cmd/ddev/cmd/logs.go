@@ -14,8 +14,8 @@ var (
 	timestamp bool
 )
 
-// LocalDevLogsCmd ...
-var LocalDevLogsCmd = &cobra.Command{
+// DdevLogsCmd contains the "ddev logs" command
+var DdevLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Get the logs from your running services.",
 	Long:  `Uses 'docker logs' to display stdout from the running services.`,
@@ -26,7 +26,7 @@ var LocalDevLogsCmd = &cobra.Command{
 		}
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteNotFound) {
-			util.Failed("App not running locally. Try 'ddev start'.")
+			util.Failed("App not currently running. Try 'ddev start'.")
 		}
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
@@ -41,10 +41,10 @@ var LocalDevLogsCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevLogsCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Follow the logs in real time.")
-	LocalDevLogsCmd.Flags().BoolVarP(&timestamp, "time", "t", false, "Add timestamps to logs")
-	LocalDevLogsCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to retrieve logs from. [e.g. web, db]")
-	LocalDevLogsCmd.Flags().StringVarP(&tail, "tail", "", "", "How many lines to show")
-	RootCmd.AddCommand(LocalDevLogsCmd)
+	DdevLogsCmd.Flags().BoolVarP(&follow, "follow", "f", false, "Follow the logs in real time.")
+	DdevLogsCmd.Flags().BoolVarP(&timestamp, "time", "t", false, "Add timestamps to logs")
+	DdevLogsCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to retrieve logs from. [e.g. web, db]")
+	DdevLogsCmd.Flags().StringVarP(&tail, "tail", "", "", "How many lines to show")
+	RootCmd.AddCommand(DdevLogsCmd)
 
 }

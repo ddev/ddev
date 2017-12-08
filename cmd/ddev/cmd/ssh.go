@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// LocalDevSSHCmd represents the ssh command.
-var LocalDevSSHCmd = &cobra.Command{
+// DdevSSHCmd represents the ssh command.
+var DdevSSHCmd = &cobra.Command{
 	Use:   "ssh",
 	Short: "Starts a shell session in the container for a service. Uses web service by default.",
 	Long:  `Starts a shell session in the container for a service. Uses web service by default. To start a shell session for another service, run "ddev ssh --service <service>`,
@@ -20,7 +20,7 @@ var LocalDevSSHCmd = &cobra.Command{
 		}
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteNotFound) {
-			util.Failed("App not running locally. Try 'ddev start'.")
+			util.Failed("App not currently running. Try 'ddev start'.")
 		}
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
@@ -38,6 +38,6 @@ var LocalDevSSHCmd = &cobra.Command{
 }
 
 func init() {
-	LocalDevSSHCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
-	RootCmd.AddCommand(LocalDevSSHCmd)
+	DdevSSHCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
+	RootCmd.AddCommand(DdevSSHCmd)
 }

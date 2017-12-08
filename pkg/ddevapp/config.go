@@ -28,9 +28,6 @@ const DefaultProviderName = "default"
 // We're not doing anything with AppVersion, so just default it to 1 for now.
 const CurrentAppVersion = "1"
 
-// DDevDefaultPlatform defines the DDev Platform. It's just hardcoded for now, but should be adjusted as we add more platforms.
-const DDevDefaultPlatform = "local"
-
 // DDevTLD defines the tld to use for DDev site URLs.
 const DDevTLD = "ddev.local"
 
@@ -87,9 +84,6 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 	c.AppRoot = AppRoot
 	c.ConfigPath = c.GetPath("config.yaml")
 	c.APIVersion = CurrentAppVersion
-
-	// Default platform for now.
-	c.Platform = DDevDefaultPlatform
 
 	// These should always default to the latest image/tag names from the Version package.
 	c.WebImage = version.WebImg + ":" + version.WebTag
@@ -476,7 +470,7 @@ func PrepDdevDirectory(dir string) error {
 	return nil
 }
 
-// DetermineAppType uses some predetermined file checks to determine if a local app
+// DetermineAppType uses some predetermined file checks to determine if an app
 // is of any of the known types
 func DetermineAppType(basePath string) (string, error) {
 	defaultLocations := map[string]string{

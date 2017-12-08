@@ -15,7 +15,7 @@ import (
 var StartCmd = &cobra.Command{
 	Use:     "start",
 	Aliases: []string{"add"},
-	Short:   "Start the local development environment for a site.",
+	Short:   "Start the development environment for a site.",
 	Long: `Start initializes and configures the web server and database containers to
 provide a working environment for development.`,
 	PreRun: func(cmd *cobra.Command, args []string) {

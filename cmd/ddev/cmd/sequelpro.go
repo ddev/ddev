@@ -23,11 +23,11 @@ import (
 // It's global so it can be mocked in testing.
 var SequelproLoc = "/Applications/sequel pro.app"
 
-// localDevSequelproCmd represents the sequelpro command
-var localDevSequelproCmd = &cobra.Command{
+// DdevSequelproCmd represents the sequelpro command
+var DdevSequelproCmd = &cobra.Command{
 	Use:   "sequelpro",
-	Short: "Easily connect local site to sequelpro",
-	Long:  `A helper command for easily using sequelpro (OSX database browser) with a ddev app that has been initialized locally.`,
+	Short: "Easily connect a dev site to sequelpro",
+	Long:  `A helper command for easily using sequelpro (OSX database browser) with a running ddev app.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {
 			output.UserOut.Fatalf("invalid arguments to sequelpro command: %v", args)
@@ -103,7 +103,7 @@ var dummyDevSequelproCmd = &cobra.Command{
 func init() {
 	switch {
 	case detectSequelpro():
-		RootCmd.AddCommand(localDevSequelproCmd)
+		RootCmd.AddCommand(DdevSequelproCmd)
 	case runtime.GOOS == "darwin":
 		RootCmd.AddCommand(dummyDevSequelproCmd)
 	}

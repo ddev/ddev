@@ -6,11 +6,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// LocalDevStopCmd represents the stop command
-var LocalDevStopCmd = &cobra.Command{
+// DdevStopCmd represents the stop command
+var DdevStopCmd = &cobra.Command{
 	Use:   "stop [sitename]",
-	Short: "Stop the local development environment for a site.",
-	Long: `Stop the local development environment for a site. You can run 'ddev stop'
+	Short: "Stop the development environment for a site.",
+	Long: `Stop the development environment for a site. You can run 'ddev stop'
 from a site directory to stop that site, or you can specify a running site
 to stop by running 'ddev stop <sitename>.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -39,5 +39,5 @@ to stop by running 'ddev stop <sitename>.`,
 }
 
 func init() {
-	RootCmd.AddCommand(LocalDevStopCmd)
+	RootCmd.AddCommand(DdevStopCmd)
 }

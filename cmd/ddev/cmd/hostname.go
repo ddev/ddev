@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// HostNameCmd represents the local command
+// HostNameCmd represents the hostname command
 var HostNameCmd = &cobra.Command{
 	Use:   "hostname [hostname] [ip]",
 	Short: "Manage your hostfile entries.",

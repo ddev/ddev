@@ -158,12 +158,12 @@ func (l *DdevApp) AppConfDir() string {
 	return filepath.Join(l.AppConfig.AppRoot, ".ddev")
 }
 
-// Docroot returns the docroot path for local app
+// Docroot returns the docroot path for ddev app
 func (l DdevApp) Docroot() string {
 	return l.AppConfig.Docroot
 }
 
-// GetName returns the  name for local app
+// GetName returns the app's name
 func (l *DdevApp) GetName() string {
 	return l.AppConfig.Name
 }
@@ -897,7 +897,7 @@ func (l *DdevApp) HostName() string {
 	return l.AppConfig.Hostname()
 }
 
-// AddHostsEntry will add the local site URL to the local hostfile.
+// AddHostsEntry will add the site URL to the host's /etc/hosts.
 func (l *DdevApp) AddHostsEntry() error {
 	dockerIP := "127.0.0.1"
 	dockerHostRawURL := os.Getenv("DOCKER_HOST")

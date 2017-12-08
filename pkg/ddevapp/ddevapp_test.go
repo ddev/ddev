@@ -61,9 +61,8 @@ func TestMain(m *testing.M) {
 	// Ensure the ddev directory is created before tests run.
 	_ = util.GetGlobalDdevDir()
 
-	// Since this test may be first time ddev has been used, we need the
-	// ddev_default network available. This would normally be done in a
-	// TestMain, so can be moved to one when we need one.
+	// Since this may be first time ddev has been used, we need the
+	// ddev_default network available.
 	dockerutil.EnsureDdevNetwork()
 
 	// Avoid having sudo try to add to /etc/hosts.
@@ -72,7 +71,7 @@ func TestMain(m *testing.M) {
 
 	count := len(ddevapp.GetApps())
 	if count > 0 {
-		log.Fatalf("Local plugin tests require no sites running. You have %v site(s) running.", count)
+		log.Fatalf("ddevapp tests require no sites running. You have %v site(s) running.", count)
 	}
 
 	if os.Getenv("GOTEST_SHORT") != "" {
@@ -135,14 +134,14 @@ func TestMain(m *testing.M) {
 	os.Exit(testRun)
 }
 
-// TestLocalStart tests the functionality that is called when "ddev start" is executed
-func TestLocalStart(t *testing.T) {
+// TestDdevStart tests the functionality that is called when "ddev start" is executed
+func TestDdevStart(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalStart", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
@@ -167,7 +166,7 @@ func TestLocalStart(t *testing.T) {
 	another := TestSites[0]
 	err := another.Prepare()
 	if err != nil {
-		assert.FailNow("TestLocalStart: Prepare() failed on another.Prepare(), err=%v", err)
+		assert.FailNow("TestDdevStart: Prepare() failed on another.Prepare(), err=%v", err)
 		return
 	}
 
@@ -216,15 +215,15 @@ func TestGetApps(t *testing.T) {
 	}
 }
 
-// TestLocalImportDB tests the functionality that is called when "ddev import-db" is executed
-func TestLocalImportDB(t *testing.T) {
+// TestDdevImportDB tests the functionality that is called when "ddev import-db" is executed
+func TestDdevImportDB(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 	testDir, _ := os.Getwd()
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportDB", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevImportDB", site.Name))
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
@@ -279,14 +278,14 @@ func TestLocalImportDB(t *testing.T) {
 	}
 }
 
-// TestLocalImportFiles tests the functionality that is called when "ddev import-files" is executed
-func TestLocalImportFiles(t *testing.T) {
+// TestDdevImportFiles tests the functionality that is called when "ddev import-files" is executed
+func TestDdevImportFiles(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalImportFiles", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevImportFiles", site.Name))
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
@@ -318,14 +317,14 @@ func TestLocalImportFiles(t *testing.T) {
 	}
 }
 
-// TestLocalExec tests the execution of commands inside a docker container of a site.
-func TestLocalExec(t *testing.T) {
+// TestDdevExec tests the execution of commands inside a docker container of a site.
+func TestDdevExec(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalExec", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevExec", site.Name))
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
@@ -359,15 +358,15 @@ func TestLocalExec(t *testing.T) {
 	}
 }
 
-// TestLocalLogs tests the container log output functionality.
-func TestLocalLogs(t *testing.T) {
+// TestDdevLogs tests the container log output functionality.
+func TestDdevLogs(t *testing.T) {
 	assert := asrt.New(t)
 
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalLogs", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevLogs", site.Name))
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
@@ -436,15 +435,15 @@ func TestProcessHooks(t *testing.T) {
 	}
 }
 
-// TestLocalStop tests the functionality that is called when "ddev stop" is executed
-func TestLocalStop(t *testing.T) {
+// TestDdevStop tests the functionality that is called when "ddev stop" is executed
+func TestDdevStop(t *testing.T) {
 	assert := asrt.New(t)
 
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s LocalStop", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStop", site.Name))
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
@@ -466,8 +465,8 @@ func TestLocalStop(t *testing.T) {
 	}
 }
 
-// TestLocalStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or ddev configs.
-func TestLocalStopMissingDirectory(t *testing.T) {
+// TestDdevStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or ddev configs.
+func TestDdevStopMissingDirectory(t *testing.T) {
 	assert := asrt.New(t)
 
 	site := TestSites[0]

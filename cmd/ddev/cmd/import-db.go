@@ -15,8 +15,8 @@ var dbExtPath string
 // ImportDBCmd represents the `ddev import-db` command.
 var ImportDBCmd = &cobra.Command{
 	Use:   "import-db",
-	Short: "Import the database of an existing site to the local dev environment.",
-	Long: `Import the database of an existing site to the local development environment.
+	Short: "Import the database of an existing site to the dev environment.",
+	Long: `Import the database of an existing site to the development environment.
 The database can be provided as a SQL dump in a .sql, .sql.gz, .zip, .tgz, or .tar.gz
 format. For the zip and tar formats, the path to a .sql file within the archive
 can be provided if it is not located at the top-level of the archive.`,
