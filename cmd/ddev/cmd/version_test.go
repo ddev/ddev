@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/version"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -19,4 +20,5 @@ func TestVersion(t *testing.T) {
 	assert.Contains(output, version.DBTag)
 	assert.Contains(output, version.DBAImg)
 	assert.Contains(output, version.DBATag)
+	assert.Contains(output, ddevapp.DDevTLD)
 }

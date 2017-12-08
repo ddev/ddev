@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -42,6 +43,7 @@ func handleVersionCommand() *uitable.Table {
 	table.AddRow("router:", version.RouterImage+":"+version.RouterTag)
 	table.AddRow("commit:", version.COMMIT)
 	table.AddRow("build info:", version.BUILDINFO)
+	table.AddRow("domain:", ddevapp.DDevTLD)
 
 	return table
 }
