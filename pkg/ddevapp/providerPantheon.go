@@ -32,6 +32,7 @@ type PantheonProvider struct {
 func (p *PantheonProvider) Init(app *DdevApp) error {
 	var err error
 
+	p.app = app
 	configPath := app.GetConfigPath("import.yaml")
 	if fileutil.FileExists(configPath) {
 		err = p.Read(configPath)
