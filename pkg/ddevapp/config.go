@@ -95,7 +95,7 @@ func (app *DdevApp) GetConfigPath(filename string) string {
 	return filepath.Join(app.AppRoot, ".ddev", filename)
 }
 
-// Write the app configuration to the .ddev folder.
+// WriteConfig writes the app configuration into the .ddev folder.
 func (app *DdevApp) WriteConfig() error {
 
 	err := PrepDdevDirectory(filepath.Dir(app.ConfigPath))
