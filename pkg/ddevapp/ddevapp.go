@@ -72,7 +72,7 @@ type DdevApp struct {
 
 // GetType returns the application type as a (lowercase) string
 func (l *DdevApp) GetType() string {
-	return strings.ToLower(l.AppConfig.AppType)
+	return strings.ToLower(l.AppType)
 }
 
 // Init populates DdevApp config based on the current working directory.
@@ -96,8 +96,8 @@ func (l *DdevApp) Init(basePath string) error {
 	web, err := l.FindContainerByType("web")
 	if err == nil {
 		containerApproot := web.Labels["com.ddev.approot"]
-		if containerApproot != l.AppConfig.AppRoot {
-			return fmt.Errorf("a web container in %s state already exists for %s that was created at %s", web.State, l.AppConfig.Name, containerApproot)
+		if containerApproot != l.AppRoot {
+			return fmt.Errorf("a web container in %s state already exists for %s that was created at %s", web.State, l.Name, containerApproot)
 		}
 	}
 
@@ -169,29 +169,29 @@ func (l *DdevApp) Describe() (map[string]interface{}, error) {
 
 // GetAppRoot return the full path from root to the app directory
 func (l *DdevApp) GetAppRoot() string {
-	return l.AppConfig.AppRoot
+	return l.AppRoot
 }
 
 // AppConfDir returns the full path to the app's .ddev configuration directory
 func (l *DdevApp) AppConfDir() string {
-	return filepath.Join(l.AppConfig.AppRoot, ".ddev")
+	return filepath.Join(l.AppRoot, ".ddev")
 }
 
 // GetDocroot returns the docroot path for ddev app
 func (l DdevApp) GetDocroot() string {
-	return l.AppConfig.Docroot
+	return l.Docroot
 }
 
 // GetName returns the app's name
 func (l *DdevApp) GetName() string {
-	return l.AppConfig.Name
+	return l.Name
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
 func (l *DdevApp) ImportDB(imPath string, extPath string) error {
 	l.DockerEnv()
 	var extPathPrompt bool
-	dbPath := l.AppConfig.ImportDir
+	dbPath := l.ImportDir
 
 	err := l.ProcessHooks("pre-import-db")
 	if err != nil {
@@ -349,7 +349,7 @@ func (l *DdevApp) SiteStatus() string {
 
 // Import performs an import from the a configured provider plugin, if one exists.
 func (l *DdevApp) Import() error {
-	provider, err := l.AppConfig.GetProvider()
+	provider, err := l.GetProvider()
 	if err != nil {
 		return err
 	}
@@ -499,7 +499,7 @@ func (l *DdevApp) ImportFiles(imPath string, extPath string) error {
 // DockerComposeYAMLPath returns the absolute path to where the docker-compose.yaml should exist for this app configuration.
 // This is a bit redundant, but is here to avoid having to expose too many details of AppConfig.
 func (l *DdevApp) DockerComposeYAMLPath() string {
-	return l.AppConfig.DockerComposeYAMLPath()
+	return l.DockerComposeYAMLPath()
 }
 
 // ComposeFiles returns a list of compose files for a project.
@@ -529,11 +529,11 @@ func (l *DdevApp) ComposeFiles() []string {
 
 // ProcessHooks executes commands defined in a Command
 func (l *DdevApp) ProcessHooks(hookName string) error {
-	if cmds := l.AppConfig.Commands[hookName]; len(cmds) > 0 {
+	if cmds := l.Commands[hookName]; len(cmds) > 0 {
 		output.UserOut.Printf("Executing %s commands...", hookName)
 	}
 
-	for _, c := range l.AppConfig.Commands[hookName] {
+	for _, c := range l.Commands[hookName] {
 		if c.Exec != "" {
 			output.UserOut.Printf("--- Running exec command: %s ---", c.Exec)
 
@@ -585,7 +585,7 @@ func (l *DdevApp) Start() error {
 	// Write docker-compose.yaml (if it doesn't exist).
 	// If the user went through the `ddev config` process it will be written already, but
 	// we also do it here in the case of a manually created `.ddev/config.yaml` file.
-	err = l.AppConfig.WriteDockerComposeConfig()
+	err = l.WriteDockerComposeConfig()
 	if err != nil {
 		return err
 	}
@@ -679,15 +679,15 @@ func (l *DdevApp) Logs(service string, follow bool, timestamps bool, tail string
 // DockerEnv sets environment variables for a docker-compose run.
 func (l *DdevApp) DockerEnv() {
 	envVars := map[string]string{
-		"COMPOSE_PROJECT_NAME": "ddev-" + l.AppConfig.Name,
-		"DDEV_SITENAME":        l.AppConfig.Name,
-		"DDEV_DBIMAGE":         l.AppConfig.DBImage,
-		"DDEV_DBAIMAGE":        l.AppConfig.DBAImage,
-		"DDEV_WEBIMAGE":        l.AppConfig.WebImage,
-		"DDEV_APPROOT":         l.AppConfig.AppRoot,
-		"DDEV_DOCROOT":         l.AppConfig.Docroot,
-		"DDEV_DATADIR":         l.AppConfig.DataDir,
-		"DDEV_IMPORTDIR":       l.AppConfig.ImportDir,
+		"COMPOSE_PROJECT_NAME": "ddev-" + l.Name,
+		"DDEV_SITENAME":        l.Name,
+		"DDEV_DBIMAGE":         l.DBImage,
+		"DDEV_DBAIMAGE":        l.DBAImage,
+		"DDEV_WEBIMAGE":        l.WebImage,
+		"DDEV_APPROOT":         l.AppRoot,
+		"DDEV_DOCROOT":         l.Docroot,
+		"DDEV_DATADIR":         l.DataDir,
+		"DDEV_IMPORTDIR":       l.ImportDir,
 		"DDEV_URL":             l.URL(),
 		"DDEV_HOSTNAME":        l.HostName(),
 		"DDEV_UID":             "",
@@ -751,7 +751,7 @@ func (l *DdevApp) Wait(containerTypes ...string) error {
 }
 
 func (l *DdevApp) determineSettingsPath() (string, error) {
-	possibleLocations := []string{l.AppConfig.SiteSettingsPath, l.AppConfig.SiteLocalSettingsPath}
+	possibleLocations := []string{l.SiteSettingsPath, l.SiteLocalSettingsPath}
 	for _, loc := range possibleLocations {
 		// If the file is found we need to check for a signature to determine if it's safe to use.
 		if fileutil.FileExists(loc) {
@@ -774,7 +774,7 @@ func (l *DdevApp) determineSettingsPath() (string, error) {
 // adding things like database host, name, and password
 func (l *DdevApp) CreateSettingsFile() error {
 	// If neither settings file options are set, then
-	if l.AppConfig.SiteLocalSettingsPath == "" && l.AppConfig.SiteSettingsPath == "" {
+	if l.SiteLocalSettingsPath == "" && l.SiteSettingsPath == "" {
 		return nil
 	}
 
@@ -855,7 +855,7 @@ func (l *DdevApp) CreateSettingsFile() error {
 // Down stops the docker containers for the project in current directory.
 func (l *DdevApp) Down(removeData bool) error {
 	l.DockerEnv()
-	settingsFilePath := l.AppConfig.SiteSettingsPath
+	settingsFilePath := l.SiteSettingsPath
 
 	// Remove all the containers and volumes for app.
 	err := Cleanup(l)
@@ -879,24 +879,24 @@ func (l *DdevApp) Down(removeData bool) error {
 				}
 			}
 		}
-		// Check that l.AppConfig.DataDir is a directory that is safe to remove.
+		// Check that l.DataDir is a directory that is safe to remove.
 		err = validateDataDirRemoval(l.AppConfig)
 		if err != nil {
 			return fmt.Errorf("failed to remove data directories: %v", err)
 		}
 		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
 		// are writable before we attempt to remove them.
-		if !fileutil.FileExists(l.AppConfig.DataDir) {
+		if !fileutil.FileExists(l.DataDir) {
 			util.Warning("No application data to remove")
 		} else {
-			err := fileutil.PurgeDirectory(l.AppConfig.DataDir)
+			err := fileutil.PurgeDirectory(l.DataDir)
 			if err != nil {
 				return fmt.Errorf("failed to remove data directories: %v", err)
 			}
 			// PurgeDirectory leaves the directory itself in place, so we remove it here.
-			err = os.RemoveAll(l.AppConfig.DataDir)
+			err = os.RemoveAll(l.DataDir)
 			if err != nil {
-				return fmt.Errorf("failed to remove data directory %s: %v", l.AppConfig.DataDir, err)
+				return fmt.Errorf("failed to remove data directory %s: %v", l.DataDir, err)
 			}
 			util.Success("Application data removed")
 		}
@@ -908,12 +908,12 @@ func (l *DdevApp) Down(removeData bool) error {
 
 // URL returns the URL for a given application.
 func (l *DdevApp) URL() string {
-	return "http://" + l.AppConfig.Hostname()
+	return "http://" + l.Hostname()
 }
 
 // HostName returns the hostname of a given application.
 func (l *DdevApp) HostName() string {
-	return l.AppConfig.Hostname()
+	return l.Hostname()
 }
 
 // AddHostsEntry will add the site URL to the host's /etc/hosts.
@@ -957,8 +957,8 @@ func (l *DdevApp) AddHostsEntry() error {
 func (l *DdevApp) prepSiteDirs() error {
 
 	dirs := []string{
-		l.AppConfig.DataDir,
-		l.AppConfig.ImportDir,
+		l.DataDir,
+		l.ImportDir,
 	}
 
 	for _, dir := range dirs {
@@ -1034,7 +1034,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// incomplete one we have to add to it.
 	_ = app.Init(activeAppRoot)
 
-	if app.AppConfig.Name == "" || app.AppConfig.DataDir == "" {
+	if app.Name == "" || app.DataDir == "" {
 		err = restoreApp(app, siteName)
 		if err != nil {
 			return app, err
@@ -1050,10 +1050,10 @@ func restoreApp(app *DdevApp, siteName string) error {
 	if siteName == "" {
 		return fmt.Errorf("error restoring AppConfig: no siteName given")
 	}
-	app.AppConfig.Name = siteName
+	app.Name = siteName
 	// Ensure that AppConfig.DataDir is set so that site data can be removed if necessary.
 	dataDir := fmt.Sprintf("%s/%s", util.GetGlobalDdevDir(), app.GetName())
-	app.AppConfig.DataDir = dataDir
+	app.DataDir = dataDir
 
 	return nil
 }
@@ -1082,4 +1082,28 @@ func validateDataDirRemoval(config *Config) error {
 		return unsafeFilePathErr
 	}
 	return nil
+}
+
+// GetProvider returns a pointer to the provider instance interface.
+func (c *Config) GetProvider() (Provider, error) {
+	if c.providerInstance != nil {
+		return c.providerInstance, nil
+	}
+
+	var provider Provider
+	err := fmt.Errorf("unknown provider type: %s", c.Provider)
+
+	switch c.Provider {
+	case "pantheon":
+		provider = &PantheonProvider{}
+		err = provider.Init(c)
+	case DefaultProviderName:
+		provider = &DefaultProvider{}
+		err = nil
+	default:
+		provider = &DefaultProvider{}
+		// Use the default error from above.
+	}
+	c.providerInstance = provider
+	return c.providerInstance, err
 }

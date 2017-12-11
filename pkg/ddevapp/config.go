@@ -111,30 +111,6 @@ func NewConfig(AppRoot string, provider string) (*Config, error) {
 	return c, nil
 }
 
-// GetProvider returns a pointer to the provider instance interface.
-func (c *Config) GetProvider() (Provider, error) {
-	if c.providerInstance != nil {
-		return c.providerInstance, nil
-	}
-
-	var provider Provider
-	err := fmt.Errorf("unknown provider type: %s", c.Provider)
-
-	switch c.Provider {
-	case "pantheon":
-		provider = &PantheonProvider{}
-		err = provider.Init(c)
-	case DefaultProviderName:
-		provider = &DefaultProvider{}
-		err = nil
-	default:
-		provider = &DefaultProvider{}
-		// Use the default error from above.
-	}
-	c.providerInstance = provider
-	return c.providerInstance, err
-}
-
 // GetPath returns the path to an application config file specified by filename.
 func (c *Config) GetPath(filename string) string {
 	return filepath.Join(c.AppRoot, ".ddev", filename)
@@ -274,9 +250,9 @@ func (c *Config) Validate() error {
 	}
 
 	// validate hostname
-	match := hostRegex.MatchString(c.Hostname())
+	match := hostRegex.MatchString(c.GetHostname())
 	if !match {
-		return fmt.Errorf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", c.Hostname())
+		return fmt.Errorf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", c.GetHostname())
 	}
 
 	// validate apptype
@@ -293,8 +269,8 @@ func (c *Config) DockerComposeYAMLPath() string {
 	return c.GetPath("docker-compose.yaml")
 }
 
-// Hostname returns the hostname to the app controlled by this config.
-func (c *Config) Hostname() string {
+// GetHostname returns the hostname to the app controlled by this config.
+func (c *Config) GetHostname() string {
 	return c.Name + "." + version.DDevTLD
 }
 

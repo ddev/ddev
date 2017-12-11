@@ -40,8 +40,8 @@ func GetApps() [](*DdevApp) {
 			// Artificially populate sitename and apptype based on labels
 			// if site.Init() failed.
 			if err != nil {
-				site.AppConfig.Name = siteContainer.Labels["com.ddev.site-name"]
-				site.AppConfig.AppType = siteContainer.Labels["com.ddev.app-type"]
+				site.Name = siteContainer.Labels["com.ddev.site-name"]
+				site.AppType = siteContainer.Labels["com.ddev.app-type"]
 			}
 			apps = append(apps, site)
 		}

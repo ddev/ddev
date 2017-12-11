@@ -83,7 +83,7 @@ func TestPrepDirectory(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestHostName tests that the TestSite.Hostname() field returns the hostname as expected.
+// TestHostName tests that the config.GetHostname() field returns the hostname as expected.
 func TestHostName(t *testing.T) {
 	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestHostName")
@@ -233,7 +233,7 @@ func TestValidate(t *testing.T) {
 
 	c.Name = "Invalid!"
 	err = c.Validate()
-	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", c.Hostname()))
+	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", c.GetHostname()))
 
 	c.Name = "valid"
 	c.Docroot = "invalid"
