@@ -86,17 +86,22 @@ func (app *DdevApp) Init(basePath string) error {
 		return err
 	}
 
-	web, err := newApp.FindContainerByType("web")
-	if err != nil {
-		return err
-	}
-	containerApproot := web.Labels["com.ddev.approot"]
-	if containerApproot != newApp.AppRoot {
-		return fmt.Errorf("a web container in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot)
-	}
 	*app = *newApp
+	web, err := app.FindContainerByType("web")
 
-	return nil
+	// if err == nil, it means we have found some containers. Make sure they have
+	// the right stuff in them.
+	if err == nil {
+		containerApproot := web.Labels["com.ddev.approot"]
+		if containerApproot != app.AppRoot {
+			return fmt.Errorf("a web container in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot)
+		}
+		return nil
+	} else if strings.Contains(err.Error(), "could not find containers") {
+		return nil
+	}
+
+	return err
 }
 
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
