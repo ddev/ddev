@@ -46,9 +46,28 @@ const SiteConfigMissing = ".ddev/config.yaml missing"
 // SiteStopped defines the string used to denote when a site is in the stopped state.
 const SiteStopped = "stopped"
 
-// DdevApp is the struct that represents a ddev app
+// DdevApp is the struct that represents a ddev app, including its config
+// from config.yaml.
 type DdevApp struct {
 	AppConfig *Config
+
+	APIVersion            string               `yaml:"APIVersion"`
+	Name                  string               `yaml:"name"`
+	AppType               string               `yaml:"type"`
+	Docroot               string               `yaml:"docroot"`
+	WebImage              string               `yaml:"webimage"`
+	DBImage               string               `yaml:"dbimage"`
+	DBAImage              string               `yaml:"dbaimage"`
+	ConfigPath            string               `yaml:"-"`
+	AppRoot               string               `yaml:"-"`
+	Platform              string               `yaml:"-"`
+	Provider              string               `yaml:"provider,omitempty"`
+	DataDir               string               `yaml:"-"`
+	ImportDir             string               `yaml:"-"`
+	SiteSettingsPath      string               `yaml:"-"`
+	SiteLocalSettingsPath string               `yaml:"-"`
+	providerInstance      Provider             `yaml:"-"`
+	Commands              map[string][]Command `yaml:"hooks,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -98,7 +117,7 @@ func (l *DdevApp) FindContainerByType(containerType string) (docker.APIContainer
 // Describe returns a map which provides detailed information on services associated with the running site.
 func (l *DdevApp) Describe() (map[string]interface{}, error) {
 
-	shortRoot := RenderHomeRootedDir(l.AppRoot())
+	shortRoot := RenderHomeRootedDir(l.GetAppRoot())
 	appDesc := make(map[string]interface{})
 
 	var https bool
@@ -115,7 +134,7 @@ func (l *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["name"] = l.GetName()
 	appDesc["status"] = l.SiteStatus()
 	appDesc["type"] = l.GetType()
-	appDesc["approot"] = l.AppRoot()
+	appDesc["approot"] = l.GetAppRoot()
 	appDesc["shortroot"] = shortRoot
 	appDesc["httpurl"] = httpURLString
 	appDesc["httpsurl"] = httpsURLString
@@ -148,8 +167,8 @@ func (l *DdevApp) Describe() (map[string]interface{}, error) {
 	return appDesc, nil
 }
 
-// AppRoot return the full path from root to the app directory
-func (l *DdevApp) AppRoot() string {
+// GetAppRoot return the full path from root to the app directory
+func (l *DdevApp) GetAppRoot() string {
 	return l.AppConfig.AppRoot
 }
 
@@ -158,8 +177,8 @@ func (l *DdevApp) AppConfDir() string {
 	return filepath.Join(l.AppConfig.AppRoot, ".ddev")
 }
 
-// Docroot returns the docroot path for ddev app
-func (l DdevApp) Docroot() string {
+// GetDocroot returns the docroot path for ddev app
+func (l DdevApp) GetDocroot() string {
 	return l.AppConfig.Docroot
 }
 
@@ -284,12 +303,12 @@ func (l *DdevApp) SiteStatus() string {
 	var siteStatus string
 	services := map[string]string{"web": "", "db": ""}
 
-	if !fileutil.FileExists(l.AppRoot()) {
-		siteStatus = fmt.Sprintf("%s: %v", SiteDirMissing, l.AppRoot())
+	if !fileutil.FileExists(l.GetAppRoot()) {
+		siteStatus = fmt.Sprintf("%s: %v", SiteDirMissing, l.GetAppRoot())
 		return siteStatus
 	}
 
-	_, err := CheckForConf(l.AppRoot())
+	_, err := CheckForConf(l.GetAppRoot())
 	if err != nil {
 		siteStatus = fmt.Sprintf("%s", SiteConfigMissing)
 		return siteStatus
@@ -405,7 +424,7 @@ func (l *DdevApp) ImportFiles(imPath string, extPath string) error {
 		uploadDir = "wp-content/uploads"
 	}
 
-	destPath := filepath.Join(l.AppRoot(), l.Docroot(), uploadDir)
+	destPath := filepath.Join(l.GetAppRoot(), l.GetDocroot(), uploadDir)
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {
@@ -538,7 +557,7 @@ func (l *DdevApp) ProcessHooks(hookName string) error {
 			// ensure exec-host runs from consistent location
 			cwd, err := os.Getwd()
 			util.CheckErr(err)
-			err = os.Chdir(l.AppRoot())
+			err = os.Chdir(l.GetAppRoot())
 			util.CheckErr(err)
 
 			err = exec.RunCommandPipe(cmd, args)
@@ -703,7 +722,7 @@ func (l *DdevApp) Stop() error {
 	}
 
 	if strings.Contains(l.SiteStatus(), SiteDirMissing) || strings.Contains(l.SiteStatus(), SiteConfigMissing) {
-		return fmt.Errorf("ddev can no longer find your application files at %s. If you would like to continue using ddev to manage this site please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev remove %s'", l.AppRoot(), l.GetName())
+		return fmt.Errorf("ddev can no longer find your application files at %s. If you would like to continue using ddev to manage this site please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev remove %s'", l.GetAppRoot(), l.GetName())
 	}
 
 	_, _, err := dockerutil.ComposeCmd(l.ComposeFiles(), "stop")
@@ -788,7 +807,7 @@ func (l *DdevApp) CreateSettingsFile() error {
 		fallthrough
 	case "drupal7":
 		output.UserOut.Printf("Generating %s file for database connection.", fileName)
-		drushSettingsPath := filepath.Join(l.AppRoot(), "drush.settings.php")
+		drushSettingsPath := filepath.Join(l.GetAppRoot(), "drush.settings.php")
 
 		// Retrieve published mysql port for drush settings file.
 		db, err := l.FindContainerByType("db")
