@@ -15,19 +15,19 @@ var DevListCmd = &cobra.Command{
 	Short: "List applications",
 	Long:  `List applications.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		sites := ddevapp.GetApps()
+		apps := ddevapp.GetApps()
 		var appDescs []map[string]interface{}
 
-		if len(sites) < 1 {
+		if len(apps) < 1 {
 			output.UserOut.Println("There are no running ddev applications.")
 			os.Exit(0)
 		}
 
 		table := ddevapp.CreateAppTable()
-		for _, site := range sites {
-			desc, err := site.Describe()
+		for _, app := range apps {
+			desc, err := app.Describe()
 			if err != nil {
-				util.Failed("Failed to describe site %s: %v", site.GetName(), err)
+				util.Failed("Failed to describe site %s: %v", app.GetName(), err)
 			}
 			appDescs = append(appDescs, desc)
 			ddevapp.RenderAppRow(table, desc)

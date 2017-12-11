@@ -76,23 +76,25 @@ func (app *DdevApp) GetType() string {
 // Init populates DdevApp config based on the current working directory.
 // It does not start the containers.
 func (app *DdevApp) Init(basePath string) error {
-	app, err := NewApp(basePath, "")
+	newApp, err := NewApp(basePath, "")
 	if err != nil {
 		return err
 	}
 
-	err = app.ValidateConfig()
+	err = newApp.ValidateConfig()
 	if err != nil {
 		return err
 	}
 
-	web, err := app.FindContainerByType("web")
-	if err == nil {
-		containerApproot := web.Labels["com.ddev.approot"]
-		if containerApproot != app.AppRoot {
-			return fmt.Errorf("a web container in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot)
-		}
+	web, err := newApp.FindContainerByType("web")
+	if err != nil {
+		return err
 	}
+	containerApproot := web.Labels["com.ddev.approot"]
+	if containerApproot != newApp.AppRoot {
+		return fmt.Errorf("a web container in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot)
+	}
+	*app = *newApp
 
 	return nil
 }
