@@ -41,6 +41,7 @@ func handleVersionCommand() *uitable.Table {
 	table.AddRow("dba:", version.DBAImg+":"+version.DBATag)
 	table.AddRow("router:", version.RouterImage+":"+version.RouterTag)
 	table.AddRow("commit:", version.COMMIT)
+	table.AddRow("domain:", version.DDevTLD)
 	table.AddRow("build info:", version.BUILDINFO)
 
 	return table

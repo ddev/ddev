@@ -19,4 +19,5 @@ func TestVersion(t *testing.T) {
 	assert.Contains(output, version.DBTag)
 	assert.Contains(output, version.DBAImg)
 	assert.Contains(output, version.DBATag)
+	assert.Contains(output, version.DDevTLD)
 }
