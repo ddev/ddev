@@ -50,7 +50,7 @@ var ConfigCommand = &cobra.Command{
 			provider = args[0]
 		}
 
-		c, err := ddevapp.NewConfig(appRoot, provider)
+		c, err := ddevapp.NewApp(appRoot, provider)
 		if err != nil {
 			util.Failed("Could not create new config: %v", err)
 		}

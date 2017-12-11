@@ -403,7 +403,7 @@ func TestProcessHooks(t *testing.T) {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
 		testcommon.ClearDockerEnv()
-		conf, err := ddevapp.NewConfig(site.Dir, ddevapp.DefaultProviderName)
+		conf, err := ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
 		assert.NoError(err)
 
 		conf.Commands = map[string][]ddevapp.Command{
@@ -730,7 +730,7 @@ func TestListWithoutDir(t *testing.T) {
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
-	config, err := ddevapp.NewConfig(testDir, "")
+	config, err := ddevapp.NewApp(testDir, "")
 	assert.NoError(err)
 	config.Name = "junk"
 	config.AppType = "drupal7"

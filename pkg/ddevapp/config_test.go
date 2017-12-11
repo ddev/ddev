@@ -26,7 +26,7 @@ func TestNewConfig(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	// Load a new Config
-	newConfig, err := NewConfig(testDir, DefaultProviderName)
+	newConfig, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 
 	// Ensure the config uses specified defaults.
@@ -37,13 +37,13 @@ func TestNewConfig(t *testing.T) {
 	newConfig.Name = util.RandString(32)
 	newConfig.AppType = "drupal8"
 
-	// Write the newConfig.
+	// WriteConfig the newConfig.
 	err = newConfig.Write()
 	assert.NoError(err)
 	_, err = os.Stat(newConfig.ConfigPath)
 	assert.NoError(err)
 
-	loadedConfig, err := NewConfig(testDir, DefaultProviderName)
+	loadedConfig, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 	assert.Equal(newConfig.Name, loadedConfig.Name)
 	assert.Equal(newConfig.AppType, loadedConfig.AppType)
@@ -71,7 +71,7 @@ func TestPrepDirectory(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	config, err := NewConfig(testDir, DefaultProviderName)
+	config, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 
 	// Prep the directory.
@@ -89,7 +89,7 @@ func TestHostName(t *testing.T) {
 	testDir := testcommon.CreateTmpDir("TestHostName")
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
-	config, err := NewConfig(testDir, DefaultProviderName)
+	config, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 	config.Name = util.RandString(32)
 
@@ -105,12 +105,12 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	// Create a config
-	config, err := NewConfig(testDir, DefaultProviderName)
+	config, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 	config.Name = util.RandString(32)
 	config.AppType = AllowedAppTypes[0]
 
-	// Write a config to create/prep necessary directories.
+	// WriteConfig a config to create/prep necessary directories.
 	err = config.Write()
 	assert.NoError(err)
 
@@ -149,7 +149,7 @@ func TestConfigCommand(t *testing.T) {
 
 	// Create the ddevapp we'll use for testing.
 	// This will not return an error, since there is no existing config.
-	config, err := NewConfig(testDir, DefaultProviderName)
+	config, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -186,7 +186,7 @@ func TestConfigCommand(t *testing.T) {
 func TestRead(t *testing.T) {
 	assert := asrt.New(t)
 
-	// This closely resembles the values one would have from NewConfig()
+	// This closely resembles the values one would have from NewApp()
 	c := &Config{
 		ConfigPath: filepath.Join("testdata", "config.yaml"),
 		AppRoot:    "testdata",
@@ -251,7 +251,7 @@ func TestWrite(t *testing.T) {
 	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestConfigWrite")
 
-	// This closely resembles the values one would have from NewConfig()
+	// This closely resembles the values one would have from NewApp()
 	c := &Config{
 		ConfigPath: filepath.Join(testDir, "config.yaml"),
 		AppRoot:    testDir,
@@ -264,7 +264,7 @@ func TestWrite(t *testing.T) {
 		Provider:   DefaultProviderName,
 	}
 
-	err := c.Write()
+	err := c.WriteConfig()
 	assert.NoError(err)
 
 	out, err := ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))
@@ -273,7 +273,7 @@ func TestWrite(t *testing.T) {
 	assert.Contains(string(out), `exec: "drush cr"`)
 
 	c.AppType = "wordpress"
-	err = c.Write()
+	err = c.WriteConfig()
 	assert.NoError(err)
 
 	out, err = ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))

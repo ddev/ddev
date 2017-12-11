@@ -46,7 +46,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 	}
 
 	// Create the ddevapp we'll use for testing.
-	config, err := NewConfig(testDir, "pantheon")
+	config, err := NewApp(testDir, "pantheon")
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -106,7 +106,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	config, err := NewConfig(testDir, "pantheon")
+	config, err := NewApp(testDir, "pantheon")
 	assert.NoError(err)
 	config.Name = pantheonTestSiteName
 
@@ -150,7 +150,7 @@ func TestPantheonPull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
-	config, err := NewConfig(siteDir, "pantheon")
+	config, err := NewApp(siteDir, "pantheon")
 	assert.NoError(err)
 	config.Name = pantheonTestSiteName
 	config.AppType = "drupal8"
@@ -165,7 +165,7 @@ func TestPantheonPull(t *testing.T) {
 
 	provider.Sitename = pantheonTestSiteName
 	provider.EnvironmentName = pantheonTestEnvName
-	err = provider.Write(config.GetPath("import.yaml"))
+	err = provider.Write(config.GetConfigPath("import.yaml"))
 	assert.NoError(err)
 
 	// Ensure we can do a pull on the configured site.

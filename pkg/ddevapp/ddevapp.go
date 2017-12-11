@@ -78,7 +78,7 @@ func (l *DdevApp) GetType() string {
 // Init populates DdevApp config based on the current working directory.
 // It does not start the containers.
 func (l *DdevApp) Init(basePath string) error {
-	config, err := NewConfig(basePath, "")
+	config, err := NewApp(basePath, "")
 
 	// Save config to l.AppConfig so we can capture and display the site's
 	// status regardless of its validity
@@ -582,7 +582,7 @@ func (l *DdevApp) Start() error {
 		return err
 	}
 
-	// Write docker-compose.yaml (if it doesn't exist).
+	// WriteConfig docker-compose.yaml (if it doesn't exist).
 	// If the user went through the `ddev config` process it will be written already, but
 	// we also do it here in the case of a manually created `.ddev/config.yaml` file.
 	err = l.WriteDockerComposeConfig()
@@ -1085,18 +1085,18 @@ func validateDataDirRemoval(config *Config) error {
 }
 
 // GetProvider returns a pointer to the provider instance interface.
-func (c *Config) GetProvider() (Provider, error) {
-	if c.providerInstance != nil {
-		return c.providerInstance, nil
+func (app *DdevApp) GetProvider() (Provider, error) {
+	if app.providerInstance != nil {
+		return app.providerInstance, nil
 	}
 
 	var provider Provider
-	err := fmt.Errorf("unknown provider type: %s", c.Provider)
+	err := fmt.Errorf("unknown provider type: %s", app.Provider)
 
-	switch c.Provider {
+	switch app.Provider {
 	case "pantheon":
 		provider = &PantheonProvider{}
-		err = provider.Init(c)
+		err = provider.Init(app)
 	case DefaultProviderName:
 		provider = &DefaultProvider{}
 		err = nil
@@ -1104,6 +1104,6 @@ func (c *Config) GetProvider() (Provider, error) {
 		provider = &DefaultProvider{}
 		// Use the default error from above.
 	}
-	c.providerInstance = provider
-	return c.providerInstance, err
+	app.providerInstance = provider
+	return app.providerInstance, err
 }

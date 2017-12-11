@@ -80,7 +80,7 @@ func (site *TestSite) Prepare() error {
 
 	// Create a config object. Err is ignored as we may not have
 	// a config file to read in from a test site.
-	config, _ := ddevapp.NewConfig(site.Dir, "")
+	config, _ := ddevapp.NewApp(site.Dir, "")
 
 	// Set site name to the name we define for test sites. We'll
 	// ignore site name defined in config file if present.

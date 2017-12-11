@@ -72,65 +72,65 @@ type Provider interface {
 	GetBackup(string) (fileLocation string, importPath string, err error)
 }
 
-// NewConfig creates a new Config struct with defaults set and overridden by any existing config.yml.
-func NewConfig(AppRoot string, provider string) (*Config, error) {
+// NewApp creates a new Config struct with defaults set and overridden by any existing config.yml.
+func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	// Set defaults.
-	c := &Config{}
-	c.ConfigPath = filepath.Join(AppRoot, ".ddev", "config.yaml")
+	app := &DdevApp{}
+	app.ConfigPath = filepath.Join(AppRoot, ".ddev", "config.yaml")
 
-	c.AppRoot = AppRoot
-	c.ConfigPath = c.GetPath("config.yaml")
-	c.APIVersion = CurrentAppVersion
+	app.AppRoot = AppRoot
+	app.ConfigPath = c.GetPath("config.yaml")
+	app.APIVersion = CurrentAppVersion
 
 	// These should always default to the latest image/tag names from the Version package.
-	c.WebImage = version.WebImg + ":" + version.WebTag
-	c.DBImage = version.DBImg + ":" + version.DBTag
-	c.DBAImage = version.DBAImg + ":" + version.DBATag
+	app.WebImage = version.WebImg + ":" + version.WebTag
+	app.DBImage = version.DBImg + ":" + version.DBTag
+	app.DBAImage = version.DBAImg + ":" + version.DBATag
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
-	if _, err := os.Stat(c.ConfigPath); !os.IsNotExist(err) {
-		err = c.Read()
+	if _, err := os.Stat(app.ConfigPath); !os.IsNotExist(err) {
+		err = app.Read()
 		if err != nil {
-			return c, fmt.Errorf("%v exists but cannot be read: %v", c.ConfigPath, err)
+			return app, fmt.Errorf("%v exists but cannot be read: %v", app.ConfigPath, err)
 		}
 	}
 
 	// Allow override with "pantheon" from function provider arg, but nothing else.
 	// Otherwise we accept whatever might have been in config file if there was anything.
-	if provider == "" && c.Provider != "" {
+	if provider == "" && app.Provider != "" {
 		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
 	} else if provider == "pantheon" || provider == DefaultProviderName {
-		c.Provider = provider // Use the provider passed-in. Function argument wins.
+		app.Provider = provider // Use the provider passed-in. Function argument wins.
 	} else if provider == "" && c.Provider == "" {
-		c.Provider = DefaultProviderName // Nothing passed in, nothing configured. Set c.Provider to default
+		app.Provider = DefaultProviderName // Nothing passed in, nothing configured. Set c.Provider to default
 	} else {
-		return c, fmt.Errorf("Provider '%s' is not implemented", provider)
+		return app, fmt.Errorf("Provider '%s' is not implemented", provider)
 	}
 
-	return c, nil
+	return app, nil
 }
 
-// GetPath returns the path to an application config file specified by filename.
-func (c *Config) GetPath(filename string) string {
-	return filepath.Join(c.AppRoot, ".ddev", filename)
+// GetConfigPath returns the path to an application config file specified by filename.
+func (app *DdevApp) GetConfigPath(filename string) string {
+	return filepath.Join(app.AppRoot, ".ddev", filename)
 }
 
 // Write the app configuration to the .ddev folder.
-func (c *Config) Write() error {
+func (app *DdevApp) WriteConfig() error {
 
-	err := PrepDdevDirectory(filepath.Dir(c.ConfigPath))
+	err := PrepDdevDirectory(filepath.Dir(app.ConfigPath))
 	if err != nil {
 		return err
 	}
 
-	cfgbytes, err := yaml.Marshal(c)
+	cfgbytes, err := yaml.Marshal(app)
 	if err != nil {
 		return err
 	}
 
 	cfgbytes = append(cfgbytes, []byte(HookTemplate)...)
-	switch c.AppType {
+	switch app.AppType {
 	case "drupal8":
 		cfgbytes = append(cfgbytes, []byte(Drupal8Hooks)...)
 	case "drupal7":
@@ -144,12 +144,12 @@ func (c *Config) Write() error {
 		return err
 	}
 
-	provider, err := c.GetProvider()
+	provider, err := app.GetProvider()
 	if err != nil {
 		return err
 	}
 
-	return provider.Write(c.GetPath("import.yaml"))
+	return provider.Write(app.GetConfigPath("import.yaml"))
 }
 
 // Read app configuration from a specified location on disk, falling back to defaults for config
@@ -265,8 +265,8 @@ func (c *Config) Validate() error {
 }
 
 // DockerComposeYAMLPath returns the absolute path to where the docker-compose.yaml should exist for this app configuration.
-func (c *Config) DockerComposeYAMLPath() string {
-	return c.GetPath("docker-compose.yaml")
+func (app *DdevApp) DockerComposeYAMLPath() string {
+	return app.GetConfigPath("docker-compose.yaml")
 }
 
 // GetHostname returns the hostname to the app controlled by this config.
@@ -275,19 +275,19 @@ func (c *Config) GetHostname() string {
 }
 
 // WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.
-func (c *Config) WriteDockerComposeConfig() error {
+func (app *DdevApp) WriteDockerComposeConfig() error {
 	var err error
 
-	if !fileutil.FileExists(c.DockerComposeYAMLPath()) {
+	if !fileutil.FileExists(app.DockerComposeYAMLPath()) {
 
 		// nolint: vetshadow
-		f, err := os.Create(c.DockerComposeYAMLPath())
+		f, err := os.Create(app.DockerComposeYAMLPath())
 		if err != nil {
 			return err
 		}
 		defer util.CheckClose(f)
 
-		rendered, err := c.RenderComposeYAML()
+		rendered, err := app.RenderComposeYAML()
 		if err != nil {
 			return err
 		}
