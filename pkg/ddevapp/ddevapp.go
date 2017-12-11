@@ -46,11 +46,9 @@ const SiteConfigMissing = ".ddev/config.yaml missing"
 // SiteStopped defines the string used to denote when a site is in the stopped state.
 const SiteStopped = "stopped"
 
-// DdevApp is the struct that represents a ddev app, including its config
+// DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	AppConfig *Config
-
 	APIVersion            string               `yaml:"APIVersion"`
 	Name                  string               `yaml:"name"`
 	AppType               string               `yaml:"type"`
@@ -869,7 +867,7 @@ func (app *DdevApp) Down(removeData bool) error {
 			}
 		}
 		// Check that app.DataDir is a directory that is safe to remove.
-		err = validateDataDirRemoval(app.AppConfig)
+		err = validateDataDirRemoval(app)
 		if err != nil {
 			return fmt.Errorf("failed to remove data directories: %v", err)
 		}
@@ -1048,8 +1046,8 @@ func restoreApp(app *DdevApp, siteName string) error {
 }
 
 // validateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
-func validateDataDirRemoval(config *Config) error {
-	dataDir := config.DataDir
+func validateDataDirRemoval(app *DdevApp) error {
+	dataDir := app.DataDir
 	unsafeFilePathErr := fmt.Errorf("filepath: %s unsafe for removal", dataDir)
 	// Check for an empty filepath
 	if dataDir == "" {
@@ -1067,7 +1065,7 @@ func validateDataDirRemoval(config *Config) error {
 	// Get the last element of dataDir and use it to check that there is something after GlobalDdevDir.
 	lastPathElem := filepath.Base(dataDir)
 	nextLastPathElem := filepath.Base(filepath.Dir(dataDir))
-	if lastPathElem == ".ddev" || nextLastPathElem != config.Name || lastPathElem == "" {
+	if lastPathElem == ".ddev" || nextLastPathElem != app.Name || lastPathElem == "" {
 		return unsafeFilePathErr
 	}
 	return nil

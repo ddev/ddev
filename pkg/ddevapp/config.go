@@ -34,27 +34,6 @@ var AllowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
-// Config defines the yaml config file format for ddev applications
-type Config struct {
-	APIVersion            string               `yaml:"APIVersion"`
-	Name                  string               `yaml:"name"`
-	AppType               string               `yaml:"type"`
-	Docroot               string               `yaml:"docroot"`
-	WebImage              string               `yaml:"webimage"`
-	DBImage               string               `yaml:"dbimage"`
-	DBAImage              string               `yaml:"dbaimage"`
-	ConfigPath            string               `yaml:"-"`
-	AppRoot               string               `yaml:"-"`
-	Platform              string               `yaml:"-"`
-	Provider              string               `yaml:"provider,omitempty"`
-	DataDir               string               `yaml:"-"`
-	ImportDir             string               `yaml:"-"`
-	SiteSettingsPath      string               `yaml:"-"`
-	SiteLocalSettingsPath string               `yaml:"-"`
-	providerInstance      Provider             `yaml:"-"`
-	Commands              map[string][]Command `yaml:"hooks,omitempty"`
-}
-
 // Command defines commands to be run as pre/post hooks
 type Command struct {
 	Exec     string `yaml:"exec,omitempty"`
