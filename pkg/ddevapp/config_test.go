@@ -89,11 +89,11 @@ func TestHostName(t *testing.T) {
 	testDir := testcommon.CreateTmpDir("TestHostName")
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
-	config, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
-	config.Name = util.RandString(32)
+	app.Name = util.RandString(32)
 
-	assert.Equal(config.Hostname(), config.Name+"."+version.DDevTLD)
+	assert.Equal(app.GetHostname(), app.Name+"."+version.DDevTLD)
 }
 
 // TestWriteDockerComposeYaml tests the writing of a docker-compose.yaml file.
