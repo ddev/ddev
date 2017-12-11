@@ -198,9 +198,9 @@ func TestRead(t *testing.T) {
 		Provider:   DefaultProviderName,
 	}
 
-	err := c.Read()
+	err := c.ReadConfig()
 	if err != nil {
-		t.Fatalf("Unable to c.Read(), err: %v", err)
+		t.Fatalf("Unable to c.ReadConfig(), err: %v", err)
 	}
 
 	// Values not defined in file, we should still have default values

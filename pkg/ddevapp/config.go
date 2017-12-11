@@ -79,7 +79,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.ConfigPath = filepath.Join(AppRoot, ".ddev", "config.yaml")
 
 	app.AppRoot = AppRoot
-	app.ConfigPath = c.GetPath("config.yaml")
+	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.APIVersion = CurrentAppVersion
 
 	// These should always default to the latest image/tag names from the Version package.
@@ -90,7 +90,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
 	if _, err := os.Stat(app.ConfigPath); !os.IsNotExist(err) {
-		err = app.Read()
+		err = app.ReadConfig()
 		if err != nil {
 			return app, fmt.Errorf("%v exists but cannot be read: %v", app.ConfigPath, err)
 		}
@@ -152,11 +152,11 @@ func (app *DdevApp) WriteConfig() error {
 	return provider.Write(app.GetConfigPath("import.yaml"))
 }
 
-// Read app configuration from a specified location on disk, falling back to defaults for config
-// values not defined in the read config file.
-func (c *Config) Read() error {
+// ReadConfig reads app configuration from a specified location on disk, falling
+// back to defaults for config values not defined in the read config file.
+func (app *DdevApp) ReadConfig() error {
 
-	source, err := ioutil.ReadFile(c.ConfigPath)
+	source, err := ioutil.ReadFile(app.ConfigPath)
 	if err != nil {
 		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", c.ConfigPath, err)
 	}
@@ -164,34 +164,34 @@ func (c *Config) Read() error {
 	// validate extend command keys
 	err = validateCommandYaml(source)
 	if err != nil {
-		return fmt.Errorf("invalid configuration in %s: %v", c.ConfigPath, err)
+		return fmt.Errorf("invalid configuration in %s: %v", app.ConfigPath, err)
 	}
 
-	// Read config values from file.
-	err = yaml.Unmarshal(source, c)
+	// ReadConfig config values from file.
+	err = yaml.Unmarshal(source, app)
 	if err != nil {
 		return err
 	}
 
 	// If any of these values aren't defined in the config file, set them to defaults.
-	if c.Name == "" {
-		c.Name = filepath.Base(c.AppRoot)
+	if app.Name == "" {
+		app.Name = filepath.Base(app.AppRoot)
 	}
-	if c.WebImage == "" {
-		c.WebImage = version.WebImg + ":" + version.WebTag
+	if app.WebImage == "" {
+		app.WebImage = version.WebImg + ":" + version.WebTag
 	}
-	if c.DBImage == "" {
-		c.DBImage = version.DBImg + ":" + version.DBTag
+	if app.DBImage == "" {
+		app.DBImage = version.DBImg + ":" + version.DBTag
 	}
-	if c.DBAImage == "" {
-		c.DBAImage = version.DBAImg + ":" + version.DBATag
+	if app.DBAImage == "" {
+		app.DBAImage = version.DBAImg + ":" + version.DBATag
 	}
 
 	dirPath := filepath.Join(util.GetGlobalDdevDir(), c.Name)
-	c.DataDir = filepath.Join(dirPath, "mysql")
-	c.ImportDir = filepath.Join(dirPath, "import-db")
+	app.DataDir = filepath.Join(dirPath, "mysql")
+	app.ImportDir = filepath.Join(dirPath, "import-db")
 
-	c.setSiteSettingsPaths(c.AppType)
+	app.setSiteSettingsPaths(app.AppType)
 
 	return err
 }
@@ -471,8 +471,8 @@ func DetermineAppType(basePath string) (string, error) {
 }
 
 // setSiteSettingsPath determines the location for site's db settings file based on apptype.
-func (c *Config) setSiteSettingsPaths(appType string) {
-	settingsFileBasePath := filepath.Join(c.AppRoot, c.Docroot)
+func (app *DdevApp) setSiteSettingsPaths(appType string) {
+	settingsFileBasePath := filepath.Join(c.AppRoot, app.Docroot)
 	var settingsFilePath, localSettingsFilePath string
 	switch appType {
 	case "drupal8":
@@ -485,8 +485,8 @@ func (c *Config) setSiteSettingsPaths(appType string) {
 		localSettingsFilePath = filepath.Join(settingsFileBasePath, "wp-config-local.php")
 	}
 
-	c.SiteSettingsPath = settingsFilePath
-	c.SiteLocalSettingsPath = localSettingsFilePath
+	app.SiteSettingsPath = settingsFilePath
+	app.SiteLocalSettingsPath = localSettingsFilePath
 }
 
 // validateCommandYaml validates command hooks and tasks defined in hooks for config.yaml
