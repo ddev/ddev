@@ -548,7 +548,7 @@ func TestDescribeMissingDirectory(t *testing.T) {
 
 	desc, err := app.Describe()
 	assert.NoError(err)
-	assert.Contains(desc["status"], ddevapp.SiteDirMissing, "Status did not include the phrase 'app directory missing' when describing a site with missing directories.")
+	assert.Contains(desc["status"], ddevapp.SiteDirMissing, "Status did not include the phrase '%s' when describing a site with missing directories.", ddevapp.SiteDirMissing)
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
@@ -728,7 +728,7 @@ func TestListWithoutDir(t *testing.T) {
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(testDir, "")
+	app, err := ddevapp.NewApp(testDir, ddevapp.DefaultProviderName)
 	assert.NoError(err)
 	app.Name = "junk"
 	app.AppType = "drupal7"
@@ -766,7 +766,7 @@ func TestListWithoutDir(t *testing.T) {
 
 		ddevapp.RenderAppRow(table, desc)
 	}
-	assert.Contains(table.String(), fmt.Sprintf("app directory missing: %s", testDir))
+	assert.Contains(table.String(), fmt.Sprintf("%s: %s", ddevapp.SiteDirMissing, testDir))
 
 	err = app.Down(true)
 	assert.NoError(err)

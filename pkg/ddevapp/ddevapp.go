@@ -931,7 +931,7 @@ func (app *DdevApp) AddHostsEntry() error {
 
 	_, err = osexec.Command("sudo", "-h").Output()
 	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
-		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s", dockerIP, app.HostName(), app.HostName(), dockerIP)
+		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", dockerIP, app.HostName(), app.HostName(), dockerIP)
 		return nil
 	}
 
