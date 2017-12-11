@@ -150,26 +150,26 @@ func TestPantheonPull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
-	config, err := NewApp(siteDir, "pantheon")
+	app, err := NewApp(siteDir, "pantheon")
 	assert.NoError(err)
-	config.Name = pantheonTestSiteName
-	config.AppType = "drupal8"
-	err = config.Write()
+	app.Name = pantheonTestSiteName
+	app.AppType = "drupal8"
+	err = app.WriteConfig()
 	assert.NoError(err)
 
 	testcommon.ClearDockerEnv()
 
 	provider := PantheonProvider{}
-	err = provider.Init(config)
+	err = provider.Init(app)
 	assert.NoError(err)
 
 	provider.Sitename = pantheonTestSiteName
 	provider.EnvironmentName = pantheonTestEnvName
-	err = provider.Write(config.GetConfigPath("import.yaml"))
+	err = provider.Write(app.GetConfigPath("import.yaml"))
 	assert.NoError(err)
 
 	// Ensure we can do a pull on the configured site.
-	app, err := GetActiveApp("")
+	app, err = GetActiveApp("")
 	assert.NoError(err)
 	err = app.Import()
 	assert.NoError(err)

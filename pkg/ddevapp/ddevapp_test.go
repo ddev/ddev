@@ -417,12 +417,10 @@ func TestProcessHooks(t *testing.T) {
 			},
 		}
 
-		l := &ddevapp.DdevApp{
-			AppConfig: conf,
-		}
+		app := &ddevapp.DdevApp{}
 
 		stdout := testcommon.CaptureUserOut()
-		err = l.ProcessHooks("hook-test")
+		err = app.ProcessHooks("hook-test")
 		assert.NoError(err)
 		out := stdout()
 
@@ -730,15 +728,15 @@ func TestListWithoutDir(t *testing.T) {
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
-	config, err := ddevapp.NewApp(testDir, "")
+	app, err := ddevapp.NewApp(testDir, "")
 	assert.NoError(err)
-	config.Name = "junk"
-	config.AppType = "drupal7"
-	err = config.Write()
+	app.Name = "junk"
+	app.AppType = "drupal7"
+	err = app.WriteConfig()
 	assert.NoError(err)
 
 	// Do a start on the configured site.
-	app, err := ddevapp.GetActiveApp("")
+	app, err = ddevapp.GetActiveApp("")
 	assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)
