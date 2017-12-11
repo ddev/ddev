@@ -151,8 +151,8 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		dbinfo["published_port"] = fmt.Sprint(dockerutil.GetPublishedPort(dbPrivatePort, db))
 		appDesc["dbinfo"] = dbinfo
 
-		appDesc["mailhog_url"] = app.URL() + ":" + appports.GetPort("mailhog")
-		appDesc["phpmyadmin_url"] = app.URL() + ":" + appports.GetPort("dba")
+		appDesc["mailhog_url"] = app.GetURL() + ":" + appports.GetPort("mailhog")
+		appDesc["phpmyadmin_url"] = app.GetURL() + ":" + appports.GetPort("dba")
 	}
 
 	appDesc["router_status"] = GetRouterStatus()
@@ -275,7 +275,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 	}
 
 	if app.GetType() == "wordpress" {
-		util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec 'wp search-replace [http://www.myproductionsite.example] %s'\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", app.URL())
+		util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec 'wp search-replace [http://www.myproductionsite.example] %s'\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", app.GetURL())
 	}
 
 	err = fileutil.PurgeDirectory(dbPath)
@@ -675,7 +675,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_DOCROOT":         app.Docroot,
 		"DDEV_DATADIR":         app.DataDir,
 		"DDEV_IMPORTDIR":       app.ImportDir,
-		"DDEV_URL":             app.URL(),
+		"DDEV_URL":             app.GetURL(),
 		"DDEV_HOSTNAME":        app.HostName(),
 		"DDEV_UID":             "",
 		"DDEV_GID":             "",
@@ -816,7 +816,7 @@ func (app *DdevApp) CreateSettingsFile() error {
 			drushConfig.IsDrupal8 = true
 		}
 
-		drupalConfig.DeployURL = app.URL()
+		drupalConfig.DeployURL = app.GetURL()
 		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
 		if err != nil {
 			return err
@@ -830,7 +830,7 @@ func (app *DdevApp) CreateSettingsFile() error {
 	case "wordpress":
 		output.UserOut.Printf("Generating %s file for database connection.", fileName)
 		wpConfig := model.NewWordpressConfig()
-		wpConfig.DeployURL = app.URL()
+		wpConfig.DeployURL = app.GetURL()
 		err := config.WriteWordpressConfig(wpConfig, settingsFilePath)
 		if err != nil {
 			return err
@@ -893,8 +893,8 @@ func (app *DdevApp) Down(removeData bool) error {
 	return err
 }
 
-// URL returns the URL for a given application.
-func (app *DdevApp) URL() string {
+// GetURL returns the URL for an app.
+func (app *DdevApp) GetURL() string {
 	return "http://" + app.GetHostname()
 }
 

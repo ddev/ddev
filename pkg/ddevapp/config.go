@@ -40,7 +40,7 @@ type Command struct {
 	ExecHost string `yaml:"exec-host,omitempty"`
 }
 
-// Provider in the interface which all provider plugins must implement.
+// Provider is the interface which all provider plugins must implement.
 type Provider interface {
 	Init(app *DdevApp) error
 	ValidateField(string, string) error
@@ -51,7 +51,7 @@ type Provider interface {
 	GetBackup(string) (fileLocation string, importPath string, err error)
 }
 
-// NewApp creates a new Config struct with defaults set and overridden by any existing config.yml.
+// NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
 func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	// Set defaults.
 	app := &DdevApp{}

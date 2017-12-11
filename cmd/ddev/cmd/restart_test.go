@@ -29,7 +29,7 @@ func TestDevRestart(t *testing.T) {
 		}
 
 		assert.Contains(string(out), "Your application can be reached at")
-		assert.Contains(string(out), app.URL())
+		assert.Contains(string(out), app.GetURL())
 
 		cleanup()
 	}
@@ -71,7 +71,7 @@ func TestDevRestartJSON(t *testing.T) {
 
 		// Go ahead and look for normal strings within the json output.
 		assert.Contains(string(out), "Your application can be reached at")
-		assert.Contains(string(out), app.URL())
+		assert.Contains(string(out), app.GetURL())
 
 		cleanup()
 	}

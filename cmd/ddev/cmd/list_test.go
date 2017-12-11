@@ -38,7 +38,7 @@ func TestDevList(t *testing.T) {
 
 		// Look for standard items in the regular ddev list output
 		assert.Contains(string(out), v.Name)
-		assert.Contains(string(out), app.URL())
+		assert.Contains(string(out), app.GetURL())
 		assert.Contains(string(out), app.GetType())
 		assert.Contains(string(out), ddevapp.RenderHomeRootedDir(app.GetAppRoot()))
 
