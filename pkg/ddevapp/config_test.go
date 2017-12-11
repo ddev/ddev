@@ -93,7 +93,7 @@ func TestHostName(t *testing.T) {
 	assert.NoError(err)
 	config.Name = util.RandString(32)
 
-	assert.Equal(config.Hostname(), config.Name+"."+DDevTLD)
+	assert.Equal(config.Hostname(), config.Name+"."+version.DDevTLD)
 }
 
 // TestWriteDockerComposeYaml tests the writing of a docker-compose.yaml file.
