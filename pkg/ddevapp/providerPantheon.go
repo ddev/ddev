@@ -41,8 +41,10 @@ func (p *PantheonProvider) Init(app *DdevApp) error {
 	return err
 }
 
-// ValidateField provides field level validation for config settings. This is used any time a field is set via `ddev app` on the primary app config, and allows
-// provider plugins to have additional validation for top level config settings.
+// ValidateField provides field level validation for config settings. This is
+// used any time a field is set via `ddev config` on the primary app config, and
+// allows provider plugins to have additional validation for top level config
+// settings.
 func (p *PantheonProvider) ValidateField(field, value string) error {
 	switch field {
 	case "Name":
