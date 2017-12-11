@@ -403,10 +403,10 @@ func TestProcessHooks(t *testing.T) {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
 		testcommon.ClearDockerEnv()
-		conf, err := ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
+		app, err := ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
 		assert.NoError(err)
 
-		conf.Commands = map[string][]ddevapp.Command{
+		app.Commands = map[string][]ddevapp.Command{
 			"hook-test": {
 				{
 					Exec: "pwd",
@@ -416,8 +416,6 @@ func TestProcessHooks(t *testing.T) {
 				},
 			},
 		}
-
-		app := &ddevapp.DdevApp{}
 
 		stdout := testcommon.CaptureUserOut()
 		err = app.ProcessHooks("hook-test")
