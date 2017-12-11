@@ -78,19 +78,19 @@ func (site *TestSite) Prepare() error {
 		return fmt.Errorf("Failed to CopyDir from %s to %s, err=%v", cachedSrcDir, site.Dir, err)
 	}
 
-	// Create a config object. Err is ignored as we may not have
+	// Create an app. Err is ignored as we may not have
 	// a config file to read in from a test site.
-	config, _ := ddevapp.NewApp(site.Dir, "")
+	app, _ := ddevapp.NewApp(site.Dir, "")
 
-	// Set site name to the name we define for test sites. We'll
-	// ignore site name defined in config file if present.
-	config.Name = site.Name
+	// Set app name to the name we define for test sites. We'll
+	// ignore app name defined in config file if present.
+	app.Name = site.Name
 
-	if config.AppType == "" {
-		config.AppType = site.AppType
+	if app.AppType == "" {
+		app.AppType = site.AppType
 	}
 
-	err = config.Write()
+	err = app.WriteConfig()
 	if err != nil {
 		return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", site.Name, site.Dir, err)
 	}

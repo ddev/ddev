@@ -29,11 +29,10 @@ type PantheonProvider struct {
 }
 
 // Init handles loading data from saved config.
-func (p *PantheonProvider) Init(config *Config) error {
+func (p *PantheonProvider) Init(app *DdevApp) error {
 	var err error
-	p.config = config
 
-	configPath := config.GetPath("import.yaml")
+	configPath := app.GetConfigPath("import.yaml")
 	if fileutil.FileExists(configPath) {
 		err = p.Read(configPath)
 	}

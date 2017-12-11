@@ -63,7 +63,7 @@ type Command struct {
 
 // Provider in the interface which all provider plugins must implement.
 type Provider interface {
-	Init(*Config) error
+	Init(app *DdevApp) error
 	ValidateField(string, string) error
 	PromptForConfig() error
 	Write(string) error
@@ -102,7 +102,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
 	} else if provider == "pantheon" || provider == DefaultProviderName {
 		app.Provider = provider // Use the provider passed-in. Function argument wins.
-	} else if provider == "" && c.Provider == "" {
+	} else if provider == "" && app.Provider == "" {
 		app.Provider = DefaultProviderName // Nothing passed in, nothing configured. Set c.Provider to default
 	} else {
 		return app, fmt.Errorf("Provider '%s' is not implemented", provider)
@@ -139,7 +139,7 @@ func (app *DdevApp) WriteConfig() error {
 		cfgbytes = append(cfgbytes, []byte(WordPressHooks)...)
 	}
 
-	err = ioutil.WriteFile(c.ConfigPath, cfgbytes, 0644)
+	err = ioutil.WriteFile(app.ConfigPath, cfgbytes, 0644)
 	if err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func (app *DdevApp) ReadConfig() error {
 
 	source, err := ioutil.ReadFile(app.ConfigPath)
 	if err != nil {
-		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", c.ConfigPath, err)
+		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", app.ConfigPath, err)
 	}
 
 	// validate extend command keys
@@ -187,7 +187,7 @@ func (app *DdevApp) ReadConfig() error {
 		app.DBAImage = version.DBAImg + ":" + version.DBATag
 	}
 
-	dirPath := filepath.Join(util.GetGlobalDdevDir(), c.Name)
+	dirPath := filepath.Join(util.GetGlobalDdevDir(), app.Name)
 	app.DataDir = filepath.Join(dirPath, "mysql")
 	app.ImportDir = filepath.Join(dirPath, "import-db")
 
@@ -197,22 +197,22 @@ func (app *DdevApp) ReadConfig() error {
 }
 
 // WarnIfConfigReplace just messages user about whether config is being replaced or created
-func (c *Config) WarnIfConfigReplace() {
-	if c.ConfigExists() {
-		util.Warning("You are reconfiguring the app at %s. \nThe existing configuration will be updated and replaced.", c.AppRoot)
+func (app *DdevApp) WarnIfConfigReplace() {
+	if app.ConfigExists() {
+		util.Warning("You are reconfiguring the app at %s. \nThe existing configuration will be updated and replaced.", app.AppRoot)
 	} else {
-		util.Success("Creating a new ddev project config in the current directory (%s)", c.AppRoot)
-		util.Success("Once completed, your configuration will be written to %s\n", c.ConfigPath)
+		util.Success("Creating a new ddev project config in the current directory (%s)", app.AppRoot)
+		util.Success("Once completed, your configuration will be written to %s\n", app.ConfigPath)
 	}
 }
 
 // PromptForConfig goes through a set of prompts to receive user input and generate an Config struct.
-func (c *Config) PromptForConfig() error {
+func (app *DdevApp) PromptForConfig() error {
 
-	c.WarnIfConfigReplace()
+	app.WarnIfConfigReplace()
 
 	for {
-		err := c.namePrompt()
+		err := app.appNamePrompt()
 
 		if err == nil {
 			break
@@ -222,7 +222,7 @@ func (c *Config) PromptForConfig() error {
 	}
 
 	for {
-		err := c.docrootPrompt()
+		err := app.docrootPrompt()
 
 		if err == nil {
 			break
@@ -231,47 +231,48 @@ func (c *Config) PromptForConfig() error {
 		output.UserOut.Printf("%v", err)
 	}
 
-	err := c.appTypePrompt()
+	err := app.appTypePrompt()
 	if err != nil {
 		return err
 	}
 
-	err = c.providerInstance.PromptForConfig()
+	err = app.providerInstance.PromptForConfig()
 
 	return err
 }
 
-// Validate ensures the configuration meets ddev's requirements.
-func (c *Config) Validate() error {
+// ValidateConfig ensures the configuration meets ddev's requirements.
+func (app *DdevApp) ValidateConfig() error {
 	// validate docroot
-	fullPath := filepath.Join(c.AppRoot, c.Docroot)
+	fullPath := filepath.Join(app.AppRoot, app.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		return fmt.Errorf("no directory could be found at %s. Please enter a valid docroot in your configuration", fullPath)
 	}
 
 	// validate hostname
-	match := hostRegex.MatchString(c.GetHostname())
+	match := hostRegex.MatchString(app.GetHostname())
 	if !match {
-		return fmt.Errorf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", c.GetHostname())
+		return fmt.Errorf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname())
 	}
 
 	// validate apptype
-	match = IsAllowedAppType(c.AppType)
+	match = IsAllowedAppType(app.AppType)
 	if !match {
-		return fmt.Errorf("'%s' is not a valid apptype", c.AppType)
+		return fmt.Errorf("'%s' is not a valid apptype", app.AppType)
 	}
 
 	return nil
 }
 
-// DockerComposeYAMLPath returns the absolute path to where the docker-compose.yaml should exist for this app configuration.
+// DockerComposeYAMLPath returns the absolute path to where the
+// docker-compose.yaml should exist for this app.
 func (app *DdevApp) DockerComposeYAMLPath() string {
 	return app.GetConfigPath("docker-compose.yaml")
 }
 
-// GetHostname returns the hostname to the app controlled by this config.
-func (c *Config) GetHostname() string {
-	return c.Name + "." + version.DDevTLD
+// GetHostname returns the hostname of the app.
+func (app *DdevApp) GetHostname() string {
+	return app.Name + "." + version.DDevTLD
 }
 
 // WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.
@@ -300,7 +301,7 @@ func (app *DdevApp) WriteDockerComposeConfig() error {
 }
 
 // RenderComposeYAML renders the contents of docker-compose.yaml.
-func (c *Config) RenderComposeYAML() (string, error) {
+func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
 	templ := template.New("compose template")
@@ -309,9 +310,9 @@ func (c *Config) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 	templateVars := map[string]string{
-		"name":        c.Name,
+		"name":        app.Name,
 		"plugin":      "ddev",
-		"appType":     c.AppType,
+		"appType":     app.AppType,
 		"mailhogport": appports.GetPort("mailhog"),
 		"dbaport":     appports.GetPort("dba"),
 		"dbport":      appports.GetPort("db"),
@@ -322,67 +323,67 @@ func (c *Config) RenderComposeYAML() (string, error) {
 }
 
 // Define an application name.
-func (c *Config) namePrompt() error {
-	provider, err := c.GetProvider()
+func (app *DdevApp) appNamePrompt() error {
+	provider, err := app.GetProvider()
 	if err != nil {
 		return err
 	}
 
 	namePrompt := "Project name"
-	if c.Name == "" {
+	if app.Name == "" {
 		dir, err := os.Getwd()
 		// if working directory name is invalid for hostnames, we shouldn't suggest it
 		if err == nil && hostRegex.MatchString(filepath.Base(dir)) {
 
-			c.Name = filepath.Base(dir)
+			app.Name = filepath.Base(dir)
 		}
 	}
 
-	namePrompt = fmt.Sprintf("%s (%s)", namePrompt, c.Name)
+	namePrompt = fmt.Sprintf("%s (%s)", namePrompt, app.Name)
 	fmt.Print(namePrompt + ": ")
-	c.Name = util.GetInput(c.Name)
-	return provider.ValidateField("Name", c.Name)
+	app.Name = util.GetInput(app.Name)
+	return provider.ValidateField("Name", app.Name)
 }
 
 // Determine the document root.
-func (c *Config) docrootPrompt() error {
-	provider, err := c.GetProvider()
+func (app *DdevApp) docrootPrompt() error {
+	provider, err := app.GetProvider()
 	if err != nil {
 		return err
 	}
 
 	// Determine the document root.
-	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)", c.AppRoot)
+	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)", app.AppRoot)
 	output.UserOut.Println("You may leave this value blank if your site files are in the application root")
 	var docrootPrompt = "Docroot Location"
-	if c.Docroot != "" {
-		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, c.Docroot)
+	if app.Docroot != "" {
+		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, app.Docroot)
 	}
 
 	fmt.Print(docrootPrompt + ": ")
-	c.Docroot = util.GetInput(c.Docroot)
+	app.Docroot = util.GetInput(app.Docroot)
 
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
-	fullPath := filepath.Join(c.AppRoot, c.Docroot)
+	fullPath := filepath.Join(app.AppRoot, app.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		output.UserOut.Errorf("No directory could be found at %s. Please enter a valid docroot\n", fullPath)
-		c.Docroot = ""
-		return c.docrootPrompt()
+		app.Docroot = ""
+		return app.docrootPrompt()
 	}
-	return provider.ValidateField("Docroot", c.Docroot)
+	return provider.ValidateField("Docroot", app.Docroot)
 }
 
 // ConfigExists determines if a ddev config file exists for this application.
-func (c *Config) ConfigExists() bool {
-	if _, err := os.Stat(c.ConfigPath); os.IsNotExist(err) {
+func (app *DdevApp) ConfigExists() bool {
+	if _, err := os.Stat(app.ConfigPath); os.IsNotExist(err) {
 		return false
 	}
 	return true
 }
 
 // appTypePrompt handles the AppType workflow.
-func (c *Config) appTypePrompt() error {
-	provider, err := c.GetProvider()
+func (app *DdevApp) appTypePrompt() error {
+	provider, err := app.GetProvider()
 	if err != nil {
 		return err
 	}
@@ -390,7 +391,7 @@ func (c *Config) appTypePrompt() error {
 	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(AllowedAppTypes, ", "))
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
-	absDocroot := filepath.Join(c.AppRoot, c.Docroot)
+	absDocroot := filepath.Join(app.AppRoot, app.Docroot)
 	log.WithFields(log.Fields{
 		"Location": absDocroot,
 	}).Debug("Attempting to auto-determine application type")
@@ -398,22 +399,22 @@ func (c *Config) appTypePrompt() error {
 	appType, err = DetermineAppType(absDocroot)
 	if err == nil {
 		// If we found an application type just set it and inform the user.
-		util.Success("Found a %s codebase at %s.", appType, filepath.Join(c.AppRoot, c.Docroot))
-		c.AppType = appType
-		return provider.ValidateField("AppType", c.AppType)
+		util.Success("Found a %s codebase at %s.", appType, filepath.Join(app.AppRoot, app.Docroot))
+		app.AppType = appType
+		return provider.ValidateField("AppType", app.AppType)
 	}
-	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, c.AppType)
+	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, app.AppType)
 
 	for IsAllowedAppType(appType) != true {
 		fmt.Printf(typePrompt + ": ")
-		appType = strings.ToLower(util.GetInput(c.AppType))
+		appType = strings.ToLower(util.GetInput(app.AppType))
 
 		if IsAllowedAppType(appType) != true {
 			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(AllowedAppTypes, ", "))
 		}
-		c.AppType = appType
+		app.AppType = appType
 	}
-	return provider.ValidateField("AppType", c.AppType)
+	return provider.ValidateField("AppType", app.AppType)
 }
 
 // IsAllowedAppType determines if a given string exists in the AllowedAppTypes slice.
@@ -472,7 +473,7 @@ func DetermineAppType(basePath string) (string, error) {
 
 // setSiteSettingsPath determines the location for site's db settings file based on apptype.
 func (app *DdevApp) setSiteSettingsPaths(appType string) {
-	settingsFileBasePath := filepath.Join(c.AppRoot, app.Docroot)
+	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	var settingsFilePath, localSettingsFilePath string
 	switch appType {
 	case "drupal8":

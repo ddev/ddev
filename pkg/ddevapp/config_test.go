@@ -226,23 +226,23 @@ func TestValidate(t *testing.T) {
 		AppType: "wordpress",
 	}
 
-	err = c.Validate()
+	err = c.ValidateConfig()
 	if err != nil {
-		t.Fatalf("Failed to c.Validate(), err=%v", err)
+		t.Fatalf("Failed to c.ValidateConfig(), err=%v", err)
 	}
 
 	c.Name = "Invalid!"
-	err = c.Validate()
+	err = c.ValidateConfig()
 	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", c.GetHostname()))
 
 	c.Name = "valid"
 	c.Docroot = "invalid"
-	err = c.Validate()
+	err = c.ValidateConfig()
 	assert.EqualError(err, fmt.Sprintf("no directory could be found at %s. Please enter a valid docroot in your configuration", filepath.Join(cwd, c.Docroot)))
 
 	c.Docroot = "testdata"
 	c.AppType = "potato"
-	err = c.Validate()
+	err = c.ValidateConfig()
 	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", c.AppType))
 }
 
