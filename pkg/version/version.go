@@ -45,3 +45,6 @@ var COMMIT = "COMMIT should be overridden"
 
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
+
+// DDevTLD defines the tld to use for DDev site URLs.
+const DDevTLD = "ddev.local"

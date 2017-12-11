@@ -28,9 +28,6 @@ const DefaultProviderName = "default"
 // We're not doing anything with AppVersion, so just default it to 1 for now.
 const CurrentAppVersion = "1"
 
-// DDevTLD defines the tld to use for DDev site URLs.
-const DDevTLD = "ddev.local"
-
 // AllowedAppTypes lists the types of site/app that can be used.
 var AllowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
 
@@ -298,7 +295,7 @@ func (c *Config) DockerComposeYAMLPath() string {
 
 // Hostname returns the hostname to the app controlled by this config.
 func (c *Config) Hostname() string {
-	return c.Name + "." + DDevTLD
+	return c.Name + "." + version.DDevTLD
 }
 
 // WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.
