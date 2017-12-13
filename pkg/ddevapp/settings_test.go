@@ -1,4 +1,4 @@
-package config_test
+package ddevapp
 
 import (
 	"testing"
@@ -7,8 +7,6 @@ import (
 
 	"io/ioutil"
 
-	"github.com/drud/ddev/pkg/cms/config"
-	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
@@ -20,8 +18,8 @@ func TestWriteDrupalConfig(t *testing.T) {
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
 
-	drupalConfig := model.NewDrupalConfig()
-	err = config.WriteDrupalConfig(drupalConfig, file.Name())
+	drupalConfig := NewDrupalConfig()
+	err = WriteDrupalSettingsFile(drupalConfig, file.Name())
 	assert.NoError(t, err)
 
 	util.CheckClose(file)
@@ -41,8 +39,8 @@ func TestWriteDrushConfig(t *testing.T) {
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
 
-	drushConfig := model.NewDrushConfig()
-	err = config.WriteDrushConfig(drushConfig, file.Name())
+	drushConfig := NewDrushConfig()
+	err = WriteDrushConfig(drushConfig, file.Name())
 	assert.NoError(t, err)
 
 	util.CheckClose(file)
@@ -62,8 +60,8 @@ func TestWriteWordpressConfig(t *testing.T) {
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
 
-	wpConfig := model.NewWordpressConfig()
-	err = config.WriteWordpressConfig(wpConfig, file.Name())
+	wpConfig := NewWordpressConfig()
+	err = WriteWordpressConfig(wpConfig, file.Name())
 	assert.NoError(t, err)
 
 	util.CheckClose(file)

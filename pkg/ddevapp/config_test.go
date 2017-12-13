@@ -37,7 +37,7 @@ func TestNewConfig(t *testing.T) {
 	app.Name = util.RandString(32)
 	app.Type = "drupal8"
 
-	// WriteConfig the newConfig.
+	// WriteConfig the app.
 	err = app.WriteConfig()
 	assert.NoError(err)
 	_, err = os.Stat(app.ConfigPath)
@@ -53,13 +53,13 @@ func TestNewConfig(t *testing.T) {
 // TestAllowedAppType tests the IsAllowedAppType function.
 func TestAllowedAppTypes(t *testing.T) {
 	assert := asrt.New(t)
-	for _, v := range AllowedAppTypes {
-		assert.True(IsAllowedAppType(v))
+	for _, v := range GetAllowedAppTypes() {
+		assert.True(IsValidAppType(v))
 	}
 
 	for i := 1; i <= 50; i++ {
 		randomType := util.RandString(32)
-		assert.False(IsAllowedAppType(randomType))
+		assert.False(IsValidAppType(randomType))
 	}
 }
 
@@ -83,7 +83,7 @@ func TestPrepDirectory(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestHostName tests that the config.GetHostname() field returns the hostname as expected.
+// TestHostName tests that the TestSite.Hostname() field returns the hostname as expected.
 func TestHostName(t *testing.T) {
 	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestHostName")
@@ -107,7 +107,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
-	app.Type = AllowedAppTypes[0]
+	app.Type = GetAllowedAppTypes()[0]
 
 	// WriteConfig a config to create/prep necessary directories.
 	err = app.WriteConfig()

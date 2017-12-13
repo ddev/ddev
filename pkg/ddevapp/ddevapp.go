@@ -2,13 +2,13 @@ package ddevapp
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 
 	"strings"
 
-	"net/url"
 	osexec "os/exec"
 
 	"os/user"
@@ -17,8 +17,6 @@ import (
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/cms/config"
-	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -45,6 +43,10 @@ const SiteConfigMissing = ".ddev/config.yaml missing"
 
 // SiteStopped defines the string used to denote when a site is in the stopped state.
 const SiteStopped = "stopped"
+
+// DdevSettingsFileSignature is the text we use to detect whether a settings file is managed by us.
+// If this string is found, we assume we can replace/update the settings file.
+const DdevSettingsFileSignature = "#ddev-generated"
 
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
@@ -275,7 +277,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		return err
 	}
 
-	err = app.CreateSettingsFile()
+	err = CreateSettingsFile(app)
 	if err != nil {
 		if err.Error() != "app config exists" {
 			return fmt.Errorf("failed to write configuration file for %s: %v", app.GetName(), err)
@@ -284,6 +286,8 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		util.Warning("Run 'ddev describe' to find the database credentials for this application.")
 	}
 
+	// @todo: We need a post-import warning hook for this
+	// instead of putting it inline here.
 	if app.GetType() == "wordpress" {
 		util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec 'wp search-replace [http://www.myproductionsite.example] %s'\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", app.GetURL())
 	}
@@ -748,12 +752,14 @@ func (app *DdevApp) Wait(containerTypes ...string) error {
 	return nil
 }
 
-func (app *DdevApp) determineSettingsPath() (string, error) {
+// DetermineDrupalSettingsPath figures out the path to the settings file for a
+// Drupal app.
+func (app *DdevApp) DetermineDrupalSettingsPath() (string, error) {
 	possibleLocations := []string{app.SiteSettingsPath, app.SiteLocalSettingsPath}
 	for _, loc := range possibleLocations {
 		// If the file is found we need to check for a signature to determine if it's safe to use.
 		if fileutil.FileExists(loc) {
-			signatureFound, err := fileutil.FgrepStringInFile(loc, model.DdevSettingsFileSignature)
+			signatureFound, err := fileutil.FgrepStringInFile(loc, DdevSettingsFileSignature)
 			util.CheckErr(err) // Really can't happen as we already checked for the file existence
 
 			if signatureFound {
@@ -776,7 +782,7 @@ func (app *DdevApp) CreateSettingsFile() error {
 		return nil
 	}
 
-	settingsFilePath, err := app.determineSettingsPath()
+	settingsFilePath, err := app.DetermineDrupalSettingsPath()
 	if err != nil {
 		return err
 	}
@@ -800,6 +806,7 @@ func (app *DdevApp) CreateSettingsFile() error {
 
 	fileName := filepath.Base(settingsFilePath)
 
+	// @todo: This needs to be removed and use the proper app hooks
 	switch app.GetType() {
 	case "drupal8":
 		fallthrough
@@ -819,8 +826,8 @@ func (app *DdevApp) CreateSettingsFile() error {
 		}
 		dbPublishPort := dockerutil.GetPublishedPort(dbPrivatePort, db)
 
-		drupalConfig := model.NewDrupalConfig()
-		drushConfig := model.NewDrushConfig()
+		drupalConfig := NewDrupalConfig()
+		drushConfig := NewDrushConfig()
 
 		if app.GetType() == "drupal8" {
 			drupalConfig.IsDrupal8 = true
@@ -828,21 +835,21 @@ func (app *DdevApp) CreateSettingsFile() error {
 		}
 
 		drupalConfig.DeployURL = app.GetURL()
-		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
+		err = WriteDrupalSettingsFile(drupalConfig, settingsFilePath)
 		if err != nil {
 			return err
 		}
 
 		drushConfig.DatabasePort = strconv.FormatInt(dbPublishPort, 10)
-		err = config.WriteDrushConfig(drushConfig, drushSettingsPath)
+		err = WriteDrushConfig(drushConfig, drushSettingsPath)
 		if err != nil {
 			return err
 		}
 	case "wordpress":
 		output.UserOut.Printf("Generating %s file for database connection.", fileName)
-		wpConfig := model.NewWordpressConfig()
+		wpConfig := NewWordpressConfig()
 		wpConfig.DeployURL = app.GetURL()
-		err := config.WriteWordpressConfig(wpConfig, settingsFilePath)
+		err := WriteWordpressConfig(wpConfig, settingsFilePath)
 		if err != nil {
 			return err
 		}
@@ -864,7 +871,7 @@ func (app *DdevApp) Down(removeData bool) error {
 	// Remove data/database if we need to.
 	if removeData {
 		if fileutil.FileExists(settingsFilePath) {
-			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
+			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DdevSettingsFileSignature)
 			util.CheckErr(err) // Really can't happen as we already checked for the file existence
 			if signatureFound {
 				err = os.Chmod(settingsFilePath, 0644)
