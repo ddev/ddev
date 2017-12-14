@@ -104,7 +104,6 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	// Create an  app
 	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
