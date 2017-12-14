@@ -98,6 +98,9 @@ func (app *DdevApp) Init(basePath string) error {
 		}
 		return nil
 	} else if strings.Contains(err.Error(), "could not find containers") {
+		// Init() is just putting together the DdevApp struct, the containers do
+		// not have to exist (app doesn't have to have been started, so the fact
+		// we didn't find any is not an error.
 		return nil
 	}
 
