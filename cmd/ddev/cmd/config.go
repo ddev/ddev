@@ -94,9 +94,9 @@ var ConfigCommand = &cobra.Command{
 			}
 
 			foundAppType, appTypeErr := ddevapp.DetermineAppType(app.Docroot)
-			fullPath, err := filepath.Abs(app.Docroot)
-			if err != nil {
-				util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, err)
+			fullPath, pathErr := filepath.Abs(app.Docroot)
+			if pathErr != nil {
+				util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, pathErr)
 			}
 			if appTypeErr == nil && (appType == "" || appType == foundAppType) { // Found an app, matches passed-in or no apptype passed
 				appType = foundAppType
