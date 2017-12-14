@@ -121,6 +121,7 @@ $databases['default']['default'] = array(
 
 // CreateDrupalSettingsFile creates the app's settings.php or equivalent,
 // adding things like database host, name, and password
+// @todo: This should not be exported
 func CreateDrupalSettingsFile(l *DdevApp) error {
 
 	settingsFilePath, err := setUpSettingsFile(l)
@@ -144,6 +145,7 @@ func CreateDrupalSettingsFile(l *DdevApp) error {
 
 // WriteDrupalSettingsFile dynamically produces valid settings.php file by combining a configuration
 // object with a data-driven template.
+// @todo: This should not be exported
 func WriteDrupalSettingsFile(drupalConfig *DrupalConfig, filePath string) error {
 	tmpl, err := template.New("drupalConfig").Funcs(sprig.TxtFuncMap()).Parse(drupalTemplate)
 	if err != nil {
@@ -170,6 +172,7 @@ func WriteDrupalSettingsFile(drupalConfig *DrupalConfig, filePath string) error 
 }
 
 // WriteDrushConfig writes out a drush config based on passed-in values.
+// @todo: This should not be exported
 func WriteDrushConfig(drushConfig *DrushConfig, filePath string) error {
 	tmpl, err := template.New("drushConfig").Funcs(sprig.TxtFuncMap()).Parse(drushTemplate)
 	if err != nil {
@@ -198,6 +201,7 @@ func WriteDrushConfig(drushConfig *DrushConfig, filePath string) error {
 // GetDrupalUploadDir just returns a static upload files (public files) dir.
 // This can be made more sophisticated in the future, for example by adding
 // the directory to the ddev config.yaml.
+// @todo: This should not be exported
 func GetDrupalUploadDir(l *DdevApp) string {
 	return "sites/default/files"
 }
@@ -216,10 +220,14 @@ func GetDrupal7Hooks() []byte {
 }
 
 // GetDrupal8Hooks for appending as byte array
+// @todo: This should not be exported
 func GetDrupal8Hooks() []byte {
 	return []byte(Drupal8Hooks)
 }
 
+// SetDrupalSiteSettingsPaths sets the paths to settings.php/settings.local.php
+// for templating.
+// @todo: This should not be exported
 func SetDrupalSiteSettingsPaths(app *DdevApp) {
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	var settingsFilePath, localSettingsFilePath string

@@ -1,4 +1,4 @@
-package ddevapp
+package ddevapp_test
 
 import (
 	"testing"
@@ -7,6 +7,7 @@ import (
 
 	"io/ioutil"
 
+	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
@@ -19,6 +20,7 @@ func TestWriteDrupalConfig(t *testing.T) {
 	assert.NoError(t, err)
 
 	drupalConfig := NewDrupalConfig()
+
 	err = WriteDrupalSettingsFile(drupalConfig, file.Name())
 	assert.NoError(t, err)
 

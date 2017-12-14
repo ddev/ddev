@@ -36,8 +36,8 @@ var AppTypeMatrix = map[string]AppTypeFuncs{
 	"backdrop": AppTypeFuncs{},
 }
 
-// GetAllowedAppTypes returns the valid apptype keys from the AppTypeMatrix
-func GetAllowedAppTypes() []string {
+// GetValidAppTypes returns the valid apptype keys from the AppTypeMatrix
+func GetValidAppTypes() []string {
 	keys := make([]string, 0, len(AppTypeMatrix))
 	for k := range AppTypeMatrix {
 		keys = append(keys, k)
@@ -64,6 +64,7 @@ func CreateSettingsFile(l *DdevApp) error {
 	return nil
 }
 
+// UploadDirFunc returns the upload (public files) directory for the given app
 func UploadDirFunc(l *DdevApp) string {
 	if appFuncs, ok := AppTypeMatrix[l.GetType()]; ok && appFuncs.uploadDir != nil {
 		uploadDir := appFuncs.uploadDir(l)
@@ -72,6 +73,8 @@ func UploadDirFunc(l *DdevApp) string {
 	return ""
 }
 
+// GetHookSuggestions gets the actual text of the config.yaml hook suggestions
+// for a given apptype
 func GetHookSuggestions(apptype string) []byte {
 	if appFuncs, ok := AppTypeMatrix[apptype]; ok && appFuncs.hookSuggestions != nil {
 		suggestions := appFuncs.hookSuggestions()
@@ -80,6 +83,8 @@ func GetHookSuggestions(apptype string) []byte {
 	return []byte("")
 }
 
+// SetSiteSettingsPaths chooses and sets the settings.php/settings.local.php
+// and related paths for a given app.
 func SetSiteSettingsPaths(app *DdevApp) {
 	if appFuncs, ok := AppTypeMatrix[app.Type]; ok && appFuncs.siteSettingsPaths != nil {
 		appFuncs.siteSettingsPaths(app)

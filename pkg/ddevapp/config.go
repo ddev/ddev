@@ -358,7 +358,7 @@ func (app *DdevApp) appTypePrompt() error {
 		return err
 	}
 	var appType string
-	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(GetAllowedAppTypes(), ", "))
+	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(GetValidAppTypes(), ", "))
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
 	absDocroot := filepath.Join(app.AppRoot, app.Docroot)
@@ -380,7 +380,7 @@ func (app *DdevApp) appTypePrompt() error {
 		appType = strings.ToLower(util.GetInput(app.Type))
 
 		if !IsValidAppType(appType) {
-			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(GetAllowedAppTypes(), ", "))
+			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(GetValidAppTypes(), ", "))
 		}
 		app.Type = appType
 	}

@@ -53,7 +53,7 @@ func TestNewConfig(t *testing.T) {
 // TestAllowedAppType tests the IsAllowedAppType function.
 func TestAllowedAppTypes(t *testing.T) {
 	assert := asrt.New(t)
-	for _, v := range GetAllowedAppTypes() {
+	for _, v := range GetValidAppTypes() {
 		assert.True(IsValidAppType(v))
 	}
 
@@ -107,7 +107,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
-	app.Type = GetAllowedAppTypes()[0]
+	app.Type = GetValidAppTypes()[0]
 
 	// WriteConfig a config to create/prep necessary directories.
 	err = app.WriteConfig()
