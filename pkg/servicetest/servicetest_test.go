@@ -77,7 +77,7 @@ func TestServices(t *testing.T) {
 			assert.NoError(err)
 
 			for _, service := range ServiceFiles {
-				confdir := filepath.Join(app.AppRoot(), ".ddev")
+				confdir := filepath.Join(app.GetAppRoot(), ".ddev")
 				err = fileutil.CopyFile(filepath.Join(ServiceDir, service), filepath.Join(confdir, service))
 				assert.NoError(err)
 			}

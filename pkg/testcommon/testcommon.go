@@ -47,9 +47,9 @@ type TestSite struct {
 	HTTPProbeURI string
 	// DocrootBase is the subdirectory witin the site that is the root/index.php
 	DocrootBase string
-	// AppType is the type of application. This can be specified when a config file is not present
+	// Type is the type of application. This can be specified when a config file is not present
 	// for a test site.
-	AppType string
+	Type string
 }
 
 // Prepare downloads and extracts a site codebase to a temporary directory.
@@ -78,19 +78,19 @@ func (site *TestSite) Prepare() error {
 		return fmt.Errorf("Failed to CopyDir from %s to %s, err=%v", cachedSrcDir, site.Dir, err)
 	}
 
-	// Create a config object. Err is ignored as we may not have
+	// Create an app. Err is ignored as we may not have
 	// a config file to read in from a test site.
-	config, _ := ddevapp.NewConfig(site.Dir, "")
+	app, _ := ddevapp.NewApp(site.Dir, "")
 
-	// Set site name to the name we define for test sites. We'll
-	// ignore site name defined in config file if present.
-	config.Name = site.Name
+	// Set app name to the name we define for test sites. We'll
+	// ignore app name defined in config file if present.
+	app.Name = site.Name
 
-	if config.AppType == "" {
-		config.AppType = site.AppType
+	if app.Type == "" {
+		app.Type = site.Type
 	}
 
-	err = config.Write()
+	err = app.WriteConfig()
 	if err != nil {
 		return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", site.Name, site.Dir, err)
 	}

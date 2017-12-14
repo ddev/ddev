@@ -26,27 +26,27 @@ func TestNewConfig(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	// Load a new Config
-	newConfig, err := NewConfig(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 
 	// Ensure the config uses specified defaults.
-	assert.Equal(newConfig.APIVersion, CurrentAppVersion)
-	assert.Equal(newConfig.DBImage, version.DBImg+":"+version.DBTag)
-	assert.Equal(newConfig.WebImage, version.WebImg+":"+version.WebTag)
-	assert.Equal(newConfig.DBAImage, version.DBAImg+":"+version.DBATag)
-	newConfig.Name = util.RandString(32)
-	newConfig.AppType = "drupal8"
+	assert.Equal(app.APIVersion, CurrentAppVersion)
+	assert.Equal(app.DBImage, version.DBImg+":"+version.DBTag)
+	assert.Equal(app.WebImage, version.WebImg+":"+version.WebTag)
+	assert.Equal(app.DBAImage, version.DBAImg+":"+version.DBATag)
+	app.Name = util.RandString(32)
+	app.Type = "drupal8"
 
-	// Write the newConfig.
-	err = newConfig.Write()
+	// WriteConfig the newConfig.
+	err = app.WriteConfig()
 	assert.NoError(err)
-	_, err = os.Stat(newConfig.ConfigPath)
+	_, err = os.Stat(app.ConfigPath)
 	assert.NoError(err)
 
-	loadedConfig, err := NewConfig(testDir, DefaultProviderName)
+	loadedConfig, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
-	assert.Equal(newConfig.Name, loadedConfig.Name)
-	assert.Equal(newConfig.AppType, loadedConfig.AppType)
+	assert.Equal(app.Name, loadedConfig.Name)
+	assert.Equal(app.Type, loadedConfig.Type)
 
 }
 
@@ -71,29 +71,29 @@ func TestPrepDirectory(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	config, err := NewConfig(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 
 	// Prep the directory.
-	err = PrepDdevDirectory(filepath.Dir(config.ConfigPath))
+	err = PrepDdevDirectory(filepath.Dir(app.ConfigPath))
 	assert.NoError(err)
 
 	// Read directory info an ensure it exists.
-	_, err = os.Stat(filepath.Dir(config.ConfigPath))
+	_, err = os.Stat(filepath.Dir(app.ConfigPath))
 	assert.NoError(err)
 }
 
-// TestHostName tests that the TestSite.Hostname() field returns the hostname as expected.
+// TestHostName tests that the config.GetHostname() field returns the hostname as expected.
 func TestHostName(t *testing.T) {
 	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestHostName")
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
-	config, err := NewConfig(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
-	config.Name = util.RandString(32)
+	app.Name = util.RandString(32)
 
-	assert.Equal(config.Hostname(), config.Name+"."+version.DDevTLD)
+	assert.Equal(app.GetHostname(), app.Name+"."+version.DDevTLD)
 }
 
 // TestWriteDockerComposeYaml tests the writing of a docker-compose.yaml file.
@@ -104,31 +104,30 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	// Create a config
-	config, err := NewConfig(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
-	config.Name = util.RandString(32)
-	config.AppType = AllowedAppTypes[0]
+	app.Name = util.RandString(32)
+	app.Type = AllowedAppTypes[0]
 
-	// Write a config to create/prep necessary directories.
-	err = config.Write()
+	// WriteConfig a config to create/prep necessary directories.
+	err = app.WriteConfig()
 	assert.NoError(err)
 
 	// After the config has been written and directories exist, the write should work.
-	err = config.WriteDockerComposeConfig()
+	err = app.WriteDockerComposeConfig()
 	assert.NoError(err)
 
 	// Ensure we can read from the file and that it's a regular file with the expected name.
-	fileinfo, err := os.Stat(config.DockerComposeYAMLPath())
+	fileinfo, err := os.Stat(app.DockerComposeYAMLPath())
 	assert.NoError(err)
 	assert.False(fileinfo.IsDir())
-	assert.Equal(fileinfo.Name(), filepath.Base(config.DockerComposeYAMLPath()))
+	assert.Equal(fileinfo.Name(), filepath.Base(app.DockerComposeYAMLPath()))
 
-	composeBytes, err := ioutil.ReadFile(config.DockerComposeYAMLPath())
+	composeBytes, err := ioutil.ReadFile(app.DockerComposeYAMLPath())
 	assert.NoError(err)
 	contentString := string(composeBytes)
-	assert.Contains(contentString, config.Platform)
-	assert.Contains(contentString, config.AppType)
+	assert.Contains(contentString, app.Platform)
+	assert.Contains(contentString, app.Type)
 }
 
 // TestConfigCommand tests the interactive config options.
@@ -148,8 +147,8 @@ func TestConfigCommand(t *testing.T) {
 	}
 
 	// Create the ddevapp we'll use for testing.
-	// This will not return an error, since there is no existing config.
-	config, err := NewConfig(testDir, DefaultProviderName)
+	// This will not return an error, since there is no existing configuration.
+	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -164,7 +163,7 @@ func TestConfigCommand(t *testing.T) {
 	util.SetInputScanner(scanner)
 
 	restoreOutput := testcommon.CaptureUserOut()
-	err = config.PromptForConfig()
+	err = app.PromptForConfig()
 	assert.NoError(err, t)
 	out := restoreOutput()
 
@@ -173,21 +172,21 @@ func TestConfigCommand(t *testing.T) {
 	assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
 	assert.Contains(out, fmt.Sprintf("'%s' is not a valid application type", invalidAppType))
 
-	// Ensure values were properly set on the config struct.
-	assert.Equal(name, config.Name)
-	assert.Equal("drupal8", config.AppType)
-	assert.Equal("docroot", config.Docroot)
+	// Ensure values were properly set on the app struct.
+	assert.Equal(name, app.Name)
+	assert.Equal("drupal8", app.Type)
+	assert.Equal("docroot", app.Docroot)
 	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
 
 }
 
-// TestRead tests reading config values from file and fallback to defaults for values not exposed.
-func TestRead(t *testing.T) {
+// TestReadConfig tests reading config values from file and fallback to defaults for values not exposed.
+func TestReadConfig(t *testing.T) {
 	assert := asrt.New(t)
 
-	// This closely resembles the values one would have from NewConfig()
-	c := &Config{
+	// This closely resembles the values one would have from NewApp()
+	app := &DdevApp{
 		ConfigPath: filepath.Join("testdata", "config.yaml"),
 		AppRoot:    "testdata",
 		APIVersion: CurrentAppVersion,
@@ -198,18 +197,18 @@ func TestRead(t *testing.T) {
 		Provider:   DefaultProviderName,
 	}
 
-	err := c.Read()
+	err := app.ReadConfig()
 	if err != nil {
-		t.Fatalf("Unable to c.Read(), err: %v", err)
+		t.Fatalf("Unable to c.ReadConfig(), err: %v", err)
 	}
 
 	// Values not defined in file, we should still have default values
-	assert.Equal(c.Name, "TestRead")
-	assert.Equal(c.DBImage, version.DBImg+":"+version.DBTag)
+	assert.Equal(app.Name, "TestRead")
+	assert.Equal(app.DBImage, version.DBImg+":"+version.DBTag)
 
 	// Values defined in file, we should have values from file
-	assert.Equal(c.AppType, "drupal8")
-	assert.Equal(c.WebImage, "test/testimage:latest")
+	assert.Equal(app.Type, "drupal8")
+	assert.Equal(app.WebImage, "test/testimage:latest")
 }
 
 // TestValidate tests validation of configuration values.
@@ -219,40 +218,40 @@ func TestValidate(t *testing.T) {
 	cwd, err := os.Getwd()
 	assert.NoError(err)
 
-	c := &Config{
+	app := &DdevApp{
 		Name:    "TestValidate",
 		AppRoot: cwd,
 		Docroot: "testdata",
-		AppType: "wordpress",
+		Type:    "wordpress",
 	}
 
-	err = c.Validate()
+	err = app.ValidateConfig()
 	if err != nil {
-		t.Fatalf("Failed to c.Validate(), err=%v", err)
+		t.Fatalf("Failed to app.ValidateConfig(), err=%v", err)
 	}
 
-	c.Name = "Invalid!"
-	err = c.Validate()
-	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", c.Hostname()))
+	app.Name = "Invalid!"
+	err = app.ValidateConfig()
+	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname()))
 
-	c.Name = "valid"
-	c.Docroot = "invalid"
-	err = c.Validate()
-	assert.EqualError(err, fmt.Sprintf("no directory could be found at %s. Please enter a valid docroot in your configuration", filepath.Join(cwd, c.Docroot)))
+	app.Name = "valid"
+	app.Docroot = "invalid"
+	err = app.ValidateConfig()
+	assert.EqualError(err, fmt.Sprintf("no directory could be found at %s. Please enter a valid docroot in your configuration", filepath.Join(cwd, app.Docroot)))
 
-	c.Docroot = "testdata"
-	c.AppType = "potato"
-	err = c.Validate()
-	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", c.AppType))
+	app.Docroot = "testdata"
+	app.Type = "potato"
+	err = app.ValidateConfig()
+	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", app.Type))
 }
 
-// TestWrite tests writing config values to file
-func TestWrite(t *testing.T) {
+// TestWriteConfig tests writing config values to file
+func TestWriteConfig(t *testing.T) {
 	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("TestConfigWrite")
 
-	// This closely resembles the values one would have from NewConfig()
-	c := &Config{
+	// This closely resembles the values one would have from NewApp()
+	app := &DdevApp{
 		ConfigPath: filepath.Join(testDir, "config.yaml"),
 		AppRoot:    testDir,
 		APIVersion: CurrentAppVersion,
@@ -260,11 +259,11 @@ func TestWrite(t *testing.T) {
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
-		AppType:    "drupal8",
+		Type:       "drupal8",
 		Provider:   DefaultProviderName,
 	}
 
-	err := c.Write()
+	err := app.WriteConfig()
 	assert.NoError(err)
 
 	out, err := ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))
@@ -272,8 +271,8 @@ func TestWrite(t *testing.T) {
 	assert.Contains(string(out), "TestWrite")
 	assert.Contains(string(out), `exec: "drush cr"`)
 
-	c.AppType = "wordpress"
-	err = c.Write()
+	app.Type = "wordpress"
+	err = app.WriteConfig()
 	assert.NoError(err)
 
 	out, err = ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))

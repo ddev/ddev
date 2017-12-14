@@ -38,9 +38,9 @@ func TestDevList(t *testing.T) {
 
 		// Look for standard items in the regular ddev list output
 		assert.Contains(string(out), v.Name)
-		assert.Contains(string(out), app.URL())
+		assert.Contains(string(out), app.GetURL())
 		assert.Contains(string(out), app.GetType())
-		assert.Contains(string(out), ddevapp.RenderHomeRootedDir(app.AppRoot()))
+		assert.Contains(string(out), ddevapp.RenderHomeRootedDir(app.GetAppRoot()))
 
 		// Look through list results in json for this site.
 		found := false
@@ -54,8 +54,8 @@ func TestDevList(t *testing.T) {
 				assert.Contains(item["httpurl"], app.HostName())
 				assert.Contains(item["httpsurl"], app.HostName())
 				assert.EqualValues(app.GetType(), item["type"])
-				assert.EqualValues(ddevapp.RenderHomeRootedDir(app.AppRoot()), item["shortroot"])
-				assert.EqualValues(app.AppRoot(), item["approot"])
+				assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), item["shortroot"])
+				assert.EqualValues(app.GetAppRoot(), item["approot"])
 				break
 			}
 		}

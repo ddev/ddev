@@ -20,7 +20,7 @@ import (
 // PantheonProvider provides pantheon-specific import functionality.
 type PantheonProvider struct {
 	ProviderType     string                   `yaml:"provider"`
-	config           *Config                  `yaml:"-"`
+	app              *DdevApp                 `yaml:"-"`
 	Sitename         string                   `yaml:"site"`
 	site             pantheon.Site            `yaml:"-"`
 	siteEnvironments pantheon.EnvironmentList `yaml:"-"`
@@ -29,11 +29,11 @@ type PantheonProvider struct {
 }
 
 // Init handles loading data from saved config.
-func (p *PantheonProvider) Init(config *Config) error {
+func (p *PantheonProvider) Init(app *DdevApp) error {
 	var err error
-	p.config = config
 
-	configPath := config.GetPath("import.yaml")
+	p.app = app
+	configPath := app.GetConfigPath("import.yaml")
 	if fileutil.FileExists(configPath) {
 		err = p.Read(configPath)
 	}
@@ -42,8 +42,10 @@ func (p *PantheonProvider) Init(config *Config) error {
 	return err
 }
 
-// ValidateField provides field level validation for config settings. This is used any time a field is set via `ddev config` on the primary app config, and allows
-// provider plugins to have additional validation for top level config settings.
+// ValidateField provides field level validation for config settings. This is
+// used any time a field is set via `ddev config` on the primary app config, and
+// allows provider plugins to have additional validation for top level config
+// settings.
 func (p *PantheonProvider) ValidateField(field, value string) error {
 	switch field {
 	case "Name":
@@ -58,7 +60,7 @@ func (p *PantheonProvider) ValidateField(field, value string) error {
 
 // SetSiteNameAndEnv sets the environment of the provider (dev/test/live)
 func (p *PantheonProvider) SetSiteNameAndEnv(environment string) {
-	p.Sitename = p.config.Name
+	p.Sitename = p.app.Name
 	p.EnvironmentName = environment
 }
 
@@ -133,7 +135,7 @@ func (p *PantheonProvider) prepDownloadDir() {
 func (p *PantheonProvider) getDownloadDir() string {
 	userDir, err := gohomedir.Dir()
 	util.CheckErr(err)
-	destDir := filepath.Join(userDir, ".ddev", "pantheon", p.config.Name)
+	destDir := filepath.Join(userDir, ".ddev", "pantheon", p.app.Name)
 	return destDir
 }
 

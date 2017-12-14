@@ -6,7 +6,7 @@ import "os"
 type DefaultProvider struct{}
 
 // Init provides a no-op for the Init operation.
-func (p *DefaultProvider) Init(config *Config) error {
+func (p *DefaultProvider) Init(app *DdevApp) error {
 	return nil
 }
 

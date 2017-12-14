@@ -25,25 +25,26 @@ func GetApps() [](*DdevApp) {
 		"com.ddev.platform":          "ddev",
 		"com.docker.compose.service": "web",
 	}
-	sites, err := dockerutil.FindContainersByLabels(labels)
+	containers, err := dockerutil.FindContainersByLabels(labels)
 
 	if err == nil {
-		for _, siteContainer := range sites {
-			site := &DdevApp{}
+		for _, siteContainer := range containers {
+			app := &DdevApp{}
 			approot, ok := siteContainer.Labels["com.ddev.approot"]
 			if !ok {
 				break
 			}
 
-			err = site.Init(approot)
+			err = app.Init(approot)
 
 			// Artificially populate sitename and apptype based on labels
-			// if site.Init() failed.
+			// if app.Init() failed.
 			if err != nil {
-				site.AppConfig.Name = siteContainer.Labels["com.ddev.site-name"]
-				site.AppConfig.AppType = siteContainer.Labels["com.ddev.app-type"]
+				app.Name = siteContainer.Labels["com.ddev.site-name"]
+				app.Type = siteContainer.Labels["com.ddev.app-type"]
+				app.AppRoot = siteContainer.Labels["com.ddev.approot"]
 			}
-			apps = append(apps, site)
+			apps = append(apps, app)
 		}
 	}
 

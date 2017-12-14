@@ -42,7 +42,7 @@ var DdevRestartCmd = &cobra.Command{
 		}
 
 		util.Success("Successfully restarted %s", app.GetName())
-		util.Success("Your application can be reached at: %s", app.URL())
+		util.Success("Your application can be reached at: %s", app.GetURL())
 	},
 }
 

@@ -50,37 +50,37 @@ var ConfigCommand = &cobra.Command{
 			provider = args[0]
 		}
 
-		c, err := ddevapp.NewConfig(appRoot, provider)
+		app, err := ddevapp.NewApp(appRoot, provider)
 		if err != nil {
 			util.Failed("Could not create new config: %v", err)
 		}
 
 		// If they have not given us any flags, we prompt for full info. Otherwise, we assume they're in control.
 		if siteName == "" && docrootRelPath == "" && pantheonEnvironment == "" && appType == "" {
-			err = c.PromptForConfig()
+			err = app.PromptForConfig()
 			if err != nil {
 				util.Failed("There was a problem configuring your application: %v", err)
 			}
 		} else { // In this case we have to validate the provided items, or set to sane defaults
 
 			// Let them know if we're replacing the config.yaml
-			c.WarnIfConfigReplace()
+			app.WarnIfConfigReplace()
 
-			// c.Name gets set to basename if not provided, or set to sitneName if provided
-			if c.Name != "" && siteName == "" { // If we already have a c.Name and no siteName, leave c.Name alone
+			// app.Name gets set to basename if not provided, or set to siteName if provided
+			if app.Name != "" && siteName == "" { // If we already have a c.Name and no siteName, leave c.Name alone
 				// Sorry this is empty but it makes the logic clearer.
 			} else if siteName != "" { // if we have a siteName passed in, use it for c.Name
-				c.Name = siteName
+				app.Name = siteName
 			} else { // No siteName passed, c.Name not set: use c.Name from the directory
 				// nolint: vetshadow
 				pwd, err := os.Getwd()
 				util.CheckErr(err)
-				c.Name = path.Base(pwd)
+				app.Name = path.Base(pwd)
 			}
 
 			// docrootRelPath must exist
 			if docrootRelPath != "" {
-				c.Docroot = docrootRelPath
+				app.Docroot = docrootRelPath
 				if _, err = os.Stat(docrootRelPath); os.IsNotExist(err) {
 					util.Failed("The docroot provided (%v) does not exist", docrootRelPath)
 				}
@@ -93,21 +93,24 @@ var ConfigCommand = &cobra.Command{
 				util.Failed("apptype must be drupal7, drupal8, or wordpress")
 			}
 
-			foundAppType, err := ddevapp.DetermineAppType(c.Docroot)
-			fullPath, _ := filepath.Abs(c.Docroot)
-			if err == nil && (appType == "" || appType == foundAppType) { // Found an app, matches passed-in or no apptype passed
+			foundAppType, appTypeErr := ddevapp.DetermineAppType(app.Docroot)
+			fullPath, pathErr := filepath.Abs(app.Docroot)
+			if pathErr != nil {
+				util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, pathErr)
+			}
+			if appTypeErr == nil && (appType == "" || appType == foundAppType) { // Found an app, matches passed-in or no apptype passed
 				appType = foundAppType
 				util.Success("Found a %s codebase at %s", foundAppType, fullPath)
-			} else if appType != "" && err != nil { // apptype was passed, but we found no app at all
+			} else if appType != "" && appTypeErr != nil { // apptype was passed, but we found no app at all
 				util.Warning("You have specified an apptype of %s but no app of that type is found in %s", appType, fullPath)
-			} else if appType != "" && err == nil && foundAppType != appType { // apptype was passed, app was found, but not the same type
+			} else if appType != "" && appTypeErr == nil && foundAppType != appType { // apptype was passed, app was found, but not the same type
 				util.Warning("You have specified an apptype of %s but an app of type %s was discovered in %s", appType, foundAppType, fullPath)
 			} else {
-				util.Failed("Failed to determine app type (drupal7/drupal8/wordpress).\nYour docroot %v may be incorrect - looking in directory %v, error=%v", c.Docroot, fullPath, err)
+				util.Failed("Failed to determine app type (drupal7/drupal8/wordpress).\nYour docroot %v may be incorrect - looking in directory %v, error=%v", app.Docroot, fullPath, appTypeErr)
 			}
-			c.AppType = appType
+			app.Type = appType
 
-			prov, _ := c.GetProvider()
+			prov, _ := app.GetProvider()
 
 			if provider == "pantheon" {
 				pantheonProvider := prov.(*ddevapp.PantheonProvider)
@@ -117,15 +120,15 @@ var ConfigCommand = &cobra.Command{
 				pantheonProvider.SetSiteNameAndEnv(pantheonEnvironment)
 			}
 			// But pantheon *does* validate "Name"
-			err = prov.Validate()
-			if err != nil {
-				util.Failed("Failed to validate sitename %v and environment %v with provider %v: %v", c.Name, pantheonEnvironment, provider, err)
+			appTypeErr = prov.Validate()
+			if appTypeErr != nil {
+				util.Failed("Failed to validate sitename %v and environment %v with provider %v: %v", app.Name, pantheonEnvironment, provider, appTypeErr)
 			} else {
-				util.Success("Using pantheon sitename '%s' and environment '%s'.", c.Name, pantheonEnvironment)
+				util.Success("Using pantheon sitename '%s' and environment '%s'.", app.Name, pantheonEnvironment)
 			}
 
 		}
-		err = c.Write()
+		err = app.WriteConfig()
 		if err != nil {
 			util.Failed("Could not write ddev config file: %v", err)
 		}

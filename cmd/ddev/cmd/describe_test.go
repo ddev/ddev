@@ -107,7 +107,7 @@ func TestDescribeAppFunction(t *testing.T) {
 		assert.EqualValues(v.Dir, desc["approot"].(string))
 
 		out, _ := json.Marshal(desc)
-		assert.Contains(string(out), app.URL())
+		assert.Contains(string(out), app.GetURL())
 		assert.Contains(string(out), app.GetName())
 		assert.Contains(string(out), "\"router_status\":\"healthy\"")
 		assert.Contains(string(out), ddevapp.RenderHomeRootedDir(v.Dir))

@@ -41,7 +41,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
 			FullSiteTarballURL:            "https://github.com/drud/drupal8/releases/download/v0.6.0/site.tar.gz",
-			AppType:                       "drupal8",
+			Type:                          "drupal8",
 		},
 		{
 			Name:                          "TestMainPkgDrupalKickstart",
@@ -394,7 +394,7 @@ func TestDdevLogs(t *testing.T) {
 	}
 }
 
-// TestProcessHooks tests execution of commands defined in config
+// TestProcessHooks tests execution of commands defined in config.yaml
 func TestProcessHooks(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -403,10 +403,10 @@ func TestProcessHooks(t *testing.T) {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
 		testcommon.ClearDockerEnv()
-		conf, err := ddevapp.NewConfig(site.Dir, ddevapp.DefaultProviderName)
+		app, err := ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
 		assert.NoError(err)
 
-		conf.Commands = map[string][]ddevapp.Command{
+		app.Commands = map[string][]ddevapp.Command{
 			"hook-test": {
 				{
 					Exec: "pwd",
@@ -417,12 +417,8 @@ func TestProcessHooks(t *testing.T) {
 			},
 		}
 
-		l := &ddevapp.DdevApp{
-			AppConfig: conf,
-		}
-
 		stdout := testcommon.CaptureUserOut()
-		err = l.ProcessHooks("hook-test")
+		err = app.ProcessHooks("hook-test")
 		assert.NoError(err)
 		out := stdout()
 
@@ -518,8 +514,8 @@ func TestDescribe(t *testing.T) {
 		assert.NoError(err)
 		assert.EqualValues(desc["status"], ddevapp.SiteRunning)
 		assert.EqualValues(app.GetName(), desc["name"])
-		assert.EqualValues(ddevapp.RenderHomeRootedDir(app.AppRoot()), desc["shortroot"])
-		assert.EqualValues(app.AppRoot(), desc["approot"])
+		assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), desc["shortroot"])
+		assert.EqualValues(app.GetAppRoot(), desc["approot"])
 
 		// Now stop it and test behavior.
 		err = app.Stop()
@@ -550,7 +546,7 @@ func TestDescribeMissingDirectory(t *testing.T) {
 
 	desc, err := app.Describe()
 	assert.NoError(err)
-	assert.Contains(desc["status"], ddevapp.SiteDirMissing, "Status did not include the phrase 'app directory missing' when describing a site with missing directories.")
+	assert.Contains(desc["status"], ddevapp.SiteDirMissing, "Status did not include the phrase '%s' when describing a site with missing directories.", ddevapp.SiteDirMissing)
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
@@ -730,15 +726,15 @@ func TestListWithoutDir(t *testing.T) {
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
-	config, err := ddevapp.NewConfig(testDir, "")
+	app, err := ddevapp.NewApp(testDir, ddevapp.DefaultProviderName)
 	assert.NoError(err)
-	config.Name = "junk"
-	config.AppType = "drupal7"
-	err = config.Write()
+	app.Name = "junk"
+	app.Type = "drupal7"
+	err = app.WriteConfig()
 	assert.NoError(err)
 
 	// Do a start on the configured site.
-	app, err := ddevapp.GetActiveApp("")
+	app, err = ddevapp.GetActiveApp("")
 	assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)
@@ -768,7 +764,7 @@ func TestListWithoutDir(t *testing.T) {
 
 		ddevapp.RenderAppRow(table, desc)
 	}
-	assert.Contains(table.String(), fmt.Sprintf("app directory missing: %s", testDir))
+	assert.Contains(table.String(), fmt.Sprintf("%s: %s", ddevapp.SiteDirMissing, testDir))
 
 	err = app.Down(true)
 	assert.NoError(err)

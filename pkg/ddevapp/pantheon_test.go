@@ -46,7 +46,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 	}
 
 	// Create the ddevapp we'll use for testing.
-	config, err := NewConfig(testDir, "pantheon")
+	app, err := NewApp(testDir, "pantheon")
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -69,12 +69,12 @@ func TestPantheonConfigCommand(t *testing.T) {
 	util.SetInputScanner(scanner)
 
 	restoreOutput := testcommon.CaptureUserOut()
-	err = config.PromptForConfig()
+	err = app.PromptForConfig()
 	assert.NoError(err, t)
 	out := restoreOutput()
 
 	// Get the provider interface and ensure it validates.
-	provider, err := config.GetProvider()
+	provider, err := app.GetProvider()
 	assert.NoError(err)
 	err = provider.Validate()
 	assert.NoError(err)
@@ -84,10 +84,10 @@ func TestPantheonConfigCommand(t *testing.T) {
 	assert.Contains(out, fmt.Sprintf("could not find a pantheon site named %s", invalidName))
 	assert.Contains(out, fmt.Sprintf("could not find an environment named '%s'", invalidEnvironment))
 
-	// Ensure values were properly set on the config struct.
-	assert.Equal(pantheonTestSiteName, config.Name)
-	assert.Equal("drupal8", config.AppType)
-	assert.Equal("docroot", config.Docroot)
+	// Ensure values were properly set on the app struct.
+	assert.Equal(pantheonTestSiteName, app.Name)
+	assert.Equal("drupal8", app.Type)
+	assert.Equal("docroot", app.Docroot)
 	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
 }
@@ -106,12 +106,12 @@ func TestPantheonBackupLinks(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	config, err := NewConfig(testDir, "pantheon")
+	app, err := NewApp(testDir, "pantheon")
 	assert.NoError(err)
-	config.Name = pantheonTestSiteName
+	app.Name = pantheonTestSiteName
 
 	provider := PantheonProvider{}
-	err = provider.Init(config)
+	err = provider.Init(app)
 	assert.NoError(err)
 
 	provider.Sitename = pantheonTestSiteName
@@ -150,26 +150,26 @@ func TestPantheonPull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
-	config, err := NewConfig(siteDir, "pantheon")
+	app, err := NewApp(siteDir, "pantheon")
 	assert.NoError(err)
-	config.Name = pantheonTestSiteName
-	config.AppType = "drupal8"
-	err = config.Write()
+	app.Name = pantheonTestSiteName
+	app.Type = "drupal8"
+	err = app.WriteConfig()
 	assert.NoError(err)
 
 	testcommon.ClearDockerEnv()
 
 	provider := PantheonProvider{}
-	err = provider.Init(config)
+	err = provider.Init(app)
 	assert.NoError(err)
 
 	provider.Sitename = pantheonTestSiteName
 	provider.EnvironmentName = pantheonTestEnvName
-	err = provider.Write(config.GetPath("import.yaml"))
+	err = provider.Write(app.GetConfigPath("import.yaml"))
 	assert.NoError(err)
 
 	// Ensure we can do a pull on the configured site.
-	app, err := GetActiveApp("")
+	app, err = GetActiveApp("")
 	assert.NoError(err)
 	err = app.Import()
 	assert.NoError(err)
