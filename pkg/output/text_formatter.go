@@ -207,7 +207,7 @@ func prefixFieldClashes(data log.Fields) {
 		data["fields.msg"] = m
 	}
 
-	if l, ok := data["level"]; ok {
-		data["fields.level"] = l
+	if level, ok := data["level"]; ok {
+		data["fields.level"] = level
 	}
 }
