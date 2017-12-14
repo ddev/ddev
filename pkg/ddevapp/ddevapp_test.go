@@ -41,7 +41,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
 			FullSiteTarballURL:            "https://github.com/drud/drupal8/releases/download/v0.6.0/site.tar.gz",
-			AppType:                       "drupal8",
+			Type:                          "drupal8",
 		},
 		{
 			Name:                          "TestMainPkgDrupalKickstart",
@@ -729,7 +729,7 @@ func TestListWithoutDir(t *testing.T) {
 	app, err := ddevapp.NewApp(testDir, ddevapp.DefaultProviderName)
 	assert.NoError(err)
 	app.Name = "junk"
-	app.AppType = "drupal7"
+	app.Type = "drupal7"
 	err = app.WriteConfig()
 	assert.NoError(err)
 

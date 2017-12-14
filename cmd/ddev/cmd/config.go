@@ -105,7 +105,7 @@ var ConfigCommand = &cobra.Command{
 			} else {
 				util.Failed("Failed to determine app type (drupal7/drupal8/wordpress).\nYour docroot %v may be incorrect - looking in directory %v, error=%v", app.Docroot, fullPath, err)
 			}
-			app.AppType = appType
+			app.Type = appType
 
 			prov, _ := app.GetProvider()
 

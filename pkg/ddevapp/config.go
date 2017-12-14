@@ -109,7 +109,7 @@ func (app *DdevApp) WriteConfig() error {
 	}
 
 	cfgbytes = append(cfgbytes, []byte(HookTemplate)...)
-	switch app.AppType {
+	switch app.Type {
 	case "drupal8":
 		cfgbytes = append(cfgbytes, []byte(Drupal8Hooks)...)
 	case "drupal7":
@@ -170,7 +170,7 @@ func (app *DdevApp) ReadConfig() error {
 	app.DataDir = filepath.Join(dirPath, "mysql")
 	app.ImportDir = filepath.Join(dirPath, "import-db")
 
-	app.setSiteSettingsPaths(app.AppType)
+	app.setSiteSettingsPaths(app.Type)
 
 	return err
 }
@@ -191,7 +191,7 @@ func (app *DdevApp) PromptForConfig() error {
 	app.WarnIfConfigReplace()
 
 	for {
-		err := app.appNamePrompt()
+		err := app.promptForName()
 
 		if err == nil {
 			break
@@ -235,9 +235,9 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	// validate apptype
-	match = IsAllowedAppType(app.AppType)
+	match = IsAllowedAppType(app.Type)
 	if !match {
-		return fmt.Errorf("'%s' is not a valid apptype", app.AppType)
+		return fmt.Errorf("'%s' is not a valid apptype", app.Type)
 	}
 
 	return nil
@@ -291,7 +291,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	templateVars := map[string]string{
 		"name":        app.Name,
 		"plugin":      "ddev",
-		"appType":     app.AppType,
+		"appType":     app.Type,
 		"mailhogport": appports.GetPort("mailhog"),
 		"dbaport":     appports.GetPort("dba"),
 		"dbport":      appports.GetPort("db"),
@@ -302,7 +302,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 }
 
 // Define an application name.
-func (app *DdevApp) appNamePrompt() error {
+func (app *DdevApp) promptForName() error {
 	provider, err := app.GetProvider()
 	if err != nil {
 		return err
@@ -360,7 +360,7 @@ func (app *DdevApp) ConfigExists() bool {
 	return true
 }
 
-// appTypePrompt handles the AppType workflow.
+// appTypePrompt handles the Type workflow.
 func (app *DdevApp) appTypePrompt() error {
 	provider, err := app.GetProvider()
 	if err != nil {
@@ -379,21 +379,21 @@ func (app *DdevApp) appTypePrompt() error {
 	if err == nil {
 		// If we found an application type just set it and inform the user.
 		util.Success("Found a %s codebase at %s.", appType, filepath.Join(app.AppRoot, app.Docroot))
-		app.AppType = appType
-		return provider.ValidateField("AppType", app.AppType)
+		app.Type = appType
+		return provider.ValidateField("Type", app.Type)
 	}
-	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, app.AppType)
+	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, app.Type)
 
 	for IsAllowedAppType(appType) != true {
 		fmt.Printf(typePrompt + ": ")
-		appType = strings.ToLower(util.GetInput(app.AppType))
+		appType = strings.ToLower(util.GetInput(app.Type))
 
 		if IsAllowedAppType(appType) != true {
 			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(AllowedAppTypes, ", "))
 		}
-		app.AppType = appType
+		app.Type = appType
 	}
-	return provider.ValidateField("AppType", app.AppType)
+	return provider.ValidateField("Type", app.Type)
 }
 
 // IsAllowedAppType determines if a given string exists in the AllowedAppTypes slice.

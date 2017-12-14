@@ -51,7 +51,7 @@ const SiteStopped = "stopped"
 type DdevApp struct {
 	APIVersion            string               `yaml:"APIVersion"`
 	Name                  string               `yaml:"name"`
-	AppType               string               `yaml:"type"`
+	Type                  string               `yaml:"type"`
 	Docroot               string               `yaml:"docroot"`
 	WebImage              string               `yaml:"webimage"`
 	DBImage               string               `yaml:"dbimage"`
@@ -70,7 +70,7 @@ type DdevApp struct {
 
 // GetType returns the application type as a (lowercase) string
 func (app *DdevApp) GetType() string {
-	return strings.ToLower(app.AppType)
+	return strings.ToLower(app.Type)
 }
 
 // Init populates DdevApp config based on the current working directory.

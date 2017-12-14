@@ -47,9 +47,9 @@ type TestSite struct {
 	HTTPProbeURI string
 	// DocrootBase is the subdirectory witin the site that is the root/index.php
 	DocrootBase string
-	// AppType is the type of application. This can be specified when a config file is not present
+	// Type is the type of application. This can be specified when a config file is not present
 	// for a test site.
-	AppType string
+	Type string
 }
 
 // Prepare downloads and extracts a site codebase to a temporary directory.
@@ -86,8 +86,8 @@ func (site *TestSite) Prepare() error {
 	// ignore app name defined in config file if present.
 	app.Name = site.Name
 
-	if app.AppType == "" {
-		app.AppType = site.AppType
+	if app.Type == "" {
+		app.Type = site.Type
 	}
 
 	err = app.WriteConfig()

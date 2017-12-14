@@ -41,7 +41,7 @@ func GetApps() [](*DdevApp) {
 			// if app.Init() failed.
 			if err != nil {
 				app.Name = siteContainer.Labels["com.ddev.site-name"]
-				app.AppType = siteContainer.Labels["com.ddev.app-type"]
+				app.Type = siteContainer.Labels["com.ddev.app-type"]
 				app.AppRoot = siteContainer.Labels["com.ddev.approot"]
 			}
 			apps = append(apps, app)

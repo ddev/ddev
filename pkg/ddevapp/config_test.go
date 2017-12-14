@@ -35,7 +35,7 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(app.WebImage, version.WebImg+":"+version.WebTag)
 	assert.Equal(app.DBAImage, version.DBAImg+":"+version.DBATag)
 	app.Name = util.RandString(32)
-	app.AppType = "drupal8"
+	app.Type = "drupal8"
 
 	// WriteConfig the newConfig.
 	err = app.WriteConfig()
@@ -46,7 +46,7 @@ func TestNewConfig(t *testing.T) {
 	loadedConfig, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 	assert.Equal(app.Name, loadedConfig.Name)
-	assert.Equal(app.AppType, loadedConfig.AppType)
+	assert.Equal(app.Type, loadedConfig.Type)
 
 }
 
@@ -108,7 +108,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
-	app.AppType = AllowedAppTypes[0]
+	app.Type = AllowedAppTypes[0]
 
 	// WriteConfig a config to create/prep necessary directories.
 	err = app.WriteConfig()
@@ -128,7 +128,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	assert.NoError(err)
 	contentString := string(composeBytes)
 	assert.Contains(contentString, app.Platform)
-	assert.Contains(contentString, app.AppType)
+	assert.Contains(contentString, app.Type)
 }
 
 // TestConfigCommand tests the interactive config options.
@@ -175,7 +175,7 @@ func TestConfigCommand(t *testing.T) {
 
 	// Ensure values were properly set on the config struct.
 	assert.Equal(name, config.Name)
-	assert.Equal("drupal8", config.AppType)
+	assert.Equal("drupal8", config.Type)
 	assert.Equal("docroot", config.Docroot)
 	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
@@ -208,7 +208,7 @@ func TestReadConfig(t *testing.T) {
 	assert.Equal(app.DBImage, version.DBImg+":"+version.DBTag)
 
 	// Values defined in file, we should have values from file
-	assert.Equal(app.AppType, "drupal8")
+	assert.Equal(app.Type, "drupal8")
 	assert.Equal(app.WebImage, "test/testimage:latest")
 }
 
@@ -223,7 +223,7 @@ func TestValidate(t *testing.T) {
 		Name:    "TestValidate",
 		AppRoot: cwd,
 		Docroot: "testdata",
-		AppType: "wordpress",
+		Type:    "wordpress",
 	}
 
 	err = app.ValidateConfig()
@@ -241,9 +241,9 @@ func TestValidate(t *testing.T) {
 	assert.EqualError(err, fmt.Sprintf("no directory could be found at %s. Please enter a valid docroot in your configuration", filepath.Join(cwd, app.Docroot)))
 
 	app.Docroot = "testdata"
-	app.AppType = "potato"
+	app.Type = "potato"
 	err = app.ValidateConfig()
-	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", app.AppType))
+	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", app.Type))
 }
 
 // TestWriteConfig tests writing config values to file
@@ -260,7 +260,7 @@ func TestWriteConfig(t *testing.T) {
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
-		AppType:    "drupal8",
+		Type:       "drupal8",
 		Provider:   DefaultProviderName,
 	}
 
@@ -272,7 +272,7 @@ func TestWriteConfig(t *testing.T) {
 	assert.Contains(string(out), "TestWrite")
 	assert.Contains(string(out), `exec: "drush cr"`)
 
-	app.AppType = "wordpress"
+	app.Type = "wordpress"
 	err = app.WriteConfig()
 	assert.NoError(err)
 
