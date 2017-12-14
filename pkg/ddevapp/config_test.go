@@ -71,15 +71,15 @@ func TestPrepDirectory(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	config, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 
 	// Prep the directory.
-	err = PrepDdevDirectory(filepath.Dir(config.ConfigPath))
+	err = PrepDdevDirectory(filepath.Dir(app.ConfigPath))
 	assert.NoError(err)
 
 	// Read directory info an ensure it exists.
-	_, err = os.Stat(filepath.Dir(config.ConfigPath))
+	_, err = os.Stat(filepath.Dir(app.ConfigPath))
 	assert.NoError(err)
 }
 
@@ -147,8 +147,8 @@ func TestConfigCommand(t *testing.T) {
 	}
 
 	// Create the ddevapp we'll use for testing.
-	// This will not return an error, since there is no existing config.
-	config, err := NewApp(testDir, DefaultProviderName)
+	// This will not return an error, since there is no existing configuration.
+	app, err := NewApp(testDir, DefaultProviderName)
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -163,7 +163,7 @@ func TestConfigCommand(t *testing.T) {
 	util.SetInputScanner(scanner)
 
 	restoreOutput := testcommon.CaptureUserOut()
-	err = config.PromptForConfig()
+	err = app.PromptForConfig()
 	assert.NoError(err, t)
 	out := restoreOutput()
 
@@ -172,10 +172,10 @@ func TestConfigCommand(t *testing.T) {
 	assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
 	assert.Contains(out, fmt.Sprintf("'%s' is not a valid application type", invalidAppType))
 
-	// Ensure values were properly set on the config struct.
-	assert.Equal(name, config.Name)
-	assert.Equal("drupal8", config.Type)
-	assert.Equal("docroot", config.Docroot)
+	// Ensure values were properly set on the app struct.
+	assert.Equal(name, app.Name)
+	assert.Equal("drupal8", app.Type)
+	assert.Equal("docroot", app.Docroot)
 	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
 

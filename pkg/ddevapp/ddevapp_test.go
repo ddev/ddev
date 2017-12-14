@@ -394,7 +394,7 @@ func TestDdevLogs(t *testing.T) {
 	}
 }
 
-// TestProcessHooks tests execution of commands defined in config
+// TestProcessHooks tests execution of commands defined in config.yaml
 func TestProcessHooks(t *testing.T) {
 	assert := asrt.New(t)
 
