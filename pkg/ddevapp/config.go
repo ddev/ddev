@@ -357,8 +357,8 @@ func (app *DdevApp) appTypePrompt() error {
 	if err != nil {
 		return err
 	}
-	var appType string
-	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(GetValidAppTypes(), ", "))
+	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
+	typePrompt := fmt.Sprintf("Application Type [%s]", validAppTypes)
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
 	absDocroot := filepath.Join(app.AppRoot, app.Docroot)
@@ -366,7 +366,7 @@ func (app *DdevApp) appTypePrompt() error {
 		"Location": absDocroot,
 	}).Debug("Attempting to auto-determine application type")
 
-	appType, err = DetermineAppType(absDocroot)
+	appType, err := DetermineAppType(absDocroot)
 	if err == nil {
 		// If we found an application type just set it and inform the user.
 		util.Success("Found a %s codebase at %s.", appType, filepath.Join(app.AppRoot, app.Docroot))
@@ -375,12 +375,12 @@ func (app *DdevApp) appTypePrompt() error {
 	}
 	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, app.Type)
 
-	if !IsValidAppType(appType) {
+	for !IsValidAppType(appType) {
 		fmt.Printf(typePrompt + ": ")
 		appType = strings.ToLower(util.GetInput(app.Type))
 
 		if !IsValidAppType(appType) {
-			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(GetValidAppTypes(), ", "))
+			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, validAppTypes)
 		}
 		app.Type = appType
 	}

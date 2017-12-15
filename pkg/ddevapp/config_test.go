@@ -157,7 +157,7 @@ func TestConfigCommand(t *testing.T) {
 	invalidAppType := strings.ToLower(util.RandString(8))
 
 	// This is a bit hard to follow, but we create an example input buffer that writes the sitename, a (invalid) document root, a valid document root,
-	// an invalid app type, and finally a valid site type (drupal8)
+	// an invalid app type, and finally a valid app type (drupal8)
 	input := fmt.Sprintf("%s\n%s\ndocroot\n%s\ndrupal8", name, invalidDir, invalidAppType)
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)

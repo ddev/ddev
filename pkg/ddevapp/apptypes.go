@@ -22,7 +22,6 @@ type AppTypeFuncs struct {
 // for each apptype (CMS).
 // Example: AppTypeMatrix["drupal"]["7"] == { settingsCreator etc }
 var AppTypeMatrix = map[string]AppTypeFuncs{
-	"":    AppTypeFuncs{},
 	"php": AppTypeFuncs{},
 	"drupal7": AppTypeFuncs{
 		CreateDrupalSettingsFile, GetDrupalUploadDir, GetDrupal7Hooks, SetDrupalSiteSettingsPaths,
@@ -34,6 +33,7 @@ var AppTypeMatrix = map[string]AppTypeFuncs{
 		CreateWordpressSettingsFile, nil, GetWordpressHooks, SetWordpressSiteSettingsPaths,
 	},
 	"backdrop": AppTypeFuncs{},
+	"typo3":    AppTypeFuncs{},
 }
 
 // GetValidAppTypes returns the valid apptype keys from the AppTypeMatrix
