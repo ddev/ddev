@@ -24,13 +24,13 @@ type AppTypeFuncs struct {
 var AppTypeMatrix = map[string]AppTypeFuncs{
 	"php": AppTypeFuncs{},
 	"drupal7": AppTypeFuncs{
-		CreateDrupalSettingsFile, GetDrupalUploadDir, GetDrupal7Hooks, SetDrupalSiteSettingsPaths,
+		createDrupalSettingsFile, getDrupalUploadDir, getDrupal7Hooks, setDrupalSiteSettingsPaths,
 	},
 	"drupal8": AppTypeFuncs{
-		CreateDrupalSettingsFile, GetDrupalUploadDir, GetDrupal8Hooks, SetDrupalSiteSettingsPaths,
+		createDrupalSettingsFile, getDrupalUploadDir, getDrupal8Hooks, setDrupalSiteSettingsPaths,
 	},
 	"wordpress": AppTypeFuncs{
-		CreateWordpressSettingsFile, nil, GetWordpressHooks, SetWordpressSiteSettingsPaths,
+		createWordpressSettingsFile, getWordpressUploadDir, getWordpressHooks, setWordpressSiteSettingsPaths,
 	},
 	"backdrop": AppTypeFuncs{},
 	"typo3":    AppTypeFuncs{},

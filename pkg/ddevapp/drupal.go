@@ -11,8 +11,8 @@ import (
 	"text/template"
 )
 
-// DrupalConfig encapsulates all the configurations for a Drupal site.
-type DrupalConfig struct {
+// DrupalSettings encapsulates all the configurations for a Drupal site.
+type DrupalSettings struct {
 	DeployName       string
 	DeployURL        string
 	DatabaseName     string
@@ -27,9 +27,9 @@ type DrupalConfig struct {
 	Signature        string
 }
 
-// NewDrupalConfig produces a DrupalConfig object with default.
-func NewDrupalConfig() *DrupalConfig {
-	return &DrupalConfig{
+// NewDrupalSettings produces a DrupalSettings object with default.
+func NewDrupalSettings() *DrupalSettings {
+	return &DrupalSettings{
 		DatabaseName:     "db",
 		DatabaseUsername: "db",
 		DatabasePassword: "db",
@@ -119,12 +119,11 @@ $databases['default']['default'] = array(
 );
 `
 
-// CreateDrupalSettingsFile creates the app's settings.php or equivalent,
+// createDrupalSettingsFile creates the app's settings.php or equivalent,
 // adding things like database host, name, and password
-// @todo: This should not be exported
-func CreateDrupalSettingsFile(l *DdevApp) error {
+func createDrupalSettingsFile(app *DdevApp) error {
 
-	settingsFilePath, err := setUpSettingsFile(l)
+	settingsFilePath, err := setUpSettingsFile(app)
 	if err != nil {
 		return fmt.Errorf("Failed to set up settings file: %v", err)
 	}
@@ -133,9 +132,9 @@ func CreateDrupalSettingsFile(l *DdevApp) error {
 
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to in the future.
-	drupalConfig := NewDrupalConfig()
+	drupalConfig := NewDrupalSettings()
 
-	err = WriteDrupalSettingsFile(drupalConfig, settingsFilePath)
+	err = writeDrupalSettingsFile(drupalConfig, settingsFilePath)
 	if err != nil {
 		return err
 	}
@@ -143,10 +142,9 @@ func CreateDrupalSettingsFile(l *DdevApp) error {
 	return nil
 }
 
-// WriteDrupalSettingsFile dynamically produces valid settings.php file by combining a configuration
+// writeDrupalSettingsFile dynamically produces valid settings.php file by combining a configuration
 // object with a data-driven template.
-// @todo: This should not be exported
-func WriteDrupalSettingsFile(drupalConfig *DrupalConfig, filePath string) error {
+func writeDrupalSettingsFile(drupalConfig *DrupalSettings, filePath string) error {
 	tmpl, err := template.New("drupalConfig").Funcs(sprig.TxtFuncMap()).Parse(drupalTemplate)
 	if err != nil {
 		return err
@@ -172,7 +170,6 @@ func WriteDrupalSettingsFile(drupalConfig *DrupalConfig, filePath string) error 
 }
 
 // WriteDrushConfig writes out a drush config based on passed-in values.
-// @todo: This should not be exported
 func WriteDrushConfig(drushConfig *DrushConfig, filePath string) error {
 	tmpl, err := template.New("drushConfig").Funcs(sprig.TxtFuncMap()).Parse(drushTemplate)
 	if err != nil {
@@ -198,11 +195,10 @@ func WriteDrushConfig(drushConfig *DrushConfig, filePath string) error {
 	return nil
 }
 
-// GetDrupalUploadDir just returns a static upload files (public files) dir.
+// getDrupalUploadDir just returns a static upload files (public files) dir.
 // This can be made more sophisticated in the future, for example by adding
 // the directory to the ddev config.yaml.
-// @todo: This should not be exported
-func GetDrupalUploadDir(l *DdevApp) string {
+func getDrupalUploadDir(l *DdevApp) string {
 	return "sites/default/files"
 }
 
@@ -214,21 +210,19 @@ const Drupal8Hooks = `
 const Drupal7Hooks = `
 #     - exec: "drush cc all"`
 
-// GetDrupal7Hooks for appending as byte array
-func GetDrupal7Hooks() []byte {
+// getDrupal7Hooks for appending as byte array
+func getDrupal7Hooks() []byte {
 	return []byte(Drupal7Hooks)
 }
 
-// GetDrupal8Hooks for appending as byte array
-// @todo: This should not be exported
-func GetDrupal8Hooks() []byte {
+// getDrupal8Hooks for appending as byte array
+func getDrupal8Hooks() []byte {
 	return []byte(Drupal8Hooks)
 }
 
-// SetDrupalSiteSettingsPaths sets the paths to settings.php/settings.local.php
+// setDrupalSiteSettingsPaths sets the paths to settings.php/settings.local.php
 // for templating.
-// @todo: This should not be exported
-func SetDrupalSiteSettingsPaths(app *DdevApp) {
+func setDrupalSiteSettingsPaths(app *DdevApp) {
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	var settingsFilePath, localSettingsFilePath string
 	settingsFilePath = filepath.Join(settingsFileBasePath, "sites", "default", "settings.php")

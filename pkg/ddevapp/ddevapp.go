@@ -826,7 +826,7 @@ func (app *DdevApp) CreateSettingsFile() error {
 		}
 		dbPublishPort := dockerutil.GetPublishedPort(dbPrivatePort, db)
 
-		drupalConfig := NewDrupalConfig()
+		drupalConfig := NewDrupalSettings()
 		drushConfig := NewDrushConfig()
 
 		if app.GetType() == "drupal8" {
@@ -835,7 +835,7 @@ func (app *DdevApp) CreateSettingsFile() error {
 		}
 
 		drupalConfig.DeployURL = app.GetURL()
-		err = WriteDrupalSettingsFile(drupalConfig, settingsFilePath)
+		err = writeDrupalSettingsFile(drupalConfig, settingsFilePath)
 		if err != nil {
 			return err
 		}

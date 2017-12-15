@@ -54,20 +54,19 @@ func NewWordpressConfig() *WordpressConfig {
 	}
 }
 
-// WordPressHooks adds a wp-specific hooks example for post-import-db
-const WordPressHooks = `
+// wordPressHooks adds a wp-specific hooks example for post-import-db
+const wordPressHooks = `
     # Un-comment and enter the production url and local url
     # to replace in your database after import.
     # - exec: "wp search-replace <production-url> <local-url>"`
 
-// GetWordpressHooks for appending as byte array
-func GetWordpressHooks() []byte {
-	return []byte(WordPressHooks)
+// getWordpressHooks for appending as byte array
+func getWordpressHooks() []byte {
+	return []byte(wordPressHooks)
 }
 
-// GetWordpressUploadDir just returns a static upload files directory string.
-// @todo: Move all these getters into named files
-func GetWordpressUploadDir(l *DdevApp) string {
+// getWordpressUploadDir just returns a static upload files directory string.
+func getWordpressUploadDir(app *DdevApp) string {
 	return "wp-content/uploads"
 }
 
@@ -138,10 +137,9 @@ if (__FILE__ == "wp-config.php") {
 `
 )
 
-// CreateWordpressSettingsFile creates a wordpress settings file from a
+// createWordpressSettingsFile creates a wordpress settings file from a
 // template.
-// @todo this should not be exported
-func CreateWordpressSettingsFile(app *DdevApp) error {
+func createWordpressSettingsFile(app *DdevApp) error {
 	settingsFilePath, err := setUpSettingsFile(app)
 	if err != nil {
 		return fmt.Errorf("Failed to set up settings file: %v", err)
@@ -155,7 +153,6 @@ func CreateWordpressSettingsFile(app *DdevApp) error {
 
 // WriteWordpressConfig dynamically produces valid wp-config.php file by combining a configuration
 // object with a data-driven template.
-// @todo this should not be exported
 func WriteWordpressConfig(wordpressConfig *WordpressConfig, filePath string) error {
 	tmpl, err := template.New("wordpressConfig").Funcs(sprig.TxtFuncMap()).Parse(wordpressTemplate)
 	if err != nil {
@@ -181,10 +178,9 @@ func WriteWordpressConfig(wordpressConfig *WordpressConfig, filePath string) err
 	return nil
 }
 
-// SetWordpressSiteSettingsPaths sets the expected settings files paths for
+// setWordpressSiteSettingsPaths sets the expected settings files paths for
 // a wordpress site.
-// @todo this should not be exported.
-func SetWordpressSiteSettingsPaths(app *DdevApp) {
+func setWordpressSiteSettingsPaths(app *DdevApp) {
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	var settingsFilePath, localSettingsFilePath string
 	settingsFilePath = filepath.Join(settingsFileBasePath, "wp-config.php")

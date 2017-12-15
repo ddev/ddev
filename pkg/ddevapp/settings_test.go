@@ -13,21 +13,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWriteDrupalConfig(t *testing.T) {
+// TestWriteDrupalSettings tests writing drupal settings.php/settings.local.php
+func TestWriteDrupalSettings(t *testing.T) {
 	dir := testcommon.CreateTmpDir("example")
-
-	file, err := ioutil.TempFile(dir, "file")
+	err := os.MkdirAll(dir+"/sites/default", 0777)
 	assert.NoError(t, err)
 
-	drupalConfig := NewDrupalConfig()
-
-	err = WriteDrupalSettingsFile(drupalConfig, file.Name())
+	app, err := NewApp(dir, DefaultProviderName)
 	assert.NoError(t, err)
+	app.Type = "drupal8"
 
-	util.CheckClose(file)
-	err = os.Chmod(dir, 0755)
-	assert.NoError(t, err)
-	err = os.Chmod(file.Name(), 0666)
+	err = CreateSettingsFile(app)
 	assert.NoError(t, err)
 
 	err = os.RemoveAll(dir)
@@ -56,7 +52,7 @@ func TestWriteDrushConfig(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestWriteWordpressConfig(t *testing.T) {
+func TestWriteWordpressSettings(t *testing.T) {
 	dir := testcommon.CreateTmpDir("example")
 
 	file, err := ioutil.TempFile(dir, "file")
