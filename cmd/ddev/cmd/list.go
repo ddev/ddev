@@ -18,10 +18,9 @@ var DevListCmd = &cobra.Command{
 	Short: "List applications",
 	Long:  `List applications.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		apps := ddevapp.GetApps()
-		var appDescs []map[string]interface{}
-
 		for {
+			apps := ddevapp.GetApps()
+			var appDescs []map[string]interface{}
 
 			if len(apps) < 1 {
 				output.UserOut.Println("There are no running ddev applications.")
