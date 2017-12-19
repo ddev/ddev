@@ -6,8 +6,7 @@
 
 SHELL := /bin/bash
 
-# These dirs must be built in this order (nginx-php-fpm depends on php7)
-CONTAINER_DIRS = docker.ddev-router docker.nginx-php-fpm-local docker.mysql-local docker.phpmyadmin
+CONTAINER_DIRS = docker.ddev-router docker.nginx-php-fpm-local mariadb-local docker.phpmyadmin
 
 BASEDIR=./containers/
 
