@@ -1,7 +1,6 @@
 package ddevapp
 
 import (
-	"fmt"
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -138,17 +137,17 @@ if (__FILE__ == "wp-config.php") {
 )
 
 // createWordpressSettingsFile creates a wordpress settings file from a
-// template.
-func createWordpressSettingsFile(app *DdevApp) error {
-	settingsFilePath, err := newSettingsFile(app)
-	if err != nil {
-		return fmt.Errorf("Failed to set up settings file: %v", err)
+// template. Returns fullpath to location of file + err
+func createWordpressSettingsFile(app *DdevApp) (string, error) {
+	settingsFilePath := app.SiteSettingsPath
+	if settingsFilePath == "" {
+		settingsFilePath = app.SiteLocalSettingsPath
 	}
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
 	wpConfig := NewWordpressConfig()
 	wpConfig.DeployURL = app.GetURL()
-	err = WriteWordpressConfig(wpConfig, settingsFilePath)
-	return err
+	err := WriteWordpressConfig(wpConfig, settingsFilePath)
+	return settingsFilePath, err
 }
 
 // WriteWordpressConfig dynamically produces valid wp-config.php file by combining a configuration

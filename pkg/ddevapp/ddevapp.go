@@ -277,7 +277,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		return err
 	}
 
-	err = CreateSettingsFile(app)
+	_, err = CreateSettingsFile(app)
 	if err != nil {
 		// @todo: Use a typed error instead of relying on the text of the message.
 		if strings.Contains(err.Error(), "settings files already exist and are being managed") {
@@ -753,9 +753,10 @@ func (app *DdevApp) Wait(containerTypes ...string) error {
 	return nil
 }
 
-// DetermineDrupalSettingsPath figures out the path to the settings file for a
-// Drupal app.
-func (app *DdevApp) DetermineDrupalSettingsPath() (string, error) {
+// DetermineSettingsPathLocation figures out the path to the settings file for
+// an app based on the contents/existence of app.SiteSettingsPath and
+// app.SiteLocalSettingsPath.
+func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	possibleLocations := []string{app.SiteSettingsPath, app.SiteLocalSettingsPath}
 	for _, loc := range possibleLocations {
 		// If the file is found we need to check for a signature to determine if it's safe to use.

@@ -13,8 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestWriteDrupalSettings tests writing drupal settings.php/settings.local.php
-func TestWriteDrupalSettings(t *testing.T) {
+// TestWriteSettings tests writing app settings (like Drupal
+// settings.php/settings.local.php
+func TestWriteSettings(t *testing.T) {
 	dir := testcommon.CreateTmpDir("example")
 	err := os.MkdirAll(dir+"/sites/default", 0777)
 	assert.NoError(t, err)
@@ -23,13 +24,15 @@ func TestWriteDrupalSettings(t *testing.T) {
 	assert.NoError(t, err)
 	app.Type = "drupal8"
 
-	err = CreateSettingsFile(app)
+	_, err = CreateSettingsFile(app)
 	assert.NoError(t, err)
 
 	err = os.RemoveAll(dir)
 	assert.NoError(t, err)
 }
 
+// @todo: Take a look at drush config in general to make sure its config
+// is noted properly. Do we need it? Are we using it?
 func TestWriteDrushConfig(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir("example")

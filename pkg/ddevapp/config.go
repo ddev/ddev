@@ -161,9 +161,9 @@ func (app *DdevApp) ReadConfig() error {
 	app.DataDir = filepath.Join(dirPath, "mysql")
 	app.ImportDir = filepath.Join(dirPath, "import-db")
 
-	SetSiteSettingsPaths(app)
+	SetApptypeSettingsPaths(app)
 
-	return err
+	return nil
 }
 
 // WarnIfConfigReplace just messages user about whether config is being replaced or created

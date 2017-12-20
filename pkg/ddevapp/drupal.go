@@ -121,13 +121,13 @@ $databases['default']['default'] = array(
 
 // createDrupalSettingsFile creates the app's settings.php or equivalent,
 // adding things like database host, name, and password
-func createDrupalSettingsFile(app *DdevApp) error {
+// Returns the fullpath to settings file and err
+func createDrupalSettingsFile(app *DdevApp) (string, error) {
 
-	settingsFilePath, err := newSettingsFile(app)
+	settingsFilePath, err := app.DetermineSettingsPathLocation()
 	if err != nil {
-		return fmt.Errorf("Failed to get Drupal settings file path: %v", err)
+		return "", fmt.Errorf("Failed to get Drupal settings file path: %v", err)
 	}
-
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
 
 	// Currently there isn't any customization done for the drupal config, but
@@ -136,10 +136,10 @@ func createDrupalSettingsFile(app *DdevApp) error {
 
 	err = writeDrupalSettingsFile(drupalConfig, settingsFilePath)
 	if err != nil {
-		return fmt.Errorf("Failed to write Drupal settings file: %v", err)
+		return settingsFilePath, fmt.Errorf("Failed to write Drupal settings file: %v", err)
 	}
 
-	return nil
+	return settingsFilePath, nil
 }
 
 // writeDrupalSettingsFile dynamically produces valid settings.php file by combining a configuration
@@ -198,7 +198,7 @@ func WriteDrushConfig(drushConfig *DrushConfig, filePath string) error {
 // getDrupalUploadDir just returns a static upload files (public files) dir.
 // This can be made more sophisticated in the future, for example by adding
 // the directory to the ddev config.yaml.
-func getDrupalUploadDir(l *DdevApp) string {
+func getDrupalUploadDir(app *DdevApp) string {
 	return "sites/default/files"
 }
 
