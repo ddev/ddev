@@ -123,20 +123,20 @@ $databases['default']['default'] = array(
 // adding things like database host, name, and password
 func createDrupalSettingsFile(app *DdevApp) error {
 
-	settingsFilePath, err := setUpSettingsFile(app)
+	settingsFilePath, err := newSettingsFile(app)
 	if err != nil {
-		return fmt.Errorf("Failed to set up settings file: %v", err)
+		return fmt.Errorf("Failed to get Drupal settings file path: %v", err)
 	}
 
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
 
 	// Currently there isn't any customization done for the drupal config, but
-	// we may want to in the future.
+	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings()
 
 	err = writeDrupalSettingsFile(drupalConfig, settingsFilePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to write Drupal settings file: %v", err)
 	}
 
 	return nil
@@ -144,8 +144,8 @@ func createDrupalSettingsFile(app *DdevApp) error {
 
 // writeDrupalSettingsFile dynamically produces valid settings.php file by combining a configuration
 // object with a data-driven template.
-func writeDrupalSettingsFile(drupalConfig *DrupalSettings, filePath string) error {
-	tmpl, err := template.New("drupalConfig").Funcs(sprig.TxtFuncMap()).Parse(drupalTemplate)
+func writeDrupalSettingsFile(settings *DrupalSettings, filePath string) error {
+	tmpl, err := template.New("settings").Funcs(sprig.TxtFuncMap()).Parse(drupalTemplate)
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func writeDrupalSettingsFile(drupalConfig *DrupalSettings, filePath string) erro
 	if err != nil {
 		return err
 	}
-	err = tmpl.Execute(file, drupalConfig)
+	err = tmpl.Execute(file, settings)
 	if err != nil {
 		return err
 	}

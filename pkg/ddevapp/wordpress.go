@@ -140,7 +140,7 @@ if (__FILE__ == "wp-config.php") {
 // createWordpressSettingsFile creates a wordpress settings file from a
 // template.
 func createWordpressSettingsFile(app *DdevApp) error {
-	settingsFilePath, err := setUpSettingsFile(app)
+	settingsFilePath, err := newSettingsFile(app)
 	if err != nil {
 		return fmt.Errorf("Failed to set up settings file: %v", err)
 	}

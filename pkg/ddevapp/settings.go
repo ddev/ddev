@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 )
 
-// setUpSettingsFile does the grunt work of determining which and where the
+// newSettingsFile does the grunt work of determining which and where the
 // settings file will be created, then sets permissions so it can do the right
 // thing.
-func setUpSettingsFile(app *DdevApp) (string, error) {
+func newSettingsFile(app *DdevApp) (string, error) {
 
 	// If neither settings file options are set, then
 	if app.SiteLocalSettingsPath == "" && app.SiteSettingsPath == "" {
@@ -34,7 +34,7 @@ func setUpSettingsFile(app *DdevApp) (string, error) {
 
 			err = os.Chmod(fp, os.FileMode(perms))
 			if err != nil {
-				return "", fmt.Errorf("could not change permissions on %s to make the file writeable: %v", fp, err)
+				return "", fmt.Errorf("could not change permissions on file %s to make it writeable: %v", fp, err)
 			}
 		}
 	}

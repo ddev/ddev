@@ -279,7 +279,8 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 
 	err = CreateSettingsFile(app)
 	if err != nil {
-		if err.Error() != "app config exists" {
+		// @todo: Use a typed error instead of relying on the text of the message.
+		if strings.Contains(err.Error(), "settings files already exist and are being managed") {
 			return fmt.Errorf("failed to write configuration file for %s: %v", app.GetName(), err)
 		}
 		util.Warning("A custom settings file exists for your application, so ddev did not generate one.")
@@ -771,90 +772,7 @@ func (app *DdevApp) DetermineDrupalSettingsPath() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("settings files already exist and are being manged by the user")
-}
-
-// CreateSettingsFile creates the app's settings.php or equivalent,
-// adding things like database host, name, and password
-func (app *DdevApp) CreateSettingsFile() error {
-	// If neither settings file options are set, then
-	if app.SiteLocalSettingsPath == "" && app.SiteSettingsPath == "" {
-		return nil
-	}
-
-	settingsFilePath, err := app.DetermineDrupalSettingsPath()
-	if err != nil {
-		return err
-	}
-
-	// Drupal and WordPress love to change settings files to be unwriteable. Chmod them to something we can work with
-	// in the event that they already exist.
-	chmodTargets := []string{filepath.Dir(settingsFilePath), settingsFilePath}
-	for _, fp := range chmodTargets {
-		if fileInfo, err := os.Stat(fp); !os.IsNotExist(err) {
-			perms := 0644
-			if fileInfo.IsDir() {
-				perms = 0755
-			}
-
-			err = os.Chmod(fp, os.FileMode(perms))
-			if err != nil {
-				return fmt.Errorf("could not change permissions on %s to make the file writeable", fp)
-			}
-		}
-	}
-
-	fileName := filepath.Base(settingsFilePath)
-
-	// @todo: This needs to be removed and use the proper app hooks
-	switch app.GetType() {
-	case "drupal8":
-		fallthrough
-	case "drupal7":
-		output.UserOut.Printf("Generating %s file for database connection.", fileName)
-		drushSettingsPath := filepath.Join(app.GetAppRoot(), "drush.settings.php")
-
-		// Retrieve published mysql port for drush settings file.
-		db, err := app.FindContainerByType("db")
-		if err != nil {
-			return err
-		}
-
-		dbPrivatePort, err := strconv.ParseInt(appports.GetPort("db"), 10, 64)
-		if err != nil {
-			return err
-		}
-		dbPublishPort := dockerutil.GetPublishedPort(dbPrivatePort, db)
-
-		drupalConfig := NewDrupalSettings()
-		drushConfig := NewDrushConfig()
-
-		if app.GetType() == "drupal8" {
-			drupalConfig.IsDrupal8 = true
-			drushConfig.IsDrupal8 = true
-		}
-
-		drupalConfig.DeployURL = app.GetURL()
-		err = writeDrupalSettingsFile(drupalConfig, settingsFilePath)
-		if err != nil {
-			return err
-		}
-
-		drushConfig.DatabasePort = strconv.FormatInt(dbPublishPort, 10)
-		err = WriteDrushConfig(drushConfig, drushSettingsPath)
-		if err != nil {
-			return err
-		}
-	case "wordpress":
-		output.UserOut.Printf("Generating %s file for database connection.", fileName)
-		wpConfig := NewWordpressConfig()
-		wpConfig.DeployURL = app.GetURL()
-		err := WriteWordpressConfig(wpConfig, settingsFilePath)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return "", fmt.Errorf("settings files already exist and are being managed by the user")
 }
 
 // Down stops the docker containers for the project in current directory.
