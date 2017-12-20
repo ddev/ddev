@@ -7,6 +7,6 @@
 [submodule "containers/docker.ddev-router"]
 	path = containers/docker.ddev-router
 	url = git@github.com:drud/docker.ddev-router.git
-[submodule "containers/docker.mysql-local"]
-	path = containers/docker.mysql-local
-	url = git@github.com:drud/docker.mysql-local.git
+[submodule "containers/mariadb-local"]
+	path = containers/mariadb-local
+	url = git@github.com:drud/mariadb-local.git
