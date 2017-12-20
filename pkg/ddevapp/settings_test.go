@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/assert"
@@ -16,16 +17,35 @@ import (
 // TestWriteSettings tests writing app settings (like Drupal
 // settings.php/settings.local.php
 func TestWriteSettings(t *testing.T) {
+	expectations := map[string]string{
+		"drupal7":   "sites/default/settings.php",
+		"drupal8":   "sites/default/settings.php",
+		"wordpress": "wp-config.php",
+	}
 	dir := testcommon.CreateTmpDir("example")
 	err := os.MkdirAll(dir+"/sites/default", 0777)
 	assert.NoError(t, err)
 
 	app, err := NewApp(dir, DefaultProviderName)
 	assert.NoError(t, err)
-	app.Type = "drupal8"
 
-	_, err = CreateSettingsFile(app)
-	assert.NoError(t, err)
+	for apptype, settingsRelativePath := range expectations {
+		app.Type = apptype
+
+		expectedSettingsFile := dir + "/" + settingsRelativePath
+		_, err = os.Stat(expectedSettingsFile)
+		assert.True(t, os.IsNotExist(err))
+		createdFile, err := CreateSettingsFile(app)
+		assert.NoError(t, err)
+		assert.EqualValues(t, expectedSettingsFile, createdFile)
+		_, err = os.Stat(expectedSettingsFile)
+		assert.NoError(t, err)
+		signatureFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, DdevSettingsFileSignature)
+		assert.NoError(t, err)
+		assert.True(t, signatureFound)
+		err = os.Remove(expectedSettingsFile)
+		assert.NoError(t, err)
+	}
 
 	err = os.RemoveAll(dir)
 	assert.NoError(t, err)

@@ -31,18 +31,18 @@ var appTypeMatrix map[string]AppTypeFuncs
 
 func init() {
 	appTypeMatrix = map[string]AppTypeFuncs{
-		"php": AppTypeFuncs{},
-		"drupal7": AppTypeFuncs{
+		"php": {},
+		"drupal7": {
 			createDrupalSettingsFile, getDrupalUploadDir, getDrupal7Hooks, setDrupalSiteSettingsPaths,
 		},
-		"drupal8": AppTypeFuncs{
+		"drupal8": {
 			createDrupalSettingsFile, getDrupalUploadDir, getDrupal8Hooks, setDrupalSiteSettingsPaths,
 		},
-		"wordpress": AppTypeFuncs{
+		"wordpress": {
 			createWordpressSettingsFile, getWordpressUploadDir, getWordpressHooks, setWordpressSiteSettingsPaths,
 		},
-		"backdrop": AppTypeFuncs{},
-		"typo3":    AppTypeFuncs{},
+		"backdrop": {},
+		"typo3":    {},
 	}
 }
 
@@ -67,8 +67,6 @@ func IsValidAppType(apptype string) bool {
 // CreateSettingsFile creates the settings file (like settings.php) for the
 // provided app is the apptype has a settingsCreator function.
 func CreateSettingsFile(app *DdevApp) (string, error) {
-	var settingsPath string
-
 	SetApptypeSettingsPaths(app)
 
 	// If neither settings file options are set, then don't continue
@@ -94,11 +92,13 @@ func CreateSettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
+	// If we have a function to do the settings creation, do it, otherwise
+	// just ignore.
 	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.settingsCreator != nil {
 		settingsPath, err := appFuncs.settingsCreator(app)
 		return settingsPath, err
 	}
-	return settingsPath, nil
+	return "", nil
 }
 
 // UploadDirFunc returns the upload (public files) directory for the given app
