@@ -22,6 +22,8 @@ echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
 if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq)
 fi
+# Update all images that may have changed
+docker images |grep -v REPOSITORY | awk '{print $1":"$2 }' | xargs -L1 docker pull
 rm -rf ~/.ddev/Test*
 
 echo "Running tests..."
