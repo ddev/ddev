@@ -643,7 +643,8 @@ func (app *DdevApp) ExecWithTty(service string, cmd ...string) error {
 }
 
 // Logs returns logs for a site's given container.
-func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tail string) error {
+// See docker.LogsOptions for more information about valid tailLines values.
+func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
 	container, err := app.FindContainerByType(service)
 	if err != nil {
 		return err
@@ -659,8 +660,8 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tail stri
 		Timestamps:   timestamps,
 	}
 
-	if tail != "" {
-		logOpts.Tail = tail
+	if tailLines != "" {
+		logOpts.Tail = tailLines
 	}
 
 	client := dockerutil.GetDockerClient()
