@@ -75,23 +75,3 @@ func TestWriteDrushConfig(t *testing.T) {
 	err = os.RemoveAll(dir)
 	assert.NoError(t, err)
 }
-
-func TestWriteWordpressSettings(t *testing.T) {
-	dir := testcommon.CreateTmpDir("example")
-
-	file, err := ioutil.TempFile(dir, "file")
-	assert.NoError(t, err)
-
-	wpConfig := NewWordpressConfig()
-	err = WriteWordpressConfig(wpConfig, file.Name())
-	assert.NoError(t, err)
-
-	util.CheckClose(file)
-	err = os.Chmod(dir, 0755)
-	assert.NoError(t, err)
-	err = os.Chmod(file.Name(), 0666)
-	assert.NoError(t, err)
-
-	err = os.RemoveAll(dir)
-	assert.NoError(t, err)
-}
