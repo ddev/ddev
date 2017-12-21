@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"os"
@@ -32,7 +33,7 @@ func TestWriteSettings(t *testing.T) {
 	for apptype, settingsRelativePath := range expectations {
 		app.Type = apptype
 
-		expectedSettingsFile := dir + "/" + settingsRelativePath
+		expectedSettingsFile := filepath.Join(dir, settingsRelativePath)
 		_, err = os.Stat(expectedSettingsFile)
 		assert.True(t, os.IsNotExist(err))
 		createdFile, err := app.CreateSettingsFile()
