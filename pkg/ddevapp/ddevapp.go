@@ -277,7 +277,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		return err
 	}
 
-	_, err = CreateSettingsFile(app)
+	_, err = app.CreateSettingsFile()
 	if err != nil {
 		// @todo: Use a typed error instead of relying on the text of the message.
 		if strings.Contains(err.Error(), "settings files already exist and are being managed") {

@@ -107,7 +107,7 @@ func (app *DdevApp) WriteConfig() error {
 
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(HookTemplate)...)
-	cfgbytes = append(cfgbytes, GetHookSuggestions(app.Type)...)
+	cfgbytes = append(cfgbytes, app.GetHookSuggestions()...)
 
 	err = ioutil.WriteFile(app.ConfigPath, cfgbytes, 0644)
 	if err != nil {
@@ -161,7 +161,7 @@ func (app *DdevApp) ReadConfig() error {
 	app.DataDir = filepath.Join(dirPath, "mysql")
 	app.ImportDir = filepath.Join(dirPath, "import-db")
 
-	SetApptypeSettingsPaths(app)
+	app.SetApptypeSettingsPaths()
 
 	return nil
 }

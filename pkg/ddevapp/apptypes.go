@@ -66,8 +66,8 @@ func IsValidAppType(apptype string) bool {
 
 // CreateSettingsFile creates the settings file (like settings.php) for the
 // provided app is the apptype has a settingsCreator function.
-func CreateSettingsFile(app *DdevApp) (string, error) {
-	SetApptypeSettingsPaths(app)
+func (app *DdevApp) CreateSettingsFile() (string, error) {
+	app.SetApptypeSettingsPaths()
 
 	// If neither settings file options are set, then don't continue
 	if app.SiteLocalSettingsPath == "" && app.SiteSettingsPath == "" {
@@ -101,8 +101,8 @@ func CreateSettingsFile(app *DdevApp) (string, error) {
 	return "", nil
 }
 
-// UploadDirFunc returns the upload (public files) directory for the given app
-func UploadDirFunc(app *DdevApp) string {
+// GetUploadDir returns the upload (public files) directory for the given app
+func (app *DdevApp) GetUploadDir() string {
 	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.uploadDir != nil {
 		uploadDir := appFuncs.uploadDir(app)
 		return uploadDir
@@ -112,8 +112,8 @@ func UploadDirFunc(app *DdevApp) string {
 
 // GetHookSuggestions gets the actual text of the config.yaml hook suggestions
 // for a given apptype
-func GetHookSuggestions(apptype string) []byte {
-	if appFuncs, ok := appTypeMatrix[apptype]; ok && appFuncs.hookSuggestions != nil {
+func (app *DdevApp) GetHookSuggestions() []byte {
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.hookSuggestions != nil {
 		suggestions := appFuncs.hookSuggestions()
 		return suggestions
 	}
@@ -122,7 +122,7 @@ func GetHookSuggestions(apptype string) []byte {
 
 // SetApptypeSettingsPaths chooses and sets the settings.php/settings.local.php
 // and related paths for a given app.
-func SetApptypeSettingsPaths(app *DdevApp) {
+func (app *DdevApp) SetApptypeSettingsPaths() {
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.apptypeSettingsPaths != nil {
 		appFuncs.apptypeSettingsPaths(app)
 	}

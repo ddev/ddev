@@ -35,7 +35,7 @@ func TestWriteSettings(t *testing.T) {
 		expectedSettingsFile := dir + "/" + settingsRelativePath
 		_, err = os.Stat(expectedSettingsFile)
 		assert.True(t, os.IsNotExist(err))
-		createdFile, err := CreateSettingsFile(app)
+		createdFile, err := app.CreateSettingsFile()
 		assert.NoError(t, err)
 		assert.EqualValues(t, expectedSettingsFile, createdFile)
 		_, err = os.Stat(expectedSettingsFile)
