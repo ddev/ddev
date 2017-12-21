@@ -107,7 +107,7 @@ func (app *DdevApp) WriteConfig() error {
 
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(HookTemplate)...)
-	cfgbytes = append(cfgbytes, app.GetHookSuggestions()...)
+	cfgbytes = append(cfgbytes, app.GetHookDefaultComments()...)
 
 	err = ioutil.WriteFile(app.ConfigPath, cfgbytes, 0644)
 	if err != nil {

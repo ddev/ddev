@@ -9,9 +9,9 @@ import (
 type settingsCreator func(*DdevApp) (string, error)
 type uploadDir func(*DdevApp) string
 
-// hookSuggestions should probably change its arg from string to app when
+// hookDefaultComments should probably change its arg from string to app when
 // config refactor is done.
-type hookSuggestions func() []byte
+type hookDefaultComments func() []byte
 
 type apptypeSettingsPaths func(app *DdevApp)
 
@@ -20,7 +20,7 @@ type apptypeSettingsPaths func(app *DdevApp)
 type AppTypeFuncs struct {
 	settingsCreator
 	uploadDir
-	hookSuggestions
+	hookDefaultComments
 	apptypeSettingsPaths
 }
 
@@ -110,11 +110,11 @@ func (app *DdevApp) GetUploadDir() string {
 	return ""
 }
 
-// GetHookSuggestions gets the actual text of the config.yaml hook suggestions
+// GetHookDefaultComments gets the actual text of the config.yaml hook suggestions
 // for a given apptype
-func (app *DdevApp) GetHookSuggestions() []byte {
-	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.hookSuggestions != nil {
-		suggestions := appFuncs.hookSuggestions()
+func (app *DdevApp) GetHookDefaultComments() []byte {
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.hookDefaultComments != nil {
+		suggestions := appFuncs.hookDefaultComments()
 		return suggestions
 	}
 	return []byte("")
