@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"runtime"
 	"strings"
 	"time"
 
@@ -336,9 +335,6 @@ func CheckDockerVersion(versionConstraint string) error {
 // relies on docker-compose being somewhere in the user's $PATH.
 func CheckDockerCompose(versionConstraint string) error {
 	executableName := "docker-compose"
-	if runtime.GOOS == "Windows" {
-		executableName = "docker-compose.exe"
-	}
 
 	path, err := exec.LookPath(executableName)
 	if err != nil {
