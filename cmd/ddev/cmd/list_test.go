@@ -77,9 +77,11 @@ func TestDdevListContinuous(t *testing.T) {
 	assert.NoError(err)
 
 	// Take a snapshot of the output a little over one second apart.
-	output1 := cmd.CombinedOutput()
+	output1, err := cmd.CombinedOutput()
+	assert.NoError(err)
 	time.Sleep(time.Millisecond * 1020)
-	output2 := cmd.CombinedOutput()
+	output2, err := cmd.CombinedOutput()
+	assert.NoError(err)
 
 	// Kill the process we started.
 	cmd.Process.Kill()
