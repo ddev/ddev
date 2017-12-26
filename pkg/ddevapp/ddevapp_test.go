@@ -384,7 +384,7 @@ func TestDdevLogs(t *testing.T) {
 		assert.Contains(out, "Database initialized")
 
 		stdout = testcommon.CaptureUserOut()
-		err = app.Logs("db", false, false, "2")
+		err = app.Logs("db", false, false, "")
 		assert.NoError(err)
 		out = stdout()
 		assert.Contains(out, "MySQL init process done. Ready for start up.")
