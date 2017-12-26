@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	//"os"
 	"time"
 
 	"github.com/drud/ddev/pkg/ddevapp"
