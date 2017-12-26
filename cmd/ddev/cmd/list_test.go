@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"encoding/json"
+	oexec "os/exec"
+	"time"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
@@ -63,4 +65,25 @@ func TestDevList(t *testing.T) {
 
 	}
 
+}
+
+// TestDdevListContinuous tests the --continuous flag for ddev list.
+func TestDdevListContinuous(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Execute "ddev list --continuous"
+	cmd := oexec.Command(DdevBin, "list", "--continuous")
+	err := cmd.Start()
+	assert.NoError(err)
+
+	// Take a snapshot of the output a little over one second apart.
+	output1 := cmd.CombinedOutput()
+	time.Sleep(time.Millisecond * 1020)
+	output2 := cmd.CombinedOutput()
+
+	// Kill the process we started.
+	cmd.Process.Kill()
+
+	// The two snapshots of output should be different.
+	assert.NotEqual(output1, output2)
 }
