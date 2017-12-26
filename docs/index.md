@@ -55,6 +55,10 @@ You can also easily perform the installation manually if preferred:
 - Copy `ddev.exe` into `%HOMEPATH%\AppData\Local\Microsoft\WindowsApps`, or otherwise add `ddev.exe` to a folder defined in your `PATH`
 - Run `ddev` from a Command Prompt or PowerShell to test your installation. You should see ddev's command usage output.
 
+### Versioning
+
+The DDEV project is committed to supporting [Semantic Version 2.0.0](https://semver.org/). Additional context on this decision can be read in [Ensure ddev is properly utilizing Semantic Versioning](https://github.com/drud/ddev/issues/352).
+
 ## Support
 If you've encountered trouble using ddev, please use these resources to get help with your issue:
 
