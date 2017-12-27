@@ -16,7 +16,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -405,33 +404,6 @@ func PrepDdevDirectory(dir string) error {
 	}
 
 	return nil
-}
-
-// DetermineAppType uses some predetermined file checks to determine if an app
-// is of any of the known types
-func DetermineAppType(basePath string) (string, error) {
-	defaultLocations := map[string]string{
-		"scripts/drupal.sh":      "drupal7",
-		"core/scripts/drupal.sh": "drupal8",
-		"wp-settings.php":        "wordpress",
-	}
-
-	for k, v := range defaultLocations {
-		fp := filepath.Join(basePath, k)
-		log.WithFields(log.Fields{
-			"file": fp,
-		}).Debug("Looking for app fingerprint.")
-		if _, err := os.Stat(fp); err == nil {
-			log.WithFields(log.Fields{
-				"file": fp,
-				"app":  v,
-			}).Debug("Found app fingerprint.")
-
-			return v, nil
-		}
-	}
-
-	return "", errors.New("DetermineAppType() couldn't determine app's type")
 }
 
 // validateCommandYaml validates command hooks and tasks defined in hooks for config.yaml
