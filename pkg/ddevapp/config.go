@@ -28,9 +28,6 @@ const DefaultProviderName = "default"
 // We're not doing anything with AppVersion, so just default it to 1 for now.
 const CurrentAppVersion = "1"
 
-// AllowedAppTypes lists the types of site/app that can be used.
-var AllowedAppTypes = []string{"drupal7", "drupal8", "wordpress"}
-
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
@@ -108,15 +105,9 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
+	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(HookTemplate)...)
-	switch app.Type {
-	case "drupal8":
-		cfgbytes = append(cfgbytes, []byte(Drupal8Hooks)...)
-	case "drupal7":
-		cfgbytes = append(cfgbytes, []byte(Drupal7Hooks)...)
-	case "wordpress":
-		cfgbytes = append(cfgbytes, []byte(WordPressHooks)...)
-	}
+	cfgbytes = append(cfgbytes, app.GetHookDefaultComments()...)
 
 	err = ioutil.WriteFile(app.ConfigPath, cfgbytes, 0644)
 	if err != nil {
@@ -170,9 +161,9 @@ func (app *DdevApp) ReadConfig() error {
 	app.DataDir = filepath.Join(dirPath, "mysql")
 	app.ImportDir = filepath.Join(dirPath, "import-db")
 
-	app.setSiteSettingsPaths(app.Type)
+	app.SetApptypeSettingsPaths()
 
-	return err
+	return nil
 }
 
 // WarnIfConfigReplace just messages user about whether config is being replaced or created
@@ -235,7 +226,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	// validate apptype
-	match = IsAllowedAppType(app.Type)
+	match = IsValidAppType(app.Type)
 	if !match {
 		return fmt.Errorf("'%s' is not a valid apptype", app.Type)
 	}
@@ -366,8 +357,8 @@ func (app *DdevApp) appTypePrompt() error {
 	if err != nil {
 		return err
 	}
-	var appType string
-	typePrompt := fmt.Sprintf("Application Type [%s]", strings.Join(AllowedAppTypes, ", "))
+	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
+	typePrompt := fmt.Sprintf("Application Type [%s]", validAppTypes)
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
 	absDocroot := filepath.Join(app.AppRoot, app.Docroot)
@@ -375,7 +366,7 @@ func (app *DdevApp) appTypePrompt() error {
 		"Location": absDocroot,
 	}).Debug("Attempting to auto-determine application type")
 
-	appType, err = DetermineAppType(absDocroot)
+	appType, err := DetermineAppType(absDocroot)
 	if err == nil {
 		// If we found an application type just set it and inform the user.
 		util.Success("Found a %s codebase at %s.", appType, filepath.Join(app.AppRoot, app.Docroot))
@@ -384,26 +375,16 @@ func (app *DdevApp) appTypePrompt() error {
 	}
 	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, app.Type)
 
-	for IsAllowedAppType(appType) != true {
+	for !IsValidAppType(appType) {
 		fmt.Printf(typePrompt + ": ")
 		appType = strings.ToLower(util.GetInput(app.Type))
 
-		if IsAllowedAppType(appType) != true {
-			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, strings.Join(AllowedAppTypes, ", "))
+		if !IsValidAppType(appType) {
+			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, validAppTypes)
 		}
 		app.Type = appType
 	}
 	return provider.ValidateField("Type", app.Type)
-}
-
-// IsAllowedAppType determines if a given string exists in the AllowedAppTypes slice.
-func IsAllowedAppType(appType string) bool {
-	for _, t := range AllowedAppTypes {
-		if appType == t {
-			return true
-		}
-	}
-	return false
 }
 
 // PrepDdevDirectory creates a .ddev directory in the current working directory
@@ -448,25 +429,6 @@ func DetermineAppType(basePath string) (string, error) {
 	}
 
 	return "", errors.New("DetermineAppType() couldn't determine app's type")
-}
-
-// setSiteSettingsPath determines the location for site's db settings file based on apptype.
-func (app *DdevApp) setSiteSettingsPaths(appType string) {
-	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
-	var settingsFilePath, localSettingsFilePath string
-	switch appType {
-	case "drupal8":
-		fallthrough
-	case "drupal7":
-		settingsFilePath = filepath.Join(settingsFileBasePath, "sites", "default", "settings.php")
-		localSettingsFilePath = filepath.Join(settingsFileBasePath, "sites", "default", "settings.local.php")
-	case "wordpress":
-		settingsFilePath = filepath.Join(settingsFileBasePath, "wp-config.php")
-		localSettingsFilePath = filepath.Join(settingsFileBasePath, "wp-config-local.php")
-	}
-
-	app.SiteSettingsPath = settingsFilePath
-	app.SiteLocalSettingsPath = localSettingsFilePath
 }
 
 // validateCommandYaml validates command hooks and tasks defined in hooks for config.yaml

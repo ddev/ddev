@@ -94,20 +94,6 @@ const HookTemplate = `
 # hooks:
 #   post-import-db:`
 
-// Drupal8Hooks adds a d8-specific hooks example for post-import-db
-const Drupal8Hooks = `
-#     - exec: "drush cr"`
-
-// Drupal7Hooks adds a d7-specific hooks example for post-import-db
-const Drupal7Hooks = `
-#     - exec: "drush cc all"`
-
-// WordPressHooks adds a wp-specific hooks example for post-import-db
-const WordPressHooks = `
-    # Un-comment and enter the production url and local url
-    # to replace in your database after import.
-    # - exec: "wp search-replace <production-url> <local-url>"`
-
 // SequelproTemplate is the template for Sequelpro config.
 var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

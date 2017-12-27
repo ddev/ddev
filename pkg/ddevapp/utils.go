@@ -19,8 +19,8 @@ import (
 )
 
 // GetApps returns an array of ddev applications.
-func GetApps() [](*DdevApp) {
-	apps := make([](*DdevApp), 0)
+func GetApps() []*DdevApp {
+	apps := make([]*DdevApp, 0)
 	labels := map[string]string{
 		"com.ddev.platform":          "ddev",
 		"com.docker.compose.service": "web",

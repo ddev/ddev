@@ -2,13 +2,13 @@ package ddevapp
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 
 	"strings"
 
-	"net/url"
 	osexec "os/exec"
 
 	"os/user"
@@ -17,8 +17,6 @@ import (
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/cms/config"
-	"github.com/drud/ddev/pkg/cms/model"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -45,6 +43,10 @@ const SiteConfigMissing = ".ddev/config.yaml missing"
 
 // SiteStopped defines the string used to denote when a site is in the stopped state.
 const SiteStopped = "stopped"
+
+// DdevSettingsFileSignature is the text we use to detect whether a settings file is managed by us.
+// If this string is found, we assume we can replace/update the settings file.
+const DdevSettingsFileSignature = "#ddev-generated"
 
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
@@ -275,15 +277,18 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		return err
 	}
 
-	err = app.CreateSettingsFile()
+	_, err = app.CreateSettingsFile()
 	if err != nil {
-		if err.Error() != "app config exists" {
+		// @todo: Use a typed error instead of relying on the text of the message.
+		if strings.Contains(err.Error(), "settings files already exist and are being managed") {
 			return fmt.Errorf("failed to write configuration file for %s: %v", app.GetName(), err)
 		}
 		util.Warning("A custom settings file exists for your application, so ddev did not generate one.")
 		util.Warning("Run 'ddev describe' to find the database credentials for this application.")
 	}
 
+	// @todo: We need a post-import warning hook for this
+	// instead of putting it inline here.
 	if app.GetType() == "wordpress" {
 		util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec 'wp search-replace [http://www.myproductionsite.example] %s'\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", app.GetURL())
 	}
@@ -748,12 +753,15 @@ func (app *DdevApp) Wait(containerTypes ...string) error {
 	return nil
 }
 
-func (app *DdevApp) determineSettingsPath() (string, error) {
+// DetermineSettingsPathLocation figures out the path to the settings file for
+// an app based on the contents/existence of app.SiteSettingsPath and
+// app.SiteLocalSettingsPath.
+func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	possibleLocations := []string{app.SiteSettingsPath, app.SiteLocalSettingsPath}
 	for _, loc := range possibleLocations {
 		// If the file is found we need to check for a signature to determine if it's safe to use.
 		if fileutil.FileExists(loc) {
-			signatureFound, err := fileutil.FgrepStringInFile(loc, model.DdevSettingsFileSignature)
+			signatureFound, err := fileutil.FgrepStringInFile(loc, DdevSettingsFileSignature)
 			util.CheckErr(err) // Really can't happen as we already checked for the file existence
 
 			if signatureFound {
@@ -765,89 +773,7 @@ func (app *DdevApp) determineSettingsPath() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("settings files already exist and are being manged by the user")
-}
-
-// CreateSettingsFile creates the app's settings.php or equivalent,
-// adding things like database host, name, and password
-func (app *DdevApp) CreateSettingsFile() error {
-	// If neither settings file options are set, then
-	if app.SiteLocalSettingsPath == "" && app.SiteSettingsPath == "" {
-		return nil
-	}
-
-	settingsFilePath, err := app.determineSettingsPath()
-	if err != nil {
-		return err
-	}
-
-	// Drupal and WordPress love to change settings files to be unwriteable. Chmod them to something we can work with
-	// in the event that they already exist.
-	chmodTargets := []string{filepath.Dir(settingsFilePath), settingsFilePath}
-	for _, fp := range chmodTargets {
-		if fileInfo, err := os.Stat(fp); !os.IsNotExist(err) {
-			perms := 0644
-			if fileInfo.IsDir() {
-				perms = 0755
-			}
-
-			err = os.Chmod(fp, os.FileMode(perms))
-			if err != nil {
-				return fmt.Errorf("could not change permissions on %s to make the file writeable", fp)
-			}
-		}
-	}
-
-	fileName := filepath.Base(settingsFilePath)
-
-	switch app.GetType() {
-	case "drupal8":
-		fallthrough
-	case "drupal7":
-		output.UserOut.Printf("Generating %s file for database connection.", fileName)
-		drushSettingsPath := filepath.Join(app.GetAppRoot(), "drush.settings.php")
-
-		// Retrieve published mysql port for drush settings file.
-		db, err := app.FindContainerByType("db")
-		if err != nil {
-			return err
-		}
-
-		dbPrivatePort, err := strconv.ParseInt(appports.GetPort("db"), 10, 64)
-		if err != nil {
-			return err
-		}
-		dbPublishPort := dockerutil.GetPublishedPort(dbPrivatePort, db)
-
-		drupalConfig := model.NewDrupalConfig()
-		drushConfig := model.NewDrushConfig()
-
-		if app.GetType() == "drupal8" {
-			drupalConfig.IsDrupal8 = true
-			drushConfig.IsDrupal8 = true
-		}
-
-		drupalConfig.DeployURL = app.GetURL()
-		err = config.WriteDrupalConfig(drupalConfig, settingsFilePath)
-		if err != nil {
-			return err
-		}
-
-		drushConfig.DatabasePort = strconv.FormatInt(dbPublishPort, 10)
-		err = config.WriteDrushConfig(drushConfig, drushSettingsPath)
-		if err != nil {
-			return err
-		}
-	case "wordpress":
-		output.UserOut.Printf("Generating %s file for database connection.", fileName)
-		wpConfig := model.NewWordpressConfig()
-		wpConfig.DeployURL = app.GetURL()
-		err := config.WriteWordpressConfig(wpConfig, settingsFilePath)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return "", fmt.Errorf("settings files already exist and are being managed by the user")
 }
 
 // Down stops the docker containers for the project in current directory.
@@ -864,7 +790,7 @@ func (app *DdevApp) Down(removeData bool) error {
 	// Remove data/database if we need to.
 	if removeData {
 		if fileutil.FileExists(settingsFilePath) {
-			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, model.DdevSettingsFileSignature)
+			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DdevSettingsFileSignature)
 			util.CheckErr(err) // Really can't happen as we already checked for the file existence
 			if signatureFound {
 				err = os.Chmod(settingsFilePath, 0644)
