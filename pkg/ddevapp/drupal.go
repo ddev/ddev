@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
+
 	"os"
 	"path/filepath"
 	"text/template"
@@ -229,4 +230,20 @@ func setDrupalSiteSettingsPaths(app *DdevApp) {
 	localSettingsFilePath = filepath.Join(settingsFileBasePath, "sites", "default", "settings.local.php")
 	app.SiteSettingsPath = settingsFilePath
 	app.SiteLocalSettingsPath = localSettingsFilePath
+}
+
+// isDrupal7App returns true if the app is of type drupal7
+func isDrupal7App(app *DdevApp) bool {
+	if _, err := os.Stat(filepath.Join(app.Docroot, "scripts/drupal.sh")); err == nil {
+		return true
+	}
+	return false
+}
+
+// isDrupal8App returns true if the app of of type drupal8
+func isDrupal8App(app *DdevApp) bool {
+	if _, err := os.Stat(filepath.Join(app.Docroot, "core/scripts/drupal.sh")); err == nil {
+		return true
+	}
+	return false
 }

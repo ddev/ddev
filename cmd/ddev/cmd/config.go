@@ -93,20 +93,18 @@ var ConfigCommand = &cobra.Command{
 				util.Failed("apptype must be drupal7, drupal8, or wordpress")
 			}
 
-			foundAppType, appTypeErr := ddevapp.DetermineAppType(app.Docroot)
+			foundAppType := app.DetectAppType()
 			fullPath, pathErr := filepath.Abs(app.Docroot)
 			if pathErr != nil {
 				util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, pathErr)
 			}
-			if appTypeErr == nil && (appType == "" || appType == foundAppType) { // Found an app, matches passed-in or no apptype passed
+			if appType == "" || appType == foundAppType { // Found an app, matches passed-in or no apptype passed
 				appType = foundAppType
 				util.Success("Found a %s codebase at %s", foundAppType, fullPath)
-			} else if appType != "" && appTypeErr != nil { // apptype was passed, but we found no app at all
+			} else if appType != "" { // apptype was passed, but we found no app at all
 				util.Warning("You have specified an apptype of %s but no app of that type is found in %s", appType, fullPath)
-			} else if appType != "" && appTypeErr == nil && foundAppType != appType { // apptype was passed, app was found, but not the same type
+			} else if appType != "" && foundAppType != appType { // apptype was passed, app was found, but not the same type
 				util.Warning("You have specified an apptype of %s but an app of type %s was discovered in %s", appType, foundAppType, fullPath)
-			} else {
-				util.Failed("Failed to determine app type (drupal7/drupal8/wordpress).\nYour docroot %v may be incorrect - looking in directory %v, error=%v", app.Docroot, fullPath, appTypeErr)
 			}
 			app.Type = appType
 
@@ -120,7 +118,7 @@ var ConfigCommand = &cobra.Command{
 				pantheonProvider.SetSiteNameAndEnv(pantheonEnvironment)
 			}
 			// But pantheon *does* validate "Name"
-			appTypeErr = prov.Validate()
+			appTypeErr := prov.Validate()
 			if appTypeErr != nil {
 				util.Failed("Failed to validate sitename %v and environment %v with provider %v: %v", app.Name, pantheonEnvironment, provider, appTypeErr)
 			} else {

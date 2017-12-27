@@ -374,8 +374,10 @@ func (app *DdevApp) appTypePrompt() error {
 		"Location": absDocroot,
 	}).Debug("Attempting to auto-determine application type")
 
-	appType, err := DetermineAppType(absDocroot)
-	if err == nil {
+	appType := app.DetectAppType()
+	// If the detected appType is php, we'll ask them to confirm,
+	// otherwise go with it.
+	if appType != "php" {
 		// If we found an application type just set it and inform the user.
 		util.Success("Found a %s codebase at %s.", appType, filepath.Join(app.AppRoot, app.Docroot))
 		app.Type = appType

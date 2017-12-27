@@ -15,6 +15,9 @@ type hookDefaultComments func() []byte
 
 type apptypeSettingsPaths func(app *DdevApp)
 
+// appTypeDetect returns true if the app is of the specified type
+type appTypeDetect func(app *DdevApp) bool
+
 // AppTypeFuncs struct defines the functions that can be called (if populated)
 // for a given appType.
 type AppTypeFuncs struct {
@@ -22,6 +25,7 @@ type AppTypeFuncs struct {
 	uploadDir
 	hookDefaultComments
 	apptypeSettingsPaths
+	appTypeDetect
 }
 
 // appTypeMatrix is a static map that defines the various functions to be called
@@ -33,13 +37,13 @@ func init() {
 	appTypeMatrix = map[string]AppTypeFuncs{
 		"php": {},
 		"drupal7": {
-			createDrupalSettingsFile, getDrupalUploadDir, getDrupal7Hooks, setDrupalSiteSettingsPaths,
+			createDrupalSettingsFile, getDrupalUploadDir, getDrupal7Hooks, setDrupalSiteSettingsPaths, isDrupal7App,
 		},
 		"drupal8": {
-			createDrupalSettingsFile, getDrupalUploadDir, getDrupal8Hooks, setDrupalSiteSettingsPaths,
+			createDrupalSettingsFile, getDrupalUploadDir, getDrupal8Hooks, setDrupalSiteSettingsPaths, isDrupal8App,
 		},
 		"wordpress": {
-			createWordpressSettingsFile, getWordpressUploadDir, getWordpressHooks, setWordpressSiteSettingsPaths,
+			createWordpressSettingsFile, getWordpressUploadDir, getWordpressHooks, setWordpressSiteSettingsPaths, isWordpressApp,
 		},
 		"backdrop": {},
 		"typo3":    {},
@@ -126,4 +130,15 @@ func (app *DdevApp) SetApptypeSettingsPaths() {
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.apptypeSettingsPaths != nil {
 		appFuncs.apptypeSettingsPaths(app)
 	}
+}
+
+// DetectAppType calls each apptype's detector until it finds a match,
+// or returns 'php' as a last resort.
+func (app *DdevApp) DetectAppType() string {
+	for appName, appFuncs := range appTypeMatrix {
+		if appFuncs.appTypeDetect != nil && appFuncs.appTypeDetect(app) {
+			return appName
+		}
+	}
+	return "php"
 }
