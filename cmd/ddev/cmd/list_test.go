@@ -85,7 +85,8 @@ func TestDdevListContinuous(t *testing.T) {
 	output2 := len(cmdOutput.Bytes())
 
 	// Kill the process we started.
-	cmd.Process.Kill()
+	err = cmd.Process.Kill()
+	assert.NoError(err)
 
 	// The two snapshots of output should be different, and output2 should be larger.
 	assert.NotEqual(output1, output2)
