@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"testing"
 
 	"encoding/json"
@@ -73,19 +74,20 @@ func TestDdevListContinuous(t *testing.T) {
 
 	// Execute "ddev list --continuous"
 	cmd := oexec.Command(DdevBin, "list", "--continuous")
+	var cmdOutput bytes.Buffer
+	cmd.Stdout = &cmdOutput
 	err := cmd.Start()
 	assert.NoError(err)
 
 	// Take a snapshot of the output a little over one second apart.
-	output1, err := cmd.CombinedOutput()
-	assert.NoError(err)
+	output1 := len(cmdOutput.Bytes())
 	time.Sleep(time.Millisecond * 1020)
-	output2, err := cmd.CombinedOutput()
-	assert.NoError(err)
+	output2 := len(cmdOutput.Bytes())
 
 	// Kill the process we started.
 	cmd.Process.Kill()
 
-	// The two snapshots of output should be different.
+	// The two snapshots of output should be different, and output2 should be larger.
 	assert.NotEqual(output1, output2)
+	assert.True((output2 > output1))
 }
