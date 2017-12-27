@@ -234,7 +234,7 @@ func setDrupalSiteSettingsPaths(app *DdevApp) {
 
 // isDrupal7App returns true if the app is of type drupal7
 func isDrupal7App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.Docroot, "scripts/drupal.sh")); err == nil {
+	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "scripts/drupal.sh")); err == nil {
 		return true
 	}
 	return false
@@ -242,7 +242,7 @@ func isDrupal7App(app *DdevApp) bool {
 
 // isDrupal8App returns true if the app of of type drupal8
 func isDrupal8App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.Docroot, "core/scripts/drupal.sh")); err == nil {
+	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "core/scripts/drupal.sh")); err == nil {
 		return true
 	}
 	return false

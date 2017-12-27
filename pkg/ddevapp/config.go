@@ -369,31 +369,24 @@ func (app *DdevApp) appTypePrompt() error {
 	typePrompt := fmt.Sprintf("Application Type [%s]", validAppTypes)
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
-	absDocroot := filepath.Join(app.AppRoot, app.Docroot)
-	log.WithFields(log.Fields{
-		"Location": absDocroot,
-	}).Debug("Attempting to auto-determine application type")
 
-	appType := app.DetectAppType()
-	// If the detected appType is php, we'll ask them to confirm,
+	detectedAppType := app.DetectAppType()
+	// If the detected detectedAppType is php, we'll ask them to confirm,
 	// otherwise go with it.
-	if appType != "php" {
-		// If we found an application type just set it and inform the user.
-		util.Success("Found a %s codebase at %s.", appType, filepath.Join(app.AppRoot, app.Docroot))
-		app.Type = appType
-		return provider.ValidateField("Type", app.Type)
-	}
-	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, app.Type)
+	// If we found an application type just set it and inform the user.
+	util.Success("Found a %s codebase at %s.", detectedAppType, filepath.Join(app.AppRoot, app.Docroot))
+	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, detectedAppType)
+
+	fmt.Printf(typePrompt + ": ")
+	appType := strings.ToLower(util.GetInput(detectedAppType))
 
 	for !IsValidAppType(appType) {
-		fmt.Printf(typePrompt + ": ")
-		appType = strings.ToLower(util.GetInput(app.Type))
+		output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, validAppTypes)
 
-		if !IsValidAppType(appType) {
-			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, validAppTypes)
-		}
-		app.Type = appType
+		fmt.Printf(typePrompt + ": ")
+		appType = strings.ToLower(util.GetInput(appType))
 	}
+	app.Type = appType
 	return provider.ValidateField("Type", app.Type)
 }
 

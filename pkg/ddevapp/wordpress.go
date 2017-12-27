@@ -190,7 +190,7 @@ func setWordpressSiteSettingsPaths(app *DdevApp) {
 
 // isWordpressApp returns true if the app of of type wordpress
 func isWordpressApp(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.Docroot, "wp-login.php")); err == nil {
+	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp-login.php")); err == nil {
 		return true
 	}
 	return false
