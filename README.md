@@ -6,12 +6,6 @@
 
 ddev is an open source tool that makes it dead simple to get local PHP development environments up and running within minutes. It's powerful and flexible as a result of its per-project environment configurations, which can be extended, version controlled, and shared. In short, ddev aims to allow development teams to use Docker in their workflow without the complexities of bespoke configuration.
 
-## Roadmap
-
-Each DRUD product has a dedicated product owner, who serves as the primary advocate for customers and end-users when making decisions regarding the public roadmap. For the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap), @rickmanelius is currently serving as the product owner.
-
-We use the longer-term roadmap to prioritize short-term sprints. Please review the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap) and [ddev issue queue](https://github.com/drud/ddev/issues) to see what's on the horizon.
-
 ## System Requirements
 
 - [Docker](https://www.docker.com/community-edition) version 17.05 or greater
@@ -108,3 +102,8 @@ If you've encountered trouble using ddev, please use these resources to get help
 
 ## Contributing
 Interested in contributing to ddev? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!
+
+
+## Addititional Information
+
+* **Roadmap:** The [ddev roadmap is publically available](https://github.com/drud/ddev/wiki/roadmap) and managed by @rickmanelius. Additional requests should be added to the [ddev issue queue](https://github.com/drud/ddev/issues).
