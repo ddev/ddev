@@ -1,7 +1,12 @@
 <h1>Extending and Customizing Environments</h1>
 ddev provides several ways in which the environment for a project using ddev can be customized and extended.
 
+## Changing PHP version
+
+The project's `.ddev/config.yaml` file defines the PHP version to use. This can be changed, and the php_version can be set there to (currently) "5.6", "7.0", or "7.1". The current default is php 7.1.
+
 ## Adding services to a project
+
 For most standard web applications, ddev provides everything you need to successfully provision and develop a web application on your local machine out of the box. More complex and sophisticated web applications, however, often require integration with services beyond the standard requirements of a web and database server. Examples of these additional services are Apache Solr, Redis, Varnish, etc. While ddev likely won't ever provide all of these additional services out of the box, it is designed to provide simple ways for the environment to be customized and extended to meet the needs of your application.
 
 A collection of vetted service configurations is available in the [Additional Services Documentation](additional-services.md).
