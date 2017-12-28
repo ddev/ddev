@@ -58,7 +58,7 @@ If you've encountered trouble using ddev, please use these resources to get help
 1. Please review the [ddev Documentation](https://ddev.readthedocs.io) to ensure your question isn't answered there.
 2. Review the [ddev issue queue](https://github.com/drud/ddev/issues) to see if an issue similar to yours already exists.
 3. If you've exhausted these options and still need help, please [file an issue](https://github.com/drud/ddev/issues/new) following the pre-populated guidelines and our [Contributing Guidelines](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md) as best as possible.
-4. We also have a channel (#ddev) in the Drupal Slack account. We're fairly responsive to questions and requests during normal business hours (US Mountain Time).
+4. We also have a channel (#ddev) in the [Drupal Slack](https://www.drupal.org/slack) account. We're fairly responsive to questions and requests during normal business hours (US Mountain Time).
 
 ## Contributing
 Interested in contributing to ddev? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!
