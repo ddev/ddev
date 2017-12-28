@@ -18,7 +18,7 @@
 We are open to expanding this list to include additional OSs as well as improve our existing support for the ones listed above. Please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue!
 
 ### Using ddev with other development environments
-ddev requires ports 80 and 3306 to be available for use on your system when sites are running. If you are using another local development environment alongside ddev, please ensure the other environment is turned off or otherwise not occupying ports 80 and 3306.
+ddev requires ports 80 and 443 to be available for use on your system when sites are running. If you are using another local development environment alongside ddev, please ensure the other environment is turned off or otherwise not occupying ports 80 and 443.
 
 If you need to use another environment after using ddev, simply ensure all of your ddev sites are stopped or removed. ddev only occupies system ports when at least one site is running.
 

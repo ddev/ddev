@@ -14,7 +14,7 @@ ddev is an open source tool that makes it dead simple to get local PHP developme
   - [Drupal 7](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-7-quickstart)
   - [Drupal 8](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-8-quickstart)
 
-Having trouble? See our [support options below](#support). Additionally, you may have trouble if another local development tool is already using port 80 or 3306. See our troubleshooting docs for more info.
+Having trouble? See our [support options below](#support). Additionally, you may have trouble if [another local development tool is already using port 80 or 443](https://ddev.readthedocs.io/en/latest/#using-ddev-with-other-development-environments).
 
 ## Current Feature List
 
