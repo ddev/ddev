@@ -27,7 +27,7 @@ import (
 	shellwords "github.com/mattn/go-shellwords"
 )
 
-const containerWaitTimeout = 35
+const containerWaitTimeout = 61
 
 // SiteRunning defines the string used to denote running sites.
 const SiteRunning = "running"
