@@ -73,7 +73,6 @@ func TestDevList(t *testing.T) {
 func TestDdevListContinuous(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping TestDdevListContinuous because Windows stdout capture doesn't work.")
-		return
 	}
 
 	assert := asrt.New(t)
