@@ -45,8 +45,6 @@ func init() {
 		"wordpress": {
 			createWordpressSettingsFile, getWordpressUploadDir, getWordpressHooks, setWordpressSiteSettingsPaths, isWordpressApp,
 		},
-		"backdrop": {},
-		"typo3":    {},
 	}
 }
 
