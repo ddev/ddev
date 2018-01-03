@@ -18,6 +18,10 @@ type apptypeSettingsPaths func(app *DdevApp)
 // appTypeDetect returns true if the app is of the specified type
 type appTypeDetect func(app *DdevApp) bool
 
+// postImportDBAction can take actions after import (like warning user about
+// required actions on Wordpress.
+type postImportDBAction func(app *DdevApp) error
+
 // AppTypeFuncs struct defines the functions that can be called (if populated)
 // for a given appType.
 type AppTypeFuncs struct {
@@ -26,6 +30,7 @@ type AppTypeFuncs struct {
 	hookDefaultComments
 	apptypeSettingsPaths
 	appTypeDetect
+	postImportDBAction
 }
 
 // appTypeMatrix is a static map that defines the various functions to be called
@@ -37,13 +42,13 @@ func init() {
 	appTypeMatrix = map[string]AppTypeFuncs{
 		"php": {},
 		"drupal7": {
-			createDrupalSettingsFile, getDrupalUploadDir, getDrupal7Hooks, setDrupalSiteSettingsPaths, isDrupal7App,
+			createDrupalSettingsFile, getDrupalUploadDir, getDrupal7Hooks, setDrupalSiteSettingsPaths, isDrupal7App, nil,
 		},
 		"drupal8": {
-			createDrupalSettingsFile, getDrupalUploadDir, getDrupal8Hooks, setDrupalSiteSettingsPaths, isDrupal8App,
+			createDrupalSettingsFile, getDrupalUploadDir, getDrupal8Hooks, setDrupalSiteSettingsPaths, isDrupal8App, nil,
 		},
 		"wordpress": {
-			createWordpressSettingsFile, getWordpressUploadDir, getWordpressHooks, setWordpressSiteSettingsPaths, isWordpressApp,
+			createWordpressSettingsFile, getWordpressUploadDir, getWordpressHooks, setWordpressSiteSettingsPaths, isWordpressApp, wordpressPostImportDBAction,
 		},
 	}
 }
@@ -139,4 +144,15 @@ func (app *DdevApp) DetectAppType() string {
 		}
 	}
 	return "php"
+}
+
+// PostImportDBAction calls each apptype's detector until it finds a match,
+// or returns 'php' as a last resort.
+func (app *DdevApp) PostImportDBAction() error {
+
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.postImportDBAction != nil {
+		return appFuncs.postImportDBAction(app)
+	}
+
+	return nil
 }

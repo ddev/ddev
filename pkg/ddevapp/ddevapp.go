@@ -288,10 +288,9 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		util.Warning("Run 'ddev describe' to find the database credentials for this application.")
 	}
 
-	// @todo: We need a post-import warning hook for this
-	// instead of putting it inline here.
-	if app.GetType() == "wordpress" {
-		util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec 'wp search-replace [http://www.myproductionsite.example] %s'\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", app.GetURL())
+	err = app.PostImportDBAction()
+	if err != nil {
+		return fmt.Errorf("failed to execute PostImportDBAction: %v", err)
 	}
 
 	err = fileutil.PurgeDirectory(dbPath)
