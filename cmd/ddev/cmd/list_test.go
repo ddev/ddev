@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"runtime"
 	"testing"
 
 	"encoding/json"
@@ -70,6 +71,11 @@ func TestDevList(t *testing.T) {
 
 // TestDdevListContinuous tests the --continuous flag for ddev list.
 func TestDdevListContinuous(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip()
+		return
+	}
+
 	assert := asrt.New(t)
 
 	// Execute "ddev list --continuous"
