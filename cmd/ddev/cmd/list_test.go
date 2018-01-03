@@ -72,7 +72,7 @@ func TestDevList(t *testing.T) {
 // TestDdevListContinuous tests the --continuous flag for ddev list.
 func TestDdevListContinuous(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip()
+		t.Skip("Skipping TestDdevListContinuous because Windows stdout capture doesn't work.")
 		return
 	}
 
