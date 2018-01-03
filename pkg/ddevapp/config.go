@@ -16,7 +16,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -369,29 +368,24 @@ func (app *DdevApp) appTypePrompt() error {
 	typePrompt := fmt.Sprintf("Application Type [%s]", validAppTypes)
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
-	absDocroot := filepath.Join(app.AppRoot, app.Docroot)
-	log.WithFields(log.Fields{
-		"Location": absDocroot,
-	}).Debug("Attempting to auto-determine application type")
 
-	appType, err := DetermineAppType(absDocroot)
-	if err == nil {
-		// If we found an application type just set it and inform the user.
-		util.Success("Found a %s codebase at %s.", appType, filepath.Join(app.AppRoot, app.Docroot))
-		app.Type = appType
-		return provider.ValidateField("Type", app.Type)
-	}
-	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, app.Type)
+	detectedAppType := app.DetectAppType()
+	// If the detected detectedAppType is php, we'll ask them to confirm,
+	// otherwise go with it.
+	// If we found an application type just set it and inform the user.
+	util.Success("Found a %s codebase at %s.", detectedAppType, filepath.Join(app.AppRoot, app.Docroot))
+	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, detectedAppType)
+
+	fmt.Printf(typePrompt + ": ")
+	appType := strings.ToLower(util.GetInput(detectedAppType))
 
 	for !IsValidAppType(appType) {
-		fmt.Printf(typePrompt + ": ")
-		appType = strings.ToLower(util.GetInput(app.Type))
+		output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, validAppTypes)
 
-		if !IsValidAppType(appType) {
-			output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, validAppTypes)
-		}
-		app.Type = appType
+		fmt.Printf(typePrompt + ": ")
+		appType = strings.ToLower(util.GetInput(appType))
 	}
+	app.Type = appType
 	return provider.ValidateField("Type", app.Type)
 }
 
@@ -410,33 +404,6 @@ func PrepDdevDirectory(dir string) error {
 	}
 
 	return nil
-}
-
-// DetermineAppType uses some predetermined file checks to determine if an app
-// is of any of the known types
-func DetermineAppType(basePath string) (string, error) {
-	defaultLocations := map[string]string{
-		"scripts/drupal.sh":      "drupal7",
-		"core/scripts/drupal.sh": "drupal8",
-		"wp-settings.php":        "wordpress",
-	}
-
-	for k, v := range defaultLocations {
-		fp := filepath.Join(basePath, k)
-		log.WithFields(log.Fields{
-			"file": fp,
-		}).Debug("Looking for app fingerprint.")
-		if _, err := os.Stat(fp); err == nil {
-			log.WithFields(log.Fields{
-				"file": fp,
-				"app":  v,
-			}).Debug("Found app fingerprint.")
-
-			return v, nil
-		}
-	}
-
-	return "", errors.New("DetermineAppType() couldn't determine app's type")
 }
 
 // validateCommandYaml validates command hooks and tasks defined in hooks for config.yaml
