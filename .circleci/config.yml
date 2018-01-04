@@ -12,10 +12,16 @@ stages:
     steps:
       - checkout
 
-      - run: brew cask install docker
-      - run: brew install docker docker-compose
-      - run: sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended &
-      - run: sleep 60
-      - run: sudo chmod 777 /var/root/library /var/root/Library/Containers
-      - run: sudo chown distiller /var/run/docker.sock
+      - run: |
+          brew cask install docker && brew install docker docker-compose
+
+      - run:
+          command: sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended >/tmp/docker.log 2>&1
+          background: true
+
+      - run: |
+          sleep 5
+          sudo chmod ugo+rwx /var/root/library /var/root/Library/Containers /usr/local/bin/docker* /var/root /var/root/Library /var/root/Library/Group\ Containers/ /var/root/Library/Group\ Containers/group.com.docker/
+          sudo chown distiller /var/run/docker.sock
+          while ! docker ps 2>/dev/null; do sleep 1; done
       - run: docker run busybox ls
