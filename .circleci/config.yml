@@ -6,10 +6,12 @@ stages:
 
     environment:
       ARTIFACTS: /artifacts
+      GOPATH: /home/distiller/go
 
-    working_directory: ~/ddev
+    working_directory: ~/go/src/github.com/drud/ddev
 
     steps:
+      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
       - checkout
 
       - run: |
@@ -21,8 +23,9 @@ stages:
 
       - run: |
           sleep 5
+          while ! sudo docker ps 2>/dev/null; do sleep 1; done
           sudo chmod ugo+rwx /var/root/library /var/root/Library/Containers /usr/local/bin/docker* /var/root /var/root/Library /var/root/Library/Group\ Containers/ /var/root/Library/Group\ Containers/group.com.docker/
           sudo chown distiller /var/run/docker.sock
-          while ! docker ps 2>/dev/null; do sleep 1; done
+
       - run: docker run busybox ls
       - run: make test
