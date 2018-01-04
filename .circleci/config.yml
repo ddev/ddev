@@ -12,9 +12,10 @@ stages:
     steps:
       - checkout
 
-      - run: brew update
-      - run: brew install docker
       - run: brew cask install docker
-      - run: open /Applications/Docker.app
+      - run: brew install docker docker-compose
+      - run: sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended &
       - run: sleep 60
+      - run: sudo chmod 777 /var/root/library /var/root/Library/Containers
+      - run: sudo chown distiller /var/run/docker.sock
       - run: docker run busybox ls
