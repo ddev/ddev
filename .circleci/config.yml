@@ -6,7 +6,7 @@ stages:
 
     environment:
       ARTIFACTS: /artifacts
-      GOPATH: /home/distiller/go
+      GOPATH: /Users/distiller/go
 
     working_directory: ~/go/src/github.com/drud/ddev
 
