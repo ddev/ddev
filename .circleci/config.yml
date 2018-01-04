@@ -13,7 +13,7 @@ stages:
       - checkout
 
       - run: |
-          brew cask install docker && brew install docker docker-compose
+          brew cask install docker && brew install docker docker-compose golang
 
       - run:
           command: sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended >/tmp/docker.log 2>&1
@@ -25,3 +25,4 @@ stages:
           sudo chown distiller /var/run/docker.sock
           while ! docker ps 2>/dev/null; do sleep 1; done
       - run: docker run busybox ls
+      - run: make test
