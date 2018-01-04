@@ -18,7 +18,7 @@ stages:
           brew cask install docker && brew install docker docker-compose golang
 
       - run:
-          command: sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended >/tmp/docker.log 2>&1
+          command: /Applications/Docker.app/Contents/MacOS/Docker --unattended >/tmp/docker.log 2>&1
           background: true
 
       - run: |
