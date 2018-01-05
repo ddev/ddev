@@ -5,12 +5,11 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/drud/ddev/pkg/ddevapp"
-	"strings"
-
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -516,6 +515,7 @@ func TestDescribe(t *testing.T) {
 		assert.EqualValues(app.GetName(), desc["name"])
 		assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), desc["shortroot"])
 		assert.EqualValues(app.GetAppRoot(), desc["approot"])
+		assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
 
 		// Now stop it and test behavior.
 		err = app.Stop()
