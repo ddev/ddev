@@ -1,179 +1,31 @@
 version: 2
-jobs:
-  # 'build' is the default build, the only one triggered automatically by github or anything else.
-  normal_build_and_test:
-    machine:
-      image: circleci/classic:201711-01
-    working_directory: ~/go/src/github.com/drud/ddev
+stages:
+  build:
+    macos:
+      xcode: "9.1.0"
+
     environment:
-      GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
+      GOPATH: /Users/distiller/go
+
+    working_directory: ~/go/src/github.com/drud/ddev
+
     steps:
       - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
-
       - checkout
 
-      - run:
-          command: ./.circleci/circle_vm_setup.sh
-          name: NORMAL Circle VM setup - tools, docker, golang
+      - run: |
+          brew cask install docker && brew install docker docker-compose golang
 
       - run:
-          command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
-          name: Installed tool versions
+          command: /Applications/Docker.app/Contents/MacOS/Docker --unattended >/tmp/docker.log 2>&1
+          background: true
 
-      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
-      - run:
-          command: make -s clean linux darwin windows
-          name: Build the ddev executables
+      - run: |
+          sleep 5
+          while ! sudo docker ps 2>/dev/null; do sleep 1; done
+          sudo chmod ugo+rwx /var/root/library /var/root/Library/Containers /usr/local/bin/docker* /var/root /var/root/Library /var/root/Library/Group\ Containers/ /var/root/Library/Group\ Containers/group.com.docker/
+          sudo chown distiller /var/run/docker.sock
 
-      # Run the built-in ddev tests with the executables just built.
-      - run:
-          command: make -s test
-          name: ddev tests
-          no_output_timeout: "20m"
-
-      - run: make -s gometalinter
-
-      - run:
-          command: bin/linux/ddev version
-          name: ddev version information
-
-      - run:
-          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
-          name: tar/zip up artifacts and make hashes
-
-      - store_artifacts:
-          path: /artifacts
-          name: Artifact storage
-
-  # nightly is triggered only with nightly_build_trigger.sh
-  nightly_build:
-    machine:
-      image: circleci/classic:201711-01
-    working_directory: ~/go/src/github.com/drud/ddev
-    environment:
-      DRUD_DEBUG: "true"
-      GOPATH: /home/circleci/go
-      ARTIFACTS: /artifacts
-    steps:
-      - checkout
-
-      - run:
-          command: ./.circleci/circle_vm_setup.sh
-          name: NIGHTLY BUILD Circle VM setup - tools, docker, golang
-
-      - run:
-          command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
-          name: Installed tool versions
-
-      # The nightly build builds a ddev that can't be run elsewhere because the containers built in are not pushed.
-      # Therefore we build this full nightly first, and then throw it away.
-      - run:
-          command: |
-            make clean
-            export VERSION=nightly.$(date +%Y%m%d%H%M%S)
-            export VERSION="$(git describe --tags --always --dirty)-nightly.$(date +%Y%m%d%H%M%S)"
-            echo VERSION=$VERSION
-            git submodule update --init && git submodule update --remote
-            make -f nightly_build.mak clean
-            make -f nightly_build.mak -s --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION DBATag=$VERSION WebTag=$VERSION RouterTag=$VERSION  NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION NGINX_LOCAL_UPSTREAM_FPM7_REPO_TAG=$VERSION UPSTREAM_PHP_REPO_TAG=$VERSION
-          no_output_timeout: "20m"
-          name: Run full nightly build
-
-      - run:
-          command: bin/linux/ddev version
-          name:  nightly-build ddev version information
-
-      # Run the built-in ddev tests with the executables just built.
-      - run:
-          command: make -s test
-          name: ddev tests
-          no_output_timeout: "20m"
-
-      - run: make -s gometalinter
-
-      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
-      # Earlier process updated submodules so now we clean them up to continue.
-      - run:
-          command: |
-            git submodule update --init &&
-            make -s clean linux darwin windows
-          name: Build the ddev executables
-
-      # Run the built-in ddev tests with the clean binaries just built.
-      - run:
-          command: make -s test
-          name: ddev tests
-          no_output_timeout: "20m"
-
-      - run:
-          command: bin/linux/ddev version
-          name: ddev version information (clean binaries, not nightlies)
-
-      - run:
-          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
-          name: tar/zip up artifacts and make hashes
-
-      - store_artifacts:
-          path: /artifacts
-          name: Artifact storage
-
-  # 'tag_build' is used to build a tag for release.
-  tag_build:
-    machine:
-      image: circleci/classic:201711-01
-    working_directory: ~/go/src/github.com/drud/ddev
-    environment:
-      DRUD_DEBUG: "true"
-      GOPATH: /home/circleci/go
-      ARTIFACTS: /artifacts
-    steps:
-      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
-
-      - checkout
-
-      - run:
-          command: ./.circleci/circle_vm_setup.sh
-          name: TAG BUILD Circle VM setup - tools, docker, golang
-
-      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
-      - run:
-          command: make -s clean linux darwin windows
-          name: Build the ddev executables
-
-      - run:
-          command: bin/linux/ddev version
-          name: ddev version information
-
-      - run:
-          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
-          name: tar/zip up artifacts and make hashes
-
-      - store_artifacts:
-          path: /artifacts
-          name: Artifact storage
-
-workflows:
-  version: 2
-  normal_build_and_test:
-    jobs:
-      - normal_build_and_test
-  nightly_build:
-    triggers:
-      - schedule:
-          cron: "0 3 * * 1-5"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - nightly_build
-  tag_build:
-    jobs:
-      - tag_build:
-          filters:
-            tags:
-              only:
-                - "/.*/"
-            branches:
-              ignore: /.*/
+      - run: docker run busybox ls
+      - run: make test
