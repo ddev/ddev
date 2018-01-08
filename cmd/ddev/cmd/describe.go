@@ -62,7 +62,7 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 	ddevapp.RenderAppRow(appTable, desc)
 	output = fmt.Sprint(appTable)
 
-	output = output + "\n\nSite Information\n-----------------\n"
+	output = output + "\n\nProject Information\n-----------------\n"
 	siteInfo := uitable.New()
 	siteInfo.AddRow("PHP version:", desc["php_version"])
 	output = output + fmt.Sprint(siteInfo)
