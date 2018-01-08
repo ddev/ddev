@@ -764,7 +764,11 @@ func TestListWithoutDir(t *testing.T) {
 
 		ddevapp.RenderAppRow(table, desc)
 	}
-	assert.Contains(table.String(), fmt.Sprintf("%s: %s", ddevapp.SiteDirMissing, testDir))
+
+	// testDir on Windows has backslashes in it, resulting in invalid regexp
+	// Remove them and use ., which is good enough.
+	testDirSafe := strings.Replace(testDir, "\\", ".", -1)
+	assert.Regexp(ddevapp.SiteDirMissing+".*"+testDirSafe, table.String())
 
 	err = app.Down(true)
 	assert.NoError(err)
