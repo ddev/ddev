@@ -169,6 +169,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	}
 
 	appDesc["router_status"] = GetRouterStatus()
+	appDesc["php_version"] = app.GetPhpVersion()
 
 	return appDesc, nil
 }
@@ -191,6 +192,15 @@ func (app DdevApp) GetDocroot() string {
 // GetName returns the app's name
 func (app *DdevApp) GetName() string {
 	return app.Name
+}
+
+// GetPhpVersion returns the app's php version
+func (app *DdevApp) GetPhpVersion() string {
+	v := DdevDefaultPHPVersion
+	if app.PHPVersion != "" {
+		v = app.PHPVersion
+	}
+	return v
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.

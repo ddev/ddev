@@ -62,6 +62,11 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 	ddevapp.RenderAppRow(appTable, desc)
 	output = fmt.Sprint(appTable)
 
+	output = output + "\n\nProject Information\n-----------------\n"
+	siteInfo := uitable.New()
+	siteInfo.AddRow("PHP version:", desc["php_version"])
+	output = output + fmt.Sprint(siteInfo)
+
 	// Only show extended status for running sites.
 	if desc["status"] == ddevapp.SiteRunning {
 		output = output + "\n\nMySQL Credentials\n-----------------\n"
