@@ -213,6 +213,11 @@ func (app *DdevApp) PromptForConfig() error {
 		return err
 	}
 
+	err = app.ConfigFileOverrideAction()
+	if err != nil {
+		return err
+	}
+
 	err = app.providerInstance.PromptForConfig()
 
 	return err
