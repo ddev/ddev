@@ -15,7 +15,8 @@ func TestApptypeDetection(t *testing.T) {
 	assert := asrt.New(t)
 
 	fileLocations := map[string]string{
-		"drupal7":   "scripts/drupal.sh",
+		"drupal6":   "misc/ahah.js",
+		"drupal7":   "misc/ajax.js",
 		"drupal8":   "core/scripts/drupal.sh",
 		"wordpress": "wp-login.php",
 	}
