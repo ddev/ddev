@@ -20,7 +20,7 @@ func TestGetVersionInfo(t *testing.T) {
 	assert.Equal(DdevVersion, v["cli"])
 	assert.Contains(v["web"], WebImg)
 	assert.Contains(v["web"], WebTag)
-	assert.Contains(v["db"], DbImg)
+	assert.Contains(v["db"], DBImg)
 	assert.Contains(v["db"], DBTag)
 	assert.Contains(v["dba"], DBAImg)
 	assert.Contains(v["dba"], DBATag)
