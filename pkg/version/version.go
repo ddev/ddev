@@ -48,3 +48,19 @@ var BUILDINFO = "BUILDINFO should have new info"
 
 // DDevTLD defines the tld to use for DDev site URLs.
 const DDevTLD = "ddev.local"
+
+// Get ddev version information.
+func GetVersionInfo() map[string]string {
+	versionInfo := make(map[string]string)
+
+	versionInfo["cli"] = DdevVersion
+	versionInfo["web"] = WebImg + ":" + WebTag
+	versionInfo["db"] = DBImg + ":" + DBTag
+	versionInfo["dba"] = DBAImg + ":" + DBATag
+	versionInfo["router"] = RouterImage + ":" + RouterTag
+	versionInfo["commit"] = COMMIT
+	versionInfo["domain"] = DDevTLD
+	versionInfo["build info"] = BUILDINFO
+
+	return versionInfo
+}
