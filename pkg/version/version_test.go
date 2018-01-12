@@ -9,6 +9,7 @@ import (
 func TestGetVersionInfo(t *testing.T) {
 	assert := asrt.New(t)
 	v := GetVersionInfo()
+
 	assert.Contains(v, "cli")
 	assert.Contains(v, "web")
 	assert.Contains(v, "db")
@@ -17,6 +18,7 @@ func TestGetVersionInfo(t *testing.T) {
 	assert.Contains(v, "commit")
 	assert.Contains(v, "domain")
 	assert.Contains(v, "build info")
+
 	assert.Equal(DdevVersion, v["cli"])
 	assert.Contains(v["web"], WebImg)
 	assert.Contains(v["web"], WebTag)
