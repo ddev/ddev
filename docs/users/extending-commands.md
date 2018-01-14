@@ -1,6 +1,6 @@
 <h1>Extending ddev Commands</h1>
 
-Certain ddev commands provide hooks to run tasks before or after the main command executes. These tasks can be defined in the config.yaml for your site, and allow for you to automate setup tasks specific to your site. To define command tasks in your configuration, specify the desired command hook as a subfield to `hooks`, then provide a list of tasks to run.
+Certain ddev commands provide hooks to run tasks before or after the main command executes. These tasks can be defined in the config.yaml for your project, and allow for you to automate setup tasks specific to your project. To define command tasks in your configuration, specify the desired command hook as a subfield to `hooks`, then provide a list of tasks to run.
 
 Example:
 
@@ -12,8 +12,8 @@ hooks:
 
 ## Supported Command Hooks
 
-- `pre-start`: Hooks into "ddev start". Execute tasks before the site environment starts. **Note:** Only `exec-host` tasks can be run successfully for pre-start. See Supported Tasks below for more info.
-- `post-start`: Hooks into "ddev start". Execute tasks after the site environment has started
+- `pre-start`: Hooks into "ddev start". Execute tasks before the project environment starts. **Note:** Only `exec-host` tasks can be run successfully for pre-start. See Supported Tasks below for more info.
+- `post-start`: Hooks into "ddev start". Execute tasks after the project environment has started
 - `pre-import-db`: Hooks into "ddev import-db". Execute tasks before database import
 - `post-import-db`: Hooks into "ddev import-db". Execute tasks after database import
 - `pre-import-files`: Hooks into "ddev import-files". Execute tasks before files are imported
@@ -37,7 +37,7 @@ hooks:
 
 Example:
 
-_Use wp-cli to replace the production URL with development URL in the database of a WordPress site_
+_Use wp-cli to replace the production URL with development URL in the database of a WordPress project_
 
 ```
 hooks:
@@ -51,7 +51,7 @@ Value: string providing the command to run. Commands requiring user interaction 
 
 Example:
 
-_Run "composer install" from your system before starting the site (composer would nee to be installed on your system)_
+_Run "composer install" from your system before starting the project (composer would nee to be installed on your system)_
 
 ```
 hooks:
@@ -68,7 +68,7 @@ hooks:
     - exec: "wp config create --dbname=db --dbuser=db --dbpass=db --dbhost=db"
     - exec: "wp core install --url=http://mysite.ddev.local --title=MySite --admin_user=admin --admin_email=admin@mail.test"
   post-import-db:
-    # Update the URL of your site throughout your database after import
+    # Update the URL of your project throughout your database after import
     - exec: "wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.local"
 ```
 
@@ -82,7 +82,7 @@ hooks:
     # Generate a one-time login link for the admin account.
     - exec: "drush uli 1"
   post-import-db:
-    # Set the site name
+    # Set the project name
     - exec: "drush vset site_name MyDevSite"
     # Enable the environment indicator module
     - exec: "drush en -y environment_indicator"

@@ -1,6 +1,6 @@
 <h1>Step-debugging with ddev and xdebug</h1>
 
-Every ddev site is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code.
+Every ddev project is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code.
 
 xdebug is a server-side tool: It is installed automatically on the container and you do *not* need to install it on your workstation. All you have to do on your workstation is to add an extra IP address (below) and perhaps add a browser extension or bookmark.
 
@@ -46,7 +46,7 @@ PHPStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/2017
 1. Make sure your "Debug port" is set to 11011 in preferences.
 2. Under the "Run" menu select "Edit configurations"
 3. Click the "+" in the upper left and choose "PHP Web Application" to create a configuration. Give it a reasonable name.
-4. Create a "server" for the site. (Screenshot below)
+4. Create a "server" for the project. (Screenshot below)
 5. Add file mappings for the docroot of the server. If your repo has the main code in the root of the repo, that will map to /var/www/html. If it's in a docroot directory, it would map to /var/www/html/docroot.
 6. Set an appropriate breakpoint.
 7. Start debugging by clicking the "debug" button, which will launch a page in your browser.
@@ -67,11 +67,11 @@ Before, beginning anything else, please set your Debugger Port to 11011. (Prefer
 
 ![Netbeans Debugging Port](images/netbeans_debugger_port.png)
 
-1. Create a PHP project that relates to your site repository. (File->New Project->PHP Application with Existing Sources)
+1. Create a PHP project that relates to your project repository. (File->New Project->PHP Application with Existing Sources)
 2. Under "Run as", choose "Local web site (running on local web server)".
-3. Under "Name and Location", give the sources folder of the **docroot/webroot** of your site.
+3. Under "Name and Location", give the sources folder of the **docroot/webroot** of your project.
 ![Netbeans project name and location](images/netbeans_project_name_location.png)
-4. Under "Run configuration" the project URL to the full URL of your dev site, for example http://drud-d8.ddev.local/, and choose the index file.
+4. Under "Run configuration" the project URL to the full URL of your dev project, for example http://drud-d8.ddev.local/, and choose the index file.
 ![Netbeans run configuration](images/netbeans_project_run_configuration.png)
 5. Set a breakpoint.
 6. Click the "Debug" button.
