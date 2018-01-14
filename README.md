@@ -3,11 +3,11 @@
 
 ![ddev logo](images/ddev_logo.png)
 
-ddev is an open source tool that makes it dead simple to get local PHP development environments up and running within minutes. It's powerful and flexible as a result of its per-project environment configurations, which can be extended, version controlled, and shared. In short, ddev aims to allow development teams to use Docker in their workflow without the complexities of bespoke configuration.
+ddev is an open source tool that makes it simple to get local PHP development environments up and running in minutes. It's powerful and flexible as a result of its per-project environment configurations, which can be extended, version controlled, and shared. In short, ddev aims to allow development teams to use Docker in their workflow without the complexities of bespoke configuration.
 
 ## Getting Started
 
-1. **Check System Requirements:** We support recent versions of macOS, Windows 10, and select Linux distributions that will run docker. ([more info here](https://ddev.readthedocs.io/en/latest/#system-requirements)).
+1. **Check System Requirements:** We support recent versions of macOS, Windows 10, and select Linux distributions that will run docker (ddev requires Docker and docker-compose). ([more info here](https://ddev.readthedocs.io/en/latest/#system-requirements)). 
 2. **Install ddev:** Options include [macOS homebrew](https://ddev.readthedocs.io/en/latest/#homebrew-macos) (recommended), an [install script](https://ddev.readthedocs.io/en/latest/#installation-script-linux-and-macos), or [a manually download](https://ddev.readthedocs.io/en/latest/#manual-installation-linux-and-macos).
 3. **Choose a CMS Quick Start Guide:** 
   - [WordPress](https://ddev.readthedocs.io/en/latest/users/cli-usage#wordpress-quickstart)
@@ -30,7 +30,7 @@ Having trouble? See our [support options below](#support). Additionally, you may
 Just running `ddev` will show you all the commands.
 
 ## Support
-If you're having trouble using ddev, please use these resources to get help with your issue:
+If you're having trouble using ddev, please use these resources to get help:
 
 1. Please review the [ddev Documentation](https://ddev.readthedocs.io) to ensure your question isn't answered there.
 2. Review the [ddev issue queue](https://github.com/drud/ddev/issues) to see if an issue similar to yours already exists.
@@ -41,4 +41,4 @@ If you're having trouble using ddev, please use these resources to get help with
 Interested in contributing to ddev? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!
 
 ## Addititional Information
-* **Roadmap:** The [ddev roadmap is publicly available](https://github.com/drud/ddev/wiki/roadmap) and managed by @rickmanelius. Additional requests should be added to the [ddev issue queue](https://github.com/drud/ddev/issues).
+* **Roadmap:** The [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap) is managed by @rickmanelius. We love your input! Make requests in the [ddev issue queue](https://github.com/drud/ddev/issues).

@@ -6,8 +6,9 @@
 
 ## System Requirements
 
-- [Docker](https://www.docker.com/community-edition) version 17.05 or greater
-- OS Support
+- [Docker](https://www.docker.com/community-edition) version 17.05 or higher
+- docker-compose 1.10.0 and higher (bundled with Docker in Docker for Mac and Docker for Windows)
+- OS Support 
   - macOS Sierra and higher (macOS 10.12 and higher)
   - Linux (See [Linux notes](users/linux_notes.md))
     * Ubuntu 16.04 LTS
