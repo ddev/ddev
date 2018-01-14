@@ -10,7 +10,7 @@ ddev is an open source tool that makes it dead simple to get local PHP developme
 1. **Check System Requirements:** We support recent versions of macOS, Windows 10, and select Linux distributions that will run docker. ([more info here](https://ddev.readthedocs.io/en/latest/#system-requirements)).
 2. **Install ddev:** Options include [macOS homebrew](https://ddev.readthedocs.io/en/latest/#homebrew-macos) (recommended), an [install script](https://ddev.readthedocs.io/en/latest/#installation-script-linux-and-macos), or [a manually download](https://ddev.readthedocs.io/en/latest/#manual-installation-linux-and-macos).
 3. **Choose a CMS Quick Start Guide:** 
-  - [Wordpress](https://ddev.readthedocs.io/en/latest/users/cli-usage#wordpress-quickstart)
+  - [WordPress](https://ddev.readthedocs.io/en/latest/users/cli-usage#wordpress-quickstart)
   - [Drupal 7](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-7-quickstart)
   - [Drupal 8](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-8-quickstart)
 
@@ -20,7 +20,7 @@ Having trouble? See our [support options below](#support). Additionally, you may
 
 * Quickly create multiple local web development environments based on a code repositories.
 * Import database for a project you're working on.
-* Import upload files to match the project (Drupal's sites/default/files or Wordpress's wp-content/uploads).
+* Import upload files to match the project (Drupal's sites/default/files or WordPress's wp-content/uploads).
 * Pantheon integration - grab a Pantheon archive and work locally with the database and files.
 * Run commands within the docker environment using `ddev exec`.
 * View logs from the web and db containers.
