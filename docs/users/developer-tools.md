@@ -50,7 +50,7 @@ $databases['default']['default'] = array(
   'password' => "db",
   'host' => "127.0.0.1",
   'driver' => "mysql",
-  'port' => <YOUR_project_DB_PORT>,
+  'port' => <YOUR_PROJECT_DB_PORT>,
   'prefix' => "",
 );
 ```
