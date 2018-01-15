@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -768,7 +769,7 @@ func TestListWithoutDir(t *testing.T) {
 	// testDir on Windows has backslashes in it, resulting in invalid regexp
 	// Remove them and use ., which is good enough.
 	testDirSafe := strings.Replace(testDir, "\\", ".", -1)
-	assert.Regexp(ddevapp.SiteDirMissing+".*"+testDirSafe, table.String())
+	assert.Regexp(regexp.MustCompile("(?s)"+ddevapp.SiteDirMissing+".*"+testDirSafe), table.String())
 
 	err = app.Down(true)
 	assert.NoError(err)
