@@ -1,12 +1,12 @@
 <h1>Pantheon Hosting Provider Integration</h1>
 
-ddev provides an integration with the [Pantheon Website Management Platform](https://pantheon.io/), which allows for Pantheon users to quickly and easily download and provision a site from Pantheon in a local ddev-managed environment.
+ddev provides an integration with the [Pantheon Website Management Platform](https://pantheon.io/), which allows for Pantheon users to quickly and easily download and provision a project from Pantheon in a local ddev-managed environment.
 
 ddev's Pantheon integration pulls an existing backup from an existing Pantheon site/environment into your local system so you can develop locally. Of course that means you must already have a Pantheon site with a backup in order to use it.
 
 ## Quick Start
 
-If you have ddev installed, and have an active Pantheon account with an active WordPress, Drupal 7, or Drupal 8 site, you can follow this quick start guide to spin up a pantheon site locally.
+If you have ddev installed, and have an active Pantheon account with an active WordPress, Drupal 7, or Drupal 8 site, you can follow this quick start guide to spin up a pantheon project locally.
 
 1. Authenticate with Pantheon.
 
@@ -16,19 +16,19 @@ If you have ddev installed, and have an active Pantheon account with an active W
 
 2. Choose a Pantheon site and environment you want to use with ddev.
 
-3. Get a copy of the site codebase from Pantheon. We recommend enabling the "Git Connection Mode" if not already enabled, and using `git clone` to check out the code locally.
+3. Get a copy of the project codebase from Pantheon. We recommend enabling the "Git Connection Mode" if not already enabled, and using `git clone` to check out the code locally.
 
-4. Create a new backup of the site. This can be done by navigating to Backups->Backup Log->Create New Backup. _Note: this must be done every time you want the latest state of your Pantheon environment provisioned locally._
+4. Create a new backup of the Pantheon site. This can be done by navigating to Backups->Backup Log->Create New Backup. _Note: this must be done every time you want the latest state of your Pantheon environment provisioned locally._
 
 5. Configure the local checkout for ddev.
 
-    a. Navigate in your terminal to your checkout of the site codebase.
+    a. Navigate in your terminal to your checkout of the project codebase.
 
     b. Run `ddev config pantheon`. When asked for the project name you must use the exact name of the Pantheon project.
 
     c. Configuration prompts will allow you to choose a Pantheon environment, suggesting "dev" as the default.
 
-6. Run `ddev pull`. The ddev environment will spin up, download the latest backup from Pantheon, and import the database and files into the ddev environment. You should now be able to access the site locally.
+6. Run `ddev pull`. The ddev environment will spin up, download the latest backup from Pantheon, and import the database and files into the ddev environment. You should now be able to access the project locally.
 
 ## Requirements
 
@@ -44,15 +44,15 @@ This step only needs to be completed once for your system. We recommend that you
 
 ## Usage
 
-### Configuring a Pantheon Site for Imports
+### Configuring a Pantheon project for Imports
 
-After you copy your Pantheon site’s codebase locally, you can use `ddev config pantheon` to generate the necessary configuration files for ddev. In addition to the prompts the `ddev config` command provides for any new site, you will also be asked to specify which Pantheon environment you wish to pull your file and database assets from. These environments are usually "live", "test", or "dev". If you wish to later change the Pantheon environment you wish to sync from, you can do so by editing the `import.yaml` file in the `.ddev` directory for your site.
+After you copy your Pantheon project’s codebase locally, you can use `ddev config pantheon` to generate the necessary configuration files for ddev. In addition to the prompts the `ddev config` command provides for any new project, you will also be asked to specify which Pantheon environment you wish to pull your file and database assets from. These environments are usually "live", "test", or "dev". If you wish to later change the Pantheon environment you wish to sync from, you can do so by editing the `import.yaml` file in the `.ddev` directory for your project.
 
 ### Imports
 
 Running `ddev pull` will connect to Pantheon through their API to find the latest versions of the database and files backups from the specified environment. If new versions are available on Pantheon, they are downloaded and stored in ~/.ddev/pantheon. If the stored copies there are the latest copies, ddev will use these cached copies instead of downloading them again.
 
-_**Note for WordPress Users:** In order for your local site to load file assets from your local environment rather than the Pantheon environment it was pulled from, the URL of the site must be changed in the database by performing a search and replace. ddev provides an example `wp search-replace` as a post-pull hook in the config.yaml for your site. It is recommended to populate and uncomment this example so that replacement is done any time a backup is pulled from Pantheon._
+_**Note for WordPress Users:** In order for your local project to load file assets from your local environment rather than the Pantheon environment it was pulled from, the URL of the project must be changed in the database by performing a search and replace. ddev provides an example `wp search-replace` as a post-pull hook in the config.yaml for your project. It is recommended to populate and uncomment this example so that replacement is done any time a backup is pulled from Pantheon._
 
 ## Troubleshooting
 

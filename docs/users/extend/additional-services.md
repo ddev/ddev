@@ -1,6 +1,6 @@
 <h1> Additional Service Configurations for ddev</h1>
 
-Site environments in ddev can be extended to provide additional services. This is achieved by adding docker compose files to a project's .ddev directory that defines the added service(s). This page provides configurations for services that are ready to be added to your project with minimal setup.
+ddev projects can be extended to provide additional services. This is achieved by adding docker-compose files to a project's .ddev directory that defines the added service(s). This page provides configurations for services that are ready to be added to your project with minimal setup.
 
 If you need a service not provided here, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
@@ -16,6 +16,6 @@ This recipe adds an Apache Solr 5.4 container to a project. It will setup a solr
 
 **Interacting with Apache Solr**
 
-- The Solr admin interface will be accessible at http://<sitename>.ddev.local:8983
-- The host connection for apache solr will be <sitename>.ddev.local
+- The Solr admin interface will be accessible at http://<projectname>.ddev.local:8983
+- The host connection for apache solr will be <projectname>.ddev.local
 - The Solr core will be "dev"

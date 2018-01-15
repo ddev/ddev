@@ -9,7 +9,7 @@ Under the hood, ddev uses docker-compose to define and run the multiple containe
 ## Conventions for defining additional services
 When defining additional services for your project, it is recommended to follow these conventions to ensure your service is handled by ddev the same way the default services are.
 
-- Containers should be follow the naming convention `ddev-[sitename]-[servicename]`
+- Containers should be follow the naming convention `ddev-[projectname]-[servicename]`
 
 - Containers should be provided the following labels:
 
