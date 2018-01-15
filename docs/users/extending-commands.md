@@ -45,18 +45,18 @@ hooks:
     - exec: "wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.local"
 ```
 
-### `exec-host`: Execute a shell command on your system.
+### `exec-host`: Execute a shell command on the host system.
 
 Value: string providing the command to run. Commands requiring user interaction are not supported.
 
 Example:
 
-_Run "composer install" from your system before starting the project (composer would nee to be installed on your system)_
+_Run "composer install" from your system before starting the project (composer must already be installed on the host workstation)_
 
 ```
 hooks:
   pre-start:
-    - exec: "composer install"
+    - exec-host: "composer install"
 ```
 
 ## WordPress Example
