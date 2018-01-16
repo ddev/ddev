@@ -6,6 +6,7 @@ import (
 
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 
@@ -42,7 +43,7 @@ func NewDrupalSettings() *DrupalSettings {
 		DatabasePrefix:   "",
 		IsDrupal8:        false,
 		HashSalt:         util.RandString(64),
-		Signature:        DdevSettingsFileSignature,
+		Signature:        DdevFileSignature,
 	}
 }
 
@@ -350,7 +351,8 @@ func drupal6ConfigOverrideAction(app *DdevApp) error {
 }
 
 // dtNginxConfig provides an nginx config override for Drupal 6
-const d6NginxConfig = `
+const d6NginxConfig = DdevFileSignature + `
+
 # Set https to 'on' if x-forwarded-proto is https
 map $http_x_forwarded_proto $fcgi_https {
     default off;
@@ -463,12 +465,17 @@ func drupal6PostConfigAction(app *DdevApp) error {
 	// Write a nginx-site.conf
 	filePath := app.GetConfigPath("nginx-site.conf")
 
-	// If the file exists, respect it, give a warning message that we're not doing it.
-	if _, err := os.Stat(filePath); err == nil {
-		util.Warning("The file %s already exists, so not creating a Drupal 6 version of it.", filePath)
-		return nil
+	if fileutil.FileExists(filePath) {
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		util.CheckErr(err) // Really can't happen as we already checked for the file existence
+
+		if !signatureFound {
+			util.Warning("A custom non-ddev-generated %s already exists, so not creating a Drupal 6 version of it.", filePath)
+			return nil
+		}
 	}
 
+	// Replace or create nginx-site.conf
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
@@ -479,5 +486,4 @@ func drupal6PostConfigAction(app *DdevApp) error {
 	}
 	util.CheckClose(file)
 	return nil
-
 }

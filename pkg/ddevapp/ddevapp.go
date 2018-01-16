@@ -44,9 +44,9 @@ const SiteConfigMissing = ".ddev/config.yaml missing"
 // SiteStopped defines the string used to denote when a site is in the stopped state.
 const SiteStopped = "stopped"
 
-// DdevSettingsFileSignature is the text we use to detect whether a settings file is managed by us.
-// If this string is found, we assume we can replace/update the settings file.
-const DdevSettingsFileSignature = "#ddev-generated"
+// DdevFileSignature is the text we use to detect whether a settings file is managed by us.
+// If this string is found, we assume we can replace/update the file.
+const DdevFileSignature = "#ddev-generated"
 
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
@@ -772,7 +772,7 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	for _, loc := range possibleLocations {
 		// If the file is found we need to check for a signature to determine if it's safe to use.
 		if fileutil.FileExists(loc) {
-			signatureFound, err := fileutil.FgrepStringInFile(loc, DdevSettingsFileSignature)
+			signatureFound, err := fileutil.FgrepStringInFile(loc, DdevFileSignature)
 			util.CheckErr(err) // Really can't happen as we already checked for the file existence
 
 			if signatureFound {
@@ -801,7 +801,7 @@ func (app *DdevApp) Down(removeData bool) error {
 	// Remove data/database if we need to.
 	if removeData {
 		if fileutil.FileExists(settingsFilePath) {
-			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DdevSettingsFileSignature)
+			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DdevFileSignature)
 			util.CheckErr(err) // Really can't happen as we already checked for the file existence
 			if signatureFound {
 				err = os.Chmod(settingsFilePath, 0644)
