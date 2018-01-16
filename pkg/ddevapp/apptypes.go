@@ -189,6 +189,4 @@ func (app *DdevApp) PostConfigAction() error {
 	// In the future if these get more specialized we may want to add this explicitly
 	// to the apptype matrix instead of doing it here.
 	return genericPostConfigAction(app)
-
-	return nil
 }
