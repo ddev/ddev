@@ -22,6 +22,13 @@ type appTypeDetect func(app *DdevApp) bool
 // required actions on Wordpress.
 type postImportDBAction func(app *DdevApp) error
 
+// configOverrideAction allows a particular apptype to override elements
+// of the config for that apptype. Key example is drupal6 needing php56
+type configOverrideAction func(app *DdevApp) error
+
+// postConfigAction allows actions to take place at the end of ddev config
+type postConfigAction func(app *DdevApp) error
+
 // AppTypeFuncs struct defines the functions that can be called (if populated)
 // for a given appType.
 type AppTypeFuncs struct {
@@ -31,6 +38,8 @@ type AppTypeFuncs struct {
 	apptypeSettingsPaths
 	appTypeDetect
 	postImportDBAction
+	configOverrideAction
+	postConfigAction
 }
 
 // appTypeMatrix is a static map that defines the various functions to be called
@@ -42,13 +51,16 @@ func init() {
 	appTypeMatrix = map[string]AppTypeFuncs{
 		"php": {},
 		"drupal7": {
-			createDrupalSettingsFile, getDrupalUploadDir, getDrupal7Hooks, setDrupalSiteSettingsPaths, isDrupal7App, nil,
+			createDrupalSettingsFile, getDrupalUploadDir, getDrupal7Hooks, setDrupalSiteSettingsPaths, isDrupal7App, nil, drupal7ConfigOverrideAction, nil,
 		},
 		"drupal8": {
-			createDrupalSettingsFile, getDrupalUploadDir, getDrupal8Hooks, setDrupalSiteSettingsPaths, isDrupal8App, nil,
+			createDrupalSettingsFile, getDrupalUploadDir, getDrupal8Hooks, setDrupalSiteSettingsPaths, isDrupal8App, nil, nil, nil,
 		},
 		"wordpress": {
-			createWordpressSettingsFile, getWordpressUploadDir, getWordpressHooks, setWordpressSiteSettingsPaths, isWordpressApp, wordpressPostImportDBAction,
+			createWordpressSettingsFile, getWordpressUploadDir, getWordpressHooks, setWordpressSiteSettingsPaths, isWordpressApp, wordpressPostImportDBAction, nil, nil,
+		},
+		"drupal6": {
+			createDrupal6SettingsFile, getDrupalUploadDir, getDrupal6Hooks, setDrupalSiteSettingsPaths, isDrupal6App, nil, drupal6ConfigOverrideAction, drupal6PostConfigAction,
 		},
 	}
 }
@@ -155,4 +167,26 @@ func (app *DdevApp) PostImportDBAction() error {
 	}
 
 	return nil
+}
+
+// ConfigFileOverrideAction gives a chance for an apptype to override any element
+// of config.yaml that it needs to.
+func (app *DdevApp) ConfigFileOverrideAction() error {
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.configOverrideAction != nil {
+		return appFuncs.configOverrideAction(app)
+	}
+
+	return nil
+}
+
+// PostConfigAction gives a chance for an apptype to override do something at
+// the end of ddev config.
+func (app *DdevApp) PostConfigAction() error {
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.postConfigAction != nil {
+		return appFuncs.postConfigAction(app)
+	}
+
+	// In the future if these get more specialized we may want to add this explicitly
+	// to the apptype matrix instead of doing it here.
+	return genericPostConfigAction(app)
 }

@@ -44,9 +44,9 @@ const SiteConfigMissing = ".ddev/config.yaml missing"
 // SiteStopped defines the string used to denote when a site is in the stopped state.
 const SiteStopped = "stopped"
 
-// DdevSettingsFileSignature is the text we use to detect whether a settings file is managed by us.
-// If this string is found, we assume we can replace/update the settings file.
-const DdevSettingsFileSignature = "#ddev-generated"
+// DdevFileSignature is the text we use to detect whether a settings file is managed by us.
+// If this string is found, we assume we can replace/update the file.
+const DdevFileSignature = "#ddev-generated"
 
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
@@ -292,7 +292,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 	if err != nil {
 		// @todo: Use a typed error instead of relying on the text of the message.
 		if strings.Contains(err.Error(), "settings files already exist and are being managed") {
-			return fmt.Errorf("failed to write configuration file for %s: %v", app.GetName(), err)
+			return fmt.Errorf("failed to write settings file for %s: %v", app.GetName(), err)
 		}
 		util.Warning("A custom settings file exists for your application, so ddev did not generate one.")
 		util.Warning("Run 'ddev describe' to find the database credentials for this application.")
@@ -772,7 +772,7 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	for _, loc := range possibleLocations {
 		// If the file is found we need to check for a signature to determine if it's safe to use.
 		if fileutil.FileExists(loc) {
-			signatureFound, err := fileutil.FgrepStringInFile(loc, DdevSettingsFileSignature)
+			signatureFound, err := fileutil.FgrepStringInFile(loc, DdevFileSignature)
 			util.CheckErr(err) // Really can't happen as we already checked for the file existence
 
 			if signatureFound {
@@ -801,7 +801,7 @@ func (app *DdevApp) Down(removeData bool) error {
 	// Remove data/database if we need to.
 	if removeData {
 		if fileutil.FileExists(settingsFilePath) {
-			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DdevSettingsFileSignature)
+			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DdevFileSignature)
 			util.CheckErr(err) // Really can't happen as we already checked for the file existence
 			if signatureFound {
 				err = os.Chmod(settingsFilePath, 0644)

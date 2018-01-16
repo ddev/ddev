@@ -134,51 +134,64 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 func TestConfigCommand(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	testDir := testcommon.CreateTmpDir("TestConfigCommand")
 
-	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
-
-	// Create a docroot folder.
-	err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
-	if err != nil {
-		t.Errorf("Could not create docroot directory under %s", testDir)
+	const apptypePos = 0
+	const phpVersionPos = 1
+	testMatrix := map[string][]string{
+		"drupal6phpversion": {"drupal6", "5.6"},
+		"drupal7phpversion": {"drupal7", "7.1"},
+		"drupal8phpversion": {"drupal8", "7.1"},
 	}
 
-	// Create the ddevapp we'll use for testing.
-	// This will not return an error, since there is no existing configuration.
-	app, err := NewApp(testDir, DefaultProviderName)
-	assert.NoError(err)
+	for testName, testValues := range testMatrix {
 
-	// Randomize some values to use for Stdin during testing.
-	name := strings.ToLower(util.RandString(16))
-	invalidDir := strings.ToLower(util.RandString(16))
-	invalidAppType := strings.ToLower(util.RandString(8))
+		testDir := testcommon.CreateTmpDir("TestConfigCommand_" + testName)
 
-	// This is a bit hard to follow, but we create an example input buffer that writes the sitename, a (invalid) document root, a valid document root,
-	// an invalid app type, and finally a valid app type (drupal8)
-	input := fmt.Sprintf("%s\n%s\ndocroot\n%s\ndrupal8", name, invalidDir, invalidAppType)
-	scanner := bufio.NewScanner(strings.NewReader(input))
-	util.SetInputScanner(scanner)
+		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
+		defer testcommon.CleanupDir(testDir)
+		defer testcommon.Chdir(testDir)()
 
-	restoreOutput := testcommon.CaptureUserOut()
-	err = app.PromptForConfig()
-	assert.NoError(err, t)
-	out := restoreOutput()
+		// Create a docroot folder.
+		err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
+		if err != nil {
+			t.Errorf("Could not create docroot directory under %s", testDir)
+		}
 
-	// Ensure we have expected vales in output.
-	assert.Contains(out, testDir)
-	assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
-	assert.Contains(out, fmt.Sprintf("'%s' is not a valid application type", invalidAppType))
+		// Create the ddevapp we'll use for testing.
+		// This will not return an error, since there is no existing configuration.
+		app, err := NewApp(testDir, DefaultProviderName)
+		assert.NoError(err)
 
-	// Ensure values were properly set on the app struct.
-	assert.Equal(name, app.Name)
-	assert.Equal("drupal8", app.Type)
-	assert.Equal("docroot", app.Docroot)
-	err = PrepDdevDirectory(testDir)
-	assert.NoError(err)
+		// Randomize some values to use for Stdin during testing.
+		name := strings.ToLower(util.RandString(16))
+		invalidDir := strings.ToLower(util.RandString(16))
+		invalidAppType := strings.ToLower(util.RandString(8))
 
+		// Create an example input buffer that writes the sitename, an invalid
+		// document root, a valid document root,
+		// an invalid app type, and finally a valid app type (from test matrix)
+		input := fmt.Sprintf("%s\n%s\ndocroot\n%s\n%s", name, invalidDir, invalidAppType, testValues[apptypePos])
+		scanner := bufio.NewScanner(strings.NewReader(input))
+		util.SetInputScanner(scanner)
+
+		restoreOutput := testcommon.CaptureUserOut()
+		err = app.PromptForConfig()
+		assert.NoError(err, t)
+		out := restoreOutput()
+
+		// Ensure we have expected vales in output.
+		assert.Contains(out, testDir)
+		assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
+		assert.Contains(out, fmt.Sprintf("'%s' is not a valid application type", invalidAppType))
+
+		// Ensure values were properly set on the app struct.
+		assert.Equal(name, app.Name)
+		assert.Equal(testValues[apptypePos], app.Type)
+		assert.Equal("docroot", app.Docroot)
+		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion)
+		err = PrepDdevDirectory(testDir)
+		assert.NoError(err)
+	}
 }
 
 // TestReadConfig tests reading config values from file and fallback to defaults for values not exposed.

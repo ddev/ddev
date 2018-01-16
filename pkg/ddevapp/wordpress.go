@@ -49,7 +49,7 @@ func NewWordpressConfig() *WordpressConfig {
 		NonceSalt:        util.RandString(64),
 		SecureAuthKey:    util.RandString(64),
 		SecureAuthSalt:   util.RandString(64),
-		Signature:        DdevSettingsFileSignature,
+		Signature:        DdevFileSignature,
 	}
 }
 

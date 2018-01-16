@@ -122,7 +122,18 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
-	return provider.Write(app.GetConfigPath("import.yaml"))
+	err = provider.Write(app.GetConfigPath("import.yaml"))
+	if err != nil {
+		return err
+	}
+
+	// Allow app-specific post-config action
+	err = app.PostConfigAction()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ReadConfig reads app configuration from a specified location on disk, falling
@@ -209,6 +220,11 @@ func (app *DdevApp) PromptForConfig() error {
 	}
 
 	err := app.appTypePrompt()
+	if err != nil {
+		return err
+	}
+
+	err = app.ConfigFileOverrideAction()
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 
 	"path"
 
@@ -37,7 +38,6 @@ var ConfigCommand = &cobra.Command{
 		appRoot, err := os.Getwd()
 		if err != nil {
 			util.Failed("Could not determine current working directory: %v", err)
-
 		}
 
 		provider := ddevapp.DefaultProviderName
@@ -89,8 +89,10 @@ var ConfigCommand = &cobra.Command{
 			if provider != "pantheon" && pantheonEnvironment != "" {
 				util.Failed("--pantheon-environment can only be used with pantheon provider, for example 'ddev config pantheon --pantheon-environment=dev --docroot=docroot'")
 			}
-			if appType != "" && appType != "drupal7" && appType != "drupal8" && appType != "wordpress" {
-				util.Failed("apptype must be drupal7, drupal8, or wordpress")
+
+			if !ddevapp.IsValidAppType(appType) {
+				validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
+				util.Failed("apptype must be one of %s", validAppTypes)
 			}
 
 			foundAppType := app.DetectAppType()
@@ -120,9 +122,13 @@ var ConfigCommand = &cobra.Command{
 			// But pantheon *does* validate "Name"
 			appTypeErr := prov.Validate()
 			if appTypeErr != nil {
-				util.Failed("Failed to validate sitename %v and environment %v with provider %v: %v", app.Name, pantheonEnvironment, provider, appTypeErr)
+				util.Failed("Failed to validate project name %v and environment %v with provider %v: %v", app.Name, pantheonEnvironment, provider, appTypeErr)
 			} else {
-				util.Success("Using pantheon sitename '%s' and environment '%s'.", app.Name, pantheonEnvironment)
+				util.Success("Using project name '%s' and environment '%s'.", app.Name, pantheonEnvironment)
+			}
+			err = app.ConfigFileOverrideAction()
+			if err != nil {
+				util.Failed("Failed to run ConfigFileOverrideAction: %v", err)
 			}
 
 		}

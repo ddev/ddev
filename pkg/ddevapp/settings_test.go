@@ -41,7 +41,7 @@ func TestWriteSettings(t *testing.T) {
 		assert.EqualValues(t, expectedSettingsFile, createdFile)
 		_, err = os.Stat(expectedSettingsFile)
 		assert.NoError(t, err)
-		signatureFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, DdevSettingsFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, DdevFileSignature)
 		assert.NoError(t, err)
 		assert.True(t, signatureFound)
 		err = os.Remove(expectedSettingsFile)
