@@ -2,7 +2,10 @@ package ddevapp
 
 import (
 	"fmt"
+<<<<<<< HEAD
 	"io/ioutil"
+=======
+>>>>>>> Fix typo
 
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/appports"
@@ -321,7 +324,7 @@ func isDrupal7App(app *DdevApp) bool {
 	return false
 }
 
-// isDrupal8App returns true if the app of of type drupal8
+// isDrupal8App returns true if the app is of type drupal8
 func isDrupal8App(app *DdevApp) bool {
 	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "core/scripts/drupal.sh")); err == nil {
 		return true
