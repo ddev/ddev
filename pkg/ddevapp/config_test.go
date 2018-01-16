@@ -139,7 +139,7 @@ func TestConfigCommand(t *testing.T) {
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
 		"drupal6phpversion": {"drupal6", "5.6"},
-		"drupal7phpversion": {"drupal7", "7.0"},
+		"drupal7phpversion": {"drupal7", "7.1"},
 		"drupal8phpversion": {"drupal8", "7.1"},
 	}
 

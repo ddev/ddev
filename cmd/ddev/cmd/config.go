@@ -38,7 +38,6 @@ var ConfigCommand = &cobra.Command{
 		appRoot, err := os.Getwd()
 		if err != nil {
 			util.Failed("Could not determine current working directory: %v", err)
-
 		}
 
 		provider := ddevapp.DefaultProviderName
