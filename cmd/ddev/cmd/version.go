@@ -26,7 +26,9 @@ var versionCmd = &cobra.Command{
 
 		versionOutput := uitable.New()
 		for label, value := range v {
-			versionOutput.AddRow(label, value)
+			if label != "build info" {
+				versionOutput.AddRow(label, value)
+			}
 		}
 
 		output.UserOut.WithField("raw", v).Println(versionOutput)
