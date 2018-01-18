@@ -21,28 +21,20 @@ var versionCmd = &cobra.Command{
 			util.CheckErr(err)
 			os.Exit(1)
 		}
-		out := handleVersionCommand()
-		output.UserOut.Println(out)
+
+		v := version.GetVersionInfo()
+
+		versionOutput := uitable.New()
+		for label, value := range v {
+			if label != "build info" {
+				versionOutput.AddRow(label, value)
+			}
+		}
+
+		output.UserOut.WithField("raw", v).Println(versionOutput)
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(versionCmd)
-}
-
-// handleVersionCommand does the testable work of the version command.
-func handleVersionCommand() *uitable.Table {
-	table := uitable.New()
-	table.MaxColWidth = 200
-
-	table.AddRow("cli:", version.DdevVersion)
-	table.AddRow("web:", version.WebImg+":"+version.WebTag)
-	table.AddRow("db:", version.DBImg+":"+version.DBTag)
-	table.AddRow("dba:", version.DBAImg+":"+version.DBATag)
-	table.AddRow("router:", version.RouterImage+":"+version.RouterTag)
-	table.AddRow("commit:", version.COMMIT)
-	table.AddRow("domain:", version.DDevTLD)
-	table.AddRow("build info:", version.BUILDINFO)
-
-	return table
 }
