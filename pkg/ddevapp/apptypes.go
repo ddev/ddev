@@ -62,6 +62,9 @@ func init() {
 		"drupal6": {
 			createDrupal6SettingsFile, getDrupalUploadDir, getDrupal6Hooks, setDrupalSiteSettingsPaths, isDrupal6App, nil, drupal6ConfigOverrideAction, drupal6PostConfigAction,
 		},
+		"typo3": {
+			createTypo3SettingsFile, getTypo3UploadDir, getTypo3Hooks, setTypo3SiteSettingsPaths, isTypo3App, nil, nil, nil,
+		},
 	}
 }
 
@@ -86,8 +89,6 @@ func IsValidAppType(apptype string) bool {
 // CreateSettingsFile creates the settings file (like settings.php) for the
 // provided app is the apptype has a settingsCreator function.
 func (app *DdevApp) CreateSettingsFile() (string, error) {
-	app.SetApptypeSettingsPaths()
-
 	// If neither settings file options are set, then don't continue
 	if app.SiteLocalSettingsPath == "" && app.SiteSettingsPath == "" {
 		return "", fmt.Errorf("Neither SiteLocalSettingsPath nor SiteSettingsPath is set")
