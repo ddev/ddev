@@ -11,8 +11,9 @@ ddev is an open source tool that makes it simple to get local PHP development en
 2. **Install ddev:** Options include [macOS homebrew](https://ddev.readthedocs.io/en/latest/#homebrew-macos) (recommended), an [install script](https://ddev.readthedocs.io/en/latest/#installation-script-linux-and-macos), or [a manually download](https://ddev.readthedocs.io/en/latest/#manual-installation-linux-and-macos).
 3. **Choose a CMS Quick Start Guide:** 
   - [WordPress](https://ddev.readthedocs.io/en/latest/users/cli-usage#wordpress-quickstart)
-  - [Drupal 7](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-7-quickstart)
+  - [Drupal 6 and 7](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-6/7-quickstart)
   - [Drupal 8](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-8-quickstart)
+  - [TYPO3](https://ddev.readthedocs.io/en/latest/users/cli-usage#typo3-quickstart)
 
 Having trouble? See our [support options below](#support). Additionally, you may have trouble if [another local development tool is already using port 80 or 443](https://ddev.readthedocs.io/en/latest/#using-ddev-with-other-development-environments).
 
