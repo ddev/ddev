@@ -84,11 +84,11 @@ func getTypo3UploadDir(app *DdevApp) string {
 
 // Typo3Hooks adds a typo3-specific hooks example for post-import-db
 const Typo3Hooks = `
-#     - exec: "hostname"`
+#     - exec: "echo database was loaded"`
 
 // getTypo3Hooks for appending as byte array
 func getTypo3Hooks() []byte {
-	// We don't have anything new to add yet, so just use Typo37 version
+	// We don't have anything new to add yet.
 	return []byte(Typo3Hooks)
 }
 
