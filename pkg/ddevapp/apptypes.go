@@ -89,6 +89,8 @@ func IsValidAppType(apptype string) bool {
 // CreateSettingsFile creates the settings file (like settings.php) for the
 // provided app is the apptype has a settingsCreator function.
 func (app *DdevApp) CreateSettingsFile() (string, error) {
+	app.SetApptypeSettingsPaths()
+
 	// If neither settings file options are set, then don't continue
 	if app.SiteLocalSettingsPath == "" && app.SiteSettingsPath == "" {
 		return "", fmt.Errorf("Neither SiteLocalSettingsPath nor SiteSettingsPath is set")
