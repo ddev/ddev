@@ -30,6 +30,9 @@ const fallbackPantheonEnvironment = "dev"
 // appType is the ddev app type, like drupal7/drupal8/wordpress
 var appType string
 
+// showConfigLocation if set causes the command to show the config location.
+var showConfigLocation bool
+
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
 	Use:   "config [provider]",
@@ -54,6 +57,16 @@ var ConfigCommand = &cobra.Command{
 		app, err := ddevapp.NewApp(appRoot, provider)
 		if err != nil {
 			util.Failed("Could not create new config: %v", err)
+		}
+
+		// Support the show-config-location flag.
+		if showConfigLocation {
+			activeApp, err := ddevapp.GetActiveApp("")
+			if err != nil && activeApp.ConfigPath != "" && activeApp.ConfigExists() {
+				util.Success("The project config location is %s", activeApp.ConfigPath)
+				return
+			}
+			util.Failed("No project configuration currently exists")
 		}
 
 		// If they have not given us any flags, we prompt for full info. Otherwise, we assume they're in control.
@@ -158,6 +171,7 @@ func init() {
 	ConfigCommand.Flags().StringVarP(&appType, "projecttype", "", "", apptypeUsage)
 	// apptype flag is there for backwards compatibility.
 	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
+	ConfigCommand.Flags().BoolVarP(&showConfigLocation, "show-config-location", "", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
 
 	RootCmd.AddCommand(ConfigCommand)
 }
