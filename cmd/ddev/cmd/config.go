@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -32,7 +33,7 @@ var appType string
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand = &cobra.Command{
 	Use:   "config [provider]",
-	Short: "Create or modify a ddev application config in the current directory",
+	Short: "Create or modify a ddev project configuration in the current directory",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		appRoot, err := os.Getwd()
@@ -90,23 +91,23 @@ var ConfigCommand = &cobra.Command{
 				util.Failed("--pantheon-environment can only be used with pantheon provider, for example 'ddev config pantheon --pantheon-environment=dev --docroot=docroot'")
 			}
 
-			if !ddevapp.IsValidAppType(appType) {
+			if appType != "" && !ddevapp.IsValidAppType(appType) {
 				validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
 				util.Failed("apptype must be one of %s", validAppTypes)
 			}
 
-			foundAppType := app.DetectAppType()
+			detectedApptype := app.DetectAppType()
 			fullPath, pathErr := filepath.Abs(app.Docroot)
 			if pathErr != nil {
 				util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, pathErr)
 			}
-			if appType == "" || appType == foundAppType { // Found an app, matches passed-in or no apptype passed
-				appType = foundAppType
-				util.Success("Found a %s codebase at %s", foundAppType, fullPath)
+			if appType == "" || appType == detectedApptype { // Found an app, matches passed-in or no apptype passed
+				appType = detectedApptype
+				util.Success("Found a %s codebase at %s", detectedApptype, fullPath)
 			} else if appType != "" { // apptype was passed, but we found no app at all
 				util.Warning("You have specified an apptype of %s but no app of that type is found in %s", appType, fullPath)
-			} else if appType != "" && foundAppType != appType { // apptype was passed, app was found, but not the same type
-				util.Warning("You have specified an apptype of %s but an app of type %s was discovered in %s", appType, foundAppType, fullPath)
+			} else if appType != "" && detectedApptype != appType { // apptype was passed, app was found, but not the same type
+				util.Warning("You have specified an apptype of %s but an app of type %s was discovered in %s", appType, detectedApptype, fullPath)
 			}
 			app.Type = appType
 
@@ -148,10 +149,15 @@ var ConfigCommand = &cobra.Command{
 }
 
 func init() {
+	validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
+	apptypeUsage := fmt.Sprintf("Provide the project type (one of %s). This is autodetected and this flag is necessary only to override the detection.", validAppTypes)
+
 	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", "Provide the sitename of site to configure (normally the same as the directory name)")
 	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the site, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
 	ConfigCommand.Flags().StringVarP(&pantheonEnvironment, "pantheon-environment", "", "", "Choose the environment for a Pantheon site (dev/test/prod) (Pantheon-only)")
-	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "", "Provide the app type (like wordpress or drupal7 or drupal8). This is normally autodetected and this flag is not necessary")
+	ConfigCommand.Flags().StringVarP(&appType, "projecttype", "", "", apptypeUsage)
+	// apptype flag is there for backwards compatibility.
+	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
 
 	RootCmd.AddCommand(ConfigCommand)
 }
