@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -45,19 +44,8 @@ func appStart() {
 		util.Failed("Failed to start %s: %v", app.GetName(), err)
 	}
 
-	var https bool
-	web, err := app.FindContainerByType("web")
-	if err == nil {
-		https = dockerutil.CheckForHTTPS(web)
-	}
-
-	urlString := fmt.Sprintf("http://%s", app.HostName())
-	if https {
-		urlString = fmt.Sprintf("%s\nhttps://%s", urlString, app.HostName())
-	}
-
 	util.Success("Successfully started %s", app.GetName())
-	util.Success("Your application can be reached at:\n%s", urlString)
+	util.Success("Your project can be reached at %s and %s", app.GetHTTPURL(), app.GetHTTPSURL())
 
 }
 func init() {

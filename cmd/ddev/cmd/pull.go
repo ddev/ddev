@@ -56,7 +56,7 @@ func appImport(skipConfirmation bool) {
 	}
 
 	util.Success("Successfully Imported.")
-	util.Success("Your application can be reached at: %s", app.GetURL())
+	util.Success("Your project can be reached at: %s and %s", app.GetHTTPURL(), app.GetHTTPSURL())
 }
 
 func init() {

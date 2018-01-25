@@ -26,6 +26,12 @@ const DefaultProviderName = "default"
 // DdevDefaultPHPVersion is the default PHP version, overridden by $DDEV_PHP_VERSION
 const DdevDefaultPHPVersion = "7.1"
 
+// DdevDefaultRouterHTTPPort is the starting router port, 80
+const DdevDefaultRouterHTTPPort = "80"
+
+// DdevDefaultRouterHTTPSPort is the starting https router port, 443
+const DdevDefaultRouterHTTPSPort = "443"
+
 // CurrentAppVersion sets the current YAML config file version.
 // We're not doing anything with AppVersion, so just default it to 1 for now.
 const CurrentAppVersion = "1"
@@ -60,6 +66,8 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.APIVersion = CurrentAppVersion
 	app.PHPVersion = DdevDefaultPHPVersion
+	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
+	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.WebImg + ":" + version.WebTag
@@ -163,6 +171,14 @@ func (app *DdevApp) ReadConfig() error {
 	}
 	if app.PHPVersion == "" {
 		app.PHPVersion = DdevDefaultPHPVersion
+	}
+
+	if app.RouterHTTPPort == "" {
+		app.RouterHTTPPort = DdevDefaultRouterHTTPPort
+	}
+
+	if app.RouterHTTPSPort == "" {
+		app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 	}
 
 	if app.WebImage == "" {
