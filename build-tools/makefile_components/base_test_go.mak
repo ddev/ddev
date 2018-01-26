@@ -11,10 +11,10 @@ test: build
 	@mkdir -p $(GOTMP)/{src/$(PKG),pkg,bin,std/linux}
 	@echo "Testing $(SRC_AND_UNDER) with TESTARGS=$(TESTARGS)"
 	@docker run -t --rm  -u $(shell id -u):$(shell id -g)                 \
-	    -v $(PWD)/$(GOTMP):/go                                                 \
-	    -v $(PWD):/go/src/$(PKG)                                          \
-	    -v $(PWD)/bin/linux:/go/bin                                     \
-	    -v $(PWD)/$(GOTMP)/std/linux:/usr/local/go/pkg/linux_amd64_static  \
+	    -v $(PWD)/$(GOTMP):/go$(DOCKERMOUNTFLAG)                                                 \
+	    -v $(PWD):/go/src/$(PKG)$(DOCKERMOUNTFLAG)                                          \
+	    -v $(PWD)/bin/linux:/go/bin$(DOCKERMOUNTFLAG)                                     \
+	    -v $(PWD)/$(GOTMP)/std/linux:/usr/local/go/pkg/linux_amd64_static$(DOCKERMOUNTFLAG)  \
 	    -e CGO_ENABLED=0	\
 	    -w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
