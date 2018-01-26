@@ -35,10 +35,12 @@ func NewBackdropsettings() *BackdropSettings {
 		DatabasePort:     appports.GetPort("db"),
 		DatabasePrefix:   "",
 		HashSalt:         util.RandString(64),
-		Signature:        DdevSettingsFileSignature,
+		Signature:        DdevFileSignature,
 	}
 }
 
+// Note that this template will almost always be used for settings.local.php
+// because Backdrop ships with it's own default settings.php.
 const backdropTemplate = `<?php
 {{ $config := . }}
 /**
