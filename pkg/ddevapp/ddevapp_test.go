@@ -585,8 +585,8 @@ func TestRouterPortsCheck(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err, "app.Start(%s) failed, err: %v", app.GetName(), err)
 
-	// Stop the router using code from StopRouter().
-	// StopRouter can't be used here because it checks to see if containers are running
+	// Stop the router using code from StopRouterIfNoContainers().
+	// StopRouterIfNoContainers can't be used here because it checks to see if containers are running
 	// and doesn't do its job as a result.
 	dest := ddevapp.RouterComposeYAMLPath()
 	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down", "-v")

@@ -740,7 +740,7 @@ func (app *DdevApp) Stop() error {
 		return err
 	}
 
-	return StopRouter()
+	return StopRouterIfNoContainers()
 }
 
 // Wait ensures that the app service containers are healthy.
@@ -832,7 +832,7 @@ func (app *DdevApp) Down(removeData bool) error {
 		}
 	}
 
-	err = StopRouter()
+	err = StopRouterIfNoContainers()
 	return err
 }
 
