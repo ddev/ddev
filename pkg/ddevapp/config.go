@@ -79,7 +79,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	if _, err := os.Stat(app.ConfigPath); !os.IsNotExist(err) {
 		err = app.ReadConfig()
 		if err != nil {
-			return app, fmt.Errorf("%v exists but cannot be read: %v", app.ConfigPath, err)
+			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
 		}
 	}
 

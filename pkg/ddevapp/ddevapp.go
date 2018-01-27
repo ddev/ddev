@@ -972,10 +972,14 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 		return app, err
 	}
 
-	// Ignore app.Init() error, since app.Init() fails if no directory found.
+	// Ignore app.Init() error (unless malformed config.yaml), since app.Init()
+	// fails if no directory found.
 	// We already were successful with *finding* the app, and if we get an
 	// incomplete one we have to add to it.
-	_ = app.Init(activeAppRoot)
+	err = app.Init(activeAppRoot)
+	if err != nil && strings.Contains(err.Error(), "config.yaml exists but cannot be read.") {
+		return app, err
+	}
 
 	if app.Name == "" || app.DataDir == "" {
 		err = restoreApp(app, siteName)
@@ -991,7 +995,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 // if it cannot restore them.
 func restoreApp(app *DdevApp, siteName string) error {
 	if siteName == "" {
-		return fmt.Errorf("error restoring AppConfig: no siteName given")
+		return fmt.Errorf("error restoring AppConfig: no project name given")
 	}
 	app.Name = siteName
 	// Ensure that AppConfig.DataDir is set so that site data can be removed if necessary.

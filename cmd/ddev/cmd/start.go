@@ -31,10 +31,11 @@ provide a working environment for development.`,
 	},
 }
 
+// appStart is a convenience function to encapsulate startup functionality
 func appStart() {
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
-		util.Failed("Failed to start: %v", err)
+		util.Failed("Failed to start project: %v", err)
 	}
 
 	output.UserOut.Printf("Starting environment for %s...", app.GetName())
