@@ -155,8 +155,8 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		dbinfo["published_port"] = fmt.Sprint(dockerutil.GetPublishedPort(dbPrivatePort, db))
 		appDesc["dbinfo"] = dbinfo
 
-		appDesc["mailhog_url"] = app.GetHTTPURL() + ":" + appports.GetPort("mailhog")
-		appDesc["phpmyadmin_url"] = app.GetHTTPURL() + ":" + appports.GetPort("dba")
+		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("mailhog")
+		appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("dba")
 	}
 
 	appDesc["router_status"] = GetRouterStatus()
