@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"net"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -224,12 +223,7 @@ func determineRouterPorts() []string {
 func CheckRouterPorts() error {
 	routerPorts := determineRouterPorts()
 	for _, port := range routerPorts {
-		conn, err := net.Dial("tcp", ":"+port)
-		// We want an error (inability to connect), that's the success case.
-		// If we don't get one, return err. This will normally be "getsockopt: connection refused"
-		// For simplicity we're not actually studying the err value.
-		if err == nil {
-			_ = conn.Close()
+		if util.IsPortActive(port) {
 			return fmt.Errorf("localhost port %s is in use", port)
 		}
 	}
