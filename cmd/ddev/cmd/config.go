@@ -62,11 +62,22 @@ var ConfigCommand = &cobra.Command{
 		// Support the show-config-location flag.
 		if showConfigLocation {
 			activeApp, err := ddevapp.GetActiveApp("")
-			if err != nil && activeApp.ConfigPath != "" && activeApp.ConfigExists() {
-				util.Success("The project config location is %s", activeApp.ConfigPath)
+			if err != nil {
+				if strings.Contains(err.Error(), "Have you run 'ddev config'") {
+					util.Failed("No project configuration currently exists")
+				} else {
+					util.Failed("Failed to access project configuration: %v", err)
+				}
+			}
+			if activeApp.ConfigPath != "" && activeApp.ConfigExists() {
+				rawResult := make(map[string]interface{})
+				rawResult["configpath"] = activeApp.ConfigPath
+				rawResult["approot"] = activeApp.AppRoot
+
+				friendlyMsg := fmt.Sprintf("The project config location is %s", activeApp.ConfigPath)
+				output.UserOut.WithField("raw", rawResult).Print(friendlyMsg)
 				return
 			}
-			util.Failed("No project configuration currently exists")
 		}
 
 		// If they have not given us any flags, we prompt for full info. Otherwise, we assume they're in control.
