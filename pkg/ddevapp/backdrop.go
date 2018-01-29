@@ -52,9 +52,6 @@ const backdropTemplate = `<?php
 $database = 'mysql://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@{{ $config.DatabaseHost }}/{{ $config.DatabaseName }}';
 $database_prefix = '{{ $config.DatabasePrefix }}';
 
-$config_directories['active'] = 'files/ddev_config/active';
-$config_directories['staging'] = 'files/ddev_config/staging';
-
 $settings['update_free_access'] = FALSE;
 $settings['hash_salt'] = '{{ $config.HashSalt }}';
 $settings['backdrop_drupal_compatibility'] = TRUE;
