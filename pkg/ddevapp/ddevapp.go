@@ -977,8 +977,8 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// incomplete one we have to add to it.
 	err = app.Init(activeAppRoot)
 	if err != nil && (strings.Contains(err.Error(), "is not a valid hostname") || strings.Contains(err.Error(), "is not a valid apptype") || strings.Contains(err.Error(), "config.yaml exists but cannot be read.")) {
-    return app, err
-  }
+		return app, err
+	}
 
 	if app.Name == "" || app.DataDir == "" {
 		err = restoreApp(app, siteName)
