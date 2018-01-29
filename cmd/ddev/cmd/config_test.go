@@ -13,7 +13,7 @@ func TestConfigDescribeLocation(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it.
-	tmpdir := testcommon.CreateTmpDir("config_show_location")
+	tmpdir := testcommon.CreateTmpDir("config-show-location")
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 
