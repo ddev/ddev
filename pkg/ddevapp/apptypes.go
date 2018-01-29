@@ -62,6 +62,9 @@ func init() {
 		"drupal6": {
 			createDrupal6SettingsFile, getDrupalUploadDir, getDrupal6Hooks, setDrupalSiteSettingsPaths, isDrupal6App, nil, drupal6ConfigOverrideAction, drupal6PostConfigAction,
 		},
+		"typo3": {
+			createTypo3SettingsFile, getTypo3UploadDir, getTypo3Hooks, setTypo3SiteSettingsPaths, isTypo3App, nil, nil, nil,
+		},
 	}
 }
 

@@ -22,9 +22,16 @@ func TestWriteSettings(t *testing.T) {
 		"drupal7":   "sites/default/settings.php",
 		"drupal8":   "sites/default/settings.php",
 		"wordpress": "wp-config.php",
+		"typo3":     "typo3conf/AdditionalConfiguration.php",
 	}
 	dir := testcommon.CreateTmpDir("example")
-	err := os.MkdirAll(dir+"/sites/default", 0777)
+	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
+	assert.NoError(t, err)
+	err = os.MkdirAll(filepath.Join(dir, "typo3conf"), 0777)
+	assert.NoError(t, err)
+
+	// typo3 wants LocalConfiguration.php to exist in the repo ahead of time.
+	err = ioutil.WriteFile(filepath.Join(dir, "typo3conf", "LocalConfiguration.php"), []byte("<?php\n"), 0644)
 	assert.NoError(t, err)
 
 	app, err := NewApp(dir, DefaultProviderName)

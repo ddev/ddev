@@ -40,13 +40,13 @@ Your application can be reached at: http://example-wordpress-site.ddev.local
 
 Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
 
-### Drupal 7 Quickstart
+### Drupal 6/7 Quickstart
 
-Beginning to use ddev with a Drupal 7 project is as simple as cloning the project's repository and checking out its directory.
+Beginning to use ddev with a Drupal 6 or 7 project is as simple as cloning the project's repository and checking out its directory.
 
 ```
-git clone https://github.com/user/my-drupal7-site
-cd my-drupal7-site
+git clone https://github.com/user/my-drupal-site
+cd my-drupal-site
 ```
 
 Now to start working with ddev. In your project's working directory, enter the following command:
@@ -55,19 +55,19 @@ Now to start working with ddev. In your project's working directory, enter the f
 ddev config
 ```
 
-_Note: ddev config will prompt you for a project name, docroot, and app type._
+_Note: ddev config will prompt you for a project name, docroot, and project type._
 
-After you've run `ddev config` you're ready to start running your project. Run ddev using a simple:
+After you've run `ddev config` you're ready to start running your project. Run ddev using:
 
 ```
 ddev start
 ``` 
 
-When running `ddev start` you should see output informing you that the project's environment is being started. If startup is successful, you'll see a message like the one below telling you where the project can be reached.
+While `ddev start` is running you will see output informing you that the project's environment is being started. When startup is complete, you'll see a message like the one below telling you where the project can be reached.
 
 ```
-Successfully started my-drupal7-site
-Your application can be reached at: http://my-drupal7-site.ddev.local
+Successfully started my-drupal-site
+Your application can be reached at: http://my-drupal-site.ddev.local
 ```
 
 Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
@@ -111,6 +111,40 @@ After running `ddev start` you should see output informing you that the project'
 ```
 Successfully started my-drupal8-site
 Your application can be reached at: http://my-drupal8-site.ddev.local
+```
+
+### TYPO3 Quickstart
+
+To get started using ddev with a TYPO3 project, simply clone the project's repository and checkout its directory.
+
+```
+git clone https://github.com/example-user/example-typo3-site
+cd example-typo3-site
+```
+
+If necessary, run build steps that you may require, like `composer install` in the correct directory.
+
+_Note: ddev assumes that the files created by a site install have already been created, including the typo3conf, typo3temp, uploads, and fileadmin directories._
+
+From here we can start setting up ddev. In your project's working directory, enter the command:
+
+```
+ddev config
+```
+
+_Note: ddev config will prompt you for a project name, docroot, and project type._
+
+After you've run `ddev config`, you're ready to start running your project. To start running ddev, simply enter:
+
+```
+ddev start
+``` 
+
+`ddev start` will provide output informing you that the project's environment is being started. When startup is successful, you'll see a message like the one below telling you where the project can be reached.
+
+```
+Successfully started example-typo3-site
+Your application can be reached at: http://example-typo3-site.ddev.local
 ```
 
 ### Database Imports
