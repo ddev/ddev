@@ -75,7 +75,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	}
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
 
-	backdropConfig := NewBackdropsettings()
+	backdropConfig := NewBackdropSettings()
 
 	err = writeBackdropSettingsFile(backdropConfig, settingsFilePath)
 	if err != nil {
