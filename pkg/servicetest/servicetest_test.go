@@ -95,14 +95,14 @@ func TestServices(t *testing.T) {
 					"com.docker.compose.service": serviceName,
 				}
 
-				container, err := dockerutil.FindContainerByLabels(labels)
+				container, findErr := dockerutil.FindContainerByLabels(labels)
 				assert.NoError(err)
-				if err != nil {
-					t.Fatalf("Could not find running container for service %s. Skipping remainder of test.", serviceName)
+				if findErr != nil {
+					t.Fatalf("Could not find running container for service %s. Skipping remainder of test: %v", serviceName, findErr)
 				}
 				name := dockerutil.ContainerName(container)
-				check, err := testcommon.ContainerCheck(name, "running")
-				assert.NoError(err)
+				check, runcheckErr := testcommon.ContainerCheck(name, "running")
+				assert.NoError(runcheckErr)
 				assert.True(check, serviceName, "container is running")
 
 				// check container env for HTTP_EXPOSE ports to check
@@ -120,8 +120,8 @@ func TestServices(t *testing.T) {
 							o := util.NewHTTPOptions("http://127.0.0.1:" + string(port.PublicPort))
 							o.ExpectedStatus = 200
 							o.Timeout = 30
-							err = util.EnsureHTTPStatus(o)
-							assert.NoError(err)
+							runcheckErr = util.EnsureHTTPStatus(o)
+							assert.NoError(runcheckErr)
 						}
 					}
 				}

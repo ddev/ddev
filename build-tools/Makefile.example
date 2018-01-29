@@ -8,11 +8,11 @@ PKG := github.com/drud/repo_name
 # Docker repo for a push
 # DOCKER_REPO ?= drud/docker_repo_name
 
-# Upstream repo used in the Dockerfile
+# Upstream repo optionally used in the Dockerfile
 # UPSTREAM_REPO ?= full/upstream-docker-repo
 
 # Top-level directories to build
-SRC_DIRS := files drudapi secrets utils
+SRC_DIRS := pkg cmd
 
 # Version variables to replace in build, The variable VERSION is automatically pulled from git committish so it doesn't have to be added
 # These are replaced in the $(PKG).version package.
@@ -26,16 +26,14 @@ SRC_DIRS := files drudapi secrets utils
 # DOCKER_ARGS =
 
 # VERSION can be set by
-  # Default: git tag
-  # make command line: make VERSION=0.9.0
-# It can also be explicitly set in the Makefile as commented out below.
+	# Default: git tag
+	# make command line: make VERSION=0.9.0
 
-# This version-strategy uses git tags to set the version string
-# VERSION can be overridden on make commandline: make VERSION=0.9.1 push
+# Normally VERSION is derived from git committish/tag.
+# VERSION can be overridden on make commandline: make push VERSION=0.9.1
+# Using the git committish means we can always tie code to container or binary.
 VERSION := $(shell git describe --tags --always --dirty)
-#
-# This version-strategy uses a manual value to set the version string
-#VERSION := 1.2.3
+
 
 # Each section of the Makefile is included from standard components below.
 # If you need to override one, import its contents below and comment out the
@@ -49,5 +47,5 @@ include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
 
-# Additional targets can be added here
+# Additional targets can be added below.
 # Also, existing targets can be overridden by copying and customizing them.
