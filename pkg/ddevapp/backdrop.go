@@ -12,6 +12,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 )
 
+// BackdropSettings holds database connection details for Backdrop.
 type BackdropSettings struct {
 	DatabaseName     string
 	DatabaseUsername string
@@ -25,7 +26,7 @@ type BackdropSettings struct {
 }
 
 // NewBackdropSettings produces a BackdropSettings object with default values.
-func NewBackdropsettings() *BackdropSettings {
+func NewBackdropSettings() *BackdropSettings {
 	return &BackdropSettings{
 		DatabaseName:     "db",
 		DatabaseUsername: "db",
