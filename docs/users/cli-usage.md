@@ -35,7 +35,7 @@ When running `ddev start` you should see output informing you that the project's
 
 ```
 Successfully started example-wordpress-site
-Your application can be reached at: http://example-wordpress-site.ddev.local
+Your project can be reached at: http://example-wordpress-site.ddev.local
 ```
 
 Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
@@ -66,8 +66,8 @@ ddev start
 While `ddev start` is running you will see output informing you that the project's environment is being started. When startup is complete, you'll see a message like the one below telling you where the project can be reached.
 
 ```
-Successfully started my-drupal-site
-Your application can be reached at: http://my-drupal-site.ddev.local
+Successfully started my-drupal7-site
+Your project can be reached at: http://my-drupal7-site.ddev.local
 ```
 
 Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
@@ -110,7 +110,7 @@ After running `ddev start` you should see output informing you that the project'
 
 ```
 Successfully started my-drupal8-site
-Your application can be reached at: http://my-drupal8-site.ddev.local
+Your project can be reached at: http://my-drupal8-site.ddev.local
 ```
 
 ### TYPO3 Quickstart
@@ -197,7 +197,7 @@ Creating local-drupal8-db
 Creating local-drupal8-web
 Waiting for the environment to become ready. This may take a couple of minutes...
 Successfully started drupal8
-Your application can be reached at: http://drupal8.ddev.local
+Your project can be reached at: http://drupal8.ddev.local
 ```
 
 And you can now visit your working project. Enjoy!

@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"net"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -28,8 +27,8 @@ func RouterComposeYAMLPath() string {
 	return dest
 }
 
-// StopRouter stops the router if there are no ddev containers running.
-func StopRouter() error {
+// StopRouterIfNoContainers stops the router if there are no ddev containers running.
+func StopRouterIfNoContainers() error {
 
 	containersRunning, err := ddevContainersRunning()
 	if err != nil {
@@ -48,8 +47,8 @@ func StopRouter() error {
 func StartDdevRouter() error {
 	exposedPorts := determineRouterPorts()
 
-	dest := RouterComposeYAMLPath()
-	routerdir := filepath.Dir(dest)
+	routerComposePath := RouterComposeYAMLPath()
+	routerdir := filepath.Dir(routerComposePath)
 	err := os.MkdirAll(routerdir, 0755)
 	if err != nil {
 		return fmt.Errorf("unable to create directory for ddev router: %v", err)
@@ -59,12 +58,12 @@ func StartDdevRouter() error {
 	if _, err = os.Stat(certDir); os.IsNotExist(err) {
 		err = os.MkdirAll(certDir, 0755)
 		if err != nil {
-			return fmt.Errorf("unable to create directory for ddev router: %v", err)
+			return fmt.Errorf("unable to create directory for ddev certs: %v", err)
 		}
 	}
 
 	var doc bytes.Buffer
-	f, ferr := os.Create(dest)
+	f, ferr := os.Create(routerComposePath)
 	if ferr != nil {
 		return ferr
 	}
@@ -87,17 +86,20 @@ func StartDdevRouter() error {
 	_, err = f.WriteString(doc.String())
 	util.CheckErr(err)
 
-	container, err := findDdevRouter()
-	// If we have a router running, we don't have to stop and start it.
-	if err != nil || container.State != "running" {
-		err = CheckRouterPorts()
-		if err != nil {
-			return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/latest/users/troubleshooting/#unable-listen", err)
-		}
+	// Since the ports in use may have changed, stop the router and make sure
+	// we can access all ports.
+	// It might be possible to do this instead by reading from docker all the
+	// existing mapped ports.
+	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "down", "-v")
+	util.CheckErr(err)
+
+	err = CheckRouterPorts()
+	if err != nil {
+		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/latest/users/troubleshooting/#unable-listen", err)
 	}
 
 	// run docker-compose up -d in the newly created directory
-	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "up", "-d")
+	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "up", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
@@ -113,7 +115,8 @@ func StartDdevRouter() error {
 }
 
 // findDdevRouter usees FindContainerByLabels to get our router container and
-// return it
+// return it. This is currently unused but may be useful in the future.
+// nolint: deadcode
 func findDdevRouter() (docker.APIContainers, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.service": RouterProjectName,
@@ -214,20 +217,14 @@ func determineRouterPorts() []string {
 	return routerPorts
 }
 
-// CheckRouterPorts tries to connect to ports 80/443 as a heuristic to find out
+// CheckRouterPorts tries to connect to the ports the router will use as a heuristic to find out
 // if they're available for docker to bind to. Returns an error if either one results
 // in a successful connection.
 func CheckRouterPorts() error {
-	// TODO: When we allow configurable ports, we'll want to use an array of configured ports here.
-	for _, port := range []int{80, 443} {
-		target := fmt.Sprintf("127.0.0.1:%d", port)
-		conn, err := net.Dial("tcp", target)
-		// We want an error (inability to connect), that's the success case.
-		// If we don't get one, return err. This will normally be "getsockopt: connection refused"
-		// For simplicity we're not actually studying the err value.
-		if err == nil {
-			_ = conn.Close()
-			return fmt.Errorf("localhost port %d is in use", port)
+	routerPorts := determineRouterPorts()
+	for _, port := range routerPorts {
+		if util.IsPortActive(port) {
+			return fmt.Errorf("localhost port %s is in use", port)
 		}
 	}
 	return nil

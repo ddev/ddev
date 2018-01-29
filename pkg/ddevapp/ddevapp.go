@@ -59,6 +59,8 @@ type DdevApp struct {
 	WebImage              string               `yaml:"webimage"`
 	DBImage               string               `yaml:"dbimage"`
 	DBAImage              string               `yaml:"dbaimage"`
+	RouterHTTPPort        string               `yaml:"router_http_port"`
+	RouterHTTPSPort       string               `yaml:"router_https_port"`
 	ConfigPath            string               `yaml:"-"`
 	AppRoot               string               `yaml:"-"`
 	Platform              string               `yaml:"-"`
@@ -126,24 +128,13 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	shortRoot := RenderHomeRootedDir(app.GetAppRoot())
 	appDesc := make(map[string]interface{})
 
-	var https bool
-	var httpsURLString string
-	httpURLString := fmt.Sprintf("http://%s", app.HostName())
-	webCon, err := app.FindContainerByType("web")
-	if err == nil {
-		https = dockerutil.CheckForHTTPS(webCon)
-	}
-	if https {
-		httpsURLString = fmt.Sprintf("https://%s", app.HostName())
-	}
-
 	appDesc["name"] = app.GetName()
 	appDesc["status"] = app.SiteStatus()
 	appDesc["type"] = app.GetType()
 	appDesc["approot"] = app.GetAppRoot()
 	appDesc["shortroot"] = shortRoot
-	appDesc["httpurl"] = httpURLString
-	appDesc["httpsurl"] = httpsURLString
+	appDesc["httpurl"] = app.GetHTTPURL()
+	appDesc["httpsurl"] = app.GetHTTPSURL()
 
 	db, err := app.FindContainerByType("db")
 	if err != nil {
@@ -164,12 +155,14 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		dbinfo["published_port"] = fmt.Sprint(dockerutil.GetPublishedPort(dbPrivatePort, db))
 		appDesc["dbinfo"] = dbinfo
 
-		appDesc["mailhog_url"] = app.GetURL() + ":" + appports.GetPort("mailhog")
-		appDesc["phpmyadmin_url"] = app.GetURL() + ":" + appports.GetPort("dba")
+		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("mailhog")
+		appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("dba")
 	}
 
 	appDesc["router_status"] = GetRouterStatus()
 	appDesc["php_version"] = app.GetPhpVersion()
+	appDesc["router_http_port"] = app.RouterHTTPPort
+	appDesc["router_https_port"] = app.RouterHTTPSPort
 
 	return appDesc, nil
 }
@@ -692,20 +685,22 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() {
 	envVars := map[string]string{
-		"COMPOSE_PROJECT_NAME": "ddev-" + app.Name,
-		"DDEV_SITENAME":        app.Name,
-		"DDEV_DBIMAGE":         app.DBImage,
-		"DDEV_DBAIMAGE":        app.DBAImage,
-		"DDEV_WEBIMAGE":        app.WebImage,
-		"DDEV_APPROOT":         app.AppRoot,
-		"DDEV_DOCROOT":         app.Docroot,
-		"DDEV_DATADIR":         app.DataDir,
-		"DDEV_IMPORTDIR":       app.ImportDir,
-		"DDEV_URL":             app.GetURL(),
-		"DDEV_HOSTNAME":        app.HostName(),
-		"DDEV_UID":             "",
-		"DDEV_GID":             "",
-		"DDEV_PHP_VERSION":     app.PHPVersion,
+		"COMPOSE_PROJECT_NAME":   "ddev-" + app.Name,
+		"DDEV_SITENAME":          app.Name,
+		"DDEV_DBIMAGE":           app.DBImage,
+		"DDEV_DBAIMAGE":          app.DBAImage,
+		"DDEV_WEBIMAGE":          app.WebImage,
+		"DDEV_APPROOT":           app.AppRoot,
+		"DDEV_DOCROOT":           app.Docroot,
+		"DDEV_DATADIR":           app.DataDir,
+		"DDEV_IMPORTDIR":         app.ImportDir,
+		"DDEV_URL":               app.GetHTTPURL(),
+		"DDEV_HOSTNAME":          app.HostName(),
+		"DDEV_UID":               "",
+		"DDEV_GID":               "",
+		"DDEV_PHP_VERSION":       app.PHPVersion,
+		"DDEV_ROUTER_HTTP_PORT":  app.RouterHTTPPort,
+		"DDEV_ROUTER_HTTPS_PORT": app.RouterHTTPSPort,
 	}
 	if runtime.GOOS == "linux" {
 		curUser, err := user.Current()
@@ -745,7 +740,7 @@ func (app *DdevApp) Stop() error {
 		return err
 	}
 
-	return StopRouter()
+	return StopRouterIfNoContainers()
 }
 
 // Wait ensures that the app service containers are healthy.
@@ -837,13 +832,26 @@ func (app *DdevApp) Down(removeData bool) error {
 		}
 	}
 
-	err = StopRouter()
+	err = StopRouterIfNoContainers()
 	return err
 }
 
-// GetURL returns the URL for an app.
-func (app *DdevApp) GetURL() string {
-	return "http://" + app.GetHostname()
+// GetHTTPURL returns the HTTP URL for an app.
+func (app *DdevApp) GetHTTPURL() string {
+	url := "http://" + app.GetHostname()
+	if app.RouterHTTPPort != "80" {
+		url = url + ":" + app.RouterHTTPPort
+	}
+	return url
+}
+
+// GetHTTPSURL returns the HTTPS URL for an app.
+func (app *DdevApp) GetHTTPSURL() string {
+	url := "https://" + app.GetHostname()
+	if app.RouterHTTPSPort != "443" {
+		url = url + ":" + app.RouterHTTPSPort
+	}
+	return url
 }
 
 // HostName returns the hostname of a given application.
@@ -964,10 +972,14 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 		return app, err
 	}
 
-	// Ignore app.Init() error, since app.Init() fails if no directory found.
+	// Ignore app.Init() error (unless malformed config.yaml), since app.Init()
+	// fails if no directory found.
 	// We already were successful with *finding* the app, and if we get an
 	// incomplete one we have to add to it.
-	_ = app.Init(activeAppRoot)
+	err = app.Init(activeAppRoot)
+	if err != nil && strings.Contains(err.Error(), "config.yaml exists but cannot be read.") {
+		return app, err
+	}
 
 	if app.Name == "" || app.DataDir == "" {
 		err = restoreApp(app, siteName)
@@ -983,7 +995,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 // if it cannot restore them.
 func restoreApp(app *DdevApp, siteName string) error {
 	if siteName == "" {
-		return fmt.Errorf("error restoring AppConfig: no siteName given")
+		return fmt.Errorf("error restoring AppConfig: no project name given")
 	}
 	app.Name = siteName
 	// Ensure that AppConfig.DataDir is set so that site data can be removed if necessary.

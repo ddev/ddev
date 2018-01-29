@@ -129,7 +129,7 @@ func Cleanup(app *DdevApp) error {
 		}
 	}
 
-	err = StopRouter()
+	err = StopRouterIfNoContainers()
 	return err
 }
 
