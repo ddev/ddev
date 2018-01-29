@@ -31,7 +31,10 @@ func TestPortOverride(t *testing.T) {
 		app, err := ddevapp.NewApp(testDir, ddevapp.DefaultProviderName)
 		assert.NoError(err)
 		app.RouterHTTPPort = strconv.Itoa(80 + i)
-		app.RouterHTTPSPort = strconv.Itoa(443 + i)
+		// Note that we start with port 453 instead of 443 here because Windows
+		// by default has port 445 occupied by NetBT (Netbios over TCP)
+		// So the test will fail because of that.
+		app.RouterHTTPSPort = strconv.Itoa(453 + i)
 		app.Name = "TestPortOverride-" + strconv.Itoa(i)
 		app.Type = "php"
 		err = app.WriteConfig()
