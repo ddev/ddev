@@ -5,8 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"path"
-
 	"path/filepath"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -100,7 +98,7 @@ var ConfigCommand = &cobra.Command{
 				// nolint: vetshadow
 				pwd, err := os.Getwd()
 				util.CheckErr(err)
-				app.Name = path.Base(pwd)
+				app.Name = filepath.Base(pwd)
 			}
 
 			// docrootRelPath must exist
