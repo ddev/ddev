@@ -161,11 +161,15 @@ func IsPortActive(port string) bool {
 	oe, ok := err.(*net.OpError)
 	if ok {
 		syscallErr, ok := oe.Err.(*os.SyscallError)
-		if ok && syscallErr.Err == syscall.ECONNREFUSED {
+
+		// On Windows, WSAECONNREFUSED (10061) results instead of ECONNREFUSED. And golang doesn't seem to have it.
+		var WSAECONNREFUSED syscall.Errno = 10061
+
+		if ok && (syscallErr.Err == syscall.ECONNREFUSED || syscallErr.Err == WSAECONNREFUSED) {
 			return false
 		}
 	}
 	// Otherwise, hmm, something else happened. It's not a fatal or anything.
-	Warning("Failed to properly check port status: %v", oe)
+	Warning("Unable to properly check port status: %v", oe)
 	return false
 }
