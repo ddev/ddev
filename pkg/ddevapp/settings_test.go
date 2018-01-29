@@ -23,7 +23,6 @@ func TestWriteSettings(t *testing.T) {
 		"drupal8":   "sites/default/settings.php",
 		"wordpress": "wp-config.php",
 		"typo3":     "typo3conf/AdditionalConfiguration.php",
-		"backdrop":  "settings.local.php",
 	}
 	dir := testcommon.CreateTmpDir("example")
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
