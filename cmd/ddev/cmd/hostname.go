@@ -49,6 +49,10 @@ var HostNameCmd = &cobra.Command{
 			rawResult["error"] = "WRITEERROR"
 			rawResult["full_error"] = fmt.Sprintf("%v", err)
 			output.UserOut.WithField("raw", rawResult).Fatal(fmt.Sprintf("Could not write hosts file: %v", err))
+		} else {
+			rawResult["error"] = "SUCCESS"
+			rawResult["detail"] = "hostname added to hosts file"
+			output.UserOut.WithField("raw", rawResult).Info("")
 		}
 	},
 }
