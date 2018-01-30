@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/output"
-	log "github.com/sirupsen/logrus"
+	"fmt"
 
-	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/output"
+
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/spf13/cobra"
 )
@@ -19,23 +19,36 @@ var HostNameCmd = &cobra.Command{
 			output.UserOut.Fatal("Invalid arguments supplied. Please use 'ddev hostname [hostname] [ip]'")
 		}
 
+		rawResult := make(map[string]interface{})
+
 		hostname, ip := args[0], args[1]
 		hosts, err := goodhosts.NewHosts()
 		if err != nil {
-			util.Failed("could not open hosts file. %s", err)
+			rawResult["error"] = "READERROR"
+			rawResult["full_error"] = fmt.Sprintf("%v", err)
+			output.UserOut.WithField("raw", rawResult).Fatal(fmt.Sprintf("could not open hosts file for read: %v", err))
+			return
 		}
 		if hosts.Has(ip, hostname) {
-			log.Debugf("Hosts file entry %s exists, taking no action", hostname)
+			if output.JSONOutput {
+				rawResult["error"] = "SUCCESS"
+				rawResult["detail"] = "hostname already exists in hosts file"
+				output.UserOut.WithField("raw", rawResult).Info("")
+			}
 			return
 		}
 
 		err = hosts.Add(ip, hostname)
 		if err != nil {
-			util.Failed("Could not add hostname")
+			rawResult["error"] = "ADDERROR"
+			rawResult["full_error"] = fmt.Sprintf("%v", err)
+			output.UserOut.WithField("raw", rawResult).Fatal(fmt.Sprintf("could not add hostname %s at %s: %v", hostname, ip, err))
 		}
 
 		if err := hosts.Flush(); err != nil {
-			util.Failed("Could not write hosts file: %s", err)
+			rawResult["error"] = "WRITEERROR"
+			rawResult["full_error"] = fmt.Sprintf("%v", err)
+			output.UserOut.WithField("raw", rawResult).Fatal(fmt.Sprintf("Could not write hosts file: %v", err))
 		}
 	},
 }
