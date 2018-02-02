@@ -30,7 +30,7 @@ func TestWriteSettings(t *testing.T) {
 	err = os.MkdirAll(filepath.Join(dir, "typo3conf"), 0777)
 	assert.NoError(t, err)
 
-	// typo3 wants LocalConfiguration.php to exist in the repo ahead of time.
+	// TYPO3 wants LocalConfiguration.php to exist in the repo ahead of time.
 	err = ioutil.WriteFile(filepath.Join(dir, "typo3conf", "LocalConfiguration.php"), []byte("<?php\n"), 0644)
 	assert.NoError(t, err)
 

@@ -12,7 +12,7 @@ import (
 )
 
 const typo3AdditionalConfigTemplate = `<?php
-/** ` + DdevFileSignature + `: Automatically generated Typo3 AdditionalConfiguration.php file.
+/** ` + DdevFileSignature + `: Automatically generated TYPO3 AdditionalConfiguration.php file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
@@ -30,18 +30,18 @@ $GLOBALS['TYPO3_CONF_VARS']['DB'] = array_merge($GLOBALS['TYPO3_CONF_VARS']['DB'
 func createTypo3SettingsFile(app *DdevApp) (string, error) {
 
 	if !fileutil.FileExists(app.SiteSettingsPath) {
-		return "", fmt.Errorf("Typo3 does not seem to have been set up yet, missing LocalConfiguration.php (%s)", app.SiteLocalSettingsPath)
+		return "", fmt.Errorf("TYPO3 does not seem to have been set up yet, missing LocalConfiguration.php (%s)", app.SiteLocalSettingsPath)
 	}
 
 	settingsFilePath, err := app.DetermineSettingsPathLocation()
 	if err != nil {
-		return "", fmt.Errorf("Failed to get Typo3 AdditionalConfiguration.php file path: %v", err)
+		return "", fmt.Errorf("Failed to get TYPO3 AdditionalConfiguration.php file path: %v", err)
 	}
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
 
 	err = writeTypo3SettingsFile(app)
 	if err != nil {
-		return settingsFilePath, fmt.Errorf("Failed to write Typo3 AdditionalConfiguration.php file: %v", err)
+		return settingsFilePath, fmt.Errorf("Failed to write TYPO3 AdditionalConfiguration.php file: %v", err)
 	}
 
 	return settingsFilePath, nil
@@ -82,7 +82,7 @@ func getTypo3UploadDir(app *DdevApp) string {
 	return "uploads"
 }
 
-// Typo3Hooks adds a typo3-specific hooks example for post-import-db
+// Typo3Hooks adds a TYPO3-specific hooks example for post-import-db
 const Typo3Hooks = `
 #     - exec: "echo database was loaded"`
 
