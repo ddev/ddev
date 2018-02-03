@@ -193,11 +193,7 @@ ddev import-db --src=dumpfile.sql.gz
 
 For in-depth application monitoring, use the `ddev describe` command to see details about the status of your ddev app.
 
-**Note for Backdrop users:** In addition to importing a Backdrop database, you will need to put your Backdrop site's `active` configuration into `files/ddev_config/active`. Without these config files present, Backdrop will not run properly. If `files/ddev_config` is not where your project stores its config, you can replace the `ddev_config` directory with a symlink to whereever you store your config. An example of this command is as follows:
-
-```
-ln -s ../config ./files/ddev_config
-```
+**Note for Backdrop users:** In addition to importing a Backdrop database, you will need to extract a copy of your Backdrop site's configuration into the local `active` directory. The location for this directory can vary depending on the contents of your Backdrop `settings.php` file, but the default location is `[docroot]/files/config_[random letters and numbers]/active`. Please refer to the Backdrop documentation for more information on [moving your Backdrop site](https://backdropcms.org/user-guide/moving-backdrop-site) into the `ddev` environment.
 
 ## Getting Started
 

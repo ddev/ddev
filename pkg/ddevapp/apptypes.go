@@ -66,7 +66,7 @@ func init() {
 			createTypo3SettingsFile, getTypo3UploadDir, getTypo3Hooks, setTypo3SiteSettingsPaths, isTypo3App, nil, nil, nil,
 		},
 		"backdrop": {
-			createBackdropSettingsFile, getBackdropUploadDir, getBackdropHooks, setBackdropSiteSettingsPaths, isBackdropApp, nil, nil, nil,
+			createBackdropSettingsFile, getBackdropUploadDir, getBackdropHooks, setBackdropSiteSettingsPaths, isBackdropApp, backdropPostImportDBAction, nil, nil,
 		},
 	}
 }

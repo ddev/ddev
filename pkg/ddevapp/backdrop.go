@@ -136,3 +136,10 @@ func isBackdropApp(app *DdevApp) bool {
 	}
 	return false
 }
+
+// backdropPostImportDBAction emits a warning about moving configuration into place
+// appropriately in order for Backdrop to function properly.
+func backdropPostImportDBAction(app *DdevApp) error {
+	util.Warning("Backdrop sites require your config JSON files to be located in your site's \"active\" configuration directory. Please refer to the Backdrop documentation (https://backdropcms.org/user-guide/moving-backdrop-site) for more information about this process.")
+	return nil
+}
