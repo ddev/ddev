@@ -1,12 +1,13 @@
 package ddevapp_test
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/testcommon"
-	asrt "github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/testcommon"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // TestApptypeDetection does a simple test of various filesystem setups to make
@@ -19,6 +20,7 @@ func TestApptypeDetection(t *testing.T) {
 		"drupal7":   "misc/ajax.js",
 		"drupal8":   "core/scripts/drupal.sh",
 		"wordpress": "wp-login.php",
+		"backdrop":  "core/scripts/backdrop.sh",
 	}
 
 	for expectedType, expectedPath := range fileLocations {

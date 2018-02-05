@@ -147,6 +147,36 @@ Successfully started example-typo3-site
 Your application can be reached at: http://example-typo3-site.ddev.local
 ```
 
+### Backdrop Quickstart
+
+To get started with Backdrop, clone the project repository and navigate to the project directory.
+
+```
+git clone https://github.com/example-user/example-backdrop-site
+cd example-backdrop-site
+```
+
+To set up ddev for your project, enter the command:
+
+```
+ddev config
+```
+
+_Note: ddev config will prompt you for a project name, docroot, and project type._
+
+After you've run `ddev config`, you're ready to start running your project. To start running ddev, simply enter:
+
+```
+ddev start
+``` 
+
+`ddev start` will provide output informing you that the project's environment is being started. When startup is successful, you'll see a message like the one below telling you where the project can be reached.
+
+```
+Successfully started example-backdrop-site
+Your application can be reached at: http://example-backdrop-site.ddev.local
+```
+
 ### Database Imports
 
 **Important:** Before importing any databases for your project, please remove its' wp-config.php if using WordPress - or settings.php file in the case of Drupal 7/8, if present. 
@@ -163,6 +193,7 @@ ddev import-db --src=dumpfile.sql.gz
 
 For in-depth application monitoring, use the `ddev describe` command to see details about the status of your ddev app.
 
+**Note for Backdrop users:** In addition to importing a Backdrop database, you will need to extract a copy of your Backdrop site's configuration into the local `active` directory. The location for this directory can vary depending on the contents of your Backdrop `settings.php` file, but the default location is `[docroot]/files/config_[random letters and numbers]/active`. Please refer to the Backdrop documentation for more information on [moving your Backdrop site](https://backdropcms.org/user-guide/moving-backdrop-site) into the `ddev` environment.
 
 ## Getting Started
 
