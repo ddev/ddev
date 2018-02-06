@@ -1,33 +1,41 @@
 #!/bin/bash
 
-# This script is used to build drud/ddev using surf 
-# (https://github.com/surf-build/surf)
+# This script is used to build drud/ddev using buildkite
 
-# Manufacture a $GOPATH environment that can mount on docker (when surf build)
-if [ ! -z "$SURF_REF" ]; then
-	BUILD=$(date "+%Y%m%d%H%M%S")
-	export GOPATH=~/tmp/ddevbuild_$BUILD
-	DRUDSRC=$GOPATH/src/github.com/drud
-	mkdir -p $DRUDSRC
-	ln -s $PWD $DRUDSRC/ddev
-	cd $DRUDSRC/ddev
-	echo "Surf building $SURF_REF ($SURF_SHA1) at $(date) on $(hostname) for OS=$(go env GOOS) in $DRUDSRC/ddev"
-	echo "To retry the build, export GITHUB_TOKEN, DDEV_PANTHEON_API_TOKEN, DRUD_DEBUG and...
-	surf-build -s $SURF_SHA1 -r https://github.com/drud/ddev -n surf-$(go env GOOS)"
-fi
+function cleanEnvironment() {
+	containers=`docker ps -a -q`
+	if [ -n "$containers" ] ; then
+	        docker stop $containers
+	fi
+	 
+	# Delete all containers
+	containers=`docker ps -a -q`
+	if [ -n "$containers" ]; then
+	        docker rm -f -v $containers
+	fi
+	 
+	# Delete all images
+	images=`docker images -q -a`
+	if [ -n "$images" ]; then
+	        docker rmi -f $images
+	fi
+
+	rm -rf ~/.ddev/Test*
+}
+
+# Manufacture a $GOPATH environment that can mount on docker.
+export GOPATH=~/tmp/ddevbuild_$BUILDKITE_BUILD_ID
+DRUDSRC=$GOPATH/src/github.com/drud
+mkdir -p $DRUDSRC
+ln -s $PWD $DRUDSRC/ddev
+cd $DRUDSRC/ddev
+echo "building $BUILDKITE_COMMIT at $(date) on $(hostname) for OS=$(go env GOOS) in $DRUDSRC/ddev"
 
 export GOTEST_SHORT=1
 
-echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
-if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
-	docker rm -f $(docker ps -aq)
-fi
-# Update all images that may have changed
-docker images |grep -v REPOSITORY | awk '{print $1":"$2 }' | xargs -L1 docker pull
-rm -rf ~/.ddev/Test*
+cleanEnvironment
 
 echo "Running tests..."
 time make test
-RV=$?
-echo "build.sh completed with status=$RV"
-exit $RV
+
+cleanEnvironment
