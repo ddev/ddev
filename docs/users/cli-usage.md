@@ -5,7 +5,7 @@ Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands
 
 ## Quickstart Guides
 
-You can start using ddev by running just a few commands. Below are quickstart instructions WordPress, Drupal 7, and Drupal 8.
+You can start using ddev by running just a few commands. Below are quickstart instructions WordPress, Drupal 7, Drupal 8, and TYPO3 CMS.
 
 **Prerequisites:** If you do not have ddev already on your machine, please follow the [installation instructions](../index.md#installation) before beginning the quickstart tutorials.  You'll need *docker* and *docker-compose* to use ddev.
 
@@ -29,7 +29,7 @@ After you've run `ddev config`, you're ready to start running your project. To s
 
 ```
 ddev start
-``` 
+```
 
 When running `ddev start` you should see output informing you that the project's environment is being started. If startup is successful, you'll see a message like the one below telling you where the project can be reached.
 
@@ -61,7 +61,7 @@ After you've run `ddev config` you're ready to start running your project. Run d
 
 ```
 ddev start
-``` 
+```
 
 While `ddev start` is running you will see output informing you that the project's environment is being started. When startup is complete, you'll see a message like the one below telling you where the project can be reached.
 
@@ -104,7 +104,7 @@ After you've run `ddev config` you're ready to start up your project. Run ddev u
 
 ```
 ddev start
-``` 
+```
 
 After running `ddev start` you should see output informing you that the project's environment is being started. If startup is successful, you'll see a message like the one below telling you where the project can be reached.
 
@@ -138,7 +138,7 @@ After you've run `ddev config`, you're ready to start running your project. To s
 
 ```
 ddev start
-``` 
+```
 
 `ddev start` will provide output informing you that the project's environment is being started. When startup is successful, you'll see a message like the one below telling you where the project can be reached.
 
@@ -168,7 +168,7 @@ After you've run `ddev config`, you're ready to start running your project. To s
 
 ```
 ddev start
-``` 
+```
 
 `ddev start` will provide output informing you that the project's environment is being started. When startup is successful, you'll see a message like the one below telling you where the project can be reached.
 
@@ -179,7 +179,7 @@ Your application can be reached at: http://example-backdrop-site.ddev.local
 
 ### Database Imports
 
-**Important:** Before importing any databases for your project, please remove its' wp-config.php if using WordPress - or settings.php file in the case of Drupal 7/8, if present. 
+**Important:** Before importing any databases for your project, please remove its' wp-config.php if using WordPress - or settings.php file in the case of Drupal 7/8, if present.
 
 _ddev will create a wp_config.php or settings.php file automatically if one does not exist. If you already have one you'll need to set the database credentials (user=db, password=db, host=db, database=db)._
 
@@ -324,7 +324,7 @@ If you want to use import-db without answering prompts, you can use the `--src` 
 `ddev import-db --src=/tmp/mydb.sql.gz`
 
 ### Importing static file assets
-The `ddev import-files` command is provided for importing the static file assets for a project, such as uploaded images and documents. Running this command will provide a prompt for you to specify the location of your asset import. The assets will then be imported to the default public upload directory of the platform for the project. For Drupal projects, this is the "sites/default/files" directory. For WordPress projects, this is the "wp-content/uploads" directory. 
+The `ddev import-files` command is provided for importing the static file assets for a project, such as uploaded images and documents. Running this command will provide a prompt for you to specify the location of your asset import. The assets will then be imported to the default public upload directory of the platform for the project. For Drupal projects, this is the "sites/default/files" directory. For WordPress projects, this is the "wp-content/uploads" directory.
 
 ```
 ➜  ddev import-files
@@ -361,7 +361,7 @@ If you want to use import-files without answering prompts, you can use the `--sr
 `ddev import-files --src=/tmp/files.tgz`
 
 ## Interacting with your project
-ddev provides several commands to facilitate interacting with your project in the development environment. These commands can be run within the working directory of your project while the project is running in ddev. 
+ddev provides several commands to facilitate interacting with your project in the development environment. These commands can be run within the working directory of your project while the project is running in ddev.
 
 ### Executing Commands in Containers
 The `ddev exec` command allows you to run shell commands in the container for a ddev service. By default, commands are executed on the web service container, in the docroot path of your project. This allows you to use [the developer tools included in the web container](developer-tools.md). For example, to run the Drush CLI in the web container, you would run `ddev exec drush status`.
