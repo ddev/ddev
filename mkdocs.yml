@@ -1,5 +1,7 @@
 site_name: ddev Documentation
-edit_uri: edit/master/docs/
+repo_url: https://github.com/drud/ddev
+repo_name: GitHub
+edit_uri: blob/master/docs/
 copyright: DRUD Technology, LLC
 theme: readthedocs
 extra_javascript:
@@ -20,5 +22,6 @@ pages:
     - 'Integration with Hosting Providers':
       - 'Pantheon': 'users/providers/pantheon.md'
     - 'Notes for Linux Users': 'users/linux_notes.md'
+    - 'Troubleshooting': 'users/troubleshooting.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'
