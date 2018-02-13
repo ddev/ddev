@@ -8,12 +8,13 @@ import (
 
 // Site is a representation of a deployed pantheon site.
 type Site struct {
-	Archived    bool   `json:"archived"`
-	ID          string `json:"id"`
-	InvitedByID string `json:"invited_by_id"`
-	Key         string `json:"key"`
-	Role        string `json:"role"`
-	Site        struct {
+	Archived bool   `json:"archived"`
+	ID       string `json:"id"`
+	// invited_by_id seems to fail for some sites and we don't use it, so ignoring it here.
+	//InvitedByID string `json:"invited_by_id"`
+	Key  string `json:"key"`
+	Role string `json:"role"`
+	Site struct {
 		Created         jsonInt64 `json:"created"`
 		CreatedByUserID string    `json:"created_by_user_id"`
 		Framework       string    `json:"framework"`
