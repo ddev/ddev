@@ -699,6 +699,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_UID":               "",
 		"DDEV_GID":               "",
 		"DDEV_PHP_VERSION":       app.PHPVersion,
+		"DDEV_PROJECT_TYPE":      app.Type,
 		"DDEV_ROUTER_HTTP_PORT":  app.RouterHTTPPort,
 		"DDEV_ROUTER_HTTPS_PORT": app.RouterHTTPSPort,
 	}
