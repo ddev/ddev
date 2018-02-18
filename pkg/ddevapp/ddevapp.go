@@ -547,11 +547,12 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 				return fmt.Errorf("%s exec failed: %v", hookName, err)
 			}
 
-			_, _, err = app.Exec("web", args...)
+			stdout, stderr, err := app.Exec("web", args...)
 			if err != nil {
-				return fmt.Errorf("%s exec failed: %v", hookName, err)
+				return fmt.Errorf("%s exec failed: %v, stderr='%s'", hookName, err, stderr)
 			}
-			util.Success("--- %s exec command succeeded ---", hookName)
+			util.Success("--- %s exec command succeeded, output below ---", hookName)
+			output.UserOut.Println(stdout + "\n" + stderr)
 		}
 		if c.ExecHost != "" {
 			output.UserOut.Printf("--- Running host command: %s ---", c.ExecHost)
