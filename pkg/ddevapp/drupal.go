@@ -62,7 +62,7 @@ func NewDrushConfig() *DrushConfig {
 }
 
 const (
-	drupalTemplate = `<?php
+	drupal8Template = `<?php
 {{ $config := . }}
 /**
  {{ $config.Signature }}: Automatically generated Drupal settings.php file.
@@ -84,8 +84,6 @@ ini_set('session.gc_divisor', 100);
 ini_set('session.gc_maxlifetime', 200000);
 ini_set('session.cookie_lifetime', 2000000);
 
-{{ if $config.IsDrupal8 }}
-
 $settings['hash_salt'] = '{{ $config.HashSalt }}';
 
 $settings['file_scan_ignore_directories'] = [
@@ -94,11 +92,38 @@ $settings['file_scan_ignore_directories'] = [
 ];
 
 
-{{ else }}
+// This is super ugly but it determines whether or not drush should include a custom settings file which allows
+// it to work both within a docker container and natively on the host system.
+if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
+  include __DIR__ . '../../../drush.settings.php';
+}
+`
+)
+
+const (
+	drupal7Template = `<?php
+{{ $config := . }}
+/**
+ {{ $config.Signature }}: Automatically generated Drupal settings.php file.
+ ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ */
+
+$databases['default']['default'] = array(
+  'database' => "{{ $config.DatabaseName }}",
+  'username' => "{{ $config.DatabaseUsername }}",
+  'password' => "{{ $config.DatabasePassword }}",
+  'host' => "{{ $config.DatabaseHost }}",
+  'driver' => "{{ $config.DatabaseDriver }}",
+  'port' => {{ $config.DatabasePort }},
+  'prefix' => "{{ $config.DatabasePrefix }}",
+);
+
+ini_set('session.gc_probability', 1);
+ini_set('session.gc_divisor', 100);
+ini_set('session.gc_maxlifetime', 200000);
+ini_set('session.cookie_lifetime', 2000000);
 
 $drupal_hash_salt = '{{ $config.HashSalt }}';
-{{ end }}
-
 
 // This is super ugly but it determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
@@ -143,10 +168,10 @@ $databases['default']['default'] = array(
 );
 `
 
-// createDrupalSettingsFile creates the app's settings.php or equivalent,
+// createDrupal7SettingsFile creates the app's settings.php or equivalent,
 // adding things like database host, name, and password
 // Returns the fullpath to settings file and err
-func createDrupalSettingsFile(app *DdevApp) (string, error) {
+func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 
 	settingsFilePath, err := app.DetermineSettingsPathLocation()
 	if err != nil {
@@ -158,7 +183,30 @@ func createDrupalSettingsFile(app *DdevApp) (string, error) {
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings()
 
-	err = writeDrupalSettingsFile(drupalConfig, settingsFilePath)
+	err = writeDrupal7SettingsFile(drupalConfig, settingsFilePath)
+	if err != nil {
+		return settingsFilePath, fmt.Errorf("Failed to write Drupal settings file: %v", err)
+	}
+
+	return settingsFilePath, nil
+}
+
+// createDrupal8SettingsFile creates the app's settings.php or equivalent,
+// adding things like database host, name, and password
+// Returns the fullpath to settings file and err
+func createDrupal8SettingsFile(app *DdevApp) (string, error) {
+
+	settingsFilePath, err := app.DetermineSettingsPathLocation()
+	if err != nil {
+		return "", fmt.Errorf("Failed to get Drupal settings file path: %v", err)
+	}
+	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
+
+	// Currently there isn't any customization done for the drupal config, but
+	// we may want to do some kind of customization in the future.
+	drupalConfig := NewDrupalSettings()
+
+	err = writeDrupal8SettingsFile(drupalConfig, settingsFilePath)
 	if err != nil {
 		return settingsFilePath, fmt.Errorf("Failed to write Drupal settings file: %v", err)
 	}
@@ -189,10 +237,37 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 	return settingsFilePath, nil
 }
 
-// writeDrupalSettingsFile dynamically produces valid settings.php file by combining a configuration
+// writeDrupal8SettingsFile dynamically produces valid settings.php file by combining a configuration
 // object with a data-driven template.
-func writeDrupalSettingsFile(settings *DrupalSettings, filePath string) error {
-	tmpl, err := template.New("settings").Funcs(sprig.TxtFuncMap()).Parse(drupalTemplate)
+func writeDrupal8SettingsFile(settings *DrupalSettings, filePath string) error {
+	tmpl, err := template.New("settings").Funcs(sprig.TxtFuncMap()).Parse(drupal8Template)
+	if err != nil {
+		return err
+	}
+
+	// Ensure target directory is writable.
+	dir := filepath.Dir(filePath)
+	err = os.Chmod(dir, 0755)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	err = tmpl.Execute(file, settings)
+	if err != nil {
+		return err
+	}
+	util.CheckClose(file)
+	return nil
+}
+
+// writeDrupal7SettingsFile dynamically produces valid settings.php file by combining a configuration
+// object with a data-driven template.
+func writeDrupal7SettingsFile(settings *DrupalSettings, filePath string) error {
+	tmpl, err := template.New("settings").Funcs(sprig.TxtFuncMap()).Parse(drupal7Template)
 	if err != nil {
 		return err
 	}
