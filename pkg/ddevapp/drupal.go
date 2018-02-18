@@ -27,7 +27,6 @@ type DrupalSettings struct {
 	DatabasePort     string
 	DatabasePrefix   string
 	HashSalt         string
-	IsDrupal8        bool
 	Signature        string
 }
 
@@ -41,7 +40,6 @@ func NewDrupalSettings() *DrupalSettings {
 		DatabaseDriver:   "mysql",
 		DatabasePort:     appports.GetPort("db"),
 		DatabasePrefix:   "",
-		IsDrupal8:        false,
 		HashSalt:         util.RandString(64),
 		Signature:        DdevFileSignature,
 	}
