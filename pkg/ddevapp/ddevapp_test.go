@@ -234,6 +234,21 @@ func TestDdevImportDB(t *testing.T) {
 			path := filepath.Join(testDir, "testdata", file)
 			err = app.ImportDB(path, "")
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+
+			settingsPath := filepath.Join(site.DocrootBase, "sites", "default", "settings.local.php")
+
+			// Make sure that the settings.local.php had correct hash_salt format
+			drupalHashSalt, err := fileutil.FgrepStringInFile(settingsPath, "$drupal_hash_salt")
+			assert.NoError(err)
+			settingsHashSalt, err := fileutil.FgrepStringInFile(settingsPath, "settings['hash_salt']")
+			assert.NoError(err)
+
+			switch site.Type {
+			case "drupal7":
+				assert.True(!settingsHashSalt && drupalHashSalt)
+			case "drupal8":
+				assert.True(!drupalHashSalt && settingsHashSalt)
+			}
 		}
 
 		if site.DBTarURL != "" {
