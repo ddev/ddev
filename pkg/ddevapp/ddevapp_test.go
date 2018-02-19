@@ -25,14 +25,6 @@ import (
 var (
 	TestSites = []testcommon.TestSite{
 		{
-			Name:                          "TestMainPkgWordpress",
-			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
-			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
-			DocrootBase:                   "htdocs",
-		},
-		{
 			Name:                          "TestMainPkgDrupal8",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.4.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-8.4.0/",
@@ -40,8 +32,9 @@ var (
 			FilesZipballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.zip",
 			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
-			FullSiteTarballURL:            "https://github.com/drud/drupal8/releases/download/v0.6.0/site.tar.gz",
+			FullSiteTarballURL:            "",
 			Type:                          "drupal8",
+			DocrootBase:                   "",
 		},
 		{
 			Name:                          "TestMainPkgDrupalKickstart",
@@ -51,6 +44,14 @@ var (
 			DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
 			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
 			DocrootBase:                   "docroot",
+		},
+		{
+			Name:                          "TestMainPkgWordpress",
+			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
+			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
+			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+			DocrootBase:                   "htdocs",
 		},
 	}
 )
@@ -235,20 +236,22 @@ func TestDdevImportDB(t *testing.T) {
 			err = app.ImportDB(path, "")
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 
-			settingsPath := filepath.Join(site.DocrootBase, "sites", "default", "settings.local.php")
-
-			// Make sure that the settings.local.php had correct hash_salt format
-			drupalHashSalt, err := fileutil.FgrepStringInFile(settingsPath, "$drupal_hash_salt")
-			assert.NoError(err)
-			settingsHashSalt, err := fileutil.FgrepStringInFile(settingsPath, "settings['hash_salt']")
-			assert.NoError(err)
-
-			switch site.Type {
+			// Test that a settings file has correct hash_salt format
+			switch app.Type {
 			case "drupal7":
-				assert.True(!settingsHashSalt && drupalHashSalt)
+				drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "$drupal_hash_salt")
+				assert.NoError(err)
+				assert.True(drupalHashSalt)
 			case "drupal8":
-				assert.True(!drupalHashSalt && settingsHashSalt)
+				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "settings['hash_salt']")
+				assert.NoError(err)
+				assert.True(settingsHashSalt)
+			case "wordpress":
+				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
+				assert.NoError(err)
+				assert.True(hasAuthSalt)
 			}
+
 		}
 
 		if site.DBTarURL != "" {
