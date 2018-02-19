@@ -566,13 +566,14 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 			err = os.Chdir(app.GetAppRoot())
 			util.CheckErr(err)
 
-			err = exec.RunCommandPipe(cmd, args)
+			out, err := exec.RunCommandPipe(cmd, args)
 			dirErr := os.Chdir(cwd)
 			util.CheckErr(dirErr)
 			if err != nil {
-				return fmt.Errorf("%s host command failed: %v", hookName, err)
+				return fmt.Errorf("%s host command failed: %v %s", hookName, err, out)
 			}
-			util.Success("--- %s host command succeeded ---", hookName)
+			util.Success("--- %s host command succeeded ---\n", hookName)
+			output.UserOut.Println(out)
 		}
 	}
 
@@ -894,7 +895,7 @@ func (app *DdevApp) AddHostsEntry() error {
 	command := strings.Join(hostnameArgs, " ")
 	util.Warning(fmt.Sprintf("    sudo %s", command))
 	output.UserOut.Println("Please enter your password if prompted.")
-	err = exec.RunCommandPipe("sudo", hostnameArgs)
+	_, err = exec.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }
 
