@@ -8,10 +8,14 @@ BASE_DIR=$PWD
 sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
 export VERSION=$(git describe --tags --always --dirty)
 
-# Generate and place the autocomplete
+$BASE_DIR/bin/linux/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt
+docker save -o /tmp/docker_images.tar $(cat /tmp/images.txt)
+
+# Generate and place the extra items like images and autocomplete
 bin/linux/ddev_gen_autocomplete
 for dir in bin/darwin/darwin_amd64 bin/linux bin/windows/windows_amd64; do
   cp bin/ddev_bash_completion.sh $dir
+  cp /tmp/docker_images.tar $dir
 done
 
 # Generate macOS tarball/zipball
