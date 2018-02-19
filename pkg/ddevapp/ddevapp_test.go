@@ -406,13 +406,15 @@ func TestProcessHooks(t *testing.T) {
 		app, err := ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
 		assert.NoError(err)
 
+		// Note that any ExecHost commands must be able to run on Windows.
+		// echo and pwd are things that work pretty much the same in both places.
 		app.Commands = map[string][]ddevapp.Command{
 			"hook-test": {
 				{
-					Exec: "pwd",
+					Exec: "ls /usr/local/bin/composer",
 				},
 				{
-					ExecHost: "pwd",
+					ExecHost: "echo something",
 				},
 			},
 		}
@@ -422,8 +424,8 @@ func TestProcessHooks(t *testing.T) {
 		assert.NoError(err)
 		out := stdout()
 
-		assert.Contains(out, "--- Running exec command: pwd ---")
-		assert.Contains(out, "--- Running host command: pwd ---")
+		assert.Contains(out, "--- Running exec command: ls /usr/local/bin/composer ---\n--- hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
+		assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
 
 		runTime()
 		cleanup()

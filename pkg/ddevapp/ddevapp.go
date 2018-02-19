@@ -569,11 +569,11 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 			out, err := exec.RunCommandPipe(cmd, args)
 			dirErr := os.Chdir(cwd)
 			util.CheckErr(dirErr)
+			output.UserOut.Println(out)
 			if err != nil {
 				return fmt.Errorf("%s host command failed: %v %s", hookName, err, out)
 			}
 			util.Success("--- %s host command succeeded ---\n", hookName)
-			output.UserOut.Println(out)
 		}
 	}
 
