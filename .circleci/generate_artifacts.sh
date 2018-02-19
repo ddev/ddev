@@ -14,10 +14,10 @@ for dir in bin/darwin/darwin_amd64 bin/linux bin/windows/windows_amd64; do
   cp bin/ddev_bash_completion.sh $dir
 done
 
-# Generate OSX tarball/zipball
+# Generate macOS tarball/zipball
 cd $BASE_DIR/bin/darwin/darwin_amd64
-tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz ddev ddev_bash_completion.sh
-zip $ARTIFACTS/ddev_osx.$VERSION.zip ddev ddev_bash_completion.sh
+tar -czf $ARTIFACTS/ddev_macos.$VERSION.tar.gz ddev ddev_bash_completion.sh
+zip $ARTIFACTS/ddev_macos.$VERSION.zip ddev ddev_bash_completion.sh
 
 # Generate linux tarball/zipball
 cd $BASE_DIR/bin/linux
