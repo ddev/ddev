@@ -18,6 +18,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
+	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -422,7 +423,9 @@ func TestProcessHooks(t *testing.T) {
 		stdout := testcommon.CaptureUserOut()
 		err = app.ProcessHooks("hook-test")
 		assert.NoError(err)
-		out := stdout()
+
+		// Ignore color in putput, can be different in different OS's
+		out := vtclean.Clean(stdout(), false)
 
 		assert.Contains(out, "--- Running exec command: ls /usr/local/bin/composer ---\n--- hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
 		assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
