@@ -14,14 +14,16 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-func TestDevLogsBadArgs(t *testing.T) {
+// TestDevLogsNoConfig tests what happens with when running "ddev logs" when
+// the directory has not been configured (and no project name is given)
+func TestDevLogsNoConfig(t *testing.T) {
 	assert := asrt.New(t)
 
 	testDir := testcommon.CreateTmpDir("no-valid-ddev-config")
 
 	err := os.Chdir(testDir)
 	if err != nil {
-		t.Skip("Could not change to temporary directory %s: %v", testDir, err)
+		t.Skipf("Could not change to temporary directory %s: %v", testDir, err)
 	}
 
 	args := []string{"logs"}
