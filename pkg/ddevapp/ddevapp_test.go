@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -76,8 +77,16 @@ func TestMain(m *testing.M) {
 		log.Fatalf("ddevapp tests require no sites running. You have %v site(s) running.", count)
 	}
 
-	if os.Getenv("GOTEST_SHORT") != "" {
-		TestSites = []testcommon.TestSite{TestSites[0]}
+	// If GOTEST_SHORT is an integer, then use it as index for a single usage
+	// in the array. Any value can be used, it will default to just using the
+	// first site in the array.
+	gotestShort := os.Getenv("GOTEST_SHORT")
+	if gotestShort != "" {
+		useSite := 0
+		if site, err := strconv.Atoi(gotestShort); err == nil && site >= 0 && site < len(TestSites) {
+			useSite = site
+		}
+		TestSites = []testcommon.TestSite{TestSites[useSite]}
 	}
 
 	for i := range TestSites {
