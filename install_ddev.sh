@@ -64,8 +64,6 @@ else
 	printf "${YELLOW}Bash completion for ddev was not installed. You may manually install /tmp/ddev_bash_completions.sh in your bash_completions.d directory.${RESET}\n"
 fi
 
-docker load -i /tmp/docker_images.tar
-
 rm /tmp/$TARBALL /tmp/$SHAFILE
 
 printf "${GREEN}ddev is now installed. Run \"ddev\" to verify your installation and see usage.${RESET}\n"
