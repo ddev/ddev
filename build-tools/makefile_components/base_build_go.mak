@@ -14,7 +14,7 @@ GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
 
 BUILD_OS = $(shell go env GOHOSTOS)
 
-BUILD_IMAGE ?= drud/golang-build-container:v0.5.2
+BUILD_IMAGE ?= drud/golang-build-container:v0.5.5
 
 BUILD_BASE_DIR ?= $$PWD
 
@@ -164,6 +164,7 @@ version:
 	@echo VERSION:$(VERSION)
 
 clean: container-clean bin-clean
+	go clean -cache || echo "You're not running latest golang locally" # Make sure the local go cache is clean for testing
 
 container-clean:
 	$(shell rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image)
