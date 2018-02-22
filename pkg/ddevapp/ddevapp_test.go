@@ -40,8 +40,9 @@ var (
 			FilesZipballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.zip",
 			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
-			FullSiteTarballURL:            "https://github.com/drud/drupal8/releases/download/v0.6.0/site.tar.gz",
+			FullSiteTarballURL:            "",
 			Type:                          "drupal8",
+			DocrootBase:                   "",
 		},
 		{
 			Name:                          "TestMainPkgDrupalKickstart",
@@ -234,6 +235,23 @@ func TestDdevImportDB(t *testing.T) {
 			path := filepath.Join(testDir, "testdata", file)
 			err = app.ImportDB(path, "")
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+
+			// Test that a settings file has correct hash_salt format
+			switch app.Type {
+			case "drupal7":
+				drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "$drupal_hash_salt")
+				assert.NoError(err)
+				assert.True(drupalHashSalt)
+			case "drupal8":
+				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "settings['hash_salt']")
+				assert.NoError(err)
+				assert.True(settingsHashSalt)
+			case "wordpress":
+				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
+				assert.NoError(err)
+				assert.True(hasAuthSalt)
+			}
+
 		}
 
 		if site.DBTarURL != "" {
