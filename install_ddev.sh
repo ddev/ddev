@@ -19,7 +19,7 @@ URL="https://github.com/drud/ddev/releases/download/$LATEST_VERSION"
 
 if [[ "$OS" == "Darwin" ]]; then
     SHACMD="shasum -a 256"
-    FILEBASE="ddev_osx"
+    FILEBASE="ddev_macos"
 elif [[ "$OS" == "Linux" ]]; then
     SHACMD="sha256sum"
     FILEBASE="ddev_linux"

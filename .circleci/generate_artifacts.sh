@@ -8,16 +8,24 @@ BASE_DIR=$PWD
 sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
 export VERSION=$(git describe --tags --always --dirty)
 
-# Generate and place the autocomplete
+# Make sure we have all our docker images, and save them in a tarball
+$BASE_DIR/bin/linux/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt
+for item in $(cat /tmp/images.txt); do
+  docker pull $item
+done
+docker save -o $ARTIFACTS/ddev_docker_images.$VERSION.tar $(cat /tmp/images.txt)
+gzip $ARTIFACTS/ddev_docker_images.$VERSION.tar
+
+# Generate and place extra items like autocomplete
 bin/linux/ddev_gen_autocomplete
 for dir in bin/darwin/darwin_amd64 bin/linux bin/windows/windows_amd64; do
   cp bin/ddev_bash_completion.sh $dir
 done
 
-# Generate OSX tarball/zipball
+# Generate macOS tarball/zipball
 cd $BASE_DIR/bin/darwin/darwin_amd64
-tar -czf $ARTIFACTS/ddev_osx.$VERSION.tar.gz ddev ddev_bash_completion.sh
-zip $ARTIFACTS/ddev_osx.$VERSION.zip ddev ddev_bash_completion.sh
+tar -czf $ARTIFACTS/ddev_macos.$VERSION.tar.gz ddev ddev_bash_completion.sh
+zip $ARTIFACTS/ddev_macos.$VERSION.zip ddev ddev_bash_completion.sh
 
 # Generate linux tarball/zipball
 cd $BASE_DIR/bin/linux
@@ -31,6 +39,6 @@ zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe ddev_bash_completion.sh
 
 # Create the sha256 files
 cd $ARTIFACTS
-for item in *.tar.gz *.zip; do
+for item in *.tar.gz *.zip ddev_docker_images.$VERSION.tar.gz; do
   sha256sum $item > $item.sha256.txt
 done
