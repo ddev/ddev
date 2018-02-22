@@ -27,33 +27,42 @@ import (
 var (
 	TestSites = []testcommon.TestSite{
 		{
-			Name:                          "TestMainPkgWordpress",
+			Name:                          "TestPkgWordpress",
 			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
 			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
 			DocrootBase:                   "htdocs",
 		},
 		{
-			Name:                          "TestMainPkgDrupal8",
+			Name:                          "TestPkgDrupal8",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.4.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-8.4.0/",
-			FilesTarballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.tar.gz",
-			FilesZipballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.zip",
-			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
-			DBZipURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_files.tar.gz",
+			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_files.zip",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.tar.gz",
+			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.zip",
 			FullSiteTarballURL:            "",
 			Type:                          "drupal8",
 			DocrootBase:                   "",
 		},
 		{
-			Name:                          "TestMainPkgDrupalKickstart",
+			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
 			SourceURL:                     "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-kickstart-0.4.0/",
 			FilesTarballURL:               "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
 			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
 			DocrootBase:                   "docroot",
+		},
+		{
+			Name:                          "TestPkgDrupal6",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-6.38/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal6_db.tar.gz",
+			FullSiteTarballURL:            "",
+			DocrootBase:                   "",
+			Type:                          "drupal6",
 		},
 	}
 )
@@ -89,6 +98,9 @@ func TestMain(m *testing.M) {
 		TestSites = []testcommon.TestSite{TestSites[useSite]}
 	}
 
+	// testRun is the exit result we'll provide.
+	// Start with a clean exit result, it will be changed if we have trouble.
+	testRun := 0
 	for i := range TestSites {
 		err := TestSites[i].Prepare()
 		if err != nil {
@@ -104,20 +116,26 @@ func TestMain(m *testing.M) {
 
 		err = app.Init(TestSites[i].Dir)
 		if err != nil {
-			log.Fatalf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			testRun = -1
+			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			continue
 		}
 
 		err = app.Start()
 		if err != nil {
-			log.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", TestSites[i].Name, err)
+			testRun = -2
+			log.Errorf("TestMain startup: app.Start() failed on site %s, err=%v", TestSites[i].Name, err)
+			continue
 		}
 
 		runTime()
 		switchDir()
 	}
 
-	log.Debugln("Running tests.")
-	testRun := m.Run()
+	if testRun == 0 {
+		log.Debugln("Running tests.")
+		testRun = m.Run()
+	}
 
 	for i, site := range TestSites {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s Remove", site.Name))
@@ -367,18 +385,19 @@ func TestDdevExec(t *testing.T) {
 		assert.NoError(err)
 
 		switch app.GetType() {
+		case "drupal6":
+			fallthrough
 		case "drupal7":
 			fallthrough
 		case "drupal8":
 			out, _, err = app.Exec("web", "drush", "status")
 			assert.NoError(err)
+			assert.Regexp("PHP configuration[ :]*/etc/php/[0-9].[0-9]/fpm/php.ini", out)
 		case "wordpress":
 			out, _, err = app.Exec("web", "wp", "--info")
 			assert.NoError(err)
-		default:
+			assert.Regexp("/etc/php.*/php.ini", out)
 		}
-
-		assert.Regexp("/etc/php.*/php.ini", out)
 
 		runTime()
 		switchDir()
