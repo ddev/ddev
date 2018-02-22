@@ -16,8 +16,8 @@ const typo3AdditionalConfigTemplate = `<?php
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
-$GLOBALS['TYPO3_CONF_VARS']['DB'] = array_merge($GLOBALS['TYPO3_CONF_VARS']['DB'], [
-                    'database' => 'db',
+$GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge($GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'], [
+                    'dbname' => 'db',
                     'host' => 'db',
                     'password' => 'db',
                     'port' => '3306',
