@@ -2,12 +2,17 @@
 
 Certain ddev commands provide hooks to run tasks before or after the main command executes. These tasks can be defined in the config.yaml for your project, and allow for you to automate setup tasks specific to your project. To define command tasks in your configuration, specify the desired command hook as a subfield to `hooks`, then provide a list of tasks to run.
 
+_Note: Only simple commands are currently supported, so if you need to handle multiple commands, put them in as separate tasks. Shell pipes, &&, ||, and related bash/shell expressions are not yet supported._
+
 Example:
 
 ```
 hooks:
-  $command-hook:
-    - task: value
+  post-start:
+    - exec: "simple command expression"
+    - exec-host: "simple command expression"
+  post-import-db:
+    - exec-host: "drush uli"
 ```
 
 ## Supported Command Hooks
@@ -27,12 +32,13 @@ Value: string providing the command to run. Commands requiring user interaction 
 
 Example:
 
-_Use drush to clear the Drupal cache after database import_
+_Use drush to clear the Drupal cache and get a user login link after database import_
 
 ```
 hooks:
   post-import-db:
     - exec: "drush cc all"
+    - exec: "drush uli"
 ```
 
 Example:
@@ -109,4 +115,14 @@ hooks:
     - exec: "drush en -y environment_indicator"
     # Clear the cache
     - exec: "drush cr"
+```
+
+## TYPO3 Example
+
+```
+hooks:
+    post-start:
+      - exec: "composer install -d TYPO3.CMS"
+      - exec: "apt-get update"
+      - exec: "apt-get install php7.2-bcmath"
 ```

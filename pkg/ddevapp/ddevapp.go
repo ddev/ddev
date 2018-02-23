@@ -547,11 +547,12 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 				return fmt.Errorf("%s exec failed: %v", hookName, err)
 			}
 
-			_, _, err = app.Exec("web", args...)
+			stdout, stderr, err := app.Exec("web", args...)
 			if err != nil {
-				return fmt.Errorf("%s exec failed: %v", hookName, err)
+				return fmt.Errorf("%s exec failed: %v, stderr='%s'", hookName, err, stderr)
 			}
-			util.Success("--- %s exec command succeeded ---", hookName)
+			util.Success("--- %s exec command succeeded, output below ---", hookName)
+			output.UserOut.Println(stdout + "\n" + stderr)
 		}
 		if c.ExecHost != "" {
 			output.UserOut.Printf("--- Running host command: %s ---", c.ExecHost)
@@ -565,13 +566,14 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 			err = os.Chdir(app.GetAppRoot())
 			util.CheckErr(err)
 
-			err = exec.RunCommandPipe(cmd, args)
+			out, err := exec.RunCommandPipe(cmd, args)
 			dirErr := os.Chdir(cwd)
 			util.CheckErr(dirErr)
+			output.UserOut.Println(out)
 			if err != nil {
-				return fmt.Errorf("%s host command failed: %v", hookName, err)
+				return fmt.Errorf("%s host command failed: %v %s", hookName, err, out)
 			}
-			util.Success("--- %s host command succeeded ---", hookName)
+			util.Success("--- %s host command succeeded ---\n", hookName)
 		}
 	}
 
@@ -893,7 +895,7 @@ func (app *DdevApp) AddHostsEntry() error {
 	command := strings.Join(hostnameArgs, " ")
 	util.Warning(fmt.Sprintf("    sudo %s", command))
 	output.UserOut.Println("Please enter your password if prompted.")
-	err = exec.RunCommandPipe("sudo", hostnameArgs)
+	_, err = exec.RunCommandPipe("sudo", hostnameArgs)
 	return err
 }
 

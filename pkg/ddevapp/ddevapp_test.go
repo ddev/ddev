@@ -18,6 +18,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
+	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -424,13 +425,15 @@ func TestProcessHooks(t *testing.T) {
 		app, err := ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
 		assert.NoError(err)
 
+		// Note that any ExecHost commands must be able to run on Windows.
+		// echo and pwd are things that work pretty much the same in both places.
 		app.Commands = map[string][]ddevapp.Command{
 			"hook-test": {
 				{
-					Exec: "pwd",
+					Exec: "ls /usr/local/bin/composer",
 				},
 				{
-					ExecHost: "pwd",
+					ExecHost: "echo something",
 				},
 			},
 		}
@@ -438,10 +441,12 @@ func TestProcessHooks(t *testing.T) {
 		stdout := testcommon.CaptureUserOut()
 		err = app.ProcessHooks("hook-test")
 		assert.NoError(err)
-		out := stdout()
 
-		assert.Contains(out, "--- Running exec command: pwd ---")
-		assert.Contains(out, "--- Running host command: pwd ---")
+		// Ignore color in putput, can be different in different OS's
+		out := vtclean.Clean(stdout(), false)
+
+		assert.Contains(out, "--- Running exec command: ls /usr/local/bin/composer ---\n--- hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
+		assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
 
 		runTime()
 		cleanup()

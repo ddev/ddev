@@ -1,7 +1,6 @@
 package exec
 
 import (
-	"os"
 	"os/exec"
 	"strings"
 
@@ -26,16 +25,14 @@ func RunCommand(command string, args []string) (string, error) {
 	return string(out), err
 }
 
-// RunCommandPipe runs a command on the host system while piping output to stderr and stdout.
-func RunCommandPipe(command string, args []string) error {
+// RunCommandPipe runs a command on the host system
+// Returns combined output as string, and error
+func RunCommandPipe(command string, args []string) (string, error) {
 	output.UserOut.WithFields(log.Fields{
 		"Command": command + " " + strings.Join(args[:], " "),
 	}).Info("Running Command")
 
-	proc := exec.Command(command, args...)
-	proc.Stdout = os.Stdout
-	proc.Stdin = os.Stdin
-	proc.Stderr = os.Stderr
-
-	return proc.Run()
+	cmd := exec.Command(command, args...)
+	stdoutStderr, err := cmd.CombinedOutput()
+	return string(stdoutStderr), err
 }
