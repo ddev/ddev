@@ -61,7 +61,7 @@ if which brew &&  [ -f `brew --prefix`/etc/bash_completion ]; then
     printf "${GREEN}Installed ddev bash completions in $bash_completion_dir${RESET}\n"
     rm /tmp/ddev_bash_completion.sh
 else
-	printf "${YELLOW}Bash completion for ddev was not installed. You may manually install /tmp/ddev_bash_completions.sh in your bash_completions.d directory.${RESET}\n"
+	printf "${YELLOW}Bash completion for ddev was not installed. You may manually install /tmp/ddev_bash_completion.sh in your bash_completions.d directory.${RESET}\n"
 fi
 
 rm /tmp/$TARBALL /tmp/$SHAFILE
