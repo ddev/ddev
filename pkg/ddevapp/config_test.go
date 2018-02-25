@@ -194,6 +194,52 @@ func TestConfigCommand(t *testing.T) {
 	}
 }
 
+// TestConfigCommandDocrootDetection asserts the default docroot is detected.
+func TestConfigCommandDocrootDetection(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+
+	testMatrix := []string{"web", "docroot", "htdocs"};
+	for _, testDocrootName := range testMatrix {
+		testDir := testcommon.CreateTmpDir("TestConfigCommand_" + testDocrootName)
+
+		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
+		defer testcommon.CleanupDir(testDir)
+		defer testcommon.Chdir(testDir)()
+
+		// Create a document root folder.
+		err := os.Mkdir(filepath.Join(testDir, testDocrootName), 0644)
+		if err != nil {
+			t.Errorf("Could not create %s directory under %s", testDocrootName, testDir)
+		}
+
+		// Create the ddevapp we'll use for testing.
+		// This will not return an error, since there is no existing configuration.
+		app, err := NewApp(testDir, DefaultProviderName)
+		assert.NoError(err)
+
+		// Randomize some values to use for Stdin during testing.
+		name := strings.ToLower(util.RandString(16))
+
+		// Create an example input buffer that writes the site name, accepts the
+		// default document root and provides a valid app type.
+		input := fmt.Sprintf("%s\n\ndrupal8", name);
+		scanner := bufio.NewScanner(strings.NewReader(input))
+		util.SetInputScanner(scanner)
+
+		err = app.PromptForConfig()
+		assert.NoError(err, t)
+
+		// Ensure values were properly set on the app struct.
+		assert.Equal(name, app.Name)
+		assert.Equal("drupal8", app.Type)
+		assert.Equal(testDocrootName, app.Docroot)
+		err = PrepDdevDirectory(testDir)
+		assert.NoError(err)
+	}
+
+}
+
 // TestReadConfig tests reading config values from file and fallback to defaults for values not exposed.
 func TestReadConfig(t *testing.T) {
 	assert := asrt.New(t)
