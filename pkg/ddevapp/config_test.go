@@ -199,7 +199,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 
-	testMatrix := []string{"web", "docroot", "htdocs"};
+	testMatrix := []string{"web", "docroot", "htdocs"}
 	for _, testDocrootName := range testMatrix {
 		testDir := testcommon.CreateTmpDir("TestConfigCommand_" + testDocrootName)
 
@@ -223,7 +223,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 		// Create an example input buffer that writes the site name, accepts the
 		// default document root and provides a valid app type.
-		input := fmt.Sprintf("%s\n\ndrupal8", name);
+		input := fmt.Sprintf("%s\n\ndrupal8", name)
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 

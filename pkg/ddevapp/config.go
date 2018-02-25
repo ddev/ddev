@@ -366,15 +366,15 @@ func (app *DdevApp) docrootPrompt() error {
 	output.UserOut.Println("You may leave this value blank if your site files are in the application root")
 	var docrootPrompt = "Docroot Location"
 	// Provide use the app.Docroot as the default docroot option.
-	var defaultDocroot = app.Docroot;
+	var defaultDocroot = app.Docroot
 	if app.Docroot != "" {
 		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
 	} else {
 		// If the app.Docroot was not defined, help discover a possible default.
 		for _, docroot := range []string{"web", "docroot", "htdocs"} {
 			if _, err := os.Stat(docroot); err == nil {
-				defaultDocroot = docroot;
-				break;
+				defaultDocroot = docroot
+				break
 			}
 		}
 	}
