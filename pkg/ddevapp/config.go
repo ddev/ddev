@@ -368,7 +368,7 @@ func (app *DdevApp) docrootPrompt() error {
 	// Provide use the app.Docroot as the default docroot option.
 	var defaultDocroot = app.Docroot
 	if defaultDocroot == "" {
-		for _, docroot := range []string{"web", "docroot", "htdocs"} {
+		for _, docroot := range []string{"web", "docroot", "htdocs", "_www", "public"} {
 			if _, err := os.Stat(docroot); err == nil {
 				defaultDocroot = docroot
 				break

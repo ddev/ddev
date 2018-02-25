@@ -199,7 +199,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 
-	testMatrix := []string{"web", "docroot", "htdocs"}
+	testMatrix := []string{"web", "docroot", "htdocs", "_www", "public"}
 	for _, testDocrootName := range testMatrix {
 		testDir := testcommon.CreateTmpDir("TestConfigCommand_" + testDocrootName)
 
@@ -227,7 +227,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
-		restoreOutput := testcommon.CaptureUserOut()
+		restoreOutput := testcommon.CaptureStdOut()
 		err = app.PromptForConfig()
 		assert.NoError(err, t)
 		out := restoreOutput()
