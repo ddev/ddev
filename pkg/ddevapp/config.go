@@ -365,12 +365,22 @@ func (app *DdevApp) docrootPrompt() error {
 	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)", app.AppRoot)
 	output.UserOut.Println("You may leave this value blank if your site files are in the application root")
 	var docrootPrompt = "Docroot Location"
+	// Provide use the app.Docroot as the default docroot option.
+	var defaultDocroot = app.Docroot;
 	if app.Docroot != "" {
-		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, app.Docroot)
+		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
+	} else {
+		// If the app.Docroot was not defined, help discover a possible default.
+		for _, docroot := range []string{"web", "docroot", "htdocs"} {
+			if _, err := os.Stat(docroot); err == nil {
+				defaultDocroot = docroot;
+				break;
+			}
+		}
 	}
 
 	fmt.Print(docrootPrompt + ": ")
-	app.Docroot = util.GetInput(app.Docroot)
+	app.Docroot = util.GetInput(defaultDocroot)
 
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(app.AppRoot, app.Docroot)
