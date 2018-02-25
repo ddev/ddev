@@ -367,16 +367,17 @@ func (app *DdevApp) docrootPrompt() error {
 	var docrootPrompt = "Docroot Location"
 	// Provide use the app.Docroot as the default docroot option.
 	var defaultDocroot = app.Docroot
-	if app.Docroot != "" {
-		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
-	} else {
-		// If the app.Docroot was not defined, help discover a possible default.
+	if defaultDocroot == "" {
 		for _, docroot := range []string{"web", "docroot", "htdocs"} {
 			if _, err := os.Stat(docroot); err == nil {
 				defaultDocroot = docroot
 				break
 			}
 		}
+	}
+	// If there is a default docroot, display it in the prompt.
+	if defaultDocroot != "" {
+		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
 	}
 
 	fmt.Print(docrootPrompt + ": ")

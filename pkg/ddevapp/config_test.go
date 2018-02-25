@@ -227,8 +227,13 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
+		restoreOutput := testcommon.CaptureUserOut()
 		err = app.PromptForConfig()
 		assert.NoError(err, t)
+		out := restoreOutput()
+
+		assert.Contains(out, testDir)
+		assert.Contains(out, fmt.Sprintf("Docroot Location (%s)", testDocrootName))
 
 		// Ensure values were properly set on the app struct.
 		assert.Equal(name, app.Name)
