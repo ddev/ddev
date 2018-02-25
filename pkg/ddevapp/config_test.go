@@ -232,7 +232,6 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 		assert.NoError(err, t)
 		out := restoreOutput()
 
-		assert.Contains(out, testDir)
 		assert.Contains(out, fmt.Sprintf("Docroot Location (%s)", testDocrootName))
 
 		// Ensure values were properly set on the app struct.
