@@ -392,10 +392,13 @@ func isDrupalApp(app *DdevApp) bool {
 	if err != nil {
 		return false
 	}
-	defer file.Close()
 	buffer := make([]byte, 3178)
-	file.Read(buffer)
-
+	_, err = file.Read(buffer)
+	if err != nil {
+		_ = file.Close()
+		return false
+	}
+	_ = file.Close()
 	return strings.Index(string(buffer), "Drupal") > -1
 }
 
