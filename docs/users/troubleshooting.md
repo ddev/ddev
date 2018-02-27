@@ -65,3 +65,23 @@ As you see, the command that's running is listed, and its pid. You then need to 
 
 
 We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
+
+<a name="container-restarts"></a>
+## DDEV-Local reports container restarts and does not arrive at "ready"
+
+### Restarts of the database container
+
+We've seen cases where this is caused by old databases that are not compatible with the current version of MariaDB that DDEV-Local is using. See [issue](https://github.com/drud/ddev/issues/615) for more information. The simple fix is to 
+
+Note: Your project database will be destroyed by this procedure.
+
+1. `ddev remove --remove-data`
+2. rm -r .ddev (removes the config.yaml and docker-compose.yml, do this only if you haven't modified those)
+3. `ddev start` 
+4. `ddev import-db` if you have a db to import
+
+### Restarts of the web container
+
+The most common cause of the web container restarting is a user-defined .ddev/nginx-site.conf - Please rename it to nginx-site.conf.bak during testing. To figure out what's wrong with it after you've identified that as the problem, `ddev ssh` and look at /var/log/nginx/error.log or use `ddev logs` and review the error.
+
+Changes to .ddev/nginx-site.conf take effect only when you do a `ddev rm` followed by `ddev start`.
