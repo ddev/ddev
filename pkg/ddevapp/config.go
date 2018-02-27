@@ -354,6 +354,18 @@ func (app *DdevApp) promptForName() error {
 	return provider.ValidateField("Name", app.Name)
 }
 
+// An array of default docroot locations to look for.
+func AvailableDocrootLocations() []string {
+	return []string{
+		"web/public",
+		"web",
+		"docroot",
+		"htdocs",
+		"_www",
+		"public",
+	}
+}
+
 // Determine the document root.
 func (app *DdevApp) docrootPrompt() error {
 	provider, err := app.GetProvider()
@@ -368,7 +380,7 @@ func (app *DdevApp) docrootPrompt() error {
 	// Provide use the app.Docroot as the default docroot option.
 	var defaultDocroot = app.Docroot
 	if defaultDocroot == "" {
-		for _, docroot := range []string{"web", "docroot", "htdocs", "_www", "public"} {
+		for _, docroot := range AvailableDocrootLocations() {
 			if _, err := os.Stat(docroot); err == nil {
 				defaultDocroot = docroot
 				break
@@ -378,6 +390,8 @@ func (app *DdevApp) docrootPrompt() error {
 	// If there is a default docroot, display it in the prompt.
 	if defaultDocroot != "" {
 		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
+	} else {
+		docrootPrompt = fmt.Sprintf("%s (current directory)", docrootPrompt)
 	}
 
 	fmt.Print(docrootPrompt + ": ")
