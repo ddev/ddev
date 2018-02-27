@@ -45,8 +45,8 @@ type TestSite struct {
 	Dir string
 	// HTTPProbeURI is the URI that can be probed to look for a working web container
 	HTTPProbeURI string
-	// DocrootBase is the subdirectory witin the site that is the root/index.php
-	DocrootBase string
+	// Docroot is the subdirectory witin the site that is the root/index.php
+	Docroot string
 	// Type is the type of application. This can be specified when a config file is not present
 	// for a test site.
 	Type string
@@ -85,9 +85,10 @@ func (site *TestSite) Prepare() error {
 	// Set app name to the name we define for test sites. We'll
 	// ignore app name defined in config file if present.
 	app.Name = site.Name
-
-	if app.Type == "" {
-		app.Type = site.Type
+	app.Docroot = site.Docroot
+	app.Type = app.DetectAppType()
+	if app.Type != site.Type {
+		return errors.Errorf("Detected apptype does not match provided apptype")
 	}
 
 	err = app.WriteConfig()

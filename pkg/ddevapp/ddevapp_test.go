@@ -32,7 +32,8 @@ var (
 			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
-			DocrootBase:                   "htdocs",
+			Docroot:                       "htdocs",
+			Type:                          "wordpress",
 		},
 		{
 			Name:                          "TestPkgDrupal8",
@@ -44,7 +45,7 @@ var (
 			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.zip",
 			FullSiteTarballURL:            "",
 			Type:                          "drupal8",
-			DocrootBase:                   "",
+			Docroot:                       "",
 		},
 		{
 			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
@@ -53,7 +54,8 @@ var (
 			FilesTarballURL:               "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
 			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
-			DocrootBase:                   "docroot",
+			Docroot:                       "docroot",
+			Type:                          "drupal7",
 		},
 		{
 			Name:                          "TestPkgDrupal6",
@@ -61,7 +63,7 @@ var (
 			ArchiveInternalExtractionPath: "drupal-6.38/",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal6_db.tar.gz",
 			FullSiteTarballURL:            "",
-			DocrootBase:                   "",
+			Docroot:                       "",
 			Type:                          "drupal6",
 		},
 		{
@@ -70,7 +72,7 @@ var (
 			ArchiveInternalExtractionPath: "backdrop-1.9.2/",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/backdrop_db.tar.gz",
 			FullSiteTarballURL:            "",
-			DocrootBase:                   "",
+			Docroot:                       "",
 			Type:                          "backdrop",
 		},
 		{
@@ -79,7 +81,7 @@ var (
 			ArchiveInternalExtractionPath: "typo3_src-8.7.10/",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/typo3git_db.tar.gz",
 			FullSiteTarballURL:            "",
-			DocrootBase:                   "",
+			Docroot:                       "",
 			Type:                          "typo3",
 		},
 	}
@@ -372,6 +374,7 @@ func TestDdevImportFiles(t *testing.T) {
 		if site.FullSiteTarballURL != "" {
 			_, siteTarPath, err := testcommon.GetCachedArchive(site.Name, "local-site-tar", "", site.FullSiteTarballURL)
 			assert.NoError(err)
+			// TODO: This is totally Drupal-only, and has to be fixed when we do file import for new CMSs
 			err = app.ImportFiles(siteTarPath, "docroot/sites/default/files")
 			assert.NoError(err)
 		}
