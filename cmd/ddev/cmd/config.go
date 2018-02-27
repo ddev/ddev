@@ -82,7 +82,7 @@ var ConfigCommand = &cobra.Command{
 		if siteName == "" && docrootRelPath == "" && pantheonEnvironment == "" && appType == "" {
 			err = app.PromptForConfig()
 			if err != nil {
-				util.Failed("There was a problem configuring your application: %v", err)
+				util.Failed("There was a problem configuring your project: %v", err)
 			}
 		} else { // In this case we have to validate the provided items, or set to sane defaults
 
@@ -127,9 +127,9 @@ var ConfigCommand = &cobra.Command{
 				appType = detectedApptype
 				util.Success("Found a %s codebase at %s", detectedApptype, fullPath)
 			} else if appType != "" { // apptype was passed, but we found no app at all
-				util.Warning("You have specified an apptype of %s but no app of that type is found in %s", appType, fullPath)
+				util.Warning("You have specified a project type of %s but no project of that type is found in %s", appType, fullPath)
 			} else if appType != "" && detectedApptype != appType { // apptype was passed, app was found, but not the same type
-				util.Warning("You have specified an apptype of %s but an app of type %s was discovered in %s", appType, detectedApptype, fullPath)
+				util.Warning("You have specified a project type of %s but a project of type %s was discovered in %s", appType, detectedApptype, fullPath)
 			}
 			app.Type = appType
 

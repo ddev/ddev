@@ -50,6 +50,6 @@ func TestSequelproBadApp(t *testing.T) {
 	// Ensure it fails if we run outside of an application root.
 	_, err := handleSequelProCommand(SequelproLoc)
 	assert.Error(err)
-	assert.Contains(err.Error(), "unable to determine the application")
+	assert.Contains(err.Error(), "unable to determine the project")
 
 }

@@ -26,11 +26,11 @@ var DdevLogsCmd = &cobra.Command{
 		}
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteNotFound) {
-			util.Failed("App not currently running. Try 'ddev start'.")
+			util.Failed("Project is not currently running. Try 'ddev start'.")
 		}
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
-			util.Failed("App is stopped. Run 'ddev start' to start the environment.")
+			util.Failed("Project is stopped. Run 'ddev start' to start the environment.")
 		}
 
 		err = app.Logs(serviceType, follow, timestamp, tail)

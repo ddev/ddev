@@ -34,7 +34,7 @@ to stop by running 'ddev stop <sitename>.`,
 			util.Failed("Failed to stop containers for %s: %v", app.GetName(), err)
 		}
 
-		util.Success("Application has been stopped.")
+		util.Success("Project has been stopped.")
 	},
 }
 
