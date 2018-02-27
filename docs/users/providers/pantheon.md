@@ -1,6 +1,6 @@
 <h1>Pantheon Hosting Provider Integration</h1>
 
-ddev provides an integration with the [Pantheon Website Management Platform](https://pantheon.io/), which allows for Pantheon users to quickly and easily download and provision a project from Pantheon in a local ddev-managed environment.
+ddev provides an integration with the [Pantheon Website Management Platform](https://pantheon.io/), which allows for Pantheon users to quickly download and provision a project from Pantheon in a local ddev-managed environment.
 
 ddev's Pantheon integration pulls an existing backup from an existing Pantheon site/environment into your local system so you can develop locally. Of course that means you must already have a Pantheon site with a backup in order to use it.
 
@@ -40,7 +40,7 @@ In order to use ddev with Pantheon.io, you need the following:
 
 ## Authentication
 
-This step only needs to be completed once for your system. We recommend that you create a token specific to ddev by going to https://pantheon.io/docs/machine-tokens/. Once you’ve completed that, simply run `ddev auth-pantheon <YOUR TOKEN>` and provide the token you just generated. This will store the token in ~/.ddev/pantheonconfig.json. If you ever delete the token, you will need to generate a new token from Pantheon and re-run the `ddev auth-pantheon` command to re-establish your connection to Pantheon.io.
+This step only needs to be completed once for your system. We recommend that you create a token specific to ddev by going to https://pantheon.io/docs/machine-tokens/. Once you’ve completed that, run `ddev auth-pantheon <YOUR TOKEN>` and provide the token you just generated. This will store the token in ~/.ddev/pantheonconfig.json. If you ever delete the token, you will need to generate a new token from Pantheon and re-run the `ddev auth-pantheon` command to re-establish your connection to Pantheon.io.
 
 ## Usage
 

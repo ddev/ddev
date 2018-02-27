@@ -17,9 +17,9 @@ Before beginning:
 7. Install Surf:
     - The quickest way to install Surf is with NPM:
     `npm install -g surf-build`
-    - OR you can download a release from https://github.com/surf-build/surf/releases.
-8. Configure the windows machine to [automatically log in on boot](https://www.howtogeek.com/112919/how-to-make-your-windows-8-computer-logon-automatically/). 
-9. In an *administrative cmd shell*, 
+    - Alternatively, download a release from https://github.com/surf-build/surf/releases.
+8. Configure the windows machine to [automatically log in on boot](https://www.howtogeek.com/112919/how-to-make-your-windows-8-computer-logon-automatically/).
+9. In an *administrative cmd shell*,
 ```
 set GITHUB_TOKEN=012345...
 set DDEV_PANTHEON_API_TOKEN=012356...
@@ -36,12 +36,12 @@ where `surf-windows-ddev` is the name of the job on the windows machine (it's fr
 4. Install nosleep `brew cask install nosleep`
 5. Enable nosleep using its shortcut in the Mac status bar.
 6. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
-7. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476). 
+7. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
 8. Install Surf:
     - The quickest way to install Surf is with NPM:
     `npm install -g surf-build`
     - OR you can download a release from https://github.com/surf-build/surf/releases.
-9. In a shell, 
+9. In a shell,
 ```
 export GITHUB_TOKEN=012345...
 export DDEV_PANTHEON_API_TOKEN=012356...
@@ -50,4 +50,3 @@ surf-install -e DDEV_PANTHEON_API_TOKEN -n surf-darwin-ddev -c "surf-run -r http
 where `surf-darwin-ddev` is the name of the job on the mac machine (it's free-form) and `surf-darwin` is the identifier used on github when the build changes statuses; it's also free-form.
 
 9. Reboot the machine and do a test run. Alternatively, test with `surf-build -r https://github.com/drud/ddev -s <some_sha>`
-

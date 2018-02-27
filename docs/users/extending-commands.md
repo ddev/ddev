@@ -1,6 +1,8 @@
 <h1>Extending ddev Commands</h1>
 
-Certain ddev commands provide hooks to run tasks before or after the main command executes. These tasks can be defined in the config.yaml for your project, and allow for you to automate setup tasks specific to your project. To define command tasks in your configuration, specify the desired command hook as a subfield to `hooks`, then provide a list of tasks to run.
+Certain ddev commands provide hooks to run tasks before or after the main command executes. To automate setup tasks specific to your project, define them in the project's config.yaml file.
+
+To define command tasks in your configuration, specify the desired command hook as a subfield to `hooks`, then provide a list of tasks to run.
 
 _Note: Only simple commands are currently supported, so if you need to handle multiple commands, put them in as separate tasks. Shell pipes, &&, ||, and related bash/shell expressions are not yet supported._
 
