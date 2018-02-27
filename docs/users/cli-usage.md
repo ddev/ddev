@@ -7,7 +7,7 @@ Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands
 
 These are quickstart instructions WordPress, Drupal 7, Drupal 8, TYPO3, and Backdrop.
 
-**Prerequisites:** Before you start [check the system requirements](../index.md#system-requirements) and follow the [installation instructions](../index.md#installation).
+**Prerequisites:** Before you start, [check the system requirements](../index.md#system-requirements) and follow the [installation instructions](../index.md#installation).
 
 ### WordPress Quickstart
 To get started using ddev with a WordPress project clone the project's repository and checkout its directory.
@@ -31,7 +31,7 @@ After you've run `ddev config`, you're ready to start running your project. To s
 ddev start
 ```
 
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
+When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
 
 ```
 Successfully started example-wordpress-site
@@ -57,13 +57,13 @@ ddev config
 
 _Note: ddev config will prompt you for a project name, docroot, and project type._
 
-After you've run `ddev config` you're ready to start running your project. Run ddev using:
+After you've run `ddev config`, you're ready to start running your project. Run ddev using:
 
 ```
 ddev start
 ```
 
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
+When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
 
 ```
 Successfully started my-drupal7-site
@@ -100,13 +100,13 @@ ddev config
 
 _Note: ddev config will prompt you for a project name, docroot, and app type._
 
-After you've run `ddev config` you're ready to start up your project. Run ddev using:
+After you've run `ddev config`, you're ready to start up your project. Run ddev using:
 
 ```
 ddev start
 ```
 
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
+When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
 
 ```
 Successfully started my-drupal8-site
@@ -140,7 +140,7 @@ After you've run `ddev config`, you're ready to start running your project. To s
 ddev start
 ```
 
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
+When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
 
 ```
 Successfully started example-typo3-site
@@ -170,7 +170,7 @@ After you've run `ddev config`, you're ready to start running your project. To s
 ddev start
 ```
 
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
+When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
 
 ```
 Successfully started example-backdrop-site
@@ -324,7 +324,8 @@ If you want to use import-db without answering prompts, you can use the `--src` 
 `ddev import-db --src=/tmp/mydb.sql.gz`
 
 ### Importing static file assets
-The `ddev import-files` command is provided for importing the static file assets for a project, such as uploaded images and documents. Running this command will provide a prompt for you to specify the location of your asset import. The assets will then be imported to the default public upload directory of the platform for the project. For Drupal projects, this is the "sites/default/files" directory. For WordPress projects, this is the "wp-content/uploads" directory.
+
+To import static file assets for a project, such as uploaded images and documents, use the `ddev import-files` command. This command will prompt you to specify the location of your asset import. Next it will import the assets into the default public upload directory of the platform for the project. For Drupal projects, this is the "sites/default/files" directory. For WordPress projects, this is the "wp-content/uploads" directory.
 
 ```
 ➜  ddev import-files
@@ -374,13 +375,14 @@ Commands can also be executed using the shorter `ddev . <cmd>` alias.
 The `ddev ssh` command will open an interactive bash shell session to the container for a ddev service. The web service is connected to by default. The session can be ended by typing `exit`. To connect to another service, use the `--service` flag to specify the service you want to connect to. For example, to connect to the database container, you would run `ddev ssh --service db`.
 
 ### Log Access
+
 The `ddev logs` command allows you to easily retrieve error logs from the web server. To follow the web server error log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail.
 
-Additional logging can be accessed by using `ddev ssh` to manually review the log files you are after. The web server stores access logs at `/var/log/nginx/access.log`, and PHP-FPM logs at `/var/log/php7.0-fpm.log`.
+To manually review additional log files use the `ddev ssh` command. The web server stores access logs at `/var/log/nginx/access.log`, and PHP-FPM logs at `/var/log/php7.0-fpm.log`.
 
 ## Stopping a project
 
-Stop a project's containers without losing data by using `ddev stop` in the working directory of the project. You can also stop any running project's containers by providing the project name as an argument, e.g. `ddev stop <projectname>`.
+Stop a project's containers without losing data by using `ddev stop` in the working directory of the project. Stop any running project's containers by providing the project name as an argument, e.g. `ddev stop <projectname>`.
 
 ## Removing a project
 
