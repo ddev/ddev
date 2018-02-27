@@ -64,6 +64,24 @@ var (
 			DocrootBase:                   "",
 			Type:                          "drupal6",
 		},
+		{
+			Name:                          "TestPkgBackdrop",
+			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.9.2.tar.gz",
+			ArchiveInternalExtractionPath: "backdrop-1.9.2/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/backdrop_db.tar.gz",
+			FullSiteTarballURL:            "",
+			DocrootBase:                   "",
+			Type:                          "backdrop",
+		},
+		{
+			Name:                          "TestPkgTypo3",
+			SourceURL:                     "https://typo3.azureedge.net/typo3/8.7.10/typo3_src-8.7.10.tar.gz",
+			ArchiveInternalExtractionPath: "typo3_src-8.7.10/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/typo3git_db.tar.gz",
+			FullSiteTarballURL:            "",
+			DocrootBase:                   "",
+			Type:                          "typo3",
+		},
 	}
 )
 
