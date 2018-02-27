@@ -28,6 +28,7 @@ var (
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		HTTPProbeURI:                  "wp-admin/setup-config.php",
 		Docroot:                       "htdocs",
+		Type:                          "wordpress",
 	},
 	}
 )
