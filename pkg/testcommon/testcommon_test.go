@@ -97,6 +97,7 @@ func TestValidTestSite(t *testing.T) {
 		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		Docroot:                       "htdocs",
+		Type:                          "wordpress",
 	}
 
 	// Create a testsite and ensure the prepare() method extracts files into a temporary directory.
