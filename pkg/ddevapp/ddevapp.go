@@ -788,7 +788,6 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 // Down stops the docker containers for the project in current directory.
 func (app *DdevApp) Down(removeData bool) error {
 	app.DockerEnv()
-	settingsFilePath := app.SiteSettingsPath
 
 	// Remove all the containers and volumes for app.
 	err := Cleanup(app)
@@ -798,24 +797,10 @@ func (app *DdevApp) Down(removeData bool) error {
 
 	// Remove data/database if we need to.
 	if removeData {
-		if fileutil.FileExists(settingsFilePath) {
-			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DdevFileSignature)
-			util.CheckErr(err) // Really can't happen as we already checked for the file existence
-			if signatureFound {
-				err = os.Chmod(settingsFilePath, 0644)
-				if err != nil {
-					return err
-				}
-				err = os.Remove(settingsFilePath)
-				if err != nil {
-					return err
-				}
-			}
-		}
 		// Check that app.DataDir is a directory that is safe to remove.
 		err = validateDataDirRemoval(app)
 		if err != nil {
-			return fmt.Errorf("failed to remove data directories: %v", err)
+			return fmt.Errorf("failed to remove data/database directories: %v", err)
 		}
 		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
 		// are writable before we attempt to remove them.
