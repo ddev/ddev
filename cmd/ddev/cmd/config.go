@@ -163,7 +163,10 @@ var ConfigCommand *cobra.Command = &cobra.Command{
 			util.Failed("Could not write ddev config file: %v", err)
 		}
 
-		_, _ = app.CreateSettingsFile()
+		_, err = app.CreateSettingsFile()
+		if err != nil {
+			util.Failed("Could not write settings file: %w", err)
+		}
 
 		// If a provider is specified, prompt about whether to do an import after config.
 		switch provider {
