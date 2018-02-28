@@ -8,7 +8,7 @@ All IDEs basically work the same: They listen on a port and react when they're c
 
 **Key facts:**
 * The debug server port on the IDE must be set to port 11011. Although the xdebug default is port 9000, that port often has conflicts for PHP developers, so 11011 is used with ddev.
-* An IP-address *alias* of 172.28.99.99 must be added to your workstation host's loopback address. On macOS this is done with the command `sudo ifconfig lo0 alias 172.28.99.99`. **This must currently be done after each reboot.**
+* An IP-address *alias* of 172.28.99.99 must be added to your workstation host's loopback address. On macOS this is done with the command `sudo ifconfig lo0 alias 172.28.99.99`. On Ubuntu 16.04 and probably other Linux variants, `sudo ifconfig docker0:0 172.28.99.99 up` **This must currently be done after each reboot.**
 
 For more background on XDebug see [XDebug documentation](https://xdebug.org/docs/remote). The intention here is that one won't have to understand XDebug to do debugging.
 
@@ -91,3 +91,17 @@ Before, beginning anything else, please set your Debugger Port to 11011. (Prefer
 6. Turn on debugging in Atom (Right-click->PHP Debug->Toggle Debugging)
 7. Turn on debugging in your browser using the browser extension.
 8. Visit a page that should trigger your breakpoint.
+
+An example configuration from [user contribution](https://github.com/drud/ddev/issues/610#issuecomment-359244922):
+```
+"php-debug":
+    AutoExpandLocals: true
+    DebugXDebugMessages: true
+    MaxDepth: 6
+    PathMaps: [
+      "/path/to/container/docroot;/path/to/host/docroot"
+    ]
+    PhpException: {}
+    ServerAddress: "172.28.99.99"
+    ServerPort: 11011
+```
