@@ -201,7 +201,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 	testMatrix := AvailableDocrootLocations()
 	for _, testDocrootName := range testMatrix {
-		testDir := testcommon.CreateTmpDir("TestConfigCommand_" + testDocrootName)
+		testDir := testcommon.CreateTmpDir("TestConfigCommand_" + filepath.Join(testDocrootName))
 
 		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
 		defer testcommon.CleanupDir(testDir)
@@ -210,7 +210,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 		// Create a document root folder.
 		err := os.MkdirAll(filepath.Join(testDir, testDocrootName), 0644)
 		if err != nil {
-			t.Errorf("Could not create %s directory under %s", testDocrootName, testDir)
+			t.Errorf("Could not create %s directory under %s", filepath.Join(testDocrootName), testDir)
 		}
 
 		// Create the ddevapp we'll use for testing.
