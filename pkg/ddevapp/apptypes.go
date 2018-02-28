@@ -94,9 +94,11 @@ func IsValidAppType(apptype string) bool {
 func (app *DdevApp) CreateSettingsFile() (string, error) {
 	app.SetApptypeSettingsPaths()
 
-	// If neither settings file options are set, then don't continue
+	// If neither settings file options are set, then don't continue. Return
+	// a nil error because this should not halt execution if the apptype
+	// does not have a settings definition.
 	if app.SiteLocalSettingsPath == "" && app.SiteSettingsPath == "" {
-		return "", fmt.Errorf("Neither SiteLocalSettingsPath nor SiteSettingsPath is set")
+		return "", nil
 	}
 
 	// Drupal and WordPress love to change settings files to be unwriteable.
