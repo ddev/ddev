@@ -28,7 +28,7 @@ var DevListCmd = &cobra.Command{
 				for _, app := range apps {
 					desc, err := app.Describe()
 					if err != nil {
-						util.Failed("Failed to describe site %s: %v", app.GetName(), err)
+						util.Failed("Failed to describe project %s: %v", app.GetName(), err)
 					}
 					appDescs = append(appDescs, desc)
 					ddevapp.RenderAppRow(table, desc)
@@ -47,6 +47,6 @@ var DevListCmd = &cobra.Command{
 }
 
 func init() {
-	DevListCmd.Flags().BoolVarP(&continuous, "continuous", "", false, "If set, site information will be emitted once per second")
+	DevListCmd.Flags().BoolVarP(&continuous, "continuous", "", false, "If set, project information will be emitted once per second")
 	RootCmd.AddCommand(DevListCmd)
 }

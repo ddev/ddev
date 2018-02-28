@@ -15,11 +15,11 @@ var dbExtPath string
 // ImportDBCmd represents the `ddev import-db` command.
 var ImportDBCmd = &cobra.Command{
 	Use:   "import-db",
-	Short: "Import the database of an existing site to the dev environment.",
-	Long: `Import the database of an existing site to the development environment.
+	Short: "Import the database of an existing project to the dev environment.",
+	Long: `Import the database of an existing project to the development environment.
 The database can be provided as a SQL dump in a .sql, .sql.gz, .zip, .tgz, or .tar.gz
 format. For the zip and tar formats, the path to a .sql file within the archive
-can be provided if it is not located at the top-level of the archive.`,
+can be provided if it is not located at the top level of the archive.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()
@@ -35,7 +35,7 @@ can be provided if it is not located at the top-level of the archive.`,
 		}
 
 		if app.SiteStatus() != ddevapp.SiteRunning {
-			util.Failed("The site is not running. The site must be running in order to import a database.")
+			util.Failed("The project is not running. The project must be running in order to import a database.")
 		}
 
 		err = app.ImportDB(dbSource, dbExtPath)

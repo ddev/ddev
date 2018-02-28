@@ -8,16 +8,16 @@ import (
 
 // DdevStopCmd represents the stop command
 var DdevStopCmd = &cobra.Command{
-	Use:   "stop [sitename]",
-	Short: "Stop the development environment for a site.",
-	Long: `Stop the development environment for a site. You can run 'ddev stop'
-from a site directory to stop that site, or you can specify a running site
-to stop by running 'ddev stop <sitename>.`,
+	Use:   "stop [projectname]",
+	Short: "Stop the development environment for a project.",
+	Long: `Stop the development environment for a project. You can run 'ddev stop'
+from a project directory to stop that project, or you can specify a running project
+to stop by running 'ddev stop <projectname>.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var siteName string
 
 		if len(args) > 1 {
-			util.Failed("Too many arguments provided. Please use 'ddev stop' or 'ddev stop [sitename]'")
+			util.Failed("Too many arguments provided. Please use 'ddev stop' or 'ddev stop [projectname]'")
 		}
 
 		if len(args) == 1 {

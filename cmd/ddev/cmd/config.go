@@ -45,7 +45,7 @@ var ConfigCommand = &cobra.Command{
 		provider := ddevapp.DefaultProviderName
 
 		if len(args) > 1 {
-			output.UserOut.Fatal("Invalid argument detected. Please use 'ddev config' or 'ddev config [provider]' to configure a site.")
+			output.UserOut.Fatal("Invalid argument detected. Please use 'ddev config' or 'ddev config [provider]' to configure a project.")
 		}
 
 		if len(args) == 1 {
@@ -173,14 +173,16 @@ var ConfigCommand = &cobra.Command{
 func init() {
 	validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
 	apptypeUsage := fmt.Sprintf("Provide the project type (one of %s). This is autodetected and this flag is necessary only to override the detection.", validAppTypes)
+	projectNameUsage := fmt.Sprintf("Provide the project name of project to configure (normally the same as the last part of directory name)")
 
-	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", "Provide the sitename of site to configure (normally the same as the directory name)")
-	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the site, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
+	ConfigCommand.Flags().StringVarP(&siteName, "projectname", "", "", projectNameUsage)
+	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
 	ConfigCommand.Flags().StringVarP(&pantheonEnvironment, "pantheon-environment", "", "", "Choose the environment for a Pantheon site (dev/test/prod) (Pantheon-only)")
 	ConfigCommand.Flags().StringVarP(&appType, "projecttype", "", "", apptypeUsage)
 	// apptype flag is there for backwards compatibility.
 	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
 	ConfigCommand.Flags().BoolVarP(&showConfigLocation, "show-config-location", "", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
+	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", projectNameUsage+" This is the same as projectname and is included only for backwards compatibility")
 
 	RootCmd.AddCommand(ConfigCommand)
 }

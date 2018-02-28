@@ -13,8 +13,8 @@ import (
 // DdevRestartCmd rebuilds an apps settings
 var DdevRestartCmd = &cobra.Command{
 	Use:   "restart",
-	Short: "Restart the development environment for a site.",
-	Long:  `Restart stops the containers for site's environment and starts them back up again.`,
+	Short: "Restart the development environment for a project.",
+	Long:  `Restart stops the containers for project and starts them back up again.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()
@@ -30,7 +30,7 @@ var DdevRestartCmd = &cobra.Command{
 			util.Failed("Failed to restart: %v", err)
 		}
 
-		output.UserOut.Printf("Restarting environment for %s...", app.GetName())
+		output.UserOut.Printf("Restarting project %s...", app.GetName())
 		err = app.Stop()
 		if err != nil {
 			util.Failed("Failed to restart %s: %v", app.GetName(), err)

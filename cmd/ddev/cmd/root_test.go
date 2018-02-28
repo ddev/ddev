@@ -73,7 +73,7 @@ func TestGetActiveAppRoot(t *testing.T) {
 	assert := asrt.New(t)
 
 	_, err := ddevapp.GetActiveAppRoot("")
-	assert.Contains(err.Error(), "Please specify a site name or change directories")
+	assert.Contains(err.Error(), "Please specify a project name or change directories")
 
 	_, err = ddevapp.GetActiveAppRoot("potato")
 	assert.Error(err)
