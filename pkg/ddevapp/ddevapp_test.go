@@ -430,6 +430,12 @@ func TestDdevExec(t *testing.T) {
 func TestDdevLogs(t *testing.T) {
 	assert := asrt.New(t)
 
+	// Skip test because on Windows because the CaptureUserOut() hangs, at least
+	// sometimes.
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping test TestDdevLogs on Windows")
+	}
+
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
@@ -684,10 +690,10 @@ func TestRouterPortsCheck(t *testing.T) {
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
 func TestCleanupWithoutCompose(t *testing.T) {
 	assert := asrt.New(t)
+
 	// Skip test because we can't rename folders while they're in use if running on Windows.
 	if runtime.GOOS == "windows" {
-		log.Println("Skipping test TestCleanupWithoutCompose on Windows")
-		t.Skip()
+		t.Skip("Skipping test TestCleanupWithoutCompose on Windows")
 	}
 
 	site := TestSites[0]
