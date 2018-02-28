@@ -210,7 +210,7 @@ Once completed, your configuration will be written to /Users/username/Projects/d
 
 Project name (drupal8):
 
-The docroot is the directory from which your site is served. This is a relative path from your application root (/Users/username/Projects/drupal8)
+The docroot is the directory from which your site is served. This is a relative path from your project root (/Users/username/Projects/drupal8)
 You may leave this value blank if your site files are in the application root
 Docroot Location: web
 Found a drupal8 codebase at /Users/username/Projects/drupal8/web
