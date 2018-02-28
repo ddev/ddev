@@ -16,7 +16,7 @@
 ## Testing
 Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...`
 
-To see which ddev commands the tests are executing, set the environment variable to DRUD_DEBUG=true.
+To see which ddev commands the tests are executing, set the environment variable DRUD_DEBUG=true.
 
 ## Contributing
 Interested in contributing to ddev? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!
