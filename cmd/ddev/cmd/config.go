@@ -152,7 +152,10 @@ var ConfigCommand *cobra.Command = &cobra.Command{
 			} else {
 				util.Success("Using project name '%s' and environment '%s'.", app.Name, pantheonEnvironment)
 			}
-			_ = app.ConfigFileOverrideAction()
+			err = app.ConfigFileOverrideAction()
+			if err != nil {
+				util.Failed("Failed to run ConfigFileOverrideAction: %v", err)
+			}
 
 		}
 		err = app.WriteConfig()
