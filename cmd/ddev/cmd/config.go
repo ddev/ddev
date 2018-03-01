@@ -32,7 +32,7 @@ var appType string
 var showConfigLocation bool
 
 // ConfigCommand represents the `ddev config` command
-var ConfigCommand = &cobra.Command{
+var ConfigCommand *cobra.Command = &cobra.Command{
 	Use:   "config [provider]",
 	Short: "Create or modify a ddev project configuration in the current directory",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -107,7 +107,10 @@ var ConfigCommand = &cobra.Command{
 				if _, err = os.Stat(docrootRelPath); os.IsNotExist(err) {
 					util.Failed("The docroot provided (%v) does not exist", docrootRelPath)
 				}
+			} else if !cmd.Flags().Changed("docroot") {
+				app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
 			}
+
 			// pantheonEnvironment must be appropriate, and can only be used with pantheon provider.
 			if provider != "pantheon" && pantheonEnvironment != "" {
 				util.Failed("--pantheon-environment can only be used with pantheon provider, for example 'ddev config pantheon --pantheon-environment=dev --docroot=docroot'")

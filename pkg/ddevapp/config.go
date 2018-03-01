@@ -366,6 +366,21 @@ func AvailableDocrootLocations() []string {
 	}
 }
 
+// DiscoverDefaultDocroot returns the default docroot directory.
+func DiscoverDefaultDocroot(app *DdevApp) string {
+	// Provide use the app.Docroot as the default docroot option.
+	var defaultDocroot = app.Docroot
+	if defaultDocroot == "" {
+		for _, docroot := range AvailableDocrootLocations() {
+			if _, err := os.Stat(docroot); err == nil {
+				defaultDocroot = docroot
+				break
+			}
+		}
+	}
+	return defaultDocroot
+}
+
 // Determine the document root.
 func (app *DdevApp) docrootPrompt() error {
 	provider, err := app.GetProvider()
@@ -377,16 +392,7 @@ func (app *DdevApp) docrootPrompt() error {
 	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)", app.AppRoot)
 	output.UserOut.Println("You may leave this value blank if your site files are in the application root")
 	var docrootPrompt = "Docroot Location"
-	// Provide use the app.Docroot as the default docroot option.
-	var defaultDocroot = app.Docroot
-	if defaultDocroot == "" {
-		for _, docroot := range AvailableDocrootLocations() {
-			if _, err := os.Stat(docroot); err == nil {
-				defaultDocroot = docroot
-				break
-			}
-		}
-	}
+	var defaultDocroot = DiscoverDefaultDocroot(app)
 	// If there is a default docroot, display it in the prompt.
 	if defaultDocroot != "" {
 		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
