@@ -15,10 +15,10 @@ This means there is another webserver listening on the named port(s) and ddev ca
 
 To resolve this conflict, choose one of two methods:
 
-1. Configure your project to use different ports.
-2. Stop the competing application.
+1. Fix port conflicts by configuring your project to use different ports.
+2. Fix port conflicts by stopping the competing application.
 
-### Method 1: Configure your project to use non-conflicting ports
+### Method 1: Fix port conflicts by configuring your project to use different ports
 
 To configure a project to use non-conflicting ports, edit the project's .ddev/config.yaml to add entries like `router_http_port: 8000` and `router_https_port: 8443` depending on your needs. Then use `ddev start` again.
 
@@ -31,7 +31,7 @@ router_http_port: 8000
 Then run `ddev start`. This changes the project's http URL to http://yoursite.ddev.local:8000.
 
 
-### Method 2: Stop the competing application to fix port conflicts
+### Method 2: Fix port conflicts by stopping the competing application
 
 Alternatively, stop the other application.
 
