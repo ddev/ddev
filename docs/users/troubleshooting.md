@@ -15,10 +15,10 @@ This means there is another webserver listening on the named port(s) and ddev ca
 
 To resolve this conflict, choose one of two methods:
 
-1. Configure your project to use different ports
+1. Configure your project to use different ports.
 2. Stop the competing application.
 
-### Configure your project to use non-conflicting ports
+### Method 1: Configure your project to use non-conflicting ports
 
 To configure a project to use non-conflicting ports, edit the project's .ddev/config.yaml to add entries like `router_http_port: 8000` and `router_https_port: 8443` depending on your needs. Then use `ddev start` again.
 
@@ -31,7 +31,7 @@ router_http_port: 8000
 Then run `ddev start`. This changes the project's http URL to http://yoursite.ddev.local:8000.
 
 
-### Stop the competing application to fix port conflicts
+### Method 2: Stop the competing application to fix port conflicts
 
 Alternatively, stop the other application.
 
@@ -43,7 +43,7 @@ sudo apachectl stop
 
 **Common tools that use port 80:**
 
-There are many processes that could be using port 80. Here are some of the common ones and how to stop them:
+Here are some of the other common processes that could be using port 80 and methods to stop them.
 
 * MAMP (macOS): [Stop MAMP](http://documentation.mamp.info/en/MAMP-Mac/Preferences/Start-Stop/)
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
@@ -63,6 +63,6 @@ nginx   1608 www-data   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 ```
 
-As you see, the command that's running is listed, and its pid. You then need to use the appropriate technique to stop the other server.
+The resulting output displays which command is running and its pid. Choose the appropriate method to stop the other server.
 
 We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
