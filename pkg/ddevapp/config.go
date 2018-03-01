@@ -354,7 +354,7 @@ func (app *DdevApp) promptForName() error {
 	return provider.ValidateField("Name", app.Name)
 }
 
-// An array of default docroot locations to look for.
+// AvailableDocrootLocations returns an of default docroot locations to look for.
 func AvailableDocrootLocations() []string {
 	return []string{
 		"web/public",
