@@ -41,8 +41,6 @@ curl https://raw.githubusercontent.com/drud/ddev/master/install_ddev.sh | bash
 
 ### Manual Installation - Linux and macOS
 
-Alternatively, perform the installation manually.
-
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 - Make ddev executable: `chmod ugo+x ddev`
 - Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
