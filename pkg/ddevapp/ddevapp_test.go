@@ -243,7 +243,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 
 	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
-	assert.Contains(err.Error(), "Could not find a site")
+	assert.Contains(err.Error(), "Could not find a project")
 }
 
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
