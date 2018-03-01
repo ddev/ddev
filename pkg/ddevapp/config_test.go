@@ -208,7 +208,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 		defer testcommon.Chdir(testDir)()
 
 		// Create a document root folder.
-		err := os.MkdirAll(filepath.Join(testDir, testDocrootName), 0644)
+		err := os.MkdirAll(filepath.Join(testDir, filepath.Join(testDocrootName)), 0755)
 		if err != nil {
 			t.Errorf("Could not create %s directory under %s", testDocrootName, testDir)
 		}
