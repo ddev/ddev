@@ -5,12 +5,12 @@ Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands
 
 ## Quickstart Guides
 
-These are quickstart instructions WordPress, Drupal 7, Drupal 8, TYPO3, and Backdrop.
+These are quickstart instructions for WordPress, Drupal 7, Drupal 8, TYPO3, and Backdrop.
 
-**Prerequisites:** Before you start, [check the system requirements](../index.md#system-requirements) and follow the [installation instructions](../index.md#installation).
+**Prerequisites:** Before you start, follow the [installation instructions](../index.md#installation). Make sure to [check the system requirements](../index.md#system-requirements), you will need *docker* and *docker-compose* to use ddev.
 
 ### WordPress Quickstart
-To get started using ddev with a WordPress project clone the project's repository and checkout its directory.
+To get started using ddev with a WordPress project, clone the project's repository and checkout its directory.
 
 ```
 git clone https://github.com/example-user/example-wordpress-site
@@ -25,7 +25,7 @@ ddev config
 
 _Note: ddev config will prompt you for a project name, docroot, and app type._
 
-After you've run `ddev config`, you're ready to start running your project. To start running ddev, enter:
+After `ddev config`, you're ready to start running your project. Run ddev using:
 
 ```
 ddev start
@@ -57,7 +57,7 @@ ddev config
 
 _Note: ddev config will prompt you for a project name, docroot, and project type._
 
-After you've run `ddev config`, you're ready to start running your project. Run ddev using:
+After `ddev config`, you're ready to start running your project. Run ddev using:
 
 ```
 ddev start
@@ -90,7 +90,7 @@ composer create-project drupal-composer/drupal-project:8.x-dev my-drupal8-site -
 cd my-drupal8-site
 ```
 
-_Find more information on composer and how to use it [here](https://github.com/drupal-composer/drupal-project)._
+_Find more information [on composer and how to use it](https://github.com/drupal-composer/drupal-project)._
 
 The next step is to configure ddev. In your project's working directory, enter the following command:
 
@@ -100,7 +100,7 @@ ddev config
 
 _Note: ddev config will prompt you for a project name, docroot, and app type._
 
-After you've run `ddev config`, you're ready to start up your project. Run ddev using:
+After `ddev config`, you're ready to start running your project. Run ddev using:
 
 ```
 ddev start
@@ -134,7 +134,7 @@ ddev config
 
 _Note: ddev config will prompt you for a project name, docroot, and project type._
 
-After you've run `ddev config`, you're ready to start running your project. To start running ddev enter:
+After `ddev config`, you're ready to start running your project. Run ddev using:
 
 ```
 ddev start
@@ -164,7 +164,7 @@ ddev config
 
 _Note: ddev config will prompt you for a project name, docroot, and project type._
 
-After you've run `ddev config`, you're ready to start running your project. To start running ddev enter:
+After `ddev config`, you're ready to start running your project. Run ddev using:
 
 ```
 ddev start
@@ -191,7 +191,7 @@ Here's an example of a database import using ddev:
 ddev import-db --src=dumpfile.sql.gz
 ```
 
-For in-depth application monitoring, use the `ddev describe` command to see details about the status of your ddev app.
+For in-depth application monitoring, use the command `ddev describe` to see details about the status of your ddev app.
 
 **Note for Backdrop users:** In addition to importing a Backdrop database, you will need to extract a copy of your Backdrop site's configuration into the local `active` directory. The location for this directory can vary depending on the contents of your Backdrop `settings.php` file, but the default location is `[docroot]/files/config_[random letters and numbers]/active`. Please refer to the Backdrop documentation for more information on [moving your Backdrop site](https://backdropcms.org/user-guide/moving-backdrop-site) into the `ddev` environment.
 
@@ -318,14 +318,14 @@ Run 'ddev describe' to find the database credentials for this application.
 Successfully imported database for drupal8
 ```
 
-<h4>Non-interactive usage</h4>
+<h4>Non-interactive usage</h4>## Stopping a project
 If you want to use import-db without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Example:
 
 `ddev import-db --src=/tmp/mydb.sql.gz`
 
 ### Importing static file assets
 
-To import static file assets for a project, such as uploaded images and documents, use the `ddev import-files` command. This command will prompt you to specify the location of your asset import. Next it will import the assets into the default public upload directory of the platform for the project. For Drupal projects, this is the "sites/default/files" directory. For WordPress projects, this is the "wp-content/uploads" directory.
+To import static file assets for a project, such as uploaded images and documents, use the command `ddev import-files`. This command will prompt you to specify the location of your asset import. Next it will import the assets into the default public upload directory of the platform for the project. For Drupal projects, this is the "sites/default/files" directory. For WordPress projects, this is the "wp-content/uploads" directory.
 
 ```
 ➜  ddev import-files
@@ -380,18 +380,14 @@ The `ddev logs` command allows you to easily retrieve error logs from the web se
 
 To manually review additional log files use the `ddev ssh` command. The web server stores access logs at `/var/log/nginx/access.log`, and PHP-FPM logs at `/var/log/php7.0-fpm.log`.
 
-## Stopping a project
-
-Stop a project's containers without losing data by using `ddev stop` in the working directory of the project. Stop any running project's containers by providing the project name as an argument, e.g. `ddev stop <projectname>`.
-
 ## Removing a project
 
 To remove a project's containers run `ddev remove` in the working directory of the project. To remove any running project's containers, providing the project name as an argument, e.g. `ddev remove <projectname>`.
 
 `ddev remove` is *not* destructive. It removes the docker containers but does not remove the database for the project. This allows you to have many configured projects with databases loaded without wasting docker containers on unused projects. `ddev remove` does not affect the project code base and files.
 
-To remove the imported database for a project, use `ddev remove --remove-data` instead of just `ddev remove`, and the database files will also be destroyed.
+To remove the imported database for a project, use the flag `--remove-data`, as in `ddev remove --remove-data`. This command will destroy both the containers and the imported database contents.
 
 ## ddev Command Auto-Completion
 
-ddev bash auto-completion is available. If you have installed ddev via homebrew (on macOS) it will already be installed. Otherwise, download the [latest release](https://github.com/drud/ddev/releases) tarball for your platform and the ddev_bash_completions.sh inside it can be installed wherever your bash_completions.d is. For example, `cp ddev_bash_completions.sh /etc/bash_completion.d/ddev`
+Bash auto-completion is available for ddev. Bash auto-completion is included in the homebrew install on macOS. For other platforms, download the [latest ddev release](https://github.com/drud/ddev/releases) tarball and locate the ddev_bash_completions.sh inside it. This can be installed wherever your bash_completions.d is. For example, `cp ddev_bash_completions.sh /etc/bash_completion.d/ddev`.
