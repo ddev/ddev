@@ -20,7 +20,7 @@ ddev requires ports 80 and 443 to be available for use on your system when proje
 
 If you need to use another environment after using ddev, just stop or remove all of your ddev projects. ddev only occupies system ports when at least one project is running.
 
-## Installation
+## Installation / upgrade
 ### Homebrew - macOS
 
 For macOS users, we recommend downloading and installing ddev via [homebrew](https://brew.sh/):
@@ -38,6 +38,9 @@ Linux and macOS end-users can use this line of code to your terminal to download
 ```
 curl https://raw.githubusercontent.com/drud/ddev/master/install_ddev.sh | bash
 ```
+
+Later, to upgrade ddev to the newest version, just run the aforementioned `install_ddev.sh` script again.
+
 
 ### Manual Installation - Linux and macOS
 You can also easily perform the installation manually if preferred:
