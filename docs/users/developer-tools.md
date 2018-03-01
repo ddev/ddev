@@ -23,8 +23,6 @@ http://mysite.ddev.local:8025
 
 Please note this will not intercept emails if your application is configured to use SMTP or a 3rd-party ESP integration. If you are using SMTP for outgoing mail handling ([Swiftmailer](https://www.drupal.org/project/swiftmailer) or [SMTP](https://www.drupal.org/project/smtp) modules for example), update your application configuration to use `localhost` on port `1025` as the SMTP server locally in order to use MailHog.
 
-MailHog provides several [configuration options](https://github.com/mailhog/MailHog/blob/master/docs/CONFIG.md). If you need to alter its configuration, you can do so by adding the desired environment variable to the `environment` section for the web container in the `.ddev/docker-compose.yaml` for your project.
-
 ## Using Development Tools on the Host Machine
 
 It is possible in many cases to use development tools installed on your host machine on a project provisioned by ddev. Tools that interact with files and require no database connection, such as Git or Composer, can be run from the host machine against the code base for a ddev project with no additional configuration necessary.
