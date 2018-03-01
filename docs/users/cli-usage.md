@@ -35,7 +35,7 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started example-wordpress-site
-Your project can be reached at: http://example-wordpress-site.ddev.local
+Your project can be reached at: http://example-wordpress-site.ddev.local and https://example-wordpress-site.ddev.local
 ```
 
 Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
