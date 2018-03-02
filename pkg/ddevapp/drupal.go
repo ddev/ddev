@@ -12,6 +12,7 @@ import (
 
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
@@ -386,26 +387,47 @@ func setDrupalSiteSettingsPaths(app *DdevApp) {
 	app.SiteLocalSettingsPath = localSettingsFilePath
 }
 
+func isDrupalApp(app *DdevApp) bool {
+	file, err := os.Open(filepath.Join(app.AppRoot, app.Docroot, "index.php"))
+	if err != nil {
+		return false
+	}
+	buffer := make([]byte, 3178)
+	_, err = file.Read(buffer)
+	if err != nil {
+		_ = file.Close()
+		return false
+	}
+	_ = file.Close()
+	return strings.Index(string(buffer), "Drupal") > -1
+}
+
 // isDrupal7App returns true if the app is of type drupal7
 func isDrupal7App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ajax.js")); err == nil {
-		return true
+	if isDrupalApp(app) {
+		if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "core/composer.json")); err != nil {
+			return true
+		}
 	}
 	return false
 }
 
 // isDrupal8App returns true if the app is of type drupal8
 func isDrupal8App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "core/scripts/drupal.sh")); err == nil {
-		return true
+	if isDrupalApp(app) {
+		if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "core/composer.json")); err == nil {
+			return true
+		}
 	}
 	return false
 }
 
 // isDrupal6App returns true if the app is of type Drupal6
 func isDrupal6App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ahah.js")); err == nil {
-		return true
+	if isDrupalApp(app) {
+		if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ahah.js")); err == nil {
+			return true
+		}
 	}
 	return false
 }
