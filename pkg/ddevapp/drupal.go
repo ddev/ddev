@@ -2,11 +2,9 @@ package ddevapp
 
 import (
 	"fmt"
-	"io/ioutil"
 
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/appports"
-	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 
