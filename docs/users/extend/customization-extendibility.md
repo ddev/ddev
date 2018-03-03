@@ -24,5 +24,17 @@ The default web container for ddev uses NGINX as the web server. A default confi
 - Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, check your container.
 - Changes to .ddev/nginx-site.conf take place only after you do a `ddev rm` followed by `ddev start`.
 
+## Providing custom PHP configuration (php.ini)
+
+You can provide an alternate PHP configuration for a project as .ddev/php.ini. After `ddev rm` and `ddev start` you should see the behavior of your PHP configuration.
+
+For starter PHP configurations, you can use the php.ini files found under the [fpm configuration](https://github.com/drud/docker.nginx-php-fpm-local/tree/master/files/etc/php) in each version of php.
+
+## Providing custom mysql/MariaDB configuration (my.cnf)
+
+You can provide an alternate /etc/my.cnf file for MariaDB by placing it in .ddev/my.cnf. After `ddev rm` and `ddev start` you should see the database server behavior change.
+
+For a starter /etc/my.cnf, see the [my.cnf used by default](https://github.com/drud/mariadb-local/blob/master/files/etc/my.cnf)
+
 ## Overriding default container images
 The default container images provided by ddev are defined in the `config.yaml` file in the `.ddev` folder of your project. This means that _defining_ an alternative image for default services is as simple as changing the image definition in `config.yaml`. In practice, however, ddev currently has certain expectations and assumptions for what the web and database containers provide. At this time, it is recommended that the default container projects be referenced or used as a starting point for developing an alternative image. If you encounter difficulties integrating alternative images, please [file an issue and let us know](https://github.com/drud/ddev/issues/new).
