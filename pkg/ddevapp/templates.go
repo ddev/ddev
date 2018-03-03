@@ -11,7 +11,7 @@ services:
     volumes:
       - "${DDEV_IMPORTDIR}:/db"
       - "${DDEV_DATADIR}:/var/lib/mysql"
-    restart: always
+    restart: "no"
     ports:
       - "3306"
     labels:
@@ -28,7 +28,7 @@ services:
     image: $DDEV_WEBIMAGE
     volumes:
       - "../:/var/www/html:cached"
-    restart: always
+    restart: "no"
     depends_on:
       - db
     links:
@@ -64,7 +64,7 @@ services:
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
-    restart: always
+    restart: "no"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .plugin }}
@@ -173,7 +173,7 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./certs:/etc/nginx/certs:cached
-    restart: always
+    restart: "always"
 networks:
    default:
      external:
