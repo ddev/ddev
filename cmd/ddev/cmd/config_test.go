@@ -43,6 +43,7 @@ func TestConfigDescribeLocation(t *testing.T) {
 
 }
 
+// TestConfigWithSitenameFlagDetectsDocroot tests docroot detected when flags passed.
 func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 	assert := asrt.New(t)
 

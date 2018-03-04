@@ -372,7 +372,10 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 	var defaultDocroot = app.Docroot
 	if defaultDocroot == "" {
 		for _, docroot := range AvailableDocrootLocations() {
-			if _, err := os.Stat(docroot); err == nil {
+			if _, err := os.Stat(docroot); err != nil {
+				continue
+			}
+			if fileutil.FileExists(docroot + "/index.php") {
 				defaultDocroot = docroot
 				break
 			}
