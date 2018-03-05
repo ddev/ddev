@@ -14,15 +14,15 @@ var continuous bool
 // DevListCmd represents the list command
 var DevListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List applications",
-	Long:  `List applications.`,
+	Short: "List projects",
+	Long:  `List projects.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for {
 			apps := ddevapp.GetApps()
 			var appDescs []map[string]interface{}
 
 			if len(apps) < 1 {
-				output.UserOut.Println("There are no running ddev applications.")
+				output.UserOut.Println("There are no running ddev projects.")
 			} else {
 				table := ddevapp.CreateAppTable()
 				for _, app := range apps {
