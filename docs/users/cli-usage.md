@@ -124,8 +124,6 @@ cd example-typo3-site
 
 If necessary, run build steps that you may require, like `composer install` in the correct directory.
 
-_Note: ddev assumes that the files created by a TYPO3 install have already been created, including the typo3conf, typo3temp, uploads, and fileadmin directories._
-
 From here we can start setting up ddev. In your project's working directory, enter the command:
 
 ```
@@ -133,6 +131,11 @@ ddev config
 ```
 
 _Note: ddev config will prompt you for a project name, docroot, and project type._
+
+* the project name will be part of the URL, so make sure to avoid whitespace, underscores and special characters to avoid problems down the road.
+* after the command run through, prepare to edit the generated config.yaml file:
+** review the php version, whether it works for you.
+** review the ports the system wants to use. If you run a local stack already, you will need to adjust here, or shut down your local stack. More infos here: https://ddev.readthedocs.io/en/latest/users/troubleshooting/#unable-listen
 
 After you've run `ddev config`, you're ready to start running your project. To start running ddev, simply enter:
 
@@ -146,6 +149,8 @@ ddev start
 Successfully started example-typo3-site
 Your application can be reached at: http://example-typo3-site.ddev.local
 ```
+
+You will now probably be interested into creating / adjusting DB credentials, the information how to do this is here: https://ddev.readthedocs.io/en/latest/users/developer-tools/#using-development-tools-on-the-host-machine.
 
 ### Backdrop Quickstart
 
