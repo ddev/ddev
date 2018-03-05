@@ -53,10 +53,12 @@ func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 	// Create a document root folder.
-	err := os.MkdirAll(filepath.Join(tmpdir, filepath.Join(testDocrootName)), 0755)
+	err := os.MkdirAll(filepath.Join(tmpdir, testDocrootName), 0755)
 	if err != nil {
 		t.Errorf("Could not create %s directory under %s", testDocrootName, tmpdir)
 	}
+	_, err = os.OpenFile(filepath.Join(tmpdir, testDocrootName, "index.php"), os.O_RDONLY|os.O_CREATE, 0666)
+	assert.NoError(err)
 
 	expectedPath := "web/core/scripts/drupal.sh"
 	err = os.MkdirAll(filepath.Join(tmpdir, filepath.Dir(expectedPath)), 0777)
