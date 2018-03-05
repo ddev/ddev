@@ -173,7 +173,7 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./certs:/etc/nginx/certs:cached
-    restart: "always"
+    restart: "no"
 networks:
    default:
      external:
