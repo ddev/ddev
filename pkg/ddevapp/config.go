@@ -203,7 +203,7 @@ func (app *DdevApp) ReadConfig() error {
 // WarnIfConfigReplace just messages user about whether config is being replaced or created
 func (app *DdevApp) WarnIfConfigReplace() {
 	if app.ConfigExists() {
-		util.Warning("You are reconfiguring the app at %s. \nThe existing configuration will be updated and replaced.", app.AppRoot)
+		util.Warning("You are reconfiguring the project at %s. \nThe existing configuration will be updated and replaced.", app.AppRoot)
 	} else {
 		util.Success("Creating a new ddev project config in the current directory (%s)", app.AppRoot)
 		util.Success("Once completed, your configuration will be written to %s\n", app.ConfigPath)
