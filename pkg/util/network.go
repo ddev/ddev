@@ -16,7 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// DownloadFile retreives a file.
+// DownloadFile retrieves a file.
 func DownloadFile(fp string, url string, progressBar bool) (err error) {
 	// Create the file
 	out, err := os.Create(fp)
