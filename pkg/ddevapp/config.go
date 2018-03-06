@@ -354,6 +354,36 @@ func (app *DdevApp) promptForName() error {
 	return provider.ValidateField("Name", app.Name)
 }
 
+// AvailableDocrootLocations returns an of default docroot locations to look for.
+func AvailableDocrootLocations() []string {
+	return []string{
+		"web/public",
+		"web",
+		"docroot",
+		"htdocs",
+		"_www",
+		"public",
+	}
+}
+
+// DiscoverDefaultDocroot returns the default docroot directory.
+func DiscoverDefaultDocroot(app *DdevApp) string {
+	// Provide use the app.Docroot as the default docroot option.
+	var defaultDocroot = app.Docroot
+	if defaultDocroot == "" {
+		for _, docroot := range AvailableDocrootLocations() {
+			if _, err := os.Stat(docroot); err != nil {
+				continue
+			}
+			if fileutil.FileExists(filepath.Join(docroot, "index.php")) {
+				defaultDocroot = docroot
+				break
+			}
+		}
+	}
+	return defaultDocroot
+}
+
 // Determine the document root.
 func (app *DdevApp) docrootPrompt() error {
 	provider, err := app.GetProvider()
@@ -365,12 +395,16 @@ func (app *DdevApp) docrootPrompt() error {
 	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)", app.AppRoot)
 	output.UserOut.Println("You may leave this value blank if your site files are in the application root")
 	var docrootPrompt = "Docroot Location"
-	if app.Docroot != "" {
-		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, app.Docroot)
+	var defaultDocroot = DiscoverDefaultDocroot(app)
+	// If there is a default docroot, display it in the prompt.
+	if defaultDocroot != "" {
+		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
+	} else {
+		docrootPrompt = fmt.Sprintf("%s (current directory)", docrootPrompt)
 	}
 
 	fmt.Print(docrootPrompt + ": ")
-	app.Docroot = util.GetInput(app.Docroot)
+	app.Docroot = util.GetInput(defaultDocroot)
 
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(app.AppRoot, app.Docroot)
