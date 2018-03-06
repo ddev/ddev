@@ -7,47 +7,47 @@
 ## System Requirements
 
 - [Docker](https://www.docker.com/community-edition) version 17.05 or higher
-- docker-compose 1.10.0 and higher (bundled with Docker in Docker for Mac and Docker for Windows)
+- docker-compose 1.10.0 and higher (bundled in Docker for Mac and Docker for Windows)
 - OS Support 
-  - macOS Sierra and higher (macOS 10.12 and higher)
+  - macOS Sierra and higher (macOS 10.12 and higher but it probably runs anywhere docker runs)
   - Linux (See [Linux notes](users/linux_notes.md)): Most recent Linux distributions which can run Docker are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+
   - Windows 10 Pro
 
 We are open to expanding this list to include additional OSs as well as improve our existing support for the ones listed above. Please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue!
 
 ### Using ddev with other development environments
-ddev requires ports 80 and 443 to be available for use on your system when projects are running. If you are using another local development environment alongside ddev, please ensure the other environment is turned off or otherwise not occupying ports 80 and 443.
-
-If you need to use another environment after using ddev, just stop or remove all of your ddev projects. ddev only occupies system ports when at least one project is running.
+ddev by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure ddev to use different ports. See [troubleshooting](https://ddev.readthedocs.io/en/latest/users/troubleshooting/#webserver-ports-are-already-occupied-by-another-webserver) for more detailed problemsolving.
 
 ## Installation
 ### Homebrew - macOS
 
-For macOS users, we recommend downloading and installing ddev via [homebrew](https://brew.sh/):
+For macOS users, we recommend downloading, installing, and upgrading via [homebrew](https://brew.sh/):
 ```
 brew tap drud/ddev && brew install ddev
 ```
-Later, to upgrade to a newer version of ddev, simply run:
-```
-brew upgrade ddev
-```
 
-### Installation Script - Linux and macOS
+Use `brew upgrade ddev` to upgrade.
 
-Linux and macOS end-users can use this line of code to your terminal to download, verify, and install ddev using our [install script](https://github.com/drud/ddev/blob/master/install_ddev.sh):
+
+### Installation/Upgrade Script - Linux and macOS
+
+Linux and macOS end-users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/install_ddev.sh):
+
 ```
 curl https://raw.githubusercontent.com/drud/ddev/master/install_ddev.sh | bash
 ```
 
-### Manual Installation - Linux and macOS
-You can also easily perform the installation manually if preferred:
+Later, to upgrade ddev to the latest version, just run `install_ddev.sh` again.
+
+
+### Manual Installation or Upgrade - Linux and macOS
+You can also easily perform the installation or upgrade manually if preferred. ddev is just a single executable, no special installation is actually required, so for all operating systems, the installation is just copying ddev into place where it's in the system path.
 
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
-- Make ddev executable: `chmod ugo+x ddev`
 - Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
 - Run `ddev` to test your installation. You should see ddev's command usage output.
 
-### Manual Installation - Windows
+### Manual Installation or Upgrade - Windows
 
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for Windows.
 - Copy `ddev.exe` into `%HOMEPATH%\AppData\Local\Microsoft\WindowsApps`, or otherwise add `ddev.exe` to a folder defined in your `PATH`
