@@ -203,7 +203,7 @@ func (app *DdevApp) ReadConfig() error {
 // WarnIfConfigReplace just messages user about whether config is being replaced or created
 func (app *DdevApp) WarnIfConfigReplace() {
 	if app.ConfigExists() {
-		util.Warning("You are reconfiguring the app at %s. \nThe existing configuration will be updated and replaced.", app.AppRoot)
+		util.Warning("You are reconfiguring the project at %s. \nThe existing configuration will be updated and replaced.", app.AppRoot)
 	} else {
 		util.Success("Creating a new ddev project config in the current directory (%s)", app.AppRoot)
 		util.Success("Once completed, your configuration will be written to %s\n", app.ConfigPath)
@@ -392,8 +392,8 @@ func (app *DdevApp) docrootPrompt() error {
 	}
 
 	// Determine the document root.
-	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)", app.AppRoot)
-	output.UserOut.Println("You may leave this value blank if your site files are in the application root")
+	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your project root (%s)", app.AppRoot)
+	output.UserOut.Println("You may leave this value blank if your site files are in the project root")
 	var docrootPrompt = "Docroot Location"
 	var defaultDocroot = DiscoverDefaultDocroot(app)
 	// If there is a default docroot, display it in the prompt.
@@ -431,7 +431,7 @@ func (app *DdevApp) appTypePrompt() error {
 		return err
 	}
 	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
-	typePrompt := fmt.Sprintf("Application Type [%s]", validAppTypes)
+	typePrompt := fmt.Sprintf("Project Type [%s]", validAppTypes)
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
 
@@ -446,7 +446,7 @@ func (app *DdevApp) appTypePrompt() error {
 	appType := strings.ToLower(util.GetInput(detectedAppType))
 
 	for !IsValidAppType(appType) {
-		output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, validAppTypes)
+		output.UserOut.Errorf("'%s' is not a valid project type. Allowed project types are: %s\n", appType, validAppTypes)
 
 		fmt.Printf(typePrompt + ": ")
 		appType = strings.ToLower(util.GetInput(appType))

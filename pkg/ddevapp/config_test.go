@@ -182,7 +182,7 @@ func TestConfigCommand(t *testing.T) {
 		// Ensure we have expected vales in output.
 		assert.Contains(out, testDir)
 		assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
-		assert.Contains(out, fmt.Sprintf("'%s' is not a valid application type", invalidAppType))
+		assert.Contains(out, fmt.Sprintf("'%s' is not a valid project type", invalidAppType))
 
 		// Ensure values were properly set on the app struct.
 		assert.Equal(name, app.Name)

@@ -26,13 +26,13 @@ func TestDescribeBadArgs(t *testing.T) {
 	args := []string{"describe"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Please specify a site name or change directories")
+	assert.Contains(string(out), "Please specify a project name or change directories")
 
 	// Ensure we get a failure if we run a describe on a named application which does not exist.
 	args = []string{"describe", util.RandString(16)}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Unable to find any active site")
+	assert.Contains(string(out), "Unable to find any active project")
 
 	// Ensure we get a failure if using too many arguments.
 	args = []string{"describe", util.RandString(16), util.RandString(16)}

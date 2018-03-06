@@ -10,12 +10,12 @@ var removeData bool
 
 // DdevRemoveCmd represents the remove command
 var DdevRemoveCmd = &cobra.Command{
-	Use:     "remove [sitename]",
+	Use:     "remove [projectname]",
 	Aliases: []string{"rm"},
-	Short:   "Remove the development environment for a site.",
-	Long: `Remove the development environment for a site. You can run 'ddev remove'
-from a site directory to remove that site, or you can specify a site to remove
-by running 'ddev remove <sitename>'. By default, remove is a non-destructive operation and will
+	Short:   "Remove the development environment for a project.",
+	Long: `Remove the development environment for a project. You can run 'ddev remove'
+from a project directory to remove that project, or you can specify a project to remove
+by running 'ddev remove <projectname>'. By default, remove is a non-destructive operation and will
 leave database contents intact. Remove never touches your code or files directories.
 
 To remove database contents, you may use the --remove-data flag with remove.`,
@@ -36,7 +36,7 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 		}
 
 		if app.SiteStatus() == ddevapp.SiteNotFound {
-			util.Failed("App not currently running. Try 'ddev start'.")
+			util.Failed("Project is not currently running. Try 'ddev start'.")
 		}
 
 		err = app.Down(removeData)
@@ -44,11 +44,11 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 			util.Failed("Failed to remove %s: %s", app.GetName(), err)
 		}
 
-		util.Success("Successfully removed the %s application.", app.GetName())
+		util.Success("Successfully removed the %s project.", app.GetName())
 	},
 }
 
 func init() {
-	DdevRemoveCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored application data (MySQL, logs, etc.)")
+	DdevRemoveCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored project data (MySQL, logs, etc.)")
 	RootCmd.AddCommand(DdevRemoveCmd)
 }

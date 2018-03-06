@@ -12,14 +12,14 @@ import (
 
 // DescribeCommand represents the `ddev config` command
 var DescribeCommand = &cobra.Command{
-	Use:   "describe [sitename]",
-	Short: "Get a detailed description of a running ddev site.",
-	Long: `Get a detailed description of a running ddev site. Describe provides basic
-information about a ddev site, including its name, location, url, and status.
+	Use:   "describe [projectname]",
+	Short: "Get a detailed description of a running ddev project.",
+	Long: `Get a detailed description of a running ddev project. Describe provides basic
+information about a ddev project, including its name, location, url, and status.
 It also provides details for MySQL connections, and connection information for
 additional services like MailHog and phpMyAdmin. You can run 'ddev describe' from
-a site directory to stop that site, or you can specify a site to describe by
-running 'ddev stop <sitename>.`,
+a project directory to stop that project, or you can specify a project to describe by
+running 'ddev stop <projectname>.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var siteName string
 
@@ -33,17 +33,17 @@ running 'ddev stop <sitename>.`,
 
 		site, err := ddevapp.GetActiveApp(siteName)
 		if err != nil {
-			util.Failed("Unable to find any active site named %s: %v", siteName, err)
+			util.Failed("Unable to find any active project named %s: %v", siteName, err)
 		}
 
 		// Do not show any describe output if we can't find the site.
 		if site.SiteStatus() == ddevapp.SiteNotFound {
-			util.Failed("no site found. have you run 'ddev start'?")
+			util.Failed("no project found. have you run 'ddev start'?")
 		}
 
 		desc, err := site.Describe()
 		if err != nil {
-			util.Failed("Failed to describe site %s: %v", err)
+			util.Failed("Failed to describe project %s: %v", err)
 		}
 
 		renderedDesc, err := renderAppDescribe(desc)

@@ -29,7 +29,7 @@ func TestDevLogsNoConfig(t *testing.T) {
 	args := []string{"logs"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Please specify a site name or change directories")
+	assert.Contains(string(out), "Please specify a project name or change directories")
 }
 
 // TestDevLogs tests that the Dev logs functionality is working.

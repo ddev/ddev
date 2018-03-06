@@ -243,7 +243,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 
 	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
-	assert.Contains(err.Error(), "Could not find a site")
+	assert.Contains(err.Error(), "Could not find a project")
 }
 
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
@@ -565,7 +565,7 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 
 	out := app.Stop()
 	assert.Error(out)
-	assert.Contains(out.Error(), "If you would like to continue using ddev to manage this site please restore your files to that directory.")
+	assert.Contains(out.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
