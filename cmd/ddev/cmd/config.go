@@ -32,7 +32,7 @@ var appType string
 var showConfigLocation bool
 
 // ConfigCommand represents the `ddev config` command
-var ConfigCommand = &cobra.Command{
+var ConfigCommand *cobra.Command = &cobra.Command{
 	Use:   "config [provider]",
 	Short: "Create or modify a ddev project configuration in the current directory",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -45,7 +45,7 @@ var ConfigCommand = &cobra.Command{
 		provider := ddevapp.DefaultProviderName
 
 		if len(args) > 1 {
-			output.UserOut.Fatal("Invalid argument detected. Please use 'ddev config' or 'ddev config [provider]' to configure a site.")
+			output.UserOut.Fatal("Invalid argument detected. Please use 'ddev config' or 'ddev config [provider]' to configure a project.")
 		}
 
 		if len(args) == 1 {
@@ -82,7 +82,7 @@ var ConfigCommand = &cobra.Command{
 		if siteName == "" && docrootRelPath == "" && pantheonEnvironment == "" && appType == "" {
 			err = app.PromptForConfig()
 			if err != nil {
-				util.Failed("There was a problem configuring your application: %v", err)
+				util.Failed("There was a problem configuring your project: %v", err)
 			}
 		} else { // In this case we have to validate the provided items, or set to sane defaults
 
@@ -107,7 +107,10 @@ var ConfigCommand = &cobra.Command{
 				if _, err = os.Stat(docrootRelPath); os.IsNotExist(err) {
 					util.Failed("The docroot provided (%v) does not exist", docrootRelPath)
 				}
+			} else if !cmd.Flags().Changed("docroot") {
+				app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
 			}
+
 			// pantheonEnvironment must be appropriate, and can only be used with pantheon provider.
 			if provider != "pantheon" && pantheonEnvironment != "" {
 				util.Failed("--pantheon-environment can only be used with pantheon provider, for example 'ddev config pantheon --pantheon-environment=dev --docroot=docroot'")
@@ -127,9 +130,9 @@ var ConfigCommand = &cobra.Command{
 				appType = detectedApptype
 				util.Success("Found a %s codebase at %s", detectedApptype, fullPath)
 			} else if appType != "" { // apptype was passed, but we found no app at all
-				util.Warning("You have specified an apptype of %s but no app of that type is found in %s", appType, fullPath)
+				util.Warning("You have specified a project type of %s but no project of that type is found in %s", appType, fullPath)
 			} else if appType != "" && detectedApptype != appType { // apptype was passed, app was found, but not the same type
-				util.Warning("You have specified an apptype of %s but an app of type %s was discovered in %s", appType, detectedApptype, fullPath)
+				util.Warning("You have specified a project type of %s but a project of type %s was discovered in %s", appType, detectedApptype, fullPath)
 			}
 			app.Type = appType
 
@@ -173,14 +176,20 @@ var ConfigCommand = &cobra.Command{
 func init() {
 	validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
 	apptypeUsage := fmt.Sprintf("Provide the project type (one of %s). This is autodetected and this flag is necessary only to override the detection.", validAppTypes)
+	projectNameUsage := fmt.Sprintf("Provide the project name of project to configure (normally the same as the last part of directory name)")
 
-	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", "Provide the sitename of site to configure (normally the same as the directory name)")
-	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the site, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
+	ConfigCommand.Flags().StringVarP(&siteName, "projectname", "", "", projectNameUsage)
+	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
 	ConfigCommand.Flags().StringVarP(&pantheonEnvironment, "pantheon-environment", "", "", "Choose the environment for a Pantheon site (dev/test/prod) (Pantheon-only)")
 	ConfigCommand.Flags().StringVarP(&appType, "projecttype", "", "", apptypeUsage)
 	// apptype flag is there for backwards compatibility.
 	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
 	ConfigCommand.Flags().BoolVarP(&showConfigLocation, "show-config-location", "", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
+	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", projectNameUsage+" This is the same as projectname and is included only for backwards compatibility")
+	err := ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --projectname")
+	util.CheckErr(err)
+	err = ConfigCommand.Flags().MarkDeprecated("apptype", "The apptype flag is deprecated in favor of --projecttype")
+	util.CheckErr(err)
 
 	RootCmd.AddCommand(ConfigCommand)
 }

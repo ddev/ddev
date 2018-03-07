@@ -23,7 +23,7 @@ From here we can start setting up ddev. Inside your project's working directory,
 ddev config
 ```
 
-_Note: ddev config will prompt you for a project name, docroot, and app type._
+_Note: ddev config will prompt you for a project name, docroot, and project type._
 
 After `ddev config`, you're ready to start running your project. Run ddev using:
 
@@ -98,7 +98,7 @@ The next step is to configure ddev. In your project's working directory, enter t
 ddev config
 ```
 
-_Note: ddev config will prompt you for a project name, docroot, and app type._
+_Note: ddev config will prompt you for a project name, docroot, and project type._
 
 After `ddev config`, you're ready to start running your project. Run ddev using:
 
@@ -124,8 +124,6 @@ cd example-typo3-site
 
 If necessary, run build steps that you may require, like `composer install` in the correct directory.
 
-_Note: ddev assumes that the files created by a site install have already been created, including the typo3conf, typo3temp, uploads, and fileadmin directories._
-
 From here we can start setting up ddev. In your project's working directory, enter the command:
 
 ```
@@ -134,7 +132,12 @@ ddev config
 
 _Note: ddev config will prompt you for a project name, docroot, and project type._
 
-After `ddev config`, you're ready to start running your project. Run ddev using:
+* The project name will be part of the URL, so make sure to avoid whitespace, underscores and special characters to avoid problems down the road.
+* After the command runs through, prepare to edit the generated config.yaml file:
+** Review the PHP version. Available options: 5.6, 7.0, 7.1, and 7.2.
+** Review the ports the system wants to use. If you run a local stack already, you will need to adjust here, or shut down your local stack. See [additional troubleshooting information here](https://ddev.readthedocs.io/en/latest/users/troubleshooting/#unable-listen).
+
+After you've run `ddev config`, you're ready to start running your project. To start running ddev, simply enter:
 
 ```
 ddev start
@@ -146,6 +149,8 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 Successfully started example-typo3-site
 Your application can be reached at: http://example-typo3-site.ddev.local
 ```
+
+For those wanting/needing to connect to the database within the database container directly, please see the [developer tools page](https://ddev.readthedocs.io/en/latest/users/developer-tools/#using-development-tools-on-the-host-machine).
 
 ### Backdrop Quickstart
 
@@ -193,7 +198,7 @@ ddev import-db --src=dumpfile.sql.gz
 
 For in-depth application monitoring, use the command `ddev describe` to see details about the status of your ddev app.
 
-**Note for Backdrop users:** In addition to importing a Backdrop database, you will need to extract a copy of your Backdrop site's configuration into the local `active` directory. The location for this directory can vary depending on the contents of your Backdrop `settings.php` file, but the default location is `[docroot]/files/config_[random letters and numbers]/active`. Please refer to the Backdrop documentation for more information on [moving your Backdrop site](https://backdropcms.org/user-guide/moving-backdrop-site) into the `ddev` environment.
+**Note for Backdrop users:** In addition to importing a Backdrop database, you will need to extract a copy of your Backdrop project's configuration into the local `active` directory. The location for this directory can vary depending on the contents of your Backdrop `settings.php` file, but the default location is `[docroot]/files/config_[random letters and numbers]/active`. Please refer to the Backdrop documentation for more information on [moving your Backdrop site](https://backdropcms.org/user-guide/moving-backdrop-site) into the `ddev` environment.
 
 ## Getting Started
 
@@ -210,7 +215,7 @@ Once completed, your configuration will be written to /Users/username/Projects/d
 
 Project name (drupal8):
 
-The docroot is the directory from which your site is served. This is a relative path from your application root (/Users/username/Projects/drupal8)
+The docroot is the directory from which your site is served. This is a relative path from your project root (/Users/username/Projects/drupal8)
 You may leave this value blank if your site files are in the application root
 Docroot Location: web
 Found a drupal8 codebase at /Users/username/Projects/drupal8/web

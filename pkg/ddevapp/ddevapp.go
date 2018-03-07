@@ -287,8 +287,8 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		if strings.Contains(err.Error(), "settings files already exist and are being managed") {
 			return fmt.Errorf("failed to write settings file for %s: %v", app.GetName(), err)
 		}
-		util.Warning("A custom settings file exists for your application, so ddev did not generate one.")
-		util.Warning("Run 'ddev describe' to find the database credentials for this application.")
+		util.Warning("A custom settings file exists for your project, so ddev did not generate one.")
+		util.Warning("Run 'ddev describe' to find the database credentials for this project.")
 	}
 
 	err = app.PostImportDBAction()
@@ -734,7 +734,7 @@ func (app *DdevApp) Stop() error {
 	}
 
 	if strings.Contains(app.SiteStatus(), SiteDirMissing) || strings.Contains(app.SiteStatus(), SiteConfigMissing) {
-		return fmt.Errorf("ddev can no longer find your application files at %s. If you would like to continue using ddev to manage this site please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev remove %s'", app.GetAppRoot(), app.GetName())
+		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev remove %s'", app.GetAppRoot(), app.GetName())
 	}
 
 	_, _, err := dockerutil.ComposeCmd(app.ComposeFiles(), "stop")
@@ -788,7 +788,6 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 // Down stops the docker containers for the project in current directory.
 func (app *DdevApp) Down(removeData bool) error {
 	app.DockerEnv()
-	settingsFilePath := app.SiteSettingsPath
 
 	// Remove all the containers and volumes for app.
 	err := Cleanup(app)
@@ -798,29 +797,15 @@ func (app *DdevApp) Down(removeData bool) error {
 
 	// Remove data/database if we need to.
 	if removeData {
-		if fileutil.FileExists(settingsFilePath) {
-			signatureFound, err := fileutil.FgrepStringInFile(settingsFilePath, DdevFileSignature)
-			util.CheckErr(err) // Really can't happen as we already checked for the file existence
-			if signatureFound {
-				err = os.Chmod(settingsFilePath, 0644)
-				if err != nil {
-					return err
-				}
-				err = os.Remove(settingsFilePath)
-				if err != nil {
-					return err
-				}
-			}
-		}
 		// Check that app.DataDir is a directory that is safe to remove.
 		err = validateDataDirRemoval(app)
 		if err != nil {
-			return fmt.Errorf("failed to remove data directories: %v", err)
+			return fmt.Errorf("failed to remove data/database directories: %v", err)
 		}
 		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
 		// are writable before we attempt to remove them.
 		if !fileutil.FileExists(app.DataDir) {
-			util.Warning("No application data to remove")
+			util.Warning("No project data/database to remove")
 		} else {
 			err := fileutil.PurgeDirectory(app.DataDir)
 			if err != nil {
@@ -831,7 +816,7 @@ func (app *DdevApp) Down(removeData bool) error {
 			if err != nil {
 				return fmt.Errorf("failed to remove data directory %s: %v", app.DataDir, err)
 			}
-			util.Success("Application data removed")
+			util.Success("Project data/database removed")
 		}
 	}
 
@@ -937,7 +922,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		}
 		_, err = CheckForConf(siteDir)
 		if err != nil {
-			return "", fmt.Errorf("Could not find a site in %s. Have you run 'ddev config'? Please specify a site name or change directories: %s", siteDir, err)
+			return "", fmt.Errorf("Could not find a project in %s. Have you run 'ddev config'? Please specify a project name or change directories: %s", siteDir, err)
 		}
 	} else {
 		var ok bool
@@ -949,7 +934,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 
 		webContainer, err := dockerutil.FindContainerByLabels(labels)
 		if err != nil {
-			return "", fmt.Errorf("could not find a site named '%s'. Run 'ddev list' to see currently active sites", siteName)
+			return "", fmt.Errorf("could not find a project named '%s'. Run 'ddev list' to see currently active projects", siteName)
 		}
 
 		siteDir, ok = webContainer.Labels["com.ddev.approot"]

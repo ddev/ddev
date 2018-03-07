@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -26,33 +27,62 @@ import (
 var (
 	TestSites = []testcommon.TestSite{
 		{
-			Name:                          "TestMainPkgWordpress",
+			Name:                          "TestPkgWordpress",
 			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
 			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
-			DocrootBase:                   "htdocs",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
+			Docroot:                       "htdocs",
+			Type:                          "wordpress",
 		},
 		{
-			Name:                          "TestMainPkgDrupal8",
+			Name:                          "TestPkgDrupal8",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.4.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-8.4.0/",
-			FilesTarballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.tar.gz",
-			FilesZipballURL:               "https://github.com/drud/drupal8/releases/download/v0.6.0/files.zip",
-			DBTarURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.tar.gz",
-			DBZipURL:                      "https://github.com/drud/drupal8/releases/download/v0.6.0/db.zip",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_files.tar.gz",
+			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_files.zip",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.tar.gz",
+			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.zip",
 			FullSiteTarballURL:            "",
 			Type:                          "drupal8",
-			DocrootBase:                   "",
+			Docroot:                       "",
 		},
 		{
-			Name:                          "TestMainPkgDrupalKickstart",
+			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
 			SourceURL:                     "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-kickstart-0.4.0/",
 			FilesTarballURL:               "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
 			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
-			DocrootBase:                   "docroot",
+			Docroot:                       "docroot",
+			Type:                          "drupal7",
+		},
+		{
+			Name:                          "TestPkgDrupal6",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-6.38/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal6_db.tar.gz",
+			FullSiteTarballURL:            "",
+			Docroot:                       "",
+			Type:                          "drupal6",
+		},
+		{
+			Name:                          "TestPkgBackdrop",
+			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.9.2.tar.gz",
+			ArchiveInternalExtractionPath: "backdrop-1.9.2/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/backdrop_db.tar.gz",
+			FullSiteTarballURL:            "",
+			Docroot:                       "",
+			Type:                          "backdrop",
+		},
+		{
+			Name:                          "TestPkgTypo3",
+			SourceURL:                     "https://typo3.azureedge.net/typo3/8.7.10/typo3_src-8.7.10.tar.gz",
+			ArchiveInternalExtractionPath: "typo3_src-8.7.10/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/typo3git_db.tar.gz",
+			FullSiteTarballURL:            "",
+			Docroot:                       "",
+			Type:                          "typo3",
 		},
 	}
 )
@@ -76,10 +106,21 @@ func TestMain(m *testing.M) {
 		log.Fatalf("ddevapp tests require no sites running. You have %v site(s) running.", count)
 	}
 
-	if os.Getenv("GOTEST_SHORT") != "" {
-		TestSites = []testcommon.TestSite{TestSites[0]}
+	// If GOTEST_SHORT is an integer, then use it as index for a single usage
+	// in the array. Any value can be used, it will default to just using the
+	// first site in the array.
+	gotestShort := os.Getenv("GOTEST_SHORT")
+	if gotestShort != "" {
+		useSite := 0
+		if site, err := strconv.Atoi(gotestShort); err == nil && site >= 0 && site < len(TestSites) {
+			useSite = site
+		}
+		TestSites = []testcommon.TestSite{TestSites[useSite]}
 	}
 
+	// testRun is the exit result we'll provide.
+	// Start with a clean exit result, it will be changed if we have trouble.
+	testRun := 0
 	for i := range TestSites {
 		err := TestSites[i].Prepare()
 		if err != nil {
@@ -95,20 +136,26 @@ func TestMain(m *testing.M) {
 
 		err = app.Init(TestSites[i].Dir)
 		if err != nil {
-			log.Fatalf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			testRun = -1
+			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			continue
 		}
 
 		err = app.Start()
 		if err != nil {
-			log.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", TestSites[i].Name, err)
+			testRun = -2
+			log.Errorf("TestMain startup: app.Start() failed on site %s, err=%v", TestSites[i].Name, err)
+			continue
 		}
 
 		runTime()
 		switchDir()
 	}
 
-	log.Debugln("Running tests.")
-	testRun := m.Run()
+	if testRun == 0 {
+		log.Debugln("Running tests.")
+		testRun = m.Run()
+	}
 
 	for i, site := range TestSites {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s Remove", site.Name))
@@ -196,7 +243,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 
 	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
-	assert.Contains(err.Error(), "Could not find a site")
+	assert.Contains(err.Error(), "Could not find a project")
 }
 
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
@@ -327,6 +374,7 @@ func TestDdevImportFiles(t *testing.T) {
 		if site.FullSiteTarballURL != "" {
 			_, siteTarPath, err := testcommon.GetCachedArchive(site.Name, "local-site-tar", "", site.FullSiteTarballURL)
 			assert.NoError(err)
+			// TODO: This is totally Drupal-only, and has to be fixed when we do file import for new CMSs
 			err = app.ImportFiles(siteTarPath, "docroot/sites/default/files")
 			assert.NoError(err)
 		}
@@ -358,18 +406,19 @@ func TestDdevExec(t *testing.T) {
 		assert.NoError(err)
 
 		switch app.GetType() {
+		case "drupal6":
+			fallthrough
 		case "drupal7":
 			fallthrough
 		case "drupal8":
 			out, _, err = app.Exec("web", "drush", "status")
 			assert.NoError(err)
+			assert.Regexp("PHP configuration[ :]*/etc/php/[0-9].[0-9]/fpm/php.ini", out)
 		case "wordpress":
 			out, _, err = app.Exec("web", "wp", "--info")
 			assert.NoError(err)
-		default:
+			assert.Regexp("/etc/php.*/php.ini", out)
 		}
-
-		assert.Regexp("/etc/php.*/php.ini", out)
 
 		runTime()
 		switchDir()
@@ -380,6 +429,12 @@ func TestDdevExec(t *testing.T) {
 // TestDdevLogs tests the container log output functionality.
 func TestDdevLogs(t *testing.T) {
 	assert := asrt.New(t)
+
+	// Skip test because on Windows because the CaptureUserOut() hangs, at least
+	// sometimes.
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping test TestDdevLogs on Windows")
+	}
 
 	app := &ddevapp.DdevApp{}
 
@@ -510,7 +565,7 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 
 	out := app.Stop()
 	assert.Error(out)
-	assert.Contains(out.Error(), "If you would like to continue using ddev to manage this site please restore your files to that directory.")
+	assert.Contains(out.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
@@ -635,10 +690,10 @@ func TestRouterPortsCheck(t *testing.T) {
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
 func TestCleanupWithoutCompose(t *testing.T) {
 	assert := asrt.New(t)
+
 	// Skip test because we can't rename folders while they're in use if running on Windows.
 	if runtime.GOOS == "windows" {
-		log.Println("Skipping test TestCleanupWithoutCompose on Windows")
-		t.Skip()
+		t.Skip("Skipping test TestCleanupWithoutCompose on Windows")
 	}
 
 	site := TestSites[0]

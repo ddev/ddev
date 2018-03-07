@@ -203,7 +203,7 @@ func (app *DdevApp) ReadConfig() error {
 // WarnIfConfigReplace just messages user about whether config is being replaced or created
 func (app *DdevApp) WarnIfConfigReplace() {
 	if app.ConfigExists() {
-		util.Warning("You are reconfiguring the app at %s. \nThe existing configuration will be updated and replaced.", app.AppRoot)
+		util.Warning("You are reconfiguring the project at %s. \nThe existing configuration will be updated and replaced.", app.AppRoot)
 	} else {
 		util.Success("Creating a new ddev project config in the current directory (%s)", app.AppRoot)
 		util.Success("Once completed, your configuration will be written to %s\n", app.ConfigPath)
@@ -354,6 +354,36 @@ func (app *DdevApp) promptForName() error {
 	return provider.ValidateField("Name", app.Name)
 }
 
+// AvailableDocrootLocations returns an of default docroot locations to look for.
+func AvailableDocrootLocations() []string {
+	return []string{
+		"web/public",
+		"web",
+		"docroot",
+		"htdocs",
+		"_www",
+		"public",
+	}
+}
+
+// DiscoverDefaultDocroot returns the default docroot directory.
+func DiscoverDefaultDocroot(app *DdevApp) string {
+	// Provide use the app.Docroot as the default docroot option.
+	var defaultDocroot = app.Docroot
+	if defaultDocroot == "" {
+		for _, docroot := range AvailableDocrootLocations() {
+			if _, err := os.Stat(docroot); err != nil {
+				continue
+			}
+			if fileutil.FileExists(filepath.Join(docroot, "index.php")) {
+				defaultDocroot = docroot
+				break
+			}
+		}
+	}
+	return defaultDocroot
+}
+
 // Determine the document root.
 func (app *DdevApp) docrootPrompt() error {
 	provider, err := app.GetProvider()
@@ -362,15 +392,19 @@ func (app *DdevApp) docrootPrompt() error {
 	}
 
 	// Determine the document root.
-	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your application root (%s)", app.AppRoot)
-	output.UserOut.Println("You may leave this value blank if your site files are in the application root")
+	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your project root (%s)", app.AppRoot)
+	output.UserOut.Println("You may leave this value blank if your site files are in the project root")
 	var docrootPrompt = "Docroot Location"
-	if app.Docroot != "" {
-		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, app.Docroot)
+	var defaultDocroot = DiscoverDefaultDocroot(app)
+	// If there is a default docroot, display it in the prompt.
+	if defaultDocroot != "" {
+		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
+	} else {
+		docrootPrompt = fmt.Sprintf("%s (current directory)", docrootPrompt)
 	}
 
 	fmt.Print(docrootPrompt + ": ")
-	app.Docroot = util.GetInput(app.Docroot)
+	app.Docroot = util.GetInput(defaultDocroot)
 
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(app.AppRoot, app.Docroot)
@@ -397,7 +431,7 @@ func (app *DdevApp) appTypePrompt() error {
 		return err
 	}
 	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
-	typePrompt := fmt.Sprintf("Application Type [%s]", validAppTypes)
+	typePrompt := fmt.Sprintf("Project Type [%s]", validAppTypes)
 
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
 
@@ -412,7 +446,7 @@ func (app *DdevApp) appTypePrompt() error {
 	appType := strings.ToLower(util.GetInput(detectedAppType))
 
 	for !IsValidAppType(appType) {
-		output.UserOut.Errorf("'%s' is not a valid application type. Allowed application types are: %s\n", appType, validAppTypes)
+		output.UserOut.Errorf("'%s' is not a valid project type. Allowed project types are: %s\n", appType, validAppTypes)
 
 		fmt.Printf(typePrompt + ": ")
 		appType = strings.ToLower(util.GetInput(appType))

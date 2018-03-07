@@ -29,7 +29,7 @@ func TestDevLogsNoConfig(t *testing.T) {
 	args := []string{"logs"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Please specify a site name or change directories")
+	assert.Contains(string(out), "Please specify a project name or change directories")
 }
 
 // TestDevLogs tests that the Dev logs functionality is working.
@@ -40,7 +40,7 @@ func TestDevLogs(t *testing.T) {
 		cleanup := v.Chdir()
 
 		confByte := []byte("<?php trigger_error(\"Fatal error\", E_USER_ERROR);")
-		err := ioutil.WriteFile(filepath.Join(v.Dir, v.DocrootBase, "index.php"), confByte, 0644)
+		err := ioutil.WriteFile(filepath.Join(v.Dir, v.Docroot, "index.php"), confByte, 0644)
 		assert.NoError(err)
 
 		o := util.NewHTTPOptions("http://127.0.0.1/index.php")

@@ -63,7 +63,7 @@ func TestDevList(t *testing.T) {
 				break
 			}
 		}
-		assert.True(found, "Failed to find site %s in ddev list -j", v.Name)
+		assert.True(found, "Failed to find project %s in ddev list -j", v.Name)
 
 	}
 

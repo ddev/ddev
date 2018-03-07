@@ -14,9 +14,9 @@ import (
 var StartCmd = &cobra.Command{
 	Use:     "start",
 	Aliases: []string{"add"},
-	Short:   "Start the development environment for a site.",
+	Short:   "Start a ddev project.",
 	Long: `Start initializes and configures the web server and database containers to
-provide a working environment for development.`,
+provide a local development environment.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()

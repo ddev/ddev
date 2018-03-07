@@ -27,7 +27,8 @@ var (
 		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		HTTPProbeURI:                  "wp-admin/setup-config.php",
-		DocrootBase:                   "htdocs",
+		Docroot:                       "htdocs",
+		Type:                          "wordpress",
 	},
 	}
 )
@@ -72,7 +73,7 @@ func TestGetActiveAppRoot(t *testing.T) {
 	assert := asrt.New(t)
 
 	_, err := ddevapp.GetActiveAppRoot("")
-	assert.Contains(err.Error(), "Please specify a site name or change directories")
+	assert.Contains(err.Error(), "Please specify a project name or change directories")
 
 	_, err = ddevapp.GetActiveAppRoot("potato")
 	assert.Error(err)

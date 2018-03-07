@@ -19,6 +19,7 @@ import (
 var (
 	updateInterval = time.Hour * 24 * 7 // One week interval between updates
 	serviceType    string
+	updateDocURL   = "https://ddev.readthedocs.io/en/latest/#installation"
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -88,7 +89,7 @@ var RootCmd = &cobra.Command{
 			}
 
 			if updateNeeded {
-				util.Warning("\n\nA new update is available! please visit %s to download the update.", updateURL)
+				util.Warning("\n\nA new update is available! please visit %s to download the update.\nFor upgrade help see %s", updateURL, updateDocURL)
 			}
 		}
 
