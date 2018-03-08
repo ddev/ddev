@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -397,4 +398,43 @@ func TestWriteConfig(t *testing.T) {
 
 	err = os.RemoveAll(testDir)
 	assert.NoError(err)
+}
+
+// TestConfigOverrideDetection tests to make sure we tell them about config overrides.
+func TestConfigOverrideDetection(t *testing.T) {
+	assert := asrt.New(t)
+
+	testcommon.ClearDockerEnv()
+
+	testDir := testcommon.CreateTmpDir("TestConfigOverrideDetection")
+
+	targetDdev := filepath.Join(testDir, ".ddev")
+	err := fileutil.CopyDir("testdata/.ddev", targetDdev)
+	assert.NoError(err)
+
+	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
+	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
+
+	app, err := NewApp(testDir, DefaultProviderName)
+	assert.NoError(err)
+
+	err = app.ReadConfig()
+	assert.NoError(err)
+
+	restoreOutput := testcommon.CaptureUserOut()
+	err = app.Start()
+	out := restoreOutput()
+	util.Warning("err=%v", err)
+	assert.NoError(err)
+
+	assert.Contains(out, "utf.cnf")
+	assert.Contains(out, "my-php.ini")
+	assert.Contains(out, "nginx-site.conf")
+	assert.Contains(out, "Custom configuration takes effect after")
+
+	err = app.Start()
+	assert.NoError(err)
+
+	_ = app.Down(true)
 }
