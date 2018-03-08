@@ -425,7 +425,6 @@ func TestConfigOverrideDetection(t *testing.T) {
 	restoreOutput := testcommon.CaptureUserOut()
 	err = app.Start()
 	out := restoreOutput()
-	util.Warning("err=%v", err)
 	assert.NoError(err)
 
 	assert.Contains(out, "utf.cnf")
