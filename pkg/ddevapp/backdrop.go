@@ -76,7 +76,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 
 	err = writeBackdropSettingsFile(backdropConfig, settingsFilePath)
 	if err != nil {
-		return settingsFilePath, fmt.Errorf("Failed to write Drupal settings file: %v", err)
+		return settingsFilePath, fmt.Errorf("Failed to write Backdrop settings file: %v", err)
 	}
 
 	return settingsFilePath, nil
