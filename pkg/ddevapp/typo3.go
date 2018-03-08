@@ -30,7 +30,7 @@ $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge($GLOBA
 func createTypo3SettingsFile(app *DdevApp) (string, error) {
 
 	if !fileutil.FileExists(app.SiteSettingsPath) {
-		return "", fmt.Errorf("TYPO3 does not seem to have been set up yet, missing LocalConfiguration.php (%s)", app.SiteLocalSettingsPath)
+		util.Warning("TYPO3 does not seem to have been set up yet, missing LocalConfiguration.php (%s)", app.SiteLocalSettingsPath)
 	}
 
 	settingsFilePath, err := app.DetermineSettingsPathLocation()
