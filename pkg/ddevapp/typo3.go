@@ -35,13 +35,13 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 
 	settingsFilePath, err := app.DetermineSettingsPathLocation()
 	if err != nil {
-		return "", fmt.Errorf("Failed to get TYPO3 AdditionalConfiguration.php file path: %v", err)
+		return "", fmt.Errorf("Failed to get TYPO3 AdditionalConfiguration.php file path: %v", err.Error())
 	}
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
 
 	err = writeTypo3SettingsFile(app)
 	if err != nil {
-		return settingsFilePath, fmt.Errorf("Failed to write TYPO3 AdditionalConfiguration.php file: %v", err)
+		return settingsFilePath, fmt.Errorf("Failed to write TYPO3 AdditionalConfiguration.php file: %v", err.Error())
 	}
 
 	return settingsFilePath, nil

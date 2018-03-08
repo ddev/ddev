@@ -68,7 +68,7 @@ ini_set('session.cookie_lifetime', 2000000);
 func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	settingsFilePath, err := app.DetermineSettingsPathLocation()
 	if err != nil {
-		return "", fmt.Errorf("Failed to get Backdrop settings file path: %v", err)
+		return "", fmt.Errorf("Failed to get Backdrop settings file path: %v", err.Error())
 	}
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
 
@@ -76,7 +76,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 
 	err = writeBackdropSettingsFile(backdropConfig, settingsFilePath)
 	if err != nil {
-		return settingsFilePath, fmt.Errorf("Failed to write Backdrop settings file: %v", err)
+		return settingsFilePath, fmt.Errorf("Failed to write Backdrop settings file: %v", err.Error())
 	}
 
 	return settingsFilePath, nil
