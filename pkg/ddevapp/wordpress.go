@@ -130,7 +130,7 @@ Sets up WordPress vars and included files.
 wp-settings.php is typically included in wp-config.php. This check ensures it is not
 included again if this file is written to wp-config-local.php.
 */
-if (__FILE__ == "wp-config.php") {
+if (basename(__FILE__) == "wp-config.php") {
 	require_once(ABSPATH . '/wp-settings.php');
 }
 `
