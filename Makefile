@@ -22,7 +22,7 @@ VERSION_VARIABLES = DdevVersion WebImg WebTag DBImg DBTag RouterImage RouterTag 
 # These variables will be used as the default unless overridden by the make
 DdevVersion ?= $(VERSION)
 WebImg ?= drud/nginx-php-fpm-local
-WebTag ?= v1.1.0
+WebTag ?= 20180308_disable_xdebug_by_default
 DBImg ?= drud/mariadb-local
 DBTag ?= v0.8.0
 RouterImage ?= drud/ddev-router
