@@ -22,19 +22,21 @@ The default web container for ddev uses NGINX as the web server. A default confi
 - **NOTE:** The "root" statement in the server block must be `root $NGINX_DOCROOT;` in order to ensure the path for NGINX to serve the project from is correct.
 - Save your configuration file and run `dev start` to start the project environment. If you encounter issues with your configuration or the project fails to start, use `ddev logs` to inspect the logs for possible NGINX configuration errors (or use `ddev ssh` and inspect /var/log/nginx/error.log.)
 - Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, check your container.
-- Changes to .ddev/nginx-site.conf take place only after you do a `ddev rm` followed by `ddev start`.
+- **IMPORTANT**: Changes to .ddev/nginx-site.conf take place only after you do a `ddev rm` followed by `ddev start`.
 
 ## Providing custom PHP configuration (php.ini)
 
-You can provide an alternate PHP configuration for a project as .ddev/php.ini. After `ddev rm` and `ddev start` you should see the behavior of your PHP configuration.
+You can provide additional PHP configuration for a project by creating a directory called `.ddev/php/` and adding any number of php configuration ini files. Normally, you should just override the specific option that you need to override. Note that any file that exists in `.ddev/php/` will be copied into `/etc/php/[version]/(cli|fpm)/conf.d`, so it's possible to replace files that already exist inside the container, so if in doubt, put your custom overrides in a file called `my-php.ini`.
 
-For starter PHP configurations, you can use the php.ini files found under the [fpm configuration](https://github.com/drud/docker.nginx-php-fpm-local/tree/master/files/etc/php) in each version of php.
+One interesting implication of this behavior is that it's possible to disable extensions by replacing the configuration file that loads them. For instance, if you were to create an empty file at `.ddev/php/20-xdebug.ini`, it would replace the configuration that loads xdebug, which would cause xdebug to not be loaded!
+
+To load the new configuration, just run a `ddev stop` and `ddev start`.
 
 ## Providing custom mysql/MariaDB configuration (my.cnf)
 
-You can provide an alternate /etc/my.cnf file for MariaDB by placing it in .ddev/my.cnf. After `ddev rm` and `ddev start` you should see the database server behavior change.
+You can provide additional PHP configuration for a project by creating a directory called `.ddev/mysql/` and adding any number of MySQL configuration files. These files will be automatically included when MySQL is started.
 
-For a starter /etc/my.cnf, see the [my.cnf used by default](https://github.com/drud/mariadb-local/blob/master/files/etc/my.cnf)
+To load the new configuration, just run a `ddev stop` and `ddev start`.
 
 ## Overriding default container images
 The default container images provided by ddev are defined in the `config.yaml` file in the `.ddev` folder of your project. This means that _defining_ an alternative image for default services is as simple as changing the image definition in `config.yaml`. In practice, however, ddev currently has certain expectations and assumptions for what the web and database containers provide. At this time, it is recommended that the default container projects be referenced or used as a starting point for developing an alternative image. If you encounter difficulties integrating alternative images, please [file an issue and let us know](https://github.com/drud/ddev/issues/new).
