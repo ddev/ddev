@@ -430,7 +430,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	assert.Contains(out, "utf.cnf")
 	assert.Contains(out, "my-php.ini")
 	assert.Contains(out, "nginx-site.conf")
-	assert.Contains(out, "Custom configuration takes effect after")
+	assert.Contains(out, "Custom configuration takes effect")
 
 	err = app.Start()
 	assert.NoError(err)
