@@ -165,3 +165,17 @@ func FgrepStringInFile(fullPath string, needle string) (bool, error) {
 	fullFileString := string(fullFileBytes)
 	return strings.Contains(fullFileString, needle), nil
 }
+
+// ListFilesInDir returns an array of files found in a directory
+func ListFilesInDir(path string) ([]string, error) {
+	var fileList []string
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return fileList, err
+	}
+
+	for _, f := range files {
+		fileList = append(fileList, f.Name())
+	}
+	return fileList, nil
+}

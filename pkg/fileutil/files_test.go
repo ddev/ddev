@@ -114,3 +114,14 @@ func TestFgrepStringInFile(t *testing.T) {
 	assert.NoError(err)
 	assert.False(result)
 }
+
+// TestListFilesInDir makes sure the files we have in testfiles are properly enumerated
+func TestListFilesInDir(t *testing.T) {
+	assert := asrt.New(t)
+
+	fileList, err := fileutil.ListFilesInDir("testdata/testfiles/")
+	assert.NoError(err)
+	assert.True(len(fileList) == 2)
+	assert.Contains(fileList[0], "one.txt")
+	assert.Contains(fileList[1], "two.txt")
+}

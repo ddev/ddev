@@ -12,6 +12,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
+	"time"
 )
 
 // TestDevLogsNoConfig tests what happens with when running "ddev logs" when
@@ -50,6 +51,8 @@ func TestDevLogs(t *testing.T) {
 		err = util.EnsureHTTPStatus(o)
 		assert.NoError(err)
 
+		// logs may not respond exactly right away, wait a tiny bit.
+		time.Sleep(2 * time.Second)
 		args := []string{"logs"}
 		out, err := exec.RunCommand(DdevBin, args)
 

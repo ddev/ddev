@@ -51,7 +51,7 @@ func init() {
 	appTypeMatrix = map[string]AppTypeFuncs{
 		"php": {},
 		"drupal6": {
-			createDrupal6SettingsFile, getDrupalUploadDir, getDrupal6Hooks, setDrupalSiteSettingsPaths, isDrupal6App, nil, drupal6ConfigOverrideAction, drupal6PostConfigAction,
+			createDrupal6SettingsFile, getDrupalUploadDir, getDrupal6Hooks, setDrupalSiteSettingsPaths, isDrupal6App, nil, drupal6ConfigOverrideAction, nil,
 		},
 		"drupal7": {
 			createDrupal7SettingsFile, getDrupalUploadDir, getDrupal7Hooks, setDrupalSiteSettingsPaths, isDrupal7App, nil, drupal7ConfigOverrideAction, nil,
@@ -192,7 +192,5 @@ func (app *DdevApp) PostConfigAction() error {
 		return appFuncs.postConfigAction(app)
 	}
 
-	// In the future if these get more specialized we may want to add this explicitly
-	// to the apptype matrix instead of doing it here.
-	return genericPostConfigAction(app)
+	return nil
 }

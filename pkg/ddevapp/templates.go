@@ -11,6 +11,7 @@ services:
     volumes:
       - "${DDEV_IMPORTDIR}:/db"
       - "${DDEV_DATADIR}:/var/lib/mysql"
+      - ".:/mnt/ddev_config"
     restart: "no"
     ports:
       - "3306"
@@ -28,6 +29,7 @@ services:
     image: $DDEV_WEBIMAGE
     volumes:
       - "../:/var/www/html:cached"
+      - ".:/mnt/ddev_config"
     restart: "no"
     depends_on:
       - db

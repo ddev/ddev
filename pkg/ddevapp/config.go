@@ -309,6 +309,43 @@ func (app *DdevApp) WriteDockerComposeConfig() error {
 	return err
 }
 
+// CheckCustomConfig warns the user if any custom configuration files are in use.
+func (app *DdevApp) CheckCustomConfig() {
+
+	// Get the path to .ddev for the current app.
+	ddevDir := filepath.Dir(app.ConfigPath)
+
+	customConfig := false
+	if _, err := os.Stat(filepath.Join(ddevDir, "nginx-site.conf")); err == nil {
+		util.Warning("Using custom nginx configuration in nginx-site.conf")
+		customConfig = true
+	}
+
+	mysqlPath := filepath.Join(ddevDir, "mysql")
+	if _, err := os.Stat(mysqlPath); err == nil {
+		mysqlFiles, err := fileutil.ListFilesInDir(mysqlPath)
+		util.CheckErr(err)
+		if len(mysqlFiles) > 0 {
+			util.Warning("Using custom mysql configuration: %v", mysqlFiles)
+			customConfig = true
+		}
+	}
+
+	phpPath := filepath.Join(ddevDir, "php")
+	if _, err := os.Stat(phpPath); err == nil {
+		phpFiles, err := fileutil.ListFilesInDir(phpPath)
+		util.CheckErr(err)
+		if len(phpFiles) > 0 {
+			util.Warning("Using custom PHP configuration: %v", phpFiles)
+			customConfig = true
+		}
+	}
+	if customConfig {
+		util.Warning("Custom configuration takes effect when container is created, \nusually on start, use 'ddev restart' if you're not seeing it take effect.")
+	}
+
+}
+
 // RenderComposeYAML renders the contents of docker-compose.yaml.
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
