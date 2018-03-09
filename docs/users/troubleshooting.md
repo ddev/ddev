@@ -5,33 +5,35 @@ Things might go wrong!
 <a name="unable-listen"></a>
 ## Webserver ports are already occupied by another webserver
 
-If you get a message from ddev about a port conflict, like this:
+ddev notifies you about port conflicts with this message:
 
 ```
 Failed to start yoursite: Unable to listen on required ports, localhost port 80 is in use,
 ```
 
-it means that you have another webserver listening on the named port(s), and it needs to be stopped so that ddev can access the port. 
+This means there is another webserver listening on the named port(s) and ddev cannot access the port.
 
-You have two choices: 
+To resolve this conflict, choose one of two methods:
 
-1. You can configure your project to use different ports
-2. You can stop the competing application.
+1. Fix port conflicts by configuring your project to use different ports.
+2. Fix port conflicts by stopping the competing application.
 
-### Configuring your project to use non-conflicting ports
+### Method 1: Fix port conflicts by configuring your project to use different ports
 
-To configure your project to use non-conflicting ports, edit the project's .ddev/config.yaml to add entries like `router_http_port: 8000` and `router_https_port: 8443` depending on your needs, then use `ddev start` again. For example, if you had a port conflict with a local apache http on port 80, you could add
+To configure a project to use non-conflicting ports, edit the project's .ddev/config.yaml to add entries like `router_http_port: 8000` and `router_https_port: 8443` depending on your needs. Then use `ddev start` again.
+
+For example, if there was a port conflict with a local apache http on port 80 add the following to the to the config.yaml file.
 
 ```
 router_http_port: 8000
 ```
 
-to the config.yaml, and `ddev start`, and the project's http URL will change to http://yoursite.ddev.local:8000.
+Then run `ddev start`. This changes the project's http URL to http://yoursite.ddev.local:8000.
 
 
-### Fixing port conflicts by stopping the other application
+### Method 2: Fix port conflicts by stopping the competing application
 
-If you choose to do so you can also just stop the other application.
+Alternatively, stop the other application.
 
 Probably the most common conflicting application is Apache running locally. It can often be stopped gracefully (but temporarily) with:
 
@@ -41,7 +43,7 @@ sudo apachectl stop
 
 **Common tools that use port 80:**
 
-There are many processes that could be using port 80. Here are some of the common ones and how to stop them:
+Here are some of the other common processes that could be using port 80 and methods to stop them.
 
 * MAMP (macOS): [Stop MAMP](http://documentation.mamp.info/en/MAMP-Mac/Preferences/Start-Stop/)
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
@@ -61,8 +63,7 @@ nginx   1608 www-data   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 ```
 
-As you see, the command that's running is listed, and its pid. You then need to use the appropriate technique to stop the other server. 
-
+The resulting output displays which command is running and its pid. Choose the appropriate method to stop the other server.
 
 We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
 

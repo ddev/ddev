@@ -19,7 +19,7 @@ As with all golang projects, you need to have your $GOPATH set up and ddev code 
 ## Testing
 Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...`
 
-If you set the environment variable DRUD_DEBUG=true you can see what ddev commands are being executed in the tests.
+To see which ddev commands the tests are executing, set the environment variable DRUD_DEBUG=true.
 
 ## Docker container development
 

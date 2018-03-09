@@ -79,7 +79,7 @@ Before, beginning anything else, please set your Debugger Port to 11011. (Prefer
 <a name="atom"></a>
 ### Atom Debugging Setup
 
-[Atom](https://atom.io/) is an extensible developers' editor promoted by Github. There are lots of extensions available for it, including [php-debug](https://atom.io/packages/php-debug), an alpha-level project but one that makes it fairly easy to do PHP debugging.
+[Atom](https://atom.io/) is an extensible developers' editor promoted by GitHub. The available extensions include [php-debug](https://atom.io/packages/php-debug) which you can use to conduct PHP debugging with the Xdebug PHP extension. This project is currently an alpha release. 
 
 1. Install an xdebug helper extension for your browser, [as suggested in documentation](https://atom.io/packages/php-debug#setting-up-xdebug)
 2. Under Preferences->+Install install the php-debug add-on:

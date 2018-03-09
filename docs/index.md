@@ -7,8 +7,8 @@
 ## System Requirements
 
 - [Docker](https://www.docker.com/community-edition) version 17.05 or higher
-- docker-compose 1.10.0 and higher (bundled in Docker for Mac and Docker for Windows)
-- OS Support 
+- docker-compose 1.10.0 and higher (bundled with Docker in Docker for Mac and Docker for Windows)
+- OS Support
   - macOS Sierra and higher (macOS 10.12 and higher but it probably runs anywhere docker runs)
   - Linux (See [Linux notes](users/linux_notes.md)): Most recent Linux distributions which can run Docker are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+
   - Windows 10 Pro
@@ -25,9 +25,10 @@ For macOS users, we recommend downloading, installing, and upgrading via [homebr
 ```
 brew tap drud/ddev && brew install ddev
 ```
-
-Use `brew upgrade ddev` to upgrade.
-
+Later, to upgrade to a newer version of ddev, run:
+```
+brew upgrade ddev
+```
 
 ### Installation/Upgrade Script - Linux and macOS
 
@@ -37,8 +38,7 @@ Linux and macOS end-users can use this line of code to your terminal to download
 curl https://raw.githubusercontent.com/drud/ddev/master/install_ddev.sh | bash
 ```
 
-Later, to upgrade ddev to the latest version, just run `install_ddev.sh` again.
-
+Later, to upgrade ddev to the latest version, just run this again.
 
 ### Manual Installation or Upgrade - Linux and macOS
 You can also easily perform the installation or upgrade manually if preferred. ddev is just a single executable, no special installation is actually required, so for all operating systems, the installation is just copying ddev into place where it's in the system path.
