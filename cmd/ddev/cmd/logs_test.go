@@ -58,7 +58,7 @@ func TestDevLogs(t *testing.T) {
 
 		assert.NoError(err)
 		assert.Contains(string(out), "Server started")
-		assert.Contains(string(out), "PHP message: PHP Stack trace:")
+		assert.Contains(string(out), "PHP Fatal error:")
 
 		cleanup()
 	}
