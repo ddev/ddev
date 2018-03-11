@@ -14,7 +14,8 @@ for item in $(cat /tmp/images.txt); do
   docker pull $item
 done
 docker save -o $ARTIFACTS/ddev_docker_images.$VERSION.tar $(cat /tmp/images.txt)
-gzip $ARTIFACTS/ddev_docker_images.$VERSION.tar
+gzip --keep $ARTIFACTS/ddev_docker_images.$VERSION.tar
+xz $ARTIFACTS/ddev_docker_images.$VERSION.tar
 
 # Generate and place extra items like autocomplete
 bin/linux/ddev_gen_autocomplete
@@ -39,6 +40,6 @@ zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe ddev_bash_completion.sh
 
 # Create the sha256 files
 cd $ARTIFACTS
-for item in *.tar.gz *.zip ddev_docker_images.$VERSION.tar.gz; do
+for item in *.tar.gz *.zip ddev_docker_images.$VERSION.tar.gz ddev_docker_images.$VERSION.tar.xz; do
   sha256sum $item > $item.sha256.txt
 done
