@@ -70,19 +70,6 @@ jobs:
           command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
           name: Show installed tool versions
 
-      # The nightly build builds a ddev that can't be run elsewhere because the containers built in are not pushed.
-      # Therefore we build this full nightly first, and then throw it away.
-      - run:
-          command: |
-            make clean
-            export VERSION="$(git describe --tags --always --dirty)-nightly.$(date +%Y%m%d%H%M%S)"
-            echo VERSION=$VERSION
-            git submodule update --init && git submodule update --remote
-            make -f nightly_build.mak clean  # Remove any existing binaries
-            make -f nightly_build.mak -s --print-directory VERSION=$VERSION DdevVersion=$VERSION DBTag=$VERSION DBATag=$VERSION WebTag=$VERSION RouterTag=$VERSION
-          no_output_timeout: "20m"
-          name: Run full nightly build
-
       - run:
           command: bin/linux/ddev version
           name:  nightly-build ddev version information
@@ -96,7 +83,6 @@ jobs:
       # Earlier process updated submodules so now we clean them up to continue.
       - run:
           command: |
-            git submodule update --init &&
             make -s clean linux darwin windows
           name: Build the ddev executables normally, with normal image tags
 
