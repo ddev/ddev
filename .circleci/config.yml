@@ -70,10 +70,6 @@ jobs:
           command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
           name: Show installed tool versions
 
-      - run:
-          command: bin/linux/ddev version
-          name:  nightly-build ddev version information
-
       - run: make -s gometalinter
 
       # Now build using the regular ddev-only technique - this results in a
