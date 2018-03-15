@@ -29,14 +29,14 @@ var RootCmd = &cobra.Command{
 	Long:  "This Command Line Interface (CLI) gives you the ability to interact with the ddev to create a development environment.",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		ignores := []string{"list", "version", "describe", "config", "hostname"}
-		command := strings.Join(os.Args, " ")
+		command := strings.Join(os.Args[1:], " ")
 
 		output.LogSetUp()
 
 		// Skip docker validation for any command listed in "ignores"
 		for _, k := range ignores {
-			if strings.Contains(command, " "+k) {
-				break
+			if strings.Contains(command, k) {
+				return
 			}
 		}
 
