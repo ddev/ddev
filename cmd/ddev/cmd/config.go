@@ -165,7 +165,7 @@ var ConfigCommand *cobra.Command = &cobra.Command{
 
 		_, err = app.CreateSettingsFile()
 		if err != nil {
-			util.Failed("Could not write settings file: %w", err)
+			util.Failed("Could not write settings file: %v", err)
 		}
 
 		// If a provider is specified, prompt about whether to do an import after config.

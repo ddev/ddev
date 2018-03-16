@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
 )
@@ -98,6 +99,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	// a nil error because this should not halt execution if the apptype
 	// does not have a settings definition.
 	if app.SiteLocalSettingsPath == "" && app.SiteSettingsPath == "" {
+		util.Warning("Project type has no settings paths configured, so not creating settings file.")
 		return "", nil
 	}
 
