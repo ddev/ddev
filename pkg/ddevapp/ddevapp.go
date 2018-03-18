@@ -283,12 +283,8 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 
 	_, err = app.CreateSettingsFile()
 	if err != nil {
-		// @todo: Use a typed error instead of relying on the text of the message.
-		if strings.Contains(err.Error(), "settings files already exist and are being managed") {
-			return fmt.Errorf("failed to write settings file for %s: %v", app.GetName(), err)
-		}
-		util.Warning("A custom settings file exists for your project, so ddev did not generate one.")
-		util.Warning("Run 'ddev describe' to find the database credentials for this project.")
+		util.Warning("A custom settings file exists for your application, so ddev did not generate one.")
+		util.Warning("Run 'ddev describe' to find the database credentials for this application.")
 	}
 
 	err = app.PostImportDBAction()

@@ -173,7 +173,7 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 
 	settingsFilePath, err := app.DetermineSettingsPathLocation()
 	if err != nil {
-		return "", fmt.Errorf("Failed to get Drupal settings file path: %v", err)
+		return "", fmt.Errorf("Failed to get Drupal 7 settings file path: %v", err.Error())
 	}
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
 
@@ -183,7 +183,7 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 
 	err = writeDrupal7SettingsFile(drupalConfig, settingsFilePath)
 	if err != nil {
-		return settingsFilePath, fmt.Errorf("Failed to write Drupal settings file: %v", err)
+		return settingsFilePath, fmt.Errorf("Failed to write Drupal settings file: %v", err.Error())
 	}
 
 	return settingsFilePath, nil
@@ -196,7 +196,7 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 
 	settingsFilePath, err := app.DetermineSettingsPathLocation()
 	if err != nil {
-		return "", fmt.Errorf("Failed to get Drupal settings file path: %v", err)
+		return "", fmt.Errorf("Failed to get Drupal 8 settings file path: %v", err.Error())
 	}
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
 
@@ -206,7 +206,7 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 
 	err = writeDrupal8SettingsFile(drupalConfig, settingsFilePath)
 	if err != nil {
-		return settingsFilePath, fmt.Errorf("Failed to write Drupal settings file: %v", err)
+		return settingsFilePath, fmt.Errorf("Failed to write Drupal settings file: %v", err.Error())
 	}
 
 	return settingsFilePath, nil
@@ -219,7 +219,7 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 
 	settingsFilePath, err := app.DetermineSettingsPathLocation()
 	if err != nil {
-		return "", fmt.Errorf("Failed to get Drupal settings file path: %v", err)
+		return "", fmt.Errorf("Failed to get Drupal 6 settings file path: %v", err.Error())
 	}
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
 
@@ -229,7 +229,7 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 
 	err = writeDrupal6SettingsFile(drupalConfig, settingsFilePath)
 	if err != nil {
-		return settingsFilePath, fmt.Errorf("Failed to write Drupal settings file: %v", err)
+		return settingsFilePath, fmt.Errorf("Failed to write Drupal settings file: %v", err.Error())
 	}
 
 	return settingsFilePath, nil

@@ -41,6 +41,7 @@ jobs:
       - run:
           command: ./.circleci/generate_artifacts.sh $ARTIFACTS
           name: tar/zip up artifacts and make hashes
+          no_output_timeout: "20m"
 
       - store_artifacts:
           path: /artifacts
@@ -79,6 +80,7 @@ jobs:
       - run:
           command: ./.circleci/generate_artifacts.sh $ARTIFACTS
           name: tar/zip up artifacts and make hashes
+          no_output_timeout: "20m"
 
       - store_artifacts:
           path: /artifacts
@@ -114,6 +116,7 @@ jobs:
       - run:
           command: ./.circleci/generate_artifacts.sh $ARTIFACTS
           name: tar/zip up artifacts and make hashes
+          no_output_timeout: "20m"
 
       - store_artifacts:
           path: /artifacts

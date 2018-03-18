@@ -30,18 +30,18 @@ $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge($GLOBA
 func createTypo3SettingsFile(app *DdevApp) (string, error) {
 
 	if !fileutil.FileExists(app.SiteSettingsPath) {
-		return "", fmt.Errorf("TYPO3 does not seem to have been set up yet, missing LocalConfiguration.php (%s)", app.SiteLocalSettingsPath)
+		util.Warning("TYPO3 does not seem to have been set up yet, missing LocalConfiguration.php (%s)", app.SiteLocalSettingsPath)
 	}
 
 	settingsFilePath, err := app.DetermineSettingsPathLocation()
 	if err != nil {
-		return "", fmt.Errorf("Failed to get TYPO3 AdditionalConfiguration.php file path: %v", err)
+		return "", fmt.Errorf("Failed to get TYPO3 AdditionalConfiguration.php file path: %v", err.Error())
 	}
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
 
 	err = writeTypo3SettingsFile(app)
 	if err != nil {
-		return settingsFilePath, fmt.Errorf("Failed to write TYPO3 AdditionalConfiguration.php file: %v", err)
+		return settingsFilePath, fmt.Errorf("Failed to write TYPO3 AdditionalConfiguration.php file: %v", err.Error())
 	}
 
 	return settingsFilePath, nil

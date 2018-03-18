@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
 )
@@ -94,9 +95,12 @@ func IsValidAppType(apptype string) bool {
 func (app *DdevApp) CreateSettingsFile() (string, error) {
 	app.SetApptypeSettingsPaths()
 
-	// If neither settings file options are set, then don't continue
+	// If neither settings file options are set, then don't continue. Return
+	// a nil error because this should not halt execution if the apptype
+	// does not have a settings definition.
 	if app.SiteLocalSettingsPath == "" && app.SiteSettingsPath == "" {
-		return "", fmt.Errorf("Neither SiteLocalSettingsPath nor SiteSettingsPath is set")
+		util.Warning("Project type has no settings paths configured, so not creating settings file.")
+		return "", nil
 	}
 
 	// Drupal and WordPress love to change settings files to be unwriteable.
@@ -121,7 +125,10 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	// just ignore.
 	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.settingsCreator != nil {
 		settingsPath, err := appFuncs.settingsCreator(app)
-		return settingsPath, err
+		if err != nil {
+			util.Warning("Unable to create settings file: %v", err)
+		}
+		return settingsPath, nil
 	}
 	return "", nil
 }
