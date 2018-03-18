@@ -125,7 +125,10 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	// just ignore.
 	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.settingsCreator != nil {
 		settingsPath, err := appFuncs.settingsCreator(app)
-		return settingsPath, err
+		if err != nil {
+			util.Warning("Unable to create settings file: %v", err)
+		}
+		return settingsPath, nil
 	}
 	return "", nil
 }
