@@ -12,7 +12,6 @@ import (
 	osexec "os/exec"
 
 	"os/user"
-	"runtime"
 
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
@@ -685,6 +684,9 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() {
+	curUser, err := user.Current()
+	util.CheckErr(err)
+
 	envVars := map[string]string{
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
@@ -698,19 +700,12 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_IMPORTDIR":                app.ImportDir,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
-		"DDEV_UID":                      "",
-		"DDEV_GID":                      "",
+		"DDEV_UID":                      curUser.Uid,
+		"DDEV_GID":                      curUser.Gid,
 		"DDEV_PHP_VERSION":              app.PHPVersion,
 		"DDEV_PROJECT_TYPE":             app.Type,
 		"DDEV_ROUTER_HTTP_PORT":         app.RouterHTTPPort,
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,
-	}
-	if runtime.GOOS == "linux" {
-		curUser, err := user.Current()
-		util.CheckErr(err)
-
-		envVars["DDEV_UID"] = curUser.Uid
-		envVars["DDEV_GID"] = curUser.Gid
 	}
 
 	// Only set values if they don't already exist in env.

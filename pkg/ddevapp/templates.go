@@ -31,6 +31,7 @@ services:
       - "../:/var/www/html:cached"
       - ".:/mnt/ddev_config"
     restart: "no"
+    user: "$DDEV_UID:$DDEV_GID"
     depends_on:
       - db
     links:
