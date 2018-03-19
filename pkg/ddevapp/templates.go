@@ -50,10 +50,10 @@ services:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
       # To expose a container port to a different host port, define the port as hostPort:containerPort
-      - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,{{ .mailhogport }}
+      - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:8080,{{ .mailhogport }}
       # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
       # To expose an HTTPS port, define the port as securePort:containerPort.
-      - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80
+      - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:8080
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .plugin }}
