@@ -13,6 +13,7 @@ ddev is an open source tool that makes it simple to get local PHP development en
   - [WordPress](https://ddev.readthedocs.io/en/latest/users/cli-usage#wordpress-quickstart)
   - [Drupal 6 and 7](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-6/7-quickstart)
   - [Drupal 8](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-8-quickstart)
+  - [Backdrop](https://ddev.readthedocs.io/en/latest/users/cli-usage/#backdrop-quickstart) 
   - [TYPO3](https://ddev.readthedocs.io/en/latest/users/cli-usage#typo3-quickstart)
 
 Having trouble? See our [support options below](#support). Additionally, you may have trouble if [another local development tool is already using port 80 or 443](https://ddev.readthedocs.io/en/latest/#using-ddev-with-other-development-environments).
@@ -21,7 +22,7 @@ Having trouble? See our [support options below](#support). Additionally, you may
 
 * Quickly create multiple local web development environments based on a code repositories.
 * Import database for a project you're working on.
-* Import upload files to match the project (Drupal's sites/default/files or WordPress's wp-content/uploads).
+* Import upload files to match the project (e.g. Drupal's sites/default/files or WordPress's wp-content/uploads).
 * Pantheon integration - grab a Pantheon archive and work locally with the database and files.
 * Run commands within the docker environment using `ddev exec`.
 * View logs from the web and db containers.
