@@ -13,6 +13,7 @@ services:
       - "${DDEV_DATADIR}:/var/lib/mysql"
       - ".:/mnt/ddev_config"
     restart: "no"
+    user: "$DDEV_UID:$DDEV_GID"
     ports:
       - "3306"
     labels:
