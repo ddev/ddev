@@ -687,6 +687,27 @@ func (app *DdevApp) DockerEnv() {
 	curUser, err := user.Current()
 	util.CheckErr(err)
 
+	var uid_int, gid_int int
+	var uid, gid string
+	// For windows the uid/gid are usually way outside linux range (ends at 60000)
+	// so we have to run as root. We may have a host uid/gid greater in other contexts,
+	// bail and run as root.
+	if uid_int, err = strconv.Atoi(curUser.Uid); err != nil {
+		uid = "0"
+	}
+	if gid_int, err = strconv.Atoi(curUser.Gid); err != nil {
+		gid = "0"
+	}
+	if uid_int > 60000 || gid_int > 60000 || uid_int == 0 {
+		util.Warning("Warning: containers will run as root. This is fine on Docker for Windows or Docker for Mac, but could be a security risk on Linux.")
+	}
+
+	// If the uid or gid is outside the range possible in container, use root
+	if uid_int > 60000 || gid_int > 60000 {
+		uid = "0"
+		gid = "0"
+	}
+
 	envVars := map[string]string{
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
