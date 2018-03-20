@@ -687,25 +687,26 @@ func (app *DdevApp) DockerEnv() {
 	curUser, err := user.Current()
 	util.CheckErr(err)
 
-	var uid_int, gid_int int
-	var uid, gid string
-	// For windows the uid/gid are usually way outside linux range (ends at 60000)
-	// so we have to run as root. We may have a host uid/gid greater in other contexts,
+	var uidInt, gidInt int
+	uidStr := curUser.Uid
+	gidStr := curUser.Gid
+	// For windows the uidStr/gidStr are usually way outside linux range (ends at 60000)
+	// so we have to run as root. We may have a host uidStr/gidStr greater in other contexts,
 	// bail and run as root.
-	if uid_int, err = strconv.Atoi(curUser.Uid); err != nil {
-		uid = "0"
+	if uidInt, err = strconv.Atoi(curUser.Uid); err != nil {
+		uidStr = "0"
 	}
-	if gid_int, err = strconv.Atoi(curUser.Gid); err != nil {
-		gid = "0"
+	if gidInt, err = strconv.Atoi(curUser.Gid); err != nil {
+		gidStr = "0"
 	}
-	if uid_int > 60000 || gid_int > 60000 || uid_int == 0 {
+	if uidInt > 60000 || gidInt > 60000 || uidInt == 0 {
 		util.Warning("Warning: containers will run as root. This is fine on Docker for Windows or Docker for Mac, but could be a security risk on Linux.")
 	}
 
-	// If the uid or gid is outside the range possible in container, use root
-	if uid_int > 60000 || gid_int > 60000 {
-		uid = "0"
-		gid = "0"
+	// If the uidStr or gidStr is outside the range possible in container, use root
+	if uidInt > 60000 || gidInt > 60000 {
+		uidStr = "0"
+		gidStr = "0"
 	}
 
 	envVars := map[string]string{
@@ -721,8 +722,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_IMPORTDIR":                app.ImportDir,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
-		"DDEV_UID":                      curUser.Uid,
-		"DDEV_GID":                      curUser.Gid,
+		"DDEV_UID":                      uidStr,
+		"DDEV_GID":                      gidStr,
 		"DDEV_PHP_VERSION":              app.PHPVersion,
 		"DDEV_PROJECT_TYPE":             app.Type,
 		"DDEV_ROUTER_HTTP_PORT":         app.RouterHTTPPort,
