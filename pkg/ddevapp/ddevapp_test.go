@@ -587,11 +587,19 @@ func TestDescribe(t *testing.T) {
 
 		// It should already be running, but start does no harm.
 		err = app.Start()
-		assert.NoError(err, "%s: app.Start() failed: %v", site.Name, err)
+
+		// If we have a problem starting, get the container logs and output.
+		if err != nil {
+			stdout := testcommon.CaptureUserOut()
+			logsErr := app.Logs("web", false, false, "")
+			assert.NoError(logsErr)
+			out := stdout()
+			assert.NoError(err, "app.Start(%s) failed: %v, web container logs=%s", site.Name, err, out)
+		}
 
 		desc, err := app.Describe()
 		assert.NoError(err)
-		assert.EqualValues(ddevapp.SiteRunning,desc["status"])
+		assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
 		assert.EqualValues(app.GetName(), desc["name"])
 		assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), desc["shortroot"])
 		assert.EqualValues(app.GetAppRoot(), desc["approot"])
@@ -603,7 +611,7 @@ func TestDescribe(t *testing.T) {
 
 		desc, err = app.Describe()
 		assert.NoError(err)
-		assert.EqualValues(desc["status"], ddevapp.SiteStopped)
+		assert.EqualValues(ddevapp.SiteStopped, desc["status"])
 		switchDir()
 	}
 }
