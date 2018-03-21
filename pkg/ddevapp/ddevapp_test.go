@@ -572,7 +572,8 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 
 }
 
-// TestDescribe tests that the describe command works properly on a stopped site.
+// TestDescribe tests that the describe command works properly on a running
+// and also a stopped project.
 func TestDescribe(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -586,11 +587,11 @@ func TestDescribe(t *testing.T) {
 
 		// It should already be running, but start does no harm.
 		err = app.Start()
-		assert.NoError(err)
+		assert.NoError(err, "%s: app.Start() failed: %v", site.Name, err)
 
 		desc, err := app.Describe()
 		assert.NoError(err)
-		assert.EqualValues(desc["status"], ddevapp.SiteRunning)
+		assert.EqualValues(ddevapp.SiteRunning,desc["status"])
 		assert.EqualValues(app.GetName(), desc["name"])
 		assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), desc["shortroot"])
 		assert.EqualValues(app.GetAppRoot(), desc["approot"])
