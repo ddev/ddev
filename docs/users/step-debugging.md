@@ -1,12 +1,13 @@
 <h1>Step-debugging with ddev and xdebug</h1>
 
-Every ddev project is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code.
+Every ddev project is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code. It is disabled by default for performance reasons, so you'll need to enable it in your config.yaml.
 
 xdebug is a server-side tool: It is installed automatically on the container and you do *not* need to install it on your workstation. All you have to do on your workstation is to add an extra IP address (below) and perhaps add a browser extension or bookmark.
 
 All IDEs basically work the same: They listen on a port and react when they're contacted there. So IDEs other than those listed here should work fine, if listening on port 11011.
 
 **Key facts:**
+* You need to explicitly enable xdebug in your config.yaml as a post-start step.
 * The debug server port on the IDE must be set to port 11011. Although the xdebug default is port 9000, that port often has conflicts for PHP developers, so 11011 is used with ddev.
 * An IP-address *alias* of 172.28.99.99 must be added to your workstation host's loopback address. On macOS this is done with the command `sudo ifconfig lo0 alias 172.28.99.99`. On Ubuntu 16.04 and probably other Linux variants, `sudo ifconfig docker0:0 172.28.99.99 up` **This must currently be done after each reboot.**
 
@@ -15,6 +16,17 @@ For more background on XDebug see [XDebug documentation](https://xdebug.org/docs
 For each IDE the link to their documentation is provided, and the skeleton steps required are listed here.
 
 ## Setup Instructions
+
+### Enable or disable xdebug in your config.yaml
+
+Use a post-start hook to enable or disable xdebug on startup:
+
+```
+hooks:
+    post-start:
+      - exec: enable_xdebug
+```
+
 
 * [PHPStorm](#phpstorm)
 * [NetBeans](#netbeans)
