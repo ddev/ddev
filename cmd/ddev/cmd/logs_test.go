@@ -45,7 +45,8 @@ func TestDevLogs(t *testing.T) {
 		assert.NoError(err)
 
 		o := util.NewHTTPOptions("http://127.0.0.1/index.php")
-		o.ExpectedStatus = 500
+		// Because php display_errors = On the error results in a 200 anyway.
+		o.ExpectedStatus = 200
 		o.Timeout = 30
 		o.Headers["Host"] = v.Name + ".ddev.local"
 		err = util.EnsureHTTPStatus(o)
