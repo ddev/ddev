@@ -500,7 +500,7 @@ func TestProcessHooks(t *testing.T) {
 		// Ignore color in putput, can be different in different OS's
 		out := vtclean.Clean(stdout(), false)
 
-		assert.Contains(out, "--- Running exec command: ls /usr/local/bin/composer ---\n--- hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
+		assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
 		assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
 
 		runTime()
