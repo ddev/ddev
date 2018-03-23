@@ -606,7 +606,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.AddHostsEntry()
+	err = app.AddHostsEntries()
 	if err != nil {
 		return err
 	}
@@ -880,8 +880,8 @@ func (app *DdevApp) HostName() string {
 	return app.GetHostname()
 }
 
-// AddHostsEntry will add the site URL to the host's /etc/hosts.
-func (app *DdevApp) AddHostsEntry() error {
+// AddHostsEntries will add the site URL to the host's /etc/hosts.
+func (app *DdevApp) AddHostsEntries() error {
 	dockerIP := "127.0.0.1"
 	dockerHostRawURL := os.Getenv("DOCKER_HOST")
 	if dockerHostRawURL != "" {
@@ -895,26 +895,31 @@ func (app *DdevApp) AddHostsEntry() error {
 	if err != nil {
 		util.Failed("could not open hostfile. %s", err)
 	}
-	if hosts.Has(dockerIP, app.HostName()) {
-		return nil
+	for _, name := range app.GetHostnames() {
+
+		if hosts.Has(dockerIP, name) {
+			continue
+		}
+
+		_, err = osexec.Command("sudo", "-h").Output()
+		if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
+			util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", dockerIP, name, name, dockerIP)
+			return nil
+		}
+
+		ddevFullpath, err := os.Executable()
+		util.CheckErr(err)
+
+		output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt will require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
+
+		hostnameArgs := []string{ddevFullpath, "hostname", name, dockerIP}
+		command := strings.Join(hostnameArgs, " ")
+		util.Warning(fmt.Sprintf("    sudo %s", command))
+		output.UserOut.Println("Please enter your password if prompted.")
+		_, err = exec.RunCommandPipe("sudo", hostnameArgs)
+		util.CheckErr(err)
 	}
-
-	_, err = osexec.Command("sudo", "-h").Output()
-	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
-		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", dockerIP, app.HostName(), app.HostName(), dockerIP)
-		return nil
-	}
-
-	ddevFullpath, err := os.Executable()
-	util.CheckErr(err)
-
-	output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt will require root privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
-	hostnameArgs := []string{ddevFullpath, "hostname", app.HostName(), dockerIP}
-	command := strings.Join(hostnameArgs, " ")
-	util.Warning(fmt.Sprintf("    sudo %s", command))
-	output.UserOut.Println("Please enter your password if prompted.")
-	_, err = exec.RunCommandPipe("sudo", hostnameArgs)
-	return err
+	return nil
 }
 
 // prepSiteDirs creates a site's directories for db container mounts
