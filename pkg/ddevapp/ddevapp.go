@@ -52,6 +52,7 @@ const DdevFileSignature = "#ddev-generated"
 type DdevApp struct {
 	APIVersion            string               `yaml:"APIVersion"`
 	Name                  string               `yaml:"name"`
+	AdditionalNames       string               `yaml:"additional_names"`
 	Type                  string               `yaml:"type"`
 	Docroot               string               `yaml:"docroot"`
 	PHPVersion            string               `yaml:"php_version"`
@@ -734,6 +735,11 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,
 	}
 
+	// additional_names should be comma-delimited set of additional FQDN.
+	if app.AdditionalNames != "" {
+		// TODO: Warn people about additional names in use.
+		envVars["DDEV_HOSTNAME"] = app.GetHostname() + "," + app.AdditionalNames
+	}
 	// Only set values if they don't already exist in env.
 	for k, v := range envVars {
 		if os.Getenv(k) == "" {
