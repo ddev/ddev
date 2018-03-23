@@ -279,9 +279,18 @@ func (app *DdevApp) DockerComposeYAMLPath() string {
 	return app.GetConfigPath("docker-compose.yaml")
 }
 
-// GetHostname returns the hostname of the app.
+// GetHostname returns the primary hostname of the app.
 func (app *DdevApp) GetHostname() string {
 	return app.Name + "." + version.DDevTLD
+}
+
+// GetHostnames() returns an array of all the configured hostnames.
+func (app *DdevApp) GetHostnames() []string {
+	nameList := app.GetHostname()
+	if app.AdditionalNames != "" {
+		nameList = nameList + "," + app.AdditionalNames
+	}
+	return strings.Split(nameList, ",")
 }
 
 // WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.

@@ -129,6 +129,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc := make(map[string]interface{})
 
 	appDesc["name"] = app.GetName()
+	appDesc["hostnames"] = app.GetHostnames()
 	appDesc["status"] = app.SiteStatus()
 	appDesc["type"] = app.GetType()
 	appDesc["approot"] = app.GetAppRoot()
