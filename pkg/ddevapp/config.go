@@ -284,7 +284,7 @@ func (app *DdevApp) GetHostname() string {
 	return app.Name + "." + version.DDevTLD
 }
 
-// GetHostnames() returns an array of all the configured hostnames.
+// GetHostnames returns an array of all the configured hostnames.
 func (app *DdevApp) GetHostnames() []string {
 	nameList := app.GetHostname()
 	if app.AdditionalNames != "" {
