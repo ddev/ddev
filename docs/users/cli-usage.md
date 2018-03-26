@@ -221,9 +221,24 @@ Docroot Location: web
 Found a drupal8 codebase at /Users/username/Projects/drupal8/web
 ```
 
-Configuration files have now been created for your project. (Take a look at the file on the project's .ddev/ddev.yaml file).
+Configuration files have now been created for your project. (Take a look at the file on the project's .ddev/ddev.yaml file). Additionally, the `ddev config` steps attempts to create a CMS specific database settings with the DDEV specific credentials pre-populated. Here's a Drupal specific example that is mirrored in the other CMSes.
 
-Now that the configuration has been created, you can start your project with `ddev start` (still from within the project working directory):
+* If settings.php does not exist, create it.
+* If a settings.php file exists that DDEV manages, recreate it.
+* If a settings.php file exists that DDEV does not manage, create settings.local.php.
+* If a settings.local.php file exists that DDEV manages, recreate it.
+* If a settings.local.php file exists that DDEV does not manage, warn the user and proceed.
+
+How do you know if DDEV manages a database settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!
+
+```
+/**
+ #ddev-generated: Automatically generated Drupal settings.php file.
+ ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ */
+```
+
+Now that the configuration files have been created, you can start your project with `ddev start` (still from within the project working directory):
 
 ```
 $ ddev start
@@ -292,11 +307,8 @@ Provide the path to the database you wish to import.
 Import path:
 ~/Downloads/db.sql
 Importing database...
-Generating settings.php file for database connection.
 Successfully imported database for drupal8
 ```
-
-A database connection file will be generated for your project if one does not exist (`settings.php` for Drupal, `wp-config.php` for WordPress). If you have already created a connection file, you will need to ensure your connection credentials match the ones provided in `ddev describe`.
 
 <h4>Supported file types</h4>
 
