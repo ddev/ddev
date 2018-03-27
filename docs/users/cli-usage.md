@@ -184,10 +184,6 @@ Your application can be reached at: http://example-backdrop-site.ddev.local
 
 ### Database Imports
 
-**Important:** Before importing any databases for your project, please remove its' wp-config.php if using WordPress - or settings.php file in the case of Drupal 7/8, if present.
-
-_ddev will create a wp_config.php or settings.php file automatically if one does not exist. If you already have one you'll need to set the database credentials (user=db, password=db, host=db, database=db)._
-
 Import a database with just one command; We offer support for several file formats, including: **.sql, sql.gz, tar, tar.gz, and zip**.
 
 Here's an example of a database import using ddev:
@@ -221,9 +217,24 @@ Docroot Location: web
 Found a drupal8 codebase at /Users/username/Projects/drupal8/web
 ```
 
-Configuration files have now been created for your project. (Take a look at the file on the project's .ddev/ddev.yaml file).
+Configuration files have now been created for your project. (Take a look at the file on the project's .ddev/ddev.yaml file). Additionally, the `ddev config` steps attempts to create a CMS specific database settings with the DDEV specific credentials pre-populated. Here's a Drupal specific example that is mirrored in the other CMSes.
 
-Now that the configuration has been created, you can start your project with `ddev start` (still from within the project working directory):
+* If settings.php does not exist, create it.
+* If a settings.php file exists that DDEV manages, recreate it.
+* If a settings.php file exists that DDEV does not manage, create settings.local.php.
+* If a settings.local.php file exists that DDEV manages, recreate it.
+* If a settings.local.php file exists that DDEV does not manage, warn the user and proceed.
+
+How do you know if DDEV manages a database settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!
+
+```
+/**
+ #ddev-generated: Automatically generated Drupal settings.php file.
+ ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ */
+```
+
+Now that the configuration files have been created, you can start your project with `ddev start` (still from within the project working directory):
 
 ```
 $ ddev start
@@ -237,6 +248,8 @@ Your project can be reached at: http://drupal8.ddev.local
 ```
 
 And you can now visit your working project. Enjoy!
+
+_Please note that if you're providing the settings.php or wp-config.php and ddev is creating the settings.local.php (or wordpress wp-config-local.php), the main settings file must explicitly include the appropriate "settings.local.php" or equivalent._
 
 ## Listing project information
 
@@ -292,11 +305,8 @@ Provide the path to the database you wish to import.
 Import path:
 ~/Downloads/db.sql
 Importing database...
-Generating settings.php file for database connection.
 Successfully imported database for drupal8
 ```
-
-A database connection file will be generated for your project if one does not exist (`settings.php` for Drupal, `wp-config.php` for WordPress). If you have already created a connection file, you will need to ensure your connection credentials match the ones provided in `ddev describe`.
 
 <h4>Supported file types</h4>
 
