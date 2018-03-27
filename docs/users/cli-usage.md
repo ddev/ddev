@@ -184,10 +184,6 @@ Your application can be reached at: http://example-backdrop-site.ddev.local
 
 ### Database Imports
 
-**Important:** Before importing any databases for your project, please remove its' wp-config.php if using WordPress - or settings.php file in the case of Drupal 7/8, if present.
-
-_ddev will create a wp_config.php or settings.php file automatically if one does not exist. If you already have one you'll need to set the database credentials (user=db, password=db, host=db, database=db)._
-
 Import a database with just one command; We offer support for several file formats, including: **.sql, sql.gz, tar, tar.gz, and zip**.
 
 Here's an example of a database import using ddev:
@@ -252,6 +248,8 @@ Your project can be reached at: http://drupal8.ddev.local
 ```
 
 And you can now visit your working project. Enjoy!
+
+_Please note that if you're providing the settings.php or wp-config.php and ddev is creating the settings.local.php (or wordpress wp-config-local.php), the main settings file must explicitly include the appropriate "settings.local.php" or equivalent._
 
 ## Listing project information
 
