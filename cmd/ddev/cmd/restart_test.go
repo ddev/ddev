@@ -63,7 +63,7 @@ func TestDevRestartJSON(t *testing.T) {
 				data := make(log.Fields, 3)
 				err = json.Unmarshal([]byte(entry), &data)
 				assert.NoError(err)
-				if !strings.Contains(data["msg"].(string), "You must manually add the following") {
+				if !strings.Contains(data["msg"].(string), "You must manually add the following") && !strings.Contains(data["msg"].(string), "Warning: containers will run as root") {
 					assert.EqualValues(data["level"], "info")
 				}
 				assert.NotEmpty(data["msg"])

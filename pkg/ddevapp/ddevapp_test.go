@@ -500,7 +500,7 @@ func TestProcessHooks(t *testing.T) {
 		// Ignore color in putput, can be different in different OS's
 		out := vtclean.Clean(stdout(), false)
 
-		assert.Contains(out, "--- Running exec command: ls /usr/local/bin/composer ---\n--- hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
+		assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
 		assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
 
 		runTime()
@@ -572,7 +572,8 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 
 }
 
-// TestDescribe tests that the describe command works properly on a stopped site.
+// TestDescribe tests that the describe command works properly on a running
+// and also a stopped project.
 func TestDescribe(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -586,11 +587,19 @@ func TestDescribe(t *testing.T) {
 
 		// It should already be running, but start does no harm.
 		err = app.Start()
-		assert.NoError(err)
+
+		// If we have a problem starting, get the container logs and output.
+		if err != nil {
+			stdout := testcommon.CaptureUserOut()
+			logsErr := app.Logs("web", false, false, "")
+			assert.NoError(logsErr)
+			out := stdout()
+			assert.NoError(err, "app.Start(%s) failed: %v, web container logs=%s", site.Name, err, out)
+		}
 
 		desc, err := app.Describe()
 		assert.NoError(err)
-		assert.EqualValues(desc["status"], ddevapp.SiteRunning)
+		assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
 		assert.EqualValues(app.GetName(), desc["name"])
 		assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), desc["shortroot"])
 		assert.EqualValues(app.GetAppRoot(), desc["approot"])
@@ -602,7 +611,7 @@ func TestDescribe(t *testing.T) {
 
 		desc, err = app.Describe()
 		assert.NoError(err)
-		assert.EqualValues(desc["status"], ddevapp.SiteStopped)
+		assert.EqualValues(ddevapp.SiteStopped, desc["status"])
 		switchDir()
 	}
 }

@@ -4,6 +4,7 @@ services:
   db:
     container_name: ddev-test-db
     image: DDEV_DBIMAGE
+    user: "$DDEV_UID:$DDEV_GID"
     volumes:
       - "${DDEV_IMPORTDIR}:/db"
     restart: always
@@ -18,6 +19,7 @@ services:
   web:
     container_name: ddev-test-web
     image: DDEV_WEBIMAGE
+    user: "$DDEV_UID:$DDEV_GID"
     volumes:
       - "../htdocs/:/var/www/html/docroot:cached"
     restart: always

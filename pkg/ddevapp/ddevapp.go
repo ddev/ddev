@@ -12,7 +12,6 @@ import (
 	osexec "os/exec"
 
 	"os/user"
-	"runtime"
 
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
@@ -276,7 +275,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		return fmt.Errorf("no .sql files found to import")
 	}
 
-	_, _, err = app.Exec("db", "bash", "-c", "cat /db/*.sql | mysql")
+	_, _, err = app.Exec("db", "bash", "-c", "cat /db/*.sql | mysql -udb -pdb db")
 	if err != nil {
 		return err
 	}
@@ -685,6 +684,31 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() {
+	curUser, err := user.Current()
+	util.CheckErr(err)
+
+	var uidInt, gidInt int
+	uidStr := curUser.Uid
+	gidStr := curUser.Gid
+	// For windows the uidStr/gidStr are usually way outside linux range (ends at 60000)
+	// so we have to run as root. We may have a host uidStr/gidStr greater in other contexts,
+	// bail and run as root.
+	if uidInt, err = strconv.Atoi(curUser.Uid); err != nil {
+		uidStr = "0"
+	}
+	if gidInt, err = strconv.Atoi(curUser.Gid); err != nil {
+		gidStr = "0"
+	}
+	if uidInt > 60000 || gidInt > 60000 || uidInt == 0 {
+		util.Warning("Warning: containers will run as root. This is fine on Docker for Windows or Docker for Mac, but could be a security risk on Linux.")
+	}
+
+	// If the uidStr or gidStr is outside the range possible in container, use root
+	if uidInt > 60000 || gidInt > 60000 {
+		uidStr = "0"
+		gidStr = "0"
+	}
+
 	envVars := map[string]string{
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
@@ -698,19 +722,12 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_IMPORTDIR":                app.ImportDir,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
-		"DDEV_UID":                      "",
-		"DDEV_GID":                      "",
+		"DDEV_UID":                      uidStr,
+		"DDEV_GID":                      gidStr,
 		"DDEV_PHP_VERSION":              app.PHPVersion,
 		"DDEV_PROJECT_TYPE":             app.Type,
 		"DDEV_ROUTER_HTTP_PORT":         app.RouterHTTPPort,
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,
-	}
-	if runtime.GOOS == "linux" {
-		curUser, err := user.Current()
-		util.CheckErr(err)
-
-		envVars["DDEV_UID"] = curUser.Uid
-		envVars["DDEV_GID"] = curUser.Gid
 	}
 
 	// Only set values if they don't already exist in env.
