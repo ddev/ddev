@@ -55,10 +55,10 @@ func NewWordpressConfig() *WordpressConfig {
 
 // wordPressHooks adds a wp-specific hooks example for post-import-db
 const wordPressHooks = `
-    # Un-comment and enter the production url and local url
-    # to replace in your database after import.
-	#post-import-db:
-    #  - exec: "wp search-replace <production-url> <local-url>"`
+# Un-comment and enter the production url and local url
+# to replace in your database after import.
+#post-import-db:
+#  - exec: "wp search-replace <production-url> <local-url>"`
 
 // getWordpressHooks for appending as byte array
 func getWordpressHooks() []byte {
