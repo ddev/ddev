@@ -238,9 +238,11 @@ ddev start
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
 
 ```
-Successfully started example-backdrop-site
-Your application can be reached at: http://example-backdrop-site.ddev.local
+Successfully started flow
+Your application can be reached at: http://example-flow-site.ddev.local
 ```
+
+Please use the url printed in your commandline interface, the one above is just an example.
 
 ### Database Imports
 
