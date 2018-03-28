@@ -182,9 +182,14 @@ Successfully started example-backdrop-site
 Your application can be reached at: http://example-backdrop-site.ddev.local
 ```
 
-### Flow Framework Quickstart
+### flow framework and neos cms Quickstart
 
 To get started with flow Framework or neos, clone your project repository and navigate to the project directory.
+
+More information can be found here:
+
+* flow: https://flow.neos.io/ | http://flowframework.readthedocs.io/en/stable/
+* neos: https://www.neos.io/ | http://neos.readthedocs.io/en/stable/
 
 ```
 git clone https://github.com/example-user/example-neos-site
