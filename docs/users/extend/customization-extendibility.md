@@ -55,3 +55,43 @@ To load the new configuration, run `ddev restart`.
 
 ## Overriding default container images
 The default container images provided by ddev are defined in the `config.yaml` file in the `.ddev` folder of your project. This means that _defining_ an alternative image for default services is as simple as changing the image definition in `config.yaml`. In practice, however, ddev currently has certain expectations and assumptions for what the web and database containers provide. At this time, it is recommended that the default container projects be referenced or used as a starting point for developing an alternative image. If you encounter difficulties integrating alternative images, please [file an issue and let us know](https://github.com/drud/ddev/issues/new).
+
+## Adding environment variables
+
+The prefered way to set env vars is the following composer package:
+
+* https://github.com/helhum/dotenv-connector
+
+It makes it possible to use an .env file, which is evaluated in an very early phase of composer autoloading initialization.
+
+Alternativly you can do the following. **You may need to redo that after an ddev update to ensure the you get the latest features**
+
+## Set an env var for the cli of the web container
+
+Change `.ddev/docker-compose.yaml` locate the key `services/web/environment` and add a line like the `MYCUSTOMVAR=CONTENT`
+
+```
+services:
+  web:
+    environment:
+      ...
+      MYCUSTOMVAR=CONTENT
+```
+
+Let´s check out the changes with `ddev restart`, `ddev ssh`, `export`.
+
+
+## Set an env var for the php-fpm service (called via http / https)
+
+Log into the container via `ddev ssh`. Get the content of the current nginx site with `cat /etc/nginx/sites-enabled/nginx-site.conf` copy that into `.ddev/nginx-site.conf`.
+
+Now modify the newly created file (beware of the semicolon at the end):
+
+```
+    location ~ \.php$ {
+      ...
+      fastcgi_param MYCUSTOMVAR CONTENT;
+    }
+```
+
+Let´s check out the changes with `ddev restart` and create an file just containing an `phpinfo`-call. You should see the env vars in the `$_SERVER` array.
