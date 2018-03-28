@@ -84,7 +84,8 @@ func getTypo3UploadDir(app *DdevApp) string {
 
 // Typo3Hooks adds a TYPO3-specific hooks example for post-import-db
 const Typo3Hooks = `
-#     - exec: "echo database was loaded"`
+#  post-start:
+#    - exec: "composer install -d /var/www/html"`
 
 // getTypo3Hooks for appending as byte array
 func getTypo3Hooks() []byte {

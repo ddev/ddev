@@ -52,7 +52,6 @@ const DdevFileSignature = "#ddev-generated"
 type DdevApp struct {
 	APIVersion            string               `yaml:"APIVersion"`
 	Name                  string               `yaml:"name"`
-	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
 	Type                  string               `yaml:"type"`
 	Docroot               string               `yaml:"docroot"`
 	PHPVersion            string               `yaml:"php_version"`
@@ -61,6 +60,7 @@ type DdevApp struct {
 	DBAImage              string               `yaml:"dbaimage"`
 	RouterHTTPPort        string               `yaml:"router_http_port"`
 	RouterHTTPSPort       string               `yaml:"router_https_port"`
+	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
 	ConfigPath            string               `yaml:"-"`
 	AppRoot               string               `yaml:"-"`
 	Platform              string               `yaml:"-"`

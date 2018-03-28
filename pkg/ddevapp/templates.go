@@ -89,15 +89,46 @@ networks:
       name: ddev_default
 `
 
-// HookTemplate is used to add example hooks usage
-const HookTemplate = `
-# Certain ddev commands can be extended to run tasks before or after the ddev
-# command is executed.
+// ConfigInstructions is used to add example hooks usage
+const ConfigInstructions = `
+# Key features of ddev's config.yaml:
+
+# name: <projectname> # Name of the project, automatically provides 
+#   http://projectname.ddev.local and https://projectname.ddev.local
+
+# type: <projecttype>  # drupal6/7/8, backdrop, typo3, wordpress, php
+
+# docroot: <relative_path> # Relative path to the directory containing index.php.
+
+# php_version: "7.1"  # PHP version to use, "5.6", "7.0", "7.1", "7.2"
+
+# You can delete the webimage, dbimage, dbaimage lines to use the defaults
+# in ddev.
+
+# webimage: <docker_image>  # nginx/php docker image. 
+# dbimage: <docker_image>  # mariadb docker image. 
+# dbaimage: <docker_image>
+
+# router_http_port: <port>  # Port to be used for http (defaults to port 80)
+# router_https_port: <port> # Port for https (defaults to 443)
+
+# additional_hostnames[]  # For example, 
+#   additional_hostnames["name1.ddev.local", "othername.some.other.domain"]
+#   would provide http and https URLs for "name1.ddev.local"
+#   and "othername.some.other.domain".
+#   This can also be written in yaml array syntax:
+#   additional_hostnames:
+#   - name1.ddev.local
+#   - othername.some.other.domain
+
+# provider: default # Currently either "default" or "pantheon"
+#
+# Many ddev commands can be extended to run tasks after the ddev command is
+# executed.
 # See https://ddev.readthedocs.io/en/latest/users/extending-commands/ for more
 # information on the commands that can be extended and the tasks you can define
-# for them.
-# hooks:
-#   post-import-db:`
+# for them. Example:
+#hooks:`
 
 // SequelproTemplate is the template for Sequelpro config.
 var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
