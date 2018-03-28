@@ -42,7 +42,7 @@ Quickstart instructions regarding database imports can be found under [Database 
 
 ### Drupal 6/7 Quickstart
 
-Beginning to use ddev with a Drupal 6 or 7 project is as simple as cloning **your** project's repository and checking out its directory.
+Beginning to use ddev with a Drupal 6 or 7 project is as simple as cloning your project's repository and checking out its directory.
 
 ```
 git clone https://github.com/user/my-drupal-site
@@ -74,7 +74,7 @@ Quickstart instructions for database imports can be found under [Database Import
 
 ### Drupal 8 Quickstart
 
-Get started with Drupal 8 projects on ddev either by cloning **your** git repository or using a new or existing composer project.
+Get started with Drupal 8 projects on ddev either by cloning your git repository or using a new or existing composer project.
 
 **Git Clone Example**
 
@@ -115,7 +115,7 @@ Your project can be reached at: http://my-drupal8-site.ddev.local
 
 ### TYPO3 Quickstart
 
-To get started using ddev with a TYPO3 project, clone **your** project's repository and checkout its directory.
+To get started using ddev with a TYPO3 project, clone your project's repository and checkout its directory.
 
 ```
 git clone https://github.com/example-user/example-typo3-site
@@ -154,7 +154,7 @@ For those wanting/needing to connect to the database within the database contain
 
 ### Backdrop Quickstart
 
-To get started with Backdrop, clone **your** project repository and navigate to the project directory.
+To get started with Backdrop, clone your project repository and navigate to the project directory.
 
 ```
 git clone https://github.com/example-user/example-backdrop-site
@@ -184,7 +184,7 @@ Your application can be reached at: http://example-backdrop-site.ddev.local
 
 ### Flow Framework Quickstart
 
-To get started with flow Framework or neos, clone **your** project repository and navigate to the project directory.
+To get started with flow Framework or neos, clone your project repository and navigate to the project directory.
 
 ```
 git clone https://github.com/example-user/example-neos-site
