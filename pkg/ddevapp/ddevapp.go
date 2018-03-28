@@ -52,7 +52,7 @@ const DdevFileSignature = "#ddev-generated"
 type DdevApp struct {
 	APIVersion            string               `yaml:"APIVersion"`
 	Name                  string               `yaml:"name"`
-	AdditionalNames       string               `yaml:"additional_names"`
+	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
 	Type                  string               `yaml:"type"`
 	Docroot               string               `yaml:"docroot"`
 	PHPVersion            string               `yaml:"php_version"`
@@ -136,6 +136,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["shortroot"] = shortRoot
 	appDesc["httpurl"] = app.GetHTTPURL()
 	appDesc["httpsurl"] = app.GetHTTPSURL()
+	appDesc["urls"] = app.GetAllURLs()
 
 	db, err := app.FindContainerByType("db")
 	if err != nil {
@@ -736,10 +737,9 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,
 	}
 
-	// additional_names should be comma-delimited set of additional FQDN.
-	if app.AdditionalNames != "" {
+	if len(app.AdditionalHostnames) > 0 {
 		// TODO: Warn people about additional names in use.
-		envVars["DDEV_HOSTNAME"] = app.GetHostname() + "," + app.AdditionalNames
+		envVars["DDEV_HOSTNAME"] = app.GetHostname() + "," + strings.Join(app.AdditionalHostnames, ",")
 	}
 	// Only set values if they don't already exist in env.
 	for k, v := range envVars {
@@ -873,6 +873,15 @@ func (app *DdevApp) GetHTTPSURL() string {
 		url = url + ":" + app.RouterHTTPSPort
 	}
 	return url
+}
+
+// GetAllURLs returns an array of all the URLs for the project
+func (app *DdevApp) GetAllURLs() []string {
+	var URLs []string
+	for _, name := range app.GetHostnames() {
+		URLs = append(URLs, "http://"+name, "https://"+name)
+	}
+	return URLs
 }
 
 // HostName returns the hostname of a given application.

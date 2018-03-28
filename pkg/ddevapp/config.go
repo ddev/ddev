@@ -286,11 +286,14 @@ func (app *DdevApp) GetHostname() string {
 
 // GetHostnames returns an array of all the configured hostnames.
 func (app *DdevApp) GetHostnames() []string {
-	nameList := app.GetHostname()
-	if app.AdditionalNames != "" {
-		nameList = nameList + "," + app.AdditionalNames
+
+	var nameList []string
+	nameList = append(nameList, app.GetHostname())
+
+	for _, name := range app.AdditionalHostnames {
+		nameList = append(nameList, name)
 	}
-	return strings.Split(nameList, ",")
+	return nameList
 }
 
 // WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.

@@ -66,9 +66,7 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 	output = output + "\n\nProject Information\n-----------------\n"
 	siteInfo := uitable.New()
 	siteInfo.AddRow("PHP version:", desc["php_version"])
-	if len(desc["hostnames"].([]string)) > 1 {
-		siteInfo.AddRow("Hostnames", strings.Join(desc["hostnames"].([]string), ", "))
-	}
+	siteInfo.AddRow("URLs:", strings.Join(desc["urls"].([]string), ", "))
 	output = output + fmt.Sprint(siteInfo)
 
 	// Only show extended status for running sites.
