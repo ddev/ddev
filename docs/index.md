@@ -6,11 +6,11 @@
 
 ## System Requirements
 
-- [Docker](https://www.docker.com/community-edition) version 17.05 or higher
+- [Docker](https://www.docker.com/community-edition) version 17.05 or higher. Linux users make sure you do the [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
 - docker-compose 1.10.0 and higher (bundled with Docker in Docker for Mac and Docker for Windows)
 - OS Support
   - macOS Sierra and higher (macOS 10.12 and higher but it probably runs anywhere docker runs)
-  - Linux (See [Linux notes](users/linux_notes.md)): Most recent Linux distributions which can run Docker are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+
+  - Linux: Most recent Linux distributions which can run Docker are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
   - Windows 10 Pro
 
 We are open to expanding this list to include additional OSs as well as improve our existing support for the ones listed above. Please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue!
