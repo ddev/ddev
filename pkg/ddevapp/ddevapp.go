@@ -430,6 +430,10 @@ func (app *DdevApp) ImportFiles(imPath string, extPath string) error {
 		uploadDir = "wp-content/uploads"
 	}
 
+	if uploadDir == "" {
+		util.Failed("No upload directory has been specified for the project type %s", app.GetType())
+	}
+
 	destPath := filepath.Join(app.GetAppRoot(), app.GetDocroot(), uploadDir)
 
 	// parent of destination dir should exist
