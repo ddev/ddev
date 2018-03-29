@@ -8,6 +8,7 @@ services:
   db:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-db
     image: $DDEV_DBIMAGE
+    stop_grace_period: 60s
     volumes:
       - "${DDEV_IMPORTDIR}:/db"
       - "${DDEV_DATADIR}:/var/lib/mysql"
