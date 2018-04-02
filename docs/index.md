@@ -19,6 +19,9 @@ We are open to expanding this list to include additional OSs as well as improve 
 ddev by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure ddev to use different ports. See [troubleshooting](https://ddev.readthedocs.io/en/latest/users/troubleshooting/#webserver-ports-are-already-occupied-by-another-webserver) for more detailed problemsolving.
 
 ## Installation
+
+_When upgrading, please check the [release notes](https://github.com/drud/ddev/releases) for actions you might need to take on each project._
+
 ### Homebrew - macOS
 
 For macOS users, we recommend downloading, installing, and upgrading via [homebrew](https://brew.sh/):
