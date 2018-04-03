@@ -50,6 +50,9 @@ type TestSite struct {
 	// Type is the type of application. This can be specified when a config file is not present
 	// for a test site.
 	Type string
+	// Safe200URL is a string of a url that can be accessed for testing a site
+	// that has not yet been installed
+	Safe200URL string
 }
 
 // Prepare downloads and extracts a site codebase to a temporary directory.

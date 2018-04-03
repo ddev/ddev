@@ -127,6 +127,7 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 					// Log expected vs. actual if we do not get a match.
 					output.UserOut.WithFields(log.Fields{
 						"URL":      o.URL,
+						"headers":  o.Headers,
 						"expected": o.ExpectedStatus,
 						"got":      resp.StatusCode,
 					}).Info("HTTP Status code matched expectations")
@@ -134,8 +135,9 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 				}
 
 				// Log expected vs. actual if we do not get a match.
-				log.WithFields(log.Fields{
+				output.UserOut.WithFields(log.Fields{
 					"URL":      o.URL,
+					"headers":  o.Headers,
 					"expected": o.ExpectedStatus,
 					"got":      resp.StatusCode,
 				}).Info("HTTP Status could not be matched")
