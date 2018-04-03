@@ -112,14 +112,11 @@ const ConfigInstructions = `
 # router_http_port: <port>  # Port to be used for http (defaults to port 80)
 # router_https_port: <port> # Port for https (defaults to 443)
 
-# additional_hostnames[]  # For example, 
-#   additional_hostnames["name1.ddev.local", "othername.some.other.domain"]
-#   would provide http and https URLs for "name1.ddev.local"
-#   and "othername.some.other.domain".
-#   This can also be written in yaml array syntax:
-#   additional_hostnames:
-#   - name1.ddev.local
-#   - othername.some.other.domain
+#additional_hostnames:
+# - somename
+# - someothername
+# would provide http and https URLs for "somename.ddev.local"
+# and "someothername.ddev.local".
 
 # provider: default # Currently either "default" or "pantheon"
 #

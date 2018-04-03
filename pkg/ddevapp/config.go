@@ -291,7 +291,7 @@ func (app *DdevApp) GetHostnames() []string {
 	nameList = append(nameList, app.GetHostname())
 
 	for _, name := range app.AdditionalHostnames {
-		nameList = append(nameList, name)
+		nameList = append(nameList, name+"."+version.DDevTLD)
 	}
 	return nameList
 }

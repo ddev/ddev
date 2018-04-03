@@ -739,7 +739,7 @@ func (app *DdevApp) DockerEnv() {
 
 	if len(app.AdditionalHostnames) > 0 {
 		// TODO: Warn people about additional names in use.
-		envVars["DDEV_HOSTNAME"] = app.GetHostname() + "," + strings.Join(app.AdditionalHostnames, ",")
+		envVars["DDEV_HOSTNAME"] = strings.Join(app.GetHostnames(), ",")
 	}
 	// Only set values if they don't already exist in env.
 	for k, v := range envVars {
