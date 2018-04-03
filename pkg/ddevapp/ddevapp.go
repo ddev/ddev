@@ -806,8 +806,13 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 func (app *DdevApp) Down(removeData bool) error {
 	app.DockerEnv()
 
+	err := app.Stop()
+	if err != nil {
+		util.Warning("Failed to stop containers for %s: %v", app.GetName(), err)
+	}
+
 	// Remove all the containers and volumes for app.
-	err := Cleanup(app)
+	err = Cleanup(app)
 	if err != nil {
 		return fmt.Errorf("Failed to remove %s: %s", app.GetName(), err)
 	}
