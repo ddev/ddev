@@ -237,9 +237,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
-		switchDir := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStartMultipleHostnames", site.Name))
-
 		testcommon.ClearDockerEnv()
 
 		err := app.Init(site.Dir)
@@ -250,8 +248,6 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		//err = app.Down(false)
-		//assert.NoError(err)
 		err = app.Start()
 		assert.NoError(err)
 
@@ -277,11 +273,10 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.NoError(err)
 		}
 
-		err = app.Down(false)
+		err = app.Stop()
 		assert.NoError(err)
 
 		runTime()
-		switchDir()
 	}
 }
 
@@ -309,6 +304,19 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
 	assert := asrt.New(t)
+
+	// Start the apps.
+	for _, site := range TestSites {
+		testcommon.ClearDockerEnv()
+		app := &ddevapp.DdevApp{}
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Start()
+		assert.NoError(err)
+	}
+
 	apps := ddevapp.GetApps()
 	assert.Equal(len(apps), len(TestSites))
 
