@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/version"
 	"path/filepath"
 	"testing"
 
@@ -48,7 +49,7 @@ func TestDevLogs(t *testing.T) {
 		// Because php display_errors = On the error results in a 200 anyway.
 		o.ExpectedStatus = 200
 		o.Timeout = 30
-		o.Headers["Host"] = v.Name + ".ddev.local"
+		o.Headers["Host"] = v.Name + "." + version.DDevTLD
 		err = util.EnsureHTTPStatus(o)
 		assert.NoError(err)
 

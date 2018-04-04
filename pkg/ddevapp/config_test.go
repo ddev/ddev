@@ -386,7 +386,7 @@ func TestWriteConfig(t *testing.T) {
 	out, err := ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))
 	assert.NoError(err)
 	assert.Contains(string(out), "TestWrite")
-	assert.Contains(string(out), `exec: "drush cr"`)
+	assert.Contains(string(out), `exec: drush cr`)
 
 	app.Type = "wordpress"
 	err = app.WriteConfig()

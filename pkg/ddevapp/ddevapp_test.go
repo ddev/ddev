@@ -18,7 +18,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	docker "github.com/fsouza/go-dockerclient"
+	"github.com/fsouza/go-dockerclient"
 	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
@@ -34,6 +34,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
 			Docroot:                       "htdocs",
 			Type:                          "wordpress",
+			Safe200URL:                    "/readme.html",
 		},
 		{
 			Name:                          "TestPkgDrupal8",
@@ -46,6 +47,7 @@ var (
 			FullSiteTarballURL:            "",
 			Type:                          "drupal8",
 			Docroot:                       "",
+			Safe200URL:                    "/README.txt",
 		},
 		{
 			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
@@ -56,6 +58,7 @@ var (
 			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
 			Docroot:                       "docroot",
 			Type:                          "drupal7",
+			Safe200URL:                    "/README.txt",
 		},
 		{
 			Name:                          "TestPkgDrupal6",
@@ -65,6 +68,7 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          "drupal6",
+			Safe200URL:                    "/CHANGELOG.txt",
 		},
 		{
 			Name:                          "TestPkgBackdrop",
@@ -74,6 +78,7 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          "backdrop",
+			Safe200URL:                    "/README.md",
 		},
 		{
 			Name:                          "TestPkgTypo3",
@@ -83,6 +88,7 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          "typo3",
+			Safe200URL:                    "/INSTALL.md",
 		},
 	}
 )
@@ -225,6 +231,55 @@ func TestDdevStart(t *testing.T) {
 	testcommon.CleanupDir(another.Dir)
 }
 
+// TestDdevStartMultipleHostnames tests start with multiple hostnames
+func TestDdevStartMultipleHostnames(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	for _, site := range TestSites {
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStartMultipleHostnames", site.Name))
+		testcommon.ClearDockerEnv()
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		app.AdditionalHostnames = []string{"sub1." + site.Name, "sub2." + site.Name, "subname.sub3." + site.Name}
+
+		err = app.WriteConfig()
+		assert.NoError(err)
+
+		err = app.Start()
+		assert.NoError(err)
+
+		// ensure docker-compose.yaml exists inside .ddev site folder
+		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
+		assert.True(composeFile)
+
+		for _, containerType := range [3]string{"web", "db", "dba"} {
+			containerName, err := constructContainerName(containerType, app)
+			assert.NoError(err)
+			check, err := testcommon.ContainerCheck(containerName, "running")
+			assert.NoError(err)
+			assert.True(check, "Container check on %s failed", containerType)
+		}
+
+		for _, hostname := range app.GetHostnames() {
+			o := util.NewHTTPOptions("http://" + "127.0.0.1" + site.Safe200URL)
+			o.ExpectedStatus = 200
+			o.Timeout = 5
+			o.TickerInterval = 1
+			o.Headers["Host"] = hostname
+			err = util.EnsureHTTPStatus(o)
+			assert.NoError(err)
+		}
+
+		err = app.Stop()
+		assert.NoError(err)
+
+		runTime()
+	}
+}
+
 // TestStartWithoutDdev makes sure we don't have a regression where lack of .ddev
 // causes a panic.
 func TestStartWithoutDdevConfig(t *testing.T) {
@@ -249,6 +304,19 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
 	assert := asrt.New(t)
+
+	// Start the apps.
+	for _, site := range TestSites {
+		testcommon.ClearDockerEnv()
+		app := &ddevapp.DdevApp{}
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Start()
+		assert.NoError(err)
+	}
+
 	apps := ddevapp.GetApps()
 	assert.Equal(len(apps), len(TestSites))
 
