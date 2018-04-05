@@ -879,7 +879,15 @@ func (app *DdevApp) GetHTTPSURL() string {
 func (app *DdevApp) GetAllURLs() []string {
 	var URLs []string
 	for _, name := range app.GetHostnames() {
-		URLs = append(URLs, "http://"+name, "https://"+name)
+		httpPort := ""
+		httpsPort := ""
+		if app.RouterHTTPPort != "80" {
+			httpPort = ":" + app.RouterHTTPPort
+		}
+		if app.RouterHTTPSPort != "443" {
+			httpsPort = ":" + app.RouterHTTPSPort
+		}
+		URLs = append(URLs, "http://"+name+httpPort, "https://"+name+httpsPort)
 	}
 	return URLs
 }
