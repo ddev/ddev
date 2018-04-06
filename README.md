@@ -16,7 +16,7 @@ ddev is an open source tool that makes it simple to get local PHP development en
   - [Backdrop](https://ddev.readthedocs.io/en/latest/users/cli-usage/#backdrop-quickstart) 
   - [TYPO3](https://ddev.readthedocs.io/en/latest/users/cli-usage#typo3-quickstart)
 
-Having trouble? See our [support options below](#support). Additionally, you may have trouble if [another local development tool is already using port 80 or 443](https://ddev.readthedocs.io/en/latest/#using-ddev-with-other-development-environments).
+Having trouble? See our [support options below](#support). You might have trouble if [another local development tool is already using port 80 or 443](https://ddev.readthedocs.io/en/latest/#using-ddev-with-other-development-environments).
 
 ## Current Feature List
 
@@ -34,13 +34,14 @@ Just running `ddev` will show you all the commands.
 ## Support
 If you're having trouble using ddev, please use these resources to get help:
 
-1. Please review the [ddev Documentation](https://ddev.readthedocs.io) to ensure your question isn't answered there.
-2. Review the [ddev issue queue](https://github.com/drud/ddev/issues) to see if an issue similar to yours already exists.
-3. If you've exhausted these options and still need help, please [file an issue](https://github.com/drud/ddev/issues/new) following the pre-populated guidelines and our [Contributing Guidelines](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md) as best as possible.
-4. We also have a channel (#ddev) in the [Drupal Slack](https://www.drupal.org/slack) account. We try to be very responsive, but replies may lag outside normal business hours in the US Mountain Time zone.
+1. See the [ddev Documentation](https://ddev.readthedocs.io).
+2. Review [Stack Overflow DDEV-Local questions and answers](https://stackoverflow.com/tags/ddev) (or ask a question there! We get notified when you ask.)
+3. The [ddev issue queue](https://github.com/drud/ddev/issues) may have an issue related to your problem.
+4. For suspected bugs or feature requests, [file an issue](https://github.com/drud/ddev/issues/new).
+5. We have slack channels (#ddev) in [Drupal Slack](https://www.drupal.org/slack) and [TYPO3 Slack](https://forger.typo3.com/slack). We and the rest of the community try to be very responsive.
 
 ## Contributing
 Interested in contributing to ddev? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!
 
 ## Addititional Information
-* **Roadmap:** The [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap) is managed by @rickmanelius. We love your input! Make requests in the [ddev issue queue](https://github.com/drud/ddev/issues).
+* **Roadmap:** See the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap). We love your input! Make requests in the [ddev issue queue](https://github.com/drud/ddev/issues).
