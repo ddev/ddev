@@ -61,6 +61,7 @@ type DdevApp struct {
 	DBAImage              string               `yaml:"dbaimage"`
 	RouterHTTPPort        string               `yaml:"router_http_port"`
 	RouterHTTPSPort       string               `yaml:"router_https_port"`
+	XdebugEnabled         string               `yaml:"xdebug_enabled"`
 	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
 	ConfigPath            string               `yaml:"-"`
 	AppRoot               string               `yaml:"-"`
@@ -166,6 +167,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["php_version"] = app.GetPhpVersion()
 	appDesc["router_http_port"] = app.RouterHTTPPort
 	appDesc["router_https_port"] = app.RouterHTTPSPort
+	appDesc["xdebug_enabled"] = app.XdebugEnabled
 
 	return appDesc, nil
 }
@@ -736,6 +738,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PROJECT_TYPE":             app.Type,
 		"DDEV_ROUTER_HTTP_PORT":         app.RouterHTTPPort,
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,
+		"DDEV_XDEBUG_ENABLED":           app.XdebugEnabled,
 	}
 
 	// Find out terminal dimensions
