@@ -7,7 +7,7 @@ xdebug is a server-side tool: It is installed automatically on the container and
 All IDEs basically work the same: They listen on a port and react when they're contacted there. So IDEs other than those listed here should work fine, if listening on the default xdebug port 9000.
 
 **Key facts:**
-* You need to explicitly enable xdebug in your config.yaml.
+* You need to explicitly enable xdebug in your config.yaml with `xdebug_enable: true` (it's disabled by default). After changing, `ddev start` again.
 * The debug server port on the IDE must be set to port 9000, which is the default and is probably already set in most IDEs. (If you need to change the xdebug port due to a port conflict on your host computer, you can do it with a PHP override, explained below.)
 
 For more background on XDebug see [XDebug documentation](https://xdebug.org/docs/remote). The intention here is that one won't have to understand XDebug to do debugging.
@@ -18,18 +18,18 @@ For each IDE the link to their documentation is provided, and the skeleton steps
 
 ### Enable or disable xdebug in your config.yaml
 
-Use a post-start hook to enable or disable xdebug on startup:
+Enable xdebug in your config.yaml:
 
-```
-hooks:
-    post-start:
-      - exec: enable_xdebug
-```
+`xdebug_enable: true`
 
+(If you don't want it set all the time, you can `ddev exec enable_xdebug` or `ddev exec disable_xdebug` any time.)
+
+### Setup for Various IDEs
 
 * [PHPStorm](#phpstorm)
 * [NetBeans](#netbeans)
 * [Atom](#atom)
+* [Visual Studio Code (vscode)](#vscode)
 
 
 <a name="phpstorm"></a>
@@ -49,12 +49,12 @@ PHPStorm [zero-configuration debugging](https://confluence.jetbrains.com/display
 
 #### PHPStorm "Run/Debug configuration" Debugging
 
-PHPStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/2017.1/run-debug-configurations.html) require slightly more up-front work but can offer more flexibility and may be easier for some people.
+PHPStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/creating-and-editing-run-debug-configurations.html) require slightly more up-front work but can offer more flexibility and may be easier for some people.
 
 1. Under the "Run" menu select "Edit configurations"
 2. Click the "+" in the upper left and choose "PHP Web Application" to create a configuration. Give it a reasonable name.
 3. Create a "server" for the project. (Screenshot below)
-4. Add file mappings for the docroot of the server. If your repo has the main code in the root of the repo, that will map to /var/www/html. If it's in a docroot directory, it would map to /var/www/html/docroot.
+4. Add file mappings for the files on the server. Click on the local repo path and add "/var/www/html" as the "Absolute path on the server".
 5. Set an appropriate breakpoint.
 6. Start debugging by clicking the "debug" button, which will launch a page in your browser.
 
@@ -69,8 +69,6 @@ Server creation:
 ### Netbeans Debugging Setup
 
 [Netbeans](https://netbeans.org/) is a free IDE which has out-of-the-box debugging configurations for PHP. You'll want the *PHP* download bundle from the [download page](https://netbeans.org/downloads/).
-
-![Netbeans Debugging Port](images/netbeans_debugger_port.png)
 
 1. Create a PHP project that relates to your project repository. (File->New Project->PHP Application with Existing Sources)
 2. Under "Run as", choose "Local web site (running on local web server)".
@@ -108,3 +106,13 @@ An example configuration from [user contribution](https://github.com/drud/ddev/i
     ]
     PhpException: {}
 ```
+
+<a name="vscode"></a>
+### Visual Studio Code (vscode) Debugging Setup
+
+1. Install the [php-debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
+2. Add to the launch.json the stanza defining "Listen for xdebug" (see [config snippet](snippets/vscode_listen_for_xdebug_snippet.txt))
+3. Set a breakpoint in your index.php. If it isn't solid red, restart.
+4. Click the vscode debug button: ![vscode debug button](images/vscode_debug_button.png).
+5. Run the "Listen for XDebug" job: ![Listen for XDebug](images/vscode_run_listen_xdebug.png)
+6. Go to a page in your project, you should hit your breakpoint.
