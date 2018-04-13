@@ -13,7 +13,7 @@
 Name "ddev"
 
 ; The file to write
-OutFile "ddev_installer.exe"
+OutFile "..\bin\windows\windows_amd64\ddev_installer.$DDEV_VERSION.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES64\ddev
