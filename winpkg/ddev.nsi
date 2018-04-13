@@ -3,9 +3,11 @@
 ; This script is based on example2.nsi. It remembers the directory,
 ; uninstall support and (optionally) installs start menu shortcuts.
 ;
-; It will install ddev.nsi into a directory that the user selects,
+; It will install ddev.exe into $PROGRAMFILES64\ddev,
 
 ;--------------------------------
+
+!include MUI2.nsh
 
 ; The name of the installer
 Name "ddev"
@@ -24,15 +26,20 @@ InstallDirRegKey HKLM "Software\NSIS_ddev" "Install_Dir"
 RequestExecutionLevel admin
 
 ;--------------------------------
+;Interface Settings
 
-; Pages
+  !define MUI_ABORTWARNING
 
-Page components
-Page directory
-Page instfiles
+;--------------------------------
+;Pages
 
-UninstPage uninstConfirm
-UninstPage instfiles
+  !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
+  !insertmacro MUI_PAGE_COMPONENTS
+  !insertmacro MUI_PAGE_DIRECTORY
+  !insertmacro MUI_PAGE_INSTFILES
+
+  !insertmacro MUI_UNPAGE_CONFIRM
+  !insertmacro MUI_UNPAGE_INSTFILES
 
 ;--------------------------------
 
@@ -52,24 +59,23 @@ Section "ddev (required)"
   
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "DisplayName" "NSIS ddev"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "UninstallString" '"$INSTDIR\uninstall.exe"'
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "UninstallString" '"$INSTDIR\ddev_uninstall.exe"'
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "NoRepair" 1
-  WriteUninstaller "uninstall.exe"
+  WriteUninstaller "ddev_uninstall.exe"
 
 SectionEnd
 
-Section "Add to PATH"
+Section "Add to PATH (Recommended)"
   Push $INSTDIR
   Call AddToPath
-
 SectionEnd
 
 ; Optional section (can be disabled by the user)
 Section "Start Menu Shortcuts"
 
   CreateDirectory "$SMPROGRAMS\ddev"
-  CreateShortcut "$SMPROGRAMS\ddev\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+  CreateShortcut "$SMPROGRAMS\ddev\Uninstall.lnk" "$INSTDIR\ddev_uninstall.exe" "" "$INSTDIR\ddev_uninstall.exe" 0
   CreateShortcut "$SMPROGRAMS\ddev\ddev (MakeNSISW).lnk" "$INSTDIR\ddev.nsi" "" "$INSTDIR\ddev.nsi" 0
   
 SectionEnd
@@ -86,7 +92,7 @@ Section "Uninstall"
 
   ; Remove files and uninstaller
   Delete $INSTDIR\ddev.nsi
-  Delete $INSTDIR\uninstall.exe
+  Delete $INSTDIR\ddev_uninstall.exe
 
   ; Remove shortcuts, if any
   Delete "$SMPROGRAMS\ddev\*.*"
