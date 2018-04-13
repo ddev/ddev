@@ -299,23 +299,22 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	stdout, _, err := app.Exec("web", "php", "--re", "xdebug")
-	assert.NoError(err)
-	assert.Contains(stdout, "Extension xdebug does not exist")
+	stdout, _, err := app.Exec("web", "php", "--ri", "xdebug")
+	assert.Error(err)
+	assert.Contains(stdout, "Extension 'xdebug' not present")
 
 	// Run with xdebug_enabled: true
 	//err = app.Stop()
 	testcommon.ClearDockerEnv()
-	assert.NoError(err)
 	app.XdebugEnabled = true
 	err = app.WriteConfig()
 	assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)
-	stdout, _, err = app.Exec("web", "php", "--re", "xdebug")
+	stdout, _, err = app.Exec("web", "php", "--ri", "xdebug")
 	assert.NoError(err)
-	assert.Contains(stdout, "xdebug version")
-	assert.Contains(stdout, "host.docker.internal")
+	assert.Contains(stdout, "xdebug support => enabled")
+	assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
 
 	err = app.Stop()
 	assert.NoError(err)
