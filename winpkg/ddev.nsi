@@ -3,7 +3,7 @@
 ; This script is based on example2.nsi. It remembers the directory,
 ; uninstall support and (optionally) installs start menu shortcuts.
 ;
-; It will install ddev.exe into $PROGRAMFILES64\ddev,
+; It will install ddev.exe into $PROGRAMFILES64/ddev,
 
 ;--------------------------------
 
@@ -12,8 +12,7 @@
 ; The name of the installer
 Name "ddev"
 
-; The file to write
-OutFile "..\bin\windows\windows_amd64\ddev_installer.$DDEV_VERSION.exe"
+OutFile "../bin/windows/windows_amd64/ddev_windows_installer.${VERSION}.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES64\ddev

@@ -36,6 +36,7 @@ zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev ddev_bash_completion.sh
 cd $BASE_DIR/bin/windows/windows_amd64
 tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe ddev_bash_completion.sh
 zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe ddev_bash_completion.sh
+cp ddev_windows_installer*.exe $ARTIFACTS
 
 # Create the sha256 files
 cd $ARTIFACTS
