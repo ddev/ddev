@@ -6,7 +6,7 @@ set -x
 # Basic tools
 
 sudo apt-get update -qq
-sudo apt-get install -qq mysql-client realpath zip
+sudo apt-get install -qq mysql-client realpath zip nsis
 
 # golang of the version we want
 sudo apt-get remove -qq golang && sudo rm -rf /usr/local/go &&
