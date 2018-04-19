@@ -51,7 +51,8 @@ Section "ddev (required)"
   SetOutPath $INSTDIR
   
   ; Put file there
-  File "..\bin\windows\windows_amd64\ddev.exe"
+  File "../bin/windows/windows_amd64/ddev.exe"
+  FIle "../bin/windows/windows_amd64/sudo.exe"
   
   ; Write the installation path into the registry
   WriteRegStr HKLM SOFTWARE\NSIS_ddev "Install_Dir" "$INSTDIR"
@@ -87,6 +88,7 @@ Section "Uninstall"
 
   ; Remove files and uninstaller
   Delete $INSTDIR\ddev.exe
+  Delete $INSTDIR\sudo.exe
   Delete $INSTDIR\ddev_uninstall.exe
 
   ; Remove shortcuts, if any

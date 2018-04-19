@@ -26,6 +26,8 @@ jobs:
           command: |
             make -s clean linux darwin windows
             makensis -DVERSION=$(git describe --tags --always --dirty) winpkg/ddev.nsi
+            curl -o /tmp/sudo.zip -O -L https://github.com/mattn/sudo/releases/download/v0.0.1/sudo-x86_64.zip
+            unzip -d bin/windows/windows_amd64 /tmp/sudo.zip
           name: Build the ddev executables
 
       # Run the built-in ddev tests with the executables just built.
