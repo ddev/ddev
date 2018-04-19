@@ -1,7 +1,7 @@
 <h1>Using Developer Tools with ddev</h1>
 
 ## Developer Tools Included in the Container
-We have included several useful developer tools in our containers.
+We have included several useful developer tools in our containers. Run `ddev describe` to see the project information and services available for your project and how to access them.   
 
 ### Command-line Tools
 - MySQL Client (mysql) - Command-line interface for interacting with MySQL.
@@ -33,7 +33,7 @@ After your project is started, access the phpMyAdmin web interface at its defaul
 http://mysite.ddev.local:8036
 ```
 
-If you use [Sequel Pro](https://www.sequelpro.com/) for macOS, run `ddev sequelpro` within a project folder, and Sequel Pro will launch and load the database for that project. Sequel Pro is a free open source database browser for macOS. 
+If you use the free [Sequel Pro](https://www.sequelpro.com/) database browser for macOS, run `ddev sequelpro` within a project folder, and Sequel Pro will launch and access the database for that project. 
 
 ## Using Development Tools on the Host Machine
 
