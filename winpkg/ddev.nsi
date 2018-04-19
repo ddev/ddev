@@ -19,9 +19,9 @@ InstallDir $PROGRAMFILES64\ddev
 
 ; Registry key to check for directory (so if you install again, it will 
 ; overwrite the old one automatically)
-InstallDirRegKey HKLM "Software\NSIS_ddev" "Install_Dir"
+InstallDirRegKey HKLM "Software\ddev" ""
 
-; Request application privileges for Windows Vista
+; Request admin privileges
 RequestExecutionLevel admin
 
 ;--------------------------------
@@ -57,7 +57,7 @@ Section "ddev (required)"
   WriteRegStr HKLM SOFTWARE\NSIS_ddev "Install_Dir" "$INSTDIR"
   
   ; Write the uninstall keys for Windows
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "DisplayName" "NSIS ddev"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "DisplayName" "ddev"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "UninstallString" '"$INSTDIR\ddev_uninstall.exe"'
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "NoRepair" 1
@@ -70,13 +70,9 @@ Section "Add to PATH (Recommended)"
   Call AddToPath
 SectionEnd
 
-; Optional section (can be disabled by the user)
 Section "Start Menu Shortcuts"
-
   CreateDirectory "$SMPROGRAMS\ddev"
   CreateShortcut "$SMPROGRAMS\ddev\Uninstall.lnk" "$INSTDIR\ddev_uninstall.exe" "" "$INSTDIR\ddev_uninstall.exe" 0
-  CreateShortcut "$SMPROGRAMS\ddev\ddev (MakeNSISW).lnk" "$INSTDIR\ddev.nsi" "" "$INSTDIR\ddev.nsi" 0
-  
 SectionEnd
 
 ;--------------------------------
@@ -90,7 +86,7 @@ Section "Uninstall"
   DeleteRegKey HKLM SOFTWARE\NSIS_ddev
 
   ; Remove files and uninstaller
-  Delete $INSTDIR\ddev.nsi
+  Delete $INSTDIR\ddev.exe
   Delete $INSTDIR\ddev_uninstall.exe
 
   ; Remove shortcuts, if any
