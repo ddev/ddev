@@ -42,7 +42,7 @@ Quickstart instructions regarding database imports can be found under [Database 
 
 ### Drupal 6/7 Quickstart
 
-Beginning to use ddev with a Drupal 6 or 7 project is as simple as cloning the project's repository and checking out its directory.
+Beginning to use ddev with a Drupal 6 or 7 project is as simple as cloning your project's repository and checking out its directory.
 
 ```
 git clone https://github.com/user/my-drupal-site
@@ -74,7 +74,7 @@ Quickstart instructions for database imports can be found under [Database Import
 
 ### Drupal 8 Quickstart
 
-Get started with Drupal 8 projects on ddev either by cloning a git repository or using a new or existing composer project.
+Get started with Drupal 8 projects on ddev either by cloning your git repository or using a new or existing composer project.
 
 **Git Clone Example**
 
@@ -115,7 +115,7 @@ Your project can be reached at: http://my-drupal8-site.ddev.local
 
 ### TYPO3 Quickstart
 
-To get started using ddev with a TYPO3 project, clone the project's repository and checkout its directory.
+To get started using ddev with a TYPO3 project, clone your project's repository and checkout its directory.
 
 ```
 git clone https://github.com/example-user/example-typo3-site
@@ -154,7 +154,7 @@ For those wanting/needing to connect to the database within the database contain
 
 ### Backdrop Quickstart
 
-To get started with Backdrop, clone the project repository and navigate to the project directory.
+To get started with Backdrop, clone your project repository and navigate to the project directory.
 
 ```
 git clone https://github.com/example-user/example-backdrop-site
@@ -181,6 +181,73 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 Successfully started example-backdrop-site
 Your application can be reached at: http://example-backdrop-site.ddev.local
 ```
+
+### flow framework and neos cms Quickstart
+
+To get started with flow Framework or neos, clone your project repository and navigate to the project directory.
+
+More information can be found here:
+
+* flow: https://flow.neos.io/ | http://flowframework.readthedocs.io/en/stable/
+* neos: https://www.neos.io/ | http://neos.readthedocs.io/en/stable/
+
+```
+git clone https://github.com/example-user/example-neos-site
+cd example-backdrop-site
+composer install
+```
+
+To set up ddev for your project, enter the command:
+
+```
+ddev config
+```
+
+_Note: ddev config will prompt you for a project name, docroot, and project type. Use **php** as project type._
+
+After `ddev config`, you're nearly ready to start running your project.
+
+We need to point flow to the correct database. To do that please create `Configuration/Development/Ddev/Settings.yaml`:
+
+```
+TYPO3:
+  Flow:
+    utility:
+      environment:
+        # Defines the base directory which Flow may use for storing different kinds
+        # of temporary files.
+        # The directory must be writable and Flow will automatically create a sub
+        # directory (named after the context) which will contain the actual temporary files.
+        temporaryDirectoryBase: '/tmp/FLOW'
+    persistence:
+      backendOptions:
+        host:     'db'
+        dbname:   'db'  # adjust to your database name
+        user:     'db'  # adjust to your database user
+        password: 'db'  # adjust to your database password
+        port:     3306
+      doctrine:
+        sqlLogger: 'TYPO3\Flow\Persistence\Doctrine\Logging\SqlLogger'
+
+```
+
+Now you could run the project, sadly the `FLOW_CONTEXT` env var is not set yet.
+You can achieve that by editing the `.ddev/docker-compose.yaml` and by changing the `.ddev/nginx-site.conf
+
+Run ddev using and you are good to go:
+
+```
+ddev start
+```
+
+When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
+
+```
+Successfully started flow
+Your application can be reached at: http://example-flow-site.ddev.local
+```
+
+Please use the url printed in your commandline interface, the one above is just an example.
 
 ### Database Imports
 
