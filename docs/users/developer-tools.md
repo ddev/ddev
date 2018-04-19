@@ -1,7 +1,7 @@
 <h1>Using Developer Tools with ddev</h1>
 
 ## Developer Tools Included in the Container
-We have included several useful developer tools in our containers.
+We have included several useful developer tools in our containers. Run `ddev describe` to see the project information and services available for your project and how to access them.   
 
 ### Command-line Tools
 - MySQL Client (mysql) - Command-line interface for interacting with MySQL.
@@ -22,6 +22,18 @@ http://mysite.ddev.local:8025
 ```
 
 Please note this will not intercept emails if your application is configured to use SMTP or a 3rd-party ESP integration. If you are using SMTP for outgoing mail handling ([Swiftmailer](https://www.drupal.org/project/swiftmailer) or [SMTP](https://www.drupal.org/project/smtp) modules for example), update your application configuration to use `localhost` on port `1025` as the SMTP server locally in order to use MailHog.
+
+### Database Management
+
+[phpMyAdmin](https://www.phpmyadmin.net/) is a free software tool to manage MySQL and MariaDB databases from a browser. phpMyAdmin comes installed with ddev. 
+
+After your project is started, access the phpMyAdmin web interface at its default port:
+
+```
+http://mysite.ddev.local:8036
+```
+
+If you use the free [Sequel Pro](https://www.sequelpro.com/) database browser for macOS, run `ddev sequelpro` within a project folder, and Sequel Pro will launch and access the database for that project. 
 
 ## Using Development Tools on the Host Machine
 
