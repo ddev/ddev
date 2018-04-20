@@ -42,18 +42,16 @@ RequestExecutionLevel admin
 
 ;--------------------------------
 
-; The stuff to install
-Section "ddev (required)"
+Section "ddev and sudo"
 
   SectionIn RO
   
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR
   
-  ; Put file there
   File "../bin/windows/windows_amd64/ddev.exe"
   FIle "../bin/windows/windows_amd64/sudo.exe"
-  
+
   ; Write the installation path into the registry
   WriteRegStr HKLM SOFTWARE\NSIS_ddev "Install_Dir" "$INSTDIR"
   
@@ -63,10 +61,9 @@ Section "ddev (required)"
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\ddev" "NoRepair" 1
   WriteUninstaller "ddev_uninstall.exe"
-
 SectionEnd
 
-Section "Add to PATH (Recommended)"
+Section "Add to PATH"
   Push $INSTDIR
   Call AddToPath
 SectionEnd
