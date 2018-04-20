@@ -117,7 +117,7 @@ jobs:
       - run:
           command: |
             ./.circleci/generate_artifacts.sh $ARTIFACTS
-            xz $ARTIFACTS/ddev_docker_images.$VERSION.tar
+            xz $ARTIFACTS/ddev_docker_images.*.tar
           name: tar/zip/xz up artifacts and make hashes
           no_output_timeout: "20m"
 
