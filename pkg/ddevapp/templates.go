@@ -23,6 +23,10 @@ services:
       com.ddev.app-type: {{ .appType }}
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
+    environment:
+      - COLUMNS=$COLUMNS
+      - LINES=$LINES
+
   web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
@@ -49,6 +53,8 @@ services:
       - DDEV_ROUTER_HTTPS_PORT=$DDEV_ROUTER_HTTPS_PORT
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - COLUMNS=$COLUMNS
+      - LINES=$LINES
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
       # To expose a container port to a different host port, define the port as hostPort:containerPort
       - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,{{ .mailhogport }}

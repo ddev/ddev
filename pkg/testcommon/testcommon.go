@@ -242,6 +242,8 @@ func ClearDockerEnv() {
 		"DDEV_PROJECT_TYPE",
 		"DDEV_ROUTER_HTTP_PORT",
 		"DDEV_ROUTER_HTTPS_PORT",
+		"COLUMNS",
+		"LINES",
 	}
 	for _, env := range envVars {
 		err := os.Unsetenv(env)
