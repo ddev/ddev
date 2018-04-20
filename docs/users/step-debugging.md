@@ -84,27 +84,22 @@ Server creation:
 
 [Atom](https://atom.io/) is an extensible developers' editor promoted by GitHub. The available extensions include [php-debug](https://atom.io/packages/php-debug) which you can use to conduct PHP debugging with the Xdebug PHP extension. This project is currently an alpha release. 
 
-1. Install an xdebug helper extension for your browser, [as suggested in documentation](https://atom.io/packages/php-debug#setting-up-xdebug)
-2. Under Preferences->+Install install the php-debug add-on:
+1. Under Preferences->+Install install the php-debug add-on:
 ![php-debug installation](images/atom_php_debug_install.png)
-3. Add configuration to the Atom config.cson by choosing "Config..." under the "Atom" menu. A "php-debug" stanza must be added, with file mappings that relate to your project. (Example [config.cson snippet](snippets/atom_config_cson_snippet.txt)
+2. Add configuration to the Atom config.cson by choosing "Config..." under the "Atom" menu. A "php-debug" stanza must be added, with file mappings that relate to your project. (Example [config.cson snippet](snippets/atom_config_cson_snippet.txt)
 ![Atom cson config](images/atom_cson_config.png)
-4. Open a project/folder and open a PHP file you'd like to debug.
-5. Set a breakpoint. (Right-click->PHP Debug->Toggle breakpoint)
-6. Turn on debugging in Atom (Right-click->PHP Debug->Toggle Debugging)
-7. Turn on debugging in your browser using the browser extension.
-8. Visit a page that should trigger your breakpoint.
+3. Open a project/folder and open a PHP file you'd like to debug.
+4. Set a breakpoint. (Right-click->PHP Debug->Toggle breakpoint)
+5. Turn on debugging in Atom (Right-click->PHP Debug->Toggle Debugging)
+6. Visit a page that should trigger your breakpoint.
 
-An example configuration from [user contribution](https://github.com/drud/ddev/issues/610#issuecomment-359244922):
+An example configuration:
 ```
-"php-debug":
-    AutoExpandLocals: true
-    DebugXDebugMessages: true
-    MaxDepth: 6
+  "php-debug":
     PathMaps: [
-      "/path/to/container/docroot;/path/to/host/docroot"
+      "remotepath;localpath"
+      "/var/www/html;/Users/rfay/workspace/d8git"
     ]
-    PhpException: {}
 ```
 
 <a name="vscode"></a>
