@@ -15,7 +15,6 @@ for item in $(cat /tmp/images.txt); do
 done
 docker save -o $ARTIFACTS/ddev_docker_images.$VERSION.tar $(cat /tmp/images.txt)
 gzip --keep $ARTIFACTS/ddev_docker_images.$VERSION.tar
-xz $ARTIFACTS/ddev_docker_images.$VERSION.tar
 
 # Generate and place extra items like autocomplete
 bin/linux/ddev_gen_autocomplete
