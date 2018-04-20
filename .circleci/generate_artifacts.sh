@@ -39,6 +39,6 @@ zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe ddev_bash_completion.sh
 
 # Create the sha256 files
 cd $ARTIFACTS
-for item in *.tar.gz *.zip ddev_docker_images.$VERSION.tar.gz ddev_docker_images.$VERSION.tar.xz; do
+for item in *.tar.gz *.zip *.xz; do
   sha256sum $item > $item.sha256.txt
 done
