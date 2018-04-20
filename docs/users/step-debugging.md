@@ -2,12 +2,12 @@
 
 Every ddev project is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code. It is disabled by default for performance reasons, so you'll need to enable it in your config.yaml.
 
-xdebug is a server-side tool: It is installed automatically on the container and you do *not* need to install it on your workstation. All you have to do on your workstation perhaps to add a browser extension or bookmark.
+xdebug is a server-side tool: It is installed automatically on the container and you do *not* need to install it on your workstation.
 
 All IDEs basically work the same: They listen on a port and react when they're contacted there. So IDEs other than those listed here should work fine, if listening on the default xdebug port 9000.
 
 **Key facts:**
-* You need to explicitly enable xdebug in your config.yaml with `xdebug_enable: true` (it's disabled by default). After changing, `ddev start` again.
+* You need to explicitly enable xdebug in your config.yaml with `xdebug_enabled: true` (it's disabled by default). After changing, `ddev start` again.
 * The debug server port on the IDE must be set to port 9000, which is the default and is probably already set in most IDEs. (If you need to change the xdebug port due to a port conflict on your host computer, you can do it with a PHP override, explained below.)
 
 For more background on XDebug see [XDebug documentation](https://xdebug.org/docs/remote). The intention here is that one won't have to understand XDebug to do debugging.
@@ -20,14 +20,13 @@ For each IDE the link to their documentation is provided, and the skeleton steps
 
 Enable xdebug in your config.yaml:
 
-`xdebug_enable: true`
+`xdebug_enabled: true`
 
 (If you don't want it set all the time, you can `ddev exec enable_xdebug` or `ddev exec disable_xdebug` any time.)
 
 ### Setup for Various IDEs
 
 * [PHPStorm](#phpstorm)
-* [NetBeans](#netbeans)
 * [Atom](#atom)
 * [Visual Studio Code (vscode)](#vscode)
 
@@ -44,8 +43,7 @@ PHPStorm [zero-configuration debugging](https://confluence.jetbrains.com/display
 1. Toggle the “Start Listening for PHP Debug Connections” button:
   ![Start listening for debug connections button](images/phpstorm_listen_for_debug_connections.png)
 2. Set a breakpoint.
-3. Using bookmarks from https://www.jetbrains.com/phpstorm/marklets/, "start debugger"
-4. Visit a page that should stop in the breakpoint you set.
+3. Visit a page that should stop in the breakpoint you set.
 
 #### PHPStorm "Run/Debug configuration" Debugging
 
@@ -54,7 +52,7 @@ PHPStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/crea
 1. Under the "Run" menu select "Edit configurations"
 2. Click the "+" in the upper left and choose "PHP Web Application" to create a configuration. Give it a reasonable name.
 3. Create a "server" for the project. (Screenshot below)
-4. Add file mappings for the files on the server. Click on the local repo path and add "/var/www/html" as the "Absolute path on the server".
+4. Add file mappings for the files on the server. Click on the local repo path and add "/var/www/html" as the "Absolute path on the server" and your repository root as the path on the host.
 5. Set an appropriate breakpoint.
 6. Start debugging by clicking the "debug" button, which will launch a page in your browser.
 
@@ -64,20 +62,6 @@ PHPStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/crea
 Server creation:
 
 ![PHPStorm server creation](images/phpstorm_config_server_config.png)
-
-<a name="netbeans"></a>
-### Netbeans Debugging Setup
-
-[Netbeans](https://netbeans.org/) is a free IDE which has out-of-the-box debugging configurations for PHP. You'll want the *PHP* download bundle from the [download page](https://netbeans.org/downloads/).
-
-1. Create a PHP project that relates to your project repository. (File->New Project->PHP Application with Existing Sources)
-2. Under "Run as", choose "Local web site (running on local web server)".
-3. Under "Name and Location", give the sources folder of the **docroot/webroot** of your project.
-![Netbeans project name and location](images/netbeans_project_name_location.png)
-4. Under "Run configuration" the project URL to the full URL of your dev project, for example http://drud-d8.ddev.local/, and choose the index file.
-![Netbeans run configuration](images/netbeans_project_run_configuration.png)
-5. Set a breakpoint.
-6. Click the "Debug" button.
 
 <a name="atom"></a>
 ### Atom Debugging Setup
@@ -111,3 +95,15 @@ An example configuration:
 4. Click the vscode debug button: ![vscode debug button](images/vscode_debug_button.png).
 5. Run the "Listen for XDebug" job: ![Listen for XDebug](images/vscode_run_listen_xdebug.png)
 6. Go to a page in your project, you should hit your breakpoint.
+
+## Using xdebug on a Port Other than the Default
+
+By default, ddev is set up to contact the default port, port 9000 on your IDE. However, if you have something else listening on that port, you'll need to change the port. (The most likely conflict is php-fpm, which also has 9000 as a default port.)
+
+* To override the port, add an override file in the project's .ddev/php directory. For example, a file .ddev/php/xdebug_remote_port.ini:
+
+```
+[PHP]
+xdebug.remote_port=11011
+```
+* Then change your IDE's configuration to listen on the new port.
