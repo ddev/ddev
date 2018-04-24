@@ -124,7 +124,5 @@ hooks:
 ```
 hooks:
     post-start:
-      - exec: "composer install -d TYPO3.CMS"
-      - exec: "apt-get update"
-      - exec: "apt-get install php7.2-bcmath"
+      - exec: "composer install -d /var/www/html/"
 ```
