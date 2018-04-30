@@ -513,28 +513,47 @@ func (app *DdevApp) ImportFiles(imPath string, extPath string) error {
 }
 
 // ComposeFiles returns a list of compose files for a project.
+// It has to put the docker-compose.y*l first
+// It has to put the docker-compose.override.y*l last
 func (app *DdevApp) ComposeFiles() []string {
-	files, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose*"))
-	if err != nil {
-		util.Failed("Failed to load compose files: %v", err)
+	files, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose*.y*l"))
+	if err != nil || len(files) == 0 {
+		util.Failed("Failed to load any docker-compose.*y*l files: %v", err)
 	}
 
-	for i, file := range files {
-		// ensure main docker-compose is first
-		match, err := filepath.Match(filepath.Join(app.AppConfDir(), "docker-compose.y*l"), file)
-		if err == nil && match {
-			files = append(files[:i], files[i+1:]...)
-			files = append([]string{file}, files...)
-		}
-		// ensure override is last
-		match, err = filepath.Match(filepath.Join(app.AppConfDir(), "docker-compose.override.y*l"), file)
-		if err == nil && match {
-			files = append(files, file)
-			files = append(files[:i], files[i+1:]...)
-		}
+	mainfiles, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose.y*l"))
+	// Glob doesn't return many errors, so just CheckErr()
+	util.CheckErr(err)
+	if len(mainfiles) == 0 {
+		util.Failed("Failed to find a docker-compose.yml or docker-compose.yaml")
+	}
+	if len(mainfiles) > 1 {
+		util.Failed("There are more than one docker-compose.y*l, unable to continue.")
 	}
 
-	return files
+	overrides, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose.override.y*l"))
+	util.CheckErr(err)
+	if len(overrides) > 1 {
+		util.Failed("There are more than one docker-compose.override.y*l, unable to continue.")
+	}
+
+	orderedFiles := make([]string, 1)
+
+	// Make sure the docker-compose.yaml goes first
+	orderedFiles[0] = mainfiles[0]
+
+	for _, file := range files {
+		// We already have the main docker-compose.yaml, so skip when we hit it.
+		// We'll add the override later, so skip it.
+		if file == mainfiles[0] || (len(overrides) == 1 && file == overrides[0]) {
+			continue
+		}
+		orderedFiles = append(orderedFiles, file)
+	}
+	if len(overrides) == 1 {
+		orderedFiles = append(orderedFiles, overrides[0])
+	}
+	return orderedFiles
 }
 
 // ProcessHooks executes commands defined in a Command
@@ -917,7 +936,7 @@ func (app *DdevApp) AddHostsEntries() error {
 	if dockerHostRawURL != "" {
 		dockerHostURL, err := url.Parse(dockerHostRawURL)
 		if err != nil {
-			return fmt.Errorf("Failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
+			return fmt.Errorf("failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
 		}
 		dockerIP = dockerHostURL.Hostname()
 	}
@@ -971,7 +990,7 @@ func (app *DdevApp) prepSiteDirs() error {
 		} else if err == nil && fileInfo.IsDir() { // If the directory exists, we're fine and don't have to create it.
 			continue
 		} else { // But otherwise it must have existed as a file, so bail
-			return fmt.Errorf("Error where trying to create directory %s, err: %v", dir, err)
+			return fmt.Errorf("error trying to create directory %s, err: %v", dir, err)
 		}
 	}
 
