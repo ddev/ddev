@@ -2,13 +2,17 @@
 
 ## Prerequisite knowledge
 
-The majority of ddev's customization ability and extensibility comes from leveraging features and functionality provided by [Docker](https://docs.docker.com/) and [Docker Compose](https://docs.docker.com/compose/overview/). Some working knowledge of these tools is required in order to customize or extend the environment ddev provides.
+Much of ddev's customization ability and extensibility comes from leveraging features and functionality provided by [Docker](https://docs.docker.com/) and [Docker Compose](https://docs.docker.com/compose/overview/). Some working knowledge of these tools is required in order to customize or extend the environment ddev provides.
 
 ## Background
 
-Under the hood, ddev uses docker-compose to define and run the multiple containers that make up the local environment for a web application. Docker Compose supports defining multiple compose files to facilitate [sharing Compose configurations between files and projects](https://docs.docker.com/compose/extends/), and ddev is designed to leverage this ability.
+Under the hood, ddev uses docker-compose to define and run the multiple containers that make up the local environment for a project. docker-compose supports defining multiple compose files to facilitate [sharing Compose configurations between files and projects](https://docs.docker.com/compose/extends/), and ddev is designed to leverage this ability.
 
-To add services to your project, create docker-compose files in the `.ddev` directory for your project. ddev will process any files using the `docker-compose.[servicename].yml` naming convention and include them in executing docker-compose functionality. In addition, create a `docker-compose.override.yml` to override any configurations from the main docker-compose file or any service compose files added to your project.
+To add custom configuration or additional services to your project, create docker-compose files in the `.ddev` directory for your project. ddev will process any files using the `docker-compose.[servicename].yaml` naming convention and include them in executing docker-compose functionality. Optionally you can also create a `docker-compose.override.yaml` to override any configurations from the main docker-compose.yaml or any additional compose files added to your project.
+
+## Restrictions on the docker-compose.yaml file
+
+The main docker-compose.yaml file is exclusively reserved for ddev's use, and will be overwritten on ddev upgrades and when a project is started, so it should not be edited, or edits will be lost. If you need to override configuration provided by docker-compose.yaml, use an additional file to do so.
 
 ## Conventions for defining additional services
 
