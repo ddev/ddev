@@ -102,6 +102,9 @@ func (app *DdevApp) GetConfigPath(filename string) string {
 // WriteConfig writes the app configuration into the .ddev folder.
 func (app *DdevApp) WriteConfig() error {
 
+	// Update the "APIVersion" to be the ddev version.
+	app.APIVersion = version.DdevVersion
+
 	err := PrepDdevDirectory(filepath.Dir(app.ConfigPath))
 	if err != nil {
 		return err
@@ -161,6 +164,9 @@ func (app *DdevApp) ReadConfig() error {
 		return err
 	}
 
+	if app.APIVersion != version.DdevVersion {
+		util.Warning("Your .ddev/config.yaml version is %s, but ddev is version %s. Please consider running 'ddev config' to update your config.yaml.", app.APIVersion, version.DdevVersion)
+	}
 	// If any of these values aren't defined in the config file, set them to defaults.
 	if app.Name == "" {
 		app.Name = filepath.Base(app.AppRoot)
