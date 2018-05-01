@@ -617,9 +617,7 @@ func (app *DdevApp) Start() error {
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 
-	// WriteConfig docker-compose.yaml (if it doesn't exist).
-	// If the user went through the `ddev config` process it will be written already, but
-	// we also do it here in the case of a manually created `.ddev/config.yaml` file.
+	// WriteConfig docker-compose.yaml
 	err = app.WriteDockerComposeConfig()
 	if err != nil {
 		return err

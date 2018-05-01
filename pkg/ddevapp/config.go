@@ -312,23 +312,33 @@ func (app *DdevApp) GetHostnames() []string {
 func (app *DdevApp) WriteDockerComposeConfig() error {
 	var err error
 
-	if !fileutil.FileExists(app.DockerComposeYAMLPath()) {
+	if fileutil.FileExists(app.DockerComposeYAMLPath()) {
+		found, err := fileutil.FgrepStringInFile(app.DockerComposeYAMLPath(), DdevFileSignature)
+		util.CheckErr(err)
 
-		// nolint: vetshadow
-		f, err := os.Create(app.DockerComposeYAMLPath())
-		if err != nil {
-			return err
+		// If we did *not* find the ddev file signature in docker-compose.yaml, we'll back it up and warn about it.
+		if !found {
+			util.Warning("User-managed docker-compose.yaml will be replaced with ddev-generated docker-compose.yaml. Original file will be placed in docker-compose.yaml.bak")
+			_ = os.Remove(app.DockerComposeYAMLPath() + ".bak")
+			err = os.Rename(app.DockerComposeYAMLPath(), app.DockerComposeYAMLPath()+".bak")
+			util.CheckErr(err)
 		}
-		defer util.CheckClose(f)
+	}
 
-		rendered, err := app.RenderComposeYAML()
-		if err != nil {
-			return err
-		}
-		_, err = f.WriteString(rendered)
-		if err != nil {
-			return err
-		}
+	// nolint: vetshadow
+	f, err := os.Create(app.DockerComposeYAMLPath())
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(f)
+
+	rendered, err := app.RenderComposeYAML()
+	if err != nil {
+		return err
+	}
+	_, err = f.WriteString(rendered)
+	if err != nil {
+		return err
 	}
 	return err
 }
@@ -380,12 +390,13 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 	templateVars := map[string]string{
-		"name":        app.Name,
-		"plugin":      "ddev",
-		"appType":     app.Type,
-		"mailhogport": appports.GetPort("mailhog"),
-		"dbaport":     appports.GetPort("dba"),
-		"dbport":      appports.GetPort("db"),
+		"name":          app.Name,
+		"plugin":        "ddev",
+		"appType":       app.Type,
+		"mailhogport":   appports.GetPort("mailhog"),
+		"dbaport":       appports.GetPort("dba"),
+		"dbport":        appports.GetPort("db"),
+		"ddevgenerated": DdevFileSignature,
 	}
 
 	err = templ.Execute(&doc, templateVars)
