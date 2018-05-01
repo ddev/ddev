@@ -15,9 +15,9 @@ If you need to create a service configuration for your project, see [Defining an
 
 ## Providing custom environment variables to a container
 
-Each project can have an unlimited number of .ddev/docker-compose.*.yaml files, so it's easy to maintain custom environment variables in a .ddev/docker-compose.environment.yaml file (the exact name doesn't matter, if it just matches docker-compose*.y*ml).
+Each project can have an unlimited number of .ddev/docker-compose.*.yaml files as described in [Custom Compose Files](./custom-compose-files.md), so it's easy to maintain custom environment variables in a .ddev/docker-compose.environment.yaml file (the exact name doesn't matter, if it just matches docker-compose.*.yaml).
 
-For example, 
+For example, a `.ddev/docker-compose.environment.yaml` with these contents would add a $TYPO3_CONTEXT environment variable to the web container, and a $SOMETHING environment variable to the db container: 
 
 ```
 version: '3'
