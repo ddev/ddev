@@ -31,7 +31,7 @@ func TestNewConfig(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure the config uses specified defaults.
-	assert.Equal(app.APIVersion, CurrentAppVersion)
+	assert.Equal(app.APIVersion, version.DdevVersion)
 	assert.Equal(app.DBImage, version.DBImg+":"+version.DBTag)
 	assert.Equal(app.WebImage, version.WebImg+":"+version.WebTag)
 	assert.Equal(app.DBAImage, version.DBAImg+":"+version.DBATag)
@@ -306,7 +306,7 @@ func TestReadConfig(t *testing.T) {
 	app := &DdevApp{
 		ConfigPath: filepath.Join("testdata", "config.yaml"),
 		AppRoot:    "testdata",
-		APIVersion: CurrentAppVersion,
+		APIVersion: version.DdevVersion,
 		Name:       "TestRead",
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,
@@ -371,7 +371,7 @@ func TestWriteConfig(t *testing.T) {
 	app := &DdevApp{
 		ConfigPath: filepath.Join(testDir, "config.yaml"),
 		AppRoot:    testDir,
-		APIVersion: CurrentAppVersion,
+		APIVersion: version.DdevVersion,
 		Name:       "TestWrite",
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,

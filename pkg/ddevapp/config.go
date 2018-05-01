@@ -32,10 +32,6 @@ const DdevDefaultRouterHTTPPort = "80"
 // DdevDefaultRouterHTTPSPort is the starting https router port, 443
 const DdevDefaultRouterHTTPSPort = "443"
 
-// CurrentAppVersion sets the current YAML config file version.
-// We're not doing anything with AppVersion, so just default it to 1 for now.
-const CurrentAppVersion = "1"
-
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
@@ -64,7 +60,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 
 	app.AppRoot = AppRoot
 	app.ConfigPath = app.GetConfigPath("config.yaml")
-	app.APIVersion = CurrentAppVersion
+	app.APIVersion = version.DdevVersion
 	app.PHPVersion = DdevDefaultPHPVersion
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
