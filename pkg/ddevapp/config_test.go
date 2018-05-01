@@ -304,13 +304,10 @@ func TestReadConfig(t *testing.T) {
 
 	// This closely resembles the values one would have from NewApp()
 	app := &DdevApp{
+		APIVersion: version.DdevVersion,
 		ConfigPath: filepath.Join("testdata", "config.yaml"),
 		AppRoot:    "testdata",
-		APIVersion: version.DdevVersion,
 		Name:       "TestRead",
-		WebImage:   version.WebImg + ":" + version.WebTag,
-		DBImage:    version.DBImg + ":" + version.DBTag,
-		DBAImage:   version.DBAImg + ":" + version.DBATag,
 		Provider:   DefaultProviderName,
 	}
 
@@ -321,11 +318,11 @@ func TestReadConfig(t *testing.T) {
 
 	// Values not defined in file, we should still have default values
 	assert.Equal(app.Name, "TestRead")
-	assert.Equal(app.DBImage, version.DBImg+":"+version.DBTag)
+	assert.Equal(app.APIVersion, version.DdevVersion)
 
 	// Values defined in file, we should have values from file
 	assert.Equal(app.Type, "drupal8")
-	assert.Equal(app.WebImage, "test/testimage:latest")
+	assert.Equal(app.Docroot, "test")
 }
 
 // TestValidate tests validation of configuration values.
