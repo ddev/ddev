@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -23,7 +24,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
-	shellwords "github.com/mattn/go-shellwords"
+	"github.com/mattn/go-shellwords"
 )
 
 const containerWaitTimeout = 61
@@ -736,6 +737,15 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTP_PORT":         app.RouterHTTPPort,
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,
 	}
+
+	// Find out terminal dimensions
+	columns, lines, err := terminal.GetSize(0)
+	if err != nil {
+		columns = 80
+		lines = 24
+	}
+	envVars["COLUMNS"] = strconv.Itoa(columns)
+	envVars["LINES"] = strconv.Itoa(lines)
 
 	if len(app.AdditionalHostnames) > 0 {
 		// TODO: Warn people about additional names in use.
