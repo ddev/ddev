@@ -105,6 +105,11 @@ func (app *DdevApp) WriteConfig() error {
 	// Update the "APIVersion" to be the ddev version.
 	app.APIVersion = version.DdevVersion
 
+	// We don't want to even set the images on write, even though we'll respect them on read.
+	app.DBAImage = ""
+	app.DBImage = ""
+	app.WebImage = ""
+
 	err := PrepDdevDirectory(filepath.Dir(app.ConfigPath))
 	if err != nil {
 		return err

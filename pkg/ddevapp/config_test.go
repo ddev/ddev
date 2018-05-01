@@ -323,6 +323,7 @@ func TestReadConfig(t *testing.T) {
 	// Values defined in file, we should have values from file
 	assert.Equal(app.Type, "drupal8")
 	assert.Equal(app.Docroot, "test")
+	assert.Equal(app.WebImage, "test/testimage:latest")
 }
 
 // TestValidate tests validation of configuration values.
