@@ -16,12 +16,12 @@ pages:
     - 'Using Developer Tools with ddev': 'users/developer-tools.md'
     - 'PHP Step Debugging': 'users/step-debugging.md'
     - 'Extending ddev':
+      - 'Additional Project Hostnames': 'users/extend/additional-hostnames.md'
       - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'
       - 'Additional Services': 'users/extend/additional-services.md'
       - 'Defining Custom Services': 'users/extend/custom-compose-files.md'
     - 'Integration with Hosting Providers':
       - 'Pantheon': 'users/providers/pantheon.md'
-    - 'Notes for Linux Users': 'users/linux_notes.md'
     - 'Troubleshooting': 'users/troubleshooting.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'

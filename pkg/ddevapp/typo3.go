@@ -15,6 +15,8 @@ const typo3AdditionalConfigTemplate = `<?php
 /** ` + DdevFileSignature + `: Automatically generated TYPO3 AdditionalConfiguration.php file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
+ 
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '.*';
 
 $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge($GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'], [
                     'dbname' => 'db',
@@ -84,7 +86,8 @@ func getTypo3UploadDir(app *DdevApp) string {
 
 // Typo3Hooks adds a TYPO3-specific hooks example for post-import-db
 const Typo3Hooks = `
-#     - exec: "echo database was loaded"`
+#  post-start:
+#    - exec: "composer install -d /var/www/html"`
 
 // getTypo3Hooks for appending as byte array
 func getTypo3Hooks() []byte {

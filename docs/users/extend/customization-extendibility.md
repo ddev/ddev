@@ -13,6 +13,24 @@ A collection of vetted service configurations is available in the [Additional Se
 
 If you need to create a service configuration for your project, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
+## Providing custom environment variables to a container
+
+Each project can have an unlimited number of .ddev/docker-compose.*.yaml files as described in [Custom Compose Files](./custom-compose-files.md), so it's easy to maintain custom environment variables in a .ddev/docker-compose.environment.yaml file (the exact name doesn't matter, if it just matches docker-compose.*.yaml).
+
+For example, a `.ddev/docker-compose.environment.yaml` with these contents would add a $TYPO3_CONTEXT environment variable to the web container, and a $SOMETHING environment variable to the db container: 
+
+```
+version: '3'
+
+services:
+  web:
+    environment:
+      - TYPO3_CONTEXT=Development
+  db:
+    environment:
+      - SOMETHING=something special
+```
+
 ## Providing custom nginx configuration
 The default web container for ddev uses NGINX as the web server. A default configuration is provided in the web container that should work for most Drupal 7+ and WordPress projects. Some projects may require custom configuration, for example to support a module or plugin requiring special rules. To accommodate these needs, ddev provides a way to replace the default configuration with a custom version.
 

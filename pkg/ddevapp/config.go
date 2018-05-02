@@ -117,7 +117,7 @@ func (app *DdevApp) WriteConfig() error {
 	}
 
 	// Append hook information and sample hook suggestions.
-	cfgbytes = append(cfgbytes, []byte(HookTemplate)...)
+	cfgbytes = append(cfgbytes, []byte(ConfigInstructions)...)
 	cfgbytes = append(cfgbytes, app.GetHookDefaultComments()...)
 
 	err = ioutil.WriteFile(app.ConfigPath, cfgbytes, 0644)
@@ -279,9 +279,21 @@ func (app *DdevApp) DockerComposeYAMLPath() string {
 	return app.GetConfigPath("docker-compose.yaml")
 }
 
-// GetHostname returns the hostname of the app.
+// GetHostname returns the primary hostname of the app.
 func (app *DdevApp) GetHostname() string {
 	return app.Name + "." + version.DDevTLD
+}
+
+// GetHostnames returns an array of all the configured hostnames.
+func (app *DdevApp) GetHostnames() []string {
+
+	var nameList []string
+	nameList = append(nameList, app.GetHostname())
+
+	for _, name := range app.AdditionalHostnames {
+		nameList = append(nameList, name+"."+version.DDevTLD)
+	}
+	return nameList
 }
 
 // WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.

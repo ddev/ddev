@@ -6,11 +6,11 @@
 
 ## System Requirements
 
-- [Docker](https://www.docker.com/community-edition) version 17.05 or higher
+- [Docker](https://www.docker.com/community-edition) version 17.05 or higher. Linux users make sure you do the [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
 - docker-compose 1.10.0 and higher (bundled with Docker in Docker for Mac and Docker for Windows)
 - OS Support
   - macOS Sierra and higher (macOS 10.12 and higher but it probably runs anywhere docker runs)
-  - Linux (See [Linux notes](users/linux_notes.md)): Most recent Linux distributions which can run Docker are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+
+  - Linux: Most recent Linux distributions which can run Docker are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
   - Windows 10 Pro
 
 We are open to expanding this list to include additional OSs as well as improve our existing support for the ones listed above. Please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue!
@@ -19,6 +19,9 @@ We are open to expanding this list to include additional OSs as well as improve 
 ddev by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure ddev to use different ports. See [troubleshooting](https://ddev.readthedocs.io/en/latest/users/troubleshooting/#webserver-ports-are-already-occupied-by-another-webserver) for more detailed problemsolving.
 
 ## Installation
+
+_When upgrading, please check the [release notes](https://github.com/drud/ddev/releases) for actions you might need to take on each project._
+
 ### Homebrew - macOS
 
 For macOS users, we recommend downloading, installing, and upgrading via [homebrew](https://brew.sh/):

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -56,7 +57,7 @@ func appImport(skipConfirmation bool) {
 	}
 
 	util.Success("Successfully Imported.")
-	util.Success("Your project can be reached at: %s and %s", app.GetHTTPURL(), app.GetHTTPSURL())
+	util.Success("Your project can be reached at %s", strings.Join(app.GetAllURLs(), ", "))
 }
 
 func init() {

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/output"
@@ -65,6 +66,7 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 	output = output + "\n\nProject Information\n-----------------\n"
 	siteInfo := uitable.New()
 	siteInfo.AddRow("PHP version:", desc["php_version"])
+	siteInfo.AddRow("URLs:", strings.Join(desc["urls"].([]string), ", "))
 	output = output + fmt.Sprint(siteInfo)
 
 	// Only show extended status for running sites.
