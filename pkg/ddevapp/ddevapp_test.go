@@ -1000,7 +1000,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	_, err = app.ComposeFiles()
 	assert.Error(err)
-	assert.Contains(err.Error(), "There are more than one docker-compose.y*l")
+	assert.Contains(err.Error(), "there are more than one docker-compose.y*l")
 
 	// Make sure that some docker-compose.override.yml and docker-compose.override.yaml conflict gets noted properly
 	app, err = ddevapp.NewApp("./testdata/testConflictingOverrideYaml", "")
@@ -1008,7 +1008,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	_, err = app.ComposeFiles()
 	assert.Error(err)
-	assert.Contains(err.Error(), "There are more than one docker-compose.override.y*l")
+	assert.Contains(err.Error(), "there are more than one docker-compose.override.y*l")
 
 	// Make sure the error gets pointed out of there's no main docker-compose.yaml
 	app, err = ddevapp.NewApp("./testdata/testNoDockerCompose", "")
@@ -1016,7 +1016,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	_, err = app.ComposeFiles()
 	assert.Error(err)
-	assert.Contains(err.Error(), "Failed to find a docker-compose.yml or docker-compose.yaml")
+	assert.Contains(err.Error(), "failed to find a docker-compose.yml or docker-compose.yaml")
 
 	// Catch if we have no docker files at all.
 	// This should also fail if the docker-compose.yaml.bak gets loaded.
@@ -1025,7 +1025,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	_, err = app.ComposeFiles()
 	assert.Error(err)
-	assert.Contains(err.Error(), "Failed to load any docker-compose.*y*l files")
+	assert.Contains(err.Error(), "failed to load any docker-compose.*y*l files")
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app

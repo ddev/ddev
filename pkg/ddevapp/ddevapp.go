@@ -518,24 +518,24 @@ func (app *DdevApp) ImportFiles(imPath string, extPath string) error {
 func (app *DdevApp) ComposeFiles() ([]string, error) {
 	files, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose*.y*l"))
 	if err != nil || len(files) == 0 {
-		return []string{}, fmt.Errorf("Failed to load any docker-compose.*y*l files: %v", err)
+		return []string{}, fmt.Errorf("failed to load any docker-compose.*y*l files: %v", err)
 	}
 
 	mainfiles, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose.y*l"))
 	// Glob doesn't return many errors, so just CheckErr()
 	util.CheckErr(err)
 	if len(mainfiles) == 0 {
-		return []string{}, fmt.Errorf("Failed to find a docker-compose.yml or docker-compose.yaml")
+		return []string{}, fmt.Errorf("failed to find a docker-compose.yml or docker-compose.yaml")
 
 	}
 	if len(mainfiles) > 1 {
-		return []string{}, fmt.Errorf("There are more than one docker-compose.y*l, unable to continue.")
+		return []string{}, fmt.Errorf("there are more than one docker-compose.y*l, unable to continue")
 	}
 
 	overrides, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose.override.y*l"))
 	util.CheckErr(err)
 	if len(overrides) > 1 {
-		return []string{}, fmt.Errorf("There are more than one docker-compose.override.y*l, unable to continue.")
+		return []string{}, fmt.Errorf("there are more than one docker-compose.override.y*l, unable to continue")
 	}
 
 	orderedFiles := make([]string, 1)
