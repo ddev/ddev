@@ -74,7 +74,7 @@ Server creation:
 ![Atom cson config](images/atom_cson_config.png)
 3. Open a project/folder and open a PHP file you'd like to debug.
 4. Set a breakpoint. (Right-click->PHP Debug->Toggle breakpoint)
-5. Turn on debugging in Atom (Right-click->PHP Debug->Toggle Debugging)
+5. Open the debug view and enable debugging by choosing Packages->PHP-Debug->Toggle Debugging. You should see "Listening on address:port 127.0.0.1:9000".
 6. Visit a page that should trigger your breakpoint.
 
 An example configuration:
