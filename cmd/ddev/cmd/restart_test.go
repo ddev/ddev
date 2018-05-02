@@ -46,7 +46,7 @@ func TestDevRestartJSON(t *testing.T) {
 		out, err := exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 
-		logItems, err := unmarshallJsonLogs(out)
+		logItems, err := unmarshallJSONLogs(out)
 		assert.NoError(err)
 
 		// The key item should be the last item; there may be a warning

@@ -77,7 +77,7 @@ func TestDescribe(t *testing.T) {
 		args = []string{"describe", "-j"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		logItems, err := unmarshallJsonLogs(out)
+		logItems, err := unmarshallJSONLogs(out)
 		assert.NoError(err)
 
 		// The description log should be the last item; there may be a warning
@@ -184,9 +184,9 @@ func TestDescribeAppWithInvalidParams(t *testing.T) {
 	cleanup()
 }
 
-// unmarshallJsonLogs takes a string buffer and splits it into lines,
+// unmarshallJSONLogs takes a string buffer and splits it into lines,
 // discards empty lines, and unmarshalls into an array of logs
-func unmarshallJsonLogs(in string) ([]log.Fields, error) {
+func unmarshallJSONLogs(in string) ([]log.Fields, error) {
 	logData := make([]log.Fields, 0)
 	logStrings := strings.Split(in, "\n")
 	data := make(log.Fields, 4)
