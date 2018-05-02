@@ -102,45 +102,47 @@ func (app *DdevApp) GetConfigPath(filename string) string {
 // WriteConfig writes the app configuration into the .ddev folder.
 func (app *DdevApp) WriteConfig() error {
 
+	// Work against a copy of the DdevApp, since we don't want to actually change it.
+	appcopy := *app
 	// Update the "APIVersion" to be the ddev version.
 	app.APIVersion = version.DdevVersion
 
 	// We don't want to even set the images on write, even though we'll respect them on read.
-	app.DBAImage = ""
-	app.DBImage = ""
-	app.WebImage = ""
+	appcopy.DBAImage = ""
+	appcopy.DBImage = ""
+	appcopy.WebImage = ""
 
-	err := PrepDdevDirectory(filepath.Dir(app.ConfigPath))
+	err := PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
 	if err != nil {
 		return err
 	}
 
-	cfgbytes, err := yaml.Marshal(app)
+	cfgbytes, err := yaml.Marshal(appcopy)
 	if err != nil {
 		return err
 	}
 
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(ConfigInstructions)...)
-	cfgbytes = append(cfgbytes, app.GetHookDefaultComments()...)
+	cfgbytes = append(cfgbytes, appcopy.GetHookDefaultComments()...)
 
-	err = ioutil.WriteFile(app.ConfigPath, cfgbytes, 0644)
+	err = ioutil.WriteFile(appcopy.ConfigPath, cfgbytes, 0644)
 	if err != nil {
 		return err
 	}
 
-	provider, err := app.GetProvider()
+	provider, err := appcopy.GetProvider()
 	if err != nil {
 		return err
 	}
 
-	err = provider.Write(app.GetConfigPath("import.yaml"))
+	err = provider.Write(appcopy.GetConfigPath("import.yaml"))
 	if err != nil {
 		return err
 	}
 
-	// Allow app-specific post-config action
-	err = app.PostConfigAction()
+	// Allow project-specific post-config action
+	err = appcopy.PostConfigAction()
 	if err != nil {
 		return err
 	}
