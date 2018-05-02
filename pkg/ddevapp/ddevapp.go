@@ -25,6 +25,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-shellwords"
+	"runtime"
 )
 
 const containerWaitTimeout = 61
@@ -739,8 +740,10 @@ func (app *DdevApp) DockerEnv() {
 	if gidInt, err = strconv.Atoi(curUser.Gid); err != nil {
 		gidStr = "0"
 	}
-	if uidInt > 60000 || gidInt > 60000 || uidInt == 0 {
-		util.Warning("Warning: containers will run as root. This is fine on Docker for Windows or Docker for Mac, but could be a security risk on Linux.")
+
+	// Warn about running as root if we're not on windows.
+	if runtime.GOOS != "windows" && (uidInt > 60000 || gidInt > 60000 || uidInt == 0) {
+		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
 	// If the uidStr or gidStr is outside the range possible in container, use root
