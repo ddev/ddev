@@ -280,6 +280,49 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 	}
 }
 
+// TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.
+func TestDdevXdebugEnabled(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	site := TestSites[0]
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevXdebugEnabled", site.Name))
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	// Run with xdebug_enabled: false
+	testcommon.ClearDockerEnv()
+	app.XdebugEnabled = false
+	err = app.WriteConfig()
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
+	stdout, _, err := app.Exec("web", "php", "--ri", "xdebug")
+	assert.Error(err)
+	assert.Contains(stdout, "Extension 'xdebug' not present")
+
+	// Run with xdebug_enabled: true
+	//err = app.Stop()
+	testcommon.ClearDockerEnv()
+	app.XdebugEnabled = true
+	err = app.WriteConfig()
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+	stdout, _, err = app.Exec("web", "php", "--ri", "xdebug")
+	assert.NoError(err)
+	assert.Contains(stdout, "xdebug support => enabled")
+	assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
+
+	err = app.Stop()
+	assert.NoError(err)
+
+	runTime()
+
+}
+
 // TestStartWithoutDdev makes sure we don't have a regression where lack of .ddev
 // causes a panic.
 func TestStartWithoutDdevConfig(t *testing.T) {
