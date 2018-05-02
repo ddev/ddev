@@ -515,26 +515,27 @@ func (app *DdevApp) ImportFiles(imPath string, extPath string) error {
 // ComposeFiles returns a list of compose files for a project.
 // It has to put the docker-compose.y*l first
 // It has to put the docker-compose.override.y*l last
-func (app *DdevApp) ComposeFiles() []string {
+func (app *DdevApp) ComposeFiles() ([]string, error) {
 	files, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose*.y*l"))
 	if err != nil || len(files) == 0 {
-		util.Failed("Failed to load any docker-compose.*y*l files: %v", err)
+		return []string{}, fmt.Errorf("Failed to load any docker-compose.*y*l files: %v", err)
 	}
 
 	mainfiles, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose.y*l"))
 	// Glob doesn't return many errors, so just CheckErr()
 	util.CheckErr(err)
 	if len(mainfiles) == 0 {
-		util.Failed("Failed to find a docker-compose.yml or docker-compose.yaml")
+		return []string{}, fmt.Errorf("Failed to find a docker-compose.yml or docker-compose.yaml")
+
 	}
 	if len(mainfiles) > 1 {
-		util.Failed("There are more than one docker-compose.y*l, unable to continue.")
+		return []string{}, fmt.Errorf("There are more than one docker-compose.y*l, unable to continue.")
 	}
 
 	overrides, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose.override.y*l"))
 	util.CheckErr(err)
 	if len(overrides) > 1 {
-		util.Failed("There are more than one docker-compose.override.y*l, unable to continue.")
+		return []string{}, fmt.Errorf("There are more than one docker-compose.override.y*l, unable to continue.")
 	}
 
 	orderedFiles := make([]string, 1)
@@ -553,7 +554,7 @@ func (app *DdevApp) ComposeFiles() []string {
 	if len(overrides) == 1 {
 		orderedFiles = append(orderedFiles, overrides[0])
 	}
-	return orderedFiles
+	return orderedFiles, nil
 }
 
 // ProcessHooks executes commands defined in a Command
@@ -634,7 +635,11 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	_, _, err = dockerutil.ComposeCmd(app.ComposeFiles(), "up", "-d")
+	files, err := app.ComposeFiles()
+	if err != nil {
+		return err
+	}
+	_, _, err = dockerutil.ComposeCmd(files, "up", "-d")
 	if err != nil {
 		return err
 	}
@@ -665,7 +670,11 @@ func (app *DdevApp) Exec(service string, cmd ...string) (string, string, error) 
 	exec := []string{"exec", "-T", service}
 	exec = append(exec, cmd...)
 
-	return dockerutil.ComposeCmd(app.ComposeFiles(), exec...)
+	files, err := app.ComposeFiles()
+	if err != nil {
+		return "", "", err
+	}
+	return dockerutil.ComposeCmd(files, exec...)
 }
 
 // ExecWithTty executes a given command in the container of given type.
@@ -676,7 +685,11 @@ func (app *DdevApp) ExecWithTty(service string, cmd ...string) error {
 	exec := []string{"exec", service}
 	exec = append(exec, cmd...)
 
-	return dockerutil.ComposeNoCapture(app.ComposeFiles(), exec...)
+	files, err := app.ComposeFiles()
+	if err != nil {
+		return err
+	}
+	return dockerutil.ComposeNoCapture(files, exec...)
 }
 
 // Logs returns logs for a site's given container.
@@ -797,7 +810,11 @@ func (app *DdevApp) Stop() error {
 		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev remove %s'", app.GetAppRoot(), app.GetName())
 	}
 
-	_, _, err := dockerutil.ComposeCmd(app.ComposeFiles(), "stop")
+	files, err := app.ComposeFiles()
+	if err != nil {
+		return err
+	}
+	_, _, err = dockerutil.ComposeCmd(files, "stop")
 
 	if err != nil {
 		return err
