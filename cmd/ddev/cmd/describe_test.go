@@ -77,33 +77,21 @@ func TestDescribe(t *testing.T) {
 		args = []string{"describe", "-j"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		logStrings := strings.Split(out, "\n")
+		logItems, err := unmarshallJsonLogs(out)
+		assert.NoError(err)
 
-		assert.True(len(logStrings) >= 2)
+		// The description log should be the last item; there may be a warning
+		// or other info before that.
+		data := logItems[len(logItems)-1]
+		assert.EqualValues(data["level"], "info")
+		raw, ok := data["raw"].(map[string]interface{})
+		assert.True(ok)
+		assert.EqualValues(raw["status"], "running")
+		assert.EqualValues(raw["name"], v.Name)
+		assert.EqualValues(raw["shortroot"].(string), ddevapp.RenderHomeRootedDir(v.Dir))
+		assert.EqualValues(raw["approot"].(string), v.Dir)
 
-		var descWasHit bool
-		// Wander through the json output lines looking for our describe.
-		for _, entry := range logStrings {
-			if entry != "" { // Ignore empty line.
-				// Unmarshall the json results. Normal log entries have 3 fields
-				data := make(log.Fields, 4)
-				err = json.Unmarshal([]byte(entry), &data)
-				assert.NoError(err)
-				if data["level"] != "info" {
-					continue
-				}
-				raw, ok := data["raw"].(map[string]interface{})
-				assert.True(ok)
-				assert.EqualValues(raw["status"], "running")
-				assert.EqualValues(raw["name"], v.Name)
-				assert.EqualValues(raw["shortroot"].(string), ddevapp.RenderHomeRootedDir(v.Dir))
-				assert.EqualValues(raw["approot"].(string), v.Dir)
-
-				assert.NotEmpty(data["msg"])
-				descWasHit = true
-			}
-		}
-		assert.True(descWasHit)
+		assert.NotEmpty(data["msg"])
 
 		cleanup()
 	}
@@ -194,4 +182,23 @@ func TestDescribeAppWithInvalidParams(t *testing.T) {
 	_, err = ddevapp.GetActiveApp(util.RandString(16))
 	assert.Error(err)
 	cleanup()
+}
+
+// unmarshallJsonLogs takes a string buffer and splits it into lines,
+// discards empty lines, and unmarshalls into an array of logs
+func unmarshallJsonLogs(in string) ([]log.Fields, error) {
+	logData := make([]log.Fields, 0)
+	logStrings := strings.Split(in, "\n")
+	data := make(log.Fields, 4)
+
+	for _, logLine := range logStrings {
+		if logLine != "" {
+			err := json.Unmarshal([]byte(logLine), &data)
+			if err != nil {
+				return []log.Fields{}, err
+			}
+			logData = append(logData, data)
+		}
+	}
+	return logData, nil
 }
