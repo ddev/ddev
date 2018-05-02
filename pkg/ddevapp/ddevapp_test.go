@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -479,10 +480,11 @@ func TestWriteableFilesDirectory(t *testing.T) {
 			// making it writeable on the host.
 			filename := fileutil.RandomFilenameBase()
 			dirname := fileutil.RandomFilenameBase()
-			inContainerDir := filepath.Join(uploadDir, dirname)
+			// Use path.Join for items on th container (linux) and filepath.Join for items on the host.
+			inContainerDir := path.Join(uploadDir, dirname)
 			onHostDir := filepath.Join(app.Docroot, inContainerDir)
-			inContainerRelativePath := filepath.Join(inContainerDir, filename)
-			onHostRelativePath := filepath.Join(onHostDir, filename)
+			inContainerRelativePath := path.Join(inContainerDir, filename)
+			onHostRelativePath := path.Join(onHostDir, filename)
 
 			err = os.MkdirAll(onHostDir, 0775)
 			assert.NoError(err)
@@ -500,9 +502,9 @@ func TestWriteableFilesDirectory(t *testing.T) {
 			// Create a file on the host and see what the result is. Make sure we can not append/write to it in the container.
 			filename = fileutil.RandomFilenameBase()
 			dirname = fileutil.RandomFilenameBase()
-			inContainerDir = filepath.Join(uploadDir, dirname)
+			inContainerDir = path.Join(uploadDir, dirname)
 			onHostDir = filepath.Join(app.Docroot, inContainerDir)
-			inContainerRelativePath = filepath.Join(inContainerDir, filename)
+			inContainerRelativePath = path.Join(inContainerDir, filename)
 			onHostRelativePath = filepath.Join(onHostDir, filename)
 
 			err = os.MkdirAll(onHostDir, 0775)
