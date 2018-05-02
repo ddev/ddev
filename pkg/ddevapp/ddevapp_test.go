@@ -455,6 +455,77 @@ func TestDdevImportDB(t *testing.T) {
 	}
 }
 
+// TestWriteableFilesDirectory tests to make sure that files created on host are writeable on container
+// and files ceated in container are correct user on host.
+func TestWriteableFilesDirectory(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	for _, site := range TestSites {
+		switchDir := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevImportDB", site.Name))
+
+		testcommon.ClearDockerEnv()
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Start()
+		assert.NoError(err)
+
+		uploadDir := app.GetUploadDir()
+		if uploadDir != "" {
+
+			// Use exec to touch a file in the container and see what the result is. Make sure it comes out with ownership
+			// making it writeable on the host.
+			filename := fileutil.RandomFilenameBase()
+			dirname := fileutil.RandomFilenameBase()
+			inContainerDir := filepath.Join(uploadDir, dirname)
+			onHostDir := filepath.Join(app.Docroot, inContainerDir)
+			inContainerRelativePath := filepath.Join(inContainerDir, filename)
+			onHostRelativePath := filepath.Join(onHostDir, filename)
+
+			err = os.MkdirAll(onHostDir, 0775)
+			assert.NoError(err)
+			_, _, err = app.Exec("web", "sh", "-c", "echo 'content created inside container\n' >"+inContainerRelativePath)
+			assert.NoError(err)
+
+			// Now try to append to the file on the host.
+			// os.OpenFile() for append here fails if the file does not already exist.
+			f, err := os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
+			assert.NoError(err)
+			_, err = f.WriteString("this addition to the file was added on the host side")
+			assert.NoError(err)
+			_ = f.Close()
+
+			// Create a file on the host and see what the result is. Make sure we can not append/write to it in the container.
+			filename = fileutil.RandomFilenameBase()
+			dirname = fileutil.RandomFilenameBase()
+			inContainerDir = filepath.Join(uploadDir, dirname)
+			onHostDir = filepath.Join(app.Docroot, inContainerDir)
+			inContainerRelativePath = filepath.Join(inContainerDir, filename)
+			onHostRelativePath = filepath.Join(onHostDir, filename)
+
+			err = os.MkdirAll(onHostDir, 0775)
+			assert.NoError(err)
+
+			f, err = os.OpenFile(onHostRelativePath, os.O_CREATE|os.O_RDWR, 0660)
+			assert.NoError(err)
+			_, err = f.WriteString("this base content was inserted on the host side\n")
+			assert.NoError(err)
+			_ = f.Close()
+			// if the file exists, add to it. We don't want to add if it's not already there.
+			_, _, err = app.Exec("web", "sh", "-c", "if [ -f "+inContainerRelativePath+" ]; then echo 'content added inside container\n' >>"+inContainerRelativePath+"; fi")
+			assert.NoError(err)
+			// grep the file for both the content added on host and that added in container.
+			_, _, err = app.Exec("web", "sh", "-c", "grep 'base content was inserted on the host' "+inContainerRelativePath+"&& grep 'content added inside container' "+inContainerRelativePath)
+			assert.NoError(err)
+		}
+
+		runTime()
+		switchDir()
+	}
+}
+
 // TestDdevImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestDdevImportFiles(t *testing.T) {
 	assert := asrt.New(t)
