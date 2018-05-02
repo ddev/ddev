@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
 
 	"encoding/json"
@@ -76,16 +77,34 @@ func TestDescribe(t *testing.T) {
 		args = []string{"describe", "-j"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		// Unmarshall the json results results. The describe function only has 4 fields to output
-		data := make(log.Fields, 4)
-		err = json.Unmarshal([]byte(out), &data)
-		assert.NoError(err)
-		raw, ok := data["raw"].(map[string]interface{})
-		assert.True(ok)
-		assert.EqualValues(raw["status"], "running")
-		assert.EqualValues(raw["name"], v.Name)
-		assert.EqualValues(raw["shortroot"].(string), ddevapp.RenderHomeRootedDir(v.Dir))
-		assert.EqualValues(raw["approot"].(string), v.Dir)
+		logStrings := strings.Split(out, "\n")
+
+		assert.True(len(logStrings) >= 2)
+
+		var descWasHit bool
+		// Wander through the json output lines looking for our describe.
+		for _, entry := range logStrings {
+			if entry != "" { // Ignore empty line.
+				// Unmarshall the json results. Normal log entries have 3 fields
+				data := make(log.Fields, 4)
+				err = json.Unmarshal([]byte(entry), &data)
+				assert.NoError(err)
+				if data["level"] != "info" {
+					continue
+				}
+				raw, ok := data["raw"].(map[string]interface{})
+				assert.True(ok)
+				assert.EqualValues(raw["status"], "running")
+				assert.EqualValues(raw["name"], v.Name)
+				assert.EqualValues(raw["shortroot"].(string), ddevapp.RenderHomeRootedDir(v.Dir))
+				assert.EqualValues(raw["approot"].(string), v.Dir)
+
+				assert.NotEmpty(data["msg"])
+				descWasHit = true
+			}
+		}
+		assert.True(descWasHit)
+
 		cleanup()
 	}
 }
