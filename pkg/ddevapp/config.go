@@ -122,6 +122,9 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
+	// Append current image information
+	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s \n# webimage: %s:%s\n# dbimage: %s:%s\n# dbaimage: %s:%s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.WebImg, version.WebTag, version.DBImg, version.DBTag, version.DBAImg, version.DBATag))...)
+
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(ConfigInstructions)...)
 	cfgbytes = append(cfgbytes, appcopy.GetHookDefaultComments()...)
