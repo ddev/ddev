@@ -105,7 +105,7 @@ func (app *DdevApp) WriteConfig() error {
 	// Work against a copy of the DdevApp, since we don't want to actually change it.
 	appcopy := *app
 	// Update the "APIVersion" to be the ddev version.
-	app.APIVersion = version.DdevVersion
+	appcopy.APIVersion = version.DdevVersion
 
 	// We don't want to even set the images on write, even though we'll respect them on read.
 	appcopy.DBAImage = ""
