@@ -77,7 +77,7 @@ We've seen cases where this is caused by old databases that are not compatible w
 Note: Your project database will be destroyed by this procedure.
 
 1. `ddev remove --remove-data`
-2. rm -r .ddev (removes the config.yaml and docker-compose.yml, do this only if you haven't modified those)
+2. rm -r .ddev (removes the config.yaml and docker-compose.yml and any custom nginx/php/mariadb config you may have added. It makes sense to make a backup of these before proceeding.)
 3. `ddev start` 
 4. `ddev import-db` if you have a db to import
 
