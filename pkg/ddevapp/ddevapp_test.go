@@ -978,6 +978,56 @@ func TestListWithoutDir(t *testing.T) {
 	assert.NoError(err)
 }
 
+// TestMultipleComposeFiles checks to see if a set of docker-compose files gets
+// properly loaded in the right order, with docker-compose.yaml first and
+// with docker-compose.override.yaml last.
+func TestMultipleComposeFiles(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+
+	// Make sure that valid yaml files get properly loaded in the proper order
+	app, err := ddevapp.NewApp("./testdata/testMultipleComposeFiles", "")
+	assert.NoError(err)
+
+	files, err := app.ComposeFiles()
+	assert.NoError(err)
+	assert.True(files[0] == filepath.Join(app.AppConfDir(), "docker-compose.yaml"))
+	assert.True(files[len(files)-1] == filepath.Join(app.AppConfDir(), "docker-compose.override.yaml"))
+
+	// Make sure that some docker-compose.yml and docker-compose.yaml conflict gets noted properly
+	app, err = ddevapp.NewApp("./testdata/testConflictingYamlYml", "")
+	assert.NoError(err)
+
+	_, err = app.ComposeFiles()
+	assert.Error(err)
+	assert.Contains(err.Error(), "there are more than one docker-compose.y*l")
+
+	// Make sure that some docker-compose.override.yml and docker-compose.override.yaml conflict gets noted properly
+	app, err = ddevapp.NewApp("./testdata/testConflictingOverrideYaml", "")
+	assert.NoError(err)
+
+	_, err = app.ComposeFiles()
+	assert.Error(err)
+	assert.Contains(err.Error(), "there are more than one docker-compose.override.y*l")
+
+	// Make sure the error gets pointed out of there's no main docker-compose.yaml
+	app, err = ddevapp.NewApp("./testdata/testNoDockerCompose", "")
+	assert.NoError(err)
+
+	_, err = app.ComposeFiles()
+	assert.Error(err)
+	assert.Contains(err.Error(), "failed to find a docker-compose.yml or docker-compose.yaml")
+
+	// Catch if we have no docker files at all.
+	// This should also fail if the docker-compose.yaml.bak gets loaded.
+	app, err = ddevapp.NewApp("./testdata/testNoDockerFilesAtAll", "")
+	assert.NoError(err)
+
+	_, err = app.ComposeFiles()
+	assert.Error(err)
+	assert.Contains(err.Error(), "failed to load any docker-compose.*y*l files")
+}
+
 // constructContainerName builds a container name given the type (web/db/dba) and the app
 func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
 	container, err := app.FindContainerByType(containerType)
