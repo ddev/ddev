@@ -7,6 +7,10 @@
 
 ;--------------------------------
 
+!define MUI_PRODUCT "DDEV-Local"
+!define MUI_VERSION "${VERSION}"
+CRCCheck On
+
 !include MUI2.nsh
 
 ; The name of the installer
@@ -31,18 +35,41 @@ RequestExecutionLevel admin
 
 ;--------------------------------
 ;Pages
+!define MUI_PAGE_HEADER_TEXT "Monkey Town Presents:"
+!define MUI_PAGE_HEADER_SUBTEXT "Monkey Chooser (c) 2013"
 
-  !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
-  !insertmacro MUI_PAGE_COMPONENTS
-  !insertmacro MUI_PAGE_DIRECTORY
-  !insertmacro MUI_PAGE_INSTFILES
+!define MUI_WELCOMEPAGE_TITLE "DDEV-Local"
+!define MUI_WELCOMEPAGE_TEXT "From DRUD Tech, https://ddev.drud.com"
+!insertmacro MUI_PAGE_WELCOME
 
-  !insertmacro MUI_UNPAGE_CONFIRM
-  !insertmacro MUI_UNPAGE_INSTFILES
+!define MUI_LICENSEPAGE_TEXT_TOP "Apache 2.0 License for DDEV-Live (ddev)"
+!define MUI_LICENSEPAGE_BUTTON "I agree"
+
+!insertmacro MUI_PAGE_LICENSE "..\LICENSE"
+
+!define MUI_LICENSEPAGE_TEXT_TOP "MIT License for github.com/mattn/sudo"
+!define MUI_LICENSEPAGE_BUTTON "I agree"
+
+!insertmacro MUI_PAGE_LICENSE "..\bin\windows\windows_amd64\sudo_license.txt"
+
+!insertmacro MUI_PAGE_COMPONENTS
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+
+!insertmacro MUI_UNPAGE_CONFIRM
+!insertmacro MUI_UNPAGE_INSTFILES
+
+!define MUI_FINISHPAGE_TITLE_3LINES "Welcome to DDEV-Local"
+!define MUI_FINISHPAGE_TEXT "Please review the release notes"
+!define MUI_FINISHPAGE_SHOWREADME https://github.com/drud/ddev/releases/tag/${VERSION}
+!define MUI_FINISHPAGE_SHOWREADME_TEXT "Continue to review the release notes."
+!define MUI_FINISHPAGE_LINK "github.com/drud/ddev"
+!define MUI_FINISHPAGE_LINK_LOCATION "https://github.com/drud/ddev"
+!insertmacro MUI_PAGE_FINISH
 
 ;--------------------------------
 
-Section "ddev"
+Section "ddev (github.com/drud/ddev)"
   SectionIn RO
   SetOutPath $INSTDIR
   
@@ -59,7 +86,7 @@ Section "ddev"
   WriteUninstaller "ddev_uninstall.exe"
 SectionEnd
 
-Section "sudo"
+Section "sudo (github.com/mattn/sudo)"
   SectionIn 1
   SetOutPath $INSTDIR
   FIle "../bin/windows/windows_amd64/sudo.exe"

@@ -94,9 +94,10 @@ setup:
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: gometalinter
 
-windows_install: windows bin/windows/windows_amd64/sudo.exe
+windows_install: windows bin/windows/windows_amd64/sudo.exe bin/windows/windows_amd64/sudo_license.txt
 	makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 
-bin/windows/windows_amd64/sudo.exe:
+bin/windows/windows_amd64/sudo.exe bin/windows/windows_amd64/sudo_license.txt:
 	curl -sSL -o /tmp/sudo.zip -O  https://github.com/mattn/sudo/releases/download/$(WINDOWS_SUDO_VERSION)/sudo-x86_64.zip
 	unzip -o -d $(PWD)/bin/windows/windows_amd64 /tmp/sudo.zip
+	curl -sSL -o $(PWD)/bin/windows/windows_amd64/sudo_license.txt https://raw.githubusercontent.com/mattn/sudo/master/LICENSE
