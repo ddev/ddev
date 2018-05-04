@@ -2,6 +2,8 @@
 
 GOMETALINTER_ARGS := --vendored-linters --disable-all --enable=gofmt --enable=vet --enable vetshadow --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode --deadline=2m
 
+WINDOWS_SUDO_VERSION=v0.0.1
+
 ##### These variables need to be adjusted in most repositories #####
 
 # This repo's root import path (under GOPATH).
@@ -57,7 +59,7 @@ include build-tools/makefile_components/base_build_go.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
-.PHONY: test testcmd testpkg build setup staticrequired
+.PHONY: test testcmd testpkg build setup staticrequired windows_install
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
@@ -91,3 +93,11 @@ setup:
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: gometalinter
+
+windows_install: windows bin/windows/windows_amd64/sudo.exe bin/windows/windows_amd64/sudo_license.txt
+	makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
+
+bin/windows/windows_amd64/sudo.exe bin/windows/windows_amd64/sudo_license.txt:
+	curl -sSL -o /tmp/sudo.zip -O  https://github.com/mattn/sudo/releases/download/$(WINDOWS_SUDO_VERSION)/sudo-x86_64.zip
+	unzip -o -d $(PWD)/bin/windows/windows_amd64 /tmp/sudo.zip
+	curl -sSL -o $(PWD)/bin/windows/windows_amd64/sudo_license.txt https://raw.githubusercontent.com/mattn/sudo/master/LICENSE

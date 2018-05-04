@@ -23,7 +23,8 @@ jobs:
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
-          command: make -s clean linux darwin windows
+          command: |
+            make -s clean linux darwin windows_install
           name: Build the ddev executables
 
       # Run the built-in ddev tests with the executables just built.

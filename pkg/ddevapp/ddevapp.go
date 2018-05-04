@@ -965,7 +965,7 @@ func (app *DdevApp) AddHostsEntries() error {
 			continue
 		}
 
-		_, err = osexec.Command("sudo", "-h").Output()
+		_, err = osexec.LookPath("sudo")
 		if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
 			util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", dockerIP, name, name, dockerIP)
 			return nil
@@ -981,7 +981,9 @@ func (app *DdevApp) AddHostsEntries() error {
 		util.Warning(fmt.Sprintf("    sudo %s", command))
 		output.UserOut.Println("Please enter your password if prompted.")
 		_, err = exec.RunCommandPipe("sudo", hostnameArgs)
-		util.CheckErr(err)
+		if err != nil {
+			util.Warning("Failed to execute sudo command, you will need to manually execute '%s' with administrative privileges", command)
+		}
 	}
 	return nil
 }
