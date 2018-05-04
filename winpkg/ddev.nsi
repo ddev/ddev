@@ -36,10 +36,11 @@ RequestExecutionLevel admin
 
 ;--------------------------------
 ;Pages
-!define MUI_SPECIALBITMAP "ddev-logo-light-bg.bmp"
+!define MUI_HEADERIMAGE
 
-!define MUI_WELCOMEPAGE_TITLE "DDEV-Local"
-!define MUI_WELCOMEPAGE_TEXT "From DRUD Tech, https://ddev.drud.com"
+!define MUI_WELCOMEPAGE_TITLE "DDEV-Local, a local PHP development environment system"
+!define MUI_WELCOMEPAGE_TEXT "From DRUD Tech, https://ddev.drud.com$\r$\nWe welcome your input and contributions. $\r$\nDocs: ddev.readthedocs.io"
+
 !insertmacro MUI_PAGE_WELCOME
 
 !define MUI_LICENSEPAGE_TEXT_TOP "Apache 2.0 License for DDEV-Live (ddev)"
@@ -57,13 +58,16 @@ RequestExecutionLevel admin
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
 
+
 !define MUI_FINISHPAGE_TITLE_3LINES "Welcome to DDEV-Local"
-!define MUI_FINISHPAGE_TEXT "Please review the release notes"
-!define MUI_FINISHPAGE_SHOWREADME https://github.com/drud/ddev/releases/tag/${VERSION}
+!define MUI_FINISHPAGE_TEXT "Please review the release notes."
+!define MUI_FINISHPAGE_SHOWREADME https://github.com/drud/ddev/releases
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "Continue to review the release notes."
 !define MUI_FINISHPAGE_LINK "github.com/drud/ddev"
 !define MUI_FINISHPAGE_LINK_LOCATION "https://github.com/drud/ddev"
 !insertmacro MUI_PAGE_FINISH
+
+!insertmacro MUI_LANGUAGE "English"
 
 ;--------------------------------
 
