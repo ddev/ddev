@@ -574,6 +574,25 @@ func TestDdevLogs(t *testing.T) {
 		out = stdout()
 		assert.Contains(out, "MySQL init process done. Ready for start up.")
 
+		// Test that we can get logs when project is stopped also
+		err = app.Stop()
+		assert.NoError(err)
+
+		stdout = testcommon.CaptureUserOut()
+		err = app.Logs("web", false, false, "")
+		assert.NoError(err)
+		out = stdout()
+		assert.Contains(out, "Server started")
+
+		stdout = testcommon.CaptureUserOut()
+		err = app.Logs("db", false, false, "")
+		assert.NoError(err)
+		out = stdout()
+		assert.Contains(out, "MySQL init process done. Ready for start up.")
+
+		err = app.Start()
+		assert.NoError(err)
+
 		runTime()
 		switchDir()
 	}
