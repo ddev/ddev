@@ -391,7 +391,7 @@ func TestDdevImportDB(t *testing.T) {
 		assert.NoError(err)
 
 		// Test simple db loads.
-		for _, file := range []string{"users.sql", "users.sql.gz", "users.sql.tar", "users.sql.tar.gz", "users.sql.tgz", "users.sql.zip"} {
+		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip"} {
 			path := filepath.Join(testDir, "testdata", file)
 			err = app.ImportDB(path, "")
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
