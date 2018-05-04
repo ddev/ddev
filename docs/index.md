@@ -50,11 +50,9 @@ You can also easily perform the installation or upgrade manually if preferred. d
 - Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
 - Run `ddev` to test your installation. You should see ddev's command usage output.
 
-### Manual Installation or Upgrade - Windows
+### Installation or Upgrade - Windows
 
-- Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for Windows.
-- Copy `ddev.exe` into `%HOMEPATH%\AppData\Local\Microsoft\WindowsApps`, or otherwise add `ddev.exe` to a folder defined in your `PATH`
-- Run `ddev` from a Command Prompt or PowerShell to test your installation. You should see ddev's command usage output.
+- A windows installer is provided in the release (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. Open a new terminal or cmd window so ddev will be in your path.
 
 ### Versioning
 
