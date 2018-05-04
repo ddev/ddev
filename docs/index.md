@@ -52,7 +52,7 @@ You can also easily perform the installation or upgrade manually if preferred. d
 
 ### Installation or Upgrade - Windows
 
-- A windows installer is provided in the release (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. Open a new terminal or cmd window so ddev will be in your path.
+- A windows installer is provided in the release (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. If you get a Windows Defender Smartscreen warning "Windows protected your PC", click "More info" and then "Run anyway". Open a new terminal or cmd window and start using ddev.
 
 ### Versioning
 
