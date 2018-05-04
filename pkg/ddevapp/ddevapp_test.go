@@ -244,7 +244,10 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		app.AdditionalHostnames = []string{"sub1." + site.Name, "sub2." + site.Name, "subname.sub3." + site.Name}
+		// site.Name is explicitly added because if not removed in GetHostNames() it will cause ddev-router failure
+		// "a" is repeated for the same reason; a user error of this type should not cause a failure; GetHostNames()
+		// should uniqueify them.
+		app.AdditionalHostnames = []string{"sub1." + site.Name, "sub2." + site.Name, "subname.sub3." + site.Name, site.Name, site.Name, site.Name}
 
 		err = app.WriteConfig()
 		assert.NoError(err)
