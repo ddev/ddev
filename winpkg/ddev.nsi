@@ -39,7 +39,7 @@ RequestExecutionLevel admin
 !define MUI_HEADERIMAGE
 
 !define MUI_WELCOMEPAGE_TITLE "DDEV-Local, a local PHP development environment system"
-!define MUI_WELCOMEPAGE_TEXT "From DRUD Tech, https://ddev.drud.com$\r$\nWe welcome your input and contributions. $\r$\nDocs: ddev.readthedocs.io"
+!define MUI_WELCOMEPAGE_TEXT "From DRUD Tech, https://ddev.com$\r$\nWe welcome your input and contributions. $\r$\nDocs: ddev.readthedocs.io"
 
 !insertmacro MUI_PAGE_WELCOME
 
