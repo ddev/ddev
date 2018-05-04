@@ -12,9 +12,10 @@
 CRCCheck On
 
 !include MUI2.nsh
+!include LogicLib.nsh
 
 ; The name of the installer
-Name "ddev"
+Name "ddev ${VERSION}"
 
 OutFile "../bin/windows/windows_amd64/ddev_windows_installer.${VERSION}.exe"
 
@@ -35,8 +36,7 @@ RequestExecutionLevel admin
 
 ;--------------------------------
 ;Pages
-!define MUI_PAGE_HEADER_TEXT "Monkey Town Presents:"
-!define MUI_PAGE_HEADER_SUBTEXT "Monkey Chooser (c) 2013"
+!define MUI_SPECIALBITMAP "ddev-logo-light-bg.bmp"
 
 !define MUI_WELCOMEPAGE_TITLE "DDEV-Local"
 !define MUI_WELCOMEPAGE_TEXT "From DRUD Tech, https://ddev.drud.com"
@@ -44,12 +44,10 @@ RequestExecutionLevel admin
 
 !define MUI_LICENSEPAGE_TEXT_TOP "Apache 2.0 License for DDEV-Live (ddev)"
 !define MUI_LICENSEPAGE_BUTTON "I agree"
-
 !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
 
 !define MUI_LICENSEPAGE_TEXT_TOP "MIT License for github.com/mattn/sudo"
 !define MUI_LICENSEPAGE_BUTTON "I agree"
-
 !insertmacro MUI_PAGE_LICENSE "..\bin\windows\windows_amd64\sudo_license.txt"
 
 !insertmacro MUI_PAGE_COMPONENTS
@@ -129,6 +127,17 @@ Section "Uninstall"
   Call un.RemoveFromPath
 
 SectionEnd
+
+; Check on startup for docker-compose. If it doesn't exist, warn the user.
+Function .onInit
+    nsExec::ExecToStack "docker-compose -v"
+    Pop $0 # return value/error/timeout
+    Pop $1
+    ${If} $0 != "0"
+      MessageBox MB_OK "Docker and docker-compose do not seem to be installed (or are not available in %PATH%), but they are required for ddev to function. Please install them after you complete ddev installation."
+    ${EndIf}
+FunctionEnd
+
 
 !ifndef _AddToPath_nsh
 !define _AddToPath_nsh
