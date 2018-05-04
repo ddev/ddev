@@ -109,8 +109,9 @@ const ConfigInstructions = `
 
 # php_version: "7.1"  # PHP version to use, "5.6", "7.0", "7.1", "7.2"
 
-# You can delete the webimage, dbimage, dbaimage lines to use the defaults
-# in ddev.
+# You can explicitly specify the webimage, dbimage, dbaimage lines but this 
+# is not recommended, as the images are often closely tied to ddev's' behavior,
+# so this can break upgrades.
 
 # webimage: <docker_image>  # nginx/php docker image. 
 # dbimage: <docker_image>  # mariadb docker image. 
@@ -118,6 +119,8 @@ const ConfigInstructions = `
 
 # router_http_port: <port>  # Port to be used for http (defaults to port 80)
 # router_https_port: <port> # Port for https (defaults to 443)
+
+# xdebug_enabled: false  # Set to true to enable xdebug and "ddev start" or "ddev restart"
 
 #additional_hostnames:
 # - somename

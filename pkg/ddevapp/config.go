@@ -32,10 +32,6 @@ const DdevDefaultRouterHTTPPort = "80"
 // DdevDefaultRouterHTTPSPort is the starting https router port, 443
 const DdevDefaultRouterHTTPSPort = "443"
 
-// CurrentAppVersion sets the current YAML config file version.
-// We're not doing anything with AppVersion, so just default it to 1 for now.
-const CurrentAppVersion = "1"
-
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
@@ -64,7 +60,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 
 	app.AppRoot = AppRoot
 	app.ConfigPath = app.GetConfigPath("config.yaml")
-	app.APIVersion = CurrentAppVersion
+	app.APIVersion = version.DdevVersion
 	app.PHPVersion = DdevDefaultPHPVersion
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
@@ -106,37 +102,50 @@ func (app *DdevApp) GetConfigPath(filename string) string {
 // WriteConfig writes the app configuration into the .ddev folder.
 func (app *DdevApp) WriteConfig() error {
 
-	err := PrepDdevDirectory(filepath.Dir(app.ConfigPath))
+	// Work against a copy of the DdevApp, since we don't want to actually change it.
+	appcopy := *app
+	// Update the "APIVersion" to be the ddev version.
+	appcopy.APIVersion = version.DdevVersion
+
+	// We don't want to even set the images on write, even though we'll respect them on read.
+	appcopy.DBAImage = ""
+	appcopy.DBImage = ""
+	appcopy.WebImage = ""
+
+	err := PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
 	if err != nil {
 		return err
 	}
 
-	cfgbytes, err := yaml.Marshal(app)
+	cfgbytes, err := yaml.Marshal(appcopy)
 	if err != nil {
 		return err
 	}
+
+	// Append current image information
+	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s \n# webimage: %s:%s\n# dbimage: %s:%s\n# dbaimage: %s:%s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.WebImg, version.WebTag, version.DBImg, version.DBTag, version.DBAImg, version.DBATag))...)
 
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(ConfigInstructions)...)
-	cfgbytes = append(cfgbytes, app.GetHookDefaultComments()...)
+	cfgbytes = append(cfgbytes, appcopy.GetHookDefaultComments()...)
 
-	err = ioutil.WriteFile(app.ConfigPath, cfgbytes, 0644)
+	err = ioutil.WriteFile(appcopy.ConfigPath, cfgbytes, 0644)
 	if err != nil {
 		return err
 	}
 
-	provider, err := app.GetProvider()
+	provider, err := appcopy.GetProvider()
 	if err != nil {
 		return err
 	}
 
-	err = provider.Write(app.GetConfigPath("import.yaml"))
+	err = provider.Write(appcopy.GetConfigPath("import.yaml"))
 	if err != nil {
 		return err
 	}
 
-	// Allow app-specific post-config action
-	err = app.PostConfigAction()
+	// Allow project-specific post-config action
+	err = appcopy.PostConfigAction()
 	if err != nil {
 		return err
 	}
@@ -165,6 +174,9 @@ func (app *DdevApp) ReadConfig() error {
 		return err
 	}
 
+	if app.APIVersion != version.DdevVersion {
+		util.Warning("Your .ddev/config.yaml version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.APIVersion, version.DdevVersion)
+	}
 	// If any of these values aren't defined in the config file, set them to defaults.
 	if app.Name == "" {
 		app.Name = filepath.Base(app.AppRoot)

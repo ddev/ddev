@@ -3,13 +3,10 @@ package cmd
 import (
 	"testing"
 
-	"encoding/json"
-
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
-	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -48,28 +45,16 @@ func TestDevRestartJSON(t *testing.T) {
 		args := []string{"restart", "-j"}
 		out, err := exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		logStrings := strings.Split(out, "\n")
-		// We expect 4 lines of json in result, and a blank (Restarting,
-		// need-add-hosts, successfully restarted, can be reached at,
-		// blank at end)
-		assert.True(len(logStrings) >= 3)
 
-		// Wander through the json output lines making sure they're reasonable json.
-		for _, entry := range logStrings {
-			if entry != "" { // Ignore empty line.
-				// Unmarshall the json results. Normal log entries have 3 fields
-				data := make(log.Fields, 3)
-				err = json.Unmarshal([]byte(entry), &data)
-				assert.NoError(err)
-				if !strings.Contains(data["msg"].(string), "You must manually add the following") && !strings.Contains(data["msg"].(string), "Warning: containers will run as root") {
-					assert.EqualValues(data["level"], "info")
-				}
-				assert.NotEmpty(data["msg"])
-			}
-		}
+		logItems, err := unmarshallJSONLogs(out)
+		assert.NoError(err)
 
-		// Go ahead and look for normal strings within the json output.
-		assert.Contains(string(out), strings.Join(app.GetAllURLs(), ", "))
+		// The key item should be the last item; there may be a warning
+		// or other info before that.
+		data := logItems[len(logItems)-1]
+		assert.EqualValues(data["level"], "info")
+		assert.Contains(data["msg"], "Your project can be reached at "+strings.Join(app.GetAllURLs(), ", "))
+
 		cleanup()
 	}
 }

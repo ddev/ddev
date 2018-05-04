@@ -6,7 +6,7 @@ var VERSION = ""
 // IMPORTANT: These versions are overridden by version ldflags specifications VERSION_VARIABLES in the Makefile
 
 // DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
-var DdevVersion = "v0.3.0-dev" // Note that this is overridden by make
+var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by make
 
 // DockerVersionConstraint is the current minimum version of docker required for ddev.
 // See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints

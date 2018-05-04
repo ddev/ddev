@@ -31,7 +31,7 @@ func TestNewConfig(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure the config uses specified defaults.
-	assert.Equal(app.APIVersion, CurrentAppVersion)
+	assert.Equal(app.APIVersion, version.DdevVersion)
 	assert.Equal(app.DBImage, version.DBImg+":"+version.DBTag)
 	assert.Equal(app.WebImage, version.WebImg+":"+version.WebTag)
 	assert.Equal(app.DBAImage, version.DBAImg+":"+version.DBATag)
@@ -304,13 +304,10 @@ func TestReadConfig(t *testing.T) {
 
 	// This closely resembles the values one would have from NewApp()
 	app := &DdevApp{
+		APIVersion: version.DdevVersion,
 		ConfigPath: filepath.Join("testdata", "config.yaml"),
 		AppRoot:    "testdata",
-		APIVersion: CurrentAppVersion,
 		Name:       "TestRead",
-		WebImage:   version.WebImg + ":" + version.WebTag,
-		DBImage:    version.DBImg + ":" + version.DBTag,
-		DBAImage:   version.DBAImg + ":" + version.DBATag,
 		Provider:   DefaultProviderName,
 	}
 
@@ -321,10 +318,11 @@ func TestReadConfig(t *testing.T) {
 
 	// Values not defined in file, we should still have default values
 	assert.Equal(app.Name, "TestRead")
-	assert.Equal(app.DBImage, version.DBImg+":"+version.DBTag)
+	assert.Equal(app.APIVersion, version.DdevVersion)
 
 	// Values defined in file, we should have values from file
 	assert.Equal(app.Type, "drupal8")
+	assert.Equal(app.Docroot, "test")
 	assert.Equal(app.WebImage, "test/testimage:latest")
 }
 
@@ -371,7 +369,7 @@ func TestWriteConfig(t *testing.T) {
 	app := &DdevApp{
 		ConfigPath: filepath.Join(testDir, "config.yaml"),
 		AppRoot:    testDir,
-		APIVersion: CurrentAppVersion,
+		APIVersion: version.DdevVersion,
 		Name:       "TestWrite",
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,

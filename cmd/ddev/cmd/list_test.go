@@ -5,13 +5,11 @@ import (
 	"runtime"
 	"testing"
 
-	"encoding/json"
 	oexec "os/exec"
 	"time"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
-	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -29,10 +27,14 @@ func TestDevList(t *testing.T) {
 	jsonOut, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 
-	// Unmarshall the json results. The list function has 4 fields to output
-	data := make(log.Fields, 4)
-	err = json.Unmarshal([]byte(jsonOut), &data)
+	logItems, err := unmarshallJSONLogs(jsonOut)
 	assert.NoError(err)
+
+	// The list should be the last item; there may be a warning
+	// or other info before that.
+	data := logItems[len(logItems)-1]
+	assert.EqualValues(data["level"], "info")
+
 	raw, ok := data["raw"].([]interface{})
 	assert.True(ok)
 
