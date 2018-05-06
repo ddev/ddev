@@ -1,0 +1,24 @@
+FROM alpine:3.7
+
+ENV MYSQL_DATABASE db
+ENV MYSQL_USER db
+ENV MYSQL_PASSWORD db
+ENV MYSQL_ROOT_PASSWORD root
+ENV MYSQL_MAX_ALLOWED_PACKET 16m
+
+RUN mkdir /docker-entrypoint-initdb.data
+
+# Install mariadb and other packages
+RUN apk update && apk add mariadb mariadb-client bash tzdata shadow
+# Remove the installed version as we need to set up our own from scratch
+RUN rm -rf /var/lib/mysql/* /etc/mysql
+
+ADD files /
+
+RUN chmod ugo+x /import.sh /healthcheck.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+EXPOSE 3306
+# The following line overrides any cmd entry
+CMD []
+HEALTHCHECK --interval=2s --retries=30 CMD ["/healthcheck.sh"]

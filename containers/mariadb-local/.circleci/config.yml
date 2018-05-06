@@ -1,0 +1,14 @@
+version: 2
+executorType: machine
+stages:
+  build:
+    workDir: ~/docker.mysql-local
+    steps:
+      - type: checkout
+      - type: shell
+        command: sudo apt-get -qq update && sudo apt-get -qq install mysql-client
+        name: Install testing requirements like mysql-client
+
+      - run: make container
+
+      - run: make test
