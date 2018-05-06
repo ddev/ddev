@@ -1,0 +1,15 @@
+version: 2
+executorType: machine
+stages:
+  build:
+    workDir: ~/docker.phpmyadmin
+    steps:
+      - type: checkout
+
+      - type: shell
+        command: make container
+
+      # Run the tests
+      - type: shell
+        command: make test
+

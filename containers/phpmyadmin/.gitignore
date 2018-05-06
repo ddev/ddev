@@ -1,0 +1,12 @@
+# Add these lines to project .gitignore
+
+# Temporary build-tools artifacts to be ignored
+.go/
+bin/
+.container*
+.push*
+linux
+darwin
+.dockerfile
+VERSION.txt
+.docker_image
