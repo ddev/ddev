@@ -1,0 +1,30 @@
+#!/bin/bash
+set -euo pipefail
+
+{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
+{{/* Set the cert name to <domain.tld>, stripping any subdomain for use of wildcard cert */}}
+{{ $host := trim $host }}
+{{ $hostParts := split $host "." }}
+{{ $tld := last $hostParts }}
+{{ $hostNoTLDParts := split (trimSuffix (printf ".%s" $tld) $host) "." }}
+{{ $cert := printf "%s.%s" (last $hostNoTLDParts) $tld }}
+
+GEN_CERT=false
+
+if [ -f /etc/nginx/certs/{{ $cert }}.crt ]; then
+    if ! openssl x509 -checkend 86400 -noout -in /etc/nginx/certs/{{ $cert }}.crt; then
+        GEN_CERT=true
+    fi
+else
+    GEN_CERT=true
+fi
+
+if [ "$GEN_CERT" = true ]; then
+    echo "Generating wildcard cert for {{ $cert }}"
+    openssl req -new -x509 -days 3285 -nodes \
+                -out /etc/nginx/certs/{{ $cert }}.crt \
+                -keyout /etc/nginx/certs/{{ $cert }}.key \
+                -subj "/C=US/ST=Colorado/L=Denver/O=DRUD Technology, LLC/OU=ddev/CN=*.{{ $cert }}"
+fi
+
+{{ end }}
