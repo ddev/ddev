@@ -2,7 +2,15 @@
 
 SHELL := /bin/bash
 
-# These dirs must be built in this order (nginx-php-fpm depends on php7)
+VERSION := $(shell git describe --tags --always --dirty)
+
+VERSION_VARIABLES=DdevVersion WebTag DBTag RouterTag DBATag
+WebTag = $(VERSION)
+DBTag =  $(VERSION)
+RouterTag = $(VERSION)
+DBATag = $(VERSION)
+
+# List of containers to be built in containers/ directory
 CONTAINER_DIRS = ddev-router nginx-php-fpm-local mysql-local phpmyadmin
 
 BASEDIR=./containers/
@@ -25,4 +33,4 @@ $(CONTAINER_DIRS):
 	$(MAKE) -C $(addprefix $(BASEDIR),$@) --print-directory test
 
 test:
-	$(MAKE) && $(MAKE) TESTARGS="" test
+	$(MAKE) && $(MAKE) VERSION_VARIABLES="$(VERSION_VARIABLES)" WebTag="$(VERSION)" DBTag="$(VERSION)" RouterTag="$(VERSION)" DBATag="$(VERSION)" TESTARGS="" test
