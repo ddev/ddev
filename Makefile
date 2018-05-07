@@ -24,13 +24,13 @@ VERSION_VARIABLES = DdevVersion WebImg WebTag DBImg DBTag RouterImage RouterTag 
 # These variables will be used as the default unless overridden by the make
 DdevVersion ?= $(VERSION)
 WebImg ?= drud/nginx-php-fpm-local
-WebTag ?= v1.3.0
+WebTag ?= $(VERSION)
 DBImg ?= drud/mariadb-local
-DBTag ?=  v0.9.0
+DBTag ?=  $(VERSION)
 RouterImage ?= drud/ddev-router
-RouterTag ?= v0.5.1
+RouterTag ?= $(VERSION)
 DBAImg ?= drud/phpmyadmin
-DBATag ?= v0.2.0
+DBATag ?= $(VERSION)
 
 # Optional to docker build
 #DOCKER_ARGS =
