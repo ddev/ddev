@@ -38,8 +38,8 @@ var (
 		},
 		{
 			Name:                          "TestPkgDrupal8",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.4.0.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-8.4.0/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.5.3.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-8.5.3/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_files.tar.gz",
 			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_files.zip",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.tar.gz",

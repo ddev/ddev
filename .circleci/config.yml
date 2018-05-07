@@ -69,7 +69,7 @@ jobs:
 
       - run:
           command: |
-            make -s linux darwin windows
+            make -s linux darwin windows_install
           name: Build the ddev executables normally, with normal image tags
 
       # Run the built-in ddev tests with the clean binaries just built.
@@ -107,7 +107,7 @@ jobs:
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
-          command: make -s clean linux darwin windows
+          command: make -s clean linux darwin windows_install
           name: Build the ddev executables
 
       - run:
