@@ -1,7 +1,7 @@
 # Docker NGINX PHP7 FPM for Local Development
 
 ## Introduction
-This is a Dockerfile to build a container image for NGINX and PHP7 in FPM with development configurations and tools. This container starts from the production [nginx-php-fpm](https://github.com/drud/docker.nginx-php-fpm) container.
+This is a Dockerfile to build a container image for NGINX and PHP7 in FPM with development configurations and tools. 
 
 ## Developer Tools
 
@@ -9,6 +9,8 @@ This is a Dockerfile to build a container image for NGINX and PHP7 in FPM with d
 * [Drush](http://www.drush.org) (from the production container)
 * [WP-CLI](http://www.wp-cli.org) (from the production container)
 * [Mailhog](https://github.com/mailhog/MailHog)
+* npm
+* yarn
 
 ## Building and pushing to dockerhub
 
@@ -21,7 +23,8 @@ make clean
 ```
 
 ## Running
-To simply run the container:
+To run the container by itself:
+
 ```
-sudo docker run -d drud/nginx-php-fpm7
+docker run -it drud/nginx-php-fpm-local bash
 ```
