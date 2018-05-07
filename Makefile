@@ -19,18 +19,14 @@ PKG := github.com/drud/ddev
 SRC_DIRS := cmd pkg
 
 # Version variables to replace in build
-VERSION_VARIABLES = DdevVersion WebImg WebTag DBImg DBTag RouterImage RouterTag DBAImg DBATag
+VERSION_VARIABLES = DdevVersion
 
 # These variables will be used as the default unless overridden by the make
 DdevVersion ?= $(VERSION)
-WebImg ?= drud/nginx-php-fpm-local
-WebTag ?= $(VERSION)
-DBImg ?= drud/mariadb-local
-DBTag ?=  $(VERSION)
-RouterImage ?= drud/ddev-router
-RouterTag ?= $(VERSION)
-DBAImg ?= drud/phpmyadmin
-DBATag ?= $(VERSION)
+# WebTag ?= $(VERSION)  # WebTag is normally specified in version.go, sometimes overridden (night-build.mak)
+# DBTag ?=  $(VERSION)  # DBTag is normally specified in version.go, sometimes overridden (night-build.mak)
+# RouterTag ?= $(VERSION) #RouterTag is normally specified in version.go, sometimes overridden (night-build.mak)
+# DBATag ?= $(VERSION) #DBATag is normally specified in version.go, sometimes overridden (night-build.mak)
 
 # Optional to docker build
 #DOCKER_ARGS =
