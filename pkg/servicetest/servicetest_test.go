@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 	}
 
 	var err error
-	ServiceDir, err = filepath.Abs("../../services")
+	ServiceDir, err = filepath.Abs("testdata/services")
 	util.CheckErr(err)
 
 	err = filepath.Walk(ServiceDir, func(path string, f os.FileInfo, _ error) error {
