@@ -1,9 +1,11 @@
 package fileutil
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 
@@ -178,4 +180,12 @@ func ListFilesInDir(path string) ([]string, error) {
 		fileList = append(fileList, f.Name())
 	}
 	return fileList, nil
+}
+
+// RandomFilenameBase generates a temporary filename for use in testing or whatever.
+// From https://stackoverflow.com/a/28005931/215713
+func RandomFilenameBase() string {
+	randBytes := make([]byte, 16)
+	_, _ = rand.Read(randBytes)
+	return hex.EncodeToString(randBytes)
 }
