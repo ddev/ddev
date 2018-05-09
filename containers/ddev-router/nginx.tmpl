@@ -267,6 +267,9 @@ server {
                 include fastcgi.conf;
                 fastcgi_pass {{ trim $upstream_name }}-{{ trim $upstream_port }};
                 {{ else }}
+                proxy_buffer_size   128k;
+                proxy_buffers   4 256k;
+                proxy_busy_buffers_size   256k;
                 proxy_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
                 {{ end }}
                 error_page 502 @brokenupstream;
@@ -361,6 +364,9 @@ server {
                 include fastcgi.conf;
                 fastcgi_pass {{ trim $upstream_name }}-{{ trim $upstream_port }};
                 {{ else }}
+                proxy_buffer_size   128k;
+                proxy_buffers   4 256k;
+                proxy_busy_buffers_size   256k;
                 proxy_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
                 {{ end }}
                 error_page 502 @brokenupstream;
