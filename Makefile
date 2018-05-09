@@ -28,7 +28,7 @@ WebTag ?= v1.3.0
 DBImg ?= drud/mariadb-local
 DBTag ?=  v0.9.0
 RouterImage ?= drud/ddev-router
-RouterTag ?= v0.5.0
+RouterTag ?= v0.5.1
 DBAImg ?= drud/phpmyadmin
 DBATag ?= v0.2.0
 

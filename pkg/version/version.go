@@ -38,7 +38,7 @@ var DBATag = "v0.2.0"
 var RouterImage = "drud/ddev-router" // Note that this is overridden by make
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "v0.5.0" // Note that this is overridden by make
+var RouterTag = "v0.5.1" // Note that this is overridden by make
 
 // COMMIT is the actual committish, supplied by make
 var COMMIT = "COMMIT should be overridden"
