@@ -11,11 +11,20 @@ RUN mkdir /docker-entrypoint-initdb.data
 # Install mariadb and other packages
 RUN apk update && apk add mariadb mariadb-client bash tzdata shadow
 # Remove the installed version as we need to set up our own from scratch
+
 RUN rm -rf /var/lib/mysql/* /etc/mysql
+RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql
 
 ADD files /
 
 RUN chmod ugo+x /import.sh /healthcheck.sh
+
+# Security-sensitive changes: Make sure our start script can do what is needed
+# But make sure these are right
+RUN chmod ugo+wx /mnt /var/tmp
+RUN chmod -R ugo+wx /var/log
+RUN chmod ugo+w /var/log/mysqld.log
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 3306
