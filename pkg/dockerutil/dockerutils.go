@@ -128,44 +128,35 @@ func NetExists(client *docker.Client, name string) bool {
 
 // ContainerWait provides a wait loop to check for container in "healthy" status.
 // timeout is in seconds.
-func ContainerWait(timeout time.Duration, labels map[string]string) error {
+func ContainerWait(waittime time.Duration, labels map[string]string) error {
 
-	ticker := time.NewTicker(500 * time.Millisecond)
-	// doneChan is triggered when we find containers or have an error trying
-	doneChan := make(chan bool)
-	// timeoutChan is triggered if we are still waiting after timeout seconds
-	timeoutChan := time.After(timeout * time.Second)
+	timeoutChan := time.After(waittime * time.Second)
+	tickChan := time.Tick(500 * time.Millisecond)
 
 	// Default error is that it timed out
 	var containerErr = errors.New("health check timed out")
+	status := ""
+	var container docker.APIContainers
 
-	go func() {
-		for range ticker.C {
-			container, err := FindContainerByLabels(labels)
-			if err != nil {
-				containerErr = errors.New("failed to query container")
-				doneChan <- true
-			}
-			status := GetContainerHealth(container)
-
-			if status == "healthy" {
-				containerErr = nil
-				doneChan <- true
-			}
-		}
-	}()
-
-outer:
 	for {
 		select {
-
-		case <-doneChan:
-			break outer
 		case <-timeoutChan:
-			break outer
+			return fmt.Errorf("Container %v did not become healthy, status=%v", container, status)
+
+		case <-tickChan:
+			container, err := FindContainerByLabels(labels)
+			if err != nil {
+				return fmt.Errorf("failed to query container %v", container)
+			}
+			status = GetContainerHealth(container)
+
+			if status == "healthy" {
+				return nil
+			}
 		}
 	}
-	ticker.Stop()
+
+	// We should never get here.
 	return containerErr
 }
 
@@ -179,6 +170,7 @@ func ContainerName(container docker.APIContainers) string {
 // return only the health status.
 func GetContainerHealth(container docker.APIContainers) string {
 	// If the container is not running, then return exited as the health.
+	// "exited" means stopped.
 	if container.State == "exited" || container.State == "restarting" {
 		return container.State
 	}
