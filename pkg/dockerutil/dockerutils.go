@@ -139,12 +139,12 @@ func ContainerWait(waittime time.Duration, labels map[string]string) error {
 	for {
 		select {
 		case <-timeoutChan:
-			return fmt.Errorf("Container %v timed out without becoming healthy, status=%v", container, status)
+			return fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
 
 		case <-tickChan:
 			container, err := FindContainerByLabels(labels)
 			if err != nil {
-				return fmt.Errorf("failed to query container %v", container)
+				return fmt.Errorf("failed to query container labels %v", labels)
 			}
 			status = GetContainerHealth(container)
 

@@ -101,11 +101,11 @@ func TestContainerWait(t *testing.T) {
 
 	err := ContainerWait(0, labels)
 	assert.Error(err)
-	assert.Equal("health check timed out", err.Error())
+	assert.Contains(err.Error(), "health check timed out")
 
 	err = ContainerWait(5, labels)
 	assert.Error(err)
-	assert.Equal("failed to query container", err.Error())
+	assert.Contains(err.Error(), "failed to query container")
 }
 
 // TestComposeCmd tests execution of docker-compose commands.
