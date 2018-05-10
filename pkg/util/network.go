@@ -82,73 +82,57 @@ func NewHTTPOptions(URL string) *HTTPOptions {
 
 // EnsureHTTPStatus will verify a URL responds with a given response code within the Timeout period (in seconds)
 func EnsureHTTPStatus(o *HTTPOptions) error {
-	tickerInt := o.TickerInterval
-	if tickerInt == 0 {
-		tickerInt = 20
+
+	client := &http.Client{
+		Timeout: o.Timeout * time.Second,
 	}
-
-	giveUp := make(chan bool)
-	go func() {
-		time.Sleep(time.Second * o.Timeout)
-		giveUp <- true
-	}()
-
-	client := &http.Client{}
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		return errors.New("received http redirect")
 	}
 
-	var respCode int
-	queryTicker := time.NewTicker(time.Second * tickerInt).C
-	for {
-		select {
-		case <-queryTicker:
-			req, err := http.NewRequest("GET", o.URL, nil)
-			CheckErr(err)
-			if o.Username != "" && o.Password != "" {
-				req.SetBasicAuth(o.Username, o.Password)
+	req, err := http.NewRequest("GET", o.URL, nil)
+	if err != nil {
+		return err
+	}
+	if o.Username != "" && o.Password != "" {
+		req.SetBasicAuth(o.Username, o.Password)
+	}
+
+	if len(o.Headers) > 0 {
+		for header, value := range o.Headers {
+			if header == "Host" {
+				req.Host = value
+				continue
 			}
-
-			if len(o.Headers) > 0 {
-				for header, value := range o.Headers {
-					if header == "Host" {
-						req.Host = value
-						continue
-					}
-					req.Header.Add(header, value)
-				}
-			}
-			// Make the request
-			resp, err := client.Do(req)
-
-			if err == nil {
-				defer CheckClose(resp.Body)
-				if o.ExpectedStatus != 0 && resp.StatusCode == o.ExpectedStatus {
-					// Log expected vs. actual if we do not get a match.
-					output.UserOut.WithFields(log.Fields{
-						"URL":      o.URL,
-						"headers":  o.Headers,
-						"expected": o.ExpectedStatus,
-						"got":      resp.StatusCode,
-					}).Info("HTTP Status code matched expectations")
-					return nil
-				}
-
-				// Log expected vs. actual if we do not get a match.
-				output.UserOut.WithFields(log.Fields{
-					"URL":      o.URL,
-					"headers":  o.Headers,
-					"expected": o.ExpectedStatus,
-					"got":      resp.StatusCode,
-				}).Info("HTTP Status could not be matched")
-
-				respCode = resp.StatusCode
-			}
-
-		case <-giveUp:
-			return fmt.Errorf("timed out after %d seconds. Got status %d, wanted %d", o.Timeout, respCode, o.ExpectedStatus)
+			req.Header.Add(header, value)
 		}
 	}
+	// Make the request
+	resp, err := client.Do(req)
+
+	if err == nil {
+		defer CheckClose(resp.Body)
+		if o.ExpectedStatus != 0 && resp.StatusCode == o.ExpectedStatus {
+			// Log expected vs. actual if we do not get a match.
+			output.UserOut.WithFields(log.Fields{
+				"URL":      o.URL,
+				"headers":  o.Headers,
+				"expected": o.ExpectedStatus,
+				"got":      resp.StatusCode,
+			}).Info("HTTP Status code matched expectations")
+			return nil
+		}
+
+		// Log expected vs. actual if we do not get a match.
+		output.UserOut.WithFields(log.Fields{
+			"URL":      o.URL,
+			"headers":  o.Headers,
+			"expected": o.ExpectedStatus,
+			"got":      resp.StatusCode,
+		}).Info("HTTP Status could not be matched, expected %d, received %d", o.ExpectedStatus, resp.StatusCode)
+
+	}
+	return fmt.Errorf("Failed to match status code %d", o.ExpectedStatus)
 }
 
 // IsPortActive checks to see if the given port on localhost is answering.
