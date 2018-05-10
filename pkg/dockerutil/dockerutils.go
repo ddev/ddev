@@ -2,7 +2,6 @@ package dockerutil
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -128,20 +127,19 @@ func NetExists(client *docker.Client, name string) bool {
 
 // ContainerWait provides a wait loop to check for container in "healthy" status.
 // timeout is in seconds.
+// This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 func ContainerWait(waittime time.Duration, labels map[string]string) error {
 
 	timeoutChan := time.After(waittime * time.Second)
 	tickChan := time.Tick(500 * time.Millisecond)
 
-	// Default error is that it timed out
-	var containerErr = errors.New("health check timed out")
 	status := ""
 	var container docker.APIContainers
 
 	for {
 		select {
 		case <-timeoutChan:
-			return fmt.Errorf("Container %v did not become healthy, status=%v", container, status)
+			return fmt.Errorf("Container %v timed out without becoming healthy, status=%v", container, status)
 
 		case <-tickChan:
 			container, err := FindContainerByLabels(labels)
@@ -157,7 +155,7 @@ func ContainerWait(waittime time.Duration, labels map[string]string) error {
 	}
 
 	// We should never get here.
-	return containerErr
+	return fmt.Errorf("Inappropriate break out of for loop in ContainerWait() waiting for container %v", container)
 }
 
 // ContainerName returns the containers human readable name.
