@@ -147,9 +147,7 @@ func ContainerWait(timeout time.Duration, labels map[string]string) error {
 				doneChan <- true
 			}
 			status := GetContainerHealth(container)
-			if status == "restarting" {
-				containerErr = fmt.Errorf("container %s: detected container restart; invalid configuration or container. consider using `docker logs %s` to debug", ContainerName(container), container.ID)
-			}
+
 			if status == "healthy" {
 				containerErr = nil
 				doneChan <- true
