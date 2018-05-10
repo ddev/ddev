@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"bufio"
-
 	"github.com/Masterminds/semver"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -227,8 +225,8 @@ func ComposeNoCapture(composeFiles []string, action ...string) error {
 // returns stdout, stderr, error/nil
 func ComposeCmd(composeFiles []string, action ...string) (string, string, error) {
 	var arg []string
-	var stdout bytes.Buffer
-	var stderr string
+	var stdoutBuf bytes.Buffer
+	var stderrBuf bytes.Buffer
 
 	for _, file := range composeFiles {
 		arg = append(arg, "-f")
@@ -238,34 +236,26 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	arg = append(arg, action...)
 
 	proc := exec.Command("docker-compose", arg...)
-	proc.Stdout = &stdout
+	proc.Stdout = &stdoutBuf
 	proc.Stdin = os.Stdin
+	proc.Stderr = &stderrBuf
 
-	stderrPipe, err := proc.StderrPipe()
-	util.CheckErr(err)
-
+	var err error
 	if err = proc.Start(); err != nil {
 		return "", "", fmt.Errorf("Failed to exec docker-compose: %v", err)
 	}
 
-	// read command's stdout line by line
-	in := bufio.NewScanner(stderrPipe)
-
-	for in.Scan() {
-		line := in.Text()
-		if len(stderr) > 0 {
-			stderr = stderr + "\n"
-		}
-		stderr = stderr + line
-		line = strings.Trim(line, "\n\r")
-		output.UserOut.Println(line)
-	}
-
 	err = proc.Wait()
 	if err != nil {
-		return stdout.String(), stderr, fmt.Errorf("Failed to run docker-compose %v, err='%v', stdout='%s', stderr='%s'", arg, err, stdout.String(), stderr)
+		return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("Failed to run docker-compose %v, err='%v', stdoutBuf='%s', stderrBuf='%s'", arg, err, stdoutBuf.String(), stderrBuf.String())
 	}
-	return stdout.String(), stderr, nil
+
+	outStrings := strings.Split(stderrBuf.String(), "\n")
+	for _, item := range outStrings {
+		line := strings.Trim(item, "\n\r")
+		output.UserOut.Println(line)
+	}
+	return stdoutBuf.String(), stderrBuf.String(), nil
 }
 
 // GetAppContainers retrieves docker containers for a given sitename.
