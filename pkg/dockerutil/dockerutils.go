@@ -131,17 +131,17 @@ func NetExists(client *docker.Client, name string) bool {
 func ContainerWait(waittime time.Duration, labels map[string]string) error {
 
 	timeoutChan := time.After(waittime * time.Second)
-	tickChan := time.Tick(500 * time.Millisecond)
+	tickChan := time.NewTicker(500 * time.Millisecond)
+	defer tickChan.Stop()
 
 	status := ""
-	var container docker.APIContainers
 
 	for {
 		select {
 		case <-timeoutChan:
 			return fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
 
-		case <-tickChan:
+		case <-tickChan.C:
 			container, err := FindContainerByLabels(labels)
 			if err != nil {
 				return fmt.Errorf("failed to query container labels %v", labels)
@@ -155,7 +155,8 @@ func ContainerWait(waittime time.Duration, labels map[string]string) error {
 	}
 
 	// We should never get here.
-	return fmt.Errorf("Inappropriate break out of for loop in ContainerWait() waiting for container %v", container)
+	// nolint: vet
+	return fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
 // ContainerName returns the containers human readable name.
