@@ -1,0 +1,5 @@
+#!/bin/bash
+
+phpdismod xdebug
+killall -HUP php-fpm || true
+echo "Disabled xdebug"

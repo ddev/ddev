@@ -72,6 +72,15 @@ jobs:
             make -s linux darwin windows_install
           name: Build the ddev executables normally, with normal image tags
 
+      - run:
+          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
+          name: tar/zip up artifacts and make hashes
+          no_output_timeout: "20m"
+
+      - store_artifacts:
+          path: /artifacts
+          name: Artifact storage
+
       # Run the built-in ddev tests with the clean binaries just built.
       - run:
           command: make -s test gometalinter
@@ -79,13 +88,12 @@ jobs:
           no_output_timeout: "20m"
 
       - run:
-          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
-          name: tar/zip up artifacts and make hashes
+          command: |
+            make -f nightly_build.mak clean  # Remove any existing binaries
+            make -f nightly_build.mak -s --print-directory
           no_output_timeout: "40m"
+          name: Full nightly build and test with containers
 
-      - store_artifacts:
-          path: /artifacts
-          name: Artifact storage
 
   # 'tag_build' is used to build a tag for release.
   tag_build:

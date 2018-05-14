@@ -23,12 +23,12 @@ To see which ddev commands the tests are executing, set the environment variable
 
 ## Docker container development
 
-ddev depends on docker containers that are regularly updated and whose source code is in other repositories.
+The four docker containers that ddev users are included in the containers/ directory:
 
-* [drud/nginx-php-fpm-local webimage](https://hub.docker.com/r/drud/nginx-php-fpm-local/) - https://github.com/drud/docker.nginx-php-fpm-local
-* [drud/mariadb-local dbimage](https://hub.docker.com/r/drud/mariadb-local) - https://github.com/drud/mariadb-local
-* [drud/phpmyadmin dbaimage](https://hub.docker.com/r/drud/phpmyadmin) - https://github.com/drud/docker.phpmyadmin
-* [drud/ddev-router routerimage](https://hub.docker.com/r/drud/ddev-router) - https://github.com/drud/docker.ddev-router
+* containers/nginx-php-fpm-local: Provides the nginx/php servers (the "web" container).
+* containers/mariadb-local: Provides the "db" container.
+* containers/phpmyadmin: Provides the phpmyadmin container
+* containers/ddev-router: The router image
 
 ## Contributing
 Interested in contributing to ddev? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!
