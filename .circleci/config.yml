@@ -31,7 +31,7 @@ jobs:
       - run:
           command: make -s test
           name: ddev tests
-          no_output_timeout: "20m"
+          no_output_timeout: "40m"
 
       - run: make -s gometalinter
 
@@ -42,7 +42,7 @@ jobs:
       - run:
           command: ./.circleci/generate_artifacts.sh $ARTIFACTS
           name: tar/zip up artifacts and make hashes
-          no_output_timeout: "20m"
+          no_output_timeout: "40m"
 
       - store_artifacts:
           path: /artifacts
@@ -81,7 +81,7 @@ jobs:
       - run:
           command: ./.circleci/generate_artifacts.sh $ARTIFACTS
           name: tar/zip up artifacts and make hashes
-          no_output_timeout: "20m"
+          no_output_timeout: "40m"
 
       - store_artifacts:
           path: /artifacts
@@ -120,7 +120,7 @@ jobs:
             ./.circleci/generate_artifacts.sh $ARTIFACTS
             xz $ARTIFACTS/ddev_docker_images.*.tar
           name: tar/zip/xz up artifacts and make hashes
-          no_output_timeout: "20m"
+          no_output_timeout: "40m"
 
       - store_artifacts:
           path: /artifacts

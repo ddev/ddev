@@ -2,7 +2,6 @@ package dockerutil
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -10,8 +9,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"bufio"
 
 	"github.com/Masterminds/semver"
 	"github.com/drud/ddev/pkg/output"
@@ -130,47 +127,36 @@ func NetExists(client *docker.Client, name string) bool {
 
 // ContainerWait provides a wait loop to check for container in "healthy" status.
 // timeout is in seconds.
-func ContainerWait(timeout time.Duration, labels map[string]string) error {
+// This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
+func ContainerWait(waittime time.Duration, labels map[string]string) error {
 
-	ticker := time.NewTicker(500 * time.Millisecond)
-	// doneChan is triggered when we find containers or have an error trying
-	doneChan := make(chan bool)
-	// timeoutChan is triggered if we are still waiting after timeout seconds
-	timeoutChan := time.After(timeout * time.Second)
+	timeoutChan := time.After(waittime * time.Second)
+	tickChan := time.NewTicker(500 * time.Millisecond)
+	defer tickChan.Stop()
 
-	// Default error is that it timed out
-	var containerErr = errors.New("health check timed out")
+	status := ""
 
-	go func() {
-		for range ticker.C {
-			container, err := FindContainerByLabels(labels)
-			if err != nil {
-				containerErr = errors.New("failed to query container")
-				doneChan <- true
-			}
-			status := GetContainerHealth(container)
-			if status == "restarting" {
-				containerErr = fmt.Errorf("container %s: detected container restart; invalid configuration or container. consider using `docker logs %s` to debug", ContainerName(container), container.ID)
-			}
-			if status == "healthy" {
-				containerErr = nil
-				doneChan <- true
-			}
-		}
-	}()
-
-outer:
 	for {
 		select {
-
-		case <-doneChan:
-			break outer
 		case <-timeoutChan:
-			break outer
+			return fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
+
+		case <-tickChan.C:
+			container, err := FindContainerByLabels(labels)
+			if err != nil {
+				return fmt.Errorf("failed to query container labels %v", labels)
+			}
+			status = GetContainerHealth(container)
+
+			if status == "healthy" {
+				return nil
+			}
 		}
 	}
-	ticker.Stop()
-	return containerErr
+
+	// We should never get here.
+	// nolint: vet
+	return fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
 // ContainerName returns the containers human readable name.
@@ -183,6 +169,7 @@ func ContainerName(container docker.APIContainers) string {
 // return only the health status.
 func GetContainerHealth(container docker.APIContainers) string {
 	// If the container is not running, then return exited as the health.
+	// "exited" means stopped.
 	if container.State == "exited" || container.State == "restarting" {
 		return container.State
 	}
@@ -227,8 +214,8 @@ func ComposeNoCapture(composeFiles []string, action ...string) error {
 // returns stdout, stderr, error/nil
 func ComposeCmd(composeFiles []string, action ...string) (string, string, error) {
 	var arg []string
-	var stdout bytes.Buffer
-	var stderr string
+	var stdoutBuf bytes.Buffer
+	var stderrBuf bytes.Buffer
 
 	for _, file := range composeFiles {
 		arg = append(arg, "-f")
@@ -238,34 +225,26 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	arg = append(arg, action...)
 
 	proc := exec.Command("docker-compose", arg...)
-	proc.Stdout = &stdout
+	proc.Stdout = &stdoutBuf
 	proc.Stdin = os.Stdin
+	proc.Stderr = &stderrBuf
 
-	stderrPipe, err := proc.StderrPipe()
-	util.CheckErr(err)
-
+	var err error
 	if err = proc.Start(); err != nil {
 		return "", "", fmt.Errorf("Failed to exec docker-compose: %v", err)
 	}
 
-	// read command's stdout line by line
-	in := bufio.NewScanner(stderrPipe)
-
-	for in.Scan() {
-		line := in.Text()
-		if len(stderr) > 0 {
-			stderr = stderr + "\n"
-		}
-		stderr = stderr + line
-		line = strings.Trim(line, "\n\r")
-		output.UserOut.Println(line)
-	}
-
 	err = proc.Wait()
 	if err != nil {
-		return stdout.String(), stderr, fmt.Errorf("Failed to run docker-compose %v, err='%v', stdout='%s', stderr='%s'", arg, err, stdout.String(), stderr)
+		return stdoutBuf.String(), stderrBuf.String(), fmt.Errorf("Failed to run docker-compose %v, err='%v', stdoutBuf='%s', stderrBuf='%s'", arg, err, stdoutBuf.String(), stderrBuf.String())
 	}
-	return stdout.String(), stderr, nil
+
+	outStrings := strings.Split(stderrBuf.String(), "\n")
+	for _, item := range outStrings {
+		line := strings.Trim(item, "\n\r")
+		output.UserOut.Println(line)
+	}
+	return stdoutBuf.String(), stderrBuf.String(), nil
 }
 
 // GetAppContainers retrieves docker containers for a given sitename.
