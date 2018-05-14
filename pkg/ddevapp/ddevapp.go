@@ -244,7 +244,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 	}
 
 	switch {
-	case strings.HasSuffix(importPath, "sql.gz"):
+	case strings.HasSuffix(importPath, "sql.gz") || strings.HasSuffix(importPath, "mysql.gz"):
 		err = archive.Ungzip(importPath, dbPath)
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
@@ -273,16 +273,16 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		}
 	}
 
-	matches, err := filepath.Glob(filepath.Join(dbPath, "*.sql"))
+	matches, err := filepath.Glob(filepath.Join(dbPath, "*.*sql"))
 	if err != nil {
 		return err
 	}
 
 	if len(matches) < 1 {
-		return fmt.Errorf("no .sql files found to import")
+		return fmt.Errorf("no .sql or .mysql files found to import")
 	}
 
-	_, _, err = app.Exec("db", "bash", "-c", "cat /db/*.sql | mysql -udb -pdb db")
+	_, _, err = app.Exec("db", "bash", "-c", "cat /db/*.*sql | mysql -udb -pdb db")
 	if err != nil {
 		return err
 	}
