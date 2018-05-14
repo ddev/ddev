@@ -17,16 +17,16 @@ var DockerVersionConstraint = ">= 17.05.0-ce-alpha1"
 var DockerComposeVersionConstraint = ">= 1.10.0-alpha1"
 
 // WebImg defines the default web image used for applications.
-var WebImg = "drud/nginx-php-fpm-local" // Note that this is overridden by make
+var WebImg = "drud/nginx-php-fpm-local"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "v1.3.0" // Note that this is overridden by make
+var WebTag = "v0.18.0-5-g78f25609" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
-var DBImg = "drud/mariadb-local" // Note that this is overridden by make
+var DBImg = "drud/mariadb-local"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "v0.9.0" // Note that this is overridden by make
+var DBTag = "v0.9.0" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
