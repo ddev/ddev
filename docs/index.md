@@ -44,11 +44,20 @@ curl https://raw.githubusercontent.com/drud/ddev/master/install_ddev.sh | bash
 Later, to upgrade ddev to the latest version, just run this again.
 
 ### Manual Installation or Upgrade - Linux and macOS
+
 You can also easily perform the installation or upgrade manually if preferred. ddev is just a single executable, no special installation is actually required, so for all operating systems, the installation is just copying ddev into place where it's in the system path.
 
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 - Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
 - Run `ddev` to test your installation. You should see ddev's command usage output.
+
+### Installation via package managers - Linux
+
+Some Linux distributions may package ddev in a way that's convenient for your distro. Right now, we are aware of packages for the following distros:
+
+	* [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
+
+Note that third party packaging is encouraged, but only supported on a best-effort basis.
 
 ### Installation or Upgrade - Windows
 
