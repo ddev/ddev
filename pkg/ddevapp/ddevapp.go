@@ -1071,7 +1071,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// We already were successful with *finding* the app, and if we get an
 	// incomplete one we have to add to it.
 	err = app.Init(activeAppRoot)
-	if err != nil && (strings.Contains(err.Error(), "is not a valid hostname") || strings.Contains(err.Error(), "is not a valid apptype") || strings.Contains(err.Error(), "config.yaml exists but cannot be read.")) {
+	if err != nil && (strings.Contains(err.Error(), "is not a valid hostname") || strings.Contains(err.Error(), "is not a valid apptype") || strings.Contains(err.Error(), "config.yaml exists but cannot be read.") || strings.Contains(err.Error(), "web container in running state already exists")) {
 		return app, err
 	}
 
