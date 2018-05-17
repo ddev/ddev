@@ -20,7 +20,7 @@ var DockerComposeVersionConstraint = ">= 1.10.0-alpha1"
 var WebImg = "drud/nginx-php-fpm-local"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "v0.18.0-5-g78f25609" // Note that this can be overridden by make
+var WebTag = "v0.18.0-9-g767d60c8" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/mariadb-local"
@@ -38,7 +38,7 @@ var DBATag = "v0.2.0"
 var RouterImage = "drud/ddev-router" // Note that this is overridden by make
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "v0.5.1" // Note that this is overridden by make
+var RouterTag = "v0.18.0-9-g767d60c8" // Note that this is overridden by make
 
 // COMMIT is the actual committish, supplied by make
 var COMMIT = "COMMIT should be overridden"
