@@ -299,13 +299,23 @@ func (app *DdevApp) GetHostname() string {
 // GetHostnames returns an array of all the configured hostnames.
 func (app *DdevApp) GetHostnames() []string {
 
-	var nameList []string
-	nameList = append(nameList, app.GetHostname())
+	// Use a map to make sure that we have unique hostnames
+	// The value is useless, so just use the int 1 for assignment.
+	nameListMap := make(map[string]int)
+
+	nameListMap[app.GetHostname()] = 1
 
 	for _, name := range app.AdditionalHostnames {
-		nameList = append(nameList, name+"."+version.DDevTLD)
+		nameListMap[name+"."+version.DDevTLD] = 1
 	}
-	return nameList
+
+	// Now walk the map and extract the keys into an array.
+	nameListArray := make([]string, 0, len(nameListMap))
+	for k := range nameListMap {
+		nameListArray = append(nameListArray, k)
+	}
+
+	return nameListArray
 }
 
 // WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.
