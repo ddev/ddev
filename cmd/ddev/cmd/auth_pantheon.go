@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"path/filepath"
+
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/go-pantheon/pkg/pantheon"
 	"github.com/spf13/cobra"
-	"path/filepath"
 )
 
 // PantheonAuthCommand represents the `ddev auth-pantheon` command
