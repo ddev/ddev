@@ -7,10 +7,6 @@ import (
 	"path/filepath"
 )
 
-type GlobalDdevDirGetter interface {
-	GetGlobalDdevDir() string
-}
-
 // PantheonAuthCommand represents the `ddev auth-pantheon` command
 var PantheonAuthCommand = &cobra.Command{
 	Use:   "auth-pantheon [token]",
