@@ -72,4 +72,4 @@ The DDEV project is committed to supporting [Semantic Version 2.0.0](https://sem
 - [ddev Documentation](https://ddev.readthedocs.io)
 - [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions
 - [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
-- #ddev channel in [Drupal Slack](https://www.drupal.org/slack) and [TYPO3 Slack](https://forger.typo3.com/slack) for interactive, immediate community support
+- #ddev channel in [Drupal Slack](https://drupal.slack.com/messages/C5TQRQZRR) and [TYPO3 Slack](https://typo3.slack.com/messages/C8TRNQ601) for interactive, immediate community support
