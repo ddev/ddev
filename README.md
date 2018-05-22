@@ -38,7 +38,8 @@ If you're having trouble using ddev, please use these resources to get help:
 2. Review [Stack Overflow DDEV-Local questions and answers](https://stackoverflow.com/tags/ddev) (or ask a question there! We get notified when you ask.)
 3. The [ddev issue queue](https://github.com/drud/ddev/issues) may have an issue related to your problem.
 4. For suspected bugs or feature requests, [file an issue](https://github.com/drud/ddev/issues/new).
-5. We have slack channels (#ddev) in [Drupal Slack](https://www.drupal.org/slack) and [TYPO3 Slack](https://forger.typo3.com/slack). We and the rest of the community try to be very responsive.
+5. #ddev channel in [Drupal Slack](https://www.drupal.org/slack) and [TYPO3 Slack](https://forger.typo3.com/slack) for interactive, immediate community support
+
 
 ## Contributing
 Interested in contributing to ddev? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!

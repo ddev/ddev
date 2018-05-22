@@ -68,8 +68,8 @@ Note that third party packaging is encouraged, but only supported on a best-effo
 The DDEV project is committed to supporting [Semantic Version 2.0.0](https://semver.org/). Additional context on this decision can be read in [Ensure ddev is properly utilizing Semantic Versioning](https://github.com/drud/ddev/issues/352).
 
 ## Support
-If you've encountered trouble using ddev, please use these resources to get help with your issue:
 
-1. Please review the [ddev Documentation](https://ddev.readthedocs.io) to ensure your question isn't answered there.
-2. Review the [ddev issue queue](https://github.com/drud/ddev/issues) to see if an issue similar to yours already exists.
-3. If you've exhausted these options and still need help, please [file an issue](https://github.com/drud/ddev/issues/new) following the pre-populated guidelines and our [Contributing Guidelines](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md) as best as possible.
+- [ddev Documentation](https://ddev.readthedocs.io)
+- [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions
+- [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
+- #ddev channel in [Drupal Slack](https://www.drupal.org/slack) and [TYPO3 Slack](https://forger.typo3.com/slack) for interactive, immediate community support

@@ -86,3 +86,7 @@ Note: Your project database will be destroyed by this procedure.
 The most common cause of the web container restarting is a user-defined .ddev/nginx-site.conf - Please rename it to nginx-site.conf.bak during testing. To figure out what's wrong with it after you've identified that as the problem, `ddev ssh` and look at /var/log/nginx/error.log or use `ddev logs` and review the error.
 
 Changes to .ddev/nginx-site.conf take effect only when you do a `ddev rm` followed by `ddev start`.
+
+## More Support
+
+Refer to the [support options](https://ddev.readthedocs.io/en/latest/#support) page.
