@@ -6,12 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"fmt"
+
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	gohomedir "github.com/mitchellh/go-homedir"
-
-	"fmt"
 
 	"github.com/drud/go-pantheon/pkg/pantheon"
 	"gopkg.in/yaml.v2"
@@ -133,9 +132,9 @@ func (p *PantheonProvider) prepDownloadDir() {
 }
 
 func (p *PantheonProvider) getDownloadDir() string {
-	userDir, err := gohomedir.Dir()
-	util.CheckErr(err)
-	destDir := filepath.Join(userDir, ".ddev", "pantheon", p.app.Name)
+	ddevDir := util.GetGlobalDdevDir()
+	destDir := filepath.Join(ddevDir, "pantheon", p.app.Name)
+
 	return destDir
 }
 
@@ -304,15 +303,14 @@ func findPantheonSite(name string) (pantheon.Site, error) {
 
 // getPantheonSession loads the pantheon API config from disk and returns a pantheon session struct.
 func getPantheonSession() *pantheon.AuthSession {
-	userDir, err := gohomedir.Dir()
-	util.CheckErr(err)
-	sessionLocation := filepath.Join(userDir, ".ddev", "pantheonconfig.json")
+	ddevDir := util.GetGlobalDdevDir()
+	sessionLocation := filepath.Join(ddevDir, "pantheonconfig.json")
 
 	// Generate a session object based on the DDEV_PANTHEON_API_TOKEN environment var.
 	session := &pantheon.AuthSession{}
 
 	// Read a previously saved session.
-	err = session.Read(sessionLocation)
+	err := session.Read(sessionLocation)
 
 	if err != nil {
 		// If we can't read a previous session fall back to using the API token.

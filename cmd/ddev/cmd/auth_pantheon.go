@@ -5,7 +5,6 @@ import (
 
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/go-pantheon/pkg/pantheon"
-	gohomedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 )
 
@@ -22,12 +21,12 @@ var PantheonAuthCommand = &cobra.Command{
 		if len(args) != 1 {
 			util.Failed("Too many arguments detected. Please provide only your Pantheon Machine token., e.g. 'ddev auth-pantheon [token]'. See https://pantheon.io/docs/machine-tokens/ for instructions on creating a token.")
 		}
-		userDir, err := gohomedir.Dir()
-		util.CheckErr(err)
-		sessionLocation := filepath.Join(userDir, ".ddev", "pantheonconfig.json")
+
+		ddevDir := util.GetGlobalDdevDir()
+		sessionLocation := filepath.Join(ddevDir, "pantheonconfig.json")
 
 		session := pantheon.NewAuthSession(args[0])
-		err = session.Auth()
+		err := session.Auth()
 		if err != nil {
 			util.Failed("Could not authenticate with pantheon: %v", err)
 		}
