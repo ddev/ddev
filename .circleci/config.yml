@@ -124,10 +124,8 @@ jobs:
 
       # We only build the xz version of the docker images on tag build.
       - run:
-          command: |
-            ./.circleci/generate_artifacts.sh $ARTIFACTS
-            xz $ARTIFACTS/ddev_docker_images.*.tar
-          name: tar/zip/xz up artifacts and make hashes
+          command: ./.circleci/generate_artifacts.sh $ARTIFACTS TRUE
+          name: tar/zip up artifacts and make hashes
           no_output_timeout: "40m"
 
       - store_artifacts:

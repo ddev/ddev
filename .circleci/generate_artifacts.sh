@@ -1,8 +1,13 @@
 #!/bin/bash
+# This script builds ddev artifacts and their sha256 hashes.
+# First arg is the artifact directory
+# Optional second arg is whether to build xz version of ddev_docker_images.tar
 
 set -o errexit
 
 ARTIFACTS=$1
+# We only build the xz artifacts if $2 ($BUILD_XZ) is not empty.
+BUILD_XZ=$2
 BASE_DIR=$PWD
 
 sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
@@ -15,6 +20,9 @@ for item in $(cat /tmp/images.txt); do
 done
 docker save -o $ARTIFACTS/ddev_docker_images.$VERSION.tar $(cat /tmp/images.txt)
 gzip --keep $ARTIFACTS/ddev_docker_images.$VERSION.tar
+if [ ! -z "$BUILD_XZ" ] ; then
+    xz $ARTIFACTS/ddev_docker_images.$VERSION.tar
+fi
 
 # Generate and place extra items like autocomplete
 bin/linux/ddev_gen_autocomplete
