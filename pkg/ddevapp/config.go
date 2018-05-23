@@ -396,8 +396,8 @@ func (app *DdevApp) CheckCustomConfig() {
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
-	var docker0Addr string = "127.0.0.1"
-	var docker0Hostname string = "unneeded"
+	var docker0Addr = "127.0.0.1"
+	var docker0Hostname = "unneeded"
 	templ := template.New("compose template")
 	templ, err = templ.Parse(DDevComposeTemplate)
 	if err != nil {
