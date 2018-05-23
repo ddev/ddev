@@ -6,10 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"fmt"
+
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"fmt"
 
 	"github.com/drud/go-pantheon/pkg/pantheon"
 	"gopkg.in/yaml.v2"
