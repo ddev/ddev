@@ -102,7 +102,7 @@ func (app *DdevApp) Init(basePath string) error {
 	if err == nil {
 		containerApproot := web.Labels["com.ddev.approot"]
 		if containerApproot != app.AppRoot {
-			return fmt.Errorf("a web container in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot)
+			return fmt.Errorf("a project (web container) in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot)
 		}
 		return nil
 	} else if strings.Contains(err.Error(), "could not find containers") {
@@ -1071,7 +1071,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// We already were successful with *finding* the app, and if we get an
 	// incomplete one we have to add to it.
 	err = app.Init(activeAppRoot)
-	if err != nil && (strings.Contains(err.Error(), "is not a valid hostname") || strings.Contains(err.Error(), "is not a valid apptype") || strings.Contains(err.Error(), "config.yaml exists but cannot be read.") || strings.Contains(err.Error(), "web container in running state already exists")) {
+	if err != nil && (strings.Contains(err.Error(), "is not a valid hostname") || strings.Contains(err.Error(), "is not a valid apptype") || strings.Contains(err.Error(), "config.yaml exists but cannot be read.") || strings.Contains(err.Error(), "a project (web container) in ")) {
 		return app, err
 	}
 
