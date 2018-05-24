@@ -2,17 +2,20 @@ package ddevapp
 
 import (
 	"fmt"
-	"golang.org/x/crypto/ssh/terminal"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"golang.org/x/crypto/ssh/terminal"
 
 	"strings"
 
 	osexec "os/exec"
 
 	"os/user"
+
+	"runtime"
 
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
@@ -25,7 +28,6 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-shellwords"
-	"runtime"
 )
 
 const containerWaitTimeout = 61
@@ -928,6 +930,8 @@ func (app *DdevApp) GetHTTPSURL() string {
 // GetAllURLs returns an array of all the URLs for the project
 func (app *DdevApp) GetAllURLs() []string {
 	var URLs []string
+
+	// Get configured URLs
 	for _, name := range app.GetHostnames() {
 		httpPort := ""
 		httpsPort := ""
@@ -939,6 +943,22 @@ func (app *DdevApp) GetAllURLs() []string {
 		}
 		URLs = append(URLs, "http://"+name+httpPort, "https://"+name+httpsPort)
 	}
+
+	webContainer, err := app.FindContainerByType("web")
+	if err != nil {
+		util.Error("Unable to find web container for app %s: %s", app.Name, err)
+	} else {
+		for _, p := range webContainer.Ports {
+			// TODO: Remove
+			fmt.Printf("%s %s %d %d\n", p.Type, p.IP, p.PublicPort, p.PrivatePort)
+
+			// TODO: Always private port 80?
+			if p.PrivatePort == 80 {
+				URLs = append(URLs, fmt.Sprintf("http://%s:%d", p.IP, p.PublicPort))
+			}
+		}
+	}
+
 	return URLs
 }
 
