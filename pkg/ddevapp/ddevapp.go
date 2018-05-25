@@ -946,13 +946,9 @@ func (app *DdevApp) GetAllURLs() []string {
 
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil {
-		util.Error("Unable to find web container for app %s: %s", app.Name, err)
+		util.Error("Unable to find web container for app: %s, err %s", app.Name, err)
 	} else {
 		for _, p := range webContainer.Ports {
-			// TODO: Remove
-			fmt.Printf("%s %s %d %d\n", p.Type, p.IP, p.PublicPort, p.PrivatePort)
-
-			// TODO: Always private port 80?
 			if p.PrivatePort == 80 {
 				URLs = append(URLs, fmt.Sprintf("http://%s:%d", p.IP, p.PublicPort))
 			}
