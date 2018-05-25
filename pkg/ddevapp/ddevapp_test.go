@@ -228,8 +228,15 @@ func TestDdevStart(t *testing.T) {
 
 	err = app.Init(another.Dir)
 	assert.Error(err)
-	assert.Contains(err.Error(), fmt.Sprintf("container in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
+	assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
+
+	// Make sure that GetActiveApp() also fails when trying to start app of duplicate name in current directory.
+	switchDir := another.Chdir()
+	_, err = ddevapp.GetActiveApp("")
+	assert.Error(err)
+	assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
 	testcommon.CleanupDir(another.Dir)
+	switchDir()
 }
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
