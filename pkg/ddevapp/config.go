@@ -12,12 +12,14 @@ import (
 	"regexp"
 
 	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
+	"runtime"
 )
 
 // DefaultProviderName contains the name of the default provider which will be used if one is not otherwise specified.
@@ -394,10 +396,28 @@ func (app *DdevApp) CheckCustomConfig() {
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
+	var docker0Addr = "127.0.0.1"
+	var docker0Hostname = "unneeded"
 	templ := template.New("compose template")
 	templ, err = templ.Parse(DDevComposeTemplate)
 	if err != nil {
 		return "", err
+	}
+	// Docker 18.03 on linux doesn't define host.docker.internal
+	// so we need to go get the ip address of docker0
+	// We would hope to be able to remove this when
+	// https://github.com/docker/for-linux/issues/264 gets resolved.
+	if runtime.GOOS == "linux" {
+		out, err := exec.RunCommandPipe("ip", []string{"address", "show", "dev", "docker0"})
+		// Do not process if ip command fails, we'll just ignore and not act.
+		if err == nil {
+			addr := regexp.MustCompile(`inet *[0-9\.]+`).FindString(out)
+			components := strings.Split(addr, " ")
+			if len(components) == 2 {
+				docker0Addr = components[1]
+				docker0Hostname = "host.docker.internal"
+			}
+		}
 	}
 	templateVars := map[string]string{
 		"name":          app.Name,
@@ -407,6 +427,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		"dbaport":       appports.GetPort("dba"),
 		"dbport":        appports.GetPort("db"),
 		"ddevgenerated": DdevFileSignature,
+		"extra_host":    docker0Hostname + `:` + docker0Addr,
 	}
 
 	err = templ.Execute(&doc, templateVars)
