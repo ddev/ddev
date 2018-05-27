@@ -1,0 +1,3 @@
+  - command: ".buildkite/buildkite_build.sh"
+    agents:
+      - "os=macos"

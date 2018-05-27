@@ -1,4 +1,2 @@
-steps:
-  - command: ".buildkite/buildkite_build.sh"
-    agents:
-      - "os=macos"
+#- trigger: "windows_build"
+- trigger: "macos_build"
