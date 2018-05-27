@@ -1,7 +1,5 @@
 steps:
-  - command: ".buildkite/buildkite_windows_build.cmd"
-    agents:
-      - "os=windows10pro"
-  - command: ".buildkite/buildkite_macos_build.sh"
+  - command: ".buildkite/build.sh"
     agents:
       - "os=macos"
+      - "os=windows10pro"
