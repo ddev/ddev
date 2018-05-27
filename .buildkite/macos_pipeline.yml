@@ -1,0 +1,5 @@
+  - command: ".buildkite/buildkite_build.sh"
+    agents:
+      - "os=macos"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true

@@ -1,0 +1,5 @@
+  - command: ".buildkite/buildkite_windows_build.cmd"
+    agents:
+      - "os=windows10pro"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
