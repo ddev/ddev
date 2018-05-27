@@ -1,2 +1,0 @@
-#- trigger: "windows_build"
-- trigger: "macos_build"
