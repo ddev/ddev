@@ -1,6 +1,8 @@
-<h1>Surf Test Machine Setup</h1>
+#Surf Test Machine Setup
 
-We are using [surf](https://github.com/surf-build/surf) for Windows and macOS testing. This is a very simple test setup that uses on-premise machines that have to be configured correctly to run.
+**(Obsolete, can be removed in the future)**
+
+Until 2018-05 we used [surf](https://github.com/surf-build/surf) for Windows and macOS testing. This is a very simple test setup that uses on-premise machines that have to be configured correctly to run.
 
 Before beginning:
 1. Obtain a GITHUB_TOKEN with repo and gist privileges (and for a user who has write/push privs on the repo). Currently this GITHUB_TOKEN is associated with drud-test-machine-account and the token is shared in lastpass.
