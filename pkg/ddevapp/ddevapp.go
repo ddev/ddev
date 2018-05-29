@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -944,13 +943,14 @@ func (app *DdevApp) GetAllURLs() []string {
 		URLs = append(URLs, "http://"+name+httpPort, "https://"+name+httpsPort)
 	}
 
+	dockerIP, err := dockerutil.GetDockerIP()
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil {
 		util.Error("Unable to find web container for app: %s, err %s", app.Name, err)
 	} else {
 		for _, p := range webContainer.Ports {
 			if p.PrivatePort == 80 {
-				URLs = append(URLs, fmt.Sprintf("http://%s:%d", p.IP, p.PublicPort))
+				URLs = append(URLs, fmt.Sprintf("http://%s:%d", dockerIP, p.PublicPort))
 				break
 			}
 		}
@@ -966,15 +966,11 @@ func (app *DdevApp) HostName() string {
 
 // AddHostsEntries will add the site URL to the host's /etc/hosts.
 func (app *DdevApp) AddHostsEntries() error {
-	dockerIP := "127.0.0.1"
-	dockerHostRawURL := os.Getenv("DOCKER_HOST")
-	if dockerHostRawURL != "" {
-		dockerHostURL, err := url.Parse(dockerHostRawURL)
-		if err != nil {
-			return fmt.Errorf("failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
-		}
-		dockerIP = dockerHostURL.Hostname()
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		return fmt.Errorf("could not get Docker IP: %s", err)
 	}
+
 	hosts, err := goodhosts.NewHosts()
 	if err != nil {
 		util.Failed("could not open hostfile. %s", err)
