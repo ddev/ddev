@@ -68,10 +68,9 @@ mysql -uroot <<EOF
 	GRANT ALL ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'localhost';
 
 	CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
-	CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
-
 	GRANT ALL ON *.* TO 'root'@'%' WITH GRANT OPTION;
-	GRANT ALL ON *.* TO 'root'@'localhost' WITH GRANT OPTION;
+	GRANT ALL ON *.* to 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
+	FLUSH PRIVILEGES;
 EOF
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
