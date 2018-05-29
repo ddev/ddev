@@ -23,7 +23,6 @@ RUN chmod ugo+x /import.sh /healthcheck.sh
 # But make sure these are right
 RUN chmod ugo+wx /mnt /var/tmp
 RUN chmod -R ugo+wx /var/log
-RUN chmod ugo+w /var/log/mysqld.log
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
