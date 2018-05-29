@@ -5,6 +5,8 @@ services:
     container_name: ddev-test-db
     image: DDEV_DBIMAGE
     user: "$DDEV_UID:$DDEV_GID"
+    volumes:
+      - "${DDEV_IMPORTDIR}:/db"
     restart: always
     environment:
       - SOME_ENV=env_value_goes_here

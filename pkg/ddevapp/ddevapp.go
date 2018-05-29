@@ -762,6 +762,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_APPROOT":                  app.AppRoot,
 		"DDEV_DOCROOT":                  app.Docroot,
 		"DDEV_DATADIR":                  app.DataDir,
+		"DDEV_IMPORTDIR":                app.ImportDir,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
 		"DDEV_UID":                      uidStr,
