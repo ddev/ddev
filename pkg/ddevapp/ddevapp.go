@@ -951,6 +951,7 @@ func (app *DdevApp) GetAllURLs() []string {
 		for _, p := range webContainer.Ports {
 			if p.PrivatePort == 80 {
 				URLs = append(URLs, fmt.Sprintf("http://%s:%d", p.IP, p.PublicPort))
+				break
 			}
 		}
 	}
