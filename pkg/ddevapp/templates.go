@@ -10,7 +10,6 @@ services:
     image: $DDEV_DBIMAGE
     stop_grace_period: 60s
     volumes:
-      - "${DDEV_IMPORTDIR}:/db"
       - "${DDEV_DATADIR}:/var/lib/mysql"
       - ".:/mnt/ddev_config"
     restart: "no"
