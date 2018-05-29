@@ -17,7 +17,7 @@ RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql
 
 ADD files /
 
-RUN chmod ugo+x /import.sh /healthcheck.sh
+RUN chmod ugo+x /healthcheck.sh
 
 # Security-sensitive changes: Make sure our start script can do what is needed
 # But make sure these are right
