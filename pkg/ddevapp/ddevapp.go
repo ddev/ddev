@@ -944,15 +944,21 @@ func (app *DdevApp) GetAllURLs() []string {
 	}
 
 	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		util.Error("Unable to get Docker IP: %s", err)
+		return URLs
+	}
+
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil {
 		util.Error("Unable to find web container for app: %s, err %s", app.Name, err)
-	} else {
-		for _, p := range webContainer.Ports {
-			if p.PrivatePort == 80 {
-				URLs = append(URLs, fmt.Sprintf("http://%s:%d", dockerIP, p.PublicPort))
-				break
-			}
+		return URLs
+	}
+
+	for _, p := range webContainer.Ports {
+		if p.PrivatePort == 80 {
+			URLs = append(URLs, fmt.Sprintf("http://%s:%d", dockerIP, p.PublicPort))
+			break
 		}
 	}
 
