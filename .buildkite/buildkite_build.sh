@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# This script is used to build drud/ddev using surf 
-# (https://github.com/surf-build/surf)
+# This script is used to build drud/ddev using buildkite
 
-# Manufacture a $GOPATH environment that can mount on docker (when surf build)
+# Manufacture a $GOPATH environment that can mount on docker (when buildkite build)
 if [ ! -z "$BUILDKITE_JOB_ID" ]; then
 	export GOPATH=~/tmp/buildkite/$BUILDKITE_JOB_ID
 	DRUDSRC=$GOPATH/src/github.com/drud
