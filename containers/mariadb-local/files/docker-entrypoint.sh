@@ -25,4 +25,4 @@ echo
 
 echo "Starting mysqld."
 tail -f /var/log/mysqld.log &
-exec mysqld --max-allowed-packet=${MYSQL_MAX_ALLOWED_PACKET:-16m}
+exec mysqld
