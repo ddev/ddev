@@ -282,7 +282,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		return fmt.Errorf("no .sql or .mysql files found to import")
 	}
 
-	_, _, err = app.Exec("db", "bash", "-c", "cat /db/*.*sql | mysql -udb -pdb db")
+	_, _, err = app.Exec("db", "bash", "-c", "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && cat /db/*.*sql | mysql db")
 	if err != nil {
 		return err
 	}

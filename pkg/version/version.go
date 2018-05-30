@@ -26,7 +26,7 @@ var WebTag = "20180522_fpm_env_vars" // Note that this can be overridden by make
 var DBImg = "drud/mariadb-local"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "v0.9.0" // Note that this may be overridden by make
+var DBTag = "20180529_fix_maria_root" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
