@@ -943,15 +943,16 @@ func (app *DdevApp) GetAllURLs() []string {
 		URLs = append(URLs, "http://"+name+httpPort, "https://"+name+httpsPort)
 	}
 
+	// Get direct address of web container
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
-		util.Error("Unable to get Docker IP: %s", err)
+		util.Error("Unable to get Docker IP: %v", err)
 		return URLs
 	}
 
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil {
-		util.Error("Unable to find web container for app: %s, err %s", app.Name, err)
+		util.Error("Unable to find web container for app: %s, err %v", app.Name, err)
 		return URLs
 	}
 
