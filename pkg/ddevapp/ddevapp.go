@@ -975,7 +975,7 @@ func (app *DdevApp) HostName() string {
 func (app *DdevApp) AddHostsEntries() error {
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
-		return fmt.Errorf("could not get Docker IP: %s", err)
+		return fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
 	hosts, err := goodhosts.NewHosts()
