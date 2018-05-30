@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"net/url"
+
 	"github.com/Masterminds/semver"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -381,4 +383,21 @@ func CheckForHTTPS(container docker.APIContainers) bool {
 		return true
 	}
 	return false
+}
+
+// GetDockerIP returns either the default Docker IP address (127.0.0.1)
+// or the value as configured by $DOCKER_HOST.
+func GetDockerIP() (string, error) {
+	dockerIP := "127.0.0.1"
+	dockerHostRawURL := os.Getenv("DOCKER_HOST")
+	if dockerHostRawURL != "" {
+		dockerHostURL, err := url.Parse(dockerHostRawURL)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
+		}
+
+		dockerIP = dockerHostURL.Hostname()
+	}
+
+	return dockerIP, nil
 }
