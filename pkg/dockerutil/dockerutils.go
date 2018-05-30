@@ -393,7 +393,7 @@ func GetDockerIP() (string, error) {
 	if dockerHostRawURL != "" {
 		dockerHostURL, err := url.Parse(dockerHostRawURL)
 		if err != nil {
-			return dockerIP, fmt.Errorf("failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
+			return "", fmt.Errorf("failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
 		}
 
 		dockerIP = dockerHostURL.Hostname()
