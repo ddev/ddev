@@ -355,6 +355,56 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 	assert.Contains(err.Error(), "Could not find a project")
 }
 
+// TestGetAllURLs ensures the GetAllURLs function returns the expected number of URLs,
+// and that one of them is the direct web container address.
+func TestGetAllURLs(t *testing.T) {
+	assert := asrt.New(t)
+
+	for _, site := range TestSites {
+		testcommon.ClearDockerEnv()
+		app := new(ddevapp.DdevApp)
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Start()
+		assert.NoError(err)
+
+		urls := app.GetAllURLs()
+
+		// Convert URLs to map[string]bool
+		urlMap := make(map[string]bool)
+		for _, u := range urls {
+			urlMap[u] = true
+		}
+
+		// We expect two URLs for each hostname (http/https) and one direct web container address.
+		expectedNumUrls := (2 * len(app.GetHostnames())) + 1
+		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
+
+		// Ensure urlMap contains direct address of the web container
+		webContainer, err := app.FindContainerByType("web")
+		assert.NoError(err)
+
+		dockerIP, err := dockerutil.GetDockerIP()
+		assert.NoError(err)
+
+		// Find HTTP port of web container
+		var port docker.APIPort
+		for _, p := range webContainer.Ports {
+			if p.PrivatePort == 80 {
+				port = p
+				break
+			}
+		}
+
+		expectedDirectAddress := fmt.Sprintf("http://%s:%d", dockerIP, port.PublicPort)
+		exists := urlMap[expectedDirectAddress]
+
+		assert.True(exists, "URL list for app: %s does not contain direct web container address: %s", app.Name, expectedDirectAddress)
+	}
+}
+
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
 	assert := asrt.New(t)
