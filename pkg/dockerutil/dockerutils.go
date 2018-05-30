@@ -386,7 +386,7 @@ func CheckForHTTPS(container docker.APIContainers) bool {
 }
 
 // GetDockerIP returns either the default Docker IP address (127.0.0.1)
-// or the value as configured by $DOCKER_HOST,
+// or the value as configured by $DOCKER_HOST.
 func GetDockerIP() (string, error) {
 	dockerIP := "127.0.0.1"
 	dockerHostRawURL := os.Getenv("DOCKER_HOST")

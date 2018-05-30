@@ -1130,6 +1130,73 @@ func TestMultipleComposeFiles(t *testing.T) {
 	assert.Contains(err.Error(), "failed to load any docker-compose.*y*l files")
 }
 
+// TestGetAllURLs ensures the GetAllURLs function returns the expected number of URLs,
+// and that one of them is the direct web container address.
+func TestGetAllURLs(t *testing.T) {
+	assert := asrt.New(t)
+
+	for _, site := range TestSites {
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s GetAllURLs", site.Name))
+
+		testcommon.ClearDockerEnv()
+		app := new(ddevapp.DdevApp)
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		// Add some additional hostnames
+		app.AdditionalHostnames = []string{
+			fmt.Sprintf("sub1.%s", site.Name),
+			fmt.Sprintf("sub2.%s", site.Name),
+			fmt.Sprintf("sub3.%s", site.Name),
+		}
+
+		err = app.WriteConfig()
+		assert.NoError(err)
+
+		err = app.Start()
+		assert.NoError(err)
+
+		urls := app.GetAllURLs()
+
+		// Convert URLs to map[string]bool
+		urlMap := make(map[string]bool)
+		for _, u := range urls {
+			urlMap[u] = true
+		}
+
+		// We expect two URLs for each hostname (http/https) and one direct web container address.
+		expectedNumUrls := (2 * len(app.GetHostnames())) + 1
+		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
+
+		// Ensure urlMap contains direct address of the web container
+		webContainer, err := app.FindContainerByType("web")
+		assert.NoError(err)
+
+		dockerIP, err := dockerutil.GetDockerIP()
+		assert.NoError(err)
+
+		// Find HTTP port of web container
+		var port docker.APIPort
+		for _, p := range webContainer.Ports {
+			if p.PrivatePort == 80 {
+				port = p
+				break
+			}
+		}
+
+		expectedDirectAddress := fmt.Sprintf("http://%s:%d", dockerIP, port.PublicPort)
+		exists := urlMap[expectedDirectAddress]
+
+		assert.True(exists, "URL list for app: %s does not contain direct web container address: %s", app.Name, expectedDirectAddress)
+
+		err = app.Stop()
+		assert.NoError(err)
+
+		runTime()
+	}
+}
+
 // constructContainerName builds a container name given the type (web/db/dba) and the app
 func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
 	container, err := app.FindContainerByType(containerType)
