@@ -2,17 +2,19 @@ package ddevapp
 
 import (
 	"fmt"
-	"golang.org/x/crypto/ssh/terminal"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"golang.org/x/crypto/ssh/terminal"
 
 	"strings"
 
 	osexec "os/exec"
 
 	"os/user"
+
+	"runtime"
 
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
@@ -25,7 +27,6 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-shellwords"
-	"runtime"
 )
 
 const containerWaitTimeout = 61
@@ -928,6 +929,8 @@ func (app *DdevApp) GetHTTPSURL() string {
 // GetAllURLs returns an array of all the URLs for the project
 func (app *DdevApp) GetAllURLs() []string {
 	var URLs []string
+
+	// Get configured URLs
 	for _, name := range app.GetHostnames() {
 		httpPort := ""
 		httpsPort := ""
@@ -939,6 +942,27 @@ func (app *DdevApp) GetAllURLs() []string {
 		}
 		URLs = append(URLs, "http://"+name+httpPort, "https://"+name+httpsPort)
 	}
+
+	// Get direct web container address
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		util.Error("Unable to get Docker IP: %v", err)
+		return URLs
+	}
+
+	webContainer, err := app.FindContainerByType("web")
+	if err != nil {
+		util.Error("Unable to find web container: %v", err)
+		return URLs
+	}
+
+	for _, p := range webContainer.Ports {
+		if p.PrivatePort == 80 {
+			URLs = append(URLs, fmt.Sprintf("http://%s:%d", dockerIP, p.PublicPort))
+			break
+		}
+	}
+
 	return URLs
 }
 
@@ -949,15 +973,11 @@ func (app *DdevApp) HostName() string {
 
 // AddHostsEntries will add the site URL to the host's /etc/hosts.
 func (app *DdevApp) AddHostsEntries() error {
-	dockerIP := "127.0.0.1"
-	dockerHostRawURL := os.Getenv("DOCKER_HOST")
-	if dockerHostRawURL != "" {
-		dockerHostURL, err := url.Parse(dockerHostRawURL)
-		if err != nil {
-			return fmt.Errorf("failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
-		}
-		dockerIP = dockerHostURL.Hostname()
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		return fmt.Errorf("could not get Docker IP: %v", err)
 	}
+
 	hosts, err := goodhosts.NewHosts()
 	if err != nil {
 		util.Failed("could not open hostfile. %s", err)
