@@ -24,7 +24,13 @@ $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge($GLOBA
                     'password' => 'db',
                     'port' => '3306',
                     'user' => 'db',
-]);`
+]);
+
+// Include local settings if it exists.
+if (file_exists(__DIR__ . '/LocalConfigurationDdev.php')) {
+	require_once __DIR__ . '/LocalConfigurationDdev.php';
+}
+`
 
 // createTypo3SettingsFile creates the app's LocalConfiguration.php and
 // AdditionalConfiguration.php, adding things like database host, name, and

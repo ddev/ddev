@@ -95,6 +95,11 @@ $settings['file_scan_ignore_directories'] = [
 if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
   include __DIR__ . '../../../drush.settings.php';
 }
+
+// Include local settings if it exists.
+if (file_exists(__DIR__ . '/settings.ddev-local.php')) {
+	require_once __DIR__ . '/settings.ddev-local.php';
+}
 `
 )
 
@@ -128,6 +133,11 @@ $drupal_hash_salt = '{{ $config.HashSalt }}';
 if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
   include __DIR__ . '../../../drush.settings.php';
 }
+
+// Include local settings if it exists.
+if (file_exists(__DIR__ . '/settings.ddev-local.php')) {
+	require_once __DIR__ . '/settings.ddev-local.php';
+}
 `
 )
 
@@ -150,6 +160,11 @@ ini_set('session.cookie_lifetime', 2000000);
 // it to work both within a docker container and natively on the host system.
 if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
   include __DIR__ . '../../../drush.settings.php';
+}
+
+// Include local settings if it exists.
+if (file_exists(__DIR__ . '/settings.ddev-local.php')) {
+	require_once __DIR__ . '/settings.ddev-local.php';
 }
 `
 )

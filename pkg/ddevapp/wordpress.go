@@ -134,6 +134,11 @@ included again if this file is written to wp-config-local.php.
 if (basename(__FILE__) == "wp-config.php") {
 	require_once(ABSPATH . '/wp-settings.php');
 }
+
+// Include local settings if it exists.
+if (file_exists(__DIR__ . '/wp-config-ddev-local.php')) {
+	require_once __DIR__ . '/wp-config-ddev-local.php';
+}
 `
 )
 
