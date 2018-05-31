@@ -61,7 +61,7 @@ Note that third party packaging is encouraged, but only supported on a best-effo
 
 ### Installation or Upgrade - Windows
 
-- A windows installer is provided in the release (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. If you get a Windows Defender Smartscreen warning "Windows protected your PC", click "More info" and then "Run anyway". Open a new terminal or cmd window and start using ddev.
+- A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. If you get a Windows Defender Smartscreen warning "Windows protected your PC", click "More info" and then "Run anyway". Open a new terminal or cmd window and start using ddev.
 
 ### Versioning
 
@@ -72,4 +72,4 @@ The DDEV project is committed to supporting [Semantic Version 2.0.0](https://sem
 - [ddev Documentation](https://ddev.readthedocs.io)
 - [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions
 - [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
-- #ddev channel in [Drupal Slack](https://drupal.slack.com/messages/C5TQRQZRR) and [TYPO3 Slack](https://typo3.slack.com/messages/C8TRNQ601) for interactive, immediate community support
+- The `#ddev` channel in [Drupal Slack](https://drupal.slack.com/messages/C5TQRQZRR) and [TYPO3 Slack](https://typo3.slack.com/messages/C8TRNQ601) for interactive, immediate community support
