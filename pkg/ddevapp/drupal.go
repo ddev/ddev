@@ -89,6 +89,8 @@ $settings['file_scan_ignore_directories'] = [
   'bower_components',
 ];
 
+// This will prevent Drupal from setting read-only permissions on sites/default.
+$settings['skip_permissions_hardening'] = TRUE;
 
 // This is super ugly but it determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
