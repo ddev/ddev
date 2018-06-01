@@ -15,9 +15,9 @@ CRCCheck On
 !include LogicLib.nsh
 
 ; The name of the installer
-Name "ddev ${VERSION}"
+Name "ddev ${MUI_VERSION}"
 
-OutFile "../bin/windows/windows_amd64/ddev_windows_installer.${VERSION}.exe"
+OutFile "../bin/windows/windows_amd64/ddev_windows_installer.${MUI_VERSION}.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES64\ddev
@@ -36,6 +36,7 @@ RequestExecutionLevel admin
 
 ;--------------------------------
 ;Pages
+
 !define MUI_HEADERIMAGE
 
 !define MUI_WELCOMEPAGE_TITLE "DDEV-Local, a local PHP development environment system"
@@ -70,8 +71,9 @@ RequestExecutionLevel admin
 !insertmacro MUI_LANGUAGE "English"
 
 ;--------------------------------
+;Installer Sections
 
-Section "ddev (github.com/drud/ddev)"
+Section "ddev (github.com/drud/ddev)" SecDDEV
   SectionIn RO
   SetOutPath $INSTDIR
   
@@ -88,25 +90,41 @@ Section "ddev (github.com/drud/ddev)"
   WriteUninstaller "ddev_uninstall.exe"
 SectionEnd
 
-Section "sudo (github.com/mattn/sudo)"
+Section "sudo (github.com/mattn/sudo)" SecSudo
   SectionIn 1
   SetOutPath $INSTDIR
-  FIle "../bin/windows/windows_amd64/sudo.exe"
+  File "../bin/windows/windows_amd64/sudo.exe"
 SectionEnd
 
-Section "Add to PATH"
+Section "Add to PATH" SecAddToPath
   SectionIn 2
   Push $INSTDIR
   Call AddToPath
 SectionEnd
 
-Section "Start Menu Shortcuts"
+Section "Start Menu Shortcuts" SecStartMenu
   CreateDirectory "$SMPROGRAMS\ddev"
   CreateShortcut "$SMPROGRAMS\ddev\Uninstall.lnk" "$INSTDIR\ddev_uninstall.exe" "" "$INSTDIR\ddev_uninstall.exe" 0
 SectionEnd
 
 ;--------------------------------
+;Descriptions
 
+  ;Language strings
+  LangString DESC_SecDDEV ${LANG_ENGLISH} "Install DDEV-local (required)."
+  LangString DESC_SecSudo ${LANG_ENGLISH} "Install sudo for Windows which is required to add hostnames to the hosts file without the need of a elevated command prompt."
+  LangString DESC_SecAddToPath ${LANG_ENGLISH} "Adds the DDEV install directory to the PATH variable to allow the usage of DDEV without the prefix of the install directory."
+  LangString DESC_SecStartMenu ${LANG_ENGLISH} "Create shortcuts at the Start Menu."
+
+  ;Assign language strings to sections
+  !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecDDEV} $(DESC_SecDDEV)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecSudo} $(DESC_SecSudo)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecAddToPath} $(DESC_SecAddToPath)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecStartMenu} $(DESC_SecStartMenu)
+  !insertmacro MUI_FUNCTION_DESCRIPTION_END
+
+;--------------------------------
 ; Uninstaller
 
 Section "Uninstall"
