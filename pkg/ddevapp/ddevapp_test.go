@@ -274,8 +274,10 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
+		dockerIP, err := dockerutil.GetDockerIP()
+		assert.NoError(err)
 		for _, hostname := range app.GetHostnames() {
-			o := util.NewHTTPOptions("http://" + "127.0.0.1" + site.Safe200URL)
+			o := util.NewHTTPOptions("http://" + dockerIP + site.Safe200URL)
 			o.ExpectedStatus = 200
 			o.Timeout = 5
 			o.TickerInterval = 1
