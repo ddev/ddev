@@ -78,24 +78,35 @@ const (
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
+// Include local settings if it exists.
+if (file_exists(__DIR__ . '/wp-config-ddev-local.php')) {
+	require_once __DIR__ . '/wp-config-ddev-local.php';
+}
+
 // ** MySQL settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
-define('DB_NAME', '{{ $config.DatabaseName }}');
+if ( !defined('DB_NAME') )
+	define('DB_NAME', '{{ $config.DatabaseName }}');
 
 /** MySQL database username */
-define('DB_USER', '{{ $config.DatabaseUsername }}');
+if ( !defined('DB_USER') )
+	define('DB_USER', '{{ $config.DatabaseUsername }}');
 
 /** MySQL database password */
-define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
+if ( !defined('DB_PASSWORD') )
+	define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
 
 /** MySQL hostname */
-define('DB_HOST', '{{ $config.DatabaseHost }}');
+if ( !defined('DB_HOST') )
+	define('DB_HOST', '{{ $config.DatabaseHost }}');
 
 /** Database Charset to use in creating database tables. */
-define('DB_CHARSET', 'utf8mb4');
+if ( !defined('DB_CHARSET') )
+	define('DB_CHARSET', 'utf8mb4');
 
 /** The Database Collate type. Don't change this if in doubt. */
-define('DB_COLLATE', '');
+if ( !defined('DB_COLLATE') )
+	define('DB_COLLATE', '');
 
 /**
  * WordPress Database Table prefix.
@@ -105,7 +116,8 @@ $table_prefix  = '{{ $config.TablePrefix }}';
 /**
  * For developers: WordPress debugging mode.
  */
-define('WP_DEBUG', false);
+if ( !defined('WP_DEBUG') )
+	define('WP_DEBUG', false);
 
 /**#@+
  * Authentication Unique Keys and Salts.
