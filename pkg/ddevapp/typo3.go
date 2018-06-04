@@ -51,8 +51,9 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 }
 
 // writeTypo3SettingsFile produces AdditionalConfiguration.php file
-// It's assumed that the LocalConfiguration.php must already exist, and we're
-// overriding the db config values in it.
+// It's assumed that the LocalConfiguration.php already exists, and we're
+// overriding the db config values in it. The typo3conf/ directory will
+// be created if it does not yet exist.
 func writeTypo3SettingsFile(app *DdevApp) error {
 
 	filePath := app.SiteLocalSettingsPath
