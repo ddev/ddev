@@ -62,7 +62,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	dir := filepath.Dir(filePath)
 	var perms os.FileMode = 0755
 	if err := os.Chmod(dir, perms); err != nil {
-		if os.IsExist(err) {
+		if !os.IsNotExist(err) {
 			// The directory exists, but chmod failed.
 			return err
 		}
