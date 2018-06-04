@@ -57,20 +57,20 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 func writeTypo3SettingsFile(app *DdevApp) error {
 
 	filePath := app.SiteLocalSettingsPath
-	var perms os.FileMode = 0755
 
-	// Ensure target directory exists.
+	// Ensure target directory is writable.
 	dir := filepath.Dir(filePath)
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
+	var perms os.FileMode = 0755
+	if err := os.Chmod(dir, perms); err != nil {
+		if os.IsExist(err) {
+			// The directory exists, but chmod failed.
+			return err
+		}
+
+		// The directory doesn't exist, create it with the appropriate permissions.
 		if err := os.Mkdir(dir, perms); err != nil {
 			return err
 		}
-	}
-
-	// Ensure target directory is writable.
-	err := os.Chmod(dir, perms)
-	if err != nil {
-		return err
 	}
 
 	file, err := os.Create(filePath)
