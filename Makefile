@@ -97,3 +97,26 @@ bin/windows/windows_amd64/sudo.exe bin/windows/windows_amd64/sudo_license.txt:
 	curl -sSL -o /tmp/sudo.zip -O  https://github.com/mattn/sudo/releases/download/$(WINDOWS_SUDO_VERSION)/sudo-x86_64.zip
 	unzip -o -d $(PWD)/bin/windows/windows_amd64 /tmp/sudo.zip
 	curl -sSL -o $(PWD)/bin/windows/windows_amd64/sudo_license.txt https://raw.githubusercontent.com/mattn/sudo/master/LICENSE
+
+
+# This build override puts the "/" on the front of the -v statements, which
+# solves problems on Docker toolbox under git bash where the mount syntax
+# is not understood. I don't think there's any reason this change can't go into
+# build-tools upstream.
+linux darwin windows: $(GOFILES)
+	@echo "building $@ from $(SRC_AND_UNDER)"
+	@$(shell rm -f VERSION.txt)
+	@$(shell mkdir -p bin/$@ $(GOTMP)/{std/$@,bin,src/$(PKG)})
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
+	    -v "/$$PWD/$(GOTMP):/go$(DOCKERMOUNTFLAG)"                                  \
+	    -v "/$$PWD:/go/src/$(PKG)$(DOCKERMOUNTFLAG)"                                 \
+	    -v "/$$PWD/bin/$@:/go/bin$(DOCKERMOUNTFLAG)"                         \
+	    -v "/$$PWD/bin/$@:/go/bin/$@$(DOCKERMOUNTFLAG)"                 \
+	    -v "/$$PWD/$(GOTMP)/std/$@:/usr/local/go/pkg/$@_amd64_static$(DOCKERMOUNTFLAG)"  \
+	    -e CGO_ENABLED=0                  \
+	    -e GOOS=$@						  \
+	    -w //go/src/$(PKG)                 \
+	    $(BUILD_IMAGE)                    \
+        go install -installsuffix static -ldflags ' $(LDFLAGS) ' $(SRC_AND_UNDER)
+	@$(shell touch $@)
+	@echo $(VERSION) >VERSION.txt
