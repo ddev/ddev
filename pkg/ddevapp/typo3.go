@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"os"
+	"path/filepath"
+
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"os"
-	"path/filepath"
 )
 
 const typo3AdditionalConfigTemplate = `<?php
@@ -55,10 +56,18 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 func writeTypo3SettingsFile(app *DdevApp) error {
 
 	filePath := app.SiteLocalSettingsPath
+	var perms os.FileMode = 0755
+
+	// Ensure target directory exists.
+	dir := filepath.Dir(filePath)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err := os.Mkdir(dir, perms); err != nil {
+			return err
+		}
+	}
 
 	// Ensure target directory is writable.
-	dir := filepath.Dir(filePath)
-	err := os.Chmod(dir, 0755)
+	err := os.Chmod(dir, perms)
 	if err != nil {
 		return err
 	}
