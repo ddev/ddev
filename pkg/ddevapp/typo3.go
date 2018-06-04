@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"os"
+	"path/filepath"
+
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"os"
-	"path/filepath"
 )
 
 const typo3AdditionalConfigTemplate = `<?php
@@ -50,17 +51,26 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 }
 
 // writeTypo3SettingsFile produces AdditionalConfiguration.php file
-// It's assumed that the LocalConfiguration.php must already exist, and we're
-// overriding the db config values in it.
+// It's assumed that the LocalConfiguration.php already exists, and we're
+// overriding the db config values in it. The typo3conf/ directory will
+// be created if it does not yet exist.
 func writeTypo3SettingsFile(app *DdevApp) error {
 
 	filePath := app.SiteLocalSettingsPath
 
 	// Ensure target directory is writable.
 	dir := filepath.Dir(filePath)
-	err := os.Chmod(dir, 0755)
-	if err != nil {
-		return err
+	var perms os.FileMode = 0755
+	if err := os.Chmod(dir, perms); err != nil {
+		if !os.IsNotExist(err) {
+			// The directory exists, but chmod failed.
+			return err
+		}
+
+		// The directory doesn't exist, create it with the appropriate permissions.
+		if err := os.Mkdir(dir, perms); err != nil {
+			return err
+		}
 	}
 
 	file, err := os.Create(filePath)
