@@ -70,10 +70,14 @@ func handleSequelProCommand(appLocation string) (string, error) {
 	}
 	defer util.CheckClose(tmpFile)
 
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		return "", err
+	}
 	_, err = tmpFile.WriteString(fmt.Sprintf(
 		ddevapp.SequelproTemplate,
 		"db",           //dbname
-		"127.0.0.1",    //host
+		dockerIP,       //host
 		app.HostName(), //connection name
 		"db",           // dbpass
 		dbPublishPort,  // port
