@@ -39,12 +39,19 @@ cleanup
 
 # Using a static composer dir saves the composer downloads for each php version.
 composercache=/tmp/composer_$$
-mkdir -p $composercache
+mkdir -p $composercache && chmod 777 $composercache
+
+export MOUNTUID=$UID
+export MOUNTGID=$(id -g)
+if [[ "$MOUNTUID" -gt "60000" || "$MOUNTGID" -gt "60000" ]] ; then
+	MOUNTUID=1
+	MOUNTGID=1
+fi
 
 for v in 5.6 7.0 7.1 7.2; do
 	echo "starting container for tests on php$v"
 
-	CONTAINER=$(docker run -u "$(id -u):$(id -g)" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -d --name $CONTAINER_NAME -v "$composercache:/home/.composer/cache" -d $DOCKER_IMAGE)
+	CONTAINER=$(docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -d --name $CONTAINER_NAME -v "/$composercache:/home/.composer/cache:rw" -d $DOCKER_IMAGE)
 	if ! containercheck; then
         echo "Container did not become ready"
         exit 1
@@ -52,15 +59,15 @@ for v in 5.6 7.0 7.1 7.2; do
 
 	curl --fail localhost:$HOST_PORT/test/phptest.php
 	curl -s localhost:$HOST_PORT/test/test-email.php | grep "Test email sent"
-	docker exec -it $CONTAINER php --version | grep "PHP $v"
-	docker exec -it $CONTAINER drush --version
-	docker exec -it $CONTAINER wp --version
+	docker exec -t $CONTAINER php --version | grep "PHP $v"
+	docker exec -t $CONTAINER drush --version
+	docker exec -t $CONTAINER wp --version
 
 	# Make sure composer create-project is working.
-	docker exec -it $CONTAINER composer create-project -d /tmp drupal-composer/drupal-project:8.x-dev my-drupal8-site --stability dev --no-interaction
+	docker exec -t $CONTAINER composer create-project -d //tmp drupal-composer/drupal-project:8.x-dev my-drupal8-site --stability dev --no-interaction
 
     # Default settings for assert.active should be 1
-    docker exec -it $CONTAINER_NAME php -i | grep "assert.active.*=> 1 => 1"
+    docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 1 => 1"
 
 	echo "testing error states for php$v"
 	# These are just the standard nginx 403 and 404 pages
@@ -97,12 +104,12 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
     fi
 	curl --fail localhost:$HOST_PORT/test/phptest.php
 	# Make sure that the project-specific config has been linked in.
-	docker exec -it $CONTAINER grep "# ddev $project_type config" /etc/nginx/nginx-site.conf
+	docker exec -t $CONTAINER grep "# ddev $project_type config" //etc/nginx/nginx-site.conf
 	# Make sure that the right PHP version was selected for the project_type
 	# Only drupal6 is currently different here.
-	docker exec -it $CONTAINER php --version | grep "PHP $PHP_VERSION"
+	docker exec -t $CONTAINER php --version | grep "PHP $PHP_VERSION"
 	# xdebug should be disabled by default.
-    docker exec -it $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
+    docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
 
 	# Make sure we don't have lots of "closed keepalive connection" complaints
 	docker logs $CONTAINER | grep -v "closed keepalive connection"
@@ -113,22 +120,22 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 	# Make sure that backdrop drush commands were added on backdrop and only backdrop
 	if [ "$project_type" == "backdrop" ] ; then
 	 	# The .drush/commands/backdrop directory should only exist for backdrop apptype
-		docker exec -it $CONTAINER bash -c 'if [ ! -d  ~/.drush/commands/backdrop ] ; then exit 1; fi'
+		docker exec -t $CONTAINER bash -c 'if [ ! -d  ~/.drush/commands/backdrop ] ; then echo "Failed to find expected backdrop drush commands"; exit 1; fi'
 	else
-		docker exec -it $CONTAINER bash -c 'if [ -d  ~/.drush/commands/backdrop ] ; then exit 2; fi'
+		docker exec -t $CONTAINER bash -c 'if [ -d  ~/.drush/commands/backdrop ] ; then echo "Found unexpected backdrop drush commands"; exit 2; fi'
 	fi
 	docker rm -f $CONTAINER
 done
 
 echo "testing use of custom nginx and php configs"
-docker run  -u "$(id -u):$(id -g)" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v $PWD/test/testdata:/mnt/ddev_config -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
-docker exec -it $CONTAINER_NAME grep "docroot is /var/www/html/potato in custom conf" /etc/nginx/sites-enabled/nginx-site.conf
+docker run  -u "$(id -u):$(id -g)" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v "/$PWD/test/testdata:/mnt/ddev_config" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
+docker exec -t $CONTAINER_NAME grep "docroot is /var/www/html/potato in custom conf" /etc/nginx/sites-enabled/nginx-site.conf
 
 # Enable xdebug (and then disable again) and make sure it does the right thing.
-docker exec -it $CONTAINER_NAME enable_xdebug
-docker exec -it $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
-docker exec -it $CONTAINER_NAME disable_xdebug
-docker exec -it $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
+docker exec -t $CONTAINER_NAME enable_xdebug
+docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
+docker exec -t $CONTAINER_NAME disable_xdebug
+docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
 
 # With overridden value we should have assert.active=0, not the default
-docker exec -it $CONTAINER_NAME php -i | grep "assert.active.*=> 0 => 0"
+docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 0 => 0"
