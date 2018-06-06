@@ -63,6 +63,7 @@ RUN apt-get -qq update && \
 		yarn \
 		zip \
 		unzip \
+		rsync \
 		libpcre3 && \
 	for v in php${PHP_VERSIONS}; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-bcmath $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring  $v-opcache $v-soap $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip; done && \
 	for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
