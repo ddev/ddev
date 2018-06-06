@@ -4,4 +4,4 @@
       - "dockertype=dockerforwindows"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
-
+    parallelism: 1
