@@ -1,6 +1,7 @@
   - command: ".buildkite/buildkite_windows_build.cmd"
     agents:
-      - "os=windows10home"
+      - "os=windows"
+      - "dockertype=toolbox"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
 
