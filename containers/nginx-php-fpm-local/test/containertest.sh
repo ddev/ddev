@@ -97,7 +97,7 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 	if [ "$project_type" == "drupal6" ]; then
 	  PHP_VERSION="5.6"
 	fi
-	CONTAINER=$(docker run  -u "$(id -u):$(id -g)" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE)
+	CONTAINER=$(docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE)
 	if ! containercheck; then
         echo "Container did not become ready"
         exit 1
