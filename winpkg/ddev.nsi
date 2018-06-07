@@ -112,9 +112,9 @@ SectionEnd
 
   ;Language strings
   LangString DESC_SecDDEV ${LANG_ENGLISH} "Install DDEV-local (required)."
-  LangString DESC_SecSudo ${LANG_ENGLISH} "Install sudo for Windows which is required to add hostnames to the hosts file without the need of a elevated command prompt."
-  LangString DESC_SecAddToPath ${LANG_ENGLISH} "Adds the DDEV install directory to the PATH variable to allow the usage of DDEV without the prefix of the install directory."
-  LangString DESC_SecStartMenu ${LANG_ENGLISH} "Create shortcuts at the Start Menu."
+  LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows allows for elevated privileges which are used to add hostnames to the Windows hosts file"
+  LangString DESC_SecAddToPath ${LANG_ENGLISH} "Adds the ddev (and sudo) path to the global PATH."
+  LangString DESC_SecStartMenu ${LANG_ENGLISH} "Makes a shortcut for the uninstaller on the Start menu."
 
   ;Assign language strings to sections
   !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
