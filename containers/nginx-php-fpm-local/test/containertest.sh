@@ -129,7 +129,7 @@ done
 
 echo "testing use of custom nginx and php configs"
 docker run  -u "$(id -u):$(id -g)" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v "/$PWD/test/testdata:/mnt/ddev_config" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
-docker exec -t $CONTAINER_NAME grep "docroot is /var/www/html/potato in custom conf" /etc/nginx/sites-enabled/nginx-site.conf
+docker exec -t $CONTAINER_NAME grep "docroot is /var/www/html/potato in custom conf" //etc/nginx/sites-enabled/nginx-site.conf
 
 # Enable xdebug (and then disable again) and make sure it does the right thing.
 docker exec -t $CONTAINER_NAME enable_xdebug
