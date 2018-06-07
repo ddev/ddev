@@ -12,3 +12,5 @@
 /.docker_image
 /debug
 /debug.test
+
+/.idea
