@@ -15,7 +15,6 @@ import (
 
 	"github.com/Masterminds/semver"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -55,7 +54,9 @@ func EnsureDdevNetwork() {
 func GetDockerClient() *docker.Client {
 	client, err := docker.NewClientFromEnv()
 	if err != nil {
-		util.Failed("could not get docker client. is docker running? error: %v", err)
+		output.UserOut.Warn("could not get docker client. is docker running? error: %v", err)
+		// Use os.Exit instead of util.Failed() to avoid import cycle with util.
+		os.Exit(100)
 	}
 
 	return client
@@ -232,7 +233,9 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	proc.Stdin = os.Stdin
 
 	stderrPipe, err := proc.StderrPipe()
-	util.CheckErr(err)
+	if err != nil {
+		return "", "", fmt.Errorf("Failed to proc.StderrPipe(): %v", err)
+	}
 
 	if err = proc.Start(); err != nil {
 		return "", "", fmt.Errorf("Failed to exec docker-compose: %v", err)

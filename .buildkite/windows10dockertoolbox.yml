@@ -1,0 +1,7 @@
+  - command: ".buildkite/test.cmd"
+    agents:
+      - "os=windows"
+      - "dockertype=toolbox"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+    parallelism: 1

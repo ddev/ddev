@@ -1,0 +1,7 @@
+  - command: ".buildkite/test.sh"
+    agents:
+      - "os=macos"
+      - "dockertype=dockerformac"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+    parallelism: 1

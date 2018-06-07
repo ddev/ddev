@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	log "github.com/sirupsen/logrus"
@@ -144,10 +145,15 @@ func addSites() {
 		}
 
 		// Warning: assumes web at port 80, will need adjustment in the future.
+		dockerIP, err := dockerutil.GetDockerIP()
+		if err != nil {
+			util.Warning("Unable to GetDockerIP: %v", err)
+		}
+
 		urls := []string{
-			"http://127.0.0.1/" + site.HTTPProbeURI,
-			"http://127.0.0.1:" + appports.GetPort("mailhog"),
-			"http://127.0.0.1:" + appports.GetPort("dba"),
+			"http://" + dockerIP + "/" + site.HTTPProbeURI,
+			"http://" + dockerIP + ":" + appports.GetPort("mailhog"),
+			"http://" + dockerIP + ":" + appports.GetPort("dba"),
 		}
 
 		for _, url := range urls {

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/gosuri/uitable"
@@ -68,6 +69,10 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 	siteInfo.AddRow("PHP version:", desc["php_version"])
 	siteInfo.AddRow("URLs:", strings.Join(desc["urls"].([]string), ", "))
 	output = output + fmt.Sprint(siteInfo)
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		return "", err
+	}
 
 	// Only show extended status for running sites.
 	if desc["status"] == ddevapp.SiteRunning {
@@ -84,7 +89,7 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 			dbTable.AddRow("Host:", dbinfo["host"])
 			dbTable.AddRow("Port:", dbinfo["port"])
 			output = output + fmt.Sprint(dbTable)
-			output = output + fmt.Sprintf("\nTo connect to mysql from your host machine, use port %[1]v on 127.0.0.1.\nFor example: mysql --host=127.0.0.1 --port=%[1]v --user=db --password=db --database=db", dbinfo["published_port"])
+			output = output + fmt.Sprintf("\nTo connect to mysql from your host machine, use port %s on %s.\nFor example: mysql --host=%s --port=%s --user=db --password=db --database=db", dbinfo["published_port"], dockerIP, dockerIP, dbinfo["published_port"])
 		}
 		output = output + "\n\nOther Services\n--------------\n"
 		other := uitable.New()

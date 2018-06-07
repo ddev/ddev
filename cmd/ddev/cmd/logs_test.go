@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/version"
 	"path/filepath"
 	"testing"
@@ -45,7 +46,9 @@ func TestDevLogs(t *testing.T) {
 		err := ioutil.WriteFile(filepath.Join(v.Dir, v.Docroot, "index.php"), confByte, 0644)
 		assert.NoError(err)
 
-		o := util.NewHTTPOptions("http://127.0.0.1/index.php")
+		dockerIP, err := dockerutil.GetDockerIP()
+		assert.NoError(err)
+		o := util.NewHTTPOptions("http://" + dockerIP + "/index.php")
 		// Because php display_errors = On the error results in a 200 anyway.
 		o.ExpectedStatus = 200
 		o.Timeout = 30

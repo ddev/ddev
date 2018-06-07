@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/cheggaaa/pb"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
 	log "github.com/sirupsen/logrus"
 )
@@ -135,9 +136,16 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 	return fmt.Errorf("Failed to match status code %d", o.ExpectedStatus)
 }
 
-// IsPortActive checks to see if the given port on localhost is answering.
+// IsPortActive checks to see if the given port on docker IP is answering.
 func IsPortActive(port string) bool {
-	conn, err := net.Dial("tcp", ":"+port)
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		Warning("Failed to get docker IP address: %v", err)
+		return false
+	}
+
+	conn, err := net.Dial("tcp", dockerIP+":"+port)
+
 	// If we were able to connect, something is listening on the port.
 	if err == nil {
 		_ = conn.Close()
