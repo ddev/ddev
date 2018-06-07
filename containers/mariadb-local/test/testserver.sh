@@ -113,7 +113,7 @@ if [ ! -f "$outdir/mariadb_10.1_base_db.tgz" ] ; then
   echo "Failed to build test starter tarball for mariadb."
   exit 4
 fi
-# rm -rf $outdir $MYTMPDIR
+rm -rf $outdir $MYTMPDIR
 
 echo "Tests passed"
 exit 0
