@@ -6,7 +6,7 @@ IMAGE="$1"  # Full image name with tag
 MYSQL_VERSION="$2"
 CONTAINER_NAME="testserver"
 HOSTPORT=33000
-MYTMPDIR=~"/tmp/testserver-sh_${SECONDS}_$$"
+MYTMPDIR="${HOME}/tmp/testserver-sh_${RANDOM}_$$"
 
 # Always clean up the container on exit.
 function cleanup {
@@ -35,11 +35,11 @@ cleanup
 
 # We use MYTMPDIR for a bogus temp dir since mktemp -d creates a dir
 # outside a docker-mountable directory on macOS
-mkdir -p $MYTMPDIR
+mkdir -p "$MYTMPDIR"
 rm -rf $MYTMPDIR/*
 
 echo "Starting image with database image $IMAGE"
-if ! docker run -u "$(id -u):$(id -g)" -v /$MYTMPDIR:/var/lib/mysql --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
+if ! docker run -u "$(id -u):$(id -g)" -v "/${MYTMPDIR}:/var/lib/mysql" --name="$CONTAINER_NAME" -p "$HOSTPORT:3306" -d $IMAGE; then
 	echo "MySQL server start failed with error code $?"
 	exit 2
 fi
@@ -86,7 +86,7 @@ mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$H
 cleanup
 
 # Run with alternate configuration my.cnf mounted
-if ! docker run -u "$(id -u):$(id -g)" -v /$MYTMPDIR:/var/lib/mysql -v /$PWD/test/testdata:/mnt/ddev_config --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
+if ! docker run -u "$(id -u):$(id -g)" -v "/${MYTMPDIR}:/var/lib/mysql" -v "/${PWD}/test/testdata:/mnt/ddev_config" --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
 	echo "MySQL server start failed with error code $?"
 	exit 3
 fi
@@ -106,14 +106,14 @@ cleanup
 
 # Test that the create_base_db.sh script can create a starter tarball.
 # This one runs as root, and ruins the underlying host mount on linux (makes it owned by root)
-outdir="~/tmp/mariadb_testserver/output_${SECONDS}_$$"
+outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
 mkdir -p $outdir
-docker run -t -v "/$outdir://mysqlbase" --rm --entrypoint=//create_base_db.sh $IMAGE
+docker run -t -v "$outdir://mysqlbase" --rm --entrypoint=//create_base_db.sh $IMAGE
 if [ ! -f "$outdir/mariadb_10.1_base_db.tgz" ] ; then
   echo "Failed to build test starter tarball for mariadb."
   exit 4
 fi
-rm -rf $outdir $MYTMPDIR
+rm -rf $outdir ${MYTMPDIR}
 
 echo "Tests passed"
 exit 0
