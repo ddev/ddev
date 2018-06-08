@@ -6,7 +6,7 @@ IMAGE="$1"  # Full image name with tag
 MYSQL_VERSION="$2"
 CONTAINER_NAME="testserver"
 HOSTPORT=33000
-MYTMPDIR=~/tmp/testserver-sh_$$
+MYTMPDIR=~"/tmp/testserver-sh_${SECONDS}_$$"
 
 # Always clean up the container on exit.
 function cleanup {
@@ -106,7 +106,7 @@ cleanup
 
 # Test that the create_base_db.sh script can create a starter tarball.
 # This one runs as root, and ruins the underlying host mount on linux (makes it owned by root)
-outdir=~/tmp/mariadb_testserver/output_$$
+outdir="~/tmp/mariadb_testserver/output_${SECONDS}_$$"
 mkdir -p $outdir
 docker run -t -v "/$outdir://mysqlbase" --rm --entrypoint=//create_base_db.sh $IMAGE
 if [ ! -f "$outdir/mariadb_10.1_base_db.tgz" ] ; then
