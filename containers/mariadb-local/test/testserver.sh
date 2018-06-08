@@ -108,7 +108,7 @@ cleanup
 # This one runs as root, and ruins the underlying host mount on linux (makes it owned by root)
 outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
 mkdir -p $outdir
-docker run -t -v "$outdir://mysqlbase" --rm --entrypoint=//create_base_db.sh $IMAGE
+docker run -t -v "/$outdir://mysqlbase" --rm --entrypoint=//create_base_db.sh $IMAGE
 if [ ! -f "$outdir/mariadb_10.1_base_db.tgz" ] ; then
   echo "Failed to build test starter tarball for mariadb."
   exit 4
