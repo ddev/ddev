@@ -39,7 +39,7 @@ mkdir -p "$MYTMPDIR"
 rm -rf $MYTMPDIR/*
 
 echo "Starting image with database image $IMAGE"
-if ! docker run -u "$(id -u):$(id -g)" -v "/${MYTMPDIR}:/var/lib/mysql" --name="$CONTAINER_NAME" -p "$HOSTPORT:3306" -d $IMAGE; then
+if ! docker run -u "$(id -u):$(id -g)" -v /$MYTMPDIR:/var/lib/mysql --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
 	echo "MySQL server start failed with error code $?"
 	exit 2
 fi
@@ -86,7 +86,7 @@ mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$H
 cleanup
 
 # Run with alternate configuration my.cnf mounted
-if ! docker run -u "$(id -u):$(id -g)" -v "/${MYTMPDIR}:/var/lib/mysql" -v "/${PWD}/test/testdata:/mnt/ddev_config" --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
+if ! docker run -u "$(id -u):$(id -g)" -v /$MYTMPDIR:/var/lib/mysql -v /$PWD/test/testdata:/mnt/ddev_config --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
 	echo "MySQL server start failed with error code $?"
 	exit 3
 fi
@@ -113,7 +113,7 @@ if [ ! -f "$outdir/mariadb_10.1_base_db.tgz" ] ; then
   echo "Failed to build test starter tarball for mariadb."
   exit 4
 fi
-rm -rf $outdir ${MYTMPDIR}
+rm -rf $outdir $MYTMPDIR
 
 echo "Tests passed"
 exit 0
