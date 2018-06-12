@@ -466,14 +466,16 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 
 	makeWritable := []string{path.Dir(app.SiteSettingsPath), app.SiteSettingsPath}
 	for _, o := range makeWritable {
-		if stat, err := os.Stat(o); err != nil {
-			// Warn the user, but don't fail.
+		stat, err := os.Stat(o)
+		if err != nil {
+			// Warn the user, but continue.
 			util.Warning("Unable to set permissions: %v", err)
-		} else {
-			if err := os.Chmod(o, stat.Mode()|writePerms); err != nil {
-				// Warn the user, but don't fail.
-				util.Warning("Unable to set permissions: %v", err)
-			}
+			continue
+		}
+
+		if err := os.Chmod(o, stat.Mode()|writePerms); err != nil {
+			// Warn the user, but continue.
+			util.Warning("Unable to set permissions: %v", err)
 		}
 	}
 
