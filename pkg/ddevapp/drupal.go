@@ -9,6 +9,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 
 	"os"
+	"path"
 	"path/filepath"
 	"text/template"
 )
@@ -424,5 +425,57 @@ func drupal7ConfigOverrideAction(app *DdevApp) error {
 // with php7+
 func drupal6ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = "5.6"
+	return nil
+}
+
+// drupal8PostStartAction handles default post-start actions for D8 apps, like ensuring
+// useful permissions settings on sites/default.
+func drupal8PostStartAction(app *DdevApp) error {
+	if err := drupalEnsureWritePerms(app); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// drupal7PostStartAction handles default post-start actions for D7 apps, like ensuring
+// useful permissions settings on sites/default.
+func drupal7PostStartAction(app *DdevApp) error {
+	if err := drupalEnsureWritePerms(app); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// drupal6PostStartAction handles default post-start actions for D6 apps, like ensuring
+// useful permissions settings on sites/default.
+func drupal6PostStartAction(app *DdevApp) error {
+	if err := drupalEnsureWritePerms(app); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// drupalEnsureWritePerms will ensure sites/default and sites/default/settings.php will
+// have the appropriate permissions for development.
+func drupalEnsureWritePerms(app *DdevApp) error {
+	output.UserOut.Printf("Ensuring write permissions for %s...", app.GetName())
+	var writePerms os.FileMode = 0200
+
+	makeWritable := []string{path.Dir(app.SiteSettingsPath), app.SiteSettingsPath}
+	for _, o := range makeWritable {
+		if stat, err := os.Stat(o); err != nil {
+			// Warn the user, but don't fail.
+			util.Warning("Unable to set permissions: %v", err)
+		} else {
+			if err := os.Chmod(o, stat.Mode()|writePerms); err != nil {
+				// Warn the user, but don't fail.
+				util.Warning("Unable to set permissions: %v", err)
+			}
+		}
+	}
+
 	return nil
 }
