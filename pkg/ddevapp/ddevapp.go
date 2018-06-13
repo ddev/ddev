@@ -581,6 +581,7 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 			util.Success("--- %s exec command succeeded, output below ---", hookName)
 			output.UserOut.Println(stdout + "\n" + stderr)
 		}
+
 		if c.ExecHost != "" {
 			output.UserOut.Printf("--- Running host command: %s ---", c.ExecHost)
 			args := strings.Split(c.ExecHost, " ")
@@ -601,6 +602,23 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 				return fmt.Errorf("%s host command failed: %v %s", hookName, err, out)
 			}
 			util.Success("--- %s host command succeeded ---\n", hookName)
+		}
+
+		if c.RExec != "" {
+			output.UserOut.Printf("--- Running rexec command: %s ---", c.RExec)
+
+			args, err := shellwords.Parse(c.RExec)
+			if err != nil {
+				return fmt.Errorf("%s exec failed: %v", hookName, err)
+			}
+
+			stdout, stderr, err := app.ExecRoot("web", args...)
+			if err != nil {
+				return fmt.Errorf("%s rexec failed: %v, stderr='%s'", hookName, err, stderr)
+			}
+
+			util.Success("--- %s rexec command succeeded, output below ---", hookName)
+			output.UserOut.Println(stdout + "\n" + stderr)
 		}
 	}
 
@@ -667,14 +685,31 @@ func (app *DdevApp) Start() error {
 func (app *DdevApp) Exec(service string, cmd ...string) (string, string, error) {
 	app.DockerEnv()
 
-	exec := []string{"exec", "-T", service}
-	exec = append(exec, cmd...)
+	ex := []string{"exec", "-T", service}
+	ex = append(ex, cmd...)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
 		return "", "", err
 	}
-	return dockerutil.ComposeCmd(files, exec...)
+
+	return dockerutil.ComposeCmd(files, ex...)
+}
+
+// ExecRoot executes a given comment as root in the container of given type without allocating a pty
+// Returns ComposeCmd results of stdout, stderr, err
+func (app *DdevApp) ExecRoot(service string, cmd ...string) (string, string, error) {
+	app.DockerEnv()
+
+	ex := []string{"exec", "-uroot", "-T", service}
+	ex = append(ex, cmd...)
+
+	files, err := app.ComposeFiles()
+	if err != nil {
+		return "", "", err
+	}
+
+	return dockerutil.ComposeCmd(files, ex...)
 }
 
 // ExecWithTty executes a given command in the container of given type.

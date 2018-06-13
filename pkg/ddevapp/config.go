@@ -11,6 +11,8 @@ import (
 
 	"regexp"
 
+	"runtime"
+
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -19,7 +21,6 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
-	"runtime"
 )
 
 // DefaultProviderName contains the name of the default provider which will be used if one is not otherwise specified.
@@ -41,6 +42,7 @@ var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-z
 type Command struct {
 	Exec     string `yaml:"exec,omitempty"`
 	ExecHost string `yaml:"exec-host,omitempty"`
+	RExec    string `yaml:"rexec"`
 }
 
 // Provider is the interface which all provider plugins must implement.
@@ -589,6 +591,7 @@ func validateCommandYaml(source []byte) error {
 	validTasks := []string{
 		"exec",
 		"exec-host",
+		"rexec",
 	}
 
 	type Validate struct {
