@@ -17,6 +17,11 @@ func TestDevExecBadArgs(t *testing.T) {
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Usage:")
+
+	args = []string{"exec", "--root"}
+	out, err = exec.RunCommand(DdevBin, args)
+	assert.Error(err)
+	assert.Contains(string(out), "Usage:")
 }
 
 // TestDevExec run `ddev exec pwd` with proper args
@@ -32,6 +37,16 @@ func TestDevExec(t *testing.T) {
 		assert.Contains(string(out), "/var/www/html")
 
 		args = []string{"-s", "db", "exec", "pwd"}
+		out, err = exec.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		assert.Contains(string(out), "/")
+
+		args = []string{"exec", "--root", "pwd"}
+		out, err = exec.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		assert.Contains(string(out), "/")
+		d
+		args = []string{"exec", "-R", "pwd"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.Contains(string(out), "/")
