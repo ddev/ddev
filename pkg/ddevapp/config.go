@@ -41,8 +41,8 @@ var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-z
 // Command defines commands to be run as pre/post hooks
 type Command struct {
 	Exec     string `yaml:"exec,omitempty"`
-	ExecHost string `yaml:"exec-host,omitempty"`
 	RExec    string `yaml:"rexec"`
+	ExecHost string `yaml:"exec-host,omitempty"`
 }
 
 // Provider is the interface which all provider plugins must implement.
