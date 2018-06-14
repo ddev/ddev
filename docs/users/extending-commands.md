@@ -12,7 +12,7 @@ Example:
 hooks:
   post-start:
     - exec: "simple command expression"
-    - rexec: "simple command expression"
+    - exec-root: "simple command expression"
     - exec-host: "simple command expression"
   post-import-db:
     - exec-host: "drush uli"
@@ -54,7 +54,7 @@ hooks:
     - exec: "wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.local"
 ```
 
-### `rexec`: Execute a shell command in the web service container as root.
+### `exec-root`: Execute a shell command in the web service container as root.
 
 Value: string providing the command to run as root. Commands requiring user interaction are not supported.
 
@@ -65,8 +65,8 @@ _Use apt to install the php-sqlite3 package_
 ```
 hooks:
   post-start:
-    - rexec: "apt-get update"
-    - rexec: "apt-get install -y php-sqlite3"
+    - exec-root: "apt-get update"
+    - exec-root: "apt-get install -y php-sqlite3"
 ```
 
 

@@ -604,20 +604,20 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 			util.Success("--- %s host command succeeded ---\n", hookName)
 		}
 
-		if c.RExec != "" {
-			output.UserOut.Printf("--- Running rexec command: %s ---", c.RExec)
+		if c.ExecRoot != "" {
+			output.UserOut.Printf("--- Running exec-root command: %s ---", c.ExecRoot)
 
-			args, err := shellwords.Parse(c.RExec)
+			args, err := shellwords.Parse(c.ExecRoot)
 			if err != nil {
-				return fmt.Errorf("%s exec failed: %v", hookName, err)
+				return fmt.Errorf("%s exec-root failed: %v", hookName, err)
 			}
 
 			stdout, stderr, err := app.ExecRoot("web", args...)
 			if err != nil {
-				return fmt.Errorf("%s rexec failed: %v, stderr='%s'", hookName, err, stderr)
+				return fmt.Errorf("%s exec-root failed: %v, stderr='%s'", hookName, err, stderr)
 			}
 
-			util.Success("--- %s rexec command succeeded, output below ---", hookName)
+			util.Success("--- %s exec-root command succeeded, output below ---", hookName)
 			output.UserOut.Println(stdout + "\n" + stderr)
 		}
 	}

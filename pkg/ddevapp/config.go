@@ -41,7 +41,7 @@ var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-z
 // Command defines commands to be run as pre/post hooks
 type Command struct {
 	Exec     string `yaml:"exec,omitempty"`
-	RExec    string `yaml:"rexec"`
+	ExecRoot string `yaml:"exec-root"`
 	ExecHost string `yaml:"exec-host,omitempty"`
 }
 
@@ -590,8 +590,8 @@ func validateCommandYaml(source []byte) error {
 
 	validTasks := []string{
 		"exec",
+		"exec-root",
 		"exec-host",
-		"rexec",
 	}
 
 	type Validate struct {
