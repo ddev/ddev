@@ -382,7 +382,9 @@ ddev provides several commands to facilitate interacting with your project in th
 ### Executing Commands in Containers
 The `ddev exec` command allows you to run shell commands in the container for a ddev service. By default, commands are executed on the web service container, in the docroot path of your project. This allows you to use [the developer tools included in the web container](developer-tools.md). For example, to run the Drush CLI in the web container, you would run `ddev exec drush status`.
 
-To run a shell command in the container for a different service, use the `--service` flag at the beginning of your exec command to specify the service the command should be run against. For example, to run the mysql client in the database, container, you would run `ddev exec --service db mysql`.
+To run a shell command in the container for a different service, use the `--service` flag at the beginning of your exec command to specify the service the command should be run against. For example, to run the mysql client in the database container, you would run `ddev exec --service db mysql`.
+
+To run a shell command as root in the container, use the `--root` flag at the beginning of your exec command. For example, to run the apt-get update command, which requires root privileges, you would run `ddev exec --root apt-get update`.
 
 Commands can also be executed using the shorter `ddev . <cmd>` alias.
 

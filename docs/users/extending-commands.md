@@ -12,8 +12,8 @@ Example:
 hooks:
   post-start:
     - exec: "simple command expression"
-    - exec-host: "simple command expression"
     - rexec: "simple command expression"
+    - exec-host: "simple command expression"
   post-import-db:
     - exec-host: "drush uli"
 ```
