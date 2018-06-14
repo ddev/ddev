@@ -41,15 +41,15 @@ func TestDevExec(t *testing.T) {
 		assert.NoError(err)
 		assert.Contains(string(out), "/")
 
-		args = []string{"exec", "--root", "pwd"}
+		args = []string{"exec", "--root", "whoami"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		assert.Contains(string(out), "/")
-		d
-		args = []string{"exec", "-R", "pwd"}
+		assert.EqualValues(string(out), "root")
+
+		args = []string{"exec", "-R", "whoami"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		assert.Contains(string(out), "/")
+		assert.EqualValues(string(out), "root")
 
 		cleanup()
 	}
