@@ -44,12 +44,12 @@ func TestDevExec(t *testing.T) {
 		args = []string{"exec", "--root", "whoami"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		assert.EqualValues(string(out), "root")
+		assert.Contains(string(out), "root")
 
 		args = []string{"exec", "-R", "whoami"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		assert.EqualValues(string(out), "root")
+		assert.Contains(string(out), "root")
 
 		cleanup()
 	}
