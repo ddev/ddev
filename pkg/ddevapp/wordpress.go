@@ -206,6 +206,10 @@ func isWordpressApp(app *DdevApp) bool {
 	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp-login.php")); err == nil {
 		return true
 	}
+	// TODO: Add wildcard to make more flexible, ie wordpress/
+	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp/wp-login.php")); err == nil {
+		return true
+	}
 	return false
 }
 
