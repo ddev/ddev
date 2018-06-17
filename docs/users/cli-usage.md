@@ -117,12 +117,23 @@ Your project can be reached at: http://my-drupal8-site.ddev.local
 
 To get started using ddev with a TYPO3 project, clone the project's repository and checkout its directory.
 
+**Git Clone Example**
+
 ```
 git clone https://github.com/example-user/example-typo3-site
 cd example-typo3-site
 ```
 
 If necessary, run build steps that you may require, like `composer install` in the correct directory.
+
+**Composer Setup Example**
+
+```
+composer create-project typo3/cms-base-distribution my-typo3-site ^9
+cd my-typo3-site
+```
+
+_Find more information [on composer and how to use it](https://composer.typo3.org)._
 
 From here we can start setting up ddev. In your project's working directory, enter the command:
 
