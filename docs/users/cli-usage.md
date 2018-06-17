@@ -181,6 +181,18 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 Successfully started example-backdrop-site
 Your application can be reached at: http://example-backdrop-site.ddev.local
 ```
+### Digital Ocean Quickstart
+Get started with DDEV on digital ocean, this guide will walk you through on how to set DDEV on live server
+
+Visit [Digital ocean](https://cloud.digitalocean.com/login) to login
+
+Click on create droplet
+
+Digital ocean has one click app feature, where it will preintall docker 17.12 on your droplet, simply go to one-click app and 
+select docker 17.12
+
+[Install docker-compose](https://docs.docker.com/compose/install/#install-compose) and make sure you follow [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
+
 
 ### Database Imports
 
