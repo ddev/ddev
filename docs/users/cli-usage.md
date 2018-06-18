@@ -129,7 +129,7 @@ If necessary, run build steps that you may require, like `composer install` in t
 **Composer Setup Example**
 
 ```
-composer create-project typo3/cms-base-distribution my-typo3-site ^9
+composer create-project typo3/cms-base-distribution my-typo3-site ^8
 cd my-typo3-site
 ```
 
