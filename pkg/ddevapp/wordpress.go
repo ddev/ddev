@@ -1,8 +1,10 @@
 package ddevapp
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"fmt"
@@ -87,46 +89,77 @@ const (
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
+// Include local settings if it exists.
+$docroot = getenv('NGINX_DOCROOT');
+if (file_exists($docroot . '/wp-config-ddev.php')) {
+	require_once $docroot . '/wp-config-ddev.php';
+}
+
 // ** MySQL settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
-define('DB_NAME', '{{ $config.DatabaseName }}');
+if (!defined('DB_NAME'))
+	define( 'DB_NAME', '{{ $config.DatabaseName }}' );
 
 /** MySQL database username */
-define('DB_USER', '{{ $config.DatabaseUsername }}');
+if (!defined('DB_USER'))
+	define( 'DB_USER', '{{ $config.DatabaseUsername }}' );
 
 /** MySQL database password */
-define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
+if (!defined('DB_PASSWORD'))
+	define( 'DB_PASSWORD', '{{ $config.DatabasePassword }}' );
 
 /** MySQL hostname */
-define('DB_HOST', '{{ $config.DatabaseHost }}');
+if (!defined('DB_PASSWORD'))
+ 	define( 'DB_HOST', '{{ $config.DatabaseHost }}' );
 
 /** Database Charset to use in creating database tables. */
-define('DB_CHARSET', 'utf8mb4');
+define( 'DB_CHARSET', 'utf8mb4' );
 
 /** The Database Collate type. Don't change this if in doubt. */
-define('DB_COLLATE', '');
+define( 'DB_COLLATE', '' );
 
 /**
  * WordPress Database Table prefix.
  */
-$table_prefix  = '{{ $config.TablePrefix }}';
+if($table_prefix == null)
+	$table_prefix  = '{{ $config.TablePrefix }}';
 
 /**
  * For developers: WordPress debugging mode.
  */
-define('WP_DEBUG', false);
+ if (!defined('WP_DEBUG'))
+	define('WP_DEBUG', false);
 
 /**#@+
  * Authentication Unique Keys and Salts.
  */
-define( 'AUTH_KEY',         '{{ $config.AuthKey }}' );
-define( 'SECURE_AUTH_KEY',  '{{ $config.SecureAuthKey }}' );
-define( 'LOGGED_IN_KEY',    '{{ $config.LoggedInKey }}' );
-define( 'NONCE_KEY',        '{{ $config.NonceKey }}' );
-define( 'AUTH_SALT',        '{{ $config.AuthSalt }}' );
-define( 'SECURE_AUTH_SALT', '{{ $config.SecureAuthSalt }}' );
-define( 'LOGGED_IN_SALT',   '{{ $config.LoggedInSalt }}' );
-define( 'NONCE_SALT',       '{{ $config.NonceSalt }}' );
+if ( !defined('AUTH_KEY') )
+	define( 'AUTH_KEY',         	'{{ $config.AuthKey }}' );
+
+if ( !defined('SECURE_AUTH_KEY') )
+	define( 'SECURE_AUTH_KEY',  	'{{ $config.SecureAuthKey }}' );
+
+if ( !defined('LOGGED_IN_KEY') )
+	define( 'LOGGED_IN_KEY',    	'{{ $config.LoggedInKey }}' );
+
+if ( !defined('NONCE_KEY') )
+	define( 'NONCE_KEY',        	'{{ $config.NonceKey }}' );
+
+if ( !defined('AUTH_SALT') )
+	define( 'AUTH_SALT',        	'{{ $config.AuthSalt }}' );
+
+if ( !defined('SECURE_AUTH_SALT') )
+	define( 'SECURE_AUTH_SALT', 	'{{ $config.SecureAuthSalt }}' );
+
+if ( !defined('LOGGED_IN_SALT') )
+	define( 'LOGGED_IN_SALT',   	'{{ $config.LoggedInSalt }}' );
+
+if ( !defined('NONCE_SALT') )
+	define( 'NONCE_SALT',       	'{{ $config.NonceSalt }}' );
+
+/** site URL */
+if ( !defined('WP_HOME') )
+	define('WP_HOME', '{{ $config.DeployURL }}');
 
 /* That's all, stop editing! Happy blogging. */
 
@@ -146,24 +179,85 @@ if (basename(__FILE__) == "wp-config.php") {
 `
 )
 
+const (
+	wordpressTemplateSimple = `<?php
+{{ $config := . }}
+/**
+ {{ $config.Signature }}: Automatically generated WordPress wp-config.php file.
+ ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ */
+
+// ** MySQL settings - You can get this info from your web host ** //
+/** The name of the database for WordPress */
+if (!defined('DB_NAME'))
+	define( 'DB_NAME', '{{ $config.DatabaseName }}' );
+
+/** MySQL database username */
+if (!defined('DB_USER'))
+	define( 'DB_USER', '{{ $config.DatabaseUsername }}' );
+
+/** MySQL database password */
+if (!defined('DB_PASSWORD'))
+	define( 'DB_PASSWORD', '{{ $config.DatabasePassword }}' );
+
+/** MySQL hostname */
+if (!defined('DB_PASSWORD'))
+	 define( 'DB_HOST', '{{ $config.DatabaseHost }}' );
+	 
+/** site URL */
+if ( !defined('WP_HOME') )
+	define('WP_HOME', '{{ $config.DeployURL }}');
+`
+)
+
+const (
+	settingsHelpText = `
+	// Include local settings if it exists.
+	if (file_exists(getenv('NGINX_DOCROOT') . '/wp-config-ddev.php')) {
+		require_once getenv('NGINX_DOCROOT') . '/wp-config-ddev.php';
+	}
+	`
+)
+
+var wptmpl string
+
 // createWordpressSettingsFile creates a wordpress settings file from a
 // template. Returns fullpath to location of file + err
 func createWordpressSettingsFile(app *DdevApp) (string, error) {
-	settingsFilePath := app.SiteSettingsPath
-	if settingsFilePath == "" {
-		settingsFilePath = app.SiteLocalSettingsPath
+	settingsFilePath, err := app.DetermineSettingsPathLocation()
+
+	if err != nil {
+		return "", fmt.Errorf("Failed to get WordPress settings file path: %v", err.Error())
 	}
 	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
+
+	if strings.Contains(filepath.Base(settingsFilePath), "wp-config-ddev.php") {
+		output.UserOut.Printf("Looks like you are maintaining a wp-config.php as part of your repo. To get DDEV to connect to the DB add the below snippet to your wp-config.php at the very top of your config. \n %s \n You will also want to add wp-config-ddev.php to your .gitignore", settingsHelpText)
+	} else {
+		output.UserOut.Printf("")
+	}
+
 	wpConfig := NewWordpressConfig()
 	wpConfig.DeployURL = app.GetHTTPURL()
-	err := WriteWordpressConfig(wpConfig, settingsFilePath)
-	return settingsFilePath, err
+	err = WriteWordpressConfig(wpConfig, settingsFilePath)
+	if err != nil {
+		return settingsFilePath, fmt.Errorf("Failed to write WordPress settings file: %v", err.Error())
+	}
+
+	return settingsFilePath, nil
 }
 
 // WriteWordpressConfig dynamically produces valid wp-config.php file by combining a configuration
 // object with a data-driven template.
 func WriteWordpressConfig(wordpressConfig *WordpressConfig, filePath string) error {
-	tmpl, err := template.New("wordpressConfig").Funcs(sprig.TxtFuncMap()).Parse(wordpressTemplate)
+
+	if strings.Contains(filepath.Base(filePath), "wp-config.php") {
+		wptmpl = wordpressTemplate
+	} else {
+		wptmpl = wordpressTemplateSimple
+	}
+
+	tmpl, err := template.New("wordpressConfig").Funcs(sprig.TxtFuncMap()).Parse(wptmpl)
 	if err != nil {
 		return err
 	}
@@ -196,7 +290,7 @@ func setWordpressSiteSettingsPaths(app *DdevApp) {
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	var settingsFilePath, localSettingsFilePath string
 	settingsFilePath = filepath.Join(settingsFileBasePath, "wp-config.php")
-	localSettingsFilePath = filepath.Join(settingsFileBasePath, "wp-config-local.php")
+	localSettingsFilePath = filepath.Join(settingsFileBasePath, "wp-config-ddev.php")
 	app.SiteSettingsPath = settingsFilePath
 	app.SiteLocalSettingsPath = localSettingsFilePath
 }
@@ -206,7 +300,7 @@ func isWordpressApp(app *DdevApp) bool {
 	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp-login.php")); err == nil {
 		return true
 	}
-	// TODO: Add wildcard to make more flexible, ie wordpress/
+	// TODO: Add wildcard or ENV var to make more flexible, ie wordpress/
 	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp/wp-login.php")); err == nil {
 		return true
 	}
