@@ -121,7 +121,7 @@ define( 'DB_COLLATE', '' );
 /**
  * WordPress Database Table prefix.
  */
-if($table_prefix == null)
+if(!isset($table_prefix))
 	$table_prefix  = '{{ $config.TablePrefix }}';
 
 /**
@@ -160,6 +160,9 @@ if ( !defined('NONCE_SALT') )
 /** site URL */
 if ( !defined('WP_HOME') )
 	define('WP_HOME', '{{ $config.DeployURL }}');
+
+/** WP_ENV */
+define('WP_ENV', getenv('DDEV_ENV_NAME') ? getenv('DDEV_ENV_NAME') : 'production');
 
 /* That's all, stop editing! Happy blogging. */
 
@@ -207,6 +210,10 @@ if (!defined('DB_HOST'))
 /** site URL */
 if ( !defined('WP_HOME') )
 	define('WP_HOME', '{{ $config.DeployURL }}');
+
+/** WP_ENV */
+define('WP_ENV', getenv('DDEV_ENV_NAME') ? getenv('DDEV_ENV_NAME') : 'production');
+
 `
 )
 
