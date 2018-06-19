@@ -109,7 +109,7 @@ if (!defined('DB_PASSWORD'))
 	define( 'DB_PASSWORD', '{{ $config.DatabasePassword }}' );
 
 /** MySQL hostname */
-if (!defined('DB_PASSWORD'))
+if (!defined('DB_HOST'))
  	define( 'DB_HOST', '{{ $config.DatabaseHost }}' );
 
 /** Database Charset to use in creating database tables. */
@@ -201,7 +201,7 @@ if (!defined('DB_PASSWORD'))
 	define( 'DB_PASSWORD', '{{ $config.DatabasePassword }}' );
 
 /** MySQL hostname */
-if (!defined('DB_PASSWORD'))
+if (!defined('DB_HOST'))
 	 define( 'DB_HOST', '{{ $config.DatabaseHost }}' );
 	 
 /** site URL */
