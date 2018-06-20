@@ -41,6 +41,7 @@ hooks:
   post-import-db:
     - exec: "drush cc all"
     - exec: "drush uli"
+    - exec: "sudo mkdir /hello"
 ```
 
 Example:
