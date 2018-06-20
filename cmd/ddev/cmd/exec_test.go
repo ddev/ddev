@@ -36,6 +36,11 @@ func TestDevExec(t *testing.T) {
 		assert.NoError(err)
 		assert.Contains(string(out), "/")
 
+		args = []string{"sudo", "whoami"}
+		out, err = exec.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		assert.Contains(string(out), "root")
+
 		cleanup()
 	}
 }
