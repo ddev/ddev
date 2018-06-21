@@ -17,7 +17,7 @@ var DdevShellCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
-			util.Failed("Failed to ssh: %v", err)
+			util.Failed("Failed to open shell: %v", err)
 		}
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteNotFound) {
@@ -33,7 +33,7 @@ var DdevShellCmd = &cobra.Command{
 		err = app.ExecWithTty(serviceType, "bash")
 
 		if err != nil {
-			util.Failed("Failed to ssh %s: %s", app.GetName(), err)
+			util.Failed("Failed to open shell in %s: %s", app.GetName(), err)
 		}
 	},
 }
