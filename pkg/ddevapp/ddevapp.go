@@ -654,6 +654,11 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	err = app.PostStartAction()
+	if err != nil {
+		return err
+	}
+
 	err = app.ProcessHooks("post-start")
 	if err != nil {
 		return err

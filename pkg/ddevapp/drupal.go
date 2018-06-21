@@ -9,6 +9,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 
 	"os"
+	"path"
 	"path/filepath"
 	"text/template"
 )
@@ -89,8 +90,10 @@ $settings['file_scan_ignore_directories'] = [
   'bower_components',
 ];
 
+// This will prevent Drupal from setting read-only permissions on sites/default.
+$settings['skip_permissions_hardening'] = TRUE;
 
-// This is super ugly but it determines whether or not drush should include a custom settings file which allows
+// This determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
 if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
   include __DIR__ . '../../../drush.settings.php';
@@ -123,7 +126,7 @@ ini_set('session.cookie_lifetime', 2000000);
 
 $drupal_hash_salt = '{{ $config.HashSalt }}';
 
-// This is super ugly but it determines whether or not drush should include a custom settings file which allows
+// This determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
 if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
   include __DIR__ . '../../../drush.settings.php';
@@ -422,5 +425,59 @@ func drupal7ConfigOverrideAction(app *DdevApp) error {
 // with php7+
 func drupal6ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = "5.6"
+	return nil
+}
+
+// drupal8PostStartAction handles default post-start actions for D8 apps, like ensuring
+// useful permissions settings on sites/default.
+func drupal8PostStartAction(app *DdevApp) error {
+	if err := drupalEnsureWritePerms(app); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// drupal7PostStartAction handles default post-start actions for D7 apps, like ensuring
+// useful permissions settings on sites/default.
+func drupal7PostStartAction(app *DdevApp) error {
+	if err := drupalEnsureWritePerms(app); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// drupal6PostStartAction handles default post-start actions for D6 apps, like ensuring
+// useful permissions settings on sites/default.
+func drupal6PostStartAction(app *DdevApp) error {
+	if err := drupalEnsureWritePerms(app); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// drupalEnsureWritePerms will ensure sites/default and sites/default/settings.php will
+// have the appropriate permissions for development.
+func drupalEnsureWritePerms(app *DdevApp) error {
+	output.UserOut.Printf("Ensuring write permissions for %s...", app.GetName())
+	var writePerms os.FileMode = 0200
+
+	makeWritable := []string{path.Dir(app.SiteSettingsPath), app.SiteSettingsPath}
+	for _, o := range makeWritable {
+		stat, err := os.Stat(o)
+		if err != nil {
+			// Warn the user, but continue.
+			util.Warning("Unable to set permissions: %v", err)
+			continue
+		}
+
+		if err := os.Chmod(o, stat.Mode()|writePerms); err != nil {
+			// Warn the user, but continue.
+			util.Warning("Unable to set permissions: %v", err)
+		}
+	}
+
 	return nil
 }

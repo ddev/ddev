@@ -2,9 +2,10 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
+
+	"github.com/drud/ddev/pkg/util"
 )
 
 type settingsCreator func(*DdevApp) (string, error)
@@ -30,6 +31,9 @@ type configOverrideAction func(app *DdevApp) error
 // postConfigAction allows actions to take place at the end of ddev config
 type postConfigAction func(app *DdevApp) error
 
+// postStartAction allows actions to take place at the end of ddev start
+type postStartAction func(app *DdevApp) error
+
 // AppTypeFuncs struct defines the functions that can be called (if populated)
 // for a given appType.
 type AppTypeFuncs struct {
@@ -41,6 +45,7 @@ type AppTypeFuncs struct {
 	postImportDBAction
 	configOverrideAction
 	postConfigAction
+	postStartAction
 }
 
 // appTypeMatrix is a static map that defines the various functions to be called
@@ -52,22 +57,22 @@ func init() {
 	appTypeMatrix = map[string]AppTypeFuncs{
 		"php": {},
 		"drupal6": {
-			createDrupal6SettingsFile, getDrupalUploadDir, getDrupal6Hooks, setDrupalSiteSettingsPaths, isDrupal6App, nil, drupal6ConfigOverrideAction, nil,
+			createDrupal6SettingsFile, getDrupalUploadDir, getDrupal6Hooks, setDrupalSiteSettingsPaths, isDrupal6App, nil, drupal6ConfigOverrideAction, nil, drupal6PostStartAction,
 		},
 		"drupal7": {
-			createDrupal7SettingsFile, getDrupalUploadDir, getDrupal7Hooks, setDrupalSiteSettingsPaths, isDrupal7App, nil, drupal7ConfigOverrideAction, nil,
+			createDrupal7SettingsFile, getDrupalUploadDir, getDrupal7Hooks, setDrupalSiteSettingsPaths, isDrupal7App, nil, drupal7ConfigOverrideAction, nil, drupal7PostStartAction,
 		},
 		"drupal8": {
-			createDrupal8SettingsFile, getDrupalUploadDir, getDrupal8Hooks, setDrupalSiteSettingsPaths, isDrupal8App, nil, nil, nil,
+			createDrupal8SettingsFile, getDrupalUploadDir, getDrupal8Hooks, setDrupalSiteSettingsPaths, isDrupal8App, nil, nil, nil, drupal8PostStartAction,
 		},
 		"wordpress": {
-			createWordpressSettingsFile, getWordpressUploadDir, getWordpressHooks, setWordpressSiteSettingsPaths, isWordpressApp, wordpressPostImportDBAction, nil, nil,
+			createWordpressSettingsFile, getWordpressUploadDir, getWordpressHooks, setWordpressSiteSettingsPaths, isWordpressApp, wordpressPostImportDBAction, nil, nil, nil,
 		},
 		"typo3": {
-			createTypo3SettingsFile, getTypo3UploadDir, getTypo3Hooks, setTypo3SiteSettingsPaths, isTypo3App, nil, nil, nil,
+			createTypo3SettingsFile, getTypo3UploadDir, getTypo3Hooks, setTypo3SiteSettingsPaths, isTypo3App, nil, nil, nil, nil,
 		},
 		"backdrop": {
-			createBackdropSettingsFile, getBackdropUploadDir, getBackdropHooks, setBackdropSiteSettingsPaths, isBackdropApp, backdropPostImportDBAction, nil, nil,
+			createBackdropSettingsFile, getBackdropUploadDir, getBackdropHooks, setBackdropSiteSettingsPaths, isBackdropApp, backdropPostImportDBAction, nil, nil, nil,
 		},
 	}
 }
@@ -197,6 +202,16 @@ func (app *DdevApp) ConfigFileOverrideAction() error {
 func (app *DdevApp) PostConfigAction() error {
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.postConfigAction != nil {
 		return appFuncs.postConfigAction(app)
+	}
+
+	return nil
+}
+
+// PostStartAction gives a chance for an apptype to do something after the app
+// has been started.
+func (app *DdevApp) PostStartAction() error {
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.postStartAction != nil {
+		return appFuncs.postStartAction(app)
 	}
 
 	return nil
