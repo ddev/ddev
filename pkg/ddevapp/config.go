@@ -58,7 +58,6 @@ type Provider interface {
 func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	// Set defaults.
 	app := &DdevApp{}
-	app.ConfigPath = filepath.Join(AppRoot, ".ddev", "config.yaml")
 
 	app.AppRoot = AppRoot
 	app.ConfigPath = app.GetConfigPath("config.yaml")
