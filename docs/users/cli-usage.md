@@ -395,6 +395,8 @@ The `ddev exec` command allows you to run shell commands in the container for a 
 
 To run a shell command in the container for a different service, use the `--service` flag at the beginning of your exec command to specify the service the command should be run against. For example, to run the mysql client in the database, container, you would run `ddev exec --service db mysql`.
 
+To run privileged commands, sudo can be passed into `ddev exec`. For example, to update the container's apt package lists, use `ddev exec sudo apt-get update`.
+
 Commands can also be executed using the shorter `ddev . <cmd>` alias.
 
 ### SSH Into Containers
