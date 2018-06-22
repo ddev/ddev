@@ -10,10 +10,10 @@ import (
 
 // DdevShellCmd represents the shell command.
 var DdevShellCmd = &cobra.Command{
-	Use:   "shell",
-	Aliases:[]string{"ssh"},
-	Short: "Starts a shell session in the container for a service. Uses web service by default.",
-	Long:  `Starts a shell session in the container for a service. Uses web service by default. To start a shell session for another service, run "ddev shell --service <service>`,
+	Use:     "shell",
+	Aliases: []string{"ssh"},
+	Short:   "Starts a shell session in the container for a service. Uses web service by default.",
+	Long:    `Starts a shell session in the container for a service. Uses web service by default. To start a shell session for another service, run "ddev shell --service <service>`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
