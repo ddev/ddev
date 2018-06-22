@@ -41,7 +41,9 @@ hooks:
   post-import-db:
     - exec: "drush cc all"
     - exec: "drush uli"
-    - exec: "sudo mkdir /hello"
+  post-start:
+    - exec: "sudo apt-get update"
+    - exec: "sudo apt-get install -y ghostscript sqlite3 php7.2-sqlite3"
 ```
 
 Example:
