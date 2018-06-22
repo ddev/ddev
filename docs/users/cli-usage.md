@@ -397,14 +397,14 @@ To run a shell command in the container for a different service, use the `--serv
 
 Commands can also be executed using the shorter `ddev . <cmd>` alias.
 
-### SSH Into Containers
-The `ddev ssh` command will open an interactive bash shell session to the container for a ddev service. The web service is connected to by default. The session can be ended by typing `exit`. To connect to another service, use the `--service` flag to specify the service you want to connect to. For example, to connect to the database container, you would run `ddev ssh --service db`.
+### Open shell in containers
+The `ddev shell` command will open an interactive bash shell session to the container for a ddev service. The web service is connected to by default. The session can be ended by typing `exit`. To connect to another service, use the `--service` flag to specify the service you want to connect to. For example, to connect to the database container, you would run `ddev ssh --service db`.
 
 ### Log Access
 
 The `ddev logs` command allows you to easily retrieve error logs from the web container (both nginx and php-fpm logs are concatenated). To follow the log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail.
 
-To manually review additional log files use the `ddev ssh` command and review logs in /var/log and /var/log/nginx. The web server stores access logs at `/var/log/nginx/access.log`, and PHP-FPM logs at `/var/log/php-fpm.log`.
+To manually review additional log files use the `ddev shell` command and review logs in /var/log and /var/log/nginx. The web server stores access logs at `/var/log/nginx/access.log`, and PHP-FPM logs at `/var/log/php-fpm.log`.
 
 ## Removing a project
 

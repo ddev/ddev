@@ -9,7 +9,7 @@ We have included several useful developer tools in our containers. Run `ddev des
 - [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 - [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations.
 
-These tools can be accessed for single commands using [`ddev exec <command>`](cli-usage.md#executing-commands-in-containers) or [`ddev ssh`](cli-usage.md#ssh-into-containers) for an interactive bash session.
+These tools can be accessed for single commands using [`ddev exec <command>`](cli-usage.md#executing-commands-in-containers) or [`ddev shell`](cli-usage.md#open-shell-in-containers) for an interactive bash session.
 
 ### Email Capture and Review
 
