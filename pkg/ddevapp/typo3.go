@@ -25,7 +25,17 @@ $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge($GLOBA
                     'password' => 'db',
                     'port' => '3306',
                     'user' => 'db',
-]);`
+]);
+
+// This mail configuration sends all emails to mailhog
+$GLOBALS['TYPO3_CONF_VARS']['MAIL'] = [
+    'transport' => 'smtp',
+    'transport_smtp_server' => 'localhost:1025',
+];
+
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['devIPmask'] = '*';
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['displayErrors'] = 1;
+`
 
 // createTypo3SettingsFile creates the app's LocalConfiguration.php and
 // AdditionalConfiguration.php, adding things like database host, name, and
@@ -122,4 +132,10 @@ func isTypo3App(app *DdevApp) bool {
 		return true
 	}
 	return false
+}
+
+// typo3ConfigOverrideAction sets a safe php_version for TYPO3
+func typo3ConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = "7.2"
+	return nil
 }
