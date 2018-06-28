@@ -115,7 +115,7 @@ if (!defined('DB_HOST'))
 /** Database Charset to use in creating database tables. */
 define( 'DB_CHARSET', 'utf8mb4' );
 
-/** The Database Collate type. Don't change this if in doubt. */
+/** The Database Collate type. */
 define( 'DB_COLLATE', '' );
 
 /**
@@ -183,7 +183,7 @@ if (basename(__FILE__) == "wp-config.php") {
 )
 
 const (
-	wordpressTemplateSimple = `<?php
+	wordpressTemplateDDEV = `<?php
 {{ $config := . }}
 /**
  {{ $config.Signature }}: Automatically generated WordPress wp-config.php file.
@@ -219,7 +219,7 @@ define('WP_ENV', getenv('DDEV_ENV_NAME') ? getenv('DDEV_ENV_NAME') : 'production
 
 const (
 	settingsHelpText = `
-	// Include local settings if it exists.
+	// Include ddev settings if it exists.
 	if (file_exists(getenv('NGINX_DOCROOT') . '/wp-config-ddev.php')) {
 		require_once getenv('NGINX_DOCROOT') . '/wp-config-ddev.php';
 	}
@@ -240,8 +240,6 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 
 	if strings.Contains(filepath.Base(settingsFilePath), "wp-config-ddev.php") {
 		output.UserOut.Printf("Looks like you are maintaining a wp-config.php as part of your repo. To get DDEV to connect to the DB add the below snippet to your wp-config.php at the very top of your config. \n %s \n You will also want to add wp-config-ddev.php to your .gitignore", settingsHelpText)
-	} else {
-		output.UserOut.Printf("")
 	}
 
 	wpConfig := NewWordpressConfig()
@@ -261,7 +259,7 @@ func WriteWordpressConfig(wordpressConfig *WordpressConfig, filePath string) err
 	if strings.Contains(filepath.Base(filePath), "wp-config.php") {
 		wptmpl = wordpressTemplate
 	} else {
-		wptmpl = wordpressTemplateSimple
+		wptmpl = wordpressTemplateDDEV
 	}
 
 	tmpl, err := template.New("wordpressConfig").Funcs(sprig.TxtFuncMap()).Parse(wptmpl)
@@ -295,11 +293,11 @@ func WriteWordpressConfig(wordpressConfig *WordpressConfig, filePath string) err
 // a wordpress site.
 func setWordpressSiteSettingsPaths(app *DdevApp) {
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
-	var settingsFilePath, localSettingsFilePath string
+	var settingsFilePath, ddevSettingsFilePath string
 	settingsFilePath = filepath.Join(settingsFileBasePath, "wp-config.php")
-	localSettingsFilePath = filepath.Join(settingsFileBasePath, "wp-config-ddev.php")
+	ddevSettingsFilePath = filepath.Join(settingsFileBasePath, "wp-config-ddev.php")
 	app.SiteSettingsPath = settingsFilePath
-	app.SiteLocalSettingsPath = localSettingsFilePath
+	app.SiteLocalSettingsPath = ddevSettingsFilePath
 }
 
 // isWordpressApp returns true if the app of of type wordpress
@@ -307,6 +305,7 @@ func isWordpressApp(app *DdevApp) bool {
 	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp-login.php")); err == nil {
 		return true
 	}
+	// check for WP installed in a sub-directory
 	// TODO: Add wildcard or ENV var to make more flexible, ie wordpress/
 	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp/wp-login.php")); err == nil {
 		return true
