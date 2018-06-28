@@ -1,16 +1,21 @@
 ## `ddev` Release Checklist 
 
-- [ ] [Create a release](https://github.com/drud/ddev/releases/new) using the github web UI, initiating a CircleCI tag build
+- [ ] For each container directory in `containers/`, `make push VERSION=vXXX` to ensure the current container version exists for building and testing
+- [ ] Update the default container versions in `pkg/version/version.go` and create a pull request
+- [ ] Once all updates have been merged into the master branch, create a tag for the release version, initiating a tag build
+- [ ] [Create a release](https://github.com/drud/ddev/releases/new) using the github web UI
 - [ ] Check out the ddev source with `git fetch upstream && git checkout <release_tag>`
-- [ ] `make push` each directory in `containers/`
-- [ ] Add the commit list to the release page
-- [ ] Download artifacts from CircleCI and upload them (except for the Windows installer and its sha256.txt) to the release page
+- [ ] Add the commit list (`git log vXXX..vYYY --oneline`) to the release page
+- [ ] Download artifacts from CircleCI
+- [ ] Confirm the integrity of each artifact with `shasum -a256 -c <artifact>.sha256.txt`
+- [ ] Upload artifacts and checksums (except for the Windows installer and its checksum) to the Github release page
 - [ ] Update the `ddev` [Homebrew formula](https://github.com/drud/homebrew-ddev) with the MacOS `.tar.gz` and SHA checksum
 - [ ] Test `brew upgrade ddev` and make sure ddev is the right version and behaves well
 - [ ] Sign the Windows installer and create a new sha256.txt according to steps below
-- [ ] Upload the signed Windows installer and SHA checksum to the release page
 - [ ] Test the Windows installer and confirm it's signed correctly
+- [ ] Upload the signed Windows installer and SHA checksum to the release page
 - [ ] Finish updating the release page, some copy-and-paste from previous release
+- [ ] Publish the release
 
 ### Signing with Windows installer
 
