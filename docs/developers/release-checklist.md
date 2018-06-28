@@ -2,9 +2,7 @@
 
 - [ ] For each container directory in `containers/`, `make push VERSION=vXXX` to ensure the current container version exists for building and testing
 - [ ] Update the default container versions in `pkg/version/version.go` and create a pull request
-- [ ] Once all updates have been merged into the master branch, create a tag for the release version, initiating a tag build
-- [ ] [Create a release](https://github.com/drud/ddev/releases/new) using the github web UI
-- [ ] Check out the ddev source with `git fetch upstream && git checkout <release_tag>`
+- [ ] Once all updates have been merged into the master branch, [create a release](https://github.com/drud/ddev/releases/new) for the new version, initiating a tag build
 - [ ] Add the commit list (`git log vXXX..vYYY --oneline`) to the release page
 - [ ] Download artifacts from CircleCI
 - [ ] Confirm the integrity of each artifact with `shasum -a256 -c <artifact>.sha256.txt`
