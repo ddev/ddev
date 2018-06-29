@@ -348,8 +348,6 @@ func TestDdevMysqlWorks(t *testing.T) {
 	assert.NoError(err)
 
 	testcommon.ClearDockerEnv()
-	//err = app.WriteConfig()
-	//assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)
 
@@ -371,6 +369,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 	runTime()
 
 }
+
 // TestStartWithoutDdev makes sure we don't have a regression where lack of .ddev
 // causes a panic.
 func TestStartWithoutDdevConfig(t *testing.T) {
