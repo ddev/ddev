@@ -110,7 +110,7 @@ outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
 mkdir -p $outdir
 docker run -t -v "/$outdir://mysqlbase" --rm --entrypoint=//create_base_db.sh $IMAGE
 if [ ! -f "$outdir/ibdata1" ] ; then
-  echo "Failed to build test starter tarball for mariadb."
+  echo "Failed to build test starter database for mariadb."
   exit 4
 fi
 rm -rf $outdir $MYTMPDIR
