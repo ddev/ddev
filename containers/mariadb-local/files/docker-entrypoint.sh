@@ -13,8 +13,8 @@ fi
 # If mariadb has not been initialized, copy in the base image.
 if [ ! -d "/var/lib/mysql/mysql" ]; then
 	mkdir -p /var/lib/mysql
-	# The tarball should include only the contents of the db and mysql directories.
-	tar --no-same-owner -C /var/lib/mysql -zxf /var/tmp/mariadb_10.1_base_db.tgz
+	mariabackup --prepare --target-dir /var/tmp/mysqlbase/ --user root --password root --socket=/var/tmp/mysql.sock
+	mariabackup --copy-back --target-dir /var/tmp/mysqlbase/ --user root --password root --socket=/var/tmp/mysql.sock
 	echo 'Database initialized'
 fi
 

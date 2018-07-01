@@ -26,7 +26,7 @@ var WebTag = "v0.20.0" // Note that this can be overridden by make
 var DBImg = "drud/mariadb-local"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "20180627_mariadb_no_apk_cache" // Note that this may be overridden by make
+var DBTag = "20180630_mariabackup" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"

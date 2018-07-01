@@ -4,13 +4,12 @@ set -x
 set -eu
 set -o pipefail
 
-# This script can be used to create a bare database tarball for use by
+# This script can be used to create a bare database directory for use by
 # ddev startup. It can be run from the host with:
-# docker run -it -v "$PWD/files/var/tmp:/mysqlbase" --rm --entrypoint=/create_base_db.sh drud/mariadb-local:<your_version>
+# docker run -it -v "$PWD/files/var/tmp/mysqlbase:/mysqlbase" --rm --entrypoint=/create_base_db.sh drud/mariadb-local:<your_version>
 
 SOCKET=/var/tmp/mysql.sock
 OUTDIR=/mysqlbase
-OUTFILE=$OUTDIR/mariadb_10.1_base_db.tgz
 
 if [ ! -d $OUTDIR ] ; then
   echo "The required output directory $OUTDIR does not seem to exist."
@@ -71,13 +70,14 @@ mysql -uroot <<EOF
 	GRANT ALL ON *.* TO 'root'@'%' WITH GRANT OPTION;
 	GRANT ALL ON *.* to 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
 	FLUSH PRIVILEGES;
+	FLUSH TABLES;
 EOF
+
+mariabackup --backup --target-dir=$OUTDIR --user root --password root --socket=$SOCKET
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
 	echo >&2 'Mariadb initialization process failed.'
 	exit 5
 fi
 
-cd /var/lib/mysql
-tar -czf $OUTFILE db mysql
-echo "The required tarball is now in $OUTFILE"
+echo "The startup database files (in mariabackup format) are now in $OUTDIR"
