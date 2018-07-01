@@ -648,7 +648,7 @@ func TestDdevLogs(t *testing.T) {
 		assert.Contains(out, "Server started")
 
 		stdout = testcommon.CaptureUserOut()
-		err = app.Logs("db", false, false, "")
+		err = app.Logs("db", false, false, "1000")
 		assert.NoError(err)
 		out = stdout()
 		assert.Contains(out, "Database initialized")
