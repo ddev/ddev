@@ -24,6 +24,7 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-shellwords"
@@ -610,6 +611,10 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	app.DockerEnv()
+
+	if app.APIVersion != version.DdevVersion {
+		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
+	}
 
 	err := app.ProcessHooks("pre-start")
 	if err != nil {
