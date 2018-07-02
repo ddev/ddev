@@ -23,6 +23,15 @@ func TestDevRemove(t *testing.T) {
 
 		cleanup()
 	}
+
+	// Re-create running sites.
+	addSites()
+	out, err := exec.RunCommand(DdevBin, []string{"remove", "--all"})
+	assert.NoError(err, "ddev remove --all should succeed but failed, err: %v, output: %s", err, out)
+	out, err = exec.RunCommand(DdevBin, []string{"list"})
+	assert.NoError(err)
+	assert.Contains(out, "no running ddev projects")
+
 	// Now put the sites back together so other tests can use them.
 	addSites()
 }
