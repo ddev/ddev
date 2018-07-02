@@ -176,7 +176,7 @@ func (app *DdevApp) ReadConfig() error {
 	}
 
 	if app.APIVersion != version.DdevVersion {
-		util.Warning("Your .ddev/config.yaml version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.APIVersion, version.DdevVersion)
+		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
 	}
 	// If any of these values aren't defined in the config file, set them to defaults.
 	if app.Name == "" {
