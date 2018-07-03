@@ -33,12 +33,12 @@ function cleanup {
 	echo "Removing $CONTAINER_NAME"
 	docker rm -f $CONTAINER_NAME 2>/dev/null || true
 }
-trap cleanup EXIT
+# trap cleanup EXIT
 
 cleanup
 
 # Using a static composer dir saves the composer downloads for each php version.
-composercache=/tmp/composer_$$
+composercache=${HOME}/tmp/composercache_${RANDOM}_$$
 mkdir -p $composercache && chmod 777 $composercache
 
 export MOUNTUID=$UID
