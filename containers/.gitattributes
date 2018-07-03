@@ -1,0 +1,2 @@
+# Shell scripts must be checked out binary for use in containers
+*.sh -crlf
