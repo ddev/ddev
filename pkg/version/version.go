@@ -11,10 +11,10 @@ var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by
 // DockerVersionConstraint is the current minimum version of docker required for ddev.
 // See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
-var DockerVersionConstraint = ">= 17.05.0-ce-alpha1"
+var DockerVersionConstraint = ">= 18.03.0-ce-alpha1"
 
 // DockerComposeVersionConstraint is the current minimum version of docker-compose required for ddev.
-var DockerComposeVersionConstraint = ">= 1.10.0-alpha1"
+var DockerComposeVersionConstraint = ">= 1.19.0-alpha1"
 
 // WebImg defines the default web image used for applications.
 var WebImg = "drud/nginx-php-fpm-local"
