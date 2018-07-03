@@ -3,6 +3,7 @@ package cmd
 import (
 	"testing"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -19,7 +20,13 @@ func TestDevRemove(t *testing.T) {
 
 		out, err := exec.RunCommand(DdevBin, []string{"remove"})
 		assert.NoError(err, "ddev remove should succeed but failed, err: %v, output: %s", err, out)
-		assert.Contains(out, "Successfully removed")
+		assert.Contains(out, "has been removed")
+
+		// Ensure the site that was just stopped does not appear in the list of sites
+		apps := ddevapp.GetApps()
+		for _, app := range apps {
+			assert.True(app.GetName() != site.Name)
+		}
 
 		cleanup()
 	}
