@@ -7,6 +7,11 @@ set -o pipefail
 set -o nounset
 set -x
 
+echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
+if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
+	docker rm -f $(docker ps -aq)
+fi
+
 # Make sure we don't have any existing containers on the testbot that might
 # result in this container not being built from scratch.
 VERSION=$(make version | sed 's/^VERSION://')
