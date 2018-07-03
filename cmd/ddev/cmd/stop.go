@@ -31,11 +31,6 @@ to stop by running 'ddev stop <projectname>.`,
 				continue
 			}
 
-			if app.SiteStatus() != ddevapp.SiteStopped {
-				util.Warning("Failed to stop %s", app.GetName())
-				continue
-			}
-
 			util.Success("Project %s has been stopped.", app.GetName())
 		}
 	},
