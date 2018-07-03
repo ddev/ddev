@@ -8,7 +8,7 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDevRemove runs `ddev rm` on the test apps
+// TestDdevStop runs `ddev stop` on the test apps
 func TestDdevStop(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -37,7 +37,7 @@ func TestDdevStop(t *testing.T) {
 	// Re-create running sites.
 	addSites()
 	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
-	assert.NoError(err, "ddev remove --all should succeed but failed, err: %v, output: %s", err, out)
+	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
 
 	// Confirm all sites are stopped.
 	apps := ddevapp.GetApps()
