@@ -245,7 +245,7 @@ func (app *DdevApp) PromptForConfig() error {
 		output.UserOut.Printf("%v", err)
 	}
 
-	err := app.appTypePrompt()
+	err := app.AppTypePrompt()
 	if err != nil {
 		return err
 	}
@@ -523,8 +523,8 @@ func (app *DdevApp) ConfigExists() bool {
 	return true
 }
 
-// appTypePrompt handles the Type workflow.
-func (app *DdevApp) appTypePrompt() error {
+// AppTypePrompt handles the Type workflow.
+func (app *DdevApp) AppTypePrompt() error {
 	provider, err := app.GetProvider()
 	if err != nil {
 		return err

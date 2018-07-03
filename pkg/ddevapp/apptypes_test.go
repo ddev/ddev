@@ -5,9 +5,13 @@ import (
 	"path/filepath"
 	"testing"
 
+	"bufio"
+	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
+	"strings"
 )
 
 // TestApptypeDetection does a simple test of various filesystem setups to make
@@ -41,6 +45,57 @@ func TestApptypeDetection(t *testing.T) {
 
 		foundType := app.DetectAppType()
 		assert.EqualValues(expectedType, foundType)
+	}
+
+}
+
+// TestPostConfigAction tests that the post-config action is properly applied, but only if the
+// config is not included in the config.yaml.
+func TestPostConfigAction(t *testing.T) {
+	assert := asrt.New(t)
+
+	appTypes := map[string]string{
+		"drupal6":   "5.6",
+		"drupal7":   "7.1",
+		"drupal8":   ddevapp.DdevDefaultPHPVersion,
+		"wordpress": ddevapp.DdevDefaultPHPVersion,
+		"backdrop":  ddevapp.DdevDefaultPHPVersion,
+	}
+
+	for appType, expectedPHPVersion := range appTypes {
+		testDir := testcommon.CreateTmpDir("TestApptype")
+
+		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
+		defer testcommon.CleanupDir(testDir)
+		defer testcommon.Chdir(testDir)()
+
+		app, err := ddevapp.NewApp(testDir, ddevapp.DefaultProviderName)
+		assert.NoError(err)
+
+		// Prompt for apptype as a way to get it into the config.
+		input := fmt.Sprintf(appType + "\n")
+		scanner := bufio.NewScanner(strings.NewReader(input))
+		util.SetInputScanner(scanner)
+		err = app.AppTypePrompt()
+		assert.NoError(err)
+		fmt.Println("")
+
+		// With no config file written, the ConfigFileOverrideAction should result in an override
+		err = app.ConfigFileOverrideAction()
+		assert.NoError(err)
+
+		// With a basic new app, the expectedPHPVersion should be the default
+		assert.EqualValues(app.PHPVersion, expectedPHPVersion)
+
+		newVersion := "19.0-" + appType
+		app.PHPVersion = newVersion
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app.ConfigFileOverrideAction()
+		assert.NoError(err)
+		// But with a config that has been written with a specified version, the version should be untouched by
+		// app.ConfigFileOverrideAction()
+		assert.EqualValues(app.PHPVersion, newVersion)
 	}
 
 }
