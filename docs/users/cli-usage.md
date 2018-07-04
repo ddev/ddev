@@ -84,6 +84,7 @@ cd my-drupal8-site
 ```
 
 **Composer Setup Example**
+*Do not use this technique with Windows, as composer on an NTFS filesystem can result in major problems with NTFS symlinks that can't be read in the Linux web container. Instead, use the [community-provided hints on Stack Overflow](https://stackoverflow.com/questions/49660082/how-can-i-run-composer-with-ddev)*
 
 ```
 composer create-project drupal-composer/drupal-project:8.x-dev my-drupal8-site --stability dev --no-interaction
@@ -127,6 +128,7 @@ cd example-typo3-site
 If necessary, run build steps that you may require, like `composer install` in the correct directory.
 
 **Composer Setup Example**
+*Do not use this technique with Windows, as composer on an NTFS filesystem can result in major problems with NTFS symlinks that can't be read in the Linux web container. Instead, use the [community-provided hints on Stack Overflow](https://stackoverflow.com/questions/49660082/how-can-i-run-composer-with-ddev)*
 
 ```
 composer create-project typo3/cms-base-distribution my-typo3-site ^8
