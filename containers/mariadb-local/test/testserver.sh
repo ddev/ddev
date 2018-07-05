@@ -116,7 +116,7 @@ cleanup
 
 # Test that the create_base_db.sh script can create a starter tarball.
 mkdir -p $outdir
-docker run -u "$MOUNTUID:$MOUNTGID" -t -v "/$outdir://mysqlbase" --rm --entrypoint=//create_base_db.sh $IMAGE
+docker run -u "$MOUNTUID:$MOUNTGID" -t -v /$outdir://mysqlbase --rm --entrypoint=//create_base_db.sh $IMAGE
 if [ ! -f "$outdir/ibdata1" ] ; then
   echo "Failed to build test starter database for mariadb."
   exit 4
