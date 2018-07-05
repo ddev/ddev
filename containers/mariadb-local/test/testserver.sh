@@ -21,7 +21,10 @@ fi
 function cleanup {
 	echo "Removing ${CONTAINER_NAME}"
 	docker rm -f $CONTAINER_NAME 2>/dev/null || true
-	rm -rf $outdir $MYTMPDIR
+	# We use MYTMPDIR for a bogus temp dir since mktemp -d creates a dir
+    # outside a docker-mountable directory on macOS
+    mkdir -p "$MYTMPDIR" "$outdir"
+    rm -rf $MYTMPDIR/* $outdir/*
 }
 
 # Wait for container to be ready.
@@ -42,11 +45,6 @@ function containercheck {
 
 # Just to make sure we're starting with a clean environment.
 cleanup
-
-# We use MYTMPDIR for a bogus temp dir since mktemp -d creates a dir
-# outside a docker-mountable directory on macOS
-mkdir -p "$MYTMPDIR"
-rm -rf $MYTMPDIR/*
 
 echo "Starting image with database image $IMAGE"
 if ! docker run -u "$MOUNTUID:$MOUNTGID" -v /$MYTMPDIR:/var/lib/mysql --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
