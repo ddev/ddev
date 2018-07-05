@@ -6,14 +6,14 @@
 
 ## System Requirements
 
-- [Docker](https://www.docker.com/community-edition) version 17.05 or higher. Linux users make sure you do the [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
-- docker-compose 1.10.0 and higher (bundled with Docker in Docker for Mac and Docker for Windows)
+- [Docker](https://www.docker.com/community-edition) version 18.03 or higher. Linux users make sure you do the [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
+- docker-compose 1.18.0 and higher (bundled with Docker in Docker for Mac and Docker for Windows)
 - OS Support
-  - macOS Sierra and higher (macOS 10.12 and higher but it probably runs anywhere docker runs)
-  - Linux: Most recent Linux distributions which can run Docker are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
-  - Windows 10 Pro
+  - macOS Sierra and higher (macOS 10.12 and higher but it should runs anywhere docker-ce runs)
+  - Linux: Most recent Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
+  - Windows 10 Pro or Enterprise with Docker-for-windows
+  - Windows 10 Home (or other Windows version) with [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/)
 
-We are open to expanding this list to include additional OSs as well as improve our existing support for the ones listed above. Please [let us know](https://github.com/drud/ddev/issues/new) if you hit an issue!
 
 ### Using ddev with other development environments
 ddev by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure ddev to use different ports. See [troubleshooting](https://ddev.readthedocs.io/en/latest/users/troubleshooting/#webserver-ports-are-already-occupied-by-another-webserver) for more detailed problemsolving.
@@ -32,6 +32,13 @@ Later, to upgrade to a newer version of ddev, run:
 ```
 brew upgrade ddev
 ```
+
+### Installation or Upgrade - Windows
+
+- A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. If you get a Windows Defender Smartscreen warning "Windows protected your PC", click "More info" and then "Run anyway". Open a new terminal or cmd window and start using ddev.
+- If using Docker Toolbox (on WIndows 10 Home, for example):
+    * Start Docker Toolbox by running the Docker Quickstart Terminal.
+    * Execute ddev commands within the Docker Quickstart Terminal.
 
 ### Installation/Upgrade Script - Linux and macOS
 
@@ -58,10 +65,6 @@ Some Linux distributions may package ddev in a way that's convenient for your di
 	* [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
 
 Note that third party packaging is encouraged, but only supported on a best-effort basis.
-
-### Installation or Upgrade - Windows
-
-- A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. If you get a Windows Defender Smartscreen warning "Windows protected your PC", click "More info" and then "Run anyway". Open a new terminal or cmd window and start using ddev.
 
 ### Versioning
 

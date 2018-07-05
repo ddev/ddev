@@ -7,7 +7,7 @@ ddev is an open source tool that makes it simple to get local PHP development en
 
 ## Getting Started
 
-1. **Check System Requirements:** We support recent versions of macOS, Windows 10, and select Linux distributions that will run docker (ddev requires Docker and docker-compose). ([more info here](https://ddev.readthedocs.io/en/latest/#system-requirements)). 
+1. **Check System Requirements:** We support recent versions of macOS, Windows 10, and Linux distributions that will run docker-ce (ddev requires Docker and docker-compose). ([more info here](https://ddev.readthedocs.io/en/latest/#system-requirements)). 
 2. **Install ddev:** [Options include](https://ddev.readthedocs.io/en/latest/#installation) macOS homebrew (recommended), an install script, or manual installation.
 3. **Choose a CMS Quick Start Guide:** 
   - [WordPress](https://ddev.readthedocs.io/en/latest/users/cli-usage#wordpress-quickstart)
