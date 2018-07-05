@@ -4,16 +4,12 @@ import (
 	"fmt"
 
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/util"
 )
 
-func getRequestedApps(args []string, allFlag bool) ([]*ddevapp.DdevApp, error) {
-	// If allFlag is true, all active apps will be returned.
-	if allFlag {
-		if len(args) > 0 {
-			return []*ddevapp.DdevApp{}, fmt.Errorf("too many arguments provided with the --all flag")
-		}
-
+// getRequestedApps will collect and return the requested apps from command line arguments and flags.
+func getRequestedApps(args []string, all bool) ([]*ddevapp.DdevApp, error) {
+	// If all is true, all active apps will be returned.
+	if all {
 		return ddevapp.GetApps(), nil
 	}
 
@@ -24,16 +20,16 @@ func getRequestedApps(args []string, allFlag bool) ([]*ddevapp.DdevApp, error) {
 		for _, siteName := range args {
 			app, err := ddevapp.GetActiveApp(siteName)
 			if err != nil {
-				util.Warning("Failed to get %s: %v", siteName, err)
-			} else {
-				apps = append(apps, app)
+				return []*ddevapp.DdevApp{}, fmt.Errorf("failed to get %s: %v", siteName, err)
 			}
+
+			apps = append(apps, app)
 		}
 
 		return apps, nil
 	}
 
-	// If the allFlag is false and no specific apps are requested, return the current app.
+	// If all is false and no specific apps are requested, return the current app.
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		return []*ddevapp.DdevApp{}, err

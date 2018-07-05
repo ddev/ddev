@@ -28,17 +28,17 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 
 		apps, err := getRequestedApps(args, removeAll)
 		if err != nil {
-			util.Failed("Unable to remove project(s): %v", err)
+			util.Failed("Unable to get project(s): %v", err)
 		}
 
 		// Iterate through the list of apps built above, removing each one.
 		for _, app := range apps {
 			if app.SiteStatus() == ddevapp.SiteNotFound {
-				util.Warning("Project is not currently running. Try 'ddev start'.")
+				util.Warning("Project %s is not currently running. Try 'ddev start'.", app.GetName())
 			}
 
 			if err := app.Down(removeData); err != nil {
-				util.Warning("Failed to remove %s: %s", app.GetName(), err)
+				util.Failed("Failed to remove %s: %v", app.GetName(), err)
 			}
 
 			util.Success("Project %s has been removed.", app.GetName())
@@ -48,6 +48,6 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 
 func init() {
 	DdevRemoveCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored project data (MySQL, logs, etc.)")
-	DdevRemoveCmd.Flags().BoolVarP(&removeAll, "all", "a", false, "Remove all active sites")
+	DdevRemoveCmd.Flags().BoolVarP(&removeAll, "all", "a", false, "Remove all running and stopped sites")
 	RootCmd.AddCommand(DdevRemoveCmd)
 }

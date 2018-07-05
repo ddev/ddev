@@ -4,7 +4,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -32,19 +31,15 @@ provide a local development environment.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		apps, err := getRequestedApps(args, startAll)
 		if err != nil {
-			util.Failed("Unable to start project(s): %v", err)
+			util.Failed("Unable to get project(s): %v", err)
 		}
 
 		if len(apps) == 0 {
-			output.UserOut.Printf("There are no stopped projects to start.")
+			output.UserOut.Printf("There are no projects to start.")
 		}
 
 		for _, app := range apps {
-			if app.SiteStatus() == ddevapp.SiteRunning {
-				continue
-			}
-
-			output.UserOut.Printf("Starting environment for %s...", app.GetName())
+			output.UserOut.Printf("Starting %s...", app.GetName())
 
 			if err := app.Start(); err != nil {
 				util.Warning("Failed to start %s: %v", app.GetName(), err)
@@ -52,7 +47,7 @@ provide a local development environment.`,
 			}
 
 			util.Success("Successfully started %s", app.GetName())
-			util.Success("Your project can be reached at %s", strings.Join(app.GetAllURLs(), ", "))
+			util.Success("Project can be reached at %s", strings.Join(app.GetAllURLs(), ", "))
 		}
 	},
 }

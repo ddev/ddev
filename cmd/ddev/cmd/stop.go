@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -18,17 +17,12 @@ to stop by running 'ddev stop <projectname>.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		apps, err := getRequestedApps(args, stopAll)
 		if err != nil {
-			util.Failed("Unable to stop project(s): %v", err)
+			util.Failed("Unable to get project(s): %v", err)
 		}
 
 		for _, app := range apps {
-			if app.SiteStatus() == ddevapp.SiteStopped {
-				continue
-			}
-
 			if err := app.Stop(); err != nil {
-				util.Warning("Failed to stop %s: %v", app.GetName(), err)
-				continue
+				util.Failed("Failed to stop %s: %v", app.GetName(), err)
 			}
 
 			util.Success("Project %s has been stopped.", app.GetName())
