@@ -35,6 +35,10 @@ provide a local development environment.`,
 			util.Failed("Unable to start project(s): %v", err)
 		}
 
+		if len(apps) == 0 {
+			output.UserOut.Printf("There are no stopped projects to start.")
+		}
+
 		for _, app := range apps {
 			if app.SiteStatus() == ddevapp.SiteRunning {
 				continue
