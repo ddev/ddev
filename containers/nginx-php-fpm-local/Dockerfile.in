@@ -103,7 +103,9 @@ RUN chmod -R 777 /var/log
 
 RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php
 # All users will have their home directory in /home, make it fully writeable
-RUN mkdir -p /home/.composer/cache /home/.drush/commands /home/.drush/aliases && chmod -R ugo+rw /home 
+RUN mkdir -p /home/.composer/cache /home/.drush/commands /home/.drush/aliases && chmod -R ugo+rw /home
+# Except that .my.cnf can't be writeable or mysql won't use it.
+RUN chmod 444 /home/.my.cnf
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log

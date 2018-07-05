@@ -336,6 +336,40 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 }
 
+// TestDdevMysqlWorks tests that mysql client can be run in both containers.
+func TestDdevMysqlWorks(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	site := TestSites[0]
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevMysqlWorks", site.Name))
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	testcommon.ClearDockerEnv()
+	err = app.Start()
+	assert.NoError(err)
+
+	// Test that mysql + .my.cnf works on web container
+	_, _, err = app.Exec("web", "bash", "-c", "mysql -e 'SELECT USER();' | grep 'db@'")
+	assert.NoError(err)
+	_, _, err = app.Exec("web", "bash", "-c", "mysql -e 'SELECT DATABASE();' | grep 'db'")
+	assert.NoError(err)
+
+	// Test that mysql + .my.cnf works on db container
+	_, _, err = app.Exec("db", "bash", "-c", "mysql -e 'SELECT USER();' | grep 'root@localhost'")
+	assert.NoError(err)
+	_, _, err = app.Exec("db", "bash", "-c", "mysql -e 'SELECT DATABASE();' | grep 'db'")
+	assert.NoError(err)
+
+	err = app.Stop()
+	assert.NoError(err)
+
+	runTime()
+
+}
+
 // TestStartWithoutDdev makes sure we don't have a regression where lack of .ddev
 // causes a panic.
 func TestStartWithoutDdevConfig(t *testing.T) {
