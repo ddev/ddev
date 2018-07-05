@@ -26,7 +26,7 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 			util.Failed("Illegal option combination: --all and --remove-data")
 		}
 
-		apps, err := determineAppList(args, removeAll)
+		apps, err := getRequestedApps(args, removeAll)
 		if err != nil {
 			util.Failed("Unable to remove project(s): %v", err)
 		}

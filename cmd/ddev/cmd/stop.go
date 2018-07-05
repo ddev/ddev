@@ -16,7 +16,7 @@ var DdevStopCmd = &cobra.Command{
 from a project directory to stop that project, or you can specify a running project
 to stop by running 'ddev stop <projectname>.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		apps, err := determineAppList(args, stopAll)
+		apps, err := getRequestedApps(args, stopAll)
 		if err != nil {
 			util.Failed("Unable to stop project(s): %v", err)
 		}

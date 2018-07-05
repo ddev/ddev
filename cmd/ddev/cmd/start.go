@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var startAll bool
+
 // StartCmd represents the add command
 var StartCmd = &cobra.Command{
 	Use:     "start",
@@ -28,28 +30,30 @@ provide a local development environment.`,
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		appStart()
+		apps, err := getRequestedApps(args, startAll)
+		if err != nil {
+			util.Failed("Unable to start project(s): %v", err)
+		}
+
+		for _, app := range apps {
+			if app.SiteStatus() == ddevapp.SiteRunning {
+				continue
+			}
+
+			output.UserOut.Printf("Starting environment for %s...", app.GetName())
+
+			if err := app.Start(); err != nil {
+				util.Warning("Failed to start %s: %v", app.GetName(), err)
+				continue
+			}
+
+			util.Success("Successfully started %s", app.GetName())
+			util.Success("Your project can be reached at %s", strings.Join(app.GetAllURLs(), ", "))
+		}
 	},
 }
 
-// appStart is a convenience function to encapsulate startup functionality
-func appStart() {
-	app, err := ddevapp.GetActiveApp("")
-	if err != nil {
-		util.Failed("Failed to start project: %v", err)
-	}
-
-	output.UserOut.Printf("Starting environment for %s...", app.GetName())
-
-	err = app.Start()
-	if err != nil {
-		util.Failed("Failed to start %s: %v", app.GetName(), err)
-	}
-
-	util.Success("Successfully started %s", app.GetName())
-	util.Success("Your project can be reached at %s", strings.Join(app.GetAllURLs(), ", "))
-
-}
 func init() {
+	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all stopped sites")
 	RootCmd.AddCommand(StartCmd)
 }

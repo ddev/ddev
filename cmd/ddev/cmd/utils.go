@@ -7,7 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 )
 
-func determineAppList(args []string, allFlag bool) ([]*ddevapp.DdevApp, error) {
+func getRequestedApps(args []string, allFlag bool) ([]*ddevapp.DdevApp, error) {
 	// If allFlag is true, all active apps will be returned.
 	if allFlag {
 		if len(args) > 0 {
