@@ -21,7 +21,7 @@ import (
 
 // SequelproLoc is where we expect to find the sequel pro.app
 // It's global so it can be mocked in testing.
-var SequelproLoc = "/Applications/sequel pro.app"
+var SequelproLoc = "/Applications/Sequel Pro.app"
 
 // DdevSequelproCmd represents the sequelpro command
 var DdevSequelproCmd = &cobra.Command{
