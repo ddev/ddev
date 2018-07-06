@@ -24,7 +24,7 @@ function cleanup {
 	# We use MYTMPDIR for a bogus temp dir since mktemp -d creates a dir
     # outside a docker-mountable directory on macOS
     mkdir -p "$MYTMPDIR" "$outdir"
-    rm -rf $MYTMPDIR/* $outdir/*
+    rm -rf $MYTMPDIR/* $MYTMPDIR/.git* $outdir/* $outdir/.git*
 }
 
 # Wait for container to be ready.
@@ -113,11 +113,19 @@ mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$H
 cleanup
 
 # Test that the create_base_db.sh script can create a starter tarball.
+# This one runs as root, and ruins the underlying host mount on linux (makes it owned by root)
+outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
 mkdir -p $outdir
-docker run -u "$MOUNTUID:$MOUNTGID" -t -v /$outdir://mysqlbase --rm --entrypoint=//create_base_db.sh $IMAGE
+docker run  -t -v /$outdir://mysqlbase --rm --entrypoint=//create_base_db.sh $IMAGE
 if [ ! -f "$outdir/ibdata1" ] ; then
   echo "Failed to build test starter database for mariadb."
   exit 4
+fi
+command="rm -rf $outdir $MYTMPDIR"
+if [ $(uname -s) = "Linux" ] ; then
+    sudo $command
+else
+    $command
 fi
 
 echo "Tests passed"
