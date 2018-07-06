@@ -7,16 +7,29 @@ MYSQL_VERSION="$2"
 CONTAINER_NAME="testserver"
 HOSTPORT=33000
 MYTMPDIR="${HOME}/tmp/testserver-sh_${RANDOM}_$$"
+outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
+
+export MOUNTUID=$UID
+export MOUNTGID=$(id -g)
+if [[ "$MOUNTUID" -gt "60000" || "$MOUNTGID" -gt "60000" ]] ; then
+	MOUNTUID=1
+	MOUNTGID=1
+fi
+
 
 # Always clean up the container on exit.
 function cleanup {
 	echo "Removing ${CONTAINER_NAME}"
 	docker rm -f $CONTAINER_NAME 2>/dev/null || true
+	# We use MYTMPDIR for a bogus temp dir since mktemp -d creates a dir
+    # outside a docker-mountable directory on macOS
+    mkdir -p "$MYTMPDIR" "$outdir"
+    rm -rf $MYTMPDIR/* $MYTMPDIR/.git* $outdir/* $outdir/.git*
 }
 
 # Wait for container to be ready.
 function containercheck {
-	for i in {60..0};
+	for i in {15..0};
 	do
 		# status contains uptime and health in parenthesis, sed to return health
 		status="$(docker ps --format "{{.Status}}" --filter "name=$CONTAINER_NAME" | sed  's/.*(\(.*\)).*/\1/')"
@@ -33,13 +46,8 @@ function containercheck {
 # Just to make sure we're starting with a clean environment.
 cleanup
 
-# We use MYTMPDIR for a bogus temp dir since mktemp -d creates a dir
-# outside a docker-mountable directory on macOS
-mkdir -p "$MYTMPDIR"
-rm -rf $MYTMPDIR/*
-
 echo "Starting image with database image $IMAGE"
-if ! docker run -u "$(id -u):$(id -g)" -v /$MYTMPDIR:/var/lib/mysql --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
+if ! docker run -u "$MOUNTUID:$MOUNTGID" -v /$MYTMPDIR:/var/lib/mysql --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
 	echo "MySQL server start failed with error code $?"
 	exit 2
 fi
@@ -86,7 +94,7 @@ mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$H
 cleanup
 
 # Run with alternate configuration my.cnf mounted
-if ! docker run -u "$(id -u):$(id -g)" -v /$MYTMPDIR:/var/lib/mysql -v /$PWD/test/testdata:/mnt/ddev_config --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
+if ! docker run -u "$MOUNTUID:$MOUNTGID" -v /$MYTMPDIR:/var/lib/mysql -v /$PWD/test/testdata:/mnt/ddev_config --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
 	echo "MySQL server start failed with error code $?"
 	exit 3
 fi
@@ -108,12 +116,17 @@ cleanup
 # This one runs as root, and ruins the underlying host mount on linux (makes it owned by root)
 outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
 mkdir -p $outdir
-docker run -t -v "/$outdir://mysqlbase" --rm --entrypoint=//create_base_db.sh $IMAGE
+docker run  -t -v /$outdir://mysqlbase --rm --entrypoint=//create_base_db.sh $IMAGE
 if [ ! -f "$outdir/ibdata1" ] ; then
   echo "Failed to build test starter database for mariadb."
   exit 4
 fi
-rm -rf $outdir $MYTMPDIR
+command="rm -rf $outdir $MYTMPDIR"
+if [ $(uname -s) = "Linux" ] ; then
+    sudo $command
+else
+    $command
+fi
 
 echo "Tests passed"
 exit 0
