@@ -39,6 +39,11 @@ function containercheck {
 		fi
 		sleep 1
 	done
+	echo "mariadb-local container did not become ready"
+    set -x
+	docker ps -a
+	docker logs $CONTAINER_NAME
+	set +x
 	return 1
 }
 
@@ -58,7 +63,6 @@ trap cleanup EXIT
 
 echo "Waiting for database server to become ready..."
 if ! containercheck; then
-	echo "Container did not become ready"
 	exit 1
 fi
 echo "Connected to mysql server."
@@ -100,7 +104,6 @@ if ! docker run -u "$MOUNTUID:$MOUNTGID" -v /$MYTMPDIR:/var/lib/mysql -v /$PWD/t
 fi
 
 if ! containercheck; then
-	echo "Container did not become ready"
 	exit 5
 fi
 

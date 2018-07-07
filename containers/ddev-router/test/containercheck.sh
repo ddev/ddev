@@ -1,14 +1,17 @@
 #!/bin/bash
-exitcode=1
 for i in `seq 1 60`;
 do
     # status contains uptime and health in parenthesis, sed to return health
     status="$(docker ps -a --format "{{.Status}}" --filter "name=$CONTAINER_NAME" | sed  's/.*(\(.*\)).*/\1/')"
     if [[ "$status" == "healthy" ]]
     then
-        exitcode=0
-        break
+        exit 0
     fi
     sleep 2
 done
-exit $exitcode
+set -x
+echo "ddev-router failed to become ready"
+docker logs ddev-router
+docker ps -a
+set +x
+exit 1

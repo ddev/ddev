@@ -25,7 +25,11 @@ function containercheck {
 		fi
 		sleep 1
 	done
-	set -x
+	echo "nginx container did not become ready"
+    set -x
+    docker ps -a
+    docker logs $CONTAINER_NAME
+    set +x
 	return 1
 }
 
@@ -53,7 +57,6 @@ for v in 5.6 7.0 7.1 7.2; do
 
 	CONTAINER=$(docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -d --name $CONTAINER_NAME -v "/$composercache:/home/.composer/cache:rw" -d $DOCKER_IMAGE)
 	if ! containercheck; then
-        echo "Container did not become ready"
         exit 1
     fi
 
@@ -99,7 +102,6 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 	fi
 	CONTAINER=$(docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE)
 	if ! containercheck; then
-        echo "Container did not become ready"
         exit 1
     fi
 	curl --fail localhost:$HOST_PORT/test/phptest.php

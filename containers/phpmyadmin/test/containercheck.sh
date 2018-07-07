@@ -8,4 +8,8 @@ do
     fi
     sleep 2
 done
+echo "phpmyadmin container failed to become ready"
+set -x
+docker ps -a
+docker logs $CONTAINER_NAME
 exit 2

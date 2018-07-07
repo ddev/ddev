@@ -18,7 +18,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 ### macOS Test Agent Setup
 
 1. Install [homebrew](https://brew.sh/)
-2. Install golang/git/docker with `brew install golang git buildkite-agent mysql`
+2. Install golang/git/docker with `brew install golang git buildkite-agent mysql-client`
 3. Install docker with `brew cask install docker`
 4. If the xcode command line tools are not yet installed, install them with `xcode select --install`
 5. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add the agent token and the tags. Tags will probably be like `"os=macos,osvariant=highsierra,dockertype=dockerformac"`
