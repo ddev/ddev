@@ -9,9 +9,13 @@ do
     fi
     sleep 2
 done
+echo "FAIL: ddev-router failed to become ready"
 set -x
-echo "ddev-router failed to become ready"
-docker logs ddev-router
+echo "========== INFO ABOUT FAILURE ============="
+docker logs $CONTAINER_NAME
 docker ps -a
+docker inspect $CONTAINER_NAME
+echo "========== END ============="
+
 set +x
 exit 1
