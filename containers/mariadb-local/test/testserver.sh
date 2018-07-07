@@ -29,7 +29,7 @@ function cleanup {
 
 # Wait for container to be ready.
 function containercheck {
-	for i in {15..0};
+	for i in {60..0};
 	do
 		# status contains uptime and health in parenthesis, sed to return health
 		status="$(docker ps --format "{{.Status}}" --filter "name=$CONTAINER_NAME" | sed  's/.*(\(.*\)).*/\1/')"
