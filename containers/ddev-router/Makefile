@@ -44,4 +44,4 @@ test: container
 	docker run -p 1082:80 -v //var/run/docker.sock:/tmp/docker.sock:ro --name ddev-router-test -d $(DOCKER_REPO):$(VERSION)
 	CONTAINER_NAME=ddev-router-test test/containercheck.sh
 	curl -s -I localhost:1082 | grep 503  # Make sure we get a 503 from nginx by default
-	@docker stop ddev-router-test
+	@docker rm -f ddev-router-test
