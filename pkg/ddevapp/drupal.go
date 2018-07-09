@@ -467,9 +467,8 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 	makeWritable := []string{path.Dir(app.SiteSettingsPath), app.SiteSettingsPath}
 	for _, o := range makeWritable {
 		stat, err := os.Stat(o)
-		if err != nil {
-			// Warn the user, but continue.
-			util.Warning("Unable to set permissions: %v", err)
+		// If the file doesn't exist, don't try to set the permissions.
+		if os.IsNotExist(err) {
 			continue
 		}
 
