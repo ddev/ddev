@@ -8,7 +8,7 @@ set -o nounset
 set -x
 
 echo "--- Cleanup docker"
-echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
+echo "Warning: deleting all docker containers and deleting images that match this build."
 if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq)
 fi

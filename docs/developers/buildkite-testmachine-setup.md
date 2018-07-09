@@ -18,7 +18,9 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 11. On Docker-for-windows, configured the C: and other drives as shared to docker.
 12. On Docker Toolbox systems, make sure that nested virtualization is enabled however you need to enable it.
 13. Edit /c/ProgramData/git/config to `autocrlf: false` and verify that `git config --list` shows only autocrlf: false. 
-13. Reboot the machine and do a test run.
+14. Run `winpty docker run -it -p 80 busybox ls` to trigger the Windows Defender warning, and "allow access".
+`
+15. Reboot the machine and do a test run.
 
 ### macOS Test Agent Setup
 
