@@ -29,7 +29,7 @@ function cleanup {
 
 # Wait for container to be ready.
 function containercheck {
-	for i in {15..0};
+	for i in {60..0};
 	do
 		# status contains uptime and health in parenthesis, sed to return health
 		status="$(docker ps --format "{{.Status}}" --filter "name=$CONTAINER_NAME" | sed  's/.*(\(.*\)).*/\1/')"
@@ -39,6 +39,10 @@ function containercheck {
 		fi
 		sleep 1
 	done
+	echo "--- mariadb-local FAIL: information"
+	docker ps -a
+	docker logs $CONTAINER_NAME
+	docker inspect $CONTAINER_NAME
 	return 1
 }
 
@@ -58,7 +62,6 @@ trap cleanup EXIT
 
 echo "Waiting for database server to become ready..."
 if ! containercheck; then
-	echo "Container did not become ready"
 	exit 1
 fi
 echo "Connected to mysql server."
@@ -100,7 +103,6 @@ if ! docker run -u "$MOUNTUID:$MOUNTGID" -v /$MYTMPDIR:/var/lib/mysql -v /$PWD/t
 fi
 
 if ! containercheck; then
-	echo "Container did not become ready"
 	exit 5
 fi
 

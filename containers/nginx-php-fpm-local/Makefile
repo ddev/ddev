@@ -35,4 +35,6 @@ include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_python.mak
 
 test: container
-	test/containertest.sh
+	# I have no idea why you have to do bash -c in this one place on Windows. But just
+	# ./test/containertest.sh fails with process_begin: CreateProcess(NULL,, ...) failed.
+	bash -c test/containertest.sh

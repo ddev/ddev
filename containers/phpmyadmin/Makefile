@@ -49,8 +49,7 @@ include ../../build-tools/makefile_components/base_push.mak
 # Additional targets can be added here
 # Also, existing targets can be overridden by copying and customizing them.
 test: container
-	@docker stop phpmyadmin-test || true
-	@docker rm phpmyadmin-test || true
-	docker run -p 1081:80 -d --name phpmyadmin-test -d $(DOCKER_REPO):$(VERSION)
+	@docker rm -f phpmyadmin-test 2>/dev/null || true
+	docker run -p 1082:80 -d --name phpmyadmin-test -d $(DOCKER_REPO):$(VERSION)
 	CONTAINER_NAME=phpmyadmin-test test/containercheck.sh
 	@docker stop phpmyadmin-test && docker rm phpmyadmin-test

@@ -7,6 +7,12 @@ set -o pipefail
 set -o nounset
 set -x
 
+echo "--- Cleanup docker"
+echo "Warning: deleting all docker containers and deleting images that match this build."
+if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
+	docker rm -f $(docker ps -aq)
+fi
+
 # Make sure we don't have any existing containers on the testbot that might
 # result in this container not being built from scratch.
 VERSION=$(make version | sed 's/^VERSION://')
@@ -17,6 +23,9 @@ fi
 
 for dir in containers/*
     do pushd $dir
+    echo "--- Build container $dir"
+    time make container
+    echo "--- Test container $dir"
     time make test
     popd
 done
