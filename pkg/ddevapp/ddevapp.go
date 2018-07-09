@@ -798,14 +798,11 @@ func (app *DdevApp) DockerEnv() {
 		// TODO: Warn people about additional names in use.
 		envVars["DDEV_HOSTNAME"] = strings.Join(app.GetHostnames(), ",")
 	}
+
 	// Only set values if they don't already exist in env.
 	for k, v := range envVars {
-		if os.Getenv(k) == "" {
-
-			err := os.Setenv(k, v)
-			if err != nil {
-				util.Error("Failed to set the environment variable %s=%s: %v", k, v, err)
-			}
+		if err := os.Setenv(k, v); err != nil {
+			util.Error("Failed to set the environment variable %s=%s: %v", k, v, err)
 		}
 	}
 }
@@ -826,9 +823,8 @@ func (app *DdevApp) Stop() error {
 	if err != nil {
 		return err
 	}
-	_, _, err = dockerutil.ComposeCmd(files, "stop")
 
-	if err != nil {
+	if _, _, err := dockerutil.ComposeCmd(files, "stop"); err != nil {
 		return err
 	}
 
@@ -886,7 +882,7 @@ func (app *DdevApp) Down(removeData bool) error {
 	// Remove all the containers and volumes for app.
 	err = Cleanup(app)
 	if err != nil {
-		return fmt.Errorf("Failed to remove %s: %s", app.GetName(), err)
+		return fmt.Errorf("failed to remove %s: %v", app.GetName(), err)
 	}
 
 	// Remove data/database if we need to.

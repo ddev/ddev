@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
+
+var stopAll bool
 
 // DdevStopCmd represents the stop command
 var DdevStopCmd = &cobra.Command{
@@ -14,30 +15,22 @@ var DdevStopCmd = &cobra.Command{
 from a project directory to stop that project, or you can specify a running project
 to stop by running 'ddev stop <projectname>.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var siteName string
-
-		if len(args) > 1 {
-			util.Failed("Too many arguments provided. Please use 'ddev stop' or 'ddev stop [projectname]'")
-		}
-
-		if len(args) == 1 {
-			siteName = args[0]
-		}
-
-		app, err := ddevapp.GetActiveApp(siteName)
+		apps, err := getRequestedApps(args, stopAll)
 		if err != nil {
-			util.Failed("Failed to stop: %v", err)
+			util.Failed("Unable to get project(s): %v", err)
 		}
 
-		err = app.Stop()
-		if err != nil {
-			util.Failed("Failed to stop containers for %s: %v", app.GetName(), err)
-		}
+		for _, app := range apps {
+			if err := app.Stop(); err != nil {
+				util.Failed("Failed to stop %s: %v", app.GetName(), err)
+			}
 
-		util.Success("Project has been stopped.")
+			util.Success("Project %s has been stopped.", app.GetName())
+		}
 	},
 }
 
 func init() {
+	DdevStopCmd.Flags().BoolVarP(&stopAll, "all", "a", false, "Stop all running sites")
 	RootCmd.AddCommand(DdevStopCmd)
 }
