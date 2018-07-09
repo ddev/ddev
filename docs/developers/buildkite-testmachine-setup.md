@@ -17,7 +17,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 10. On Docker-for-windows systems, launch Docker. It will offer to reconfigure Hyper-V and do a restart.
 11. On Docker-for-windows, configured the C: and other drives as shared to docker.
 12. On Docker Toolbox systems, make sure that nested virtualization is enabled however you need to enable it.
-13. `git config --global auto.crlf false` - This makes everything be checked out as-is, with no text 
+13. Edit /c/ProgramData/git/config to `autocrlf: false` and verify that `git config --list` shows only autocrlf: false. 
 13. Reboot the machine and do a test run.
 
 ### macOS Test Agent Setup
