@@ -5,7 +5,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 ## Windows Test Agent Setup:
 
 1. Install [chocolatey](https://chocolatey.org/)
-2. Install golang/mysql-cli/make/git/docker-ce/nssm with `choco install -y git mysql-cli golang make docker-for-windows nssm`
+2. Install golang/mysql-cli/make/git/docker-ce/nssm with `choco install -y git mysql-cli golang make docker-for-windows nssm GoogleChrome`
 3. If a laptop, set the "lid closing" setting in settings to do nothing.
 4. Set the "Sleep after time" setting in settings to never.
 5. Install the buildkite-agent. Use the latest release from [github.com/buildkite/agent](https://github.com/buildkite/agent/releases). It should go in /c/buildkite-agent, with the buildkite-agent.exe in /c/buildkite-agent/bin and the config in /c/buildkite-agent.
