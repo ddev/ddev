@@ -9,7 +9,8 @@ do
     sleep 2
 done
 echo "phpmyadmin container failed to become ready"
-set -x
+echo "--- FAIL: phpmyadmin container failure information"
 docker ps -a
 docker logs $CONTAINER_NAME
+docker inspect $CONTAINER_NAME
 exit 2

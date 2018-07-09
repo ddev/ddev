@@ -26,10 +26,10 @@ function containercheck {
 		sleep 1
 	done
 	echo "nginx container did not become ready"
-    set -x
+	echo "--- FAIL: nginx-php-fpm-local container failure info"
     docker ps -a
     docker logs $CONTAINER_NAME
-    set +x
+    docker inspect $CONTAINER_NAME
 	return 1
 }
 

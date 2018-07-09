@@ -39,11 +39,10 @@ function containercheck {
 		fi
 		sleep 1
 	done
-	echo "mariadb-local container did not become ready"
-    set -x
+	echo "--- mariadb-local FAIL: information"
 	docker ps -a
 	docker logs $CONTAINER_NAME
-	set +x
+	docker inspect $CONTAINER_NAME
 	return 1
 }
 

@@ -7,6 +7,7 @@ set -o pipefail
 set -o nounset
 set -x
 
+echo "--- Cleanup docker"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
 if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq)
@@ -22,6 +23,9 @@ fi
 
 for dir in containers/*
     do pushd $dir
+    echo "--- Build container $dir"
+    time make container
+    echo "--- Test container $dir"
     time make test
     popd
 done

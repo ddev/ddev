@@ -9,11 +9,12 @@ if [ ! -z "$BUILDKITE_JOB_ID" ]; then
 	mkdir -p $DRUDSRC
 	ln -s $PWD $DRUDSRC/ddev
 	cd $DRUDSRC/ddev
-	echo "buildkite building $BUILDKITE_JOB_ID at $(date) on $(hostname) for OS=$(go env GOOS) in $DRUDSRC/ddev"
+	echo "--- buildkite building $BUILDKITE_JOB_ID at $(date) on $(hostname) for OS=$(go env GOOS) in $DRUDSRC/ddev"
 fi
 
 export GOTEST_SHORT=1
 
+echo "--- cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
 if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq)
