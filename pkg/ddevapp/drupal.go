@@ -12,6 +12,8 @@ import (
 	"path"
 	"path/filepath"
 	"text/template"
+
+	"github.com/drud/ddev/pkg/fileutil"
 )
 
 // DrupalSettings encapsulates all the configurations for a Drupal site.
@@ -27,6 +29,7 @@ type DrupalSettings struct {
 	DatabasePrefix   string
 	HashSalt         string
 	Signature        string
+	SyncDir          string
 }
 
 // NewDrupalSettings produces a DrupalSettings object with default.
@@ -41,6 +44,7 @@ func NewDrupalSettings() *DrupalSettings {
 		DatabasePrefix:   "",
 		HashSalt:         util.RandString(64),
 		Signature:        DdevFileSignature,
+		SyncDir:          "sites/default/files/sync",
 	}
 }
 
@@ -92,6 +96,15 @@ $settings['file_scan_ignore_directories'] = [
 
 // This will prevent Drupal from setting read-only permissions on sites/default.
 $settings['skip_permissions_hardening'] = TRUE;
+
+// This will ensure the site can only be accessed through the intended host names.
+// Additional host patterns can be added for custom configurations.
+$settings['trusted_host_patterns'] = ['.*'];
+
+// This specifies the default configuration sync directory.
+if (empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
+  $config_directories[CONFIG_SYNC_DIRECTORY] = '{{ $config.SyncDir }}';
+}
 
 // This determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
@@ -248,8 +261,7 @@ func writeDrupal8SettingsFile(settings *DrupalSettings, filePath string) error {
 
 	// Ensure target directory is writable.
 	dir := filepath.Dir(filePath)
-	err = os.Chmod(dir, 0755)
-	if err != nil {
+	if err = os.Chmod(dir, 0755); err != nil {
 		return err
 	}
 
@@ -257,10 +269,11 @@ func writeDrupal8SettingsFile(settings *DrupalSettings, filePath string) error {
 	if err != nil {
 		return err
 	}
-	err = tmpl.Execute(file, settings)
-	if err != nil {
+
+	if err := tmpl.Execute(file, settings); err != nil {
 		return err
 	}
+
 	util.CheckClose(file)
 	return nil
 }
@@ -431,6 +444,10 @@ func drupal6ConfigOverrideAction(app *DdevApp) error {
 // drupal8PostStartAction handles default post-start actions for D8 apps, like ensuring
 // useful permissions settings on sites/default.
 func drupal8PostStartAction(app *DdevApp) error {
+	if err := createDrupal8SyncDir(app); err != nil {
+		return err
+	}
+
 	if err := drupalEnsureWritePerms(app); err != nil {
 		return err
 	}
@@ -476,6 +493,24 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 			// Warn the user, but continue.
 			util.Warning("Unable to set permissions: %v", err)
 		}
+	}
+
+	return nil
+}
+
+// createDrupal8SyncDir creates a Drupal 8 app's sync directory
+func createDrupal8SyncDir(app *DdevApp) error {
+	// Currently there isn't any customization done for the drupal config, but
+	// we may want to do some kind of customization in the future.
+	drupalConfig := NewDrupalSettings()
+
+	syncDirPath := path.Join(app.GetAppRoot(), app.GetDocroot(), drupalConfig.SyncDir)
+	if fileutil.FileExists(syncDirPath) {
+		return nil
+	}
+
+	if err := os.MkdirAll(syncDirPath, 0755); err != nil {
+		return fmt.Errorf("failed to create sync directory (%s): %v", syncDirPath, err)
 	}
 
 	return nil
