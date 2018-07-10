@@ -12,6 +12,8 @@ import (
 	"path"
 	"path/filepath"
 	"text/template"
+
+	"github.com/drud/ddev/pkg/fileutil"
 )
 
 // DrupalSettings encapsulates all the configurations for a Drupal site.
@@ -503,8 +505,7 @@ func createDrupal8SyncDir(app *DdevApp) error {
 	drupalConfig := NewDrupalSettings()
 
 	syncDirPath := path.Join(app.GetAppRoot(), app.GetDocroot(), drupalConfig.SyncDir)
-	if _, err := os.Stat(syncDirPath); !os.IsNotExist(err) {
-		// Directory already exists.
+	if fileutil.FileExists(syncDirPath) {
 		return nil
 	}
 
