@@ -8,6 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -65,6 +66,8 @@ func NewDrushConfig() *DrushConfig {
 }
 
 const (
+	drupalSettingsTemplate = ``
+
 	drupal8Template = `<?php
 {{ $config := . }}
 /**
@@ -209,23 +212,32 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 // adding things like database host, name, and password
 // Returns the fullpath to settings file and err
 func createDrupal8SettingsFile(app *DdevApp) (string, error) {
+	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(app.SiteLocalSettingsPath))
 
-	settingsFilePath, err := app.DetermineSettingsPathLocation()
-	if err != nil {
-		return "", fmt.Errorf("Failed to get Drupal 8 settings file path: %v", err.Error())
+	baseSiteSettingsFile := filepath.Base(app.SiteSettingsPath)
+	baseSiteLocalSettingsFile := filepath.Base(app.SiteLocalSettingsPath)
+
+	if !fileutil.FileExists(app.SiteSettingsPath) {
+		// TODO: Create settings.php that does nothing but include settings.ddev.php
+
+		output.UserOut.Printf("Generating %s file to include %s.", baseSiteSettingsFile, baseSiteLocalSettingsFile)
+		if _, err := os.Create(app.SiteSettingsPath); err != nil {
+			return app.SiteLocalSettingsPath, err
+		}
 	}
-	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
+
+	if err := addIncludeToSettingsFile(app.SiteSettingsPath, app.SiteLocalSettingsPath); err != nil {
+		return app.SiteLocalSettingsPath, fmt.Errorf("failed to include %s in %s: %v", baseSiteSettingsFile, baseSiteLocalSettingsFile, err)
+	}
 
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings()
-
-	err = writeDrupal8SettingsFile(drupalConfig, settingsFilePath)
-	if err != nil {
-		return settingsFilePath, fmt.Errorf("Failed to write Drupal settings file: %v", err.Error())
+	if err := writeDrupal8SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
+		return app.SiteLocalSettingsPath, fmt.Errorf("failed to write Drupal settings file: %v", err.Error())
 	}
 
-	return settingsFilePath, nil
+	return app.SiteLocalSettingsPath, nil
 }
 
 // createDrupal6SettingsFile creates the app's settings.php or equivalent,
@@ -399,7 +411,7 @@ func setDrupalSiteSettingsPaths(app *DdevApp) {
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	var settingsFilePath, localSettingsFilePath string
 	settingsFilePath = filepath.Join(settingsFileBasePath, "sites", "default", "settings.php")
-	localSettingsFilePath = filepath.Join(settingsFileBasePath, "sites", "default", "settings.local.php")
+	localSettingsFilePath = filepath.Join(settingsFileBasePath, "sites", "default", "settings.ddev.php")
 	app.SiteSettingsPath = settingsFilePath
 	app.SiteLocalSettingsPath = localSettingsFilePath
 }
@@ -521,4 +533,44 @@ func createDrupal8SyncDir(app *DdevApp) error {
 	}
 
 	return nil
+}
+
+// addIncludeToSettingsFile will include settings.ddev.php in settings.php if it is not already included.
+func addIncludeToSettingsFile(siteSettingsPath, siteLocalSettingsPath string) error {
+	// TODO: find a better way to determine if settings.ddev.php has been included?
+	if included, err := fileutil.FgrepStringInFile(siteSettingsPath, filepath.Base(siteLocalSettingsPath)); err != nil {
+		return err
+	} else if included {
+		return nil
+	}
+
+	siteSettingsFile, err := os.OpenFile(siteSettingsPath, os.O_RDWR, 0)
+	if err != nil {
+		return err
+	}
+
+	// Get current contents of settings.php
+	siteSettings, err := ioutil.ReadAll(siteSettingsFile)
+	if err != nil {
+		return err
+	}
+
+	// If settings.php is empty, write the simple include to it.
+	if len(siteSettings) == 0 {
+		// TODO: Pull in a template for this
+		if _, err := siteSettingsFile.Write([]byte("<?php\ninclude settings.ddev.php\n")); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	// If the file is not empty, append the include.
+	// TODO: Formatting, templating, etc
+	if _, err := siteSettingsFile.WriteAt([]byte("\ninclude settings.ddev.php\n"), int64(len(siteSettings))); err != nil {
+		return err
+	}
+
+	return nil
+
 }
