@@ -464,8 +464,16 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 	output.UserOut.Printf("Ensuring write permissions for %s...", app.GetName())
 	var writePerms os.FileMode = 0200
 
-	makeWritable := []string{path.Dir(app.SiteSettingsPath), app.SiteSettingsPath}
+	settingsDir := path.Dir(app.SiteSettingsPath)
+	makeWritable := []string{
+		settingsDir,
+		app.SiteSettingsPath,
+		app.SiteLocalSettingsPath,
+		path.Join(settingsDir, "services.yml"),
+	}
+
 	for _, o := range makeWritable {
+		fmt.Printf("Making %s writable\n", o)
 		stat, err := os.Stat(o)
 		// If the file doesn't exist, don't try to set the permissions.
 		if os.IsNotExist(err) {
