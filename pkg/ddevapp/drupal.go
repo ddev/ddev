@@ -509,7 +509,7 @@ func createDrupal8SyncDir(app *DdevApp) error {
 	}
 
 	if err := os.MkdirAll(syncDirPath, 0755); err != nil {
-		return fmt.Errorf("failed to create sync directory: %v", err)
+		return fmt.Errorf("failed to create sync directory (%s): %v", syncDirPath, err)
 	}
 
 	return nil
