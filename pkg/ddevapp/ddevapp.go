@@ -1196,32 +1196,6 @@ func restoreApp(app *DdevApp, siteName string) error {
 	return nil
 }
 
-// validateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
-func validateDataDirRemoval(app *DdevApp) error {
-	dataDir := app.DataDir
-	unsafeFilePathErr := fmt.Errorf("filepath: %s unsafe for removal", dataDir)
-	// Check for an empty filepath
-	if dataDir == "" {
-		return unsafeFilePathErr
-	}
-	// Get the current working directory.
-	currDir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	// Check that dataDir is not the current directory.
-	if dataDir == currDir {
-		return unsafeFilePathErr
-	}
-	// Get the last element of dataDir and use it to check that there is something after GlobalDdevDir.
-	lastPathElem := filepath.Base(dataDir)
-	nextLastPathElem := filepath.Base(filepath.Dir(dataDir))
-	if lastPathElem == ".ddev" || nextLastPathElem != app.Name || lastPathElem == "" {
-		return unsafeFilePathErr
-	}
-	return nil
-}
-
 // GetProvider returns a pointer to the provider instance interface.
 func (app *DdevApp) GetProvider() (Provider, error) {
 	if app.providerInstance != nil {
