@@ -29,7 +29,7 @@ var WebTag = "20180726_webserver_bump" // Note that this can be overridden by ma
 var DBImg = "drud/ddev-dbserver"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "20180726_fix_dbserver_test" // Note that this may be overridden by make
+var DBTag = "20180720_volume_snapshot" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
