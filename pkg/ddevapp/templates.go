@@ -10,9 +10,18 @@ services:
     image: $DDEV_DBIMAGE
     stop_grace_period: 60s
     volumes:
-      - "${DDEV_IMPORTDIR}:/db"
-      - "${DDEV_DATADIR}:/var/lib/mysql"
-      - ".:/mnt/ddev_config:ro"
+      - type: "volume"
+        source: mariadb-database
+        target: "/var/lib/mysql"
+        volume:
+          nocopy: true
+      - type: "bind"
+        source: "${DDEV_IMPORTDIR}"
+        target: "/db"
+      - type: "bind"
+        source: "."
+        target: "/mnt/ddev_config"
+        read_only
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     ports:
@@ -95,6 +104,9 @@ networks:
   default:
     external:
       name: ddev_default
+volumes:
+  mariadb-database:
+    name: "${DDEV_SITENAME}-mariadb"
   
 `
 
