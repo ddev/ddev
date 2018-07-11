@@ -8,6 +8,7 @@ import (
 
 var removeData bool
 var removeAll bool
+var createSnapshot bool
 
 // DdevRemoveCmd represents the remove command
 var DdevRemoveCmd = &cobra.Command{
@@ -39,7 +40,7 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 				util.Warning("Project %s is not currently running. Try 'ddev start'.", app.GetName())
 			}
 
-			if err := app.Down(removeData); err != nil {
+			if err := app.Down(removeData, createSnapshot); err != nil {
 				util.Failed("Failed to remove ddev project %s: %v", app.GetName(), err)
 			}
 
@@ -50,6 +51,8 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 
 func init() {
 	DdevRemoveCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored project data (MySQL, logs, etc.)")
+	DdevRemoveCmd.Flags().BoolVarP(&createSnapshot, "create-snapshot", "C", true, "Create database snapshot")
+
 	DdevRemoveCmd.Flags().BoolVarP(&removeAll, "all", "a", false, "Remove all running and stopped projects")
 	RootCmd.AddCommand(DdevRemoveCmd)
 }

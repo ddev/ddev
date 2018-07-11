@@ -268,6 +268,10 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("no directory could be found at %s. Please enter a valid docroot in your configuration", fullPath)
 	}
 
+	if _, err := os.Stat(app.ConfigPath); os.IsNotExist(err) {
+		return fmt.Errorf("no valid project config.yaml was found at %s", app.ConfigPath)
+	}
+
 	// validate hostname
 	match := hostRegex.MatchString(app.GetHostname())
 	if !match {
