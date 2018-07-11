@@ -3,6 +3,8 @@ set -x
 set -eu
 set -o pipefail
 
+sudo chown -R $UID:$(id -g) /var/lib/mysql
+
 # If we have extra mariadb cnf files,, copy them to where they go.
 if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
   cp /mnt/ddev_config/mysql/*.cnf /etc/mysql/conf.d
