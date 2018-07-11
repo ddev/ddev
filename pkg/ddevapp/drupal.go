@@ -207,6 +207,32 @@ $databases['default']['default'] = array(
 );
 `
 
+// manageDrupalCommonSettingsFile will direct inspecting and writing the main settings file (settings.php).
+func manageDrupalCommonSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) error {
+	if !fileutil.FileExists(app.SiteSettingsPath) {
+		output.UserOut.Printf("No %s file exists", drupalConfig.SiteSettings)
+
+		if err := writeDrupalCommonSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
+			return fmt.Errorf("failed to write %s: %v", app.SiteSettingsPath, err)
+		}
+	}
+
+	included, err := settingsHasInclude(drupalConfig, app.SiteSettingsPath)
+	if err != nil {
+		return fmt.Errorf("failed to check for include in %s: %v", app.SiteSettingsPath, err)
+	}
+
+	if !included {
+		output.UserOut.Printf("Existing %s file does not include %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal)
+
+		if err := addIncludeToSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
+			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsLocal, drupalConfig.SiteSettings, err)
+		}
+	}
+
+	return nil
+}
+
 // writeDrupalCommonSettingsFile creates the app's settings.php or equivalent,
 // which does nothing more than imports the ddev-managed settings.ddev.php.
 func writeDrupalCommonSettingsFile(drupalConfig *DrupalSettings, settingsFilePath string) error {
@@ -238,21 +264,9 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings()
-	if !fileutil.FileExists(app.SiteSettingsPath) {
-		if err := writeDrupalCommonSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
-			return "", fmt.Errorf("failed to write %s: %v", app.SiteSettingsPath, err)
-		}
-	}
 
-	included, err := settingsHasInclude(drupalConfig, app.SiteSettingsPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to check for include in %s: %v", app.SiteSettingsPath, err)
-	}
-
-	if !included {
-		if err := addIncludeToSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
-			return "", fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsLocal, drupalConfig.SiteSettings, err)
-		}
+	if err := manageDrupalCommonSettingsFile(app, drupalConfig); err != nil {
+		return "", err
 	}
 
 	if err := writeDrupal7SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
@@ -269,21 +283,9 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings()
-	if !fileutil.FileExists(app.SiteSettingsPath) {
-		if err := writeDrupalCommonSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
-			return app.SiteLocalSettingsPath, fmt.Errorf("failed to write %s: %v", app.SiteSettingsPath, err)
-		}
-	}
 
-	included, err := settingsHasInclude(drupalConfig, app.SiteSettingsPath)
-	if err != nil {
-		return app.SiteLocalSettingsPath, fmt.Errorf("failed to check for include in %s: %v", app.SiteSettingsPath, err)
-	}
-
-	if !included {
-		if err := addIncludeToSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
-			return app.SiteLocalSettingsPath, fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsLocal, drupalConfig.SiteSettings, err)
-		}
+	if err := manageDrupalCommonSettingsFile(app, drupalConfig); err != nil {
+		return "", err
 	}
 
 	if err := writeDrupal8SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
@@ -300,21 +302,9 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings()
-	if !fileutil.FileExists(app.SiteSettingsPath) {
-		if err := writeDrupalCommonSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
-			return app.SiteLocalSettingsPath, fmt.Errorf("failed to write %s: %v", app.SiteSettingsPath, err)
-		}
-	}
 
-	included, err := settingsHasInclude(drupalConfig, app.SiteSettingsPath)
-	if err != nil {
-		return app.SiteLocalSettingsPath, fmt.Errorf("failed to check for include in %s: %v", app.SiteSettingsPath, err)
-	}
-
-	if !included {
-		if err := addIncludeToSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
-			return app.SiteLocalSettingsPath, fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsLocal, drupalConfig.SiteSettings, err)
-		}
+	if err := manageDrupalCommonSettingsFile(app, drupalConfig); err != nil {
+		return "", err
 	}
 
 	if err := writeDrupal6SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
@@ -611,7 +601,7 @@ func settingsHasInclude(drupalConfig *DrupalSettings, siteSettingsPath string) (
 
 // addIncludeToSettingsFile will include settings.ddev.php in settings.php.
 func addIncludeToSettingsFile(drupalConfig *DrupalSettings, siteSettingsPath string) error {
-	output.UserOut.Printf("Appending include of %s to %s", drupalConfig.SiteSettingsLocal, siteSettingsPath)
+	output.UserOut.Printf("Modifying %s to include %s", drupalConfig.SiteSettings, siteSettingsPath)
 
 	// Open file for appending to preserve current contents
 	file, err := os.OpenFile(siteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
