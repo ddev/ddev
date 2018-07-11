@@ -336,10 +336,11 @@ func TestValidate(t *testing.T) {
 	assert.NoError(err)
 
 	app := &DdevApp{
-		Name:    "TestValidate",
-		AppRoot: cwd,
-		Docroot: "testdata",
-		Type:    "wordpress",
+		Name:       "TestValidate",
+		ConfigPath: filepath.Join("testdata", "config.yaml"),
+		AppRoot:    cwd,
+		Docroot:    "testdata",
+		Type:       "wordpress",
 	}
 
 	err = app.ValidateConfig()
