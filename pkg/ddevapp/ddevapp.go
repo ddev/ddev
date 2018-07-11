@@ -814,7 +814,7 @@ func (app *DdevApp) Stop() error {
 	app.DockerEnv()
 
 	if app.SiteStatus() == SiteNotFound {
-		return fmt.Errorf("no site to remove")
+		return fmt.Errorf("no project to stop")
 	}
 
 	if strings.Contains(app.SiteStatus(), SiteDirMissing) || strings.Contains(app.SiteStatus(), SiteConfigMissing) {
@@ -894,27 +894,30 @@ func (app *DdevApp) Down(removeData bool) error {
 		}
 
 		// Check that app.DataDir is a directory that is safe to remove.
-		err = validateDataDirRemoval(app)
-		if err != nil {
-			return fmt.Errorf("failed to remove data/database directories: %v", err)
-		}
-
+		//err = validateDataDirRemoval(app)
+		//if err != nil {
+		//	return fmt.Errorf("failed to remove data/database directories: %v", err)
+		//}
 		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
 		// are writable before we attempt to remove them.
-		if !fileutil.FileExists(app.DataDir) {
-			util.Warning("No project data/database to remove")
-		} else {
-			// nolint: vetshadow
-			err := fileutil.PurgeDirectory(app.DataDir)
-			if err != nil {
-				return fmt.Errorf("failed to remove data directories: %v", err)
-			}
-			// PurgeDirectory leaves the directory itself in place, so we remove it here.
-			err = os.RemoveAll(app.DataDir)
-			if err != nil {
-				return fmt.Errorf("failed to remove data directory %s: %v", app.DataDir, err)
-			}
-			util.Success("Project data/database removed")
+		//if !fileutil.FileExists(app.DataDir) {
+		//	util.Warning("No project data/database to remove")
+		//} else {
+		//	err := fileutil.PurgeDirectory(app.DataDir)
+		//	if err != nil {
+		//		return fmt.Errorf("failed to remove data directories: %v", err)
+		//	}
+		//	// PurgeDirectory leaves the directory itself in place, so we remove it here.
+		//	err = os.RemoveAll(app.DataDir)
+		//	if err != nil {
+		//		return fmt.Errorf("failed to remove data directory %s: %v", app.DataDir, err)
+		//	}
+		//	util.Success("Project data/database removed")
+		//}
+		client := dockerutil.GetDockerClient()
+		err = client.RemoveVolume(app.Name + "-mariadb")
+		if err != nil {
+			return err
 		}
 	}
 
