@@ -19,12 +19,18 @@ echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
 if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq)
 fi
-echo "Docker ps -a:"
-docker ps -a
 
-# Update all images that may have changed
-docker images |grep -v REPOSITORY | awk '{print $1":"$2 }' | xargs -L1 docker pull
+# Update all images that couyld have changed
+docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull
 rm -rf ~/.ddev/Test*
+
+set -o errexit
+set -o pipefail
+set -o nounset
+set -x
+
+# Our testbot should now be sane, run the testbot checker to make sure.
+./.buildkite/sanetestbot.sh
 
 echo "Running tests..."
 time make test

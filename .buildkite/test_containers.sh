@@ -21,6 +21,9 @@ if [ ! -z "$IMAGES" ] ; then
   docker rmi --force $IMAGES
 fi
 
+# Our testbot should now be sane, run the testbot checker to make sure.
+./.buildkite/sanetestbot.sh
+
 for dir in containers/*
     do pushd $dir
     echo "--- Build container $dir"
