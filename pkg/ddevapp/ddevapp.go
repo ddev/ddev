@@ -873,10 +873,8 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	return "", fmt.Errorf("settings files already exist and are being managed by the user")
 }
 
-// Down stops the docker containers for the project in current directory.
-func (app *DdevApp) Down(removeData bool) error {
-	app.DockerEnv()
-
+// SnapshotDatabase forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
+func (app *DdevApp) SnapshotDatabase() error {
 	t := time.Now()
 	snapshotDir := filepath.Join("db_snapshots", app.Name+"_"+t.Format("20060102150405"))
 	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
@@ -885,7 +883,7 @@ func (app *DdevApp) Down(removeData bool) error {
 	if err != nil {
 		return err
 	}
-	// Tell the mariadb container to save a snapshot (into ~/.ddev? or .ddev?)
+
 	util.Warning("Creating database snapshot before destroying the database")
 	stdout, stderr, err := app.Exec("db", "bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock", containerSnapshotDir))
 	if err != nil {
@@ -897,7 +895,21 @@ func (app *DdevApp) Down(removeData bool) error {
 	if err != nil {
 		util.Warning("Failed to stop containers for %s: %v", app.GetName(), err)
 	}
+	return nil
+}
 
+// Down stops the docker containers for the project in current directory.
+func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
+	app.DockerEnv()
+
+	var err error
+
+	if createSnapshot == true {
+		err = app.SnapshotDatabase()
+		if err != nil {
+			return err
+		}
+	}
 	// Remove all the containers and volumes for app.
 	err = Cleanup(app)
 	if err != nil {

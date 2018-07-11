@@ -435,5 +435,5 @@ func TestConfigOverrideDetection(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	_ = app.Down(true)
+	_ = app.Down(true, false)
 }

@@ -185,7 +185,7 @@ func TestMain(m *testing.M) {
 		}
 
 		if app.SiteStatus() != ddevapp.SiteNotFound {
-			err = app.Down(true)
+			err = app.Down(true, false)
 			if err != nil {
 				log.Fatalf("TestMain shutdown: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
 			}
@@ -995,7 +995,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	// Notice that we set the removeData parameter to true.
 	// This gives us added test coverage over sites with missing directories
 	// by ensuring any associated database files get cleaned up as well.
-	err = app.Down(true)
+	err = app.Down(true, false)
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
@@ -1039,7 +1039,7 @@ func TestGetAppsEmpty(t *testing.T) {
 		assert.NoError(err)
 
 		if app.SiteStatus() != ddevapp.SiteNotFound {
-			err = app.Down(true)
+			err = app.Down(true, false)
 			assert.NoError(err)
 		}
 		switchDir()
@@ -1125,7 +1125,7 @@ func TestListWithoutDir(t *testing.T) {
 	testDirSafe := strings.Replace(testDir, "\\", ".", -1)
 	assert.Regexp(regexp.MustCompile("(?s)"+ddevapp.SiteDirMissing+".*"+testDirSafe), table.String())
 
-	err = app.Down(true)
+	err = app.Down(true, false)
 	assert.NoError(err)
 
 	// Change back to package dir. Lots of things will have to be cleaned up
