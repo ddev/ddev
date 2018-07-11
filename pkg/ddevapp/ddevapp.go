@@ -28,6 +28,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-shellwords"
+	"time"
 )
 
 const containerWaitTimeout = 61
@@ -876,7 +877,23 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 func (app *DdevApp) Down(removeData bool) error {
 	app.DockerEnv()
 
-	err := app.Stop()
+	t := time.Now()
+	snapshotDir := filepath.Join("db_snapshots", app.Name+"_"+t.Format("20060102150405"))
+	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
+	containerSnapshotDir := filepath.Join("/mnt/ddev_config", snapshotDir)
+	err := os.MkdirAll(hostSnapshotDir, 0777)
+	if err != nil {
+		return err
+	}
+	// Tell the mariadb container to save a snapshot (into ~/.ddev? or .ddev?)
+	util.Warning("Creating database snapshot before destroying the database")
+	stdout, stderr, err := app.Exec("db", "bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock", containerSnapshotDir))
+	if err != nil {
+		util.Warning("Failed to create snapshot, %s, %s", stdout, stderr)
+		return err
+	}
+	util.Success("Created database snapshot: %s", hostSnapshotDir)
+	err = app.Stop()
 	if err != nil {
 		util.Warning("Failed to stop containers for %s: %v", app.GetName(), err)
 	}
@@ -884,7 +901,7 @@ func (app *DdevApp) Down(removeData bool) error {
 	// Remove all the containers and volumes for app.
 	err = Cleanup(app)
 	if err != nil {
-		return fmt.Errorf("failed to remove %s: %v", app.GetName(), err)
+		return fmt.Errorf("failed to remove ddev project %s: %v", app.GetName(), err)
 	}
 
 	// Remove data/database/hostname if we need to.
