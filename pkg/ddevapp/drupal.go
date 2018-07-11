@@ -210,7 +210,7 @@ $databases['default']['default'] = array(
 // manageDrupalCommonSettingsFile will direct inspecting and writing the main settings file (settings.php).
 func manageDrupalCommonSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) error {
 	if !fileutil.FileExists(app.SiteSettingsPath) {
-		output.UserOut.Printf("No %s file exists", drupalConfig.SiteSettings)
+		output.UserOut.Printf("No %s file exists, creating one", drupalConfig.SiteSettings)
 
 		if err := writeDrupalCommonSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
 			return fmt.Errorf("failed to write %s: %v", app.SiteSettingsPath, err)
@@ -223,7 +223,7 @@ func manageDrupalCommonSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) 
 	}
 
 	if !included {
-		output.UserOut.Printf("Existing %s file does not include %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal)
+		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal)
 
 		if err := addIncludeToSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
 			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsLocal, drupalConfig.SiteSettings, err)
@@ -236,8 +236,6 @@ func manageDrupalCommonSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) 
 // writeDrupalCommonSettingsFile creates the app's settings.php or equivalent,
 // which does nothing more than imports the ddev-managed settings.ddev.php.
 func writeDrupalCommonSettingsFile(drupalConfig *DrupalSettings, settingsFilePath string) error {
-	output.UserOut.Printf("Generating %s file to include %s.", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal)
-
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupalCommonSettingsTemplate)
 	if err != nil {
 		return err
@@ -592,17 +590,11 @@ func settingsHasInclude(drupalConfig *DrupalSettings, siteSettingsPath string) (
 		return false, err
 	}
 
-	if !included {
-		output.UserOut.Printf("Settings file at %s does not include %s", siteSettingsPath, drupalConfig.SiteSettingsLocal)
-	}
-
 	return included, nil
 }
 
 // addIncludeToSettingsFile will include settings.ddev.php in settings.php.
 func addIncludeToSettingsFile(drupalConfig *DrupalSettings, siteSettingsPath string) error {
-	output.UserOut.Printf("Modifying %s to include %s", drupalConfig.SiteSettings, siteSettingsPath)
-
 	// Open file for appending to preserve current contents
 	file, err := os.OpenFile(siteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil {
