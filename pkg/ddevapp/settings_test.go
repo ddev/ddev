@@ -19,8 +19,9 @@ import (
 // settings.php/settings.local.php
 func TestWriteSettings(t *testing.T) {
 	expectations := map[string]string{
-		"drupal7":   "sites/default/settings.php",
-		"drupal8":   "sites/default/settings.php",
+		"drupal6":   "sites/default/settings.ddev.php",
+		"drupal7":   "sites/default/settings.ddev.php",
+		"drupal8":   "sites/default/settings.ddev.php",
 		"wordpress": "wp-config.php",
 		"typo3":     "typo3conf/AdditionalConfiguration.php",
 	}
