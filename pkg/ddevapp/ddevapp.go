@@ -891,10 +891,6 @@ func (app *DdevApp) SnapshotDatabase() error {
 		return err
 	}
 	util.Success("Created database snapshot: %s", hostSnapshotDir)
-	err = app.Stop()
-	if err != nil {
-		util.Warning("Failed to stop containers for %s: %v", app.GetName(), err)
-	}
 	return nil
 }
 
@@ -909,6 +905,11 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	err = app.Stop()
+	if err != nil {
+		util.Warning("Failed to stop containers for %s: %v", app.GetName(), err)
 	}
 	// Remove all the containers and volumes for app.
 	err = Cleanup(app)

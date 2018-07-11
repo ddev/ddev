@@ -11,7 +11,7 @@ import (
 
 var startAll bool
 
-// StartCmd represents the add command
+// StartCmd provides the ddev start command
 var StartCmd = &cobra.Command{
 	Use:     "start [projectname ...]",
 	Aliases: []string{"add"},
