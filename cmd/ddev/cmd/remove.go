@@ -40,7 +40,7 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 			}
 
 			if err := app.Down(removeData); err != nil {
-				util.Failed("Failed to remove %s: %v", app.GetName(), err)
+				util.Failed("Failed to remove ddev project %s: %v", app.GetName(), err)
 			}
 
 			util.Success("Project %s has been removed.", app.GetName())
