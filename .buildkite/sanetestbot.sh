@@ -24,4 +24,4 @@ if [ $(go env GOOS) = "windows"  -a $(git config core.autocrlf) != "false" ] ; t
  exit 3
 fi
 
-echo "testbot seems to be set up OK"
+echo "=== testbot $HOSTNAME seems to be set up OK ==="
