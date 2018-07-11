@@ -19,8 +19,8 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 12. On Docker Toolbox systems, make sure that nested virtualization is enabled however you need to enable it.
 13. Edit /c/ProgramData/git/config to `autocrlf: false` and verify that `git config --list` shows only autocrlf: false. 
 14. Run `winpty docker run -it -p 80 busybox ls` to trigger the Windows Defender warning, and "allow access".
-`
-15. Reboot the machine and do a test run.
+15. Try running .buildkite/sanetestbot.sh to check your work.
+16. Reboot the machine and do a test run.
 
 ### macOS Test Agent Setup
 
@@ -33,4 +33,5 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 7. Enable nosleep using its shortcut in the Mac status bar.
 8. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
 9. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
-10. Reboot the machine and do a test run.
+10. Try running .buildkite/sanetestbot.sh to check your work.
+11. Reboot the machine and do a test run.
