@@ -222,12 +222,12 @@ func writeDrupalCommonSettingsFile(drupalConfig *DrupalSettings, settingsFilePat
 	if err != nil {
 		return err
 	}
+	defer util.CheckClose(file)
 
 	if err := tmpl.Execute(file, drupalConfig); err != nil {
 		return err
 	}
 
-	util.CheckClose(file)
 	return nil
 }
 
@@ -258,8 +258,6 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 // adding things like database host, name, and password
 // Returns the fullpath to settings file and err
 func createDrupal8SettingsFile(app *DdevApp) (string, error) {
-	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(app.SiteLocalSettingsPath))
-
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings()
@@ -269,9 +267,12 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
-	if included, err := settingsHasInclude(app.SiteSettingsPath, app.SiteLocalSettingsPath); err != nil {
-		return app.SiteLocalSettingsPath, err
-	} else if !included {
+	included, err := settingsHasInclude(app.SiteSettingsPath, drupalConfig)
+	if err != nil {
+		return app.SiteLocalSettingsPath, fmt.Errorf("failed to grep %s: %v", app.SiteSettingsPath, err)
+	}
+
+	if !included {
 		if err := addIncludeToSettingsFile(app.SiteSettingsPath, drupalConfig); err != nil {
 			return app.SiteLocalSettingsPath, fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal, err)
 		}
@@ -325,12 +326,12 @@ func writeDrupal8SettingsFile(settings *DrupalSettings, filePath string) error {
 	if err != nil {
 		return err
 	}
+	defer util.CheckClose(file)
 
 	if err := tmpl.Execute(file, settings); err != nil {
 		return err
 	}
 
-	util.CheckClose(file)
 	return nil
 }
 
@@ -579,16 +580,29 @@ func createDrupal8SyncDir(app *DdevApp) error {
 
 // settingsHasInclude determines if the settings.php or equivalent includes settings.ddev.php or equivalent.
 // This is done by looking for the ddev settings file (settings.ddev.php) in settings.php.
-func settingsHasInclude(siteSettingsPath, siteLocalSettingsPath string) (bool, error) {
-	return fileutil.FgrepStringInFile(siteSettingsPath, filepath.Base(siteLocalSettingsPath))
+func settingsHasInclude(siteSettingsPath string, drupalConfig *DrupalSettings) (bool, error) {
+	included, err := fileutil.FgrepStringInFile(siteSettingsPath, drupalConfig.SiteSettingsLocal)
+	if err != nil {
+		return false, err
+	}
+
+	if !included {
+		output.UserOut.Printf("Settings file at %s does not include %s", siteSettingsPath, drupalConfig.SiteSettingsLocal)
+	}
+
+	return included, nil
 }
 
 // addIncludeToSettingsFile will include settings.ddev.php in settings.php.
 func addIncludeToSettingsFile(siteSettingsPath string, drupalConfig *DrupalSettings) error {
+	output.UserOut.Printf("Appending include of %s to %s", drupalConfig.SiteSettingsLocal, siteSettingsPath)
+
+	// Open file for appending to preserve current contents
 	file, err := os.OpenFile(siteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
+	defer util.CheckClose(file)
 
 	// Get current contents of settings.php
 	siteSettings, err := ioutil.ReadAll(file)
@@ -607,11 +621,9 @@ func addIncludeToSettingsFile(siteSettingsPath string, drupalConfig *DrupalSetti
 	b := bytes.NewBuffer([]byte{})
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupalCommonSettingsAppendTemplate)
 	tmpl.Execute(b, drupalConfig)
-
 	if _, err := file.Write(b.Bytes()); err != nil {
 		return err
 	}
 
-	util.CheckClose(file)
 	return nil
 }
