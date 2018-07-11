@@ -2,7 +2,7 @@ package ddevapp
 
 // DDevComposeTemplate is used to create the main docker-compose.yaml
 // file for a ddev site.
-const DDevComposeTemplate = `version: '3'
+const DDevComposeTemplate = `version: '{{ .compose_version }}'
 {{ .ddevgenerated }}
 services:
   db:
@@ -95,6 +95,7 @@ networks:
   default:
     external:
       name: ddev_default
+  
 `
 
 // ConfigInstructions is used to add example hooks usage
@@ -207,7 +208,7 @@ var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 </plist>`
 
 // DdevRouterTemplate is the template for the generic router container.
-const DdevRouterTemplate = `version: '3'
+const DdevRouterTemplate = `version: '{{ .compose_version }}'
 services:
   ddev-router:
     image: {{ .router_image }}:{{ .router_tag }}
