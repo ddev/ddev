@@ -422,14 +422,15 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	}
 	templateVars := map[string]string{
-		"name":          app.Name,
-		"plugin":        "ddev",
-		"appType":       app.Type,
-		"mailhogport":   appports.GetPort("mailhog"),
-		"dbaport":       appports.GetPort("dba"),
-		"dbport":        appports.GetPort("db"),
-		"ddevgenerated": DdevFileSignature,
-		"extra_host":    docker0Hostname + `:` + docker0Addr,
+		"name":            app.Name,
+		"plugin":          "ddev",
+		"appType":         app.Type,
+		"mailhogport":     appports.GetPort("mailhog"),
+		"dbaport":         appports.GetPort("dba"),
+		"dbport":          appports.GetPort("db"),
+		"ddevgenerated":   DdevFileSignature,
+		"extra_host":      docker0Hostname + `:` + docker0Addr,
+		"compose_version": version.DockerComposeFileFormatVersion,
 	}
 
 	err = templ.Execute(&doc, templateVars)
