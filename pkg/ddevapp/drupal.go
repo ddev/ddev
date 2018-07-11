@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"fmt"
 
-	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -615,15 +614,4 @@ func addIncludeToSettingsFile(siteSettingsPath string, drupalConfig *DrupalSetti
 
 	util.CheckClose(file)
 	return nil
-}
-
-//
-func getTemplateFuncMap() map[string]interface{} {
-	// Use sprig's template function map as a base
-	m := sprig.FuncMap()
-
-	// Add helpful utilities on top of it
-	m["joinPath"] = filepath.Join
-
-	return m
 }

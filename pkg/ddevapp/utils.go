@@ -11,6 +11,7 @@ import (
 
 	"errors"
 
+	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
@@ -163,4 +164,15 @@ func ddevContainersRunning() (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// getTemplateFuncMap will return a map of useful template functions.
+func getTemplateFuncMap() map[string]interface{} {
+	// Use sprig's template function map as a base
+	m := sprig.FuncMap()
+
+	// Add helpful utilities on top of it
+	m["joinPath"] = filepath.Join
+
+	return m
 }
