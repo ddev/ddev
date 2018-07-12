@@ -13,3 +13,18 @@ additional_hostnames:
 ```
 
 This configuration would result in working hostnames of mysite.ddev.local, extraname.ddev.local, fr.mysite.ddev.local, es.mysite.ddev.local, and it.mysite.ddev.local (with full http and https URLs for each).
+
+You can also provide additional_fqdn entries, which don't use the ".ddev.local" top-level domain. 
+
+```
+name: somename
+
+additional_fqdns:
+- mysite.com
+- somesite.yoursite.com
+- anothersite.yoursite.com
+```
+
+This configuration would result in working hostnames of somename.ddev.local, mysite.com, somesite.yoursite.com http://anothersite.yoursite.com, and anothersite.yoursite.com.
+
+Please be warned that this may not work predictably on all systems. There are operating systems and machines where /etc/hosts may not be the first or only resolution technique, especially if the additional_fqdn you use is also in DNS.

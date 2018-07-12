@@ -66,6 +66,7 @@ type DdevApp struct {
 	RouterHTTPSPort       string               `yaml:"router_https_port"`
 	XdebugEnabled         bool                 `yaml:"xdebug_enabled"`
 	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
+	AdditionalFQDNs       []string             `yaml:"additional_fqdns"`
 	ConfigPath            string               `yaml:"-"`
 	AppRoot               string               `yaml:"-"`
 	Platform              string               `yaml:"-"`
@@ -794,7 +795,7 @@ func (app *DdevApp) DockerEnv() {
 	envVars["COLUMNS"] = strconv.Itoa(columns)
 	envVars["LINES"] = strconv.Itoa(lines)
 
-	if len(app.AdditionalHostnames) > 0 {
+	if len(app.AdditionalHostnames) > 0 || len(app.AdditionalFQDNs) > 0 {
 		// TODO: Warn people about additional names in use.
 		envVars["DDEV_HOSTNAME"] = strings.Join(app.GetHostnames(), ",")
 	}

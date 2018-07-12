@@ -307,6 +307,10 @@ func (app *DdevApp) GetHostnames() []string {
 		nameListMap[name+"."+version.DDevTLD] = 1
 	}
 
+	for _, name := range app.AdditionalFQDNs {
+		nameListMap[name] = 1
+	}
+
 	// Now walk the map and extract the keys into an array.
 	nameListArray := make([]string, 0, len(nameListMap))
 	for k := range nameListMap {
