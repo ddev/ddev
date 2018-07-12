@@ -789,6 +789,12 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_XDEBUG_ENABLED":           strconv.FormatBool(app.XdebugEnabled),
 	}
 
+	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
+	// It's used for special startup on restoring to a snapshot.
+	if len(os.Getenv("DDEV_MARIADB_LOCAL_COMMAND")) == 0 {
+		os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
+	}
+
 	// Find out terminal dimensions
 	columns, lines, err := terminal.GetSize(0)
 	if err != nil {
@@ -891,6 +897,34 @@ func (app *DdevApp) SnapshotDatabase() error {
 		return err
 	}
 	util.Success("Created database snapshot: %s", hostSnapshotDir)
+	return nil
+}
+
+// RevertToSnapshot restores a mariadb snapshot of the db to be loaded
+// The project must be stopped and docker volume removed and recreated for this to work.
+func (app *DdevApp) RevertToSnapshot(snapshotName string) error {
+	snapshotDir := filepath.Join("db_snapshots", snapshotName)
+
+	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
+	if !fileutil.FileExists(hostSnapshotDir) {
+		return fmt.Errorf("Failed to find the snapshot directory %s", hostSnapshotDir)
+	}
+
+	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
+		err := app.Down(false, false)
+		if err != nil {
+			return fmt.Errorf("Failed to rm  project for RevertToSnapshot: %v", err)
+		}
+	}
+
+	os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
+	err := app.Start()
+	os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
+	if err != nil {
+		return fmt.Errorf("Failed to start project for RevertToSnapshot: %v", err)
+	}
+
+	util.Success("Reverted to database snapshot: %s", hostSnapshotDir)
 	return nil
 }
 
