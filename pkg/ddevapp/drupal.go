@@ -80,8 +80,7 @@ const drupalCommonSettingsTemplate = `<?php
 include '{{ joinPath $config.SitePath $config.SiteSettingsLocal }}';
 `
 
-const drupalCommonSettingsAppendTemplate = `
-{{ $config := . }}
+const drupalCommonSettingsAppendTemplate = `{{ $config := . }}
 /**
  This was automatically generated to include settings managed by ddev.
  */
@@ -222,10 +221,12 @@ func manageDrupalCommonSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) 
 		return fmt.Errorf("failed to check for include in %s: %v", app.SiteSettingsPath, err)
 	}
 
-	if !included {
+	if included {
+		output.UserOut.Printf("Existing %s file includes %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal)
+	} else {
 		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal)
 
-		if err := addIncludeToSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
+		if err := addIncludeToDrupalSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
 			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsLocal, drupalConfig.SiteSettings, err)
 		}
 	}
@@ -235,14 +236,20 @@ func manageDrupalCommonSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) 
 
 // writeDrupalCommonSettingsFile creates the app's settings.php or equivalent,
 // which does nothing more than imports the ddev-managed settings.ddev.php.
-func writeDrupalCommonSettingsFile(drupalConfig *DrupalSettings, settingsFilePath string) error {
+func writeDrupalCommonSettingsFile(drupalConfig *DrupalSettings, filePath string) error {
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupalCommonSettingsTemplate)
 	if err != nil {
 		return err
 	}
 
+	// Ensure target directory is writable.
+	dir := filepath.Dir(filePath)
+	if err = os.Chmod(dir, 0755); err != nil {
+		return err
+	}
+
 	// Create file
-	file, err := os.OpenFile(settingsFilePath, os.O_RDWR|os.O_CREATE, 0644)
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
@@ -277,7 +284,7 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
-	if err := createGitIgnore(filepath.Dir(app.SiteSettingsPath), drupalConfig.SiteSettingsLocal); err != nil {
+	if err := createGitIgnore(filepath.Dir(app.SiteLocalSettingsPath), drupalConfig.SiteSettingsLocal); err != nil {
 		output.UserOut.Warnf("Failed to write .gitignore: %v", err)
 	}
 
@@ -623,8 +630,8 @@ func settingsHasInclude(drupalConfig *DrupalSettings, siteSettingsPath string) (
 	return included, nil
 }
 
-// addIncludeToSettingsFile will include settings.ddev.php in settings.php.
-func addIncludeToSettingsFile(drupalConfig *DrupalSettings, siteSettingsPath string) error {
+// addIncludeToDrupalSettingsFile will include settings.ddev.php in settings.php.
+func addIncludeToDrupalSettingsFile(drupalConfig *DrupalSettings, siteSettingsPath string) error {
 	// Open file for appending to preserve current contents
 	file, err := os.OpenFile(siteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil {
@@ -633,25 +640,25 @@ func addIncludeToSettingsFile(drupalConfig *DrupalSettings, siteSettingsPath str
 	defer util.CheckClose(file)
 
 	// Get current contents of settings.php
-	siteSettings, err := ioutil.ReadAll(file)
+	currentSiteSettings, err := ioutil.ReadAll(file)
 	if err != nil {
 		return err
 	}
 
-	// If settings.php is empty, write the simple include to it.
-	if len(siteSettings) == 0 {
+	// If settings.php is empty, just write the entire settings file to it
+	if len(currentSiteSettings) == 0 {
 		if err := writeDrupalCommonSettingsFile(drupalConfig, siteSettingsPath); err != nil {
 			return err
 		}
 	}
 
-	// The file is not empty, append the include.
-	b := bytes.NewBuffer([]byte{})
+	// The file is not empty, append the include
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupalCommonSettingsAppendTemplate)
 	if err != nil {
 		return err
 	}
 
+	b := bytes.NewBuffer([]byte{})
 	if err := tmpl.Execute(b, drupalConfig); err != nil {
 		return err
 	}
