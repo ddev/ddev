@@ -291,7 +291,15 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.NoError(err)
 		}
 
+		// Multiple projects can't run at the same time with the fqdns, so we need to clean
+		// up these for tests that run later.
+		app.AdditionalFQDNs = []string{}
+		app.AdditionalHostnames = []string{}
+		app.WriteConfig()
+
 		err = app.Stop()
+		assert.NoError(err)
+		err = app.Down(false)
 		assert.NoError(err)
 
 		runTime()
