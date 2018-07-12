@@ -25,6 +25,8 @@ additional_fqdns:
 - anothersite.yoursite.com
 ```
 
-This configuration would result in working hostnames of somename.ddev.local, mysite.com, somesite.yoursite.com http://anothersite.yoursite.com, and anothersite.yoursite.com.
+This configuration would result in working FQDNs of somename.ddev.local, mysite.com, somesite.yoursite.com http://anothersite.yoursite.com, and anothersite.yoursite.com.
 
-Please be warned that this may not work predictably on all systems. There are operating systems and machines where /etc/hosts may not be the first or only resolution technique, especially if the additional_fqdn you use is also in DNS.
+**Warning**: this may not work predictably on all systems. There are operating systems and machines where /etc/hosts may not be the first or only resolution technique, especially if the additional_fqdn you use is also in DNS.
+
+**Warning**: if you use an additional_fqdn that exists on the internet (like "www.google.com"), your hosts file will override access to the original (internet) site, and you'll be sad and confused that you can't get to it.
