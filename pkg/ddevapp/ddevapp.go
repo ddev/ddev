@@ -792,7 +792,8 @@ func (app *DdevApp) DockerEnv() {
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
 	// It's used for special startup on restoring to a snapshot.
 	if len(os.Getenv("DDEV_MARIADB_LOCAL_COMMAND")) == 0 {
-		os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
+		err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
+		util.CheckErr(err)
 	}
 
 	// Find out terminal dimensions
@@ -917,12 +918,14 @@ func (app *DdevApp) RevertToSnapshot(snapshotName string) error {
 		}
 	}
 
-	os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
-	err := app.Start()
-	os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
+	err := os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
+	util.CheckErr(err)
+	err = app.Start()
 	if err != nil {
 		return fmt.Errorf("Failed to start project for RevertToSnapshot: %v", err)
 	}
+	err = os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
+	util.CheckErr(err)
 
 	util.Success("Reverted to database snapshot: %s", hostSnapshotDir)
 	return nil
