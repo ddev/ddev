@@ -11,6 +11,9 @@ import (
 
 	"errors"
 
+	"os"
+	"text/template"
+
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -175,4 +178,35 @@ func getTemplateFuncMap() map[string]interface{} {
 	m["joinPath"] = filepath.Join
 
 	return m
+}
+
+const gitIgnoreTemplate = `{{ range $i, $f := . -}}
+{{ $f }}
+{{- end }}
+`
+
+// createGitIgnore will create a .gitignore file in the target directory if one does not exist.
+// Each value in ignores will be added as a new line to the .gitignore.
+func createGitIgnore(targetDir string, ignores ...string) error {
+	gitIgnoreFilePath := filepath.Join(targetDir, ".gitignore")
+	if fileutil.FileExists(gitIgnoreFilePath) {
+		return nil
+	}
+
+	tmpl, err := template.New("gitignore").Funcs(getTemplateFuncMap()).Parse(gitIgnoreTemplate)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.OpenFile(gitIgnoreFilePath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(file)
+
+	if err := tmpl.Execute(file, ignores); err != nil {
+		return err
+	}
+
+	return nil
 }
