@@ -35,7 +35,7 @@ services:
     environment:
       - COLUMNS=$COLUMNS
       - LINES=$LINES
-
+    command: "$DDEV_MARIADB_LOCAL_COMMAND"
   web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE

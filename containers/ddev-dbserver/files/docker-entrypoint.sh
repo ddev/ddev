@@ -3,6 +3,19 @@ set -x
 set -eu
 set -o pipefail
 
+# If we have a restore_snapshot arg, get the snapshot directory
+# otherwise, fail and abort startup
+if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
+  snapshot_dir="/mnt/ddev_config/db_snapshots/${2:-nothingthere}"
+  if [ -d $snapshot_dir ] ; then
+    echo "Restoring from snapshot directory $snapshot_dir"
+  else
+    echo "$snapshot_dir does not exist, not attempting restore of snapshot"
+    unset snapshot_dir
+    exit 3
+  fi
+fi
+
 sudo chown -R $UID:$(id -g) /var/lib/mysql
 
 # If we have extra mariadb cnf files,, copy them to where they go.
@@ -13,10 +26,12 @@ fi
 
 # If mariadb has not been initialized, copy in the base image.
 if [ ! -d "/var/lib/mysql/mysql" ]; then
+    target=${snapshot_dir:-/var/tmp/mysqlbase/}
+    sudo rm -rf /var/lib/mysql/*
 	mkdir -p /var/lib/mysql
-	mariabackup --prepare --target-dir /var/tmp/mysqlbase/ --user root --password root --socket=/var/tmp/mysql.sock
-	mariabackup --copy-back --target-dir /var/tmp/mysqlbase/ --user root --password root --socket=/var/tmp/mysql.sock
-	echo 'Database initialized'
+	mariabackup --prepare --target-dir "$target" --user root --password root --socket=/var/tmp/mysql.sock
+	mariabackup --copy-back --target-dir "$target" --user root --password root --socket=/var/tmp/mysql.sock
+	echo 'Database initialized from $target'
 fi
 
 
