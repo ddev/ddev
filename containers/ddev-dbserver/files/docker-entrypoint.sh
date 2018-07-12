@@ -9,6 +9,7 @@ if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
   snapshot_dir="/mnt/ddev_config/db_snapshots/${2:-nothingthere}"
   if [ -d $snapshot_dir ] ; then
     echo "Restoring from snapshot directory $snapshot_dir"
+    sudo rm -rf /var/lib/mysql/*
   else
     echo "$snapshot_dir does not exist, not attempting restore of snapshot"
     unset snapshot_dir
@@ -27,7 +28,6 @@ fi
 # If mariadb has not been initialized, copy in the base image.
 if [ ! -d "/var/lib/mysql/mysql" ]; then
     target=${snapshot_dir:-/var/tmp/mysqlbase/}
-    sudo rm -rf /var/lib/mysql/*
 	mkdir -p /var/lib/mysql
 	mariabackup --prepare --target-dir "$target" --user root --password root --socket=/var/tmp/mysql.sock
 	mariabackup --copy-back --target-dir "$target" --user root --password root --socket=/var/tmp/mysql.sock
