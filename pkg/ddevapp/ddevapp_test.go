@@ -19,6 +19,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
@@ -255,6 +256,10 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		// "a" is repeated for the same reason; a user error of this type should not cause a failure; GetHostNames()
 		// should uniqueify them.
 		app.AdditionalHostnames = []string{"sub1." + site.Name, "sub2." + site.Name, "subname.sub3." + site.Name, site.Name, site.Name, site.Name}
+
+		// sub1.<sitename>.ddev.local and sitename.ddev.local are deliberately included to prove they don't
+		// cause ddev-router failures"
+		app.AdditionalFQDNs = []string{"one.example.com", "two.example.com", "a.one.example.com", site.Name + "." + version.DDevTLD, "sub1." + site.Name + version.DDevTLD}
 
 		err = app.WriteConfig()
 		assert.NoError(err)

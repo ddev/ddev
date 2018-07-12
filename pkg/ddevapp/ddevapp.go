@@ -796,7 +796,6 @@ func (app *DdevApp) DockerEnv() {
 	envVars["LINES"] = strconv.Itoa(lines)
 
 	if len(app.AdditionalHostnames) > 0 || len(app.AdditionalFQDNs) > 0 {
-		// TODO: Warn people about additional names in use.
 		envVars["DDEV_HOSTNAME"] = strings.Join(app.GetHostnames(), ",")
 	}
 
