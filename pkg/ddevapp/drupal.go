@@ -267,8 +267,14 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 		return "", err
 	}
 
-	if err := writeDrupal7SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
+	// Create settings.ddev.php if one doesn't already exist
+	if fileutil.FileExists(app.SiteLocalSettingsPath) {
+		output.UserOut.Printf("ddev settings file %s already exists", drupalConfig.SiteSettingsLocal)
+	} else {
+		output.UserOut.Printf("No %s exists, creating one", drupalConfig.SiteSettingsLocal)
+		if err := writeDrupal7SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
+			return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
+		}
 	}
 
 	return app.SiteLocalSettingsPath, nil
@@ -286,8 +292,14 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 		return "", err
 	}
 
-	if err := writeDrupal8SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return app.SiteLocalSettingsPath, fmt.Errorf("failed to write Drupal settings file: %v", err.Error())
+	// Create settings.ddev.php if one doesn't already exist
+	if fileutil.FileExists(app.SiteLocalSettingsPath) {
+		output.UserOut.Printf("ddev settings file %s already exists", drupalConfig.SiteSettingsLocal)
+	} else {
+		output.UserOut.Printf("No %s exists, creating one", drupalConfig.SiteSettingsLocal)
+		if err := writeDrupal8SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
+			return "", fmt.Errorf("failed to write Drupal settings file: %v", err.Error())
+		}
 	}
 
 	return app.SiteLocalSettingsPath, nil
@@ -305,8 +317,14 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 		return "", err
 	}
 
-	if err := writeDrupal6SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("failed to write Drupal settings file: %v", err)
+	// Create settings.ddev.php if one doesn't already exist
+	if fileutil.FileExists(app.SiteLocalSettingsPath) {
+		output.UserOut.Printf("ddev settings file %s already exists", drupalConfig.SiteSettingsLocal)
+	} else {
+		output.UserOut.Printf("No %s exists, creating one", drupalConfig.SiteSettingsLocal)
+		if err := writeDrupal6SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
+			return "", fmt.Errorf("failed to write Drupal settings file: %v", err)
+		}
 	}
 
 	return app.SiteLocalSettingsPath, nil
