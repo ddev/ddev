@@ -46,6 +46,7 @@ RUN apt-get -qq update && \
         git \
         mysql-client \
         nginx \
+        apache2 \
         nodejs \
         libcap2-bin \
         supervisor \
