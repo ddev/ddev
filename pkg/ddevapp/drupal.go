@@ -207,6 +207,9 @@ $databases['default']['default'] = array(
 );
 `
 
+const gitignoreTemplate = `{{ .SiteSettingsLocal }}
+`
+
 // manageDrupalCommonSettingsFile will direct inspecting and writing the main settings file (settings.php).
 func manageDrupalCommonSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) error {
 	if !fileutil.FileExists(app.SiteSettingsPath) {
@@ -277,6 +280,10 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
+	if err := createGitignore(app, drupalConfig); err != nil {
+		output.UserOut.Warnf("Failed to write .gitignore: %v", err)
+	}
+
 	return app.SiteLocalSettingsPath, nil
 }
 
@@ -302,6 +309,10 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
+	if err := createGitignore(app, drupalConfig); err != nil {
+		output.UserOut.Warnf("Failed to write .gitignore: %v", err)
+	}
+
 	return app.SiteLocalSettingsPath, nil
 }
 
@@ -325,6 +336,10 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 		if err := writeDrupal6SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
 			return "", fmt.Errorf("failed to write Drupal settings file: %v", err)
 		}
+	}
+
+	if err := createGitignore(app, drupalConfig); err != nil {
+		output.UserOut.Warnf("Failed to write .gitignore: %v", err)
 	}
 
 	return app.SiteLocalSettingsPath, nil
@@ -636,8 +651,41 @@ func addIncludeToSettingsFile(drupalConfig *DrupalSettings, siteSettingsPath str
 	// The file is not empty, append the include.
 	b := bytes.NewBuffer([]byte{})
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupalCommonSettingsAppendTemplate)
-	tmpl.Execute(b, drupalConfig)
+	if err != nil {
+		return err
+	}
+
+	if err := tmpl.Execute(b, drupalConfig); err != nil {
+		return err
+	}
+
 	if _, err := file.Write(b.Bytes()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// createGitIgnore will prevent the settings.ddev.php file from being committed to version control.
+func createGitignore(app *DdevApp, drupalConfig *DrupalSettings) error {
+	// TODO: should this existence check be handled before this is called?
+	gitignorePath := filepath.Join(path.Dir(app.SiteLocalSettingsPath), ".gitignore")
+	if fileutil.FileExists(gitignorePath) {
+		return nil
+	}
+
+	tmpl, err := template.New("gitignore").Funcs(getTemplateFuncMap()).Parse(gitignoreTemplate)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.OpenFile(gitignorePath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(file)
+
+	if err := tmpl.Execute(file, drupalConfig); err != nil {
 		return err
 	}
 
