@@ -54,7 +54,7 @@ const backdropMainSettingsTemplate = `<?php
 /**
  This was automatically generated to include settings managed by ddev.
  */
-include {{ '$config.SiteSettingsLocal }}';
+include '{{ $config.SiteSettingsLocal }}';
 `
 
 const backdropSettingsAppendTemplate = `{{ $config := . }}
@@ -94,7 +94,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		output.UserOut.Printf("No %s file exists, creating one", settings.SiteSettings)
-		if err := writeBackdropMainSettingsFile(settings, app.SiteLocalSettingsPath); err != nil {
+		if err := writeBackdropMainSettingsFile(settings, app.SiteSettingsPath); err != nil {
 			return "", err
 		}
 	}

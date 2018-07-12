@@ -19,6 +19,7 @@ import (
 // settings.php/settings.local.php
 func TestWriteSettings(t *testing.T) {
 	expectations := map[string]string{
+		"backdrop":  "settings.ddev.php",
 		"drupal6":   "sites/default/settings.ddev.php",
 		"drupal7":   "sites/default/settings.ddev.php",
 		"drupal8":   "sites/default/settings.ddev.php",
