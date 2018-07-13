@@ -645,7 +645,7 @@ func addIncludeToDrupalSettingsFile(drupalConfig *DrupalSettings, siteSettingsPa
 		return err
 	}
 
-	// If settings.php is empty, just write the entire settings file to it
+	// If settings.php is empty, write the complete settings template
 	if len(currentSiteSettings) == 0 {
 		if err := writeDrupalCommonSettingsFile(drupalConfig, siteSettingsPath); err != nil {
 			return err

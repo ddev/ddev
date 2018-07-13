@@ -48,7 +48,6 @@ func NewBackdropSettings() *BackdropSettings {
 	}
 }
 
-// TODO: Share basic settings templates
 const backdropMainSettingsTemplate = `<?php
 {{ $config := . }}
 /**
@@ -252,7 +251,7 @@ func addIncludeToBackdropSettingsFile(settings *BackdropSettings, siteSettingsPa
 		return err
 	}
 
-	// If settings.php is empty, just write the entire settings file to it
+	// If settings.php is empty, write the complete settings template
 	if len(currentSiteSettings) == 0 {
 		if err := writeBackdropMainSettingsFile(settings, siteSettingsPath); err != nil {
 			return err
