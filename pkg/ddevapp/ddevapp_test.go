@@ -308,7 +308,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 		err = app.Stop()
 		assert.NoError(err)
-		err = app.Down(false)
+		err = app.Down(false, false)
 		assert.NoError(err)
 
 		runTime()
