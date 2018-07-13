@@ -180,8 +180,11 @@ func getTemplateFuncMap() map[string]interface{} {
 	return m
 }
 
+// gitIgnoreTemplate will write a .gitignore file.
+// This template expects string slice to be provided, with each string corresponding to
+// a line in the resulting .gitignore.
 const gitIgnoreTemplate = `{{ range $i, $f := . -}}
-{{ $f }}
+/{{ $f }}
 {{- end }}
 `
 
