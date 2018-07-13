@@ -8,6 +8,8 @@ import (
 
 	"io/ioutil"
 
+	"fmt"
+
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -94,14 +96,8 @@ func TestWriteDrushConfig(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+// Test
 func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
-	appTypeSettingsLocations := map[string][]string{
-		"drupal6":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-		"drupal7":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-		"drupal8":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-		"backdrop": {"settings.php", "settings.ddev.php"},
-	}
-
 	dir := testcommon.CreateTmpDir("")
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
@@ -140,6 +136,7 @@ func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 	}
 }
 
+// Test
 func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 	dir := testcommon.CreateTmpDir("")
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
@@ -188,5 +185,80 @@ func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 		modifiedSettingsIncludesOriginalContents, err := fileutil.FgrepStringInFile(expectedSettingsLocation, originalContents)
 		assert.NoError(t, err)
 		assert.True(t, modifiedSettingsIncludesOriginalContents)
+	}
+}
+
+// Test
+func TestCreateGitIgnoreIfNoneExists(t *testing.T) {
+	dir := testcommon.CreateTmpDir("")
+	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
+	assert.NoError(t, err)
+
+	app, err := NewApp(dir, DefaultProviderName)
+	assert.NoError(t, err)
+
+	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
+		app.Type = appType
+
+		relativeSettingsDdevLocation := relativeSettingsLocations[1]
+		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
+		expectedGitIgnoreLocation := filepath.Join(filepath.Dir(expectedSettingsDdevLocation), ".gitignore")
+		fmt.Println(expectedGitIgnoreLocation)
+
+		// Ensure that no .gitignore exists
+		os.Remove(expectedGitIgnoreLocation)
+
+		// Invoke the settings file creation process
+		_, err = app.CreateSettingsFile()
+		assert.NoError(t, err)
+
+		// Ensure that a .gitignore exists
+		assert.True(t, fileutil.FileExists(expectedGitIgnoreLocation))
+
+		c, _ := ioutil.ReadFile(expectedGitIgnoreLocation)
+		fmt.Printf("gitignore contents: %s", c)
+
+		// Ensure that the new .gitignore includes settings.ddev.php
+		newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, filepath.Base(relativeSettingsDdevLocation))
+		assert.NoError(t, err)
+		assert.True(t, newGitIgnoreIncludesSettingsDdev)
+	}
+}
+
+// Test
+func TestGitIgnoreAlreadyExists(t *testing.T) {
+	dir := testcommon.CreateTmpDir("")
+	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
+	assert.NoError(t, err)
+
+	app, err := NewApp(dir, DefaultProviderName)
+	assert.NoError(t, err)
+
+	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
+		app.Type = appType
+
+		relativeSettingsDdevLocation := relativeSettingsLocations[1]
+		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
+		expectedGitIgnoreLocation := filepath.Join(filepath.Dir(expectedSettingsDdevLocation), ".gitignore")
+		fmt.Println(expectedGitIgnoreLocation)
+
+		// Ensure that a .gitignore already exists and has some contents
+		originalContents := "not empty"
+		settingsFile, err := os.Create(expectedGitIgnoreLocation)
+		assert.NoError(t, err)
+		_, err = settingsFile.Write([]byte(originalContents))
+		assert.NoError(t, err)
+
+		// Invoke the settings file creation process
+		_, err = app.CreateSettingsFile()
+		assert.NoError(t, err)
+
+		// Ensure that .gitignore still exists
+		assert.True(t, fileutil.FileExists(expectedGitIgnoreLocation))
+
+		// Ensure that the new .gitignore has not been modified to include settings.ddev.php
+		existingGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, filepath.Base(relativeSettingsDdevLocation))
+		assert.NoError(t, err)
+		assert.False(t, existingGitIgnoreIncludesSettingsDdev)
 	}
 }
