@@ -96,7 +96,8 @@ func TestWriteDrushConfig(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// Test
+// TestIncludeSettingsDdevInNewSettingsFile verifies that when no settings.php file exists,
+// a settings.php file is created that includes settings.ddev.php.
 func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 	dir := testcommon.CreateTmpDir("")
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
@@ -136,7 +137,8 @@ func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 	}
 }
 
-// Test
+// TestIncludeSettingsDdevInExistingSettingsFile verifies that when a settings.php file already exists,
+// it is modified to include settings.ddev.php
 func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 	dir := testcommon.CreateTmpDir("")
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
@@ -188,7 +190,8 @@ func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 	}
 }
 
-// Test
+// TestCreateGitIgnoreIfNoneExists verifies that if no .gitignore file exists in the directory
+// containing settings.php and settings.ddev.php, a .gitignore is created that includes settings.ddev.php.
 func TestCreateGitIgnoreIfNoneExists(t *testing.T) {
 	dir := testcommon.CreateTmpDir("")
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
@@ -225,7 +228,8 @@ func TestCreateGitIgnoreIfNoneExists(t *testing.T) {
 	}
 }
 
-// Test
+// TestGitIgnoreAlreadyExists verifies that if a .gitignore already exists in the directory
+// containing settings.php and settings.ddev.php, it is not modified.
 func TestGitIgnoreAlreadyExists(t *testing.T) {
 	dir := testcommon.CreateTmpDir("")
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
