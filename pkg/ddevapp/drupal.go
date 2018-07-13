@@ -72,6 +72,8 @@ func NewDrushConfig() *DrushConfig {
 	}
 }
 
+// drupalCommonSettingsTemplate defines the template that will become settings.php
+// in the even that one does not already exist.
 const drupalCommonSettingsTemplate = `<?php
 {{ $config := . }}
 /**
@@ -80,6 +82,8 @@ const drupalCommonSettingsTemplate = `<?php
 include '{{ joinPath $config.SitePath $config.SiteSettingsLocal }}';
 `
 
+// drupalCommonSettingsAppendTemplate defines the template that will be appended to
+// settings.php in the event that one exists.
 const drupalCommonSettingsAppendTemplate = `{{ $config := . }}
 /**
  This was automatically generated to include settings managed by ddev.
@@ -206,7 +210,7 @@ $databases['default']['default'] = array(
 );
 `
 
-// manageDrupalCommonSettingsFile will direct inspecting and writing the main settings file (settings.php).
+// manageDrupalCommonSettingsFile will direct inspecting and writing of settings.php.
 func manageDrupalCommonSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) error {
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		output.UserOut.Printf("No %s file exists, creating one", drupalConfig.SiteSettings)
@@ -262,9 +266,9 @@ func writeDrupalCommonSettingsFile(drupalConfig *DrupalSettings, filePath string
 	return nil
 }
 
-// createDrupal7SettingsFile creates the app's settings.php or equivalent,
-// adding things like database host, name, and password
-// Returns the fullpath to settings file and err
+// createDrupal7SettingsFile manages creation and modification of settings.php and settings.ddev.php.
+// If a settings.php file already exists, it will be modified to ensure that it includes
+// settings.ddev.php, which contains ddev-specific configuration.
 func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
@@ -291,9 +295,9 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 	return app.SiteLocalSettingsPath, nil
 }
 
-// createDrupal8SettingsFile creates the app's settings.php or equivalent,
-// adding things like database host, name, and password
-// Returns the fullpath to settings file and err
+// createDrupal8SettingsFile manages creation and modification of settings.php and settings.ddev.php.
+// If a settings.php file already exists, it will be modified to ensure that it includes
+// settings.ddev.php, which contains ddev-specific configuration.
 func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
@@ -320,9 +324,9 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 	return app.SiteLocalSettingsPath, nil
 }
 
-// createDrupal6SettingsFile creates the app's settings.php or equivalent,
-// adding things like database host, name, and password
-// Returns the fullpath to settings file and err
+// createDrupal6SettingsFile manages creation and modification of settings.php and settings.ddev.php.
+// If a settings.php file already exists, it will be modified to ensure that it includes
+// settings.ddev.php, which contains ddev-specific configuration.
 func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
@@ -349,7 +353,7 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 	return app.SiteLocalSettingsPath, nil
 }
 
-// writeDrupal8SettingsFile dynamically produces valid settings.php file by combining a configuration
+// writeDrupal8SettingsFile dynamically produces valid settings.ddev.php file by combining a configuration
 // object with a data-driven template.
 func writeDrupal8SettingsFile(settings *DrupalSettings, filePath string) error {
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupal8Template)
@@ -376,7 +380,7 @@ func writeDrupal8SettingsFile(settings *DrupalSettings, filePath string) error {
 	return nil
 }
 
-// writeDrupal7SettingsFile dynamically produces valid settings.php file by combining a configuration
+// writeDrupal7SettingsFile dynamically produces valid settings.ddev.php file by combining a configuration
 // object with a data-driven template.
 func writeDrupal7SettingsFile(settings *DrupalSettings, filePath string) error {
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupal7Template)
@@ -403,7 +407,7 @@ func writeDrupal7SettingsFile(settings *DrupalSettings, filePath string) error {
 	return nil
 }
 
-// writeDrupal6SettingsFile dynamically produces valid settings.php file by combining a configuration
+// writeDrupal6SettingsFile dynamically produces valid settings.ddev.php file by combining a configuration
 // object with a data-driven template.
 func writeDrupal6SettingsFile(settings *DrupalSettings, filePath string) error {
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupal6Template)
@@ -630,7 +634,8 @@ func settingsHasInclude(drupalConfig *DrupalSettings, siteSettingsPath string) (
 	return included, nil
 }
 
-// addIncludeToDrupalSettingsFile will include settings.ddev.php in settings.php.
+// addIncludeToDrupalSettingsFile modifies the settings.php file to include the settings.ddev.php
+// file, which contains ddev-specific configuration.
 func addIncludeToDrupalSettingsFile(drupalConfig *DrupalSettings, siteSettingsPath string) error {
 	// Open file for appending to preserve current contents
 	file, err := os.OpenFile(siteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)

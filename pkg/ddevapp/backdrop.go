@@ -48,6 +48,8 @@ func NewBackdropSettings() *BackdropSettings {
 	}
 }
 
+// backdropMainSettingsTemplate defines the template that will become settings.php in
+// the event that one does not already exist.
 const backdropMainSettingsTemplate = `<?php
 {{ $config := . }}
 /**
@@ -56,6 +58,8 @@ const backdropMainSettingsTemplate = `<?php
 include '{{ $config.SiteSettingsLocal }}';
 `
 
+// backdropSettingsAppendTemplate defines the template that will be appended to
+// settings.php in the event that one exists.
 const backdropSettingsAppendTemplate = `{{ $config := . }}
 /**
  This was automatically generated to include settings managed by ddev.
@@ -63,8 +67,7 @@ const backdropSettingsAppendTemplate = `{{ $config := . }}
 include '{{ $config.SiteSettingsLocal }}';
 `
 
-// Note that this template will almost always be used for settings.local.php
-// because Backdrop ships with it's own default settings.php.
+// backdropLocalSettingsTemplate defines the template that will become settings.ddev.php.
 const backdropLocalSettingsTemplate = `<?php
 {{ $config := . }}
 /**
@@ -85,9 +88,9 @@ ini_set('session.gc_maxlifetime', 200000);
 ini_set('session.cookie_lifetime', 2000000);
 `
 
-// createBackdropSettingsFile creates the app's settings.php or equivalent,
-// adding things like database host, name, and password.
-// Returns the full path to the settings file and err.
+// createBackdropSettingsFile manages creation and modification of settings.php and settings.ddev.php.
+// If a settings.php file already exists, it will be modified to ensure that it includes
+// settings.ddev.php, which contains ddev-specific configuration.
 func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	settings := NewBackdropSettings()
 
@@ -128,21 +131,6 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	}
 
 	return app.SiteLocalSettingsPath, nil
-
-	//settingsFilePath, err := app.DetermineSettingsPathLocation()
-	//if err != nil {
-	//	return "", fmt.Errorf("Failed to get Backdrop settings file path: %v", err.Error())
-	//}
-	//output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
-	//
-	//settings := NewBackdropSettings()
-	//
-	//err = writeBackdropMainSettingsFile(settings, settingsFilePath)
-	//if err != nil {
-	//	return settingsFilePath, fmt.Errorf("Failed to write Backdrop settings file: %v", err.Error())
-	//}
-	//
-	//return settingsFilePath, nil
 }
 
 // writeBackdropMainSettingsFile dynamically produces a valid settings.php file by
@@ -236,7 +224,8 @@ func backdropPostImportDBAction(app *DdevApp) error {
 	return nil
 }
 
-//
+// addIncludeToBackdropSettingsFile modifies the settings.php file to include the settings.ddev.php
+// file, which contains ddev-specific configuration.
 func addIncludeToBackdropSettingsFile(settings *BackdropSettings, siteSettingsPath string) error {
 	// Open file for appending to preserve current contents
 	file, err := os.OpenFile(siteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
