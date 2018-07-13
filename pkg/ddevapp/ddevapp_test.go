@@ -93,6 +93,7 @@ var (
 			Safe200URL:                    "/INSTALL.md",
 		},
 	}
+	FullTestSites = TestSites
 )
 
 func TestMain(m *testing.M) {
@@ -522,6 +523,63 @@ func TestDdevImportDB(t *testing.T) {
 		runTime()
 		switchDir()
 	}
+}
+
+// TestDdevRevertSnapshot tests creating a snapshot and reverting to it
+func TestDdevRevertSnapshot(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("DdevRevertSnapshot"))
+
+	d7tester_test1, err := filepath.Abs(filepath.Join("testdata", "revert_snapshot", "d7tester_test_1.sql.gz"))
+	assert.NoError(err)
+	d7tester_test2, err := filepath.Abs(filepath.Join("testdata", "revert_snapshot", "d7tester_test_2.sql.gz"))
+	assert.NoError(err)
+
+	// Use d7 only for this test, the key thing is the database interaction
+	site := FullTestSites[2]
+
+	err = site.Prepare()
+	if err != nil {
+		t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+	}
+
+	switchDir := site.Chdir()
+	testcommon.ClearDockerEnv()
+
+	err = app.Init(site.Dir)
+	if err != nil {
+		if app.SiteStatus() != ddevapp.SiteRunning {
+			t.Fatalf("app.Init() failed on site %s in dir %s, err=%v", site.Name, site.Dir, err)
+		}
+	}
+
+	err = app.Start()
+	if err != nil {
+		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
+	}
+
+	// TODO: Test at the beginning we get normal drupal install prompt
+
+	err = app.ImportDB(d7tester_test1, "")
+	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7tester_test1, err)
+	//TODO: Validate that we got the test_1 version by hitting the site
+
+	// TODO: Save a snapshot
+	err = app.ImportDB(d7tester_test2, "")
+	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7tester_test1, err)
+	//TODO: Validate that we got the test_1 version by hitting the site
+	// TODO: do an rm, which also saves a snapshot
+
+	// TODO: revert to test_1 snapshot, verify
+	// TODO: Revert to test2 snapshot, verify
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	runTime()
+	switchDir()
 }
 
 // TestWriteableFilesDirectory tests to make sure that files created on host are writeable on container
