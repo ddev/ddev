@@ -21,6 +21,11 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
+	asrt "github.com/stretchr/testify/assert"
+	"net/http"
+	"net/url"
+	"strings"
+	"testing"
 )
 
 // TestSite describes a site for testing, with name, URL of tarball, and optional dir.
@@ -333,4 +338,57 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 		return extractPath, archiveFullPath, fmt.Errorf("archive extraction of %s failed err=%v", archiveFullPath, err)
 	}
 	return extractPath, archiveFullPath, nil
+}
+
+// GetLocalHTTPResponse takes a URL, hits the local docker for it, returns result
+// Returns error (with the body) if not 200 status code.
+func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, error) {
+	assert := asrt.New(t)
+
+	u, err := url.Parse(rawurl)
+	if err != nil {
+		t.Fatalf("Failed to parse url %s: %v", rawurl, err)
+	}
+
+	dockerIP, err := dockerutil.GetDockerIP()
+	assert.NoError(err)
+
+	fakeHost := u.Hostname()
+	u.Host = dockerIP
+	localAddress := u.String()
+
+	client := &http.Client{}
+	if req, err := http.NewRequest("GET", localAddress, nil); err != nil {
+		return "", fmt.Errorf("Failed to NewRequest GET %s: %v", localAddress, err)
+	} else {
+		req.Host = fakeHost
+
+		if resp, err := client.Do(req); err != nil {
+			return "", err
+		} else {
+			defer resp.Body.Close()
+			bodyBytes, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return "", fmt.Errorf("unable to ReadAll resp.body: %v", err)
+			}
+			bodyString := string(bodyBytes)
+			if resp.StatusCode != 200 {
+				return bodyString, fmt.Errorf("http status code was %d, not 200", resp.StatusCode)
+			}
+			return bodyString, nil
+		}
+	}
+}
+
+// EnsureHTTPContent will verify a URL responds with a 200 and expected content string
+func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string) error {
+	body, err := GetLocalHTTPResponse(t, rawurl)
+	if err != nil {
+		return err
+	}
+
+	if !strings.Contains(body, expectedContent) {
+		return fmt.Errorf("Failed to find content %s", expectedContent)
+	}
+	return nil
 }
