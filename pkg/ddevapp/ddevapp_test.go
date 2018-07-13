@@ -19,6 +19,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
@@ -256,6 +257,10 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		// should uniqueify them.
 		app.AdditionalHostnames = []string{"sub1." + site.Name, "sub2." + site.Name, "subname.sub3." + site.Name, site.Name, site.Name, site.Name}
 
+		// sub1.<sitename>.ddev.local and sitename.ddev.local are deliberately included to prove they don't
+		// cause ddev-router failures"
+		app.AdditionalFQDNs = []string{"one.example.com", "two.example.com", "a.one.example.com", site.Name + "." + version.DDevTLD, "sub1." + site.Name + version.DDevTLD}
+
 		err = app.WriteConfig()
 		assert.NoError(err)
 
@@ -286,7 +291,15 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.NoError(err)
 		}
 
+		// Multiple projects can't run at the same time with the fqdns, so we need to clean
+		// up these for tests that run later.
+		app.AdditionalFQDNs = []string{}
+		app.AdditionalHostnames = []string{}
+		app.WriteConfig()
+
 		err = app.Stop()
+		assert.NoError(err)
+		err = app.Down(false)
 		assert.NoError(err)
 
 		runTime()
@@ -680,12 +693,6 @@ func TestDdevLogs(t *testing.T) {
 		assert.NoError(err)
 		out := stdout()
 		assert.Contains(out, "Server started")
-
-		stdout = testcommon.CaptureUserOut()
-		err = app.Logs("db", false, false, "1000")
-		assert.NoError(err)
-		out = stdout()
-		assert.Contains(out, "Database initialized")
 
 		stdout = testcommon.CaptureUserOut()
 		err = app.Logs("db", false, false, "")

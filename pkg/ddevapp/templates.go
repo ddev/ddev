@@ -129,6 +129,12 @@ const ConfigInstructions = `
 # would provide http and https URLs for "somename.ddev.local"
 # and "someothername.ddev.local".
 
+#additional_fqdns:
+# - example.com
+# - sub1.example.com
+# would provide http and https URLs for "example.com" and "sub1.example.com"
+# Please take care with this because it can cause great confusion.
+
 # provider: default # Currently either "default" or "pantheon"
 #
 # Many ddev commands can be extended to run tasks after the ddev command is
