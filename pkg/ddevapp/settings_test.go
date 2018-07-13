@@ -86,3 +86,184 @@ func TestWriteDrushConfig(t *testing.T) {
 	err = os.RemoveAll(dir)
 	assert.NoError(t, err)
 }
+
+func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
+	appTypeSettingsLocations := map[string][]string{
+		"drupal6":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+		"drupal7":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+		"drupal8":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+		"backdrop": {"settings.php", "settings.ddev.php"},
+	}
+
+	dir := testcommon.CreateTmpDir("")
+	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
+	assert.NoError(t, err)
+
+	app, err := NewApp(dir, DefaultProviderName)
+	assert.NoError(t, err)
+
+	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
+		app.Type = appType
+
+		relativeSettingsLocation := relativeSettingsLocations[0]
+		relativeSettingsDdevLocation := relativeSettingsLocations[1]
+		expectedSettingsLocation := filepath.Join(dir, relativeSettingsLocation)
+		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
+
+		// Ensure that no settings.php exists
+		os.Remove(expectedSettingsLocation)
+
+		// Ensure that no settings.ddev.php file exists
+		os.Remove(expectedSettingsDdevLocation)
+
+		// Invoke the settings file creation process
+		_, err := app.CreateSettingsFile()
+		assert.NoError(t, err)
+
+		// Ensure that a settings.php was created
+		assert.True(t, fileutil.FileExists(expectedSettingsLocation))
+
+		// Ensure that settings.php references settings.ddev.php
+		newSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, relativeSettingsDdevLocation)
+		assert.NoError(t, err)
+		assert.True(t, newSettingsIncludesSettingsDdev)
+
+		// Ensure that settings.ddev.php exists
+		assert.True(t, fileutil.FileExists(expectedSettingsDdevLocation))
+	}
+}
+
+func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
+	appTypeSettingsLocations := map[string][]string{
+		"drupal6":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+		"drupal7":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+		"drupal8":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+		"backdrop": {"settings.php", "settings.ddev.php"},
+	}
+
+	dir := testcommon.CreateTmpDir("")
+	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
+	assert.NoError(t, err)
+
+	app, err := NewApp(dir, DefaultProviderName)
+	assert.NoError(t, err)
+
+	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
+		app.Type = appType
+
+		relativeSettingsLocation := relativeSettingsLocations[0]
+		relativeSettingsDdevLocation := relativeSettingsLocations[1]
+		expectedSettingsLocation := filepath.Join(dir, relativeSettingsLocation)
+		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
+
+		// Ensure that no settings.php exists
+		os.Remove(expectedSettingsLocation)
+
+		// Ensure that no settings.ddev.php file exists
+		os.Remove(expectedSettingsDdevLocation)
+
+		// Create a settings.php that does not include settings.ddev.php
+		originalContents := "not empty"
+		settingsFile, err := os.Create(expectedSettingsLocation)
+		assert.NoError(t, err)
+		_, err = settingsFile.Write([]byte(originalContents))
+		assert.NoError(t, err)
+
+		// Invoke the settings file creation process
+		_, err = app.CreateSettingsFile()
+		assert.NoError(t, err)
+
+		// Ensure that settings.php exists
+		assert.True(t, fileutil.FileExists(expectedSettingsLocation))
+
+		// Ensure that settings.ddev.php exists
+		assert.True(t, fileutil.FileExists(expectedSettingsDdevLocation))
+
+		// Ensure that settings.php references settings.ddev.php
+		existingSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, relativeSettingsDdevLocation)
+		assert.NoError(t, err)
+		assert.True(t, existingSettingsIncludesSettingsDdev)
+
+		// Ensure that settings.php includes original contents
+		modifiedSettingsInlcudesOriginalContents, err := fileutil.FgrepStringInFile(expectedSettingsLocation, originalContents)
+		assert.NoError(t, err)
+		assert.True(t, modifiedSettingsInlcudesOriginalContents)
+	}
+}
+
+func TestIncludeAndWriteSettingsDdev(t *testing.T) {
+	appTypeSettingsLocations := map[string][]string{
+		"drupal6":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+		"drupal7":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+		"drupal8":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+		"backdrop": {"settings.php", "settings.ddev.php"},
+	}
+
+	dir := testcommon.CreateTmpDir("")
+	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
+	assert.NoError(t, err)
+
+	app, err := NewApp(dir, DefaultProviderName)
+	assert.NoError(t, err)
+
+	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
+		app.Type = appType
+
+		relativeSettingsLocation := relativeSettingsLocations[0]
+		relativeSettingsDdevLocation := relativeSettingsLocations[1]
+		expectedSettingsLocation := filepath.Join(dir, relativeSettingsLocation)
+		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
+
+		// Ensure that no settings.php exists
+		os.Remove(expectedSettingsLocation)
+
+		// Ensure that no settings.ddev.php file exists
+		os.Remove(expectedSettingsDdevLocation)
+
+		// Invoke the settings file creation process
+		_, err := app.CreateSettingsFile()
+		assert.NoError(t, err)
+
+		// Ensure that a settings.php was created
+		assert.True(t, fileutil.FileExists(expectedSettingsLocation))
+
+		// Ensure that settings.php references settings.ddev.php
+		newSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, relativeSettingsDdevLocation)
+		assert.NoError(t, err)
+		assert.True(t, newSettingsIncludesSettingsDdev)
+
+		// Ensure that settings.ddev.php exists
+		assert.True(t, fileutil.FileExists(expectedSettingsDdevLocation))
+
+		// Remove settings.php and settings.ddev.php
+		assert.NoError(t, os.Remove(expectedSettingsLocation))
+		assert.NoError(t, os.Remove(expectedSettingsDdevLocation))
+
+		// Create a settings.php that does not include settings.ddev.php
+		originalContents := "not empty"
+		settingsFile, err := os.Create(expectedSettingsLocation)
+		assert.NoError(t, err)
+		_, err = settingsFile.Write([]byte(originalContents))
+		assert.NoError(t, err)
+
+		// Invoke the settings file creation process
+		_, err = app.CreateSettingsFile()
+		assert.NoError(t, err)
+
+		// Ensure that settings.php exists
+		assert.True(t, fileutil.FileExists(expectedSettingsLocation))
+
+		// Ensure that settings.ddev.php exists
+		assert.True(t, fileutil.FileExists(expectedSettingsDdevLocation))
+
+		// Ensure that settings.php references settings.ddev.php
+		existingSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, relativeSettingsDdevLocation)
+		assert.NoError(t, err)
+		assert.True(t, existingSettingsIncludesSettingsDdev)
+
+		// Ensure that settings.php includes original contents
+		modifiedSettingsInlcudesOriginalContents, err := fileutil.FgrepStringInFile(expectedSettingsLocation, originalContents)
+		assert.NoError(t, err)
+		assert.True(t, modifiedSettingsInlcudesOriginalContents)
+	}
+}
