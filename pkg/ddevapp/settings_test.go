@@ -15,6 +15,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var appTypeSettingsLocations = map[string][]string{
+	"drupal6":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+	"drupal7":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+	"drupal8":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
+	"backdrop": {"settings.php", "settings.ddev.php"},
+}
+
 // TestWriteSettings tests writing app settings (like Drupal
 // settings.php/settings.local.php
 func TestWriteSettings(t *testing.T) {
@@ -134,13 +141,6 @@ func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 }
 
 func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
-	appTypeSettingsLocations := map[string][]string{
-		"drupal6":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-		"drupal7":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-		"drupal8":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-		"backdrop": {"settings.php", "settings.ddev.php"},
-	}
-
 	dir := testcommon.CreateTmpDir("")
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
@@ -192,13 +192,6 @@ func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 }
 
 func TestIncludeAndWriteSettingsDdev(t *testing.T) {
-	appTypeSettingsLocations := map[string][]string{
-		"drupal6":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-		"drupal7":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-		"drupal8":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-		"backdrop": {"settings.php", "settings.ddev.php"},
-	}
-
 	dir := testcommon.CreateTmpDir("")
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
