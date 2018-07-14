@@ -13,7 +13,7 @@ var DdevSnapshotCommand = &cobra.Command{
 	Short: "Create a database snapshot for one or more projects.",
 	Long:  `Uses mariabackup command to create a database snapshot in the .ddev/db_snapshots folder.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		apps, err := getRequestedApps(args, stopAll)
+		apps, err := getRequestedApps(args, snapshotAll)
 		if err != nil {
 			util.Failed("Unable to get project(s): %v", err)
 		}
