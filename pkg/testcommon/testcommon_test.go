@@ -166,12 +166,11 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 
 	safeURL := app.GetHTTPURL() + ts.Safe200URL
 	out, err := GetLocalHTTPResponse(t, safeURL)
-
+	assert.NoError(err)
 	assert.Contains(out, "Famous 5-minute install")
 
-	err = EnsureLocalHTTPContent(t, safeURL, "Famous 5-minute install")
-	assert.NoError(err)
-
+	// This does the same thing as previous, but worth exercising it here.
+	EnsureLocalHTTPContent(t, safeURL, "Famous 5-minute install")
 	app.Down(true, false)
 
 	cleanup()
