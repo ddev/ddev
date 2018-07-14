@@ -881,24 +881,26 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 }
 
 // SnapshotDatabase forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
-func (app *DdevApp) SnapshotDatabase() error {
+// Returns the dirname of the snapshot and err
+func (app *DdevApp) SnapshotDatabase() (string, error) {
 	t := time.Now()
-	snapshotDir := filepath.Join("db_snapshots", app.Name+"_"+t.Format("20060102150405"))
+	snapshotName := app.Name + "_" + t.Format("20060102150405")
+	snapshotDir := filepath.Join("db_snapshots", snapshotName)
 	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
 	containerSnapshotDir := filepath.Join("/mnt/ddev_config", snapshotDir)
 	err := os.MkdirAll(hostSnapshotDir, 0777)
 	if err != nil {
-		return err
+		return snapshotName, err
 	}
 
-	util.Warning("Creating database snapshot before destroying the database")
-	stdout, stderr, err := app.Exec("db", "bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log", containerSnapshotDir, app.Name+"_"+t.Format("20060102150405")))
+	util.Warning("Creating database snapshot %s", snapshotName)
+	stdout, stderr, err := app.Exec("db", "bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log", containerSnapshotDir, snapshotName))
 	if err != nil {
 		util.Warning("Failed to create snapshot: %v, stdout=%s, stderr=%s", err, stdout, stderr)
-		return err
+		return "", err
 	}
-	util.Success("Created database snapshot: %s", hostSnapshotDir)
-	return nil
+	util.Success("Created database snapshot %s in %s", snapshotName, hostSnapshotDir)
+	return snapshotName, nil
 }
 
 // RevertToSnapshot restores a mariadb snapshot of the db to be loaded
@@ -938,7 +940,7 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 	var err error
 
 	if createSnapshot == true {
-		err = app.SnapshotDatabase()
+		_, err = app.SnapshotDatabase()
 		if err != nil {
 			return err
 		}

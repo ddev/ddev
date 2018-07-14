@@ -24,7 +24,6 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 	"net/http"
 	"net/url"
-	"strings"
 	"testing"
 )
 
@@ -358,37 +357,36 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, error) {
 	localAddress := u.String()
 
 	client := &http.Client{}
-	if req, err := http.NewRequest("GET", localAddress, nil); err != nil {
-		return "", fmt.Errorf("Failed to NewRequest GET %s: %v", localAddress, err)
-	} else {
-		req.Host = fakeHost
+	req, err := http.NewRequest("GET", localAddress, nil)
 
-		if resp, err := client.Do(req); err != nil {
-			return "", err
-		} else {
-			defer resp.Body.Close()
-			bodyBytes, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				return "", fmt.Errorf("unable to ReadAll resp.body: %v", err)
-			}
-			bodyString := string(bodyBytes)
-			if resp.StatusCode != 200 {
-				return bodyString, fmt.Errorf("http status code was %d, not 200", resp.StatusCode)
-			}
-			return bodyString, nil
-		}
+	if err != nil {
+		return "", fmt.Errorf("Failed to NewRequest GET %s: %v", localAddress, err)
 	}
+	req.Host = fakeHost
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	//nolint: errcheck
+	defer resp.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("unable to ReadAll resp.body: %v", err)
+	}
+	bodyString := string(bodyBytes)
+	if resp.StatusCode != 200 {
+		return bodyString, fmt.Errorf("http status code was %d, not 200", resp.StatusCode)
+	}
+	return bodyString, nil
 }
 
-// EnsureHTTPContent will verify a URL responds with a 200 and expected content string
-func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string) error {
-	body, err := GetLocalHTTPResponse(t, rawurl)
-	if err != nil {
-		return err
-	}
+// EnsureLocalHTTPContent will verify a URL responds with a 200 and expected content string
+func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string) {
+	assert := asrt.New(t)
 
-	if !strings.Contains(body, expectedContent) {
-		return fmt.Errorf("Failed to find content %s", expectedContent)
-	}
-	return nil
+	body, err := GetLocalHTTPResponse(t, rawurl)
+	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
+	assert.Contains(body, expectedContent)
 }

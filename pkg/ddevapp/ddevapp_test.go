@@ -560,23 +560,35 @@ func TestDdevRevertSnapshot(t *testing.T) {
 		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
 	}
 
-	// TODO: Test at the beginning we get normal drupal install prompt
+	// Test at the beginning using install.php; it should work as expected.
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+"/install.php", "Install with commonly used features pre-configured")
 
 	err = app.ImportDB(d7tester_test1, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7tester_test1, err)
-	//TODO: Validate that we got the test_1 version by hitting the site
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
 
-	// TODO: Save a snapshot
+	// Make a snapshot of d7 tester test 1
+	d7testerTest1Snapshot, err := app.SnapshotDatabase()
+	assert.NoError(err)
+
 	err = app.ImportDB(d7tester_test2, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7tester_test1, err)
-	//TODO: Validate that we got the test_1 version by hitting the site
-	// TODO: do an rm, which also saves a snapshot
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
 
-	// TODO: revert to test_1 snapshot, verify
-	// TODO: Revert to test2 snapshot, verify
+	d7testerTest2Snapshot, err := app.SnapshotDatabase()
+	assert.NoError(err)
+
+	err = app.RevertToSnapshot(d7testerTest1Snapshot)
+	assert.NoError(err)
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
+	err = app.RevertToSnapshot(d7testerTest2Snapshot)
+	assert.NoError(err)
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
 
 	err = app.Down(true, false)
 	assert.NoError(err)
+
+	// TODO: Check behavior of ddev rm with snapshot, see if it has right stuff in it.
 
 	runTime()
 	switchDir()
