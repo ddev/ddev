@@ -6,7 +6,7 @@
 # PKG := github.com/drud/repo_name
 
 # Docker repo for a push
-DOCKER_REPO ?= drud/mariadb-local
+DOCKER_REPO ?= drud/ddev-dbserver
 
 # Upstream repo used in the Dockerfile
 # UPSTREAM_REPO ?= oraclelinux:7.3

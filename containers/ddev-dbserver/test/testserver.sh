@@ -39,7 +39,7 @@ function containercheck {
 		fi
 		sleep 1
 	done
-	echo "--- mariadb-local FAIL: information"
+	echo "--- ddev-dbserver FAIL: information"
 	docker ps -a
 	docker logs $CONTAINER_NAME
 	docker inspect $CONTAINER_NAME

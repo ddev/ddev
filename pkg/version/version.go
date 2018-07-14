@@ -23,7 +23,7 @@ var WebImg = "drud/nginx-php-fpm-local"
 var WebTag = "20180628_fix_writeable_my_conf" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
-var DBImg = "drud/mariadb-local"
+var DBImg = "drud/ddev-dbserver"
 
 // DBTag defines the default db image tag for drud dev
 var DBTag = "20180630_mariabackup" // Note that this may be overridden by make
