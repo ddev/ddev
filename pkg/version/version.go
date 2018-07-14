@@ -17,7 +17,7 @@ var DockerVersionConstraint = ">= 18.03.0-ce-alpha1"
 var DockerComposeVersionConstraint = ">= 1.18.0-alpha1"
 
 // WebImg defines the default web image used for applications.
-var WebImg = "drud/nginx-php-fpm-local"
+var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
 var WebTag = "20180628_fix_writeable_my_conf" // Note that this can be overridden by make
