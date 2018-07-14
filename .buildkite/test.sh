@@ -19,8 +19,9 @@ echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
 if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq)
 fi
+docker system prune --volumes --force
 
-# Update all images that couyld have changed
+# Update all images that could have changed
 docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull
 rm -rf ~/.ddev/Test*
 
