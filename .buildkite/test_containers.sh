@@ -6,6 +6,8 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in ${DRUDSRC:-}/ddev"
+
 function cleanup {
     set +x
     echo "--- Cleanup docker"
