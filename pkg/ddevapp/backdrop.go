@@ -143,7 +143,7 @@ func writeBackdropMainSettingsFile(settings *BackdropSettings, filePath string) 
 
 	// Ensure target directory is writable.
 	dir := filepath.Dir(filePath)
-	if err := os.Chmod(dir, 0755); err != nil {
+	if err = os.Chmod(dir, 0755); err != nil {
 		return err
 	}
 
@@ -170,7 +170,7 @@ func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) 
 
 	// Ensure target directory is writable
 	dir := filepath.Dir(filePath)
-	if err := os.Chmod(dir, 0755); err != nil {
+	if err = os.Chmod(dir, 0755); err != nil {
 		return err
 	}
 
@@ -242,7 +242,7 @@ func addIncludeToBackdropSettingsFile(settings *BackdropSettings, siteSettingsPa
 
 	// If settings.php is empty, write the complete settings template
 	if len(currentSiteSettings) == 0 {
-		if err := writeBackdropMainSettingsFile(settings, siteSettingsPath); err != nil {
+		if err = writeBackdropMainSettingsFile(settings, siteSettingsPath); err != nil {
 			return err
 		}
 	}
