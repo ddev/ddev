@@ -356,7 +356,13 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, error) {
 	u.Host = dockerIP
 	localAddress := u.String()
 
-	client := &http.Client{}
+	// Do not follow redirects, https://stackoverflow.com/a/38150816/215713
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
 	req, err := http.NewRequest("GET", localAddress, nil)
 
 	if err != nil {
