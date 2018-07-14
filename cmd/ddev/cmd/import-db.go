@@ -35,7 +35,10 @@ can be provided if it is not located at the top level of the archive.`,
 		}
 
 		if app.SiteStatus() != ddevapp.SiteRunning {
-			util.Failed("The project is not running. The project must be running in order to import a database.")
+			err = app.Start()
+			if err != nil {
+				util.Failed("Failed to start app %s to import-db: %v", app.Name, err)
+			}
 		}
 
 		err = app.ImportDB(dbSource, dbExtPath)
