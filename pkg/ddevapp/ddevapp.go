@@ -893,6 +893,13 @@ func (app *DdevApp) SnapshotDatabase() (string, error) {
 		return snapshotName, err
 	}
 
+	if app.SiteStatus() != SiteRunning {
+		err = app.Start()
+		if err != nil {
+			return snapshotName, fmt.Errorf("Failed to start project %s to snapshot database: %v", app.Name, err)
+		}
+	}
+
 	util.Warning("Creating database snapshot %s", snapshotName)
 	stdout, stderr, err := app.Exec("db", "bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log", containerSnapshotDir, snapshotName))
 	if err != nil {
