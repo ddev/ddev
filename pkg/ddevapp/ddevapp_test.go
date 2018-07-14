@@ -561,7 +561,7 @@ func TestDdevRevertSnapshot(t *testing.T) {
 	}
 
 	// Test at the beginning using install.php; it should work as expected.
-	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+"/install.php", "We use DFP to show you content relevant to Drupal Commerce")
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+"/install.php?profile=commerce_kickstart", "We use DFP to show you content relevant to Drupal Commerce")
 
 	err = app.ImportDB(d7tester_test1, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7tester_test1, err)
