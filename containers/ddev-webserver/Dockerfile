@@ -1,0 +1,116 @@
+FROM bitnami/minideb:jessie
+
+ENV PHP_VERSIONS="5.6 7.0 7.1 7.2"
+ENV PHP_DEFAULT_VERSION="7.1"
+ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
+
+ENV NGINX_VERSION=1.12.1-1~jessie
+ENV DRUSH_VERSION=8.1.15
+ENV WP_CLI_VERSION=1.4.1
+ENV MAILHOG_VERSION=1.0.0
+ENV BACKDROP_DRUSH_VERSION=0.0.6
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV TERM xterm
+ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
+ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
+ENV NGINX_DOCROOT /var/www/html
+
+# composer normally screams about running as root, we don't need that.
+ENV COMPOSER_ALLOW_SUPERUSER 1
+
+# Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
+ENV NGINX_SITE_VARS '$NGINX_DOCROOT'
+
+RUN apt-get -qq update && \
+    apt-get -qq install --no-install-recommends --no-install-suggests -y \
+        procps \
+        curl \
+        ca-certificates \
+        apt-transport-https \
+        wget \
+        fontconfig \
+        bzip2 \
+        openssh-client && \
+    wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
+    echo "deb https://packages.sury.org/php/ jessie main" > /etc/apt/sources.list.d/php.list && \
+    wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
+    apt-key add /tmp/nginx_signing.key && \
+    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
+    echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
+    echo "deb http://nginx.org/packages/debian/ jessie nginx" >> /etc/apt/sources.list && \
+    curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+    apt-get -qq update && \
+    apt-get -qq install --no-install-recommends --no-install-suggests -y \
+        less \
+        git \
+        mysql-client \
+        nginx \
+        nodejs \
+        libcap2-bin \
+        supervisor \
+        sudo \
+        imagemagick \
+        iputils-ping \
+        patch \
+        telnet \
+        netcat6 \
+        iproute2 \
+        vim \
+        nano \
+        gettext \
+        ncurses-bin \
+        yarn \
+        zip \
+        unzip \
+        rsync \
+        libpcre3 && \
+    for v in php${PHP_VERSIONS}; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-bcmath $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring $v-memcached $v-opcache $v-soap $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip; done && \
+    for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
+    apt-get -qq autoremove -y && \
+    apt-get -qq clean -y && \
+    rm -rf /var/lib/apt/lists/*
+
+# Arbitrary user needs to be able to bind to privileged ports (for nginx)
+RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
+
+ADD files /
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
+RUN curl -sSL "https://github.com/wp-cli/wp-cli/releases/download/v${WP_CLI_VERSION}/wp-cli-${WP_CLI_VERSION}.phar" -o /usr/local/bin/wp-cli
+
+RUN composer global require drush/drush:${DRUSH_VERSION} && ln -s /home/.composer/vendor/drush/drush/drush /usr/local/bin/drush && chmod -R ugo+rx /root
+
+RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal && chmod +x /usr/local/bin/drupal
+
+
+RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/drush.zip -o /tmp/backdrop_drush.zip && unzip /tmp/backdrop_drush.zip -d /var/tmp/backdrop_drush_commands
+
+RUN mkdir -p /etc/nginx/sites-enabled && \
+    touch /var/log/php-fpm.log && \
+    chmod ugo+rw /var/log/php-fpm.log && \
+    chmod ugo+rwx /var/run && \
+    touch /var/log/nginx/access.log && \
+    touch /var/log/nginx/error.log && \
+    chmod -R ugo+rw /var/log/nginx/ && \
+    chmod ugo+rx /usr/local/bin/* && \
+    chmod ugo+x /start.sh && \
+    update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION} && \
+    ln -s /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
+
+RUN chmod -R 777 /var/log
+
+RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php
+# All users will have their home directory in /home, make it fully writeable
+RUN mkdir -p /home/.composer/cache /home/.drush/commands /home/.drush/aliases && chmod -R ugo+rw /home
+# Except that .my.cnf can't be writeable or mysql won't use it.
+RUN chmod 444 /home/.my.cnf
+
+RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
+  chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
+
+EXPOSE 80 8025
+HEALTHCHECK --interval=2s --retries=5 CMD ["/healthcheck.sh"]
+
+CMD ["/start.sh"]
