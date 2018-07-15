@@ -11,8 +11,6 @@ SHELL := /bin/bash
 
 PWD := $(shell pwd)
 
-BUILD_IMAGE ?= drud/golang-build-container:v0.5.4
-
 all: VERSION.txt build
 
 build: linux
