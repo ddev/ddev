@@ -213,7 +213,8 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 		if err != nil {
 			t.Errorf("Could not create %s directory under %s", testDocrootName, testDir)
 		}
-		os.OpenFile(filepath.Join(testDir, filepath.Join(testDocrootName), "index.php"), os.O_RDONLY|os.O_CREATE, 0664)
+		_, err = os.OpenFile(filepath.Join(testDir, filepath.Join(testDocrootName), "index.php"), os.O_RDONLY|os.O_CREATE, 0664)
+		assert.NoError(err)
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
@@ -267,7 +268,8 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not create %s directory under %s", "docroot", testDir)
 	}
-	os.OpenFile(filepath.Join(testDir, "docroot", "index.php"), os.O_RDONLY|os.O_CREATE, 0664)
+	_, err = os.OpenFile(filepath.Join(testDir, "docroot", "index.php"), os.O_RDONLY|os.O_CREATE, 0664)
+	assert.NoError(err)
 
 	// Create the ddevapp we'll use for testing.
 	// This will not return an error, since there is no existing configuration.

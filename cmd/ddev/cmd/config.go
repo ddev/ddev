@@ -59,6 +59,7 @@ var ConfigCommand *cobra.Command = &cobra.Command{
 
 		// Support the show-config-location flag.
 		if showConfigLocation {
+			// nolint: vetshadow
 			activeApp, err := ddevapp.GetActiveApp("")
 			if err != nil {
 				if strings.Contains(err.Error(), "Have you run 'ddev config'") {

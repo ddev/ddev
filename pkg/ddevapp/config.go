@@ -325,6 +325,7 @@ func (app *DdevApp) WriteDockerComposeConfig() error {
 	var err error
 
 	if fileutil.FileExists(app.DockerComposeYAMLPath()) {
+		// nolint: vetshadow
 		found, err := fileutil.FgrepStringInFile(app.DockerComposeYAMLPath(), DdevFileSignature)
 		util.CheckErr(err)
 
@@ -408,6 +409,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	// We would hope to be able to remove this when
 	// https://github.com/docker/for-linux/issues/264 gets resolved.
 	if runtime.GOOS == "linux" {
+		// nolint: vetshadow
 		out, err := exec.RunCommandPipe("ip", []string{"address", "show", "dev", "docker0"})
 		// Do not process if ip command fails, we'll just ignore and not act.
 		if err == nil {
