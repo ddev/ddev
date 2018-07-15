@@ -33,7 +33,7 @@ jobs:
           name: ddev tests
           no_output_timeout: "40m"
 
-      - run: make -s gometalinter
+      - run: make -s staticrequired
 
       - run:
           command: bin/linux/ddev version
