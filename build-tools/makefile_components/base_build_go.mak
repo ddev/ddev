@@ -5,7 +5,7 @@
 ##### comment about what you did and why.
 
 
-.PHONY: all build test push clean container-clean bin-clean version static govendor gofmt govet golint
+.PHONY: all build test push clean container-clean bin-clean version static govendor gofmt govet golint golangci-lint container
 GOTMP=.gotmp
 
 SHELL = /bin/bash
