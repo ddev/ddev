@@ -40,7 +40,7 @@ func TestWriteSettings(t *testing.T) {
 		"wordpress": "wp-config.php",
 		"typo3":     "typo3conf/AdditionalConfiguration.php",
 	}
-	dir := testcommon.CreateTmpDir("example")
+	dir := testcommon.CreateTmpDir(t.Name())
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
 	err = os.MkdirAll(filepath.Join(dir, "typo3conf"), 0777)
@@ -81,7 +81,7 @@ func TestWriteSettings(t *testing.T) {
 // is noted properly. Do we need it? Are we using it?
 func TestWriteDrushConfig(t *testing.T) {
 
-	dir := testcommon.CreateTmpDir("example")
+	dir := testcommon.CreateTmpDir(t.Name())
 
 	file, err := ioutil.TempFile(dir, "file")
 	assert.NoError(t, err)
@@ -104,7 +104,7 @@ func TestWriteDrushConfig(t *testing.T) {
 // TestIncludeSettingsDdevInNewSettingsFile verifies that when no settings.php file exists,
 // a settings.php file is created that includes settings.ddev.php.
 func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
-	dir := testcommon.CreateTmpDir("")
+	dir := testcommon.CreateTmpDir(t.Name())
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
 
@@ -145,7 +145,7 @@ func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 // TestIncludeSettingsDdevInExistingSettingsFile verifies that when a settings.php file already exists,
 // it is modified to include settings.ddev.php
 func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
-	dir := testcommon.CreateTmpDir("")
+	dir := testcommon.CreateTmpDir(t.Name())
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
 
@@ -198,7 +198,7 @@ func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 // TestCreateGitIgnoreIfNoneExists verifies that if no .gitignore file exists in the directory
 // containing settings.php and settings.ddev.php, a .gitignore is created that includes settings.ddev.php.
 func TestCreateGitIgnoreIfNoneExists(t *testing.T) {
-	dir := testcommon.CreateTmpDir("")
+	dir := testcommon.CreateTmpDir(t.Name())
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
 
@@ -236,7 +236,7 @@ func TestCreateGitIgnoreIfNoneExists(t *testing.T) {
 // TestGitIgnoreAlreadyExists verifies that if a .gitignore already exists in the directory
 // containing settings.php and settings.ddev.php, it is not modified.
 func TestGitIgnoreAlreadyExists(t *testing.T) {
-	dir := testcommon.CreateTmpDir("")
+	dir := testcommon.CreateTmpDir(t.Name())
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
 
