@@ -120,10 +120,10 @@ func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
 
 		// Ensure that no settings.php exists
-		os.Remove(expectedSettingsLocation)
+		_ = os.Remove(expectedSettingsLocation)
 
 		// Ensure that no settings.ddev.php file exists
-		os.Remove(expectedSettingsDdevLocation)
+		_ = os.Remove(expectedSettingsDdevLocation)
 
 		// Invoke the settings file creation process
 		_, err := app.CreateSettingsFile()
@@ -161,10 +161,10 @@ func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
 
 		// Ensure that no settings.php exists
-		os.Remove(expectedSettingsLocation)
+		_ = os.Remove(expectedSettingsLocation)
 
 		// Ensure that no settings.ddev.php file exists
-		os.Remove(expectedSettingsDdevLocation)
+		_ = os.Remove(expectedSettingsDdevLocation)
 
 		// Create a settings.php that does not include settings.ddev.php
 		originalContents := "not empty"
@@ -214,7 +214,7 @@ func TestCreateGitIgnoreIfNoneExists(t *testing.T) {
 		fmt.Println(expectedGitIgnoreLocation)
 
 		// Ensure that no .gitignore exists
-		os.Remove(expectedGitIgnoreLocation)
+		_ = os.Remove(expectedGitIgnoreLocation)
 
 		// Invoke the settings file creation process
 		_, err = app.CreateSettingsFile()
