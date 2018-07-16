@@ -116,14 +116,8 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
-	// Create settings.ddev.php if one doesn't already exist
-	if fileutil.FileExists(app.SiteLocalSettingsPath) {
-		output.UserOut.Printf("ddev settings file %s already exists", settings.SiteSettingsLocal)
-	} else {
-		output.UserOut.Printf("No %s exists, creating one", settings.SiteSettingsLocal)
-		if err := writeBackdropDdevSettingsFile(settings, app.SiteLocalSettingsPath); err != nil {
-			return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
-		}
+	if err := writeBackdropDdevSettingsFile(settings, app.SiteLocalSettingsPath); err != nil {
+		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
 	}
 
 	if err := createGitIgnore(filepath.Dir(app.SiteLocalSettingsPath), settings.SiteSettingsLocal); err != nil {
