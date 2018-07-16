@@ -1,7 +1,7 @@
-# Docker NGINX PHP7 FPM for Local Development
+# Docker ddev-webserver (webserver and php)
 
 ## Introduction
-This is a Dockerfile to build a container image for NGINX and PHP7 in FPM with development configurations and tools. 
+This is a Dockerfile to build a container image for ddev's web container. 
 
 ## Developer Tools
 
@@ -16,9 +16,9 @@ This is a Dockerfile to build a container image for NGINX and PHP7 in FPM with d
 
 ```
 make container
-make push
-make VERSION=0.3.0 container
-make VERSION=0.3.0 push
+make push # Pushes the git committish as version
+make VERSION=20190101_test_version container
+make VERSION=20190101_test_version push
 make clean
 ```
 
@@ -26,5 +26,5 @@ make clean
 To run the container by itself:
 
 ```
-docker run -it drud/nginx-php-fpm-local bash
+docker run -it drud/ddev-webserver bash
 ```

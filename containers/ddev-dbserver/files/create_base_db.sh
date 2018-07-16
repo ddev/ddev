@@ -6,7 +6,7 @@ set -o pipefail
 
 # This script can be used to create a bare database directory for use by
 # ddev startup. It can be run from the host with:
-# docker run -it -v "$PWD/files/var/tmp/mysqlbase:/mysqlbase" --rm --entrypoint=/create_base_db.sh drud/mariadb-local:<your_version>
+# docker run -it -v "$PWD/files/var/tmp/mysqlbase:/mysqlbase" --rm --entrypoint=/create_base_db.sh drud/ddev-dbserver:<your_version>
 
 SOCKET=/var/tmp/mysql.sock
 OUTDIR=/mysqlbase

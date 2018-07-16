@@ -25,8 +25,8 @@ To see which ddev commands the tests are executing, set the environment variable
 
 The four docker containers that ddev users are included in the containers/ directory:
 
-* containers/nginx-php-fpm-local: Provides the nginx/php servers (the "web" container).
-* containers/mariadb-local: Provides the "db" container.
+* containers/ddev-webserver: Provides the web servers (the "web" container).
+* containers/ddev-dbserver: Provides the "db" container.
 * containers/phpmyadmin: Provides the phpmyadmin container
 * containers/ddev-router: The router image
 

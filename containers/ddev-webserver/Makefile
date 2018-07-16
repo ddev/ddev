@@ -3,7 +3,7 @@
 ##### These variables need to be adjusted in most repositories #####
 
 # Docker repo for a push
-DOCKER_REPO ?= drud/nginx-php-fpm-local
+DOCKER_REPO ?= drud/ddev-webserver
 
 # Top-level directories to build
 #SRC_DIRS := filexs drudapi secrets utils
