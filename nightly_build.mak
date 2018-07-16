@@ -11,7 +11,7 @@ RouterTag = $(VERSION)
 DBATag = $(VERSION)
 
 # List of containers to be built in containers/ directory
-CONTAINER_DIRS = ddev-router nginx-php-fpm-local mariadb-local phpmyadmin
+CONTAINER_DIRS = $(shell pushd containers >/dev/null && \ls && popd >/dev/null )
 
 BASEDIR=./containers/
 
