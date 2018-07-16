@@ -165,7 +165,7 @@ gometalinter:
 
 golangci-lint:
 	@echo "golangci-lint: "
-	docker run -t --rm -u $(shell id -u):$(shell id -g)                       \
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                       \
 		-v $(S)$$PWD/$(GOTMP):/go$(DOCKERMOUNTFLAG)                            \
 		-v $(S)$$PWD:/go/src/$(PKG)$(DOCKERMOUNTFLAG)                          \
 		-w $(S)/go/src/$(PKG)                                                  \
