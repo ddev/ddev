@@ -59,7 +59,7 @@ if (file_exists('{{ $config.SiteSettingsLocal }}')) {
 // backdropSettingsAppendTemplate defines the template that will be appended to
 // settings.php in the event that one exists.
 const backdropSettingsAppendTemplate = `{{ $config := . }}
-// {{ $config.Signature }}: Automatically generated include for settings managed by ddev.
+// Automatically generated include for settings managed by ddev.
 if (file_exists('{{ $config.SiteSettingsLocal }}')) {
   include '{{ $config.SiteSettingsLocal }}';
 }

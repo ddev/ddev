@@ -83,7 +83,7 @@ if (file_exists('{{ joinPath $config.SitePath $config.SiteSettingsLocal }}')) {
 // drupalCommonSettingsAppendTemplate defines the template that will be appended to
 // settings.php in the event that one exists.
 const drupalCommonSettingsAppendTemplate = `{{ $config := . }}
-// {{ $config.Signature }}: Automatically generated include for settings managed by ddev.
+// Automatically generated include for settings managed by ddev.
 if (file_exists('{{ joinPath $config.SitePath $config.SiteSettingsLocal }}')) {
   include '{{ joinPath $config.SitePath $config.SiteSettingsLocal }}';
 }
