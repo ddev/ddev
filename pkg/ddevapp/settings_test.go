@@ -266,3 +266,40 @@ func TestGitIgnoreAlreadyExists(t *testing.T) {
 		assert.False(t, existingGitIgnoreIncludesSettingsDdev)
 	}
 }
+
+// TestOverwriteDdevSettings ensures that if a settings.ddev.php file already exists, it is overwritten by the
+// settings creation process.
+func TestOverwriteDdevSettings(t *testing.T) {
+	dir := testcommon.CreateTmpDir(t.Name())
+	err := os.MkdirAll(filepath.Join(dir, "sites", "default"), 0777)
+	assert.NoError(t, err)
+
+	app, err := NewApp(dir, DefaultProviderName)
+	assert.NoError(t, err)
+
+	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
+		app.Type = appType
+
+		relativeSettingsDdevLocation := relativeSettingsLocations[1]
+		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
+
+		// Ensure that a settings.ddev.php file exists
+		originalContents := "not empty"
+		settingsFile, err := os.Create(expectedSettingsDdevLocation)
+		assert.NoError(t, err)
+		_, err = settingsFile.Write([]byte(originalContents))
+		assert.NoError(t, err)
+
+		// Invoke the settings file creation process
+		_, err = app.CreateSettingsFile()
+		assert.NoError(t, err)
+
+		// Ensure settings.ddev.php exists
+		assert.True(t, fileutil.FileExists(expectedSettingsDdevLocation))
+
+		// Ensure settings.ddev.php was overwritten with new contents
+		containsOriginalString, err := fileutil.FgrepStringInFile(expectedSettingsDdevLocation, originalContents)
+		assert.NoError(t, err)
+		assert.False(t, containsOriginalString)
+	}
+}
