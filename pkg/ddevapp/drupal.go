@@ -302,7 +302,7 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 	}
 
 	if err := writeDrupal8SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("failed to write Drupal settings file: %v", err.Error())
+		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
 	}
 
 	if err := createGitIgnore(filepath.Dir(app.SiteSettingsPath), drupalConfig.SiteSettingsLocal); err != nil {
@@ -325,7 +325,7 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 	}
 
 	if err := writeDrupal6SettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("failed to write Drupal settings file: %v", err)
+		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
 	}
 
 	if err := createGitIgnore(filepath.Dir(app.SiteSettingsPath), drupalConfig.SiteSettingsLocal); err != nil {
