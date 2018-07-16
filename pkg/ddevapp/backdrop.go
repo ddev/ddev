@@ -8,8 +8,6 @@ import (
 
 	"io/ioutil"
 
-	"bytes"
-
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
@@ -53,7 +51,7 @@ func NewBackdropSettings() *BackdropSettings {
 const backdropMainSettingsTemplate = `<?php
 {{ $config := . }}
 // {{ $config.Signature }}: Automatically generated Backdrop settings file.
-if (file_exists( {{ $config.SiteSettingsLocal }} )) {
+if (file_exists('{{ $config.SiteSettingsLocal }}')) {
   include '{{ $config.SiteSettingsLocal }}';
 }
 `
@@ -62,7 +60,7 @@ if (file_exists( {{ $config.SiteSettingsLocal }} )) {
 // settings.php in the event that one exists.
 const backdropSettingsAppendTemplate = `{{ $config := . }}
 // {{ $config.Signature }}: Automatically generated include for settings managed by ddev.
-if (file_exists( {{ $config.SiteSettingsLocal }} )) {
+if (file_exists('{{ $config.SiteSettingsLocal }}')) {
   include '{{ $config.SiteSettingsLocal }}';
 }
 `
@@ -111,7 +109,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", settings.SiteSettings, settings.SiteSettingsLocal)
 
-		if err := addIncludeToBackdropSettingsFile(settings, app.SiteSettingsPath); err != nil {
+		if err := appendIncludeToBackdropSettingsFile(settings, app.SiteSettingsPath); err != nil {
 			return "", fmt.Errorf("failed to include %s in %s: %v", settings.SiteSettingsLocal, settings.SiteSettings, err)
 		}
 	}
@@ -218,41 +216,34 @@ func backdropPostImportDBAction(app *DdevApp) error {
 	return nil
 }
 
-// addIncludeToBackdropSettingsFile modifies the settings.php file to include the settings.ddev.php
+// appendIncludeToBackdropSettingsFile modifies the settings.php file to include the settings.ddev.php
 // file, which contains ddev-specific configuration.
-func addIncludeToBackdropSettingsFile(settings *BackdropSettings, siteSettingsPath string) error {
-	// Open file for appending to preserve current contents
+func appendIncludeToBackdropSettingsFile(settings *BackdropSettings, siteSettingsPath string) error {
+	// Check if file is empty
+	contents, err := ioutil.ReadFile(siteSettingsPath)
+	if err != nil {
+		return err
+	}
+
+	// If the file is empty, write the complete settings template and return
+	if len(contents) == 0 {
+		return writeBackdropMainSettingsFile(settings, siteSettingsPath)
+	}
+
+	// The file is not empty, open it for appending
 	file, err := os.OpenFile(siteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
 	defer util.CheckClose(file)
 
-	// Get current contents of settings.php
-	currentSiteSettings, err := ioutil.ReadAll(file)
-	if err != nil {
-		return err
-	}
-
-	// If settings.php is empty, write the complete settings template
-	if len(currentSiteSettings) == 0 {
-		if err = writeBackdropMainSettingsFile(settings, siteSettingsPath); err != nil {
-			return err
-		}
-	}
-
-	// The file is not empty, append the include
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(backdropSettingsAppendTemplate)
 	if err != nil {
 		return err
 	}
 
-	b := bytes.NewBuffer([]byte{})
-	if err := tmpl.Execute(b, settings); err != nil {
-		return err
-	}
-
-	if _, err := file.Write(b.Bytes()); err != nil {
+	// Write the template to the file
+	if err := tmpl.Execute(file, settings); err != nil {
 		return err
 	}
 

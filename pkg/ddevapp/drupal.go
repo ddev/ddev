@@ -13,8 +13,6 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"bytes"
-
 	"github.com/drud/ddev/pkg/fileutil"
 )
 
@@ -230,7 +228,7 @@ func manageDrupalCommonSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) 
 	} else {
 		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal)
 
-		if err := addIncludeToDrupalSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
+		if err := appendIncludeToDrupalSettingsFile(drupalConfig, app.SiteSettingsPath); err != nil {
 			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsLocal, drupalConfig.SiteSettings, err)
 		}
 	}
@@ -616,41 +614,34 @@ func settingsHasInclude(drupalConfig *DrupalSettings, siteSettingsPath string) (
 	return included, nil
 }
 
-// addIncludeToDrupalSettingsFile modifies the settings.php file to include the settings.ddev.php
+// appendIncludeToDrupalSettingsFile modifies the settings.php file to include the settings.ddev.php
 // file, which contains ddev-specific configuration.
-func addIncludeToDrupalSettingsFile(drupalConfig *DrupalSettings, siteSettingsPath string) error {
-	// Open file for appending to preserve current contents
+func appendIncludeToDrupalSettingsFile(drupalConfig *DrupalSettings, siteSettingsPath string) error {
+	// Check if file is empty
+	contents, err := ioutil.ReadFile(siteSettingsPath)
+	if err != nil {
+		return err
+	}
+
+	// If the file is empty, write the complete settings template and return
+	if len(contents) == 0 {
+		return writeDrupalCommonSettingsFile(drupalConfig, siteSettingsPath)
+	}
+
+	// The file is not empty, open it for appending
 	file, err := os.OpenFile(siteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
 	defer util.CheckClose(file)
 
-	// Get current contents of settings.php
-	currentSiteSettings, err := ioutil.ReadAll(file)
-	if err != nil {
-		return err
-	}
-
-	// If settings.php is empty, write the complete settings template
-	if len(currentSiteSettings) == 0 {
-		if err = writeDrupalCommonSettingsFile(drupalConfig, siteSettingsPath); err != nil {
-			return err
-		}
-	}
-
-	// The file is not empty, append the include
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupalCommonSettingsAppendTemplate)
 	if err != nil {
 		return err
 	}
 
-	b := bytes.NewBuffer([]byte{})
-	if err := tmpl.Execute(b, drupalConfig); err != nil {
-		return err
-	}
-
-	if _, err := file.Write(b.Bytes()); err != nil {
+	// Write the template to the file
+	if err := tmpl.Execute(file, drupalConfig); err != nil {
 		return err
 	}
 
