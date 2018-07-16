@@ -22,7 +22,7 @@ type settingsLocations struct {
 	local string
 }
 
-var appTypeSettingsLocations = map[string]settingsLocations{
+var drupalBackdropSettingsLocations = map[string]settingsLocations{
 	"drupal6":  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	"drupal7":  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	"drupal8":  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
@@ -101,9 +101,9 @@ func TestWriteDrushConfig(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// TestIncludeSettingsDdevInNewSettingsFile verifies that when no settings.php file exists,
+// TestDrupalBackdropIncludeSettingsDdevInNewSettingsFile verifies that when no settings.php file exists,
 // a settings.php file is created that includes settings.ddev.php.
-func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
+func TestDrupalBackdropIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 	dir := testcommon.CreateTmpDir(t.Name())
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
@@ -111,7 +111,7 @@ func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 	app, err := NewApp(dir, DefaultProviderName)
 	assert.NoError(t, err)
 
-	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
+	for appType, relativeSettingsLocations := range drupalBackdropSettingsLocations {
 		app.Type = appType
 
 		relativeSettingsLocation := relativeSettingsLocations.main
@@ -142,9 +142,9 @@ func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 	}
 }
 
-// TestIncludeSettingsDdevInExistingSettingsFile verifies that when a settings.php file already exists,
+// TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile verifies that when a settings.php file already exists,
 // it is modified to include settings.ddev.php
-func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
+func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 	dir := testcommon.CreateTmpDir(t.Name())
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
@@ -152,7 +152,7 @@ func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 	app, err := NewApp(dir, DefaultProviderName)
 	assert.NoError(t, err)
 
-	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
+	for appType, relativeSettingsLocations := range drupalBackdropSettingsLocations {
 		app.Type = appType
 
 		relativeSettingsLocation := relativeSettingsLocations.main
@@ -195,9 +195,9 @@ func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 	}
 }
 
-// TestCreateGitIgnoreIfNoneExists verifies that if no .gitignore file exists in the directory
+// TestDrupalBackdropCreateGitIgnoreIfNoneExists verifies that if no .gitignore file exists in the directory
 // containing settings.php and settings.ddev.php, a .gitignore is created that includes settings.ddev.php.
-func TestCreateGitIgnoreIfNoneExists(t *testing.T) {
+func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 	dir := testcommon.CreateTmpDir(t.Name())
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
@@ -205,7 +205,7 @@ func TestCreateGitIgnoreIfNoneExists(t *testing.T) {
 	app, err := NewApp(dir, DefaultProviderName)
 	assert.NoError(t, err)
 
-	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
+	for appType, relativeSettingsLocations := range drupalBackdropSettingsLocations {
 		app.Type = appType
 
 		relativeSettingsDdevLocation := relativeSettingsLocations.local
@@ -233,9 +233,9 @@ func TestCreateGitIgnoreIfNoneExists(t *testing.T) {
 	}
 }
 
-// TestGitIgnoreAlreadyExists verifies that if a .gitignore already exists in the directory
+// TestDrupalBackdropGitIgnoreAlreadyExists verifies that if a .gitignore already exists in the directory
 // containing settings.php and settings.ddev.php, it is not modified.
-func TestGitIgnoreAlreadyExists(t *testing.T) {
+func TestDrupalBackdropGitIgnoreAlreadyExists(t *testing.T) {
 	dir := testcommon.CreateTmpDir(t.Name())
 	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
 	assert.NoError(t, err)
@@ -243,7 +243,7 @@ func TestGitIgnoreAlreadyExists(t *testing.T) {
 	app, err := NewApp(dir, DefaultProviderName)
 	assert.NoError(t, err)
 
-	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
+	for appType, relativeSettingsLocations := range drupalBackdropSettingsLocations {
 		app.Type = appType
 
 		relativeSettingsDdevLocation := relativeSettingsLocations.local
@@ -272,9 +272,9 @@ func TestGitIgnoreAlreadyExists(t *testing.T) {
 	}
 }
 
-// TestOverwriteDdevSettings ensures that if a settings.ddev.php file already exists, it is overwritten by the
+// TestDrupalBackdropOverwriteDdevSettings ensures that if a settings.ddev.php file already exists, it is overwritten by the
 // settings creation process.
-func TestOverwriteDdevSettings(t *testing.T) {
+func TestDrupalBackdropOverwriteDdevSettings(t *testing.T) {
 	dir := testcommon.CreateTmpDir(t.Name())
 	err := os.MkdirAll(filepath.Join(dir, "sites", "default"), 0777)
 	assert.NoError(t, err)
@@ -282,7 +282,7 @@ func TestOverwriteDdevSettings(t *testing.T) {
 	app, err := NewApp(dir, DefaultProviderName)
 	assert.NoError(t, err)
 
-	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
+	for appType, relativeSettingsLocations := range drupalBackdropSettingsLocations {
 		app.Type = appType
 
 		relativeSettingsDdevLocation := relativeSettingsLocations.local
