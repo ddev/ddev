@@ -76,19 +76,19 @@ func NewDrushConfig() *DrushConfig {
 // in the even that one does not already exist.
 const drupalCommonSettingsTemplate = `<?php
 {{ $config := . }}
-/**
- This was automatically generated to include settings managed by ddev.
- */
-include '{{ joinPath $config.SitePath $config.SiteSettingsLocal }}';
+// {{ $config.Signature }}: Automatically generated Drupal settings file.
+if (file_exists('{{ joinPath $config.SitePath $config.SiteSettingsLocal }}')) {
+  include '{{ joinPath $config.SitePath $config.SiteSettingsLocal }}';
+}
 `
 
 // drupalCommonSettingsAppendTemplate defines the template that will be appended to
 // settings.php in the event that one exists.
 const drupalCommonSettingsAppendTemplate = `{{ $config := . }}
-/**
- This was automatically generated to include settings managed by ddev.
- */
-include '{{ joinPath $config.SitePath $config.SiteSettingsLocal }}';
+// {{ $config.Signature }}: Automatically generated include for settings managed by ddev.
+if (file_exists('{{ joinPath $config.SitePath $config.SiteSettingsLocal }}')) {
+  include '{{ joinPath $config.SitePath $config.SiteSettingsLocal }}';
+}
 `
 
 const (

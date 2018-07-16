@@ -52,26 +52,26 @@ func NewBackdropSettings() *BackdropSettings {
 // the event that one does not already exist.
 const backdropMainSettingsTemplate = `<?php
 {{ $config := . }}
-/**
- This was automatically generated to include settings managed by ddev.
- */
-include '{{ $config.SiteSettingsLocal }}';
+// {{ $config.Signature }}: Automatically generated Backdrop settings file.
+if (file_exists( {{ $config.SiteSettingsLocal }} )) {
+  include '{{ $config.SiteSettingsLocal }}';
+}
 `
 
 // backdropSettingsAppendTemplate defines the template that will be appended to
 // settings.php in the event that one exists.
 const backdropSettingsAppendTemplate = `{{ $config := . }}
-/**
- This was automatically generated to include settings managed by ddev.
- */
-include '{{ $config.SiteSettingsLocal }}';
+// {{ $config.Signature }}: Automatically generated include for settings managed by ddev.
+if (file_exists( {{ $config.SiteSettingsLocal }} )) {
+  include '{{ $config.SiteSettingsLocal }}';
+}
 `
 
 // backdropLocalSettingsTemplate defines the template that will become settings.ddev.php.
 const backdropLocalSettingsTemplate = `<?php
 {{ $config := . }}
 /**
- {{ $config.Signature }}: Automatically generated Backdrop settings.php file.
+ {{ $config.Signature }}: Automatically generated Backdrop settings file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
