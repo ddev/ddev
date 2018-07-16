@@ -17,11 +17,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var appTypeSettingsLocations = map[string][]string{
-	"drupal6":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-	"drupal7":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-	"drupal8":  {"sites/default/settings.php", "sites/default/settings.ddev.php"},
-	"backdrop": {"settings.php", "settings.ddev.php"},
+type settingsLocations struct {
+	main  string
+	local string
+}
+
+var appTypeSettingsLocations = map[string]settingsLocations{
+	"drupal6":  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	"drupal7":  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	"drupal8":  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	"backdrop": {main: "settings.php", local: "settings.ddev.php"},
 }
 
 // TestWriteSettings tests writing app settings (like Drupal
@@ -109,8 +114,8 @@ func TestIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
 		app.Type = appType
 
-		relativeSettingsLocation := relativeSettingsLocations[0]
-		relativeSettingsDdevLocation := relativeSettingsLocations[1]
+		relativeSettingsLocation := relativeSettingsLocations.main
+		relativeSettingsDdevLocation := relativeSettingsLocations.local
 		expectedSettingsLocation := filepath.Join(dir, relativeSettingsLocation)
 		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
 
@@ -150,8 +155,8 @@ func TestIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
 		app.Type = appType
 
-		relativeSettingsLocation := relativeSettingsLocations[0]
-		relativeSettingsDdevLocation := relativeSettingsLocations[1]
+		relativeSettingsLocation := relativeSettingsLocations.main
+		relativeSettingsDdevLocation := relativeSettingsLocations.local
 		expectedSettingsLocation := filepath.Join(dir, relativeSettingsLocation)
 		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
 
@@ -203,7 +208,7 @@ func TestCreateGitIgnoreIfNoneExists(t *testing.T) {
 	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
 		app.Type = appType
 
-		relativeSettingsDdevLocation := relativeSettingsLocations[1]
+		relativeSettingsDdevLocation := relativeSettingsLocations.local
 		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
 		expectedGitIgnoreLocation := filepath.Join(filepath.Dir(expectedSettingsDdevLocation), ".gitignore")
 		fmt.Println(expectedGitIgnoreLocation)
@@ -241,7 +246,7 @@ func TestGitIgnoreAlreadyExists(t *testing.T) {
 	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
 		app.Type = appType
 
-		relativeSettingsDdevLocation := relativeSettingsLocations[1]
+		relativeSettingsDdevLocation := relativeSettingsLocations.local
 		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
 		expectedGitIgnoreLocation := filepath.Join(filepath.Dir(expectedSettingsDdevLocation), ".gitignore")
 		fmt.Println(expectedGitIgnoreLocation)
@@ -280,7 +285,7 @@ func TestOverwriteDdevSettings(t *testing.T) {
 	for appType, relativeSettingsLocations := range appTypeSettingsLocations {
 		app.Type = appType
 
-		relativeSettingsDdevLocation := relativeSettingsLocations[1]
+		relativeSettingsDdevLocation := relativeSettingsLocations.local
 		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
 
 		// Ensure that a settings.ddev.php file exists
