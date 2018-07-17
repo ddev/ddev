@@ -41,16 +41,18 @@ func TestWriteSettings(t *testing.T) {
 		"typo3":     "typo3conf/AdditionalConfiguration.php",
 	}
 	dir := testcommon.CreateTmpDir(t.Name())
-	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
+
+	app, err := NewApp(dir, DefaultProviderName)
 	assert.NoError(t, err)
-	err = os.MkdirAll(filepath.Join(dir, "typo3conf"), 0777)
+
+	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
+	assert.NoError(t, err)
+
+	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "typo3conf"), 0777)
 	assert.NoError(t, err)
 
 	// TYPO3 wants LocalConfiguration.php to exist in the repo ahead of time.
-	err = ioutil.WriteFile(filepath.Join(dir, "typo3conf", "LocalConfiguration.php"), []byte("<?php\n"), 0644)
-	assert.NoError(t, err)
-
-	app, err := NewApp(dir, DefaultProviderName)
+	err = ioutil.WriteFile(filepath.Join(dir, app.Docroot, "typo3conf", "LocalConfiguration.php"), []byte("<?php\n"), 0644)
 	assert.NoError(t, err)
 
 	for apptype, settingsRelativePath := range expectations {
@@ -105,10 +107,11 @@ func TestWriteDrushConfig(t *testing.T) {
 // a settings.php file is created that includes settings.ddev.php.
 func TestDrupalBackdropIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 	dir := testcommon.CreateTmpDir(t.Name())
-	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
-	assert.NoError(t, err)
 
 	app, err := NewApp(dir, DefaultProviderName)
+	assert.NoError(t, err)
+
+	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
 	assert.NoError(t, err)
 
 	for appType, relativeSettingsLocations := range drupalBackdropSettingsLocations {
@@ -146,10 +149,11 @@ func TestDrupalBackdropIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 // it is modified to include settings.ddev.php
 func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 	dir := testcommon.CreateTmpDir(t.Name())
-	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
-	assert.NoError(t, err)
 
 	app, err := NewApp(dir, DefaultProviderName)
+	assert.NoError(t, err)
+
+	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
 	assert.NoError(t, err)
 
 	for appType, relativeSettingsLocations := range drupalBackdropSettingsLocations {
@@ -199,10 +203,11 @@ func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 // containing settings.php and settings.ddev.php, a .gitignore is created that includes settings.ddev.php.
 func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 	dir := testcommon.CreateTmpDir(t.Name())
-	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
-	assert.NoError(t, err)
 
 	app, err := NewApp(dir, DefaultProviderName)
+	assert.NoError(t, err)
+
+	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
 	assert.NoError(t, err)
 
 	for appType, relativeSettingsLocations := range drupalBackdropSettingsLocations {
@@ -237,10 +242,11 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 // containing settings.php and settings.ddev.php, it is not modified.
 func TestDrupalBackdropGitIgnoreAlreadyExists(t *testing.T) {
 	dir := testcommon.CreateTmpDir(t.Name())
-	err := os.MkdirAll(filepath.Join(dir, "sites/default"), 0777)
-	assert.NoError(t, err)
 
 	app, err := NewApp(dir, DefaultProviderName)
+	assert.NoError(t, err)
+
+	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
 	assert.NoError(t, err)
 
 	for appType, relativeSettingsLocations := range drupalBackdropSettingsLocations {
@@ -276,10 +282,11 @@ func TestDrupalBackdropGitIgnoreAlreadyExists(t *testing.T) {
 // settings creation process.
 func TestDrupalBackdropOverwriteDdevSettings(t *testing.T) {
 	dir := testcommon.CreateTmpDir(t.Name())
-	err := os.MkdirAll(filepath.Join(dir, "sites", "default"), 0777)
-	assert.NoError(t, err)
 
 	app, err := NewApp(dir, DefaultProviderName)
+	assert.NoError(t, err)
+
+	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
 	assert.NoError(t, err)
 
 	for appType, relativeSettingsLocations := range drupalBackdropSettingsLocations {
