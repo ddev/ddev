@@ -70,7 +70,7 @@ func TestWriteSettings(t *testing.T) {
 		// nolint: vetshadow
 		signatureFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, DdevFileSignature)
 		assert.NoError(t, err)
-		assert.True(t, signatureFound)
+		assert.True(t, signatureFound, "Failed to find %s in %s", DdevFileSignature, expectedSettingsFile)
 		err = os.Remove(expectedSettingsFile)
 		assert.NoError(t, err)
 	}
@@ -138,7 +138,7 @@ func TestDrupalBackdropIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 		// Ensure that settings.php references settings.ddev.php
 		newSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, relativeSettingsDdevLocation)
 		assert.NoError(t, err)
-		assert.True(t, newSettingsIncludesSettingsDdev)
+		assert.True(t, newSettingsIncludesSettingsDdev, "Failed to find %s in %s", relativeSettingsDdevLocation, expectedSettingsLocation)
 
 		// Ensure that settings.ddev.php exists
 		assert.True(t, fileutil.FileExists(expectedSettingsDdevLocation))
@@ -190,12 +190,12 @@ func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 		// Ensure that settings.php references settings.ddev.php
 		existingSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, relativeSettingsDdevLocation)
 		assert.NoError(t, err)
-		assert.True(t, existingSettingsIncludesSettingsDdev)
+		assert.True(t, existingSettingsIncludesSettingsDdev, "Failed to find %s in %s", relativeSettingsDdevLocation, expectedSettingsLocation)
 
 		// Ensure that settings.php includes original contents
 		modifiedSettingsIncludesOriginalContents, err := fileutil.FgrepStringInFile(expectedSettingsLocation, originalContents)
 		assert.NoError(t, err)
-		assert.True(t, modifiedSettingsIncludesOriginalContents)
+		assert.True(t, modifiedSettingsIncludesOriginalContents, "Failed to find %s in %s", originalContents, expectedSettingsLocation)
 	}
 }
 
@@ -234,7 +234,7 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 		// Ensure that the new .gitignore includes settings.ddev.php
 		newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, filepath.Base(relativeSettingsDdevLocation))
 		assert.NoError(t, err)
-		assert.True(t, newGitIgnoreIncludesSettingsDdev)
+		assert.True(t, newGitIgnoreIncludesSettingsDdev, "Failed to find %s in %s", filepath.Base(relativeSettingsDdevLocation), expectedGitIgnoreLocation)
 	}
 }
 
@@ -274,7 +274,7 @@ func TestDrupalBackdropGitIgnoreAlreadyExists(t *testing.T) {
 		// Ensure that the new .gitignore has not been modified to include settings.ddev.php
 		existingGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, filepath.Base(relativeSettingsDdevLocation))
 		assert.NoError(t, err)
-		assert.False(t, existingGitIgnoreIncludesSettingsDdev)
+		assert.False(t, existingGitIgnoreIncludesSettingsDdev, "Found unexpected %s in %s", filepath.Base(relativeSettingsDdevLocation), expectedGitIgnoreLocation)
 	}
 }
 
@@ -312,6 +312,6 @@ func TestDrupalBackdropOverwriteDdevSettings(t *testing.T) {
 		// Ensure settings.ddev.php was overwritten with new contents
 		containsOriginalString, err := fileutil.FgrepStringInFile(expectedSettingsDdevLocation, originalContents)
 		assert.NoError(t, err)
-		assert.False(t, containsOriginalString)
+		assert.False(t, containsOriginalString, "Found unexpected %s in %s", originalContents, expectedSettingsDdevLocation)
 	}
 }

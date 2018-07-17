@@ -47,10 +47,10 @@ func NewDrupalSettings() *DrupalSettings {
 		DatabasePrefix:    "",
 		HashSalt:          util.RandString(64),
 		Signature:         DdevFileSignature,
-		SitePath:          filepath.Join("sites", "default"),
+		SitePath:          path.Join("sites", "default"),
 		SiteSettings:      "settings.php",
 		SiteSettingsLocal: "settings.ddev.php",
-		SyncDir:           filepath.Join("files", "sync"),
+		SyncDir:           path.Join("files", "sync"),
 	}
 }
 

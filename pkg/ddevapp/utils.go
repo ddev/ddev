@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -177,7 +178,7 @@ func getTemplateFuncMap() map[string]interface{} {
 	m := sprig.FuncMap()
 
 	// Add helpful utilities on top of it
-	m["joinPath"] = filepath.Join
+	m["joinPath"] = path.Join
 
 	return m
 }
