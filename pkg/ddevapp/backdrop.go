@@ -119,7 +119,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	}
 
 	if err := createGitIgnore(filepath.Dir(app.SiteLocalSettingsPath), settings.SiteSettingsLocal); err != nil {
-		output.UserOut.Warnf("Failed to write .gitignore: %v", err)
+		output.UserOut.Warnf("Failed to write .gitignore in %s: %v", app.SiteLocalSettingsPath, err)
 	}
 
 	return app.SiteLocalSettingsPath, nil
