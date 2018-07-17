@@ -14,6 +14,8 @@ import (
 	"os"
 	"text/template"
 
+	"io/ioutil"
+
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -193,7 +195,15 @@ const gitIgnoreTemplate = `{{ range $i, $f := . -}}
 func createGitIgnore(targetDir string, ignores ...string) error {
 	gitIgnoreFilePath := filepath.Join(targetDir, ".gitignore")
 	if fileutil.FileExists(gitIgnoreFilePath) {
-		return nil
+		gitIgnoreContents, err := ioutil.ReadFile(gitIgnoreFilePath)
+		if err != nil {
+			return err
+		}
+
+		// The .gitignore exists and is not empty
+		if len(gitIgnoreContents) > 0 {
+			return nil
+		}
 	}
 
 	tmpl, err := template.New("gitignore").Funcs(getTemplateFuncMap()).Parse(gitIgnoreTemplate)
