@@ -143,11 +143,11 @@ func (f *TextFormatter) printColored(b *bytes.Buffer, entry *log.Entry, keys []s
 		levelColor = nocolor
 	}
 
-	fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m ", levelColor, entry.Message)
+	_, _ = fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m ", levelColor, entry.Message)
 
 	for _, k := range keys {
 		v := entry.Data[k]
-		fmt.Fprintf(b, " \x1b[%dm%s\x1b[0m=", levelColor, k)
+		_, _ = fmt.Fprintf(b, " \x1b[%dm%s\x1b[0m=", levelColor, k)
 		f.appendValue(b, v)
 	}
 }

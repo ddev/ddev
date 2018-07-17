@@ -272,6 +272,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		assert.True(composeFile)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
+			//nolint: vetshadow
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "running")
@@ -295,7 +296,8 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		// up these for tests that run later.
 		app.AdditionalFQDNs = []string{}
 		app.AdditionalHostnames = []string{}
-		app.WriteConfig()
+		err = app.WriteConfig()
+		assert.NoError(err)
 
 		err = app.Stop()
 		assert.NoError(err)
@@ -937,18 +939,18 @@ func TestRouterPortsCheck(t *testing.T) {
 
 	// Occupy port 80 using docker busybox trick, then see if we can start router.
 	// This is done with docker so that we don't have to use explicit sudo
-	containerId, err := exec.RunCommand("sh", []string{"-c", "docker run -d -p80:80 --rm busybox:latest sleep 100 2>/dev/null"})
+	containerID, err := exec.RunCommand("sh", []string{"-c", "docker run -d -p80:80 --rm busybox:latest sleep 100 2>/dev/null"})
 	if err != nil {
-		t.Fatalf("Failed to run docker command to occupy port 80, err=%v output=%v", err, containerId)
+		t.Fatalf("Failed to run docker command to occupy port 80, err=%v output=%v", err, containerID)
 	}
-	containerId = strings.TrimSpace(containerId)
+	containerID = strings.TrimSpace(containerID)
 
 	// Now try to start the router. It should fail because the port is occupied.
 	err = ddevapp.StartDdevRouter()
 	assert.Error(err, "Failure: router started even though port 80 was occupied")
 
 	// Remove our dummy busybox docker container.
-	out, err := exec.RunCommand("docker", []string{"rm", "-f", containerId})
+	out, err := exec.RunCommand("docker", []string{"rm", "-f", containerID})
 	assert.NoError(err, "Failed to docker rm the port-occupier container, err=%v output=%v", err, out)
 }
 
@@ -990,6 +992,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
+		// nolint: vetshadow
 		_, err := constructContainerName(containerType, app)
 		assert.Error(err)
 	}
@@ -1101,6 +1104,7 @@ func TestListWithoutDir(t *testing.T) {
 	// array first.
 	table := ddevapp.CreateAppTable()
 	for _, site := range apps {
+		// nolint: vetshadow
 		desc, err := site.Describe()
 		if err != nil {
 			t.Fatalf("Failed to describe site %s: %v", site.GetName(), err)

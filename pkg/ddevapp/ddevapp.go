@@ -264,6 +264,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 	case strings.HasSuffix(importPath, "tar.gz"):
 		fallthrough
 	case strings.HasSuffix(importPath, "tgz"):
+		// nolint: vetshadow
 		err := archive.Untar(importPath, dbPath, extPath)
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
@@ -459,6 +460,7 @@ func (app *DdevApp) ImportFiles(imPath string, extPath string) error {
 
 	if fileutil.FileExists(destPath) {
 		// ensure existing directory is empty
+		// nolint: vetshadow
 		err := fileutil.PurgeDirectory(destPath)
 		if err != nil {
 			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
@@ -897,6 +899,7 @@ func (app *DdevApp) Down(removeData bool) error {
 		if !fileutil.FileExists(app.DataDir) {
 			util.Warning("No project data/database to remove")
 		} else {
+			// nolint: vetshadow
 			err := fileutil.PurgeDirectory(app.DataDir)
 			if err != nil {
 				return fmt.Errorf("failed to remove data directories: %v", err)
@@ -1065,6 +1068,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 			"com.docker.compose.service": "web",
 		}
 
+		// nolint: vetshadow
 		webContainer, err := dockerutil.FindContainerByLabels(labels)
 		if err != nil {
 			return "", fmt.Errorf("could not find a project named '%s'. Run 'ddev list' to see currently active projects", siteName)

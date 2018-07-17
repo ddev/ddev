@@ -159,7 +159,7 @@ func ContainerWait(waittime time.Duration, labels map[string]string) error {
 	}
 
 	// We should never get here.
-	// nolint: vet
+	// nolint: vet, govet
 	return fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
