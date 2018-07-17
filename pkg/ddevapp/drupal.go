@@ -237,7 +237,7 @@ func manageDrupalCommonSettingsFile(app *DdevApp, drupalConfig *DrupalSettings) 
 }
 
 // writeDrupalCommonSettingsFile creates the app's settings.php or equivalent,
-// which does nothing more than imports the ddev-managed settings.ddev.php.
+// which does nothing more than import the ddev-managed settings.ddev.php.
 func writeDrupalCommonSettingsFile(drupalConfig *DrupalSettings, filePath string) error {
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupalCommonSettingsTemplate)
 	if err != nil {
