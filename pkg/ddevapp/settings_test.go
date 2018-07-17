@@ -136,9 +136,10 @@ func TestDrupalBackdropIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 		assert.True(t, fileutil.FileExists(expectedSettingsLocation))
 
 		// Ensure that settings.php references settings.ddev.php
-		newSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, relativeSettingsDdevLocation)
+		settingsDdev := filepath.Base(relativeSettingsDdevLocation)
+		newSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, settingsDdev)
 		assert.NoError(t, err)
-		assert.True(t, newSettingsIncludesSettingsDdev, "Failed to find %s in %s", relativeSettingsDdevLocation, expectedSettingsLocation)
+		assert.True(t, newSettingsIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedSettingsLocation)
 
 		// Ensure that settings.ddev.php exists
 		assert.True(t, fileutil.FileExists(expectedSettingsDdevLocation))
@@ -188,9 +189,10 @@ func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 		assert.True(t, fileutil.FileExists(expectedSettingsDdevLocation))
 
 		// Ensure that settings.php references settings.ddev.php
-		existingSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, relativeSettingsDdevLocation)
+		settingsDdev := filepath.Base(relativeSettingsDdevLocation)
+		existingSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, settingsDdev)
 		assert.NoError(t, err)
-		assert.True(t, existingSettingsIncludesSettingsDdev, "Failed to find %s in %s", relativeSettingsDdevLocation, expectedSettingsLocation)
+		assert.True(t, existingSettingsIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedSettingsLocation)
 
 		// Ensure that settings.php includes original contents
 		modifiedSettingsIncludesOriginalContents, err := fileutil.FgrepStringInFile(expectedSettingsLocation, originalContents)
@@ -232,9 +234,10 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 		fmt.Printf("gitignore contents: %s", c)
 
 		// Ensure that the new .gitignore includes settings.ddev.php
-		newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, filepath.Base(relativeSettingsDdevLocation))
+		settingsDdev := filepath.Base(relativeSettingsDdevLocation)
+		newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, settingsDdev)
 		assert.NoError(t, err)
-		assert.True(t, newGitIgnoreIncludesSettingsDdev, "Failed to find %s in %s", filepath.Base(relativeSettingsDdevLocation), expectedGitIgnoreLocation)
+		assert.True(t, newGitIgnoreIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedGitIgnoreLocation)
 	}
 }
 
@@ -272,9 +275,10 @@ func TestDrupalBackdropGitIgnoreAlreadyExists(t *testing.T) {
 		assert.True(t, fileutil.FileExists(expectedGitIgnoreLocation))
 
 		// Ensure that the new .gitignore has not been modified to include settings.ddev.php
-		existingGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, filepath.Base(relativeSettingsDdevLocation))
+		settingsDdev := relativeSettingsDdevLocation
+		existingGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, settingsDdev)
 		assert.NoError(t, err)
-		assert.False(t, existingGitIgnoreIncludesSettingsDdev, "Found unexpected %s in %s", filepath.Base(relativeSettingsDdevLocation), expectedGitIgnoreLocation)
+		assert.False(t, existingGitIgnoreIncludesSettingsDdev, "Found unexpected %s in %s", settingsDdev, expectedGitIgnoreLocation)
 	}
 }
 
