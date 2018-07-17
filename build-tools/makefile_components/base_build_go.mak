@@ -49,7 +49,7 @@ linux darwin windows: $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
 	@$(shell rm -f VERSION.txt)
 	@$(shell mkdir -p bin/$@ $(GOTMP)/{std/$@,bin,src/$(PKG)})
-	docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
+	@docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
 	    -v "$(S)$$PWD/$(GOTMP):/go$(DOCKERMOUNTFLAG)"                                \
 	    -v "$(S)$$PWD:/go/src/$(PKG)$(DOCKERMOUNTFLAG)"                              \
 	    -v "$(S)$$PWD/bin/$@:/go/bin$(DOCKERMOUNTFLAG)"                        \
