@@ -239,6 +239,11 @@ $databases['default']['default'] = array(
 
 // manageDrupalSettingsFile will direct inspecting and writing of settings.php.
 func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, settingsTemplate, appendTemplate string) error {
+	// We'll be writing/appending to the settings files and parent directory, make sure we have permissions to do so
+	if err := drupalEnsureWritePerms(app); err != nil {
+		return err
+	}
+
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		output.UserOut.Printf("No %s file exists, creating one", drupalConfig.SiteSettings)
 
@@ -587,7 +592,7 @@ func drupal6PostStartAction(app *DdevApp) error {
 // drupalEnsureWritePerms will ensure sites/default and sites/default/settings.php will
 // have the appropriate permissions for development.
 func drupalEnsureWritePerms(app *DdevApp) error {
-	output.UserOut.Printf("Ensuring write permissions for %s...", app.GetName())
+	output.UserOut.Printf("Ensuring write permissions for %s", app.GetName())
 	var writePerms os.FileMode = 0200
 
 	settingsDir := path.Dir(app.SiteSettingsPath)
