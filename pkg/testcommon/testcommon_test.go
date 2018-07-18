@@ -171,7 +171,8 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 
 	// This does the same thing as previous, but worth exercising it here.
 	EnsureLocalHTTPContent(t, safeURL, "Famous 5-minute install")
-	app.Down(true, false)
+	err = app.Down(true, false)
+	assert.NoError(err)
 
 	cleanup()
 

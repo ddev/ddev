@@ -532,9 +532,9 @@ func TestDdevRevertSnapshot(t *testing.T) {
 
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("DdevRevertSnapshot"))
 
-	d7tester_test1, err := filepath.Abs(filepath.Join("testdata", "revert_snapshot", "d7tester_test_1.sql.gz"))
+	d7testerTest1, err := filepath.Abs(filepath.Join("testdata", "revert_snapshot", "d7tester_test_1.sql.gz"))
 	assert.NoError(err)
-	d7tester_test2, err := filepath.Abs(filepath.Join("testdata", "revert_snapshot", "d7tester_test_2.sql.gz"))
+	d7testerTest2, err := filepath.Abs(filepath.Join("testdata", "revert_snapshot", "d7tester_test_2.sql.gz"))
 	assert.NoError(err)
 
 	// Use d7 only for this test, the key thing is the database interaction
@@ -563,16 +563,16 @@ func TestDdevRevertSnapshot(t *testing.T) {
 	// Test at the beginning using install.php; it should work as expected.
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+"/install.php?profile=commerce_kickstart", "We use DFP to show you content relevant to Drupal Commerce")
 
-	err = app.ImportDB(d7tester_test1, "")
-	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7tester_test1, err)
+	err = app.ImportDB(d7testerTest1, "")
+	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1, err)
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
 
 	// Make a snapshot of d7 tester test 1
 	d7testerTest1Snapshot, err := app.SnapshotDatabase()
 	assert.NoError(err)
 
-	err = app.ImportDB(d7tester_test2, "")
-	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7tester_test1, err)
+	err = app.ImportDB(d7testerTest2, "")
+	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1, err)
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
 
 	d7testerTest2Snapshot, err := app.SnapshotDatabase()
