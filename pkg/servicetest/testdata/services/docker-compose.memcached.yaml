@@ -16,15 +16,5 @@ services:
     labels:
     # These labels ensure this service is discoverable by ddev
       com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.approot: $DDEV_APPROOT
-      com.ddev.app-url: $DDEV_URL
-    environment:
-      - VIRTUAL_HOST=$DDEV_HOSTNAME # This defines the host name the service should be accessible from. This will be sitename.ddev.local
-      - HTTP_EXPOSE=11211
 
     command: ["-m", "128"]
-
-# This links the memcached service to the web service defined in the main docker-compose.yml, allowing applications running in the web service to access the memcached service at memcached:11211
-  web:
-    links:
-      - memcached:$DDEV_HOSTNAME
