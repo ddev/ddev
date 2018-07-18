@@ -230,8 +230,6 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 		// Ensure that a .gitignore exists
 		assert.True(t, fileutil.FileExists(expectedGitIgnoreLocation))
 
-		c, _ := ioutil.ReadFile(expectedGitIgnoreLocation)
-
 		// Ensure that the new .gitignore includes settings.ddev.php
 		settingsDdev := filepath.Base(relativeSettingsDdevLocation)
 		newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, settingsDdev)
