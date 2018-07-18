@@ -16,6 +16,8 @@ function cleanup {
         docker rm -f $(docker ps -aq) >/dev/null || true
     fi
 
+	docker system prune --volumes --force
+
     # Make sure we don't have any existing containers on the testbot that might
     # result in this container not being built from scratch.
     VERSION=$(make version | sed 's/^VERSION://')
