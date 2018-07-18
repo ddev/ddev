@@ -995,6 +995,7 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 		if err != nil {
 			return err
 		}
+		util.Success("Project data/database removed from docker volume for project %s", app.Name)
 	}
 
 	err = StopRouterIfNoContainers()
