@@ -250,7 +250,7 @@ Your project can be reached at: http://drupal8.ddev.local
 And you can now visit your working project. Enjoy!
 
 ### Configuration files
-_Please note that if you're providing the settings.php or wp-config.php and ddev is creating the settings.local.php (or wordpress wp-config-local.php), the main settings file must explicitly include the appropriate "settings.local.php" or equivalent._
+_**Note:** If you're providing the settings.php or wp-config.php and DDEV is creating the settings.ddev.php (or wp-config-local.php, AdditionalConfig.php, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file._
 
 The `ddev config` command attempts to create a CMS-specific settings file with DDEV credentials pre-populated.
 
