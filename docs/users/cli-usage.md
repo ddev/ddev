@@ -5,7 +5,7 @@ Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands
 
 ## Quickstart Guides
 
-These are quickstart instructions for WordPress, Drupal 7, Drupal 8, TYPO3, and Backdrop.
+These are quickstart instructions for WordPress, Drupal 6, Drupal 7, Drupal 8, TYPO3, and Backdrop.
 
 **Prerequisites:** Before you start, follow the [installation instructions](../index.md#installation). Make sure to [check the system requirements](../index.md#system-requirements), you will need *docker* and *docker-compose* to use ddev.
 
@@ -213,7 +213,7 @@ For in-depth application monitoring, use the command `ddev describe` to see deta
 
 ## Getting Started
 
-Check out the git repository for the project you want to work on. `cd` into the directory and run `ddev config` and follow the prompts.
+Check out the git repository for the project you want to work on. `cd` into the directory, run `ddev config`, and follow the prompts.
 
 ```
 $ cd ~/Projects
@@ -232,22 +232,7 @@ Docroot Location: web
 Found a drupal8 codebase at /Users/username/Projects/drupal8/web
 ```
 
-Configuration files have now been created for your project. (Take a look at the file on the project's .ddev/ddev.yaml file). Additionally, the `ddev config` steps attempts to create a CMS specific database settings with the DDEV specific credentials pre-populated. Here's a Drupal specific example that is mirrored in the other CMSes.
-
-* If settings.php does not exist, create it.
-* If a settings.php file exists that DDEV manages, recreate it.
-* If a settings.php file exists that DDEV does not manage, create settings.local.php.
-* If a settings.local.php file exists that DDEV manages, recreate it.
-* If a settings.local.php file exists that DDEV does not manage, warn the user and proceed.
-
-How do you know if DDEV manages a database settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!
-
-```
-/**
- #ddev-generated: Automatically generated Drupal settings.php file.
- ddev manages this file and may delete or overwrite the file unless this comment is removed.
- */
-```
+Configuration files have now been created for your project. Take a look at the project's .ddev/config.yaml file.
 
 Now that the configuration files have been created, you can start your project with `ddev start` (still from within the project working directory):
 
@@ -264,7 +249,29 @@ Your project can be reached at: http://drupal8.ddev.local
 
 And you can now visit your working project. Enjoy!
 
+### Configuration files
 _Please note that if you're providing the settings.php or wp-config.php and ddev is creating the settings.local.php (or wordpress wp-config-local.php), the main settings file must explicitly include the appropriate "settings.local.php" or equivalent._
+
+The `ddev config` command attempts to create a CMS-specific settings file with DDEV credentials pre-populated.
+
+For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed file, settings.ddev.php. The `ddev config` command will ensure that these settings are included in your settings.php through the following steps:
+
+* Write DDEV settings to settings.ddev.php
+* If no settings.php file exists, create one that includes settings.ddev.php
+* If a settings.php file already exists, ensure that it includes settings.ddev.php, modifying settings.php to write the include if necessary
+
+For **TYPO3**, DDEV settings are written to AdditionalConfiguration.php.  If AdditionalConfiguration.php exists and is not managed by DDEV, it will not be modified.
+
+For **Wordpress**, DDEV settings are written to wp-config.php.
+
+How do you know if DDEV manages a settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!
+
+```
+/**
+ #ddev-generated: Automatically generated Drupal settings.php file.
+ ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ */
+```
 
 ## Listing project information
 
