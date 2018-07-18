@@ -8,7 +8,9 @@ SANITIZED_DOCKER_REPO = $(subst /,_,$(DOCKER_REPO))
 
 DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(VERSION)
 
-container: $(wildcard Dockerfile*)
+container: .container-$(DOTFILE_IMAGE) container-name
+
+.container-$(DOTFILE_IMAGE): $(wildcard Dockerfile Dockerfile.in) container-name
     # UPSTREAM_REPO in the Dockerfile.in will be changed to the value from Makefile; this is deprecated.
     # There's no reason not to just use Dockerfile now.
 	@if [ -f Dockerfile.in ]; then sed -e 's|UPSTREAM_REPO|$(UPSTREAM_REPO)|g' Dockerfile.in > .dockerfile; else cp Dockerfile .dockerfile; fi
@@ -17,8 +19,7 @@ container: $(wildcard Dockerfile*)
 	# Add the .docker_image into the build so it's easy to figure out where a docker image came from.
 	@echo "ADD .docker_image /$(SANITIZED_DOCKER_REPO)_VERSION_INFO.txt" >>.dockerfile
 	docker build -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) -f .dockerfile .
-	@docker images -q $(DOCKER_REPO):$(VERSION) >/dev/null
-
+	@docker images -q $(DOCKER_REPO):$(VERSION) >$@
 
 container-name:
 	@echo "container: $(DOCKER_REPO):$(VERSION)"
