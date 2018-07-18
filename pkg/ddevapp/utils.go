@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -11,6 +12,12 @@ import (
 
 	"errors"
 
+	"os"
+	"text/template"
+
+	"io/ioutil"
+
+	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
@@ -163,4 +170,57 @@ func ddevContainersRunning() (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+// getTemplateFuncMap will return a map of useful template functions.
+func getTemplateFuncMap() map[string]interface{} {
+	// Use sprig's template function map as a base
+	m := sprig.FuncMap()
+
+	// Add helpful utilities on top of it
+	m["joinPath"] = path.Join
+
+	return m
+}
+
+// gitIgnoreTemplate will write a .gitignore file.
+// This template expects string slice to be provided, with each string corresponding to
+// a line in the resulting .gitignore.
+const gitIgnoreTemplate = `{{ range $i, $f := . -}}
+/{{ $f }}
+{{- end }}
+`
+
+// createGitIgnore will create a .gitignore file in the target directory if one does not exist.
+// Each value in ignores will be added as a new line to the .gitignore.
+func createGitIgnore(targetDir string, ignores ...string) error {
+	gitIgnoreFilePath := filepath.Join(targetDir, ".gitignore")
+	if fileutil.FileExists(gitIgnoreFilePath) {
+		gitIgnoreContents, err := ioutil.ReadFile(gitIgnoreFilePath)
+		if err != nil {
+			return err
+		}
+
+		// The .gitignore exists and is not empty
+		if len(gitIgnoreContents) > 0 {
+			return nil
+		}
+	}
+
+	tmpl, err := template.New("gitignore").Funcs(getTemplateFuncMap()).Parse(gitIgnoreTemplate)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.OpenFile(gitIgnoreFilePath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(file)
+
+	if err := tmpl.Execute(file, ignores); err != nil {
+		return err
+	}
+
+	return nil
 }

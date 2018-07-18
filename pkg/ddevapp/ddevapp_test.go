@@ -460,11 +460,11 @@ func TestDdevImportDB(t *testing.T) {
 			// Test that a settings file has correct hash_salt format
 			switch app.Type {
 			case "drupal7":
-				drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "$drupal_hash_salt")
+				drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "$drupal_hash_salt")
 				assert.NoError(err)
 				assert.True(drupalHashSalt)
 			case "drupal8":
-				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "settings['hash_salt']")
+				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "settings['hash_salt']")
 				assert.NoError(err)
 				assert.True(settingsHashSalt)
 			case "wordpress":

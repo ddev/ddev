@@ -6,46 +6,70 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/Masterminds/sprig"
+	"io/ioutil"
+
 	"github.com/drud/ddev/pkg/appports"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 )
 
 // BackdropSettings holds database connection details for Backdrop.
 type BackdropSettings struct {
-	DatabaseName     string
-	DatabaseUsername string
-	DatabasePassword string
-	DatabaseHost     string
-	DatabaseDriver   string
-	DatabasePort     string
-	DatabasePrefix   string
-	HashSalt         string
-	Signature        string
+	DatabaseName      string
+	DatabaseUsername  string
+	DatabasePassword  string
+	DatabaseHost      string
+	DatabaseDriver    string
+	DatabasePort      string
+	DatabasePrefix    string
+	HashSalt          string
+	Signature         string
+	SiteSettings      string
+	SiteSettingsLocal string
 }
 
 // NewBackdropSettings produces a BackdropSettings object with default values.
 func NewBackdropSettings() *BackdropSettings {
 	return &BackdropSettings{
-		DatabaseName:     "db",
-		DatabaseUsername: "db",
-		DatabasePassword: "db",
-		DatabaseHost:     "db",
-		DatabaseDriver:   "mysql",
-		DatabasePort:     appports.GetPort("db"),
-		DatabasePrefix:   "",
-		HashSalt:         util.RandString(64),
-		Signature:        DdevFileSignature,
+		DatabaseName:      "db",
+		DatabaseUsername:  "db",
+		DatabasePassword:  "db",
+		DatabaseHost:      "db",
+		DatabaseDriver:    "mysql",
+		DatabasePort:      appports.GetPort("db"),
+		DatabasePrefix:    "",
+		HashSalt:          util.RandString(64),
+		Signature:         DdevFileSignature,
+		SiteSettings:      "settings.php",
+		SiteSettingsLocal: "settings.ddev.php",
 	}
 }
 
-// Note that this template will almost always be used for settings.local.php
-// because Backdrop ships with it's own default settings.php.
-const backdropTemplate = `<?php
+// backdropMainSettingsTemplate defines the template that will become settings.php in
+// the event that one does not already exist.
+const backdropMainSettingsTemplate = `<?php
+{{ $config := . }}
+// {{ $config.Signature }}: Automatically generated Backdrop settings file.
+if (file_exists(__DIR__ . '/{{ $config.SiteSettingsLocal }}')) {
+  include __DIR__ . '/{{ $config.SiteSettingsLocal }}';
+}
+`
+
+// backdropSettingsAppendTemplate defines the template that will be appended to
+// settings.php in the event that one exists.
+const backdropSettingsAppendTemplate = `{{ $config := . }}
+// Automatically generated include for settings managed by ddev.
+if (file_exists(__DIR__ . '/{{ $config.SiteSettingsLocal }}')) {
+  include __DIR__ . '/{{ $config.SiteSettingsLocal }}';
+}
+`
+
+// backdropLocalSettingsTemplate defines the template that will become settings.ddev.php.
+const backdropLocalSettingsTemplate = `<?php
 {{ $config := . }}
 /**
- {{ $config.Signature }}: Automatically generated Backdrop settings.php file.
+ {{ $config.Signature }}: Automatically generated Backdrop settings file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
@@ -62,38 +86,56 @@ ini_set('session.gc_maxlifetime', 200000);
 ini_set('session.cookie_lifetime', 2000000);
 `
 
-// createBackdropSettingsFile creates the app's settings.php or equivalent,
-// adding things like database host, name, and password.
-// Returns the full path to the settings file and err.
+// createBackdropSettingsFile manages creation and modification of settings.php and settings.ddev.php.
+// If a settings.php file already exists, it will be modified to ensure that it includes
+// settings.ddev.php, which contains ddev-specific configuration.
 func createBackdropSettingsFile(app *DdevApp) (string, error) {
-	settingsFilePath, err := app.DetermineSettingsPathLocation()
-	if err != nil {
-		return "", fmt.Errorf("Failed to get Backdrop settings file path: %v", err.Error())
-	}
-	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
+	settings := NewBackdropSettings()
 
-	backdropConfig := NewBackdropSettings()
-
-	err = writeBackdropSettingsFile(backdropConfig, settingsFilePath)
-	if err != nil {
-		return settingsFilePath, fmt.Errorf("Failed to write Backdrop settings file: %v", err.Error())
+	if !fileutil.FileExists(app.SiteSettingsPath) {
+		output.UserOut.Printf("No %s file exists, creating one", settings.SiteSettings)
+		if err := writeBackdropMainSettingsFile(settings, app.SiteSettingsPath); err != nil {
+			return "", err
+		}
 	}
 
-	return settingsFilePath, nil
+	included, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, settings.SiteSettingsLocal)
+	if err != nil {
+		return "", err
+	}
+
+	if included {
+		output.UserOut.Printf("Existing %s includes %s", settings.SiteSettings, settings.SiteSettingsLocal)
+	} else {
+		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", settings.SiteSettings, settings.SiteSettingsLocal)
+
+		if err := appendIncludeToBackdropSettingsFile(settings, app.SiteSettingsPath); err != nil {
+			return "", fmt.Errorf("failed to include %s in %s: %v", settings.SiteSettingsLocal, settings.SiteSettings, err)
+		}
+	}
+
+	if err := writeBackdropDdevSettingsFile(settings, app.SiteLocalSettingsPath); err != nil {
+		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
+	}
+
+	if err := createGitIgnore(filepath.Dir(app.SiteLocalSettingsPath), settings.SiteSettingsLocal); err != nil {
+		output.UserOut.Warnf("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteLocalSettingsPath), err)
+	}
+
+	return app.SiteLocalSettingsPath, nil
 }
 
-// writeBackdropSettingsFile dynamically produces a valid settings.php file by
+// writeBackdropMainSettingsFile dynamically produces a valid settings.php file by
 // combining a configuration object with a data-driven template.
-func writeBackdropSettingsFile(settings *BackdropSettings, filePath string) error {
-	tmpl, err := template.New("settings").Funcs(sprig.TxtFuncMap()).Parse(backdropTemplate)
+func writeBackdropMainSettingsFile(settings *BackdropSettings, filePath string) error {
+	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(backdropMainSettingsTemplate)
 	if err != nil {
 		return err
 	}
 
 	// Ensure target directory is writable.
 	dir := filepath.Dir(filePath)
-	err = os.Chmod(dir, 0755)
-	if err != nil {
+	if err = os.Chmod(dir, 0755); err != nil {
 		return err
 	}
 
@@ -101,11 +143,39 @@ func writeBackdropSettingsFile(settings *BackdropSettings, filePath string) erro
 	if err != nil {
 		return err
 	}
-	err = tmpl.Execute(file, settings)
+	defer util.CheckClose(file)
+
+	if err := tmpl.Execute(file, settings); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// writeBackdropDdevSettingsFile dynamically produces a valid settings.ddev.php file
+// by combining a configuration object with a data-driven template.
+func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) error {
+	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(backdropLocalSettingsTemplate)
 	if err != nil {
 		return err
 	}
-	util.CheckClose(file)
+
+	// Ensure target directory is writable
+	dir := filepath.Dir(filePath)
+	if err = os.Chmod(dir, 0755); err != nil {
+		return err
+	}
+
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(file)
+
+	if err := tmpl.Execute(file, settings); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -125,8 +195,10 @@ func getBackdropHooks() []byte {
 
 // setBackdropSiteSettingsPaths sets the paths to settings.php for templating.
 func setBackdropSiteSettingsPaths(app *DdevApp) {
+	settings := NewBackdropSettings()
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
-	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, "settings.local.php")
+	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettings)
+	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettingsLocal)
 }
 
 // isBackdropApp returns true if the app is of type "backdrop".
@@ -141,5 +213,39 @@ func isBackdropApp(app *DdevApp) bool {
 // appropriately in order for Backdrop to function properly.
 func backdropPostImportDBAction(app *DdevApp) error {
 	util.Warning("Backdrop sites require your config JSON files to be located in your site's \"active\" configuration directory. Please refer to the Backdrop documentation (https://backdropcms.org/user-guide/moving-backdrop-site) for more information about this process.")
+	return nil
+}
+
+// appendIncludeToBackdropSettingsFile modifies the settings.php file to include the settings.ddev.php
+// file, which contains ddev-specific configuration.
+func appendIncludeToBackdropSettingsFile(settings *BackdropSettings, siteSettingsPath string) error {
+	// Check if file is empty
+	contents, err := ioutil.ReadFile(siteSettingsPath)
+	if err != nil {
+		return err
+	}
+
+	// If the file is empty, write the complete settings template and return
+	if len(contents) == 0 {
+		return writeBackdropMainSettingsFile(settings, siteSettingsPath)
+	}
+
+	// The file is not empty, open it for appending
+	file, err := os.OpenFile(siteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(file)
+
+	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(backdropSettingsAppendTemplate)
+	if err != nil {
+		return err
+	}
+
+	// Write the template to the file
+	if err := tmpl.Execute(file, settings); err != nil {
+		return err
+	}
+
 	return nil
 }
