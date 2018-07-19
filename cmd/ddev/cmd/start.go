@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"os"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -20,12 +19,6 @@ var StartCmd = &cobra.Command{
 	Long: `Start initializes and configures the web server and database containers to
 provide a local development environment.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		if len(args) > 0 {
-			err := cmd.Usage()
-			util.CheckErr(err)
-			os.Exit(0)
-		}
-
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
