@@ -50,7 +50,7 @@
   version = "1.5.0"
 
 [[constraint]]
-  branch = "master"
+  version = "v1.2.2"
   name = "github.com/fsouza/go-dockerclient"
 
 # This seem to be required due to a problem in either docker or go-dockerclient
