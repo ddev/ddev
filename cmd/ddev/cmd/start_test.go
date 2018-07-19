@@ -28,4 +28,23 @@ func TestDdevStart(t *testing.T) {
 	for _, app := range apps {
 		assert.True(app.SiteStatus() == ddevapp.SiteRunning, "All sites should be running, but %s status: %s", app.GetName(), app.SiteStatus())
 	}
+
+	// Stop all sites.
+	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all"})
+	assert.NoError(err)
+
+	// Build start command startMultipleArgs
+	startMultipleArgs := []string{"start"}
+	for _, app := range apps {
+		startMultipleArgs = append(startMultipleArgs, app.GetName())
+	}
+
+	// Start multiple projects in one command
+	out, err = exec.RunCommand(DdevBin, startMultipleArgs)
+	assert.NoError(err, "ddev start with multiple project names should have succeeded, but failed, err: %v, output %s", err, out)
+
+	// Confirm all sites are running
+	for _, app := range apps {
+		assert.True(app.SiteStatus() == ddevapp.SiteRunning, "All sites should be running, but %s status: %s", app.GetName(), app.SiteStatus())
+	}
 }
