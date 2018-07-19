@@ -578,10 +578,10 @@ func TestDdevRevertSnapshot(t *testing.T) {
 	d7testerTest2Snapshot, err := app.SnapshotDatabase()
 	assert.NoError(err)
 
-	err = app.RevertToSnapshot(d7testerTest1Snapshot)
+	err = app.RestoreSnapshot(d7testerTest1Snapshot)
 	assert.NoError(err)
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
-	err = app.RevertToSnapshot(d7testerTest2Snapshot)
+	err = app.RestoreSnapshot(d7testerTest2Snapshot)
 	assert.NoError(err)
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
 
