@@ -13,11 +13,13 @@ var startAll bool
 
 // StartCmd represents the add command
 var StartCmd = &cobra.Command{
-	Use:     "start",
+	Use:     "start [projectname ...]",
 	Aliases: []string{"add"},
 	Short:   "Start a ddev project.",
-	Long: `Start initializes and configures the web server and database containers to
-provide a local development environment.`,
+	Long: `Start initializes and configures the web server and database containers
+to provide a local development environment. You can run 'ddev start' from a
+project directory to start that project, or you can start stopped projects in
+any directory by running 'ddev start projectname [projectname ...]'`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
@@ -46,6 +48,6 @@ provide a local development environment.`,
 }
 
 func init() {
-	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all stopped sites")
+	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all stopped projects")
 	RootCmd.AddCommand(StartCmd)
 }
