@@ -48,6 +48,6 @@ To remove database contents, you may use the --remove-data flag with remove.`,
 
 func init() {
 	DdevRemoveCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored project data (MySQL, logs, etc.)")
-	DdevRemoveCmd.Flags().BoolVarP(&removeAll, "all", "a", false, "Remove all running and stopped sites")
+	DdevRemoveCmd.Flags().BoolVarP(&removeAll, "all", "a", false, "Remove all running and stopped projects")
 	RootCmd.AddCommand(DdevRemoveCmd)
 }

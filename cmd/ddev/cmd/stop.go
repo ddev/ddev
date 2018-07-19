@@ -31,6 +31,6 @@ to stop by running 'ddev stop <projectname>.`,
 }
 
 func init() {
-	DdevStopCmd.Flags().BoolVarP(&stopAll, "all", "a", false, "Stop all running sites")
+	DdevStopCmd.Flags().BoolVarP(&stopAll, "all", "a", false, "Stop all running projects")
 	RootCmd.AddCommand(DdevStopCmd)
 }
