@@ -910,20 +910,20 @@ func (app *DdevApp) SnapshotDatabase() (string, error) {
 	return snapshotName, nil
 }
 
-// RevertToSnapshot restores a mariadb snapshot of the db to be loaded
+// RestoreSnapshot restores a mariadb snapshot of the db to be loaded
 // The project must be stopped and docker volume removed and recreated for this to work.
-func (app *DdevApp) RevertToSnapshot(snapshotName string) error {
+func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	snapshotDir := filepath.Join("db_snapshots", snapshotName)
 
 	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
 	if !fileutil.FileExists(hostSnapshotDir) {
-		return fmt.Errorf("Failed to find the snapshot directory %s", hostSnapshotDir)
+		return fmt.Errorf("Failed to find a snapshot in %s", hostSnapshotDir)
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
 		err := app.Down(false, false)
 		if err != nil {
-			return fmt.Errorf("Failed to rm  project for RevertToSnapshot: %v", err)
+			return fmt.Errorf("Failed to rm  project for RestoreSnapshot: %v", err)
 		}
 	}
 
@@ -931,7 +931,7 @@ func (app *DdevApp) RevertToSnapshot(snapshotName string) error {
 	util.CheckErr(err)
 	err = app.Start()
 	if err != nil {
-		return fmt.Errorf("Failed to start project for RevertToSnapshot: %v", err)
+		return fmt.Errorf("Failed to start project for RestoreSnapshot: %v", err)
 	}
 	err = os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
 	util.CheckErr(err)
