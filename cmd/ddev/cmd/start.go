@@ -14,11 +14,13 @@ var startAll bool
 
 // StartCmd represents the add command
 var StartCmd = &cobra.Command{
-	Use:     "start",
+	Use:     "start [projectname ...]",
 	Aliases: []string{"add"},
 	Short:   "Start a ddev project.",
-	Long: `Start initializes and configures the web server and database containers to
-provide a local development environment.`,
+	Long: `Start initializes and configures the web server and database containers
+to provide a local development environment. You can run 'ddev start' from a
+project directory to stop that project, or you can start stopped projects by
+running 'ddev start [projectname ...]'`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()

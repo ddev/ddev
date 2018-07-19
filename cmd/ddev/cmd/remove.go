@@ -11,13 +11,14 @@ var removeAll bool
 
 // DdevRemoveCmd represents the remove command
 var DdevRemoveCmd = &cobra.Command{
-	Use:     "remove [projectname]",
+	Use:     "remove [projectname ...]",
 	Aliases: []string{"rm"},
 	Short:   "Remove the development environment for a project.",
 	Long: `Remove the development environment for a project. You can run 'ddev remove'
-from a project directory to remove that project, or you can specify a project to remove
-by running 'ddev remove <projectname>'. By default, remove is a non-destructive operation and will
-leave database contents intact. Remove never touches your code or files directories.
+from a project directory to remove that project, or you can specify projects
+to remove by running 'ddev remove [projectname ...]'. By default, remove is
+a non-destructive operation and will leave database contents intact. Remove
+never touches your code or files directories.
 
 To remove database contents, you may use the --remove-data flag with remove.`,
 	Run: func(cmd *cobra.Command, args []string) {
