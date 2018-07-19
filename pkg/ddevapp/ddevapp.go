@@ -965,10 +965,6 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 
 	// Remove data/database/hostname if we need to.
 	if removeData {
-		if err = app.RemoveHostsEntries(); err != nil {
-			return fmt.Errorf("failed to remove hosts entries: %v", err)
-		}
-
 		// Check that app.DataDir is a directory that is safe to remove.
 		//err = validateDataDirRemoval(app)
 		//if err != nil {
