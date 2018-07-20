@@ -22,6 +22,7 @@ import (
 
 const (
 	cERROR_PIPE_BUSY      = syscall.Errno(231)
+	cERROR_NO_DATA        = syscall.Errno(232)
 	cERROR_PIPE_CONNECTED = syscall.Errno(535)
 	cERROR_SEM_TIMEOUT    = syscall.Errno(121)
 
@@ -120,6 +121,11 @@ func (f *win32MessageBytePipe) Read(b []byte) (int, error) {
 		// zero-byte message, ensure that all future Read() calls
 		// also return EOF.
 		f.readEOF = true
+	} else if err == syscall.ERROR_MORE_DATA {
+		// ERROR_MORE_DATA indicates that the pipe's read mode is message mode
+		// and the message still has more bytes. Treat this as a success, since
+		// this package presents all named pipes as byte streams.
+		err = nil
 	}
 	return n, err
 }
@@ -172,16 +178,6 @@ func DialPipe(path string, timeout *time.Duration) (net.Conn, error) {
 	err = getNamedPipeInfo(h, &flags, nil, nil, nil)
 	if err != nil {
 		return nil, err
-	}
-
-	var state uint32
-	err = getNamedPipeHandleState(h, &state, nil, nil, nil, nil, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	if state&cPIPE_READMODE_MESSAGE != 0 {
-		return nil, &os.PathError{Op: "open", Path: path, Err: errors.New("message readmode pipes not supported")}
 	}
 
 	f, err := makeWin32File(h)
@@ -254,6 +250,36 @@ func (l *win32PipeListener) makeServerPipe() (*win32File, error) {
 	return f, nil
 }
 
+func (l *win32PipeListener) makeConnectedServerPipe() (*win32File, error) {
+	p, err := l.makeServerPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	// Wait for the client to connect.
+	ch := make(chan error)
+	go func(p *win32File) {
+		ch <- connectPipe(p)
+	}(p)
+
+	select {
+	case err = <-ch:
+		if err != nil {
+			p.Close()
+			p = nil
+		}
+	case <-l.closeCh:
+		// Abort the connect request by closing the handle.
+		p.Close()
+		p = nil
+		err = <-ch
+		if err == nil || err == ErrFileClosed {
+			err = ErrPipeListenerClosed
+		}
+	}
+	return p, err
+}
+
 func (l *win32PipeListener) listenerRoutine() {
 	closed := false
 	for !closed {
@@ -261,31 +287,20 @@ func (l *win32PipeListener) listenerRoutine() {
 		case <-l.closeCh:
 			closed = true
 		case responseCh := <-l.acceptCh:
-			p, err := l.makeServerPipe()
-			if err == nil {
-				// Wait for the client to connect.
-				ch := make(chan error)
-				go func(p *win32File) {
-					ch <- connectPipe(p)
-				}(p)
-				select {
-				case err = <-ch:
-					if err != nil {
-						p.Close()
-						p = nil
-					}
-				case <-l.closeCh:
-					// Abort the connect request by closing the handle.
-					p.Close()
-					p = nil
-					err = <-ch
-					if err == nil || err == ErrFileClosed {
-						err = ErrPipeListenerClosed
-					}
-					closed = true
+			var (
+				p   *win32File
+				err error
+			)
+			for {
+				p, err = l.makeConnectedServerPipe()
+				// If the connection was immediately closed by the client, try
+				// again.
+				if err != cERROR_NO_DATA {
+					break
 				}
 			}
 			responseCh <- acceptResponse{p, err}
+			closed = err == ErrPipeListenerClosed
 		}
 	}
 	syscall.Close(l.firstHandle)
