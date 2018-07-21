@@ -1272,6 +1272,9 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	case "pantheon":
 		provider = &PantheonProvider{}
 		err = provider.Init(app)
+	case "drud-s3":
+		provider = &DrudS3Provider{}
+		err = provider.Init(app)
 	case DefaultProviderName:
 		provider = &DefaultProvider{}
 		err = nil

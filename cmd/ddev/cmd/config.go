@@ -35,6 +35,8 @@ var showConfigLocation bool
 var ConfigCommand *cobra.Command = &cobra.Command{
 	Use:   "config [provider]",
 	Short: "Create or modify a ddev project configuration in the current directory",
+	Aliases: []string{"pantheon-environment"},
+
 	Run: func(cmd *cobra.Command, args []string) {
 
 		appRoot, err := os.Getwd()
@@ -113,8 +115,8 @@ var ConfigCommand *cobra.Command = &cobra.Command{
 			}
 
 			// pantheonEnvironment must be appropriate, and can only be used with pantheon provider.
-			if provider != "pantheon" && pantheonEnvironment != "" {
-				util.Failed("--pantheon-environment can only be used with pantheon provider, for example 'ddev config pantheon --pantheon-environment=dev --docroot=docroot'")
+			if (provider == "default" || provider == "") && pantheonEnvironment != "" {
+				util.Failed("--pantheon-environment can only be used with a non-default provider, for example 'ddev config pantheon --pantheon-environment=dev --docroot=docroot'")
 			}
 
 			if appType != "" && !ddevapp.IsValidAppType(appType) {
@@ -186,7 +188,7 @@ func init() {
 
 	ConfigCommand.Flags().StringVarP(&siteName, "projectname", "", "", projectNameUsage)
 	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
-	ConfigCommand.Flags().StringVarP(&pantheonEnvironment, "pantheon-environment", "", "", "Choose the environment for a Pantheon site (dev/test/prod) (Pantheon-only)")
+	ConfigCommand.Flags().StringVarP(&pantheonEnvironment, "environment", "", "", "Choose the environment for a  project (dev/test/prod) (non-default provider only)")
 	ConfigCommand.Flags().StringVarP(&appType, "projecttype", "", "", apptypeUsage)
 	// apptype flag is there for backwards compatibility.
 	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")

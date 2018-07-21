@@ -1,34 +1,42 @@
 package ddevapp
 
 import (
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
-
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-
-	"github.com/drud/go-pantheon/pkg/pantheon"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
+	"sort"
+	"strings"
 )
 
-// PantheonProvider provides pantheon-specific import functionality.
-type PantheonProvider struct {
-	ProviderType     string                   `yaml:"provider"`
-	app              *DdevApp                 `yaml:"-"`
-	Sitename         string                   `yaml:"site"`
-	site             pantheon.Site            `yaml:"-"`
-	siteEnvironments pantheon.EnvironmentList `yaml:"-"`
-	EnvironmentName  string                   `yaml:"environment"`
-	environment      pantheon.Environment     `yaml:"-"`
+// DrudS3BucketName is the name of hte bucket where we can expect to find backups.
+// TODO: Move it into configuration
+var DrudS3BucketName string = "ddev-local-tests"
+
+
+// DrudS3Provider provides DrudS3-specific import functionality.
+type DrudS3Provider struct {
+	ProviderType string   `yaml:"provider"`
+	app          *DdevApp `yaml:"-"`
+	Sitename     string   `yaml:"site"`
+	//site             DrudS3.Site            `yaml:"-"`
+	projectEnvironments []string `yaml:"-"`
+	EnvironmentName     string   `yaml:"environment"`
+	//environment      DrudS3.Environment     `yaml:"-"`
 }
 
 // Init handles loading data from saved config.
-func (p *PantheonProvider) Init(app *DdevApp) error {
+func (p *DrudS3Provider) Init(app *DdevApp) error {
 	var err error
 
 	p.app = app
@@ -37,7 +45,7 @@ func (p *PantheonProvider) Init(app *DdevApp) error {
 		err = p.Read(configPath)
 	}
 
-	p.ProviderType = "pantheon"
+	p.ProviderType = "drud-s3"
 	return err
 }
 
@@ -45,28 +53,30 @@ func (p *PantheonProvider) Init(app *DdevApp) error {
 // used any time a field is set via `ddev config` on the primary app config, and
 // allows provider plugins to have additional validation for top level config
 // settings.
-func (p *PantheonProvider) ValidateField(field, value string) error {
+func (p *DrudS3Provider) ValidateField(field, value string) error {
 	switch field {
 	case "Name":
-		_, err := findPantheonSite(value)
+		_, err := findDrudS3Project(value)
 		if err != nil {
 			p.Sitename = value
 		}
 		return err
+		// TODO: Validate environment as well, but that has to be done in the context of the project
 	}
+
 	return nil
 }
 
 // SetSiteNameAndEnv sets the environment of the provider (dev/test/live)
-func (p *PantheonProvider) SetSiteNameAndEnv(environment string) {
+func (p *DrudS3Provider) SetSiteNameAndEnv(environment string) {
 	p.Sitename = p.app.Name
 	p.EnvironmentName = environment
 }
 
-// PromptForConfig provides interactive configuration prompts when running `ddev config pantheon`
-func (p *PantheonProvider) PromptForConfig() error {
+// PromptForConfig provides interactive configuration prompts when running `ddev config DrudS3`
+func (p *DrudS3Provider) PromptForConfig() error {
 	for {
-		p.SetSiteNameAndEnv("dev")
+		p.SetSiteNameAndEnv("production")
 		err := p.environmentPrompt()
 
 		if err == nil {
@@ -78,107 +88,70 @@ func (p *PantheonProvider) PromptForConfig() error {
 }
 
 // GetBackup will download the most recent backup specified by backupType. Valid values for backupType are "database" or "files".
-func (p *PantheonProvider) GetBackup(backupType string) (fileLocation string, importPath string, err error) {
+func (p *DrudS3Provider) GetBackup(backupType string) (fileLocation string, importPath string, err error) {
 	if backupType != "database" && backupType != "files" {
 		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
 
-	// Set the import path blank, to use the root of the archive by default.
+	// Set the import path (within the archive) blank, to use the root of the archive by default.
 	importPath = ""
 	err = p.environmentExists()
 	if err != nil {
 		return "", "", err
 	}
 
-	session := getPantheonSession()
-
-	// Find either a files or database backup, depending on what was asked for.
-	bl := pantheon.NewBackupList(p.site.ID, p.EnvironmentName)
-	err = session.Request("GET", bl)
+	sess, client, err := getDrudS3Session()
 	if err != nil {
 		return "", "", err
 	}
 
-	backup, err := p.getPantheonBackupLink(backupType, bl, session)
-	if err != nil {
-		return "", "", err
+	prefix := "db"
+	if backupType == "files" {
+		prefix = "files"
 	}
-
-	p.prepDownloadDir()
-	destFile := filepath.Join(p.getDownloadDir(), backup.FileName)
+	object, err := getLatestS3Object(client, DrudS3BucketName, p.app.Name+"/"+p.EnvironmentName+"/"+prefix)
 
 	// Check to see if this file has been downloaded previously.
 	// Attempt a new download If we can't stat the file or we get a mismatch on the filesize.
+	destFile := filepath.Join(p.getDownloadDir(), path.Base(*object.Key))
+
 	stat, err := os.Stat(destFile)
-	if err != nil || stat.Size() != int64(backup.Size) {
-		err = util.DownloadFile(destFile, backup.DownloadURL, true)
+	if err != nil || stat.Size() != int64(*object.Size) {
+		p.prepDownloadDir()
+
+		err = downloadS3Object(sess, DrudS3BucketName, object, p.getDownloadDir())
 		if err != nil {
 			return "", "", err
 		}
-	}
-
-	if backupType == "files" {
-		importPath = fmt.Sprintf("files_%s", p.EnvironmentName)
 	}
 
 	return destFile, importPath, nil
 }
 
 // prepDownloadDir ensures the download cache directories are created and writeable.
-func (p *PantheonProvider) prepDownloadDir() {
+func (p *DrudS3Provider) prepDownloadDir() {
 	destDir := p.getDownloadDir()
 	err := os.MkdirAll(destDir, 0755)
 	util.CheckErr(err)
 }
 
-func (p *PantheonProvider) getDownloadDir() string {
+func (p *DrudS3Provider) getDownloadDir() string {
 	ddevDir := util.GetGlobalDdevDir()
-	destDir := filepath.Join(ddevDir, "pantheon", p.app.Name)
+	destDir := filepath.Join(ddevDir, "drud-s3", p.app.Name)
 
 	return destDir
 }
 
-// getPantheonBackupLink will return a URL for the most recent backyp of archiveType that exist with the BackupList specified.
-func (p *PantheonProvider) getPantheonBackupLink(archiveType string, bl *pantheon.BackupList, session *pantheon.AuthSession) (*pantheon.Backup, error) {
-	latestBackup := pantheon.Backup{}
-	for i, backup := range bl.Backups {
-		if backup.ArchiveType == archiveType && backup.Timestamp > latestBackup.Timestamp {
-			latestBackup = bl.Backups[i]
-		}
-	}
-
-	if latestBackup.Timestamp != 0 {
-		// Get a time-limited backup URL from Pantheon. This requires a POST of the backup type to their API.
-		err := session.Request("POST", &latestBackup)
-		if err != nil {
-			return &pantheon.Backup{}, fmt.Errorf("could not get backup URL: %v", err)
-		}
-
-		return &latestBackup, nil
-	}
-
-	// If no matches were found, just return an empty backup along with an error.
-	return &pantheon.Backup{}, fmt.Errorf("could not find a backup of type %s. please visit your pantheon dashboard and ensure the '%s' environment has a backup available", archiveType, p.EnvironmentName)
-}
-
-// environmentPrompt contains the user prompts for interactive configuration of the pantheon environment.
-func (p *PantheonProvider) environmentPrompt() error {
-	_, err := p.GetEnvironments()
-	if err != nil {
-		return err
-	}
+// environmentPrompt contains the user prompts for interactive configuration of the DrudS3 environment.
+func (p *DrudS3Provider) environmentPrompt() error {
 
 	if p.EnvironmentName == "" {
-		p.EnvironmentName = "dev"
+		p.EnvironmentName = "production"
 	}
 
 	fmt.Println("\nConfigure import environment:")
 
-	keys := make([]string, 0, len(p.siteEnvironments.Environments))
-	for k := range p.siteEnvironments.Environments {
-		keys = append(keys, k)
-	}
-	fmt.Println("\n\t- " + strings.Join(keys, "\n\t- ") + "\n")
+	fmt.Println("\n\t- " + strings.Join(p.projectEnvironments, "\n\t- ") + "\n")
 	var environmentPrompt = "Type the name to select an environment to import from"
 	if p.EnvironmentName != "" {
 		environmentPrompt = fmt.Sprintf("%s (%s)", environmentPrompt, p.EnvironmentName)
@@ -187,17 +160,17 @@ func (p *PantheonProvider) environmentPrompt() error {
 	fmt.Print(environmentPrompt + ": ")
 	envName := util.GetInput(p.EnvironmentName)
 
-	_, ok := p.siteEnvironments.Environments[envName]
+	// TODO: Get this to validate environment correctly
 
-	if !ok {
-		return fmt.Errorf("could not find an environment named '%s'", envName)
-	}
+	//if !ok {
+	//	return fmt.Errorf("could not find an environment named '%s'", envName)
+	//}
 	p.SetSiteNameAndEnv(envName)
 	return nil
 }
 
-// Write the pantheon provider configuration to a spcified location on disk.
-func (p *PantheonProvider) Write(configPath string) error {
+// Write the DrudS3 provider configuration to a spcified location on disk.
+func (p *DrudS3Provider) Write(configPath string) error {
 	err := PrepDdevDirectory(filepath.Dir(configPath))
 	if err != nil {
 		return err
@@ -216,8 +189,8 @@ func (p *PantheonProvider) Write(configPath string) error {
 	return nil
 }
 
-// Read pantheon provider configuration from a specified location on disk.
-func (p *PantheonProvider) Read(configPath string) error {
+// Read DrudS3 provider configuration from a specified location on disk.
+func (p *DrudS3Provider) Read(configPath string) error {
 	source, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return err
@@ -232,102 +205,189 @@ func (p *PantheonProvider) Read(configPath string) error {
 	return nil
 }
 
-// GetEnvironments will return a list of environments for the currently configured upstream pantheon site.
-func (p *PantheonProvider) GetEnvironments() (pantheon.EnvironmentList, error) {
-	var el *pantheon.EnvironmentList
-	// If we've got an already populated environment list, then just use that.
-	if len(p.siteEnvironments.Environments) > 0 {
-		return p.siteEnvironments, nil
+// GetEnvironments will return a list of environments for the currently configured upstream DrudS3 site.
+func (p *DrudS3Provider) GetEnvironments() (map[string]bool, error) {
+	environments, err := findDrudS3Project(p.app.Name)
+	if err != nil {
+		return nil, err
 	}
-
-	// Otherwise we need to find our environments.
-	session := getPantheonSession()
-
-	if p.site.ID == "" {
-		site, err := findPantheonSite(p.Sitename)
-		if err != nil {
-			return p.siteEnvironments, err
-		}
-
-		p.site = site
-	}
-
-	// Get a list of all active environments for the current site.
-	el = pantheon.NewEnvironmentList(p.site.ID)
-	err := session.Request("GET", el)
-	p.siteEnvironments = *el
-	return *el, err
+	return environments, nil
 }
 
-// Validate ensures that the current configuration is valid (i.e. the configured pantheon site/environment exists)
-func (p *PantheonProvider) Validate() error {
+// Validate ensures that the current configuration is valid (i.e. the configured DrudS3 site/environment exists)
+func (p *DrudS3Provider) Validate() error {
 	return p.environmentExists()
 }
 
-// environmentExists ensures the currently configured pantheon site & environment exists.
-func (p *PantheonProvider) environmentExists() error {
-	_, err := p.GetEnvironments()
+// environmentExists ensures the currently configured DrudS3 site & environment exists.
+func (p *DrudS3Provider) environmentExists() error {
+	environments, err := p.GetEnvironments()
 	if err != nil {
 		return err
 	}
-
-	_, ok := p.siteEnvironments.Environments[p.EnvironmentName]
-
-	if !ok {
-		return fmt.Errorf("could not find an environment named '%s'", p.EnvironmentName)
+	if _, ok := environments[p.EnvironmentName]; !ok {
+		return fmt.Errorf("could not find an environment with backups named '%s'", p.EnvironmentName)
 	}
 
 	return nil
 }
 
-// findPantheonSite ensures the pantheon site specified by name exists, and the current user has access to it.
-func findPantheonSite(name string) (pantheon.Site, error) {
-	session := getPantheonSession()
-
-	// Get a list of all sites the current user has access to. Ensure we can find the site which was used in the CLI arguments in that list.
-	sl := &pantheon.SiteList{}
-	err := session.Request("GET", sl)
+// findDrudS3Project ensures the DrudS3 site specified by name exists, and the current user has access to it.
+// It returns an array of environment names and err
+func findDrudS3Project(project string) (map[string]bool, error) {
+	_, client, err := getDrudS3Session()
 	if err != nil {
-		return pantheon.Site{}, err
+		return nil, err
+	}
+	// Get a list of all projects the current user has access to.
+	projectMap, err := getDrudS3Projects(client, DrudS3BucketName)
+	if err != nil {
+		return nil, err
 	}
 
-	// Get a list of environments for a given site.
-	for i, site := range sl.Sites {
-		if site.Site.Name == name {
-			return sl.Sites[i], nil
-		}
-	}
+	projectWithEnvs := projectMap[project]
 
-	return pantheon.Site{}, fmt.Errorf("could not find a pantheon site named %s", name)
+	// Get a list of environments for a given project.
+	return projectWithEnvs, nil
 }
 
-// getPantheonSession loads the pantheon API config from disk and returns a pantheon session struct.
-func getPantheonSession() *pantheon.AuthSession {
-	ddevDir := util.GetGlobalDdevDir()
-	sessionLocation := filepath.Join(ddevDir, "pantheonconfig.json")
+// getDrudS3Session loads the DrudS3 API config from disk and returns a DrudS3 session struct.
+func getDrudS3Session() (*session.Session, *s3.S3, error) {
+	//ddevDir := util.GetGlobalDdevDir()
 
-	// Generate a session object based on the DDEV_PANTHEON_API_TOKEN environment var.
-	session := &pantheon.AuthSession{}
+	// TODO: Move S3 auth into global config?
+	//sessionLocation := filepath.Join(ddevDir, "DrudS3config.json")
 
-	// Read a previously saved session.
-	err := session.Read(sessionLocation)
-
+	// This is currently depending on auth in ~/.aws/credentials
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String("us-east-1")},
+	)
 	if err != nil {
-		// If we can't read a previous session fall back to using the API token.
-		apiToken := os.Getenv("DDEV_PANTHEON_API_TOKEN")
-		if apiToken == "" {
-			util.Failed("No saved session could be found and the environment variable DDEV_PANTHEON_API_TOKEN is not set. Please use ddev auth-pantheon or set a DDEV_PANTHEON_API_TOKEN. https://pantheon.io/docs/machine-tokens/ provides instructions on creating a token.")
+		return nil, nil, fmt.Errorf("Failed to NewSession: %v", err)
+	}
+
+	client := s3.New(sess)
+
+	return sess, client, nil
+}
+
+// Functions to allow golang sort-by-modified-date (descending) for s3 objects found.
+type byModified []*s3.Object
+
+func (objs byModified) Len() int {
+	return len(objs)
+}
+func (objs byModified) Swap(i, j int) {
+	objs[i], objs[j] = objs[j], objs[i]
+}
+func (objs byModified) Less(i, j int) bool {
+	return objs[j].LastModified.Before(*objs[i].LastModified)
+}
+
+// getDrudS3Projects returns a map of project[environment] so it's easy to
+// find what projects are available in the bucket and then to get the
+// environments for that project.
+func getDrudS3Projects(client *s3.S3, bucket string) (map[string]map[string]bool, error) {
+	objects, err := getS3ObjectsWithPrefix(client, bucket, "")
+	if err != nil {
+		return nil, err
+	}
+	projectMap := make(map[string]map[string]bool)
+
+	// This sadly is processing all of the items we receive, all the files in all the directories
+	for _, obj := range objects {
+		// TODO: I think it's possible for the object key separator not to be a "/"
+		components := strings.Split(*obj.Key, "/")
+		if (len(components)) >= 2 {
+			tmp := make (map[string]bool)
+			tmp[components[1]] = true
+			projectMap[components[0]] = tmp
 		}
-		session = pantheon.NewAuthSession(os.Getenv("DDEV_PANTHEON_API_TOKEN"))
 	}
+	keys := make([]string, 0, len(projectMap))
+	for k := range projectMap {
+		keys = append(keys, k)
+	}
+	return projectMap, nil
+}
 
-	err = session.Auth()
+func getS3ObjectsWithPrefix(client *s3.S3, bucket string, prefix string) ([]*s3.Object, error) {
+	// TODO: This may be fragile because it could return a lot of items.
+	maxKeys := aws.Int64(1000000000)
+
+	// TODO: WARNING: ListObjects only returns first 1000 objects
+	resp, err := client.ListObjects(&s3.ListObjectsInput{
+		Bucket:  aws.String(bucket),
+		Prefix:  aws.String(prefix),
+		MaxKeys: maxKeys,
+	})
 	if err != nil {
-		output.UserOut.Fatalf("Could not authenticate with pantheon: %v", err)
+		return nil, fmt.Errorf("unable to list items in bucket %s with prefix %s: %v", bucket, prefix, err)
 	}
 
-	err = session.Write(sessionLocation)
-	util.CheckErr(err)
+	if len(resp.Contents) == 0 {
+		return nil, fmt.Errorf("there are no objects matching %s in bucket %s", prefix, bucket)
+	}
+	return resp.Contents, nil
+}
 
-	return session
+func getLatestS3Object(client *s3.S3, bucket string, prefix string) (*s3.Object, error) {
+	// TODO: Manage maxKeys better; it would be nice if we could just get recent, but
+	// AWS doesn't support that.
+	maxKeys := aws.Int64(1000000000)
+
+	// TODO: WARNING: ListObjects only returns first 1000 objects
+	resp, err := client.ListObjects(&s3.ListObjectsInput{
+		Bucket:  aws.String(bucket),
+		Prefix:  aws.String(prefix),
+		MaxKeys: maxKeys,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to list items in bucket %s with prefix %s: %v", bucket, prefix, err)
+	}
+
+	if len(resp.Contents) == 0 {
+		return nil, fmt.Errorf("there are no objects matching %s in bucket %s", prefix, bucket)
+	}
+
+	sort.Sort(byModified(resp.Contents))
+
+	return resp.Contents[0], nil
+}
+
+func downloadS3Object(sess *session.Session, bucket string, object *s3.Object, localDir string) error {
+
+	localPath := filepath.Join(localDir, path.Base(*object.Key))
+	_, err := os.Stat(localPath)
+	var file *os.File
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(localDir, 0755)
+		if err != nil {
+			return fmt.Errorf("Failed to mkdir %s: %v", localDir)
+		}
+
+		file, err = os.Create(localPath)
+		if err != nil {
+			return fmt.Errorf("Unable to create file %v, %v", localPath, err)
+		}
+	} else {
+		fmt.Printf("File %s already downloaded, skipping\n", localPath)
+		return nil
+	}
+
+	defer file.Close()
+
+	downloader := s3manager.NewDownloader(sess)
+
+	numBytes, err := downloader.Download(file,
+		&s3.GetObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    object.Key,
+		})
+	if err != nil {
+		return fmt.Errorf("unable to download item %v, %v", object, err)
+	}
+
+	fmt.Println("Downloaded", file.Name(), numBytes, "bytes")
+	return nil
 }
