@@ -3,7 +3,10 @@ set -x
 set -o errexit nounset pipefail
 
 # If DDEV_PHP_VERSION isn't set, use a reasonable default
-DDEV_PHP_VERSION=${DDEV_PHP_VERSION:-$PHP_DEFAULT_VERSION}
+DDEV_PHP_VERSION="${DDEV_PHP_VERSION:-$PHP_DEFAULT_VERSION}"
+
+# If DDEV_WEBSERVER_TYPE isn't set, use a reasonable default
+DDEV_WEBSERVER_TYPE="${DDEV_WEBSERVER_TYPE:-nginx-fpm}"
 
 # Update full path NGINX_DOCROOT if DOCROOT env is provided
 if [ -n "$DOCROOT" ] ; then
@@ -57,4 +60,4 @@ fi
 
 echo 'Server started'
 
-exec /usr/bin/supervisord -n -c /etc/supervisord.conf
+exec /usr/bin/supervisord -n -c "/etc/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
