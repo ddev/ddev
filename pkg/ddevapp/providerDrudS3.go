@@ -110,6 +110,9 @@ func (p *DrudS3Provider) GetBackup(backupType string) (fileLocation string, impo
 		prefix = "files"
 	}
 	object, err := getLatestS3Object(client, DrudS3BucketName, p.app.Name+"/"+p.EnvironmentName+"/"+prefix)
+	if (err != nil) {
+		return "", "", fmt.Errorf("unable to getLatestS3Object for bucket %s project %s environment %s prefix %s, %v", DrudS3BucketName, p.app.Name, p.EnvironmentName, prefix, err)
+	}
 
 	// Check to see if this file has been downloaded previously.
 	// Attempt a new download If we can't stat the file or we get a mismatch on the filesize.
@@ -296,17 +299,13 @@ func getDrudS3Projects(client *s3.S3, bucket string) (map[string]map[string]bool
 
 	// This sadly is processing all of the items we receive, all the files in all the directories
 	for _, obj := range objects {
-		// TODO: I think it's possible for the object key separator not to be a "/"
+		// TODO: It might be possible but unlikely for the object key separator not to be a "/"
 		components := strings.Split(*obj.Key, "/")
 		if (len(components)) >= 2 {
 			tmp := make (map[string]bool)
 			tmp[components[1]] = true
 			projectMap[components[0]] = tmp
 		}
-	}
-	keys := make([]string, 0, len(projectMap))
-	for k := range projectMap {
-		keys = append(keys, k)
 	}
 	return projectMap, nil
 }
@@ -363,7 +362,7 @@ func downloadS3Object(sess *session.Session, bucket string, object *s3.Object, l
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(localDir, 0755)
 		if err != nil {
-			return fmt.Errorf("Failed to mkdir %s: %v", localDir)
+			return fmt.Errorf("Failed to mkdir %s: %v", localDir, err)
 		}
 
 		file, err = os.Create(localPath)
