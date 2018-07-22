@@ -21,8 +21,7 @@ import (
 
 // DrudS3BucketName is the name of hte bucket where we can expect to find backups.
 // TODO: Move it into configuration
-var DrudS3BucketName string = "ddev-local-tests"
-
+var DrudS3BucketName = "ddev-local-tests"
 
 // DrudS3Provider provides DrudS3-specific import functionality.
 type DrudS3Provider struct {
@@ -110,7 +109,7 @@ func (p *DrudS3Provider) GetBackup(backupType string) (fileLocation string, impo
 		prefix = "files"
 	}
 	object, err := getLatestS3Object(client, DrudS3BucketName, p.app.Name+"/"+p.EnvironmentName+"/"+prefix)
-	if (err != nil) {
+	if err != nil {
 		return "", "", fmt.Errorf("unable to getLatestS3Object for bucket %s project %s environment %s prefix %s, %v", DrudS3BucketName, p.app.Name, p.EnvironmentName, prefix, err)
 	}
 
@@ -302,7 +301,7 @@ func getDrudS3Projects(client *s3.S3, bucket string) (map[string]map[string]bool
 		// TODO: It might be possible but unlikely for the object key separator not to be a "/"
 		components := strings.Split(*obj.Key, "/")
 		if (len(components)) >= 2 {
-			tmp := make (map[string]bool)
+			tmp := make(map[string]bool)
 			tmp[components[1]] = true
 			projectMap[components[0]] = tmp
 		}
@@ -374,6 +373,7 @@ func downloadS3Object(sess *session.Session, bucket string, object *s3.Object, l
 		return nil
 	}
 
+	// nolint: errcheck
 	defer file.Close()
 
 	downloader := s3manager.NewDownloader(sess)

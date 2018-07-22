@@ -33,8 +33,8 @@ var showConfigLocation bool
 
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand *cobra.Command = &cobra.Command{
-	Use:   "config [provider]",
-	Short: "Create or modify a ddev project configuration in the current directory",
+	Use:     "config [provider]",
+	Short:   "Create or modify a ddev project configuration in the current directory",
 	Aliases: []string{"pantheon-environment"},
 
 	Run: func(cmd *cobra.Command, args []string) {
