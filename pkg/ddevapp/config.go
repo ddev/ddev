@@ -29,6 +29,10 @@ const DefaultProviderName = "default"
 // DdevDefaultPHPVersion is the default PHP version, overridden by $DDEV_PHP_VERSION
 const DdevDefaultPHPVersion = "7.1"
 
+// DdevDefaultWebserverType is the default webserver type, as nginx-fpm/apache-fpm/apache-cgi,
+// overridden by $DDEV_WEBSERVER_TYPE
+const DdevDefaultWebserverType = "nginx-fpm"
+
 // DdevDefaultRouterHTTPPort is the starting router port, 80
 const DdevDefaultRouterHTTPPort = "80"
 
@@ -64,6 +68,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.APIVersion = version.DdevVersion
 	app.PHPVersion = DdevDefaultPHPVersion
+	app.WebserverType = DdevDefaultWebserverType
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 
@@ -182,6 +187,10 @@ func (app *DdevApp) ReadConfig() error {
 	}
 	if app.PHPVersion == "" {
 		app.PHPVersion = DdevDefaultPHPVersion
+	}
+
+	if app.WebserverType == "" {
+		app.WebserverType = DdevDefaultWebserverType
 	}
 
 	if app.RouterHTTPPort == "" {
