@@ -131,3 +131,12 @@ func posString(slice []string, element string) int {
 	}
 	return -1
 }
+
+// MapKeysToArray takes the keys of the map and turns them into a string array
+func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
+	result := make([]string, 0, len(mapWithKeys))
+	for v := range mapWithKeys {
+		result = append(result, v)
+	}
+	return result
+}

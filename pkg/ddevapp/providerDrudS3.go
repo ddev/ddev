@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
+	"github.com/AlecAivazis/survey"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -25,10 +26,10 @@ var DrudS3BucketName = "ddev-local-tests"
 
 // DrudS3Provider provides DrudS3-specific import functionality.
 type DrudS3Provider struct {
-	ProviderType        string   `yaml:"provider"`
-	app                 *DdevApp `yaml:"-"`
-	projectEnvironments []string `yaml:"-"`
-	EnvironmentName     string   `yaml:"environment"`
+	ProviderType string   `yaml:"provider"`
+	app          *DdevApp `yaml:"-"`
+	//projectEnvironments []string `yaml:"-"`
+	EnvironmentName string `yaml:"environment"`
 }
 
 // Init handles loading data from saved config.
@@ -63,16 +64,9 @@ func (p *DrudS3Provider) ValidateField(field, value string) error {
 	return nil
 }
 
-// SetSiteNameAndEnv sets the environment of the provider (dev/test/live)
-func (p *DrudS3Provider) SetSiteNameAndEnv(environment string) {
-	// Site name is not carried in this implementation, we use the app's Name instead.
-	p.EnvironmentName = environment
-}
-
 // PromptForConfig provides interactive configuration prompts when running `ddev config DrudS3`
 func (p *DrudS3Provider) PromptForConfig() error {
 	for {
-		p.SetSiteNameAndEnv("production")
 		err := p.environmentPrompt()
 
 		if err == nil {
@@ -141,30 +135,45 @@ func (p *DrudS3Provider) getDownloadDir() string {
 	return destDir
 }
 
-// environmentPrompt contains the user prompts for interactive configuration of the DrudS3 environment.
+// environmentPrompt does the interactive for configuration of the DrudS3 environment.
 func (p *DrudS3Provider) environmentPrompt() error {
 
-	if p.EnvironmentName == "" {
-		p.EnvironmentName = "production"
+	environments, err := p.GetEnvironments()
+	envAry := util.MapKeysToArray(environments)
+	if len(envAry) == 1 {
+		p.EnvironmentName = envAry[0]
+		util.Success("Only one environment is available, environment is set to %s", p.EnvironmentName)
+		return nil
+	}
+	fmt.Printf("Available environments: %v", envAry)
+	var prompt = []*survey.Question{
+		{
+			Name: "EnvironmentName",
+			Prompt: &survey.Select{
+				Message: "Choose an environment to pull from:",
+				Options: envAry,
+				Default: p.EnvironmentName,
+			},
+
+			Validate: func(val interface{}) error {
+
+				if str, ok := environments[val.(string)]; !ok {
+					return fmt.Errorf("%s is not a valid environment for site %s; available environments are %v", str, p.app.Name, environments)
+				}
+				return nil
+			},
+		},
+	}
+	answer := struct {
+		EnvironmentName string
+	}{}
+
+	err = survey.Ask(prompt, &answer)
+	if err != nil {
+		return fmt.Errorf("survey.Ask failed: %v", err)
 	}
 
-	fmt.Println("\nConfigure import environment:")
-
-	fmt.Println("\n\t- " + strings.Join(p.projectEnvironments, "\n\t- ") + "\n")
-	var environmentPrompt = "Type the name to select an environment to import from"
-	if p.EnvironmentName != "" {
-		environmentPrompt = fmt.Sprintf("%s (%s)", environmentPrompt, p.EnvironmentName)
-	}
-
-	fmt.Print(environmentPrompt + ": ")
-	envName := util.GetInput(p.EnvironmentName)
-
-	// TODO: Get this to validate environment correctly
-
-	//if !ok {
-	//	return fmt.Errorf("could not find an environment named '%s'", envName)
-	//}
-	p.SetSiteNameAndEnv(envName)
+	p.EnvironmentName = answer.EnvironmentName
 	return nil
 }
 
@@ -205,7 +214,7 @@ func (p *DrudS3Provider) Read(configPath string) error {
 }
 
 // GetEnvironments will return a list of environments for the currently configured upstream DrudS3 site.
-func (p *DrudS3Provider) GetEnvironments() (map[string]bool, error) {
+func (p *DrudS3Provider) GetEnvironments() (map[string]interface{}, error) {
 	environments, err := findDrudS3Project(p.app.Name)
 	if err != nil {
 		return nil, err
@@ -233,7 +242,7 @@ func (p *DrudS3Provider) environmentExists() error {
 
 // findDrudS3Project ensures the DrudS3 site specified by name exists, and the current user has access to it.
 // It returns an array of environment names and err
-func findDrudS3Project(project string) (map[string]bool, error) {
+func findDrudS3Project(project string) (map[string]interface{}, error) {
 	_, client, err := getDrudS3Session()
 	if err != nil {
 		return nil, err
@@ -286,19 +295,19 @@ func (objs byModified) Less(i, j int) bool {
 // getDrudS3Projects returns a map of project[environment] so it's easy to
 // find what projects are available in the bucket and then to get the
 // environments for that project.
-func getDrudS3Projects(client *s3.S3, bucket string) (map[string]map[string]bool, error) {
+func getDrudS3Projects(client *s3.S3, bucket string) (map[string]map[string]interface{}, error) {
 	objects, err := getS3ObjectsWithPrefix(client, bucket, "")
 	if err != nil {
 		return nil, err
 	}
-	projectMap := make(map[string]map[string]bool)
+	projectMap := make(map[string]map[string]interface{})
 
 	// This sadly is processing all of the items we receive, all the files in all the directories
 	for _, obj := range objects {
 		// TODO: It might be possible but unlikely for the object key separator not to be a "/"
 		components := strings.Split(*obj.Key, "/")
 		if (len(components)) >= 2 {
-			tmp := make(map[string]bool)
+			tmp := make(map[string]interface{})
 			tmp[components[1]] = true
 			projectMap[components[0]] = tmp
 		}
