@@ -9,7 +9,6 @@ import (
 
 	"github.com/AlecAivazis/survey"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -30,6 +29,7 @@ type DrudS3Provider struct {
 	app          *DdevApp `yaml:"-"`
 	//projectEnvironments []string `yaml:"-"`
 	EnvironmentName string `yaml:"environment"`
+	S3Bucket        string `yaml:"s3_bucket"`
 }
 
 // Init handles loading data from saved config.
@@ -37,7 +37,7 @@ func (p *DrudS3Provider) Init(app *DdevApp) error {
 	var err error
 
 	p.app = app
-	configPath := app.GetConfigPath("import.yaml")
+	configPath := app.GetConfigPath("drud-s3.yaml")
 	if fileutil.FileExists(configPath) {
 		err = p.Read(configPath)
 	}
@@ -53,7 +53,7 @@ func (p *DrudS3Provider) Init(app *DdevApp) error {
 func (p *DrudS3Provider) ValidateField(field, value string) error {
 	switch field {
 	case "Name":
-		_, err := findDrudS3Project(value)
+		_, err := findDrudS3Project(p.S3Bucket, value)
 		if err != nil {
 			return nil
 		}
@@ -66,15 +66,70 @@ func (p *DrudS3Provider) ValidateField(field, value string) error {
 
 // PromptForConfig provides interactive configuration prompts when running `ddev config DrudS3`
 func (p *DrudS3Provider) PromptForConfig() error {
-	for {
-		err := p.environmentPrompt()
+	// 1. Get bucketnames accessible
+	// 2. If only one bucket, choose it
+	// 3. Get projects, if only one, choose it
+	// 4. Get environments, if only one, choose it
 
-		if err == nil {
-			return nil
-		}
-
-		output.UserOut.Errorf("%v\n", err)
+	bucketsAvailable, err := getBucketList()
+	if err != nil {
+		return fmt.Errorf("Unable to list buckets: %v", err)
 	}
+	var bucketPrompt = []*survey.Question{
+		{Name: "BucketName",
+			Prompt: &survey.Select{
+				Message: "AWS S3 Bucket Name:",
+				Options: bucketsAvailable,
+				Default: p.S3Bucket,
+			},
+		},
+	}
+	bucketAnswer := struct {
+		BucketName string
+	}{}
+	err = survey.Ask(bucketPrompt, &bucketAnswer)
+	if err != nil {
+		return fmt.Errorf("survey.Ask of bucket name failed: %v", err)
+	}
+	p.S3Bucket = bucketAnswer.BucketName
+
+	environments, err := p.GetEnvironments()
+	envAry := util.MapKeysToArray(environments)
+	if len(envAry) == 1 {
+		p.EnvironmentName = envAry[0]
+		util.Success("Only one environment is available, environment is set to %s", p.EnvironmentName)
+		return nil
+	}
+
+	var envPrompt = []*survey.Question{
+		{
+			Name: "EnvironmentName",
+			Prompt: &survey.Select{
+				Message: "Choose an environment to pull from:",
+				Options: envAry,
+				Default: p.EnvironmentName,
+			},
+
+			Validate: func(val interface{}) error {
+
+				if str, ok := environments[val.(string)]; !ok {
+					return fmt.Errorf("%s is not a valid environment for site %s; available environments are %v", str, p.app.Name, environments)
+				}
+				return nil
+			},
+		},
+	}
+	envAnswer := struct {
+		EnvironmentName string
+	}{}
+
+	err = survey.Ask(envPrompt, &envAnswer)
+	if err != nil {
+		return fmt.Errorf("survey.Ask of environment failed: %v", err)
+	}
+
+	p.EnvironmentName = envAnswer.EnvironmentName
+	return nil
 }
 
 // GetBackup will download the most recent backup specified by backupType. Valid values for backupType are "database" or "files".
@@ -135,48 +190,6 @@ func (p *DrudS3Provider) getDownloadDir() string {
 	return destDir
 }
 
-// environmentPrompt does the interactive for configuration of the DrudS3 environment.
-func (p *DrudS3Provider) environmentPrompt() error {
-
-	environments, err := p.GetEnvironments()
-	envAry := util.MapKeysToArray(environments)
-	if len(envAry) == 1 {
-		p.EnvironmentName = envAry[0]
-		util.Success("Only one environment is available, environment is set to %s", p.EnvironmentName)
-		return nil
-	}
-	fmt.Printf("Available environments: %v", envAry)
-	var prompt = []*survey.Question{
-		{
-			Name: "EnvironmentName",
-			Prompt: &survey.Select{
-				Message: "Choose an environment to pull from:",
-				Options: envAry,
-				Default: p.EnvironmentName,
-			},
-
-			Validate: func(val interface{}) error {
-
-				if str, ok := environments[val.(string)]; !ok {
-					return fmt.Errorf("%s is not a valid environment for site %s; available environments are %v", str, p.app.Name, environments)
-				}
-				return nil
-			},
-		},
-	}
-	answer := struct {
-		EnvironmentName string
-	}{}
-
-	err = survey.Ask(prompt, &answer)
-	if err != nil {
-		return fmt.Errorf("survey.Ask failed: %v", err)
-	}
-
-	p.EnvironmentName = answer.EnvironmentName
-	return nil
-}
-
 // Write the DrudS3 provider configuration to a spcified location on disk.
 func (p *DrudS3Provider) Write(configPath string) error {
 	err := PrepDdevDirectory(filepath.Dir(configPath))
@@ -215,7 +228,7 @@ func (p *DrudS3Provider) Read(configPath string) error {
 
 // GetEnvironments will return a list of environments for the currently configured upstream DrudS3 site.
 func (p *DrudS3Provider) GetEnvironments() (map[string]interface{}, error) {
-	environments, err := findDrudS3Project(p.app.Name)
+	environments, err := findDrudS3Project(p.S3Bucket, p.app.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -240,9 +253,27 @@ func (p *DrudS3Provider) environmentExists() error {
 	return nil
 }
 
+// getBucketList returns an array of buckets available with current S3 public/private keys
+func getBucketList() ([]string, error) {
+	_, client, err := getDrudS3Session()
+	if err != nil {
+		return nil, err
+	}
+	result, err := client.ListBuckets(nil)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to list S3 buckets: %v", err)
+	}
+
+	buckets := []string{}
+	for _, b := range result.Buckets {
+		buckets = append(buckets, aws.StringValue(b.Name))
+	}
+	return buckets, nil
+}
+
 // findDrudS3Project ensures the DrudS3 site specified by name exists, and the current user has access to it.
 // It returns an array of environment names and err
-func findDrudS3Project(project string) (map[string]interface{}, error) {
+func findDrudS3Project(bucket string, project string) (map[string]interface{}, error) {
 	_, client, err := getDrudS3Session()
 	if err != nil {
 		return nil, err
