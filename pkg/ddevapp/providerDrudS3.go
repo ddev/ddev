@@ -32,7 +32,7 @@ func (p *DrudS3Provider) Init(app *DdevApp) error {
 	var err error
 
 	p.app = app
-	configPath := app.GetConfigPath("drud-s3.yaml")
+	configPath := app.GetConfigPath("import.yaml")
 	if fileutil.FileExists(configPath) {
 		err = p.Read(configPath)
 	}
@@ -82,6 +82,7 @@ func (p *DrudS3Provider) PromptForConfig() error {
 	bucketAnswer := struct {
 		BucketName string
 	}{}
+
 	err = survey.Ask(bucketPrompt, &bucketAnswer)
 	if err != nil {
 		return fmt.Errorf("survey.Ask of bucket name failed: %v", err)
@@ -236,6 +237,7 @@ func (p *DrudS3Provider) Read(configPath string) error {
 
 // GetEnvironments will return a list of environments for the currently configured upstream DrudS3 site.
 func (p *DrudS3Provider) GetEnvironments() (map[string]interface{}, error) {
+	fmt.Printf("GetEnvironments bucket=%s", p.S3Bucket)
 	environments, err := findDrudS3Project(p.S3Bucket, p.app.Name)
 	if err != nil {
 		return nil, err
@@ -344,11 +346,14 @@ func getDrudS3Projects(client *s3.S3, bucket string) (map[string]map[string]inte
 	// This sadly is processing all of the items we receive, all the files in all the directories
 	for _, obj := range objects {
 		// TODO: It might be possible but unlikely for the object key separator not to be a "/"
-		components := strings.Split(*obj.Key, "/")
-		if (len(components)) >= 2 {
-			tmp := make(map[string]interface{})
-			tmp[components[1]] = true
-			projectMap[components[0]] = tmp
+		components := strings.Split(strings.TrimRight(*obj.Key, "/"), "/")
+		// We're only interested in items that have an actual dump in them.
+		if (len(components)) == 3 {
+			if _, ok := projectMap[components[0]]; !ok {
+				tmp := make(map[string]interface{})
+				projectMap[components[0]] = tmp
+			}
+			projectMap[components[0]][components[1]] = true
 		}
 	}
 	return projectMap, nil
@@ -374,6 +379,8 @@ func getS3ObjectsWithPrefix(client *s3.S3, bucket string, prefix string) ([]*s3.
 	return resp.Contents, nil
 }
 
+// getLatestS3Object gets the most recently modified key in the named bucket
+// with the provided prefix.
 func getLatestS3Object(client *s3.S3, bucket string, prefix string) (*s3.Object, error) {
 	// TODO: Manage maxKeys better; it would be nice if we could just get recent, but
 	// AWS doesn't support that.
@@ -390,7 +397,7 @@ func getLatestS3Object(client *s3.S3, bucket string, prefix string) (*s3.Object,
 	}
 
 	if len(resp.Contents) == 0 {
-		return nil, fmt.Errorf("there are no objects matching %s in bucket %s", prefix, bucket)
+		return nil, fmt.Errorf("there are no objects matching prefix %s in bucket %s", prefix, bucket)
 	}
 
 	sort.Sort(byModified(resp.Contents))
