@@ -115,8 +115,8 @@ var ConfigCommand *cobra.Command = &cobra.Command{
 			}
 
 			// pantheonEnvironment must be appropriate, and can only be used with pantheon provider.
-			if (provider == "default" || provider == "") && pantheonEnvironment != "" {
-				util.Failed("--pantheon-environment can only be used with a non-default provider, for example 'ddev config pantheon --pantheon-environment=dev --docroot=docroot'")
+			if (provider == ddevapp.DefaultProviderName || provider == "") && pantheonEnvironment != "" {
+				util.Failed("--environment can only be used with a non-default provider, for example 'ddev config pantheon --environment=dev --docroot=docroot'")
 			}
 
 			if appType != "" && !ddevapp.IsValidAppType(appType) {

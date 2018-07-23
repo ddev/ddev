@@ -25,13 +25,10 @@ var DrudS3BucketName = "ddev-local-tests"
 
 // DrudS3Provider provides DrudS3-specific import functionality.
 type DrudS3Provider struct {
-	ProviderType string   `yaml:"provider"`
-	app          *DdevApp `yaml:"-"`
-	Sitename     string   `yaml:"site"`
-	//site             DrudS3.Site            `yaml:"-"`
+	ProviderType        string   `yaml:"provider"`
+	app                 *DdevApp `yaml:"-"`
 	projectEnvironments []string `yaml:"-"`
 	EnvironmentName     string   `yaml:"environment"`
-	//environment      DrudS3.Environment     `yaml:"-"`
 }
 
 // Init handles loading data from saved config.
@@ -57,7 +54,7 @@ func (p *DrudS3Provider) ValidateField(field, value string) error {
 	case "Name":
 		_, err := findDrudS3Project(value)
 		if err != nil {
-			p.Sitename = value
+			return nil
 		}
 		return err
 		// TODO: Validate environment as well, but that has to be done in the context of the project
@@ -68,7 +65,7 @@ func (p *DrudS3Provider) ValidateField(field, value string) error {
 
 // SetSiteNameAndEnv sets the environment of the provider (dev/test/live)
 func (p *DrudS3Provider) SetSiteNameAndEnv(environment string) {
-	p.Sitename = p.app.Name
+	// Site name is not carried in this implementation, we use the app's Name instead.
 	p.EnvironmentName = environment
 }
 
