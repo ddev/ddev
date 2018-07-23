@@ -24,8 +24,8 @@ func NewWordpressInteractor(app *ddevapp.DdevApp) Interactor {
 		adminPassword: "ddevpassword",
 		rootDir:       app.AppRoot,
 		browser:       surf.NewBrowser(),
-		baseURL:       app.GetHTTPURL(),
-		loginPath:     fmt.Sprintf("%s/wp-login.php", app.GetHTTPURL()),
+		baseURL:       app.GetWebContainerAddress(),
+		loginPath:     fmt.Sprintf("%s/wp-login.php", app.GetWebContainerAddress()),
 		authedPath:    "/wp-admin/",
 	}
 
