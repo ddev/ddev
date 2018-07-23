@@ -1,0 +1,2 @@
+# Depends: authz_core
+LoadModule authz_dbm_module /usr/lib/apache2/modules/mod_authz_dbm.so

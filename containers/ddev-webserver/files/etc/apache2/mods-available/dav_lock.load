@@ -1,0 +1,1 @@
+LoadModule dav_lock_module /usr/lib/apache2/modules/mod_dav_lock.so

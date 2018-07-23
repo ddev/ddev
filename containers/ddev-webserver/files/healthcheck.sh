@@ -4,5 +4,5 @@
 
 set -eo pipefail
 
-curl --fail localhost/fpmstatus
+curl --fail localhost/phpstatus
 curl --fail localhost:8025 >/dev/null 2>&1

@@ -50,6 +50,16 @@ else
     ln -s /etc/nginx/nginx-site-default.conf /etc/nginx/nginx-site.conf
 fi
 
+# Change the apache run user to current user/group
+printf "\nexport APACHE_RUN_USER=uid_$(id -u)\nexport APACHE_RUN_GROUP=gid_$(id -g)\n" >>/etc/apache2/envvars
+if [ "$DDEV_WEBSERVER_TYPE" = "apache-cgi" ] ; then
+    a2enmod php${DDEV_PHP_VERSION}
+fi
+if [ "$DDEV_WEBSERVER_TYPE" = "apache-fpm" ] ; then
+    a2enmod proxy_fcgi setenvif
+    a2enconf php${DDEV_PHP_VERSION}-fpm
+fi
+
 # Substitute values of environment variables in nginx configuration
 envsubst "$NGINX_SITE_VARS" < "$NGINX_SITE_TEMPLATE" > /etc/nginx/sites-enabled/nginx-site.conf
 
