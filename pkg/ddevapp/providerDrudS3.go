@@ -19,17 +19,12 @@ import (
 	"strings"
 )
 
-// DrudS3BucketName is the name of hte bucket where we can expect to find backups.
-// TODO: Move it into configuration
-var DrudS3BucketName = "ddev-local-tests"
-
 // DrudS3Provider provides DrudS3-specific import functionality.
 type DrudS3Provider struct {
-	ProviderType string   `yaml:"provider"`
-	app          *DdevApp `yaml:"-"`
-	//projectEnvironments []string `yaml:"-"`
-	EnvironmentName string `yaml:"environment"`
-	S3Bucket        string `yaml:"s3_bucket"`
+	ProviderType    string   `yaml:"provider"`
+	app             *DdevApp `yaml:"-"`
+	EnvironmentName string   `yaml:"environment"`
+	S3Bucket        string   `yaml:"s3_bucket"`
 }
 
 // Init handles loading data from saved config.
@@ -93,11 +88,24 @@ func (p *DrudS3Provider) PromptForConfig() error {
 	}
 	p.S3Bucket = bucketAnswer.BucketName
 
+	_, client, err := getDrudS3Session()
+	if err != nil {
+		return fmt.Errorf("could not  get s3 session: %v", err)
+	}
+
+	projects, err := getDrudS3Projects(client, p.S3Bucket)
+	if err != nil {
+		return fmt.Errorf("could not getDrudS3Projects: %v", err)
+	}
+	if _, ok := projects[p.app.Name]; !ok {
+		return fmt.Errorf("project name %s has no backups in S3 bucket %s", p.app.Name, p.S3Bucket)
+	}
+
 	environments, err := p.GetEnvironments()
 	envAry := util.MapKeysToArray(environments)
 	if len(envAry) == 1 {
 		p.EnvironmentName = envAry[0]
-		util.Success("Only one environment is available, environment is set to %s", p.EnvironmentName)
+		util.Success("Only one environment is available, environment is set to '%s'", p.EnvironmentName)
 		return nil
 	}
 
@@ -154,9 +162,9 @@ func (p *DrudS3Provider) GetBackup(backupType string) (fileLocation string, impo
 	if backupType == "files" {
 		prefix = "files"
 	}
-	object, err := getLatestS3Object(client, DrudS3BucketName, p.app.Name+"/"+p.EnvironmentName+"/"+prefix)
+	object, err := getLatestS3Object(client, p.S3Bucket, p.app.Name+"/"+p.EnvironmentName+"/"+prefix)
 	if err != nil {
-		return "", "", fmt.Errorf("unable to getLatestS3Object for bucket %s project %s environment %s prefix %s, %v", DrudS3BucketName, p.app.Name, p.EnvironmentName, prefix, err)
+		return "", "", fmt.Errorf("unable to getLatestS3Object for bucket %s project %s environment %s prefix %s, %v", p.S3Bucket, p.app.Name, p.EnvironmentName, prefix, err)
 	}
 
 	// Check to see if this file has been downloaded previously.
@@ -167,7 +175,7 @@ func (p *DrudS3Provider) GetBackup(backupType string) (fileLocation string, impo
 	if err != nil || stat.Size() != int64(*object.Size) {
 		p.prepDownloadDir()
 
-		err = downloadS3Object(sess, DrudS3BucketName, object, p.getDownloadDir())
+		err = downloadS3Object(sess, p.S3Bucket, object, p.getDownloadDir())
 		if err != nil {
 			return "", "", err
 		}
@@ -279,7 +287,7 @@ func findDrudS3Project(bucket string, project string) (map[string]interface{}, e
 		return nil, err
 	}
 	// Get a list of all projects the current user has access to.
-	projectMap, err := getDrudS3Projects(client, DrudS3BucketName)
+	projectMap, err := getDrudS3Projects(client, bucket)
 	if err != nil {
 		return nil, err
 	}
