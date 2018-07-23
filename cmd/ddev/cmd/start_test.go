@@ -26,7 +26,8 @@ func TestDdevStart(t *testing.T) {
 
 	// Confirm all sites are running.
 	for _, site := range DevTestSites {
-		app, err := ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
+		var app *ddevapp.DdevApp
+		app, err = ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
 		assert.NoError(err)
 
 		// Ensure site interactivity
@@ -55,7 +56,8 @@ func TestDdevStart(t *testing.T) {
 	// Build start command startMultipleArgs
 	startMultipleArgs := []string{"start"}
 	for _, site := range DevTestSites {
-		app, err := ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
+		var app *ddevapp.DdevApp
+		app, err = ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
 		assert.NoError(err)
 
 		startMultipleArgs = append(startMultipleArgs, app.GetName())
