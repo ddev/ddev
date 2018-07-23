@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/AlecAivazis/survey"
+  packages = ["."]
+  revision = "17861e192dc11fd2f5081df1932c94cce262fa1e"
+  version = "v1.6.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/Azure/go-ansiterm"
   packages = [
@@ -290,6 +296,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/mgutz/ansi"
+  packages = ["."]
+  revision = "9520e82c474b0a04dd04f8a40959027271bab992"
+
+[[projects]]
+  branch = "master"
   name = "github.com/mitchellh/go-homedir"
   packages = ["."]
   revision = "3864e76763d94a6df2f9960b16a20a33da9f9a66"
@@ -429,6 +441,15 @@
   version = "v0.3.0"
 
 [[projects]]
+  name = "gopkg.in/AlecAivazis/survey.v1"
+  packages = [
+    "core",
+    "terminal"
+  ]
+  revision = "17861e192dc11fd2f5081df1932c94cce262fa1e"
+  version = "v1.6.1"
+
+[[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
@@ -437,6 +458,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "76906af83028f2c6aae82eeadb0db71fe08b3e523695873488a9d390c4257eb2"
+  inputs-digest = "9600715ade79596cef8a32591d397a72de217e9dba4a24a0c9e47fc27112adb6"
   solver-name = "gps-cdcl"
   solver-version = 1
