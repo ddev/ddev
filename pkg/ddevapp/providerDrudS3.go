@@ -71,13 +71,16 @@ func (p *DrudS3Provider) PromptForConfig() error {
 		}
 		err := survey.AskOne(accessKeyPrompt, &p.AWSAccessKey, nil)
 		if err != nil {
-			return fmt.Errorf("survey.Ask of AWS credentials failed: %v", err)
+			return fmt.Errorf("survey.Ask of AWS access key failed: %v", err)
 		}
 
 		secretPrompt := &survey.Password{
 			Message: "AWS secret access key:",
 		}
-		survey.AskOne(secretPrompt, &p.AWSSecretKey, nil)
+		err = survey.AskOne(secretPrompt, &p.AWSSecretKey, nil)
+		if err != nil {
+			return fmt.Errorf("survey.Ask of AWS secret key failed: %v", err)
+		}
 	}
 	_, client, err := p.getDrudS3Session()
 	if err != nil {
@@ -125,6 +128,9 @@ func (p *DrudS3Provider) PromptForConfig() error {
 	}
 
 	environments, err := p.GetEnvironments()
+	if err != nil {
+		return fmt.Errorf("unable to GetEnvironments: %v", err)
+	}
 	envAry := util.MapKeysToArray(environments)
 	if len(envAry) == 1 {
 		p.EnvironmentName = envAry[0]
