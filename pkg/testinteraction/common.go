@@ -26,7 +26,7 @@ type commonInteraction struct {
 // running the ddev config command in the application's root directory.
 func (c *commonInteraction) configure(docroot, projectName, projectType string) error {
 	args := []string{"config", "--docroot", docroot, "--projectname", projectName, "--projecttype", projectType}
-	if _, err := exec.RunCommandInDir("ddev", args, c.rootDir); err != nil {
+	if _, err := exec.RunCommandInDir(c.ddevBin, args, c.rootDir); err != nil {
 		return nil
 	}
 
