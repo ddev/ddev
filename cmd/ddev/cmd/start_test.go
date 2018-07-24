@@ -31,7 +31,7 @@ func TestDdevStart(t *testing.T) {
 		assert.NoError(err)
 
 		// Ensure site interactivity
-		interactor := testinteraction.NewInteractor(app)
+		interactor := testinteraction.NewInteractor(app, DdevBin)
 		if interactor != nil {
 			err = interactor.Configure()
 			assert.NoError(err, "Configuration failed: %v", err)
@@ -39,7 +39,7 @@ func TestDdevStart(t *testing.T) {
 			err = interactor.Install()
 			assert.NoError(err, "Installation failed: %v", err)
 
-			err = interactor.FindContentAtPath("/", app.GetName()) // fmt.Sprintf("%s.*", app.GetName()))
+			err = interactor.FindContentAtPath("/", app.GetName())
 			assert.NoError(err, "Failed to find content at path: %v", err)
 
 			err = interactor.Login()

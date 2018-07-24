@@ -17,6 +17,7 @@ type commonInteraction struct {
 	authedPath    string
 	baseURL       string
 	browser       *browser.Browser
+	ddevBin       string
 	loginPath     string
 	rootDir       string
 }

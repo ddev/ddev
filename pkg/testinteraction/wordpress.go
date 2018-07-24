@@ -18,10 +18,11 @@ type wordpressInteraction struct {
 
 // NewWordpressInteractor returns a struct pointer that satisfies the Interactor interface
 // specific to a Wordpress project.
-func NewWordpressInteractor(app *ddevapp.DdevApp) Interactor {
+func NewWordpressInteractor(app *ddevapp.DdevApp, ddevBin string) Interactor {
 	c := &commonInteraction{
 		adminUsername: "ddevusername",
 		adminPassword: "ddevpassword",
+		ddevBin:       ddevBin,
 		rootDir:       app.AppRoot,
 		browser:       surf.NewBrowser(),
 		baseURL:       app.GetWebContainerAddress(),
@@ -81,7 +82,7 @@ func (w *wordpressInteraction) Install() error {
 		fmt.Sprintf("--admin_email=%s", w.adminEmail),
 	}
 
-	if _, err := exec.RunCommandInDir("ddev", args, w.rootDir); err != nil {
+	if _, err := exec.RunCommandInDir(w.ddevBin, args, w.rootDir); err != nil {
 		return err
 	}
 

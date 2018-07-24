@@ -13,10 +13,10 @@ type Interactor interface {
 // NewInteractor will inspect the provided app and return an instantiated Interactor
 // if one is available. If no Interactor is defined for the app type, NewInteractor
 // will return nil.
-func NewInteractor(app *ddevapp.DdevApp) Interactor {
+func NewInteractor(app *ddevapp.DdevApp, ddevBin string) Interactor {
 	switch app.Type {
 	case "wordpress":
-		return NewWordpressInteractor(app)
+		return NewWordpressInteractor(app, ddevBin)
 	}
 
 	return nil
