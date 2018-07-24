@@ -384,6 +384,7 @@ func getDrudS3Projects(client *s3.S3, bucket string) (map[string]map[string]inte
 	return projectMap, nil
 }
 
+// getS3ObjectsWithPrefix gets all S3 objects in the named bucket with the prefix provided.
 func getS3ObjectsWithPrefix(client *s3.S3, bucket string, prefix string) ([]*s3.Object, error) {
 	// TODO: This may be fragile because it could return a lot of items.
 	maxKeys := aws.Int64(1000000000)
@@ -430,8 +431,8 @@ func getLatestS3Object(client *s3.S3, bucket string, prefix string) (*s3.Object,
 	return resp.Contents[0], nil
 }
 
+// downloadS3Object grabs the object named and brings it down to the directory named
 func downloadS3Object(sess *session.Session, bucket string, object *s3.Object, localDir string) error {
-
 	localPath := filepath.Join(localDir, path.Base(*object.Key))
 	_, err := os.Stat(localPath)
 	var file *os.File
@@ -446,7 +447,7 @@ func downloadS3Object(sess *session.Session, bucket string, object *s3.Object, l
 			return fmt.Errorf("Unable to create file %v, %v", localPath, err)
 		}
 	} else {
-		fmt.Printf("File %s already downloaded, skipping\n", localPath)
+		util.Success("File %s was already downloaded, skipping", localPath)
 		return nil
 	}
 
@@ -464,6 +465,6 @@ func downloadS3Object(sess *session.Session, bucket string, object *s3.Object, l
 		return fmt.Errorf("unable to download item %v, %v", object, err)
 	}
 
-	fmt.Println("Downloaded", file.Name(), numBytes, "bytes")
+	util.Success("Downloaded file %s (%d bytes)", file.Name(), numBytes)
 	return nil
 }
