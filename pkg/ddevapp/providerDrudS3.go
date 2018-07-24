@@ -49,16 +49,8 @@ func (p *DrudS3Provider) Init(app *DdevApp) error {
 // allows provider plugins to have additional validation for top level config
 // settings.
 func (p *DrudS3Provider) ValidateField(field, value string) error {
-	switch field {
-	case "Name":
-		_, err := p.findDrudS3Project()
-		if err != nil {
-			return nil
-		}
-		return err
-		// TODO: Validate environment as well, but that has to be done in the context of the project
-	}
-
+	// No validation is done here because so many things depend on each other.
+	// Instead we use p.Validate()
 	return nil
 }
 
@@ -71,7 +63,7 @@ func (p *DrudS3Provider) PromptForConfig() error {
 	// 4. Get environments, if only one, choose it
 
 	if p.AWSAccessKey != "" && p.AWSSecretKey != "" {
-		util.Success("AWS Access Key ID and AWS Secret Access Key already configured in .ddev/input.yaml")
+		util.Success("AWS Access Key ID and AWS Secret Access Key already configured in .ddev/import.yaml")
 	} else {
 		accessKeyPrompt := &survey.Input{
 			Message: "AWS access key id:",
@@ -136,7 +128,7 @@ func (p *DrudS3Provider) PromptForConfig() error {
 	envAry := util.MapKeysToArray(environments)
 	if len(envAry) == 1 {
 		p.EnvironmentName = envAry[0]
-		util.Success("Only one environment is available, environment is set to '%s'", p.EnvironmentName)
+		util.Success("Only one environment is available for project %s, environment is set to '%s'", p.app.Name, p.EnvironmentName)
 		return nil
 	}
 
@@ -275,6 +267,7 @@ func (p *DrudS3Provider) GetEnvironments() (map[string]interface{}, error) {
 }
 
 // Validate ensures that the current configuration is valid (i.e. the configured DrudS3 site/environment exists)
+// If the environment exists, the project exists, and the AWS keys are working right.
 func (p *DrudS3Provider) Validate() error {
 	return p.environmentExists()
 }
