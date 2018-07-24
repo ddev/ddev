@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	"github.com/AlecAivazis/survey"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	"gopkg.in/yaml.v2"
@@ -24,6 +25,8 @@ type DrudS3Provider struct {
 	ProviderType    string   `yaml:"provider"`
 	app             *DdevApp `yaml:"-"`
 	EnvironmentName string   `yaml:"environment"`
+	AWSAccessKey    string   `yaml:"aws_access_key_id"`
+	AWSSecretKey    string   `yaml:"aws_secret_access_key"`
 	S3Bucket        string   `yaml:"s3_bucket"`
 }
 
@@ -48,7 +51,7 @@ func (p *DrudS3Provider) Init(app *DdevApp) error {
 func (p *DrudS3Provider) ValidateField(field, value string) error {
 	switch field {
 	case "Name":
-		_, err := findDrudS3Project(p.S3Bucket, value)
+		_, err := p.findDrudS3Project()
 		if err != nil {
 			return nil
 		}
@@ -61,37 +64,64 @@ func (p *DrudS3Provider) ValidateField(field, value string) error {
 
 // PromptForConfig provides interactive configuration prompts when running `ddev config DrudS3`
 func (p *DrudS3Provider) PromptForConfig() error {
+	// 0. Get AWS keys if they don't already exist
 	// 1. Get bucketnames accessible
 	// 2. If only one bucket, choose it
-	// 3. Get projects, if only one, choose it
+	// 3. Get projects, this project (same exact name) must exist in the bucket, choose it
 	// 4. Get environments, if only one, choose it
 
-	bucketsAvailable, err := getBucketList()
-	if err != nil {
-		return fmt.Errorf("Unable to list buckets: %v", err)
-	}
-	var bucketPrompt = []*survey.Question{
-		{Name: "BucketName",
-			Prompt: &survey.Select{
-				Message: "AWS S3 Bucket Name:",
-				Options: bucketsAvailable,
-				Default: p.S3Bucket,
-			},
-		},
-	}
-	bucketAnswer := struct {
-		BucketName string
-	}{}
+	if p.AWSAccessKey != "" && p.AWSSecretKey != "" {
+		util.Success("AWS Access Key ID and AWS Secret Access Key already configured in .ddev/input.yaml")
+	} else {
+		accessKeyPrompt := &survey.Input{
+			Message: "AWS access key id:",
+			Default: p.AWSAccessKey,
+		}
+		err := survey.AskOne(accessKeyPrompt, &p.AWSAccessKey, nil)
+		if err != nil {
+			return fmt.Errorf("survey.Ask of AWS credentials failed: %v", err)
+		}
 
-	err = survey.Ask(bucketPrompt, &bucketAnswer)
-	if err != nil {
-		return fmt.Errorf("survey.Ask of bucket name failed: %v", err)
+		secretPrompt := &survey.Password{
+			Message: "AWS secret access key:",
+		}
+		survey.AskOne(secretPrompt, &p.AWSSecretKey, nil)
 	}
-	p.S3Bucket = bucketAnswer.BucketName
-
-	_, client, err := getDrudS3Session()
+	_, client, err := p.getDrudS3Session()
 	if err != nil {
 		return fmt.Errorf("could not  get s3 session: %v", err)
+	}
+
+	// Get buckets
+	bucketsAvailable, err := p.getBucketList()
+	if err != nil {
+		return fmt.Errorf("unable to list buckets: %v", err)
+	}
+	if len(bucketsAvailable) == 0 {
+		return fmt.Errorf("no buckets are accessible with the provided AWS credentials")
+	}
+	if len(bucketsAvailable) == 1 {
+		p.S3Bucket = bucketsAvailable[0]
+		util.Success("Only one accessible bucket (%s), so using it.", p.S3Bucket)
+	} else {
+		var bucketPrompt = []*survey.Question{
+			{Name: "BucketName",
+				Prompt: &survey.Select{
+					Message: "AWS S3 Bucket Name:",
+					Options: bucketsAvailable,
+					Default: p.S3Bucket,
+				},
+			},
+		}
+		bucketAnswer := struct {
+			BucketName string
+		}{}
+
+		err = survey.Ask(bucketPrompt, &bucketAnswer)
+		if err != nil {
+			return fmt.Errorf("survey.Ask of bucket name failed: %v", err)
+		}
+		p.S3Bucket = bucketAnswer.BucketName
 	}
 
 	projects, err := getDrudS3Projects(client, p.S3Bucket)
@@ -154,7 +184,7 @@ func (p *DrudS3Provider) GetBackup(backupType string) (fileLocation string, impo
 		return "", "", err
 	}
 
-	sess, client, err := getDrudS3Session()
+	sess, client, err := p.getDrudS3Session()
 	if err != nil {
 		return "", "", err
 	}
@@ -237,8 +267,7 @@ func (p *DrudS3Provider) Read(configPath string) error {
 
 // GetEnvironments will return a list of environments for the currently configured upstream DrudS3 site.
 func (p *DrudS3Provider) GetEnvironments() (map[string]interface{}, error) {
-	fmt.Printf("GetEnvironments bucket=%s", p.S3Bucket)
-	environments, err := findDrudS3Project(p.S3Bucket, p.app.Name)
+	environments, err := p.findDrudS3Project()
 	if err != nil {
 		return nil, err
 	}
@@ -264,8 +293,8 @@ func (p *DrudS3Provider) environmentExists() error {
 }
 
 // getBucketList returns an array of buckets available with current S3 public/private keys
-func getBucketList() ([]string, error) {
-	_, client, err := getDrudS3Session()
+func (p *DrudS3Provider) getBucketList() ([]string, error) {
+	_, client, err := p.getDrudS3Session()
 	if err != nil {
 		return nil, err
 	}
@@ -283,33 +312,29 @@ func getBucketList() ([]string, error) {
 
 // findDrudS3Project ensures the DrudS3 site specified by name exists, and the current user has access to it.
 // It returns an array of environment names and err
-func findDrudS3Project(bucket string, project string) (map[string]interface{}, error) {
-	_, client, err := getDrudS3Session()
+func (p *DrudS3Provider) findDrudS3Project() (map[string]interface{}, error) {
+	_, client, err := p.getDrudS3Session()
 	if err != nil {
 		return nil, err
 	}
 	// Get a list of all projects the current user has access to.
-	projectMap, err := getDrudS3Projects(client, bucket)
+	projectMap, err := getDrudS3Projects(client, p.S3Bucket)
 	if err != nil {
 		return nil, err
 	}
 
-	projectWithEnvs := projectMap[project]
+	projectWithEnvs := projectMap[p.app.Name]
 
 	// Get a list of environments for a given project.
 	return projectWithEnvs, nil
 }
 
 // getDrudS3Session loads the DrudS3 API config from disk and returns a DrudS3 session struct.
-func getDrudS3Session() (*session.Session, *s3.S3, error) {
-	//ddevDir := util.GetGlobalDdevDir()
-
-	// TODO: Move S3 auth into global config?
-	//sessionLocation := filepath.Join(ddevDir, "DrudS3config.json")
-
-	// This is currently depending on auth in ~/.aws/credentials
+func (p *DrudS3Provider) getDrudS3Session() (*session.Session, *s3.S3, error) {
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String("us-east-1")},
+		Region:      aws.String("us-east-1"),
+		Credentials: credentials.NewStaticCredentials(p.AWSAccessKey, p.AWSSecretKey, ""),
+	},
 	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("Failed to NewSession: %v", err)
