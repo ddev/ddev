@@ -54,11 +54,13 @@ func (c *commonInteraction) FindContentAtPath(contentPath string, contentExpr st
 	var err error
 
 	// TODO: Find a better way to build URLs.
-	urlString := fmt.Sprintf("%s/%s", c.baseURL, contentPath)
+	urlString := fmt.Sprintf("%s%s", c.baseURL, contentPath)
+	fmt.Printf("Opening %s\n", urlString)
 	if err = c.browser.Open(urlString); err != nil {
 		return err
 	}
 
+	fmt.Printf("Looking for content: %s\nIn body:\n\n%s\n\n", contentExpr, c.browser.Body())
 	match, err := regexp.Match(contentExpr, []byte(c.browser.Body()))
 	if err != nil {
 		return err
