@@ -47,6 +47,12 @@ func TestMain(m *testing.M) {
 		log.Errorln("could not set noninteractive mode, failed to Setenv, err: ", err)
 	}
 
+	// Attempt to remove all running containers before starting a test.
+	// If no projects are running, this will exit silently and without error.
+	if _, err = exec.RunCommand(DdevBin, []string{"remove", "--all"}); err != nil {
+		log.Warnf("Failed to remove all running projects: %v", err)
+	}
+
 	for i := range DevTestSites {
 		err = DevTestSites[i].Prepare()
 		if err != nil {
