@@ -49,7 +49,7 @@ func TestMain(m *testing.M) {
 
 	// Attempt to remove all running containers before starting a test.
 	// If no projects are running, this will exit silently and without error.
-	if _, err := exec.RunCommand(DdevBin, []string{"remove", "--all"}); err != nil {
+	if _, err = exec.RunCommand(DdevBin, []string{"remove", "--all"}); err != nil {
 		log.Warnf("Failed to remove all running projects: %v", err)
 	}
 
