@@ -36,6 +36,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/Netflix/go-expect"
+  packages = ["."]
+  revision = "902ceccd167a1e52575d2d4c31bce9a8c053f9db"
+
+[[projects]]
+  branch = "master"
   name = "github.com/Nvveen/Gotty"
   packages = ["."]
   revision = "cd527374f1e5bff4938207604a14f2e38a9cf512"
@@ -230,6 +236,12 @@
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/hinshun/vt10x"
+  packages = ["."]
+  revision = "daaf3c1e6420d53c686215ed7313fa345dcf417b"
+
+[[projects]]
   name = "github.com/huandu/xstrings"
   packages = ["."]
   revision = "2bf18b218c51864a87384c06996e40ff9dcff8e1"
@@ -251,6 +263,12 @@
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
   revision = "0b12d6b5"
+
+[[projects]]
+  name = "github.com/kr/pty"
+  packages = ["."]
+  revision = "fa756f09eeb418bf1cc6268c66ceaad9bb98f598"
+  version = "v1.1.2"
 
 [[projects]]
   name = "github.com/lextoumbourou/goodhosts"
@@ -458,6 +476,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9600715ade79596cef8a32591d397a72de217e9dba4a24a0c9e47fc27112adb6"
+  inputs-digest = "2cf7e12dfc821f27ece51249c1a4b3a00fd0a4e64a49bbd7466c7c68a4a846ff"
   solver-name = "gps-cdcl"
   solver-version = 1

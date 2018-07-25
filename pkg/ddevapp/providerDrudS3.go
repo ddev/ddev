@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	"github.com/AlecAivazis/survey"
+
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"

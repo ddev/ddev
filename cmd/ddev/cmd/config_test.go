@@ -3,10 +3,13 @@ package cmd
 import (
 	"testing"
 
+	"github.com/Netflix/go-expect"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/hinshun/vt10x"
 	asrt "github.com/stretchr/testify/assert"
 	"os"
+	osexec "os/exec"
 	"path/filepath"
 )
 
@@ -74,4 +77,91 @@ func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Found a drupal8 codebase")
+}
+
+const DrudS3TestSiteName = "d7-kickstart"
+const DrudS3TestEnvName = "production"
+const DrudS3TestBucket = "ddev-local-tests"
+
+// TestConfigDrudS3 runs through the ddev config drud-s3 interactive command
+func TestConfigDrudS3(t *testing.T) {
+	assert := asrt.New(t)
+
+	accessKeyID := os.Getenv("DDEV_DRUD_S3_AWS_ACCESS_KEY_ID")
+	secretAccessKey := os.Getenv("DDEV_DRUD_S3_AWS_SECRET_ACCESS_KEY")
+	if accessKeyID == "" || secretAccessKey == "" {
+		t.Skip("No DDEV_DRUD_S3_AWS_ACCESS_KEY_ID and  DDEV_DRUD_S3_AWS_SECRET_ACCESS_KEY env vars have been set. Skipping DrudS3 specific test.")
+	}
+
+	// Create a temporary directory and switch to it.
+	tmpdir := testcommon.CreateTmpDir("TestConfigDrudS3")
+	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
+
+	// Multiplex stdin/stdout to a virtual terminal to respond to ANSI escape
+	// sequences (i.e. cursor position report).
+	c, state, err := vt10x.NewVT10XConsole()
+	assert.NoError(err)
+	defer c.Close()
+
+	donec := make(chan struct{})
+	go func(state2 *vt10x.State) {
+		defer close(donec)
+		testcommon.ExpectString(c, state2, "Project name")
+		c.SendLine(DrudS3TestSiteName) // Project name
+
+		testcommon.ExpectString(c, state2, "Docroot Location")
+		c.SendLine("thereisnodocroot") //Docroot location
+		testcommon.ExpectString(c, state2, "No directory could be found")
+		testcommon.ExpectString(c, state2, "Docroot Location")
+		c.SendLine(".")
+		testcommon.ExpectString(c, state2, "Project Type")
+		c.SendLine("junk")
+		testcommon.ExpectString(c, state2, "is not a valid project type")
+		testcommon.ExpectString(c, state2, "Project Type")
+		c.SendLine("drupal7") // Project type
+		testcommon.ExpectString(c, state2, "AWS access key id")
+		c.SendLine(accessKeyID)
+		testcommon.ExpectString(c, state2, "AWS secret access key")
+		c.SendLine(secretAccessKey)
+		testcommon.ExpectString(c, state2, "AWS S3 Bucket Name")
+		c.SendLine(DrudS3TestBucket)
+		testcommon.ExpectString(c, state2, "Choose an environment")
+		c.SendLine(DrudS3TestEnvName)
+		//c.SendLine("")  // AWS Access key
+		//c.SendLine("")  // aws secret
+
+		//c.SendLine("")
+		//testcommon.ExpectString(c, "Docroot location")
+		//c.SendLine("")
+		//c.Send("\x03")
+		//testcommon.ExpectString(c, "Nothing that should be there")
+
+		//c.ExpectEOF()
+		println("Got the eof")
+	}(state)
+
+	dcmd := osexec.Command(DdevBin, "config", "drud-s3")
+
+	dcmd.Stdin = c.Tty()
+	dcmd.Stdout = c.Tty()
+	dcmd.Stderr = c.Tty()
+
+	err = dcmd.Run()
+	assert.NoError(err)
+	println("Made it past dcmd.Start()")
+	//c.SendLine("") // project name
+	//c.SendLine("") // docroot
+	//c.SendLine("") // project type
+	//c.SendLine("") // a spare
+
+	//dcmd.Wait()
+	println("After dcmd.wait()")
+
+	// Close the slave end of the pty, and read the remaining bytes from the master end.
+	c.Tty().Close()
+	<-donec
+
+	// Dump the terminal's screen.
+	t.Log(expect.StripTrailingEmptyLines(state.String()))
 }
