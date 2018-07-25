@@ -111,7 +111,7 @@ func TestMain(m *testing.M) {
 
 	// Attempt to remove all running containers before starting a test.
 	// If no projects are running, this will exit silently and without error.
-	//
+	// If a system doesn't have `ddev` in its $PATH, this will emit a warning but will not fail the test.
 	if _, err := exec.RunCommand("ddev", []string{"remove", "--all"}); err != nil {
 		log.Warnf("Failed to remove all running projects: %v", err)
 	}
