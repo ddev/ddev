@@ -109,9 +109,16 @@ func TestMain(m *testing.M) {
 	// This is normally done by Testsite.Prepare()
 	_ = os.Setenv("DRUD_NONINTERACTIVE", "true")
 
+	// Attempt to remove all running containers before starting a test.
+	// If no projects are running, this will exit silently and without error.
+	//
+	if _, err := exec.RunCommand("ddev", []string{"remove", "--all"}); err != nil {
+		log.Warnf("Failed to remove all running projects: %v", err)
+	}
+
 	count := len(ddevapp.GetApps())
 	if count > 0 {
-		log.Fatalf("ddevapp tests require no sites running. You have %v site(s) running.", count)
+		log.Fatalf("ddevapp tests require no projects running. You have %v project(s) running.", count)
 	}
 
 	// If GOTEST_SHORT is an integer, then use it as index for a single usage
