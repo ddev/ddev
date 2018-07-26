@@ -996,6 +996,7 @@ func (app *DdevApp) AddHostsEntries() error {
 	if err != nil {
 		util.Failed("could not open hostfile: %v", err)
 	}
+
 	for _, name := range app.GetHostnames() {
 
 		if hosts.Has(dockerIP, name) {
@@ -1036,6 +1037,7 @@ func (app *DdevApp) RemoveHostsEntries() error {
 	if err != nil {
 		util.Failed("could not open hostfile: %v", err)
 	}
+
 	for _, name := range app.GetHostnames() {
 		if !hosts.Has(dockerIP, name) {
 			continue
