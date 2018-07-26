@@ -57,8 +57,8 @@ func NewWordpressConfig() *WordpressConfig {
 const wordPressHooks = `
 # Un-comment and enter the production url and local url
 # to replace in your database after import.
-#post-import-db:
-#  - exec: "wp search-replace <production-url> <local-url>"`
+#  post-import-db:
+#    - exec: wp search-replace <production-url> <local-url>`
 
 // getWordpressHooks for appending as byte array
 func getWordpressHooks() []byte {
