@@ -35,17 +35,17 @@ var HostNameCmd = &cobra.Command{
 		}
 
 		if removeHostName {
-			removeHost(hosts, ip, hostname)
+			removeHostname(hosts, ip, hostname)
 
 			return
 		}
 
-		addHost(hosts, ip, hostname)
+		addHostname(hosts, ip, hostname)
 	},
 }
 
-// addHost encapsulates the
-func addHost(hosts goodhosts.Hosts, ip, hostname string) {
+// addHostname encapsulates the logic of adding a hostname to the system's hosts file.
+func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 	var detail string
 	rawResult := make(map[string]interface{})
 
@@ -84,7 +84,8 @@ func addHost(hosts goodhosts.Hosts, ip, hostname string) {
 	return
 }
 
-func removeHost(hosts goodhosts.Hosts, ip, hostname string) {
+// removeHostname encapsulates the logic of removing a hostname from the system's hosts file.
+func removeHostname(hosts goodhosts.Hosts, ip, hostname string) {
 	rawResult := make(map[string]interface{})
 
 	if !hosts.Has(ip, hostname) {
