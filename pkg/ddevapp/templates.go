@@ -101,7 +101,7 @@ networks:
 const ConfigInstructions = `
 # Key features of ddev's config.yaml:
 
-# name: <projectname> # Name of the project, automatically provides 
+# name: <projectname> # Name of the project, automatically provides
 #   http://projectname.ddev.local and https://projectname.ddev.local
 
 # type: <projecttype>  # drupal6/7/8, backdrop, typo3, wordpress, php
@@ -110,12 +110,12 @@ const ConfigInstructions = `
 
 # php_version: "7.1"  # PHP version to use, "5.6", "7.0", "7.1", "7.2"
 
-# You can explicitly specify the webimage, dbimage, dbaimage lines but this 
+# You can explicitly specify the webimage, dbimage, dbaimage lines but this
 # is not recommended, as the images are often closely tied to ddev's' behavior,
 # so this can break upgrades.
 
-# webimage: <docker_image>  # nginx/php docker image. 
-# dbimage: <docker_image>  # mariadb docker image. 
+# webimage: <docker_image>  # nginx/php docker image.
+# dbimage: <docker_image>  # mariadb docker image.
 # dbaimage: <docker_image>
 
 # router_http_port: <port>  # Port to be used for http (defaults to port 80)
