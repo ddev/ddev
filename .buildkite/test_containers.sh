@@ -5,13 +5,13 @@
 set -o errexit
 set -o pipefail
 set -o nounset
-set -x
 
 function cleanup {
+    set +x
     echo "--- Cleanup docker"
     echo "Warning: deleting all docker containers and deleting images that match this build."
     if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
-        docker rm -f $(docker ps -aq)
+        docker rm -f $(docker ps -aq) >/dev/null || true
     fi
 
     # Make sure we don't have any existing containers on the testbot that might
@@ -19,7 +19,7 @@ function cleanup {
     VERSION=$(make version | sed 's/^VERSION://')
     IMAGES=$(docker images | awk "/$VERSION/ { print \$3 }")
     if [ ! -z "${IMAGES:-}" ] ; then
-      docker rmi --force $IMAGES
+      docker rmi --force $IMAGES 2>&1 >/dev/null || true
     fi
 }
 
@@ -33,6 +33,7 @@ cleanup
 # Our testbot should now be sane, run the testbot checker to make sure.
 ./.buildkite/sanetestbot.sh
 
+set -x
 
 for dir in containers/*
     do pushd $dir
