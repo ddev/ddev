@@ -90,7 +90,7 @@ jobs:
       - run:
           command: |
             make -f nightly_build.mak clean  # Remove any existing binaries
-            make -f nightly_build.mak -s --print-directory
+            make -f nightly_build.mak -s --print-directory DOCKER_ARGS=--no-cache
           no_output_timeout: "40m"
           name: Full nightly build and test with containers
 
