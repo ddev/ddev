@@ -1058,7 +1058,7 @@ func (app *DdevApp) RemoveHostsEntries() error {
 		output.UserOut.Println("Please enter your password if prompted.")
 
 		if _, err = exec.RunCommandPipe("sudo", hostnameArgs); err != nil {
-			util.Warning("Faield to execute sudo command, you will need to manually execute '%s' with administrative privileges", command)
+			util.Warning("Failed to execute sudo command, you will need to manually execute '%s' with administrative privileges", command)
 		}
 	}
 
