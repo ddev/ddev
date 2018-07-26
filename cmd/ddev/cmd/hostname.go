@@ -25,10 +25,11 @@ var HostNameCmd = &cobra.Command{
 
 		hosts, err := goodhosts.NewHosts()
 		if err != nil {
+			detail := fmt.Sprintf("Could not open hosts file for reading: %v", err)
 			rawResult := make(map[string]interface{})
 			rawResult["error"] = "READERROR"
-			rawResult["full_error"] = fmt.Sprintf("%v", err)
-			output.UserOut.WithField("raw", rawResult).Fatal(fmt.Sprintf("could not open hosts file for read: %v", err))
+			rawResult["full_error"] = detail
+			output.UserOut.WithField("raw", rawResult).Fatal(detail)
 
 			return
 		}
@@ -43,38 +44,42 @@ var HostNameCmd = &cobra.Command{
 	},
 }
 
+// addHost encapsulates the
 func addHost(hosts goodhosts.Hosts, ip, hostname string) {
+	var detail string
 	rawResult := make(map[string]interface{})
 
 	if hosts.Has(ip, hostname) {
-		if output.JSONOutput {
-			rawResult["error"] = "SUCCESS"
-			rawResult["detail"] = "hostname already exists in hosts file"
-			output.UserOut.WithField("raw", rawResult).Info("")
-		}
+		detail = "Hostname already exists in hosts file"
+		rawResult["error"] = "SUCCESS"
+		rawResult["detail"] = detail
+		output.UserOut.WithField("raw", rawResult).Info(detail)
 
 		return
 	}
 
 	if err := hosts.Add(ip, hostname); err != nil {
+		detail = fmt.Sprintf("Could notk add hostname %s at %s: %v", hostname, ip, err)
 		rawResult["error"] = "ADDERROR"
-		rawResult["full_error"] = fmt.Sprintf("%v", err)
-		output.UserOut.WithField("raw", rawResult).Fatal(fmt.Sprintf("could not add hostname %s at %s: %v", hostname, ip, err))
+		rawResult["full_error"] = detail
+		output.UserOut.WithField("raw", rawResult).Fatal(detail)
 
 		return
 	}
 
 	if err := hosts.Flush(); err != nil {
+		detail = fmt.Sprintf("Could not write hosts file: %v", err)
 		rawResult["error"] = "WRITEERROR"
-		rawResult["full_error"] = fmt.Sprintf("%v", err)
-		output.UserOut.WithField("raw", rawResult).Fatal(fmt.Sprintf("Could not write hosts file: %v", err))
+		rawResult["full_error"] = detail
+		output.UserOut.WithField("raw", rawResult).Fatal(detail)
 
 		return
 	}
 
+	detail = "Hostname added to hosts file"
 	rawResult["error"] = "SUCCESS"
-	rawResult["detail"] = "hostname added to hosts file"
-	output.UserOut.WithField("raw", rawResult).Info("")
+	rawResult["detail"] = detail
+	output.UserOut.WithField("raw", rawResult).Info(detail)
 
 	return
 }
@@ -83,32 +88,36 @@ func removeHost(hosts goodhosts.Hosts, ip, hostname string) {
 	rawResult := make(map[string]interface{})
 
 	if !hosts.Has(ip, hostname) {
+		detail := "Hostname does not exist in hosts file"
 		rawResult["error"] = "SUCCESS"
-		rawResult["detail"] = "hostname does not exist in hosts file"
-		output.UserOut.WithField("raw", rawResult).Info("")
+		rawResult["detail"] = detail
+		output.UserOut.WithField("raw", rawResult).Info(detail)
 
 		return
 	}
 
 	if err := hosts.Remove(ip, hostname); err != nil {
+		detail := fmt.Sprintf("Could not remove hostname %s at %s: %v", hostname, ip, err)
 		rawResult["error"] = "REMOVEERROR"
-		rawResult["full_error"] = fmt.Sprintf("%v", err)
-		output.UserOut.WithField("raw", rawResult).Fatal(fmt.Sprintf("could not remove hostname %s at %s: %v", hostname, ip, err))
+		rawResult["full_error"] = detail
+		output.UserOut.WithField("raw", rawResult).Fatal(detail)
 
 		return
 	}
 
 	if err := hosts.Flush(); err != nil {
-		rawResult["error"] = "WRITERROR"
-		rawResult["full_error"] = fmt.Sprintf("%v", err)
-		output.UserOut.WithField("raw", rawResult).Info("")
+		detail := fmt.Sprintf("Could not write hosts file: %v", err)
+		rawResult["error"] = "WRITEERROR"
+		rawResult["full_error"] = detail
+		output.UserOut.WithField("raw", rawResult).Info(detail)
 
 		return
 	}
 
+	detail := "Hostname removed from hosts file"
 	rawResult["error"] = "SUCCESS"
-	rawResult["detail"] = "hostname removed from hosts file"
-	output.UserOut.WithField("raw", rawResult).Info("")
+	rawResult["detail"] = detail
+	output.UserOut.WithField("raw", rawResult).Info(detail)
 
 	return
 }
