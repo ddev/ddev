@@ -20,7 +20,7 @@ var DockerComposeVersionConstraint = ">= 1.18.0-alpha1"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "v1.0.0" // Note that this can be overridden by make
+var WebTag = "20180726_webserver_bump" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
