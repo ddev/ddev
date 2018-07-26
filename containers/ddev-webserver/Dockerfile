@@ -1,6 +1,6 @@
 FROM bitnami/minideb:jessie
 
-ENV PHP_VERSIONS="5.6 7.0 7.1 7.2"
+ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2"
 ENV PHP_DEFAULT_VERSION="7.1"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 
@@ -65,7 +65,7 @@ RUN apt-get -qq update && \
         unzip \
         rsync \
         libpcre3 && \
-    for v in php${PHP_VERSIONS}; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-bcmath $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring $v-memcached $v-opcache $v-redis $v-soap $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip; done && \
+    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-bcmath $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring $v-memcached $v-opcache $v-redis $v-soap $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip; done && \
     for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
     apt-get -qq autoremove -y && \
     apt-get -qq clean -y && \
