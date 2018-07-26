@@ -887,13 +887,18 @@ func (app *DdevApp) Down(removeData bool) error {
 		return fmt.Errorf("failed to remove %s: %v", app.GetName(), err)
 	}
 
-	// Remove data/database if we need to.
+	// Remove data/database/hostname if we need to.
 	if removeData {
+		if err = app.RemoveHostsEntries(); err != nil {
+			return fmt.Errorf("failed to remove hosts entries: %v", err)
+		}
+
 		// Check that app.DataDir is a directory that is safe to remove.
 		err = validateDataDirRemoval(app)
 		if err != nil {
 			return fmt.Errorf("failed to remove data/database directories: %v", err)
 		}
+
 		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
 		// are writable before we attempt to remove them.
 		if !fileutil.FileExists(app.DataDir) {
@@ -989,7 +994,7 @@ func (app *DdevApp) AddHostsEntries() error {
 
 	hosts, err := goodhosts.NewHosts()
 	if err != nil {
-		util.Failed("could not open hostfile. %s", err)
+		util.Failed("could not open hostfile: %v", err)
 	}
 	for _, name := range app.GetHostnames() {
 
@@ -1017,6 +1022,46 @@ func (app *DdevApp) AddHostsEntries() error {
 			util.Warning("Failed to execute sudo command, you will need to manually execute '%s' with administrative privileges", command)
 		}
 	}
+	return nil
+}
+
+// RemoveHostsEntries will remote the site URL from the host's /etc/hosts.
+func (app *DdevApp) RemoveHostsEntries() error {
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		return fmt.Errorf("could not get Docker IP: %v", err)
+	}
+
+	hosts, err := goodhosts.NewHosts()
+	if err != nil {
+		util.Failed("could not open hostfile: %v", err)
+	}
+	for _, name := range app.GetHostnames() {
+		if !hosts.Has(dockerIP, name) {
+			continue
+		}
+
+		_, err = osexec.LookPath("sudo")
+		if os.Getenv("DRUD_NONINTERACTIVE") != "" || err != nil {
+			util.Warning("You must manually remove the following entry from your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname --remove %s %s", dockerIP, name, name, dockerIP)
+			return nil
+		}
+
+		ddevFullPath, err := os.Executable()
+		util.CheckErr(err)
+
+		output.UserOut.Printf("ddev needs to remove an entry from your hosts file.\nIt will require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
+
+		hostnameArgs := []string{ddevFullPath, "hostname", "--remove", name, dockerIP}
+		command := strings.Join(hostnameArgs, " ")
+		util.Warning(fmt.Sprintf("    sudo %s", command))
+		output.UserOut.Println("Please enter your password if prompted.")
+
+		if _, err = exec.RunCommandPipe("sudo", hostnameArgs); err != nil {
+			util.Warning("Faield to execute sudo command, you will need to manually execute '%s' with administrative privileges", command)
+		}
+	}
+
 	return nil
 }
 
