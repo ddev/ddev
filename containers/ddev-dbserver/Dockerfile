@@ -19,7 +19,7 @@ RUN chmod ugo+x /healthcheck.sh
 # Security-sensitive changes: Make sure our start script can do what is needed
 # But make sure these are right
 RUN chmod ugo+wx /mnt /var/tmp
-RUN chmod -R ugo+wx /var/log /var/tmp/mysqlbase
+RUN chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
