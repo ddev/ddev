@@ -12,7 +12,7 @@ services:
     volumes:
       - "${DDEV_IMPORTDIR}:/db"
       - "${DDEV_DATADIR}:/var/lib/mysql"
-      - ".:/mnt/ddev_config"
+      - ".:/mnt/ddev_config:ro"
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     ports:
@@ -32,7 +32,7 @@ services:
     image: $DDEV_WEBIMAGE
     volumes:
       - "../:/var/www/html:cached"
-      - ".:/mnt/ddev_config"
+      - ".:/mnt/ddev_config:ro"
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     depends_on:
