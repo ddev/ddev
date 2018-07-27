@@ -97,7 +97,8 @@ mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$H
 cleanup
 
 # Run with alternate configuration my.cnf mounted
-if ! docker run -u "$MOUNTUID:$MOUNTGID" -v /$MYTMPDIR:/var/lib/mysql -v /$PWD/test/testdata:/mnt/ddev_config --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
+# mysqld will ignore world-writeable config file, so we make it ro for sure
+if ! docker run -u "$MOUNTUID:$MOUNTGID" -v /$MYTMPDIR:/var/lib/mysql -v /$PWD/test/testdata:/mnt/ddev_config:ro --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
 	echo "MySQL server start failed with error code $?"
 	exit 3
 fi

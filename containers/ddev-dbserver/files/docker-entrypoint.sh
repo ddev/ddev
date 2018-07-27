@@ -3,11 +3,10 @@ set -x
 set -eu
 set -o pipefail
 
-# Normally /mnt/ddev_config will be mounted; config file requires it,
-# so create it if it doesn't exist.
-if [ ! -d /mnt/ddev_config/mysql ] ; then
-  mkdir -p /mnt/ddev_config/mysql
-  chmod ugo+rx /mnt/ddev_config /mnt/ddev_config/mysql
+# If we have extra mariadb cnf files,, copy them to where they go.
+if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
+  cp /mnt/ddev_config/mysql/*.cnf /etc/mysql/conf.d
+  chmod ugo-w /etc/mysql/conf.d/*
 fi
 
 # If mariadb has not been initialized, copy in the base image.
