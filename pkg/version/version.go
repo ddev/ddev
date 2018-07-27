@@ -26,7 +26,7 @@ var WebTag = "v1.0.0" // Note that this can be overridden by make
 var DBImg = "drud/ddev-dbserver"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "v1.0.0" // Note that this may be overridden by make
+var DBTag = "20180726_fix_dbserver_test" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
