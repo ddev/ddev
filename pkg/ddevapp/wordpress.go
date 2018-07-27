@@ -57,8 +57,8 @@ func NewWordpressConfig() *WordpressConfig {
 const wordPressHooks = `
 # Un-comment and enter the production url and local url
 # to replace in your database after import.
-#post-import-db:
-#  - exec: "wp search-replace <production-url> <local-url>"`
+#  post-import-db:
+#    - exec: wp search-replace <production-url> <local-url>`
 
 // getWordpressHooks for appending as byte array
 func getWordpressHooks() []byte {
@@ -200,6 +200,6 @@ func isWordpressApp(app *DdevApp) bool {
 // wordpressPostImportDBAction just emits a warning about updating URLs as is
 // required with wordpress when running on a different URL.
 func wordpressPostImportDBAction(app *DdevApp) error {
-	util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec 'wp search-replace [http://www.myproductionsite.example] %s'\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", app.GetHTTPURL())
+	util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec wp search-replace [http://www.myproductionsite.example] %s\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", app.GetHTTPURL())
 	return nil
 }

@@ -394,7 +394,7 @@ func TestWriteConfig(t *testing.T) {
 
 	out, err = ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))
 	assert.NoError(err)
-	assert.Contains(string(out), `exec: "wp search-replace`)
+	assert.Contains(string(out), `- exec: wp search-replace`)
 
 	err = os.RemoveAll(testDir)
 	assert.NoError(err)
