@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/AlecAivazis/survey"
-  packages = ["."]
-  revision = "17861e192dc11fd2f5081df1932c94cce262fa1e"
-  version = "v1.6.1"
-
-[[projects]]
   branch = "master"
   name = "github.com/Azure/go-ansiterm"
   packages = [
@@ -461,6 +455,7 @@
 [[projects]]
   name = "gopkg.in/AlecAivazis/survey.v1"
   packages = [
+    ".",
     "core",
     "terminal"
   ]
@@ -476,6 +471,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2cf7e12dfc821f27ece51249c1a4b3a00fd0a4e64a49bbd7466c7c68a4a846ff"
+  inputs-digest = "d07868f623984d1a5759a6b1cdd7acd9e5358aeba1cbe8811f3d916eeb06f6e6"
   solver-name = "gps-cdcl"
   solver-version = 1
