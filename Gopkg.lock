@@ -35,6 +35,18 @@
   revision = "cd527374f1e5bff4938207604a14f2e38a9cf512"
 
 [[projects]]
+  name = "github.com/PuerkitoBio/goquery"
+  packages = ["."]
+  revision = "dc2ec5c7ca4d9aae063b79b9f581dd3ea6afd2b2"
+  version = "v1.4.1"
+
+[[projects]]
+  name = "github.com/andybalholm/cascadia"
+  packages = ["."]
+  revision = "901648c87902174f774fac311d7f176f8647bdaa"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/aokoli/goutils"
   packages = ["."]
   revision = "3391d3790d23d03408670993e957e8f408993c34"
@@ -176,6 +188,18 @@
     "json/token"
   ]
   revision = "ef8a98b0bbce4a65b5aa4c368430a80ddc533168"
+
+[[projects]]
+  name = "github.com/headzoo/surf"
+  packages = [
+    "agent",
+    "browser",
+    "errors",
+    "jar",
+    "util"
+  ]
+  revision = "60198774ccce43e1d26c80e961497b7d262460b3"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/huandu/xstrings"
@@ -352,7 +376,11 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
-  packages = ["context"]
+  packages = [
+    "context",
+    "html",
+    "html/atom"
+  ]
   revision = "81d44fd177a98d09fe3bc40a5a78d495d3f042ea"
 
 [[projects]]
@@ -378,6 +406,12 @@
   version = "v0.3.0"
 
 [[projects]]
+  name = "gopkg.in/headzoo/surf.v1"
+  packages = ["."]
+  revision = "60198774ccce43e1d26c80e961497b7d262460b3"
+  version = "v1.0.0"
+
+[[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
@@ -386,6 +420,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "36e2c243db90f8139308c2ade1d97bcee60913c8f478bd5a4cd9fe5703404fe6"
+  inputs-digest = "c6b0d979475633fb28ff193ba558965cbddb21bb028773656352b63a91ba6dc1"
   solver-name = "gps-cdcl"
   solver-version = 1

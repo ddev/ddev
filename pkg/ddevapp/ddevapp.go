@@ -952,27 +952,35 @@ func (app *DdevApp) GetAllURLs() []string {
 		URLs = append(URLs, "http://"+name+httpPort, "https://"+name+httpsPort)
 	}
 
-	// Get direct address of web container
+	if directAddress := app.GetWebContainerAddress(); len(directAddress) > 0 {
+		URLs = append(URLs, directAddress)
+	}
+
+	return URLs
+}
+
+// GetWebContainerAddress returns the direct IP and port of the web container.
+func (app *DdevApp) GetWebContainerAddress() string {
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
 		util.Error("Unable to get Docker IP: %v", err)
-		return URLs
+		return ""
 	}
 
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil {
 		util.Error("Unable to find web container for app: %s, err %v", app.Name, err)
-		return URLs
+		return ""
 	}
 
 	for _, p := range webContainer.Ports {
 		if p.PrivatePort == 80 {
-			URLs = append(URLs, fmt.Sprintf("http://%s:%d", dockerIP, p.PublicPort))
-			break
+			return fmt.Sprintf("http://%s:%d", dockerIP, p.PublicPort)
 		}
 	}
 
-	return URLs
+	util.Error("Unable to find direct address of web container")
+	return ""
 }
 
 // HostName returns the hostname of a given application.
