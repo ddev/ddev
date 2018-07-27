@@ -189,7 +189,7 @@ func getBackdropUploadDir(app *DdevApp) string {
 func getBackdropHooks() []byte {
 	backdropHooks := `
 #  post-import-db:
-#    - exec: "drush cc all"`
+#    - exec: drush cc all`
 	return []byte(backdropHooks)
 }
 
