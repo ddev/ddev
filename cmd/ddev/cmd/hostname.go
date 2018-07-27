@@ -39,7 +39,7 @@ to allow ddev to modify your hosts file.`,
 		// Attempt to write the hosts file first to catch any permissions issues early
 		if err := hosts.Flush(); err != nil {
 			rawResult := make(map[string]interface{})
-			detail := fmt.Sprintf("Could not write hosts file: %v", err)
+			detail := fmt.Sprintf("Please use sudo or execute with administrative privileges: %v", err)
 			rawResult["error"] = "WRITEERROR"
 			rawResult["full_error"] = detail
 			output.UserOut.WithField("raw", rawResult).Fatal(detail)
