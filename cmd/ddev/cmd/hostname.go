@@ -27,9 +27,20 @@ to allow ddev to modify your hosts file.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		hosts, err := goodhosts.NewHosts()
 		if err != nil {
-			detail := fmt.Sprintf("Could not open hosts file for reading: %v", err)
 			rawResult := make(map[string]interface{})
+			detail := fmt.Sprintf("Could not open hosts file for reading: %v", err)
 			rawResult["error"] = "READERROR"
+			rawResult["full_error"] = detail
+			output.UserOut.WithField("raw", rawResult).Fatal(detail)
+
+			return
+		}
+
+		// Attempt to write the hosts file first to catch any permissions issues early
+		if err := hosts.Flush(); err != nil {
+			rawResult := make(map[string]interface{})
+			detail := fmt.Sprintf("Could not write hosts file: %v", err)
+			rawResult["error"] = "WRITEERROR"
 			rawResult["full_error"] = detail
 			output.UserOut.WithField("raw", rawResult).Fatal(detail)
 
