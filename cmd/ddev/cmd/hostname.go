@@ -5,8 +5,11 @@ import (
 
 	"github.com/drud/ddev/pkg/output"
 
+	"strings"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/spf13/cobra"
 )
@@ -182,6 +185,12 @@ func removeInactiveHostnames(hosts goodhosts.Hosts) {
 					continue
 				}
 
+				// Silently ignore those that may not be ddev-managed to not spam the user's terminal
+				if !strings.HasSuffix(h, version.DDevTLD) {
+					continue
+				}
+
+				// Remaining host names are fair game to be removed
 				if err := hosts.Remove(line.IP, h); err != nil {
 					detail = fmt.Sprintf("Could not remove hostname %s at %s: %v", h, line.IP, err)
 					internalResult["error"] = "REMOVEERROR"
