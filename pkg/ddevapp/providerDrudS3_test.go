@@ -86,28 +86,28 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 
 	// Make sure invalid access key gets correct behavior
 	provider.AWSAccessKey = "AKIAIBSTOTALLYINVALID"
-	backupLink, importPath, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database")
 	assert.Error(err)
 	assert.Contains(err.Error(), "InvalidAccessKeyId")
 
 	// Make sure invalid secret key gets correct behavior
 	provider.AWSAccessKey = accessKeyID
 	provider.AWSSecretKey = "rweeHGZ5totallyinvalidsecretkey"
-	backupLink, importPath, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database")
 	assert.Error(err)
 	assert.Contains(err.Error(), "SignatureDoesNotMatch")
 
 	// Make sure bad environment gets correct behavior.
 	provider.AWSSecretKey = secretAccessKey
 	provider.EnvironmentName = "someInvalidUnknownEnvironment"
-	backupLink, importPath, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database")
 	assert.Error(err)
 	assert.Contains(err.Error(), "could not find an environment")
 
 	// Make sure bad bucket gets correct behavior.
 	provider.S3Bucket = DrudS3TestBucket
 	provider.S3Bucket = "someInvalidUnknownBucket"
-	backupLink, importPath, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database")
 	assert.Error(err)
 	assert.Contains(err.Error(), "NoSuchBucket")
 
