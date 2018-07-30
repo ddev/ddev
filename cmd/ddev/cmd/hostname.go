@@ -231,5 +231,7 @@ func init() {
 	HostNameCmd.Flags().BoolVarP(&removeHostName, "remove", "r", false, "Remove the provided host name - ip correlation")
 	HostNameCmd.Flags().BoolVarP(&removeInactive, "remove-inactive", "R", false, "Remove host names of inactive projects")
 	HostNameCmd.Flags().BoolVar(&removeInactive, "fire-bazooka", false, "Alias of --remove-inactive")
+	HostNameCmd.Flags().MarkHidden("fire-bazooka")
+
 	RootCmd.AddCommand(HostNameCmd)
 }
