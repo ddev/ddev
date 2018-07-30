@@ -162,8 +162,8 @@ func removeInactiveHostnames(hosts goodhosts.Hosts) {
 	var detail string
 	rawResult := make(map[string]interface{})
 
-	// Get the list active hosts names to preserve, always including localhost
-	activeHostNames := map[string]bool{"localhost": true}
+	// Get the list active hosts names to preserve
+	activeHostNames := make(map[string]bool)
 	for _, app := range ddevapp.GetApps() {
 		for _, h := range app.GetHostnames() {
 			activeHostNames[h] = true
@@ -196,7 +196,7 @@ func removeInactiveHostnames(hosts goodhosts.Hosts) {
 					continue
 				}
 
-				// Silently ignore those that may not be ddev-managed to not spam the user's terminal
+				// Silently ignore those that may not be ddev-managed
 				if !strings.HasSuffix(h, version.DDevTLD) {
 					continue
 				}
@@ -223,11 +223,6 @@ func removeInactiveHostnames(hosts goodhosts.Hosts) {
 		rawResult["full_error"] = detail
 		output.UserOut.WithField("raw", rawResult).Fatal(detail)
 	}
-
-	detail = "Cleaned up inactive host names"
-	rawResult["error"] = "SUCCESS"
-	rawResult["detail"] = detail
-	output.UserOut.WithField("raw", rawResult).Info(detail)
 
 	return
 }
