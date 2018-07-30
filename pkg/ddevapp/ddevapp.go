@@ -425,7 +425,6 @@ func (app *DdevApp) Import() error {
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
 func (app *DdevApp) ImportFiles(imPath string, extPath string) error {
-	var uploadDir string
 	var extPathPrompt bool
 
 	app.DockerEnv()
@@ -447,14 +446,20 @@ func (app *DdevApp) ImportFiles(imPath string, extPath string) error {
 		imPath = util.GetInput("")
 	}
 
-	if app.GetType() == "drupal7" || app.GetType() == "drupal8" {
-		uploadDir = "sites/default/files"
+	importPath, err := appimport.ValidateAsset(imPath, "files")
+	if err != nil {
+		if err.Error() == "is archive" && extPathPrompt {
+			output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
+			fmt.Print("Archive extraction path:")
+
+			extPath = util.GetInput("")
+		}
+		if err.Error() != "is archive" {
+			return err
+		}
 	}
 
-	if app.GetType() == "wordpress" {
-		uploadDir = "wp-content/uploads"
-	}
-
+	uploadDir := app.GetUploadDir()
 	if uploadDir == "" {
 		util.Failed("No upload directory has been specified for the project type %s", app.GetType())
 	}
@@ -483,19 +488,6 @@ func (app *DdevApp) ImportFiles(imPath string, extPath string) error {
 		// create destination directory
 		err = os.MkdirAll(destPath, 0755)
 		if err != nil {
-			return err
-		}
-	}
-
-	importPath, err := appimport.ValidateAsset(imPath, "files")
-	if err != nil {
-		if err.Error() == "is archive" && extPathPrompt {
-			output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
-			fmt.Print("Archive extraction path:")
-
-			extPath = util.GetInput("")
-		}
-		if err.Error() != "is archive" {
 			return err
 		}
 	}

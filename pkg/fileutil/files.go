@@ -81,6 +81,7 @@ func CopyDir(src string, dst string) error {
 		return err
 	}
 	if err == nil {
+		fmt.Println("Directory already exists, bailing:", dst)
 		return fmt.Errorf("destination already exists")
 	}
 
