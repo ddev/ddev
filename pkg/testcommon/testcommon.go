@@ -14,14 +14,12 @@ import (
 
 	"fmt"
 
-	"github.com/Netflix/go-expect"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/hinshun/vt10x"
 	"github.com/pkg/errors"
 	asrt "github.com/stretchr/testify/assert"
 	"net/http"

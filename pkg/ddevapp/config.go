@@ -80,7 +80,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 		}
 	}
 
-	// Allow override with "pantheon" from function provider arg, but nothing else.
+	// Allow override with provider.
 	// Otherwise we accept whatever might have been in config file if there was anything.
 	if provider == "" && app.Provider != "" {
 		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
