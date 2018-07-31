@@ -7,12 +7,17 @@ import (
 
 	"path/filepath"
 
+	"net"
+
+	"fmt"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/fsouza/go-dockerclient"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -27,9 +32,26 @@ var (
 			Type:    "drupal8",
 		},
 	}
-	ServiceFiles []string
-	ServiceDir   string
+	ServiceFiles   []string
+	ServiceDir     string
+	serviceConfigs = map[string]serviceTestConfig{
+		"solr": {
+			proto: "http",
+			port:  8983,
+			path:  "/solr/",
+		},
+		"memcached": {
+			proto: "tcp",
+			port:  11211,
+		},
+	}
 )
+
+type serviceTestConfig struct {
+	proto string
+	port  int64
+	path  string
+}
 
 // TestMain runs the tests in servicetest
 func TestMain(m *testing.M) {
@@ -107,25 +129,20 @@ func TestServices(t *testing.T) {
 				assert.NoError(runcheckErr)
 				assert.True(check, serviceName, "container is running")
 
-				// check container env for HTTP_EXPOSE ports to check
-				expose := dockerutil.GetContainerEnv("HTTP_EXPOSE", container)
-				if expose != "" {
-					if strings.Contains(expose, ":") {
-						ports := strings.Split(expose, ":")
-						expose = ports[1]
-					}
+				// Use the service name to find the expected way to communicate with the service.
+				conf := serviceConfigs[serviceName]
 
-					containerPorts := container.Ports
-					for _, port := range containerPorts {
-						if string(port.PrivatePort) == expose && port.PublicPort != 0 {
-							log.Debugln("Checking for 200 status for port ", port.PrivatePort)
-							o := util.NewHTTPOptions("http://127.0.0.1:" + string(port.PublicPort))
-							o.ExpectedStatus = 200
-							o.Timeout = 30
-							runcheckErr = util.EnsureHTTPStatus(o)
-							assert.NoError(runcheckErr)
-						}
-					}
+				switch conf.proto {
+				case "http":
+					checkHTTP(t, container, conf.port, conf.path)
+					continue
+
+				case "tcp":
+					checkTCP(t, container, conf.port, conf.path)
+					continue
+
+				default:
+					t.Fail()
 				}
 
 			}
@@ -135,4 +152,47 @@ func TestServices(t *testing.T) {
 			site.Cleanup()
 		}
 	}
+}
+
+// checkHTTP will attempt to communicate with a service over HTTP
+func checkHTTP(t *testing.T, container docker.APIContainers, targetPort int64, path string) {
+	t.Log("Checking HTTP communication")
+	assert := asrt.New(t)
+
+	for _, port := range container.Ports {
+		if port.PrivatePort == targetPort && port.PublicPort != 0 {
+			address := fmt.Sprintf("http://127.0.0.1:%d%s", port.PublicPort, path)
+			t.Logf("Checking %s for 200 status", address)
+
+			o := util.NewHTTPOptions(address)
+			o.ExpectedStatus = 200
+			o.Timeout = 30
+			runcheckErr := util.EnsureHTTPStatus(o)
+			assert.NoError(runcheckErr)
+
+			return
+		}
+	}
+
+	t.Fatalf("Unable to find target port: %d", targetPort)
+}
+
+// checkTCP will attempt to communicate with a service over TCP
+func checkTCP(t *testing.T, container docker.APIContainers, targetPort int64, path string) {
+	t.Log("Checking TCP communication")
+	assert := asrt.New(t)
+
+	for _, port := range container.Ports {
+		if port.PrivatePort == targetPort {
+			address := fmt.Sprintf("127.0.0.1:%d%s", port.PublicPort, path)
+			t.Logf("Checking tcp://%s", address)
+
+			_, err := net.Dial("tcp", address)
+			assert.NoError(err, "Unable to dial tcp://%s: %s", address, err)
+
+			return
+		}
+	}
+
+	t.Fatalf("Unable to find target port: %d", targetPort)
 }
