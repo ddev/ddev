@@ -133,7 +133,7 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 		}).Info("HTTP Status could not be matched, expected %d, received %d", o.ExpectedStatus, resp.StatusCode)
 
 	}
-	return fmt.Errorf("Failed to match status code %d", o.ExpectedStatus)
+	return fmt.Errorf("failed to match status code: %d, got: %d", o.ExpectedStatus, resp.StatusCode)
 }
 
 // IsPortActive checks to see if the given port on docker IP is answering.
