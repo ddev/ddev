@@ -21,7 +21,6 @@ services:
       - type: "bind"
         source: "."
         target: "/mnt/ddev_config"
-        read_only
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     ports:
