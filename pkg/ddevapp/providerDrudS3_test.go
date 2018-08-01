@@ -26,7 +26,7 @@ const drudS3TestSiteName = "d7-kickstart"
 const drudS3TestEnvName = "production"
 const drudS3TestBucket = "ddev-local-tests"
 
-var drudS3AccessKeyId = os.Getenv("DDEV_DRUD_S3_AWS_ACCESS_KEY_ID")
+var drudS3AccessKeyID = os.Getenv("DDEV_DRUD_S3_AWS_ACCESS_KEY_ID")
 var drudS3SecretAccessKey = os.Getenv("DDEV_DRUD_S3_AWS_SECRET_ACCESS_KEY")
 
 // TODO: We need to actually test app.PromptForConfig(), but haven't succeeded in doing it
@@ -35,7 +35,7 @@ var drudS3SecretAccessKey = os.Getenv("DDEV_DRUD_S3_AWS_SECRET_ACCESS_KEY")
 
 // TestDrudS3ConfigCommand tests the interactive config options.
 func TestDrudS3ConfigCommand(t *testing.T) {
-	if drudS3AccessKeyId == "" || drudS3SecretAccessKey == "" {
+	if drudS3AccessKeyID == "" || drudS3SecretAccessKey == "" {
 		t.Skip("No DDEV_DRUD_S3_AWS_ACCESS_KEY_ID and  DDEV_DRUD_S3_AWS_SECRET_ACCESS_KEY env vars have been set. Skipping DrudS3 specific test.")
 	}
 
@@ -52,7 +52,7 @@ func TestDrudS3ConfigCommand(t *testing.T) {
 	assert.NoError(err)
 
 	// Attempt config with the whole config setup, including access keys.
-	input := fmt.Sprintf("%s\n\n\n%s\n%s\n%s\n%s\n\n\n", drudS3TestSiteName, drudS3AccessKeyId, drudS3SecretAccessKey, drudS3TestBucket, drudS3TestEnvName)
+	input := fmt.Sprintf("%s\n\n\n%s\n%s\n%s\n%s\n\n\n", drudS3TestSiteName, drudS3AccessKeyID, drudS3SecretAccessKey, drudS3TestBucket, drudS3TestEnvName)
 
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
@@ -112,6 +112,7 @@ func TestDrudS3ConfigCommand(t *testing.T) {
 
 	restoreOutput = testcommon.CaptureUserOut()
 	err = app.PromptForConfig()
+	assert.NoError(err)
 
 	_ = restoreOutput()
 	println() // Just lets goland find the PASS
@@ -130,7 +131,7 @@ func assertEqualProviderValues(t *testing.T, provider ddevapp.Provider) {
 
 	assert.EqualValues(p.EnvironmentName, drudS3TestEnvName)
 	assert.EqualValues(p.AWSSecretKey, drudS3SecretAccessKey)
-	assert.EqualValues(p.AWSAccessKey, drudS3AccessKeyId)
+	assert.EqualValues(p.AWSAccessKey, drudS3AccessKeyID)
 	assert.EqualValues(p.EnvironmentName, drudS3TestEnvName)
 	assert.EqualValues(p.S3Bucket, drudS3TestBucket)
 }
