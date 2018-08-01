@@ -568,14 +568,14 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
 
 	// Make a snapshot of d7 tester test 1
-	d7testerTest1Snapshot, err := app.SnapshotDatabase()
+	d7testerTest1Snapshot, err := app.SnapshotDatabase("")
 	assert.NoError(err)
 
 	err = app.ImportDB(d7testerTest2, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1, err)
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
 
-	d7testerTest2Snapshot, err := app.SnapshotDatabase()
+	d7testerTest2Snapshot, err := app.SnapshotDatabase("")
 	assert.NoError(err)
 
 	err = app.RestoreSnapshot(d7testerTest1Snapshot)
