@@ -25,7 +25,6 @@ function cleanup {
     if [ ! -z "${IMAGES:-}" ] ; then
       docker rmi --force $IMAGES 2>&1 >/dev/null || true
     fi
-    docker system prune --volumes --force
 }
 
 # Now that we've got a container running, we need to make sure to clean up
