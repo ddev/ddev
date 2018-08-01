@@ -648,6 +648,13 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
+
+	// TODO: Add import operation here? Start, create a snapshot, then restore-snapshot?
+	err = app.checkDbMigration()
+	if err != nil {
+		return err
+	}
+
 	_, _, err = dockerutil.ComposeCmd(files, "up", "-d")
 	if err != nil {
 		return err
@@ -1250,4 +1257,17 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	}
 	app.providerInstance = provider
 	return app.providerInstance, err
+}
+
+// checkDbMigration checks for need of db migration and if needed, does the migration.
+func (app *DdevApp) checkDbMigration() error {
+	dataDir := filepath.Join(util.GetGlobalDdevDir(), app.Name, "mysql")
+
+	if fileutil.FileExists(dataDir) {
+		// If the dataDir exists, mount it onto ddev-dbserver and run script there that converts to a snapshot
+		// Then do a restore-snapshot on that snapshot.
+		// Old datadir can be renamed to .bak
+
+	}
+	return nil
 }
