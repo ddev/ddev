@@ -882,9 +882,11 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 
 // SnapshotDatabase forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
 // Returns the dirname of the snapshot and err
-func (app *DdevApp) SnapshotDatabase() (string, error) {
-	t := time.Now()
-	snapshotName := app.Name + "_" + t.Format("20060102150405")
+func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
+	if snapshotName == "" {
+		t := time.Now()
+		snapshotName = app.Name + "_" + t.Format("20060102150405")
+	}
 	snapshotDir := filepath.Join("db_snapshots", snapshotName)
 	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
 	containerSnapshotDir := filepath.Join("/mnt/ddev_config", snapshotDir)
@@ -936,7 +938,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	err = os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
 	util.CheckErr(err)
 
-	util.Success("Reverted to database snapshot: %s", hostSnapshotDir)
+	util.Success("Restored database snapshot: %s", hostSnapshotDir)
 	return nil
 }
 
@@ -947,7 +949,8 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 	var err error
 
 	if createSnapshot == true {
-		_, err = app.SnapshotDatabase()
+		t := time.Now()
+		_, err = app.SnapshotDatabase(app.Name + "_remove_data_snapshot_" + t.Format("20060102150405"))
 		if err != nil {
 			return err
 		}

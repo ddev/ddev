@@ -525,16 +525,16 @@ func TestDdevImportDB(t *testing.T) {
 	}
 }
 
-// TestDdevRevertSnapshot tests creating a snapshot and reverting to it
-func TestDdevRevertSnapshot(t *testing.T) {
+// TestDdevRestoreSnapshot tests creating a snapshot and reverting to it
+func TestDdevRestoreSnapshot(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("DdevRevertSnapshot"))
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
 
-	d7testerTest1, err := filepath.Abs(filepath.Join("testdata", "revert_snapshot", "d7tester_test_1.sql.gz"))
+	d7testerTest1, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_1.sql.gz"))
 	assert.NoError(err)
-	d7testerTest2, err := filepath.Abs(filepath.Join("testdata", "revert_snapshot", "d7tester_test_2.sql.gz"))
+	d7testerTest2, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_2.sql.gz"))
 	assert.NoError(err)
 
 	// Use d7 only for this test, the key thing is the database interaction
