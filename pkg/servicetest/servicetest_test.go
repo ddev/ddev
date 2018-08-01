@@ -7,8 +7,6 @@ import (
 
 	"path/filepath"
 
-	"net"
-
 	"fmt"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -17,7 +15,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/fsouza/go-dockerclient"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -32,26 +29,9 @@ var (
 			Type:    "drupal8",
 		},
 	}
-	ServiceFiles   []string
-	ServiceDir     string
-	serviceConfigs = map[string]serviceTestConfig{
-		"solr": {
-			proto: "http",
-			port:  8983,
-			path:  "/solr/",
-		},
-		"memcached": {
-			proto: "tcp",
-			port:  11211,
-		},
-	}
+	ServiceFiles []string
+	ServiceDir   string
 )
-
-type serviceTestConfig struct {
-	proto string
-	port  int64
-	path  string
-}
 
 // TestMain runs the tests in servicetest
 func TestMain(m *testing.M) {
@@ -84,7 +64,8 @@ func TestMain(m *testing.M) {
 
 // TestServices tests each service compose file in the services folder.
 // It tests that a site can fully start w/ the compose file present, and
-// checks that any exposed HTTP ports return 200.
+// runs each service's check function to ensure it's accessible from
+// the web container.
 func TestServices(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -109,43 +90,8 @@ func TestServices(t *testing.T) {
 			err = app.Start()
 			assert.NoError(err)
 
-			for _, service := range ServiceFiles {
-				t.Log("Checking containers for ", service)
-				serviceName := strings.TrimPrefix(service, "docker-compose.")
-				serviceName = strings.TrimSuffix(serviceName, ".yaml")
-
-				labels := map[string]string{
-					"com.ddev.site-name":         app.GetName(),
-					"com.docker.compose.service": serviceName,
-				}
-
-				container, findErr := dockerutil.FindContainerByLabels(labels)
-				assert.NoError(err)
-				if findErr != nil {
-					t.Fatalf("Could not find running container for service %s. Skipping remainder of test: %v", serviceName, findErr)
-				}
-				name := dockerutil.ContainerName(container)
-				check, runcheckErr := testcommon.ContainerCheck(name, "running")
-				assert.NoError(runcheckErr)
-				assert.True(check, serviceName, "container is running")
-
-				// Use the service name to find the expected way to communicate with the service.
-				conf := serviceConfigs[serviceName]
-
-				switch conf.proto {
-				case "http":
-					checkHTTP(t, container, conf.port, conf.path)
-					continue
-
-				case "tcp":
-					checkTCP(t, container, conf.port, conf.path)
-					continue
-
-				default:
-					t.Fail()
-				}
-
-			}
+			checkSolrService(t, app)
+			checkMemcachedService(t, app)
 
 			err = app.Down(true)
 			assert.NoError(err)
@@ -154,45 +100,65 @@ func TestServices(t *testing.T) {
 	}
 }
 
-// checkHTTP will attempt to communicate with a service over HTTP
-func checkHTTP(t *testing.T, container docker.APIContainers, targetPort int64, path string) {
-	t.Log("Checking HTTP communication")
+// checkSolrService ensures that the solr service's container is
+// running and that the service is accessible from the web container
+func checkSolrService(t *testing.T, app *ddevapp.DdevApp) {
+	service := "solr"
+	port := "8983"
+	path := fmt.Sprintf("http://%s:%s/solr/", service, port)
+
+	var err error
 	assert := asrt.New(t)
-
-	for _, port := range container.Ports {
-		if port.PrivatePort == targetPort && port.PublicPort != 0 {
-			address := fmt.Sprintf("http://127.0.0.1:%d%s", port.PublicPort, path)
-			t.Logf("Checking %s for 200 status", address)
-
-			o := util.NewHTTPOptions(address)
-			o.ExpectedStatus = 200
-			o.Timeout = 30
-			runcheckErr := util.EnsureHTTPStatus(o)
-			assert.NoError(runcheckErr)
-
-			return
-		}
+	labels := map[string]string{
+		"com.ddev.site-name":         app.GetName(),
+		"com.docker.compose.service": service,
 	}
 
-	t.Fatalf("Unable to find target port: %d", targetPort)
+	container, err := dockerutil.FindContainerByLabels(labels)
+	if err != nil {
+		t.Fatalf("Could not find running container for %s service. Skipping remainder of test: %v", service, err)
+	}
+
+	// Ensure container is running
+	check, err := testcommon.ContainerCheck(dockerutil.ContainerName(container), "running")
+	assert.NoError(err)
+	assert.True(check, "%s container is not running", service)
+
+	// Ensure service is accessible from web container
+	checkCommand := fmt.Sprintf("curl -sL -w '%%{http_code}' '%s' -o /dev/null", path)
+	out, _, err := app.Exec("web", "sh", "-c", checkCommand)
+	assert.NoError(err, "Unable to make request to http://%s:%s/solr/", service, port)
+	assert.Equal("200", out)
 }
 
-// checkTCP will attempt to communicate with a service over TCP
-func checkTCP(t *testing.T, container docker.APIContainers, targetPort int64, path string) {
-	t.Log("Checking TCP communication")
+// checkMemcachedService ensures that the memcached service's
+// container is running and that the service is accessible from
+// the web container
+func checkMemcachedService(t *testing.T, app *ddevapp.DdevApp) {
+	service := "memcached"
+	port := "11211"
+
+	var err error
 	assert := asrt.New(t)
-
-	for _, port := range container.Ports {
-		if port.PrivatePort == targetPort {
-			address := fmt.Sprintf("127.0.0.1:%d%s", port.PublicPort, path)
-			t.Logf("Checking tcp://%s", address)
-
-			_, err := net.Dial("tcp", address)
-			assert.NoError(err, "Unable to dial tcp://%s: %s", address, err)
-
-			return
-		}
+	labels := map[string]string{
+		"com.ddev.site-name":         app.GetName(),
+		"com.docker.compose.service": service,
 	}
 
-	t.Fatalf("Unable to find target port: %d", targetPort)
+	container, err := dockerutil.FindContainerByLabels(labels)
+	if err != nil {
+		t.Fatalf("Could not find running container for %s service. Skipping remainder of test: %v", service, err)
+	}
+
+	// Ensure container is running
+	check, err := testcommon.ContainerCheck(dockerutil.ContainerName(container), "running")
+	assert.NoError(err)
+	assert.True(check, "%s container is not running", service)
+
+	// Ensure service is accessible from web container
+	checkCommand := fmt.Sprintf("echo stats | nc -t 1 %s %s", service, port)
+
+	// We have to ignore the error value, as the '-t 1' timeout option causes a non-zero return value
+	out, _, _ := app.Exec("web", "sh", "-c", checkCommand)
+	assert.Contains(out, "STAT pid 1")
 }
