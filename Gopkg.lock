@@ -11,12 +11,6 @@
   revision = "d6e3b3328b783f23731bc4d058875b0371ff8109"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/Bowery/prompt"
-  packages = ["."]
-  revision = "94b504f42fdd503acc3b3c79ec2b517d90e0de8a"
-
-[[projects]]
   name = "github.com/Masterminds/semver"
   packages = ["."]
   revision = "c7af12943936e8c39859482e61f0574c2fd7fc75"
@@ -443,6 +437,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d7a22a358d1ea720ec6fc2933fc9237cc6136630e4e1392ed0cd5d5058350586"
+  inputs-digest = "f6e18524f6c1e6222da4deb6dc749b5d5a2e8a66985f70584e2319b4884520bd"
   solver-name = "gps-cdcl"
   solver-version = 1

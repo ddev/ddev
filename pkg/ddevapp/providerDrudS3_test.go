@@ -22,9 +22,12 @@ import (
  * defined in the constants below.
  */
 
-const DrudS3TestSiteName = "d7-kickstart"
-const DrudS3TestEnvName = "production"
-const DrudS3TestBucket = "ddev-local-tests"
+const drudS3TestSiteName = "d7-kickstart"
+const drudS3TestEnvName = "production"
+const drudS3TestBucket = "ddev-local-tests"
+
+var drudS3AccessKeyId = os.Getenv("DDEV_DRUD_S3_AWS_ACCESS_KEY_ID")
+var drudS3SecretAccessKey = os.Getenv("DDEV_DRUD_S3_AWS_SECRET_ACCESS_KEY")
 
 // TODO: We need to actually test app.PromptForConfig(), but haven't succeeded in doing it
 // (Problems with terminal emulation and survey.) We absolutely want to test the text prompts,
@@ -32,9 +35,7 @@ const DrudS3TestBucket = "ddev-local-tests"
 
 // TestDrudS3ConfigCommand tests the interactive config options.
 func TestDrudS3ConfigCommand(t *testing.T) {
-	accessKeyID := os.Getenv("DDEV_DRUD_S3_AWS_ACCESS_KEY_ID")
-	secretAccessKey := os.Getenv("DDEV_DRUD_S3_AWS_SECRET_ACCESS_KEY")
-	if accessKeyID == "" || secretAccessKey == "" {
+	if drudS3AccessKeyId == "" || drudS3SecretAccessKey == "" {
 		t.Skip("No DDEV_DRUD_S3_AWS_ACCESS_KEY_ID and  DDEV_DRUD_S3_AWS_SECRET_ACCESS_KEY env vars have been set. Skipping DrudS3 specific test.")
 	}
 
@@ -50,35 +51,88 @@ func TestDrudS3ConfigCommand(t *testing.T) {
 	app, err := ddevapp.NewApp(testDir, "drud-s3")
 	assert.NoError(err)
 
-	input := fmt.Sprintf("%s\n\n\n%s\n%s\n%s\n%s\n\n\n", DrudS3TestSiteName, accessKeyID, secretAccessKey, DrudS3TestBucket, DrudS3TestEnvName)
+	// Attempt config with the whole config setup, including access keys.
+	input := fmt.Sprintf("%s\n\n\n%s\n%s\n%s\n%s\n\n\n", drudS3TestSiteName, drudS3AccessKeyId, drudS3SecretAccessKey, drudS3TestBucket, drudS3TestEnvName)
 
-	println("Input with %s", input)
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 
 	restoreOutput := testcommon.CaptureUserOut()
 	err = app.PromptForConfig()
 	assert.NoError(err)
-	out := restoreOutput()
+	_ = restoreOutput()
 
-	assert.Contains(out, "something")
 	// Get the provider interface and ensure it validates.
 	provider, err := app.GetProvider()
+
 	assert.NoError(err)
 	err = provider.Validate()
 	assert.NoError(err)
 
-	//// Ensure we have expected string values in output.
-	//assert.Contains(out, testDir)
-	//assert.Contains(out, fmt.Sprintf("could not find a pantheon site named %s", invalidName))
-	//assert.Contains(out, fmt.Sprintf("could not find an environment named '%s'", invalidEnvironment))
-	//
-	//// Ensure values were properly set on the app struct.
-	//assert.Equal(pantheonTestSiteName, app.Name)
-	//assert.Equal("drupal8", app.Type)
-	//assert.Equal("docroot", app.Docroot)
-	//err = PrepDdevDirectory(testDir)
-	//assert.NoError(err)
+	assertEqualProviderValues(t, provider)
+
+	// Now try the same thing again, but at this point we have established the AWS keys
+	// so it shouldn't ask for those any more.
+	input = fmt.Sprintf("%s\n\n\n%s\n%s\n", drudS3TestSiteName, drudS3TestBucket, drudS3TestEnvName)
+
+	scanner = bufio.NewScanner(strings.NewReader(input))
+	util.SetInputScanner(scanner)
+
+	restoreOutput = testcommon.CaptureUserOut()
+	err = app.PromptForConfig()
+	assert.NoError(err)
+	_ = restoreOutput()
+
+	// Get the provider interface and ensure it validates.
+	provider, err = app.GetProvider()
+
+	assert.NoError(err)
+	err = provider.Validate()
+	assert.NoError(err)
+
+	assertEqualProviderValues(t, provider)
+
+	// Now try with an invalid bucket name, should fail
+	input = fmt.Sprintf("%s\n\n\n%s\n%s\n", drudS3TestSiteName, "InvalidTestBucket", drudS3TestEnvName)
+
+	scanner = bufio.NewScanner(strings.NewReader(input))
+	util.SetInputScanner(scanner)
+
+	restoreOutput = testcommon.CaptureUserOut()
+	err = app.PromptForConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "NoSuchBucket")
+	_ = restoreOutput()
+
+	// Now try with an invalid environment name, should fail
+	input = fmt.Sprintf("%s\n\n\n%s\n%s\n", drudS3TestSiteName, drudS3TestBucket, "invalidEnvironmentName")
+
+	scanner = bufio.NewScanner(strings.NewReader(input))
+	util.SetInputScanner(scanner)
+
+	restoreOutput = testcommon.CaptureUserOut()
+	err = app.PromptForConfig()
+
+	_ = restoreOutput()
+	println() // Just lets goland find the PASS
+	provider, err = app.GetProvider()
+	assert.NoError(err)
+	err = provider.Validate()
+	assert.Error(err)
+	assert.Contains(err.Error(), "could not find an environment with backups")
+}
+
+// assertEqualProviderValues is just a helper function to avoid repeating assertions.
+func assertEqualProviderValues(t *testing.T, provider ddevapp.Provider) {
+	assert := asrt.New(t)
+
+	p := provider.(*ddevapp.DrudS3Provider)
+
+	assert.EqualValues(p.EnvironmentName, drudS3TestEnvName)
+	assert.EqualValues(p.AWSSecretKey, drudS3SecretAccessKey)
+	assert.EqualValues(p.AWSAccessKey, drudS3AccessKeyId)
+	assert.EqualValues(p.EnvironmentName, drudS3TestEnvName)
+	assert.EqualValues(p.S3Bucket, drudS3TestBucket)
 }
 
 // TestDrudS3ValidDownloadObjects ensures we can find download objects from DrudS3 for a configured environment.
@@ -104,13 +158,13 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 		ProviderType:    "drud-s3",
 		AWSSecretKey:    secretAccessKey,
 		AWSAccessKey:    accessKeyID,
-		S3Bucket:        DrudS3TestBucket,
-		EnvironmentName: DrudS3TestEnvName,
+		S3Bucket:        drudS3TestBucket,
+		EnvironmentName: drudS3TestEnvName,
 	}
 
 	app, err := ddevapp.NewApp(testDir, "drud-s3")
 	assert.NoError(err)
-	app.Name = DrudS3TestSiteName
+	app.Name = drudS3TestSiteName
 	app.Type = "drupal7"
 
 	err = provider.Init(app)
@@ -159,7 +213,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	assert.Contains(err.Error(), "could not find an environment")
 
 	// Make sure bad bucket gets correct behavior.
-	provider.S3Bucket = DrudS3TestBucket
+	provider.S3Bucket = drudS3TestBucket
 	provider.S3Bucket = "someInvalidUnknownBucket"
 	_, _, err = provider.GetBackup("database")
 	assert.Error(err)

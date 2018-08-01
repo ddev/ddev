@@ -7,10 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
-	"github.com/Bowery/prompt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -67,20 +65,8 @@ func (p *DrudS3Provider) PromptForConfig() error {
 	if p.AWSAccessKey != "" && p.AWSSecretKey != "" {
 		util.Success("AWS Access Key ID and AWS Secret Access Key already configured in .ddev/import.yaml")
 	} else {
-		p.AWSAccessKey, err = prompt.BasicDefault("AWS access key id:", p.AWSAccessKey)
-		if err != nil {
-			return fmt.Errorf("failed prompt for AWS S3 Bucket Name: %v", err)
-		}
-		fmt.Printf("\nprovider=%v app=%v, AWS Access key id received='%s'\n", p, p.app, p.AWSAccessKey) // DEBUG: REMEMBER TO REMOVE THIS DEBUG
-
-		// This *can* be done with prompt.Password() to hide the response, but then I don't
-		// know how to let people use a default easily.
-		p.AWSSecretKey, err = prompt.BasicDefault("AWS secret access key:", p.AWSSecretKey)
-		if err != nil {
-			return fmt.Errorf("failed prompt for AWS secret access key: %v", err)
-		}
-		fmt.Printf("\nprovider=%v app=%v, AWS Secret received='%s'\n", p, p.app, p.AWSSecretKey) // DEBUG: REMEMBER TO REMOVE THIS DEBUG
-
+		p.AWSAccessKey = util.Prompt("AWS access key id", p.AWSAccessKey)
+		p.AWSSecretKey = util.Prompt("AWS secret access key", p.AWSSecretKey)
 	}
 	_, client, err := p.getDrudS3Session()
 	if err != nil {
@@ -103,11 +89,12 @@ func (p *DrudS3Provider) PromptForConfig() error {
 		//fullPrompt := fmt.Sprintf("AWS S3 Bucket Name (one of %s):", bucketNameString)
 		// Putting the full bucketname option in the prompt results in a panic, so
 		// separate options output here: https://github.com/Bowery/prompt/issues/15
-		output.UserOut.Printf("AWS S3 Bucket Name must be one of [%s].", bucketNameString)
-		p.S3Bucket, err = prompt.BasicDefault("AWS S3 Bucket Name", p.S3Bucket)
-		if err != nil {
-			return fmt.Errorf("failed prompt for AWS S3 Bucket Name: %v", err)
-		}
+		//output.UserOut.Printf("AWS S3 Bucket Name must be one of [%s].", bucketNameString)
+		promptWithBuckets := fmt.Sprintf("AWS S3 Bucket Name [%s]", bucketNameString)
+		p.S3Bucket = util.Prompt(promptWithBuckets, p.S3Bucket)
+		//if err != nil {
+		//	return fmt.Errorf("failed prompt for AWS S3 Bucket Name: %v", err)
+		//}
 	}
 
 	projects, err := getDrudS3Projects(client, p.S3Bucket)
@@ -130,11 +117,11 @@ func (p *DrudS3Provider) PromptForConfig() error {
 	}
 
 	envNames := strings.Join(envAry, ", ")
-	fullPrompt := fmt.Sprintf("Environment Name [%s]:", envNames)
-	p.EnvironmentName, err = prompt.BasicDefault(fullPrompt, p.EnvironmentName)
-	if err != nil {
-		return fmt.Errorf("failed prompt for environment name: %v", err)
-	}
+	fullPrompt := fmt.Sprintf("Environment Name [%s]", envNames)
+	p.EnvironmentName = util.Prompt(fullPrompt, p.EnvironmentName)
+	//if err != nil {
+	//	return fmt.Errorf("failed prompt for environment name: %v", err)
+	//}
 
 	return nil
 }
@@ -269,7 +256,7 @@ func (p *DrudS3Provider) getBucketList() ([]string, error) {
 	}
 	result, err := client.ListBuckets(nil)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to list S3 buckets: %v", err)
+		return nil, fmt.Errorf("unable to list S3 buckets: %v", err)
 	}
 
 	buckets := []string{}
@@ -306,7 +293,7 @@ func (p *DrudS3Provider) getDrudS3Session() (*session.Session, *s3.S3, error) {
 	},
 	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Failed to NewSession: %v", err)
+		return nil, nil, fmt.Errorf("failed to NewSession: %v", err)
 	}
 
 	client := s3.New(sess)
