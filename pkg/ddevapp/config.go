@@ -202,7 +202,6 @@ func (app *DdevApp) ReadConfig() error {
 	}
 
 	dirPath := filepath.Join(util.GetGlobalDdevDir(), app.Name)
-	app.DataDir = filepath.Join(dirPath, "mysql")
 	app.ImportDir = filepath.Join(dirPath, "import-db")
 
 	app.SetApptypeSettingsPaths()
