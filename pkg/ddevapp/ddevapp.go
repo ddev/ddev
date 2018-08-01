@@ -776,7 +776,6 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_APPROOT":                  app.AppRoot,
 		"DDEV_DOCROOT":                  app.Docroot,
-		"DDEV_DATADIR":                  app.DataDir,
 		"DDEV_IMPORTDIR":                app.ImportDir,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
@@ -1129,7 +1128,6 @@ func (app *DdevApp) RemoveHostsEntries() error {
 func (app *DdevApp) prepSiteDirs() error {
 
 	dirs := []string{
-		app.DataDir,
 		app.ImportDir,
 	}
 
@@ -1210,7 +1208,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 		return app, err
 	}
 
-	if app.Name == "" || app.DataDir == "" {
+	if app.Name == "" {
 		err = restoreApp(app, siteName)
 		if err != nil {
 			return app, err
@@ -1220,17 +1218,13 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	return app, nil
 }
 
-// restoreApp recreates an AppConfig's Name and/or DataDir and returns an error
+// restoreApp recreates an AppConfig's Name and returns an error
 // if it cannot restore them.
 func restoreApp(app *DdevApp, siteName string) error {
 	if siteName == "" {
 		return fmt.Errorf("error restoring AppConfig: no project name given")
 	}
 	app.Name = siteName
-	// Ensure that AppConfig.DataDir is set so that site data can be removed if necessary.
-	dataDir := fmt.Sprintf("%s/%s", util.GetGlobalDdevDir(), app.GetName())
-	app.DataDir = dataDir
-
 	return nil
 }
 
