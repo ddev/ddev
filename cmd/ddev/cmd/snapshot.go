@@ -6,6 +6,7 @@ import (
 )
 
 var snapshotAll bool
+var snapshotName string
 
 // DdevSnapshotCommand provides the snapshot command
 var DdevSnapshotCommand = &cobra.Command{
@@ -19,7 +20,7 @@ var DdevSnapshotCommand = &cobra.Command{
 		}
 
 		for _, app := range apps {
-			if snapshotName, err := app.SnapshotDatabase(); err != nil {
+			if snapshotName, err := app.SnapshotDatabase(snapshotName); err != nil {
 				util.Failed("Failed to snapshot %s: %v", app.GetName(), err)
 			} else {
 				util.Success("Created snapshot %s", snapshotName)
@@ -30,5 +31,6 @@ var DdevSnapshotCommand = &cobra.Command{
 
 func init() {
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotAll, "all", "a", false, "Snapshot all running sites")
+	DdevSnapshotCommand.Flags().StringVarP(&snapshotName, "name", "n", "", "provide a name for the snapshot")
 	RootCmd.AddCommand(DdevSnapshotCommand)
 }
