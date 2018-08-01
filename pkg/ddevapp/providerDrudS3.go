@@ -71,6 +71,7 @@ func (p *DrudS3Provider) PromptForConfig() error {
 		if err != nil {
 			return fmt.Errorf("failed prompt for AWS S3 Bucket Name: %v", err)
 		}
+		fmt.Printf("\nprovider=%v app=%v, AWS Access key id received='%s'\n", p, p.app, p.AWSAccessKey) // DEBUG: REMEMBER TO REMOVE THIS DEBUG
 
 		// This *can* be done with prompt.Password() to hide the response, but then I don't
 		// know how to let people use a default easily.
@@ -78,6 +79,8 @@ func (p *DrudS3Provider) PromptForConfig() error {
 		if err != nil {
 			return fmt.Errorf("failed prompt for AWS secret access key: %v", err)
 		}
+		fmt.Printf("\nprovider=%v app=%v, AWS Secret received='%s'\n", p, p.app, p.AWSSecretKey) // DEBUG: REMEMBER TO REMOVE THIS DEBUG
+
 	}
 	_, client, err := p.getDrudS3Session()
 	if err != nil {
