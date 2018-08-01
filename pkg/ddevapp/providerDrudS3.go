@@ -10,6 +10,7 @@ import (
 	"github.com/Bowery/prompt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -55,31 +56,27 @@ func (p *DrudS3Provider) ValidateField(field, value string) error {
 }
 
 // PromptForConfig provides interactive configuration prompts when running `ddev config DrudS3`
+// 0. Get AWS keys if they don't already exist
+// 1. Get bucketnames accessible
+// 2. If only one bucket, choose it
+// 3. Get projects, this project (same exact name) must exist in the bucket, choose it
+// 4. Get environments, if only one, choose it
 func (p *DrudS3Provider) PromptForConfig() error {
-	// 0. Get AWS keys if they don't already exist
-	// 1. Get bucketnames accessible
-	// 2. If only one bucket, choose it
-	// 3. Get projects, this project (same exact name) must exist in the bucket, choose it
-	// 4. Get environments, if only one, choose it
 
+	var err error
 	if p.AWSAccessKey != "" && p.AWSSecretKey != "" {
 		util.Success("AWS Access Key ID and AWS Secret Access Key already configured in .ddev/import.yaml")
 	} else {
-		accessKeyPrompt := &survey.Input{
-			Message: "AWS access key id:",
-			Default: p.AWSAccessKey,
-		}
-		err := survey.AskOne(accessKeyPrompt, &p.AWSAccessKey, nil)
+		p.AWSAccessKey, err = prompt.BasicDefault("AWS access key id:", p.AWSAccessKey)
 		if err != nil {
-			return fmt.Errorf("survey.Ask of AWS access key failed: %v", err)
+			return fmt.Errorf("failed prompt for AWS S3 Bucket Name: %v", err)
 		}
 
-		secretPrompt := &survey.Password{
-			Message: "AWS secret access key:",
-		}
-		err = survey.AskOne(secretPrompt, &p.AWSSecretKey, nil)
+		// This *can* be done with prompt.Password() to hide the response, but then I don't
+		// know how to let people use a default easily.
+		p.AWSSecretKey, err = prompt.BasicDefault("AWS secret access key:", p.AWSSecretKey)
 		if err != nil {
-			return fmt.Errorf("survey.Ask of AWS secret key failed: %v", err)
+			return fmt.Errorf("failed prompt for AWS secret access key: %v", err)
 		}
 	}
 	_, client, err := p.getDrudS3Session()
@@ -99,24 +96,15 @@ func (p *DrudS3Provider) PromptForConfig() error {
 		p.S3Bucket = bucketsAvailable[0]
 		util.Success("Only one accessible bucket (%s), so using it.", p.S3Bucket)
 	} else {
-		var bucketPrompt = []*survey.Question{
-			{Name: "BucketName",
-				Prompt: &survey.Select{
-					Message: "AWS S3 Bucket Name:",
-					Options: bucketsAvailable,
-					Default: p.S3Bucket,
-				},
-			},
-		}
-		bucketAnswer := struct {
-			BucketName string
-		}{}
-
-		err = survey.Ask(bucketPrompt, &bucketAnswer)
+		bucketNameString := strings.Join(bucketsAvailable, ", ")
+		//fullPrompt := fmt.Sprintf("AWS S3 Bucket Name (one of %s):", bucketNameString)
+		// Putting the full bucketname option in the prompt results in a panic, so
+		// separate options output here: https://github.com/Bowery/prompt/issues/15
+		output.UserOut.Printf("AWS S3 Bucket Name must be one of [%s].", bucketNameString)
+		p.S3Bucket, err = prompt.BasicDefault("AWS S3 Bucket Name", p.S3Bucket)
 		if err != nil {
-			return fmt.Errorf("survey.Ask of bucket name failed: %v", err)
+			return fmt.Errorf("failed prompt for AWS S3 Bucket Name: %v", err)
 		}
-		p.S3Bucket = bucketAnswer.BucketName
 	}
 
 	projects, err := getDrudS3Projects(client, p.S3Bucket)
@@ -138,34 +126,13 @@ func (p *DrudS3Provider) PromptForConfig() error {
 		return nil
 	}
 
-	var envPrompt = []*survey.Question{
-		{
-			Name: "EnvironmentName",
-			Prompt: &survey.Select{
-				Message: "Choose an environment to pull from:",
-				Options: envAry,
-				Default: p.EnvironmentName,
-			},
-
-			Validate: func(val interface{}) error {
-
-				if str, ok := environments[val.(string)]; !ok {
-					return fmt.Errorf("%s is not a valid environment for site %s; available environments are %v", str, p.app.Name, environments)
-				}
-				return nil
-			},
-		},
-	}
-	envAnswer := struct {
-		EnvironmentName string
-	}{}
-
-	err = survey.Ask(envPrompt, &envAnswer)
+	envNames := strings.Join(envAry, ", ")
+	fullPrompt := fmt.Sprintf("Environment Name [%s]:", envNames)
+	p.EnvironmentName, err = prompt.BasicDefault(fullPrompt, p.EnvironmentName)
 	if err != nil {
-		return fmt.Errorf("survey.Ask of environment failed: %v", err)
+		return fmt.Errorf("failed prompt for environment name: %v", err)
 	}
 
-	p.EnvironmentName = envAnswer.EnvironmentName
 	return nil
 }
 
