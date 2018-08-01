@@ -7,10 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
+	"github.com/Bowery/prompt"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
-	"gopkg.in/AlecAivazis/survey.v1"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
