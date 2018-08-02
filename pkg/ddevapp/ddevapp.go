@@ -52,6 +52,12 @@ const SiteStopped = "stopped"
 // If this string is found, we assume we can replace/update the file.
 const DdevFileSignature = "#ddev-generated"
 
+// UidInt is the UID of the user used to run docker containers
+var UidInt, GidInt int
+
+// UidStr is the UID (as a string) of the UID of the user used to run docker containers
+var UidStr, GidStr string
+
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
@@ -756,28 +762,27 @@ func (app *DdevApp) DockerEnv() {
 	curUser, err := user.Current()
 	util.CheckErr(err)
 
-	var uidInt, gidInt int
-	uidStr := curUser.Uid
-	gidStr := curUser.Gid
-	// For windows the uidStr/gidStr are usually way outside linux range (ends at 60000)
-	// so we have to run as root. We may have a host uidStr/gidStr greater in other contexts,
+	UidStr = curUser.Uid
+	GidStr = curUser.Gid
+	// For windows the UidStr/GidStr are usually way outside linux range (ends at 60000)
+	// so we have to run as root. We may have a host UidStr/GidStr greater in other contexts,
 	// bail and run as root.
-	if uidInt, err = strconv.Atoi(curUser.Uid); err != nil {
-		uidStr = "0"
+	if UidInt, err = strconv.Atoi(curUser.Uid); err != nil {
+		UidStr = "0"
 	}
-	if gidInt, err = strconv.Atoi(curUser.Gid); err != nil {
-		gidStr = "0"
+	if GidInt, err = strconv.Atoi(curUser.Gid); err != nil {
+		GidStr = "0"
 	}
 
 	// Warn about running as root if we're not on windows.
-	if runtime.GOOS != "windows" && (uidInt > 60000 || gidInt > 60000 || uidInt == 0) {
+	if runtime.GOOS != "windows" && (UidInt > 60000 || GidInt > 60000 || UidInt == 0) {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
-	// If the uidStr or gidStr is outside the range possible in container, use root
-	if uidInt > 60000 || gidInt > 60000 {
-		uidStr = "0"
-		gidStr = "0"
+	// If the UidStr or GidStr is outside the range possible in container, use root
+	if UidInt > 60000 || GidInt > 60000 {
+		UidStr = "0"
+		GidStr = "0"
 	}
 
 	envVars := map[string]string{
@@ -792,8 +797,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_IMPORTDIR":                app.ImportDir,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
-		"DDEV_UID":                      uidStr,
-		"DDEV_GID":                      gidStr,
+		"DDEV_UID":                      UidStr,
+		"DDEV_GID":                      GidStr,
 		"DDEV_PHP_VERSION":              app.PHPVersion,
 		"DDEV_PROJECT_TYPE":             app.Type,
 		"DDEV_ROUTER_HTTP_PORT":         app.RouterHTTPPort,
@@ -1288,7 +1293,7 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 		t := time.Now()
 		snapshotName := fmt.Sprintf("%s_volume_migration_snapshot_%s", app.Name, t.Format("20060102150405"))
 
-		out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf("docker run -t -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s", snapshotName, app.GetConfigPath(""), dataDir, version.DBImg, version.DBTag)})
+		out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf("docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s", UidStr, GidStr, snapshotName, app.GetConfigPath(""), dataDir, version.DBImg, version.DBTag)})
 
 		if err != nil {
 			return false, fmt.Errorf("failed to run migrate_file_to_volume.sh, err=%v output=%v", err, out)
