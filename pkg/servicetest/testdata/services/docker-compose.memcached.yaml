@@ -4,7 +4,7 @@
 # Edit the 'command' settings to change CLI flags sent to memcached.
 # Defaults to '-m 128' to allocate 128 MB of memcached storage.
 
-version: '3'
+version: '3.6'
 
 services:
   memcached: # This is the service name used when running ddev commands accepting the --service flag
