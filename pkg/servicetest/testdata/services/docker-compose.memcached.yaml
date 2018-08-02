@@ -1,0 +1,20 @@
+# ddev memcached recipe file
+#
+# To use this in your own project: Copy this file to your project's .ddev folder.
+# Edit the 'command' settings to change CLI flags sent to memcached.
+# Defaults to '-m 128' to allocate 128 MB of memcached storage.
+
+version: '3'
+
+services:
+  memcached: # This is the service name used when running ddev commands accepting the --service flag
+    container_name: ddev-${DDEV_SITENAME}-memcached # This is the name of the container. It is recommended to follow the same name convention used in the main docker-compose.yml file.
+    image: memcached:1.5
+    restart: always
+    ports:
+      - 11211 # memcached is available at this port inside the container
+    labels:
+    # These labels ensure this service is discoverable by ddev
+      com.ddev.site-name: ${DDEV_SITENAME}
+
+    command: ["-m", "128"]
