@@ -10,7 +10,7 @@ set -o pipefail
 # months.
 #
 # Run this command in the project directory:
-# docker run -t -e SNAPSHOT_NAME=<migration_snapshot_name -v "$PWD/.ddev:/mnt/ddev_config" -v "$HOME/.ddev/<projectname>/mysql:/var/lib/mysql" --rm --entrypoint=/migrate_file_to_volume.sh drud/ddev-dbserver:<your_version>
+# docker run -t -u "$(id -u):$(id -g)" -e SNAPSHOT_NAME=<migration_snapshot_name -v "$PWD/.ddev:/mnt/ddev_config" -v "$HOME/.ddev/<projectname>/mysql:/var/lib/mysql" --rm --entrypoint=/migrate_file_to_volume.sh drud/ddev-dbserver:<your_version>
 
 if [ -z "${SNAPSHOT_NAME:-}" ] ; then
     echo "SNAPSHOT_NAME environment variable must be set"
@@ -21,14 +21,12 @@ OUTDIR="/mnt/ddev_config/db_snapshots/${SNAPSHOT_NAME}"
 SOCKET=/var/tmp/mysql.sock
 
 mkdir -p $OUTDIR
-chgrp mysql /var/tmp
-chmod ug+rw /var/tmp
 
 if [ ! -d "/var/lib/mysql/mysql" ]; then
 	echo "No mysql bind-mount directory was found, aborting"
 	exit 2
 fi
-chown -R mysql:mysql /var/lib/mysql /var/log/mysql*
+sudo chmod -R ugo+rw /var/lib/mysql /var/log/mysql*
 
 mysqld --skip-networking &
 pid="$!"
