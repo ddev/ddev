@@ -484,12 +484,6 @@ func (app *DdevApp) ImportFiles(imPath string, extPath string) error {
 		if err != nil {
 			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
 		}
-	} else {
-		// create destination directory
-		err = os.MkdirAll(destPath, 0755)
-		if err != nil {
-			return err
-		}
 	}
 
 	switch {

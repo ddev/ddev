@@ -75,6 +75,10 @@ func Untar(source string, dest string, extractionDir string) error {
 
 	defer util.CheckClose(f)
 
+	if err = os.MkdirAll(dest, 0755); err != nil {
+		return err
+	}
+
 	if strings.HasSuffix(source, "gz") {
 		gf, err := gzip.NewReader(f)
 		if err != nil {
@@ -167,6 +171,10 @@ func Unzip(source string, dest string, extractionDir string) error {
 		return fmt.Errorf("Failed to open zipfile %s, err:%v", source, err)
 	}
 	defer util.CheckClose(zf)
+
+	if err = os.MkdirAll(dest, 0755); err != nil {
+		return err
+	}
 
 	for _, file := range zf.File {
 		// If we have an extractionDir and this doesn't match, skip it.
