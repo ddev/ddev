@@ -614,13 +614,25 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
+	var err error
+
 	app.DockerEnv()
 
 	if app.APIVersion != version.DdevVersion {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
 	}
 
-	err := app.ProcessHooks("pre-start")
+	// IF we need to do a DB migration to docker-volume, do it here.
+	// It actually does the app.Start() at the end of the migration, so we can return successfully here.
+	migrationDone, err := app.migrateDbIfRequired()
+	if err != nil {
+		return fmt.Errorf("Failed to migrate db from bind-mounted db: %v", err)
+	}
+	if migrationDone {
+		return nil
+	}
+
+	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
 	}
@@ -645,12 +657,6 @@ func (app *DdevApp) Start() error {
 	}
 
 	files, err := app.ComposeFiles()
-	if err != nil {
-		return err
-	}
-
-	// TODO: Add import operation here? Start, create a snapshot, then restore-snapshot?
-	err = app.checkDbMigration()
 	if err != nil {
 		return err
 	}
@@ -1259,15 +1265,43 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	return app.providerInstance, err
 }
 
-// checkDbMigration checks for need of db migration and if needed, does the migration.
-func (app *DdevApp) checkDbMigration() error {
+// migrateDbIfRequired checks for need of db migration to docker-volume-mount and if needed, does the migration.
+// This should be important around the time of its release, 2018-08-02 or so, but should be increasingly
+// irrelevant after that and can eventually be removed.
+// Returns bool (true if migration was done) and err
+func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 	dataDir := filepath.Join(util.GetGlobalDdevDir(), app.Name, "mysql")
 
+	var err error
 	if fileutil.FileExists(dataDir) {
 		// If the dataDir exists, mount it onto ddev-dbserver and run script there that converts to a snapshot
 		// Then do a restore-snapshot on that snapshot.
 		// Old datadir can be renamed to .bak
+		output.UserOut.Print("Migrating bind-mounted database in ~/.ddev to docker-volume mounted database")
+		if app.SiteStatus() == SiteRunning {
+			err = app.Down(false, false)
+		}
+		if err != nil {
+			return false, fmt.Errorf("failed to stop/remove project %s: %v", app.Name, err)
+		}
 
+		t := time.Now()
+		snapshotName := fmt.Sprintf("%s_volume_migration_snapshot_%s", app.Name, t.Format("20060102150405"))
+
+		out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf("docker run -t -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s", snapshotName, app.GetConfigPath(""), dataDir, version.DBImg, version.DBTag)})
+
+		if err != nil {
+			return false, fmt.Errorf("failed to run migrate_file_to_volume.sh, err=%v output=%v", err, out)
+		}
+		err = os.Rename(dataDir, dataDir+"_migrated.bak")
+
+		// RestoreSnapshot() does a Start(); start doesn't do the migration because dataDir now isn't there.
+		err = app.RestoreSnapshot(snapshotName)
+		if err != nil {
+			return false, fmt.Errorf("failed to restore migration snapshot %s: %v", snapshotName, err)
+		}
+		util.Success("Migrated bind-mounted db from %s to docker-volume mounted db.", dataDir)
+		return true, nil
 	}
-	return nil
+	return false, nil
 }
