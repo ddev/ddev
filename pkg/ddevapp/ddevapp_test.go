@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
@@ -594,7 +595,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	switchDir()
 }
 
-// TestWriteableFilesDirectory tests to make sure that files created on host are writeable on container
+// TestWriteableFilesDirectory tests to make sure that files created on host are writable on container
 // and files ceated in container are correct user on host.
 func TestWriteableFilesDirectory(t *testing.T) {
 	assert := asrt.New(t)
@@ -1319,6 +1320,79 @@ func TestGetAllURLs(t *testing.T) {
 
 		runTime()
 	}
+}
+
+// TestDbMigration tests migration from bind-mounted db to volume-mounted db
+// This should be important around the time of its release, 2018-08-02 or so, but should be increasingly
+// irrelevant after that and can eventually be removed.
+func TestDbMigration(t *testing.T) {
+	assert := asrt.New(t)
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDbMigration"))
+
+	app := &ddevapp.DdevApp{}
+	dbMigrationTarball, err := filepath.Abs(filepath.Join("testdata", "db_migration", "d7_to_migrate.tgz"))
+	assert.NoError(err)
+
+	// Use d7 only for this test
+	site := FullTestSites[2]
+
+	err = site.Prepare()
+	if err != nil {
+		t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+	}
+
+	switchDir := site.Chdir()
+	testcommon.ClearDockerEnv()
+
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+
+	dataDir := filepath.Join(util.GetGlobalDdevDir(), app.Name, "mysql")
+
+	// Remove any existing dataDir or migration backups
+	if fileutil.FileExists(dataDir) {
+		err = os.RemoveAll(dataDir)
+		assert.NoError(err)
+	}
+	if fileutil.FileExists(dataDir + "_migrated.bak") {
+		err = os.RemoveAll(dataDir + "_migrated.bak")
+		assert.NoError(err)
+	}
+
+	// Start it to make sure we can do a removeData
+	err = app.Start()
+	assert.NoError(err)
+
+	// removeData removes the volume so we have a completely clean start
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	// Untar the to-migrate db into old-style dataDir (~/.ddev/projectname/mysql)
+	err = os.MkdirAll(dataDir, 0755)
+	assert.NoError(err)
+	err = archive.Untar(dbMigrationTarball, dataDir, "")
+	assert.NoError(err)
+
+	_, err = app.CreateSettingsFile()
+	assert.NoError(err)
+
+	// app.Start() will discover the mysql directory and migrate it to a snapshot.
+	err = app.Start()
+	if err != nil {
+		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
+	}
+
+	// Check to see expected migrated data.
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "This d7 site is ready for migration to docker-volume")
+
+	assert.True(fileutil.FileExists(dataDir + "_migrated.bak"))
+	assert.False(fileutil.FileExists(dataDir))
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	runTime()
+	switchDir()
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app

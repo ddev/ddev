@@ -28,7 +28,7 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
 	echo "No mysql bind-mount directory was found, aborting"
 	exit 2
 fi
-chown -R mysql:mysql /var/lib/mysql /mnt/ddev_config/mysql /var/log/mysql*
+chown -R mysql:mysql /var/lib/mysql /var/log/mysql*
 
 mysqld --skip-networking &
 pid="$!"
