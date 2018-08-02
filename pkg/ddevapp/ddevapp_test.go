@@ -1336,9 +1336,12 @@ func TestDbMigration(t *testing.T) {
 	// Use d7 only for this test
 	site := FullTestSites[2]
 
-	err = site.Prepare()
-	if err != nil {
-		t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
+		err = site.Prepare()
+		if err != nil {
+			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+		}
 	}
 
 	switchDir := site.Chdir()
