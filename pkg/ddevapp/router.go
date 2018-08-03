@@ -76,9 +76,10 @@ func StartDdevRouter() error {
 	}
 
 	templateVars := map[string]interface{}{
-		"router_image": version.RouterImage,
-		"router_tag":   version.RouterTag,
-		"ports":        exposedPorts,
+		"router_image":    version.RouterImage,
+		"router_tag":      version.RouterTag,
+		"ports":           exposedPorts,
+		"compose_version": version.DockerComposeFileFormatVersion,
 	}
 
 	err = templ.Execute(&doc, templateVars)

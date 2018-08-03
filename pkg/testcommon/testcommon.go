@@ -21,6 +21,10 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
+	asrt "github.com/stretchr/testify/assert"
+	"net/http"
+	"net/url"
+	"testing"
 )
 
 // TestSite describes a site for testing, with name, URL of tarball, and optional dir.
@@ -239,7 +243,6 @@ func ClearDockerEnv() {
 		"DDEV_URL",
 		"DDEV_HOSTNAME",
 		"DDEV_IMPORTDIR",
-		"DDEV_DATADIR",
 		"DDEV_PHP_VERSION",
 		"DDEV_PROJECT_TYPE",
 		"DDEV_ROUTER_HTTP_PORT",
@@ -333,4 +336,62 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 		return extractPath, archiveFullPath, fmt.Errorf("archive extraction of %s failed err=%v", archiveFullPath, err)
 	}
 	return extractPath, archiveFullPath, nil
+}
+
+// GetLocalHTTPResponse takes a URL, hits the local docker for it, returns result
+// Returns error (with the body) if not 200 status code.
+func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, error) {
+	assert := asrt.New(t)
+
+	u, err := url.Parse(rawurl)
+	if err != nil {
+		t.Fatalf("Failed to parse url %s: %v", rawurl, err)
+	}
+
+	dockerIP, err := dockerutil.GetDockerIP()
+	assert.NoError(err)
+
+	fakeHost := u.Hostname()
+	u.Host = dockerIP
+	localAddress := u.String()
+
+	// Do not follow redirects, https://stackoverflow.com/a/38150816/215713
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	req, err := http.NewRequest("GET", localAddress, nil)
+
+	if err != nil {
+		return "", fmt.Errorf("Failed to NewRequest GET %s: %v", localAddress, err)
+	}
+	req.Host = fakeHost
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+
+	//nolint: errcheck
+	defer resp.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("unable to ReadAll resp.body: %v", err)
+	}
+	bodyString := string(bodyBytes)
+	if resp.StatusCode != 200 {
+		return bodyString, fmt.Errorf("http status code was %d, not 200", resp.StatusCode)
+	}
+	return bodyString, nil
+}
+
+// EnsureLocalHTTPContent will verify a URL responds with a 200 and expected content string
+func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string) {
+	assert := asrt.New(t)
+
+	body, err := GetLocalHTTPResponse(t, rawurl)
+	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
+	assert.Contains(body, expectedContent)
 }

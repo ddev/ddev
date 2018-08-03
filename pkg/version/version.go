@@ -11,10 +11,13 @@ var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by
 // DockerVersionConstraint is the current minimum version of docker required for ddev.
 // See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
-var DockerVersionConstraint = ">= 18.03.0-ce-alpha1"
+var DockerVersionConstraint = ">= 18.06.0-ce"
 
 // DockerComposeVersionConstraint is the current minimum version of docker-compose required for ddev.
 var DockerComposeVersionConstraint = ">= 1.18.0-alpha1"
+
+// DockerComposeFileFormatVersion is the compose version to be used
+var DockerComposeFileFormatVersion = "3.6"
 
 // WebImg defines the default web image used for applications.
 var WebImg = "drud/ddev-webserver"
@@ -26,7 +29,7 @@ var WebTag = "20180726_webserver_bump" // Note that this can be overridden by ma
 var DBImg = "drud/ddev-dbserver"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "20180726_fix_dbserver_test" // Note that this may be overridden by make
+var DBTag = "20180802_experimental_maria_10_2" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"

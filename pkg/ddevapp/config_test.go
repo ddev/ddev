@@ -336,10 +336,11 @@ func TestValidate(t *testing.T) {
 	assert.NoError(err)
 
 	app := &DdevApp{
-		Name:    "TestValidate",
-		AppRoot: cwd,
-		Docroot: "testdata",
-		Type:    "wordpress",
+		Name:       "TestValidate",
+		ConfigPath: filepath.Join("testdata", "config.yaml"),
+		AppRoot:    cwd,
+		Docroot:    "testdata",
+		Type:       "wordpress",
 	}
 
 	err = app.ValidateConfig()
@@ -435,5 +436,5 @@ func TestConfigOverrideDetection(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	_ = app.Down(true)
+	_ = app.Down(true, false)
 }

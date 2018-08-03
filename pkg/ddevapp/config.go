@@ -202,7 +202,6 @@ func (app *DdevApp) ReadConfig() error {
 	}
 
 	dirPath := filepath.Join(util.GetGlobalDdevDir(), app.Name)
-	app.DataDir = filepath.Join(dirPath, "mysql")
 	app.ImportDir = filepath.Join(dirPath, "import-db")
 
 	app.SetApptypeSettingsPaths()
@@ -266,6 +265,10 @@ func (app *DdevApp) ValidateConfig() error {
 	fullPath := filepath.Join(app.AppRoot, app.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		return fmt.Errorf("no directory could be found at %s. Please enter a valid docroot in your configuration", fullPath)
+	}
+
+	if _, err := os.Stat(app.ConfigPath); os.IsNotExist(err) {
+		return fmt.Errorf("no valid project config.yaml was found at %s", app.ConfigPath)
 	}
 
 	// validate hostname
@@ -422,14 +425,15 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	}
 	templateVars := map[string]string{
-		"name":          app.Name,
-		"plugin":        "ddev",
-		"appType":       app.Type,
-		"mailhogport":   appports.GetPort("mailhog"),
-		"dbaport":       appports.GetPort("dba"),
-		"dbport":        appports.GetPort("db"),
-		"ddevgenerated": DdevFileSignature,
-		"extra_host":    docker0Hostname + `:` + docker0Addr,
+		"name":            app.Name,
+		"plugin":          "ddev",
+		"appType":         app.Type,
+		"mailhogport":     appports.GetPort("mailhog"),
+		"dbaport":         appports.GetPort("dba"),
+		"dbport":          appports.GetPort("db"),
+		"ddevgenerated":   DdevFileSignature,
+		"extra_host":      docker0Hostname + `:` + docker0Addr,
+		"compose_version": version.DockerComposeFileFormatVersion,
 	}
 
 	err = templ.Execute(&doc, templateVars)
