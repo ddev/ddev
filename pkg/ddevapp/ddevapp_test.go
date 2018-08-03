@@ -540,10 +540,12 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	// Use d7 only for this test, the key thing is the database interaction
 	site := FullTestSites[2]
-
-	err = site.Prepare()
-	if err != nil {
-		t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
+		err = site.Prepare()
+		if err != nil {
+			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+		}
 	}
 
 	switchDir := site.Chdir()
@@ -573,7 +575,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 
 	err = app.ImportDB(d7testerTest2, "")
-	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1, err)
+	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2, err)
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
 
 	d7testerTest2Snapshot, err := app.SnapshotDatabase("")

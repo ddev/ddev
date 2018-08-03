@@ -14,12 +14,12 @@ import (
 
 // ValidateAsset determines if a given asset matches the required criteria for a given asset type.
 // If the path provided is a tarball, it will extract, validate, and return the extracted asset path.
-func ValidateAsset(assetPath string, assetType string) (string, error) {
+func ValidateAsset(unexpandedAssetPath string, assetType string) (string, error) {
 	var invalidAssetError = "%v. Please provide a valid asset path."
 	extensions := []string{"tar", "gz", "tgz", "zip"}
 
 	// Input provided via prompt or "--flag=value" is not expanded by shell. This will help ensure ~ is expanded to the user home directory.
-	assetPath, err := gohomedir.Expand(assetPath)
+	assetPath, err := gohomedir.Expand(unexpandedAssetPath)
 	if err != nil {
 		return "", fmt.Errorf(invalidAssetError, err)
 	}
