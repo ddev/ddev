@@ -21,13 +21,13 @@ jobs:
           command: printf "go version:$(go version)\ndocker version=$(docker --version)\ndocker-compose version=$(docker-compose --version)\nHOME=$HOME USER=$(whoami) PWD=$PWD"
           name: Installed tool versions
 
-      - run: make -s staticrequired
-
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
           command: |
             make -s clean linux darwin windows_install
           name: Build the ddev executables
+
+      - run: make -s staticrequired
 
       # Run the built-in ddev tests with the executables just built.
       - run:
