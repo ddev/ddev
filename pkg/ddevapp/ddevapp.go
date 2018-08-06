@@ -437,6 +437,11 @@ func (app *DdevApp) ImportFiles(imPath string, extPath string) error {
 		uploadDir = "sites/default/files"
 	}
 
+	{
+		uploadDir := "Another value"
+		fmt.Println(uploadDir)
+	}
+
 	if app.GetType() == "wordpress" {
 		uploadDir = "wp-content/uploads"
 	}
