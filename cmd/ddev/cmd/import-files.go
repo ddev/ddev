@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	"os"
+	"fmt"
 
+	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -16,32 +18,83 @@ var fileExtPath string
 var ImportFileCmd = &cobra.Command{
 	Use:   "import-files",
 	Short: "Import the uploaded files directory of an existing project to the default public upload directory of your project.",
-	Long: `Import the uploaded files directory of an existing project to the default public
-upload directory of your project. The files can be provided as a directory
-path or an archive in .tar, .tar.gz, .tgz, or .zip format. For the .zip and tar formats,
-the path to a directory within the archive can be provided if it is not located at the
-top-level of the archive. If the destination directory exists, it will be replaced with
-the assets being imported.`,
+	Long: `Import the uploaded files directory of an existing project to the default
+public upload directory of your project. The files can be provided as a
+directory path or an archive in .tar, .tar.gz, .tgz, or .zip format. For the
+.zip and tar formats, the path to a directory within the archive can be
+provided if it is not located at the top-level of the archive. If the
+destination directory exists, it will be replaced with the assets being
+imported.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		if len(args) > 0 {
-			err := cmd.Usage()
-			util.CheckErr(err)
-			os.Exit(0)
-		}
 		dockerutil.EnsureDdevNetwork()
 	},
+	Args: cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed("Failed to import files: %v", err)
 		}
 
-		err = app.ImportFiles(fileSource, fileExtPath)
+		var extPathPrompt bool
+		if fileSource == "" {
+			fileSource, extPathPrompt = promptForFileSource()
+		}
+
+		importPath, err := appimport.ValidateAsset(fileSource, "files")
 		if err != nil {
+			if err.Error() == "is archive" && extPathPrompt {
+				fileExtPath = promptForExtPath()
+			}
+
+			if err.Error() != "is archive" {
+				util.Failed("Failed to import files for %s: ", err)
+			}
+		}
+
+		if err = app.ImportFiles(importPath, fileExtPath); err != nil {
 			util.Failed("Failed to import files for %s: %v", app.GetName(), err)
 		}
+
 		util.Success("Successfully imported files for %v", app.GetName())
 	},
+}
+
+const importPathPrompt = `Provide the path to the directory or archive you wish to import.
+Please note: if the destination directory exists, it will be replaced with the
+import assets specified here.`
+
+// promptForFileSource prompts the user for the path to the source file.
+func promptForFileSource() (string, bool) {
+	var fileSourceResponse string
+	var promptForExtPath bool
+
+	// ensure we prompt for extraction path if an archive is provided, while still allowing
+	// non-interactive use of --src flag without providing a --extract-path flag.
+	if fileExtPath == "" {
+		promptForExtPath = true
+	}
+
+	output.UserOut.Println(importPathPrompt)
+	fmt.Print("Import path: ")
+
+	fileSourceResponse = util.GetInput("")
+
+	return fileSourceResponse, promptForExtPath
+}
+
+const extPathPrompt = `You provided an archive. Do you want to extract from a specific path in your
+archive? You may leave this blank if you wish to use the full archive contents.`
+
+// promptForExtPath prompts the user for the internal extraction path of an archive.
+func promptForExtPath() string {
+	var extPath string
+
+	output.UserOut.Println(extPathPrompt)
+	fmt.Print("Archive extraction path: ")
+
+	extPath = util.GetInput("")
+
+	return extPath
 }
 
 func init() {

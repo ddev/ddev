@@ -1,12 +1,13 @@
 package ddevapp
 
 import (
-	"github.com/Masterminds/sprig"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
 	"text/template"
+
+	"github.com/Masterminds/sprig"
+	"github.com/drud/ddev/pkg/output"
+	"github.com/drud/ddev/pkg/util"
 )
 
 // WordpressConfig encapsulates all the configurations for a WordPress site.
@@ -203,3 +204,7 @@ func wordpressPostImportDBAction(app *DdevApp) error {
 	util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec wp search-replace [http://www.myproductionsite.example] %s\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", app.GetHTTPURL())
 	return nil
 }
+
+// wordpressImportFilesAction defines the Wordpress workflow for importing project files.
+// The Wordpress workflow is currently identical to the Drupal import-files workflow.
+var wordpressImportFilesAction = drupalImportFilesAction

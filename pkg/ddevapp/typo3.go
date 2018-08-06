@@ -137,3 +137,7 @@ func typo3ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = "7.2"
 	return nil
 }
+
+// typo3ImportFilesAction defines the TYPO3 workflow for importing project files.
+// The TYPO3 import-files workflow is currently identical to the Drupal workflow.
+var typo3ImportFilesAction = drupalImportFilesAction

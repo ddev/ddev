@@ -236,3 +236,29 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 
 	return nil
 }
+
+// isTar determines whether the object at the filepath is a .tar archive.
+func isTar(filepath string) bool {
+	if strings.HasSuffix(filepath, ".tar") {
+		return true
+	}
+
+	if strings.HasSuffix(filepath, ".tar.gz") {
+		return true
+	}
+
+	if strings.HasSuffix(filepath, ".tgz") {
+		return true
+	}
+
+	return false
+}
+
+// isZip determines if the object at hte filepath is a .zip.
+func isZip(filepath string) bool {
+	if strings.HasSuffix(filepath, ".zip") {
+		return true
+	}
+
+	return false
+}

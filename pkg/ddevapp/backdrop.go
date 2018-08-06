@@ -249,3 +249,7 @@ func appendIncludeToBackdropSettingsFile(settings *BackdropSettings, siteSetting
 
 	return nil
 }
+
+// backdropImportFilesAction defines the Backdrop workflow for importing project files.
+// The Backdrop workflow is currently identical to the Drupal import-files workflow.
+var backdropImportFilesAction = drupalImportFilesAction
