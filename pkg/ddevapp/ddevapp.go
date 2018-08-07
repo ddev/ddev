@@ -1305,7 +1305,7 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 		}
 		err = os.Rename(dataDir, dataDir+"_migrated.bak")
 		if err != nil {
-			return false, fmt.Errorf("Unable to rename %s to %s: %v", dataDir, dataDir+"_migrated.bak", err)
+			return false, fmt.Errorf("Unable to rename %s to %s; you can remove the directory manually if that's ok: %v", dataDir, dataDir+"_migrated.bak", err)
 		}
 
 		// RestoreSnapshot() does a Start(); start doesn't do the migration because dataDir now isn't there.
