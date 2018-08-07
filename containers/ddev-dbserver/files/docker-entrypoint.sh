@@ -30,7 +30,7 @@ fi
 if [ ! -d "/var/lib/mysql/mysql" ]; then
     target=${snapshot_dir:-/var/tmp/mysqlbase/}
     name=$(basename $target)
-    sudo rm -rf /var/lib/mysql && sudo chmod -R ugo+w /var/lib/mysql
+    sudo rm -rf /var/lib/mysql/* && sudo chmod -R ugo+w /var/lib/mysql
 	mariabackup --prepare --target-dir "$target" --user root --password root --socket=/var/tmp/mysql.sock 2>"/var/log/mariabackup_prepare_$name.log"
 	mariabackup --copy-back --target-dir "$target" --user root --password root --socket=/var/tmp/mysql.sock 2>"/var/log/mariabackup_copy_back_$name.log"
 	echo 'Database initialized from $target'
