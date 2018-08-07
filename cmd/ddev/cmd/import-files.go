@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var fileSource string
-var fileExtPath string
+var sourcePath string
+var extPath string
 
 // ImportFileCmd represents the `ddev import-db` command.
 var ImportFileCmd = &cobra.Command{
@@ -35,23 +35,31 @@ imported.`,
 			util.Failed("Failed to import files: %v", err)
 		}
 
-		var extPathPrompt bool
-		if fileSource == "" {
-			fileSource, extPathPrompt = promptForFileSource()
+		var showExtPathPrompt bool
+		if sourcePath == "" {
+			// Ensure we prompt for extraction path if an archive is provided, while still allowing
+			// non-interactive use of --src flag without providing a --extract-path flag.
+			if extPath == "" {
+				showExtPathPrompt = true
+			}
+
+			promptForFileSource(&sourcePath)
 		}
 
-		importPath, err := appimport.ValidateAsset(fileSource, "files")
+		importPath, err := appimport.ValidateAsset(sourcePath, "files")
 		if err != nil {
-			if err.Error() == "is archive" && extPathPrompt {
-				fileExtPath = promptForExtPath()
+			// Ensure we prompt for extraction path if an archive is provided, while still allowing
+			// non-interactive use of --src flag without providing a --extract-path flag.
+			if err.Error() == "is archive" && showExtPathPrompt {
+				promptForExtPath(&extPath)
 			}
 
 			if err.Error() != "is archive" {
-				util.Failed("Failed to import files for %s: ", err)
+				util.Failed("Failed to import files for %s: %v", app.GetName(), err)
 			}
 		}
 
-		if err = app.ImportFiles(importPath, fileExtPath); err != nil {
+		if err = app.ImportFiles(importPath, extPath); err != nil {
 			util.Failed("Failed to import files for %s: %v", app.GetName(), err)
 		}
 
@@ -59,46 +67,42 @@ imported.`,
 	},
 }
 
-const importPathPrompt = `Provide the path to the directory or archive you wish to import.
-Please note: if the destination directory exists, it will be replaced with the
+const importPathPrompt = `Provide the path to the directory or archive you wish to import.`
+
+const importPathWarn = `Please note: if the destination directory exists, it will be replaced with the
 import assets specified here.`
 
 // promptForFileSource prompts the user for the path to the source file.
-func promptForFileSource() (string, bool) {
-	var fileSourceResponse string
-	var promptForExtPath bool
-
-	// ensure we prompt for extraction path if an archive is provided, while still allowing
-	// non-interactive use of --src flag without providing a --extract-path flag.
-	if fileExtPath == "" {
-		promptForExtPath = true
-	}
-
+func promptForFileSource(val *string) {
 	output.UserOut.Println(importPathPrompt)
-	fmt.Print("Import path: ")
+	output.UserOut.Warnln(importPathWarn)
 
-	fileSourceResponse = util.GetInput("")
-
-	return fileSourceResponse, promptForExtPath
+	// An empty string isn't acceptable here, keep
+	// prompting until something is entered
+	for {
+		fmt.Print("Import path: ")
+		*val = util.GetInput("")
+		if len(*val) > 0 {
+			break
+		}
+	}
 }
 
 const extPathPrompt = `You provided an archive. Do you want to extract from a specific path in your
 archive? You may leave this blank if you wish to use the full archive contents.`
 
 // promptForExtPath prompts the user for the internal extraction path of an archive.
-func promptForExtPath() string {
-	var extPath string
-
+func promptForExtPath(val *string) {
 	output.UserOut.Println(extPathPrompt)
+
+	// An empty string is acceptable in this case, indicating
+	// no particular extraction path
 	fmt.Print("Archive extraction path: ")
-
-	extPath = util.GetInput("")
-
-	return extPath
+	*val = util.GetInput("")
 }
 
 func init() {
-	ImportFileCmd.Flags().StringVarP(&fileSource, "src", "", "", "Provide the path to a directory or tar/tar.gz/tgz/zip archive of files to import")
-	ImportFileCmd.Flags().StringVarP(&fileExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
+	ImportFileCmd.Flags().StringVarP(&sourcePath, "src", "", "", "Provide the path to a directory or tar/tar.gz/tgz/zip archive of files to import")
+	ImportFileCmd.Flags().StringVarP(&extPath, "extract-path", "", "", "If provided asset is an archive, optionally provide the path to extract within the archive.")
 	RootCmd.AddCommand(ImportFileCmd)
 }
