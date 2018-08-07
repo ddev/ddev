@@ -450,6 +450,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	var stdout bytes.Buffer
 	err = client.Logs(docker.LogsOptions{
 		Stdout:       true,
+		Stderr:       true,
 		Container:    container.ID,
 		OutputStream: &stdout,
 	})

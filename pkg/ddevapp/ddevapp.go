@@ -1303,6 +1303,7 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 		if err != nil {
 			return false, fmt.Errorf("failed to run migrate_file_to_volume.sh, err=%v output=%v", err, out)
 		}
+		util.Success("Output from migration container: %s", out)
 		err = os.Rename(dataDir, dataDir+"_migrated.bak")
 		if err != nil {
 			return false, fmt.Errorf("Unable to rename %s to %s: %v", dataDir, dataDir+"_migrated.bak", err)

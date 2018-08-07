@@ -51,7 +51,7 @@ if [ "$i" -eq 0 ]; then
 	exit 4
 fi
 
-mariabackup --backup --target-dir=$OUTDIR --user root --password root --socket=$SOCKET
+mariabackup --backup --target-dir=$OUTDIR --user root --password root --socket=$SOCKET 2>&1
 
 # Wait for mysqld to exit
 kill -s TERM "$pid"&& wait "$pid"
