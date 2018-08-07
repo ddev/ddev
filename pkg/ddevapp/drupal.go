@@ -164,7 +164,7 @@ if (empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
 // This determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
 if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
-  include __DIR__ . '../../../drush.settings.php';
+  include __DIR__ . '/../../../drush.settings.php';
 }
 `
 )
@@ -197,7 +197,7 @@ $drupal_hash_salt = '{{ $config.HashSalt }}';
 // This determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
 if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
-  include __DIR__ . '../../../drush.settings.php';
+  include __DIR__ . '/../../../drush.settings.php';
 }
 `
 )
@@ -220,7 +220,7 @@ ini_set('session.cookie_lifetime', 2000000);
 // This determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
 if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
-  include __DIR__ . '../../../drush.settings.php';
+  include __DIR__ . '/../../../drush.settings.php';
 }
 `
 )
