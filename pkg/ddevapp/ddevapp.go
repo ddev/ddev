@@ -1289,7 +1289,7 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 		// Then do a restore-snapshot on that snapshot.
 		// Old datadir can be renamed to .bak
 		output.UserOut.Print("Migrating bind-mounted database in ~/.ddev to docker-volume mounted database")
-		if app.SiteStatus() == SiteRunning {
+		if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
 			err = app.Down(false, false)
 		}
 		if err != nil {

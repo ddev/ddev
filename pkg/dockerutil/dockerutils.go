@@ -428,7 +428,7 @@ func RunSimpleContainer(image string, cmd []string, entrypoint []string, env []s
 
 	container, err := client.CreateContainer(options)
 	if err != nil {
-		return "", fmt.Errorf("failed to create/start docker container (%v):%v", err)
+		return "", fmt.Errorf("failed to create/start docker container (%v):%v", options, err)
 	}
 
 	// nolint: errcheck
