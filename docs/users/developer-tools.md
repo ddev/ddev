@@ -53,7 +53,7 @@ The port referenced is unique per running project, and randomly chosen from avai
 **Note:** The host database port is likely to change any time a project is stopped/removed and then later started again.
 
 ### Using Drush Installation on Host Machine
-If you have Drush installed on your host system, you can use it to interact with a ddev project by defining a `drush.settings.php` file at the docroot of your code base, and referencing it from your `settings.php` file. The `drush.settings.php` file should look similar to below, using the host port information for your project retrieved from `ddev describe`:
+If you have Drush installed on your host system, you can use it to interact with a ddev project by defining a `drush.settings.php` file at the docroot of your code base. This will be automatically referenced from the generated `settings.ddev.php` file which is located under `web/sites/default`. The `drush.settings.php` file should look similar to below, using the host port information for your project retrieved from `ddev describe`:
 
 ```
 <?php
@@ -68,15 +68,3 @@ $databases['default']['default'] = array(
   'prefix' => "",
 );
 ```
-
-The following should be added to the `settings.php` file so that the `drush.settings.php` file is loaded when using Drush on your host machine:
-
-```
-// This determines whether or not drush should include a custom settings file which allows
-// it to work both within a docker container and natively on the host system.
-if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
-  include __DIR__ . '/../../../drush.settings.php';
-}
-```
-
-These configuration files are auto-generated for you if you run [`ddev import-db`](cli-usage.md#import-db) on a project with no existing settings file.
