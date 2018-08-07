@@ -5,7 +5,11 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"fmt"
+
 	"github.com/Masterminds/sprig"
+	"github.com/drud/ddev/pkg/archive"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 )
@@ -207,4 +211,45 @@ func wordpressPostImportDBAction(app *DdevApp) error {
 
 // wordpressImportFilesAction defines the Wordpress workflow for importing project files.
 // The Wordpress workflow is currently identical to the Drupal import-files workflow.
-var wordpressImportFilesAction = drupalImportFilesAction
+func wordpressImportFilesAction(app *DdevApp, importPath, extPath string) error {
+	destPath := filepath.Join(app.GetAppRoot(), app.GetDocroot(), app.GetUploadDir())
+
+	// parent of destination dir should exist
+	if !fileutil.FileExists(filepath.Dir(destPath)) {
+		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
+	}
+
+	// parent of destination dir should be writable.
+	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+		return err
+	}
+
+	// If the destination path exists, remove it as was warned
+	if fileutil.FileExists(destPath) {
+		if err := os.RemoveAll(destPath); err != nil {
+			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
+		}
+	}
+
+	if isTar(importPath) {
+		if err := archive.Untar(importPath, destPath, extPath); err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
+		}
+
+		return nil
+	}
+
+	if isZip(importPath) {
+		if err := archive.Unzip(importPath, destPath, extPath); err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
+		}
+
+		return nil
+	}
+
+	if err := fileutil.CopyDir(importPath, destPath); err != nil {
+		return err
+	}
+
+	return nil
+}
