@@ -1299,8 +1299,7 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 		t := time.Now()
 		snapshotName := fmt.Sprintf("%s_volume_migration_snapshot_%s", app.Name, t.Format("20060102150405"))
 
-		out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf("docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s", UIDStr, GIDStr, snapshotName, app.GetConfigPath(""), dataDir, version.DBImg, version.DBTag)})
-
+		out, err := dockerutil.RunSimpleContainer(version.DBImg+":"+version.DBTag, nil, []string{"ls"}, nil, nil, "0")
 		if err != nil {
 			return false, fmt.Errorf("failed to run migrate_file_to_volume.sh, err=%v output=%v", err, out)
 		}

@@ -404,3 +404,55 @@ func GetDockerIP() (string, error) {
 
 	return dockerIP, nil
 }
+
+// RunSimpleContainer runs a container (non-daemonized) and captures the stdout.
+// It will block, so not to be run on a container whose entryoint or cmd might hang or run too long.
+// This should be the equivalent of something like
+// docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
+func RunSimpleContainer(image string, cmd []string, entrypoint []string, env []string, binds []string, uid string) (string, error) {
+	client := GetDockerClient()
+	options := docker.CreateContainerOptions{
+		Name: "envtest",
+		Config: &docker.Config{
+			Image:      image,
+			Cmd:        cmd,
+			Env:        env,
+			User:       uid,
+			Entrypoint: entrypoint,
+		},
+		HostConfig: &docker.HostConfig{
+			Binds: binds,
+		},
+	}
+
+	container, err := client.CreateContainer(options)
+	if err != nil {
+		return "", fmt.Errorf("failed to create/start docker container (%v):%v", err)
+	}
+
+	// nolint: errcheck
+	defer client.RemoveContainer(docker.RemoveContainerOptions{
+		Force: true,
+		ID:    container.ID,
+	})
+	err = client.StartContainer(container.ID, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to StartContainer: %v", err)
+	}
+	_, err = client.WaitContainer(container.ID)
+	if err != nil {
+		return "", fmt.Errorf("failed to WaitContainer: %v", err)
+	}
+
+	var stdout bytes.Buffer
+	err = client.Logs(docker.LogsOptions{
+		Stdout:       true,
+		Container:    container.ID,
+		OutputStream: &stdout,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to get Logs(): %v", err)
+	}
+
+	return stdout.String(), nil
+}
