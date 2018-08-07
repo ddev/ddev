@@ -62,6 +62,7 @@ var (
 			Docroot:                       "docroot",
 			Type:                          "drupal7",
 			Safe200URL:                    "/README.txt",
+			FullSiteArchiveExtPath:        "docroot/sites/default/files",
 		},
 		{
 			Name:                          "TestPkgDrupal6",
@@ -701,8 +702,7 @@ func TestDdevImportFiles(t *testing.T) {
 		if site.FullSiteTarballURL != "" {
 			_, siteTarPath, err := testcommon.GetCachedArchive(site.Name, "local-site-tar", "", site.FullSiteTarballURL)
 			assert.NoError(err)
-			// TODO: This is totally Drupal-only, and has to be fixed when we do file import for new CMSs
-			err = app.ImportFiles(siteTarPath, "docroot/sites/default/files")
+			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
 			assert.NoError(err)
 		}
 

@@ -57,6 +57,9 @@ type TestSite struct {
 	// Safe200URL is a string of a url that can be accessed for testing a site
 	// that has not yet been installed
 	Safe200URL string
+	// FullSiteArchiveExtPath is the path that should be extracted from inside an archive when
+	// importing the files from a full site archive
+	FullSiteArchiveExtPath string
 }
 
 // Prepare downloads and extracts a site codebase to a temporary directory.
