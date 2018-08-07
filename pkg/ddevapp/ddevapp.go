@@ -1289,7 +1289,7 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 		// Then do a restore-snapshot on that snapshot.
 		// Old datadir can be renamed to .bak
 		output.UserOut.Print("Migrating bind-mounted database in ~/.ddev to docker-volume mounted database")
-		if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
+		if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped || app.SiteStatus() == "db service stopped" || app.SiteStatus() == "web service stopped" {
 			err = app.Down(false, false)
 		}
 		if err != nil {
@@ -1299,7 +1299,7 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 		t := time.Now()
 		snapshotName := fmt.Sprintf("%s_volume_migration_snapshot_%s", app.Name, t.Format("20060102150405"))
 
-		out, err := dockerutil.RunSimpleContainer(version.DBImg+":"+version.DBTag, nil, []string{"/migrate_file_to_volume.sh", UIDStr, GIDStr}, []string{"SNAPSHOT_NAME=" + snapshotName}, []string{app.GetConfigPath("") + ":" + "/mnt/ddev_config", dataDir + ":/var/lib/mysql"}, UIDStr)
+		out, err := dockerutil.RunSimpleContainer(version.DBImg+":"+version.DBTag, app.Name+"_migrate_volume", nil, []string{"/migrate_file_to_volume.sh", UIDStr, GIDStr}, []string{"SNAPSHOT_NAME=" + snapshotName}, []string{app.GetConfigPath("") + ":" + "/mnt/ddev_config", dataDir + ":/var/lib/mysql"}, UIDStr)
 		if err != nil {
 			return false, fmt.Errorf("failed to run migrate_file_to_volume.sh, err=%v output=%v", err, out)
 		}

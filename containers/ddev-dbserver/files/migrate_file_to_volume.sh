@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# set -x
-set -eu
-set -o pipefail
+set -x
+# DEBUG DON'T FORGET TO SET THIS BACK!
+#set -eu
+#set -o pipefail
 
 # This script is used to migrate a ddev bind-mounted database to a docker-volume mounted database
 # It is actually just for the initial migration of v1.0.0-era databases to (hopefully) v1.1.0
@@ -50,7 +51,7 @@ if [ "$i" -eq 0 ]; then
 	exit 4
 fi
 
-mariabackup --backup --target-dir=$OUTDIR --user root --password root --socket=$SOCKET 2>/dev/null
+mariabackup --backup --target-dir=$OUTDIR --user root --password root --socket=$SOCKET
 
 # Wait for mysqld to exit
 kill -s TERM "$pid"&& wait "$pid"

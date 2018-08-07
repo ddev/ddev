@@ -410,16 +410,18 @@ func GetDockerIP() (string, error) {
 // This should be the equivalent of something like
 // docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
-func RunSimpleContainer(image string, cmd []string, entrypoint []string, env []string, binds []string, uid string) (string, error) {
+func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string) (string, error) {
 	client := GetDockerClient()
 	options := docker.CreateContainerOptions{
-		Name: "envtest",
+		Name: name,
 		Config: &docker.Config{
-			Image:      image,
-			Cmd:        cmd,
-			Env:        env,
-			User:       uid,
-			Entrypoint: entrypoint,
+			Image:        image,
+			Cmd:          cmd,
+			Env:          env,
+			User:         uid,
+			Entrypoint:   entrypoint,
+			AttachStderr: true,
+			AttachStdout: true,
 		},
 		HostConfig: &docker.HostConfig{
 			Binds: binds,
