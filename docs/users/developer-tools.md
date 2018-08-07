@@ -75,7 +75,7 @@ The following should be added to the `settings.php` file so that the `drush.sett
 // This determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
 if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
-  include __DIR__ . '../../../drush.settings.php';
+  include __DIR__ . '/../../../drush.settings.php';
 }
 ```
 
