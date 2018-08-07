@@ -697,9 +697,9 @@ func drupalImportFilesAction(app *DdevApp, importPath, extPath string) error {
 		return err
 	}
 
+	// If the destination path exists, remove it as was warned
 	if fileutil.FileExists(destPath) {
-		// ensure existing directory is empty
-		if err := fileutil.PurgeDirectory(destPath); err != nil {
+		if err := os.RemoveAll(destPath); err != nil {
 			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
 		}
 	}
