@@ -442,9 +442,12 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	if err != nil {
 		return "", fmt.Errorf("failed to StartContainer: %v", err)
 	}
-	_, err = client.WaitContainer(container.ID)
+	exitCode, err := client.WaitContainer(container.ID)
 	if err != nil {
 		return "", fmt.Errorf("failed to WaitContainer: %v", err)
+	}
+	if exitCode != 0 {
+		return "", fmt.Errorf("container run failed with exit code %d", exitCode)
 	}
 
 	var stdout bytes.Buffer

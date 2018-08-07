@@ -9,9 +9,10 @@ import (
 	"path/filepath"
 
 	. "github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/version"
-	docker "github.com/fsouza/go-dockerclient"
+	"github.com/fsouza/go-dockerclient"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -161,4 +162,29 @@ func TestGetContainerEnv(t *testing.T) {
 	assert.Equal("future-fry", env)
 	env = GetContainerEnv("NONEXISTENT", container)
 	assert.Equal("", env)
+}
+
+// TestRunSimpleContainer does a simple test of RunSimpleContainer()
+func TestRunSimpleContainer(t *testing.T) {
+	assert := asrt.New(t)
+
+	basename := fileutil.RandomFilenameBase()
+	pwd, _ := os.Getwd()
+	pwd, _ = filepath.Abs(pwd)
+	testdata := filepath.Join(pwd, "testdata")
+
+	// Try the success case; script found, runs, all good.
+	out, err := RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25")
+	assert.NoError(err)
+	assert.Contains(out, "simplescript.sh; TEMPENV=someenv UID=25")
+
+	// Try the case of running nonexistent script
+	out, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25")
+	assert.Error(err)
+	assert.Contains(err.Error(), "failed to StartContainer")
+
+	// Try the case of running a script that fails
+	out, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25")
+	assert.Error(err)
+	assert.Contains(err.Error(), "container run failed with exit code 5")
 }
