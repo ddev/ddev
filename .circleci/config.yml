@@ -27,13 +27,13 @@ jobs:
             make -s clean linux darwin windows_install
           name: Build the ddev executables
 
-      - run: make -s staticrequired
-
       # Run the built-in ddev tests with the executables just built.
       - run:
           command: make -s test
           name: ddev tests
           no_output_timeout: "40m"
+
+      - run: make -s staticrequired
 
       - run:
           command: bin/linux/ddev version
