@@ -533,9 +533,9 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
 
-	d7testerTest1, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_1.sql.gz"))
+	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_1.sql.gz"))
 	assert.NoError(err)
-	d7testerTest2, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_2.sql.gz"))
+	d7testerTest2Dump, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_2.sql.gz"))
 	assert.NoError(err)
 
 	// Use d7 only for this test, the key thing is the database interaction
@@ -562,36 +562,31 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
 	}
-
-	// Get rid of any existing database
-	err = app.Down(true, false)
-	assert.NoError(err)
-	// And then start it up again fresh, ready for install.
-	err = app.Start()
-	assert.NoError(err)
-
-	// Test at the beginning using install.php; it should work as expected.
-	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+"/install.php?profile=commerce_kickstart", "We use DFP to show you content relevant to Drupal Commerce")
-
-	err = app.ImportDB(d7testerTest1, "")
-	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1, err)
+	
+	err = app.ImportDB(d7testerTest1Dump, "")
+	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
 
 	// Make a snapshot of d7 tester test 1
-	d7testerTest1Snapshot, err := app.SnapshotDatabase("")
+	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
+	snapshotName, err := app.SnapshotDatabase("d7testerTest1")
 	assert.NoError(err)
+	assert.EqualValues(snapshotName, "d7testerTest1")
+	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
 
-	err = app.ImportDB(d7testerTest2, "")
-	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2, err)
+	err = app.ImportDB(d7testerTest2Dump, "")
+	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
 
-	d7testerTest2Snapshot, err := app.SnapshotDatabase("")
+	snapshotName, err = app.SnapshotDatabase("d7testerTest2")
 	assert.NoError(err)
+	assert.EqualValues(snapshotName, "d7testerTest2")
+	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
 
-	err = app.RestoreSnapshot(d7testerTest1Snapshot)
+	err = app.RestoreSnapshot("d7testerTest1")
 	assert.NoError(err)
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
-	err = app.RestoreSnapshot(d7testerTest2Snapshot)
+	err = app.RestoreSnapshot("d7testerTest2")
 	assert.NoError(err)
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
 
