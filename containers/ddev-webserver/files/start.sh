@@ -54,10 +54,12 @@ fi
 printf "\nexport APACHE_RUN_USER=uid_$(id -u)\nexport APACHE_RUN_GROUP=gid_$(id -g)\n" >>/etc/apache2/envvars
 if [ "$DDEV_WEBSERVER_TYPE" = "apache-cgi" ] ; then
     a2enmod php${DDEV_PHP_VERSION}
+    a2enmod rewrite
 fi
 if [ "$DDEV_WEBSERVER_TYPE" = "apache-fpm" ] ; then
     a2enmod proxy_fcgi setenvif
     a2enconf php${DDEV_PHP_VERSION}-fpm
+    a2enmod rewrite
 fi
 
 # Substitute values of environment variables in nginx configuration

@@ -114,7 +114,6 @@ RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.lo
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
 
 RUN for v in $PHP_VERSIONS; do a2dismod $v; done
-RUN a2enmod rewrite
 
 EXPOSE 80 8025
 HEALTHCHECK --interval=2s --retries=5 CMD ["/healthcheck.sh"]
