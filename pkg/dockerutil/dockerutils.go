@@ -415,8 +415,8 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 
 	// Windows 10 Docker toolbox won't handle a bind mount like C:\..., so must convert to /c/...
 	for i := range binds {
-		binds[i] = strings.Replace(binds[i],`\`, `/`, -1)
-		if (strings.Index(binds[i], ":") == 1) {
+		binds[i] = strings.Replace(binds[i], `\`, `/`, -1)
+		if strings.Index(binds[i], ":") == 1 {
 			binds[i] = strings.Replace(binds[i], ":", "", 1)
 			binds[i] = "/" + binds[i]
 			// And amazingly, the drive letter must be lower-case.
