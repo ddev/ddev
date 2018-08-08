@@ -29,6 +29,7 @@ import (
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-shellwords"
 	"time"
+	"path"
 )
 
 const containerWaitTimeout = 61
@@ -910,9 +911,11 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 		t := time.Now()
 		snapshotName = app.Name + "_" + t.Format("20060102150405")
 	}
-	snapshotDir := filepath.Join("db_snapshots", snapshotName)
+	// Container side has to use path.Join instead of filepath.Join because they are
+	// targeted at the linux filesystem, so won't work with filepath on Windows
+	snapshotDir := path.Join("db_snapshots", snapshotName)
 	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
-	containerSnapshotDir := filepath.Join("/mnt/ddev_config", snapshotDir)
+	containerSnapshotDir := path.Join("/mnt/ddev_config", snapshotDir)
 	err := os.MkdirAll(hostSnapshotDir, 0777)
 	if err != nil {
 		return snapshotName, err

@@ -562,7 +562,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
 	}
-	
+
 	err = app.ImportDB(d7testerTest1Dump, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
