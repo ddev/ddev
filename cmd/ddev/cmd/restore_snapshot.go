@@ -9,7 +9,7 @@ import (
 
 // DdevRestoreSnapshotCommand provides the ability to revert to a database snapshot
 var DdevRestoreSnapshotCommand = &cobra.Command{
-	Use:   "restore-snapshot projectname_HHHHMMDDHHMMSS",
+	Use:   "restore-snapshot [snapshot_name]",
 	Short: "Restore a project's database to the provided snapshot version.",
 	Long: `Uses mariabackup command to restore a project database to a particular snapshot from the .ddev/db_snapshots folder.
 Example: "ddev restore-snapshot d8git_20180717203845"`,
