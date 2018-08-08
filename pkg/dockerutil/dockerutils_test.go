@@ -179,12 +179,12 @@ func TestRunSimpleContainer(t *testing.T) {
 	assert.Contains(out, "simplescript.sh; TEMPENV=someenv UID=25")
 
 	// Try the case of running nonexistent script
-	out, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25")
+	_, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25")
 	assert.Error(err)
 	assert.Contains(err.Error(), "failed to StartContainer")
 
 	// Try the case of running a script that fails
-	out, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25")
+	_, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25")
 	assert.Error(err)
 	assert.Contains(err.Error(), "container run failed with exit code 5")
 }
