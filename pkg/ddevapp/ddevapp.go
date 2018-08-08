@@ -994,6 +994,10 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 
 	// Remove data/database/hostname if we need to.
 	if removeData {
+		if err = app.RemoveHostsEntries(); err != nil {
+			return fmt.Errorf("failed to remove hosts entries: %v", err)
+		}
+
 		client := dockerutil.GetDockerClient()
 		err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: app.Name + "-mariadb"})
 		if err != nil {
