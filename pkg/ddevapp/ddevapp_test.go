@@ -2,6 +2,7 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -21,7 +22,9 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+
 	"github.com/fsouza/go-dockerclient"
+	"github.com/google/uuid"
 	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
@@ -672,6 +675,55 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	}
 }
 
+// TestDdevImportFilesDir tests that "ddev import-files" can successfully import non-archive directories
+func TestDdevImportFilesDir(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	// Create a dummy directory to test non-archive imports
+	importDir, err := ioutil.TempDir("", t.Name())
+	assert.NoError(err)
+	fileNames := make([]string, 0)
+	for i := 0; i < 5; i++ {
+		fileName := uuid.New().String()
+		fileNames = append(fileNames, fileName)
+
+		fullPath := filepath.Join(importDir, fileName)
+		err = ioutil.WriteFile(fullPath, []byte(fileName), 0644)
+		assert.NoError(err)
+	}
+
+	for _, site := range TestSites {
+		switchDir := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+
+		testcommon.ClearDockerEnv()
+		err = app.Init(site.Dir)
+		assert.NoError(err)
+
+		// Function under test
+		err = app.ImportFiles(importDir, "")
+		assert.NoError(err, "Importing a directory returned an error:", err)
+
+		// Confirm contents of destination dir after import
+		absUploadDir := filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir())
+		uploadedFiles, err := ioutil.ReadDir(absUploadDir)
+		assert.NoError(err)
+
+		uploadedFilesMap := map[string]bool{}
+		for _, uploadedFile := range uploadedFiles {
+			uploadedFilesMap[filepath.Base(uploadedFile.Name())] = true
+		}
+
+		for _, expectedFile := range fileNames {
+			assert.True(uploadedFilesMap[expectedFile], "Expected file %s not found for site: %s", expectedFile, site.Name)
+		}
+
+		runTime()
+		switchDir()
+	}
+}
+
 // TestDdevImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestDdevImportFiles(t *testing.T) {
 	assert := asrt.New(t)
@@ -699,7 +751,7 @@ func TestDdevImportFiles(t *testing.T) {
 			assert.NoError(err)
 		}
 
-		if site.FullSiteTarballURL != "" {
+		if site.FullSiteTarballURL != "" && site.FullSiteArchiveExtPath != "" {
 			_, siteTarPath, err := testcommon.GetCachedArchive(site.Name, "local-site-tar", "", site.FullSiteTarballURL)
 			assert.NoError(err)
 			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
