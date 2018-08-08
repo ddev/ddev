@@ -563,6 +563,13 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
 	}
 
+	// Get rid of any existing database
+	err = app.Down(true, false)
+	assert.NoError(err)
+	// And then start it up again fresh, ready for install.
+	err = app.Start()
+	assert.NoError(err)
+
 	// Test at the beginning using install.php; it should work as expected.
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+"/install.php?profile=commerce_kickstart", "We use DFP to show you content relevant to Drupal Commerce")
 
