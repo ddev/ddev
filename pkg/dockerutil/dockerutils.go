@@ -412,6 +412,24 @@ func GetDockerIP() (string, error) {
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
 func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string) (string, error) {
 	client := GetDockerClient()
+
+	// Windows 10 Docker toolbox won't handle a bind mount like C:\..., so must convert to /c/...
+	for i := range binds {
+		binds[i] = strings.Replace(binds[i],`\`, `/`, -1)
+		if (strings.Index(binds[i], ":") == 1) {
+			binds[i] = strings.Replace(binds[i], ":", "", 1)
+			binds[i] = "/" + binds[i]
+			// And amazingly, the drive letter must be lower-case.
+			re := regexp.MustCompile("^/[A-Z]/")
+			driveLetter := re.FindString(binds[i])
+			if len(driveLetter) == 3 {
+				binds[i] = strings.TrimPrefix(binds[i], driveLetter)
+				binds[i] = strings.ToLower(driveLetter) + binds[i]
+			}
+
+		}
+	}
+
 	options := docker.CreateContainerOptions{
 		Name: name,
 		Config: &docker.Config{
