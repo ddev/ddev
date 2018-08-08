@@ -577,11 +577,10 @@ func PrepDdevDirectory(dir string) error {
 			return err
 		}
 	}
-	gitignoreFile := filepath.Join(dir, ".gitignore")
-	gitignoreContent := []byte("#This file is created and managed by ddev\n/docker-compose.yaml\n/import.yaml\n")
-	err := ioutil.WriteFile(gitignoreFile, gitignoreContent, 0644)
+
+	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml")
 	if err != nil {
-		return fmt.Errorf("Failed to write .ddev/.gitignore file: %v", err)
+		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
 
 	return nil
