@@ -189,7 +189,7 @@ const gitIgnoreTemplate = `{{.Signature}}: Automatically generated ddev .gitigno
 /{{.}}{{end}}
 `
 
-type GitIgnoreTemplate struct {
+type ignoreTemplateContents struct {
 	Signature    string
 	IgnoredItems []string
 }
@@ -225,7 +225,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 	}
 	defer util.CheckClose(file)
 
-	parms := GitIgnoreTemplate{
+	parms := ignoreTemplateContents{
 		Signature:    DdevFileSignature,
 		IgnoredItems: ignores,
 	}
