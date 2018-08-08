@@ -28,8 +28,8 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-shellwords"
-	"time"
 	"path"
+	"time"
 )
 
 const containerWaitTimeout = 61
