@@ -11,7 +11,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 // docrootRelPath is the relative path to the docroot where index.php is
@@ -47,15 +46,7 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Failed(err.Error())
 	}
 
-	// Find out if flags have been provided
-	flagsProvided := false
-	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		if flag.Changed {
-			flagsProvided = true
-		}
-	})
-
-	if !flagsProvided {
+	if cmd.Flags().NFlag() == 0 {
 		err = app.PromptForConfig()
 		if err != nil {
 			util.Failed("There was a problem configuring your project: %v", err)
