@@ -23,5 +23,6 @@ pages:
     - 'Integration with Hosting Providers':
       - 'Pantheon': 'users/providers/pantheon.md'
     - 'Troubleshooting': 'users/troubleshooting.md'
+    - 'Docker Installation': 'users/docker_installation.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'
