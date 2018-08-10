@@ -100,7 +100,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 // the directory to the ddev config.yaml.
 func getTypo3UploadDir(app *DdevApp) string {
 	// @todo: Check to see if this gets overridden in LocalConfiguration.php
-	return "uploads"
+	return "fileadmin"
 }
 
 // Typo3Hooks adds a TYPO3-specific hooks example for post-import-db
