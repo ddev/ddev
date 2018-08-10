@@ -32,10 +32,11 @@ func TestValidateAsset(t *testing.T) {
 	err = os.Mkdir(testDir, 0755)
 	assert.NoError(err)
 
-	testPath, err := appimport.ValidateAsset("~/"+testDirName, "files")
+	testPath, isArchive, err := appimport.ValidateAsset("~/"+testDirName, "files")
 	assert.NoError(err)
 	assert.Contains(testPath, userDir)
 	assert.False(strings.Contains(testPath, "~"))
+	assert.False(isArchive)
 	err = os.Remove(testDir)
 	assert.NoError(err)
 
@@ -43,25 +44,26 @@ func TestValidateAsset(t *testing.T) {
 	deepDir := filepath.Join(testdata, "dirlevel1", "dirlevel2")
 	err = os.Chdir(deepDir)
 	assert.NoError(err)
-	testPath, err = appimport.ValidateAsset("../../dirlevel1", "files")
+	testPath, _, err = appimport.ValidateAsset("../../dirlevel1", "files")
 	assert.NoError(err)
-
 	assert.Contains(testPath, "dirlevel1")
 
 	// archive
 	testArchivePath := filepath.Join(testdata, "somedb.sql.gz")
-	_, err = appimport.ValidateAsset(testArchivePath, "db")
-	assert.Error(err)
-	assert.Equal(err.Error(), "is archive")
+	_, isArchive, err = appimport.ValidateAsset(testArchivePath, "db")
+	assert.NoError(err)
+	assert.True(isArchive)
 
 	// db no sql
 	gofilePath := filepath.Join(testdata, "junk.go")
-	_, err = appimport.ValidateAsset(gofilePath, "db")
+	_, isArchive, err = appimport.ValidateAsset(gofilePath, "db")
 	assert.Contains(err.Error(), "provided path is not a .sql file or archive")
 	assert.Error(err)
+	assert.False(isArchive)
 
 	// files not a directory
-	_, err = appimport.ValidateAsset(gofilePath, "files")
+	_, isArchive, err = appimport.ValidateAsset(gofilePath, "files")
+	assert.False(isArchive)
 	assert.Error(err)
 	assert.Contains(err.Error(), "provided path is not a directory or archive")
 }

@@ -46,15 +46,15 @@ imported.`,
 			promptForFileSource(&sourcePath)
 		}
 
-		importPath, err := appimport.ValidateAsset(sourcePath, "files")
+		importPath, isArchive, err := appimport.ValidateAsset(sourcePath, "files")
 		if err != nil {
 			// Ensure we prompt for extraction path if an archive is provided, while still allowing
 			// non-interactive use of --src flag without providing a --extract-path flag.
-			if err.Error() == "is archive" && showExtPathPrompt {
+			if isArchive && showExtPathPrompt {
 				promptForExtPath(&extPath)
 			}
 
-			if err.Error() != "is archive" {
+			if err != nil {
 				util.Failed("Failed to import files for %s: %v", app.GetName(), err)
 			}
 		}

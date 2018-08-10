@@ -247,15 +247,16 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		imPath = util.GetInput("")
 	}
 
-	importPath, err := appimport.ValidateAsset(imPath, "db")
+	importPath, isArchive, err := appimport.ValidateAsset(imPath, "db")
 	if err != nil {
-		if err.Error() == "is archive" && extPathPrompt {
+		if isArchive && extPathPrompt {
 			output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
 			fmt.Print("Archive extraction path:")
 
 			extPath = util.GetInput("")
 		}
-		if err.Error() != "is archive" {
+
+		if err != nil {
 			return err
 		}
 	}
