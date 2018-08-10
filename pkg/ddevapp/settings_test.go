@@ -68,7 +68,7 @@ func TestWriteSettings(t *testing.T) {
 		// nolint: vetshadow
 		createdFile, err := app.CreateSettingsFile()
 		assert.NoError(err)
-		assert.EqualValues(t, expectedSettingsFile, createdFile)
+		assert.EqualValues(expectedSettingsFile, createdFile)
 		_, err = os.Stat(expectedSettingsFile)
 		assert.NoError(err)
 		// nolint: vetshadow
@@ -81,6 +81,7 @@ func TestWriteSettings(t *testing.T) {
 
 	err = os.RemoveAll(dir)
 	assert.NoError(err)
+	println("") // Just lets Goland find the PASS when done.
 }
 
 // TestWriteDrushConfig test the drush config we write
