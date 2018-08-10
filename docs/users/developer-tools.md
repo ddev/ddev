@@ -53,18 +53,4 @@ The port referenced is unique per running project, and randomly chosen from avai
 **Note:** The host database port is likely to change any time a project is stopped/removed and then later started again.
 
 ### Using Drush Installation on Host Machine
-If you have Drush installed on your host system, you can use it to interact with a ddev project by defining a `drush.settings.php` file at the docroot of your code base. This will be automatically referenced from the generated `settings.ddev.php` file which is located under `<docroot>/sites/default`. The `drush.settings.php` file should look similar to below, using the host port information for your project retrieved from `ddev describe`:
-
-```
-<?php
-
-$databases['default']['default'] = array(
-  'database' => "db",
-  'username' => "db",
-  'password' => "db",
-  'host' => "127.0.0.1",
-  'driver' => "mysql",
-  'port' => <YOUR_PROJECT_DB_PORT>,
-  'prefix' => "",
-);
-```
+If you have PHP and Drush installed on your host system, you can use it to interact with a ddev project. On the host system the extra include ddev_drush_settings.php is written on startup and will allow drush to access the database server. This may not work for all drush commands because of course the actual webserver environment is not available.

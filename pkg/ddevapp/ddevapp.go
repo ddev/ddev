@@ -158,11 +158,6 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["httpsurl"] = app.GetHTTPSURL()
 	appDesc["urls"] = app.GetAllURLs()
 
-	db, err := app.FindContainerByType("db")
-	if err != nil {
-		return nil, fmt.Errorf("Failed to find container of type db: %v", err)
-	}
-
 	// Only show extended status for running sites.
 	if app.SiteStatus() == SiteRunning {
 		dbinfo := make(map[string]interface{})
@@ -170,11 +165,11 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		dbinfo["password"] = "db"
 		dbinfo["dbname"] = "db"
 		dbinfo["host"] = "db"
-		port := appports.GetPort("db")
-		dbinfo["port"] = port
-		dbPrivatePort, err := strconv.ParseInt(port, 10, 64)
+		dbPublicPort, err := app.GetPublishedPort("db")
 		util.CheckErr(err)
-		dbinfo["published_port"] = fmt.Sprint(dockerutil.GetPublishedPort(dbPrivatePort, db))
+		dbinfo["dbPort"] = appports.GetPort("db")
+		util.CheckErr(err)
+		dbinfo["published_port"] = dbPublicPort
 		appDesc["dbinfo"] = dbinfo
 
 		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("mailhog")
@@ -188,6 +183,19 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
 
 	return appDesc, nil
+}
+
+// GetPublishedPort returns the host-exposed public port of a container.
+func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
+	dbContainer, err := app.FindContainerByType(serviceName)
+	if err != nil {
+		return -1, fmt.Errorf("Failed to find container of type %s: %v", serviceName, err)
+	}
+
+	privatePort, _ := strconv.ParseInt(appports.GetPort(serviceName), 10, 16)
+
+	publishedPort := dockerutil.GetPublishedPort(privatePort, dbContainer)
+	return publishedPort, nil
 }
 
 // GetAppRoot return the full path from root to the app directory
