@@ -398,6 +398,27 @@ If you want to use import-files without answering prompts, you can use the `--sr
 
 `ddev import-files --src=/tmp/files.tgz`
 
+## Snapshotting and restoring a database
+
+The project database is stored in a docker volume, but can be snapshotted (and later restored) with the `ddev snapshot` command. A snapshot is automatically taken when you do a `ddev remove --remove-data`. For example:
+
+```
+$ ddev snapshot
+Creating database snapshot d8git_20180801132403
+Created database snapshot d8git_20180801132403 in /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git_20180801132403
+Created snapshot d8git_20180801132403
+rfay@rfay-mbp-2017:~/workspace/d8git$ ddev restore-snapshot d8git_20180801132403
+...
+
+$ ddev restore-snapshot d8git_20180801132403
+...
+Restored database snapshot: /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git_20180801132403
+
+```
+
+Snapshots are stored in the project's .ddev/db_snapshots directory, and the directory can be renamed as necessary. For example, if you rename the above d8git_20180801132403 directory to "working_before_migration", then you can use `ddev restore-snapshot working_before_migration`.
+
+
 ## Interacting with your project
 ddev provides several commands to facilitate interacting with your project in the development environment. These commands can be run within the working directory of your project while the project is running in ddev.
 

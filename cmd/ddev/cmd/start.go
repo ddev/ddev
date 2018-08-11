@@ -11,7 +11,7 @@ import (
 
 var startAll bool
 
-// StartCmd represents the add command
+// StartCmd provides the ddev start command
 var StartCmd = &cobra.Command{
 	Use:     "start [projectname ...]",
 	Aliases: []string{"add"},
@@ -37,7 +37,7 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 			output.UserOut.Printf("Starting %s...", app.GetName())
 
 			if err := app.Start(); err != nil {
-				util.Warning("Failed to start %s: %v", app.GetName(), err)
+				util.Failed("Failed to start %s: %v", app.GetName(), err)
 				continue
 			}
 

@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
@@ -93,6 +94,7 @@ var (
 			Safe200URL:                    "/INSTALL.md",
 		},
 	}
+	FullTestSites = TestSites
 )
 
 func TestMain(m *testing.M) {
@@ -185,7 +187,7 @@ func TestMain(m *testing.M) {
 		}
 
 		if app.SiteStatus() != ddevapp.SiteNotFound {
-			err = app.Down(true)
+			err = app.Down(true, false)
 			if err != nil {
 				log.Fatalf("TestMain shutdown: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
 			}
@@ -308,7 +310,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 		err = app.Stop()
 		assert.NoError(err)
-		err = app.Down(false)
+		err = app.Down(false, false)
 		assert.NoError(err)
 
 		runTime()
@@ -524,7 +526,80 @@ func TestDdevImportDB(t *testing.T) {
 	}
 }
 
-// TestWriteableFilesDirectory tests to make sure that files created on host are writeable on container
+// TestDdevRestoreSnapshot tests creating a snapshot and reverting to it
+func TestDdevRestoreSnapshot(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
+
+	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_1.sql.gz"))
+	assert.NoError(err)
+	d7testerTest2Dump, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_2.sql.gz"))
+	assert.NoError(err)
+
+	// Use d7 only for this test, the key thing is the database interaction
+	site := FullTestSites[2]
+	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
+		err = site.Prepare()
+		if err != nil {
+			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+		}
+	}
+
+	switchDir := site.Chdir()
+	testcommon.ClearDockerEnv()
+
+	err = app.Init(site.Dir)
+	if err != nil {
+		if app.SiteStatus() != ddevapp.SiteRunning {
+			t.Fatalf("app.Init() failed on site %s in dir %s, err=%v", site.Name, site.Dir, err)
+		}
+	}
+
+	err = app.Start()
+	if err != nil {
+		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
+	}
+
+	err = app.ImportDB(d7testerTest1Dump, "")
+	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
+
+	// Make a snapshot of d7 tester test 1
+	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
+	snapshotName, err := app.SnapshotDatabase("d7testerTest1")
+	assert.NoError(err)
+	assert.EqualValues(snapshotName, "d7testerTest1")
+	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
+
+	err = app.ImportDB(d7testerTest2Dump, "")
+	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
+
+	snapshotName, err = app.SnapshotDatabase("d7testerTest2")
+	assert.NoError(err)
+	assert.EqualValues(snapshotName, "d7testerTest2")
+	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
+
+	err = app.RestoreSnapshot("d7testerTest1")
+	assert.NoError(err)
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
+	err = app.RestoreSnapshot("d7testerTest2")
+	assert.NoError(err)
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	// TODO: Check behavior of ddev rm with snapshot, see if it has right stuff in it.
+
+	runTime()
+	switchDir()
+}
+
+// TestWriteableFilesDirectory tests to make sure that files created on host are writable on container
 // and files ceated in container are correct user on host.
 func TestWriteableFilesDirectory(t *testing.T) {
 	assert := asrt.New(t)
@@ -995,7 +1070,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	// Notice that we set the removeData parameter to true.
 	// This gives us added test coverage over sites with missing directories
 	// by ensuring any associated database files get cleaned up as well.
-	err = app.Down(true)
+	err = app.Down(true, false)
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
@@ -1039,7 +1114,7 @@ func TestGetAppsEmpty(t *testing.T) {
 		assert.NoError(err)
 
 		if app.SiteStatus() != ddevapp.SiteNotFound {
-			err = app.Down(true)
+			err = app.Down(true, false)
 			assert.NoError(err)
 		}
 		switchDir()
@@ -1125,7 +1200,7 @@ func TestListWithoutDir(t *testing.T) {
 	testDirSafe := strings.Replace(testDir, "\\", ".", -1)
 	assert.Regexp(regexp.MustCompile("(?s)"+ddevapp.SiteDirMissing+".*"+testDirSafe), table.String())
 
-	err = app.Down(true)
+	err = app.Down(true, false)
 	assert.NoError(err)
 
 	// Change back to package dir. Lots of things will have to be cleaned up
@@ -1249,6 +1324,82 @@ func TestGetAllURLs(t *testing.T) {
 
 		runTime()
 	}
+}
+
+// TestDbMigration tests migration from bind-mounted db to volume-mounted db
+// This should be important around the time of its release, 2018-08-02 or so, but should be increasingly
+// irrelevant after that and can eventually be removed.
+func TestDbMigration(t *testing.T) {
+	assert := asrt.New(t)
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDbMigration"))
+
+	app := &ddevapp.DdevApp{}
+	dbMigrationTarball, err := filepath.Abs(filepath.Join("testdata", "db_migration", "d7_to_migrate.tgz"))
+	assert.NoError(err)
+
+	// Use d7 only for this test
+	site := FullTestSites[2]
+
+	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
+		err = site.Prepare()
+		if err != nil {
+			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+		}
+	}
+
+	switchDir := site.Chdir()
+	testcommon.ClearDockerEnv()
+
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+
+	dataDir := filepath.Join(util.GetGlobalDdevDir(), app.Name, "mysql")
+
+	// Remove any existing dataDir or migration backups
+	if fileutil.FileExists(dataDir) {
+		err = os.RemoveAll(dataDir)
+		assert.NoError(err)
+	}
+	if fileutil.FileExists(dataDir + "_migrated.bak") {
+		err = os.RemoveAll(dataDir + "_migrated.bak")
+		assert.NoError(err)
+	}
+
+	// Start it to make sure we can do a removeData
+	err = app.Start()
+	assert.NoError(err)
+
+	// removeData removes the volume so we have a completely clean start
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	// Untar the to-migrate db into old-style dataDir (~/.ddev/projectname/mysql)
+	err = os.MkdirAll(dataDir, 0755)
+	assert.NoError(err)
+	err = archive.Untar(dbMigrationTarball, dataDir, "")
+	assert.NoError(err)
+
+	_, err = app.CreateSettingsFile()
+	assert.NoError(err)
+
+	// app.Start() will discover the mysql directory and migrate it to a snapshot.
+	err = app.Start()
+	if err != nil {
+		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
+	}
+
+	// Check to see expected migrated data.
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "This d7 site is ready for migration to docker-volume")
+
+	assert.True(fileutil.FileExists(dataDir + "_migrated.bak"))
+	assert.False(fileutil.FileExists(dataDir))
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	runTime()
+	switchDir()
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app

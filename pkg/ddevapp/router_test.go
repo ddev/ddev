@@ -66,7 +66,7 @@ func TestPortOverride(t *testing.T) {
 		// each down before testing the next that would be a more trivial test.
 		// Don't worry about the possible error case as this is just a test cleanup
 		// nolint: errcheck
-		defer app.Down(true)
+		defer app.Down(true, false)
 	}
 
 }

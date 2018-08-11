@@ -404,3 +404,80 @@ func GetDockerIP() (string, error) {
 
 	return dockerIP, nil
 }
+
+// RunSimpleContainer runs a container (non-daemonized) and captures the stdout.
+// It will block, so not to be run on a container whose entryoint or cmd might hang or run too long.
+// This should be the equivalent of something like
+// docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
+// Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
+func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string) (string, error) {
+	client := GetDockerClient()
+
+	// Windows 10 Docker toolbox won't handle a bind mount like C:\..., so must convert to /c/...
+	for i := range binds {
+		binds[i] = strings.Replace(binds[i], `\`, `/`, -1)
+		if strings.Index(binds[i], ":") == 1 {
+			binds[i] = strings.Replace(binds[i], ":", "", 1)
+			binds[i] = "/" + binds[i]
+			// And amazingly, the drive letter must be lower-case.
+			re := regexp.MustCompile("^/[A-Z]/")
+			driveLetter := re.FindString(binds[i])
+			if len(driveLetter) == 3 {
+				binds[i] = strings.TrimPrefix(binds[i], driveLetter)
+				binds[i] = strings.ToLower(driveLetter) + binds[i]
+			}
+
+		}
+	}
+
+	options := docker.CreateContainerOptions{
+		Name: name,
+		Config: &docker.Config{
+			Image:        image,
+			Cmd:          cmd,
+			Env:          env,
+			User:         uid,
+			Entrypoint:   entrypoint,
+			AttachStderr: true,
+			AttachStdout: true,
+		},
+		HostConfig: &docker.HostConfig{
+			Binds: binds,
+		},
+	}
+
+	container, err := client.CreateContainer(options)
+	if err != nil {
+		return "", fmt.Errorf("failed to create/start docker container (%v):%v", options, err)
+	}
+
+	// nolint: errcheck
+	defer client.RemoveContainer(docker.RemoveContainerOptions{
+		Force: true,
+		ID:    container.ID,
+	})
+	err = client.StartContainer(container.ID, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to StartContainer: %v", err)
+	}
+	exitCode, err := client.WaitContainer(container.ID)
+	if err != nil {
+		return "", fmt.Errorf("failed to WaitContainer: %v", err)
+	}
+	if exitCode != 0 {
+		return "", fmt.Errorf("container run failed with exit code %d", exitCode)
+	}
+
+	var stdout bytes.Buffer
+	err = client.Logs(docker.LogsOptions{
+		Stdout:       true,
+		Stderr:       true,
+		Container:    container.ID,
+		OutputStream: &stdout,
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to get Logs(): %v", err)
+	}
+
+	return stdout.String(), nil
+}

@@ -6,6 +6,8 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in ${PWD}"
+
 function cleanup {
     set +x
     echo "--- Cleanup docker"
@@ -13,6 +15,8 @@ function cleanup {
     if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
         docker rm -f $(docker ps -aq) >/dev/null || true
     fi
+
+	docker system prune --volumes --force
 
     # Make sure we don't have any existing containers on the testbot that might
     # result in this container not being built from scratch.

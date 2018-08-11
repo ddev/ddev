@@ -7,10 +7,25 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
+
+var TestSites = []TestSite{
+	{
+		Name:                          "TestValidTestSiteWordpress",
+		SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
+		ArchiveInternalExtractionPath: "wordpress-0.4.0/",
+		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
+		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+		Docroot:                       "htdocs",
+		Type:                          "wordpress",
+		Safe200URL:                    "/readme.html",
+	},
+}
 
 // TestTmpDir tests the ability to create a temporary directory.
 func TestTmpDir(t *testing.T) {
@@ -90,24 +105,17 @@ func TestValidTestSite(t *testing.T) {
 	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
 	//not need to be updated over time.
-	ts := TestSite{
-		Name:                          "TestValidTestSiteWordpress",
-		SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
-		ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
-		Docroot:                       "htdocs",
-		Type:                          "wordpress",
-	}
+	site := TestSites[0]
 
-	// Create a testsite and ensure the prepare() method extracts files into a temporary directory.
-	err = ts.Prepare()
-	if err != nil {
-		t.Logf("Prepare() failed on TestSite %v, err=%v", ts, err)
-		t.FailNow()
+	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
+		err = site.Prepare()
+		if err != nil {
+			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+		}
 	}
-	assert.NotNil(ts.Dir, "Directory is set.")
-	docroot := filepath.Join(ts.Dir, ts.Docroot)
+	assert.NotNil(site.Dir, "Directory is set.")
+	docroot := filepath.Join(site.Dir, site.Docroot)
 	dirStat, err := os.Stat(docroot)
 	assert.NoError(err, "Docroot exists after prepare()")
 	if err != nil {
@@ -115,12 +123,12 @@ func TestValidTestSite(t *testing.T) {
 	}
 	assert.True(dirStat.IsDir(), "Docroot is a directory")
 
-	cleanup := ts.Chdir()
+	cleanup := site.Chdir()
 	currentDir, err := os.Getwd()
 	assert.NoError(err, "We can determine the current directory after changing to our TestSite directory")
 
 	// On OSX this are created under /var, but /var is a symlink to /var/private, so we cannot ensure complete equality of these strings.
-	assert.Contains(currentDir, ts.Dir, "Current directory matches expectations")
+	assert.Contains(currentDir, site.Dir, "Current directory matches expectations")
 
 	cleanup()
 
@@ -128,10 +136,51 @@ func TestValidTestSite(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(startingDir, currentDir, "Able to return to our original starting directory")
 
-	ts.Cleanup()
-	_, err = os.Stat(ts.Dir)
+	site.Cleanup()
+	_, err = os.Stat(site.Dir)
 	assert.Error(err, "Could not stat temporary directory after cleanup")
 
+}
+
+// TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
+func TestGetLocalHTTPResponse(t *testing.T) {
+	assert := asrt.New(t)
+
+	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
+	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
+	//not need to be updated over time.
+	site := TestSites[0]
+
+	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
+		err := site.Prepare()
+		if err != nil {
+			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+		}
+	}
+
+	cleanup := site.Chdir()
+
+	app := &ddevapp.DdevApp{}
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	err = app.Start()
+	assert.NoError(err)
+
+	safeURL := app.GetHTTPURL() + site.Safe200URL
+	out, err := GetLocalHTTPResponse(t, safeURL)
+	assert.NoError(err)
+	assert.Contains(out, "Famous 5-minute install")
+
+	// This does the same thing as previous, but worth exercising it here.
+	EnsureLocalHTTPContent(t, safeURL, "Famous 5-minute install")
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	cleanup()
+
+	site.Cleanup()
 }
 
 // TestGetCachedArchive tests download and extraction of archives for test sites

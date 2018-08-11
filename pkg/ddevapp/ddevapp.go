@@ -28,6 +28,8 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-shellwords"
+	"path"
+	"time"
 )
 
 const containerWaitTimeout = 61
@@ -50,6 +52,18 @@ const SiteStopped = "stopped"
 // DdevFileSignature is the text we use to detect whether a settings file is managed by us.
 // If this string is found, we assume we can replace/update the file.
 const DdevFileSignature = "#ddev-generated"
+
+// UIDInt is the UID of the user used to run docker containers
+var UIDInt int
+
+// GIDInt is the GID of hte user used to run docker containers
+var GIDInt int
+
+// UIDStr is the UID (as a string) of the UID of the user used to run docker containers
+var UIDStr string
+
+// GIDStr is the GID (as string) of GID of user running docker containers
+var GIDStr string
 
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
@@ -613,13 +627,25 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
+	var err error
+
 	app.DockerEnv()
 
 	if app.APIVersion != version.DdevVersion {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
 	}
 
-	err := app.ProcessHooks("pre-start")
+	// IF we need to do a DB migration to docker-volume, do it here.
+	// It actually does the app.Start() at the end of the migration, so we can return successfully here.
+	migrationDone, err := app.migrateDbIfRequired()
+	if err != nil {
+		return fmt.Errorf("Failed to migrate db from bind-mounted db: %v", err)
+	}
+	if migrationDone {
+		return nil
+	}
+
+	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
 	}
@@ -647,6 +673,7 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
+
 	_, _, err = dockerutil.ComposeCmd(files, "up", "-d")
 	if err != nil {
 		return err
@@ -742,28 +769,27 @@ func (app *DdevApp) DockerEnv() {
 	curUser, err := user.Current()
 	util.CheckErr(err)
 
-	var uidInt, gidInt int
-	uidStr := curUser.Uid
-	gidStr := curUser.Gid
-	// For windows the uidStr/gidStr are usually way outside linux range (ends at 60000)
-	// so we have to run as root. We may have a host uidStr/gidStr greater in other contexts,
+	UIDStr = curUser.Uid
+	GIDStr = curUser.Gid
+	// For windows the UIDStr/GIDStr are usually way outside linux range (ends at 60000)
+	// so we have to run as root. We may have a host UIDStr/GIDStr greater in other contexts,
 	// bail and run as root.
-	if uidInt, err = strconv.Atoi(curUser.Uid); err != nil {
-		uidStr = "0"
+	if UIDInt, err = strconv.Atoi(curUser.Uid); err != nil {
+		UIDStr = "0"
 	}
-	if gidInt, err = strconv.Atoi(curUser.Gid); err != nil {
-		gidStr = "0"
+	if GIDInt, err = strconv.Atoi(curUser.Gid); err != nil {
+		GIDStr = "0"
 	}
 
 	// Warn about running as root if we're not on windows.
-	if runtime.GOOS != "windows" && (uidInt > 60000 || gidInt > 60000 || uidInt == 0) {
+	if runtime.GOOS != "windows" && (UIDInt > 60000 || GIDInt > 60000 || UIDInt == 0) {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
-	// If the uidStr or gidStr is outside the range possible in container, use root
-	if uidInt > 60000 || gidInt > 60000 {
-		uidStr = "0"
-		gidStr = "0"
+	// If the UIDStr or GIDStr is outside the range possible in container, use root
+	if UIDInt > 60000 || GIDInt > 60000 {
+		UIDStr = "0"
+		GIDStr = "0"
 	}
 
 	envVars := map[string]string{
@@ -775,17 +801,23 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_APPROOT":                  app.AppRoot,
 		"DDEV_DOCROOT":                  app.Docroot,
-		"DDEV_DATADIR":                  app.DataDir,
 		"DDEV_IMPORTDIR":                app.ImportDir,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
-		"DDEV_UID":                      uidStr,
-		"DDEV_GID":                      gidStr,
+		"DDEV_UID":                      UIDStr,
+		"DDEV_GID":                      GIDStr,
 		"DDEV_PHP_VERSION":              app.PHPVersion,
 		"DDEV_PROJECT_TYPE":             app.Type,
 		"DDEV_ROUTER_HTTP_PORT":         app.RouterHTTPPort,
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,
 		"DDEV_XDEBUG_ENABLED":           strconv.FormatBool(app.XdebugEnabled),
+	}
+
+	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
+	// It's used for special startup on restoring to a snapshot.
+	if len(os.Getenv("DDEV_MARIADB_LOCAL_COMMAND")) == 0 {
+		err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
+		util.CheckErr(err)
 	}
 
 	// Find out terminal dimensions
@@ -814,7 +846,7 @@ func (app *DdevApp) Stop() error {
 	app.DockerEnv()
 
 	if app.SiteStatus() == SiteNotFound {
-		return fmt.Errorf("no site to remove")
+		return fmt.Errorf("no project to stop")
 	}
 
 	if strings.Contains(app.SiteStatus(), SiteDirMissing) || strings.Contains(app.SiteStatus(), SiteConfigMissing) {
@@ -872,19 +904,92 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	return "", fmt.Errorf("settings files already exist and are being managed by the user")
 }
 
+// SnapshotDatabase forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
+// Returns the dirname of the snapshot and err
+func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
+	if snapshotName == "" {
+		t := time.Now()
+		snapshotName = app.Name + "_" + t.Format("20060102150405")
+	}
+	// Container side has to use path.Join instead of filepath.Join because they are
+	// targeted at the linux filesystem, so won't work with filepath on Windows
+	snapshotDir := path.Join("db_snapshots", snapshotName)
+	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
+	containerSnapshotDir := path.Join("/mnt/ddev_config", snapshotDir)
+	err := os.MkdirAll(hostSnapshotDir, 0777)
+	if err != nil {
+		return snapshotName, err
+	}
+
+	if app.SiteStatus() != SiteRunning {
+		err = app.Start()
+		if err != nil {
+			return snapshotName, fmt.Errorf("Failed to start project %s to snapshot database: %v", app.Name, err)
+		}
+	}
+
+	util.Warning("Creating database snapshot %s", snapshotName)
+	stdout, stderr, err := app.Exec("db", "bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log", containerSnapshotDir, snapshotName))
+	if err != nil {
+		util.Warning("Failed to create snapshot: %v, stdout=%s, stderr=%s", err, stdout, stderr)
+		return "", err
+	}
+	util.Success("Created database snapshot %s in %s", snapshotName, hostSnapshotDir)
+	return snapshotName, nil
+}
+
+// RestoreSnapshot restores a mariadb snapshot of the db to be loaded
+// The project must be stopped and docker volume removed and recreated for this to work.
+func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
+	snapshotDir := filepath.Join("db_snapshots", snapshotName)
+
+	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
+	if !fileutil.FileExists(hostSnapshotDir) {
+		return fmt.Errorf("Failed to find a snapshot in %s", hostSnapshotDir)
+	}
+
+	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
+		err := app.Down(false, false)
+		if err != nil {
+			return fmt.Errorf("Failed to rm  project for RestoreSnapshot: %v", err)
+		}
+	}
+
+	err := os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
+	util.CheckErr(err)
+	err = app.Start()
+	if err != nil {
+		return fmt.Errorf("Failed to start project for RestoreSnapshot: %v", err)
+	}
+	err = os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
+	util.CheckErr(err)
+
+	util.Success("Restored database snapshot: %s", hostSnapshotDir)
+	return nil
+}
+
 // Down stops the docker containers for the project in current directory.
-func (app *DdevApp) Down(removeData bool) error {
+func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
 
-	err := app.Stop()
+	var err error
+
+	if createSnapshot == true {
+		t := time.Now()
+		_, err = app.SnapshotDatabase(app.Name + "_remove_data_snapshot_" + t.Format("20060102150405"))
+		if err != nil {
+			return err
+		}
+	}
+
+	err = app.Stop()
 	if err != nil {
 		util.Warning("Failed to stop containers for %s: %v", app.GetName(), err)
 	}
-
 	// Remove all the containers and volumes for app.
 	err = Cleanup(app)
 	if err != nil {
-		return fmt.Errorf("failed to remove %s: %v", app.GetName(), err)
+		return fmt.Errorf("failed to remove ddev project %s: %v", app.GetName(), err)
 	}
 
 	// Remove data/database/hostname if we need to.
@@ -893,29 +998,12 @@ func (app *DdevApp) Down(removeData bool) error {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
 
-		// Check that app.DataDir is a directory that is safe to remove.
-		err = validateDataDirRemoval(app)
+		client := dockerutil.GetDockerClient()
+		err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: app.Name + "-mariadb"})
 		if err != nil {
-			return fmt.Errorf("failed to remove data/database directories: %v", err)
+			return err
 		}
-
-		// mysql data can be set to read-only on linux hosts. PurgeDirectory ensures files
-		// are writable before we attempt to remove them.
-		if !fileutil.FileExists(app.DataDir) {
-			util.Warning("No project data/database to remove")
-		} else {
-			// nolint: vetshadow
-			err := fileutil.PurgeDirectory(app.DataDir)
-			if err != nil {
-				return fmt.Errorf("failed to remove data directories: %v", err)
-			}
-			// PurgeDirectory leaves the directory itself in place, so we remove it here.
-			err = os.RemoveAll(app.DataDir)
-			if err != nil {
-				return fmt.Errorf("failed to remove data directory %s: %v", app.DataDir, err)
-			}
-			util.Success("Project data/database removed")
-		}
+		util.Success("Project data/database removed from docker volume for project %s", app.Name)
 	}
 
 	err = StopRouterIfNoContainers()
@@ -1071,7 +1159,6 @@ func (app *DdevApp) RemoveHostsEntries() error {
 func (app *DdevApp) prepSiteDirs() error {
 
 	dirs := []string{
-		app.DataDir,
 		app.ImportDir,
 	}
 
@@ -1152,7 +1239,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 		return app, err
 	}
 
-	if app.Name == "" || app.DataDir == "" {
+	if app.Name == "" {
 		err = restoreApp(app, siteName)
 		if err != nil {
 			return app, err
@@ -1162,43 +1249,13 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	return app, nil
 }
 
-// restoreApp recreates an AppConfig's Name and/or DataDir and returns an error
+// restoreApp recreates an AppConfig's Name and returns an error
 // if it cannot restore them.
 func restoreApp(app *DdevApp, siteName string) error {
 	if siteName == "" {
 		return fmt.Errorf("error restoring AppConfig: no project name given")
 	}
 	app.Name = siteName
-	// Ensure that AppConfig.DataDir is set so that site data can be removed if necessary.
-	dataDir := fmt.Sprintf("%s/%s", util.GetGlobalDdevDir(), app.GetName())
-	app.DataDir = dataDir
-
-	return nil
-}
-
-// validateDataDirRemoval validates that dataDir is a safe filepath to be removed by ddev.
-func validateDataDirRemoval(app *DdevApp) error {
-	dataDir := app.DataDir
-	unsafeFilePathErr := fmt.Errorf("filepath: %s unsafe for removal", dataDir)
-	// Check for an empty filepath
-	if dataDir == "" {
-		return unsafeFilePathErr
-	}
-	// Get the current working directory.
-	currDir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	// Check that dataDir is not the current directory.
-	if dataDir == currDir {
-		return unsafeFilePathErr
-	}
-	// Get the last element of dataDir and use it to check that there is something after GlobalDdevDir.
-	lastPathElem := filepath.Base(dataDir)
-	nextLastPathElem := filepath.Base(filepath.Dir(dataDir))
-	if lastPathElem == ".ddev" || nextLastPathElem != app.Name || lastPathElem == "" {
-		return unsafeFilePathErr
-	}
 	return nil
 }
 
@@ -1224,4 +1281,47 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	}
 	app.providerInstance = provider
 	return app.providerInstance, err
+}
+
+// migrateDbIfRequired checks for need of db migration to docker-volume-mount and if needed, does the migration.
+// This should be important around the time of its release, 2018-08-02 or so, but should be increasingly
+// irrelevant after that and can eventually be removed.
+// Returns bool (true if migration was done) and err
+func (app *DdevApp) migrateDbIfRequired() (bool, error) {
+	dataDir := filepath.Join(util.GetGlobalDdevDir(), app.Name, "mysql")
+
+	var err error
+	if fileutil.FileExists(dataDir) {
+		// If the dataDir exists, mount it onto ddev-dbserver and run script there that converts to a snapshot
+		// Then do a restore-snapshot on that snapshot.
+		// Old datadir can be renamed to .bak
+		output.UserOut.Print("Migrating bind-mounted database in ~/.ddev to docker-volume mounted database")
+		if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped || app.SiteStatus() == "db service stopped" || app.SiteStatus() == "web service stopped" {
+			err = app.Down(false, false)
+		}
+		if err != nil {
+			return false, fmt.Errorf("failed to stop/remove project %s: %v", app.Name, err)
+		}
+
+		t := time.Now()
+		snapshotName := fmt.Sprintf("%s_volume_migration_snapshot_%s", app.Name, t.Format("20060102150405"))
+
+		out, err := dockerutil.RunSimpleContainer(version.DBImg+":"+version.DBTag, app.Name+"_migrate_volume", nil, []string{"/migrate_file_to_volume.sh", UIDStr, GIDStr}, []string{"SNAPSHOT_NAME=" + snapshotName}, []string{app.GetConfigPath("") + ":" + "/mnt/ddev_config", dataDir + ":/var/lib/mysql"}, UIDStr)
+		if err != nil {
+			return false, fmt.Errorf("failed to run migrate_file_to_volume.sh, err=%v output=%v", err, out)
+		}
+		err = os.Rename(dataDir, dataDir+"_migrated.bak")
+		if err != nil {
+			return false, fmt.Errorf("Unable to rename %s to %s; you can remove the directory manually if that's ok: %v", dataDir, dataDir+"_migrated.bak", err)
+		}
+
+		// RestoreSnapshot() does a Start(); start doesn't do the migration because dataDir now isn't there.
+		err = app.RestoreSnapshot(snapshotName)
+		if err != nil {
+			return false, fmt.Errorf("failed to restore migration snapshot %s: %v", snapshotName, err)
+		}
+		util.Success("Migrated bind-mounted db from %s to docker-volume mounted db.", dataDir)
+		return true, nil
+	}
+	return false, nil
 }

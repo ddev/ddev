@@ -71,14 +71,17 @@ func TestServices(t *testing.T) {
 
 	if len(ServiceFiles) > 0 {
 		for _, site := range TestSites {
-			err := site.Prepare()
-			if err != nil {
-				t.Fatalf("Prepare() failed on TestSite.Prepare() for site=%s, err=%v", site.Name, err)
+			// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+			if site.Dir == "" || !fileutil.FileExists(site.Dir) {
+				err := site.Prepare()
+				if err != nil {
+					t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+				}
 			}
 
 			app := &ddevapp.DdevApp{}
 
-			err = app.Init(site.Dir)
+			err := app.Init(site.Dir)
 			assert.NoError(err)
 
 			for _, service := range ServiceFiles {
@@ -93,7 +96,7 @@ func TestServices(t *testing.T) {
 			checkSolrService(t, app)
 			checkMemcachedService(t, app)
 
-			err = app.Down(true)
+			err = app.Down(true, false)
 			assert.NoError(err)
 			site.Cleanup()
 		}

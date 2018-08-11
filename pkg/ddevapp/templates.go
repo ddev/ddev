@@ -2,7 +2,7 @@ package ddevapp
 
 // DDevComposeTemplate is used to create the main docker-compose.yaml
 // file for a ddev site.
-const DDevComposeTemplate = `version: '3'
+const DDevComposeTemplate = `version: '{{ .compose_version }}'
 {{ .ddevgenerated }}
 services:
   db:
@@ -10,9 +10,17 @@ services:
     image: $DDEV_DBIMAGE
     stop_grace_period: 60s
     volumes:
-      - "${DDEV_IMPORTDIR}:/db"
-      - "${DDEV_DATADIR}:/var/lib/mysql"
-      - ".:/mnt/ddev_config:ro"
+      - type: "volume"
+        source: mariadb-database
+        target: "/var/lib/mysql"
+        volume:
+          nocopy: true
+      - type: "bind"
+        source: "${DDEV_IMPORTDIR}"
+        target: "/db"
+      - type: "bind"
+        source: "."
+        target: "/mnt/ddev_config"
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     ports:
@@ -26,7 +34,7 @@ services:
     environment:
       - COLUMNS=$COLUMNS
       - LINES=$LINES
-
+    command: "$DDEV_MARIADB_LOCAL_COMMAND"
   web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
@@ -95,6 +103,10 @@ networks:
   default:
     external:
       name: ddev_default
+volumes:
+  mariadb-database:
+    name: "${DDEV_SITENAME}-mariadb"
+  
 `
 
 // ConfigInstructions is used to add example hooks usage
@@ -207,7 +219,7 @@ var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 </plist>`
 
 // DdevRouterTemplate is the template for the generic router container.
-const DdevRouterTemplate = `version: '3'
+const DdevRouterTemplate = `version: '{{ .compose_version }}'
 services:
   ddev-router:
     image: {{ .router_image }}:{{ .router_tag }}
