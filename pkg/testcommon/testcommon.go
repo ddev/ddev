@@ -337,6 +337,7 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 	}
 	return extractPath, archiveFullPath, nil
 }
+
 // GetLocalHTTPResponse takes a URL, hits the local docker for it, returns result
 // Returns error (with the body) if not 200 status code.
 func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, error) {

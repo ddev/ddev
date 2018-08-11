@@ -86,15 +86,8 @@ func (p *DrudS3Provider) PromptForConfig() error {
 		util.Success("Only one accessible bucket (%s), so using it.", p.S3Bucket)
 	} else {
 		bucketNameString := strings.Join(bucketsAvailable, ", ")
-		//fullPrompt := fmt.Sprintf("AWS S3 Bucket Name (one of %s):", bucketNameString)
-		// Putting the full bucketname option in the prompt results in a panic, so
-		// separate options output here: https://github.com/Bowery/prompt/issues/15
-		//output.UserOut.Printf("AWS S3 Bucket Name must be one of [%s].", bucketNameString)
 		promptWithBuckets := fmt.Sprintf("AWS S3 Bucket Name [%s]", bucketNameString)
 		p.S3Bucket = util.Prompt(promptWithBuckets, p.S3Bucket)
-		//if err != nil {
-		//	return fmt.Errorf("failed prompt for AWS S3 Bucket Name: %v", err)
-		//}
 	}
 
 	projects, err := getDrudS3Projects(client, p.S3Bucket)
@@ -119,9 +112,6 @@ func (p *DrudS3Provider) PromptForConfig() error {
 	envNames := strings.Join(envAry, ", ")
 	fullPrompt := fmt.Sprintf("Environment Name [%s]", envNames)
 	p.EnvironmentName = util.Prompt(fullPrompt, p.EnvironmentName)
-	//if err != nil {
-	//	return fmt.Errorf("failed prompt for environment name: %v", err)
-	//}
 
 	return nil
 }
@@ -341,61 +331,44 @@ func getDrudS3Projects(client *s3.S3, bucket string) (map[string]map[string]inte
 }
 
 // getS3ObjectsWithPrefix gets all S3 objects in the named bucket with the prefix provided.
-func getS3ObjectsWithPrefix(client *s3.S3, bucket string, prefix string) ([]*s3.Object, error) {
-	// TODO: This may be fragile because it could return a lot of items.
-	maxKeys := aws.Int64(1000000000)
-
-	// TODO: WARNING: ListObjects only returns first 1000 objects
-	resp, err := client.ListObjects(&s3.ListObjectsInput{
-		Bucket:  aws.String(bucket),
-		Prefix:  aws.String(prefix),
-		MaxKeys: maxKeys,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("unable to list items in bucket %s with prefix %s: %v", bucket, prefix, err)
-	}
-
-	if len(resp.Contents) == 0 {
-		return nil, fmt.Errorf("there are no objects matching %s in bucket %s", prefix, bucket)
-	}
-	return resp.Contents, nil
-}
-
-// getLatestS3Object gets the most recently modified key in the named bucket
-// with the provided prefix.
 // Examples at https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/s3-example-basic-bucket-operations.html
 // and at https://github.com/awsdocs/aws-doc-sdk-examples/tree/master/go/example_code/s3
 // S3 api description at https://docs.aws.amazon.com/AmazonS3/latest/API/v2-RESTBucketGET.html
 // ListObjectsPages example https://gist.github.com/eferro/651fbb72851fa7987fc642c8f39638eb
-func getLatestS3Object(client *s3.S3, bucket string, prefix string) (*s3.Object, error) {
-	maxKeys := aws.Int64(10)
+func getS3ObjectsWithPrefix(client *s3.S3, bucket string, prefix string) ([]*s3.Object, error) {
+	maxKeys := aws.Int64(100)
 
-		query := s3.ListObjectsInput{
-			Bucket:  aws.String(bucket),
-			Prefix:  aws.String(prefix),
-			MaxKeys: maxKeys,
+	query := &s3.ListObjectsInput{
+		Bucket:  aws.String(bucket),
+		Prefix:  aws.String(prefix),
+		MaxKeys: maxKeys,
+	}
+	var allObjs []*s3.Object
+	err := client.ListObjectsPages(query, func(page *s3.ListObjectsOutput, lastPage bool) bool {
+		for _, value := range page.Contents {
+			allObjs = append(allObjs, value)
 		}
-		pageNum := 0
-		err := client.ListObjectsPages(&query, func(page *s3.ListObjectsOutput, lastPage bool) bool
-		{
-			fmt.Println("Page", pageNum)
-			pageNum++
-			for _, value := range page.Contents {
-				fmt.Println(*value.Key)
-			}
-			fmt.Println("pageNum", pageNum, "lastPage", lastPage)
+		return true
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to ListObjectsPages: %v", err)
+	}
 
-			// return if we should continue with the next page
-			return true
-
-		})
-if (err != nil) {
-	return fmt.Errorf("failed to ListObjectsPages: %v", err)
+	if len(allObjs) == 0 {
+		return nil, fmt.Errorf("there are no objects matching %s in bucket %s", prefix, bucket)
+	}
+	return allObjs, nil
 }
 
-	sort.Sort(byModified(resp.Contents))
-
-	return resp.Contents[0], nil
+// getLatestS3Object gets the most recently modified key in the named bucket
+// with the provided prefix.
+func getLatestS3Object(client *s3.S3, bucket string, prefix string) (*s3.Object, error) {
+	allObjs, err := getS3ObjectsWithPrefix(client, bucket, prefix)
+	if err != nil {
+		return nil, fmt.Errorf("failed to getS3ObjectsWithPrefix: %v", err)
+	}
+	sort.Sort(byModified(allObjs))
+	return allObjs[0], nil
 }
 
 // downloadS3Object grabs the object named and brings it down to the directory named

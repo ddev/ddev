@@ -186,7 +186,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	assert.NoError(err)
 	err = app.Import()
 	assert.NoError(err)
-	err = app.Down(true)
+	err = app.Down(true, false)
 	assert.NoError(err)
 
 	// Make sure invalid access key gets correct behavior
@@ -215,5 +215,4 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	_, _, err = provider.GetBackup("database")
 	assert.Error(err)
 	assert.Contains(err.Error(), "NoSuchBucket")
-
 }

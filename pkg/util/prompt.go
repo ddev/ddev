@@ -30,7 +30,7 @@ func GetInput(defaultValue string) string {
 
 // Prompt gets input with a prompt and returns the input
 func Prompt(prompt string, defaultValue string) string {
-	fullPrompt := fmt.Sprintf("%s (%s):", prompt, defaultValue)
+	fullPrompt := fmt.Sprintf("%s (%s)", prompt, defaultValue)
 	fmt.Print(fullPrompt + ": ")
 	return GetInput(defaultValue)
 }
