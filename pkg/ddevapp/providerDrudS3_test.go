@@ -29,10 +29,6 @@ const drudS3TestBucket = "ddev-local-tests"
 var drudS3AccessKeyID = os.Getenv("DDEV_DRUD_S3_AWS_ACCESS_KEY_ID")
 var drudS3SecretAccessKey = os.Getenv("DDEV_DRUD_S3_AWS_SECRET_ACCESS_KEY")
 
-// TODO: We need to actually test app.PromptForConfig(), but haven't succeeded in doing it
-// (Problems with terminal emulation and survey.) We absolutely want to test the text prompts,
-// but have not succeeded using Survey's go-expect technique nor capture std as pantheon tests do.
-
 // TestDrudS3ConfigCommand tests the interactive config options.
 func TestDrudS3ConfigCommand(t *testing.T) {
 	if drudS3AccessKeyID == "" || drudS3SecretAccessKey == "" {
