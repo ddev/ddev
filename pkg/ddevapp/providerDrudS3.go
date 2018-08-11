@@ -363,24 +363,35 @@ func getS3ObjectsWithPrefix(client *s3.S3, bucket string, prefix string) ([]*s3.
 
 // getLatestS3Object gets the most recently modified key in the named bucket
 // with the provided prefix.
+// Examples at https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/s3-example-basic-bucket-operations.html
+// and at https://github.com/awsdocs/aws-doc-sdk-examples/tree/master/go/example_code/s3
+// S3 api description at https://docs.aws.amazon.com/AmazonS3/latest/API/v2-RESTBucketGET.html
+// ListObjectsPages example https://gist.github.com/eferro/651fbb72851fa7987fc642c8f39638eb
 func getLatestS3Object(client *s3.S3, bucket string, prefix string) (*s3.Object, error) {
-	// TODO: Manage maxKeys better; it would be nice if we could just get recent, but
-	// AWS doesn't support that.
-	maxKeys := aws.Int64(1000000000)
+	maxKeys := aws.Int64(10)
 
-	// TODO: WARNING: ListObjects only returns first 1000 objects
-	resp, err := client.ListObjects(&s3.ListObjectsInput{
-		Bucket:  aws.String(bucket),
-		Prefix:  aws.String(prefix),
-		MaxKeys: maxKeys,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("unable to list items in bucket %s with prefix %s: %v", bucket, prefix, err)
-	}
+		query := s3.ListObjectsInput{
+			Bucket:  aws.String(bucket),
+			Prefix:  aws.String(prefix),
+			MaxKeys: maxKeys,
+		}
+		pageNum := 0
+		err := client.ListObjectsPages(&query, func(page *s3.ListObjectsOutput, lastPage bool) bool
+		{
+			fmt.Println("Page", pageNum)
+			pageNum++
+			for _, value := range page.Contents {
+				fmt.Println(*value.Key)
+			}
+			fmt.Println("pageNum", pageNum, "lastPage", lastPage)
 
-	if len(resp.Contents) == 0 {
-		return nil, fmt.Errorf("there are no objects matching prefix %s in bucket %s", prefix, bucket)
-	}
+			// return if we should continue with the next page
+			return true
+
+		})
+if (err != nil) {
+	return fmt.Errorf("failed to ListObjectsPages: %v", err)
+}
 
 	sort.Sort(byModified(resp.Contents))
 
