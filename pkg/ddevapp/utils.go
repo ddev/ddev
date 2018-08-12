@@ -7,15 +7,13 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	docker "github.com/fsouza/go-dockerclient"
+	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 
 	"errors"
 
 	"os"
 	"text/template"
-
-	"io/ioutil"
 
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -186,24 +184,33 @@ func getTemplateFuncMap() map[string]interface{} {
 // gitIgnoreTemplate will write a .gitignore file.
 // This template expects string slice to be provided, with each string corresponding to
 // a line in the resulting .gitignore.
-const gitIgnoreTemplate = `{{ range $i, $f := . -}}
-/{{ $f }}
-{{- end }}
+const gitIgnoreTemplate = `{{.Signature}}: Automatically generated ddev .gitignore.
+{{range .IgnoredItems}}
+/{{.}}{{end}}
 `
 
-// createGitIgnore will create a .gitignore file in the target directory if one does not exist.
+type ignoreTemplateContents struct {
+	Signature    string
+	IgnoredItems []string
+}
+
+// CreateGitIgnore will create a .gitignore file in the target directory if one does not exist.
 // Each value in ignores will be added as a new line to the .gitignore.
-func createGitIgnore(targetDir string, ignores ...string) error {
+func CreateGitIgnore(targetDir string, ignores ...string) error {
 	gitIgnoreFilePath := filepath.Join(targetDir, ".gitignore")
+
 	if fileutil.FileExists(gitIgnoreFilePath) {
-		gitIgnoreContents, err := ioutil.ReadFile(gitIgnoreFilePath)
+		sigFound, err := fileutil.FgrepStringInFile(gitIgnoreFilePath, DdevFileSignature)
+		util.CheckErr(err)
+		// If we sigFound the file and did not find the signature in .ddev/.gitignore, warn about it.
+		if !sigFound {
+			util.Warning("User-managed .ddev/.gitignore will not be managed by ddev")
+			return nil
+		}
+		// Otherwise, remove the existing file to prevent surprising template results
+		err = os.Remove(gitIgnoreFilePath)
 		if err != nil {
 			return err
-		}
-
-		// The .gitignore exists and is not empty
-		if len(gitIgnoreContents) > 0 {
-			return nil
 		}
 	}
 
@@ -218,7 +225,12 @@ func createGitIgnore(targetDir string, ignores ...string) error {
 	}
 	defer util.CheckClose(file)
 
-	if err := tmpl.Execute(file, ignores); err != nil {
+	parms := ignoreTemplateContents{
+		Signature:    DdevFileSignature,
+		IgnoredItems: ignores,
+	}
+
+	if err = tmpl.Execute(file, parms); err != nil {
 		return err
 	}
 

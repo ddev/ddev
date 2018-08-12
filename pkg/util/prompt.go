@@ -2,6 +2,7 @@ package util
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -25,4 +26,11 @@ func GetInput(defaultValue string) string {
 	}
 
 	return value
+}
+
+// Prompt gets input with a prompt and returns the input
+func Prompt(prompt string, defaultValue string) string {
+	fullPrompt := fmt.Sprintf("%s (%s)", prompt, defaultValue)
+	fmt.Print(fullPrompt + ": ")
+	return GetInput(defaultValue)
 }

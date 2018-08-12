@@ -64,11 +64,11 @@ func FormatPlural(count int, single string, plural string) string {
 
 var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-// setLetterBytes exists solely so that tests can override the default characters used by
+// SetLetterBytes exists solely so that tests can override the default characters used by
 // RandString. It should probably be avoided for 'normal' operations.
 // this is actually used in utils_test.go (test only) so we set nolint on it.
 // nolint: deadcode
-func setLetterBytes(lb string) {
+func SetLetterBytes(lb string) {
 	letterBytes = lb
 }
 
@@ -130,4 +130,13 @@ func posString(slice []string, element string) int {
 		}
 	}
 	return -1
+}
+
+// MapKeysToArray takes the keys of the map and turns them into a string array
+func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
+	result := make([]string, 0, len(mapWithKeys))
+	for v := range mapWithKeys {
+		result = append(result, v)
+	}
+	return result
 }

@@ -22,6 +22,7 @@ pages:
       - 'Defining Custom Services': 'users/extend/custom-compose-files.md'
     - 'Integration with Hosting Providers':
       - 'Pantheon': 'users/providers/pantheon.md'
+      - 'DDEV-Live': 'users/providers/drud-s3.md'
     - 'Troubleshooting': 'users/troubleshooting.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'

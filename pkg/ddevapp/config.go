@@ -80,11 +80,11 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 		}
 	}
 
-	// Allow override with "pantheon" from function provider arg, but nothing else.
+	// Allow override with provider.
 	// Otherwise we accept whatever might have been in config file if there was anything.
 	if provider == "" && app.Provider != "" {
 		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
-	} else if provider == "pantheon" || provider == DefaultProviderName {
+	} else if provider == "pantheon" || provider == "drud-s3" || provider == DefaultProviderName {
 		app.Provider = provider // Use the provider passed-in. Function argument wins.
 	} else if provider == "" && app.Provider == "" {
 		app.Provider = DefaultProviderName // Nothing passed in, nothing configured. Set c.Provider to default
@@ -576,6 +576,11 @@ func PrepDdevDirectory(dir string) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml")
+	if err != nil {
+		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
 
 	return nil
