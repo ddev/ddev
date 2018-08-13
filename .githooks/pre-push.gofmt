@@ -9,6 +9,3 @@ test -z "$(git ls-files --exclude-standard --others)" || (echo "There are unstag
 
 # Make sure gofmt has been done
 make -s gofmt
-
-# And check make staticrequired
-make -s staticrequired
