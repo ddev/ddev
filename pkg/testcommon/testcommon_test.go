@@ -40,7 +40,7 @@ func TestTmpDir(t *testing.T) {
 	// Clean up tempoary directory and ensure it no longer exists.
 	CleanupDir(testDir)
 	_, err = os.Stat(testDir)
-	assert.True(err != nil, "Could not stat temporary directory")
+	assert.Error(err, "Could not stat temporary directory")
 	if err != nil {
 		assert.True(os.IsNotExist(err), "Error is of type IsNotExists")
 	}
@@ -191,15 +191,17 @@ func TestGetCachedArchive(t *testing.T) {
 
 	sourceURL := "https://raw.githubusercontent.com/drud/ddev/master/.gitignore"
 	exPath, archPath, err := GetCachedArchive("TestInvalidArchive", "test", "", sourceURL)
-	assert.True(err != nil)
-	assert.Contains(err.Error(), fmt.Sprintf("archive extraction of %s failed", archPath))
+	assert.Error(err)
+	if err != nil {
+		assert.Contains(err.Error(), fmt.Sprintf("archive extraction of %s failed", archPath))
+	}
 
 	err = os.RemoveAll(filepath.Dir(exPath))
 	assert.NoError(err)
 
 	sourceURL = "http://invalid_domain/somefilethatdoesnotexists"
 	exPath, archPath, err = GetCachedArchive("TestInvalidDownloadURL", "test", "", sourceURL)
-	assert.True(err != nil)
+	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), fmt.Sprintf("Failed to download url=%s into %s", sourceURL, archPath))
 	}
