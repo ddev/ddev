@@ -204,7 +204,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 		util.CheckErr(err)
 		// If we sigFound the file and did not find the signature in .ddev/.gitignore, warn about it.
 		if !sigFound {
-			util.Warning("User-managed .ddev/.gitignore will not be managed by ddev")
+			util.Warning("User-managed %s will not be managed/overwritten by ddev", gitIgnoreFilePath)
 			return nil
 		}
 		// Otherwise, remove the existing file to prevent surprising template results
