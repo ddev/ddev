@@ -97,7 +97,9 @@ func TestDrudS3ConfigCommand(t *testing.T) {
 	restoreOutput = testcommon.CaptureUserOut()
 	err = app.PromptForConfig()
 	assert.Error(err)
-	assert.Contains(err.Error(), "NoSuchBucket")
+	if err != nil {
+		assert.Contains(err.Error(), "NoSuchBucket")
+	}
 	_ = restoreOutput()
 
 	// Now try with an invalid environment name, should fail
@@ -116,7 +118,9 @@ func TestDrudS3ConfigCommand(t *testing.T) {
 	assert.NoError(err)
 	err = provider.Validate()
 	assert.Error(err)
-	assert.Contains(err.Error(), "could not find an environment with backups")
+	if err != nil {
+		assert.Contains(err.Error(), "could not find an environment with backups")
+	}
 }
 
 // assertEqualProviderValues is just a helper function to avoid repeating assertions.
@@ -193,26 +197,34 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	provider.AWSAccessKey = "AKIAIBSTOTALLYINVALID"
 	_, _, err = provider.GetBackup("database")
 	assert.Error(err)
-	assert.Contains(err.Error(), "InvalidAccessKeyId")
+	if err != nil {
+		assert.Contains(err.Error(), "InvalidAccessKeyId")
+	}
 
 	// Make sure invalid secret key gets correct behavior
 	provider.AWSAccessKey = accessKeyID
 	provider.AWSSecretKey = "rweeHGZ5totallyinvalidsecretkey"
 	_, _, err = provider.GetBackup("database")
 	assert.Error(err)
-	assert.Contains(err.Error(), "SignatureDoesNotMatch")
+	if err != nil {
+		assert.Contains(err.Error(), "SignatureDoesNotMatch")
+	}
 
 	// Make sure bad environment gets correct behavior.
 	provider.AWSSecretKey = secretAccessKey
 	provider.EnvironmentName = "someInvalidUnknownEnvironment"
 	_, _, err = provider.GetBackup("database")
 	assert.Error(err)
-	assert.Contains(err.Error(), "could not find an environment")
+	if err != nil {
+		assert.Contains(err.Error(), "could not find an environment")
+	}
 
 	// Make sure bad bucket gets correct behavior.
 	provider.S3Bucket = drudS3TestBucket
 	provider.S3Bucket = "someInvalidUnknownBucket"
 	_, _, err = provider.GetBackup("database")
 	assert.Error(err)
-	assert.Contains(err.Error(), "NoSuchBucket")
+	if err != nil {
+		assert.Contains(err.Error(), "NoSuchBucket")
+	}
 }

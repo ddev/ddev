@@ -57,7 +57,9 @@ func TestValidateAsset(t *testing.T) {
 	// db no sql
 	gofilePath := filepath.Join(testdata, "junk.go")
 	_, isArchive, err = appimport.ValidateAsset(gofilePath, "db")
-	assert.Contains(err.Error(), "provided path is not a .sql file or archive")
+	if err != nil {
+		assert.Contains(err.Error(), "provided path is not a .sql file or archive")
+	}
 	assert.Error(err)
 	assert.False(isArchive)
 
@@ -65,5 +67,7 @@ func TestValidateAsset(t *testing.T) {
 	_, isArchive, err = appimport.ValidateAsset(gofilePath, "files")
 	assert.False(isArchive)
 	assert.Error(err)
-	assert.Contains(err.Error(), "provided path is not a directory or archive")
+	if err != nil {
+		assert.Contains(err.Error(), "provided path is not a directory or archive")
+	}
 }

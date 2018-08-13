@@ -25,12 +25,16 @@ func TestCopyDir(t *testing.T) {
 	// test source not a directory
 	err = fileutil.CopyDir(testFileLocation, sourceDir)
 	assert.Error(err)
-	assert.Contains(err.Error(), "source is not a directory")
+	if err != nil {
+		assert.Contains(err.Error(), "source is not a directory")
+	}
 
 	// test destination exists
 	err = fileutil.CopyDir(sourceDir, targetDir)
 	assert.Error(err)
-	assert.Contains(err.Error(), "destination already exists")
+	if err != nil {
+		assert.Contains(err.Error(), "destination already exists")
+	}
 	err = os.RemoveAll(subdir)
 	assert.NoError(err)
 
