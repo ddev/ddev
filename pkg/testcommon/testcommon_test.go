@@ -169,7 +169,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	assert.NoError(err)
 
 	safeURL := app.GetHTTPURL() + site.Safe200URL
-	out, err := GetLocalHTTPResponse(t, safeURL)
+	out, err := GetLocalHTTPResponse(t, safeURL, 20)
 	assert.NoError(err)
 	assert.Contains(out, "Famous 5-minute install")
 
