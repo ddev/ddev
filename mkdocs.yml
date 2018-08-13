@@ -24,5 +24,6 @@ pages:
       - 'Pantheon': 'users/providers/pantheon.md'
       - 'DDEV-Live': 'users/providers/drud-s3.md'
     - 'Troubleshooting': 'users/troubleshooting.md'
+    - 'Docker Installation': 'users/docker_installation.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'

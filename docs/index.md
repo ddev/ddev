@@ -22,6 +22,10 @@ ddev by default uses ports 80 and 443 on your system when projects are running. 
 
 _When upgrading, please check the [release notes](https://github.com/drud/ddev/releases) for actions you might need to take on each project._
 
+### Docker Installation
+
+Docker and docker-compose are required before anything will work with ddev. This is pretty easy on most environments, but we have a [docker_installation](users/docker_installation.md) page to help sort out the nuances, especially on Windows and Linux.
+
 ### Homebrew - macOS
 
 For macOS users, we recommend downloading, installing, and upgrading via [homebrew](https://brew.sh/):
