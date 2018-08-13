@@ -333,10 +333,6 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
 	}
 
-	if err := CreateGitIgnore(filepath.Dir(app.SiteLocalSettingsPath), drupalConfig.SiteSettingsLocal, "ddev_drush_settings.php"); err != nil {
-		output.UserOut.Warnf("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteLocalSettingsPath), err)
-	}
-
 	return app.SiteLocalSettingsPath, nil
 }
 
@@ -356,10 +352,6 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
 	}
 
-	if err := CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), drupalConfig.SiteSettingsLocal, "ddev_drush_settings.php"); err != nil {
-		output.UserOut.Warnf("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteLocalSettingsPath), err)
-	}
-
 	return app.SiteLocalSettingsPath, nil
 }
 
@@ -377,10 +369,6 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 
 	if err := writeDrupal6DdevSettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
 		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
-	}
-
-	if err := CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), drupalConfig.SiteSettingsLocal, "ddev_drush_settings.php"); err != nil {
-		output.UserOut.Warnf("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteLocalSettingsPath), err)
 	}
 
 	return app.SiteLocalSettingsPath, nil

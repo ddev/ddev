@@ -77,6 +77,12 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		util.Failed("Failed to write config: %v", err)
 	}
+
+	_, err = app.CreateSettingsFile()
+	if err != nil {
+		util.Warning("Could not write settings file: %v", err)
+	}
+
 	err = provider.Write(app.GetConfigPath("import.yaml"))
 	if err != nil {
 		util.Failed("Failed to write provider config: %v", err)
@@ -200,11 +206,6 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	err = app.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("could not write ddev config file %s: %v", app.ConfigPath, err)
-	}
-
-	_, err = app.CreateSettingsFile()
-	if err != nil {
-		return fmt.Errorf("Could not write settings file: %v", err)
 	}
 	return nil
 }

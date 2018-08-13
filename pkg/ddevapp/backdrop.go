@@ -127,10 +127,6 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
 	}
 
-	if err = CreateGitIgnore(filepath.Dir(app.SiteLocalSettingsPath), settings.SiteSettingsLocal, "ddev_drush_settings.php"); err != nil {
-		output.UserOut.Warnf("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteLocalSettingsPath), err)
-	}
-
 	return app.SiteLocalSettingsPath, nil
 }
 

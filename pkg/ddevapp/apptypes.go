@@ -137,6 +137,10 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		if err != nil {
 			util.Warning("Unable to create settings file: %v", err)
 		}
+		if err := CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteLocalSettingsPath), "ddev_drush_settings.php"); err != nil {
+			util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteLocalSettingsPath), err)
+		}
+
 		return settingsPath, nil
 	}
 	return "", nil
