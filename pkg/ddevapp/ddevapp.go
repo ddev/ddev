@@ -247,15 +247,16 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		imPath = util.GetInput("")
 	}
 
-	importPath, err := appimport.ValidateAsset(imPath, "db")
+	importPath, isArchive, err := appimport.ValidateAsset(imPath, "db")
 	if err != nil {
-		if err.Error() == "is archive" && extPathPrompt {
+		if isArchive && extPathPrompt {
 			output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
 			fmt.Print("Archive extraction path:")
 
 			extPath = util.GetInput("")
 		}
-		if err.Error() != "is archive" {
+
+		if err != nil {
 			return err
 		}
 	}
@@ -424,108 +425,18 @@ func (app *DdevApp) Import() error {
 }
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
-func (app *DdevApp) ImportFiles(imPath string, extPath string) error {
-	var uploadDir string
-	var extPathPrompt bool
-
+func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 	app.DockerEnv()
 
-	err := app.ProcessHooks("pre-import-files")
-	if err != nil {
+	if err := app.ProcessHooks("pre-import-files"); err != nil {
 		return err
 	}
 
-	if imPath == "" {
-		// ensure we prompt for extraction path if an archive is provided, while still allowing
-		// non-interactive use of --src flag without providing a --extract-path flag.
-		if extPath == "" {
-			extPathPrompt = true
-		}
-		output.UserOut.Println("Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.")
-		fmt.Print("Import path: ")
-
-		imPath = util.GetInput("")
-	}
-
-	if app.GetType() == "drupal7" || app.GetType() == "drupal8" {
-		uploadDir = "sites/default/files"
-	}
-
-	if app.GetType() == "wordpress" {
-		uploadDir = "wp-content/uploads"
-	}
-
-	if uploadDir == "" {
-		util.Failed("No upload directory has been specified for the project type %s", app.GetType())
-	}
-
-	destPath := filepath.Join(app.GetAppRoot(), app.GetDocroot(), uploadDir)
-
-	// parent of destination dir should exist
-	if !fileutil.FileExists(filepath.Dir(destPath)) {
-		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
-	}
-
-	// parent of destination dir should be writable
-	err = os.Chmod(filepath.Dir(destPath), 0755)
-	if err != nil {
+	if err := app.ImportFilesAction(importPath, extPath); err != nil {
 		return err
 	}
 
-	if fileutil.FileExists(destPath) {
-		// ensure existing directory is empty
-		// nolint: vetshadow
-		err := fileutil.PurgeDirectory(destPath)
-		if err != nil {
-			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
-		}
-	} else {
-		// create destination directory
-		err = os.MkdirAll(destPath, 0755)
-		if err != nil {
-			return err
-		}
-	}
-
-	importPath, err := appimport.ValidateAsset(imPath, "files")
-	if err != nil {
-		if err.Error() == "is archive" && extPathPrompt {
-			output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
-			fmt.Print("Archive extraction path:")
-
-			extPath = util.GetInput("")
-		}
-		if err.Error() != "is archive" {
-			return err
-		}
-	}
-
-	switch {
-	case strings.HasSuffix(importPath, "tar"):
-		fallthrough
-	case strings.HasSuffix(importPath, "tar.gz"):
-		fallthrough
-	case strings.HasSuffix(importPath, "tgz"):
-		err = archive.Untar(importPath, destPath, extPath)
-		if err != nil {
-			return fmt.Errorf("failed to extract provided archive: %v", err)
-		}
-	case strings.HasSuffix(importPath, "zip"):
-		err = archive.Unzip(importPath, destPath, extPath)
-		if err != nil {
-			return fmt.Errorf("failed to extract provided archive: %v", err)
-		}
-
-	default:
-		// Simple file copy if none of the archive formats
-		err = fileutil.CopyDir(importPath, destPath)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = app.ProcessHooks("post-import-files")
-	if err != nil {
+	if err := app.ProcessHooks("post-import-files"); err != nil {
 		return err
 	}
 
