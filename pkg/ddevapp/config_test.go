@@ -165,13 +165,11 @@ func TestConfigCommand(t *testing.T) {
 
 		// Randomize some values to use for Stdin during testing.
 		name := strings.ToLower(util.RandString(16))
-		invalidDir := strings.ToLower(util.RandString(16))
 		invalidAppType := strings.ToLower(util.RandString(8))
 
-		// Create an example input buffer that writes the sitename, an invalid
-		// document root, a valid document root,
+		// Create an example input buffer that writes the sitename, a valid document root,
 		// an invalid app type, and finally a valid app type (from test matrix)
-		input := fmt.Sprintf("%s\n%s\ndocroot\n%s\n%s", name, invalidDir, invalidAppType, testValues[apptypePos])
+		input := fmt.Sprintf("%s\ndocroot\n%s\n%s", name, invalidAppType, testValues[apptypePos])
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
@@ -182,7 +180,6 @@ func TestConfigCommand(t *testing.T) {
 
 		// Ensure we have expected vales in output.
 		assert.Contains(out, testDir)
-		assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
 		assert.Contains(out, fmt.Sprintf("'%s' is not a valid project type", invalidAppType))
 
 		// Ensure values were properly set on the app struct.
