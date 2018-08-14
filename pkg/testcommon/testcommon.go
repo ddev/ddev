@@ -342,9 +342,13 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 }
 
 // GetLocalHTTPResponse takes a URL, hits the local docker for it, returns result
+// takes rawurl and timeout in seconds
 // Returns error (with the body) if not 200 status code.
-func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, error) {
+func GetLocalHTTPResponse(t *testing.T, rawurl string, timeout int) (string, error) {
 	assert := asrt.New(t)
+	if timeout < 0 {
+		timeout = 10
+	}
 
 	u, err := url.Parse(rawurl)
 	if err != nil {
@@ -358,13 +362,13 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, error) {
 	u.Host = dockerIP
 	localAddress := u.String()
 
-	timeout := time.Duration(10 * time.Second)
+	timeoutSecs := time.Duration(time.Duration(timeout) * time.Second)
 	// Do not follow redirects, https://stackoverflow.com/a/38150816/215713
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
-		Timeout: timeout,
+		Timeout: timeoutSecs,
 	}
 
 	req, err := http.NewRequest("GET", localAddress, nil)
@@ -396,7 +400,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, error) {
 func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string) {
 	assert := asrt.New(t)
 
-	body, err := GetLocalHTTPResponse(t, rawurl)
+	body, err := GetLocalHTTPResponse(t, rawurl, 20)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
 	assert.Contains(body, expectedContent)
 }
