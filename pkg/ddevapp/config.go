@@ -513,7 +513,7 @@ func (app *DdevApp) docrootPrompt() error {
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(app.AppRoot, app.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		output.UserOut.Warnf("Warning: the provided docroot at %s does not currently exist.", fullPath)
+		util.Warning("Warning: the provided docroot at %s does not currently exist.", fullPath)
 	}
 
 	return provider.ValidateField("Docroot", app.Docroot)
