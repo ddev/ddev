@@ -102,11 +102,15 @@ func TestContainerWait(t *testing.T) {
 
 	err := ContainerWait(0, labels)
 	assert.Error(err)
-	assert.Contains(err.Error(), "health check timed out")
+	if err != nil {
+		assert.Contains(err.Error(), "health check timed out")
+	}
 
 	err = ContainerWait(5, labels)
 	assert.Error(err)
-	assert.Contains(err.Error(), "failed to query container")
+	if err != nil {
+		assert.Contains(err.Error(), "failed to query container")
+	}
 }
 
 // TestComposeCmd tests execution of docker-compose commands.
@@ -181,10 +185,14 @@ func TestRunSimpleContainer(t *testing.T) {
 	// Try the case of running nonexistent script
 	_, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25")
 	assert.Error(err)
-	assert.Contains(err.Error(), "failed to StartContainer")
+	if err != nil {
+		assert.Contains(err.Error(), "failed to StartContainer")
+	}
 
 	// Try the case of running a script that fails
 	_, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25")
 	assert.Error(err)
-	assert.Contains(err.Error(), "container run failed with exit code 5")
+	if err != nil {
+		assert.Contains(err.Error(), "container run failed with exit code 5")
+	}
 }

@@ -242,13 +242,17 @@ func TestDdevStart(t *testing.T) {
 
 	err = app.Init(another.Dir)
 	assert.Error(err)
-	assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
+	if err != nil {
+		assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
+	}
 
 	// Make sure that GetActiveApp() also fails when trying to start app of duplicate name in current directory.
 	switchDir := another.Chdir()
 	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
-	assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
+	if err != nil {
+		assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
+	}
 	testcommon.CleanupDir(another.Dir)
 	switchDir()
 }
@@ -416,7 +420,9 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 
 	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
-	assert.Contains(err.Error(), "Could not find a project")
+	if err != nil {
+		assert.Contains(err.Error(), "Could not find a project")
+	}
 }
 
 // TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
@@ -1283,7 +1289,9 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	_, err = app.ComposeFiles()
 	assert.Error(err)
-	assert.Contains(err.Error(), "there are more than one docker-compose.y*l")
+	if err != nil {
+		assert.Contains(err.Error(), "there are more than one docker-compose.y*l")
+	}
 
 	// Make sure that some docker-compose.override.yml and docker-compose.override.yaml conflict gets noted properly
 	app, err = ddevapp.NewApp("./testdata/testConflictingOverrideYaml", "")
@@ -1291,7 +1299,9 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	_, err = app.ComposeFiles()
 	assert.Error(err)
-	assert.Contains(err.Error(), "there are more than one docker-compose.override.y*l")
+	if err != nil {
+		assert.Contains(err.Error(), "there are more than one docker-compose.override.y*l")
+	}
 
 	// Make sure the error gets pointed out of there's no main docker-compose.yaml
 	app, err = ddevapp.NewApp("./testdata/testNoDockerCompose", "")
@@ -1299,7 +1309,9 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	_, err = app.ComposeFiles()
 	assert.Error(err)
-	assert.Contains(err.Error(), "failed to find a docker-compose.yml or docker-compose.yaml")
+	if err != nil {
+		assert.Contains(err.Error(), "failed to find a docker-compose.yml or docker-compose.yaml")
+	}
 
 	// Catch if we have no docker files at all.
 	// This should also fail if the docker-compose.yaml.bak gets loaded.
@@ -1308,7 +1320,9 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	_, err = app.ComposeFiles()
 	assert.Error(err)
-	assert.Contains(err.Error(), "failed to load any docker-compose.*y*l files")
+	if err != nil {
+		assert.Contains(err.Error(), "failed to load any docker-compose.*y*l files")
+	}
 }
 
 // TestGetAllURLs ensures the GetAllURLs function returns the expected number of URLs,

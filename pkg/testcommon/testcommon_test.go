@@ -41,7 +41,9 @@ func TestTmpDir(t *testing.T) {
 	CleanupDir(testDir)
 	_, err = os.Stat(testDir)
 	assert.Error(err, "Could not stat temporary directory")
-	assert.True(os.IsNotExist(err), "Error is of type IsNotExists")
+	if err != nil {
+		assert.True(os.IsNotExist(err), "Error is of type IsNotExists")
+	}
 }
 
 // TestChdir tests the Chdir function and ensures it will change to a temporary directory and then properly return
@@ -139,7 +141,6 @@ func TestValidTestSite(t *testing.T) {
 	site.Cleanup()
 	_, err = os.Stat(site.Dir)
 	assert.Error(err, "Could not stat temporary directory after cleanup")
-
 }
 
 // TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
@@ -191,7 +192,9 @@ func TestGetCachedArchive(t *testing.T) {
 	sourceURL := "https://raw.githubusercontent.com/drud/ddev/master/.gitignore"
 	exPath, archPath, err := GetCachedArchive("TestInvalidArchive", "test", "", sourceURL)
 	assert.Error(err)
-	assert.Contains(err.Error(), fmt.Sprintf("archive extraction of %s failed", archPath))
+	if err != nil {
+		assert.Contains(err.Error(), fmt.Sprintf("archive extraction of %s failed", archPath))
+	}
 
 	err = os.RemoveAll(filepath.Dir(exPath))
 	assert.NoError(err)
@@ -199,7 +202,9 @@ func TestGetCachedArchive(t *testing.T) {
 	sourceURL = "http://invalid_domain/somefilethatdoesnotexists"
 	exPath, archPath, err = GetCachedArchive("TestInvalidDownloadURL", "test", "", sourceURL)
 	assert.Error(err)
-	assert.Contains(err.Error(), fmt.Sprintf("Failed to download url=%s into %s", sourceURL, archPath))
+	if err != nil {
+		assert.Contains(err.Error(), fmt.Sprintf("Failed to download url=%s into %s", sourceURL, archPath))
+	}
 
 	err = os.RemoveAll(filepath.Dir(exPath))
 	assert.NoError(err)
