@@ -13,8 +13,10 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/drud/ddev/pkg/archive"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
+
+	"github.com/drud/ddev/pkg/archive"
 )
 
 // DrupalSettings encapsulates all the configurations for a Drupal site.
@@ -57,17 +59,17 @@ func NewDrupalSettings() *DrupalSettings {
 
 // DrushConfig encapsulates configuration for a drush settings file.
 type DrushConfig struct {
-	DatabasePort string
+	DatabasePort int
 	DatabaseHost string
-	IsDrupal8    bool
 }
 
 // NewDrushConfig produces a DrushConfig object with default.
-func NewDrushConfig() *DrushConfig {
+func NewDrushConfig(app *DdevApp) *DrushConfig {
+	dockerIP, _ := dockerutil.GetDockerIP()
+	dbPublishedPort, _ := app.GetPublishedPort("db")
 	return &DrushConfig{
-		DatabaseHost: "127.0.0.1",
-		DatabasePort: appports.GetPort("db"),
-		IsDrupal8:    false,
+		DatabaseHost: dockerIP,
+		DatabasePort: dbPublishedPort,
 	}
 }
 
@@ -163,8 +165,9 @@ if (empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
 
 // This determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
-if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
-  include __DIR__ . '../../../drush.settings.php';
+$drush_settings = __DIR__ . '/ddev_drush_settings.php';
+if (empty($_ENV['DDEV_PHP_VERSION']) && file_exists($drush_settings)) {
+  include $drush_settings;
 }
 `
 )
@@ -196,8 +199,9 @@ $drupal_hash_salt = '{{ $config.HashSalt }}';
 
 // This determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
-if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
-  include __DIR__ . '../../../drush.settings.php';
+$drush_settings = __DIR__ . '/ddev_drush_settings.php';
+if (empty($_ENV['DDEV_PHP_VERSION']) && file_exists($drush_settings)) {
+  include $drush_settings;
 }
 `
 )
@@ -219,23 +223,37 @@ ini_set('session.cookie_lifetime', 2000000);
 
 // This determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
-if (!empty($_SERVER["argv"]) && strpos($_SERVER["argv"][0], "drush") && empty($_ENV['DEPLOY_NAME'])) {
-  include __DIR__ . '../../../drush.settings.php';
+$drush_settings = __DIR__ . '/ddev_drush_settings.php';
+if (empty($_ENV['DDEV_PHP_VERSION']) && file_exists($drush_settings)) {
+  include $drush_settings;
 }
 `
 )
 
 const drushTemplate = `<?php
 {{ $config := . }}
-$databases['default']['default'] = array(
-  'database' => "db",
-  'username' => "db",
-  'password' => "db",
-  'host' => "127.0.0.1",
-  'driver' => "mysql",
-  'port' => {{ $config.DatabasePort }},
-  'prefix' => "",
-);
+$version = "";
+if (defined("\Drupal::VERSION")) {
+    $version = \Drupal::VERSION;
+} else if (defined("VERSION")) {
+    $version = VERSION;
+}
+
+// Use the array format for D7+
+if (version_compare($version, "7.0") > 0) {
+  $databases['default']['default'] = array(
+    'database' => "db",
+    'username' => "db",
+    'password' => "db",
+    'host' => "{{ $config.DatabaseHost }}",
+    'driver' => "mysql",
+    'port' => {{ $config.DatabasePort }},
+    'prefix' => "",
+  );
+} else {
+  // or the old db_url format for d6
+  $db_url = 'mysql://db:db@{{ $config.DatabaseHost }}:{{ $config.DatabasePort }}/db';
+}
 `
 
 // manageDrupalSettingsFile will direct inspecting and writing of settings.php.
@@ -315,10 +333,6 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
 	}
 
-	if err := CreateGitIgnore(filepath.Dir(app.SiteLocalSettingsPath), drupalConfig.SiteSettingsLocal); err != nil {
-		output.UserOut.Warnf("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteLocalSettingsPath), err)
-	}
-
 	return app.SiteLocalSettingsPath, nil
 }
 
@@ -338,10 +352,6 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
 	}
 
-	if err := CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), drupalConfig.SiteSettingsLocal); err != nil {
-		output.UserOut.Warnf("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteLocalSettingsPath), err)
-	}
-
 	return app.SiteLocalSettingsPath, nil
 }
 
@@ -359,10 +369,6 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 
 	if err := writeDrupal6DdevSettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
 		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
-	}
-
-	if err := CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), drupalConfig.SiteSettingsLocal); err != nil {
-		output.UserOut.Warnf("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteLocalSettingsPath), err)
 	}
 
 	return app.SiteLocalSettingsPath, nil
@@ -446,6 +452,7 @@ func writeDrupal6DdevSettingsFile(settings *DrupalSettings, filePath string) err
 		return err
 	}
 	util.CheckClose(file)
+
 	return nil
 }
 
@@ -510,7 +517,7 @@ func getDrupal8Hooks() []byte {
 	return []byte(Drupal8Hooks)
 }
 
-// setDrupalSiteSettingsPaths sets the paths to settings.php/settings.local.php
+// setDrupalSiteSettingsPaths sets the paths to settings.php/settings.ddev.php
 // for templating.
 func setDrupalSiteSettingsPaths(app *DdevApp) {
 	drupalConfig := NewDrupalSettings()
@@ -567,6 +574,13 @@ func drupal8PostStartAction(app *DdevApp) error {
 		return err
 	}
 
+	// Drush config has to be written after start because we don't know the ports until it's started
+	drushConfig := NewDrushConfig(app)
+	err := WriteDrushConfig(drushConfig, filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+	if err != nil {
+		util.Warning("Failed to WriteDrushConfig: %v", err)
+	}
+
 	return nil
 }
 
@@ -577,6 +591,13 @@ func drupal7PostStartAction(app *DdevApp) error {
 		return err
 	}
 
+	// Drush config has to be written after start because we don't know the ports until it's started
+	drushConfig := NewDrushConfig(app)
+	err := WriteDrushConfig(drushConfig, filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+	if err != nil {
+		util.Warning("Failed to WriteDrushConfig: %v", err)
+	}
+
 	return nil
 }
 
@@ -585,6 +606,13 @@ func drupal7PostStartAction(app *DdevApp) error {
 func drupal6PostStartAction(app *DdevApp) error {
 	if err := drupalEnsureWritePerms(app); err != nil {
 		return err
+	}
+
+	// Drush config has to be written after start because we don't know the ports until it's started
+	drushConfig := NewDrushConfig(app)
+	err := WriteDrushConfig(drushConfig, filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+	if err != nil {
+		util.Warning("Failed to WriteDrushConfig: %v", err)
 	}
 
 	return nil

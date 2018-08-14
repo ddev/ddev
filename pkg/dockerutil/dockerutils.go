@@ -369,10 +369,10 @@ func CheckDockerCompose(versionConstraint string) error {
 }
 
 // GetPublishedPort returns the published port for a given private port.
-func GetPublishedPort(privatePort int64, container docker.APIContainers) int64 {
+func GetPublishedPort(privatePort int64, container docker.APIContainers) int {
 	for _, port := range container.Ports {
 		if port.PrivatePort == privatePort {
-			return port.PublicPort
+			return int(port.PublicPort)
 		}
 	}
 	return 0

@@ -85,6 +85,14 @@ ini_set('session.gc_probability', 1);
 ini_set('session.gc_divisor', 100);
 ini_set('session.gc_maxlifetime', 200000);
 ini_set('session.cookie_lifetime', 2000000);
+
+// This determines whether or not drush should include a custom settings file which allows
+// it to work both within a docker container and natively on the host system.
+$drush_settings = __DIR__ . '/ddev_drush_settings.php';
+if (empty($_ENV['DDEV_PHP_VERSION']) && file_exists($drush_settings)) {
+  include $drush_settings;
+}
+
 `
 
 // createBackdropSettingsFile manages creation and modification of settings.php and settings.ddev.php.
@@ -110,17 +118,13 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", settings.SiteSettings, settings.SiteSettingsLocal)
 
-		if err := appendIncludeToBackdropSettingsFile(settings, app.SiteSettingsPath); err != nil {
+		if err = appendIncludeToBackdropSettingsFile(settings, app.SiteSettingsPath); err != nil {
 			return "", fmt.Errorf("failed to include %s in %s: %v", settings.SiteSettingsLocal, settings.SiteSettings, err)
 		}
 	}
 
-	if err := writeBackdropDdevSettingsFile(settings, app.SiteLocalSettingsPath); err != nil {
+	if err = writeBackdropDdevSettingsFile(settings, app.SiteLocalSettingsPath); err != nil {
 		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
-	}
-
-	if err := CreateGitIgnore(filepath.Dir(app.SiteLocalSettingsPath), settings.SiteSettingsLocal); err != nil {
-		output.UserOut.Warnf("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteLocalSettingsPath), err)
 	}
 
 	return app.SiteLocalSettingsPath, nil
@@ -291,6 +295,19 @@ func backdropImportFilesAction(app *DdevApp, importPath, extPath string) error {
 
 	if err := fileutil.CopyDir(importPath, destPath); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// backdropPostStartAction handles default post-start actions for backdrop apps, like ensuring
+// useful permissions settings on sites/default.
+func backdropPostStartAction(app *DdevApp) error {
+	// Drush config has to be written after start because we don't know the ports until it's started
+	drushConfig := NewDrushConfig(app)
+	err := WriteDrushConfig(drushConfig, filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+	if err != nil {
+		util.Warning("Failed to WriteDrushConfig: %v", err)
 	}
 
 	return nil
