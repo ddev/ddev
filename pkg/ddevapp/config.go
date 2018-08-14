@@ -11,6 +11,8 @@ import (
 
 	"regexp"
 
+	"runtime"
+
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -19,7 +21,6 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
-	"runtime"
 )
 
 // DefaultProviderName contains the name of the default provider which will be used if one is not otherwise specified.
@@ -261,12 +262,6 @@ func (app *DdevApp) PromptForConfig() error {
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
-	// validate docroot
-	fullPath := filepath.Join(app.AppRoot, app.Docroot)
-	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		return fmt.Errorf("no directory could be found at %s. Please enter a valid docroot in your configuration", fullPath)
-	}
-
 	if _, err := os.Stat(app.ConfigPath); os.IsNotExist(err) {
 		return fmt.Errorf("no valid project config.yaml was found at %s", app.ConfigPath)
 	}
@@ -518,10 +513,9 @@ func (app *DdevApp) docrootPrompt() error {
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(app.AppRoot, app.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		output.UserOut.Errorf("No directory could be found at %s. Please enter a valid docroot\n", fullPath)
-		app.Docroot = ""
-		return app.docrootPrompt()
+		output.UserOut.Warnf("Warning: the provided docroot at %s does not currently exist.", fullPath)
 	}
+
 	return provider.ValidateField("Docroot", app.Docroot)
 }
 

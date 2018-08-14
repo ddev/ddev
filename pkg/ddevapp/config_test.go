@@ -352,12 +352,8 @@ func TestValidate(t *testing.T) {
 	err = app.ValidateConfig()
 	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname()))
 
-	app.Name = "valid"
-	app.Docroot = "invalid"
-	err = app.ValidateConfig()
-	assert.EqualError(err, fmt.Sprintf("no directory could be found at %s. Please enter a valid docroot in your configuration", filepath.Join(cwd, app.Docroot)))
-
 	app.Docroot = "testdata"
+	app.Name = "valid"
 	app.Type = "potato"
 	err = app.ValidateConfig()
 	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", app.Type))

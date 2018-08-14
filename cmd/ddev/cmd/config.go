@@ -172,7 +172,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	if docrootRelPath != "" {
 		app.Docroot = docrootRelPath
 		if _, err = os.Stat(docrootRelPath); os.IsNotExist(err) {
-			util.Failed("The docroot provided (%v) does not exist", docrootRelPath)
+			output.UserOut.Warnf("Warning: the provided docroot at %s does not currently exist.", docrootRelPath)
 		}
 	} else if !cmd.Flags().Changed("docroot") {
 		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
