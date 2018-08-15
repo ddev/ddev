@@ -48,15 +48,13 @@ imported.`,
 
 		importPath, isArchive, err := appimport.ValidateAsset(sourcePath, "files")
 		if err != nil {
-			// Ensure we prompt for extraction path if an archive is provided, while still allowing
-			// non-interactive use of --src flag without providing a --extract-path flag.
-			if isArchive && showExtPathPrompt {
-				promptForExtPath(&extPath)
-			}
+			util.Failed("Failed to import files for %s: %v", app.GetName(), err)
+		}
 
-			if err != nil {
-				util.Failed("Failed to import files for %s: %v", app.GetName(), err)
-			}
+		// Ensure we prompt for extraction path if an archive is provided, while still allowing
+		// non-interactive use of --src flag without providing a --extract-path flag.
+		if isArchive && showExtPathPrompt {
+			promptForExtPath(&extPath)
 		}
 
 		if err = app.ImportFiles(importPath, extPath); err != nil {
@@ -67,7 +65,7 @@ imported.`,
 	},
 }
 
-const importPathPrompt = `Provide the path to the directory or archive you wish to import.`
+const importPathPrompt = `Provide the path to the source directory or archive you wish to import.`
 
 const importPathWarn = `Please note: if the destination directory exists, it will be replaced with the
 import assets specified here.`
@@ -102,7 +100,7 @@ func promptForExtPath(val *string) {
 }
 
 func init() {
-	ImportFileCmd.Flags().StringVarP(&sourcePath, "src", "", "", "Provide the path to a directory or tar/tar.gz/tgz/zip archive of files to import")
+	ImportFileCmd.Flags().StringVarP(&sourcePath, "src", "", "", "Provide the path to the source directory or tar/tar.gz/tgz/zip archive of files to import")
 	ImportFileCmd.Flags().StringVarP(&extPath, "extract-path", "", "", "If provided asset is an archive, optionally provide the path to extract within the archive.")
 	RootCmd.AddCommand(ImportFileCmd)
 }

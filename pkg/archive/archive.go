@@ -92,19 +92,26 @@ func Untar(source string, dest string, extractionDir string) error {
 		tf = tar.NewReader(f)
 	}
 
+	// Define a boolean that indicates whether or not at least one
+	// file matches the extraction directory.
+	foundPathMatch := false
 	for {
 		file, err := tf.Next()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("Error during read of tar archive %v, err: %v", source, err)
+			return fmt.Errorf("error during read of tar archive %v, err: %v", source, err)
 		}
 
 		// If we have an extractionDir and this doesn't match, skip it.
 		if !strings.HasPrefix(file.Name, extractionDir) {
 			continue
 		}
+
+		// If we haven't continue-ed above, the file matches the extraction dir and this flag
+		// should be ensured to be true.
+		foundPathMatch = true
 
 		// If extractionDir matches file name and isn't a directory, we should be extracting a specific file.
 		if file.Name == extractionDir && file.Typeflag != tar.TypeDir {
@@ -143,20 +150,25 @@ func Untar(source string, dest string, extractionDir string) error {
 			fullPathDir := filepath.Dir(fullPath)
 			err = os.MkdirAll(fullPathDir, 0755)
 			if err != nil {
-				return fmt.Errorf("Failed to create the directory %s, err: %v", fullPathDir, err)
+				return fmt.Errorf("failed to create the directory %s, err: %v", fullPathDir, err)
 			}
 
 			// For a regular file, create and copy the file.
 			exFile, err := os.Create(fullPath)
 			if err != nil {
-				return fmt.Errorf("Failed to create file %v, err: %v", fullPath, err)
+				return fmt.Errorf("failed to create file %v, err: %v", fullPath, err)
 			}
 			_, err = io.Copy(exFile, tf)
 			_ = exFile.Close()
 			if err != nil {
-				return fmt.Errorf("Failed to copy to file %v, err: %v", fullPath, err)
+				return fmt.Errorf("failed to copy to file %v, err: %v", fullPath, err)
 			}
 		}
+	}
+
+	// If no files matched the extraction path, return an error.
+	if !foundPathMatch {
+		return fmt.Errorf("failed to find files in extraction path: %s", extractionDir)
 	}
 
 	return nil
@@ -176,11 +188,18 @@ func Unzip(source string, dest string, extractionDir string) error {
 		return err
 	}
 
+	// Define a boolean that indicates whether or not at least one
+	// file matches the extraction directory.
+	foundPathMatch := false
 	for _, file := range zf.File {
 		// If we have an extractionDir and this doesn't match, skip it.
 		if !strings.HasPrefix(file.Name, extractionDir) {
 			continue
 		}
+
+		// If we haven't continue-ed above, the file matches the extraction dir and this flag
+		// should be ensured to be true.
+		foundPathMatch = true
 
 		// If extractionDir matches file name and isn't a directory, we should be extracting a specific file.
 		fileInfo := file.FileInfo()
@@ -221,6 +240,11 @@ func Unzip(source string, dest string, extractionDir string) error {
 		if err != nil {
 			return fmt.Errorf("Failed to copy to file %v, err: %v", fullPath, err)
 		}
+	}
+
+	// If no files matched the extraction path, return an error.
+	if !foundPathMatch {
+		return fmt.Errorf("failed to find files in extraction path: %s", extractionDir)
 	}
 
 	return nil
