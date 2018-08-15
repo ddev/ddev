@@ -33,6 +33,13 @@ var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.
 
 var providerName = ddevapp.DefaultProviderName
 
+var phpVersionArg string
+var httpPortArg int
+var httpsPortArg int
+var xdebugEnabledArg bool
+var additionalHostnamesArg string
+var additionalFQDNsArg string
+
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand *cobra.Command = &cobra.Command{
 	Use:     "config [provider]",
