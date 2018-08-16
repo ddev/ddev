@@ -168,7 +168,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.Name = filepath.Base(pwd)
 	}
 
-	// docrootRelPath must exist
+	// Warn the user if the supplied docrootRelPath doesn't exist yet
 	if docrootRelPath != "" {
 		app.Docroot = docrootRelPath
 		if _, err = os.Stat(docrootRelPath); os.IsNotExist(err) {
