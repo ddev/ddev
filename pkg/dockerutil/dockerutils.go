@@ -412,6 +412,12 @@ func GetDockerIP() (string, error) {
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
 func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string) (string, error) {
 	client := GetDockerClient()
+	var buf bytes.Buffer
+	err := client.PullImage(docker.PullImageOptions{Repository: image, OutputStream: &buf},
+		docker.AuthConfiguration{})
+	if err != nil {
+		return "", fmt.Errorf("failed to pull image %s: %v", image, err)
+	}
 
 	// Windows 10 Docker toolbox won't handle a bind mount like C:\..., so must convert to /c/...
 	for i := range binds {
