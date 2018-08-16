@@ -13,32 +13,46 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// docrootRelPath is the relative path to the docroot where index.php is
-var docrootRelPath string
+// Define flags for the config command
+var (
+	// createDocroot will allow a nonexistent docroot to be created
+	createDocroot bool
 
-// siteName is the name of the site
-var siteName string
+	// docrootRelPath is the relative path to the docroot where index.php is.
+	docrootRelPath string
 
-// appType is the ddev app type, like drupal7/drupal8/wordpress
-var appType string
+	// siteName is the name of the site.
+	siteName string
 
-// showConfigLocation if set causes the command to show the config locatio
-var showConfigLocation bool
+	// appType is the ddev app type, like drupal7/drupal8/wordpress.
+	appType string
 
-// createDocroot will allow a nonexistent docroot to be created
-var createDocroot bool
+	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6/7.0/7.1/7.2.
+	phpVersionArg string
 
-// extraFlagsHandlingFunc does specific handling for additional flags, and is different per provider.
-var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error
+	// httpPortArg overrides the default HTTP port (80).
+	httpPortArg int
+
+	// httpsPortArg overrides the default HTTPS port (443).
+	httpsPortArg int
+
+	// xdebugEnabledArg allows a user to enable XDebug from a command flag.
+	xdebugEnabledArg bool
+
+	// additionalHostnamesArg allows a user to provide a comma-delimited list of hostnames from a command flag.
+	additionalHostnamesArg string
+
+	// additionalFQDNsArg allows a user to provide a comma-delimited list of FQDNs from a command flag.
+	additionalFQDNsArg string
+
+	// showConfigLocation if set causes the command to show the config location
+	showConfigLocation bool
+)
 
 var providerName = ddevapp.DefaultProviderName
 
-var phpVersionArg string
-var httpPortArg int
-var httpsPortArg int
-var xdebugEnabledArg bool
-var additionalHostnamesArg string
-var additionalFQDNsArg string
+// extraFlagsHandlingFunc does specific handling for additional flags, and is different per provider.
+var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error
 
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand *cobra.Command = &cobra.Command{
@@ -102,21 +116,32 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 }
 
 func init() {
+	var err error
+
 	validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
 	apptypeUsage := fmt.Sprintf("Provide the project type (one of %s). This is autodetected and this flag is necessary only to override the detection.", validAppTypes)
 	projectNameUsage := fmt.Sprintf("Provide the project name of project to configure (normally the same as the last part of directory name)")
 
-	ConfigCommand.Flags().StringVarP(&siteName, "projectname", "", "", projectNameUsage)
-	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
-	ConfigCommand.Flags().StringVarP(&appType, "projecttype", "", "", apptypeUsage)
-	// apptype flag is there for backwards compatibility.
-	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
+	ConfigCommand.Flags().StringVar(&siteName, "projectname", "", projectNameUsage)
+	ConfigCommand.Flags().StringVar(&docrootRelPath, "docroot", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
+	ConfigCommand.Flags().StringVar(&appType, "projecttype", "", apptypeUsage)
+	ConfigCommand.Flags().StringVar(&phpVersionArg, "php-version", "", "The version of PHP that will be enabled in the web container")
+	ConfigCommand.Flags().IntVar(&httpPortArg, "http-port", 80, "The web container's exposed HTTP port")
+	ConfigCommand.Flags().IntVar(&httpsPortArg, "https-port", 443, "The web container's exposed HTTPS port")
+	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", false, "Whether or not XDebug is enabled in the web container")
+	ConfigCommand.Flags().StringVar(&additionalHostnamesArg, "additional-hostnames", "", "A comma-delimited list of hostnames for the project")
+	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
 	ConfigCommand.Flags().BoolVarP(&showConfigLocation, "show-config-location", "", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
-	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", projectNameUsage+" This is the same as projectname and is included only for backwards compatibility")
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
-	err := ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --projectname")
-	util.CheckErr(err)
+
+	// apptype flag exists for backwards compatibility.
+	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
 	err = ConfigCommand.Flags().MarkDeprecated("apptype", "The apptype flag is deprecated in favor of --projecttype")
+	util.CheckErr(err)
+
+	// sitename flag exists for backwards compatibility.
+	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", projectNameUsage+" This is the same as projectname and is included only for backwards compatibility")
+	err = ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --projectname")
 	util.CheckErr(err)
 
 	RootCmd.AddCommand(ConfigCommand)
@@ -139,7 +164,6 @@ func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
 
 // handleMainConfigArgs() validates and processes the main config args (docroot, etc.)
 func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error {
-
 	var err error
 
 	// Support the show-config-location flag.
@@ -153,6 +177,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 				util.Failed("Failed to access project configuration: %v", err)
 			}
 		}
+
 		if activeApp.ConfigPath != "" && activeApp.ConfigExists() {
 			rawResult := make(map[string]interface{})
 			rawResult["configpath"] = activeApp.ConfigPath
