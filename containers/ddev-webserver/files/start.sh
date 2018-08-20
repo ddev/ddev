@@ -18,8 +18,8 @@ fi
 if [ -f "/mnt/ddev_config/nginx-site.conf" ] ; then
     export NGINX_SITE_TEMPLATE="/mnt/ddev_config/nginx-site.conf"
 fi
-if [ -f "/mnt/ddev_config/apache/apache.conf" ]; then
-    export APACHE_SITE_TEMPLATE="/mnt/ddev_config/apache/apache-site-default.conf"
+if [ -f "/mnt/ddev_config/apache/apache-site.conf" ]; then
+    export APACHE_SITE_TEMPLATE="/mnt/ddev_config/apache/apache-site.conf"
 fi
 
 # Update the default PHP and FPM versions a DDEV_PHP_VERSION like '5.6' or '7.0' is provided
