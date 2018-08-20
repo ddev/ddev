@@ -6,7 +6,14 @@
 set -o errexit
 set -o pipefail
 set -o nounset
-#set -x
+
+DISK_AVAIL=$(df -k . | awk '/[0-9]%/ { gsub(/%/, ""); print $5}')
+if [ ${DISK_AVAIL} -ge 95 ] ; then
+    echo "Disk usage is ${DISK_AVAIL}% on $(hostname), not usable";
+    exit 1;
+else
+   echo "Disk usage is ${DISK_AVAIL}% on $(hostname).";
+fi
 
 # Test to make sure docker is installed and working
 docker ps >/dev/null
