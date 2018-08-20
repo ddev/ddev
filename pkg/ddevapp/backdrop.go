@@ -89,7 +89,7 @@ ini_set('session.cookie_lifetime', 2000000);
 // This determines whether or not drush should include a custom settings file which allows
 // it to work both within a docker container and natively on the host system.
 $drush_settings = __DIR__ . '/ddev_drush_settings.php';
-if (empty($_ENV['DDEV_PHP_VERSION']) && file_exists($drush_settings)) {
+if (empty(getenv('DDEV_PHP_VERSION')) && file_exists($drush_settings)) {
   include $drush_settings;
 }
 
