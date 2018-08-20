@@ -54,7 +54,7 @@ func TestDevLogs(t *testing.T) {
 		o.Timeout = 30
 		o.Headers["Host"] = v.Name + "." + version.DDevTLD
 		err = util.EnsureHTTPStatus(o)
-		assert.NoError(err)
+		assert.NoError(err, "expected 200 status not found for project %s: %v", v.Name, err)
 
 		// logs may not respond exactly right away, wait a tiny bit.
 		time.Sleep(2 * time.Second)
@@ -63,7 +63,7 @@ func TestDevLogs(t *testing.T) {
 
 		assert.NoError(err)
 		assert.Contains(string(out), "Server started")
-		assert.Contains(string(out), "PHP Fatal error:")
+		assert.Contains(string(out), "PHP Fatal error:", "PHP Fatal error not found for project %s output='%s", v.Name, string(out))
 
 		cleanup()
 	}
