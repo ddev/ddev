@@ -71,6 +71,7 @@ envsubst "$APACHE_SITE_VARS" < "$APACHE_SITE_TEMPLATE" > /etc/apache2/sites-enab
 printf "\nexport APACHE_RUN_USER=uid_$(id -u)\nexport APACHE_RUN_GROUP=gid_$(id -g)\n" >>/etc/apache2/envvars
 if [ "$DDEV_WEBSERVER_TYPE" = "apache-cgi" ] ; then
     a2enmod php${DDEV_PHP_VERSION}
+    a2dismod proxy_fcgi
     a2enmod rewrite
     a2dissite 000-default
 fi
