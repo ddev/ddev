@@ -23,7 +23,8 @@ ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
 # Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
-ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT'
+# NGINX_DOCROOT is for backward compatibility only, to break less people.
+ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
 ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
 
 RUN apt-get -qq update && \
