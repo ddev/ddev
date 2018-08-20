@@ -14,13 +14,17 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
 ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
-ENV NGINX_DOCROOT /var/www/html
+ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
+ENV WEBSERVER_DOCROOT /var/www/html
+# For backward compatibility only
+ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
 
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
 # Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
-ENV NGINX_SITE_VARS '$NGINX_DOCROOT'
+ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT'
+ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
 
 RUN apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
