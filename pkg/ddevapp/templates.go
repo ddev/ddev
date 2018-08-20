@@ -136,6 +136,8 @@ const ConfigInstructions = `
 
 # xdebug_enabled: false  # Set to true to enable xdebug and "ddev start" or "ddev restart"
 
+# webserver_type: nginx-fpm  # Can be set to apache-fpm or apache-cgi as well
+
 #additional_hostnames:
 # - somename
 # - someothername
