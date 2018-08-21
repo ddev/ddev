@@ -1,7 +1,6 @@
 version: 2
 jobs:
-  # 'build' is the default build, the only one triggered automatically by github or anything else.
-  normal_build_and_test:
+  golang_build:
     machine:
       image: circleci/classic:201808-01
     working_directory: ~/go/src/github.com/drud/ddev
@@ -9,44 +8,69 @@ jobs:
       GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
     steps:
-      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
+    - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
+    - checkout
+    - run:
+        command: ./.circleci/circle_vm_setup.sh
+        name: NORMAL Circle VM setup - tools, docker, golang
+        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - run:
+        command: |
+          make -s clean linux darwin windows_install
+        name: Build the ddev executables
+    - persist_to_workspace:
+        root: ~/
+        paths: go
 
-      - checkout
+  golang_test:
+    machine:
+      image: circleci/classic:201808-01
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      GOPATH: /home/circleci/go
+      ARTIFACTS: /artifacts
+    steps:
+    - attach_workspace:
+        at: ~/
+    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: make -s test
+        name: ddev tests
+        no_output_timeout: "40m"
 
-      - run:
-          command: ./.circleci/circle_vm_setup.sh
-          name: NORMAL Circle VM setup - tools, docker, golang
+  staticrequired:
+    machine:
+      image: circleci/classic:201808-01
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      GOPATH: /home/circleci/go
+      ARTIFACTS: /artifacts
+    steps:
+    - attach_workspace:
+        at: ~/
+    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: make staticrequired
+        name: staticrequired
 
-      - run:
-          command: printf "go version:$(go version)\ndocker version=$(docker --version)\ndocker-compose version=$(docker-compose --version)\nHOME=$HOME USER=$(whoami) PWD=$PWD"
-          name: Installed tool versions
+  artifacts:
+    machine:
+      image: circleci/classic:201808-01
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      GOPATH: /home/circleci/go
+      ARTIFACTS: /artifacts
+    steps:
+    - attach_workspace:
+        at: ~/
+    - run:
+        command: ./.circleci/generate_artifacts.sh $ARTIFACTS
+        name: tar/zip up artifacts and make hashes
+        no_output_timeout: "40m"
 
-      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
-      - run:
-          command: |
-            make -s clean linux darwin windows_install
-          name: Build the ddev executables
-
-      # Run the built-in ddev tests with the executables just built.
-      - run:
-          command: make -s test
-          name: ddev tests
-          no_output_timeout: "40m"
-
-      - run: make -s staticrequired
-
-      - run:
-          command: bin/linux/ddev version
-          name: ddev version information
-
-      - run:
-          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
-          name: tar/zip up artifacts and make hashes
-          no_output_timeout: "40m"
-
-      - store_artifacts:
-          path: /artifacts
-          name: Artifact storage
+    - store_artifacts:
+        path: /artifacts
+        name: Artifact storage
 
   nightly_build:
     machine:
@@ -136,7 +160,17 @@ workflows:
   version: 2
   normal_build_and_test:
     jobs:
-      - normal_build_and_test
+    - golang_build
+    - golang_test:
+        requires:
+        - golang_build
+    - staticrequired:
+        requires:
+        - golang_build
+    - artifacts:
+        requires:
+        - golang_build
+
   nightly_build:
     triggers:
       - schedule:
