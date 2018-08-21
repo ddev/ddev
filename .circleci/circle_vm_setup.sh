@@ -14,6 +14,10 @@ wget -q -O /tmp/golang.tgz https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz 
 sudo tar -C /usr/local -xzf /tmp/golang.tgz
 
 
+# docker-compose
+sudo curl -s -L "https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
 # Remove existing docker. This section should not be required after switch to
 # circleci/classic:201808-01 image
 #sudo apt-get remove docker docker-engine docker.io
@@ -30,6 +34,3 @@ sudo tar -C /usr/local -xzf /tmp/golang.tgz
 #sudo apt-get update -qq
 #sudo apt-get install -qq docker-ce
 #
-## docker-compose
-#sudo curl -s -L "https://github.com/docker/compose/releases/download/1.21.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-#sudo chmod +x /usr/local/bin/docker-compose
