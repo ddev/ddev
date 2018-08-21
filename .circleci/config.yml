@@ -3,7 +3,7 @@ jobs:
   # 'build' is the default build, the only one triggered automatically by github or anything else.
   normal_build_and_test:
     machine:
-      image: circleci/classic:201711-01
+      image: circleci/classic:201808-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
