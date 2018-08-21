@@ -183,16 +183,30 @@ func TestRunSimpleContainer(t *testing.T) {
 	assert.Contains(out, "simplescript.sh; TEMPENV=someenv UID=25")
 
 	// Try the case of running nonexistent script
-	_, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25")
+	_, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "failed to StartContainer")
 	}
 
 	// Try the case of running a script that fails
-	_, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25")
+	_, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "container run failed with exit code 5")
+	}
+
+	// Provide an unqualified tag name
+	_, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "")
+	assert.Error(err)
+	if err != nil {
+		assert.Contains(err.Error(), "image name must specify tag")
+	}
+
+	// Provide a malformed tag name
+	_, err = RunSimpleContainer("busybox:", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "")
+	assert.Error(err)
+	if err != nil {
+		assert.Contains(err.Error(), "malformed tag provided")
 	}
 }

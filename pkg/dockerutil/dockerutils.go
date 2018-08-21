@@ -413,12 +413,24 @@ func GetDockerIP() (string, error) {
 func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string) (string, error) {
 	client := GetDockerClient()
 
-	imageExists, err := ImageExistsLocally(image)
+	// Ensure image string includes a tag
+	imageChunks := strings.Split(image, ":")
+	if len(imageChunks) == 1 {
+		// Image does not specify tag
+		return "", fmt.Errorf("image name must specify tag: %s", image)
+	}
+
+	if tag := imageChunks[len(imageChunks)-1]; len(tag) == 0 {
+		// Image specifies malformed tag (ends with ':')
+		return "", fmt.Errorf("malformed tag provided: %s", image)
+	}
+
+	existsLocally, err := ImageExistsLocally(image)
 	if err != nil {
 		return "", fmt.Errorf("failed to check if image %s is available locally: %v", image, err)
 	}
 
-	if !imageExists {
+	if !existsLocally {
 		var buf bytes.Buffer
 		pullErr := client.PullImage(docker.PullImageOptions{Repository: image, OutputStream: &buf},
 			docker.AuthConfiguration{})
