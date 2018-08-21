@@ -497,10 +497,12 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 }
 
 // ImageExistsLocally determines if an image is available locally.
-func ImageExistsLocally(imageTag string) (bool, error) {
+func ImageExistsLocally(imageName string) (bool, error) {
 	client := GetDockerClient()
 
-	images, err := client.ListImages(docker.ListImagesOptions{})
+	images, err := client.ListImages(docker.ListImagesOptions{
+		Filter: imageName,
+	})
 
 	if err != nil {
 		return false, err
@@ -513,7 +515,7 @@ func ImageExistsLocally(imageTag string) (bool, error) {
 	for _, i := range images {
 		// RepoTags is a slice in the format of <repo-name>:<tag>, like drud/ddev-webserver:v1.2.3
 		for _, tag := range i.RepoTags {
-			if tag == imageTag {
+			if tag == imageName {
 				return true, nil
 			}
 		}
