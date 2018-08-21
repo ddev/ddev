@@ -406,17 +406,37 @@ func GetDockerIP() (string, error) {
 }
 
 // RunSimpleContainer runs a container (non-daemonized) and captures the stdout.
-// It will block, so not to be run on a container whose entryoint or cmd might hang or run too long.
+// It will block, so not to be run on a container whose entrypoint or cmd might hang or run too long.
 // This should be the equivalent of something like
 // docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
 func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string) (string, error) {
 	client := GetDockerClient()
-	var buf bytes.Buffer
-	err := client.PullImage(docker.PullImageOptions{Repository: image, OutputStream: &buf},
-		docker.AuthConfiguration{})
+
+	// Ensure image string includes a tag
+	imageChunks := strings.Split(image, ":")
+	if len(imageChunks) == 1 {
+		// Image does not specify tag
+		return "", fmt.Errorf("image name must specify tag: %s", image)
+	}
+
+	if tag := imageChunks[len(imageChunks)-1]; len(tag) == 0 {
+		// Image specifies malformed tag (ends with ':')
+		return "", fmt.Errorf("malformed tag provided: %s", image)
+	}
+
+	existsLocally, err := ImageExistsLocally(image)
 	if err != nil {
-		return "", fmt.Errorf("failed to pull image %s: %v", image, err)
+		return "", fmt.Errorf("failed to check if image %s is available locally: %v", image, err)
+	}
+
+	if !existsLocally {
+		var buf bytes.Buffer
+		pullErr := client.PullImage(docker.PullImageOptions{Repository: image, OutputStream: &buf},
+			docker.AuthConfiguration{})
+		if pullErr != nil {
+			return "", fmt.Errorf("failed to pull image %s: %v", image, pullErr)
+		}
 	}
 
 	// Windows 10 Docker toolbox won't handle a bind mount like C:\..., so must convert to /c/...
@@ -486,4 +506,32 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	}
 
 	return stdout.String(), nil
+}
+
+// ImageExistsLocally determines if an image is available locally.
+func ImageExistsLocally(imageName string) (bool, error) {
+	client := GetDockerClient()
+
+	images, err := client.ListImages(docker.ListImagesOptions{
+		Filter: imageName,
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	if len(images) == 0 {
+		return false, nil
+	}
+
+	for _, i := range images {
+		// RepoTags is a slice in the format of <repo-name>:<tag>, like drud/ddev-webserver:v1.2.3
+		for _, tag := range i.RepoTags {
+			if tag == imageName {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
 }
