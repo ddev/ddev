@@ -14,6 +14,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/google/uuid"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -187,6 +188,105 @@ func TestConfigCommand(t *testing.T) {
 		assert.Equal(testValues[apptypePos], app.Type)
 		assert.Equal("docroot", app.Docroot)
 		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion)
+		err = PrepDdevDirectory(testDir)
+		assert.NoError(err)
+	}
+}
+
+// TestConfigCommandInteractiveCreateDocrootDenied
+func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+
+	testMatrix := map[string][]string{
+		"drupal6phpversion": {"drupal6", "5.6"},
+		"drupal7phpversion": {"drupal7", "7.1"},
+		"drupal8phpversion": {"drupal8", "7.1"},
+	}
+
+	for testName := range testMatrix {
+		testDir := testcommon.CreateTmpDir(t.Name() + testName)
+
+		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
+		defer testcommon.CleanupDir(testDir)
+		defer testcommon.Chdir(testDir)()
+
+		// Create the ddevapp we'll use for testing.
+		// This will not return an error, since there is no existing configuration.
+		app, err := NewApp(testDir, DefaultProviderName)
+		assert.NoError(err)
+
+		// Randomize some values to use for Stdin during testing.
+		name := uuid.New().String()
+		nonexistentDocroot := "does/not/exist"
+
+		// Create an example input buffer that writes the sitename, a nonexistent document root,
+		// and a "no"
+		input := fmt.Sprintf("%s\n%s\nno", name, nonexistentDocroot)
+		scanner := bufio.NewScanner(strings.NewReader(input))
+		util.SetInputScanner(scanner)
+
+		err = app.PromptForConfig()
+		assert.Error(err, t)
+
+		// Ensure we have expected vales in output.
+		assert.Contains(err.Error(), "docroot must exist to continue configuration")
+
+		err = PrepDdevDirectory(testDir)
+		assert.NoError(err)
+	}
+}
+
+// TestConfigCommandCreateDocrootAllowed
+func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+
+	const apptypePos = 0
+	const phpVersionPos = 1
+	testMatrix := map[string][]string{
+		"drupal6phpversion": {"drupal6", "5.6"},
+		"drupal7phpversion": {"drupal7", "7.1"},
+		"drupal8phpversion": {"drupal8", "7.1"},
+	}
+
+	for testName, testValues := range testMatrix {
+		testDir := testcommon.CreateTmpDir(t.Name() + testName)
+
+		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
+		defer testcommon.CleanupDir(testDir)
+		defer testcommon.Chdir(testDir)()
+
+		// Create the ddevapp we'll use for testing.
+		// This will not return an error, since there is no existing configuration.
+		app, err := NewApp(testDir, DefaultProviderName)
+		assert.NoError(err)
+
+		// Randomize some values to use for Stdin during testing.
+		name := uuid.New().String()
+		nonexistentDocroot := "does/not/exist"
+
+		// Create an example input buffer that writes the sitename, a nonexistent document root,
+		// a "yes", and a valid apptype
+		input := fmt.Sprintf("%s\n%s\nyes\n%s", name, nonexistentDocroot, testValues[apptypePos])
+		scanner := bufio.NewScanner(strings.NewReader(input))
+		util.SetInputScanner(scanner)
+
+		restoreOutput := testcommon.CaptureUserOut()
+		err = app.PromptForConfig()
+		assert.NoError(err, t)
+		out := restoreOutput()
+
+		// Ensure we have expected vales in output.
+		assert.Contains(out, nonexistentDocroot)
+		assert.Contains(out, "Created docroot")
+
+		// Ensure values were properly set on the app struct.
+		assert.Equal(name, app.Name)
+		assert.Equal(testValues[apptypePos], app.Type)
+		assert.Equal(nonexistentDocroot, app.Docroot)
+		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion)
+
 		err = PrepDdevDirectory(testDir)
 		assert.NoError(err)
 	}
