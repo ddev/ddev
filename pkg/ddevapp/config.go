@@ -235,14 +235,8 @@ func (app *DdevApp) PromptForConfig() error {
 		output.UserOut.Printf("%v", err)
 	}
 
-	for {
-		err := app.docrootPrompt()
-
-		if err == nil {
-			break
-		}
-
-		output.UserOut.Printf("%v", err)
+	if err := app.docrootPrompt(); err != nil {
+		return err
 	}
 
 	err := app.AppTypePrompt()
@@ -524,12 +518,12 @@ func (app *DdevApp) docrootPrompt() error {
 			}
 
 			if strings.ToLower(resp) == "n" || strings.ToLower(resp) == "no" {
-				util.Failed("Docroot must exist to continue configuration", fullPath)
+				return fmt.Errorf("docroot must exist to continue configuration")
 			}
 		}
 
 		if err = os.MkdirAll(fullPath, 0755); err != nil {
-			util.Failed("Unable to create docroot: %v", err)
+			return fmt.Errorf("unable to create docroot: %v", err)
 		}
 
 		util.Success("Created docroot at %s.", fullPath)
