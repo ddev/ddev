@@ -25,6 +25,9 @@ var appType string
 // showConfigLocation if set causes the command to show the config locatio
 var showConfigLocation bool
 
+// createDocroot will allow a nonexistent docroot to be created
+var createDocroot bool
+
 // extraFlagsHandlingFunc does specific handling for additional flags, and is different per provider.
 var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error
 
@@ -103,6 +106,7 @@ func init() {
 	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
 	ConfigCommand.Flags().BoolVarP(&showConfigLocation, "show-config-location", "", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
 	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", projectNameUsage+" This is the same as projectname and is included only for backwards compatibility")
+	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
 	err := ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --projectname")
 	util.CheckErr(err)
 	err = ConfigCommand.Flags().MarkDeprecated("apptype", "The apptype flag is deprecated in favor of --projecttype")
@@ -168,11 +172,25 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.Name = filepath.Base(pwd)
 	}
 
-	// Warn the user if the supplied docrootRelPath doesn't exist yet
+	// Ensure that the docroot exists
 	if docrootRelPath != "" {
 		app.Docroot = docrootRelPath
 		if _, err = os.Stat(docrootRelPath); os.IsNotExist(err) {
-			util.Warning("Warning: the provided docroot at %s does not currently exist.", docrootRelPath)
+			// If the user has indicated that the docroot should be created, create it.
+			if !createDocroot {
+				util.Failed("The provided docroot %s does not exist. Allow ddev to create it with the --create-docroot flag.", docrootRelPath)
+			}
+
+			docrootAbsPath, err := filepath.Abs(app.Docroot)
+			if err != nil {
+				util.Failed("Could not create docroot at %s: %v", docrootRelPath, err)
+			}
+
+			if err = os.MkdirAll(docrootAbsPath, 0755); err != nil {
+				util.Failed("Could not create docroot at %s: %v", docrootAbsPath, err)
+			}
+
+			util.Success("Created docroot at %s", docrootAbsPath)
 		}
 	} else if !cmd.Flags().Changed("docroot") {
 		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)

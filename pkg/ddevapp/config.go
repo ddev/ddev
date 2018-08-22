@@ -514,6 +514,25 @@ func (app *DdevApp) docrootPrompt() error {
 	fullPath := filepath.Join(app.AppRoot, app.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		util.Warning("Warning: the provided docroot at %s does not currently exist.", fullPath)
+
+		// Ask the user for permission to create the docroot
+		for {
+			fmt.Printf("Create docroot at %s? [Y/n]: ", fullPath)
+			resp := util.GetInput("")
+			if strings.ToLower(resp) == "y" || strings.ToLower(resp) == "yes" {
+				break
+			}
+
+			if strings.ToLower(resp) == "n" || strings.ToLower(resp) == "no" {
+				return fmt.Errorf("unable to create docroot")
+			}
+		}
+
+		if err = os.MkdirAll(fullPath, 0755); err != nil {
+			return fmt.Errorf("unable to create docroot: %v", err)
+		}
+
+		util.Success("Created docroot at %s.", fullPath)
 	}
 
 	return provider.ValidateField("Docroot", app.Docroot)
