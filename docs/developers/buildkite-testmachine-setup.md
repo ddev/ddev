@@ -23,6 +23,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 15. Try running .buildkite/sanetestbot.sh to check your work.
 16. Change the name of the machine to something in keeping with current style. Maybe `testbot-dell-toolbox-3`.
 17. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
+18. Set the timezone properly (US MT)
 18. Reboot the machine and do a test run.
 
 ### macOS Test Agent Setup
@@ -40,4 +41,5 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 10. Try running .buildkite/sanetestbot.sh to check your work.
 11. Change the name of the machine to something in keeping with current style. Maybe `testbot-dell-toolbox-3`.
 12. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
-13. Reboot the machine and do a test run.
+13. Set the timezone properly (US MT)
+14. Reboot the machine and do a test run.
