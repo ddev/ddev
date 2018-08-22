@@ -6,7 +6,6 @@ jobs:
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
-      ARTIFACTS: /artifacts
     steps:
     - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
     - checkout
@@ -22,13 +21,45 @@ jobs:
         root: ~/
         paths: go
 
-  golang_test:
+  golang_test_nginx_fpm:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
-      ARTIFACTS: /artifacts
+      DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
+    steps:
+    - attach_workspace:
+        at: ~/
+    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: make -s test
+        name: ddev tests
+        no_output_timeout: "40m"
+
+  golang_test_apache_fpm:
+    machine:
+      image: circleci/classic:201808-01
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      GOPATH: /home/circleci/go
+      DDEV_TEST_WEBSERVER_TYPE: apache-fpm
+    steps:
+    - attach_workspace:
+        at: ~/
+    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: make -s test
+        name: ddev tests
+        no_output_timeout: "40m"
+
+  golang_test_apache_cgi:
+    machine:
+      image: circleci/classic:201808-01
+    working_directory: ~/go/src/github.com/drud/ddev
+    environment:
+      GOPATH: /home/circleci/go
+      DDEV_TEST_WEBSERVER_TYPE: apache-cgi
     steps:
     - attach_workspace:
         at: ~/
@@ -166,7 +197,13 @@ workflows:
   normal_build_and_test:
     jobs:
     - golang_build
-    - golang_test:
+    - golang_test_nginx_fpm:
+        requires:
+        - golang_build
+    - golang_test_apache_fpm:
+        requires:
+        - golang_build
+    - golang_test_apache_cgi:
         requires:
         - golang_build
     - staticrequired:

@@ -31,7 +31,7 @@ const DdevDefaultPHPVersion = "7.1"
 
 // DdevDefaultWebserverType is the default webserver type, as nginx-fpm/apache-fpm/apache-cgi,
 // overridden by $DDEV_WEBSERVER_TYPE
-const DdevDefaultWebserverType = "nginx-fpm"
+var DdevDefaultWebserverType = "nginx-fpm"
 
 // DdevDefaultRouterHTTPPort is the starting router port, 80
 const DdevDefaultRouterHTTPPort = "80"
@@ -57,6 +57,14 @@ type Provider interface {
 	Read(string) error
 	Validate() error
 	GetBackup(string) (fileLocation string, importPath string, err error)
+}
+
+// init() is for testing situations only, allowing us to override the default webserver type
+func init() {
+	// This is for automated testing only. It allows us to override the webserver type.
+	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
+		DdevDefaultWebserverType = testWebServerType
+	}
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
