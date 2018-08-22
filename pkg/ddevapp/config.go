@@ -524,12 +524,12 @@ func (app *DdevApp) docrootPrompt() error {
 			}
 
 			if strings.ToLower(resp) == "n" || strings.ToLower(resp) == "no" {
-				return fmt.Errorf("unable to create docroot")
+				util.Failed("Docroot must exist to continue configuration", fullPath)
 			}
 		}
 
 		if err = os.MkdirAll(fullPath, 0755); err != nil {
-			return fmt.Errorf("unable to create docroot: %v", err)
+			util.Failed("Unable to create docroot: %v", err)
 		}
 
 		util.Success("Created docroot at %s.", fullPath)
