@@ -249,6 +249,13 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 	app.Type = appTypeArg
 
+	// App overrides are done after app type is detected, but
+	// before user-defined flags are set.
+	err = app.ConfigFileOverrideAction()
+	if err != nil {
+		util.Failed("failed to run ConfigFileOverrideAction: %v", err)
+	}
+
 	if phpVersionArg != "" {
 		app.PHPVersion = phpVersionArg
 	}
@@ -261,6 +268,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.RouterHTTPSPort = httpsPortArg
 	}
 
+	// This bool flag is false by default, so only use the value if the flag was explicity set.
 	if cmd.Flag("xdebug-enabled").Changed {
 		app.XdebugEnabled = xdebugEnabledArg
 	}
@@ -273,14 +281,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.AdditionalFQDNs = strings.Split(additionalFQDNsArg, ",")
 	}
 
-	err = app.ConfigFileOverrideAction()
-	if err != nil {
-		util.Failed("failed to run ConfigFileOverrideAction: %v", err)
-	}
-
 	err = app.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("could not write ddev config file %s: %v", app.ConfigPath, err)
 	}
+
 	return nil
 }
