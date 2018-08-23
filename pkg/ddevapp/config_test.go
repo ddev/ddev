@@ -218,7 +218,7 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 
 		// Randomize some values to use for Stdin during testing.
 		name := uuid.New().String()
-		nonexistentDocroot := "does/not/exist"
+		nonexistentDocroot := filepath.Join("does", "not", "exist")
 
 		// Create an example input buffer that writes the sitename, a nonexistent document root,
 		// and a "no"
@@ -264,7 +264,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 
 		// Randomize some values to use for Stdin during testing.
 		name := uuid.New().String()
-		nonexistentDocroot := "does/not/exist"
+		nonexistentDocroot := filepath.Join("does", "not", "exist")
 
 		// Create an example input buffer that writes the sitename, a nonexistent document root,
 		// a "yes", and a valid apptype
