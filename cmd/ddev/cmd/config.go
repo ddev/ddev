@@ -181,7 +181,8 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 				util.Failed("The provided docroot %s does not exist. Allow ddev to create it with the --create-docroot flag.", docrootRelPath)
 			}
 
-			docrootAbsPath, err := filepath.Abs(app.Docroot)
+			var docrootAbsPath string
+			docrootAbsPath, err = filepath.Abs(app.Docroot)
 			if err != nil {
 				util.Failed("Could not create docroot at %s: %v", docrootRelPath, err)
 			}
