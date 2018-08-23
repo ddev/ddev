@@ -297,9 +297,13 @@ func writeDrupalSettingsFile(drupalConfig *DrupalSettings, filePath string, vers
 		return err
 	}
 
-	// Ensure target directory is writable.
+	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err = os.Chmod(dir, 0755); err != nil {
+	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 
@@ -382,9 +386,13 @@ func writeDrupal8DdevSettingsFile(settings *DrupalSettings, filePath string) err
 		return err
 	}
 
-	// Ensure target directory is writable.
+	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err = os.Chmod(dir, 0755); err != nil {
+	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 
@@ -409,10 +417,13 @@ func writeDrupal7DdevSettingsFile(settings *DrupalSettings, filePath string) err
 		return err
 	}
 
-	// Ensure target directory is writable.
+	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	err = os.Chmod(dir, 0755)
-	if err != nil {
+	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 
@@ -436,10 +447,13 @@ func writeDrupal6DdevSettingsFile(settings *DrupalSettings, filePath string) err
 		return err
 	}
 
-	// Ensure target directory is writable.
+	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	err = os.Chmod(dir, 0755)
-	if err != nil {
+	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 
@@ -463,10 +477,13 @@ func WriteDrushConfig(drushConfig *DrushConfig, filePath string) error {
 		return err
 	}
 
-	// Ensure target directory is writable.
+	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	err = os.Chmod(dir, 0755)
-	if err != nil {
+	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 
