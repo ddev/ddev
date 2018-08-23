@@ -2,7 +2,7 @@ version: 2
 jobs:
   golang_build:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
@@ -24,7 +24,7 @@ jobs:
 
   golang_test:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
@@ -40,7 +40,7 @@ jobs:
 
   staticrequired:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
@@ -55,7 +55,7 @@ jobs:
 
   artifacts:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
@@ -74,7 +74,7 @@ jobs:
 
   nightly_build:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       DRUD_DEBUG: "true"
@@ -122,7 +122,7 @@ jobs:
   # 'tag_build' is used to build a tag for release.
   tag_build:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       DRUD_DEBUG: "true"
