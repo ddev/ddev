@@ -14,6 +14,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/google/uuid"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -165,13 +166,11 @@ func TestConfigCommand(t *testing.T) {
 
 		// Randomize some values to use for Stdin during testing.
 		name := strings.ToLower(util.RandString(16))
-		invalidDir := strings.ToLower(util.RandString(16))
 		invalidAppType := strings.ToLower(util.RandString(8))
 
-		// Create an example input buffer that writes the sitename, an invalid
-		// document root, a valid document root,
+		// Create an example input buffer that writes the sitename, a valid document root,
 		// an invalid app type, and finally a valid app type (from test matrix)
-		input := fmt.Sprintf("%s\n%s\ndocroot\n%s\n%s", name, invalidDir, invalidAppType, testValues[apptypePos])
+		input := fmt.Sprintf("%s\ndocroot\n%s\n%s", name, invalidAppType, testValues[apptypePos])
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
@@ -182,7 +181,6 @@ func TestConfigCommand(t *testing.T) {
 
 		// Ensure we have expected vales in output.
 		assert.Contains(out, testDir)
-		assert.Contains(out, fmt.Sprintf("No directory could be found at %s", filepath.Join(testDir, invalidDir)))
 		assert.Contains(out, fmt.Sprintf("'%s' is not a valid project type", invalidAppType))
 
 		// Ensure values were properly set on the app struct.
@@ -190,6 +188,105 @@ func TestConfigCommand(t *testing.T) {
 		assert.Equal(testValues[apptypePos], app.Type)
 		assert.Equal("docroot", app.Docroot)
 		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion)
+		err = PrepDdevDirectory(testDir)
+		assert.NoError(err)
+	}
+}
+
+// TestConfigCommandInteractiveCreateDocrootDenied
+func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+
+	testMatrix := map[string][]string{
+		"drupal6phpversion": {"drupal6", "5.6"},
+		"drupal7phpversion": {"drupal7", "7.1"},
+		"drupal8phpversion": {"drupal8", "7.1"},
+	}
+
+	for testName := range testMatrix {
+		testDir := testcommon.CreateTmpDir(t.Name() + testName)
+
+		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
+		defer testcommon.CleanupDir(testDir)
+		defer testcommon.Chdir(testDir)()
+
+		// Create the ddevapp we'll use for testing.
+		// This will not return an error, since there is no existing configuration.
+		app, err := NewApp(testDir, DefaultProviderName)
+		assert.NoError(err)
+
+		// Randomize some values to use for Stdin during testing.
+		name := uuid.New().String()
+		nonexistentDocroot := filepath.Join("does", "not", "exist")
+
+		// Create an example input buffer that writes the sitename, a nonexistent document root,
+		// and a "no"
+		input := fmt.Sprintf("%s\n%s\nno", name, nonexistentDocroot)
+		scanner := bufio.NewScanner(strings.NewReader(input))
+		util.SetInputScanner(scanner)
+
+		err = app.PromptForConfig()
+		assert.Error(err, t)
+
+		// Ensure we have expected vales in output.
+		assert.Contains(err.Error(), "docroot must exist to continue configuration")
+
+		err = PrepDdevDirectory(testDir)
+		assert.NoError(err)
+	}
+}
+
+// TestConfigCommandCreateDocrootAllowed
+func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+
+	const apptypePos = 0
+	const phpVersionPos = 1
+	testMatrix := map[string][]string{
+		"drupal6phpversion": {"drupal6", "5.6"},
+		"drupal7phpversion": {"drupal7", "7.1"},
+		"drupal8phpversion": {"drupal8", "7.1"},
+	}
+
+	for testName, testValues := range testMatrix {
+		testDir := testcommon.CreateTmpDir(t.Name() + testName)
+
+		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
+		defer testcommon.CleanupDir(testDir)
+		defer testcommon.Chdir(testDir)()
+
+		// Create the ddevapp we'll use for testing.
+		// This will not return an error, since there is no existing configuration.
+		app, err := NewApp(testDir, DefaultProviderName)
+		assert.NoError(err)
+
+		// Randomize some values to use for Stdin during testing.
+		name := uuid.New().String()
+		nonexistentDocroot := filepath.Join("does", "not", "exist")
+
+		// Create an example input buffer that writes the sitename, a nonexistent document root,
+		// a "yes", and a valid apptype
+		input := fmt.Sprintf("%s\n%s\nyes\n%s", name, nonexistentDocroot, testValues[apptypePos])
+		scanner := bufio.NewScanner(strings.NewReader(input))
+		util.SetInputScanner(scanner)
+
+		restoreOutput := testcommon.CaptureUserOut()
+		err = app.PromptForConfig()
+		assert.NoError(err, t)
+		out := restoreOutput()
+
+		// Ensure we have expected vales in output.
+		assert.Contains(out, nonexistentDocroot)
+		assert.Contains(out, "Created docroot")
+
+		// Ensure values were properly set on the app struct.
+		assert.Equal(name, app.Name)
+		assert.Equal(testValues[apptypePos], app.Type)
+		assert.Equal(nonexistentDocroot, app.Docroot)
+		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion)
+
 		err = PrepDdevDirectory(testDir)
 		assert.NoError(err)
 	}
@@ -352,12 +449,8 @@ func TestValidate(t *testing.T) {
 	err = app.ValidateConfig()
 	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname()))
 
-	app.Name = "valid"
-	app.Docroot = "invalid"
-	err = app.ValidateConfig()
-	assert.EqualError(err, fmt.Sprintf("no directory could be found at %s. Please enter a valid docroot in your configuration", filepath.Join(cwd, app.Docroot)))
-
 	app.Docroot = "testdata"
+	app.Name = "valid"
 	app.Type = "potato"
 	err = app.ValidateConfig()
 	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", app.Type))

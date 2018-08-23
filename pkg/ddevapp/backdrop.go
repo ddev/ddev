@@ -138,9 +138,13 @@ func writeBackdropMainSettingsFile(settings *BackdropSettings, filePath string) 
 		return err
 	}
 
-	// Ensure target directory is writable.
+	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err = os.Chmod(dir, 0755); err != nil {
+	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 
@@ -165,9 +169,13 @@ func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) 
 		return err
 	}
 
-	// Ensure target directory is writable
+	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err = os.Chmod(dir, 0755); err != nil {
+	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
 		return err
 	}
 
