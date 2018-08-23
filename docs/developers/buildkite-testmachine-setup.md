@@ -4,8 +4,11 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 ## Windows Test Agent Setup:
 
+0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 1. Install [chocolatey](https://chocolatey.org/)
-2. Install golang/mysql-cli/make/git/docker-ce/nssm with `choco install -y git mysql-cli golang make docker-for-windows nssm GoogleChrome`
+2. Install golang/mysql-cli/make/git/docker-ce/nssm with `choco install -y git mysql-cli golang make docker-for-windows nssm GoogleChrome 7zip jq composer` (If docker-toolbox, use that instead; you may have to download the release separately to get correct version.)
+3. Enable gd and curl extensions in /c/tools/php72/php.ini
+3. Install bats: `git clone git://github.com/bats-core/bats-core; cd bats-core; git checkout v1.1.0; ./install.sh`
 3. If a laptop, set the "lid closing" setting in settings to do nothing.
 4. Set the "Sleep after time" setting in settings to never.
 5. Install the buildkite-agent. Use the latest release from [github.com/buildkite/agent](https://github.com/buildkite/agent/releases). It should go in /c/buildkite-agent, with the buildkite-agent.exe in /c/buildkite-agent/bin and the config in /c/buildkite-agent.
@@ -20,12 +23,16 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 13. Edit /c/ProgramData/git/config to `autocrlf: false` and verify that `git config --list` shows only autocrlf: false. 
 14. Run `winpty docker run -it -p 80 busybox ls` to trigger the Windows Defender warning, and "allow access".
 15. Try running .buildkite/sanetestbot.sh to check your work.
-16. Reboot the machine and do a test run.
+16. Change the name of the machine to something in keeping with current style. Maybe `testbot-dell-toolbox-3`.
+17. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
+18. Set the timezone properly (US MT)
+18. Reboot the machine and do a test run.
 
 ### macOS Test Agent Setup
 
+0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 1. Install [homebrew](https://brew.sh/)
-2. Install golang/git/docker with `brew install golang git buildkite-agent mariadb`
+2. Install golang/git/docker with `brew install golang git buildkite-agent mariadb jq p7zip bats-core composer`
 3. Install docker with `brew cask install docker`
 4. If the xcode command line tools are not yet installed, install them with `xcode select --install`
 5. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add the agent token and the tags. Tags will probably be like `"os=macos,osvariant=highsierra,dockertype=dockerformac"` - Also edit with `build-path="~/tmp/buildkite-agent/builds"`
@@ -34,4 +41,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 8. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
 9. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
 10. Try running .buildkite/sanetestbot.sh to check your work.
-11. Reboot the machine and do a test run.
+11. Change the name of the machine to something in keeping with current style. Maybe `testbot-dell-toolbox-3`.
+12. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
+13. Set the timezone properly (US MT)
+14. Reboot the machine and do a test run.
