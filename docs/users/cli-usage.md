@@ -443,7 +443,7 @@ To manually review additional log files use the `ddev ssh` command and review lo
 
 ## Stopping a project
 
-To stop the development environment for a project run `ddev stop` in its working directory. You can also stop a particular project's environment from any directory by running `ddev stop [projectname]` or stop every running project via `ddev stop --all`.
+To stop the development environment for a project run `ddev stop` in its working directory. You can also stop a particular project's environment from any directory by running `ddev stop <projectname>` or stop every running project via `ddev stop --all`.
 
 ## Removing a project
 
