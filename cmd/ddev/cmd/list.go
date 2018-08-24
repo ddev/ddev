@@ -11,7 +11,7 @@ import (
 
 var continuous bool
 
-// DevListCmd represents the list command
+// DdevListCmd represents the list command
 var DdevListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List projects",
