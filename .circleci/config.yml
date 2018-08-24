@@ -32,7 +32,9 @@ jobs:
     steps:
     - attach_workspace:
         at: ~/
-    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: ./.circleci/circle_vm_setup.sh
+        name: Circle VM setup - tools, docker, golang
     - run:
         command: make -s test
         name: ddev tests
@@ -49,6 +51,9 @@ jobs:
     - attach_workspace:
         at: ~/
     # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: ./.circleci/circle_vm_setup.sh
+        name: Circle VM setup - tools, docker, golang
     - run:
         command: make staticrequired
         name: staticrequired
