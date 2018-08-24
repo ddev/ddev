@@ -7,8 +7,6 @@ import (
 	"strings"
 	"text/template"
 
-	"fmt"
-
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
