@@ -33,13 +33,17 @@ jobs:
         at: ~/
     # Run the built-in ddev tests with the executables just built.
     - run:
+        command: ./.circleci/circle_vm_setup.sh
+        name: Circle VM setup - tools, docker, golang
+        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - run:
         command: make -s test
         name: ddev tests
         no_output_timeout: "40m"
 
   golang_test_apache_fpm:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
@@ -47,6 +51,10 @@ jobs:
     steps:
     - attach_workspace:
         at: ~/
+    - run:
+        command: ./.circleci/circle_vm_setup.sh
+        name: Circle VM setup - tools, docker, golang
+        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: make -s test
@@ -55,7 +63,7 @@ jobs:
 
   golang_test_apache_cgi:
     machine:
-      image: circleci/classic:201808-01
+      image: circleci/classic:201711-01
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
