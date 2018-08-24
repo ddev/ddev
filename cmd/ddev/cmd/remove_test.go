@@ -46,7 +46,7 @@ func TestDevRemove(t *testing.T) {
 	assert.NoError(err, "ddev remove --all should succeed but failed, err: %v, output: %s", err, out)
 	out, err = exec.RunCommand(DdevBin, []string{"list"})
 	assert.NoError(err)
-	assert.Contains(out, "no running ddev projects")
+	assert.Contains(out, "no active ddev projects")
 	assert.Equal(0, len(ddevapp.GetApps()), "Not all apps were removed after ddev remove --all")
 
 	// Now put the sites back together so other tests can use them.
