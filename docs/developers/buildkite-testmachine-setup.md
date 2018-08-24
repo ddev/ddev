@@ -24,9 +24,9 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 14. Run `winpty docker run -it -p 80 busybox ls` to trigger the Windows Defender warning, and "allow access".
 15. Try running .buildkite/sanetestbot.sh to check your work.
 16. Change the name of the machine to something in keeping with current style. Maybe `testbot-dell-toolbox-3`.
-17. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
+17. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.)
 18. Set the timezone properly (US MT)
-18. Reboot the machine and do a test run.
+19. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
 
 ### macOS Test Agent Setup
 
@@ -41,7 +41,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 8. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
 9. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
 10. Try running .buildkite/sanetestbot.sh to check your work.
-11. Change the name of the machine to something in keeping with current style. Maybe `testbot-dell-toolbox-3`.
+11. Change the name of the machine to something in keeping with current style. Maybe `testbot-mbp2017-macos-3`.
 12. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
 13. Set the timezone properly (US MT)
 14. Reboot the machine and do a test run.
