@@ -22,7 +22,7 @@ var DdevListCmd = &cobra.Command{
 			appDescs := make([]map[string]interface{}, 0)
 
 			if len(apps) < 1 {
-				output.UserOut.WithField("raw", appDescs).Println("There are no running ddev projects.")
+				output.UserOut.WithField("raw", appDescs).Println("There are no active ddev projects.")
 			} else {
 				table := ddevapp.CreateAppTable()
 				for _, app := range apps {
