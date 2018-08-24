@@ -48,6 +48,8 @@ jobs:
     environment:
       GOPATH: /home/circleci/go
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
+      # Experiment with only testing TYPO3 with the apache run.
+      GOTEST_SHORT: 5
     steps:
     - attach_workspace:
         at: ~/
@@ -68,6 +70,8 @@ jobs:
     environment:
       GOPATH: /home/circleci/go
       DDEV_TEST_WEBSERVER_TYPE: apache-cgi
+      # Experiment with only testing TYPO3 with the apache run.
+      GOTEST_SHORT: 5
     steps:
     - attach_workspace:
         at: ~/
