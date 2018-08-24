@@ -12,17 +12,17 @@ import (
 var continuous bool
 
 // DevListCmd represents the list command
-var DevListCmd = &cobra.Command{
+var DdevListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List projects",
 	Long:  `List projects.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for {
 			apps := ddevapp.GetApps()
-			var appDescs []map[string]interface{}
+			appDescs := make([]map[string]interface{}, 0)
 
 			if len(apps) < 1 {
-				output.UserOut.Println("There are no running ddev projects.")
+				output.UserOut.WithField("raw", appDescs).Println("There are no running ddev projects.")
 			} else {
 				table := ddevapp.CreateAppTable()
 				for _, app := range apps {
@@ -42,11 +42,10 @@ var DevListCmd = &cobra.Command{
 
 			time.Sleep(time.Second)
 		}
-
 	},
 }
 
 func init() {
-	DevListCmd.Flags().BoolVarP(&continuous, "continuous", "", false, "If set, project information will be emitted once per second")
-	RootCmd.AddCommand(DevListCmd)
+	DdevListCmd.Flags().BoolVarP(&continuous, "continuous", "", false, "If set, project information will be emitted once per second")
+	RootCmd.AddCommand(DdevListCmd)
 }
