@@ -89,7 +89,7 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 			dbTable.AddRow("Host:", dbinfo["host"])
 			dbTable.AddRow("Port:", dbinfo["port"])
 			output = output + fmt.Sprint(dbTable)
-			output = output + fmt.Sprintf("\nTo connect to mysql from your host machine, use port %s on %s.\nFor example: mysql --host=%s --port=%s --user=db --password=db --database=db", dbinfo["published_port"], dockerIP, dockerIP, dbinfo["published_port"])
+			output = output + fmt.Sprintf("\nTo connect to mysql from your host machine, use port %d on %s.\nFor example: mysql --host=%s --port=%d --user=db --password=db --database=db", dbinfo["published_port"], dockerIP, dockerIP, dbinfo["published_port"])
 		}
 		output = output + "\n\nOther Services\n--------------\n"
 		other := uitable.New()
