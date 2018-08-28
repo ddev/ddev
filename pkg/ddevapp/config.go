@@ -511,7 +511,7 @@ func (app *DdevApp) docrootPrompt() error {
 
 		// Ask the user for permission to create the docroot
 		for {
-			resp := util.Prompt("Create docroot at %s? [Y/n]", "yes")
+			resp := util.Prompt(fmt.Sprintf("Create docroot at %s? [Y/n]", fullPath), "yes")
 			if strings.ToLower(resp) == "y" || strings.ToLower(resp) == "yes" {
 				break
 			}
