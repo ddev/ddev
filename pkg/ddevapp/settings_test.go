@@ -10,13 +10,14 @@ import (
 
 	"fmt"
 
+	"time"
+
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"time"
 )
 
 type settingsLocations struct {
@@ -41,7 +42,7 @@ func TestWriteSettings(t *testing.T) {
 		"drupal6":   "sites/default/settings.ddev.php",
 		"drupal7":   "sites/default/settings.ddev.php",
 		"drupal8":   "sites/default/settings.ddev.php",
-		"wordpress": "wp-config.php",
+		"wordpress": "wp-config-ddev.php",
 		"typo3":     "typo3conf/AdditionalConfiguration.php",
 	}
 	dir := testcommon.CreateTmpDir(t.Name())
