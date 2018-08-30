@@ -194,11 +194,11 @@ func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) 
 
 // getBackdropUploadDir will return a custom upload dir if defined, returning a default path if not.
 func getBackdropUploadDir(app *DdevApp) string {
-	if app.ImportFilesPath == "" {
+	if app.UploadPath == "" {
 		return "files"
 	}
 
-	return app.ImportFilesPath
+	return app.UploadPath
 }
 
 // getBackdropHooks for appending as byte array.

@@ -501,11 +501,11 @@ func WriteDrushConfig(drushConfig *DrushConfig, filePath string) error {
 
 // getDrupalUploadDir will return a custom upload dir if defined, returning a default path if not.
 func getDrupalUploadDir(app *DdevApp) string {
-	if app.ImportFilesPath == "" {
+	if app.UploadPath == "" {
 		return "sites/default/files"
 	}
 
-	return app.ImportFilesPath
+	return app.UploadPath
 }
 
 // Drupal8Hooks adds a d8-specific hooks example for post-import-db
