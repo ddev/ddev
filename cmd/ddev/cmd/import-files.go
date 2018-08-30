@@ -24,7 +24,11 @@ directory path or an archive in .tar, .tar.gz, .tgz, or .zip format. For the
 .zip and tar formats, the path to a directory within the archive can be
 provided if it is not located at the top-level of the archive. If the
 destination directory exists, it will be replaced with the assets being
-imported.`,
+imported.
+
+The destination directory can be configured in your project's config.yaml
+under the upload_dir key. If no custom upload directory is defined, the app
+type's default upload directory will be used.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
