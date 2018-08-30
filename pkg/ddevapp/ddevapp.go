@@ -16,6 +16,9 @@ import (
 
 	"runtime"
 
+	"path"
+	"time"
+
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/archive"
@@ -28,8 +31,6 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-shellwords"
-	"path"
-	"time"
 )
 
 const containerWaitTimeout = 61
@@ -91,6 +92,7 @@ type DdevApp struct {
 	SiteLocalSettingsPath string               `yaml:"-"`
 	providerInstance      Provider             `yaml:"-"`
 	Commands              map[string][]Command `yaml:"hooks,omitempty"`
+	ImportFilesPath       string               `yaml:"import_files_path,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string
