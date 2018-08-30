@@ -135,17 +135,20 @@ const ConfigInstructions = `
 
 # xdebug_enabled: false  # Set to true to enable xdebug and "ddev start" or "ddev restart"
 
-#additional_hostnames:
-# - somename
-# - someothername
+# additional_hostnames:
+#  - somename
+#  - someothername
 # would provide http and https URLs for "somename.ddev.local"
 # and "someothername.ddev.local".
 
-#additional_fqdns:
-# - example.com
-# - sub1.example.com
+# additional_fqdns:
+#  - example.com
+#  - sub1.example.com
 # would provide http and https URLs for "example.com" and "sub1.example.com"
 # Please take care with this because it can cause great confusion.
+
+# upload_dir: custom/upload/dir
+# would set the destination path for ddev import-files to custom/upload/dir.
 
 # provider: default # Currently either "default" or "pantheon"
 #
