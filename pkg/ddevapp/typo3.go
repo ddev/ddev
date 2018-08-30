@@ -95,12 +95,13 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	return nil
 }
 
-// getTypo3UploadDir just returns a static upload files (public files) dir.
-// This can be made more sophisticated in the future, for example by adding
-// the directory to the ddev config.yaml.
+// getTypo3UploadDir will return a custom upload dir if defined, returning a default path if not.
 func getTypo3UploadDir(app *DdevApp) string {
-	// @todo: Check to see if this gets overridden in LocalConfiguration.php
-	return "fileadmin"
+	if app.ImportFilesPath == "" {
+		return "fileadmin"
+	}
+
+	return app.ImportFilesPath
 }
 
 // Typo3Hooks adds a TYPO3-specific hooks example for post-import-db
