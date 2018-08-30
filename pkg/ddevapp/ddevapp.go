@@ -92,7 +92,7 @@ type DdevApp struct {
 	SiteLocalSettingsPath string               `yaml:"-"`
 	providerInstance      Provider             `yaml:"-"`
 	Commands              map[string][]Command `yaml:"hooks,omitempty"`
-	UploadPath            string               `yaml:"upload_path,omitempty"`
+	UploadDir             string               `yaml:"upload_dir,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string

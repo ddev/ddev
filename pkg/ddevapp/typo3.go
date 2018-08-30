@@ -97,11 +97,11 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 
 // getTypo3UploadDir will return a custom upload dir if defined, returning a default path if not.
 func getTypo3UploadDir(app *DdevApp) string {
-	if app.UploadPath == "" {
+	if app.UploadDir == "" {
 		return "fileadmin"
 	}
 
-	return app.UploadPath
+	return app.UploadDir
 }
 
 // Typo3Hooks adds a TYPO3-specific hooks example for post-import-db
