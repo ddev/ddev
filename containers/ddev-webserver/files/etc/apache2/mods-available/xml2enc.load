@@ -1,0 +1,1 @@
+LoadModule xml2enc_module /usr/lib/apache2/modules/mod_xml2enc.so

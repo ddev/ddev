@@ -1,0 +1,2 @@
+# Depends: proxy_balancer
+LoadModule lbmethod_byrequests_module /usr/lib/apache2/modules/mod_lbmethod_byrequests.so

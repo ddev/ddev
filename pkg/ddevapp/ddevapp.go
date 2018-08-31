@@ -74,6 +74,7 @@ type DdevApp struct {
 	Type                  string               `yaml:"type"`
 	Docroot               string               `yaml:"docroot"`
 	PHPVersion            string               `yaml:"php_version"`
+	WebserverType         string               `yaml:"webserver_type"`
 	WebImage              string               `yaml:"webimage,omitempty"`
 	DBImage               string               `yaml:"dbimage,omitempty"`
 	DBAImage              string               `yaml:"dbaimage,omitempty"`
@@ -180,6 +181,8 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 
 	appDesc["router_status"] = GetRouterStatus()
 	appDesc["php_version"] = app.GetPhpVersion()
+	appDesc["webserver_type"] = app.GetWebserverType()
+
 	appDesc["router_http_port"] = app.RouterHTTPPort
 	appDesc["router_https_port"] = app.RouterHTTPSPort
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
@@ -225,6 +228,15 @@ func (app *DdevApp) GetPhpVersion() string {
 	v := DdevDefaultPHPVersion
 	if app.PHPVersion != "" {
 		v = app.PHPVersion
+	}
+	return v
+}
+
+// GetWebserverType returns the app's webserver type (nginx-fpm/apache-fpm/apache-cgi)
+func (app *DdevApp) GetWebserverType() string {
+	v := DdevDefaultWebserverType
+	if app.WebserverType != "" {
+		v = app.WebserverType
 	}
 	return v
 }
@@ -728,6 +740,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_UID":                      UIDStr,
 		"DDEV_GID":                      GIDStr,
 		"DDEV_PHP_VERSION":              app.PHPVersion,
+		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
 		"DDEV_PROJECT_TYPE":             app.Type,
 		"DDEV_ROUTER_HTTP_PORT":         app.RouterHTTPPort,
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,

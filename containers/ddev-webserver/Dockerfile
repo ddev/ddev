@@ -14,13 +14,18 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
 ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
-ENV NGINX_DOCROOT /var/www/html
+ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
+ENV WEBSERVER_DOCROOT /var/www/html
+# For backward compatibility only
+ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
 
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
 
 # Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
-ENV NGINX_SITE_VARS '$NGINX_DOCROOT'
+# NGINX_DOCROOT is for backward compatibility only, to break less people.
+ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
+ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
 
 RUN apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
@@ -46,6 +51,7 @@ RUN apt-get -qq update && \
         git \
         mysql-client \
         nginx \
+        apache2 \
         nodejs \
         libcap2-bin \
         supervisor \
@@ -65,14 +71,15 @@ RUN apt-get -qq update && \
         unzip \
         rsync \
         libpcre3 && \
-    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-bcmath $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring $v-memcached $v-opcache $v-redis $v-soap $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip; done && \
+    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-bcmath $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring $v-memcached $v-opcache $v-redis $v-soap $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
     for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
     apt-get -qq autoremove -y && \
     apt-get -qq clean -y && \
     rm -rf /var/lib/apt/lists/*
 
-# Arbitrary user needs to be able to bind to privileged ports (for nginx)
+# Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
+RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 
 ADD files /
 
@@ -87,7 +94,7 @@ RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal 
 
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/drush.zip -o /tmp/backdrop_drush.zip && unzip /tmp/backdrop_drush.zip -d /var/tmp/backdrop_drush_commands
 
-RUN mkdir -p /etc/nginx/sites-enabled && \
+RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
     touch /var/log/php-fpm.log && \
     chmod ugo+rw /var/log/php-fpm.log && \
     chmod ugo+rwx /var/run && \
@@ -101,7 +108,8 @@ RUN mkdir -p /etc/nginx/sites-enabled && \
 
 RUN chmod -R 777 /var/log
 
-RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php
+RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2
+
 # All users will have their home directory in /home, make it fully writeable
 RUN mkdir -p /home/.composer/cache /home/.drush/commands /home/.drush/aliases && chmod -R ugo+rw /home
 # Except that .my.cnf can't be writeable or mysql won't use it.
@@ -109,6 +117,9 @@ RUN chmod 444 /home/.my.cnf
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
+
+RUN for v in $PHP_VERSIONS; do a2dismod $v; done
+RUN a2dismod mpm_event
 
 EXPOSE 80 8025
 HEALTHCHECK --interval=2s --retries=5 CMD ["/healthcheck.sh"]

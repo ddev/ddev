@@ -1,0 +1,1 @@
+LoadModule socache_memcache_module /usr/lib/apache2/modules/mod_socache_memcache.so

@@ -1,0 +1,2 @@
+# Depends: mime
+LoadModule include_module /usr/lib/apache2/modules/mod_include.so

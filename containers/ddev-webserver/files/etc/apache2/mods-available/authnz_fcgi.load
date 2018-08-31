@@ -1,0 +1,1 @@
+LoadModule authnz_fcgi_module /usr/lib/apache2/modules/mod_authnz_fcgi.so

@@ -1,0 +1,3 @@
+# This module depends on mod_watchdog to be loaded before. In Debian, this
+# module is statically linked.
+LoadModule heartbeat_module /usr/lib/apache2/modules/mod_heartbeat.so

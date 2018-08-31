@@ -56,6 +56,7 @@ services:
       - DDEV_URL=$DDEV_URL
       - DOCROOT=$DDEV_DOCROOT
       - DDEV_PHP_VERSION=$DDEV_PHP_VERSION
+      - DDEV_WEBSERVER_TYPE=$DDEV_WEBSERVER_TYPE
       - DDEV_PROJECT_TYPE=$DDEV_PROJECT_TYPE
       - DDEV_ROUTER_HTTP_PORT=$DDEV_ROUTER_HTTP_PORT
       - DDEV_ROUTER_HTTPS_PORT=$DDEV_ROUTER_HTTPS_PORT
@@ -134,6 +135,8 @@ const ConfigInstructions = `
 # router_https_port: <port> # Port for https (defaults to 443)
 
 # xdebug_enabled: false  # Set to true to enable xdebug and "ddev start" or "ddev restart"
+
+# webserver_type: nginx-fpm  # Can be set to apache-fpm or apache-cgi as well
 
 # additional_hostnames:
 #  - somename

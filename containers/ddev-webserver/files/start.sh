@@ -3,15 +3,23 @@ set -x
 set -o errexit nounset pipefail
 
 # If DDEV_PHP_VERSION isn't set, use a reasonable default
-DDEV_PHP_VERSION=${DDEV_PHP_VERSION:-$PHP_DEFAULT_VERSION}
+DDEV_PHP_VERSION="${DDEV_PHP_VERSION:-$PHP_DEFAULT_VERSION}"
 
-# Update full path NGINX_DOCROOT if DOCROOT env is provided
+# If DDEV_WEBSERVER_TYPE isn't set, use a reasonable default
+DDEV_WEBSERVER_TYPE="${DDEV_WEBSERVER_TYPE:-nginx-fpm}"
+
+# Update full path WEBSERVER_DOCROOT if DOCROOT env is provided
 if [ -n "$DOCROOT" ] ; then
-    export NGINX_DOCROOT="/var/www/html/$DOCROOT"
+    export WEBSERVER_DOCROOT="/var/www/html/$DOCROOT"
+    # NGINX_DOCROOT is for backward compatibility of custom config only
+    export NGINX_DOCROOT=$WEBSERVER_DOCROOT
 fi
 
 if [ -f "/mnt/ddev_config/nginx-site.conf" ] ; then
     export NGINX_SITE_TEMPLATE="/mnt/ddev_config/nginx-site.conf"
+fi
+if [ -f "/mnt/ddev_config/apache/apache-site.conf" ]; then
+    export APACHE_SITE_TEMPLATE="/mnt/ddev_config/apache/apache-site.conf"
 fi
 
 # Update the default PHP and FPM versions a DDEV_PHP_VERSION like '5.6' or '7.0' is provided
@@ -47,8 +55,32 @@ else
     ln -s /etc/nginx/nginx-site-default.conf /etc/nginx/nginx-site.conf
 fi
 
-# Substitute values of environment variables in nginx configuration
+# Get and link a specific apache-site-<project>.conf for our project type (if it exists)
+rm -f /etc/apache2/apache-site.conf
+if [ -f /etc/apache2/ddev_apache-$DDEV_PROJECT_TYPE.conf ] ; then
+    ln -s -f /etc/apache2/apache-site-$DDEV_PROJECT_TYPE.conf /etc/apache2/apache-site.conf
+else
+    ln -s -f /etc/apache2/apache-site-default.conf /etc/apache2/apache-site.conf
+fi
+
+# Substitute values of environment variables in nginx and apache configuration
 envsubst "$NGINX_SITE_VARS" < "$NGINX_SITE_TEMPLATE" > /etc/nginx/sites-enabled/nginx-site.conf
+envsubst "$APACHE_SITE_VARS" < "$APACHE_SITE_TEMPLATE" > /etc/apache2/sites-enabled/apache-site.conf
+
+# Change the apache run user to current user/group
+printf "\nexport APACHE_RUN_USER=uid_$(id -u)\nexport APACHE_RUN_GROUP=gid_$(id -g)\n" >>/etc/apache2/envvars
+if [ "$DDEV_WEBSERVER_TYPE" = "apache-cgi" ] ; then
+    a2enmod php${DDEV_PHP_VERSION}
+    a2dismod proxy_fcgi
+    a2enmod rewrite
+    a2dissite 000-default
+fi
+if [ "$DDEV_WEBSERVER_TYPE" = "apache-fpm" ] ; then
+    a2enmod proxy_fcgi setenvif
+    a2enconf php${DDEV_PHP_VERSION}-fpm
+    a2enmod rewrite
+    a2dissite 000-default
+fi
 
 # Disable xdebug by default. Users can enable with /usr/local/bin/enable_xdebug
 if [ "$DDEV_XDEBUG_ENABLED" != "true" ]; then
@@ -57,4 +89,4 @@ fi
 
 echo 'Server started'
 
-exec /usr/bin/supervisord -n -c /etc/supervisord.conf
+exec /usr/bin/supervisord -n -c "/etc/supervisord-${DDEV_WEBSERVER_TYPE}.conf"

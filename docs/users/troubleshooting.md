@@ -83,9 +83,9 @@ Note: Your project database will be destroyed by this procedure.
 
 ### Restarts of the web container
 
-The most common cause of the web container restarting is a user-defined .ddev/nginx-site.conf - Please rename it to nginx-site.conf.bak during testing. To figure out what's wrong with it after you've identified that as the problem, `ddev ssh` and look at /var/log/nginx/error.log or use `ddev logs` and review the error.
+The most common cause of the web container restarting is a user-defined .ddev/nginx-site.conf or .ddev/apache/apache-site.conf - Please rename these to <xxx_site.conf> during testing. To figure out what's wrong with it after you've identified that as the problem, `ddev ssh` and look at /var/log/nginx/error.log or /var/log/apache2/error.log or use `ddev logs` and review the error.
 
-Changes to .ddev/nginx-site.conf take effect only when you do a `ddev rm` followed by `ddev start`.
+Changes to .ddev/nginx-site.conf and .ddev/apache/apache-site.conf take effect only when you do a `ddev restart` or the equivalent.
 
 ## More Support
 
