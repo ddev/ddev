@@ -113,6 +113,7 @@ func TestConfigSetValues(t *testing.T) {
 	additionalHostnames := strings.Join(additionalHostnamesSlice, ",")
 	additionalFQDNsSlice := []string{"abc.com", "123.pizza", "xyz.co.uk"}
 	additionalFQDNs := strings.Join(additionalFQDNsSlice, ",")
+	uploadDir := filepath.Join("custom", "config", "path")
 
 	args := []string{
 		"config",
@@ -124,7 +125,9 @@ func TestConfigSetValues(t *testing.T) {
 		"--https-port", httpsPort,
 		fmt.Sprintf("--xdebug-enabled=%t", xdebugEnabled),
 		"--additional-hostnames", additionalHostnames,
-		"--additional-fqdns", additionalFQDNs}
+		"--additional-fqdns", additionalFQDNs,
+		"--upload-dir", uploadDir,
+	}
 
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
@@ -150,4 +153,5 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(xdebugEnabled, app.XdebugEnabled)
 	assert.Equal(additionalHostnamesSlice, app.AdditionalHostnames)
 	assert.Equal(additionalFQDNsSlice, app.AdditionalFQDNs)
+	assert.Equal(uploadDir, app.UploadDir)
 }
