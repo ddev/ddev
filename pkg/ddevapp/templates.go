@@ -138,17 +138,20 @@ const ConfigInstructions = `
 
 # webserver_type: nginx-fpm  # Can be set to apache-fpm or apache-cgi as well
 
-#additional_hostnames:
-# - somename
-# - someothername
+# additional_hostnames:
+#  - somename
+#  - someothername
 # would provide http and https URLs for "somename.ddev.local"
 # and "someothername.ddev.local".
 
-#additional_fqdns:
-# - example.com
-# - sub1.example.com
+# additional_fqdns:
+#  - example.com
+#  - sub1.example.com
 # would provide http and https URLs for "example.com" and "sub1.example.com"
 # Please take care with this because it can cause great confusion.
+
+# upload_dir: custom/upload/dir
+# would set the destination path for ddev import-files to custom/upload/dir.
 
 # provider: default # Currently either "default" or "pantheon"
 #

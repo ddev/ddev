@@ -355,14 +355,20 @@ Run 'ddev describe' to find the database credentials for this application.
 Successfully imported database for drupal8
 ```
 
-<h4>Non-interactive usage</h4>## Stopping a project
+<h4>Non-interactive usage</h4>
+
 If you want to use import-db without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Example:
 
 `ddev import-db --src=/tmp/mydb.sql.gz`
 
 ### Importing static file assets
 
-To import static file assets for a project, such as uploaded images and documents, use the command `ddev import-files`. This command will prompt you to specify the location of your asset import. Next it will import the assets into the default public upload directory of the platform for the project. For Drupal projects, this is the "sites/default/files" directory. For WordPress projects, this is the "wp-content/uploads" directory.
+To import static file assets for a project, such as uploaded images and documents, use the command `ddev import-files`. This command will prompt you to specify the location of your import asset, then import the assets into the project's upload directory. To define a custom upload directory, set the `upload_dir` key in your project's `config.yaml`. If no custom upload directory is defined, the a default will be used:
+
+- For Drupal projects, this is the `sites/default/files` directory
+- For WordPress projects, this is the `wp-content/uploads` directory
+- For TYPO3 projects, this is the `fileadmin` directory
+- For Backdrop projects, this is the `files` directory
 
 ```
 ➜  ddev import-files
@@ -439,6 +445,10 @@ The `ddev ssh` command will open an interactive bash shell session to the contai
 The `ddev logs` command allows you to easily retrieve error logs from the web container (both nginx/apache and php-fpm logs are concatenated). To follow the log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail.
 
 To manually review additional log files use the `ddev ssh` command and review logs in /var/log and /var/log/nginx or /var/log/apache2. The web server stores access logs at `/var/log/nginx/access.log` or `/var/log/apache2/access.log`, and PHP-FPM (for nginx-fpm and apache-fpm webservers) stores logs at `/var/log/php-fpm.log`.
+
+## Stopping a project
+
+To stop the development environment for a project run `ddev stop` in its working directory. You can also stop a particular project's environment from any directory by running `ddev stop <projectname>` or stop every running project via `ddev stop --all`.
 
 ## Removing a project
 

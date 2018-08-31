@@ -737,7 +737,7 @@ func TestDdevImportFiles(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevImportFiles", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
@@ -762,6 +762,66 @@ func TestDdevImportFiles(t *testing.T) {
 			assert.NoError(err)
 			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
 			assert.NoError(err)
+		}
+
+		runTime()
+		switchDir()
+	}
+}
+
+// TestDdevImportFilesCustomUploadDir ensures that files are imported to a custom upload directory when requested
+func TestDdevImportFilesCustomUploadDir(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	for _, site := range TestSites {
+		switchDir := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+
+		testcommon.ClearDockerEnv()
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		// Set custom upload dir
+		app.UploadDir = "my/upload/dir"
+		absUploadDir := filepath.Join(app.AppRoot, app.Docroot, app.UploadDir)
+		err = os.MkdirAll(absUploadDir, 0755)
+		assert.NoError(err)
+
+		if site.FilesTarballURL != "" {
+			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+			assert.NoError(err)
+			err = app.ImportFiles(tarballPath, "")
+			assert.NoError(err)
+
+			// Ensure upload dir isn't empty
+			fileInfoSlice, err := ioutil.ReadDir(absUploadDir)
+			assert.NoError(err)
+			assert.NotEmpty(fileInfoSlice)
+		}
+
+		if site.FilesZipballURL != "" {
+			_, zipballPath, err := testcommon.GetCachedArchive(site.Name, "local-zipballs-files", "", site.FilesZipballURL)
+			assert.NoError(err)
+			err = app.ImportFiles(zipballPath, "")
+			assert.NoError(err)
+
+			// Ensure upload dir isn't empty
+			fileInfoSlice, err := ioutil.ReadDir(absUploadDir)
+			assert.NoError(err)
+			assert.NotEmpty(fileInfoSlice)
+		}
+
+		if site.FullSiteTarballURL != "" && site.FullSiteArchiveExtPath != "" {
+			_, siteTarPath, err := testcommon.GetCachedArchive(site.Name, "local-site-tar", "", site.FullSiteTarballURL)
+			assert.NoError(err)
+			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
+			assert.NoError(err)
+
+			// Ensure upload dir isn't empty
+			fileInfoSlice, err := ioutil.ReadDir(absUploadDir)
+			assert.NoError(err)
+			assert.NotEmpty(fileInfoSlice)
 		}
 
 		runTime()

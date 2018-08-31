@@ -70,9 +70,13 @@ func getWordpressHooks() []byte {
 	return []byte(wordPressHooks)
 }
 
-// getWordpressUploadDir just returns a static upload files directory string.
+// getWordpressUploadDir will return a custom upload dir if defined, returning a default path if not.
 func getWordpressUploadDir(app *DdevApp) string {
-	return "wp-content/uploads"
+	if app.UploadDir == "" {
+		return "wp-content/uploads"
+	}
+
+	return app.UploadDir
 }
 
 const (

@@ -528,7 +528,7 @@ func (app *DdevApp) docrootPrompt() error {
 
 		// Ask the user for permission to create the docroot
 		for {
-			resp := util.Prompt("Create docroot at %s? [Y/n]", "yes")
+			resp := util.Prompt(fmt.Sprintf("Create docroot at %s? [Y/n]", fullPath), "yes")
 			if strings.ToLower(resp) == "y" || strings.ToLower(resp) == "yes" {
 				break
 			}
@@ -601,7 +601,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml")
+	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
