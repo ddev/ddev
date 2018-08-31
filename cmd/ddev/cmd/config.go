@@ -45,8 +45,11 @@ var (
 	// additionalFQDNsArg allows a user to provide a comma-delimited list of FQDNs from a command flag.
 	additionalFQDNsArg string
 
-	// showConfigLocation if set causes the command to show the config location
+	// showConfigLocation, if set, causes the command to show the config location.
 	showConfigLocation bool
+
+	// uploadDirArg allows a user to set the project's upload directory, the destination directory for import-files.
+	uploadDirArg string
 )
 
 var providerName = ddevapp.DefaultProviderName
@@ -133,6 +136,7 @@ func init() {
 	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
+	ConfigCommand.Flags().StringVar(&uploadDirArg, "upload-dir", "", "Sets the project's upload directoy, the destination directory of the import-files command.")
 
 	// apptype flag exists for backwards compatibility.
 	ConfigCommand.Flags().StringVar(&appTypeArg, "apptype", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
@@ -279,6 +283,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if additionalFQDNsArg != "" {
 		app.AdditionalFQDNs = strings.Split(additionalFQDNsArg, ",")
+	}
+
+	if uploadDirArg != "" {
+		app.UploadDir = uploadDirArg
 	}
 
 	err = app.WriteConfig()
