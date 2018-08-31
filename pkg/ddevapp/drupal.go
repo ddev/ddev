@@ -499,11 +499,13 @@ func WriteDrushConfig(drushConfig *DrushConfig, filePath string) error {
 	return nil
 }
 
-// getDrupalUploadDir just returns a static upload files (public files) dir.
-// This can be made more sophisticated in the future, for example by adding
-// the directory to the ddev config.yaml.
+// getDrupalUploadDir will return a custom upload dir if defined, returning a default path if not.
 func getDrupalUploadDir(app *DdevApp) string {
-	return "sites/default/files"
+	if app.UploadDir == "" {
+		return "sites/default/files"
+	}
+
+	return app.UploadDir
 }
 
 // Drupal8Hooks adds a d8-specific hooks example for post-import-db
