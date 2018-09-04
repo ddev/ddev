@@ -3,11 +3,20 @@ package cmd
 import (
 	"testing"
 
+	"os"
+	"path/filepath"
+
+	"strings"
+
+	"fmt"
+
+	"io/ioutil"
+
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
-	"os"
-	"path/filepath"
+	"gopkg.in/yaml.v2"
 )
 
 // TestConfigDescribeLocation tries out the --show-config-location flag.
@@ -74,4 +83,75 @@ func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(string(out), "Found a drupal8 codebase")
+}
+
+// TestConfigSetValues sets all available configuration values using command flags, then confirms that the
+// values have been correctly written to the config file.
+func TestConfigSetValues(t *testing.T) {
+	var err error
+	assert := asrt.New(t)
+
+	// Create a temporary directory and switch to it.
+	tmpdir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
+
+	// Create an existing docroot
+	docroot := "web"
+	if err = os.MkdirAll(filepath.Join(tmpdir, docroot), 0755); err != nil {
+		t.Errorf("Could not create docroot %s in %s", docroot, tmpdir)
+	}
+
+	// Build config args
+	projectName := "my-project-name"
+	projectType := "typo3"
+	phpVersion := "7.1"
+	httpPort := "81"
+	httpsPort := "444"
+	xdebugEnabled := true
+	additionalHostnamesSlice := []string{"abc", "123", "xyz"}
+	additionalHostnames := strings.Join(additionalHostnamesSlice, ",")
+	additionalFQDNsSlice := []string{"abc.com", "123.pizza", "xyz.co.uk"}
+	additionalFQDNs := strings.Join(additionalFQDNsSlice, ",")
+	uploadDir := filepath.Join("custom", "config", "path")
+
+	args := []string{
+		"config",
+		"--projectname", projectName,
+		"--docroot", docroot,
+		"--projecttype", projectType,
+		"--php-version", phpVersion,
+		"--http-port", httpPort,
+		"--https-port", httpsPort,
+		fmt.Sprintf("--xdebug-enabled=%t", xdebugEnabled),
+		"--additional-hostnames", additionalHostnames,
+		"--additional-fqdns", additionalFQDNs,
+		"--upload-dir", uploadDir,
+	}
+
+	_, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err)
+
+	configFile := filepath.Join(tmpdir, ".ddev", "config.yaml")
+	configContents, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		t.Errorf("Unable to read %s: %v", configFile, err)
+	}
+
+	assert.NoError(err, "Unable to read config file at %s", configFile)
+	app := &ddevapp.DdevApp{}
+	if err = yaml.Unmarshal(configContents, app); err != nil {
+		t.Errorf("Could not unmarshal config.yaml %s: %v", configFile, err)
+	}
+
+	assert.Equal(projectName, app.Name)
+	assert.Equal(docroot, app.Docroot)
+	assert.Equal(projectType, app.Type)
+	assert.Equal(phpVersion, app.PHPVersion)
+	assert.Equal(httpPort, app.RouterHTTPPort)
+	assert.Equal(httpsPort, app.RouterHTTPSPort)
+	assert.Equal(xdebugEnabled, app.XdebugEnabled)
+	assert.Equal(additionalHostnamesSlice, app.AdditionalHostnames)
+	assert.Equal(additionalFQDNsSlice, app.AdditionalFQDNs)
+	assert.Equal(uploadDir, app.UploadDir)
 }

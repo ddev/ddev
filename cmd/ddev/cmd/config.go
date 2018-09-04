@@ -13,25 +13,49 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// docrootRelPath is the relative path to the docroot where index.php is
-var docrootRelPath string
+// Define flags for the config command
+var (
+	// createDocroot will allow a nonexistent docroot to be created
+	createDocroot bool
 
-// siteName is the name of the site
-var siteName string
+	// docrootRelPathArg is the relative path to the docroot where index.php is.
+	docrootRelPathArg string
 
-// appType is the ddev app type, like drupal7/drupal8/wordpress
-var appType string
+	// siteNameArg is the name of the site.
+	siteNameArg string
 
-// showConfigLocation if set causes the command to show the config locatio
-var showConfigLocation bool
+	// appTypeArg is the ddev app type, like drupal7/drupal8/wordpress.
+	appTypeArg string
 
-// createDocroot will allow a nonexistent docroot to be created
-var createDocroot bool
+	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6/7.0/7.1/7.2.
+	phpVersionArg string
+
+	// httpPortArg overrides the default HTTP port (80).
+	httpPortArg string
+
+	// httpsPortArg overrides the default HTTPS port (443).
+	httpsPortArg string
+
+	// xdebugEnabledArg allows a user to enable XDebug from a command flag.
+	xdebugEnabledArg bool
+
+	// additionalHostnamesArg allows a user to provide a comma-delimited list of hostnames from a command flag.
+	additionalHostnamesArg string
+
+	// additionalFQDNsArg allows a user to provide a comma-delimited list of FQDNs from a command flag.
+	additionalFQDNsArg string
+
+	// showConfigLocation, if set, causes the command to show the config location.
+	showConfigLocation bool
+
+	// uploadDirArg allows a user to set the project's upload directory, the destination directory for import-files.
+	uploadDirArg string
+)
+
+var providerName = ddevapp.DefaultProviderName
 
 // extraFlagsHandlingFunc does specific handling for additional flags, and is different per provider.
 var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error
-
-var providerName = ddevapp.DefaultProviderName
 
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand *cobra.Command = &cobra.Command{
@@ -95,21 +119,33 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 }
 
 func init() {
+	var err error
+
 	validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
 	apptypeUsage := fmt.Sprintf("Provide the project type (one of %s). This is autodetected and this flag is necessary only to override the detection.", validAppTypes)
 	projectNameUsage := fmt.Sprintf("Provide the project name of project to configure (normally the same as the last part of directory name)")
 
-	ConfigCommand.Flags().StringVarP(&siteName, "projectname", "", "", projectNameUsage)
-	ConfigCommand.Flags().StringVarP(&docrootRelPath, "docroot", "", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
-	ConfigCommand.Flags().StringVarP(&appType, "projecttype", "", "", apptypeUsage)
-	// apptype flag is there for backwards compatibility.
-	ConfigCommand.Flags().StringVarP(&appType, "apptype", "", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
-	ConfigCommand.Flags().BoolVarP(&showConfigLocation, "show-config-location", "", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
-	ConfigCommand.Flags().StringVarP(&siteName, "sitename", "", "", projectNameUsage+" This is the same as projectname and is included only for backwards compatibility")
+	ConfigCommand.Flags().StringVar(&siteNameArg, "projectname", "", projectNameUsage)
+	ConfigCommand.Flags().StringVar(&docrootRelPathArg, "docroot", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
+	ConfigCommand.Flags().StringVar(&appTypeArg, "projecttype", "", apptypeUsage)
+	ConfigCommand.Flags().StringVar(&phpVersionArg, "php-version", "", "The version of PHP that will be enabled in the web container")
+	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The web container's exposed HTTP port")
+	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The web container's exposed HTTPS port")
+	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", false, "Whether or not XDebug is enabled in the web container")
+	ConfigCommand.Flags().StringVar(&additionalHostnamesArg, "additional-hostnames", "", "A comma-delimited list of hostnames for the project")
+	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
-	err := ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --projectname")
-	util.CheckErr(err)
+	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
+	ConfigCommand.Flags().StringVar(&uploadDirArg, "upload-dir", "", "Sets the project's upload directoy, the destination directory of the import-files command.")
+
+	// apptype flag exists for backwards compatibility.
+	ConfigCommand.Flags().StringVar(&appTypeArg, "apptype", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
 	err = ConfigCommand.Flags().MarkDeprecated("apptype", "The apptype flag is deprecated in favor of --projecttype")
+	util.CheckErr(err)
+
+	// sitename flag exists for backwards compatibility.
+	ConfigCommand.Flags().StringVar(&siteNameArg, "sitename", "", projectNameUsage+" This is the same as projectname and is included only for backwards compatibility")
+	err = ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --projectname")
 	util.CheckErr(err)
 
 	RootCmd.AddCommand(ConfigCommand)
@@ -132,7 +168,6 @@ func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
 
 // handleMainConfigArgs() validates and processes the main config args (docroot, etc.)
 func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error {
-
 	var err error
 
 	// Support the show-config-location flag.
@@ -146,6 +181,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 				util.Failed("Failed to access project configuration: %v", err)
 			}
 		}
+
 		if activeApp.ConfigPath != "" && activeApp.ConfigExists() {
 			rawResult := make(map[string]interface{})
 			rawResult["configpath"] = activeApp.ConfigPath
@@ -160,12 +196,12 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	// Let them know if we're replacing the config.yaml
 	app.WarnIfConfigReplace()
 
-	// app.Name gets set to basename if not provided, or set to siteName if provided
-	if app.Name != "" && siteName == "" { // If we already have a c.Name and no siteName, leave c.Name alone
+	// app.Name gets set to basename if not provided, or set to siteNameArg if provided
+	if app.Name != "" && siteNameArg == "" { // If we already have a c.Name and no siteNameArg, leave c.Name alone
 		// Sorry this is empty but it makes the logic clearer.
-	} else if siteName != "" { // if we have a siteName passed in, use it for c.Name
-		app.Name = siteName
-	} else { // No siteName passed, c.Name not set: use c.Name from the directory
+	} else if siteNameArg != "" { // if we have a siteNameArg passed in, use it for c.Name
+		app.Name = siteNameArg
+	} else { // No siteNameArg passed, c.Name not set: use c.Name from the directory
 		// nolint: vetshadow
 		pwd, err := os.Getwd()
 		util.CheckErr(err)
@@ -173,18 +209,18 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	// Ensure that the docroot exists
-	if docrootRelPath != "" {
-		app.Docroot = docrootRelPath
-		if _, err = os.Stat(docrootRelPath); os.IsNotExist(err) {
+	if docrootRelPathArg != "" {
+		app.Docroot = docrootRelPathArg
+		if _, err = os.Stat(docrootRelPathArg); os.IsNotExist(err) {
 			// If the user has indicated that the docroot should be created, create it.
 			if !createDocroot {
-				util.Failed("The provided docroot %s does not exist. Allow ddev to create it with the --create-docroot flag.", docrootRelPath)
+				util.Failed("The provided docroot %s does not exist. Allow ddev to create it with the --create-docroot flag.", docrootRelPathArg)
 			}
 
 			var docrootAbsPath string
 			docrootAbsPath, err = filepath.Abs(app.Docroot)
 			if err != nil {
-				util.Failed("Could not create docroot at %s: %v", docrootRelPath, err)
+				util.Failed("Could not create docroot at %s: %v", docrootRelPathArg, err)
 			}
 
 			if err = os.MkdirAll(docrootAbsPath, 0755); err != nil {
@@ -197,7 +233,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
 	}
 
-	if appType != "" && !ddevapp.IsValidAppType(appType) {
+	if appTypeArg != "" && !ddevapp.IsValidAppType(appTypeArg) {
 		validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
 		util.Failed("apptype must be one of %s", validAppTypes)
 	}
@@ -207,24 +243,56 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	if pathErr != nil {
 		util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, pathErr)
 	}
-	if appType == "" || appType == detectedApptype { // Found an app, matches passed-in or no apptype passed
-		appType = detectedApptype
+	if appTypeArg == "" || appTypeArg == detectedApptype { // Found an app, matches passed-in or no apptype passed
+		appTypeArg = detectedApptype
 		util.Success("Found a %s codebase at %s", detectedApptype, fullPath)
-	} else if appType != "" { // apptype was passed, but we found no app at all
-		util.Warning("You have specified a project type of %s but no project of that type is found in %s", appType, fullPath)
-	} else if appType != "" && detectedApptype != appType { // apptype was passed, app was found, but not the same type
-		util.Warning("You have specified a project type of %s but a project of type %s was discovered in %s", appType, detectedApptype, fullPath)
+	} else if appTypeArg != "" { // apptype was passed, but we found no app at all
+		util.Warning("You have specified a project type of %s but no project of that type is found in %s", appTypeArg, fullPath)
+	} else if appTypeArg != "" && detectedApptype != appTypeArg { // apptype was passed, app was found, but not the same type
+		util.Warning("You have specified a project type of %s but a project of type %s was discovered in %s", appTypeArg, detectedApptype, fullPath)
 	}
-	app.Type = appType
+	app.Type = appTypeArg
 
+	// App overrides are done after app type is detected, but
+	// before user-defined flags are set.
 	err = app.ConfigFileOverrideAction()
 	if err != nil {
 		util.Failed("failed to run ConfigFileOverrideAction: %v", err)
+	}
+
+	if phpVersionArg != "" {
+		app.PHPVersion = phpVersionArg
+	}
+
+	if httpPortArg != "" {
+		app.RouterHTTPPort = httpPortArg
+	}
+
+	if httpsPortArg != "" {
+		app.RouterHTTPSPort = httpsPortArg
+	}
+
+	// This bool flag is false by default, so only use the value if the flag was explicity set.
+	if cmd.Flag("xdebug-enabled").Changed {
+		app.XdebugEnabled = xdebugEnabledArg
+	}
+
+	if additionalHostnamesArg != "" {
+		app.AdditionalHostnames = strings.Split(additionalHostnamesArg, ",")
+	}
+
+	if additionalFQDNsArg != "" {
+		app.AdditionalFQDNs = strings.Split(additionalFQDNsArg, ",")
+	}
+
+	if uploadDirArg != "" {
+		app.UploadDir = uploadDirArg
 	}
 
 	err = app.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("could not write ddev config file %s: %v", app.ConfigPath, err)
 	}
+
 	return nil
 }
