@@ -40,13 +40,14 @@ type WordpressConfig struct {
 }
 
 // NewWordpressConfig produces a WordpressConfig object with defaults.
-func NewWordpressConfig() *WordpressConfig {
+func NewWordpressConfig(app *DdevApp) *WordpressConfig {
 	return &WordpressConfig{
 		WPGeneric:         false,
 		DatabaseName:      "db",
 		DatabaseUsername:  "db",
 		DatabasePassword:  "db",
 		DatabaseHost:      "db",
+		DeployURL:         app.GetHTTPURL(),
 		Docroot:           "/var/www/html/docroot",
 		TablePrefix:       "wp_",
 		AuthKey:           util.RandString(64),
@@ -95,6 +96,15 @@ const wordpressSettingsTemplate = `<?php
 if (file_exists(getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}')) {
 	require_once getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}';
 }
+
+/** Absolute path to the WordPress directory. */
+if (!defined('ABSPATH'))
+	define('ABSPATH', dirname(__FILE__) . '/');
+
+/**
+Sets up WordPress vars and included files.
+*/
+require_once(ABSPATH . '/wp-settings.php');
 `
 
 const wordpressSettingsAppendTemplate = `{{ $config := . }}
@@ -102,6 +112,15 @@ const wordpressSettingsAppendTemplate = `{{ $config := . }}
 if (file_exists(getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}')) {
 	require_once getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}';
 }
+
+/** Absolute path to the WordPress directory. */
+if (!defined('ABSPATH'))
+	define('ABSPATH', dirname(__FILE__) . '/');
+
+/**
+Sets up WordPress vars and included files.
+*/
+require_once(ABSPATH . '/wp-settings.php');
 `
 
 const wordpressDdevSettingsTemplate = `<?php
@@ -125,18 +144,20 @@ if (!defined('DB_PASSWORD'))
 
 /** MySQL hostname */
 if (!defined('DB_HOST'))
- 	define( 'DB_HOST', '{{ $config.DatabaseHost }}' );
+	define( 'DB_HOST', '{{ $config.DatabaseHost }}' );
 
 /** Database Charset to use in creating database tables. */
-define( 'DB_CHARSET', 'utf8mb4' );
+if (!defined('DB_CHARSET'))
+	define( 'DB_CHARSET', 'utf8mb4' );
 
 /** The Database Collate type. */
-define( 'DB_COLLATE', '' );
+if (!defined('DB_COLLATE'))
+	define( 'DB_COLLATE', '');
 
 /**
  * WordPress Database Table prefix.
  */
-if(!isset($table_prefix))
+if (!isset($table_prefix))
 	$table_prefix  = '{{ $config.TablePrefix }}';
 
 /**
@@ -148,56 +169,43 @@ if(!isset($table_prefix))
 /**#@+
  * Authentication Unique Keys and Salts.
  */
-if ( !defined('AUTH_KEY') )
-	define( 'AUTH_KEY',         	'{{ $config.AuthKey }}' );
+if (!defined('AUTH_KEY'))
+	define('AUTH_KEY',         	'{{ $config.AuthKey }}');
 
-if ( !defined('SECURE_AUTH_KEY') )
-	define( 'SECURE_AUTH_KEY',  	'{{ $config.SecureAuthKey }}' );
+if (!defined('SECURE_AUTH_KEY'))
+	define('SECURE_AUTH_KEY',  	'{{ $config.SecureAuthKey }}');
 
-if ( !defined('LOGGED_IN_KEY') )
-	define( 'LOGGED_IN_KEY',    	'{{ $config.LoggedInKey }}' );
+if (!defined('LOGGED_IN_KEY'))
+	define('LOGGED_IN_KEY',    	'{{ $config.LoggedInKey }}');
 
-if ( !defined('NONCE_KEY') )
-	define( 'NONCE_KEY',        	'{{ $config.NonceKey }}' );
+if (!defined('NONCE_KEY'))
+	define('NONCE_KEY',        	'{{ $config.NonceKey }}');
 
-if ( !defined('AUTH_SALT') )
-	define( 'AUTH_SALT',        	'{{ $config.AuthSalt }}' );
+if (!defined('AUTH_SALT'))
+	define('AUTH_SALT',        	'{{ $config.AuthSalt }}');
 
-if ( !defined('SECURE_AUTH_SALT') )
-	define( 'SECURE_AUTH_SALT', 	'{{ $config.SecureAuthSalt }}' );
+if (!defined('SECURE_AUTH_SALT'))
+	define('SECURE_AUTH_SALT', 	'{{ $config.SecureAuthSalt }}');
 
-if ( !defined('LOGGED_IN_SALT') )
-	define( 'LOGGED_IN_SALT',   	'{{ $config.LoggedInSalt }}' );
+if (!defined('LOGGED_IN_SALT'))
+	define('LOGGED_IN_SALT',   	'{{ $config.LoggedInSalt }}');
 
-if ( !defined('NONCE_SALT') )
-	define( 'NONCE_SALT',       	'{{ $config.NonceSalt }}' );
+if (!defined('NONCE_SALT'))
+	define('NONCE_SALT',       	'{{ $config.NonceSalt }}');
 
 /** site URL */
-if ( !defined('WP_HOME') )
+if (!defined('WP_HOME'))
 	define('WP_HOME', '{{ $config.DeployURL }}');
 
 /** WP_ENV */
-define('WP_ENV', getenv('DDEV_ENV_NAME') ? getenv('DDEV_ENV_NAME') : 'production');
-
-/** Absolute path to the WordPress directory. */
-if ( !defined('ABSPATH') )
-	define('ABSPATH', dirname(__FILE__) . '/');
-
-/**
-Sets up WordPress vars and included files.
-
-wp-settings.php is typically included in wp-config.php. This check ensures it is not
-included again if this file is written to wp-config-local.php.
-*/
-if (basename(__FILE__) == "wp-config.php") {
-	require_once(ABSPATH . '/wp-settings.php');
-}
+if (!defined('WP_ENV'))
+	define('WP_ENV', getenv('DDEV_ENV_NAME') ? getenv('DDEV_ENV_NAME') : 'production');
 `
 
 // createWordpressSettingsFile creates a Wordpress settings file from a
 // template. Returns full path to location of file + err
 func createWordpressSettingsFile(app *DdevApp) (string, error) {
-	config := NewWordpressConfig()
+	config := NewWordpressConfig(app)
 
 	// If the settings file does not exist, create it
 	if !fileutil.FileExists(app.SiteSettingsPath) {
@@ -329,7 +337,7 @@ func appendIncludeToWordpressSettingsFile(config *WordpressConfig, siteSettingsP
 // setWordpressSiteSettingsPaths sets the expected settings files paths for
 // a wordpress site.
 func setWordpressSiteSettingsPaths(app *DdevApp) {
-	config := NewWordpressConfig()
+	config := NewWordpressConfig(app)
 
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettings)
