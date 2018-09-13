@@ -1,5 +1,6 @@
 root:x:0:
 nginx:x:0:
+gid_0:x:0:
 gid_1:x:1:
 gid_2:x:2:
 gid_3:x:3:
