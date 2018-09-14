@@ -55,19 +55,19 @@ fi
 for v in 5.6 7.0 7.1 7.2; do
 	echo "starting container for tests on php$v"
 
-	CONTAINER=$(docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -d --name $CONTAINER_NAME -v "/$composercache:/home/.composer/cache:rw" -d $DOCKER_IMAGE)
+	docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -d --name $CONTAINER_NAME -v "/$composercache:/home/.composer/cache:rw" -d $DOCKER_IMAGE
 	if ! containercheck; then
         exit 1
     fi
 
 	curl --fail localhost:$HOST_PORT/test/phptest.php
 	curl -s localhost:$HOST_PORT/test/test-email.php | grep "Test email sent"
-	docker exec -t $CONTAINER php --version | grep "PHP $v"
-	docker exec -t $CONTAINER drush --version
-	docker exec -t $CONTAINER wp --version
+	docker exec -t $CONTAINER_NAME php --version | grep "PHP $v"
+	docker exec -t $CONTAINER_NAME drush --version
+	docker exec -t $CONTAINER_NAME wp --version
 
 	# Make sure composer create-project is working.
-	docker exec -t $CONTAINER composer create-project -d //tmp drupal-composer/drupal-project:8.x-dev my-drupal8-site --stability dev --no-interaction
+	docker exec -t $CONTAINER_NAME composer create-project -d //tmp drupal-composer/drupal-project:8.x-dev my-drupal8-site --stability dev --no-interaction
 
     # Default settings for assert.active should be 1
     docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 1 => 1"
@@ -90,7 +90,7 @@ for v in 5.6 7.0 7.1 7.2; do
     # Make sure the phpstatus url is working for testing php-fpm.
     curl -s localhost:$HOST_PORT/phpstatus | grep "idle processes"
 
-	docker rm -f $CONTAINER
+	docker rm -f $CONTAINER_NAME
 done
 
 # Run various project_types and check behavior.
@@ -100,44 +100,51 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 	if [ "$project_type" == "drupal6" ]; then
 	  PHP_VERSION="5.6"
 	fi
-	CONTAINER=$(docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE)
+	docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
 	if ! containercheck; then
         exit 1
     fi
 	curl --fail localhost:$HOST_PORT/test/phptest.php
 	# Make sure that the project-specific config has been linked in.
-	docker exec -t $CONTAINER grep "# ddev $project_type config" //etc/nginx/nginx-site.conf
+	docker exec -t $CONTAINER_NAME grep "# ddev $project_type config" //etc/nginx/nginx-site.conf
 	# Make sure that the right PHP version was selected for the project_type
 	# Only drupal6 is currently different here.
-	docker exec -t $CONTAINER php --version | grep "PHP $PHP_VERSION"
+	docker exec -t $CONTAINER_NAME php --version | grep "PHP $PHP_VERSION"
 	# xdebug should be disabled by default.
     docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
 
 	# Make sure we don't have lots of "closed keepalive connection" complaints
-	docker logs $CONTAINER | grep -v "closed keepalive connection"
+	(docker logs $CONTAINER_NAME 2>&1 | grep -v "closed keepalive connection")  || (echo "Found unwanted closed keepalive connection messages" && exit 101)
 	# Make sure both nginx logs and fpm logs are being tailed
-	docker logs $CONTAINER | grep "==> /var/log/nginx/error.log" >/dev/null
-	docker logs $CONTAINER | grep "==> /var/log/php-fpm.log" >/dev/null
+    curl --fail localhost:$HOST_PORT/test/fatal.php
+	(docker logs $CONTAINER_NAME 2>&1 | grep "WARNING:.* said into stderr:.*fatal.php on line " >/dev/null) || (echo "Failed to find WARNING: .pool www" && exit 102)
+	(docker logs $CONTAINER_NAME 2>&1 | grep "FastCGI sent in stderr: .PHP message: PHP Fatal error:" >/dev/null) || (echo "failed to find FastCGI sent in stderr" && exit 103)
 
 	# Make sure that backdrop drush commands were added on backdrop and only backdrop
 	if [ "$project_type" == "backdrop" ] ; then
 	 	# The .drush/commands/backdrop directory should only exist for backdrop apptype
-		docker exec -t $CONTAINER bash -c 'if [ ! -d  ~/.drush/commands/backdrop ] ; then echo "Failed to find expected backdrop drush commands"; exit 1; fi'
+		docker exec -t $CONTAINER_NAME bash -c 'if [ ! -d  ~/.drush/commands/backdrop ] ; then echo "Failed to find expected backdrop drush commands"; exit 1; fi'
 	else
-		docker exec -t $CONTAINER bash -c 'if [ -d  ~/.drush/commands/backdrop ] ; then echo "Found unexpected backdrop drush commands"; exit 2; fi'
+		docker exec -t $CONTAINER_NAME bash -c 'if [ -d  ~/.drush/commands/backdrop ] ; then echo "Found unexpected backdrop drush commands"; exit 2; fi'
 	fi
-	docker rm -f $CONTAINER
+	docker rm -f $CONTAINER_NAME
 done
 
-echo "testing use of custom nginx and php configs"
+echo "--- testing use of custom nginx and php configs"
 docker run  -u "$(id -u):$(id -g)" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v "/$PWD/test/testdata:/mnt/ddev_config:ro" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
 docker exec -t $CONTAINER_NAME grep "docroot is /var/www/html/potato in custom conf" //etc/nginx/sites-enabled/nginx-site.conf
 
 # Enable xdebug (and then disable again) and make sure it does the right thing.
+echo "--- Turn on and off xdebug and check the results
 docker exec -t $CONTAINER_NAME enable_xdebug
 docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
 docker exec -t $CONTAINER_NAME disable_xdebug
 docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
 
+# Verify that the custom php configuration in ddev_config/php is activated.
+echo "--- Verify that /mnt/ddev_config is mounted and we have php overrides there.
+docker exec -it $CONTAINER_NAME ls -lR //mnt/ddev_config >/dev/null
+
 # With overridden value we should have assert.active=0, not the default
-docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 0 => 0"
+echo "--- Check that assert.active override is working"
+docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 0 => 0" >/dev/null
