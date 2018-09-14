@@ -24,7 +24,7 @@ Each project can have an unlimited number of .ddev/docker-compose.*.yaml files a
 For example, a `.ddev/docker-compose.environment.yaml` with these contents would add a $TYPO3_CONTEXT environment variable to the web container, and a $SOMETHING environment variable to the db container: 
 
 ```
-version: '3'
+version: '3.6'
 
 services:
   web:
