@@ -71,7 +71,8 @@ RUN apt-get -qq update && \
         unzip \
         rsync \
         locales-all \
-        libpcre3 && \
+        libpcre3 \
+        php-imagick && \
     for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-bcmath $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring $v-memcached $v-opcache $v-redis $v-soap $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
     for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
     apt-get -qq autoremove -y && \
