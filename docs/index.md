@@ -6,8 +6,8 @@
 
 ## System Requirements
 
-- [Docker](https://www.docker.com/community-edition) version 18.03 or higher. Linux users make sure you do the [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
-- docker-compose 1.18.0 and higher (bundled with Docker in Docker for Mac and Docker for Windows)
+- [Docker](https://www.docker.com/community-edition) version 18.06 or higher. Linux users make sure you do the [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
+- docker-compose 1.22.0 and higher (bundled with Docker in Docker for Mac and Docker for Windows)
 - OS Support
   - macOS Sierra and higher (macOS 10.12 and higher but it should runs anywhere docker-ce runs)
   - Linux: Most recent Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
