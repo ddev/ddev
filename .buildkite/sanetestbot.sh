@@ -19,7 +19,7 @@ fi
 docker ps >/dev/null
 # Test that docker can allocate 80 and 443, get get busybox
 docker pull busybox:latest >/dev/null
-docker run -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 --rm busybox:latest ls >/dev/null
+docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$PWD:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null
 
 # Check that required commands are available.
 for command in mysql git go make; do
