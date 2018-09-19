@@ -89,4 +89,4 @@ fi
 
 echo 'Server started'
 
-exec /usr/bin/supervisord -n -c "/etc/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
+exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
