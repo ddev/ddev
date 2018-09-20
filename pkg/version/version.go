@@ -25,7 +25,7 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20180913_apache_broken_on_windows" // Note that this can be overridden by make
+var WebTag = "20180920_fix_drush_auto_yes" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
