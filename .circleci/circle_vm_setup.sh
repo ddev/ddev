@@ -10,7 +10,7 @@ sudo apt-get install -qq mysql-client realpath zip nsis
 
 # golang of the version we want
 sudo apt-get remove -qq golang && sudo rm -rf /usr/local/go &&
-wget -q -O /tmp/golang.tgz https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz &&
+wget -q -O /tmp/golang.tgz https://dl.google.com/go/go1.11.linux-amd64.tar.gz &&
 sudo tar -C /usr/local -xzf /tmp/golang.tgz
 
 
