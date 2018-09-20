@@ -129,3 +129,12 @@ hooks:
     post-start:
       - exec: "composer install -d /var/www/html/"
 ```
+
+## Adding Additional PHP Modules Example
+
+```
+hooks:
+    post-start:
+      # Install php modules and then tell php-fpm to reload
+      - exec: bash -c "sudo apt-get update && sudo apt-get install -y php7.1-ldap php7.1-tidy && killall -HUP php-fpm"
+```
