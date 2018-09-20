@@ -25,8 +25,8 @@ var (
 			Name:                          "TestServicesDrupal8",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.5.3.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-8.5.3/",
-			Docroot: "",
-			Type:    "drupal8",
+			Docroot:                       "",
+			Type:                          "drupal8",
 		},
 	}
 	ServiceFiles []string

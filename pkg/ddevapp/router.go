@@ -171,7 +171,7 @@ func determineRouterPorts() []string {
 	var routerPorts []string
 	containers, err := dockerutil.GetDockerContainers(false)
 	if err != nil {
-		util.Failed("failed to retrieve containers for determining port mappings", err)
+		util.Failed("failed to retrieve containers for determining port mappings: %v", err)
 	}
 
 	// loop through all containers with site-name label
