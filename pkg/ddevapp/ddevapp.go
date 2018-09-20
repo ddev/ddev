@@ -705,13 +705,13 @@ func (app *DdevApp) DockerEnv() {
 	UIDStr = curUser.Uid
 	GIDStr = curUser.Gid
 	// For windows the UIDStr/GIDStr are usually way outside linux range (ends at 60000)
-	// so we have to run as root. We may have a host UIDStr/GIDStr greater in other contexts,
-	// bail and run as root.
+	// so we have to run as arbitrary user 1000. We may have a host UIDStr/GIDStr greater in other contexts,
+	// 1000 seems not to cause file permissions issues at least on docker-for-windows.
 	if UIDInt, err = strconv.Atoi(curUser.Uid); err != nil {
-		UIDStr = "0"
+		UIDStr = "1000"
 	}
 	if GIDInt, err = strconv.Atoi(curUser.Gid); err != nil {
-		GIDStr = "0"
+		GIDStr = "1000"
 	}
 
 	// Warn about running as root if we're not on windows.
@@ -721,8 +721,8 @@ func (app *DdevApp) DockerEnv() {
 
 	// If the UIDStr or GIDStr is outside the range possible in container, use root
 	if UIDInt > 60000 || GIDInt > 60000 {
-		UIDStr = "0"
-		GIDStr = "0"
+		UIDStr = "1000"
+		GIDStr = "1000"
 	}
 
 	envVars := map[string]string{
