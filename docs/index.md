@@ -49,7 +49,7 @@ brew upgrade ddev
 Linux and macOS end-users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/install_ddev.sh):
 
 ```
-curl https://raw.githubusercontent.com/drud/ddev/master/install_ddev.sh | bash
+curl -L https://raw.githubusercontent.com/drud/ddev/master/install_ddev.sh | bash
 ```
 
 Later, to upgrade ddev to the latest version, just run this again.
