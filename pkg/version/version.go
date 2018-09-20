@@ -16,7 +16,7 @@ var DockerVersionConstraint = ">= 18.06.0-ce"
 
 // DockerComposeVersionConstraint is the current minimum version of docker-compose required for ddev.
 // REMEMBER TO CHANGE docs/index.md if you touch this!
-var DockerComposeVersionConstraint = ">= 1.18.0-alpha1"
+var DockerComposeVersionConstraint = ">= 1.20.0"
 
 // DockerComposeFileFormatVersion is the compose version to be used
 var DockerComposeFileFormatVersion = "3.6"
