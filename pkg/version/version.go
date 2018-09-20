@@ -11,9 +11,11 @@ var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by
 // DockerVersionConstraint is the current minimum version of docker required for ddev.
 // See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
+// REMEMBER TO CHANGE docs/index.md if you touch this!
 var DockerVersionConstraint = ">= 18.06.0-ce"
 
 // DockerComposeVersionConstraint is the current minimum version of docker-compose required for ddev.
+// REMEMBER TO CHANGE docs/index.md if you touch this!
 var DockerComposeVersionConstraint = ">= 1.18.0-alpha1"
 
 // DockerComposeFileFormatVersion is the compose version to be used
