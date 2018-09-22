@@ -1,10 +1,9 @@
-FROM bitnami/minideb:jessie
+FROM bitnami/minideb:stretch
 
 ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2"
 ENV PHP_DEFAULT_VERSION="7.1"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 
-ENV NGINX_VERSION=1.12.1-1~jessie
 ENV DRUSH_VERSION=8.1.15
 ENV WP_CLI_VERSION=1.4.1
 ENV MAILHOG_VERSION=1.0.0
@@ -36,14 +35,15 @@ RUN apt-get -qq update && \
         wget \
         fontconfig \
         bzip2 \
+        gnupg \
         locales-all && \
     wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
-    echo "deb https://packages.sury.org/php/ jessie main" > /etc/apt/sources.list.d/php.list && \
+    echo "deb https://packages.sury.org/php/ stretch main" > /etc/apt/sources.list.d/php.list && \
     wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
     apt-key add /tmp/nginx_signing.key && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
     echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-    echo "deb http://nginx.org/packages/debian/ jessie nginx" >> /etc/apt/sources.list && \
+    echo "deb http://nginx.org/packages/debian/ stretch nginx" >> /etc/apt/sources.list && \
     curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
     apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
@@ -60,7 +60,7 @@ RUN apt-get -qq update && \
         iputils-ping \
         patch \
         telnet \
-        netcat6 \
+        netcat \
         iproute2 \
         vim \
         nano \
