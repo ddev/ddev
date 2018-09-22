@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.8
 
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
