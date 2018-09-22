@@ -25,25 +25,25 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20180920_fix_drush_auto_yes" // Note that this can be overridden by make
+var WebTag = "20180922_upgrade_debian_stretch" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "v1.2.0" // Note that this may be overridden by make
+var DBTag = "20180922_upgrade_debian_stretch" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
 
 // DBATag defines the default phpmyadmin image tag used for applications.
-var DBATag = "v1.2.0" // Note that this can be overridden by make
+var DBATag = "20180922_upgrade_debian_stretch" // Note that this can be overridden by make
 
 // RouterImage defines the image used for the router.
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "v1.2.0" // Note that this can be overridden by make
+var RouterTag = "20180922_upgrade_debian_stretch" // Note that this can be overridden by make
 
 // COMMIT is the actual committish, supplied by make
 var COMMIT = "COMMIT should be overridden"
