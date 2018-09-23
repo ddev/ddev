@@ -8,12 +8,13 @@ CONTAINER_NAME="testserver"
 HOSTPORT=33000
 MYTMPDIR="${HOME}/tmp/testserver-sh_${RANDOM}_$$"
 outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
+VOLUME="mariadbtest-${RANDOM}_$$"
 
 export MOUNTUID=$UID
 export MOUNTGID=$(id -g)
 if [[ "$MOUNTUID" -gt "60000" || "$MOUNTGID" -gt "60000" ]] ; then
-	MOUNTUID=1
-	MOUNTGID=1
+	MOUNTUID=1000
+	MOUNTGID=1000
 fi
 
 
@@ -21,10 +22,10 @@ fi
 function cleanup {
 	echo "Removing ${CONTAINER_NAME}"
 	docker rm -f $CONTAINER_NAME 2>/dev/null || true
+	docker volume rm $VOLUME || true
 	# We use MYTMPDIR for a bogus temp dir since mktemp -d creates a dir
     # outside a docker-mountable directory on macOS
-    mkdir -p "$MYTMPDIR" "$outdir"
-    rm -rf $MYTMPDIR/* $MYTMPDIR/.git* $outdir/* $outdir/.git*
+    rm -rf $outdir/* $outdir/.git*
 }
 
 # Wait for container to be ready.
@@ -51,7 +52,7 @@ function containercheck {
 cleanup
 
 echo "Starting image with database image $IMAGE"
-if ! docker run -u "$MOUNTUID:$MOUNTGID" -v /$MYTMPDIR:/var/lib/mysql --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
+if ! docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
 	echo "MySQL server start failed with error code $?"
 	exit 2
 fi
@@ -98,7 +99,7 @@ cleanup
 
 # Run with alternate configuration my.cnf mounted
 # mysqld will ignore world-writeable config file, so we make it ro for sure
-if ! docker run -u "$MOUNTUID:$MOUNTGID" -v /$MYTMPDIR:/var/lib/mysql -v /$PWD/test/testdata:/mnt/ddev_config:ro --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
+if ! docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql -v /$PWD/test/testdata:/mnt/ddev_config:ro --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
 	echo "MySQL server start failed with error code $?"
 	exit 3
 fi
@@ -113,13 +114,12 @@ docker exec -t $CONTAINER_NAME grep "collation-server" //mnt/ddev_config/mysql/u
 # With the custom config, our collation should be utf8_general_ci, not utf8mb4
 mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW GLOBAL VARIABLES like \"collation_server\";" | grep "utf8_general_ci"
 
-cleanup
+#cleanup
 
 # Test that the create_base_db.sh script can create a starter tarball.
-# This one runs as root, and ruins the underlying host mount on linux (makes it owned by root)
-outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
 mkdir -p $outdir
-docker run  -t -v /$outdir://mysqlbase --rm --entrypoint=//create_base_db.sh $IMAGE
+rm -rf $outdir/files/var/tmp/*
+docker run  -u "$MOUNTUID:$MOUNTGID" -t -v /$outdir://mysqlbase --rm --entrypoint=//create_base_db.sh $IMAGE
 if [ ! -f "$outdir/ibdata1" ] ; then
   echo "Failed to build test starter database for mariadb."
   exit 4
