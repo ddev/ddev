@@ -37,7 +37,7 @@ var DBTag = "20180922_upgrade_debian_stretch" // Note that this may be overridde
 var DBAImg = "drud/phpmyadmin"
 
 // DBATag defines the default phpmyadmin image tag used for applications.
-var DBATag = "20180922_upgrade_debian_stretch" // Note that this can be overridden by make
+var DBATag = "v1.2.0" // Note that this can be overridden by make
 
 // RouterImage defines the image used for the router.
 var RouterImage = "drud/ddev-router"
