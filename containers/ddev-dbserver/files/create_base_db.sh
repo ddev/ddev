@@ -6,7 +6,7 @@ set -o pipefail
 
 # This script can be used to create a bare database directory for use by
 # ddev startup. It can be run from the host with:
-# docker run -it -v "$PWD/files/var/tmp/mysqlbase:/mysqlbase" --rm --entrypoint=/create_base_db.sh drud/ddev-dbserver:<your_version>
+# docker run -t -u $(id -u) -v "$PWD/files/var/tmp/mysqlbase:/mysqlbase" --rm --entrypoint=/create_base_db.sh drud/ddev-dbserver:<your_version>
 
 SOCKET=/var/tmp/mysql.sock
 OUTDIR=/mysqlbase
@@ -18,17 +18,10 @@ fi
 
 # For this script we don't want the defaults in .my.cnf
 # However, this script is never run on a normal startup, so we can just throw it away.
-rm -f /home/.my.cnf
+sudo rm -f /home/.my.cnf
 
-chgrp mysql /var/tmp
-chmod ug+rw /var/tmp
-
-if [ -d "/var/lib/mysql/mysql" ]; then
-	echo "A mysql installation already exists, aborting"
-	exit 2
-fi
-mkdir -p /var/lib/mysql /mnt/ddev_config/mysql
-chown -R mysql:mysql /var/lib/mysql /mnt/ddev_config/mysql /var/log/mysql*
+sudo chmod ugo+w /var/tmp
+sudo mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && sudo rm -f /var/lib/mysql/* && sudo chmod -R ugo+w /var/lib/mysql
 
 echo 'Initializing mysql'
 mysql_install_db
@@ -73,6 +66,7 @@ mysql -uroot <<EOF
 	FLUSH TABLES;
 EOF
 
+sudo rm -rf $OUTDIR/*
 mariabackup --backup --target-dir=$OUTDIR --user root --password root --socket=$SOCKET
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
