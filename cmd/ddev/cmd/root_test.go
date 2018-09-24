@@ -56,7 +56,7 @@ func TestMain(m *testing.M) {
 	for i := range DevTestSites {
 		err = DevTestSites[i].Prepare()
 		if err != nil {
-			log.Fatalln("Prepare() failed in TestMain site=%s, err=", DevTestSites[i].Name, err)
+			log.Fatalf("Prepare() failed in TestMain site=%s, err=%v\n", DevTestSites[i].Name, err)
 		}
 	}
 	addSites()
@@ -185,7 +185,7 @@ func removeSites() {
 		args := []string{"remove", "-R"}
 		out, err := exec.RunCommand(DdevBin, args)
 		if err != nil {
-			log.Fatalln("Failed to run ddev remove -R command, err: %v, output: %s", err, out)
+			log.Fatalf("Failed to run ddev remove -R command, err: %v, output: %s\n", err, out)
 		}
 	}
 }
