@@ -130,7 +130,7 @@ func EnsureHTTPStatus(o *HTTPOptions) error {
 			"headers":  o.Headers,
 			"expected": o.ExpectedStatus,
 			"got":      resp.StatusCode,
-		}).Info("HTTP Status could not be matched, expected %d, received %d", o.ExpectedStatus, resp.StatusCode)
+		}).Infof("HTTP Status could not be matched, expected %d, received %d", o.ExpectedStatus, resp.StatusCode)
 
 	}
 	return fmt.Errorf("failed to match status code: %d, got: %d", o.ExpectedStatus, resp.StatusCode)

@@ -45,7 +45,7 @@ running 'ddev stop <projectname>.`,
 
 		desc, err := site.Describe()
 		if err != nil {
-			util.Failed("Failed to describe project %s: %v", err)
+			util.Failed("Failed to describe project %s: %v", site.Name, err)
 		}
 
 		renderedDesc, err := renderAppDescribe(desc)

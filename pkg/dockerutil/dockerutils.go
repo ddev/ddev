@@ -54,7 +54,7 @@ func EnsureDdevNetwork() {
 func GetDockerClient() *docker.Client {
 	client, err := docker.NewClientFromEnv()
 	if err != nil {
-		output.UserOut.Warn("could not get docker client. is docker running? error: %v", err)
+		output.UserOut.Warnf("could not get docker client. is docker running? error: %v", err)
 		// Use os.Exit instead of util.Failed() to avoid import cycle with util.
 		os.Exit(100)
 	}
