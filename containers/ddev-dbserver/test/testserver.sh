@@ -114,7 +114,7 @@ docker exec -t $CONTAINER_NAME grep "collation-server" //mnt/ddev_config/mysql/u
 # With the custom config, our collation should be utf8_general_ci, not utf8mb4
 mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW GLOBAL VARIABLES like \"collation_server\";" | grep "utf8_general_ci"
 
-#cleanup
+cleanup
 
 # Test that the create_base_db.sh script can create a starter tarball.
 mkdir -p $outdir
