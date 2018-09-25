@@ -87,6 +87,28 @@ The most common cause of the web container restarting is a user-defined .ddev/ng
 
 Changes to .ddev/nginx-site.conf and .ddev/apache/apache-site.conf take effect only when you do a `ddev restart` or the equivalent.
 
+### Firewall on host prohibits communication between containers (example: firewalld linux)
+
+On linux workstations whose network connections are policed by firewalld, we may need to query to find the name of the bridge added by ddev and add it to the trusted firewall zone.  The following bash script may be used in a post-start hook.
+
+```shell
+#!/bin/bash
+# discover network id string by querying docker with name ddev_default
+DDEVNETWORK=$(docker network ls -f name=ddev_default -q); 
+echo "Configuring firewalld add br-$DDEVNETWORK to zone trusted" 
+# tell firewalld to temporarily add br-(NETWORK ID) to trusted zone
+firewall-cmd --zone=trusted --change-interface=br-$DDEVNETWORK
+````
+You can add this script as ddev-firewalld-allow to a directory in your $PATH, for instance a personal ~/bin directory, make it executable, and add it to your project by adding it in a post start hook and the end of your .ddev/config.yaml
+
+```yaml
+hooks:
+  post-start:
+    - exec-host: "ddev-firewalld-allow"
+```
+On `ddev start` you will be prompted by firewalld for authentication.
+
+
 ## More Support
 
 Refer to the [support options](https://ddev.readthedocs.io/en/latest/#support) page.
