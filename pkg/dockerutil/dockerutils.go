@@ -490,10 +490,8 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	if err != nil {
 		return "", fmt.Errorf("failed to WaitContainer: %v", err)
 	}
-	if exitCode != 0 {
-		return "", fmt.Errorf("container run failed with exit code %d", exitCode)
-	}
 
+	// Get logs so we can report them if exitCode failed
 	var stdout bytes.Buffer
 	err = client.Logs(docker.LogsOptions{
 		Stdout:       true,
@@ -503,6 +501,11 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to get Logs(): %v", err)
+	}
+
+	// This is the exitCode from the client.WaitContainer()
+	if exitCode != 0 {
+		return stdout.String(), fmt.Errorf("container run failed with exit code %d", exitCode)
 	}
 
 	return stdout.String(), nil

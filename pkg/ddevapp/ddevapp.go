@@ -1243,7 +1243,7 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 		t := time.Now()
 		snapshotName := fmt.Sprintf("%s_volume_migration_snapshot_%s", app.Name, t.Format("20060102150405"))
 
-		out, err := dockerutil.RunSimpleContainer(version.DBImg+":"+version.DBTag, app.Name+"_migrate_volume", nil, []string{"/migrate_file_to_volume.sh", UIDStr, GIDStr}, []string{"SNAPSHOT_NAME=" + snapshotName}, []string{app.GetConfigPath("") + ":" + "/mnt/ddev_config", dataDir + ":/var/lib/mysql"}, UIDStr)
+		out, err := dockerutil.RunSimpleContainer(version.DBImg+":"+version.DBTag, app.Name+"_migrate_volume", nil, []string{"/migrate_file_to_volume.sh", UIDStr, GIDStr}, []string{"SNAPSHOT_NAME=" + snapshotName}, []string{app.GetConfigPath("") + ":" + "/mnt/ddev_config", dataDir + ":/mysqlmount"}, UIDStr)
 		if err != nil {
 			return false, fmt.Errorf("failed to run migrate_file_to_volume.sh, err=%v output=%v", err, out)
 		}

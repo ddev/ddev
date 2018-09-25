@@ -1,7 +1,7 @@
-FROM nginx:1.13.6
+FROM nginx:1.15.3
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV DOCKER_GEN_VERSION 0.7.3
+ENV DOCKER_GEN_VERSION 0.7.4
 ENV DOCKER_HOST unix:///tmp/docker.sock
 
 RUN apt-get -qq update && \

@@ -10,11 +10,11 @@ set -o pipefail
 # months.
 #
 # Run this command in the project directory:
-# docker run -t -u "$(id -u):$(id -g)" -e SNAPSHOT_NAME=<migration_snapshot_name -v "$PWD/.ddev:/mnt/ddev_config" -v "$HOME/.ddev/<projectname>/mysql:/var/lib/mysql" --rm --entrypoint=/migrate_file_to_volume.sh drud/ddev-dbserver:<your_version>
+# docker run -t -u "$(id -u):$(id -g)" -e SNAPSHOT_NAME=<migration_snapshot_name -v "$PWD/.ddev:/mnt/ddev_config" -v "$HOME/.ddev/<projectname>/mysql:/mysqlmount" --rm --entrypoint=/migrate_file_to_volume.sh drud/ddev-dbserver:<your_version>
 
 if [ -z "${SNAPSHOT_NAME:-}" ] ; then
     echo "SNAPSHOT_NAME environment variable must be set"
-    exit 1
+    exit 101
 fi
 
 OUTDIR="/mnt/ddev_config/db_snapshots/${SNAPSHOT_NAME}"
@@ -22,10 +22,13 @@ SOCKET=/var/tmp/mysql.sock
 
 mkdir -p $OUTDIR
 
-if [ ! -d "/var/lib/mysql/mysql" ]; then
+if [ ! -d "/mysqlmount/mysql" ]; then
 	echo "No mysql bind-mount directory was found, aborting"
-	exit 2
+	exit 102
 fi
+
+sudo mkdir -p /var/lib/mysql && sudo chmod -R ugo+w /var/lib/mysql
+cp -r /mysqlmount/* /var/lib/mysql
 
 
 # Wait for mysql server to be ready.
@@ -46,19 +49,20 @@ function serverwait {
 	return 1
 }
 
-sudo chmod -R ugo+rw /var/lib/mysql /var/log/mysql*
-
 # Using --skip-grant-tables here becasue some old projects may not have working
 # --user root --password root
 mysqld --skip-networking --skip-grant-tables --socket=$SOCKET 2>&1 &
 pid=$!
 if ! serverwait ; then
     echo "Failed to get mysqld running"
-    exit 2
+    exit 103
 fi
 
 mariabackup --backup --target-dir=$OUTDIR --user root --socket=$SOCKET 2>&1
-if [ "$?" != 0 ] ; then echo "Failed mariabackup command."; exit $?; fi
+if [ "$?" != 0 ] ; then
+    echo "Failed mariabackup command.";
+    exit $((200+$?));
+fi
 
 # Wait for mysqld to exit
 kill -s TERM "$pid" && wait "$pid"

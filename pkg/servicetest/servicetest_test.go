@@ -159,9 +159,9 @@ func checkMemcachedService(t *testing.T, app *ddevapp.DdevApp) {
 	assert.True(check, "%s container is not running", service)
 
 	// Ensure service is accessible from web container
-	checkCommand := fmt.Sprintf("echo stats | nc -t 1 %s %s", service, port)
+	checkCommand := fmt.Sprintf("echo stats | nc -q 1 %s %s", service, port)
 
-	// We have to ignore the error value, as the '-t 1' timeout option causes a non-zero return value
-	out, _, _ := app.Exec("web", "sh", "-c", checkCommand)
-	assert.Contains(out, "STAT pid 1")
+	out, _, err := app.Exec("web", "sh", "-c", checkCommand)
+	assert.NoError(err)
+	assert.Contains(out, "STAT pid")
 }
