@@ -640,7 +640,7 @@ func (app *DdevApp) Start() error {
 func (app *DdevApp) Exec(service string, cmd ...string) (string, string, error) {
 	app.DockerEnv()
 
-	exec := []string{"exec", "-T", service}
+	exec := []string{"exec", "-e", "DDEV_EXEC=true", "-T", service}
 	exec = append(exec, cmd...)
 
 	files, err := app.ComposeFiles()
