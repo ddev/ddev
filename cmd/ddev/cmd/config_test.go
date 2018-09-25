@@ -114,6 +114,7 @@ func TestConfigSetValues(t *testing.T) {
 	additionalFQDNsSlice := []string{"abc.com", "123.pizza", "xyz.co.uk"}
 	additionalFQDNs := strings.Join(additionalFQDNsSlice, ",")
 	uploadDir := filepath.Join("custom", "config", "path")
+	webserverType := "apache-fpm"
 
 	args := []string{
 		"config",
@@ -127,6 +128,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--additional-hostnames", additionalHostnames,
 		"--additional-fqdns", additionalFQDNs,
 		"--upload-dir", uploadDir,
+		"--webserver-type", webserverType,
 	}
 
 	_, err = exec.RunCommand(DdevBin, args)
@@ -154,4 +156,5 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(additionalHostnamesSlice, app.AdditionalHostnames)
 	assert.Equal(additionalFQDNsSlice, app.AdditionalFQDNs)
 	assert.Equal(uploadDir, app.UploadDir)
+	assert.Equal(webserverType, app.WebserverType)
 }
