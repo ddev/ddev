@@ -46,17 +46,23 @@ After installing docker-ce you *must* install docker-compose separately. [Follow
 See [Docker's post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user). You need to add your linux user to the "docker" group. and normally set up docker to start on boot.
 
 
-## Testing Your Docker Installation
+## Testing and Troubleshooting Your Docker Installation
 
-macOS or Linux: Run `docker-compose version && docker run -t -p 80:80 -v "$PWD:/tmp/homedir" busybox:latest ls /tmp/homedir` - you should see the contents of your home directory displayed.
+Docker needs to be able to a few things for ddev to work:
 
-Windows in cmd window: Run `docker run -t -p 80:80 -v "%USERPROFILE%:/tmp/homedir" busybox ls /tmp/homedir` - you should see the contents of your home directory displayed.
+* Mount the project code directory from the host into the container; the project code directory is usually somewhere in a subdirectory of your home directory. 
+* Access TCP ports on the host to serve HTTP and HTTPS. These are ports 80 and 443 by default, but they can be changed on a per-project basis.
+* Mount ~/.ddev for SSL cert cache and import-db. 
 
-Windows in git-bash window: run ` docker run -t -p 80:80 -v "$USERPROFILE:/tmp/homedir" busybox ls //tmp/homedir` - you should see the contents of your home directory displayed.
+So we can use a single docker command to make sure that docker is set up to do what we want:
 
-If any of these steps fails you'll need to troubleshoot. 
+In your project directory run `docker run -t -p 80:80 -v "$PWD:/tmp/projdir" -v "$HOME:/tmp/homedir" busybox sh -c "echo ---- Project Directory && ls /tmp/projdir && echo ---- Home Directory && ls /tmp/homedir"` - you should see the contents of your home directory displayed. (On Windows, make sure you do this using git-bash or Docker Quickstart Terminal.)
+
+If that fails (if you get an error, or you don't see the contents of your project directory and your home directory) you'll need to troubleshoot:
 
 * "port is already allocated": See [troubleshooting](troubleshooting.md).
+* `invalid mount config for type "bind": bind mount source path does not exist: <some path>` means the filesystem isn't successfully shared.
 * "The path ... is not shared and is not known to Docker": Visit docker's preferences/settings->File sharing and share the appropriate path or drive.
 * "Error response from daemon: Get https://registry-1.docker.io/v2/" - Docker may not be running (restart it) or you may not have any access to the internet.
-* "403 authentication required": Try `docker logout` and do it again. 
+* "403 authentication required" when trying to `ddev start`: Try `docker logout` and do it again. Docker authentication is *not* required for any normal ddev action.
+ 
