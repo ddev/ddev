@@ -3,13 +3,14 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
-	"os"
-	"strings"
-	"testing"
 )
 
 /**
@@ -188,7 +189,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	// Ensure we can do a pull on the configured site.
 	app, err = ddevapp.GetActiveApp("")
 	assert.NoError(err)
-	err = app.Import()
+	err = app.Import(&ddevapp.ImportOptions{})
 	assert.NoError(err)
 	err = app.Down(true, false)
 	assert.NoError(err)

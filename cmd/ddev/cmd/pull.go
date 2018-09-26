@@ -11,7 +11,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var skipConfirmation bool
+var (
+	skipConfirmationArg bool
+
+	skipDbArg bool
+
+	skipFilesArg bool
+
+	skipImportArg bool
+)
 
 // PullCmd represents the `ddev pull` command.
 var PullCmd = &cobra.Command{
@@ -29,7 +37,7 @@ var PullCmd = &cobra.Command{
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		appImport(skipConfirmation)
+		appImport(skipConfirmationArg)
 	},
 }
 
@@ -51,7 +59,12 @@ func appImport(skipConfirmation bool) {
 		}
 	}
 
-	err = app.Import()
+	err = app.Import(&ddevapp.ImportOptions{
+		SkipDb:     skipDbArg,
+		SkipFiles:  skipFilesArg,
+		SkipImport: skipImportArg,
+	})
+
 	if err != nil {
 		util.Failed("Could not perform import: %v", err)
 	}
@@ -61,6 +74,9 @@ func appImport(skipConfirmation bool) {
 }
 
 func init() {
-	PullCmd.Flags().BoolVarP(&skipConfirmation, "skip-confirmation", "y", false, "Skip confirmation step.")
+	PullCmd.Flags().BoolVarP(&skipConfirmationArg, "skip-confirmation", "y", false, "Skip confirmation step")
+	PullCmd.Flags().BoolVar(&skipDbArg, "ignore-db", false, "Skip database download step")
+	PullCmd.Flags().BoolVar(&skipFilesArg, "ignore-files", false, "Skip file archive download step")
+	PullCmd.Flags().BoolVar(&skipImportArg, "skip-import", false, "Downloads files and/or databases, but skips the import step")
 	RootCmd.AddCommand(PullCmd)
 }

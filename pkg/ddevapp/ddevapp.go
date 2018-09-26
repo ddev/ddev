@@ -401,8 +401,15 @@ func (app *DdevApp) SiteStatus() string {
 	return siteStatus
 }
 
+// ImportOptions allows the import process to be modified by skipping import steps.
+type ImportOptions struct {
+	SkipDb     bool
+	SkipFiles  bool
+	SkipImport bool
+}
+
 // Import performs an import from the a configured provider plugin, if one exists.
-func (app *DdevApp) Import() error {
+func (app *DdevApp) Import(opts *ImportOptions) error {
 	provider, err := app.GetProvider()
 	if err != nil {
 		return err
@@ -414,33 +421,43 @@ func (app *DdevApp) Import() error {
 	}
 
 	if app.SiteStatus() != SiteRunning {
-		output.UserOut.Println("Site is not currently running. Starting site before performing import.")
+		util.Warning("Site is not currently running. Starting site before performing import.")
 		err = app.Start()
 		if err != nil {
 			return err
 		}
 	}
 
-	fileLocation, importPath, err := provider.GetBackup("database")
-	if err != nil {
-		return err
+	if !opts.SkipDb {
+		output.UserOut.Println("Pulling database...")
+		fileLocation, importPath, err := provider.GetBackup("database")
+		if err != nil {
+			return err
+		}
+
+		if !opts.SkipImport {
+			output.UserOut.Println("Importing database...")
+			err = app.ImportDB(fileLocation, importPath)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	output.UserOut.Println("Importing database...")
-	err = app.ImportDB(fileLocation, importPath)
-	if err != nil {
-		return err
-	}
+	if !opts.SkipFiles {
+		output.UserOut.Println("Pulling files...")
+		fileLocation, importPath, err := provider.GetBackup("files")
+		if err != nil {
+			return err
+		}
 
-	fileLocation, importPath, err = provider.GetBackup("files")
-	if err != nil {
-		return err
-	}
-
-	output.UserOut.Println("Importing files...")
-	err = app.ImportFiles(fileLocation, importPath)
-	if err != nil {
-		return err
+		if !opts.SkipImport {
+			output.UserOut.Println("Importing files...")
+			err = app.ImportFiles(fileLocation, importPath)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
