@@ -1,6 +1,6 @@
 <h1>Troubleshooting</h1>
 
-Things might go wrong!
+Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](https://ddev.readthedocs.io/en/latest/#support). And see [Docker troubleshooting suggstions](./docker_installation.md#troubleshooting).
 
 <a name="unable-listen"></a>
 ## Webserver ports are already occupied by another webserver
@@ -70,22 +70,23 @@ We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on 
 <a name="container-restarts"></a>
 ## DDEV-Local reports container restarts and does not arrive at "ready"
 
-### Restarts of the database container
+## Restarts of the database container
 
-We've seen cases where this is caused by old databases that are not compatible with the current version of MariaDB that DDEV-Local is using. See [issue](https://github.com/drud/ddev/issues/615) for more information. The simple fix is to 
+The most common cause of the database container not coming up is a damaged database, so the mariadb server daemon is unable to start. This is typically caused by an unexpected docker event like system shutdown or docker exit which doesn't give the db container time to clean up and close connections. See [issue](https://github.com/drud/ddev/issues/748). In general, the easiest fix is to destroy and reload the database from either a database dump or a ddev snapshot. Otherwise, that issue has more ambitious approaches that may be taken if you have neither. But the easiest approach is this, which *will destroy and then reload your project database*:
 
-Note: Your project database will be destroyed by this procedure.
+1. `ddev remove --remove-data --omit-snapshot`
+2. mv .ddev .ddev.bak (renames the directory with config.yaml and docker-compose.yml and any custom nginx/php/mariadb config you may have added. Renaming it means .)
+3. `ddev config`
+4. `ddev start` 
+5. `ddev import-db` or `ddev restore-snapshot <snapshot-name>` if you have a db to import or a snapshot to restore.
 
-1. `ddev remove --remove-data`
-2. rm -r .ddev (removes the config.yaml and docker-compose.yml and any custom nginx/php/mariadb config you may have added. It makes sense to make a backup of these before proceeding.)
-3. `ddev start` 
-4. `ddev import-db` if you have a db to import
+Another approach to destroying the database is to destroy the docker volume where it is =stored with `docker volume rm <projectname>-mariadb`
 
-### Restarts of the web container
+## "web service unhealthy" or "web service starting" or exited 
 
-The most common cause of the web container restarting is a user-defined .ddev/nginx-site.conf or .ddev/apache/apache-site.conf - Please rename these to <xxx_site.conf> during testing. To figure out what's wrong with it after you've identified that as the problem, use `ddev logs` and review the error.
+The most common cause of the web container being unhealthy is a user-defined .ddev/nginx-site.conf or .ddev/apache/apache-site.conf - Please rename these to <xxx_site.conf> during testing. To figure out what's wrong with it after you've identified that as the problem, use `ddev logs` and review the error.
 
-Changes to .ddev/nginx-site.conf and .ddev/apache/apache-site.conf take effect only when you do a `ddev restart` or the equivalent.
+Changes to .ddev/nginx-site.conf and .ddev/apache/apache-site.conf take effect only when you do a `ddev rm && ddev start` or the equivalent.
 
 ## No input file specified (404) or Forbidden (403)
 
@@ -97,4 +98,4 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 
 ## More Support
 
-Refer to the [support options](https://ddev.readthedocs.io/en/latest/#support) page.
+[Support options](https://ddev.readthedocs.io/en/latest/#support) has a variety of options.

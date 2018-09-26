@@ -45,7 +45,7 @@ After installing docker-ce you *must* install docker-compose separately. [Follow
 
 See [Docker's post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user). You need to add your linux user to the "docker" group. and normally set up docker to start on boot.
 
-
+<a name="troubleshooting"></a>
 ## Testing and Troubleshooting Your Docker Installation
 
 Docker needs to be able to a few things for ddev to work:
@@ -66,3 +66,8 @@ If that fails (if you get an error, or you don't see the contents of your projec
 * "Error response from daemon: Get https://registry-1.docker.io/v2/" - Docker may not be running (restart it) or you may not have any access to the internet.
 * "403 authentication required" when trying to `ddev start`: Try `docker logout` and do it again. Docker authentication is *not* required for any normal ddev action.
  
+If you are on Docker for Windows or Docker for Mac and you are seeing shared directories not show up in the web container (nothing there when you `ddev ssh`) then:
+
+* Unshare and then reshare the drive
+* Consider resetting Docker to factory defaults. This often helps in this situation because Docker goes through the whole authentication process again.
+
