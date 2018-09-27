@@ -56,7 +56,7 @@ type Provider interface {
 	Write(string) error
 	Read(string) error
 	Validate() error
-	GetBackup(string) (fileLocation string, importPath string, err error)
+	GetBackup(string, string) (fileLocation string, importPath string, err error)
 }
 
 // init() is for testing situations only, allowing us to override the default webserver type

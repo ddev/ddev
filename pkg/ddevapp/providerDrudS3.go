@@ -2,21 +2,23 @@ package ddevapp
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/util"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/util"
+	"gopkg.in/yaml.v2"
 )
 
 // DrudS3Provider provides DrudS3-specific import functionality.
@@ -116,15 +118,21 @@ func (p *DrudS3Provider) PromptForConfig() error {
 	return nil
 }
 
-// GetBackup will download the most recent backup specified by backupType. Valid values for backupType are "database" or "files".
-func (p *DrudS3Provider) GetBackup(backupType string) (fileLocation string, importPath string, err error) {
+// GetBackup will download the most recent backup specified by backupType in the given environment. If no environment
+// is supplied, the configured environment will be used. Valid values for backupType are "database" or "files".
+func (p *DrudS3Provider) GetBackup(backupType, environment string) (fileLocation string, importPath string, err error) {
 	if backupType != "database" && backupType != "files" {
 		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
 
+	// If the user hasn't defined an environment override, use the configured value.
+	if environment == "" {
+		environment = p.EnvironmentName
+	}
+
 	// Set the import path (within the archive) blank, to use the root of the archive by default.
 	importPath = ""
-	err = p.environmentExists()
+	err = p.environmentExists(environment)
 	if err != nil {
 		return "", "", err
 	}
@@ -138,9 +146,9 @@ func (p *DrudS3Provider) GetBackup(backupType string) (fileLocation string, impo
 	if backupType == "files" {
 		prefix = "files"
 	}
-	object, err := getLatestS3Object(client, p.S3Bucket, p.app.Name+"/"+p.EnvironmentName+"/"+prefix)
+	object, err := getLatestS3Object(client, p.S3Bucket, p.app.Name+"/"+environment+"/"+prefix)
 	if err != nil {
-		return "", "", fmt.Errorf("unable to getLatestS3Object for bucket %s project %s environment %s prefix %s, %v", p.S3Bucket, p.app.Name, p.EnvironmentName, prefix, err)
+		return "", "", fmt.Errorf("unable to getLatestS3Object for bucket %s project %s environment %s prefix %s, %v", p.S3Bucket, p.app.Name, environment, prefix, err)
 	}
 
 	// Check to see if this file has been downloaded previously.
@@ -222,17 +230,17 @@ func (p *DrudS3Provider) GetEnvironments() (map[string]interface{}, error) {
 // Validate ensures that the current configuration is valid (i.e. the configured DrudS3 site/environment exists)
 // If the environment exists, the project exists, and the AWS keys are working right.
 func (p *DrudS3Provider) Validate() error {
-	return p.environmentExists()
+	return p.environmentExists(p.EnvironmentName)
 }
 
 // environmentExists ensures the currently configured DrudS3 site & environment exists.
-func (p *DrudS3Provider) environmentExists() error {
+func (p *DrudS3Provider) environmentExists(environment string) error {
 	environments, err := p.GetEnvironments()
 	if err != nil {
 		return err
 	}
-	if _, ok := environments[p.EnvironmentName]; !ok {
-		return fmt.Errorf("could not find an environment with backups named '%s'", p.EnvironmentName)
+	if _, ok := environments[environment]; !ok {
+		return fmt.Errorf("could not find an environment with backups named '%s'", environment)
 	}
 
 	return nil

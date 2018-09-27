@@ -403,9 +403,10 @@ func (app *DdevApp) SiteStatus() string {
 
 // PullOptions allows for customization of the pull process.
 type PullOptions struct {
-	SkipDb     bool
-	SkipFiles  bool
-	SkipImport bool
+	SkipDb      bool
+	SkipFiles   bool
+	SkipImport  bool
+	Environment string
 }
 
 // Pull performs an import from the a configured provider plugin, if one exists.
@@ -429,7 +430,7 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 		output.UserOut.Println("Skipping database pull.")
 	} else {
 		output.UserOut.Println("Downloading database...")
-		fileLocation, importPath, err := provider.GetBackup("database")
+		fileLocation, importPath, err := provider.GetBackup("database", opts.Environment)
 		if err != nil {
 			return err
 		}
@@ -451,7 +452,7 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 		output.UserOut.Println("Skipping files pull.")
 	} else {
 		output.UserOut.Println("Downloading file archive...")
-		fileLocation, importPath, err := provider.GetBackup("files")
+		fileLocation, importPath, err := provider.GetBackup("files", opts.Environment)
 		if err != nil {
 			return err
 		}

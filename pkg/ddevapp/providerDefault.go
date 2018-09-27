@@ -43,6 +43,6 @@ func (p *DefaultProvider) Validate() error {
 }
 
 // GetBackup provides a no-op for the GetBackup operation.
-func (p *DefaultProvider) GetBackup(backupType string) (fileLocation string, importPath string, err error) {
+func (p *DefaultProvider) GetBackup(backupType, environment string) (fileLocation string, importPath string, err error) {
 	return "", "", nil
 }
