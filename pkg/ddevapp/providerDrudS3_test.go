@@ -181,7 +181,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure we can get a db backup on the happy path.
-	backupLink, importPath, err := provider.GetBackup("database")
+	backupLink, importPath, err := provider.GetBackup("database", "")
 	assert.NoError(err)
 	assert.Equal(importPath, "")
 	assert.True(strings.HasSuffix(backupLink, "sql.gz"))
@@ -196,7 +196,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 
 	// Make sure invalid access key gets correct behavior
 	provider.AWSAccessKey = "AKIAIBSTOTALLYINVALID"
-	_, _, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database", "")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "InvalidAccessKeyId")
@@ -205,7 +205,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	// Make sure invalid secret key gets correct behavior
 	provider.AWSAccessKey = accessKeyID
 	provider.AWSSecretKey = "rweeHGZ5totallyinvalidsecretkey"
-	_, _, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database", "")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "SignatureDoesNotMatch")
@@ -214,7 +214,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	// Make sure bad environment gets correct behavior.
 	provider.AWSSecretKey = secretAccessKey
 	provider.EnvironmentName = "someInvalidUnknownEnvironment"
-	_, _, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database", "")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "could not find an environment")
@@ -223,7 +223,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	// Make sure bad bucket gets correct behavior.
 	provider.S3Bucket = drudS3TestBucket
 	provider.S3Bucket = "someInvalidUnknownBucket"
-	_, _, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database", "")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "NoSuchBucket")
