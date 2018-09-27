@@ -17,8 +17,8 @@ var extPath string
 // ImportFileCmd represents the `ddev import-db` command.
 var ImportFileCmd = &cobra.Command{
 	Use:   "import-files",
-	Short: "Import the uploaded files directory of an existing project to the default public upload directory of your project.",
-	Long: `Import the uploaded files directory of an existing project to the default
+	Short: "Pull the uploaded files directory of an existing project to the default public upload directory of your project.",
+	Long: `Pull the uploaded files directory of an existing project to the default
 public upload directory of your project. The files can be provided as a
 directory path or an archive in .tar, .tar.gz, .tgz, or .zip format. For the
 .zip and tar formats, the path to a directory within the archive can be
@@ -82,7 +82,7 @@ func promptForFileSource(val *string) {
 	// An empty string isn't acceptable here, keep
 	// prompting until something is entered
 	for {
-		fmt.Print("Import path: ")
+		fmt.Print("Pull path: ")
 		*val = util.GetInput("")
 		if len(*val) > 0 {
 			break

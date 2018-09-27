@@ -2,81 +2,96 @@ package cmd
 
 import (
 	"os"
-	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
 var (
+	// skipConfirmationArg allows a user to skip the confirmation prompt.
 	skipConfirmationArg bool
 
+	// skipDbArg allows a user to skip pulling the remote database.
 	skipDbArg bool
 
+	// skipFilesArg allows a user to skip pulling the remote file archive.
 	skipFilesArg bool
 
+	// skipImportArg allows a user to pull remote assets, but not import them into the project.
 	skipImportArg bool
 )
 
 // PullCmd represents the `ddev pull` command.
 var PullCmd = &cobra.Command{
 	Use:   "pull",
-	Short: "Import files and database using a configured provider plugin.",
-	Long: `Import files and database using a configured provider plugin.
+	Short: "Pull files and database using a configured provider plugin.",
+	Long: `Pull files and database using a configured provider plugin.
 	Running pull will connect to the configured provider and download + import the
 	latest backups.`,
+	Args: cobra.ExactArgs(0),
 	PreRun: func(cmd *cobra.Command, args []string) {
-		if len(args) > 0 {
-			err := cmd.Usage()
-			util.CheckErr(err)
-			os.Exit(0)
-		}
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		appImport(skipConfirmationArg)
+		appPull(skipConfirmationArg)
 	},
 }
 
-func appImport(skipConfirmation bool) {
+func appPull(skipConfirmation bool) {
 	app, err := ddevapp.GetActiveApp("")
 
 	if err != nil {
-		util.Failed("appImport failed: %v", err)
+		util.Failed("Pull failed: %v", err)
 	}
 
-	if !skipConfirmation {
-		// Unfortunately we cannot use util.Warning here as it automatically adds a newline, which is awkward when dealing with prompts.
-		d := color.New(color.FgYellow)
-		_, err = d.Printf("You're about to delete the current database and files and replace with a fresh import. Would you like to continue (y/N): ")
-		util.CheckErr(err)
+	// If we're not performing the import step, we won't be deleting the existing db or files.
+	if !skipConfirmation && !skipImportArg {
+		// Only warn the user about relevant risks.
+		var message string
+		if skipDbArg && skipFilesArg {
+			util.Warning("Both database and files import steps skipped.")
+			return
+		} else if !skipDbArg && skipFilesArg {
+			message = "database"
+		} else if !skipFilesArg && skipDbArg {
+			message = "files"
+		} else {
+			message = "database and files"
+		}
+
+		util.Warning("You're about to delete the current %s and replace with the results of a fresh pull.", message)
+		output.UserOut.Printf("Would you like to continue? [y/N]")
 		if !util.AskForConfirmation() {
-			util.Warning("Import cancelled.")
+			util.Warning("Pull cancelled.")
 			os.Exit(2)
 		}
 	}
 
-	err = app.Import(&ddevapp.ImportOptions{
+	provider, err := app.GetProvider()
+	if err != nil {
+		util.Failed("Failed to get provider: %v", err)
+	}
+
+	pullOpts := &ddevapp.PullOptions{
 		SkipDb:     skipDbArg,
 		SkipFiles:  skipFilesArg,
 		SkipImport: skipImportArg,
-	})
-
-	if err != nil {
-		util.Failed("Could not perform import: %v", err)
 	}
 
-	util.Success("Successfully Imported.")
-	util.Success("Your project can be reached at %s", strings.Join(app.GetAllURLs(), ", "))
+	if err := app.Pull(provider, pullOpts); err != nil {
+		util.Failed("Pull failed: %v", err)
+	}
+
+	util.Success("Pull succeeded.")
 }
 
 func init() {
 	PullCmd.Flags().BoolVarP(&skipConfirmationArg, "skip-confirmation", "y", false, "Skip confirmation step")
-	PullCmd.Flags().BoolVar(&skipDbArg, "ignore-db", false, "Skip database download step")
-	PullCmd.Flags().BoolVar(&skipFilesArg, "ignore-files", false, "Skip file archive download step")
+	PullCmd.Flags().BoolVar(&skipDbArg, "skip-db", false, "Skip database download step")
+	PullCmd.Flags().BoolVar(&skipFilesArg, "skip-files", false, "Skip file archive download step")
 	PullCmd.Flags().BoolVar(&skipImportArg, "skip-import", false, "Downloads files and/or databases, but skips the import step")
 	RootCmd.AddCommand(PullCmd)
 }

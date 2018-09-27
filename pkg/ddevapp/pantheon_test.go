@@ -171,7 +171,7 @@ func TestPantheonPull(t *testing.T) {
 	// Ensure we can do a pull on the configured site.
 	app, err = GetActiveApp("")
 	assert.NoError(err)
-	err = app.Import(&ImportOptions{})
+	err = app.Pull(&provider, &PullOptions{})
 	assert.NoError(err)
 	err = app.Down(true, false)
 	assert.NoError(err)

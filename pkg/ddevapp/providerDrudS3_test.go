@@ -189,7 +189,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	// Ensure we can do a pull on the configured site.
 	app, err = ddevapp.GetActiveApp("")
 	assert.NoError(err)
-	err = app.Import(&ddevapp.ImportOptions{})
+	err = app.Pull(&provider, &ddevapp.PullOptions{})
 	assert.NoError(err)
 	err = app.Down(true, false)
 	assert.NoError(err)
