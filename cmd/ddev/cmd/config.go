@@ -50,6 +50,9 @@ var (
 
 	// uploadDirArg allows a user to set the project's upload directory, the destination directory for import-files.
 	uploadDirArg string
+
+	// webserverTypeArgs allows a user to set the project's webserver type
+	webserverTypeArg string
 )
 
 var providerName = ddevapp.DefaultProviderName
@@ -136,7 +139,8 @@ func init() {
 	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
-	ConfigCommand.Flags().StringVar(&uploadDirArg, "upload-dir", "", "Sets the project's upload directoy, the destination directory of the import-files command.")
+	ConfigCommand.Flags().StringVar(&uploadDirArg, "upload-dir", "", "Sets the project's upload directory, the destination directory of the import-files command.")
+	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", "Sets the project's desired webserver type: nginx-fpm, apache-fpm, or apache-cgi")
 
 	// apptype flag exists for backwards compatibility.
 	ConfigCommand.Flags().StringVar(&appTypeArg, "apptype", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
@@ -287,6 +291,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if uploadDirArg != "" {
 		app.UploadDir = uploadDirArg
+	}
+
+	if webserverTypeArg != "" {
+		app.WebserverType = webserverTypeArg
 	}
 
 	err = app.WriteConfig()
