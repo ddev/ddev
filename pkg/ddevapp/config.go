@@ -263,10 +263,6 @@ func (app *DdevApp) PromptForConfig() error {
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
-	if _, err := os.Stat(app.ConfigPath); os.IsNotExist(err) {
-		return fmt.Errorf("no valid project config.yaml was found at %s", app.ConfigPath).(invalidConfigFile)
-	}
-
 	// validate hostnames
 	for _, hn := range app.GetHostnames() {
 		if !hostRegex.MatchString(hn) {
