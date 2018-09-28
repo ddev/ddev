@@ -58,7 +58,7 @@ Docker needs to be able to a few things for ddev to work:
 
 So we can use a single docker command to make sure that docker is set up to do what we want:
 
-**On Windows this command should be run in git-bash (or Docker Quickstart Terminal with Docker Toolbox).** In your project directory run `docker run -t -p 80:80 -v "/$PWD:/tmp/projdir" -v "/$HOME:/tmp/homedir" busybox sh -c "echo ---- Project Directory && ls //tmp/projdir && echo ---- Home Directory && ls //tmp/homedir"` - you should see the contents of your home directory displayed. (On Windows, make sure you do this using git-bash or Docker Quickstart Terminal.)
+**On Windows this command should be run in git-bash (or Docker Quickstart Terminal with Docker Toolbox).** In your project directory run `docker run --rm -t -p 80:80 -v "/$PWD:/tmp/projdir" -v "/$HOME:/tmp/homedir" busybox sh -c "echo ---- Project Directory && ls //tmp/projdir && echo ---- Home Directory && ls //tmp/homedir"` - you should see the contents of your home directory displayed. (On Windows, make sure you do this using git-bash or Docker Quickstart Terminal.)
 
 If that fails (if you get an error, or you don't see the contents of your project directory and your home directory) you'll need to troubleshoot:
 
