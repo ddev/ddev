@@ -1,13 +1,14 @@
 package ddevapp_test
 
 import (
+	"strconv"
+	"testing"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
-	"strconv"
-	"testing"
 )
 
 // TestPortOverride makes sure that the router_http_port and router_https_port
@@ -28,7 +29,7 @@ func TestPortOverride(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 
-		app, err := ddevapp.NewApp(testDir, ddevapp.DefaultProviderName)
+		app, err := ddevapp.NewApp(testDir, ddevapp.ProviderDefault)
 		assert.NoError(err)
 		app.RouterHTTPPort = strconv.Itoa(80 + i)
 		// Note that we start with port 453 instead of 443 here because Windows

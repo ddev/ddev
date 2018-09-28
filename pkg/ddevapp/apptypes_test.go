@@ -41,7 +41,7 @@ func TestApptypeDetection(t *testing.T) {
 		_, err = os.OpenFile(filepath.Join(testDir, expectedPath), os.O_RDONLY|os.O_CREATE, 0666)
 		assert.NoError(err)
 
-		app, err := ddevapp.NewApp(testDir, ddevapp.DefaultProviderName)
+		app, err := ddevapp.NewApp(testDir, ddevapp.ProviderDefault)
 		assert.NoError(err)
 
 		foundType := app.DetectAppType()
@@ -57,9 +57,9 @@ func TestPostConfigAction(t *testing.T) {
 	appTypes := map[string]string{
 		"drupal6":   "5.6",
 		"drupal7":   "7.1",
-		"drupal8":   ddevapp.DdevDefaultPHPVersion,
-		"wordpress": ddevapp.DdevDefaultPHPVersion,
-		"backdrop":  ddevapp.DdevDefaultPHPVersion,
+		"drupal8":   ddevapp.PHPDefault,
+		"wordpress": ddevapp.PHPDefault,
+		"backdrop":  ddevapp.PHPDefault,
 	}
 
 	for appType, expectedPHPVersion := range appTypes {
@@ -69,7 +69,7 @@ func TestPostConfigAction(t *testing.T) {
 		defer testcommon.CleanupDir(testDir)
 		defer testcommon.Chdir(testDir)()
 
-		app, err := ddevapp.NewApp(testDir, ddevapp.DefaultProviderName)
+		app, err := ddevapp.NewApp(testDir, ddevapp.ProviderDefault)
 		assert.NoError(err)
 
 		// Prompt for apptype as a way to get it into the config.

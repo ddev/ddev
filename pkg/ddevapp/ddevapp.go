@@ -1205,7 +1205,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// Mostly ignore app.Init() error, since app.Init() fails if no directory found. Some errors should be handled though.
 	// We already were successful with *finding* the app, and if we get an
 	// incomplete one we have to add to it.
-	if err := app.Init(activeAppRoot); err != nil {
+	if err = app.Init(activeAppRoot); err != nil {
 		switch err.(type) {
 		case webContainerExists:
 			return app, err

@@ -28,7 +28,7 @@ func TestNewConfig(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	// Load a new Config
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 
 	// Ensure the config uses specified defaults.
@@ -45,7 +45,7 @@ func TestNewConfig(t *testing.T) {
 	_, err = os.Stat(app.ConfigPath)
 	assert.NoError(err)
 
-	loadedConfig, err := NewApp(testDir, DefaultProviderName)
+	loadedConfig, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 	assert.Equal(app.Name, loadedConfig.Name)
 	assert.Equal(app.Type, loadedConfig.Type)
@@ -73,7 +73,7 @@ func TestPrepDirectory(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 
 	// Prep the directory.
@@ -91,7 +91,7 @@ func TestHostName(t *testing.T) {
 	testDir := testcommon.CreateTmpDir("TestHostName")
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
 
@@ -106,7 +106,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
 	app.Type = GetValidAppTypes()[0]
@@ -161,7 +161,7 @@ func TestConfigCommand(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, DefaultProviderName)
+		app, err := NewApp(testDir, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -229,7 +229,7 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, DefaultProviderName)
+		app, err := NewApp(testDir, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -275,7 +275,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, DefaultProviderName)
+		app, err := NewApp(testDir, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -331,7 +331,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, DefaultProviderName)
+		app, err := NewApp(testDir, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -386,7 +386,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 
 	// Create the ddevapp we'll use for testing.
 	// This will not return an error, since there is no existing configuration.
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -423,7 +423,7 @@ func TestReadConfig(t *testing.T) {
 		ConfigPath: filepath.Join("testdata", "config.yaml"),
 		AppRoot:    "testdata",
 		Name:       "TestRead",
-		Provider:   DefaultProviderName,
+		Provider:   ProviderDefault,
 	}
 
 	err := app.ReadConfig()
@@ -487,7 +487,7 @@ func TestWriteConfig(t *testing.T) {
 		DBImage:    version.DBImg + ":" + version.DBTag,
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
 		Type:       "drupal8",
-		Provider:   DefaultProviderName,
+		Provider:   ProviderDefault,
 	}
 
 	err := app.WriteConfig()
@@ -526,7 +526,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 
 	err = app.ReadConfig()
