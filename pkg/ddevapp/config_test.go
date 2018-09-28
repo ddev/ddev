@@ -449,11 +449,14 @@ func TestValidate(t *testing.T) {
 	assert.NoError(err)
 
 	app := &DdevApp{
-		Name:       "TestValidate",
-		ConfigPath: filepath.Join("testdata", "config.yaml"),
-		AppRoot:    cwd,
-		Docroot:    "testdata",
-		Type:       "wordpress",
+		Name:          "TestValidate",
+		ConfigPath:    filepath.Join("testdata", "config.yaml"),
+		AppRoot:       cwd,
+		Docroot:       "testdata",
+		Type:          AppTypeWordpress,
+		PHPVersion:    PHPDefault,
+		WebserverType: WebserverDefault,
+		Provider:      ProviderDefault,
 	}
 
 	err = app.ValidateConfig()
@@ -463,13 +466,15 @@ func TestValidate(t *testing.T) {
 
 	app.Name = "Invalid!"
 	err = app.ValidateConfig()
-	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a project name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname()))
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid hostname")
 
 	app.Docroot = "testdata"
 	app.Name = "valid"
 	app.Type = "potato"
 	err = app.ValidateConfig()
-	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", app.Type))
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid app type")
 }
 
 // TestWriteConfig tests writing config values to file
@@ -486,7 +491,7 @@ func TestWriteConfig(t *testing.T) {
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
-		Type:       "drupal8",
+		Type:       AppTypeDrupal8,
 		Provider:   ProviderDefault,
 	}
 
@@ -498,7 +503,7 @@ func TestWriteConfig(t *testing.T) {
 	assert.Contains(string(out), "TestWrite")
 	assert.Contains(string(out), `exec: drush cr`)
 
-	app.Type = "wordpress"
+	app.Type = AppTypeWordpress
 	err = app.WriteConfig()
 	assert.NoError(err)
 

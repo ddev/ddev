@@ -39,10 +39,7 @@ var (
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
 			Docroot:                       "htdocs",
-			Type:                          "wordpress",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
-			FilesImageURI:                 "/wp-content/uploads/2017/04/pexels-photo-265186-1024x683.jpeg",
+			Type:                          ddevapp.AppTypeWordpress,
 		},
 		{
 			Name:                          "TestPkgDrupal8",
@@ -53,7 +50,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal8_6_1_db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.zip",
 			FullSiteTarballURL:            "",
-			Type:                          "drupal8",
+			Type:                          ddevapp.AppTypeDrupal8,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "this is a post with an image"},
@@ -61,16 +58,13 @@ var (
 		},
 		{
 			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.59.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-7.59/",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59-db.tar.gz",
-			FullSiteTarballURL:            "",
-			Docroot:                       "",
-			Type:                          "drupal7",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "D7 test project, kittens edition"},
-			FilesImageURI:                 "/sites/default/files/field/image/kittens-large.jpg",
+			SourceURL:                     "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-kickstart-0.4.0/",
+			FilesTarballURL:               "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
+			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
+			Docroot:                       "docroot",
+			Type:                          ddevapp.AppTypeDrupal7,
 			FullSiteArchiveExtPath:        "docroot/sites/default/files",
 		},
 		{
@@ -81,10 +75,7 @@ var (
 			FullSiteTarballURL:            "",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
-			Type:                          "drupal6",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
-			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
+			Type:                          ddevapp.AppTypeDrupal6,
 		},
 		{
 			Name:                          "TestPkgBackdrop",
@@ -94,10 +85,7 @@ var (
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/backdrop_files.11.0.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
-			Type:                          "backdrop",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/first-post-all-about-kittens", Expect: "Lots of kittens are a good thing"},
-			FilesImageURI:                 "/files/styles/large/public/field/image/kittens-large.jpg",
+			Type:                          ddevapp.AppTypeBackdrop,
 		},
 		{
 			Name:                          "TestPkgTypo3",
@@ -106,11 +94,8 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_db.tar.gz",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_files.tar.gz",
 			FullSiteTarballURL:            "",
-			Docroot:                       "public",
-			Type:                          "typo3",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
-			FilesImageURI:                 "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
+			Docroot:                       "",
+			Type:                          ddevapp.AppTypeTYPO3,
 		},
 	}
 	FullTestSites = TestSites
@@ -1001,15 +986,15 @@ func TestDdevExec(t *testing.T) {
 		assert.NoError(err)
 
 		switch app.GetType() {
-		case "drupal6":
+		case ddevapp.AppTypeDrupal6:
 			fallthrough
-		case "drupal7":
+		case ddevapp.AppTypeDrupal7:
 			fallthrough
-		case "drupal8":
+		case ddevapp.AppTypeDrupal8:
 			out, _, err = app.Exec("web", "drush", "status")
 			assert.NoError(err)
 			assert.Regexp("PHP configuration[ :]*/etc/php/[0-9].[0-9]/fpm/php.ini", out)
-		case "wordpress":
+		case ddevapp.AppTypeWordpress:
 			out, _, err = app.Exec("web", "wp", "--info")
 			assert.NoError(err)
 			assert.Regexp("/etc/php.*/php.ini", out)
@@ -1534,7 +1519,7 @@ func TestHttpsRedirection(t *testing.T) {
 	err = os.Chdir(appDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(appDir, ddevapp.DefaultProviderName)
+	app, err := ddevapp.NewApp(appDir, ddevapp.ProviderDefault)
 	assert.NoError(err)
 	app.Name = "proj"
 	app.Type = "php"
