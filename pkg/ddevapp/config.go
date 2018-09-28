@@ -23,16 +23,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-// DefaultProviderName contains the name of the default provider which will be used if one is not otherwise specified.
-const DefaultProviderName = "default"
-
-// DdevDefaultPHPVersion is the default PHP version, overridden by $DDEV_PHP_VERSION
-const DdevDefaultPHPVersion = "7.1"
-
-// DdevDefaultWebserverType is the default webserver type, as nginx-fpm/apache-fpm/apache-cgi,
-// overridden by $DDEV_WEBSERVER_TYPE
-var DdevDefaultWebserverType = "nginx-fpm"
-
 // DdevDefaultRouterHTTPPort is the starting router port, 80
 const DdevDefaultRouterHTTPPort = "80"
 
@@ -63,7 +53,7 @@ type Provider interface {
 func init() {
 	// This is for automated testing only. It allows us to override the webserver type.
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
-		DdevDefaultWebserverType = testWebServerType
+		WebserverDefault = testWebServerType
 	}
 }
 
@@ -75,8 +65,8 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.AppRoot = AppRoot
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.APIVersion = version.DdevVersion
-	app.PHPVersion = DdevDefaultPHPVersion
-	app.WebserverType = DdevDefaultWebserverType
+	app.PHPVersion = PHPDefault
+	app.WebserverType = WebserverDefault
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 
@@ -98,12 +88,12 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	// Otherwise we accept whatever might have been in config file if there was anything.
 	if provider == "" && app.Provider != "" {
 		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
-	} else if provider == "pantheon" || provider == "drud-s3" || provider == DefaultProviderName {
+	} else if provider == ProviderPantheon || provider == ProviderDrudS3 || provider == ProviderDefault {
 		app.Provider = provider // Use the provider passed-in. Function argument wins.
 	} else if provider == "" && app.Provider == "" {
-		app.Provider = DefaultProviderName // Nothing passed in, nothing configured. Set c.Provider to default
+		app.Provider = ProviderDefault // Nothing passed in, nothing configured. Set c.Provider to default
 	} else {
-		return app, fmt.Errorf("Provider '%s' is not implemented", provider)
+		return app, fmt.Errorf("provider '%s' is not implemented", provider)
 	}
 
 	return app, nil
@@ -194,11 +184,11 @@ func (app *DdevApp) ReadConfig() error {
 		app.Name = filepath.Base(app.AppRoot)
 	}
 	if app.PHPVersion == "" {
-		app.PHPVersion = DdevDefaultPHPVersion
+		app.PHPVersion = PHPDefault
 	}
 
 	if app.WebserverType == "" {
-		app.WebserverType = DdevDefaultWebserverType
+		app.WebserverType = WebserverDefault
 	}
 
 	if app.RouterHTTPPort == "" {
@@ -274,19 +264,34 @@ func (app *DdevApp) PromptForConfig() error {
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
 	if _, err := os.Stat(app.ConfigPath); os.IsNotExist(err) {
-		return fmt.Errorf("no valid project config.yaml was found at %s", app.ConfigPath)
+		return fmt.Errorf("no valid project config.yaml was found at %s", app.ConfigPath).(invalidConfigFile)
 	}
 
-	// validate hostname
-	match := hostRegex.MatchString(app.GetHostname())
-	if !match {
-		return fmt.Errorf("%s is not a valid hostname. Please enter a project name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname())
+	// validate hostnames
+	for _, hn := range app.GetHostnames() {
+		if !hostRegex.MatchString(hn) {
+			return fmt.Errorf("invalid hostname: %s. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", hn).(invalidHostname)
+		}
 	}
 
 	// validate apptype
-	match = IsValidAppType(app.Type)
-	if !match {
-		return fmt.Errorf("'%s' is not a valid apptype", app.Type)
+	if !IsValidAppType(app.Type) {
+		return fmt.Errorf("invalid app type: %s", app.Type).(invalidAppType)
+	}
+
+	// validate PHP version
+	if !IsValidPHPVersion(app.PHPVersion) {
+		return fmt.Errorf("invalid PHP version: %s", app.PHPVersion).(invalidPHPVersion)
+	}
+
+	// validate webserver type
+	if !IsValidWebserverType(app.WebserverType) {
+		return fmt.Errorf("invalid webserver type: %s", app.WebserverType).(invalidWebserverType)
+	}
+
+	// validate provider
+	if !IsValidProvider(app.Provider) {
+		return fmt.Errorf("invalid provider: %s", app.Provider).(invalidProvider)
 	}
 
 	return nil
