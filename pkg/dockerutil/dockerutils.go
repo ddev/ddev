@@ -152,8 +152,11 @@ func ContainerWait(waittime time.Duration, labels map[string]string) error {
 			}
 			status = GetContainerHealth(container)
 
-			if status == "healthy" {
+			switch status {
+			case "healthy":
 				return nil
+			case "exited":
+				return fmt.Errorf("Please use 'ddev logs` or `ddev logs -s db' to find out why the container failed.", labels)
 			}
 		}
 	}
