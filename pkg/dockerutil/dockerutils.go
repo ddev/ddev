@@ -156,7 +156,8 @@ func ContainerWait(waittime time.Duration, labels map[string]string) error {
 			case "healthy":
 				return nil
 			case "exited":
-				return fmt.Errorf("Please use 'ddev logs` or `ddev logs -s db' to find out why the container failed.", labels)
+				service := container.Labels["com.docker.compose.service"]
+				return fmt.Errorf("container start failed, please use 'ddev logs -s %s` to find out why it failed", service)
 			}
 		}
 	}

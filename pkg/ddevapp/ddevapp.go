@@ -808,7 +808,7 @@ func (app *DdevApp) Wait(containerTypes ...string) error {
 		}
 		err := dockerutil.ContainerWait(containerWaitTimeout, labels)
 		if err != nil {
-			return fmt.Errorf("Container %s failed: %v", containerType, err)
+			return fmt.Errorf("%s container failed: %v", containerType, err)
 		}
 	}
 
