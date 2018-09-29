@@ -534,8 +534,5 @@ func TestConfigOverrideDetection(t *testing.T) {
 	}
 	assert.Contains(out, "Custom configuration takes effect")
 
-	err = app.Start()
-	assert.NoError(err)
-
 	_ = app.Down(true, false)
 }
