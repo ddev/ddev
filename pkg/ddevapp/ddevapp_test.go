@@ -1327,10 +1327,10 @@ func TestListWithoutDir(t *testing.T) {
 	assert.NoError(err)
 }
 
-type UrlRedirectExpectations struct {
+type URLRedirectExpectations struct {
 	scheme              string
 	uri                 string
-	expectedRedirectUri string
+	expectedRedirectURI string
 }
 
 // TestHttpsRedirection tests to make sure that webserver and php redirect to correct
@@ -1355,7 +1355,7 @@ func TestHttpsRedirection(t *testing.T) {
 	app.Name = "proj"
 	app.Type = "php"
 
-	expectations := []UrlRedirectExpectations{
+	expectations := []URLRedirectExpectations{
 		{"https", "/subdir", "/subdir/"},
 		{"https", "/redir_abs.php", "/landed.php"},
 		{"https", "/redir_relative.php", "/landed.php"},
@@ -1378,25 +1378,25 @@ func TestHttpsRedirection(t *testing.T) {
 		// Test for directory redirects under https and http
 		for _, parts := range expectations {
 
-			reqUrl := parts.scheme + "://" + app.GetHostname() + parts.uri
+			reqURL := parts.scheme + "://" + app.GetHostname() + parts.uri
 			// nolint: vetshadow
-			_, resp, err := testcommon.GetLocalHTTPResponse(t, reqUrl)
+			_, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
 			assert.Error(err)
-			assert.NotNil(resp, "resp was nil for webserver_type=%s url=%s", webserverType, reqUrl)
+			assert.NotNil(resp, "resp was nil for webserver_type=%s url=%s", webserverType, reqURL)
 			if resp != nil {
 				locHeader := resp.Header.Get("Location")
 
-				expectedRedirect := parts.expectedRedirectUri
+				expectedRedirect := parts.expectedRedirectURI
 				// However, if we're hitting redir_abs.php (or apache hitting directory), the redirect will be the whole url.
 				if strings.Contains(parts.uri, "redir_abs.php") || webserverType != "nginx-fpm" {
-					expectedRedirect = parts.scheme + "://" + app.GetHostname() + parts.expectedRedirectUri
+					expectedRedirect = parts.scheme + "://" + app.GetHostname() + parts.expectedRedirectURI
 				}
 				// Except the php relative redirect is always relative.
 				if strings.Contains(parts.uri, "redir_relative.php") {
-					expectedRedirect = parts.expectedRedirectUri
+					expectedRedirect = parts.expectedRedirectURI
 				}
 
-				assert.EqualValues(locHeader, expectedRedirect, "For webserver_type %s url %s expected redirect %s != actual %s", webserverType, reqUrl, expectedRedirect, locHeader)
+				assert.EqualValues(locHeader, expectedRedirect, "For webserver_type %s url %s expected redirect %s != actual %s", webserverType, reqURL, expectedRedirect, locHeader)
 			}
 		}
 	}
