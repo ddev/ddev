@@ -28,6 +28,7 @@ import (
 	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
+	rqr "github.com/stretchr/testify/require"
 )
 
 var (
@@ -1317,6 +1318,73 @@ func TestListWithoutDir(t *testing.T) {
 	// Remove them and use ., which is good enough.
 	testDirSafe := strings.Replace(testDir, "\\", ".", -1)
 	assert.Regexp(regexp.MustCompile("(?s)"+ddevapp.SiteDirMissing+".*"+testDirSafe), table.String())
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	// Change back to package dir. Lots of things will have to be cleaned up
+	// in defers, and for windows we have to not be sitting in them.
+	err = os.Chdir(packageDir)
+	assert.NoError(err)
+}
+
+type UrlRedirectExpectations struct {
+	url      string
+	redirect string
+}
+
+// TestHttpsRedirection tests to make sure that webserver and php redirect to correct
+// scheme (http or https).
+func TestHttpsRedirection(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+	require := rqr.New(t)
+	testcommon.ClearDockerEnv()
+	packageDir, _ := os.Getwd()
+
+	testDir := testcommon.CreateTmpDir("TestHttpsRedirection")
+	defer testcommon.CleanupDir(testDir)
+	appDir := filepath.Join(testDir, "proj")
+	err := fileutil.CopyDir(filepath.Join(packageDir, "testdata", "TestHttpsRedirection"), appDir)
+	assert.NoError(err)
+	err = os.Chdir(appDir)
+	assert.NoError(err)
+
+	app, err := ddevapp.NewApp(appDir, ddevapp.DefaultProviderName)
+	assert.NoError(err)
+	app.Name = "proj"
+	app.Type = "php"
+
+	expectations := []UrlRedirectExpectations{
+		{"https://proj.ddev.local/subdir", "https://proj.ddev.local/subdir/"},
+		{"https://proj.ddev.local/redir_abs.php", "https://proj.ddev.local/landed.php"},
+		{"https://proj.ddev.local/redir_relative.php", "/landed.php"},
+		{"http://proj.ddev.local/subdir", "http://proj.ddev.local/subdir/"},
+		{"http://proj.ddev.local/redir_abs.php", "http://proj.ddev.local/landed.php"},
+		{"http://proj.ddev.local/redir_relative.php", "/landed.php"},
+	}
+
+	for _, webserverType := range []string{"nginx-fpm", "apache-fpm", "apache-cgi"} {
+		app.WebserverType = webserverType
+		err = app.WriteConfig()
+		assert.NoError(err)
+
+		// Do a start on the configured site.
+		app, err = ddevapp.GetActiveApp("")
+		assert.NoError(err)
+		err = app.Start()
+		assert.NoError(err)
+
+		// Test for directory redirects under https and http
+		for _, pair := range expectations {
+
+			_, resp, err := testcommon.GetLocalHTTPResponse(t, pair.url)
+			assert.Error(err)
+			require.NotNil(resp)
+			locHeader := resp.Header.Get("Location")
+			assert.EqualValues(locHeader, pair.redirect, "For webserver_type %s url %s expected redirect %s != actual %s", app.WebserverType, pair.url, pair.redirect, locHeader)
+		}
+	}
 
 	err = app.Down(true, false)
 	assert.NoError(err)
