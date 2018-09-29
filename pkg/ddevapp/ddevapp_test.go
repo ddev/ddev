@@ -28,7 +28,6 @@ import (
 	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
-	rqr "github.com/stretchr/testify/require"
 )
 
 var (
@@ -1329,8 +1328,9 @@ func TestListWithoutDir(t *testing.T) {
 }
 
 type UrlRedirectExpectations struct {
-	url      string
-	redirect string
+	scheme              string
+	uri                 string
+	expectedRedirectUri string
 }
 
 // TestHttpsRedirection tests to make sure that webserver and php redirect to correct
@@ -1338,7 +1338,7 @@ type UrlRedirectExpectations struct {
 func TestHttpsRedirection(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	require := rqr.New(t)
+	//require := rqr.New(t)
 	testcommon.ClearDockerEnv()
 	packageDir, _ := os.Getwd()
 
@@ -1356,12 +1356,12 @@ func TestHttpsRedirection(t *testing.T) {
 	app.Type = "php"
 
 	expectations := []UrlRedirectExpectations{
-		{"https://proj.ddev.local/subdir", "https://proj.ddev.local/subdir/"},
-		{"https://proj.ddev.local/redir_abs.php", "https://proj.ddev.local/landed.php"},
-		{"https://proj.ddev.local/redir_relative.php", "/landed.php"},
-		{"http://proj.ddev.local/subdir", "http://proj.ddev.local/subdir/"},
-		{"http://proj.ddev.local/redir_abs.php", "http://proj.ddev.local/landed.php"},
-		{"http://proj.ddev.local/redir_relative.php", "/landed.php"},
+		{"https", "/subdir", "/subdir/"},
+		{"https", "/redir_abs.php", "/landed.php"},
+		{"https", "/redir_relative.php", "/landed.php"},
+		{"http", "/subdir", "/subdir/"},
+		{"http", "/redir_abs.php", "/landed.php"},
+		{"http", "/redir_relative.php", "/landed.php"},
 	}
 
 	for _, webserverType := range []string{"nginx-fpm", "apache-fpm", "apache-cgi"} {
@@ -1376,13 +1376,28 @@ func TestHttpsRedirection(t *testing.T) {
 		assert.NoError(err)
 
 		// Test for directory redirects under https and http
-		for _, pair := range expectations {
+		for _, parts := range expectations {
 
-			_, resp, err := testcommon.GetLocalHTTPResponse(t, pair.url)
+			reqUrl := parts.scheme + "://" + app.GetHostname() + parts.uri
+			// nolint: vetshadow
+			_, resp, err := testcommon.GetLocalHTTPResponse(t, reqUrl)
 			assert.Error(err)
-			require.NotNil(resp)
-			locHeader := resp.Header.Get("Location")
-			assert.EqualValues(locHeader, pair.redirect, "For webserver_type %s url %s expected redirect %s != actual %s", app.WebserverType, pair.url, pair.redirect, locHeader)
+			assert.NotNil(resp, "resp was nil for webserver_type=%s url=%s", webserverType, reqUrl)
+			if resp != nil {
+				locHeader := resp.Header.Get("Location")
+
+				expectedRedirect := parts.expectedRedirectUri
+				// However, if we're hitting redir_abs.php (or apache hitting directory), the redirect will be the whole url.
+				if strings.Contains(parts.uri, "redir_abs.php") || webserverType != "nginx-fpm" {
+					expectedRedirect = parts.scheme + "://" + app.GetHostname() + parts.expectedRedirectUri
+				}
+				// Except the php relative redirect is always relative.
+				if strings.Contains(parts.uri, "redir_relative.php") {
+					expectedRedirect = parts.expectedRedirectUri
+				}
+
+				assert.EqualValues(locHeader, expectedRedirect, "For webserver_type %s url %s expected redirect %s != actual %s", webserverType, reqUrl, expectedRedirect, locHeader)
+			}
 		}
 	}
 
