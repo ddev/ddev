@@ -1,18 +1,15 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/version"
 	"path/filepath"
 	"testing"
 
 	"os"
 
-	"io/ioutil"
-
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"time"
 )
@@ -40,31 +37,25 @@ func TestDevLogs(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, v := range DevTestSites {
+		// Copy our fatal error php into the docroot of testsite.
+		err := fileutil.CopyFile(filepath.Join("testdata", "fatal.php"), filepath.Join(v.Dir, v.Docroot, "fatal.php"))
+		assert.NoError(err)
 		cleanup := v.Chdir()
 
-		confByte := []byte("<?php trigger_error(\"Fatal error\", E_USER_ERROR);")
-		err := ioutil.WriteFile(filepath.Join(v.Dir, v.Docroot, "index.php"), confByte, 0644)
+		url := "http://" + v.Name + "." + version.DDevTLD + "/fatal.php"
+		out, err := testcommon.GetLocalHTTPResponse(t, url)
+		_ = out
 		assert.NoError(err)
-
-		dockerIP, err := dockerutil.GetDockerIP()
-		assert.NoError(err)
-		o := util.NewHTTPOptions("http://" + dockerIP + "/index.php")
 		// Because php display_errors = On the error results in a 200 anyway.
-		o.ExpectedStatus = 200
-		o.Timeout = 30
-		o.Headers["Host"] = v.Name + "." + version.DDevTLD
-		err = util.EnsureHTTPStatus(o)
-		assert.NoError(err, "expected 200 status not found for project %s: %v", v.Name, err)
 
 		// logs may not respond exactly right away, wait a tiny bit.
 		time.Sleep(2 * time.Second)
 		args := []string{"logs"}
-		out, err := exec.RunCommand(DdevBin, args)
+		out, err = exec.RunCommand(DdevBin, args)
 
 		assert.NoError(err)
 		assert.Contains(string(out), "Server started")
 		assert.Contains(string(out), "PHP Fatal error:", "PHP Fatal error not found for project %s output='%s", v.Name, string(out))
-
 		cleanup()
 	}
 }
