@@ -856,10 +856,7 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 	}
 
 	if app.SiteStatus() != SiteRunning {
-		err = app.Start()
-		if err != nil {
-			return snapshotName, fmt.Errorf("Failed to start project %s to snapshot database: %v", app.Name, err)
-		}
+		return "", fmt.Errorf("unable to snapshot database, project %v is not running. \nPlease start the project if you want to snapshot it. \nIf removing, you can remove without a snapshot using 'ddev remove --remove-data --omit-snapshot', \nwhich will destroy your database", app.Name)
 	}
 
 	util.Warning("Creating database snapshot %s", snapshotName)
