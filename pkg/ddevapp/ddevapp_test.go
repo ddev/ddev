@@ -1338,7 +1338,6 @@ type URLRedirectExpectations struct {
 func TestHttpsRedirection(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	//require := rqr.New(t)
 	testcommon.ClearDockerEnv()
 	packageDir, _ := os.Getwd()
 
