@@ -372,14 +372,19 @@ func (app *DdevApp) CheckCustomConfig() {
 	ddevDir := filepath.Dir(app.ConfigPath)
 
 	customConfig := false
-	if _, err := os.Stat(filepath.Join(ddevDir, "nginx-site.conf")); err == nil {
+	if _, err := os.Stat(filepath.Join(ddevDir, "nginx-site.conf")); err == nil && app.WebserverType == "nginx-fpm" {
 		util.Warning("Using custom nginx configuration in nginx-site.conf")
+		customConfig = true
+	}
+
+	if _, err := os.Stat(filepath.Join(ddevDir, "apache", "apache-site.conf")); err == nil && app.WebserverType != "nginx-fpm" {
+		util.Warning("Using custom apache configuration in apache/apache-site.conf")
 		customConfig = true
 	}
 
 	mysqlPath := filepath.Join(ddevDir, "mysql")
 	if _, err := os.Stat(mysqlPath); err == nil {
-		mysqlFiles, err := fileutil.ListFilesInDir(mysqlPath)
+		mysqlFiles, err := filepath.Glob(mysqlPath + "/*.cnf")
 		util.CheckErr(err)
 		if len(mysqlFiles) > 0 {
 			util.Warning("Using custom mysql configuration: %v", mysqlFiles)
@@ -389,7 +394,7 @@ func (app *DdevApp) CheckCustomConfig() {
 
 	phpPath := filepath.Join(ddevDir, "php")
 	if _, err := os.Stat(phpPath); err == nil {
-		phpFiles, err := fileutil.ListFilesInDir(phpPath)
+		phpFiles, err := filepath.Glob(phpPath + "/*.ini")
 		util.CheckErr(err)
 		if len(phpFiles) > 0 {
 			util.Warning("Using custom PHP configuration: %v", phpFiles)
