@@ -1,6 +1,9 @@
 package ddevapp
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 // DefaultProvider provides a no-op for the provider plugin interface methods.
 type DefaultProvider struct{}
@@ -12,6 +15,14 @@ func (p *DefaultProvider) Init(app *DdevApp) error {
 
 // ValidateField provides a no-op for the ValidateField operation.
 func (p *DefaultProvider) ValidateField(field, value string) error {
+	if field == "Name" {
+		// validate project name
+		match := hostRegex.MatchString(value)
+		if !match {
+			return fmt.Errorf("%s is not a valid project name. Please enter a project name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", value)
+		}
+
+	}
 	return nil
 }
 

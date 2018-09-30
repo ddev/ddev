@@ -447,7 +447,7 @@ func TestValidate(t *testing.T) {
 
 	app.Name = "Invalid!"
 	err = app.ValidateConfig()
-	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname()))
+	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a project name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname()))
 
 	app.Docroot = "testdata"
 	app.Name = "valid"
