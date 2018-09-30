@@ -38,7 +38,9 @@ func TestDevLogs(t *testing.T) {
 
 	for _, v := range DevTestSites {
 		// Copy our fatal error php into the docroot of testsite.
-		err := fileutil.CopyFile(filepath.Join("testdata", "fatal.php"), filepath.Join(v.Dir, v.Docroot, "fatal.php"))
+		pwd, err := os.Getwd()
+		assert.NoError(err)
+		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "fatal.php"), filepath.Join(v.Dir, v.Docroot, "fatal.php"))
 		assert.NoError(err)
 		cleanup := v.Chdir()
 
