@@ -18,13 +18,9 @@ import (
 // the directory has not been configured (and no project name is given)
 func TestDevLogsNoConfig(t *testing.T) {
 	assert := asrt.New(t)
-
 	testDir := testcommon.CreateTmpDir("no-valid-ddev-config")
-
-	err := os.Chdir(testDir)
-	if err != nil {
-		t.Skipf("Could not change to temporary directory %s: %v", testDir, err)
-	}
+	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
 
 	args := []string{"logs"}
 	out, err := exec.RunCommand(DdevBin, args)
