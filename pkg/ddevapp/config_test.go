@@ -183,6 +183,22 @@ func TestConfigCommand(t *testing.T) {
 		assert.Contains(out, testDir)
 		assert.Contains(out, fmt.Sprintf("'%s' is not a valid project type", invalidAppType))
 
+		// Create an example input buffer that writes an invalid projectname, then a valid-project-name,
+		// a valid document root,
+		// a valid app type
+		input = fmt.Sprintf("invalid_project_name\n%s\ndocroot\n%s", name, testValues[apptypePos])
+		scanner = bufio.NewScanner(strings.NewReader(input))
+		util.SetInputScanner(scanner)
+
+		restoreOutput = testcommon.CaptureUserOut()
+		err = app.PromptForConfig()
+		assert.NoError(err, t)
+		out = restoreOutput()
+
+		// Ensure we have expected vales in output.
+		assert.Contains(out, testDir)
+		assert.Contains(out, "invalid_project_name is not a valid project name")
+
 		// Ensure values were properly set on the app struct.
 		assert.Equal(name, app.Name)
 		assert.Equal(testValues[apptypePos], app.Type)

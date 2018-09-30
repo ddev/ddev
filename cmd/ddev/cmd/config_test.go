@@ -158,3 +158,48 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(uploadDir, app.UploadDir)
 	assert.Equal(webserverType, app.WebserverType)
 }
+
+// TestConfigInvalidProjectname tests to make sure that invalid projectnames
+// are not accepted and valid names are accepted.
+func TestConfigInvalidProjectname(t *testing.T) {
+	var err error
+	assert := asrt.New(t)
+
+	// Create a temporary directory and switch to it.
+	tmpdir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
+
+	// Create an existing docroot
+	docroot := "web"
+	if err = os.MkdirAll(filepath.Join(tmpdir, docroot), 0755); err != nil {
+		t.Errorf("Could not create docroot %s in %s", docroot, tmpdir)
+	}
+
+	// Test some valid project names
+	for _, projName := range []string{"no-spaces-but-hyphens", "UpperAndLower", "should.work.with.dots"} {
+		args := []string{
+			"config",
+			"--projectname", projName,
+		}
+
+		out, err := exec.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		assert.NotContains(out, "is not a valid project name")
+		assert.Contains(out, "You may now run 'ddev start'")
+	}
+
+	// test some invalid project names.
+	for _, projName := range []string{"with spaces", "with_underscores", "no,commas-will-make-it"} {
+		args := []string{
+			"config",
+			"--projectname", projName,
+		}
+
+		out, err := exec.RunCommand(DdevBin, args)
+		assert.Error(err)
+		assert.Contains(out, fmt.Sprintf("%s is not a valid project name", projName))
+		assert.NotContains(out, "You may now run 'ddev start'")
+	}
+
+}
