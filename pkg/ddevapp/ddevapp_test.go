@@ -1562,6 +1562,7 @@ func TestWebserverType(t *testing.T) {
 			err = app.Start()
 			assert.NoError(err)
 
+			// nolint: vetshadow
 			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/phpinfo.php")
 			assert.NoError(err)
 
