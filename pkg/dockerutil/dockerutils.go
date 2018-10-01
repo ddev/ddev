@@ -152,8 +152,12 @@ func ContainerWait(waittime time.Duration, labels map[string]string) error {
 			}
 			status = GetContainerHealth(container)
 
-			if status == "healthy" {
+			switch status {
+			case "healthy":
 				return nil
+			case "exited":
+				service := container.Labels["com.docker.compose.service"]
+				return fmt.Errorf("container start failed, please use 'ddev logs -s %s` to find out why it failed", service)
 			}
 		}
 	}
