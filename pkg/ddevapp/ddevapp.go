@@ -125,7 +125,7 @@ func (app *DdevApp) Init(basePath string) error {
 			return fmt.Errorf("a project (web container) in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot)
 		}
 		return nil
-	} else if strings.Contains(err.Error(), "could not find containers") {
+	} else if strings.Contains(err.Error(), "unable to find any running or stopped containers") {
 		// Init() is just putting together the DdevApp struct, the containers do
 		// not have to exist (app doesn't have to have been started, so the fact
 		// we didn't find any is not an error.
