@@ -40,11 +40,11 @@ func TestDevLogs(t *testing.T) {
 		cleanup := v.Chdir()
 
 		url := "http://" + v.Name + "." + version.DDevTLD + "/logtest.php"
-		out, err := testcommon.GetLocalHTTPResponse(t, url)
+		_, err = testcommon.GetLocalHTTPResponse(t, url)
 		assert.NoError(err)
 
 		args := []string{"logs"}
-		out, err = exec.RunCommand(DdevBin, args)
+		out, err := exec.RunCommand(DdevBin, args)
 
 		assert.NoError(err)
 		assert.Contains(string(out), "Server started")
