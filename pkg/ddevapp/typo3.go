@@ -40,23 +40,32 @@ $GLOBALS['TYPO3_CONF_VARS']['SYS']['displayErrors'] = 1;
 // AdditionalConfiguration.php, adding things like database host, name, and
 // password. Returns the fullpath to settings file and error
 func createTypo3SettingsFile(app *DdevApp) (string, error) {
-
 	if !fileutil.FileExists(app.SiteSettingsPath) {
-		util.Warning("TYPO3 does not seem to have been set up yet, missing LocalConfiguration.php (%s)", app.SiteLocalSettingsPath)
+		util.Warning("TYPO3 does not seem to have been set up yet, missing %s (%s)", filepath.Base(app.SiteSettingsPath), app.SiteSettingsPath)
 	}
 
-	settingsFilePath, err := app.DetermineSettingsPathLocation()
-	if err != nil {
-		return "", fmt.Errorf("Failed to get TYPO3 AdditionalConfiguration.php file path: %v", err.Error())
-	}
-	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
+	// TYPO3 ddev settings file will be AdditionalConfiguration.php (app.SiteLocalSettingsPath).
+	// Check if the file already exists.
+	if fileutil.FileExists(app.SiteLocalSettingsPath) {
+		// Check if the file is managed by ddev.
+		signatureFound, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, DdevFileSignature)
+		if err != nil {
+			return "", err
+		}
 
-	err = writeTypo3SettingsFile(app)
-	if err != nil {
-		return settingsFilePath, fmt.Errorf("Failed to write TYPO3 AdditionalConfiguration.php file: %v", err.Error())
+		// If the signature wasn't found, warn the user and return.
+		if !signatureFound {
+			util.Warning("%s already exists and is managed by the user.", filepath.Base(app.SiteLocalSettingsPath))
+			return app.SiteLocalSettingsPath, nil
+		}
 	}
 
-	return settingsFilePath, nil
+	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(app.SiteLocalSettingsPath))
+	if err := writeTypo3SettingsFile(app); err != nil {
+		return "", fmt.Errorf("failed to write TYPO3 AdditionalConfiguration.php file: %v", err.Error())
+	}
+
+	return app.SiteLocalSettingsPath, nil
 }
 
 // writeTypo3SettingsFile produces AdditionalConfiguration.php file
@@ -64,7 +73,6 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 // overriding the db config values in it. The typo3conf/ directory will
 // be created if it does not yet exist.
 func writeTypo3SettingsFile(app *DdevApp) error {
-
 	filePath := app.SiteLocalSettingsPath
 
 	// Ensure target directory is writable.

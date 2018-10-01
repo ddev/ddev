@@ -821,16 +821,17 @@ func (app *DdevApp) Wait(containerTypes ...string) error {
 func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	possibleLocations := []string{app.SiteSettingsPath, app.SiteLocalSettingsPath}
 	for _, loc := range possibleLocations {
-		// If the file is found we need to check for a signature to determine if it's safe to use.
-		if fileutil.FileExists(loc) {
-			signatureFound, err := fileutil.FgrepStringInFile(loc, DdevFileSignature)
-			util.CheckErr(err) // Really can't happen as we already checked for the file existence
+		// If the file doesn't exist, it's safe to use
+		if !fileutil.FileExists(loc) {
+			return loc, nil
+		}
 
-			if signatureFound {
-				return loc, nil
-			}
-		} else {
-			// If the file is not found it's safe to use.
+		// If the file does exist, check for a signature indicating it's managed by ddev.
+		signatureFound, err := fileutil.FgrepStringInFile(loc, DdevFileSignature)
+		util.CheckErr(err) // Really can't happen as we already checked for the file existence
+
+		// If the signature was found, it's safe to use.
+		if signatureFound {
 			return loc, nil
 		}
 	}
