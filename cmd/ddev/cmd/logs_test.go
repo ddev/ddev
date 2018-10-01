@@ -11,7 +11,6 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
-	"time"
 )
 
 // TestDevLogsNoConfig tests what happens with when running "ddev logs" when
@@ -36,24 +35,20 @@ func TestDevLogs(t *testing.T) {
 		// Copy our fatal error php into the docroot of testsite.
 		pwd, err := os.Getwd()
 		assert.NoError(err)
-		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "fatal.php"), filepath.Join(v.Dir, v.Docroot, "fatal.php"))
+		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "logtest.php"), filepath.Join(v.Dir, v.Docroot, "logtest.php"))
 		assert.NoError(err)
 		cleanup := v.Chdir()
 
-		url := "http://" + v.Name + "." + version.DDevTLD + "/fatal.php"
+		url := "http://" + v.Name + "." + version.DDevTLD + "/logtest.php"
 		out, err := testcommon.GetLocalHTTPResponse(t, url)
-		_ = out
 		assert.NoError(err)
-		// Because php display_errors = On the error results in a 200 anyway.
 
-		// logs may not respond exactly right away, wait a tiny bit.
-		time.Sleep(2 * time.Second)
 		args := []string{"logs"}
 		out, err = exec.RunCommand(DdevBin, args)
 
 		assert.NoError(err)
 		assert.Contains(string(out), "Server started")
-		assert.Contains(string(out), "PHP Fatal error:", "PHP Fatal error not found for project %s output='%s", v.Name, string(out))
+		assert.Contains(string(out), "Notice to demonstrate logging", "PHP notice not found for project %s output='%s", v.Name, string(out))
 		cleanup()
 	}
 }
