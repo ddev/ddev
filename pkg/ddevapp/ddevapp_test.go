@@ -1534,6 +1534,38 @@ func TestGetAllURLs(t *testing.T) {
 	}
 }
 
+// TestWebserverType checks that webserver_type:apache-cgi or apache-fpm does the right thing
+func TestWebserverType(t *testing.T) {
+	assert := asrt.New(t)
+
+	for _, site := range TestSites {
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s GetAllURLs", site.Name))
+
+		testcommon.ClearDockerEnv()
+		app := new(ddevapp.DdevApp)
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+		for _, app.WebserverType = range []string{"apache-fpm", "apache-cgi", "nginx-fpm"} {
+
+			err = app.WriteConfig()
+			assert.NoError(err)
+
+			err = app.Start()
+			assert.NoError(err)
+
+			out, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
+			assert.NoError(err)
+			_ = out
+		}
+
+		err = app.Stop()
+		assert.NoError(err)
+
+		runTime()
+	}
+}
+
 // TestDbMigration tests migration from bind-mounted db to volume-mounted db
 // This should be important around the time of its release, 2018-08-02 or so, but should be increasingly
 // irrelevant after that and can eventually be removed.
