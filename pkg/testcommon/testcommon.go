@@ -2,6 +2,7 @@ package testcommon
 
 import (
 	"bytes"
+	"crypto/tls"
 	"io"
 	"io/ioutil"
 	"os"
@@ -343,7 +344,7 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 
 // GetLocalHTTPResponse takes a URL, hits the local docker for it, returns result
 // Returns error (with the body) if not 200 status code.
-func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, error) {
+func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, *http.Response, error) {
 	assert := asrt.New(t)
 
 	u, err := url.Parse(rawurl)
@@ -359,44 +360,51 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, error) {
 	localAddress := u.String()
 
 	timeout := time.Duration(10 * time.Second)
+
+	// Ignore https cert failure, since we are in testing environment.
+	insecureTransport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
 	// Do not follow redirects, https://stackoverflow.com/a/38150816/215713
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
-		Timeout: timeout,
+		Transport: insecureTransport,
+		Timeout:   timeout,
 	}
 
 	req, err := http.NewRequest("GET", localAddress, nil)
 
 	if err != nil {
-		return "", fmt.Errorf("Failed to NewRequest GET %s: %v", localAddress, err)
+		return "", nil, fmt.Errorf("Failed to NewRequest GET %s: %v", localAddress, err)
 	}
 	req.Host = fakeHost
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return "", resp, err
 	}
 
 	//nolint: errcheck
 	defer resp.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("unable to ReadAll resp.body: %v", err)
+		return "", resp, fmt.Errorf("unable to ReadAll resp.body: %v", err)
 	}
 	bodyString := string(bodyBytes)
 	if resp.StatusCode != 200 {
-		return bodyString, fmt.Errorf("http status code was %d, not 200", resp.StatusCode)
+		return bodyString, resp, fmt.Errorf("http status code was %d, not 200", resp.StatusCode)
 	}
-	return bodyString, nil
+	return bodyString, resp, nil
 }
 
 // EnsureLocalHTTPContent will verify a URL responds with a 200 and expected content string
 func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string) {
 	assert := asrt.New(t)
 
-	body, err := GetLocalHTTPResponse(t, rawurl)
+	body, _, err := GetLocalHTTPResponse(t, rawurl)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
 	assert.Contains(body, expectedContent)
 }

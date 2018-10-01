@@ -1327,6 +1327,88 @@ func TestListWithoutDir(t *testing.T) {
 	assert.NoError(err)
 }
 
+type URLRedirectExpectations struct {
+	scheme              string
+	uri                 string
+	expectedRedirectURI string
+}
+
+// TestHttpsRedirection tests to make sure that webserver and php redirect to correct
+// scheme (http or https).
+func TestHttpsRedirection(t *testing.T) {
+	// Set up tests and give ourselves a working directory.
+	assert := asrt.New(t)
+	testcommon.ClearDockerEnv()
+	packageDir, _ := os.Getwd()
+
+	testDir := testcommon.CreateTmpDir("TestHttpsRedirection")
+	defer testcommon.CleanupDir(testDir)
+	appDir := filepath.Join(testDir, "proj")
+	err := fileutil.CopyDir(filepath.Join(packageDir, "testdata", "TestHttpsRedirection"), appDir)
+	assert.NoError(err)
+	err = os.Chdir(appDir)
+	assert.NoError(err)
+
+	app, err := ddevapp.NewApp(appDir, ddevapp.DefaultProviderName)
+	assert.NoError(err)
+	app.Name = "proj"
+	app.Type = "php"
+
+	expectations := []URLRedirectExpectations{
+		{"https", "/subdir", "/subdir/"},
+		{"https", "/redir_abs.php", "/landed.php"},
+		{"https", "/redir_relative.php", "/landed.php"},
+		{"http", "/subdir", "/subdir/"},
+		{"http", "/redir_abs.php", "/landed.php"},
+		{"http", "/redir_relative.php", "/landed.php"},
+	}
+
+	for _, webserverType := range []string{"nginx-fpm", "apache-fpm", "apache-cgi"} {
+		app.WebserverType = webserverType
+		err = app.WriteConfig()
+		assert.NoError(err)
+
+		// Do a start on the configured site.
+		app, err = ddevapp.GetActiveApp("")
+		assert.NoError(err)
+		err = app.Start()
+		assert.NoError(err)
+
+		// Test for directory redirects under https and http
+		for _, parts := range expectations {
+
+			reqURL := parts.scheme + "://" + app.GetHostname() + parts.uri
+			// nolint: vetshadow
+			_, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
+			assert.Error(err)
+			assert.NotNil(resp, "resp was nil for webserver_type=%s url=%s", webserverType, reqURL)
+			if resp != nil {
+				locHeader := resp.Header.Get("Location")
+
+				expectedRedirect := parts.expectedRedirectURI
+				// However, if we're hitting redir_abs.php (or apache hitting directory), the redirect will be the whole url.
+				if strings.Contains(parts.uri, "redir_abs.php") || webserverType != "nginx-fpm" {
+					expectedRedirect = parts.scheme + "://" + app.GetHostname() + parts.expectedRedirectURI
+				}
+				// Except the php relative redirect is always relative.
+				if strings.Contains(parts.uri, "redir_relative.php") {
+					expectedRedirect = parts.expectedRedirectURI
+				}
+
+				assert.EqualValues(locHeader, expectedRedirect, "For webserver_type %s url %s expected redirect %s != actual %s", webserverType, reqURL, expectedRedirect, locHeader)
+			}
+		}
+	}
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	// Change back to package dir. Lots of things will have to be cleaned up
+	// in defers, and for windows we have to not be sitting in them.
+	err = os.Chdir(packageDir)
+	assert.NoError(err)
+}
+
 // TestMultipleComposeFiles checks to see if a set of docker-compose files gets
 // properly loaded in the right order, with docker-compose.yaml first and
 // with docker-compose.override.yaml last.
