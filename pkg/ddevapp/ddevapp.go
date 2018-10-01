@@ -856,7 +856,7 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 	}
 
 	if app.SiteStatus() != SiteRunning {
-		return "", fmt.Errorf("unable to snapshot database, project %v is not running. \nPlease start the project if you want to snapshot it. \nIf removing, you can remove without a snapshot using 'ddev remove --remove-data --omit-snapshot', \nwhich will destroy your database", app.Name)
+		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf removing, you can remove without a snapshot using \n'ddev remove --remove-data --omit-snapshot', \nwhich will destroy your database", app.Name)
 	}
 
 	util.Warning("Creating database snapshot %s", snapshotName)
@@ -920,7 +920,7 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 	// Remove all the containers and volumes for app.
 	err = Cleanup(app)
 	if err != nil {
-		return fmt.Errorf("failed to remove ddev project %s: %v", app.GetName(), err)
+		return err
 	}
 
 	// Remove data/database/hostname if we need to.

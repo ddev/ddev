@@ -58,7 +58,7 @@ To snapshot the database on remove, use "ddev remove --snapshot"; A snapshot is 
 			// We do the snapshot if either --snapshot or --remove-data UNLESS omit-snapshot is set
 			doSnapshot := ((createSnapshot || removeData) && !omitSnapshot)
 			if err := app.Down(removeData, doSnapshot); err != nil {
-				util.Failed("Failed to remove ddev project %s: %v", app.GetName(), err)
+				util.Failed("Failed to remove project %s: \n%v", app.GetName(), err)
 			}
 
 			util.Success("Project %s has been removed.", app.GetName())
