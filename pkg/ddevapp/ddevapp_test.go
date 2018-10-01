@@ -1541,24 +1541,46 @@ func TestWebserverType(t *testing.T) {
 	for _, site := range TestSites {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s GetAllURLs", site.Name))
 
-		testcommon.ClearDockerEnv()
 		app := new(ddevapp.DdevApp)
 
 		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		// Copy our phpinfo into the docroot of testsite.
+		pwd, err := os.Getwd()
+		assert.NoError(err)
+		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "phpinfo.php"), filepath.Join(app.AppRoot, app.Docroot, "phpinfo.php"))
+
 		assert.NoError(err)
 		for _, app.WebserverType = range []string{"apache-fpm", "apache-cgi", "nginx-fpm"} {
 
 			err = app.WriteConfig()
 			assert.NoError(err)
 
+			testcommon.ClearDockerEnv()
+
 			err = app.Start()
 			assert.NoError(err)
 
-			out, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
+			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/phpinfo.php")
 			assert.NoError(err)
-			_ = out
+
+			expectedServerType := "Apache/2.4"
+			if app.WebserverType == "nginx-fpm" {
+				expectedServerType = "nginx/1"
+			}
+			//assert.Contains(resp.Header["Server"], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
+			assert.Contains(out, "$_SERVER['SERVER_SOFTWARE']</td><td class=\"v\">"+expectedServerType, "For app.WebserverType=%s expected $_SERVER['SERVER_SOFTWARE'] to show %s", app.WebserverType, expectedServerType)
+
 		}
 
+		// Set the apptype back to whatever the default was so we don't break any following tests.
+		testVar := os.Getenv("DDEV_TEST_WEBSERVER_TYPE")
+		if testVar != "" {
+			app.WebserverType = testVar
+			err = app.WriteConfig()
+			assert.NoError(err)
+		}
 		err = app.Stop()
 		assert.NoError(err)
 
