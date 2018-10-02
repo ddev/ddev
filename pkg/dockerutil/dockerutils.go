@@ -112,7 +112,7 @@ func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, e
 	// If we couldn't find a match return a list with a single (empty) element alongside the error.
 	if len(containerMatches) < 1 {
 		containerMatches = []docker.APIContainers{{}}
-		returnError = fmt.Errorf("could not find containers which matched search criteria: %+v", labels)
+		returnError = fmt.Errorf("unable to find any running or stopped containers")
 	}
 
 	return containerMatches, returnError

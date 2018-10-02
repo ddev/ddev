@@ -125,7 +125,7 @@ func (app *DdevApp) Init(basePath string) error {
 			return fmt.Errorf("a project (web container) in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot)
 		}
 		return nil
-	} else if strings.Contains(err.Error(), "could not find containers") {
+	} else if strings.Contains(err.Error(), "unable to find any running or stopped containers") {
 		// Init() is just putting together the DdevApp struct, the containers do
 		// not have to exist (app doesn't have to have been started, so the fact
 		// we didn't find any is not an error.
@@ -857,10 +857,7 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 	}
 
 	if app.SiteStatus() != SiteRunning {
-		err = app.Start()
-		if err != nil {
-			return snapshotName, fmt.Errorf("Failed to start project %s to snapshot database: %v", app.Name, err)
-		}
+		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf removing, you can remove without a snapshot using \n'ddev remove --remove-data --omit-snapshot', \nwhich will destroy your database", app.Name)
 	}
 
 	util.Warning("Creating database snapshot %s", snapshotName)
@@ -924,7 +921,7 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 	// Remove all the containers and volumes for app.
 	err = Cleanup(app)
 	if err != nil {
-		return fmt.Errorf("failed to remove ddev project %s: %v", app.GetName(), err)
+		return err
 	}
 
 	// Remove data/database/hostname if we need to.
