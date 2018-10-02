@@ -598,7 +598,19 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
 	err = app.RestoreSnapshot("d7testerTest2")
 	assert.NoError(err)
-	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
+	//testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
+
+	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
+	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetHTTPURL(), err)
+	assert.Contains(body, "d7 tester test 2 has 2 nodes")
+	if err != nil {
+		t.Logf("resp after timeout: %v", resp)
+		stdout := testcommon.CaptureUserOut()
+		err = app.Logs("web", false, false, "")
+		assert.NoError(err)
+		out := stdout()
+		t.Logf("web container logs after timeout: %s", out)
+	}
 
 	err = app.Down(true, false)
 	assert.NoError(err)
