@@ -20,6 +20,7 @@ RUN chmod ugo+x /healthcheck.sh
 # But make sure these are right
 RUN chmod ugo+wx /mnt /var/tmp
 RUN chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
+RUN ln -s /dev/stderr /var/log/mysqld.err
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 

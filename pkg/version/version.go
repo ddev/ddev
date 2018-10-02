@@ -31,7 +31,7 @@ var WebTag = "20180925_php_ini_disable_functions" // Note that this can be overr
 var DBImg = "drud/ddev-dbserver"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "20180922_upgrade_debian_stretch" // Note that this may be overridden by make
+var DBTag = "20180929_mariadb_stderr" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"

@@ -442,9 +442,9 @@ The `ddev ssh` command will open an interactive bash shell session to the contai
 
 ### Log Access
 
-The `ddev logs` command allows you to easily retrieve error logs from the web container (both nginx/apache and php-fpm logs are concatenated). To follow the log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail.
+The `ddev logs` command allows you to easily view error logs from the web container (both nginx/apache and php-fpm logs are concatenated). To follow the log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. Similarly, `ddev logs -s db` will show logs from a running or stopped db container.
 
-To manually review additional log files use the `ddev ssh` command and review logs in /var/log and /var/log/nginx or /var/log/apache2. The web server stores access logs at `/var/log/nginx/access.log` or `/var/log/apache2/access.log`, and PHP-FPM (for nginx-fpm and apache-fpm webservers) stores logs at `/var/log/php-fpm.log`.
+To manually review additional log files use the `ddev ssh` command and review logs in /var/log and /var/log/nginx or /var/log/apache2. The web server stores access logs at `/var/log/nginx/access.log` or `/var/log/apache2/access.log`, for example.  (Error logs from webservers and php-fpm are *not* stored in logfiles but instead are captured by `ddev logs`.)
 
 ## Stopping a project
 
