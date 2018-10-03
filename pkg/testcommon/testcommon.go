@@ -28,6 +28,12 @@ import (
 	"testing"
 )
 
+// URIWithExpect pairs a URI like "/readme.html" with some substring content "should be found in URI"
+type URIWithExpect struct {
+	URI    string
+	Expect string
+}
+
 // TestSite describes a site for testing, with name, URL of tarball, and optional dir.
 type TestSite struct {
 	// Name is the generic name of the site, and is used as the default dir.
@@ -55,9 +61,8 @@ type TestSite struct {
 	// Type is the type of application. This can be specified when a config file is not present
 	// for a test site.
 	Type string
-	// Safe200URL is a string of a url that can be accessed for testing a site
-	// that has not yet been installed
-	Safe200URL string
+	// Safe200URIWithExpectation provides a static URI with contents that it can be expected to contain.
+	Safe200URIWithExpectation URIWithExpect
 	// FullSiteArchiveExtPath is the path that should be extracted from inside an archive when
 	// importing the files from a full site archive
 	FullSiteArchiveExtPath string
@@ -351,12 +356,13 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, *http.Response, 
 	if err != nil {
 		t.Fatalf("Failed to parse url %s: %v", rawurl, err)
 	}
+	port := u.Port()
 
 	dockerIP, err := dockerutil.GetDockerIP()
 	assert.NoError(err)
 
-	fakeHost := u.Hostname()
-	u.Host = dockerIP
+	fakeHost := u.Hostname() + ":" + port
+	u.Host = dockerIP + ":" + port
 	localAddress := u.String()
 
 	timeout := time.Duration(10 * time.Second)

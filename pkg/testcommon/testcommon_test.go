@@ -23,7 +23,7 @@ var TestSites = []TestSite{
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		Docroot:                       "htdocs",
 		Type:                          "wordpress",
-		Safe200URL:                    "/readme.html",
+		Safe200URIWithExpectation:     URIWithExpect{"/readme.html", "Welcome. WordPress is a very special project to me."},
 	},
 }
 
@@ -169,13 +169,13 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	safeURL := app.GetHTTPURL() + site.Safe200URL
+	safeURL := app.GetHTTPURL() + site.Safe200URIWithExpectation.URI
 	out, _, err := GetLocalHTTPResponse(t, safeURL)
 	assert.NoError(err)
-	assert.Contains(out, "Famous 5-minute install")
+	assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 
 	// This does the same thing as previous, but worth exercising it here.
-	EnsureLocalHTTPContent(t, safeURL, "Famous 5-minute install")
+	EnsureLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect)
 	err = app.Down(true, false)
 	assert.NoError(err)
 
