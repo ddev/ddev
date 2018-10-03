@@ -1671,6 +1671,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
+		//nolint: vet
 		for _, pair := range []testcommon.PortPair{{"80", "443"}, {"8080", "8443"}} {
 			testcommon.ClearDockerEnv()
 			app.RouterHTTPPort = pair.HTTPPort
@@ -1686,8 +1687,8 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 
 			// Ensure that we can access the same URL from within the web container (via router)
-			//nolint: vetshadow
-			out, _, err := app.Exec("web", "curl", "-sk", app.GetHTTPURL()+site.Safe200URIWithExpectation.URI)
+			var out string
+			out, _, err = app.Exec("web", "curl", "-sk", app.GetHTTPURL()+site.Safe200URIWithExpectation.URI)
 			assert.NoError(err)
 			assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 

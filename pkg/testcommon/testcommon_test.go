@@ -177,6 +177,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		assert.NoError(err)
 
 		safeURL := app.GetHTTPURL() + site.Safe200URIWithExpectation.URI
+		//nolint: vetshadow
 		out, _, err := GetLocalHTTPResponse(t, safeURL)
 		assert.NoError(err)
 		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
