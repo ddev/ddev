@@ -40,7 +40,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
 			Docroot:                       "htdocs",
 			Type:                          "wordpress",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{"/readme.html", "Welcome. WordPress is a very special project to me."},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 		},
 		{
 			Name:                          "TestPkgDrupal8",
@@ -53,7 +53,7 @@ var (
 			FullSiteTarballURL:            "",
 			Type:                          "drupal8",
 			Docroot:                       "",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{"/README.txt", "Drupal is an open source content management platform"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 		},
 		{
 			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
@@ -64,7 +64,7 @@ var (
 			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
 			Docroot:                       "docroot",
 			Type:                          "drupal7",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{"/README.txt", "Drupal is an open source content management platform"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 			FullSiteArchiveExtPath:        "docroot/sites/default/files",
 		},
 		{
@@ -75,7 +75,7 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          "drupal6",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{"/CHANGELOG.txt", "Drupal 6.38, 2016-02-24"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
 		},
 		{
 			Name:                          "TestPkgBackdrop",
@@ -85,7 +85,7 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          "backdrop",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{"/README.md", "Backdrop is a full-featured content management system"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
 		},
 		{
 			Name:                          "TestPkgTypo3",
@@ -95,7 +95,7 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          "typo3",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{"/INSTALL.md", "TYPO3 is an open source PHP based web content management"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/INSTALL.md", Expect: "TYPO3 is an open source PHP based web content management"},
 		},
 	}
 	FullTestSites = TestSites
@@ -1691,6 +1691,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 
 			// Ensure that we can access the same URL from within the web container (via router)
+			//nolint: vetshadow
 			out, _, err := app.Exec("web", "curl", "-sk", app.GetHTTPURL()+site.Safe200URIWithExpectation.URI)
 			assert.NoError(err)
 			assert.Contains(out, site.Safe200URIWithExpectation.Expect)

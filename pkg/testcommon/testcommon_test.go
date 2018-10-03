@@ -23,7 +23,7 @@ var TestSites = []TestSite{
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		Docroot:                       "htdocs",
 		Type:                          "wordpress",
-		Safe200URIWithExpectation:     URIWithExpect{"/readme.html", "Welcome. WordPress is a very special project to me."},
+		Safe200URIWithExpectation:     URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 	},
 }
 

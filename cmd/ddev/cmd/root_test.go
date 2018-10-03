@@ -30,6 +30,7 @@ var (
 		HTTPProbeURI:                  "wp-admin/setup-config.php",
 		Docroot:                       "htdocs",
 		Type:                          "wordpress",
+		Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 	},
 	}
 )
