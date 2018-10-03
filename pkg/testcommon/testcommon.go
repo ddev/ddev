@@ -361,8 +361,13 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, *http.Response, 
 	dockerIP, err := dockerutil.GetDockerIP()
 	assert.NoError(err)
 
-	fakeHost := u.Hostname() + ":" + port
-	u.Host = dockerIP + ":" + port
+	fakeHost := u.Hostname()
+	u.Host = dockerIP
+	// Add the port if there is one.
+	if port != "" {
+		fakeHost = u.Hostname() + ":" + port
+		u.Host = dockerIP + ":" + port
+	}
 	localAddress := u.String()
 
 	timeout := time.Duration(10 * time.Second)
@@ -413,4 +418,10 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string)
 	body, _, err := GetLocalHTTPResponse(t, rawurl)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
 	assert.Contains(body, expectedContent)
+}
+
+// PortPair is for tests to use naming portsets for tests
+type PortPair struct {
+	HTTPPort  string
+	HTTPSPort string
 }

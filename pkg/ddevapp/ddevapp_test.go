@@ -1659,11 +1659,6 @@ func TestDbMigration(t *testing.T) {
 	switchDir()
 }
 
-type portPair struct {
-	httpPort  string
-	httpsPort string
-}
-
 // TestInternalAndExternalAccessToURL checks we can access content from host and from inside container by URL (with port)
 func TestInternalAndExternalAccessToURL(t *testing.T) {
 	assert := asrt.New(t)
@@ -1676,10 +1671,10 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		for _, pair := range []portPair{{"80", "443"}, {"8080", "8443"}} {
+		for _, pair := range []testcommon.PortPair{{"80", "443"}, {"8080", "8443"}} {
 			testcommon.ClearDockerEnv()
-			app.RouterHTTPPort = pair.httpPort
-			app.RouterHTTPSPort = pair.httpsPort
+			app.RouterHTTPPort = pair.HTTPPort
+			app.RouterHTTPSPort = pair.HTTPSPort
 			err = app.WriteConfig()
 			assert.NoError(err)
 
