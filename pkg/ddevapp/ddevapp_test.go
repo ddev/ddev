@@ -310,9 +310,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		err = app.Stop()
-		assert.NoError(err)
-		err = app.Down(false, false)
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -1521,6 +1519,13 @@ func TestGetAllURLs(t *testing.T) {
 
 		assert.True(exists, "URL list for app: %s does not contain direct web container address: %s", app.Name, expectedDirectAddress)
 
+		// Multiple projects can't run at the same time with the fqdns, so we need to clean
+		// up these for tests that run later.
+		app.AdditionalFQDNs = []string{}
+		app.AdditionalHostnames = []string{}
+		err = app.WriteConfig()
+		assert.NoError(err)
+
 		err = app.Stop()
 		assert.NoError(err)
 
@@ -1679,6 +1684,10 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			err = app.WriteConfig()
 			assert.NoError(err)
 
+			if app.SiteStatus() == ddevapp.SiteStopped || app.SiteStatus() == ddevapp.SiteRunning {
+				err = app.Down(true, false)
+				assert.NoError(err)
+			}
 			err = app.Start()
 			assert.NoError(err)
 
