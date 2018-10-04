@@ -63,6 +63,8 @@ type TestSite struct {
 	Type string
 	// Safe200URIWithExpectation provides a static URI with contents that it can be expected to contain.
 	Safe200URIWithExpectation URIWithExpect
+	// DynamicURI provides a dynamic (after db load) URI with contents we can expect.
+	DynamicURI URIWithExpect
 	// FullSiteArchiveExtPath is the path that should be extracted from inside an archive when
 	// importing the files from a full site archive
 	FullSiteArchiveExtPath string
