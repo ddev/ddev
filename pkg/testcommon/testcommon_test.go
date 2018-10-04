@@ -23,7 +23,7 @@ var TestSites = []TestSite{
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		Docroot:                       "htdocs",
 		Type:                          "wordpress",
-		Safe200URL:                    "/readme.html",
+		Safe200URIWithExpectation:     URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 	},
 }
 
@@ -166,16 +166,36 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	err = app.Start()
+	for _, pair := range []PortPair{{"80", "443"}, {"8080", "8443"}} {
+		ClearDockerEnv()
+		app.RouterHTTPPort = pair.HTTPPort
+		app.RouterHTTPSPort = pair.HTTPSPort
+		err = app.WriteConfig()
+		assert.NoError(err)
+
+		err = app.Start()
+		assert.NoError(err)
+
+		safeURL := app.GetHTTPURL() + site.Safe200URIWithExpectation.URI
+		//nolint: vetshadow
+		out, _, err := GetLocalHTTPResponse(t, safeURL)
+		assert.NoError(err)
+		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
+
+		safeURL = app.GetHTTPSURL() + site.Safe200URIWithExpectation.URI
+		out, _, err = GetLocalHTTPResponse(t, safeURL)
+		assert.NoError(err)
+		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
+
+		// This does the same thing as previous, but worth exercising it here.
+		EnsureLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect)
+	}
+	// Set the ports back to the default was so we don't break any following tests.
+	app.RouterHTTPSPort = "443"
+	app.RouterHTTPPort = "80"
+	err = app.WriteConfig()
 	assert.NoError(err)
 
-	safeURL := app.GetHTTPURL() + site.Safe200URL
-	out, _, err := GetLocalHTTPResponse(t, safeURL)
-	assert.NoError(err)
-	assert.Contains(out, "Famous 5-minute install")
-
-	// This does the same thing as previous, but worth exercising it here.
-	EnsureLocalHTTPContent(t, safeURL, "Famous 5-minute install")
 	err = app.Down(true, false)
 	assert.NoError(err)
 

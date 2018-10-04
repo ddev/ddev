@@ -78,6 +78,9 @@ services:
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
     extra_hosts: ["{{ .extra_host }}"]
+    external_links:
+      - ddev-router:$DDEV_HOSTNAME
+
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE

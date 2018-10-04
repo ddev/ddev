@@ -40,7 +40,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
 			Docroot:                       "htdocs",
 			Type:                          "wordpress",
-			Safe200URL:                    "/readme.html",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 		},
 		{
 			Name:                          "TestPkgDrupal8",
@@ -53,7 +53,7 @@ var (
 			FullSiteTarballURL:            "",
 			Type:                          "drupal8",
 			Docroot:                       "",
-			Safe200URL:                    "/README.txt",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 		},
 		{
 			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
@@ -64,7 +64,7 @@ var (
 			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
 			Docroot:                       "docroot",
 			Type:                          "drupal7",
-			Safe200URL:                    "/README.txt",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 			FullSiteArchiveExtPath:        "docroot/sites/default/files",
 		},
 		{
@@ -75,7 +75,7 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          "drupal6",
-			Safe200URL:                    "/CHANGELOG.txt",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
 		},
 		{
 			Name:                          "TestPkgBackdrop",
@@ -85,7 +85,7 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          "backdrop",
-			Safe200URL:                    "/README.md",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
 		},
 		{
 			Name:                          "TestPkgTypo3",
@@ -95,7 +95,7 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          "typo3",
-			Safe200URL:                    "/INSTALL.md",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/INSTALL.md", Expect: "TYPO3 is an open source PHP based web content management"},
 		},
 	}
 	FullTestSites = TestSites
@@ -297,16 +297,10 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
-		dockerIP, err := dockerutil.GetDockerIP()
-		assert.NoError(err)
 		for _, hostname := range app.GetHostnames() {
-			o := util.NewHTTPOptions("http://" + dockerIP + site.Safe200URL)
-			o.ExpectedStatus = 200
-			o.Timeout = 5
-			o.TickerInterval = 1
-			o.Headers["Host"] = hostname
-			err = util.EnsureHTTPStatus(o)
-			assert.NoError(err)
+			testcommon.EnsureLocalHTTPContent(t, "http://"+hostname+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			testcommon.EnsureLocalHTTPContent(t, "https://"+hostname+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+
 		}
 
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean
@@ -316,9 +310,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		err = app.Stop()
-		assert.NoError(err)
-		err = app.Down(false, false)
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -1527,6 +1519,13 @@ func TestGetAllURLs(t *testing.T) {
 
 		assert.True(exists, "URL list for app: %s does not contain direct web container address: %s", app.Name, expectedDirectAddress)
 
+		// Multiple projects can't run at the same time with the fqdns, so we need to clean
+		// up these for tests that run later.
+		app.AdditionalFQDNs = []string{}
+		app.AdditionalHostnames = []string{}
+		err = app.WriteConfig()
+		assert.NoError(err)
+
 		err = app.Stop()
 		assert.NoError(err)
 
@@ -1663,6 +1662,60 @@ func TestDbMigration(t *testing.T) {
 
 	runTime()
 	switchDir()
+}
+
+// TestInternalAndExternalAccessToURL checks we can access content from host and from inside container by URL (with port)
+func TestInternalAndExternalAccessToURL(t *testing.T) {
+	assert := asrt.New(t)
+
+	for _, site := range TestSites {
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestInternalAndExternalAccessToURL", site.Name))
+
+		app := new(ddevapp.DdevApp)
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		//nolint: vet
+		for _, pair := range []testcommon.PortPair{{"80", "443"}, {"8080", "8443"}} {
+			testcommon.ClearDockerEnv()
+			app.RouterHTTPPort = pair.HTTPPort
+			app.RouterHTTPSPort = pair.HTTPSPort
+			err = app.WriteConfig()
+			assert.NoError(err)
+
+			if app.SiteStatus() == ddevapp.SiteStopped || app.SiteStatus() == ddevapp.SiteRunning {
+				err = app.Down(true, false)
+				assert.NoError(err)
+			}
+			err = app.Start()
+			assert.NoError(err)
+
+			// Ensure that we can access from the host even with extra port specifications.
+			testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+
+			// Ensure that we can access the same URL from within the web container (via router)
+			var out string
+			out, _, err = app.Exec("web", "curl", "-sk", app.GetHTTPURL()+site.Safe200URIWithExpectation.URI)
+			assert.NoError(err)
+			assert.Contains(out, site.Safe200URIWithExpectation.Expect)
+
+			out, _, err = app.Exec("web", "curl", "-sk", app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI)
+			assert.NoError(err)
+			assert.Contains(out, site.Safe200URIWithExpectation.Expect)
+		}
+
+		// Set the ports back to the default was so we don't break any following tests.
+		app.RouterHTTPSPort = "443"
+		app.RouterHTTPPort = "80"
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app.Stop()
+		assert.NoError(err)
+
+		runTime()
+	}
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app
