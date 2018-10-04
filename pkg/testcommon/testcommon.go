@@ -372,7 +372,9 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, *http.Response, 
 	}
 	localAddress := u.String()
 
-	timeout := time.Duration(10 * time.Second)
+	// Use a 40-second timeout; some queries are against a db-backed CMS;
+	// sometimes there are lots of docker projects going
+	timeout := time.Duration(40 * time.Second)
 
 	// Ignore https cert failure, since we are in testing environment.
 	insecureTransport := &http.Transport{

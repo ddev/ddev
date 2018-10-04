@@ -41,6 +41,7 @@ var (
 			Docroot:                       "htdocs",
 			Type:                          "wordpress",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
 		},
 		{
 			Name:                          "TestPkgDrupal8",
@@ -54,6 +55,7 @@ var (
 			Type:                          "drupal8",
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "this is a post with an image"},
 		},
 		{
 			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
@@ -65,6 +67,7 @@ var (
 			Docroot:                       "docroot",
 			Type:                          "drupal7",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/drinks/guy-mug", Expect: "\"The Guy\" Mug"},
 			FullSiteArchiveExtPath:        "docroot/sites/default/files",
 		},
 		{
@@ -76,6 +79,7 @@ var (
 			Docroot:                       "",
 			Type:                          "drupal6",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
 		},
 		{
 			Name:                          "TestPkgBackdrop",
@@ -86,6 +90,7 @@ var (
 			Docroot:                       "",
 			Type:                          "backdrop",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/nothing", Expect: "Backdrop doesn't come up yet because of config directory"},
 		},
 		{
 			Name:                          "TestPkgTypo3",
@@ -96,6 +101,7 @@ var (
 			Docroot:                       "",
 			Type:                          "typo3",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/INSTALL.md", Expect: "TYPO3 is an open source PHP based web content management"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/someting", Expect: "Haven't got this working yet"},
 		},
 	}
 	FullTestSites = TestSites
@@ -522,6 +528,53 @@ func TestDdevImportDB(t *testing.T) {
 			err = app.ImportDB(cachedArchive, "data.sql")
 			assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
 		}
+		// We don't want all the projects running at once.
+		err = app.Stop()
+		assert.NoError(err)
+
+		runTime()
+		switchDir()
+	}
+}
+
+// TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
+// we have a spot-test success hit on a URL
+func TestDdevFullSiteSetup(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	for _, site := range TestSites {
+		switchDir := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevFullSiteSetup", site.Name))
+
+		testcommon.ClearDockerEnv()
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		if site.DBTarURL != "" {
+			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
+			assert.NoError(err)
+			err = app.ImportDB(cachedArchive, "")
+			assert.NoError(err)
+
+			// Make sure that the loaded site at least does something.
+			testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.DynamicURI.URI, site.DynamicURI.Expect)
+
+			assert.NoError(err)
+		}
+		if site.FilesTarballURL != "" {
+			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+			assert.NoError(err)
+			err = app.ImportFiles(tarballPath, "")
+			assert.NoError(err)
+		}
+
+		// Make sure that the loaded site at least does something.
+		testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.DynamicURI.URI, site.DynamicURI.Expect)
+
+		// We don't want all the projects running at once.
+		err = app.Stop()
+		assert.NoError(err)
 
 		runTime()
 		switchDir()
