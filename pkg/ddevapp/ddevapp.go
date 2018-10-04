@@ -989,7 +989,7 @@ func (app *DdevApp) GetWebContainerDirectURL() string {
 	if err != nil {
 		util.Warning("Unable to get Docker IP: %v", err)
 	}
-	port, err := app.GetWebContainerPublicPort()
+	port, _ := app.GetWebContainerPublicPort()
 	return fmt.Sprintf("http://%s:%d", dockerIP, port)
 }
 
