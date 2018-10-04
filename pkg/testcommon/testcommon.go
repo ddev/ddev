@@ -109,6 +109,9 @@ func (site *TestSite) Prepare() error {
 		return errors.Errorf("Detected apptype does not match provided apptype")
 	}
 
+	err = app.ConfigFileOverrideAction()
+	util.CheckErr(err)
+
 	err = app.WriteConfig()
 	if err != nil {
 		return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", site.Name, site.Dir, err)

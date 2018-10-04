@@ -74,8 +74,9 @@ var (
 			Name:                          "TestPkgDrupal6",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-6.38/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal6_db.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_db.tar.gz",
 			FullSiteTarballURL:            "",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
 			Type:                          "drupal6",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
@@ -551,6 +552,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
+		err = app.Start()
+		assert.NoError(err)
+
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
@@ -571,6 +575,15 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// Make sure that the loaded site at least does something.
 		testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.DynamicURI.URI, site.DynamicURI.Expect)
+
+		// Allow for one-off probing of the individual projects
+		switch site.Name {
+		case "TestPkgDrupal6":
+			// Make sure that one of the uploaded files made it in there.
+			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/sites/default/files/garland_logo.jpg")
+			assert.NoError(err)
+			assert.Equal(resp.Header["Content-Type"][0], "image/jpeg")
+		}
 
 		// We don't want all the projects running at once.
 		err = app.Stop()
