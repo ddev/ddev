@@ -479,14 +479,17 @@ func TestDdevImportDB(t *testing.T) {
 			// Test that a settings file has correct hash_salt format
 			switch app.Type {
 			case "drupal7":
+				// nolint: vetshadow
 				drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "$drupal_hash_salt")
 				assert.NoError(err)
 				assert.True(drupalHashSalt)
 			case "drupal8":
+				// nolint: vetshadow
 				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "settings['hash_salt']")
 				assert.NoError(err)
 				assert.True(settingsHashSalt)
 			case "wordpress":
+				// nolint: vetshadow
 				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
 				assert.NoError(err)
 				assert.True(hasAuthSalt)
@@ -495,6 +498,7 @@ func TestDdevImportDB(t *testing.T) {
 		}
 
 		if site.DBTarURL != "" {
+			// nolint: vetshadow
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
 			err = app.ImportDB(cachedArchive, "")
@@ -510,6 +514,7 @@ func TestDdevImportDB(t *testing.T) {
 		}
 
 		if site.DBZipURL != "" {
+			// nolint: vetshadow
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteZipArchive", "", site.DBZipURL)
 
 			assert.NoError(err)
@@ -524,6 +529,7 @@ func TestDdevImportDB(t *testing.T) {
 		}
 
 		if site.FullSiteTarballURL != "" {
+			// nolint: vetshadow
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_FullSiteTarballURL", "", site.FullSiteTarballURL)
 			assert.NoError(err)
 
@@ -557,6 +563,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NoError(err)
 
 		if site.DBTarURL != "" {
+			// nolint: vetshadow
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
 			err = app.ImportDB(cachedArchive, "")
@@ -568,6 +575,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			assert.NoError(err)
 		}
 		if site.FilesTarballURL != "" {
+			// nolint: vetshadow
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			assert.NoError(err)
 			err = app.ImportFiles(tarballPath, "")
@@ -581,10 +589,12 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		switch site.Name {
 		case "TestPkgDrupal6":
 			// Make sure that one of the uploaded files made it in there.
+			// nolint: vetshadow
 			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/sites/default/files/garland_logo.jpg")
 			assert.NoError(err)
 			assert.Equal(resp.Header["Content-Type"][0], "image/jpeg")
 		case "TestPkgBackdrop":
+			// nolint: vetshadow
 			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/files/styles/large/public/field/image/kittens-large.jpg")
 			assert.NoError(err)
 			assert.Equal(resp.Header["Content-Type"][0], "image/jpeg")
