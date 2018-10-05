@@ -84,14 +84,15 @@ var (
 		},
 		{
 			Name:                          "TestPkgBackdrop",
-			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.9.2.tar.gz",
-			ArchiveInternalExtractionPath: "backdrop-1.9.2/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/backdrop_db.tar.gz",
+			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.11.0.tar.gz",
+			ArchiveInternalExtractionPath: "backdrop-1.11.0/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/backdrop_db.11.0.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/backdrop_files.11.0.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          "backdrop",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/nothing", Expect: "Backdrop doesn't come up yet because of config directory"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/first-post-all-about-kittens", Expect: "Lots of kittens are a good thing"},
 		},
 		{
 			Name:                          "TestPkgTypo3",
@@ -583,10 +584,14 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/sites/default/files/garland_logo.jpg")
 			assert.NoError(err)
 			assert.Equal(resp.Header["Content-Type"][0], "image/jpeg")
+		case "TestPkgBackdrop":
+			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/files/styles/large/public/field/image/kittens-large.jpg")
+			assert.NoError(err)
+			assert.Equal(resp.Header["Content-Type"][0], "image/jpeg")
 		}
 
 		// We don't want all the projects running at once.
-		err = app.Stop()
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
