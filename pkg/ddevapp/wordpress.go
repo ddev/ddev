@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"io/ioutil"
-
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -92,35 +90,13 @@ const wordpressSettingsTemplate = `<?php
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
+/** Absolute path to the WordPress directory. */
+define('ABSPATH', dirname(__FILE__) . '/');
+
 // Automatically generated include for settings managed by ddev.
 if (file_exists(getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}')) {
 	require_once getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}';
 }
-
-/** Absolute path to the WordPress directory. */
-if (!defined('ABSPATH'))
-	define('ABSPATH', dirname(__FILE__) . '/');
-
-/**
-Sets up WordPress vars and included files.
-*/
-require_once(ABSPATH . '/wp-settings.php');
-`
-
-const wordpressSettingsAppendTemplate = `{{ $config := . }}
-// Automatically generated include for settings managed by ddev.
-if (file_exists(getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}')) {
-	require_once getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}';
-}
-
-/** Absolute path to the WordPress directory. */
-if (!defined('ABSPATH'))
-	define('ABSPATH', dirname(__FILE__) . '/');
-
-/**
-Sets up WordPress vars and included files.
-*/
-require_once(ABSPATH . '/wp-settings.php');
 `
 
 const wordpressDdevSettingsTemplate = `<?php
@@ -131,75 +107,25 @@ This file is managed by ddev and may be deleted or overwritten.
 */
 
 /** The name of the database for WordPress */
-if (!defined('DB_NAME'))
-	define( 'DB_NAME', '{{ $config.DatabaseName }}' );
+define('DB_NAME', '{{ $config.DatabaseName }}');
 
 /** MySQL database username */
-if (!defined('DB_USER'))
-	define( 'DB_USER', '{{ $config.DatabaseUsername }}' );
+define('DB_USER', '{{ $config.DatabaseUsername }}');
 
 /** MySQL database password */
-if (!defined('DB_PASSWORD'))
-	define( 'DB_PASSWORD', '{{ $config.DatabasePassword }}' );
+define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
 
 /** MySQL hostname */
-if (!defined('DB_HOST'))
-	define( 'DB_HOST', '{{ $config.DatabaseHost }}' );
+define('DB_HOST', '{{ $config.DatabaseHost }}');
 
-/** Database Charset to use in creating database tables. */
-if (!defined('DB_CHARSET'))
-	define( 'DB_CHARSET', 'utf8mb4' );
+/** Enable debug */
+define('WP_DEBUG', true);
 
-/** The Database Collate type. */
-if (!defined('DB_COLLATE'))
-	define( 'DB_COLLATE', '');
-
-/**
- * WordPress Database Table prefix.
- */
-if (!isset($table_prefix))
-	$table_prefix  = '{{ $config.TablePrefix }}';
-
-/**
- * For developers: WordPress debugging mode.
- */
- if (!defined('WP_DEBUG'))
-	define('WP_DEBUG', false);
-
-/**#@+
- * Authentication Unique Keys and Salts.
- */
-if (!defined('AUTH_KEY'))
-	define('AUTH_KEY',         	'{{ $config.AuthKey }}');
-
-if (!defined('SECURE_AUTH_KEY'))
-	define('SECURE_AUTH_KEY',  	'{{ $config.SecureAuthKey }}');
-
-if (!defined('LOGGED_IN_KEY'))
-	define('LOGGED_IN_KEY',    	'{{ $config.LoggedInKey }}');
-
-if (!defined('NONCE_KEY'))
-	define('NONCE_KEY',        	'{{ $config.NonceKey }}');
-
-if (!defined('AUTH_SALT'))
-	define('AUTH_SALT',        	'{{ $config.AuthSalt }}');
-
-if (!defined('SECURE_AUTH_SALT'))
-	define('SECURE_AUTH_SALT', 	'{{ $config.SecureAuthSalt }}');
-
-if (!defined('LOGGED_IN_SALT'))
-	define('LOGGED_IN_SALT',   	'{{ $config.LoggedInSalt }}');
-
-if (!defined('NONCE_SALT'))
-	define('NONCE_SALT',       	'{{ $config.NonceSalt }}');
-
-/** site URL */
-if (!defined('WP_HOME'))
-	define('WP_HOME', '{{ $config.DeployURL }}');
+/** Site URL */
+define('WP_HOME', ($_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST']);
 
 /** WP_ENV */
-if (!defined('WP_ENV'))
-	define('WP_ENV', getenv('DDEV_ENV_NAME') ? getenv('DDEV_ENV_NAME') : 'production');
+define('WP_ENV', getenv('DDEV_ENV_NAME') ? getenv('DDEV_ENV_NAME') : 'production');
 `
 
 // createWordpressSettingsFile creates a Wordpress settings file from a
@@ -207,34 +133,20 @@ if (!defined('WP_ENV'))
 func createWordpressSettingsFile(app *DdevApp) (string, error) {
 	config := NewWordpressConfig(app)
 
-	// If the settings file does not exist, create it
-	if !fileutil.FileExists(app.SiteSettingsPath) {
-		output.UserOut.Printf("No %s file exists, creating one", config.SiteSettings)
-
-		if err := writeWordpressSettingsFile(config, app.SiteSettingsPath); err != nil {
-			return "", fmt.Errorf("failed to write %s: %v", app.SiteSettingsPath, err)
-		}
-	}
-
-	// If the settings file does not include a reference to the ddev settings, append the include
-	included, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, config.SiteSettingsLocal)
-	if err != nil {
-		return "", fmt.Errorf("failed to check for include in %s: %v", app.SiteSettingsPath, err)
-	}
-
-	if included {
-		output.UserOut.Printf("Existing %s file includes %s", config.SiteSettings, config.SiteSettingsLocal)
-	} else {
-		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", config.SiteSettings, config.SiteSettingsLocal)
-
-		if err := appendIncludeToWordpressSettingsFile(config, app.SiteSettingsPath); err != nil {
-			return "", fmt.Errorf("failed to include %s in %s: %v", config.SiteSettingsLocal, config.SiteSettings, err)
-		}
-	}
-
-	// Always write a new ddev-specific settings file
+	// Unconditionally write ddev settings file
 	if err := writeWordpressDdevSettingsFile(config, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("failed to write %s: %v", app.SiteLocalSettingsPath, err)
+		return "", err
+	}
+
+	// Check if an existing WordPress settings file exists
+	if fileutil.FileExists(app.SiteSettingsPath) {
+		// If settings file does exist, alert the user to generated ddev settings
+		output.UserOut.Printf("An existing %s file has been detected.\nddev settings have been written to %s - please alter your settings to include these values before starting this project.", app.SiteSettingsPath, app.SiteLocalSettingsPath)
+	} else {
+		// If settings file does not exist, write basic settings file including it
+		if err := writeWordpressSettingsFile(config, app.SiteSettingsPath); err != nil {
+			return "", err
+		}
 	}
 
 	return app.SiteLocalSettingsPath, nil
@@ -301,39 +213,6 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 	return nil
 }
 
-// appendIncludeToWordpressSettingsFile modifies the settings file to include the ddev-specific settings file.
-func appendIncludeToWordpressSettingsFile(config *WordpressConfig, siteSettingsPath string) error {
-	// Check if file is empty
-	contents, err := ioutil.ReadFile(siteSettingsPath)
-	if err != nil {
-		return err
-	}
-
-	// If the file is empty, write the complete settings template and return
-	if len(contents) == 0 {
-		return writeWordpressSettingsFile(config, siteSettingsPath)
-	}
-
-	// The file is not empty, open it for appending
-	file, err := os.OpenFile(siteSettingsPath, os.O_RDWR|os.O_APPEND, 0644)
-	if err != nil {
-		return err
-	}
-	defer util.CheckClose(file)
-
-	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(wordpressSettingsAppendTemplate)
-	if err != nil {
-		return err
-	}
-
-	// Write the template to the file
-	if err := tmpl.Execute(file, config); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // setWordpressSiteSettingsPaths sets the expected settings files paths for
 // a wordpress site.
 func setWordpressSiteSettingsPaths(app *DdevApp) {
@@ -349,11 +228,13 @@ func isWordpressApp(app *DdevApp) bool {
 	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp-login.php")); err == nil {
 		return true
 	}
+
 	// check for WP installed in a sub-directory
 	// TODO: Add wildcard or ENV var to make more flexible, ie wordpress/
 	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp/wp-login.php")); err == nil {
 		return true
 	}
+
 	return false
 }
 
