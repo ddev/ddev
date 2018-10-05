@@ -170,13 +170,6 @@ func TestMain(m *testing.M) {
 			continue
 		}
 
-		err = app.Start()
-		if err != nil {
-			testRun = -2
-			log.Errorf("TestMain startup: app.Start() failed on site %s, err=%v", TestSites[i].Name, err)
-			continue
-		}
-
 		runTime()
 		switchDir()
 	}
@@ -236,6 +229,8 @@ func TestDdevStart(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
+		err = app.Down(true, false)
+		assert.NoError(err)
 		runTime()
 		switchDir()
 	}
@@ -567,11 +562,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
 			err = app.ImportDB(cachedArchive, "")
-			assert.NoError(err)
-
-			// Make sure that the loaded site at least does something.
-			testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.DynamicURI.URI, site.DynamicURI.Expect)
-
 			assert.NoError(err)
 		}
 		if site.FilesTarballURL != "" {
