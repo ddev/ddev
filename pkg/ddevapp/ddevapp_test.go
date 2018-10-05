@@ -222,6 +222,9 @@ func TestDdevStart(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
+		err = app.Start()
+		assert.NoError(err)
+
 		// ensure docker-compose.yaml exists inside .ddev site folder
 		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 		assert.True(composeFile)
@@ -241,15 +244,26 @@ func TestDdevStart(t *testing.T) {
 		switchDir()
 	}
 
+	// Start up TestSites[0] again
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	assert.NoError(err)
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
 	// try to start a site of same name at different path
 	another := TestSites[0]
-	err := another.Prepare()
+	err = another.Prepare()
 	if err != nil {
 		assert.FailNow("TestDdevStart: Prepare() failed on another.Prepare(), err=%v", err)
 		return
 	}
 
-	err = app.Init(another.Dir)
+	badapp := &ddevapp.DdevApp{}
+
+	err = badapp.Init(another.Dir)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
@@ -264,6 +278,10 @@ func TestDdevStart(t *testing.T) {
 	}
 	testcommon.CleanupDir(another.Dir)
 	switchDir()
+
+	// Clean up site 0
+	err = app.Down(true, false)
+	assert.NoError(err)
 }
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
