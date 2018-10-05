@@ -596,8 +596,21 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			assert.NoError(err)
 		}
 
-		// Make sure that the loaded site at least does something.
-		testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.DynamicURI.URI, site.DynamicURI.Expect)
+		// Test static content.
+		testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		// Test dynamic php + database content.
+		//testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.DynamicURI.URI, site.DynamicURI.Expect)
+		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
+		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl)
+		assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=$v: %v", rawurl, resp, err)
+		if err != nil {
+			stdout := testcommon.CaptureUserOut()
+			err = app.Logs("web", false, false, "")
+			assert.NoError(err)
+			out := stdout()
+			t.Logf("Logs after GetLocalHTTPResponse: %s", out)
+		}
+		assert.Contains(body, site.DynamicURI.Expect)
 
 		// Load an image from the files section
 		if site.FilesImageURI != "" {
