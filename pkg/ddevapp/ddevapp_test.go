@@ -227,6 +227,7 @@ func TestDdevStart(t *testing.T) {
 		assert.True(composeFile)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
+			//nolint: vetshadow
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "running")
@@ -582,6 +583,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// Load an image from the files section
 		if site.FilesImageURI != "" {
+			// nolint: vetshadow
 			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+site.FilesImageURI)
 			assert.NoError(err)
 			assert.Equal(resp.Header["Content-Type"][0], "image/jpeg")
