@@ -65,6 +65,8 @@ type TestSite struct {
 	Safe200URIWithExpectation URIWithExpect
 	// DynamicURI provides a dynamic (after db load) URI with contents we can expect.
 	DynamicURI URIWithExpect
+	// FilesImageURI is URI to a file loaded by import-files that is a jpg.
+	FilesImageURI string
 	// FullSiteArchiveExtPath is the path that should be extracted from inside an archive when
 	// importing the files from a full site archive
 	FullSiteArchiveExtPath string
@@ -375,9 +377,9 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, *http.Response, 
 	}
 	localAddress := u.String()
 
-	// Use a 40-second timeout; some queries are against a db-backed CMS;
+	// Use a 20-second timeout; some queries are against a db-backed CMS;
 	// sometimes there are lots of docker projects going
-	timeout := time.Duration(40 * time.Second)
+	timeout := time.Duration(20 * time.Second)
 
 	// Ignore https cert failure, since we are in testing environment.
 	insecureTransport := &http.Transport{

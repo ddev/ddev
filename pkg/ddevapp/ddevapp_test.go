@@ -42,6 +42,7 @@ var (
 			Type:                          "wordpress",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
+			FilesImageURI:                 "/wp-content/uploads/2017/04/pexels-photo-265186-1024x683.jpeg",
 		},
 		{
 			Name:                          "TestPkgDrupal8",
@@ -56,6 +57,7 @@ var (
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "this is a post with an image"},
+			FilesImageURI:                 "/sites/default/files//2017-04/pexels-photo-265186.jpeg",
 		},
 		{
 			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
@@ -67,7 +69,8 @@ var (
 			Docroot:                       "docroot",
 			Type:                          "drupal7",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/drinks/guy-mug", Expect: "\"The Guy\" Mug"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/drinks/guy-mug", Expect: "The Guy&quot; Mug"},
+			FilesImageURI:                 "/sites/default/files/mug-2v1.jpg",
 			FullSiteArchiveExtPath:        "docroot/sites/default/files",
 		},
 		{
@@ -81,6 +84,7 @@ var (
 			Type:                          "drupal6",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
+			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
 		},
 		{
 			Name:                          "TestPkgBackdrop",
@@ -93,6 +97,7 @@ var (
 			Type:                          "backdrop",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/first-post-all-about-kittens", Expect: "Lots of kittens are a good thing"},
+			FilesImageURI:                 "/files/styles/large/public/field/image/kittens-large.jpg",
 		},
 		{
 			Name:                          "TestPkgTypo3",
@@ -575,17 +580,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		// Make sure that the loaded site at least does something.
 		testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.DynamicURI.URI, site.DynamicURI.Expect)
 
-		// Allow for one-off probing of the individual projects
-		switch site.Name {
-		case "TestPkgDrupal6":
-			// Make sure that one of the uploaded files made it in there.
-			// nolint: vetshadow
-			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/sites/default/files/garland_logo.jpg")
-			assert.NoError(err)
-			assert.Equal(resp.Header["Content-Type"][0], "image/jpeg")
-		case "TestPkgBackdrop":
-			// nolint: vetshadow
-			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/files/styles/large/public/field/image/kittens-large.jpg")
+		// Load an image from the files section
+		if site.FilesImageURI != "" {
+			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+site.FilesImageURI)
 			assert.NoError(err)
 			assert.Equal(resp.Header["Content-Type"][0], "image/jpeg")
 		}
