@@ -40,7 +40,7 @@ func TestDevLogs(t *testing.T) {
 		cleanup := v.Chdir()
 
 		url := "http://" + v.Name + "." + version.DDevTLD + "/logtest.php"
-		_, err = testcommon.GetLocalHTTPResponse(t, url)
+		_, _, err = testcommon.GetLocalHTTPResponse(t, url)
 		assert.NoError(err)
 
 		args := []string{"logs"}
