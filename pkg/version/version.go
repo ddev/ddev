@@ -31,7 +31,7 @@ var WebTag = "20180929_nginx_quit_immediately" // Note that this can be overridd
 var DBImg = "drud/ddev-dbserver"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "20181004_check_cms_content" // Note that this may be overridden by make
+var DBTag = "20181006_mariadb_upgrade" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
