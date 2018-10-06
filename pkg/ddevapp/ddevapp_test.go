@@ -780,6 +780,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 			// Now try to append to the file on the host.
 			// os.OpenFile() for append here fails if the file does not already exist.
+			//nolint: vetshadow
 			f, err := os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
 			assert.NoError(err)
 			_, err = f.WriteString("this addition to the file was added on the host side")
@@ -1005,6 +1006,7 @@ func TestDdevExec(t *testing.T) {
 		}
 
 		err = app.Down(true, false)
+		assert.NoError(err)
 
 		runTime()
 		switchDir()
@@ -1135,6 +1137,7 @@ func TestDdevStop(t *testing.T) {
 		assert.NoError(err)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
+			//nolint: vetshadow
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "exited")
