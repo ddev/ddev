@@ -87,6 +87,8 @@ if [ "$DDEV_XDEBUG_ENABLED" != "true" ]; then
     disable_xdebug
 fi
 
+ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
+
 echo 'Server started'
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
