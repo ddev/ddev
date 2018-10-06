@@ -1157,7 +1157,7 @@ func TestDescribe(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		// It should already be running, but start does no harm.
+		// It may already be running, but start does no harm.
 		err = app.Start()
 
 		// If we have a problem starting, get the container logs and output.
@@ -1166,7 +1166,11 @@ func TestDescribe(t *testing.T) {
 			logsErr := app.Logs("web", false, false, "")
 			assert.NoError(logsErr)
 			out := stdout()
-			assert.NoError(err, "app.Start(%s) failed: %v, web container logs=%s", site.Name, err, out)
+
+			healthcheck, inspectErr := exec.RunCommandPipe("bash", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
+			assert.NoError(inspectErr)
+
+			assert.NoError(err, "app.Start(%s) failed: %v, web container healthcheck=%s, logs=%s", site.Name, err, healthcheck, out)
 		}
 
 		desc, err := app.Describe()
@@ -1692,7 +1696,7 @@ func TestWebserverType(t *testing.T) {
 				expectedServerType = "nginx"
 			}
 			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
-			assert.Contains(out, "$_SERVER['SERVER_SOFTWARE']</td><td class=\"v\">"+expectedServerType, "For app.WebserverType=%s expected $_SERVER['SERVER_SOFTWARE'] to show %s", app.WebserverType, expectedServerType)
+			assert.Contains(out, "SERVER['SERVER_SOFTWARE']</td><td class=\"v\">"+expectedServerType, "For app.WebserverType=%s phpinfo expected SERVER['SERVER_SOFTWARE'] to show %s", app.WebserverType, expectedServerType)
 
 		}
 
