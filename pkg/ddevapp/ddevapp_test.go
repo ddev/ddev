@@ -77,7 +77,7 @@ var (
 			Name:                          "TestPkgDrupal6",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-6.38/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_db.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
 			FullSiteTarballURL:            "",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
@@ -101,14 +101,16 @@ var (
 		},
 		{
 			Name:                          "TestPkgTypo3",
-			SourceURL:                     "https://typo3.azureedge.net/typo3/8.7.10/typo3_src-8.7.10.tar.gz",
-			ArchiveInternalExtractionPath: "typo3_src-8.7.10/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/typo3git_db.tar.gz",
+			SourceURL:                     "https://github.com/drud/typo3-v9-test/archive/v0.2.2.tar.gz",
+			ArchiveInternalExtractionPath: "typo3-v9-test-0.2.2/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_db.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_files.tar.gz",
 			FullSiteTarballURL:            "",
-			Docroot:                       "",
+			Docroot:                       "public",
 			Type:                          "typo3",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/INSTALL.md", Expect: "TYPO3 is an open source PHP based web content management"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/someting", Expect: "Haven't got this working yet"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
+			FilesImageURI:                 "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
 		},
 	}
 	FullTestSites = TestSites
@@ -617,7 +619,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			// nolint: vetshadow
 			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+site.FilesImageURI)
 			assert.NoError(err)
-			assert.Equal(resp.Header["Content-Type"][0], "image/jpeg")
+			assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
 		}
 
 		// We don't want all the projects running at once.
