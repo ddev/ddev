@@ -217,6 +217,11 @@ func TestDdevStart(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
+	// Make sure this leaves us in the original test directory
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
@@ -489,6 +494,8 @@ func TestDdevImportDB(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
+		assert.NoError(err)
+		err = app.Start()
 		assert.NoError(err)
 
 		// Test simple db loads.
