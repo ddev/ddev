@@ -317,6 +317,13 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 		err = app.Start()
 		assert.NoError(err)
+		if err != nil && strings.Contains(err.Error(), "db container failed") {
+			stdout := testcommon.CaptureUserOut()
+			err = app.Logs("db", false, false, "")
+			assert.NoError(err)
+			out := stdout()
+			t.Logf("DB Logs after app.Start: \n%s\n=== END DB LOGS ===", out)
+		}
 
 		// ensure docker-compose.yaml exists inside .ddev site folder
 		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
@@ -387,7 +394,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	assert.Contains(stdout, "xdebug support => enabled")
 	assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
 
-	err = app.Stop()
+	err = app.Down(true, false)
 	assert.NoError(err)
 
 	runTime()
@@ -421,7 +428,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 	_, _, err = app.Exec("db", "bash", "-c", "mysql -e 'SELECT DATABASE();' | grep 'db'")
 	assert.NoError(err)
 
-	err = app.Stop()
+	err = app.Down(true, false)
 	assert.NoError(err)
 
 	runTime()
@@ -479,6 +486,19 @@ func TestGetApps(t *testing.T) {
 			}
 		}
 		assert.True(found, "Found testSite %s in list", testSite.Name)
+	}
+
+	// Now shut down all sites as we expect them to be shut down.
+	for _, site := range TestSites {
+		testcommon.ClearDockerEnv()
+		app := &ddevapp.DdevApp{}
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Down(true, false)
+		assert.NoError(err)
+
 	}
 }
 
@@ -565,7 +585,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
 		}
 		// We don't want all the projects running at once.
-		err = app.Stop()
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -790,6 +810,9 @@ func TestWriteableFilesDirectory(t *testing.T) {
 			assert.NoError(err)
 		}
 
+		err = app.Down(true, false)
+		assert.NoError(err)
+
 		runTime()
 		switchDir()
 	}
@@ -954,6 +977,8 @@ func TestDdevExec(t *testing.T) {
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
+		err = app.Start()
+		assert.NoError(err)
 
 		out, _, err := app.Exec("web", "pwd")
 		assert.NoError(err)
@@ -979,6 +1004,8 @@ func TestDdevExec(t *testing.T) {
 			assert.Regexp("/etc/php.*/php.ini", out)
 		}
 
+		err = app.Down(true, false)
+
 		runTime()
 		switchDir()
 
@@ -1002,6 +1029,9 @@ func TestDdevLogs(t *testing.T) {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevLogs", site.Name))
 
 		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Start()
 		assert.NoError(err)
 
 		stdout := testcommon.CaptureUserOut()
@@ -1032,7 +1062,7 @@ func TestDdevLogs(t *testing.T) {
 		out = stdout()
 		assert.Contains(out, "MySQL init process done. Ready for start up.")
 
-		err = app.Start()
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -1050,6 +1080,8 @@ func TestProcessHooks(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 		app, err := ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
+		assert.NoError(err)
+		err = app.Start()
 		assert.NoError(err)
 
 		// Note that any ExecHost commands must be able to run on Windows.
@@ -1075,6 +1107,9 @@ func TestProcessHooks(t *testing.T) {
 		assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
 		assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
 
+		err = app.Down(true, false)
+		assert.NoError(err)
+
 		runTime()
 		cleanup()
 
@@ -1094,7 +1129,8 @@ func TestDdevStop(t *testing.T) {
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
-
+		err = app.Start()
+		assert.NoError(err)
 		err = app.Stop()
 		assert.NoError(err)
 
@@ -1105,7 +1141,8 @@ func TestDdevStop(t *testing.T) {
 			assert.NoError(err)
 			assert.True(check, containerType, "container has exited")
 		}
-
+		err = app.Down(true, false)
+		assert.NoError(err)
 		runTime()
 		switchDir()
 	}
@@ -1170,7 +1207,7 @@ func TestDescribe(t *testing.T) {
 			healthcheck, inspectErr := exec.RunCommandPipe("bash", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
 			assert.NoError(inspectErr)
 
-			assert.NoError(err, "app.Start(%s) failed: %v, web container healthcheck=%s, logs=%s", site.Name, err, healthcheck, out)
+			assert.NoError(err, "app.Start(%s) failed: %v, \nweb container healthcheck='%s', \n=== web container logs=\n%s\n=== END web container logs ===", site.Name, err, healthcheck, out)
 		}
 
 		desc, err := app.Describe()
@@ -1188,6 +1225,8 @@ func TestDescribe(t *testing.T) {
 		desc, err = app.Describe()
 		assert.NoError(err)
 		assert.EqualValues(ddevapp.SiteStopped, desc["status"])
+		err = app.Down(true, false)
+		assert.NoError(err)
 		switchDir()
 	}
 }
@@ -1231,8 +1270,10 @@ func TestRouterPortsCheck(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		err = app.Stop()
-		assert.NoError(err)
+		if app.SiteStatus() == ddevapp.SiteRunning || app.SiteStatus() == ddevapp.SiteStopped {
+			err = app.Down(true, false)
+			assert.NoError(err)
+		}
 
 		switchDir()
 	}
@@ -1241,7 +1282,12 @@ func TestRouterPortsCheck(t *testing.T) {
 	site := TestSites[0]
 	testcommon.ClearDockerEnv()
 
-	app, err := ddevapp.GetActiveApp(site.Name)
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
+	app, err = ddevapp.GetActiveApp(site.Name)
 	if err != nil {
 		t.Fatalf("Failed to GetActiveApp(%s), err:%v", site.Name, err)
 	}
