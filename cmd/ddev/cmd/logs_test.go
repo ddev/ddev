@@ -1,33 +1,25 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/version"
 	"path/filepath"
 	"testing"
 
 	"os"
 
-	"io/ioutil"
-
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
-	"time"
 )
 
 // TestDevLogsNoConfig tests what happens with when running "ddev logs" when
 // the directory has not been configured (and no project name is given)
 func TestDevLogsNoConfig(t *testing.T) {
 	assert := asrt.New(t)
-
 	testDir := testcommon.CreateTmpDir("no-valid-ddev-config")
-
-	err := os.Chdir(testDir)
-	if err != nil {
-		t.Skipf("Could not change to temporary directory %s: %v", testDir, err)
-	}
+	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
 
 	args := []string{"logs"}
 	out, err := exec.RunCommand(DdevBin, args)
@@ -40,31 +32,23 @@ func TestDevLogs(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, v := range DevTestSites {
+		// Copy our fatal error php into the docroot of testsite.
+		pwd, err := os.Getwd()
+		assert.NoError(err)
+		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "logtest.php"), filepath.Join(v.Dir, v.Docroot, "logtest.php"))
+		assert.NoError(err)
 		cleanup := v.Chdir()
 
-		confByte := []byte("<?php trigger_error(\"Fatal error\", E_USER_ERROR);")
-		err := ioutil.WriteFile(filepath.Join(v.Dir, v.Docroot, "index.php"), confByte, 0644)
+		url := "http://" + v.Name + "." + version.DDevTLD + "/logtest.php"
+		_, err = testcommon.GetLocalHTTPResponse(t, url)
 		assert.NoError(err)
 
-		dockerIP, err := dockerutil.GetDockerIP()
-		assert.NoError(err)
-		o := util.NewHTTPOptions("http://" + dockerIP + "/index.php")
-		// Because php display_errors = On the error results in a 200 anyway.
-		o.ExpectedStatus = 200
-		o.Timeout = 30
-		o.Headers["Host"] = v.Name + "." + version.DDevTLD
-		err = util.EnsureHTTPStatus(o)
-		assert.NoError(err, "expected 200 status not found for project %s: %v", v.Name, err)
-
-		// logs may not respond exactly right away, wait a tiny bit.
-		time.Sleep(2 * time.Second)
 		args := []string{"logs"}
 		out, err := exec.RunCommand(DdevBin, args)
 
 		assert.NoError(err)
 		assert.Contains(string(out), "Server started")
-		assert.Contains(string(out), "PHP Fatal error:", "PHP Fatal error not found for project %s output='%s", v.Name, string(out))
-
+		assert.Contains(string(out), "Notice to demonstrate logging", "PHP notice not found for project %s output='%s", v.Name, string(out))
 		cleanup()
 	}
 }
