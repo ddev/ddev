@@ -23,6 +23,8 @@ Docker Toolbox is only recommended for systems that absolutely won't run Docker-
 
 [Chocolatey](https://chocolatey.org/install) users: `choco install docker-toolbox`
 
+On Docker Toolbox you must by default have your project directory somewhere inside your home directory, as only the home directory is shared with Docker by default.
+
 
 ## Linux Installation: Docker-ce
 
@@ -45,18 +47,32 @@ After installing docker-ce you *must* install docker-compose separately. [Follow
 
 See [Docker's post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user). You need to add your linux user to the "docker" group. and normally set up docker to start on boot.
 
+<a name="troubleshooting"></a>
+## Testing and Troubleshooting Your Docker Installation
 
-## Testing Your Docker Installation
+Docker needs to be able to a few things for ddev to work:
 
-macOS or Linux: Run `docker-compose version && docker run -t -p 80:80 -v "$PWD:/tmp/homedir" busybox:latest ls /tmp/homedir` - you should see the contents of your home directory displayed.
+* Mount the project code directory from the host into the container; the project code directory is usually somewhere in a subdirectory of your home directory. 
+* Mount ~/.ddev for SSL cert cache and import-db. 
+* Access TCP ports on the host to serve HTTP and HTTPS. These are ports 80 and 443 by default, but they can be changed on a per-project basis.
 
-Windows in cmd window: Run `docker run -t -p 80:80 -v "%USERPROFILE%:/tmp/homedir" busybox ls /tmp/homedir` - you should see the contents of your home directory displayed.
+So we can use a single docker command to make sure that docker is set up to do what we want:
 
-Windows in git-bash window: run ` docker run -t -p 80:80 -v "$USERPROFILE:/tmp/homedir" busybox ls //tmp/homedir` - you should see the contents of your home directory displayed.
+**On Windows this command should be run in git-bash (or Docker Quickstart Terminal with Docker Toolbox).** In your project directory run `docker run --rm -t -p 80:80 -v "/$PWD:/tmp/projdir" -v "/$HOME:/tmp/homedir" busybox sh -c "echo ---- Project Directory && ls //tmp/projdir && echo ---- Home Directory && ls //tmp/homedir"` - you should see the contents of your home directory displayed. (On Windows, make sure you do this using git-bash or Docker Quickstart Terminal.)
 
-If any of these steps fails you'll need to troubleshoot. 
+If that fails (if you get an error, or you don't see the contents of your project directory and your home directory) you'll need to troubleshoot:
 
 * "port is already allocated": See [troubleshooting](troubleshooting.md).
+* `invalid mount config for type "bind": bind mount source path does not exist: <some path>` means the filesystem isn't successfully shared into the docker container.
 * "The path ... is not shared and is not known to Docker": Visit docker's preferences/settings->File sharing and share the appropriate path or drive.
 * "Error response from daemon: Get https://registry-1.docker.io/v2/" - Docker may not be running (restart it) or you may not have any access to the internet.
-* "403 authentication required": Try `docker logout` and do it again. 
+* "403 authentication required" when trying to `ddev start`: Try `docker logout` and do it again. Docker authentication is *not* required for any normal ddev action.
+ 
+If you are on Docker for Windows or Docker for Mac and you are seeing shared directories not show up in the web container (nothing there when you `ddev ssh`) then:
+
+* Unshare and then reshare the drive
+* Consider resetting Docker to factory defaults. This often helps in this situation because Docker goes through the whole authentication process again.
+
+If you are on Linux, the most common problem is having an old docker-compose, since the docker-compose that installs by default is incompatible with ddev. You'll find out about this right away because ddev will tell you on `ddev start` or most other ddev commands.
+
+If you are on Docker Toolbox on Windows, the most common problem is trying to put the project directory outside the home directory.

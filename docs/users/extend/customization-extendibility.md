@@ -46,7 +46,7 @@ The default configuration for ddev uses nginx as the web server (`webserver_type
 - The `location ~ ^/(phpstatus|ping)$ {` block is required for the webserver container healthcheck to work.
 `
 - Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose.
-- **IMPORTANT**: Changes to .ddev/nginx-site.conf take place on a `ddev restart` or when the container is rebuilt for another reason.
+- **IMPORTANT**: Changes to .ddev/nginx-site.conf take place on a `ddev rm && ddev start` or when the container is rebuilt for another reason.
 
 ## Providing custom apache configuration
 
@@ -60,7 +60,7 @@ If you're using `webserver_type: apache-fpm` or `webserver_type: apache-cgi` in 
 - The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the healthcheck script to work.
 `
 - Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose.
-- **IMPORTANT**: Changes to .ddev/apache/apache-site.conf take place on a `ddev restart` (or when the container is rebuilt for another reason).
+- **IMPORTANT**: Changes to .ddev/apache/apache-site.conf take place on a `ddev rm && ddev start` (or when the container is rebuilt for another reason).
 
 ## Providing custom PHP configuration (php.ini)
 
@@ -68,7 +68,7 @@ You can provide additional PHP configuration for a project by creating a directo
 
 One interesting implication of this behavior is that it's possible to disable extensions by replacing the configuration file that loads them. For instance, if you were to create an empty file at `.ddev/php/20-xdebug.ini`, it would replace the configuration that loads xdebug, which would cause xdebug to not be loaded!
 
-To load the new configuration, just run a `ddev restart`.
+To load the new configuration, just run a `ddev rm && ddev start`.
 
 An example file in .ddev/php/my-php.ini might look like this:
 ```
