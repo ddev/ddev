@@ -1723,7 +1723,7 @@ func TestWebserverType(t *testing.T) {
 		// Copy our phpinfo into the docroot of testsite.
 		pwd, err := os.Getwd()
 		assert.NoError(err)
-		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "phpinfo.php"), filepath.Join(app.AppRoot, app.Docroot, "phpinfo.php"))
+		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "servertype.php"), filepath.Join(app.AppRoot, app.Docroot, "servertype.php"))
 
 		assert.NoError(err)
 		for _, app.WebserverType = range []string{"apache-fpm", "apache-cgi", "nginx-fpm"} {
@@ -1737,16 +1737,16 @@ func TestWebserverType(t *testing.T) {
 			assert.NoError(err)
 
 			// nolint: vetshadow
-			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectURL()+"/phpinfo.php")
+			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/servertype.php")
 			assert.NoError(err)
 
 			expectedServerType := "Apache/2"
 			if app.WebserverType == "nginx-fpm" {
 				expectedServerType = "nginx"
 			}
-			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
-			assert.Contains(out, "SERVER['SERVER_SOFTWARE']</td><td class=\"v\">"+expectedServerType, "For app.WebserverType=%s phpinfo expected SERVER['SERVER_SOFTWARE'] to show %s", app.WebserverType, expectedServerType)
+			//assert.Contains(resp.Header["Server"], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
 
+			assert.Contains(out, expectedServerType, "For app.WebserverType=%s phpinfo expected servertype.php to show %s", app.WebserverType, expectedServerType)
 		}
 
 		// Set the apptype back to whatever the default was so we don't break any following tests.
