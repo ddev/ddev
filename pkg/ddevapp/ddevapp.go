@@ -861,7 +861,7 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 	}
 
 	util.Warning("Creating database snapshot %s", snapshotName)
-	stdout, stderr, err := app.Exec("db", "bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log", containerSnapshotDir, snapshotName))
+	stdout, stderr, err := app.Exec("db", "bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir))
 	if err != nil {
 		util.Warning("Failed to create snapshot: %v, stdout=%s, stderr=%s", err, stdout, stderr)
 		return "", err
