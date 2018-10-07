@@ -71,7 +71,7 @@ mariabackup --backup --target-dir=$OUTDIR --user root --password root --socket=$
 
 # Initialize with current mariadb_version
 my_mariadb_version=$(mysql -V | awk '{sub( /\.[0-9]+-MariaDB,/, ""); print $5 }')
-echo $my_mariadb_version >/var/lib/mysql/db_mariadb_version.txt
+echo $my_mariadb_version >$OUTDIR/db_mariadb_version.txt
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
 	echo >&2 'Mariadb initialization process failed.'
