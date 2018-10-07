@@ -22,7 +22,7 @@ fi
 function cleanup {
 	echo "Removing ${CONTAINER_NAME}"
 	docker rm -f $CONTAINER_NAME 2>/dev/null || true
-	docker volume rm $VOLUME || true
+	docker volume rm $VOLUME 2>/dev/null || true
 	# We use MYTMPDIR for a bogus temp dir since mktemp -d creates a dir
     # outside a docker-mountable directory on macOS
     rm -rf $outdir/* $outdir/.git*
@@ -65,7 +65,7 @@ echo "Waiting for database server to become ready..."
 if ! containercheck; then
 	exit 1
 fi
-echo "Connected to mysql server."
+echo "DB Server container started up successfully"
 
 # Try basic connection using root user/password.
 if ! mysql --user=root --password=root --database=mysql --host=127.0.0.1 --port=$HOSTPORT -e "SELECT 1;"; then

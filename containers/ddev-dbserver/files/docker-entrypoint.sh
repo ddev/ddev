@@ -69,7 +69,7 @@ if [ "$my_mariadb_version" != "$db_mariadb_version" ]; then
     mysqld --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
     pid=$!
     if ! serverwait ; then
-        echo "Failed to get mysqld running"
+        echo "Failed to get mysqld running to run mysql_upgrade"
         exit 103
     fi
     echo "Running mysql_upgrade because my_mariadb_version=$my_mariadb_version is not the same as db_mariadb_version=$db_mariadb_version"
