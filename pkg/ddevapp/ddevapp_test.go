@@ -1146,6 +1146,7 @@ func TestDdevStop(t *testing.T) {
 		}
 		err = app.Down(true, false)
 		assert.NoError(err)
+
 		runTime()
 		switchDir()
 	}
@@ -1175,13 +1176,14 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
-	out := app.Stop()
-	assert.Error(out)
-	assert.Contains(out.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
+	err = app.Stop()
+	assert.Error(err)
+	assert.Contains(err.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
-
+	err = app.Down(true, false)
+	assert.NoError(err)
 }
 
 // TestDescribe tests that the describe command works properly on a running
@@ -1245,6 +1247,8 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	err := app.Init(site.Dir)
 	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
 
 	// Move the site directory to a temp location to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
@@ -1255,6 +1259,8 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	assert.Contains(desc["status"], ddevapp.SiteDirMissing, "Status did not include the phrase '%s' when describing a site with missing directories.", ddevapp.SiteDirMissing)
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
+	assert.NoError(err)
+	err = app.Down(true, false)
 	assert.NoError(err)
 }
 
@@ -1319,6 +1325,8 @@ func TestRouterPortsCheck(t *testing.T) {
 	// Remove our dummy busybox docker container.
 	out, err := exec.RunCommand("docker", []string{"rm", "-f", containerID})
 	assert.NoError(err, "Failed to docker rm the port-occupier container, err=%v output=%v", err, out)
+	err = app.Down(true, false)
+	assert.NoError(err)
 }
 
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
@@ -1701,7 +1709,7 @@ func TestGetAllURLs(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		err = app.Stop()
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -1756,7 +1764,7 @@ func TestWebserverType(t *testing.T) {
 			err = app.WriteConfig()
 			assert.NoError(err)
 		}
-		err = app.Stop()
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -1886,7 +1894,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		app.RouterHTTPPort = "80"
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = app.Stop()
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
