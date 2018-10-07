@@ -354,9 +354,15 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 	return extractPath, archiveFullPath, nil
 }
 
-// GetLocalHTTPResponse takes a URL, hits the local docker for it, returns result
+// GetLocalHTTPResponse takes a URL and optional timeout in seconds,
+// hits the local docker for it, returns result
 // Returns error (with the body) if not 200 status code.
-func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, *http.Response, error) {
+func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (string, *http.Response, error) {
+	var timeoutSecs = 20
+	if len(timeoutSecsAry) > 0 {
+		timeoutSecs = timeoutSecsAry[0]
+	}
+	timeoutTime := time.Duration(timeoutSecs) * time.Second
 	assert := asrt.New(t)
 
 	u, err := url.Parse(rawurl)
@@ -377,10 +383,6 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, *http.Response, 
 	}
 	localAddress := u.String()
 
-	// Use a 20-second timeout; some queries are against a db-backed CMS;
-	// sometimes there are lots of docker projects going
-	timeout := time.Duration(20 * time.Second)
-
 	// Ignore https cert failure, since we are in testing environment.
 	insecureTransport := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -392,7 +394,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, *http.Response, 
 			return http.ErrUseLastResponse
 		},
 		Transport: insecureTransport,
-		Timeout:   timeout,
+		Timeout:   timeoutTime,
 	}
 
 	req, err := http.NewRequest("GET", localAddress, nil)
@@ -421,10 +423,14 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string) (string, *http.Response, 
 }
 
 // EnsureLocalHTTPContent will verify a URL responds with a 200 and expected content string
-func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string) {
+func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, timeoutSeconds ...int) {
+	var httpTimeout = 20
+	if len(timeoutSeconds) > 0 {
+		httpTimeout = timeoutSeconds[0]
+	}
 	assert := asrt.New(t)
 
-	body, _, err := GetLocalHTTPResponse(t, rawurl)
+	body, _, err := GetLocalHTTPResponse(t, rawurl, httpTimeout)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
 	assert.Contains(body, expectedContent)
 }

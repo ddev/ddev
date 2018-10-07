@@ -630,7 +630,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		// Test dynamic php + database content.
 		//testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.DynamicURI.URI, site.DynamicURI.Expect)
 		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
-		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl)
+		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 40)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=$v: %v", rawurl, resp, err)
 		if err != nil {
 			stdout := testcommon.CaptureUserOut()
@@ -722,7 +722,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 	//testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
 
-	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
+	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 40)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetHTTPURL(), err)
 	assert.Contains(body, "d7 tester test 2 has 2 nodes")
 	if err != nil {
