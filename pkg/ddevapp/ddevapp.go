@@ -977,27 +977,36 @@ func (app *DdevApp) GetAllURLs() []string {
 		URLs = append(URLs, "http://"+name+httpPort, "https://"+name+httpsPort)
 	}
 
+	URLs = append(URLs, app.GetWebContainerDirectURL())
+
+	return URLs
+}
+
+// GetWebContainerDirectURL returns the URL that can be used without the router to get to web container.
+func (app *DdevApp) GetWebContainerDirectURL() string {
 	// Get direct address of web container
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
-		util.Error("Unable to get Docker IP: %v", err)
-		return URLs
+		util.Warning("Unable to get Docker IP: %v", err)
 	}
+	port, _ := app.GetWebContainerPublicPort()
+	return fmt.Sprintf("http://%s:%d", dockerIP, port)
+}
+
+// GetWebContainerPublicPort returns the direct-access public tcp port for http
+func (app *DdevApp) GetWebContainerPublicPort() (int, error) {
 
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil {
-		util.Error("Unable to find web container for app: %s, err %v", app.Name, err)
-		return URLs
+		return -1, fmt.Errorf("Unable to find web container for app: %s, err %v", app.Name, err)
 	}
 
 	for _, p := range webContainer.Ports {
 		if p.PrivatePort == 80 {
-			URLs = append(URLs, fmt.Sprintf("http://%s:%d", dockerIP, p.PublicPort))
-			break
+			return int(p.PublicPort), nil
 		}
 	}
-
-	return URLs
+	return -1, fmt.Errorf("No public port found for private port 80")
 }
 
 // HostName returns the hostname of a given application.
