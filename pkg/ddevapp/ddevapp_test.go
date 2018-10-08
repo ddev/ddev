@@ -1745,15 +1745,14 @@ func TestWebserverType(t *testing.T) {
 			assert.NoError(err)
 
 			// nolint: vetshadow
-			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+"/servertype.php")
+			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectURL()+"/servertype.php")
 			assert.NoError(err)
 
 			expectedServerType := "Apache/2"
 			if app.WebserverType == "nginx-fpm" {
 				expectedServerType = "nginx"
 			}
-			//assert.Contains(resp.Header["Server"], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
-
+			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
 			assert.Contains(out, expectedServerType, "For app.WebserverType=%s phpinfo expected servertype.php to show %s", app.WebserverType, expectedServerType)
 		}
 
