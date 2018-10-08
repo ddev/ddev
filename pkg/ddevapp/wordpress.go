@@ -312,17 +312,19 @@ func wordpressImportFilesAction(app *DdevApp, importPath, extPath string) error 
 	return nil
 }
 
-// getRelativeAbsPath returns the portion of the ABSPATH value that will come after "/" in wp-config.php.
+// getRelativeAbsPath returns the portion of the ABSPATH value that will come after "/" in wp-config.php -
+// this is done by searching (at a max depth of one directory from the docroot) for wp-settings.php, the
+// file we're using as a signal to indicate that this is a WordPress project.
 func getRelativeAbsPath(app *DdevApp) (string, error) {
 	needle := "wp-settings.php"
 
 	// Check if the docroot is the abspath
-	if fileutil.FileExists(filepath.Join(app.Docroot, needle)) {
+	if fileutil.FileExists(filepath.Join(app.AppRoot, app.Docroot, needle)) {
 		return "", nil
 	}
 
 	// Gather directories in approot
-	objs, err := ioutil.ReadDir(app.Docroot)
+	objs, err := ioutil.ReadDir(filepath.Join(app.AppRoot, app.Docroot))
 	if err != nil {
 		return "", err
 	}
@@ -332,7 +334,7 @@ func getRelativeAbsPath(app *DdevApp) (string, error) {
 			continue
 		}
 
-		potentials, err := ioutil.ReadDir(filepath.Join(app.Docroot, obj.Name()))
+		potentials, err := ioutil.ReadDir(filepath.Join(app.AppRoot, app.Docroot, obj.Name()))
 		if err != nil {
 			return "", err
 		}

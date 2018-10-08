@@ -7,11 +7,12 @@ import (
 
 	"bufio"
 	"fmt"
+	"strings"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
-	"strings"
 )
 
 // TestApptypeDetection does a simple test of various filesystem setups to make
@@ -23,7 +24,7 @@ func TestApptypeDetection(t *testing.T) {
 		"drupal6":   "misc/ahah.js",
 		"drupal7":   "misc/ajax.js",
 		"drupal8":   "core/scripts/drupal.sh",
-		"wordpress": "wp-login.php",
+		"wordpress": "wp-settings.php",
 		"backdrop":  "core/scripts/backdrop.sh",
 	}
 
@@ -46,7 +47,6 @@ func TestApptypeDetection(t *testing.T) {
 		foundType := app.DetectAppType()
 		assert.EqualValues(expectedType, foundType)
 	}
-
 }
 
 // TestPostConfigAction tests that the post-config action is properly applied, but only if the
