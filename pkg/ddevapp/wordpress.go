@@ -2,14 +2,15 @@ package ddevapp
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"text/template"
 
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 )
 
@@ -35,10 +36,13 @@ type WordpressConfig struct {
 	Signature         string
 	SiteSettings      string
 	SiteSettingsLocal string
+	AbsPath           string
 }
 
 // NewWordpressConfig produces a WordpressConfig object with defaults.
 func NewWordpressConfig(app *DdevApp) *WordpressConfig {
+	absPath, _ := getRelativeAbsPath(app)
+
 	return &WordpressConfig{
 		WPGeneric:         false,
 		DatabaseName:      "db",
@@ -59,15 +63,12 @@ func NewWordpressConfig(app *DdevApp) *WordpressConfig {
 		Signature:         DdevFileSignature,
 		SiteSettings:      "wp-config.php",
 		SiteSettingsLocal: "wp-config-ddev.php",
+		AbsPath:           absPath,
 	}
 }
 
 // wordPressHooks adds a wp-specific hooks example for post-import-db
-const wordPressHooks = `
-# Un-comment and enter the production url and local url
-# to replace in your database after import.
-#  post-import-db:
-#    - exec: wp search-replace <production-url> <local-url>`
+const wordPressHooks = ``
 
 // getWordpressHooks for appending as byte array
 func getWordpressHooks() []byte {
@@ -91,11 +92,16 @@ const wordpressSettingsTemplate = `<?php
  */
 
 /** Absolute path to the WordPress directory. */
-define('ABSPATH', dirname(__FILE__) . '/');
+define('ABSPATH', dirname(__FILE__) . '/{{ $config.AbsPath }}');
 
-// Automatically generated include for settings managed by ddev.
+/** Automatically generated include for settings managed by ddev. */
 if (file_exists(getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}')) {
 	require_once getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}';
+}
+
+/** Include wp-settings.php */
+if (file_exists(ABSPATH . '/wp-settings.php')) {
+	require_once ABSPATH . '/wp-settings.php';
 }
 `
 
@@ -121,11 +127,17 @@ define('DB_HOST', '{{ $config.DatabaseHost }}');
 /** Enable debug */
 define('WP_DEBUG', true);
 
-/** Site URL */
-define('WP_HOME', ($_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https' ? 'https://' : 'http://') . $_SERVER['HTTP_HOST']);
+/** WP_HOME URL */
+define('WP_HOME', '{{ $config.DeployURL }}');
+
+/** WP_SITEURL location */
+define('WP_SITEURL', WP_HOME . '/{{ $config.AbsPath  }}');
 
 /** WP_ENV */
 define('WP_ENV', getenv('DDEV_ENV_NAME') ? getenv('DDEV_ENV_NAME') : 'production');
+
+/** Define the database table prefix */
+$table_prefix  = 'wp_';
 `
 
 // createWordpressSettingsFile creates a Wordpress settings file from a
@@ -140,8 +152,24 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 
 	// Check if an existing WordPress settings file exists
 	if fileutil.FileExists(app.SiteSettingsPath) {
-		// If settings file does exist, alert the user to generated ddev settings
-		output.UserOut.Printf("An existing %s file has been detected.\nddev settings have been written to %s - please alter your settings to include these values before starting this project.", app.SiteSettingsPath, app.SiteLocalSettingsPath)
+		// Check if existing WordPress settings file is ddev-managed
+		sigExists, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, DdevFileSignature)
+		if err != nil {
+			return "", err
+		}
+
+		if sigExists {
+			// Settings file is ddev-managed, overwriting is safe
+			if err := writeWordpressSettingsFile(config, app.SiteSettingsPath); err != nil {
+				return "", err
+			}
+		} else {
+			// Settings file exists and is not ddev-managed, alert the user to the location
+			// of the generated ddev settings file
+			util.Warning("\nAn existing user-managed %s file has been detected", path.Base(app.SiteSettingsPath))
+			util.Warning("ddev settings have been written to %s", app.SiteLocalSettingsPath)
+			util.Warning("Please alter your settings to include these values before starting this project\n")
+		}
 	} else {
 		// If settings file does not exist, write basic settings file including it
 		if err := writeWordpressSettingsFile(config, app.SiteSettingsPath); err != nil {
@@ -225,23 +253,17 @@ func setWordpressSiteSettingsPaths(app *DdevApp) {
 
 // isWordpressApp returns true if the app of of type wordpress
 func isWordpressApp(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp-login.php")); err == nil {
-		return true
+	_, err := getRelativeAbsPath(app)
+	if err != nil {
+		return false
 	}
 
-	// check for WP installed in a sub-directory
-	// TODO: Add wildcard or ENV var to make more flexible, ie wordpress/
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp/wp-login.php")); err == nil {
-		return true
-	}
-
-	return false
+	return true
 }
 
 // wordpressPostImportDBAction just emits a warning about updating URLs as is
 // required with wordpress when running on a different URL.
 func wordpressPostImportDBAction(app *DdevApp) error {
-	util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec wp search-replace [http://www.myproductionsite.example] %s\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", app.GetHTTPURL())
 	return nil
 }
 
@@ -288,4 +310,39 @@ func wordpressImportFilesAction(app *DdevApp, importPath, extPath string) error 
 	}
 
 	return nil
+}
+
+// getRelativeAbsPath returns the portion of the ABSPATH value that will come after "/" in wp-config.php.
+func getRelativeAbsPath(app *DdevApp) (string, error) {
+	needle := "wp-settings.php"
+
+	// Check if the docroot is the abspath
+	if fileutil.FileExists(filepath.Join(app.Docroot, needle)) {
+		return "", nil
+	}
+
+	// Gather directories in approot
+	objs, err := ioutil.ReadDir(app.Docroot)
+	if err != nil {
+		return "", err
+	}
+
+	for _, obj := range objs {
+		if !obj.IsDir() {
+			continue
+		}
+
+		potentials, err := ioutil.ReadDir(filepath.Join(app.Docroot, obj.Name()))
+		if err != nil {
+			return "", err
+		}
+
+		for _, potential := range potentials {
+			if potential.Name() == needle {
+				return obj.Name(), nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("unable to determine ABSPATH")
 }
