@@ -38,6 +38,8 @@ services:
   web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
+    cap_add:
+      - SYS_PTRACE
     volumes:
       - "../:/var/www/html:cached"
       - ".:/mnt/ddev_config:ro"

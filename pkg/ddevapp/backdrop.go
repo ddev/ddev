@@ -52,6 +52,11 @@ func NewBackdropSettings() *BackdropSettings {
 const backdropMainSettingsTemplate = `<?php
 {{ $config := . }}
 // {{ $config.Signature }}: Automatically generated Backdrop settings file.
+
+// Providing these in the main settings file is most likely to match the default config_directories.
+$database = 'mysql://user:pass@localhost/database_name';
+$config_directories['active'] = 'files/config_' . md5($database) . '/active';
+$config_directories['staging'] = 'files/config_' . md5($database) . '/staging';
 if (file_exists(__DIR__ . '/{{ $config.SiteSettingsLocal }}')) {
   include __DIR__ . '/{{ $config.SiteSettingsLocal }}';
 }

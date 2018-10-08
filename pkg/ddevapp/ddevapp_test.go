@@ -41,61 +41,76 @@ var (
 			Docroot:                       "htdocs",
 			Type:                          "wordpress",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
+			FilesImageURI:                 "/wp-content/uploads/2017/04/pexels-photo-265186-1024x683.jpeg",
 		},
 		{
 			Name:                          "TestPkgDrupal8",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.5.3.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-8.5.3/",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_files.tar.gz",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.6.1.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-8.6.1/",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal8_6_1_files.tar.gz",
 			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_files.zip",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal8_6_1_db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.zip",
 			FullSiteTarballURL:            "",
 			Type:                          "drupal8",
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "this is a post with an image"},
+			FilesImageURI:                 "/sites/default/files//2017-04/pexels-photo-265186.jpeg",
 		},
 		{
 			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
-			SourceURL:                     "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-kickstart-0.4.0/",
-			FilesTarballURL:               "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
-			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
-			Docroot:                       "docroot",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.59.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-7.59/",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59-db.tar.gz",
+			FullSiteTarballURL:            "",
+			Docroot:                       "",
 			Type:                          "drupal7",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "D7 test project, kittens edition"},
+			FilesImageURI:                 "/sites/default/files/field/image/kittens-large.jpg",
 			FullSiteArchiveExtPath:        "docroot/sites/default/files",
 		},
 		{
 			Name:                          "TestPkgDrupal6",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-6.38/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal6_db.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
 			FullSiteTarballURL:            "",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
 			Type:                          "drupal6",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
+			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
 		},
 		{
 			Name:                          "TestPkgBackdrop",
-			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.9.2.tar.gz",
-			ArchiveInternalExtractionPath: "backdrop-1.9.2/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/backdrop_db.tar.gz",
+			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.11.0.tar.gz",
+			ArchiveInternalExtractionPath: "backdrop-1.11.0/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/backdrop_db.11.0.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/backdrop_files.11.0.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          "backdrop",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/first-post-all-about-kittens", Expect: "Lots of kittens are a good thing"},
+			FilesImageURI:                 "/files/styles/large/public/field/image/kittens-large.jpg",
 		},
 		{
 			Name:                          "TestPkgTypo3",
-			SourceURL:                     "https://typo3.azureedge.net/typo3/8.7.10/typo3_src-8.7.10.tar.gz",
-			ArchiveInternalExtractionPath: "typo3_src-8.7.10/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/typo3git_db.tar.gz",
+			SourceURL:                     "https://github.com/drud/typo3-v9-test/archive/v0.2.2.tar.gz",
+			ArchiveInternalExtractionPath: "typo3-v9-test-0.2.2/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_db.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_files.tar.gz",
 			FullSiteTarballURL:            "",
-			Docroot:                       "",
+			Docroot:                       "public",
 			Type:                          "typo3",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/INSTALL.md", Expect: "TYPO3 is an open source PHP based web content management"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
+			FilesImageURI:                 "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
 		},
 	}
 	FullTestSites = TestSites
@@ -162,13 +177,6 @@ func TestMain(m *testing.M) {
 			continue
 		}
 
-		err = app.Start()
-		if err != nil {
-			testRun = -2
-			log.Errorf("TestMain startup: app.Start() failed on site %s, err=%v", TestSites[i].Name, err)
-			continue
-		}
-
 		runTime()
 		switchDir()
 	}
@@ -209,6 +217,11 @@ func TestDdevStart(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
+	// Make sure this leaves us in the original test directory
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
@@ -216,11 +229,15 @@ func TestDdevStart(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
+		err = app.Start()
+		assert.NoError(err)
+
 		// ensure docker-compose.yaml exists inside .ddev site folder
 		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 		assert.True(composeFile)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
+			//nolint: vetshadow
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "running")
@@ -228,19 +245,32 @@ func TestDdevStart(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
+		err = app.Down(true, false)
+		assert.NoError(err)
 		runTime()
 		switchDir()
 	}
 
+	// Start up TestSites[0] again
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	assert.NoError(err)
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
 	// try to start a site of same name at different path
 	another := TestSites[0]
-	err := another.Prepare()
+	err = another.Prepare()
 	if err != nil {
 		assert.FailNow("TestDdevStart: Prepare() failed on another.Prepare(), err=%v", err)
 		return
 	}
 
-	err = app.Init(another.Dir)
+	badapp := &ddevapp.DdevApp{}
+
+	err = badapp.Init(another.Dir)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
@@ -255,6 +285,10 @@ func TestDdevStart(t *testing.T) {
 	}
 	testcommon.CleanupDir(another.Dir)
 	switchDir()
+
+	// Clean up site 0
+	err = app.Down(true, false)
+	assert.NoError(err)
 }
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
@@ -283,6 +317,13 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 		err = app.Start()
 		assert.NoError(err)
+		if err != nil && strings.Contains(err.Error(), "db container failed") {
+			stdout := testcommon.CaptureUserOut()
+			err = app.Logs("db", false, false, "")
+			assert.NoError(err)
+			out := stdout()
+			t.Logf("DB Logs after app.Start: \n%s\n=== END DB LOGS ===", out)
+		}
 
 		// ensure docker-compose.yaml exists inside .ddev site folder
 		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
@@ -353,7 +394,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	assert.Contains(stdout, "xdebug support => enabled")
 	assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
 
-	err = app.Stop()
+	err = app.Down(true, false)
 	assert.NoError(err)
 
 	runTime()
@@ -387,7 +428,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 	_, _, err = app.Exec("db", "bash", "-c", "mysql -e 'SELECT DATABASE();' | grep 'db'")
 	assert.NoError(err)
 
-	err = app.Stop()
+	err = app.Down(true, false)
 	assert.NoError(err)
 
 	runTime()
@@ -446,6 +487,19 @@ func TestGetApps(t *testing.T) {
 		}
 		assert.True(found, "Found testSite %s in list", testSite.Name)
 	}
+
+	// Now shut down all sites as we expect them to be shut down.
+	for _, site := range TestSites {
+		testcommon.ClearDockerEnv()
+		app := &ddevapp.DdevApp{}
+
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Down(true, false)
+		assert.NoError(err)
+
+	}
 }
 
 // TestDdevImportDB tests the functionality that is called when "ddev import-db" is executed
@@ -461,6 +515,8 @@ func TestDdevImportDB(t *testing.T) {
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
+		err = app.Start()
+		assert.NoError(err)
 
 		// Test simple db loads.
 		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip"} {
@@ -471,14 +527,17 @@ func TestDdevImportDB(t *testing.T) {
 			// Test that a settings file has correct hash_salt format
 			switch app.Type {
 			case "drupal7":
+				// nolint: vetshadow
 				drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "$drupal_hash_salt")
 				assert.NoError(err)
 				assert.True(drupalHashSalt)
 			case "drupal8":
+				// nolint: vetshadow
 				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "settings['hash_salt']")
 				assert.NoError(err)
 				assert.True(settingsHashSalt)
 			case "wordpress":
+				// nolint: vetshadow
 				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
 				assert.NoError(err)
 				assert.True(hasAuthSalt)
@@ -487,6 +546,7 @@ func TestDdevImportDB(t *testing.T) {
 		}
 
 		if site.DBTarURL != "" {
+			// nolint: vetshadow
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
 			err = app.ImportDB(cachedArchive, "")
@@ -502,6 +562,7 @@ func TestDdevImportDB(t *testing.T) {
 		}
 
 		if site.DBZipURL != "" {
+			// nolint: vetshadow
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteZipArchive", "", site.DBZipURL)
 
 			assert.NoError(err)
@@ -516,12 +577,81 @@ func TestDdevImportDB(t *testing.T) {
 		}
 
 		if site.FullSiteTarballURL != "" {
+			// nolint: vetshadow
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_FullSiteTarballURL", "", site.FullSiteTarballURL)
 			assert.NoError(err)
 
 			err = app.ImportDB(cachedArchive, "data.sql")
 			assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
 		}
+		// We don't want all the projects running at once.
+		err = app.Down(true, false)
+		assert.NoError(err)
+
+		runTime()
+		switchDir()
+	}
+}
+
+// TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
+// we have a spot-test success hit on a URL
+func TestDdevFullSiteSetup(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	for _, site := range TestSites {
+		switchDir := site.Chdir()
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevFullSiteSetup", site.Name))
+
+		testcommon.ClearDockerEnv()
+		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Start()
+		assert.NoError(err)
+
+		if site.DBTarURL != "" {
+			// nolint: vetshadow
+			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
+			assert.NoError(err)
+			err = app.ImportDB(cachedArchive, "")
+			assert.NoError(err)
+		}
+		if site.FilesTarballURL != "" {
+			// nolint: vetshadow
+			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+			assert.NoError(err)
+			err = app.ImportFiles(tarballPath, "")
+			assert.NoError(err)
+		}
+
+		// Test static content.
+		testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		// Test dynamic php + database content.
+		//testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.DynamicURI.URI, site.DynamicURI.Expect)
+		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
+		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 40)
+		assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=$v: %v", rawurl, resp, err)
+		if err != nil {
+			stdout := testcommon.CaptureUserOut()
+			err = app.Logs("web", false, false, "")
+			assert.NoError(err)
+			out := stdout()
+			t.Logf("Logs after GetLocalHTTPResponse: %s", out)
+		}
+		assert.Contains(body, site.DynamicURI.Expect)
+
+		// Load an image from the files section
+		if site.FilesImageURI != "" {
+			// nolint: vetshadow
+			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+site.FilesImageURI)
+			assert.NoError(err)
+			assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
+		}
+
+		// We don't want all the projects running at once.
+		err = app.Down(true, false)
+		assert.NoError(err)
 
 		runTime()
 		switchDir()
@@ -592,7 +722,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 	//testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
 
-	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
+	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 40)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetHTTPURL(), err)
 	assert.Contains(body, "d7 tester test 2 has 2 nodes")
 	if err != nil {
@@ -650,6 +780,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 			// Now try to append to the file on the host.
 			// os.OpenFile() for append here fails if the file does not already exist.
+			//nolint: vetshadow
 			f, err := os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
 			assert.NoError(err)
 			_, err = f.WriteString("this addition to the file was added on the host side")
@@ -679,6 +810,9 @@ func TestWriteableFilesDirectory(t *testing.T) {
 			_, _, err = app.Exec("web", "sh", "-c", "grep 'base content was inserted on the host' "+inContainerRelativePath+"&& grep 'content added inside container' "+inContainerRelativePath)
 			assert.NoError(err)
 		}
+
+		err = app.Down(true, false)
+		assert.NoError(err)
 
 		runTime()
 		switchDir()
@@ -844,6 +978,8 @@ func TestDdevExec(t *testing.T) {
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
+		err = app.Start()
+		assert.NoError(err)
 
 		out, _, err := app.Exec("web", "pwd")
 		assert.NoError(err)
@@ -869,6 +1005,9 @@ func TestDdevExec(t *testing.T) {
 			assert.Regexp("/etc/php.*/php.ini", out)
 		}
 
+		err = app.Down(true, false)
+		assert.NoError(err)
+
 		runTime()
 		switchDir()
 
@@ -892,6 +1031,9 @@ func TestDdevLogs(t *testing.T) {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevLogs", site.Name))
 
 		err := app.Init(site.Dir)
+		assert.NoError(err)
+
+		err = app.Start()
 		assert.NoError(err)
 
 		stdout := testcommon.CaptureUserOut()
@@ -922,7 +1064,7 @@ func TestDdevLogs(t *testing.T) {
 		out = stdout()
 		assert.Contains(out, "MySQL init process done. Ready for start up.")
 
-		err = app.Start()
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -940,6 +1082,8 @@ func TestProcessHooks(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 		app, err := ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
+		assert.NoError(err)
+		err = app.Start()
 		assert.NoError(err)
 
 		// Note that any ExecHost commands must be able to run on Windows.
@@ -965,6 +1109,9 @@ func TestProcessHooks(t *testing.T) {
 		assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
 		assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
 
+		err = app.Down(true, false)
+		assert.NoError(err)
+
 		runTime()
 		cleanup()
 
@@ -984,17 +1131,21 @@ func TestDdevStop(t *testing.T) {
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
-
+		err = app.Start()
+		assert.NoError(err)
 		err = app.Stop()
 		assert.NoError(err)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
+			//nolint: vetshadow
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "exited")
 			assert.NoError(err)
 			assert.True(check, containerType, "container has exited")
 		}
+		err = app.Down(true, false)
+		assert.NoError(err)
 
 		runTime()
 		switchDir()
@@ -1025,13 +1176,14 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
-	out := app.Stop()
-	assert.Error(out)
-	assert.Contains(out.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
+	err = app.Stop()
+	assert.Error(err)
+	assert.Contains(err.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
-
+	err = app.Down(true, false)
+	assert.NoError(err)
 }
 
 // TestDescribe tests that the describe command works properly on a running
@@ -1047,7 +1199,7 @@ func TestDescribe(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		// It should already be running, but start does no harm.
+		// It may already be running, but start does no harm.
 		err = app.Start()
 
 		// If we have a problem starting, get the container logs and output.
@@ -1056,7 +1208,11 @@ func TestDescribe(t *testing.T) {
 			logsErr := app.Logs("web", false, false, "")
 			assert.NoError(logsErr)
 			out := stdout()
-			assert.NoError(err, "app.Start(%s) failed: %v, web container logs=%s", site.Name, err, out)
+
+			healthcheck, inspectErr := exec.RunCommandPipe("bash", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
+			assert.NoError(inspectErr)
+
+			assert.NoError(err, "app.Start(%s) failed: %v, \nweb container healthcheck='%s', \n=== web container logs=\n%s\n=== END web container logs ===", site.Name, err, healthcheck, out)
 		}
 
 		desc, err := app.Describe()
@@ -1074,6 +1230,8 @@ func TestDescribe(t *testing.T) {
 		desc, err = app.Describe()
 		assert.NoError(err)
 		assert.EqualValues(ddevapp.SiteStopped, desc["status"])
+		err = app.Down(true, false)
+		assert.NoError(err)
 		switchDir()
 	}
 }
@@ -1089,6 +1247,8 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	err := app.Init(site.Dir)
 	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
 
 	// Move the site directory to a temp location to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
@@ -1099,6 +1259,8 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	assert.Contains(desc["status"], ddevapp.SiteDirMissing, "Status did not include the phrase '%s' when describing a site with missing directories.", ddevapp.SiteDirMissing)
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
+	assert.NoError(err)
+	err = app.Down(true, false)
 	assert.NoError(err)
 }
 
@@ -1117,8 +1279,10 @@ func TestRouterPortsCheck(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		err = app.Stop()
-		assert.NoError(err)
+		if app.SiteStatus() == ddevapp.SiteRunning || app.SiteStatus() == ddevapp.SiteStopped {
+			err = app.Down(true, false)
+			assert.NoError(err)
+		}
 
 		switchDir()
 	}
@@ -1127,7 +1291,12 @@ func TestRouterPortsCheck(t *testing.T) {
 	site := TestSites[0]
 	testcommon.ClearDockerEnv()
 
-	app, err := ddevapp.GetActiveApp(site.Name)
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
+	app, err = ddevapp.GetActiveApp(site.Name)
 	if err != nil {
 		t.Fatalf("Failed to GetActiveApp(%s), err:%v", site.Name, err)
 	}
@@ -1156,6 +1325,8 @@ func TestRouterPortsCheck(t *testing.T) {
 	// Remove our dummy busybox docker container.
 	out, err := exec.RunCommand("docker", []string{"rm", "-f", containerID})
 	assert.NoError(err, "Failed to docker rm the port-occupier container, err=%v output=%v", err, out)
+	err = app.Down(true, false)
+	assert.NoError(err)
 }
 
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
@@ -1538,7 +1709,7 @@ func TestGetAllURLs(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		err = app.Stop()
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -1560,7 +1731,7 @@ func TestWebserverType(t *testing.T) {
 		// Copy our phpinfo into the docroot of testsite.
 		pwd, err := os.Getwd()
 		assert.NoError(err)
-		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "phpinfo.php"), filepath.Join(app.AppRoot, app.Docroot, "phpinfo.php"))
+		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "servertype.php"), filepath.Join(app.AppRoot, app.Docroot, "servertype.php"))
 
 		assert.NoError(err)
 		for _, app.WebserverType = range []string{"apache-fpm", "apache-cgi", "nginx-fpm"} {
@@ -1574,7 +1745,7 @@ func TestWebserverType(t *testing.T) {
 			assert.NoError(err)
 
 			// nolint: vetshadow
-			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectURL()+"/phpinfo.php")
+			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectURL()+"/servertype.php")
 			assert.NoError(err)
 
 			expectedServerType := "Apache/2"
@@ -1582,8 +1753,7 @@ func TestWebserverType(t *testing.T) {
 				expectedServerType = "nginx"
 			}
 			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
-			assert.Contains(out, "$_SERVER['SERVER_SOFTWARE']</td><td class=\"v\">"+expectedServerType, "For app.WebserverType=%s expected $_SERVER['SERVER_SOFTWARE'] to show %s", app.WebserverType, expectedServerType)
-
+			assert.Contains(out, expectedServerType, "For app.WebserverType=%s phpinfo expected servertype.php to show %s", app.WebserverType, expectedServerType)
 		}
 
 		// Set the apptype back to whatever the default was so we don't break any following tests.
@@ -1593,7 +1763,7 @@ func TestWebserverType(t *testing.T) {
 			err = app.WriteConfig()
 			assert.NoError(err)
 		}
-		err = app.Stop()
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -1723,7 +1893,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		app.RouterHTTPPort = "80"
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = app.Stop()
+		err = app.Down(true, false)
 		assert.NoError(err)
 
 		runTime()
