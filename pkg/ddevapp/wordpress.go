@@ -94,6 +94,16 @@ const wordpressSettingsTemplate = `<?php
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
+/** Authentication Unique Keys and Salts. */
+define('AUTH_KEY',         '{{ $config.AuthKey }}');
+define('SECURE_AUTH_KEY',  '{{ $config.SecureAuthKey }}');
+define('LOGGED_IN_KEY',    '{{ $config.LoggedInKey }}');
+define('NONCE_KEY',        '{{ $config.NonceKey }}');
+define('AUTH_SALT',        '{{ $config.AuthSalt }}');
+define('SECURE_AUTH_SALT', '{{ $config.SecureAuthSalt }}');
+define('LOGGED_IN_SALT',   '{{ $config.LoggedInSalt }}');
+define('NONCE_SALT',       '{{ $config.NonceSalt }}');
+
 /** Absolute path to the WordPress directory. */
 define('ABSPATH', dirname(__FILE__) . '/{{ $config.AbsPath }}');
 
@@ -169,9 +179,11 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 		} else {
 			// Settings file exists and is not ddev-managed, alert the user to the location
 			// of the generated ddev settings file
-			util.Warning("\nAn existing user-managed %s file has been detected", path.Base(app.SiteSettingsPath))
-			util.Warning("ddev settings have been written to %s", app.SiteLocalSettingsPath)
-			util.Warning("Please alter your settings to include these values before starting this project\n")
+			util.Warning("\nAn existing user-managed %s file has been detected!", path.Base(app.SiteSettingsPath))
+			util.Warning("Project ddev settings have been written to:\n")
+			util.Warning(app.SiteLocalSettingsPath)
+			util.Warning("\nPlease edit your settings file to include these settings before starting")
+			util.Warning("this project.\n")
 		}
 	} else {
 		// If settings file does not exist, write basic settings file including it
