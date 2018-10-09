@@ -137,7 +137,7 @@ cleanup
 docker volume rm $VOLUME && docker volume create $VOLUME
 # Populate the volume with the contents of our 10.1 tarball. Here it doesn't matter that
 # we're putting it in /var/lib/mysql, but it's put there just for clarity of purpose.
-docker run -i --rm -v "$VOLUME:/var/lib/mysql" busybox tar -C /var/lib/mysql -zxf - <test/testdata/d6git_basic_mariadb_10_1.tgz
+docker run -i --rm -v "$VOLUME:/var/lib/mysql" busybox tar -C //var/lib/mysql -zxf - <test/testdata/d6git_basic_mariadb_10_1.tgz
 # Now start up the container with the populated volume
 if ! docker run -u "$MOUNTUID:$MOUNTGID" -v "$VOLUME:/var/lib/mysql" --name=$CONTAINER_NAME -d $IMAGE; then
 	echo "MySQL server start failed with error code $?"
