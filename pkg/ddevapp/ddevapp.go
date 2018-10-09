@@ -879,6 +879,9 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	if !fileutil.FileExists(hostSnapshotDir) {
 		return fmt.Errorf("Failed to find a snapshot in %s", hostSnapshotDir)
 	}
+	if !fileutil.FileExists(filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")) {
+		return fmt.Errorf("snapshot %s is not compatible with this version of ddev and mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/latest/users/troubleshooting/#old-snapshot")
+	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
 		err := app.Down(false, false)

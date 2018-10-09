@@ -661,6 +661,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it
 func TestDdevRestoreSnapshot(t *testing.T) {
 	assert := asrt.New(t)
+	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
@@ -733,6 +734,16 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 		out := stdout()
 		t.Logf("web container logs after timeout: %s", out)
 	}
+
+	// Attempt a restore with a pre-mariadb_10.2 snapshot. It should fail and give a link.
+	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
+	assert.NoError(err)
+
+	err = archive.Untar(oldSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots", "oldsnapshot"), "")
+	assert.NoError(err)
+	err = app.RestoreSnapshot("oldsnapshot")
+	assert.Error(err)
+	assert.Contains(err.Error(), "is not compatible with this version of ddev and mariadb")
 
 	err = app.Down(true, false)
 	assert.NoError(err)
