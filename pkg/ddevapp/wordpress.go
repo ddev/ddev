@@ -107,7 +107,7 @@ define('ABSPATH', dirname(__FILE__) . '/{{ $config.AbsPath }}');
 
 // Include for settings managed by ddev.
 $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
-if (is_readable($ddev_settings)) && !defined('DB_USER')) {
+if (is_readable($ddev_settings) && !defined('DB_USER')) {
 	require_once($ddev_settings);
 }
 
@@ -162,7 +162,7 @@ Please add the following snippet to your wp-config.php file:
 
 // Include for ddev-managed settings in wp-config-ddev.php.
 $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
-if (is_readable($ddev_settings)) && !defined('DB_USER')) {
+if (is_readable($ddev_settings) && !defined('DB_USER')) {
   require_once($ddev_settings);
 }`
 
