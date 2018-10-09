@@ -4,5 +4,5 @@
 
 set -eo pipefail
 
-mysql -udb -pdb --database=db -e "SHOW DATABASES LIKE 'db';" >/dev/null
+mysql --host=127.0.0.1 -udb -pdb --database=db -e "SHOW DATABASES LIKE 'db';" >/dev/null
 

@@ -861,7 +861,7 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 	}
 
 	util.Warning("Creating database snapshot %s", snapshotName)
-	stdout, stderr, err := app.Exec("db", "bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log", containerSnapshotDir, snapshotName))
+	stdout, stderr, err := app.Exec("db", "bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir))
 	if err != nil {
 		util.Warning("Failed to create snapshot: %v, stdout=%s, stderr=%s", err, stdout, stderr)
 		return "", err
@@ -878,6 +878,9 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
 	if !fileutil.FileExists(hostSnapshotDir) {
 		return fmt.Errorf("Failed to find a snapshot in %s", hostSnapshotDir)
+	}
+	if !fileutil.FileExists(filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")) {
+		return fmt.Errorf("snapshot %s is not compatible with this version of ddev and mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/latest/users/troubleshooting/#old-snapshot")
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
@@ -1234,38 +1237,8 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 	dataDir := filepath.Join(util.GetGlobalDdevDir(), app.Name, "mysql")
 
-	var err error
 	if fileutil.FileExists(dataDir) {
-		// If the dataDir exists, mount it onto ddev-dbserver and run script there that converts to a snapshot
-		// Then do a restore-snapshot on that snapshot.
-		// Old datadir can be renamed to .bak
-		output.UserOut.Print("Migrating bind-mounted database in ~/.ddev to docker-volume mounted database")
-		if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped || app.SiteStatus() == "db service stopped" || app.SiteStatus() == "web service stopped" {
-			err = app.Down(false, false)
-		}
-		if err != nil {
-			return false, fmt.Errorf("failed to stop/remove project %s: %v", app.Name, err)
-		}
-
-		t := time.Now()
-		snapshotName := fmt.Sprintf("%s_volume_migration_snapshot_%s", app.Name, t.Format("20060102150405"))
-
-		out, err := dockerutil.RunSimpleContainer(version.DBImg+":"+version.DBTag, app.Name+"_migrate_volume", nil, []string{"/migrate_file_to_volume.sh", UIDStr, GIDStr}, []string{"SNAPSHOT_NAME=" + snapshotName}, []string{app.GetConfigPath("") + ":" + "/mnt/ddev_config", dataDir + ":/mysqlmount"}, UIDStr)
-		if err != nil {
-			return false, fmt.Errorf("failed to run migrate_file_to_volume.sh, err=%v output=%v", err, out)
-		}
-		err = os.Rename(dataDir, dataDir+"_migrated.bak")
-		if err != nil {
-			return false, fmt.Errorf("Unable to rename %s to %s; you can remove the directory manually if that's ok: %v", dataDir, dataDir+"_migrated.bak", err)
-		}
-
-		// RestoreSnapshot() does a Start(); start doesn't do the migration because dataDir now isn't there.
-		err = app.RestoreSnapshot(snapshotName)
-		if err != nil {
-			return false, fmt.Errorf("failed to restore migration snapshot %s: %v", snapshotName, err)
-		}
-		util.Success("Migrated bind-mounted db from %s to docker-volume mounted db.", dataDir)
-		return true, nil
+		return false, fmt.Errorf("sorry, it is not possible to migrate bind-mounted databases using ddev v1.3+, please use ddev v1.2 to migrate, or just 'mv ~/.ddev/%s/mysql ~/.ddev/%s/mysql.saved' and then restart and reload with 'ddev import-db'", app.Name, app.Name)
 	}
 	return false, nil
 }

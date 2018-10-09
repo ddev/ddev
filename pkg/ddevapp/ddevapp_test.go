@@ -661,6 +661,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it
 func TestDdevRestoreSnapshot(t *testing.T) {
 	assert := asrt.New(t)
+	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
@@ -733,6 +734,16 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 		out := stdout()
 		t.Logf("web container logs after timeout: %s", out)
 	}
+
+	// Attempt a restore with a pre-mariadb_10.2 snapshot. It should fail and give a link.
+	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
+	assert.NoError(err)
+
+	err = archive.Untar(oldSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots", "oldsnapshot"), "")
+	assert.NoError(err)
+	err = app.RestoreSnapshot("oldsnapshot")
+	assert.Error(err)
+	assert.Contains(err.Error(), "is not compatible with this version of ddev and mariadb")
 
 	err = app.Down(true, false)
 	assert.NoError(err)
@@ -1810,37 +1821,20 @@ func TestDbMigration(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// Start it to make sure we can do a removeData
-	err = app.Start()
-	assert.NoError(err)
-
-	// removeData removes the volume so we have a completely clean start
-	err = app.Down(true, false)
-	assert.NoError(err)
-
 	// Untar the to-migrate db into old-style dataDir (~/.ddev/projectname/mysql)
 	err = os.MkdirAll(dataDir, 0755)
 	assert.NoError(err)
 	err = archive.Untar(dbMigrationTarball, dataDir, "")
 	assert.NoError(err)
+	defer os.RemoveAll(dataDir)
 
 	_, err = app.CreateSettingsFile()
 	assert.NoError(err)
 
 	// app.Start() will discover the mysql directory and migrate it to a snapshot.
 	err = app.Start()
-	if err != nil {
-		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
-	}
-
-	// Check to see expected migrated data.
-	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "This d7 site is ready for migration to docker-volume")
-
-	assert.True(fileutil.FileExists(dataDir + "_migrated.bak"))
-	assert.False(fileutil.FileExists(dataDir))
-
-	err = app.Down(true, false)
-	assert.NoError(err)
+	assert.Error(err)
+	assert.Contains(err.Error(), "it is not possible to migrate bind-mounted")
 
 	runTime()
 	switchDir()

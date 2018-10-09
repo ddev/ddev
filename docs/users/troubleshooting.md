@@ -96,6 +96,19 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 * Misconfigured docroot: If the docroot isn't where the webserver thinks it is, then the webserver won't find the index.php. Look at your .ddev/config.yaml to verify it has a docroot that will lead to the index.php. It should be a relative path from the project root to the directory where the index.php is.
 * Docker not mounting your code: If you `ddev ssh` and `ls` and there's nothing there, Docker may not be mounting your code. See [docker installation](./docker_installation.md) for testing docker install. (Is Docker, the drive or directory where your project is must be shared. In Docker Toolbox it *must* be a subdirectory of your home directory unless you [make special accomodations for Docker Toolbox](http://support.divio.com/local-development/docker/how-to-use-a-directory-outside-cusers-with-docker-toolbox-on-windowsdocker-for-windows)).
 
+<a name="old-snapshot"></a>
+## Can't restore snapshot created before ddev v1.3
+
+Database snapshot from before v1.3.0 are not compatible with ddev v1.3+ because the mariabackup with MariaDB 10.2 is not compatible with earlier backups. However, if you really need that snapshot and don't have a database dump to run with `ddev import-db`, there's a fairly easy workaround:
+
+1. In .ddev/config.yaml temporarily set `dbimage: drud/ddev-webserver:v1.2.0`.
+2. `ddev start` to start with the new version
+3. Use `ddev restore-snapshot` to restore the snapshot by name.
+4. `ddev rm`
+5. Remove the `dbimage` line from .ddev/config.yaml.
+6. `ddev start`
+7. Make a new snapshot with `ddev snapshot`.
+
 ## More Support
 
 [Support options](https://ddev.readthedocs.io/en/latest/#support) has a variety of options.

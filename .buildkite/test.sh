@@ -20,6 +20,7 @@ if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq)
 fi
 docker system prune --volumes --force
+rm -rf ~/.ddev/TestPkg*
 
 # Update all images that could have changed
 docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull
