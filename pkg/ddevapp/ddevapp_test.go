@@ -1821,14 +1821,6 @@ func TestDbMigration(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// Start it to make sure we can do a removeData
-	err = app.Start()
-	assert.NoError(err)
-
-	// removeData removes the volume so we have a completely clean start
-	err = app.Down(true, false)
-	assert.NoError(err)
-
 	// Untar the to-migrate db into old-style dataDir (~/.ddev/projectname/mysql)
 	err = os.MkdirAll(dataDir, 0755)
 	assert.NoError(err)
@@ -1840,18 +1832,8 @@ func TestDbMigration(t *testing.T) {
 
 	// app.Start() will discover the mysql directory and migrate it to a snapshot.
 	err = app.Start()
-	if err != nil {
-		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
-	}
-
-	// Check to see expected migrated data.
-	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "This d7 site is ready for migration to docker-volume")
-
-	assert.True(fileutil.FileExists(dataDir + "_migrated.bak"))
-	assert.False(fileutil.FileExists(dataDir))
-
-	err = app.Down(true, false)
-	assert.NoError(err)
+	assert.Error(err)
+	assert.Contains(err.Error(), "it is not possible to migrate bind-mounted")
 
 	runTime()
 	switchDir()
