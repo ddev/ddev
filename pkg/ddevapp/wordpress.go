@@ -166,8 +166,7 @@ Please add the following snippet to your wp-config.php file:
 $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
 if (is_readable($ddev_settings)) && !defined('DB_USER')) {
   require_once($ddev_settings);
-}
-`
+}`
 
 // createWordpressSettingsFile creates a Wordpress settings file from a
 // template. Returns full path to location of file + err
@@ -200,7 +199,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 		} else {
 			// Settings file exists and is not ddev-managed, alert the user to the location
 			// of the generated ddev settings file
-			util.Error(wordpressConfigInstructions, app.SiteLocalSettingsPath)
+			util.Failed(wordpressConfigInstructions, app.SiteLocalSettingsPath)
 		}
 	} else {
 		// If settings file does not exist, write basic settings file including it
