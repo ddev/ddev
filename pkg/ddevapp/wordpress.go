@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig"
@@ -12,9 +13,6 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 )
-
-type wordpressMultipleAbsPathCandidatesError error
-type wordpressNoAbsPathError error
 
 // WordpressConfig encapsulates all the configurations for a WordPress site.
 type WordpressConfig struct {
@@ -288,8 +286,7 @@ func isWordpressApp(app *DdevApp) bool {
 	if err != nil {
 		// Multiple abspath candidates is an issue, but is still a valid
 		// indicator that this is a WordPress app
-		switch err.(type) {
-		case wordpressMultipleAbsPathCandidatesError:
+		if strings.Contains(err.Error(), "multiple") {
 			return true
 		}
 
@@ -365,11 +362,11 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 	}
 
 	if len(subDirMatches) == 0 {
-		return "", fmt.Errorf("unable to find %s in subdirectories", needle).(wordpressNoAbsPathError)
+		return "", fmt.Errorf("unable to find %s in subdirectories", needle)
 	}
 
 	if len(subDirMatches) > 1 {
-		return "", fmt.Errorf("multiple subdirectories contain %s", needle).(wordpressMultipleAbsPathCandidatesError)
+		return "", fmt.Errorf("multiple subdirectories contain %s", needle)
 	}
 
 	absPath := path.Base(path.Dir(subDirMatches[0]))
