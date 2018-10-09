@@ -1826,6 +1826,7 @@ func TestDbMigration(t *testing.T) {
 	assert.NoError(err)
 	err = archive.Untar(dbMigrationTarball, dataDir, "")
 	assert.NoError(err)
+	defer os.RemoveAll(dataDir)
 
 	_, err = app.CreateSettingsFile()
 	assert.NoError(err)
