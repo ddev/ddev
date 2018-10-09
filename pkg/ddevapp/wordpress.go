@@ -171,7 +171,9 @@ if (is_readable($ddev_settings)) && !defined('DB_USER')) {
 func createWordpressSettingsFile(app *DdevApp) (string, error) {
 	absPath, err := wordpressGetRelativeAbsPath(app)
 	if err != nil {
-		util.Failed("Unable to create settings file: %v", err)
+		if strings.Contains(err.Error(), "multiple") {
+			util.Warning("Unable to determine ABSPATH: %v", err)
+		}
 	}
 
 	config := NewWordpressConfig(app, absPath)
