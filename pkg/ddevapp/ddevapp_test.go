@@ -538,7 +538,7 @@ func TestDdevImportDB(t *testing.T) {
 				assert.True(settingsHashSalt)
 			case "wordpress":
 				// nolint: vetshadow
-				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "SECURE_AUTH_SALT")
+				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
 				assert.NoError(err)
 				assert.True(hasAuthSalt)
 			}
