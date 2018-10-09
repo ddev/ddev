@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,6 +12,9 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 )
+
+type wordpressMultipleAbsPathCandidatesError error
+type wordpressNoAbsPathError error
 
 // WordpressConfig encapsulates all the configurations for a WordPress site.
 type WordpressConfig struct {
@@ -40,9 +42,7 @@ type WordpressConfig struct {
 }
 
 // NewWordpressConfig produces a WordpressConfig object with defaults.
-func NewWordpressConfig(app *DdevApp) *WordpressConfig {
-	absPath, _ := getRelativeAbsPath(app)
-
+func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 	return &WordpressConfig{
 		WPGeneric:         false,
 		DatabaseName:      "db",
@@ -107,9 +107,10 @@ define('NONCE_SALT',       '{{ $config.NonceSalt }}');
 /** Absolute path to the WordPress directory. */
 define('ABSPATH', dirname(__FILE__) . '/{{ $config.AbsPath }}');
 
-/** Automatically generated include for settings managed by ddev. */
-if (file_exists(getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}')) {
-	require_once getenv('NGINX_DOCROOT') . '/{{ $config.SiteSettingsLocal }}';
+// Include for settings managed by ddev.
+$ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
+if (is_readable($ddev_settings)) && !defined('DB_USER')) {
+	require_once($ddev_settings);
 }
 
 /** Include wp-settings.php */
@@ -153,10 +154,30 @@ define('WP_ENV', getenv('DDEV_ENV_NAME') ? getenv('DDEV_ENV_NAME') : 'production
 $table_prefix  = 'wp_';
 `
 
+const wordpressConfigInstructions = `
+An existing user-managed wp-config.php file has been detected!
+Project ddev settings have been written to:
+
+%s
+
+Please add the following snippet to your wp-config.php file:
+
+// Include for ddev-managed settings in wp-config-ddev.php.
+$ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
+if (is_readable($ddev_settings)) && !defined('DB_USER')) {
+  require_once($ddev_settings);
+}
+`
+
 // createWordpressSettingsFile creates a Wordpress settings file from a
 // template. Returns full path to location of file + err
 func createWordpressSettingsFile(app *DdevApp) (string, error) {
-	config := NewWordpressConfig(app)
+	absPath, err := wordpressGetRelativeAbsPath(app)
+	if err != nil {
+		util.Failed("Unable to create settings file: %v", err)
+	}
+
+	config := NewWordpressConfig(app, absPath)
 
 	// Unconditionally write ddev settings file
 	if err := writeWordpressDdevSettingsFile(config, app.SiteLocalSettingsPath); err != nil {
@@ -179,11 +200,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 		} else {
 			// Settings file exists and is not ddev-managed, alert the user to the location
 			// of the generated ddev settings file
-			util.Warning("\nAn existing user-managed %s file has been detected!", path.Base(app.SiteSettingsPath))
-			util.Warning("Project ddev settings have been written to:\n")
-			util.Warning(app.SiteLocalSettingsPath)
-			util.Warning("\nPlease edit your settings file to include these settings before starting")
-			util.Warning("this project.\n")
+			util.Error(wordpressConfigInstructions, app.SiteLocalSettingsPath)
 		}
 	} else {
 		// If settings file does not exist, write basic settings file including it
@@ -259,7 +276,7 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 // setWordpressSiteSettingsPaths sets the expected settings files paths for
 // a wordpress site.
 func setWordpressSiteSettingsPaths(app *DdevApp) {
-	config := NewWordpressConfig(app)
+	config := NewWordpressConfig(app, "")
 
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettings)
@@ -268,18 +285,19 @@ func setWordpressSiteSettingsPaths(app *DdevApp) {
 
 // isWordpressApp returns true if the app of of type wordpress
 func isWordpressApp(app *DdevApp) bool {
-	_, err := getRelativeAbsPath(app)
+	_, err := wordpressGetRelativeAbsPath(app)
 	if err != nil {
+		// Multiple abspath candidates is an issue, but is still a valid
+		// indicator that this is a WordPress app
+		switch err.(type) {
+		case wordpressMultipleAbsPathCandidatesError:
+			return true
+		}
+
 		return false
 	}
 
 	return true
-}
-
-// wordpressPostImportDBAction just emits a warning about updating URLs as is
-// required with wordpress when running on a different URL.
-func wordpressPostImportDBAction(app *DdevApp) error {
-	return nil
 }
 
 // wordpressImportFilesAction defines the Wordpress workflow for importing project files.
@@ -327,39 +345,35 @@ func wordpressImportFilesAction(app *DdevApp, importPath, extPath string) error 
 	return nil
 }
 
-// getRelativeAbsPath returns the portion of the ABSPATH value that will come after "/" in wp-config.php -
+// wordpressGetRelativeAbsPath returns the portion of the ABSPATH value that will come after "/" in wp-config.php -
 // this is done by searching (at a max depth of one directory from the docroot) for wp-settings.php, the
 // file we're using as a signal to indicate that this is a WordPress project.
-func getRelativeAbsPath(app *DdevApp) (string, error) {
+func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 	needle := "wp-settings.php"
 
-	// Check if the docroot is the abspath
-	if fileutil.FileExists(filepath.Join(app.AppRoot, app.Docroot, needle)) {
-		return "", nil
-	}
-
-	// Gather directories in approot
-	objs, err := ioutil.ReadDir(filepath.Join(app.AppRoot, app.Docroot))
+	curDirMatches, err := filepath.Glob(filepath.Join(app.AppRoot, app.Docroot, needle))
 	if err != nil {
 		return "", err
 	}
 
-	for _, obj := range objs {
-		if !obj.IsDir() {
-			continue
-		}
-
-		potentials, err := ioutil.ReadDir(filepath.Join(app.AppRoot, app.Docroot, obj.Name()))
-		if err != nil {
-			return "", err
-		}
-
-		for _, potential := range potentials {
-			if potential.Name() == needle {
-				return obj.Name(), nil
-			}
-		}
+	if len(curDirMatches) > 0 {
+		return "", nil
 	}
 
-	return "", fmt.Errorf("unable to determine ABSPATH")
+	subDirMatches, err := filepath.Glob(filepath.Join(app.AppRoot, app.Docroot, "*", needle))
+	if err != nil {
+		return "", err
+	}
+
+	if len(subDirMatches) == 0 {
+		return "", fmt.Errorf("unable to find %s in subdirectories", needle).(wordpressNoAbsPathError)
+	}
+
+	if len(subDirMatches) > 1 {
+		return "", fmt.Errorf("multiple subdirectories contain %s", needle).(wordpressMultipleAbsPathCandidatesError)
+	}
+
+	absPath := path.Base(path.Dir(subDirMatches[0]))
+
+	return absPath, nil
 }
