@@ -262,7 +262,12 @@ For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed fil
 
 For **TYPO3**, DDEV settings are written to AdditionalConfiguration.php.  If AdditionalConfiguration.php exists and is not managed by DDEV, it will not be modified.
 
-For **Wordpress**, DDEV settings are written to wp-config.php.
+For **Wordpress**, DDEV settings are written to a DDEV-managed file, wp-config-ddev.php. The `ddev config` command will attempt to write settings through the following steps:
+
+* Write DDEV settings to wp-config-ddev.php
+* If no wp-config.php exists, create one that include wp-config-ddev.php
+* If a DDEV-managed wp-config.php exists, create one that includes wp-config.php
+* If a user-managed wp-config.php exists, instruct the user on how to modify it to include DDEV settings
 
 How do you know if DDEV manages a settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!
 
