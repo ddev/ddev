@@ -523,11 +523,16 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	assert.Contains(out, "utf.cnf")
 	assert.Contains(out, "my-php.ini")
-	assert.Contains(out, "nginx-site.conf")
-	assert.Contains(out, "Custom configuration takes effect")
 
-	err = app.Start()
-	assert.NoError(err)
+	switch app.WebserverType {
+	case "nginx-fpm":
+		assert.Contains(out, "nginx-site.conf")
+		assert.NotContains(out, "apache-site.conf")
+	default:
+		assert.Contains(out, "apache-site.conf")
+		assert.NotContains(out, "nginx-site.conf")
+	}
+	assert.Contains(out, "Custom configuration takes effect")
 
 	_ = app.Down(true, false)
 }
