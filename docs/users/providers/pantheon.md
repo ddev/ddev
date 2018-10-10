@@ -50,7 +50,7 @@ After you copy your Pantheon project’s codebase locally, you can use `ddev con
 
 ### Imports
 
-Running `ddev pull` will connect to Pantheon through their API to find the latest versions of the database and files backups from the specified environment. If new versions are available on Pantheon, they are downloaded and stored in ~/.ddev/pantheon. If the stored copies there are the latest copies, ddev will use these cached copies instead of downloading them again.
+Running `ddev pull` will connect to Pantheon through their API to find the latest versions of the database and files backups from the specified environment. If new versions are available on Pantheon, they are downloaded and stored in ~/.ddev/pantheon. If the stored copies there are the latest copies, ddev will use these cached copies instead of downloading them again. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags. Use the `--env` flag to specify the Pantheon environment being pulled from.
 
 _**Note for WordPress Users:** In order for your local project to load file assets from your local environment rather than the Pantheon environment it was pulled from, the URL of the project must be changed in the database by performing a search and replace. ddev provides an example `wp search-replace` as a post-pull hook in the config.yaml for your project. It is recommended to populate and uncomment this example so that replacement is done any time a backup is pulled from Pantheon._
 

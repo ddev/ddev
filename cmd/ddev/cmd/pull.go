@@ -94,9 +94,9 @@ func appPull(skipConfirmation bool) {
 
 func init() {
 	PullCmd.Flags().BoolVarP(&skipConfirmationArg, "skip-confirmation", "y", false, "Skip confirmation step")
-	PullCmd.Flags().BoolVar(&skipDbArg, "skip-db", false, "Skip database download step")
-	PullCmd.Flags().BoolVar(&skipFilesArg, "skip-files", false, "Skip file archive download step")
-	PullCmd.Flags().BoolVar(&skipImportArg, "skip-import", false, "Downloads files and/or databases, but skips the import step")
-	PullCmd.Flags().StringVar(&envArg, "env", "", "Overrides the provider environment being pulled")
+	PullCmd.Flags().BoolVar(&skipDbArg, "skip-db", false, "Skip pulling database archive")
+	PullCmd.Flags().BoolVar(&skipFilesArg, "skip-files", false, "Skip pulling file archive")
+	PullCmd.Flags().BoolVar(&skipImportArg, "skip-import", false, "Downloads file and/or database archives, but does not import them")
+	PullCmd.Flags().StringVar(&envArg, "env", "", "Overrides the default provider environment being pulled")
 	RootCmd.AddCommand(PullCmd)
 }
