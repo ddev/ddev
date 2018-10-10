@@ -297,6 +297,13 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.WebserverType = webserverTypeArg
 	}
 
+	provider, err := app.GetProvider()
+	util.CheckErr(err)
+	err = provider.ValidateField("Name", app.Name)
+	if err != nil {
+		return fmt.Errorf("failed to validate configuration: %v", err)
+	}
+
 	err = app.WriteConfig()
 	if err != nil {
 		return fmt.Errorf("could not write ddev config file %s: %v", app.ConfigPath, err)

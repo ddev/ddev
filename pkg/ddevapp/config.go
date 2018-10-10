@@ -280,7 +280,7 @@ func (app *DdevApp) ValidateConfig() error {
 	// validate hostname
 	match := hostRegex.MatchString(app.GetHostname())
 	if !match {
-		return fmt.Errorf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname())
+		return fmt.Errorf("%s is not a valid hostname. Please enter a project name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname())
 	}
 
 	// validate apptype
@@ -451,14 +451,13 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	return doc.String(), err
 }
 
-// Define an application name.
+// prompt for a project name.
 func (app *DdevApp) promptForName() error {
 	provider, err := app.GetProvider()
 	if err != nil {
 		return err
 	}
 
-	namePrompt := "Project name"
 	if app.Name == "" {
 		dir, err := os.Getwd()
 		// if working directory name is invalid for hostnames, we shouldn't suggest it
@@ -468,9 +467,7 @@ func (app *DdevApp) promptForName() error {
 		}
 	}
 
-	namePrompt = fmt.Sprintf("%s (%s)", namePrompt, app.Name)
-	fmt.Print(namePrompt + ": ")
-	app.Name = util.GetInput(app.Name)
+	app.Name = util.Prompt("Project name", app.Name)
 	return provider.ValidateField("Name", app.Name)
 }
 
