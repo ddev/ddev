@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"os"
+	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -66,8 +66,8 @@ func appPull(skipConfirmation bool) {
 		}
 
 		util.Warning("You're about to delete the current %s and replace with the results of a fresh pull.", message)
-		output.UserOut.Printf("Would you like to continue? [y/N]")
-		if !util.AskForConfirmation() {
+		resp := strings.ToLower(util.Prompt("Would you like to continue? [Y/n]", "yes"))
+		if resp != "y" && resp != "yes" {
 			util.Warning("Pull cancelled.")
 			os.Exit(2)
 		}
