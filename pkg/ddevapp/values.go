@@ -87,7 +87,7 @@ func IsValidProvider(provider string) bool {
 
 // GetValidProviders is a helper function that returns a list of valid providers.
 func GetValidProviders() []string {
-	s := make([]string, len(ValidProviders))
+	s := make([]string, 0, len(ValidProviders))
 
 	for p := range ValidProviders {
 		s = append(s, p)
@@ -106,6 +106,17 @@ func IsValidPHPVersion(phpVersion string) bool {
 	return true
 }
 
+// GetValidPHPVersions is a helper function that returns a list of valid PHP versions.
+func GetValidPHPVersions() []string {
+	s := make([]string, 0, len(ValidPHPVersions))
+
+	for p := range ValidPHPVersions {
+		s = append(s, p)
+	}
+
+	return s
+}
+
 // IsValidWebserverType is a helper function to determine if a webserver type is valid, returning
 // true if the supplied webserver type is valid and false otherwise.
 func IsValidWebserverType(webserverType string) bool {
@@ -114,6 +125,17 @@ func IsValidWebserverType(webserverType string) bool {
 	}
 
 	return true
+}
+
+// GetValidWebserverTypes is a helper function that returns a list of valid webserver types.
+func GetValidWebserverTypes() []string {
+	s := make([]string, 0, len(ValidWebserverTypes))
+
+	for p := range ValidWebserverTypes {
+		s = append(s, p)
+	}
+
+	return s
 }
 
 // IsValidAppType is a helper function to determine if an app type is valid, returning

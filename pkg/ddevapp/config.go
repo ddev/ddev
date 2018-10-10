@@ -259,7 +259,7 @@ func (app *DdevApp) PromptForConfig() error {
 func (app *DdevApp) ValidateConfig() error {
 	provider, err := app.GetProvider()
 	if err != nil {
-		return err
+		return err.(invalidProvider)
 	}
 
 	// validate project name
@@ -281,17 +281,12 @@ func (app *DdevApp) ValidateConfig() error {
 
 	// validate PHP version
 	if !IsValidPHPVersion(app.PHPVersion) {
-		return fmt.Errorf("invalid PHP version: %s", app.PHPVersion).(invalidPHPVersion)
+		return fmt.Errorf("invalid PHP version: %s, must be one of %v", app.PHPVersion, GetValidPHPVersions()).(invalidPHPVersion)
 	}
 
 	// validate webserver type
 	if !IsValidWebserverType(app.WebserverType) {
-		return fmt.Errorf("invalid webserver type: %s", app.WebserverType).(invalidWebserverType)
-	}
-
-	// validate provider
-	if !IsValidProvider(app.Provider) {
-		return fmt.Errorf("invalid provider: %s", app.Provider).(invalidProvider)
+		return fmt.Errorf("invalid webserver type: %s, must be one of %s", app.WebserverType, GetValidWebserverTypes()).(invalidWebserverType)
 	}
 
 	return nil

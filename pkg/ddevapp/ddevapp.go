@@ -1251,7 +1251,7 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	}
 
 	var provider Provider
-	err := fmt.Errorf("unknown provider type: %s", app.Provider)
+	err := fmt.Errorf("unknown provider type: %s, must be one of %v", app.Provider, GetValidProviders())
 
 	switch app.Provider {
 	case ProviderPantheon:
