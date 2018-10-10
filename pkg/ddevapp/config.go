@@ -257,6 +257,16 @@ func (app *DdevApp) PromptForConfig() error {
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
+	provider, err := app.GetProvider()
+	if err != nil {
+		return err
+	}
+
+	// validate project name
+	if err = provider.ValidateField("Name", app.Name); err != nil {
+		return err.(invalidAppName)
+	}
+
 	// validate hostnames
 	for _, hn := range app.GetHostnames() {
 		if !hostRegex.MatchString(hn) {
