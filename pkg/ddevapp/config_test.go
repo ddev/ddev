@@ -467,7 +467,7 @@ func TestValidate(t *testing.T) {
 	app.Name = "Invalid!"
 	err = app.ValidateConfig()
 	assert.Error(err)
-	assert.Contains(err.Error(), "invalid hostname")
+	assert.Contains(err.Error(), "not a valid project name")
 
 	app.Docroot = "testdata"
 	app.Name = "valid"
@@ -475,6 +475,30 @@ func TestValidate(t *testing.T) {
 	err = app.ValidateConfig()
 	assert.Error(err)
 	assert.Contains(err.Error(), "invalid app type")
+
+	app.Type = AppTypeWordpress
+	app.PHPVersion = "1.1"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid PHP")
+
+	app.PHPVersion = PHPDefault
+	app.WebserverType = "server"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid webserver type")
+
+	app.WebserverType = WebserverDefault
+	app.AdditionalHostnames = []string{"good", "b@d"}
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid hostname")
+
+	app.AdditionalHostnames = []string{}
+	app.AdditionalFQDNs = []string{"good.com", "b@d.com"}
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid hostname")
 }
 
 // TestWriteConfig tests writing config values to file
