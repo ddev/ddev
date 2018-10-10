@@ -86,7 +86,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 
 	// Ensure values were properly set on the app struct.
 	assert.Equal(pantheonTestSiteName, app.Name)
-	assert.Equal("drupal8", app.Type)
+	assert.Equal(AppTypeDrupal8, app.Type)
 	assert.Equal("docroot", app.Docroot)
 	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
@@ -153,7 +153,7 @@ func TestPantheonPull(t *testing.T) {
 	app, err := NewApp(siteDir, ProviderPantheon)
 	assert.NoError(err)
 	app.Name = pantheonTestSiteName
-	app.Type = "drupal8"
+	app.Type = AppTypeDrupal8
 	err = app.WriteConfig()
 	assert.NoError(err)
 

@@ -23,12 +23,6 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-// DdevDefaultRouterHTTPPort is the starting router port, 80
-const DdevDefaultRouterHTTPPort = "80"
-
-// DdevDefaultRouterHTTPSPort is the starting https router port, 443
-const DdevDefaultRouterHTTPSPort = "443"
-
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
@@ -373,12 +367,12 @@ func (app *DdevApp) CheckCustomConfig() {
 	ddevDir := filepath.Dir(app.ConfigPath)
 
 	customConfig := false
-	if _, err := os.Stat(filepath.Join(ddevDir, "nginx-site.conf")); err == nil && app.WebserverType == "nginx-fpm" {
+	if _, err := os.Stat(filepath.Join(ddevDir, "nginx-site.conf")); err == nil && app.WebserverType == WebserverNginxFPM {
 		util.Warning("Using custom nginx configuration in nginx-site.conf")
 		customConfig = true
 	}
 
-	if _, err := os.Stat(filepath.Join(ddevDir, "apache", "apache-site.conf")); err == nil && app.WebserverType != "nginx-fpm" {
+	if _, err := os.Stat(filepath.Join(ddevDir, "apache", "apache-site.conf")); err == nil && app.WebserverType != WebserverNginxFPM {
 		util.Warning("Using custom apache configuration in apache/apache-site.conf")
 		customConfig = true
 	}

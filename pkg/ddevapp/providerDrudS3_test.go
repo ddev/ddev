@@ -167,7 +167,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	app, err := ddevapp.NewApp(testDir, "drud-s3")
 	assert.NoError(err)
 	app.Name = drudS3TestSiteName
-	app.Type = "drupal7"
+	app.Type = ddevapp.AppTypeDrupal7
 
 	err = provider.Init(app)
 	assert.NoError(err)

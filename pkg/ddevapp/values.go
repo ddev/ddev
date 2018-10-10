@@ -66,6 +66,15 @@ const (
 	AppTypeWordpress = "wordpress"
 )
 
+// Ports
+const (
+	// DdevDefaultRouterHTTPPort is the default router HTTP port
+	DdevDefaultRouterHTTPPort = "80"
+
+	// DdevDefaultRouterHTTPSPort is the default router HTTPS port
+	DdevDefaultRouterHTTPSPort = "443"
+)
+
 // IsValidProvider is a helper function to determine if a provider value is valid, returning
 // true if the supplied provider is valid and false otherwise.
 func IsValidProvider(provider string) bool {

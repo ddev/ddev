@@ -144,7 +144,7 @@ func isTypo3App(app *DdevApp) bool {
 
 // typo3ConfigOverrideAction sets a safe php_version for TYPO3
 func typo3ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = "7.2"
+	app.PHPVersion = PHP72
 	return nil
 }
 

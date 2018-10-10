@@ -37,7 +37,7 @@ func TestPortOverride(t *testing.T) {
 		// So the test will fail because of that.
 		app.RouterHTTPSPort = strconv.Itoa(453 + i)
 		app.Name = "TestPortOverride-" + strconv.Itoa(i)
-		app.Type = "php"
+		app.Type = ddevapp.AppTypePHP
 		err = app.WriteConfig()
 		assert.NoError(err)
 		err = app.ReadConfig()

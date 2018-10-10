@@ -26,7 +26,7 @@ var (
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.5.3.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-8.5.3/",
 			Docroot:                       "",
-			Type:                          "drupal8",
+			Type:                          ddevapp.AppTypeDrupal8,
 		},
 	}
 	ServiceFiles []string

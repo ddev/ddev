@@ -526,17 +526,17 @@ func TestDdevImportDB(t *testing.T) {
 
 			// Test that a settings file has correct hash_salt format
 			switch app.Type {
-			case "drupal7":
+			case ddevapp.AppTypeDrupal7:
 				// nolint: vetshadow
 				drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "$drupal_hash_salt")
 				assert.NoError(err)
 				assert.True(drupalHashSalt)
-			case "drupal8":
+			case ddevapp.AppTypeDrupal8:
 				// nolint: vetshadow
 				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "settings['hash_salt']")
 				assert.NoError(err)
 				assert.True(settingsHashSalt)
-			case "wordpress":
+			case ddevapp.AppTypeWordpress:
 				// nolint: vetshadow
 				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
 				assert.NoError(err)
@@ -1461,7 +1461,7 @@ func TestListWithoutDir(t *testing.T) {
 	app, err := ddevapp.NewApp(testDir, ddevapp.ProviderDefault)
 	assert.NoError(err)
 	app.Name = "junk"
-	app.Type = "drupal7"
+	app.Type = ddevapp.AppTypeDrupal7
 	err = app.WriteConfig()
 	assert.NoError(err)
 
@@ -1537,7 +1537,7 @@ func TestHttpsRedirection(t *testing.T) {
 	app, err := ddevapp.NewApp(appDir, ddevapp.ProviderDefault)
 	assert.NoError(err)
 	app.Name = "proj"
-	app.Type = "php"
+	app.Type = ddevapp.AppTypePHP
 
 	expectations := []URLRedirectExpectations{
 		{"https", "/subdir", "/subdir/"},
@@ -1548,7 +1548,7 @@ func TestHttpsRedirection(t *testing.T) {
 		{"http", "/redir_relative.php", "/landed.php"},
 	}
 
-	for _, webserverType := range []string{"nginx-fpm", "apache-fpm", "apache-cgi"} {
+	for _, webserverType := range []string{ddevapp.WebserverNginxFPM, ddevapp.WebserverApacheFPM, ddevapp.WebserverApacheCGI} {
 		app.WebserverType = webserverType
 		err = app.WriteConfig()
 		assert.NoError(err)
@@ -1572,7 +1572,7 @@ func TestHttpsRedirection(t *testing.T) {
 
 				expectedRedirect := parts.expectedRedirectURI
 				// However, if we're hitting redir_abs.php (or apache hitting directory), the redirect will be the whole url.
-				if strings.Contains(parts.uri, "redir_abs.php") || webserverType != "nginx-fpm" {
+				if strings.Contains(parts.uri, "redir_abs.php") || webserverType != ddevapp.WebserverNginxFPM {
 					expectedRedirect = parts.scheme + "://" + app.GetHostname() + parts.expectedRedirectURI
 				}
 				// Except the php relative redirect is always relative.
@@ -1744,7 +1744,7 @@ func TestWebserverType(t *testing.T) {
 		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "servertype.php"), filepath.Join(app.AppRoot, app.Docroot, "servertype.php"))
 
 		assert.NoError(err)
-		for _, app.WebserverType = range []string{"apache-fpm", "apache-cgi", "nginx-fpm"} {
+		for _, app.WebserverType = range []string{ddevapp.WebserverApacheFPM, ddevapp.WebserverApacheCGI, ddevapp.WebserverNginxFPM} {
 
 			err = app.WriteConfig()
 			assert.NoError(err)
@@ -1759,7 +1759,7 @@ func TestWebserverType(t *testing.T) {
 			assert.NoError(err)
 
 			expectedServerType := "Apache/2"
-			if app.WebserverType == "nginx-fpm" {
+			if app.WebserverType == ddevapp.WebserverNginxFPM {
 				expectedServerType = "nginx"
 			}
 			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)

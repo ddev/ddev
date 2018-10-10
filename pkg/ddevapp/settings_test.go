@@ -26,10 +26,10 @@ type settingsLocations struct {
 }
 
 var drupalBackdropSettingsLocations = map[string]settingsLocations{
-	"drupal6":  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	"drupal7":  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	"drupal8":  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	"backdrop": {main: "settings.php", local: "settings.ddev.php"},
+	AppTypeDrupal6:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	AppTypeDrupal7:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	AppTypeDrupal8:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	AppTypeBackdrop: {main: "settings.php", local: "settings.ddev.php"},
 }
 
 // TestWriteSettings tests writing app settings (like Drupal
@@ -38,12 +38,12 @@ func TestWriteSettings(t *testing.T) {
 	assert := asrt.New(t)
 
 	expectations := map[string]string{
-		"backdrop":  "settings.ddev.php",
-		"drupal6":   "sites/default/settings.ddev.php",
-		"drupal7":   "sites/default/settings.ddev.php",
-		"drupal8":   "sites/default/settings.ddev.php",
-		"wordpress": "wp-config-ddev.php",
-		"typo3":     "typo3conf/AdditionalConfiguration.php",
+		AppTypeBackdrop:  "settings.ddev.php",
+		AppTypeDrupal6:   "sites/default/settings.ddev.php",
+		AppTypeDrupal7:   "sites/default/settings.ddev.php",
+		AppTypeDrupal8:   "sites/default/settings.ddev.php",
+		AppTypeWordpress: "wp-config-ddev.php",
+		AppTypeTYPO3:     "typo3conf/AdditionalConfiguration.php",
 	}
 	dir := testcommon.CreateTmpDir(t.Name())
 
@@ -116,7 +116,7 @@ func TestWriteDrushConfig(t *testing.T) {
 		drushFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php")
 
 		switch app.Type {
-		case "drupal6", "drupal7", "drupal8", "backdrop":
+		case AppTypeDrupal6, AppTypeDrupal7, AppTypeDrupal8, AppTypeBackdrop:
 			require.True(t, fileutil.FileExists(drushFilePath))
 			//nolint: vetshadow
 			hostFound, err := fileutil.FgrepStringInFile(drushFilePath, fmt.Sprintf("'host' => \"%s\"", dockerIP))

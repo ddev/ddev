@@ -37,7 +37,7 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(app.WebImage, version.WebImg+":"+version.WebTag)
 	assert.Equal(app.DBAImage, version.DBAImg+":"+version.DBATag)
 	app.Name = util.RandString(32)
-	app.Type = "drupal8"
+	app.Type = AppTypeDrupal8
 
 	// WriteConfig the app.
 	err = app.WriteConfig()
@@ -140,9 +140,9 @@ func TestConfigCommand(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {"drupal6", "5.6"},
-		"drupal7phpversion": {"drupal7", "7.1"},
-		"drupal8phpversion": {"drupal8", "7.1"},
+		"drupal6phpversion": {AppTypeDrupal6, PHP56},
+		"drupal7phpversion": {AppTypeDrupal7, PHP71},
+		"drupal8phpversion": {AppTypeDrupal8, PHP71},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -215,9 +215,9 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 	assert := asrt.New(t)
 
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {"drupal6", "5.6"},
-		"drupal7phpversion": {"drupal7", "7.1"},
-		"drupal8phpversion": {"drupal8", "7.1"},
+		"drupal6phpversion": {AppTypeDrupal6, PHP56},
+		"drupal7phpversion": {AppTypeDrupal7, PHP71},
+		"drupal8phpversion": {AppTypeDrupal8, PHP71},
 	}
 
 	for testName := range testMatrix {
@@ -261,9 +261,9 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {"drupal6", "5.6"},
-		"drupal7phpversion": {"drupal7", "7.1"},
-		"drupal8phpversion": {"drupal8", "7.1"},
+		"drupal6phpversion": {AppTypeDrupal6, PHP56},
+		"drupal7phpversion": {AppTypeDrupal7, PHP71},
+		"drupal8phpversion": {AppTypeDrupal8, PHP71},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -352,7 +352,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 		// Ensure values were properly set on the app struct.
 		assert.Equal(name, app.Name)
-		assert.Equal("drupal8", app.Type)
+		assert.Equal(AppTypeDrupal8, app.Type)
 		assert.Equal(testDocrootName, app.Docroot)
 		err = PrepDdevDirectory(testDir)
 		assert.NoError(err)
@@ -407,7 +407,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 
 	// Ensure values were properly set on the app struct.
 	assert.Equal(name, app.Name)
-	assert.Equal("drupal8", app.Type)
+	assert.Equal(AppTypeDrupal8, app.Type)
 	assert.Equal("docroot", app.Docroot)
 	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
@@ -436,7 +436,7 @@ func TestReadConfig(t *testing.T) {
 	assert.Equal(app.APIVersion, version.DdevVersion)
 
 	// Values defined in file, we should have values from file
-	assert.Equal(app.Type, "drupal8")
+	assert.Equal(app.Type, AppTypeDrupal8)
 	assert.Equal(app.Docroot, "test")
 	assert.Equal(app.WebImage, "test/testimage:latest")
 }
@@ -546,7 +546,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	assert.Contains(out, "my-php.ini")
 
 	switch app.WebserverType {
-	case "nginx-fpm":
+	case WebserverNginxFPM:
 		assert.Contains(out, "nginx-site.conf")
 		assert.NotContains(out, "apache-site.conf")
 	default:

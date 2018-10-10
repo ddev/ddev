@@ -163,7 +163,7 @@ func (app *DdevApp) DetectAppType() string {
 			return appName
 		}
 	}
-	return "php"
+	return AppTypePHP
 }
 
 // PostImportDBAction calls each apptype's detector until it finds a match,
