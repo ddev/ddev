@@ -40,6 +40,9 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
 			Docroot:                       "htdocs",
 			Type:                          ddevapp.AppTypeWordpress,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
+			FilesImageURI:                 "/wp-content/uploads/2017/04/pexels-photo-265186-1024x683.jpeg",
 		},
 		{
 			Name:                          "TestPkgDrupal8",
@@ -58,13 +61,16 @@ var (
 		},
 		{
 			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
-			SourceURL:                     "https://github.com/drud/drupal-kickstart/archive/v0.4.0.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-kickstart-0.4.0/",
-			FilesTarballURL:               "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/db.tar.gz",
-			FullSiteTarballURL:            "https://github.com/drud/drupal-kickstart/releases/download/v0.4.0/site.tar.gz",
-			Docroot:                       "docroot",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.59.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-7.59/",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59-db.tar.gz",
+			FullSiteTarballURL:            "",
+			Docroot:                       "",
 			Type:                          ddevapp.AppTypeDrupal7,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "D7 test project, kittens edition"},
+			FilesImageURI:                 "/sites/default/files/field/image/kittens-large.jpg",
 			FullSiteArchiveExtPath:        "docroot/sites/default/files",
 		},
 		{
@@ -76,6 +82,9 @@ var (
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
 			Type:                          ddevapp.AppTypeDrupal6,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
+			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
 		},
 		{
 			Name:                          "TestPkgBackdrop",
@@ -86,6 +95,9 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          ddevapp.AppTypeBackdrop,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/first-post-all-about-kittens", Expect: "Lots of kittens are a good thing"},
+			FilesImageURI:                 "/files/styles/large/public/field/image/kittens-large.jpg",
 		},
 		{
 			Name:                          "TestPkgTypo3",
@@ -94,8 +106,11 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_db.tar.gz",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_files.tar.gz",
 			FullSiteTarballURL:            "",
-			Docroot:                       "",
+			Docroot:                       "public",
 			Type:                          ddevapp.AppTypeTYPO3,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
+			FilesImageURI:                 "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
 		},
 	}
 	FullTestSites = TestSites
