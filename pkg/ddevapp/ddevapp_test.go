@@ -39,7 +39,7 @@ var (
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
 			Docroot:                       "htdocs",
-			Type:                          ddevapp.AppTypeWordpress,
+			Type:                          ddevapp.AppTypeWordPress,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
 			FilesImageURI:                 "/wp-content/uploads/2017/04/pexels-photo-265186-1024x683.jpeg",
@@ -536,7 +536,7 @@ func TestDdevImportDB(t *testing.T) {
 				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "settings['hash_salt']")
 				assert.NoError(err)
 				assert.True(settingsHashSalt)
-			case ddevapp.AppTypeWordpress:
+			case ddevapp.AppTypeWordPress:
 				// nolint: vetshadow
 				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
 				assert.NoError(err)
@@ -1009,7 +1009,7 @@ func TestDdevExec(t *testing.T) {
 			out, _, err = app.Exec("web", "drush", "status")
 			assert.NoError(err)
 			assert.Regexp("PHP configuration[ :]*/etc/php/[0-9].[0-9]/fpm/php.ini", out)
-		case ddevapp.AppTypeWordpress:
+		case ddevapp.AppTypeWordPress:
 			out, _, err = app.Exec("web", "wp", "--info")
 			assert.NoError(err)
 			assert.Regexp("/etc/php.*/php.ini", out)

@@ -63,7 +63,7 @@ const (
 	AppTypeDrupal8   = "drupal8"
 	AppTypePHP       = "php"
 	AppTypeTYPO3     = "typo3"
-	AppTypeWordpress = "wordpress"
+	AppTypeWordPress = "wordpress"
 )
 
 // Ports

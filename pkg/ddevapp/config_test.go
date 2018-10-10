@@ -453,7 +453,7 @@ func TestValidate(t *testing.T) {
 		ConfigPath:    filepath.Join("testdata", "config.yaml"),
 		AppRoot:       cwd,
 		Docroot:       "testdata",
-		Type:          AppTypeWordpress,
+		Type:          AppTypeWordPress,
 		PHPVersion:    PHPDefault,
 		WebserverType: WebserverDefault,
 		Provider:      ProviderDefault,
@@ -476,7 +476,7 @@ func TestValidate(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "invalid app type")
 
-	app.Type = AppTypeWordpress
+	app.Type = AppTypeWordPress
 	app.PHPVersion = "1.1"
 	err = app.ValidateConfig()
 	assert.Error(err)
@@ -527,7 +527,7 @@ func TestWriteConfig(t *testing.T) {
 	assert.Contains(string(out), "TestWrite")
 	assert.Contains(string(out), `exec: drush cr`)
 
-	app.Type = AppTypeWordpress
+	app.Type = AppTypeWordPress
 	err = app.WriteConfig()
 	assert.NoError(err)
 

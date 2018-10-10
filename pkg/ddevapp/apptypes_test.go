@@ -24,7 +24,7 @@ func TestApptypeDetection(t *testing.T) {
 		ddevapp.AppTypeDrupal6:   "misc/ahah.js",
 		ddevapp.AppTypeDrupal7:   "misc/ajax.js",
 		ddevapp.AppTypeDrupal8:   "core/scripts/drupal.sh",
-		ddevapp.AppTypeWordpress: "wp-settings.php",
+		ddevapp.AppTypeWordPress: "wp-settings.php",
 		ddevapp.AppTypeBackdrop:  "core/scripts/backdrop.sh",
 	}
 
@@ -58,7 +58,7 @@ func TestPostConfigAction(t *testing.T) {
 		ddevapp.AppTypeDrupal6:   ddevapp.PHP56,
 		ddevapp.AppTypeDrupal7:   ddevapp.PHP71,
 		ddevapp.AppTypeDrupal8:   ddevapp.PHPDefault,
-		ddevapp.AppTypeWordpress: ddevapp.PHPDefault,
+		ddevapp.AppTypeWordPress: ddevapp.PHPDefault,
 		ddevapp.AppTypeBackdrop:  ddevapp.PHPDefault,
 	}
 
