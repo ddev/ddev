@@ -51,7 +51,7 @@ func appPull(skipConfirmation bool) {
 	}
 
 	// If we're not performing the import step, we won't be deleting the existing db or files.
-	if !skipConfirmation && !skipImportArg {
+	if !skipConfirmation && !skipImportArg && os.Getenv("DRUD_NONINTERACTIVE") == "" {
 		// Only warn the user about relevant risks.
 		var message string
 		if skipDbArg && skipFilesArg {
