@@ -81,15 +81,6 @@ func init() {
 	}
 }
 
-// GetValidAppTypes returns the valid apptype keys from the appTypeMatrix
-func GetValidAppTypes() []string {
-	keys := make([]string, 0, len(appTypeMatrix))
-	for k := range appTypeMatrix {
-		keys = append(keys, k)
-	}
-	return keys
-}
-
 // CreateSettingsFile creates the settings file (like settings.php) for the
 // provided app is the apptype has a settingsCreator function.
 func (app *DdevApp) CreateSettingsFile() (string, error) {

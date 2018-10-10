@@ -116,3 +116,12 @@ func IsValidAppType(apptype string) bool {
 
 	return true
 }
+
+// GetValidAppTypes returns the valid apptype keys from the appTypeMatrix
+func GetValidAppTypes() []string {
+	keys := make([]string, 0, len(appTypeMatrix))
+	for k := range appTypeMatrix {
+		keys = append(keys, k)
+	}
+	return keys
+}
