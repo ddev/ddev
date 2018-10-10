@@ -7,60 +7,96 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
-var skipConfirmation bool
+var (
+	// skipConfirmationArg allows a user to skip the confirmation prompt.
+	skipConfirmationArg bool
+
+	// skipDbArg allows a user to skip pulling the remote database.
+	skipDbArg bool
+
+	// skipFilesArg allows a user to skip pulling the remote file archive.
+	skipFilesArg bool
+
+	// skipImportArg allows a user to pull remote assets, but not import them into the project.
+	skipImportArg bool
+
+	// envArg allows a user to override the provider environment being pulled.
+	envArg string
+)
 
 // PullCmd represents the `ddev pull` command.
 var PullCmd = &cobra.Command{
 	Use:   "pull",
-	Short: "Import files and database using a configured provider plugin.",
-	Long: `Import files and database using a configured provider plugin.
+	Short: "Pull files and database using a configured provider plugin.",
+	Long: `Pull files and database using a configured provider plugin.
 	Running pull will connect to the configured provider and download + import the
 	latest backups.`,
+	Args: cobra.ExactArgs(0),
 	PreRun: func(cmd *cobra.Command, args []string) {
-		if len(args) > 0 {
-			err := cmd.Usage()
-			util.CheckErr(err)
-			os.Exit(0)
-		}
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		appImport(skipConfirmation)
+		appPull(skipConfirmationArg)
 	},
 }
 
-func appImport(skipConfirmation bool) {
+func appPull(skipConfirmation bool) {
 	app, err := ddevapp.GetActiveApp("")
 
 	if err != nil {
-		util.Failed("appImport failed: %v", err)
+		util.Failed("Pull failed: %v", err)
 	}
 
-	if !skipConfirmation {
-		// Unfortunately we cannot use util.Warning here as it automatically adds a newline, which is awkward when dealing with prompts.
-		d := color.New(color.FgYellow)
-		_, err = d.Printf("You're about to delete the current database and files and replace with a fresh import. Would you like to continue (y/N): ")
-		util.CheckErr(err)
-		if !util.AskForConfirmation() {
-			util.Warning("Import cancelled.")
+	// If we're not performing the import step, we won't be deleting the existing db or files.
+	if !skipConfirmation && !skipImportArg && os.Getenv("DRUD_NONINTERACTIVE") == "" {
+		// Only warn the user about relevant risks.
+		var message string
+		if skipDbArg && skipFilesArg {
+			util.Warning("Both database and files import steps skipped.")
+			return
+		} else if !skipDbArg && skipFilesArg {
+			message = "database"
+		} else if !skipFilesArg && skipDbArg {
+			message = "files"
+		} else {
+			message = "database and files"
+		}
+
+		util.Warning("You're about to delete the current %s and replace with the results of a fresh pull.", message)
+		resp := strings.ToLower(util.Prompt("Would you like to continue? [Y/n]", "yes"))
+		if resp != "y" && resp != "yes" {
+			util.Warning("Pull cancelled.")
 			os.Exit(2)
 		}
 	}
 
-	err = app.Import()
+	provider, err := app.GetProvider()
 	if err != nil {
-		util.Failed("Could not perform import: %v", err)
+		util.Failed("Failed to get provider: %v", err)
 	}
 
-	util.Success("Successfully Imported.")
-	util.Success("Your project can be reached at %s", strings.Join(app.GetAllURLs(), ", "))
+	pullOpts := &ddevapp.PullOptions{
+		SkipDb:      skipDbArg,
+		SkipFiles:   skipFilesArg,
+		SkipImport:  skipImportArg,
+		Environment: envArg,
+	}
+
+	if err := app.Pull(provider, pullOpts); err != nil {
+		util.Failed("Pull failed: %v", err)
+	}
+
+	util.Success("Pull succeeded.")
 }
 
 func init() {
-	PullCmd.Flags().BoolVarP(&skipConfirmation, "skip-confirmation", "y", false, "Skip confirmation step.")
+	PullCmd.Flags().BoolVarP(&skipConfirmationArg, "skip-confirmation", "y", false, "Skip confirmation step")
+	PullCmd.Flags().BoolVar(&skipDbArg, "skip-db", false, "Skip pulling database archive")
+	PullCmd.Flags().BoolVar(&skipFilesArg, "skip-files", false, "Skip pulling file archive")
+	PullCmd.Flags().BoolVar(&skipImportArg, "skip-import", false, "Downloads file and/or database archives, but does not import them")
+	PullCmd.Flags().StringVar(&envArg, "env", "", "Overrides the default provider environment being pulled")
 	RootCmd.AddCommand(PullCmd)
 }

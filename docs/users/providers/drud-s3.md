@@ -22,4 +22,8 @@ If you have ddev installed, and have an active DDEV-Live account, you can follow
 
 4. Run `ddev pull`. The ddev environment will spin up, download the latest backup, and import the database and files into the ddev environment. You should now be able to access the project locally.
 
+### Imports
+
+Running `ddev pull` will connect to Drud-S3 to find the latest versions of the database and files backups from the specified environment. If new versions are available, they are downloaded and stored in ~/.ddev/drud-s3. If the stored copies there are the latest copies, ddev will use these cached copies instead of downloading them again. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags. Use the `--env` flag to specify the Drud-S3 environment being pulled from.
+
 _**Note for WordPress Users:** In order for your local project to load file assets from your local environment rather than the Drud-S3 environment it was pulled from, the URL of the project must be changed in the database by performing a search and replace. ddev provides an example `wp search-replace` as a post-pull hook in the config.yaml for your project. It is recommended to populate and uncomment this example so that replacement is done any time a backup is pulled from Drud-S3._

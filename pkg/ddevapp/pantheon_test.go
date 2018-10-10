@@ -118,11 +118,11 @@ func TestPantheonBackupLinks(t *testing.T) {
 	provider.EnvironmentName = pantheonTestEnvName
 
 	// Ensure GetBackup triggers an error for unknown backup types.
-	_, _, err = provider.GetBackup(util.RandString(8))
+	_, _, err = provider.GetBackup(util.RandString(8), "")
 	assert.Error(err)
 
 	// Ensure we can get a
-	backupLink, importPath, err := provider.GetBackup("database")
+	backupLink, importPath, err := provider.GetBackup("database", "")
 
 	assert.Equal(importPath, "")
 	assert.Contains(backupLink, "database.sql.gz")
@@ -171,7 +171,7 @@ func TestPantheonPull(t *testing.T) {
 	// Ensure we can do a pull on the configured site.
 	app, err = GetActiveApp("")
 	assert.NoError(err)
-	err = app.Import()
+	err = app.Pull(&provider, &PullOptions{})
 	assert.NoError(err)
 	err = app.Down(true, false)
 	assert.NoError(err)

@@ -77,15 +77,21 @@ func (p *PantheonProvider) PromptForConfig() error {
 	}
 }
 
-// GetBackup will download the most recent backup specified by backupType. Valid values for backupType are "database" or "files".
-func (p *PantheonProvider) GetBackup(backupType string) (fileLocation string, importPath string, err error) {
+// GetBackup will download the most recent backup specified by backupType in the given environment. If no environment
+// is supplied, the configured environment will be used. Valid values for backupType are "database" or "files".
+func (p *PantheonProvider) GetBackup(backupType, environment string) (fileLocation string, importPath string, err error) {
 	if backupType != "database" && backupType != "files" {
 		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
 
-	// Set the import path blank, to use the root of the archive by default.
+	// If the user hasn't defined an environment override, use the configured value.
+	if environment == "" {
+		environment = p.EnvironmentName
+	}
+
+	// Set the import path blank to use the root of the archive by default.
 	importPath = ""
-	err = p.environmentExists()
+	err = p.environmentExists(environment)
 	if err != nil {
 		return "", "", err
 	}
@@ -93,13 +99,13 @@ func (p *PantheonProvider) GetBackup(backupType string) (fileLocation string, im
 	session := getPantheonSession()
 
 	// Find either a files or database backup, depending on what was asked for.
-	bl := pantheon.NewBackupList(p.site.ID, p.EnvironmentName)
+	bl := pantheon.NewBackupList(p.site.ID, environment)
 	err = session.Request("GET", bl)
 	if err != nil {
 		return "", "", err
 	}
 
-	backup, err := p.getPantheonBackupLink(backupType, bl, session)
+	backup, err := p.getPantheonBackupLink(backupType, bl, session, environment)
 	if err != nil {
 		return "", "", err
 	}
@@ -118,7 +124,7 @@ func (p *PantheonProvider) GetBackup(backupType string) (fileLocation string, im
 	}
 
 	if backupType == "files" {
-		importPath = fmt.Sprintf("files_%s", p.EnvironmentName)
+		importPath = fmt.Sprintf("files_%s", environment)
 	}
 
 	return destFile, importPath, nil
@@ -139,7 +145,7 @@ func (p *PantheonProvider) getDownloadDir() string {
 }
 
 // getPantheonBackupLink will return a URL for the most recent backyp of archiveType that exist with the BackupList specified.
-func (p *PantheonProvider) getPantheonBackupLink(archiveType string, bl *pantheon.BackupList, session *pantheon.AuthSession) (*pantheon.Backup, error) {
+func (p *PantheonProvider) getPantheonBackupLink(archiveType string, bl *pantheon.BackupList, session *pantheon.AuthSession, environment string) (*pantheon.Backup, error) {
 	latestBackup := pantheon.Backup{}
 	for i, backup := range bl.Backups {
 		if backup.ArchiveType == archiveType && backup.Timestamp > latestBackup.Timestamp {
@@ -158,7 +164,7 @@ func (p *PantheonProvider) getPantheonBackupLink(archiveType string, bl *pantheo
 	}
 
 	// If no matches were found, just return an empty backup along with an error.
-	return &pantheon.Backup{}, fmt.Errorf("could not find a backup of type %s. please visit your pantheon dashboard and ensure the '%s' environment has a backup available", archiveType, p.EnvironmentName)
+	return &pantheon.Backup{}, fmt.Errorf("could not find a backup of type %s. Please visit your pantheon dashboard and ensure the '%s' environment has a backup available", archiveType, environment)
 }
 
 // environmentPrompt contains the user prompts for interactive configuration of the pantheon environment.
@@ -261,20 +267,18 @@ func (p *PantheonProvider) GetEnvironments() (pantheon.EnvironmentList, error) {
 
 // Validate ensures that the current configuration is valid (i.e. the configured pantheon site/environment exists)
 func (p *PantheonProvider) Validate() error {
-	return p.environmentExists()
+	return p.environmentExists(p.EnvironmentName)
 }
 
 // environmentExists ensures the currently configured pantheon site & environment exists.
-func (p *PantheonProvider) environmentExists() error {
+func (p *PantheonProvider) environmentExists(environment string) error {
 	_, err := p.GetEnvironments()
 	if err != nil {
 		return err
 	}
 
-	_, ok := p.siteEnvironments.Environments[p.EnvironmentName]
-
-	if !ok {
-		return fmt.Errorf("could not find an environment named '%s'", p.EnvironmentName)
+	if _, ok := p.siteEnvironments.Environments[environment]; !ok {
+		return fmt.Errorf("could not find an environment named '%s'", environment)
 	}
 
 	return nil

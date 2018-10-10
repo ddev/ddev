@@ -264,7 +264,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 			extPathPrompt = true
 		}
 		output.UserOut.Println("Provide the path to the database you wish to import.")
-		fmt.Print("Import path: ")
+		fmt.Print("Pull path: ")
 
 		imPath = util.GetInput("")
 	}
@@ -401,12 +401,17 @@ func (app *DdevApp) SiteStatus() string {
 	return siteStatus
 }
 
-// Import performs an import from the a configured provider plugin, if one exists.
-func (app *DdevApp) Import() error {
-	provider, err := app.GetProvider()
-	if err != nil {
-		return err
-	}
+// PullOptions allows for customization of the pull process.
+type PullOptions struct {
+	SkipDb      bool
+	SkipFiles   bool
+	SkipImport  bool
+	Environment string
+}
+
+// Pull performs an import from the a configured provider plugin, if one exists.
+func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
+	var err error
 
 	err = provider.Validate()
 	if err != nil {
@@ -414,33 +419,55 @@ func (app *DdevApp) Import() error {
 	}
 
 	if app.SiteStatus() != SiteRunning {
-		output.UserOut.Println("Site is not currently running. Starting site before performing import.")
+		util.Warning("Project is not currently running. Starting project before performing pull.")
 		err = app.Start()
 		if err != nil {
 			return err
 		}
 	}
 
-	fileLocation, importPath, err := provider.GetBackup("database")
-	if err != nil {
-		return err
+	if opts.SkipDb {
+		output.UserOut.Println("Skipping database pull.")
+	} else {
+		output.UserOut.Println("Downloading database...")
+		fileLocation, importPath, err := provider.GetBackup("database", opts.Environment)
+		if err != nil {
+			return err
+		}
+
+		output.UserOut.Printf("Database downloaded to: %s", fileLocation)
+
+		if opts.SkipImport {
+			output.UserOut.Println("Skipping database import.")
+		} else {
+			output.UserOut.Println("Importing database...")
+			err = app.ImportDB(fileLocation, importPath)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	output.UserOut.Println("Importing database...")
-	err = app.ImportDB(fileLocation, importPath)
-	if err != nil {
-		return err
-	}
+	if opts.SkipFiles {
+		output.UserOut.Println("Skipping files pull.")
+	} else {
+		output.UserOut.Println("Downloading file archive...")
+		fileLocation, importPath, err := provider.GetBackup("files", opts.Environment)
+		if err != nil {
+			return err
+		}
 
-	fileLocation, importPath, err = provider.GetBackup("files")
-	if err != nil {
-		return err
-	}
+		output.UserOut.Printf("File archive downloaded to: %s", fileLocation)
 
-	output.UserOut.Println("Importing files...")
-	err = app.ImportFiles(fileLocation, importPath)
-	if err != nil {
-		return err
+		if opts.SkipImport {
+			output.UserOut.Println("Skipping files import.")
+		} else {
+			output.UserOut.Println("Importing files...")
+			err = app.ImportFiles(fileLocation, importPath)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

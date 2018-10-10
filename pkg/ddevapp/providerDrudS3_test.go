@@ -3,13 +3,14 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
-	"os"
-	"strings"
-	"testing"
 )
 
 /**
@@ -180,7 +181,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure we can get a db backup on the happy path.
-	backupLink, importPath, err := provider.GetBackup("database")
+	backupLink, importPath, err := provider.GetBackup("database", "")
 	assert.NoError(err)
 	assert.Equal(importPath, "")
 	assert.True(strings.HasSuffix(backupLink, "sql.gz"))
@@ -188,14 +189,14 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	// Ensure we can do a pull on the configured site.
 	app, err = ddevapp.GetActiveApp("")
 	assert.NoError(err)
-	err = app.Import()
+	err = app.Pull(&provider, &ddevapp.PullOptions{})
 	assert.NoError(err)
 	err = app.Down(true, false)
 	assert.NoError(err)
 
 	// Make sure invalid access key gets correct behavior
 	provider.AWSAccessKey = "AKIAIBSTOTALLYINVALID"
-	_, _, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database", "")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "InvalidAccessKeyId")
@@ -204,7 +205,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	// Make sure invalid secret key gets correct behavior
 	provider.AWSAccessKey = accessKeyID
 	provider.AWSSecretKey = "rweeHGZ5totallyinvalidsecretkey"
-	_, _, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database", "")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "SignatureDoesNotMatch")
@@ -213,7 +214,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	// Make sure bad environment gets correct behavior.
 	provider.AWSSecretKey = secretAccessKey
 	provider.EnvironmentName = "someInvalidUnknownEnvironment"
-	_, _, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database", "")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "could not find an environment")
@@ -222,7 +223,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	// Make sure bad bucket gets correct behavior.
 	provider.S3Bucket = drudS3TestBucket
 	provider.S3Bucket = "someInvalidUnknownBucket"
-	_, _, err = provider.GetBackup("database")
+	_, _, err = provider.GetBackup("database", "")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "NoSuchBucket")
