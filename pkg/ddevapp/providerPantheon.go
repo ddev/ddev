@@ -37,7 +37,7 @@ func (p *PantheonProvider) Init(app *DdevApp) error {
 		err = p.Read(configPath)
 	}
 
-	p.ProviderType = "pantheon"
+	p.ProviderType = ProviderPantheon
 	return err
 }
 

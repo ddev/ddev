@@ -29,7 +29,7 @@ var (
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		HTTPProbeURI:                  "wp-admin/setup-config.php",
 		Docroot:                       "htdocs",
-		Type:                          "wordpress",
+		Type:                          ddevapp.AppTypeWordPress,
 		Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 	},
 	}

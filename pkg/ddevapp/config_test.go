@@ -28,7 +28,7 @@ func TestNewConfig(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	// Load a new Config
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 
 	// Ensure the config uses specified defaults.
@@ -37,7 +37,7 @@ func TestNewConfig(t *testing.T) {
 	assert.Equal(app.WebImage, version.WebImg+":"+version.WebTag)
 	assert.Equal(app.DBAImage, version.DBAImg+":"+version.DBATag)
 	app.Name = util.RandString(32)
-	app.Type = "drupal8"
+	app.Type = AppTypeDrupal8
 
 	// WriteConfig the app.
 	err = app.WriteConfig()
@@ -45,7 +45,7 @@ func TestNewConfig(t *testing.T) {
 	_, err = os.Stat(app.ConfigPath)
 	assert.NoError(err)
 
-	loadedConfig, err := NewApp(testDir, DefaultProviderName)
+	loadedConfig, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 	assert.Equal(app.Name, loadedConfig.Name)
 	assert.Equal(app.Type, loadedConfig.Type)
@@ -73,7 +73,7 @@ func TestPrepDirectory(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 
 	// Prep the directory.
@@ -91,7 +91,7 @@ func TestHostName(t *testing.T) {
 	testDir := testcommon.CreateTmpDir("TestHostName")
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
 
@@ -106,7 +106,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
 	app.Type = GetValidAppTypes()[0]
@@ -140,9 +140,9 @@ func TestConfigCommand(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {"drupal6", "5.6"},
-		"drupal7phpversion": {"drupal7", "7.1"},
-		"drupal8phpversion": {"drupal8", "7.1"},
+		"drupal6phpversion": {AppTypeDrupal6, PHP56},
+		"drupal7phpversion": {AppTypeDrupal7, PHP71},
+		"drupal8phpversion": {AppTypeDrupal8, PHP71},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -161,7 +161,7 @@ func TestConfigCommand(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, DefaultProviderName)
+		app, err := NewApp(testDir, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -215,9 +215,9 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 	assert := asrt.New(t)
 
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {"drupal6", "5.6"},
-		"drupal7phpversion": {"drupal7", "7.1"},
-		"drupal8phpversion": {"drupal8", "7.1"},
+		"drupal6phpversion": {AppTypeDrupal6, PHP56},
+		"drupal7phpversion": {AppTypeDrupal7, PHP71},
+		"drupal8phpversion": {AppTypeDrupal8, PHP71},
 	}
 
 	for testName := range testMatrix {
@@ -229,7 +229,7 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, DefaultProviderName)
+		app, err := NewApp(testDir, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -261,9 +261,9 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {"drupal6", "5.6"},
-		"drupal7phpversion": {"drupal7", "7.1"},
-		"drupal8phpversion": {"drupal8", "7.1"},
+		"drupal6phpversion": {AppTypeDrupal6, PHP56},
+		"drupal7phpversion": {AppTypeDrupal7, PHP71},
+		"drupal8phpversion": {AppTypeDrupal8, PHP71},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -275,7 +275,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, DefaultProviderName)
+		app, err := NewApp(testDir, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -331,7 +331,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, DefaultProviderName)
+		app, err := NewApp(testDir, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -352,7 +352,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 		// Ensure values were properly set on the app struct.
 		assert.Equal(name, app.Name)
-		assert.Equal("drupal8", app.Type)
+		assert.Equal(AppTypeDrupal8, app.Type)
 		assert.Equal(testDocrootName, app.Docroot)
 		err = PrepDdevDirectory(testDir)
 		assert.NoError(err)
@@ -386,7 +386,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 
 	// Create the ddevapp we'll use for testing.
 	// This will not return an error, since there is no existing configuration.
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -407,7 +407,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 
 	// Ensure values were properly set on the app struct.
 	assert.Equal(name, app.Name)
-	assert.Equal("drupal8", app.Type)
+	assert.Equal(AppTypeDrupal8, app.Type)
 	assert.Equal("docroot", app.Docroot)
 	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
@@ -423,7 +423,7 @@ func TestReadConfig(t *testing.T) {
 		ConfigPath: filepath.Join("testdata", "config.yaml"),
 		AppRoot:    "testdata",
 		Name:       "TestRead",
-		Provider:   DefaultProviderName,
+		Provider:   ProviderDefault,
 	}
 
 	err := app.ReadConfig()
@@ -436,7 +436,7 @@ func TestReadConfig(t *testing.T) {
 	assert.Equal(app.APIVersion, version.DdevVersion)
 
 	// Values defined in file, we should have values from file
-	assert.Equal(app.Type, "drupal8")
+	assert.Equal(app.Type, AppTypeDrupal8)
 	assert.Equal(app.Docroot, "test")
 	assert.Equal(app.WebImage, "test/testimage:latest")
 }
@@ -449,11 +449,14 @@ func TestValidate(t *testing.T) {
 	assert.NoError(err)
 
 	app := &DdevApp{
-		Name:       "TestValidate",
-		ConfigPath: filepath.Join("testdata", "config.yaml"),
-		AppRoot:    cwd,
-		Docroot:    "testdata",
-		Type:       "wordpress",
+		Name:          "TestValidate",
+		ConfigPath:    filepath.Join("testdata", "config.yaml"),
+		AppRoot:       cwd,
+		Docroot:       "testdata",
+		Type:          AppTypeWordPress,
+		PHPVersion:    PHPDefault,
+		WebserverType: WebserverDefault,
+		Provider:      ProviderDefault,
 	}
 
 	err = app.ValidateConfig()
@@ -463,13 +466,39 @@ func TestValidate(t *testing.T) {
 
 	app.Name = "Invalid!"
 	err = app.ValidateConfig()
-	assert.EqualError(err, fmt.Sprintf("%s is not a valid hostname. Please enter a project name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname()))
+	assert.Error(err)
+	assert.Contains(err.Error(), "not a valid project name")
 
 	app.Docroot = "testdata"
 	app.Name = "valid"
 	app.Type = "potato"
 	err = app.ValidateConfig()
-	assert.EqualError(err, fmt.Sprintf("'%s' is not a valid apptype", app.Type))
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid app type")
+
+	app.Type = AppTypeWordPress
+	app.PHPVersion = "1.1"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid PHP")
+
+	app.PHPVersion = PHPDefault
+	app.WebserverType = "server"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid webserver type")
+
+	app.WebserverType = WebserverDefault
+	app.AdditionalHostnames = []string{"good", "b@d"}
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid hostname")
+
+	app.AdditionalHostnames = []string{}
+	app.AdditionalFQDNs = []string{"good.com", "b@d.com"}
+	err = app.ValidateConfig()
+	assert.Error(err)
+	assert.Contains(err.Error(), "invalid hostname")
 }
 
 // TestWriteConfig tests writing config values to file
@@ -486,8 +515,8 @@ func TestWriteConfig(t *testing.T) {
 		WebImage:   version.WebImg + ":" + version.WebTag,
 		DBImage:    version.DBImg + ":" + version.DBTag,
 		DBAImage:   version.DBAImg + ":" + version.DBATag,
-		Type:       "drupal8",
-		Provider:   DefaultProviderName,
+		Type:       AppTypeDrupal8,
+		Provider:   ProviderDefault,
 	}
 
 	err := app.WriteConfig()
@@ -498,7 +527,7 @@ func TestWriteConfig(t *testing.T) {
 	assert.Contains(string(out), "TestWrite")
 	assert.Contains(string(out), `exec: drush cr`)
 
-	app.Type = "wordpress"
+	app.Type = AppTypeWordPress
 	err = app.WriteConfig()
 	assert.NoError(err)
 
@@ -526,7 +555,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, DefaultProviderName)
+	app, err := NewApp(testDir, ProviderDefault)
 	assert.NoError(err)
 
 	err = app.ReadConfig()
@@ -541,7 +570,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	assert.Contains(out, "my-php.ini")
 
 	switch app.WebserverType {
-	case "nginx-fpm":
+	case WebserverNginxFPM:
 		assert.Contains(out, "nginx-site.conf")
 		assert.NotContains(out, "apache-site.conf")
 	default:

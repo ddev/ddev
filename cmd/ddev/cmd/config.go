@@ -55,7 +55,7 @@ var (
 	webserverTypeArg string
 )
 
-var providerName = ddevapp.DefaultProviderName
+var providerName = ddevapp.ProviderDefault
 
 // extraFlagsHandlingFunc does specific handling for additional flags, and is different per provider.
 var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error
@@ -297,15 +297,12 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.WebserverType = webserverTypeArg
 	}
 
-	provider, err := app.GetProvider()
-	util.CheckErr(err)
-	err = provider.ValidateField("Name", app.Name)
-	if err != nil {
-		return fmt.Errorf("failed to validate configuration: %v", err)
+	// Ensure the configuration passes validation before writing config file.
+	if err := app.ValidateConfig(); err != nil {
+		return fmt.Errorf("failed to validate config: %v", err)
 	}
 
-	err = app.WriteConfig()
-	if err != nil {
+	if err := app.WriteConfig(); err != nil {
 		return fmt.Errorf("could not write ddev config file %s: %v", app.ConfigPath, err)
 	}
 

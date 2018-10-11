@@ -45,7 +45,7 @@ func TestDrudS3ConfigCommand(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	// Create the app we'll use for testing.
-	app, err := ddevapp.NewApp(testDir, "drud-s3")
+	app, err := ddevapp.NewApp(testDir, ddevapp.ProviderDrudS3)
 	assert.NoError(err)
 
 	// Attempt config with the whole config setup, including access keys.
@@ -167,7 +167,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	app, err := ddevapp.NewApp(testDir, "drud-s3")
 	assert.NoError(err)
 	app.Name = drudS3TestSiteName
-	app.Type = "drupal7"
+	app.Type = ddevapp.AppTypeDrupal7
 
 	err = provider.Init(app)
 	assert.NoError(err)

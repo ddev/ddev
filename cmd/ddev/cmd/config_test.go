@@ -104,8 +104,8 @@ func TestConfigSetValues(t *testing.T) {
 
 	// Build config args
 	projectName := "my-project-name"
-	projectType := "typo3"
-	phpVersion := "7.1"
+	projectType := ddevapp.AppTypeTYPO3
+	phpVersion := ddevapp.PHP71
 	httpPort := "81"
 	httpsPort := "444"
 	xdebugEnabled := true
@@ -114,7 +114,7 @@ func TestConfigSetValues(t *testing.T) {
 	additionalFQDNsSlice := []string{"abc.com", "123.pizza", "xyz.co.uk"}
 	additionalFQDNs := strings.Join(additionalFQDNsSlice, ",")
 	uploadDir := filepath.Join("custom", "config", "path")
-	webserverType := "apache-fpm"
+	webserverType := ddevapp.WebserverApacheFPM
 
 	args := []string{
 		"config",

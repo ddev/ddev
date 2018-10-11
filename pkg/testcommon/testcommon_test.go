@@ -22,7 +22,7 @@ var TestSites = []TestSite{
 		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		Docroot:                       "htdocs",
-		Type:                          "wordpress",
+		Type:                          ddevapp.AppTypeWordPress,
 		Safe200URIWithExpectation:     URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 	},
 }

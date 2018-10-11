@@ -122,7 +122,7 @@ func (app *DdevApp) Init(basePath string) error {
 	if err == nil {
 		containerApproot := web.Labels["com.ddev.approot"]
 		if containerApproot != app.AppRoot {
-			return fmt.Errorf("a project (web container) in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot)
+			return fmt.Errorf("a project (web container) in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot).(webContainerExists)
 		}
 		return nil
 	} else if strings.Contains(err.Error(), "unable to find any running or stopped containers") {
@@ -225,7 +225,7 @@ func (app *DdevApp) GetName() string {
 
 // GetPhpVersion returns the app's php version
 func (app *DdevApp) GetPhpVersion() string {
-	v := DdevDefaultPHPVersion
+	v := PHPDefault
 	if app.PHPVersion != "" {
 		v = app.PHPVersion
 	}
@@ -234,7 +234,7 @@ func (app *DdevApp) GetPhpVersion() string {
 
 // GetWebserverType returns the app's webserver type (nginx-fpm/apache-fpm/apache-cgi)
 func (app *DdevApp) GetWebserverType() string {
-	v := DdevDefaultWebserverType
+	v := WebserverDefault
 	if app.WebserverType != "" {
 		v = app.WebserverType
 	}
@@ -1205,9 +1205,11 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// Mostly ignore app.Init() error, since app.Init() fails if no directory found. Some errors should be handled though.
 	// We already were successful with *finding* the app, and if we get an
 	// incomplete one we have to add to it.
-	err = app.Init(activeAppRoot)
-	if err != nil && (strings.Contains(err.Error(), "is not a valid hostname") || strings.Contains(err.Error(), "is not a valid apptype") || strings.Contains(err.Error(), "config.yaml exists but cannot be read.") || strings.Contains(err.Error(), "a project (web container) in ")) {
-		return app, err
+	if err = app.Init(activeAppRoot); err != nil {
+		switch err.(type) {
+		case webContainerExists, invalidConfigFile, invalidHostname, invalidAppType, invalidPHPVersion, invalidWebserverType, invalidProvider:
+			return app, err
+		}
 	}
 
 	if app.Name == "" {
@@ -1237,16 +1239,16 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	}
 
 	var provider Provider
-	err := fmt.Errorf("unknown provider type: %s", app.Provider)
+	err := fmt.Errorf("unknown provider type: %s, must be one of %v", app.Provider, GetValidProviders())
 
 	switch app.Provider {
-	case "pantheon":
+	case ProviderPantheon:
 		provider = &PantheonProvider{}
 		err = provider.Init(app)
-	case "drud-s3":
+	case ProviderDrudS3:
 		provider = &DrudS3Provider{}
 		err = provider.Init(app)
-	case DefaultProviderName:
+	case ProviderDefault:
 		provider = &DefaultProvider{}
 		err = nil
 	default:

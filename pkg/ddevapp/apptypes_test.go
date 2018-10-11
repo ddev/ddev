@@ -21,11 +21,11 @@ func TestApptypeDetection(t *testing.T) {
 	assert := asrt.New(t)
 
 	fileLocations := map[string]string{
-		"drupal6":   "misc/ahah.js",
-		"drupal7":   "misc/ajax.js",
-		"drupal8":   "core/scripts/drupal.sh",
-		"wordpress": "wp-settings.php",
-		"backdrop":  "core/scripts/backdrop.sh",
+		ddevapp.AppTypeDrupal6:   "misc/ahah.js",
+		ddevapp.AppTypeDrupal7:   "misc/ajax.js",
+		ddevapp.AppTypeDrupal8:   "core/scripts/drupal.sh",
+		ddevapp.AppTypeWordPress: "wp-settings.php",
+		ddevapp.AppTypeBackdrop:  "core/scripts/backdrop.sh",
 	}
 
 	for expectedType, expectedPath := range fileLocations {
@@ -41,7 +41,7 @@ func TestApptypeDetection(t *testing.T) {
 		_, err = os.OpenFile(filepath.Join(testDir, expectedPath), os.O_RDONLY|os.O_CREATE, 0666)
 		assert.NoError(err)
 
-		app, err := ddevapp.NewApp(testDir, ddevapp.DefaultProviderName)
+		app, err := ddevapp.NewApp(testDir, ddevapp.ProviderDefault)
 		assert.NoError(err)
 
 		foundType := app.DetectAppType()
@@ -55,11 +55,11 @@ func TestPostConfigAction(t *testing.T) {
 	assert := asrt.New(t)
 
 	appTypes := map[string]string{
-		"drupal6":   "5.6",
-		"drupal7":   "7.1",
-		"drupal8":   ddevapp.DdevDefaultPHPVersion,
-		"wordpress": ddevapp.DdevDefaultPHPVersion,
-		"backdrop":  ddevapp.DdevDefaultPHPVersion,
+		ddevapp.AppTypeDrupal6:   ddevapp.PHP56,
+		ddevapp.AppTypeDrupal7:   ddevapp.PHP71,
+		ddevapp.AppTypeDrupal8:   ddevapp.PHPDefault,
+		ddevapp.AppTypeWordPress: ddevapp.PHPDefault,
+		ddevapp.AppTypeBackdrop:  ddevapp.PHPDefault,
 	}
 
 	for appType, expectedPHPVersion := range appTypes {
@@ -69,7 +69,7 @@ func TestPostConfigAction(t *testing.T) {
 		defer testcommon.CleanupDir(testDir)
 		defer testcommon.Chdir(testDir)()
 
-		app, err := ddevapp.NewApp(testDir, ddevapp.DefaultProviderName)
+		app, err := ddevapp.NewApp(testDir, ddevapp.ProviderDefault)
 		assert.NoError(err)
 
 		// Prompt for apptype as a way to get it into the config.

@@ -39,7 +39,7 @@ var (
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
 			Docroot:                       "htdocs",
-			Type:                          "wordpress",
+			Type:                          ddevapp.AppTypeWordPress,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
 			FilesImageURI:                 "/wp-content/uploads/2017/04/pexels-photo-265186-1024x683.jpeg",
@@ -53,7 +53,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal8_6_1_db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.zip",
 			FullSiteTarballURL:            "",
-			Type:                          "drupal8",
+			Type:                          ddevapp.AppTypeDrupal8,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "this is a post with an image"},
@@ -67,7 +67,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59-db.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
-			Type:                          "drupal7",
+			Type:                          ddevapp.AppTypeDrupal7,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "D7 test project, kittens edition"},
 			FilesImageURI:                 "/sites/default/files/field/image/kittens-large.jpg",
@@ -81,7 +81,7 @@ var (
 			FullSiteTarballURL:            "",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
-			Type:                          "drupal6",
+			Type:                          ddevapp.AppTypeDrupal6,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
 			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
@@ -94,7 +94,7 @@ var (
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/backdrop_files.11.0.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
-			Type:                          "backdrop",
+			Type:                          ddevapp.AppTypeBackdrop,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/first-post-all-about-kittens", Expect: "Lots of kittens are a good thing"},
 			FilesImageURI:                 "/files/styles/large/public/field/image/kittens-large.jpg",
@@ -107,7 +107,7 @@ var (
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_files.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "public",
-			Type:                          "typo3",
+			Type:                          ddevapp.AppTypeTYPO3,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
 			FilesImageURI:                 "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
@@ -526,17 +526,17 @@ func TestDdevImportDB(t *testing.T) {
 
 			// Test that a settings file has correct hash_salt format
 			switch app.Type {
-			case "drupal7":
+			case ddevapp.AppTypeDrupal7:
 				// nolint: vetshadow
 				drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "$drupal_hash_salt")
 				assert.NoError(err)
 				assert.True(drupalHashSalt)
-			case "drupal8":
+			case ddevapp.AppTypeDrupal8:
 				// nolint: vetshadow
 				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "settings['hash_salt']")
 				assert.NoError(err)
 				assert.True(settingsHashSalt)
-			case "wordpress":
+			case ddevapp.AppTypeWordPress:
 				// nolint: vetshadow
 				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
 				assert.NoError(err)
@@ -1001,15 +1001,15 @@ func TestDdevExec(t *testing.T) {
 		assert.NoError(err)
 
 		switch app.GetType() {
-		case "drupal6":
+		case ddevapp.AppTypeDrupal6:
 			fallthrough
-		case "drupal7":
+		case ddevapp.AppTypeDrupal7:
 			fallthrough
-		case "drupal8":
+		case ddevapp.AppTypeDrupal8:
 			out, _, err = app.Exec("web", "drush", "status")
 			assert.NoError(err)
 			assert.Regexp("PHP configuration[ :]*/etc/php/[0-9].[0-9]/fpm/php.ini", out)
-		case "wordpress":
+		case ddevapp.AppTypeWordPress:
 			out, _, err = app.Exec("web", "wp", "--info")
 			assert.NoError(err)
 			assert.Regexp("/etc/php.*/php.ini", out)
@@ -1091,7 +1091,7 @@ func TestProcessHooks(t *testing.T) {
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
 		testcommon.ClearDockerEnv()
-		app, err := ddevapp.NewApp(site.Dir, ddevapp.DefaultProviderName)
+		app, err := ddevapp.NewApp(site.Dir, ddevapp.ProviderDefault)
 		assert.NoError(err)
 		err = app.Start()
 		assert.NoError(err)
@@ -1458,10 +1458,10 @@ func TestListWithoutDir(t *testing.T) {
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(testDir, ddevapp.DefaultProviderName)
+	app, err := ddevapp.NewApp(testDir, ddevapp.ProviderDefault)
 	assert.NoError(err)
 	app.Name = "junk"
-	app.Type = "drupal7"
+	app.Type = ddevapp.AppTypeDrupal7
 	err = app.WriteConfig()
 	assert.NoError(err)
 
@@ -1534,10 +1534,10 @@ func TestHttpsRedirection(t *testing.T) {
 	err = os.Chdir(appDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(appDir, ddevapp.DefaultProviderName)
+	app, err := ddevapp.NewApp(appDir, ddevapp.ProviderDefault)
 	assert.NoError(err)
 	app.Name = "proj"
-	app.Type = "php"
+	app.Type = ddevapp.AppTypePHP
 
 	expectations := []URLRedirectExpectations{
 		{"https", "/subdir", "/subdir/"},
@@ -1548,7 +1548,7 @@ func TestHttpsRedirection(t *testing.T) {
 		{"http", "/redir_relative.php", "/landed.php"},
 	}
 
-	for _, webserverType := range []string{"nginx-fpm", "apache-fpm", "apache-cgi"} {
+	for _, webserverType := range []string{ddevapp.WebserverNginxFPM, ddevapp.WebserverApacheFPM, ddevapp.WebserverApacheCGI} {
 		app.WebserverType = webserverType
 		err = app.WriteConfig()
 		assert.NoError(err)
@@ -1572,7 +1572,7 @@ func TestHttpsRedirection(t *testing.T) {
 
 				expectedRedirect := parts.expectedRedirectURI
 				// However, if we're hitting redir_abs.php (or apache hitting directory), the redirect will be the whole url.
-				if strings.Contains(parts.uri, "redir_abs.php") || webserverType != "nginx-fpm" {
+				if strings.Contains(parts.uri, "redir_abs.php") || webserverType != ddevapp.WebserverNginxFPM {
 					expectedRedirect = parts.scheme + "://" + app.GetHostname() + parts.expectedRedirectURI
 				}
 				// Except the php relative redirect is always relative.
@@ -1744,7 +1744,7 @@ func TestWebserverType(t *testing.T) {
 		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "servertype.php"), filepath.Join(app.AppRoot, app.Docroot, "servertype.php"))
 
 		assert.NoError(err)
-		for _, app.WebserverType = range []string{"apache-fpm", "apache-cgi", "nginx-fpm"} {
+		for _, app.WebserverType = range []string{ddevapp.WebserverApacheFPM, ddevapp.WebserverApacheCGI, ddevapp.WebserverNginxFPM} {
 
 			err = app.WriteConfig()
 			assert.NoError(err)
@@ -1759,7 +1759,7 @@ func TestWebserverType(t *testing.T) {
 			assert.NoError(err)
 
 			expectedServerType := "Apache/2"
-			if app.WebserverType == "nginx-fpm" {
+			if app.WebserverType == ddevapp.WebserverNginxFPM {
 				expectedServerType = "nginx"
 			}
 			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
