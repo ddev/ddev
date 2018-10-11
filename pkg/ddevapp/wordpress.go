@@ -145,9 +145,6 @@ define('WP_HOME', '{{ $config.DeployURL }}');
 /** WP_SITEURL location */
 define('WP_SITEURL', WP_HOME . '/{{ $config.AbsPath  }}');
 
-/** WP_ENV */
-define('WP_ENV', getenv('DDEV_ENV_NAME') ? getenv('DDEV_ENV_NAME') : 'production');
-
 /** Define the database table prefix */
 $table_prefix  = 'wp_';
 `
