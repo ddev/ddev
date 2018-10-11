@@ -909,7 +909,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 
 	if !fileutil.FileExists(filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")) {
 		// This command returning an error indicates grep has failed to find the value
-		if _, _, err := app.Exec("db", "sh", "-c", "mariabackup --verison 2>&1 >/dev/null | grep 10.1"); err != nil {
+		if _, _, err := app.Exec("db", "sh", "-c", "mariabackup --version 2>&1 | grep 10.1"); err != nil {
 			return fmt.Errorf("snapshot %s is not compatible with this version of ddev and mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/latest/users/troubleshooting/#old-snapshot")
 		}
 	}
