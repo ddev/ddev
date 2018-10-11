@@ -1207,19 +1207,7 @@ func GetActiveApp(siteName string) (*DdevApp, error) {
 	// incomplete one we have to add to it.
 	if err = app.Init(activeAppRoot); err != nil {
 		switch err.(type) {
-		case webContainerExists:
-			return app, err
-		case invalidConfigFile:
-			return app, err
-		case invalidHostname:
-			return app, err
-		case invalidAppType:
-			return app, err
-		case invalidPHPVersion:
-			return app, err
-		case invalidWebserverType:
-			return app, err
-		case invalidProvider:
+		case webContainerExists, invalidConfigFile, invalidHostname, invalidAppType, invalidPHPVersion, invalidWebserverType, invalidProvider:
 			return app, err
 		}
 	}
