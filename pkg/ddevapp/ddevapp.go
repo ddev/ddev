@@ -907,20 +907,21 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("Failed to find a snapshot in %s", hostSnapshotDir)
 	}
 
-	// This command returning an error indicates grep has failed to find the value
-	_, _, err := app.Exec("db", "sh", "-c", "mysql -V | grep 10.2")
-	if !fileutil.FileExists(filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")) && err == nil {
-		return fmt.Errorf("snapshot %s is not compatible with this version of ddev and mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/latest/users/troubleshooting/#old-snapshot")
+	if !fileutil.FileExists(filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")) {
+		// This command returning an error indicates grep has failed to find the value
+		if _, _, err := app.Exec("db", "sh", "-c", "mysql -V | grep 10.2"); err == nil {
+			return fmt.Errorf("snapshot %s is not compatible with this version of ddev and mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/latest/users/troubleshooting/#old-snapshot")
+		}
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
-		err = app.Down(false, false)
+		err := app.Down(false, false)
 		if err != nil {
 			return fmt.Errorf("Failed to rm  project for RestoreSnapshot: %v", err)
 		}
 	}
 
-	err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
+	err := os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
 	util.CheckErr(err)
 	err = app.Start()
 	if err != nil {
