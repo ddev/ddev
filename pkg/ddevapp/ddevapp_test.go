@@ -542,7 +542,6 @@ func TestDdevImportDB(t *testing.T) {
 				assert.NoError(err)
 				assert.True(hasAuthSalt)
 			}
-
 		}
 
 		if site.DBTarURL != "" {

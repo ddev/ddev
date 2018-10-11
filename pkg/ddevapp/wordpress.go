@@ -1,69 +1,75 @@
 package ddevapp
 
 import (
-	"os"
-	"path/filepath"
-	"text/template"
-
 	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+	"text/template"
 
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 )
 
 // WordpressConfig encapsulates all the configurations for a WordPress site.
 type WordpressConfig struct {
-	WPGeneric        bool
-	DeployName       string
-	DeployURL        string
-	DatabaseName     string
-	DatabaseUsername string
-	DatabasePassword string
-	DatabaseHost     string
-	AuthKey          string
-	SecureAuthKey    string
-	LoggedInKey      string
-	NonceKey         string
-	AuthSalt         string
-	SecureAuthSalt   string
-	LoggedInSalt     string
-	NonceSalt        string
-	Docroot          string
-	TablePrefix      string
-	Signature        string
+	WPGeneric         bool
+	DeployName        string
+	DeployURL         string
+	DatabaseName      string
+	DatabaseUsername  string
+	DatabasePassword  string
+	DatabaseHost      string
+	AuthKey           string
+	SecureAuthKey     string
+	LoggedInKey       string
+	NonceKey          string
+	AuthSalt          string
+	SecureAuthSalt    string
+	LoggedInSalt      string
+	NonceSalt         string
+	Docroot           string
+	TablePrefix       string
+	Signature         string
+	SiteSettings      string
+	SiteSettingsLocal string
+	AbsPath           string
 }
 
 // NewWordpressConfig produces a WordpressConfig object with defaults.
-func NewWordpressConfig() *WordpressConfig {
+func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 	return &WordpressConfig{
-		WPGeneric:        false,
-		DatabaseName:     "db",
-		DatabaseUsername: "db",
-		DatabasePassword: "db",
-		DatabaseHost:     "db",
-		Docroot:          "/var/www/html/docroot",
-		TablePrefix:      "wp_",
-		AuthKey:          util.RandString(64),
-		AuthSalt:         util.RandString(64),
-		LoggedInKey:      util.RandString(64),
-		LoggedInSalt:     util.RandString(64),
-		NonceKey:         util.RandString(64),
-		NonceSalt:        util.RandString(64),
-		SecureAuthKey:    util.RandString(64),
-		SecureAuthSalt:   util.RandString(64),
-		Signature:        DdevFileSignature,
+		WPGeneric:         false,
+		DatabaseName:      "db",
+		DatabaseUsername:  "db",
+		DatabasePassword:  "db",
+		DatabaseHost:      "db",
+		DeployURL:         app.GetHTTPURL(),
+		Docroot:           "/var/www/html/docroot",
+		TablePrefix:       "wp_",
+		AuthKey:           util.RandString(64),
+		AuthSalt:          util.RandString(64),
+		LoggedInKey:       util.RandString(64),
+		LoggedInSalt:      util.RandString(64),
+		NonceKey:          util.RandString(64),
+		NonceSalt:         util.RandString(64),
+		SecureAuthKey:     util.RandString(64),
+		SecureAuthSalt:    util.RandString(64),
+		Signature:         DdevFileSignature,
+		SiteSettings:      "wp-config.php",
+		SiteSettingsLocal: "wp-config-ddev.php",
+		AbsPath:           absPath,
 	}
 }
 
-// wordPressHooks adds a wp-specific hooks example for post-import-db
+// wordPressHooks adds a wp-specific hooks example for post-start
 const wordPressHooks = `
-# Un-comment and enter the production url and local url
-# to replace in your database after import.
-#  post-import-db:
-#    - exec: wp search-replace <production-url> <local-url>`
+# Un-comment to emit the WP CLI version after ddev start.
+#  post-start:
+#    - exec: wp cli version`
 
 // getWordpressHooks for appending as byte array
 func getWordpressHooks() []byte {
@@ -79,15 +85,45 @@ func getWordpressUploadDir(app *DdevApp) string {
 	return app.UploadDir
 }
 
-const (
-	wordpressTemplate = `<?php
+const wordpressSettingsTemplate = `<?php
 {{ $config := . }}
 /**
- {{ $config.Signature }}: Automatically generated WordPress wp-config.php file.
+ {{ $config.Signature }}: Automatically generated WordPress settings file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
-// ** MySQL settings - You can get this info from your web host ** //
+/** Authentication Unique Keys and Salts. */
+define('AUTH_KEY',         '{{ $config.AuthKey }}');
+define('SECURE_AUTH_KEY',  '{{ $config.SecureAuthKey }}');
+define('LOGGED_IN_KEY',    '{{ $config.LoggedInKey }}');
+define('NONCE_KEY',        '{{ $config.NonceKey }}');
+define('AUTH_SALT',        '{{ $config.AuthSalt }}');
+define('SECURE_AUTH_SALT', '{{ $config.SecureAuthSalt }}');
+define('LOGGED_IN_SALT',   '{{ $config.LoggedInSalt }}');
+define('NONCE_SALT',       '{{ $config.NonceSalt }}');
+
+/** Absolute path to the WordPress directory. */
+define('ABSPATH', dirname(__FILE__) . '/{{ $config.AbsPath }}');
+
+// Include for settings managed by ddev.
+$ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
+if (is_readable($ddev_settings) && !defined('DB_USER')) {
+	require_once($ddev_settings);
+}
+
+/** Include wp-settings.php */
+if (file_exists(ABSPATH . '/wp-settings.php')) {
+	require_once ABSPATH . '/wp-settings.php';
+}
+`
+
+const wordpressDdevSettingsTemplate = `<?php
+{{ $config := . }}
+/**
+{{ $config.Signature }}: Automatically generated WordPress settings file.
+This file is managed by ddev and may be deleted or overwritten.
+*/
+
 /** The name of the database for WordPress */
 define('DB_NAME', '{{ $config.DatabaseName }}');
 
@@ -100,75 +136,92 @@ define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
 /** MySQL hostname */
 define('DB_HOST', '{{ $config.DatabaseHost }}');
 
-/** Database Charset to use in creating database tables. */
-define('DB_CHARSET', 'utf8mb4');
+/** Enable debug */
+define('WP_DEBUG', true);
 
-/** The Database Collate type. Don't change this if in doubt. */
-define('DB_COLLATE', '');
+/** WP_HOME URL */
+define('WP_HOME', '{{ $config.DeployURL }}');
 
-/**
- * WordPress Database Table prefix.
- */
-$table_prefix  = '{{ $config.TablePrefix }}';
+/** WP_SITEURL location */
+define('WP_SITEURL', WP_HOME . '/{{ $config.AbsPath  }}');
 
-/**
- * For developers: WordPress debugging mode.
- */
-define('WP_DEBUG', false);
+/** WP_ENV */
+define('WP_ENV', getenv('DDEV_ENV_NAME') ? getenv('DDEV_ENV_NAME') : 'production');
 
-/**#@+
- * Authentication Unique Keys and Salts.
- */
-define( 'AUTH_KEY',         '{{ $config.AuthKey }}' );
-define( 'SECURE_AUTH_KEY',  '{{ $config.SecureAuthKey }}' );
-define( 'LOGGED_IN_KEY',    '{{ $config.LoggedInKey }}' );
-define( 'NONCE_KEY',        '{{ $config.NonceKey }}' );
-define( 'AUTH_SALT',        '{{ $config.AuthSalt }}' );
-define( 'SECURE_AUTH_SALT', '{{ $config.SecureAuthSalt }}' );
-define( 'LOGGED_IN_SALT',   '{{ $config.LoggedInSalt }}' );
-define( 'NONCE_SALT',       '{{ $config.NonceSalt }}' );
-
-/* That's all, stop editing! Happy blogging. */
-
-/** Absolute path to the WordPress directory. */
-if ( !defined('ABSPATH') )
-	define('ABSPATH', dirname(__FILE__) . '/');
-
-/**
-Sets up WordPress vars and included files.
-
-wp-settings.php is typically included in wp-config.php. This check ensures it is not
-included again if this file is written to wp-config-local.php.
-*/
-if (basename(__FILE__) == "wp-config.php") {
-	require_once(ABSPATH . '/wp-settings.php');
-}
+/** Define the database table prefix */
+$table_prefix  = 'wp_';
 `
-)
 
-// createWordpressSettingsFile creates a wordpress settings file from a
-// template. Returns fullpath to location of file + err
+const wordpressConfigInstructions = `
+An existing user-managed wp-config.php file has been detected!
+Project ddev settings have been written to:
+
+%s
+
+Please comment out all existing database connection settings add the following
+snippet to your wp-config.php file before the include of wp-settings.php near 
+the bottom of the file:
+
+// Include for ddev-managed settings in wp-config-ddev.php.
+$ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
+if (is_readable($ddev_settings) && !defined('DB_USER')) {
+  require_once($ddev_settings);
+}`
+
+// createWordpressSettingsFile creates a Wordpress settings file from a
+// template. Returns full path to location of file + err
 func createWordpressSettingsFile(app *DdevApp) (string, error) {
-	settingsFilePath := app.SiteSettingsPath
-	if settingsFilePath == "" {
-		settingsFilePath = app.SiteLocalSettingsPath
+	absPath, err := wordpressGetRelativeAbsPath(app)
+	if err != nil {
+		if strings.Contains(err.Error(), "multiple") {
+			util.Warning("Unable to determine ABSPATH: %v", err)
+		}
 	}
-	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(settingsFilePath))
-	wpConfig := NewWordpressConfig()
-	wpConfig.DeployURL = app.GetHTTPURL()
-	err := WriteWordpressConfig(wpConfig, settingsFilePath)
-	return settingsFilePath, err
+
+	config := NewWordpressConfig(app, absPath)
+
+	// Unconditionally write ddev settings file
+	if err := writeWordpressDdevSettingsFile(config, app.SiteLocalSettingsPath); err != nil {
+		return "", err
+	}
+
+	// Check if an existing WordPress settings file exists
+	if fileutil.FileExists(app.SiteSettingsPath) {
+		// Check if existing WordPress settings file is ddev-managed
+		sigExists, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, DdevFileSignature)
+		if err != nil {
+			return "", err
+		}
+
+		if sigExists {
+			// Settings file is ddev-managed, overwriting is safe
+			if err := writeWordpressSettingsFile(config, app.SiteSettingsPath); err != nil {
+				return "", err
+			}
+		} else {
+			// Settings file exists and is not ddev-managed, alert the user to the location
+			// of the generated ddev settings file
+			util.Failed(wordpressConfigInstructions, app.SiteLocalSettingsPath)
+		}
+	} else {
+		// If settings file does not exist, write basic settings file including it
+		if err := writeWordpressSettingsFile(config, app.SiteSettingsPath); err != nil {
+			return "", err
+		}
+	}
+
+	return app.SiteLocalSettingsPath, nil
 }
 
-// WriteWordpressConfig dynamically produces valid wp-config.php file by combining a configuration
+// writeWordpressSettingsFile dynamically produces valid wp-config.php file by combining a configuration
 // object with a data-driven template.
-func WriteWordpressConfig(wordpressConfig *WordpressConfig, filePath string) error {
-	tmpl, err := template.New("wordpressConfig").Funcs(sprig.TxtFuncMap()).Parse(wordpressTemplate)
+func writeWordpressSettingsFile(wordpressConfig *WordpressConfig, filePath string) error {
+	tmpl, err := template.New("wordpressConfig").Funcs(sprig.TxtFuncMap()).Parse(wordpressSettingsTemplate)
 	if err != nil {
 		return err
 	}
 
-	// Ensure target directory exists and is writeable
+	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
 	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
@@ -182,38 +235,69 @@ func WriteWordpressConfig(wordpressConfig *WordpressConfig, filePath string) err
 	if err != nil {
 		return err
 	}
-	err = tmpl.Execute(file, wordpressConfig)
+	defer util.CheckClose(file)
+
+	if err = tmpl.Execute(file, wordpressConfig); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// writeWordpressDdevSettingsFile unconditionally creates the file that contains ddev-specific settings.
+func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) error {
+	tmpl, err := template.New("wordpressConfig").Funcs(sprig.TxtFuncMap()).Parse(wordpressDdevSettingsTemplate)
 	if err != nil {
 		return err
 	}
-	util.CheckClose(file)
+
+	// Ensure target directory exists and is writable
+	dir := filepath.Dir(filePath)
+	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(file)
+
+	if err = tmpl.Execute(file, config); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // setWordpressSiteSettingsPaths sets the expected settings files paths for
 // a wordpress site.
 func setWordpressSiteSettingsPaths(app *DdevApp) {
+	config := NewWordpressConfig(app, "")
+
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
-	var settingsFilePath, localSettingsFilePath string
-	settingsFilePath = filepath.Join(settingsFileBasePath, "wp-config.php")
-	localSettingsFilePath = filepath.Join(settingsFileBasePath, "wp-config-local.php")
-	app.SiteSettingsPath = settingsFilePath
-	app.SiteLocalSettingsPath = localSettingsFilePath
+	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettings)
+	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettingsLocal)
 }
 
 // isWordpressApp returns true if the app of of type wordpress
 func isWordpressApp(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "wp-login.php")); err == nil {
-		return true
-	}
-	return false
-}
+	_, err := wordpressGetRelativeAbsPath(app)
+	if err != nil {
+		// Multiple abspath candidates is an issue, but is still a valid
+		// indicator that this is a WordPress app
+		if strings.Contains(err.Error(), "multiple") {
+			return true
+		}
 
-// wordpressPostImportDBAction just emits a warning about updating URLs as is
-// required with wordpress when running on a different URL.
-func wordpressPostImportDBAction(app *DdevApp) error {
-	util.Warning("Wordpress sites require a search/replace of the database when the URL is changed. You can run \"ddev exec wp search-replace [http://www.myproductionsite.example] %s\" to update the URLs across your database. For more information, see http://wp-cli.org/commands/search-replace/", app.GetHTTPURL())
-	return nil
+		return false
+	}
+
+	return true
 }
 
 // wordpressImportFilesAction defines the Wordpress workflow for importing project files.
@@ -259,4 +343,37 @@ func wordpressImportFilesAction(app *DdevApp, importPath, extPath string) error 
 	}
 
 	return nil
+}
+
+// wordpressGetRelativeAbsPath returns the portion of the ABSPATH value that will come after "/" in wp-config.php -
+// this is done by searching (at a max depth of one directory from the docroot) for wp-settings.php, the
+// file we're using as a signal to indicate that this is a WordPress project.
+func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
+	needle := "wp-settings.php"
+
+	curDirMatches, err := filepath.Glob(filepath.Join(app.AppRoot, app.Docroot, needle))
+	if err != nil {
+		return "", err
+	}
+
+	if len(curDirMatches) > 0 {
+		return "", nil
+	}
+
+	subDirMatches, err := filepath.Glob(filepath.Join(app.AppRoot, app.Docroot, "*", needle))
+	if err != nil {
+		return "", err
+	}
+
+	if len(subDirMatches) == 0 {
+		return "", fmt.Errorf("unable to find %s in subdirectories", needle)
+	}
+
+	if len(subDirMatches) > 1 {
+		return "", fmt.Errorf("multiple subdirectories contain %s", needle)
+	}
+
+	absPath := path.Base(path.Dir(subDirMatches[0]))
+
+	return absPath, nil
 }
