@@ -115,6 +115,9 @@ func TestConfigSetValues(t *testing.T) {
 	additionalFQDNs := strings.Join(additionalFQDNsSlice, ",")
 	uploadDir := filepath.Join("custom", "config", "path")
 	webserverType := ddevapp.WebserverApacheFPM
+	webImage := "custom-web-image"
+	dbImage := "custom-db-image"
+	dbaImage := "custom-dba-image"
 
 	args := []string{
 		"config",
@@ -129,6 +132,9 @@ func TestConfigSetValues(t *testing.T) {
 		"--additional-fqdns", additionalFQDNs,
 		"--upload-dir", uploadDir,
 		"--webserver-type", webserverType,
+		"--web-image", webImage,
+		"--db-image", dbImage,
+		"--dba-image", dbaImage,
 	}
 
 	_, err = exec.RunCommand(DdevBin, args)
@@ -140,10 +146,9 @@ func TestConfigSetValues(t *testing.T) {
 		t.Errorf("Unable to read %s: %v", configFile, err)
 	}
 
-	assert.NoError(err, "Unable to read config file at %s", configFile)
 	app := &ddevapp.DdevApp{}
 	if err = yaml.Unmarshal(configContents, app); err != nil {
-		t.Errorf("Could not unmarshal config.yaml %s: %v", configFile, err)
+		t.Errorf("Could not unmarshal %s: %v", configFile, err)
 	}
 
 	assert.Equal(projectName, app.Name)
@@ -157,6 +162,61 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(additionalFQDNsSlice, app.AdditionalFQDNs)
 	assert.Equal(uploadDir, app.UploadDir)
 	assert.Equal(webserverType, app.WebserverType)
+	assert.Equal(webImage, app.WebImage)
+	assert.Equal(dbImage, app.DBImage)
+	assert.Equal(dbaImage, app.DBAImage)
+
+	// Test that container images can be unset with default flags
+	args = []string{
+		"config",
+		"--web-image-default",
+		"--db-image-default",
+		"--dba-image-default",
+	}
+
+	_, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err)
+
+	configContents, err = ioutil.ReadFile(configFile)
+	assert.NoError(err, "Unable to read %s: %v", configFile, err)
+
+	app = &ddevapp.DdevApp{}
+	err = yaml.Unmarshal(configContents, app)
+	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
+
+	assert.Equal(app.WebImage, "")
+	assert.Equal(app.DBImage, "")
+	assert.Equal(app.DBAImage, "")
+
+	// Test that all container images can be unset with single default images flag
+	args = []string{
+		"config",
+		"--web-image", webImage,
+		"--db-image", dbImage,
+		"--dba-image", dbaImage,
+	}
+
+	_, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err)
+
+	args = []string{
+		"config",
+		"--image-defaults",
+	}
+
+	_, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err)
+
+	configContents, err = ioutil.ReadFile(configFile)
+	assert.NoError(err, "Unable to read %s: %v", configFile, err)
+
+	app = &ddevapp.DdevApp{}
+	err = yaml.Unmarshal(configContents, app)
+	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
+
+	assert.Equal(app.WebImage, "")
+	assert.Equal(app.DBImage, "")
+	assert.Equal(app.DBAImage, "")
 }
 
 // TestConfigInvalidProjectname tests to make sure that invalid projectnames
