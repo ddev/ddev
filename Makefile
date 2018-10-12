@@ -88,7 +88,7 @@ setup:
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
-staticrequired: gometalinter golangci-lint
+staticrequired: golangci-lint
 
 windows_install: windows bin/windows/windows_amd64/sudo.exe bin/windows/windows_amd64/sudo_license.txt
 	makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
