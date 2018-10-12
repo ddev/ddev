@@ -19,7 +19,7 @@ var drudS3Bucket string
 var drudS3ConfigCommand *cobra.Command = &cobra.Command{
 	Use:     "drud-s3",
 	Short:   "Create or modify a ddev project drud-s3 configuration in the current directory",
-	Example: `"ddev config drud-s3" or "ddev config drud-s3 --access-key-id=AKIAISOMETHINGMAGIC --secret-access-key=rweeMAGICSECRET --docroot=. --projectname=d7-kickstart --projecttype=drupal7 --bucket-name=my_aws_s3_bucket --environment=production"`,
+	Example: `"ddev config drud-s3" or "ddev config drud-s3 --access-key-id=AKIAISOMETHINGMAGIC --secret-access-key=rweeMAGICSECRET --docroot=. --project-name=d7-kickstart --project-type=drupal7 --bucket-name=my_aws_s3_bucket --environment=production"`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		providerName = ddevapp.ProviderDrudS3
 		extraFlagsHandlingFunc = handleDrudS3Flags

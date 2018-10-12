@@ -121,9 +121,9 @@ func TestConfigSetValues(t *testing.T) {
 
 	args := []string{
 		"config",
-		"--projectname", projectName,
+		"--project-name", projectName,
 		"--docroot", docroot,
-		"--projecttype", projectType,
+		"--project-type", projectType,
 		"--php-version", phpVersion,
 		"--http-port", httpPort,
 		"--https-port", httpsPort,
@@ -240,7 +240,7 @@ func TestConfigInvalidProjectname(t *testing.T) {
 	for _, projName := range []string{"no-spaces-but-hyphens", "UpperAndLower", "should.work.with.dots"} {
 		args := []string{
 			"config",
-			"--projectname", projName,
+			"--project-name", projName,
 		}
 
 		out, err := exec.RunCommand(DdevBin, args)
@@ -253,7 +253,7 @@ func TestConfigInvalidProjectname(t *testing.T) {
 	for _, projName := range []string{"with spaces", "with_underscores", "no,commas-will-make-it"} {
 		args := []string{
 			"config",
-			"--projectname", projName,
+			"--project-name", projName,
 		}
 
 		out, err := exec.RunCommand(DdevBin, args)

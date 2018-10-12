@@ -21,11 +21,11 @@ var (
 	// docrootRelPathArg is the relative path to the docroot where index.php is.
 	docrootRelPathArg string
 
-	// siteNameArg is the name of the site.
-	siteNameArg string
+	// projectNameArg is the name of the site.
+	projectNameArg string
 
-	// appTypeArg is the ddev app type, like drupal7/drupal8/wordpress.
-	appTypeArg string
+	// projectTypeArg is the ddev app type, like drupal7/drupal8/wordpress.
+	projectTypeArg string
 
 	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6/7.0/7.1/7.2.
 	phpVersionArg string
@@ -85,7 +85,7 @@ var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.
 var ConfigCommand *cobra.Command = &cobra.Command{
 	Use:     "config [provider]",
 	Short:   "Create or modify a ddev project configuration in the current directory",
-	Example: `"ddev config" or "ddev config --docroot=. --projectname=d7-kickstart --projecttype=drupal7"`,
+	Example: `"ddev config" or "ddev config --docroot=. --project-name=d7-kickstart --project-type=drupal7"`,
 	Args:    cobra.ExactArgs(0),
 	Run:     handleConfigRun,
 }
@@ -146,12 +146,12 @@ func init() {
 	var err error
 
 	validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
-	apptypeUsage := fmt.Sprintf("Provide the project type (one of %s). This is autodetected and this flag is necessary only to override the detection.", validAppTypes)
+	projectTypeUsage := fmt.Sprintf("Provide the project type (one of %s). This is autodetected and this flag is necessary only to override the detection.", validAppTypes)
 	projectNameUsage := fmt.Sprintf("Provide the project name of project to configure (normally the same as the last part of directory name)")
 
-	ConfigCommand.Flags().StringVar(&siteNameArg, "projectname", "", projectNameUsage)
+	ConfigCommand.Flags().StringVar(&projectNameArg, "project-name", "", projectNameUsage)
 	ConfigCommand.Flags().StringVar(&docrootRelPathArg, "docroot", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
-	ConfigCommand.Flags().StringVar(&appTypeArg, "projecttype", "", apptypeUsage)
+	ConfigCommand.Flags().StringVar(&projectTypeArg, "project-type", "", projectTypeUsage)
 	ConfigCommand.Flags().StringVar(&phpVersionArg, "php-version", "", "The version of PHP that will be enabled in the web container")
 	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The web container's exposed HTTP port")
 	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The web container's exposed HTTPS port")
@@ -170,14 +170,24 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&dbaImageDefaultArg, "dba-image-default", false, "Sets the default dba container image for this ddev version")
 	ConfigCommand.Flags().BoolVar(&imageDefaultsArg, "image-defaults", false, "Sets the default web, db, and dba container images")
 
+	// projectname flag exists for backwards compatability.
+	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
+	err = ConfigCommand.Flags().MarkDeprecated("projectname", "The --projectname flag is deprecated in favor of --project-name")
+	util.CheckErr(err)
+
+	// apptype flag exists for backwards compatability.
+	ConfigCommand.Flags().StringVar(&projectTypeArg, "projecttype", "", projectTypeUsage)
+	err = ConfigCommand.Flags().MarkDeprecated("projecttype", "The --projecttype flag is deprecated in favor of --project-type")
+	util.CheckErr(err)
+
 	// apptype flag exists for backwards compatibility.
-	ConfigCommand.Flags().StringVar(&appTypeArg, "apptype", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
-	err = ConfigCommand.Flags().MarkDeprecated("apptype", "The apptype flag is deprecated in favor of --projecttype")
+	ConfigCommand.Flags().StringVar(&projectTypeArg, "apptype", "", projectTypeUsage+" This is the same as --project-type and is included only for backwards compatibility.")
+	err = ConfigCommand.Flags().MarkDeprecated("apptype", "The apptype flag is deprecated in favor of --project-type")
 	util.CheckErr(err)
 
 	// sitename flag exists for backwards compatibility.
-	ConfigCommand.Flags().StringVar(&siteNameArg, "sitename", "", projectNameUsage+" This is the same as projectname and is included only for backwards compatibility")
-	err = ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --projectname")
+	ConfigCommand.Flags().StringVar(&projectNameArg, "sitename", "", projectNameUsage+" This is the same as project-name and is included only for backwards compatibility")
+	err = ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --project-name")
 	util.CheckErr(err)
 
 	RootCmd.AddCommand(ConfigCommand)
@@ -229,10 +239,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	app.WarnIfConfigReplace()
 
 	// app.Name gets set to basename if not provided, or set to siteNameArg if provided
-	if app.Name != "" && siteNameArg == "" { // If we already have a c.Name and no siteNameArg, leave c.Name alone
+	if app.Name != "" && projectNameArg == "" { // If we already have a c.Name and no siteNameArg, leave c.Name alone
 		// Sorry this is empty but it makes the logic clearer.
-	} else if siteNameArg != "" { // if we have a siteNameArg passed in, use it for c.Name
-		app.Name = siteNameArg
+	} else if projectNameArg != "" { // if we have a siteNameArg passed in, use it for c.Name
+		app.Name = projectNameArg
 	} else { // No siteNameArg passed, c.Name not set: use c.Name from the directory
 		// nolint: vetshadow
 		pwd, err := os.Getwd()
@@ -265,7 +275,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
 	}
 
-	if appTypeArg != "" && !ddevapp.IsValidAppType(appTypeArg) {
+	if projectTypeArg != "" && !ddevapp.IsValidAppType(projectTypeArg) {
 		validAppTypes := strings.Join(ddevapp.GetValidAppTypes(), ", ")
 		util.Failed("apptype must be one of %s", validAppTypes)
 	}
@@ -275,15 +285,15 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	if pathErr != nil {
 		util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, pathErr)
 	}
-	if appTypeArg == "" || appTypeArg == detectedApptype { // Found an app, matches passed-in or no apptype passed
-		appTypeArg = detectedApptype
+	if projectTypeArg == "" || projectTypeArg == detectedApptype { // Found an app, matches passed-in or no apptype passed
+		projectTypeArg = detectedApptype
 		util.Success("Found a %s codebase at %s", detectedApptype, fullPath)
-	} else if appTypeArg != "" { // apptype was passed, but we found no app at all
-		util.Warning("You have specified a project type of %s but no project of that type is found in %s", appTypeArg, fullPath)
-	} else if appTypeArg != "" && detectedApptype != appTypeArg { // apptype was passed, app was found, but not the same type
-		util.Warning("You have specified a project type of %s but a project of type %s was discovered in %s", appTypeArg, detectedApptype, fullPath)
+	} else if projectTypeArg != "" { // apptype was passed, but we found no app at all
+		util.Warning("You have specified a project type of %s but no project of that type is found in %s", projectTypeArg, fullPath)
+	} else if projectTypeArg != "" && detectedApptype != projectTypeArg { // apptype was passed, app was found, but not the same type
+		util.Warning("You have specified a project type of %s but a project of type %s was discovered in %s", projectTypeArg, detectedApptype, fullPath)
 	}
-	app.Type = appTypeArg
+	app.Type = projectTypeArg
 
 	// App overrides are done after app type is detected, but
 	// before user-defined flags are set.
