@@ -627,7 +627,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		// Test static content.
 		testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
-		//testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.DynamicURI.URI, site.DynamicURI.Expect)
 		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 40)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=$v: %v", rawurl, resp, err)
@@ -697,7 +696,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	err = app.ImportDB(d7testerTest1Dump, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
-	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
 
 	// Make a snapshot of d7 tester test 1
 	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
@@ -708,7 +707,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	err = app.ImportDB(d7testerTest2Dump, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
-	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes", 45)
 
 	snapshotName, err = app.SnapshotDatabase("d7testerTest2")
 	assert.NoError(err)
@@ -717,12 +716,11 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	err = app.RestoreSnapshot("d7testerTest1")
 	assert.NoError(err)
-	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node")
+	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
 	err = app.RestoreSnapshot("d7testerTest2")
 	assert.NoError(err)
-	//testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes")
 
-	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 40)
+	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 45)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetHTTPURL(), err)
 	assert.Contains(body, "d7 tester test 2 has 2 nodes")
 	if err != nil {
