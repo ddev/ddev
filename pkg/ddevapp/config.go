@@ -106,10 +106,18 @@ func (app *DdevApp) WriteConfig() error {
 	// Update the "APIVersion" to be the ddev version.
 	appcopy.APIVersion = version.DdevVersion
 
-	// We don't want to even set the images on write, even though we'll respect them on read.
-	appcopy.DBAImage = ""
-	appcopy.DBImage = ""
-	appcopy.WebImage = ""
+	// Only set the images on write if non-default values have been specified.
+	if appcopy.WebImage == fmt.Sprintf("%s:%s", version.WebImg, version.WebTag) {
+		appcopy.WebImage = ""
+	}
+
+	if appcopy.DBImage == fmt.Sprintf("%s:%s", version.DBImg, version.DBTag) {
+		appcopy.DBImage = ""
+	}
+
+	if appcopy.DBAImage == fmt.Sprintf("%s:%s", version.DBAImg, version.DBATag) {
+		appcopy.DBAImage = ""
+	}
 
 	err := PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
 	if err != nil {

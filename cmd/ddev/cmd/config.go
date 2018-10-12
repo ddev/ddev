@@ -53,6 +53,27 @@ var (
 
 	// webserverTypeArgs allows a user to set the project's webserver type
 	webserverTypeArg string
+
+	// webImageArg allows a user to set the project's web server container image
+	webImageArg string
+
+	// webImageDefaultArg allows a user to unset the specific web server container image
+	webImageDefaultArg bool
+
+	// dbImageArg allows a user to set the project's db server container image
+	dbImageArg string
+
+	// dbImageDefaultArg allows a user to uset the specific db server container image
+	dbImageDefaultArg bool
+
+	// dbaImageArg allows a user to set the project's dba container image
+	dbaImageArg string
+
+	// dbaImageDefaultArg allows a user to unset the specific dba container image
+	dbaImageDefaultArg bool
+
+	// imageDefaultsArg allows a user to unset all specific container images
+	imageDefaultsArg bool
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -141,6 +162,13 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
 	ConfigCommand.Flags().StringVar(&uploadDirArg, "upload-dir", "", "Sets the project's upload directory, the destination directory of the import-files command.")
 	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", "Sets the project's desired webserver type: nginx-fpm, apache-fpm, or apache-cgi")
+	ConfigCommand.Flags().StringVar(&webImageArg, "web-image", "", "Sets the web container image")
+	ConfigCommand.Flags().BoolVar(&webImageDefaultArg, "web-image-default", false, "Sets the default web container image for this ddev version")
+	ConfigCommand.Flags().StringVar(&dbImageArg, "db-image", "", "Sets the db container image")
+	ConfigCommand.Flags().BoolVar(&dbImageDefaultArg, "db-image-default", false, "Sets the default db container image for this ddev version")
+	ConfigCommand.Flags().StringVar(&dbaImageArg, "dba-image", "", "Sets the dba container image")
+	ConfigCommand.Flags().BoolVar(&dbaImageDefaultArg, "dba-image-default", false, "Sets the default dba container image for this ddev version")
+	ConfigCommand.Flags().BoolVar(&imageDefaultsArg, "image-defaults", false, "Sets the default web, db, and dba container images")
 
 	// apptype flag exists for backwards compatibility.
 	ConfigCommand.Flags().StringVar(&appTypeArg, "apptype", "", apptypeUsage+" This is the same as --projecttype and is included only for backwards compatibility.")
@@ -295,6 +323,36 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if webserverTypeArg != "" {
 		app.WebserverType = webserverTypeArg
+	}
+
+	if webImageArg != "" {
+		app.WebImage = webImageArg
+	}
+
+	if webImageDefaultArg {
+		app.WebImage = ""
+	}
+
+	if dbImageArg != "" {
+		app.DBImage = dbImageArg
+	}
+
+	if dbImageDefaultArg {
+		app.DBImage = ""
+	}
+
+	if dbaImageArg != "" {
+		app.DBAImage = dbaImageArg
+	}
+
+	if dbaImageDefaultArg {
+		app.DBAImage = ""
+	}
+
+	if imageDefaultsArg {
+		app.WebImage = ""
+		app.DBImage = ""
+		app.DBAImage = ""
 	}
 
 	// Ensure the configuration passes validation before writing config file.
