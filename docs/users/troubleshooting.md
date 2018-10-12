@@ -106,7 +106,7 @@ Database snapshot from before v1.3.0 are not compatible with ddev v1.3+ because 
 3. `ddev start` to start with the new version
 4. Use `ddev restore-snapshot` to restore the snapshot by name
 5. `ddev rm`
-6. `ddev config --db-image default`
+6. `ddev config --db-image-default`
 7. `ddev start`
 8. Make a new snapshot with `ddev snapshot`
 
