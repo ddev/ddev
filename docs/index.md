@@ -70,42 +70,14 @@ Some Linux distributions may package ddev in a way that's convenient for your di
 
 Note that third party packaging is encouraged, but only supported on a best-effort basis.
 
-### Versioning
+### Uninstallation
 
-The DDEV project is committed to supporting [Semantic Version 2.0.0](https://semver.org/). Additional context on this decision can be read in [Ensure ddev is properly utilizing Semantic Versioning](https://github.com/drud/ddev/issues/352).
+For instructions to uninstall DDEV-Local see [Uninstallation](users/uninstall.md).
 
 ## Support
 
+We love to hear from our users and help them be successful with ddev. Support options include:
 - [ddev Documentation](https://ddev.readthedocs.io)
 - [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
 - [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
 - The `#ddev` channel in [Drupal Slack](https://www.drupal.org/slack) and [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support
-
-## Uninstallation
-
-A DDEV-Local installation consists of:
-
-* The binary itself (self-contained)
-* The .ddev folder in a project
-* The ~/.ddev folder where various global items are stored.
-* The docker images and containers created. 
-* Any entries in /etc/hosts
-
-To uninstall a project:
-
-`ddev remove --remove-data` and `rm -r .ddev`
-
-To uninstall the global .ddev: `rm -r ~/.ddev`
-
-To remove all /etc/hosts entries owned by ddev: `ddev hostname --remove-inactive`
-
-If you installed docker just for ddev and want to uninstall it with all containers and images, just uninstall it for your version of Docker. [google link](https://www.google.com/search?q=uninstall+docker&oq=uninstall+docker&aqs=chrome.0.0j69i60j0l2j35i39j0.1970j0j4&sourceid=chrome&ie=UTF-8). 
-
-Otherwise:
-* To remove all ddev docker containers that might still exist: `docker rm $(docker ps -a | awk '/ddev/ { print $1 }')`
-* To remove all ddev docker images that might exist: `docker rmi $(docker images | awk '/ddev/ {print $3}')`
-
-To remove the ddev binary:
-* On macOS with homebrew, `brew uninstall ddev`
-* For linux or other simple installs, just remove the binary, for example `sudo rm /usr/local/bin/ddev`
-* On Windows (if you used the ddev Windows installer) use the uninstall on the start menu.
