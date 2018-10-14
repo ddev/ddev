@@ -14,7 +14,7 @@ var pantheonEnvironmentName = "dev"
 var pantheonConfigCommand *cobra.Command = &cobra.Command{
 	Use:     "pantheon",
 	Short:   "Create or modify a ddev project pantheon configuration in the current directory",
-	Example: `"ddev config pantheon" or "ddev config pantheon --docroot=. --projectname=myproject --pantheon-environment=dev"`,
+	Example: `"ddev config pantheon" or "ddev config pantheon --docroot=. --project-name=myproject --pantheon-environment=dev"`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		providerName = ddevapp.ProviderPantheon
 		extraFlagsHandlingFunc = handlePantheonFlags

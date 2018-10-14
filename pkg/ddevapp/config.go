@@ -65,9 +65,9 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 
 	// These should always default to the latest image/tag names from the Version package.
-	app.WebImage = version.WebImg + ":" + version.WebTag
-	app.DBImage = version.DBImg + ":" + version.DBTag
-	app.DBAImage = version.DBAImg + ":" + version.DBATag
+	app.WebImage = version.GetWebImage()
+	app.DBImage = version.GetDBImage()
+	app.DBAImage = version.GetDBAImage()
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
@@ -106,10 +106,18 @@ func (app *DdevApp) WriteConfig() error {
 	// Update the "APIVersion" to be the ddev version.
 	appcopy.APIVersion = version.DdevVersion
 
-	// We don't want to even set the images on write, even though we'll respect them on read.
-	appcopy.DBAImage = ""
-	appcopy.DBImage = ""
-	appcopy.WebImage = ""
+	// Only set the images on write if non-default values have been specified.
+	if appcopy.WebImage == version.GetWebImage() {
+		appcopy.WebImage = ""
+	}
+
+	if appcopy.DBImage == version.GetDBImage() {
+		appcopy.DBImage = ""
+	}
+
+	if appcopy.DBAImage == version.GetDBAImage() {
+		appcopy.DBAImage = ""
+	}
 
 	err := PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
 	if err != nil {
@@ -122,7 +130,7 @@ func (app *DdevApp) WriteConfig() error {
 	}
 
 	// Append current image information
-	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s \n# webimage: %s:%s\n# dbimage: %s:%s\n# dbaimage: %s:%s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.WebImg, version.WebTag, version.DBImg, version.DBTag, version.DBAImg, version.DBATag))...)
+	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s \n# webimage: %s\n# dbimage: %s\n# dbaimage: %s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.GetWebImage(), version.GetDBImage(), version.GetDBAImage()))...)
 
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(ConfigInstructions)...)
@@ -194,13 +202,15 @@ func (app *DdevApp) ReadConfig() error {
 	}
 
 	if app.WebImage == "" {
-		app.WebImage = version.WebImg + ":" + version.WebTag
+		app.WebImage = version.GetWebImage()
 	}
+
 	if app.DBImage == "" {
-		app.DBImage = version.DBImg + ":" + version.DBTag
+		app.DBImage = version.GetDBImage()
 	}
+
 	if app.DBAImage == "" {
-		app.DBAImage = version.DBAImg + ":" + version.DBATag
+		app.DBAImage = version.GetDBAImage()
 	}
 
 	dirPath := filepath.Join(util.GetGlobalDdevDir(), app.Name)

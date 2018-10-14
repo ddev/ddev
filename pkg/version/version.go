@@ -1,5 +1,7 @@
 package version
 
+import "fmt"
+
 // VERSION is supplied with the git committish this is built from
 var VERSION = ""
 
@@ -68,4 +70,19 @@ func GetVersionInfo() map[string]string {
 	versionInfo["build info"] = BUILDINFO
 
 	return versionInfo
+}
+
+// GetWebImage returns the correctly formatted web image:tag reference
+func GetWebImage() string {
+	return fmt.Sprintf("%s:%s", WebImg, WebTag)
+}
+
+// GetDBImage returns the correctly formatted db image:tag reference
+func GetDBImage() string {
+	return fmt.Sprintf("%s:%s", DBImg, DBTag)
+}
+
+// GetDBAImage returns the correctly formatted dba image:tag reference
+func GetDBAImage() string {
+	return fmt.Sprintf("%s:%s", DBAImg, DBATag)
 }
