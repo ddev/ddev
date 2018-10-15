@@ -29,6 +29,10 @@ var ComposeConfigCmd = &cobra.Command{
 			util.Failed("Failed to get compose-config: %v", err)
 		}
 
+		if err = app.WriteDockerComposeConfig(); err != nil {
+			util.Failed("Failed to get compose-config: %v", err)
+		}
+
 		app.DockerEnv()
 		files, err := app.ComposeFiles()
 		if err != nil {
