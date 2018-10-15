@@ -653,8 +653,7 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 
 	for _, o := range makeWritable {
 		stat, err := os.Stat(o)
-		// If the file doesn't exist, don't try to set the permissions.
-		if os.IsNotExist(err) {
+		if err != nil {
 			continue
 		}
 
