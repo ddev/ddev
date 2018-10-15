@@ -70,12 +70,13 @@ Some Linux distributions may package ddev in a way that's convenient for your di
 
 Note that third party packaging is encouraged, but only supported on a best-effort basis.
 
-### Versioning
+### Uninstallation
 
-The DDEV project is committed to supporting [Semantic Version 2.0.0](https://semver.org/). Additional context on this decision can be read in [Ensure ddev is properly utilizing Semantic Versioning](https://github.com/drud/ddev/issues/352).
+For instructions to uninstall DDEV-Local see [Uninstallation](users/uninstall.md).
 
 ## Support
 
+We love to hear from our users and help them be successful with ddev. Support options include:
 - [ddev Documentation](https://ddev.readthedocs.io)
 - [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
 - [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
