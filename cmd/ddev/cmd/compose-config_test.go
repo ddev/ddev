@@ -18,9 +18,12 @@ services:
       my_custom: value_here
 `
 
+// TestcomposeConfigCmd ensures the compose-config command behaves
+// as expected with a simple docker-compose.yaml and with a basic
+// docker-compose.override.yaml.
 func TestComposeConfigCmd(t *testing.T) {
 	// Create a temporary directory and switch to it.
-	tmpdir := testcommon.CreateTmpDir("compose-config")
+	tmpdir := testcommon.CreateTmpDir(t.Name())
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 
