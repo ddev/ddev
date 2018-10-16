@@ -94,6 +94,7 @@ type DdevApp struct {
 	providerInstance      Provider             `yaml:"-"`
 	Commands              map[string][]Command `yaml:"hooks,omitempty"`
 	UploadDir             string               `yaml:"upload_dir,omitempty"`
+	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -682,20 +683,19 @@ type ExecOpts struct {
 func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	app.DockerEnv()
 
-	// Build docker-compose comamand
-	exec := []string{"exec", "-e", "DDEV_EXEC=true"}
-	if opts.Dir != "" {
-		exec = append(exec, "-w", opts.Dir)
+	if opts.Service == "" {
+		return "", "", fmt.Errorf("no service provided")
 	}
 
-	if opts.Service == "" {
-		return "", "", fmt.Errorf("undefined service")
+	exec := []string{"exec", "-e", "DDEV_EXEC=true"}
+	if workingDir := app.getWorkingDir(opts.Service, opts.Dir); workingDir != "" {
+		exec = append(exec, "-w", workingDir)
 	}
 
 	exec = append(exec, "-T", opts.Service)
 
 	if opts.Cmd == nil {
-		return "", "", fmt.Errorf("undefined command")
+		return "", "", fmt.Errorf("no command provided")
 	}
 
 	exec = append(exec, opts.Cmd...)
@@ -710,16 +710,31 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 // ExecWithTty executes a given command in the container of given type.
 // It allocates a pty for interactive work.
-func (app *DdevApp) ExecWithTty(service string, cmd ...string) error {
+func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	app.DockerEnv()
 
-	exec := []string{"exec", service}
-	exec = append(exec, cmd...)
+	if opts.Service == "" {
+		return fmt.Errorf("no service provided")
+	}
+
+	exec := []string{"exec"}
+	if workingDir := app.getWorkingDir(opts.Service, opts.Dir); workingDir != "" {
+		exec = append(exec, "-w", workingDir)
+	}
+
+	exec = append(exec, opts.Service)
+
+	if opts.Cmd == nil {
+		return fmt.Errorf("no command provided")
+	}
+
+	exec = append(exec, opts.Cmd...)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
 		return err
 	}
+
 	return dockerutil.ComposeNoCapture(files, exec...)
 }
 
@@ -1314,4 +1329,21 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 		return false, fmt.Errorf("sorry, it is not possible to migrate bind-mounted databases using ddev v1.3+, please use ddev v1.2 to migrate, or just 'mv ~/.ddev/%s/mysql ~/.ddev/%s/mysql.saved' and then restart and reload with 'ddev import-db'", app.Name, app.Name)
 	}
 	return false, nil
+}
+
+// getWorkingDir will determine the appropriate working directory for an Exec/ExecWithTty command
+// by consulting with the project configuration. If no dir is specified for the service, an
+// empty string will be returned
+func (app *DdevApp) getWorkingDir(service, dir string) string {
+	if dir != "" {
+		return dir
+	}
+
+	if app.WorkingDir != nil {
+		if workingDir := app.WorkingDir[service]; workingDir != "" {
+			return workingDir
+		}
+	}
+
+	return ""
 }

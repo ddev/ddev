@@ -8,6 +8,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// sshDirArg allows a configurable container destination directory.
+var sshDirArg string
+
 // DdevSSHCmd represents the ssh command.
 var DdevSSHCmd = &cobra.Command{
 	Use:   "ssh",
@@ -29,7 +32,11 @@ var DdevSSHCmd = &cobra.Command{
 
 		app.DockerEnv()
 
-		err = app.ExecWithTty(serviceType, "bash")
+		err = app.ExecWithTty(&ddevapp.ExecOpts{
+			Service: serviceType,
+			Cmd:     []string{"bash"},
+			Dir:     sshDirArg,
+		})
 
 		if err != nil {
 			util.Failed("Failed to ssh %s: %s", app.GetName(), err)
@@ -39,5 +46,6 @@ var DdevSSHCmd = &cobra.Command{
 
 func init() {
 	DdevSSHCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
+	DdevSSHCmd.Flags().StringVarP(&sshDirArg, "dir", "d", "", "Defines the destination directory within the container")
 	RootCmd.AddCommand(DdevSSHCmd)
 }
