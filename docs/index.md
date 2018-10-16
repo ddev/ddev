@@ -11,7 +11,7 @@
 - OS Support
   - macOS Sierra and higher (macOS 10.12 and higher but it should runs anywhere docker-ce runs)
   - Linux: Most recent Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
-  - Windows 10 Pro or Enterprise with Docker-for-windows
+  - Windows 10 Pro or Enterprise with [Docker-for-windows](https://docs.docker.com/docker-for-windows/install/)
   - Windows 10 Home (or other Windows version) with [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/)
 
 
