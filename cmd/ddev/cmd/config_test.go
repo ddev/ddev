@@ -263,3 +263,34 @@ func TestConfigInvalidProjectname(t *testing.T) {
 	}
 
 }
+
+// TestConfigNoPerms tests that the config command gracefully handles the case
+// where it does not have permissions to read or edit settings files.
+func TestConfigNoPerms(t *testing.T) {
+	var err error
+	assert := asrt.New(t)
+
+	// Create a temporary directory and switch to it.
+	tmpdir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
+
+	// Create existing sites/default directories and lock it down
+	sitesDir := filepath.Join(tmpdir, "sites")
+	err = os.MkdirAll(filepath.Join(sitesDir, "default"), 0755)
+	assert.NoError(err)
+	err = os.Chmod(sitesDir, 0000)
+	assert.NoError(err)
+
+	// Run ddev config
+	args := []string{
+		"config",
+		"--docroot", ".",
+		"--project-name", "nopanic",
+		"--project-type", "drupal8",
+	}
+
+	out, err := exec.RunCommand(DdevBin, args)
+	assert.NoError(err)
+	assert.Contains(out, "permission denied")
+}
