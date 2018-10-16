@@ -377,7 +377,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	stdout, _, err := app.Exec("web", "php", "--ri", "xdebug")
+	opts := &ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"php", "--ri", "xdebug"},
+	}
+	stdout, _, err := app.Exec(opts)
 	assert.Error(err)
 	assert.Contains(stdout, "Extension 'xdebug' not present")
 
@@ -389,7 +393,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)
-	stdout, _, err = app.Exec("web", "php", "--ri", "xdebug")
+	stdout, _, err = app.Exec(opts)
 	assert.NoError(err)
 	assert.Contains(stdout, "xdebug support => enabled")
 	assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
@@ -417,15 +421,27 @@ func TestDdevMysqlWorks(t *testing.T) {
 	assert.NoError(err)
 
 	// Test that mysql + .my.cnf works on web container
-	_, _, err = app.Exec("web", "bash", "-c", "mysql -e 'SELECT USER();' | grep 'db@'")
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"bash", "-c", "mysql -e 'SELECT USER();' | grep 'db@'"},
+	})
 	assert.NoError(err)
-	_, _, err = app.Exec("web", "bash", "-c", "mysql -e 'SELECT DATABASE();' | grep 'db'")
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"bash", "-c", "mysql -e 'SELECT DATABASE();' | grep 'db'"},
+	})
 	assert.NoError(err)
 
 	// Test that mysql + .my.cnf works on db container
-	_, _, err = app.Exec("db", "bash", "-c", "mysql -e 'SELECT USER();' | grep 'root@localhost'")
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     []string{"bash", "-c", "mysql -e 'SELECT USER();' | grep 'root@localhost'"},
+	})
 	assert.NoError(err)
-	_, _, err = app.Exec("db", "bash", "-c", "mysql -e 'SELECT DATABASE();' | grep 'db'")
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     []string{"bash", "-c", "mysql -e 'SELECT DATABASE();' | grep 'db'"},
+	})
 	assert.NoError(err)
 
 	err = app.Down(true, false)
@@ -551,7 +567,10 @@ func TestDdevImportDB(t *testing.T) {
 			err = app.ImportDB(cachedArchive, "")
 			assert.NoError(err)
 
-			out, _, err := app.Exec("db", "mysql", "-e", "SHOW TABLES;")
+			out, _, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     []string{"mysql", "-e", "SHOW TABLES;"},
+			})
 			assert.NoError(err)
 
 			assert.Contains(out, "Tables_in_db")
@@ -568,7 +587,10 @@ func TestDdevImportDB(t *testing.T) {
 			err = app.ImportDB(cachedArchive, "")
 			assert.NoError(err)
 
-			out, _, err := app.Exec("db", "mysql", "-e", "SHOW TABLES;")
+			out, _, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     []string{"mysql", "-e", "SHOW TABLES;"},
+			})
 			assert.NoError(err)
 
 			assert.Contains(out, "Tables_in_db")
@@ -783,7 +805,10 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 			err = os.MkdirAll(onHostDir, 0775)
 			assert.NoError(err)
-			_, _, err = app.Exec("web", "sh", "-c", "echo 'content created inside container\n' >"+inContainerRelativePath)
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     []string{"sh", "-c", "echo 'content created inside container\n' >" + inContainerRelativePath},
+			})
 			assert.NoError(err)
 
 			// Now try to append to the file on the host.
@@ -812,10 +837,16 @@ func TestWriteableFilesDirectory(t *testing.T) {
 			assert.NoError(err)
 			_ = f.Close()
 			// if the file exists, add to it. We don't want to add if it's not already there.
-			_, _, err = app.Exec("web", "sh", "-c", "if [ -f "+inContainerRelativePath+" ]; then echo 'content added inside container\n' >>"+inContainerRelativePath+"; fi")
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     []string{"sh", "-c", "if [ -f " + inContainerRelativePath + " ]; then echo 'content added inside container\n' >>" + inContainerRelativePath + "; fi"},
+			})
 			assert.NoError(err)
 			// grep the file for both the content added on host and that added in container.
-			_, _, err = app.Exec("web", "sh", "-c", "grep 'base content was inserted on the host' "+inContainerRelativePath+"&& grep 'content added inside container' "+inContainerRelativePath)
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     []string{"sh", "-c", "grep 'base content was inserted on the host' " + inContainerRelativePath + "&& grep 'content added inside container' " + inContainerRelativePath},
+			})
 			assert.NoError(err)
 		}
 
@@ -989,13 +1020,22 @@ func TestDdevExec(t *testing.T) {
 		err = app.Start()
 		assert.NoError(err)
 
-		out, _, err := app.Exec("web", "pwd")
+		out, _, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "web",
+			Cmd:     []string{"pwd"},
+		})
 		assert.NoError(err)
 		assert.Contains(out, "/var/www/html")
 
-		_, _, err = app.Exec("db", "mysql", "-e", "DROP DATABASE db;")
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     []string{"mysql", "-e", "DROP DATABASE db;"},
+		})
 		assert.NoError(err)
-		_, _, err = app.Exec("db", "mysql", "information_schema", "-e", "CREATE DATABASE db;")
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     []string{"mysql", "information_schema", "-e", "CREATE DATABASE db;"},
+		})
 		assert.NoError(err)
 
 		switch app.GetType() {
@@ -1004,11 +1044,17 @@ func TestDdevExec(t *testing.T) {
 		case ddevapp.AppTypeDrupal7:
 			fallthrough
 		case ddevapp.AppTypeDrupal8:
-			out, _, err = app.Exec("web", "drush", "status")
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     []string{"drush", "status"},
+			})
 			assert.NoError(err)
 			assert.Regexp("PHP configuration[ :]*/etc/php/[0-9].[0-9]/fpm/php.ini", out)
 		case ddevapp.AppTypeWordPress:
-			out, _, err = app.Exec("web", "wp", "--info")
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     []string{"wp", "--info"},
+			})
 			assert.NoError(err)
 			assert.Regexp("/etc/php.*/php.ini", out)
 		}
@@ -1870,11 +1916,17 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 
 			// Ensure that we can access the same URL from within the web container (via router)
 			var out string
-			out, _, err = app.Exec("web", "curl", "-sk", app.GetHTTPURL()+site.Safe200URIWithExpectation.URI)
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     []string{"curl", "-sk", app.GetHTTPURL() + site.Safe200URIWithExpectation.URI},
+			})
 			assert.NoError(err)
 			assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 
-			out, _, err = app.Exec("web", "curl", "-sk", app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI)
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     []string{"curl", "-sk", app.GetHTTPSURL() + site.Safe200URIWithExpectation.URI},
+			})
 			assert.NoError(err)
 			assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 		}

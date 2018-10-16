@@ -11,6 +11,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// execDirArg allows a configurable container execution directory
+var execDirArg string
+
 // DdevExecCmd allows users to execute arbitrary bash commands within a container.
 var DdevExecCmd = &cobra.Command{
 	Use:     "exec <command>",
@@ -39,7 +42,12 @@ var DdevExecCmd = &cobra.Command{
 
 		app.DockerEnv()
 
-		out, _, err := app.Exec(serviceType, args...)
+		out, _, err := app.Exec(&ddevapp.ExecOpts{
+			Service: serviceType,
+			Dir:     execDirArg,
+			Cmd:     args,
+		})
+
 		if err != nil {
 			util.Failed("Failed to execute command %s: %v", args, err)
 		}
@@ -49,6 +57,7 @@ var DdevExecCmd = &cobra.Command{
 
 func init() {
 	DdevExecCmd.Flags().StringVarP(&serviceType, "service", "s", "web", "Defines the service to connect to. [e.g. web, db]")
+	DdevExecCmd.Flags().StringVarP(&execDirArg, "dir", "d", "", "Defines the execution directory within the container")
 	// This requires flags for exec to be specified prior to any arguments, allowing for
 	// flags to be ignored by cobra for commands that are to be executed in a container.
 	DdevExecCmd.Flags().SetInterspersed(false)
