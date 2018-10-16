@@ -279,7 +279,7 @@ func TestConfigNoPerms(t *testing.T) {
 	sitesDir := filepath.Join(tmpdir, "sites")
 	err = os.MkdirAll(filepath.Join(sitesDir, "default"), 0755)
 	assert.NoError(err)
-	err = os.Chmod(sitesDir, 0000)
+	err = os.Chmod(sitesDir, 0100)
 	assert.NoError(err)
 
 	// Run ddev config
