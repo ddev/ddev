@@ -18,7 +18,7 @@ services:
       my_custom: value_here
 `
 
-// TestcomposeConfigCmd ensures the compose-config command behaves
+// TestComposeConfigCmd ensures the compose-config command behaves
 // as expected with a simple docker-compose.yaml and with a basic
 // docker-compose.override.yaml.
 func TestComposeConfigCmd(t *testing.T) {
