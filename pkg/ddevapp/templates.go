@@ -158,6 +158,13 @@ const ConfigInstructions = `
 # upload_dir: custom/upload/dir
 # would set the destination path for ddev import-files to custom/upload/dir.
 
+# working_dir:
+#   web: /var/www/html
+#   db: /home
+# would set the default working directory for the web and db services. 
+# These values specify the destination directory for ddev ssh and the 
+# directory in which commands passed into ddev exec are run. 
+
 # provider: default # Currently either "default" or "pantheon"
 #
 # Many ddev commands can be extended to run tasks after the ddev command is
