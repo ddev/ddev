@@ -1333,7 +1333,7 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 
 // getWorkingDir will determine the appropriate working directory for an Exec/ExecWithTty command
 // by consulting with the project configuration. If no dir is specified for the service, an
-// empty string will be returned
+// empty string will be returned.
 func (app *DdevApp) getWorkingDir(service, dir string) string {
 	if dir != "" {
 		return dir

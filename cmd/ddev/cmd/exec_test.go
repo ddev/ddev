@@ -26,20 +26,41 @@ func TestDevExec(t *testing.T) {
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
 
+		// Test default invocation
 		args := []string{"exec", "pwd"}
 		out, err := exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		assert.Contains(string(out), "/var/www/html")
+		assert.Contains(out, "/var/www/html")
 
+		// Test specifying service
 		args = []string{"-s", "db", "exec", "pwd"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		assert.Contains(string(out), "/")
+		assert.Contains(out, "/")
 
+		// Test specifying working directory
+		args = []string{"exec", "-d", "/bin", "pwd"}
+		out, err = exec.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		assert.Contains(out, "/bin")
+
+		// Test specifying service and working directory
+		args = []string{"exec", "-s", "db", "-d", "/var", "pwd"}
+		out, err = exec.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		assert.Contains(out, "/var")
+
+		// Test sudo
 		args = []string{"exec", "sudo", "whoami"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		assert.Contains(string(out), "root")
+		assert.Contains(out, "root")
+
+		// Test that an nonexistant working directory generates an error
+		args = []string{"exec", "-d", "/does/not/exist", "pwd"}
+		out, err = exec.RunCommand(DdevBin, args)
+		assert.Error(err)
+		assert.Contains(out, "no such file or directory")
 
 		cleanup()
 	}
