@@ -654,7 +654,10 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 	for _, o := range makeWritable {
 		stat, err := os.Stat(o)
 		if err != nil {
-			util.Warning("Unable to ensure write permissions: %v", err)
+			if !os.IsNotExist(err) {
+				util.Warning("Unable to ensure write permissions: %v", err)
+			}
+
 			continue
 		}
 

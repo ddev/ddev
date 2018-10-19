@@ -103,7 +103,10 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		if err != nil {
 			// We're not doing anything about this error other than warning,
 			// and will have to deal with the same check in settingsCreator.
-			util.Warning("Unable to ensure write permissions: %v", err)
+			if !os.IsNotExist(err) {
+				util.Warning("Unable to ensure write permissions: %v", err)
+			}
+
 			continue
 		}
 
