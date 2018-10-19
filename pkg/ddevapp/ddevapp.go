@@ -1335,15 +1335,18 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 // by consulting with the project configuration. If no dir is specified for the service, an
 // empty string will be returned.
 func (app *DdevApp) getWorkingDir(service, dir string) string {
+	// Highest preference is for directories passed into the command directly
 	if dir != "" {
 		return dir
 	}
 
+	// The next highest preference is for directories defined in config.yaml
 	if app.WorkingDir != nil {
 		if workingDir := app.WorkingDir[service]; workingDir != "" {
 			return workingDir
 		}
 	}
 
-	return ""
+	// The next highest preference is for app type defaults
+	return app.DefaultWorkingDirMap()[service]
 }

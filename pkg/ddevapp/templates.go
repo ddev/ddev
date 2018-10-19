@@ -53,7 +53,7 @@ services:
     ports:
       - "80"
       - "{{ .mailhogport }}"
-    working_dir: /var/www/html/${DDEV_DOCROOT}
+    working_dir: /var/www/html/
     environment:
       - DDEV_URL=$DDEV_URL
       - DOCROOT=$DDEV_DOCROOT

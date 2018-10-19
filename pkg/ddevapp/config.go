@@ -119,6 +119,14 @@ func (app *DdevApp) WriteConfig() error {
 		appcopy.DBAImage = ""
 	}
 
+	// Don't write default working dir values to config
+	defaults := appcopy.DefaultWorkingDirMap()
+	for service, defaultWorkingDir := range defaults {
+		if app.WorkingDir[service] == defaultWorkingDir {
+			delete(appcopy.WorkingDir, service)
+		}
+	}
+
 	err := PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
 	if err != nil {
 		return err

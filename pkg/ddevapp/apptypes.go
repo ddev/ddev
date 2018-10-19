@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/drud/ddev/pkg/util"
@@ -37,6 +38,9 @@ type postStartAction func(app *DdevApp) error
 // importFilesAction
 type importFilesAction func(app *DdevApp, importPath, extPath string) error
 
+// defaultWorkingDirMap returns the app type's default working directory map
+type defaultWorkingDirMap func(app *DdevApp) map[string]string
+
 // AppTypeFuncs struct defines the functions that can be called (if populated)
 // for a given appType.
 type AppTypeFuncs struct {
@@ -50,24 +54,24 @@ type AppTypeFuncs struct {
 	postConfigAction
 	postStartAction
 	importFilesAction
+	defaultWorkingDirMap
 }
 
 // appTypeMatrix is a static map that defines the various functions to be called
 // for each apptype (CMS).
-// Example: appTypeMatrix["drupal"]["7"] == { settingsCreator etc }
 var appTypeMatrix map[string]AppTypeFuncs
 
 func init() {
 	appTypeMatrix = map[string]AppTypeFuncs{
 		AppTypePHP: {},
 		AppTypeDrupal6: {
-			settingsCreator: createDrupal6SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal6Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal6App, postImportDBAction: nil, configOverrideAction: drupal6ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal6PostStartAction, importFilesAction: drupalImportFilesAction,
+			settingsCreator: createDrupal6SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal6Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal6App, postImportDBAction: nil, configOverrideAction: drupal6ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal6PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
 		AppTypeDrupal7: {
-			settingsCreator: createDrupal7SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal7Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal7App, postImportDBAction: nil, configOverrideAction: drupal7ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal7PostStartAction, importFilesAction: drupalImportFilesAction,
+			settingsCreator: createDrupal7SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal7Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal7App, postImportDBAction: nil, configOverrideAction: drupal7ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal7PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
 		AppTypeDrupal8: {
-			settingsCreator: createDrupal8SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal8Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal8App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: drupal8PostStartAction, importFilesAction: drupalImportFilesAction,
+			settingsCreator: createDrupal8SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal8Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal8App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: drupal8PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
 		AppTypeWordPress: {
 			settingsCreator: createWordpressSettingsFile, uploadDir: getWordpressUploadDir, hookDefaultComments: getWordpressHooks, apptypeSettingsPaths: setWordpressSiteSettingsPaths, appTypeDetect: isWordpressApp, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil, importFilesAction: wordpressImportFilesAction,
@@ -76,7 +80,7 @@ func init() {
 			settingsCreator: createTypo3SettingsFile, uploadDir: getTypo3UploadDir, hookDefaultComments: getTypo3Hooks, apptypeSettingsPaths: setTypo3SiteSettingsPaths, appTypeDetect: isTypo3App, postImportDBAction: nil, configOverrideAction: typo3ConfigOverrideAction, postConfigAction: nil, postStartAction: nil, importFilesAction: typo3ImportFilesAction,
 		},
 		AppTypeBackdrop: {
-			settingsCreator: createBackdropSettingsFile, uploadDir: getBackdropUploadDir, hookDefaultComments: getBackdropHooks, apptypeSettingsPaths: setBackdropSiteSettingsPaths, appTypeDetect: isBackdropApp, postImportDBAction: backdropPostImportDBAction, configOverrideAction: nil, postConfigAction: nil, postStartAction: backdropPostStartAction, importFilesAction: backdropImportFilesAction,
+			settingsCreator: createBackdropSettingsFile, uploadDir: getBackdropUploadDir, hookDefaultComments: getBackdropHooks, apptypeSettingsPaths: setBackdropSiteSettingsPaths, appTypeDetect: isBackdropApp, postImportDBAction: backdropPostImportDBAction, configOverrideAction: nil, postConfigAction: nil, postStartAction: backdropPostStartAction, importFilesAction: backdropImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
 	}
 }
@@ -214,4 +218,20 @@ func (app *DdevApp) ImportFilesAction(importPath, extPath string) error {
 	}
 
 	return nil
+}
+
+// DefaultWorkingDirMap returns the app type's default working directory map.
+func (app *DdevApp) DefaultWorkingDirMap() map[string]string {
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.defaultWorkingDirMap != nil {
+		return appFuncs.defaultWorkingDirMap(app)
+	}
+
+	return nil
+}
+
+// docrootWorkingDir handles the shared case in which the web service working directory is the docroot.
+func docrootWorkingDir(app *DdevApp) map[string]string {
+	return map[string]string{
+		"web": path.Join("/var/www/html", app.Docroot),
+	}
 }
