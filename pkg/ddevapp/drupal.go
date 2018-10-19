@@ -267,13 +267,13 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, settin
 		output.UserOut.Printf("No %s file exists, creating one", drupalConfig.SiteSettings)
 
 		if err := writeDrupalSettingsFile(drupalConfig, app.SiteSettingsPath, settingsTemplate); err != nil {
-			return fmt.Errorf("failed to write %s: %v", app.SiteSettingsPath, err)
+			return fmt.Errorf("failed to write: %v", err)
 		}
 	}
 
 	included, err := settingsHasInclude(drupalConfig, app.SiteSettingsPath)
 	if err != nil {
-		return fmt.Errorf("failed to check for include in %s: %v", app.SiteSettingsPath, err)
+		return fmt.Errorf("failed to check for include: %v", err)
 	}
 
 	if included {
@@ -334,7 +334,7 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 	}
 
 	if err := writeDrupal7DdevSettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
+		return "", fmt.Errorf("`failed to write` Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
 	}
 
 	return app.SiteLocalSettingsPath, nil
@@ -653,8 +653,11 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 
 	for _, o := range makeWritable {
 		stat, err := os.Stat(o)
-		// If the file doesn't exist, don't try to set the permissions.
-		if os.IsNotExist(err) {
+		if err != nil {
+			if !os.IsNotExist(err) {
+				util.Warning("Unable to ensure write permissions: %v", err)
+			}
+
 			continue
 		}
 

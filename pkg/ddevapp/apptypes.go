@@ -99,16 +99,25 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	// exist.
 	chmodTargets := []string{filepath.Dir(app.SiteSettingsPath), app.SiteLocalSettingsPath}
 	for _, fp := range chmodTargets {
-		if fileInfo, err := os.Stat(fp); !os.IsNotExist(err) {
-			perms := 0644
-			if fileInfo.IsDir() {
-				perms = 0755
+		fileInfo, err := os.Stat(fp)
+		if err != nil {
+			// We're not doing anything about this error other than warning,
+			// and will have to deal with the same check in settingsCreator.
+			if !os.IsNotExist(err) {
+				util.Warning("Unable to ensure write permissions: %v", err)
 			}
 
-			err = os.Chmod(fp, os.FileMode(perms))
-			if err != nil {
-				return "", fmt.Errorf("could not change permissions on file %s to make it writeable: %v", fp, err)
-			}
+			continue
+		}
+
+		perms := 0644
+		if fileInfo.IsDir() {
+			perms = 0755
+		}
+
+		err = os.Chmod(fp, os.FileMode(perms))
+		if err != nil {
+			return "", fmt.Errorf("could not change permissions on file %s to make it writeable: %v", fp, err)
 		}
 	}
 
