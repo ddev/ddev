@@ -49,6 +49,5 @@ var ComposeConfigCmd = &cobra.Command{
 }
 
 func init() {
-	ComposeConfigCmd.Hidden = true
-	RootCmd.AddCommand(ComposeConfigCmd)
+	DebugCmd.AddCommand(ComposeConfigCmd)
 }
