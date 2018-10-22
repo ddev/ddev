@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM mariadb:10.2
 
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
@@ -6,7 +6,9 @@ ENV MYSQL_PASSWORD db
 ENV MYSQL_ROOT_PASSWORD root
 
 # Install mariadb and other packages
-RUN apk add --no-cache mariadb mariadb-client mariadb-backup mariadb-server-utils bash tzdata shadow sudo
+#RUN apk add --no-cache mariadb mariadb-client mariadb-backup mariadb-server-utils bash tzdata shadow sudo
+RUN apt-get update && apt-get install -y bash tzdata vim less sudo
+
 # Remove the installed version as we need to set up our own from scratch
 
 RUN rm -rf /var/lib/mysql/* /etc/mysql
