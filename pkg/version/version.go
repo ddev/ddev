@@ -33,7 +33,7 @@ var WebTag = "20181124_pecl_upload_progress" // Note that this can be overridden
 var DBImg = "drud/ddev-dbserver"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "v1.4.0" // Note that this may be overridden by make
+var DBTag = "20181022_dbserver_based_on_mariadb" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
