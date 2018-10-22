@@ -800,6 +800,13 @@ func TestWriteableFilesDirectory(t *testing.T) {
 			// Use path.Join for items on th container (linux) and filepath.Join for items on the host.
 			inContainerDir := path.Join(uploadDir, dirname)
 			onHostDir := filepath.Join(app.Docroot, inContainerDir)
+
+			// The container execution directory is dependent on the app type
+			switch app.Type {
+			case ddevapp.AppTypeWordPress, ddevapp.AppTypeTYPO3, ddevapp.AppTypePHP:
+				inContainerDir = path.Join(app.Docroot, inContainerDir)
+			}
+
 			inContainerRelativePath := path.Join(inContainerDir, filename)
 			onHostRelativePath := path.Join(onHostDir, filename)
 
@@ -825,6 +832,12 @@ func TestWriteableFilesDirectory(t *testing.T) {
 			dirname = fileutil.RandomFilenameBase()
 			inContainerDir = path.Join(uploadDir, dirname)
 			onHostDir = filepath.Join(app.Docroot, inContainerDir)
+			// The container execution directory is dependent on the app type
+			switch app.Type {
+			case ddevapp.AppTypeWordPress, ddevapp.AppTypeTYPO3, ddevapp.AppTypePHP:
+				inContainerDir = path.Join(app.Docroot, inContainerDir)
+			}
+
 			inContainerRelativePath = path.Join(inContainerDir, filename)
 			onHostRelativePath = filepath.Join(onHostDir, filename)
 
