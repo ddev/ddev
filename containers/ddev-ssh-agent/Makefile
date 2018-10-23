@@ -34,3 +34,5 @@ include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
+test:
+	true >/dev/null
