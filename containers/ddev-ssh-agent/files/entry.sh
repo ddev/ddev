@@ -19,6 +19,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+
+set -eo pipefail
+
 # Print a debug message if debug mode is on ($DEBUG is not empty)
 # @param message
 debug_msg ()
