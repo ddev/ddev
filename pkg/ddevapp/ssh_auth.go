@@ -66,12 +66,11 @@ func EnsureSSHAuthContainer() error {
 	}
 
 	// ensure we have a happy sshAuth
-	// (ddev-ssh-agent doesn't currently have healthcheck so this doesn't work)
-	//label := map[string]string{"com.docker.compose.project": SSHAuthName}
-	//err = dockerutil.ContainerWait(containerWaitTimeout, label)
-	//if err != nil {
-	//	return fmt.Errorf("ddev-ssh-agent failed to become ready: %v", err)
-	//}
+	label := map[string]string{"com.docker.compose.project": SSHAuthName}
+	err = dockerutil.ContainerWait(containerWaitTimeout, label)
+	if err != nil {
+		return fmt.Errorf("ddev-ssh-agent failed to become ready: %v", err)
+	}
 
 	// TODO: Update this warning so people know what to do.
 	util.Warning("ssh-agent container is running: If you want to add authentication to to the ssh-agent container, do something about that.")
