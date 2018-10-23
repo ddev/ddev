@@ -118,13 +118,13 @@ func StartDdevRouter() error {
 // findDdevRouter usees FindContainerByLabels to get our router container and
 // return it. This is currently unused but may be useful in the future.
 // nolint: deadcode
-func findDdevRouter() (docker.APIContainers, error) {
+func findDdevRouter() (*docker.APIContainers, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.service": RouterProjectName,
 	}
 	container, err := dockerutil.FindContainerByLabels(containerQuery)
 	if err != nil {
-		return docker.APIContainers{}, fmt.Errorf("failed to execute findContainersByLabels, %v", err)
+		return nil, fmt.Errorf("failed to execute findContainersByLabels, %v", err)
 	}
 	return container, nil
 }
@@ -159,7 +159,7 @@ func GetRouterStatus() string {
 	if err != nil {
 		status = SiteNotFound
 	} else {
-		status = dockerutil.GetContainerHealth(container)
+		status = dockerutil.GetContainerHealth(*container)
 	}
 
 	return status

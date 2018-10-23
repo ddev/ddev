@@ -64,9 +64,15 @@ func GetDockerClient() *docker.Client {
 }
 
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.
-func FindContainerByLabels(labels map[string]string) (docker.APIContainers, error) {
+func FindContainerByLabels(labels map[string]string) (*docker.APIContainers, error) {
 	containers, err := FindContainersByLabels(labels)
-	return containers[0], err
+	if err != nil {
+		return nil, err
+	}
+	if len(containers) > 0 {
+		return &containers[0], nil
+	}
+	return nil, nil
 }
 
 // GetDockerContainers returns a slice of all docker containers on the host system.
@@ -110,12 +116,6 @@ func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, e
 		}
 	}
 
-	// If we couldn't find a match return a list with a single (empty) element alongside the error.
-	if len(containerMatches) < 1 {
-		containerMatches = []docker.APIContainers{{}}
-		returnError = fmt.Errorf("unable to find any running or stopped containers")
-	}
-
 	return containerMatches, returnError
 }
 
@@ -151,7 +151,7 @@ func ContainerWait(waittime time.Duration, labels map[string]string) error {
 			if err != nil {
 				return fmt.Errorf("failed to query container labels %v", labels)
 			}
-			status = GetContainerHealth(container)
+			status = GetContainerHealth(*container)
 
 			switch status {
 			case "healthy":
@@ -174,7 +174,7 @@ func ContainerName(container docker.APIContainers) string {
 }
 
 // GetContainerHealth retrieves the status of a given container. The status string returned
-// by docker contains uptime and the health status in parenths. This function will filter the uptime and
+// by docker contains uptime and the health status in parens. This function will filter the uptime and
 // return only the health status.
 func GetContainerHealth(container docker.APIContainers) string {
 	// If the container is not running, then return exited as the health.

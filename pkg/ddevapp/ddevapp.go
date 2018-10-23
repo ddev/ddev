@@ -118,26 +118,25 @@ func (app *DdevApp) Init(basePath string) error {
 	*app = *newApp
 	web, err := app.FindContainerByType("web")
 
-	// if err == nil, it means we have found some containers. Make sure they have
-	// the right stuff in them.
-	if err == nil {
+	if err != nil {
+		return err
+	}
+
+	if web != nil {
 		containerApproot := web.Labels["com.ddev.approot"]
 		if containerApproot != app.AppRoot {
 			return fmt.Errorf("a project (web container) in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot).(webContainerExists)
 		}
 		return nil
-	} else if strings.Contains(err.Error(), "unable to find any running or stopped containers") {
-		// Init() is just putting together the DdevApp struct, the containers do
-		// not have to exist (app doesn't have to have been started, so the fact
-		// we didn't find any is not an error.
-		return nil
 	}
-
-	return err
+	// Init() is just putting together the DdevApp struct, the containers do
+	// not have to exist (app doesn't have to have been started, so the fact
+	// we didn't find any is not an error.
+	return nil
 }
 
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
-func (app *DdevApp) FindContainerByType(containerType string) (docker.APIContainers, error) {
+func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContainers, error) {
 	labels := map[string]string{
 		"com.ddev.site-name":         app.GetName(),
 		"com.docker.compose.service": containerType,
@@ -200,7 +199,7 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 
 	privatePort, _ := strconv.ParseInt(appports.GetPort(serviceName), 10, 16)
 
-	publishedPort := dockerutil.GetPublishedPort(privatePort, dbContainer)
+	publishedPort := dockerutil.GetPublishedPort(privatePort, *dbContainer)
 	return publishedPort, nil
 }
 
@@ -410,7 +409,7 @@ func (app *DdevApp) SiteStatus() string {
 			services[service] = SiteNotFound
 			siteStatus = service + " service " + SiteNotFound
 		} else {
-			status := dockerutil.GetContainerHealth(container)
+			status := dockerutil.GetContainerHealth(*container)
 
 			switch status {
 			case "exited":
@@ -1306,7 +1305,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 
 		siteDir, ok = webContainer.Labels["com.ddev.approot"]
 		if !ok {
-			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(webContainer))
+			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(*webContainer))
 		}
 	}
 	appRoot, err := CheckForConf(siteDir)
