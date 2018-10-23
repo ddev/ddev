@@ -49,8 +49,8 @@ func EnsureSshAuthContainer() error {
 	}
 
 	templateVars := map[string]interface{}{
-		"sshAuth_image":   version.SshAuthImage,
-		"sshAuth_tag":     version.SshAuthTag,
+		"ssh_auth_image":  version.SshAuthImage,
+		"ssh_auth_tag":    version.SshAuthTag,
 		"compose_version": version.DockerComposeFileFormatVersion,
 	}
 

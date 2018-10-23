@@ -75,6 +75,7 @@ services:
       # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
       # To expose an HTTPS port, define the port as securePort:containerPort.
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80
+      - SSH_AUTH_SOCK=/home/.ssh-agent/socket
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .plugin }}
@@ -114,6 +115,8 @@ networks:
 volumes:
   mariadb-database:
     name: "${DDEV_SITENAME}-mariadb"
+  ddev-ssh-agent_socket_dir:
+    external: true
   
 `
 
@@ -273,7 +276,7 @@ volumes:
 services:
   ddev-ssh-agent:
     container_name: ddev-ssh-agent
-    image: nardeas/ssh-agent:latest
+    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
       - "dot_ssh:/tmp/.ssh"
