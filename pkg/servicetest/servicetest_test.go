@@ -123,7 +123,7 @@ func checkSolrService(t *testing.T, app *ddevapp.DdevApp) {
 	}
 
 	// Ensure container is running
-	check, err := testcommon.ContainerCheck(dockerutil.ContainerName(container), "running")
+	check, err := testcommon.ContainerCheck(dockerutil.ContainerName(*container), "running")
 	assert.NoError(err)
 	assert.True(check, "%s container is not running", service)
 
@@ -157,7 +157,7 @@ func checkMemcachedService(t *testing.T, app *ddevapp.DdevApp) {
 	}
 
 	// Ensure container is running
-	check, err := testcommon.ContainerCheck(dockerutil.ContainerName(container), "running")
+	check, err := testcommon.ContainerCheck(dockerutil.ContainerName(*container), "running")
 	assert.NoError(err)
 	assert.True(check, "%s container is not running", service)
 

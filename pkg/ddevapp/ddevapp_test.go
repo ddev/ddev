@@ -2066,7 +2066,7 @@ func constructContainerName(containerType string, app *ddevapp.DdevApp) (string,
 	if err != nil {
 		return "", err
 	}
-	name := dockerutil.ContainerName(container)
+	name := dockerutil.ContainerName(*container)
 	return name, nil
 }
 

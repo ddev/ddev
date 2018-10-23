@@ -198,11 +198,11 @@ func TestGetContainerEnv(t *testing.T) {
 	container, err := FindContainerByLabels(map[string]string{"com.docker.compose.service": "ddevrouter"})
 	assert.NoError(err)
 
-	env := GetContainerEnv("HOTDOG", container)
+	env := GetContainerEnv("HOTDOG", *container)
 	assert.Equal("superior-to-corndog", env)
-	env = GetContainerEnv("POTATO", container)
+	env = GetContainerEnv("POTATO", *container)
 	assert.Equal("future-fry", env)
-	env = GetContainerEnv("NONEXISTENT", container)
+	env = GetContainerEnv("NONEXISTENT", *container)
 	assert.Equal("", env)
 }
 

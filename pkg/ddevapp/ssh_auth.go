@@ -13,19 +13,19 @@ import (
 	"path"
 )
 
-// SshAuthName is the "machine name" of the ddev-ssh-agent docker-compose service
-const SshAuthName = "ddev-ssh-agent"
+// SSHAuthName is the "machine name" of the ddev-ssh-agent docker-compose service
+const SSHAuthName = "ddev-ssh-agent"
 
-// SshAuthComposeYAMLPath returns the full filepath to the ssh-auth docker-compose yaml file.
-func SshAuthComposeYAMLPath() string {
+// SSHAuthComposeYAMLPath returns the full filepath to the ssh-auth docker-compose yaml file.
+func SSHAuthComposeYAMLPath() string {
 	ddevDir := util.GetGlobalDdevDir()
 	dest := path.Join(ddevDir, "ssh-auth-compose.yaml")
 	return dest
 }
 
-// EnsureSshAuthContainer ensures the ssh-auth container is running.
-func EnsureSshAuthContainer() error {
-	sshContainer, err := findDdevSshAuth()
+// EnsureSSHAuthContainer ensures the ssh-auth container is running.
+func EnsureSSHAuthContainer() error {
+	sshContainer, err := findDdevSSHAuth()
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func EnsureSshAuthContainer() error {
 	if sshContainer != nil {
 		return nil
 	}
-	sshAuthComposePath := SshAuthComposeYAMLPath()
+	sshAuthComposePath := SSHAuthComposeYAMLPath()
 
 	var doc bytes.Buffer
 	f, ferr := os.Create(sshAuthComposePath)
@@ -43,14 +43,14 @@ func EnsureSshAuthContainer() error {
 	defer util.CheckClose(f)
 
 	templ := template.New("compose template")
-	templ, err = templ.Parse(DdevSshAuthTemplate)
+	templ, err = templ.Parse(DdevSSHAuthTemplate)
 	if err != nil {
 		return err
 	}
 
 	templateVars := map[string]interface{}{
-		"ssh_auth_image":  version.SshAuthImage,
-		"ssh_auth_tag":    version.SshAuthTag,
+		"ssh_auth_image":  version.SSHAuthImage,
+		"ssh_auth_tag":    version.SSHAuthTag,
 		"compose_version": version.DockerComposeFileFormatVersion,
 	}
 
@@ -60,14 +60,14 @@ func EnsureSshAuthContainer() error {
 	util.CheckErr(err)
 
 	// run docker-compose up -d in the newly created directory
-	_, _, err = dockerutil.ComposeCmd([]string{sshAuthComposePath}, "-p", SshAuthName, "up", "-d")
+	_, _, err = dockerutil.ComposeCmd([]string{sshAuthComposePath}, "-p", SSHAuthName, "up", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
 	}
 
 	// ensure we have a happy sshAuth
 	// (ddev-ssh-agent doesn't currently have healthcheck so this doesn't work)
-	//label := map[string]string{"com.docker.compose.project": SshAuthName}
+	//label := map[string]string{"com.docker.compose.project": SSHAuthName}
 	//err = dockerutil.ContainerWait(containerWaitTimeout, label)
 	//if err != nil {
 	//	return fmt.Errorf("ddev-ssh-agent failed to become ready: %v", err)
@@ -78,11 +78,11 @@ func EnsureSshAuthContainer() error {
 	return nil
 }
 
-// findDdevSshAuth usees FindContainerByLabels to get our sshAuth container and
+// findDdevSSHAuth usees FindContainerByLabels to get our sshAuth container and
 // return it (or nil if it doesn't exist yet)
-func findDdevSshAuth() (*docker.APIContainers, error) {
+func findDdevSSHAuth() (*docker.APIContainers, error) {
 	containerQuery := map[string]string{
-		"com.docker.compose.project": SshAuthName,
+		"com.docker.compose.project": SSHAuthName,
 	}
 
 	container, err := dockerutil.FindContainerByLabels(containerQuery)
@@ -92,28 +92,30 @@ func findDdevSshAuth() (*docker.APIContainers, error) {
 	return container, nil
 }
 
-// RenderSshAuthStatus returns a user-friendly string showing sshAuth-status
-func RenderSshAuthStatus() string {
-	status := GetSshAuthStatus()
+// RenderSSHAuthStatus returns a user-friendly string showing sshAuth-status
+// TODO: Not yet in service
+// noint: deadcode
+func RenderSSHAuthStatus() string {
+	status := GetSSHAuthStatus()
 	var renderedStatus string
-	badSshAuth := "\nThe sshAuth is not currently running. Your sites are likely inaccessible at this time.\nTry running 'ddev start' on a site to recreate the sshAuth."
+	badSSHAuth := "\nThe sshAuth is not yet running."
 
 	switch status {
 	case SiteNotFound:
-		renderedStatus = color.RedString(status) + badSshAuth
+		renderedStatus = color.RedString(status) + badSSHAuth
 	case "healthy":
 		renderedStatus = color.CyanString(status)
 	case "exited":
 		fallthrough
 	default:
-		renderedStatus = color.RedString(status) + badSshAuth
+		renderedStatus = color.RedString(status) + badSSHAuth
 	}
-	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", renderedStatus)
+	return fmt.Sprintf("\nssh-auth status: %v", renderedStatus)
 }
 
-// GetSshAuthStatus outputs sshAuth status and warning if not
+// GetSSHAuthStatus outputs sshAuth status and warning if not
 // running or healthy, as applicable.
-func GetSshAuthStatus() string {
+func GetSSHAuthStatus() string {
 	var status string
 
 	label := map[string]string{"com.docker.compose.service": "ddev-ssh-auth"}

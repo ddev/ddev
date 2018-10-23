@@ -47,9 +47,9 @@ var RouterImage = "drud/ddev-router"
 // RouterTag defines the tag used for the router.
 var RouterTag = "v1.3.0" // Note that this can be overridden by make
 
-var SshAuthImage = "drud/ddev-ssh-agent"
+var SSHAuthImage = "drud/ddev-ssh-agent"
 
-var SshAuthTag = "20181022_add_ssh_auth"
+var SSHAuthTag = "20181022_add_ssh_auth"
 
 // COMMIT is the actual committish, supplied by make
 var COMMIT = "COMMIT should be overridden"

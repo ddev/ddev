@@ -649,7 +649,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = EnsureSshAuthContainer()
+	err = EnsureSSHAuthContainer()
 	if err != nil {
 		return err
 	}

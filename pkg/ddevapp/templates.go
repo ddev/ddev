@@ -267,7 +267,7 @@ volumes:
     name: "ddev-router-cert-cache"
 `
 
-const DdevSshAuthTemplate = `version: '{{ .compose_version }}'
+const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'
 
 volumes:
   dot_ssh:
