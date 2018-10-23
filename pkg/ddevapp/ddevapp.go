@@ -406,6 +406,10 @@ func (app *DdevApp) SiteStatus() string {
 	for service := range services {
 		container, err := app.FindContainerByType(service)
 		if err != nil {
+			util.Error("app.FindContainerByType(%v) failed", service)
+			return ""
+		}
+		if container == nil {
 			services[service] = SiteNotFound
 			siteStatus = service + " service " + SiteNotFound
 		} else {

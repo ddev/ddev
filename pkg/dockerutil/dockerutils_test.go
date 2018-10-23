@@ -111,7 +111,7 @@ func TestContainerWait(t *testing.T) {
 	err = ContainerWait(5, labels)
 	assert.Error(err)
 	if err != nil {
-		assert.Contains(err.Error(), "failed to query container")
+		assert.Contains(err.Error(), "health check timed out")
 	}
 }
 

@@ -151,6 +151,9 @@ func ContainerWait(waittime time.Duration, labels map[string]string) error {
 			if err != nil {
 				return fmt.Errorf("failed to query container labels %v", labels)
 			}
+			if container == nil {
+				continue
+			}
 			status = GetContainerHealth(*container)
 
 			switch status {
