@@ -649,6 +649,11 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	err = EnsureSshAuthContainer()
+	if err != nil {
+		return err
+	}
+
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 

@@ -43,6 +43,9 @@ services:
     volumes:
       - "../:/var/www/html:cached"
       - ".:/mnt/ddev_config:ro"
+      - type: "volume"
+        source: ddev-ssh-agent_socket_dir
+        target: "/home/.ssh-agent"
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     depends_on:
@@ -259,4 +262,22 @@ networks:
 volumes:
   ddev-router-cert-cache:
     name: "ddev-router-cert-cache"
+`
+
+const DdevSshAuthTemplate = `version: '{{ .compose_version }}'
+
+volumes:
+  dot_ssh:
+  socket_dir:
+
+services:
+  ddev-ssh-agent:
+    container_name: ddev-ssh-agent
+    image: nardeas/ssh-agent:latest
+    user: "$DDEV_UID:$DDEV_GID"
+    volumes:
+      - "dot_ssh:/tmp/.ssh"
+      - "socket_dir:/tmp/.ssh-agent"
+    environment:
+      - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
 `

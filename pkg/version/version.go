@@ -47,6 +47,10 @@ var RouterImage = "drud/ddev-router"
 // RouterTag defines the tag used for the router.
 var RouterTag = "v1.3.0" // Note that this can be overridden by make
 
+var SshAuthImage = "nardeas/docker-ssh-agent"
+
+var SshAuthTag = "latest"
+
 // COMMIT is the actual committish, supplied by make
 var COMMIT = "COMMIT should be overridden"
 
