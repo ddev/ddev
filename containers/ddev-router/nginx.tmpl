@@ -78,6 +78,10 @@ proxy_set_header X-Forwarded-Port $proxy_x_forwarded_port;
 
 # Mitigate httpoxy attack (see README for details)
 proxy_set_header Proxy "";
+
+# Open CORS
+proxy_set_header Origin "";
+add_header "Access-Control-Allow-Origin" "*" always;
 {{ end }}
 
 {{ $enable_ipv6 := eq (or ($.Env.ENABLE_IPV6) "") "true" }}
