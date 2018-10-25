@@ -40,7 +40,8 @@ case "$1" in
 
   # Create proxy-socket for ssh-agent (to give everyone acceess to the ssh-agent socket)
   echo "Creating a proxy socket..."
-  rm ${SSH_AUTH_SOCK} ${SSH_AUTH_PROXY_SOCK} > /dev/null 2>&1
+  rm -f ${SSH_AUTH_SOCK} ${SSH_AUTH_PROXY_SOCK}
+  echo "Running socat UNIX-LISTEN:${SSH_AUTH_PROXY_SOCK},perm=0666,fork UNIX-CONNECT:${SSH_AUTH_SOCK}"
   socat UNIX-LISTEN:${SSH_AUTH_PROXY_SOCK},perm=0666,fork UNIX-CONNECT:${SSH_AUTH_SOCK} &
 
   echo "Launching ssh-agent..."

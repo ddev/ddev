@@ -29,10 +29,12 @@ func EnsureSSHAuthContainer() error {
 	if err != nil {
 		return err
 	}
-	// If we already have an ssh container, there's nothing to do.
-	if sshContainer != nil {
+	// If we already have a running ssh container, there's nothing to do.
+	if sshContainer != nil && sshContainer.State == "running" {
 		return nil
 	}
+	// In all other cases we'll create/force-recreate
+
 	sshAuthComposePath := SSHAuthComposeYAMLPath()
 
 	var doc bytes.Buffer
@@ -59,8 +61,9 @@ func EnsureSSHAuthContainer() error {
 	_, err = f.WriteString(doc.String())
 	util.CheckErr(err)
 
-	// run docker-compose up -d in the newly created directory
-	_, _, err = dockerutil.ComposeCmd([]string{sshAuthComposePath}, "-p", SSHAuthName, "up", "-d")
+	// run docker-compose up -d
+	// This will force-recreate, discarding existing auth if there is a stopped container.
+	_, _, err = dockerutil.ComposeCmd([]string{sshAuthComposePath}, "-p", SSHAuthName, "up", "--force-recreate", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
 	}
