@@ -1891,6 +1891,31 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 	}
 }
 
+// TestCaptureLogs checks that app.CaptureLogs() works
+func TestCaptureLogs(t *testing.T) {
+	assert := asrt.New(t)
+
+	site := TestSites[0]
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s CaptureLogs", site.Name))
+
+	app := new(ddevapp.DdevApp)
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
+	logs, err := app.CaptureLogs("web", false, "100")
+	assert.NoError(err)
+
+	assert.Contains(logs, "INFO spawned")
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	runTime()
+}
+
 // constructContainerName builds a container name given the type (web/db/dba) and the app
 func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
 	container, err := app.FindContainerByType(containerType)
