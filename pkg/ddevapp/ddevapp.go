@@ -728,7 +728,7 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
 	stdout := util.CaptureUserOut()
-	err := app.Logs(service, false, false, "")
+	err := app.Logs(service, false, timestamps, tailLines)
 	out := stdout()
 	return out, err
 }
