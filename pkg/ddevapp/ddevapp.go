@@ -810,6 +810,10 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 	if err != nil {
 		return err
 	}
+	if container == nil {
+		util.Warning("No running service container %s was found", service)
+		return nil
+	}
 
 	logOpts := docker.LogsOptions{
 		Container:    container.ID,

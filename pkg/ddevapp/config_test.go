@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
@@ -566,13 +567,11 @@ func TestConfigOverrideDetection(t *testing.T) {
 	err = app.Start()
 	out := restoreOutput()
 	if strings.Contains(out, "ddev-ssh-agent failed to become ready") {
-		stdout := testcommon.CaptureUserOut()
-		logsErr := app.Logs("ddev-ssh-agent", false, false, "")
-		assert.NoError(logsErr)
-		out := stdout()
-		t.Logf("ddev-ssh-agent failed to become ready: Logs: ===\n%s\n===", out)
+		dockerLogs, err := exec.RunCommand("docker", []string{"logs", "ddev-ssh-agent"})
+		assert.NoError(err)
+		t.Logf("ddev-ssh-agent failed to become ready, docker logs:===\n%s\n===", dockerLogs)
 	}
-	require.NoError(t, err)
+	require.NoError(t, err, "app.Start() did not succeed: output:===\n%s\n===", out)
 
 	assert.Contains(out, "utf.cnf")
 	assert.Contains(out, "my-php.ini")
