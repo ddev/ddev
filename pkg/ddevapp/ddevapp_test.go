@@ -318,7 +318,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		err = app.Start()
 		assert.NoError(err)
 		if err != nil && strings.Contains(err.Error(), "db container failed") {
-			stdout := testcommon.CaptureUserOut()
+			stdout := util.CaptureUserOut()
 			err = app.Logs("db", false, false, "")
 			assert.NoError(err)
 			out := stdout()
@@ -625,13 +625,13 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Test static content.
-		testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
 		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 40)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=$v: %v", rawurl, resp, err)
 		if err != nil {
-			stdout := testcommon.CaptureUserOut()
+			stdout := util.CaptureUserOut()
 			err = app.Logs("web", false, false, "")
 			assert.NoError(err)
 			out := stdout()
@@ -725,7 +725,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.Contains(body, "d7 tester test 2 has 2 nodes")
 	if err != nil {
 		t.Logf("resp after timeout: %v", resp)
-		stdout := testcommon.CaptureUserOut()
+		stdout := util.CaptureUserOut()
 		err = app.Logs("web", false, false, "")
 		assert.NoError(err)
 		out := stdout()
@@ -1044,13 +1044,13 @@ func TestDdevLogs(t *testing.T) {
 		err = app.Start()
 		assert.NoError(err)
 
-		stdout := testcommon.CaptureUserOut()
+		stdout := util.CaptureUserOut()
 		err = app.Logs("web", false, false, "")
 		assert.NoError(err)
 		out := stdout()
 		assert.Contains(out, "Server started")
 
-		stdout = testcommon.CaptureUserOut()
+		stdout = util.CaptureUserOut()
 		err = app.Logs("db", false, false, "")
 		assert.NoError(err)
 		out = stdout()
@@ -1060,13 +1060,13 @@ func TestDdevLogs(t *testing.T) {
 		err = app.Stop()
 		assert.NoError(err)
 
-		stdout = testcommon.CaptureUserOut()
+		stdout = util.CaptureUserOut()
 		err = app.Logs("web", false, false, "")
 		assert.NoError(err)
 		out = stdout()
 		assert.Contains(out, "Server started")
 
-		stdout = testcommon.CaptureUserOut()
+		stdout = util.CaptureUserOut()
 		err = app.Logs("db", false, false, "")
 		assert.NoError(err)
 		out = stdout()
@@ -1107,7 +1107,7 @@ func TestProcessHooks(t *testing.T) {
 			},
 		}
 
-		stdout := testcommon.CaptureUserOut()
+		stdout := util.CaptureUserOut()
 		err = app.ProcessHooks("hook-test")
 		assert.NoError(err)
 
@@ -1212,7 +1212,7 @@ func TestDescribe(t *testing.T) {
 
 		// If we have a problem starting, get the container logs and output.
 		if err != nil {
-			stdout := testcommon.CaptureUserOut()
+			stdout := util.CaptureUserOut()
 			logsErr := app.Logs("web", false, false, "")
 			assert.NoError(logsErr)
 			out := stdout()

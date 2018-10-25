@@ -31,7 +31,7 @@ func TestGetInput(t *testing.T) {
 
 	// Try basic GetInput
 	input := "InputIWantToSee"
-	restoreOutput := testcommon.CaptureUserOut()
+	restoreOutput := util.CaptureUserOut()
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 	result := util.GetInput("nodefault")
@@ -40,7 +40,7 @@ func TestGetInput(t *testing.T) {
 
 	// Try Prompt() with a default value which is overridden
 	input = "InputIWantToSee"
-	restoreOutput = testcommon.CaptureUserOut()
+	restoreOutput = util.CaptureUserOut()
 	scanner = bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 	result = util.Prompt("nodefault", "expected default")
@@ -49,7 +49,7 @@ func TestGetInput(t *testing.T) {
 
 	// Try Prompt() with a default value but don't provide a response
 	input = ""
-	restoreOutput = testcommon.CaptureUserOut()
+	restoreOutput = util.CaptureUserOut()
 	scanner = bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 	result = util.Prompt("nodefault", "expected default")
