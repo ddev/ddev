@@ -724,6 +724,15 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 	return nil
 }
 
+// CaptureLogs returns logs for a site's given container.
+// See docker.LogsOptions for more information about valid tailLines values.
+func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
+	stdout := util.CaptureUserOut()
+	err := app.Logs(service, false, false, "")
+	out := stdout()
+	return out, err
+}
+
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() {
 	curUser, err := user.Current()

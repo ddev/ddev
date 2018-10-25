@@ -3,6 +3,7 @@ package testcommon
 import (
 	"bytes"
 	"crypto/tls"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"io"
 	"io/ioutil"
 	"os"
@@ -16,10 +17,8 @@ import (
 	"fmt"
 
 	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
 	asrt "github.com/stretchr/testify/assert"

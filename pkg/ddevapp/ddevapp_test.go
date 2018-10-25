@@ -1778,6 +1778,31 @@ func TestWebserverType(t *testing.T) {
 	}
 }
 
+// TestCaptureLogs checks that app.CaptureLogs() works
+func TestCaptureLogs(t *testing.T) {
+	assert := asrt.New(t)
+
+	site := TestSites[0]
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s CaptureLogs", site.Name))
+
+	app := new(ddevapp.DdevApp)
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
+	logs, err := app.CaptureLogs("web", false, "100")
+	assert.NoError(err)
+
+	assert.Contains(logs, "INFO spawned")
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	runTime()
+}
+
 // TestDbMigration tests migration from bind-mounted db to volume-mounted db
 // This should be important around the time of its release, 2018-08-02 or so, but should be increasingly
 // irrelevant after that and can eventually be removed.
