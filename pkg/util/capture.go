@@ -34,3 +34,28 @@ func CaptureUserOut() func() string {
 		return out
 	}
 }
+
+// CaptureStdOut captures Stdout to a string. Capturing starts when it is called. It returns an anonymous function that when called, will return a string
+// containing the output during capture, and revert once again to the original value of os.StdOut.
+func CaptureStdOut() func() string {
+	old := os.Stdout // keep backup of the real stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	return func() string {
+		outC := make(chan string)
+		// copy the output in a separate goroutine so printing can't block indefinitely
+		go func() {
+			var buf bytes.Buffer
+			_, err := io.Copy(&buf, r)
+			CheckErr(err)
+			outC <- buf.String()
+		}()
+
+		// back to normal state
+		CheckClose(w)
+		os.Stdout = old // restoring the real stdout
+		out := <-outC
+		return out
+	}
+}

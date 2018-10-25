@@ -343,7 +343,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
-		restoreOutput := testcommon.CaptureStdOut()
+		restoreOutput := util.CaptureStdOut()
 		err = app.PromptForConfig()
 		assert.NoError(err, t)
 		out := restoreOutput()
@@ -398,7 +398,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 
-	restoreOutput := testcommon.CaptureStdOut()
+	restoreOutput := util.CaptureStdOut()
 	err = app.PromptForConfig()
 	assert.NoError(err, t)
 	out := restoreOutput()

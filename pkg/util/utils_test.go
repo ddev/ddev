@@ -3,7 +3,7 @@ package util_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"strings"
@@ -56,4 +56,26 @@ func TestGetInput(t *testing.T) {
 	assert.EqualValues("expected default", result)
 	_ = restoreOutput()
 	println() // Just lets goland find the PASS or FAIL
+}
+
+// TestCaptureUserOut ensures capturing of stdout works as expected.
+func TestCaptureUserOut(t *testing.T) {
+	assert := asrt.New(t)
+	restoreOutput := util.CaptureUserOut()
+	text := util.RandString(128)
+	output.UserOut.Println(text)
+	out := restoreOutput()
+
+	assert.Contains(out, text)
+}
+
+// TestCaptureStdOut ensures capturing of stdout works as expected.
+func TestCaptureStdOut(t *testing.T) {
+	assert := asrt.New(t)
+	restoreOutput := util.CaptureStdOut()
+	text := util.RandString(128)
+	fmt.Println(text)
+	out := restoreOutput()
+
+	assert.Contains(out, text)
 }

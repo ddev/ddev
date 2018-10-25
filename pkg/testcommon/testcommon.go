@@ -1,10 +1,8 @@
 package testcommon
 
 import (
-	"bytes"
 	"crypto/tls"
 	"github.com/drud/ddev/pkg/ddevapp"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -188,31 +186,6 @@ func Chdir(path string) func() {
 			// TODO: This should never Fatalf, as it terminates the process without test running finishing cleanup.
 			log.Fatalf("Failed to change directory to original dir=%s, err=%v", curDir, err)
 		}
-	}
-}
-
-// CaptureStdOut captures Stdout to a string. Capturing starts when it is called. It returns an anonymous function that when called, will return a string
-// containing the output during capture, and revert once again to the original value of os.StdOut.
-func CaptureStdOut() func() string {
-	old := os.Stdout // keep backup of the real stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	return func() string {
-		outC := make(chan string)
-		// copy the output in a separate goroutine so printing can't block indefinitely
-		go func() {
-			var buf bytes.Buffer
-			_, err := io.Copy(&buf, r)
-			util.CheckErr(err)
-			outC <- buf.String()
-		}()
-
-		// back to normal state
-		util.CheckClose(w)
-		os.Stdout = old // restoring the real stdout
-		out := <-outC
-		return out
 	}
 }
 
