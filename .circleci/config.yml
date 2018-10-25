@@ -157,6 +157,20 @@ jobs:
           path: /artifacts
           name: Artifact storage
 
+      - run:
+          command: |
+            /home/circleci/ghr \
+            -draft \
+            -prerelease \
+            -r $GITHUB_REPOSITORY \
+            -u $GITHUB_USERNAME \
+            -t $GITHUB_TOKEN \
+            -n $(cat ./.version) \
+            -b "$(cat ./release-notes.md)" \
+            $(cat ./.version) $ARTIFACTS
+          name: Upload artifacts to GitHub release page
+
+
 workflows:
   version: 2
   normal_build_and_test:
