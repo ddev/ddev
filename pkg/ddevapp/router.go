@@ -157,10 +157,14 @@ func GetRouterStatus() string {
 	container, err := dockerutil.FindContainerByLabels(label)
 
 	if err != nil {
-		status = SiteNotFound
-	} else {
-		status = dockerutil.GetContainerHealth(*container)
+		util.Error("Failed to FindContainerByLabels(%v)", label)
+		return "error"
 	}
+	if container == nil {
+		return "no ddev-router found"
+	}
+
+	status = dockerutil.GetContainerHealth(*container)
 
 	return status
 }

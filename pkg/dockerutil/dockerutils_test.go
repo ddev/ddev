@@ -197,6 +197,7 @@ func TestGetContainerEnv(t *testing.T) {
 
 	container, err := FindContainerByLabels(map[string]string{"com.docker.compose.service": "ddevrouter"})
 	assert.NoError(err)
+	require.NotEmpty(t, container)
 
 	env := GetContainerEnv("HOTDOG", *container)
 	assert.Equal("superior-to-corndog", env)

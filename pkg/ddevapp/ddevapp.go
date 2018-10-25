@@ -1309,6 +1309,9 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		// nolint: vetshadow
 		webContainer, err := dockerutil.FindContainerByLabels(labels)
 		if err != nil {
+			return "", err
+		}
+		if webContainer == nil {
 			return "", fmt.Errorf("could not find a project named '%s'. Run 'ddev list' to see currently active projects", siteName)
 		}
 

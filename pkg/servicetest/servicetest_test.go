@@ -1,6 +1,7 @@
 package servicetest_test
 
 import (
+	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
@@ -118,9 +119,8 @@ func checkSolrService(t *testing.T, app *ddevapp.DdevApp) {
 	}
 
 	container, err := dockerutil.FindContainerByLabels(labels)
-	if err != nil {
-		t.Fatalf("Could not find running container for %s service. Skipping remainder of test: %v", service, err)
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, container)
 
 	// Ensure container is running
 	check, err := testcommon.ContainerCheck(dockerutil.ContainerName(*container), "running")
@@ -152,9 +152,8 @@ func checkMemcachedService(t *testing.T, app *ddevapp.DdevApp) {
 	}
 
 	container, err := dockerutil.FindContainerByLabels(labels)
-	if err != nil {
-		t.Fatalf("Could not find running container for %s service. Skipping remainder of test: %v", service, err)
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, container)
 
 	// Ensure container is running
 	check, err := testcommon.ContainerCheck(dockerutil.ContainerName(*container), "running")

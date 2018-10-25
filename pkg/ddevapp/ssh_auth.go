@@ -115,16 +115,16 @@ func RenderSSHAuthStatus() string {
 // GetSSHAuthStatus outputs sshAuth status and warning if not
 // running or healthy, as applicable.
 func GetSSHAuthStatus() string {
-	var status string
-
 	label := map[string]string{"com.docker.compose.service": "ddev-ssh-auth"}
 	container, err := dockerutil.FindContainerByLabels(label)
 
 	if err != nil {
-		status = SiteNotFound
-	} else {
-		status = dockerutil.GetContainerHealth(*container)
+		util.Error("Failed to execute FindContainerByLabels(%v): %v", label, err)
+		return SiteNotFound
 	}
+	if container == nil {
+		return SiteNotFound
+	}
+	return dockerutil.GetContainerHealth(*container)
 
-	return status
 }
