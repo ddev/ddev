@@ -367,16 +367,17 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 }
 
 // EnsureLocalHTTPContent will verify a URL responds with a 200 and expected content string
-func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, timeoutSeconds ...int) {
+func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, timeoutSeconds ...int) (*http.Response, error) {
 	var httpTimeout = 20
 	if len(timeoutSeconds) > 0 {
 		httpTimeout = timeoutSeconds[0]
 	}
 	assert := asrt.New(t)
 
-	body, _, err := GetLocalHTTPResponse(t, rawurl, httpTimeout)
+	body, resp, err := GetLocalHTTPResponse(t, rawurl, httpTimeout)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
 	assert.Contains(body, expectedContent)
+	return resp, err
 }
 
 // PortPair is for tests to use naming portsets for tests

@@ -79,3 +79,4 @@ func TestCaptureStdOut(t *testing.T) {
 
 	assert.Contains(out, text)
 }
+c
