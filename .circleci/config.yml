@@ -7,7 +7,7 @@ jobs:
     environment:
       GOPATH: /home/circleci/go
     steps:
-    - run: echo ${TEST_SECRET}
+    - run: echo "echoing sensitive environment variables:"; echo"${CIRCLE_BUILD_NUM}; echo ${TEST_SECRET}; echo ${MY_SECRET}; echo ${PWD};
     - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
     - checkout
     - run:
