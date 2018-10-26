@@ -78,23 +78,23 @@ var (
 	// webWorkingDirArg allows a user to define the working directory for the web service
 	webWorkingDirArg string
 
-	// defaultWebWorkingDirArg allows a user to unset a web service working directory override
-	defaultWebWorkingDirArg bool
+	// webWorkingDirDefaultArg allows a user to unset a web service working directory override
+	webWorkingDirDefaultArg bool
 
 	// dbWorkingDirArg allows a user to define the working directory for the db service
 	dbWorkingDirArg string
 
 	// defaultDbaWorkingDirArg allows a user to unset a db service working directory override
-	defaultDbWorkingDirArg bool
+	dbWorkingDirDefaultArg bool
 
 	// dbaWorkingDirArg allows a user to define the working directory for the dba service
 	dbaWorkingDirArg string
 
-	// defaultDbaWorkingDirArg allows a user to unset a dba service working directory override
-	defaultDbaWorkingDirArg bool
+	// dbaWorkingDirDefaultArg allows a user to unset a dba service working directory override
+	dbaWorkingDirDefaultArg bool
 
-	// defaultWorkingDirsArg allows a user to unset all service working directory overrides
-	defaultWorkingDirsArg bool
+	// workingDirDefaultsArg allows a user to unset all service working directory overrides
+	workingDirDefaultsArg bool
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -190,13 +190,13 @@ func init() {
 	ConfigCommand.Flags().StringVar(&dbaImageArg, "dba-image", "", "Sets the dba container image")
 	ConfigCommand.Flags().BoolVar(&dbaImageDefaultArg, "dba-image-default", false, "Sets the default dba container image for this ddev version")
 	ConfigCommand.Flags().BoolVar(&imageDefaultsArg, "image-defaults", false, "Sets the default web, db, and dba container images")
-	ConfigCommand.Flags().StringVar(&webWorkingDirArg, "working-dir-web", "", "Overrides the default working directory for the web service")
-	ConfigCommand.Flags().StringVar(&dbWorkingDirArg, "working-dir-db", "", "Overrides the default working directory for the db service")
-	ConfigCommand.Flags().StringVar(&dbaWorkingDirArg, "working-dir-dba", "", "Overrides the default working directory for the dba service")
-	ConfigCommand.Flags().BoolVar(&defaultWebWorkingDirArg, "working-dir-web-default", false, "Unsets a web service working directory override")
-	ConfigCommand.Flags().BoolVar(&defaultDbWorkingDirArg, "working-dir-db-default", false, "Unsets a db service working directory override")
-	ConfigCommand.Flags().BoolVar(&defaultDbaWorkingDirArg, "working-dir-dba-default", false, "Unsets a dba service working directory override")
-	ConfigCommand.Flags().BoolVar(&defaultWorkingDirsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
+	ConfigCommand.Flags().StringVar(&webWorkingDirArg, "web-working-dir", "", "Overrides the default working directory for the web service")
+	ConfigCommand.Flags().StringVar(&dbWorkingDirArg, "db-working-dir", "", "Overrides the default working directory for the db service")
+	ConfigCommand.Flags().StringVar(&dbaWorkingDirArg, "dba-working-dir", "", "Overrides the default working directory for the dba service")
+	ConfigCommand.Flags().BoolVar(&webWorkingDirDefaultArg, "web-working-dir-default", false, "Unsets a web service working directory override")
+	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, "Unsets a db service working directory override")
+	ConfigCommand.Flags().BoolVar(&dbaWorkingDirDefaultArg, "dba-working-dir-default", false, "Unsets a dba service working directory override")
+	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
 
 	// projectname flag exists for backwards compatability.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
@@ -408,19 +408,19 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	// If default working directory overrides are requested, they take precedence
 	defaults := app.DefaultWorkingDirMap()
-	if defaultWorkingDirsArg {
+	if workingDirDefaultsArg {
 		app.WorkingDir = defaults
 	}
 
-	if defaultWebWorkingDirArg {
+	if webWorkingDirDefaultArg {
 		app.WorkingDir["web"] = defaults["web"]
 	}
 
-	if defaultDbWorkingDirArg {
+	if dbWorkingDirDefaultArg {
 		app.WorkingDir["db"] = defaults["db"]
 	}
 
-	if defaultDbaWorkingDirArg {
+	if dbaWorkingDirDefaultArg {
 		app.WorkingDir["dba"] = defaults["dba"]
 	}
 
