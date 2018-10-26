@@ -393,6 +393,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.DBAImage = ""
 	}
 
+	if app.WorkingDir == nil {
+		app.WorkingDir = map[string]string{}
+	}
+
 	// Set working directory overrides
 	if webWorkingDirArg != "" {
 		app.WorkingDir["web"] = webWorkingDirArg
