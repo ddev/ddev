@@ -74,6 +74,27 @@ var (
 
 	// imageDefaultsArg allows a user to unset all specific container images
 	imageDefaultsArg bool
+
+	// webWorkingDirArg allows a user to define the working directory for the web service
+	webWorkingDirArg string
+
+	// defaultWebWorkingDirArg allows a user to unset a web service working directory override
+	defaultWebWorkingDirArg bool
+
+	// dbWorkingDirArg allows a user to define the working directory for the db service
+	dbWorkingDirArg string
+
+	// defaultDbaWorkingDirArg allows a user to unset a db service working directory override
+	defaultDbWorkingDirArg bool
+
+	// dbaWorkingDirArg allows a user to define the working directory for the dba service
+	dbaWorkingDirArg string
+
+	// defaultDbaWorkingDirArg allows a user to unset a dba service working directory override
+	defaultDbaWorkingDirArg bool
+
+	// defaultWorkingDirsArg allows a user to unset all service working directory overrides
+	defaultWorkingDirsArg bool
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -169,6 +190,13 @@ func init() {
 	ConfigCommand.Flags().StringVar(&dbaImageArg, "dba-image", "", "Sets the dba container image")
 	ConfigCommand.Flags().BoolVar(&dbaImageDefaultArg, "dba-image-default", false, "Sets the default dba container image for this ddev version")
 	ConfigCommand.Flags().BoolVar(&imageDefaultsArg, "image-defaults", false, "Sets the default web, db, and dba container images")
+	ConfigCommand.Flags().StringVar(&webWorkingDirArg, "working-dir-web", "", "Overrides the default working directory for the web service")
+	ConfigCommand.Flags().StringVar(&dbWorkingDirArg, "working-dir-db", "", "Overrides the default working directory for the db service")
+	ConfigCommand.Flags().StringVar(&dbaWorkingDirArg, "working-dir-dba", "", "Overrides the default working directory for the dba service")
+	ConfigCommand.Flags().BoolVar(&defaultWebWorkingDirArg, "working-dir-web-default", false, "Unsets a web service working directory override")
+	ConfigCommand.Flags().BoolVar(&defaultDbWorkingDirArg, "working-dir-db-default", false, "Unsets a db service working directory override")
+	ConfigCommand.Flags().BoolVar(&defaultDbaWorkingDirArg, "working-dir-dba-default", false, "Unsets a dba service working directory override")
+	ConfigCommand.Flags().BoolVar(&defaultWorkingDirsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
 
 	// projectname flag exists for backwards compatability.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
@@ -363,6 +391,37 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.WebImage = ""
 		app.DBImage = ""
 		app.DBAImage = ""
+	}
+
+	// Set working directory overrides
+	if webWorkingDirArg != "" {
+		app.WorkingDir["web"] = webWorkingDirArg
+	}
+
+	if dbWorkingDirArg != "" {
+		app.WorkingDir["db"] = dbWorkingDirArg
+	}
+
+	if dbaWorkingDirArg != "" {
+		app.WorkingDir["dba"] = dbaWorkingDirArg
+	}
+
+	// If default working directory overrides are requested, they take precedence
+	defaults := app.DefaultWorkingDirMap()
+	if defaultWorkingDirsArg {
+		app.WorkingDir = defaults
+	}
+
+	if defaultWebWorkingDirArg {
+		app.WorkingDir["web"] = defaults["web"]
+	}
+
+	if defaultDbWorkingDirArg {
+		app.WorkingDir["db"] = defaults["db"]
+	}
+
+	if defaultDbaWorkingDirArg {
+		app.WorkingDir["dba"] = defaults["dba"]
 	}
 
 	// Ensure the configuration passes validation before writing config file.

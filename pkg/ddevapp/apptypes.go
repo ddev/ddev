@@ -39,7 +39,7 @@ type postStartAction func(app *DdevApp) error
 type importFilesAction func(app *DdevApp, importPath, extPath string) error
 
 // defaultWorkingDirMap returns the app type's default working directory map
-type defaultWorkingDirMap func(app *DdevApp) map[string]string
+type defaultWorkingDirMap func(app *DdevApp, defaults map[string]string) map[string]string
 
 // AppTypeFuncs struct defines the functions that can be called (if populated)
 // for a given appType.
@@ -222,16 +222,24 @@ func (app *DdevApp) ImportFilesAction(importPath, extPath string) error {
 
 // DefaultWorkingDirMap returns the app type's default working directory map.
 func (app *DdevApp) DefaultWorkingDirMap() map[string]string {
-	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.defaultWorkingDirMap != nil {
-		return appFuncs.defaultWorkingDirMap(app)
+	// Default working directory values are defined here.
+	// Services working directories can be overridden by app types if needed.
+	defaults := map[string]string{
+		"web": "/var/www/html/",
+		"db":  "/home",
+		"dba": "/home",
 	}
 
-	return nil
+	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.defaultWorkingDirMap != nil {
+		return appFuncs.defaultWorkingDirMap(app, defaults)
+	}
+
+	return defaults
 }
 
 // docrootWorkingDir handles the shared case in which the web service working directory is the docroot.
-func docrootWorkingDir(app *DdevApp) map[string]string {
-	return map[string]string{
-		"web": path.Join("/var/www/html", app.Docroot),
-	}
+func docrootWorkingDir(app *DdevApp, defaults map[string]string) map[string]string {
+	defaults["web"] = path.Join("/var/www/html", app.Docroot)
+
+	return defaults
 }
