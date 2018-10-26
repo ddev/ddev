@@ -43,3 +43,4 @@ curl -sL https://github.com/tcnksm/ghr/releases/download/v0.12.0/${GHR_RELEASE}.
 gunzip ${GHR_RELEASE}.tar.gz
 tar -xf ${GHR_RELEASE}.tar
 ln -s ./${GHR_RELEASE}/ghr /home/circleci/ghr
+/home/circleci/ghr -v 
