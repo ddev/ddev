@@ -3,7 +3,7 @@ package util_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"strings"
@@ -31,7 +31,7 @@ func TestGetInput(t *testing.T) {
 
 	// Try basic GetInput
 	input := "InputIWantToSee"
-	restoreOutput := testcommon.CaptureUserOut()
+	restoreOutput := util.CaptureUserOut()
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 	result := util.GetInput("nodefault")
@@ -40,7 +40,7 @@ func TestGetInput(t *testing.T) {
 
 	// Try Prompt() with a default value which is overridden
 	input = "InputIWantToSee"
-	restoreOutput = testcommon.CaptureUserOut()
+	restoreOutput = util.CaptureUserOut()
 	scanner = bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 	result = util.Prompt("nodefault", "expected default")
@@ -49,11 +49,33 @@ func TestGetInput(t *testing.T) {
 
 	// Try Prompt() with a default value but don't provide a response
 	input = ""
-	restoreOutput = testcommon.CaptureUserOut()
+	restoreOutput = util.CaptureUserOut()
 	scanner = bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 	result = util.Prompt("nodefault", "expected default")
 	assert.EqualValues("expected default", result)
 	_ = restoreOutput()
 	println() // Just lets goland find the PASS or FAIL
+}
+
+// TestCaptureUserOut ensures capturing of stdout works as expected.
+func TestCaptureUserOut(t *testing.T) {
+	assert := asrt.New(t)
+	restoreOutput := util.CaptureUserOut()
+	text := util.RandString(128)
+	output.UserOut.Println(text)
+	out := restoreOutput()
+
+	assert.Contains(out, text)
+}
+
+// TestCaptureStdOut ensures capturing of stdout works as expected.
+func TestCaptureStdOut(t *testing.T) {
+	assert := asrt.New(t)
+	restoreOutput := util.CaptureStdOut()
+	text := util.RandString(128)
+	fmt.Println(text)
+	out := restoreOutput()
+
+	assert.Contains(out, text)
 }

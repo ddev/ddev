@@ -1,9 +1,8 @@
 package testcommon
 
 import (
-	"bytes"
 	"crypto/tls"
-	"io"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -16,10 +15,8 @@ import (
 	"fmt"
 
 	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
 	asrt "github.com/stretchr/testify/assert"
@@ -189,59 +186,6 @@ func Chdir(path string) func() {
 			// TODO: This should never Fatalf, as it terminates the process without test running finishing cleanup.
 			log.Fatalf("Failed to change directory to original dir=%s, err=%v", curDir, err)
 		}
-	}
-}
-
-// CaptureUserOut captures output written to UserOut to a string.
-// Capturing starts when it is called. It returns an anonymous function that
-// when called, will return a string containing the output during capture, and
-// revert once again to the original value of os.StdOut.
-func CaptureUserOut() func() string {
-	old := output.UserOut.Out // keep backup of the real stdout
-	r, w, _ := os.Pipe()
-	output.UserOut.Out = w
-
-	return func() string {
-		outC := make(chan string)
-		// copy the output in a separate goroutine so printing can't block indefinitely
-		go func() {
-			var buf bytes.Buffer
-			_, err := io.Copy(&buf, r)
-			util.CheckErr(err)
-			outC <- buf.String()
-		}()
-
-		// back to normal state
-		util.CheckClose(w)
-		output.UserOut.Out = old // restoring the real stdout
-
-		out := <-outC
-		return out
-	}
-}
-
-// CaptureStdOut captures Stdout to a string. Capturing starts when it is called. It returns an anonymous function that when called, will return a string
-// containing the output during capture, and revert once again to the original value of os.StdOut.
-func CaptureStdOut() func() string {
-	old := os.Stdout // keep backup of the real stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	return func() string {
-		outC := make(chan string)
-		// copy the output in a separate goroutine so printing can't block indefinitely
-		go func() {
-			var buf bytes.Buffer
-			_, err := io.Copy(&buf, r)
-			util.CheckErr(err)
-			outC <- buf.String()
-		}()
-
-		// back to normal state
-		util.CheckClose(w)
-		os.Stdout = old // restoring the real stdout
-		out := <-outC
-		return out
 	}
 }
 
@@ -423,16 +367,17 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 }
 
 // EnsureLocalHTTPContent will verify a URL responds with a 200 and expected content string
-func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, timeoutSeconds ...int) {
+func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, timeoutSeconds ...int) (*http.Response, error) {
 	var httpTimeout = 20
 	if len(timeoutSeconds) > 0 {
 		httpTimeout = timeoutSeconds[0]
 	}
 	assert := asrt.New(t)
 
-	body, _, err := GetLocalHTTPResponse(t, rawurl, httpTimeout)
+	body, resp, err := GetLocalHTTPResponse(t, rawurl, httpTimeout)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
 	assert.Contains(body, expectedContent)
+	return resp, err
 }
 
 // PortPair is for tests to use naming portsets for tests

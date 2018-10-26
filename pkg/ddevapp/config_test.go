@@ -174,7 +174,7 @@ func TestConfigCommand(t *testing.T) {
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
-		restoreOutput := testcommon.CaptureUserOut()
+		restoreOutput := util.CaptureUserOut()
 		err = app.PromptForConfig()
 		assert.NoError(err, t)
 		out := restoreOutput()
@@ -190,7 +190,7 @@ func TestConfigCommand(t *testing.T) {
 		scanner = bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
-		restoreOutput = testcommon.CaptureUserOut()
+		restoreOutput = util.CaptureUserOut()
 		err = app.PromptForConfig()
 		assert.NoError(err, t)
 		out = restoreOutput()
@@ -288,7 +288,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
-		restoreOutput := testcommon.CaptureUserOut()
+		restoreOutput := util.CaptureUserOut()
 		err = app.PromptForConfig()
 		assert.NoError(err, t)
 		out := restoreOutput()
@@ -343,7 +343,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 		scanner := bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
-		restoreOutput := testcommon.CaptureStdOut()
+		restoreOutput := util.CaptureStdOut()
 		err = app.PromptForConfig()
 		assert.NoError(err, t)
 		out := restoreOutput()
@@ -398,7 +398,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 
-	restoreOutput := testcommon.CaptureStdOut()
+	restoreOutput := util.CaptureStdOut()
 	err = app.PromptForConfig()
 	assert.NoError(err, t)
 	out := restoreOutput()
@@ -561,7 +561,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	err = app.ReadConfig()
 	assert.NoError(err)
 
-	restoreOutput := testcommon.CaptureUserOut()
+	restoreOutput := util.CaptureUserOut()
 	err = app.Start()
 	out := restoreOutput()
 	assert.NoError(err)

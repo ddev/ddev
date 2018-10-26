@@ -9,8 +9,6 @@ import (
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -73,28 +71,6 @@ func TestChdir(t *testing.T) {
 	assert.Equal(currentDir, startingDir, "Ensure we have changed back to the starting directory")
 
 	CleanupDir(testDir)
-}
-
-// TestCaptureUserOut ensures capturing of stdout works as expected.
-func TestCaptureUserOut(t *testing.T) {
-	assert := asrt.New(t)
-	restoreOutput := CaptureUserOut()
-	text := util.RandString(128)
-	output.UserOut.Println(text)
-	out := restoreOutput()
-
-	assert.Contains(out, text)
-}
-
-// TestCaptureStdOut ensures capturing of stdout works as expected.
-func TestCaptureStdOut(t *testing.T) {
-	assert := asrt.New(t)
-	restoreOutput := CaptureStdOut()
-	text := util.RandString(128)
-	fmt.Println(text)
-	out := restoreOutput()
-
-	assert.Contains(out, text)
 }
 
 // TestValidTestSite tests the TestSite struct behavior in the case of a valid configuration.
@@ -188,7 +164,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 
 		// This does the same thing as previous, but worth exercising it here.
-		EnsureLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect)
+		_, _ = EnsureLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect)
 	}
 	// Set the ports back to the default was so we don't break any following tests.
 	app.RouterHTTPSPort = "443"

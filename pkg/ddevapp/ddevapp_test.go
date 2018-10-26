@@ -318,7 +318,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		err = app.Start()
 		assert.NoError(err)
 		if err != nil && strings.Contains(err.Error(), "db container failed") {
-			stdout := testcommon.CaptureUserOut()
+			stdout := util.CaptureUserOut()
 			err = app.Logs("db", false, false, "")
 			assert.NoError(err)
 			out := stdout()
@@ -339,8 +339,8 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		}
 
 		for _, hostname := range app.GetHostnames() {
-			testcommon.EnsureLocalHTTPContent(t, "http://"+hostname+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-			testcommon.EnsureLocalHTTPContent(t, "https://"+hostname+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+hostname+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			_, _ = testcommon.EnsureLocalHTTPContent(t, "https://"+hostname+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 
 		}
 
@@ -625,13 +625,13 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Test static content.
-		testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
 		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 40)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=$v: %v", rawurl, resp, err)
 		if err != nil {
-			stdout := testcommon.CaptureUserOut()
+			stdout := util.CaptureUserOut()
 			err = app.Logs("web", false, false, "")
 			assert.NoError(err)
 			out := stdout()
@@ -696,7 +696,12 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	err = app.ImportDB(d7testerTest1Dump, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
-	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
+	_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
+	if err != nil {
+		logs, err := app.CaptureLogs("web", false, "20")
+		assert.NoError(err)
+		t.Logf("Failed http content assertion; web container logs:\n=======%s==========\n", logs)
+	}
 
 	// Make a snapshot of d7 tester test 1
 	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
@@ -707,7 +712,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	err = app.ImportDB(d7testerTest2Dump, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
-	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes", 45)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes", 45)
 
 	snapshotName, err = app.SnapshotDatabase("d7testerTest2")
 	assert.NoError(err)
@@ -716,7 +721,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	err = app.RestoreSnapshot("d7testerTest1")
 	assert.NoError(err)
-	testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
 	err = app.RestoreSnapshot("d7testerTest2")
 	assert.NoError(err)
 
@@ -725,7 +730,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.Contains(body, "d7 tester test 2 has 2 nodes")
 	if err != nil {
 		t.Logf("resp after timeout: %v", resp)
-		stdout := testcommon.CaptureUserOut()
+		stdout := util.CaptureUserOut()
 		err = app.Logs("web", false, false, "")
 		assert.NoError(err)
 		out := stdout()
@@ -1044,13 +1049,13 @@ func TestDdevLogs(t *testing.T) {
 		err = app.Start()
 		assert.NoError(err)
 
-		stdout := testcommon.CaptureUserOut()
+		stdout := util.CaptureUserOut()
 		err = app.Logs("web", false, false, "")
 		assert.NoError(err)
 		out := stdout()
 		assert.Contains(out, "Server started")
 
-		stdout = testcommon.CaptureUserOut()
+		stdout = util.CaptureUserOut()
 		err = app.Logs("db", false, false, "")
 		assert.NoError(err)
 		out = stdout()
@@ -1060,13 +1065,13 @@ func TestDdevLogs(t *testing.T) {
 		err = app.Stop()
 		assert.NoError(err)
 
-		stdout = testcommon.CaptureUserOut()
+		stdout = util.CaptureUserOut()
 		err = app.Logs("web", false, false, "")
 		assert.NoError(err)
 		out = stdout()
 		assert.Contains(out, "Server started")
 
-		stdout = testcommon.CaptureUserOut()
+		stdout = util.CaptureUserOut()
 		err = app.Logs("db", false, false, "")
 		assert.NoError(err)
 		out = stdout()
@@ -1107,7 +1112,7 @@ func TestProcessHooks(t *testing.T) {
 			},
 		}
 
-		stdout := testcommon.CaptureUserOut()
+		stdout := util.CaptureUserOut()
 		err = app.ProcessHooks("hook-test")
 		assert.NoError(err)
 
@@ -1212,7 +1217,7 @@ func TestDescribe(t *testing.T) {
 
 		// If we have a problem starting, get the container logs and output.
 		if err != nil {
-			stdout := testcommon.CaptureUserOut()
+			stdout := util.CaptureUserOut()
 			logsErr := app.Logs("web", false, false, "")
 			assert.NoError(logsErr)
 			out := stdout()
@@ -1865,8 +1870,8 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			assert.NoError(err)
 
 			// Ensure that we can access from the host even with extra port specifications.
-			testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-			testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 
 			// Ensure that we can access the same URL from within the web container (via router)
 			var out string
@@ -1889,6 +1894,31 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 
 		runTime()
 	}
+}
+
+// TestCaptureLogs checks that app.CaptureLogs() works
+func TestCaptureLogs(t *testing.T) {
+	assert := asrt.New(t)
+
+	site := TestSites[0]
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s CaptureLogs", site.Name))
+
+	app := new(ddevapp.DdevApp)
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
+	logs, err := app.CaptureLogs("web", false, "100")
+	assert.NoError(err)
+
+	assert.Contains(logs, "INFO spawned")
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	runTime()
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app
