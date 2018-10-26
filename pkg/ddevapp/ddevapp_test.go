@@ -1040,6 +1040,14 @@ func TestDdevExec(t *testing.T) {
 		assert.NoError(err)
 		assert.Contains(out, "/var/www/html")
 
+		out, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "web",
+			Dir:     "/usr/local",
+			Cmd:     []string{"pwd"},
+		})
+		assert.NoError(err)
+		assert.Contains(out, "/usr/local")
+
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
 			Cmd:     []string{"mysql", "-e", "DROP DATABASE db;"},
