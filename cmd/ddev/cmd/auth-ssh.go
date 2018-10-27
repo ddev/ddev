@@ -7,7 +7,6 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"os/user"
 	"path/filepath"
 )
 
@@ -28,10 +27,8 @@ var AuthSSHCommand = &cobra.Command{
 		if len(args) == 1 {
 			SSHKeyPath = args[0]
 		}
-		curUser, err := user.Current()
-		if err != nil {
-			util.Failed("user.Current() failed: %v", err)
-		}
+
+		_, _, uidStr, _ := util.GetContainerUIDGid()
 
 		if SSHKeyPath == "" {
 			homeDir, err := homedir.Dir()
@@ -41,7 +38,7 @@ var AuthSSHCommand = &cobra.Command{
 			SSHKeyPath = filepath.Join(homeDir, ".ssh")
 		}
 
-		err = exec.RunInteractiveCommand("docker", []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", SSHKeyPath + ":/tmp/.ssh", "-u", curUser.Uid, version.SSHAuthImage + ":" + version.SSHAuthTag, "ssh-add"})
+		err := exec.RunInteractiveCommand("docker", []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", SSHKeyPath + ":/tmp/.ssh", "-u", uidStr, version.SSHAuthImage + ":" + version.SSHAuthTag, "ssh-add"})
 
 		if err != nil {
 			util.Failed("Docker command failed: %v", err)

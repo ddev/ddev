@@ -12,10 +12,6 @@ import (
 
 	osexec "os/exec"
 
-	"os/user"
-
-	"runtime"
-
 	"path"
 	"time"
 
@@ -53,18 +49,6 @@ const SiteStopped = "stopped"
 // DdevFileSignature is the text we use to detect whether a settings file is managed by us.
 // If this string is found, we assume we can replace/update the file.
 const DdevFileSignature = "#ddev-generated"
-
-// UIDInt is the UID of the user used to run docker containers
-var UIDInt int
-
-// GIDInt is the GID of hte user used to run docker containers
-var GIDInt int
-
-// UIDStr is the UID (as a string) of the UID of the user used to run docker containers
-var UIDStr string
-
-// GIDStr is the GID (as string) of GID of user running docker containers
-var GIDStr string
 
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
@@ -850,30 +834,12 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() {
-	curUser, err := user.Current()
-	util.CheckErr(err)
 
-	UIDStr = curUser.Uid
-	GIDStr = curUser.Gid
-	// For windows the UIDStr/GIDStr are usually way outside linux range (ends at 60000)
-	// so we have to run as arbitrary user 1000. We may have a host UIDStr/GIDStr greater in other contexts,
-	// 1000 seems not to cause file permissions issues at least on docker-for-windows.
-	if UIDInt, err = strconv.Atoi(curUser.Uid); err != nil {
-		UIDStr = "1000"
-	}
-	if GIDInt, err = strconv.Atoi(curUser.Gid); err != nil {
-		GIDStr = "1000"
-	}
+	uidInt, gidInt, uidStr, gidStr := util.GetContainerUIDGid()
 
 	// Warn about running as root if we're not on windows.
-	if runtime.GOOS != "windows" && (UIDInt > 60000 || GIDInt > 60000 || UIDInt == 0) {
+	if uidInt > 60000 || gidInt > 60000 || uidInt == 0 {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
-	}
-
-	// If the UIDStr or GIDStr is outside the range possible in container, use root
-	if UIDInt > 60000 || GIDInt > 60000 {
-		UIDStr = "1000"
-		GIDStr = "1000"
 	}
 
 	envVars := map[string]string{
@@ -888,8 +854,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_IMPORTDIR":                app.ImportDir,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
-		"DDEV_UID":                      UIDStr,
-		"DDEV_GID":                      GIDStr,
+		"DDEV_UID":                      uidStr,
+		"DDEV_GID":                      gidStr,
 		"DDEV_PHP_VERSION":              app.PHPVersion,
 		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
 		"DDEV_PROJECT_TYPE":             app.Type,
@@ -901,7 +867,7 @@ func (app *DdevApp) DockerEnv() {
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
 	// It's used for special startup on restoring to a snapshot.
 	if len(os.Getenv("DDEV_MARIADB_LOCAL_COMMAND")) == 0 {
-		err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
+		err := os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
 		util.CheckErr(err)
 	}
 

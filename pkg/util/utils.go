@@ -3,6 +3,8 @@ package util
 import (
 	"math/rand"
 	"os"
+	"os/user"
+	"strconv"
 	"strings"
 	"time"
 
@@ -139,4 +141,27 @@ func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
 		result = append(result, v)
 	}
 	return result
+}
+
+// GetContainerUIDGid() returns the uid and gid (and string forms) to be used running most containers.
+func GetContainerUIDGid() (uid int, gid int, uidStr string, gidStr string) {
+	var uidInt, gidInt int
+	curUser, err := user.Current()
+	CheckErr(err)
+
+	uidStr = curUser.Uid
+	gidStr = curUser.Gid
+	// For windows the uidStr/gidStr are usually way outside linux range (ends at 60000)
+	// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
+	// 1000 seems not to cause file permissions issues at least on docker-for-windows.
+	if uidInt, err = strconv.Atoi(curUser.Uid); err != nil {
+		uidStr = "1000"
+		uidInt = 1000
+	}
+	if gidInt, err = strconv.Atoi(curUser.Gid); err != nil {
+		gidStr = "1000"
+		gidInt = 1000
+	}
+	return uidInt, gidInt, uidStr, gidStr
+
 }
