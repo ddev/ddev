@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"os"
 	"os/exec"
 	"strings"
 
@@ -36,4 +37,23 @@ func RunCommandPipe(command string, args []string) (string, error) {
 	cmd := exec.Command(command, args...)
 	stdoutStderr, err := cmd.CombinedOutput()
 	return string(stdoutStderr), err
+}
+
+// RunInteractiveCommand runs a command on the host system interactively, with stdin/stdout/stderr connected
+// Returns error
+func RunInteractiveCommand(command string, args []string) error {
+	output.UserOut.WithFields(log.Fields{
+		"Command": command + " " + strings.Join(args[:], " "),
+	}).Info("Running Command")
+
+	cmd := exec.Command(command, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+	err = cmd.Wait()
+	return err
 }
