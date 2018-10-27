@@ -100,7 +100,7 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		output = output + fmt.Sprint(other)
 	}
 
-	output = output + "\n" + ddevapp.RenderRouterStatus()
+	output = output + "\n" + ddevapp.RenderRouterStatus() + "\t" + ddevapp.RenderSSHAuthStatus()
 
 	return output, nil
 }

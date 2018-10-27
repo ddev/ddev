@@ -94,22 +94,19 @@ func findDdevSSHAuth() (*docker.APIContainers, error) {
 }
 
 // RenderSSHAuthStatus returns a user-friendly string showing sshAuth-status
-// TODO: Not yet in service
-// noint: deadcode
 func RenderSSHAuthStatus() string {
 	status := GetSSHAuthStatus()
 	var renderedStatus string
-	badSSHAuth := "\nThe sshAuth is not yet running."
 
 	switch status {
 	case SiteNotFound:
-		renderedStatus = color.RedString(status) + badSSHAuth
+		renderedStatus = color.RedString(status)
 	case "healthy":
 		renderedStatus = color.CyanString(status)
 	case "exited":
 		fallthrough
 	default:
-		renderedStatus = color.RedString(status) + badSSHAuth
+		renderedStatus = color.RedString(status)
 	}
 	return fmt.Sprintf("\nssh-auth status: %v", renderedStatus)
 }
@@ -117,7 +114,7 @@ func RenderSSHAuthStatus() string {
 // GetSSHAuthStatus outputs sshAuth status and warning if not
 // running or healthy, as applicable.
 func GetSSHAuthStatus() string {
-	label := map[string]string{"com.docker.compose.service": "ddev-ssh-auth"}
+	label := map[string]string{"com.docker.compose.project": SSHAuthName}
 	container, err := dockerutil.FindContainerByLabels(label)
 
 	if err != nil {

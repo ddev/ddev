@@ -167,6 +167,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	}
 
 	appDesc["router_status"] = GetRouterStatus()
+	appDesc["ssh_agent_status"] = GetSSHAuthStatus()
 	appDesc["php_version"] = app.GetPhpVersion()
 	appDesc["webserver_type"] = app.GetWebserverType()
 
