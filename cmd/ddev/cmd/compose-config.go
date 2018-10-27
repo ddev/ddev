@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// ComposeConfigCmd implements the ddev debug compose-config command
 var ComposeConfigCmd = &cobra.Command{
 	Use:   "compose-config [project]",
 	Short: "Prints the docker-compose configuration of the current project",

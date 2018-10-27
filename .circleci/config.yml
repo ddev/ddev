@@ -155,7 +155,7 @@ jobs:
 
       # Run the built-in ddev tests with the clean binaries just built.
       - run:
-          command: make -s test gometalinter
+          command: make -s test
           name: ddev tests, with normal clean ddev binaries (normal image tags)
           no_output_timeout: "20m"
 
