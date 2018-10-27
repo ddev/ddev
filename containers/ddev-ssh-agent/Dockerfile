@@ -42,6 +42,8 @@ ENV SOCKET_DIR /tmp/.ssh-agent
 ENV SSH_AUTH_SOCK ${SOCKET_DIR}/socket
 ENV SSH_AUTH_PROXY_SOCK ${SOCKET_DIR}/proxy-socket
 
+RUN ln -s $SSH_KEY_DIR /home/.ssh
+
 RUN mkdir ${SOCKET_DIR} && mkdir ${SSH_KEY_DIR} && chmod 777 ${SOCKET_DIR} ${SSH_KEY_DIR}
 
 HEALTHCHECK --interval=2s --retries=5 CMD ["/healthcheck.sh"]
