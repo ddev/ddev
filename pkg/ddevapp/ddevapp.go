@@ -79,6 +79,7 @@ type DdevApp struct {
 	Commands              map[string][]Command `yaml:"hooks,omitempty"`
 	UploadDir             string               `yaml:"upload_dir,omitempty"`
 	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
+	OmitContainers        []string             `yaml:"omit_containers,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -160,7 +161,9 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		appDesc["dbinfo"] = dbinfo
 
 		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("mailhog")
-		appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("dba")
+		if !util.ArrayContainsString(app.OmitContainers, "dba") {
+			appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("dba")
+		}
 	}
 
 	appDesc["router_status"] = GetRouterStatus()
@@ -637,9 +640,11 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = EnsureSSHAuthContainer()
-	if err != nil {
-		return err
+	if !util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent") {
+		err = EnsureSSHAuthContainer()
+		if err != nil {
+			return err
+		}
 	}
 
 	// Warn the user if there is any custom configuration in use.

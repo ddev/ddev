@@ -108,9 +108,9 @@ func AskForConfirmation() bool {
 	nokayResponses := []string{"n", "no", ""}
 	responseLower := strings.ToLower(response)
 
-	if containsString(okayResponses, responseLower) {
+	if ArrayContainsString(okayResponses, responseLower) {
 		return true
-	} else if containsString(nokayResponses, responseLower) {
+	} else if ArrayContainsString(nokayResponses, responseLower) {
 		return false
 	} else {
 		output.UserOut.Println("Please type yes or no and then press enter:")
@@ -118,8 +118,8 @@ func AskForConfirmation() bool {
 	}
 }
 
-// containsString returns true if slice contains element
-func containsString(slice []string, element string) bool {
+// ArrayContainsString returns true if slice contains element
+func ArrayContainsString(slice []string, element string) bool {
 	return !(posString(slice, element) == -1)
 }
 

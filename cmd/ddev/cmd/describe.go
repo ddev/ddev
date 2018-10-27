@@ -94,7 +94,9 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		output = output + "\n\nOther Services\n--------------\n"
 		other := uitable.New()
 		other.AddRow("MailHog:", desc["mailhog_url"])
-		other.AddRow("phpMyAdmin:", desc["phpmyadmin_url"])
+		if _, ok := desc["phpmyadmin_url"]; ok {
+			other.AddRow("phpMyAdmin:", desc["phpmyadmin_url"])
+		}
 		output = output + fmt.Sprint(other)
 	}
 

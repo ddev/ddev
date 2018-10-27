@@ -86,6 +86,7 @@ services:
     external_links:
       - ddev-router:$DDEV_HOSTNAME
 
+{{if .IncludeDBA}}
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
@@ -108,6 +109,7 @@ services:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
       - HTTP_EXPOSE={{ .dbaport }}
+{{end}}
 networks:
   default:
     external:
@@ -169,6 +171,10 @@ const ConfigInstructions = `
 # would set the default working directory for the web and db services. 
 # These values specify the destination directory for ddev ssh and the 
 # directory in which commands passed into ddev exec are run. 
+
+# omit_containers: ["dba", "ddev-ssh-agent"]
+# would omit the dba (phpMyAdmin) and ddev-ssh-agent containers.
+
 
 # provider: default # Currently either "default" or "pantheon"
 #

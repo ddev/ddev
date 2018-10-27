@@ -452,6 +452,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			}
 		}
 	}
+
+	var includeDBA string
+	if util.ArrayContainsString(app.OmitContainers, "dba") {
+		includeDBA = "includeDBA"
+	}
 	templateVars := map[string]string{
 		"name":            app.Name,
 		"plugin":          "ddev",
@@ -462,6 +467,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		"ddevgenerated":   DdevFileSignature,
 		"extra_host":      docker0Hostname + `:` + docker0Addr,
 		"compose_version": version.DockerComposeFileFormatVersion,
+		"includeDBA":      includeDBA,
 	}
 
 	err = templ.Execute(&doc, templateVars)
