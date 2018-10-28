@@ -86,7 +86,7 @@ services:
     external_links:
       - ddev-router:$DDEV_HOSTNAME
 
-{{if .IncludeDBA}}
+{{if  .IncludeDBA }}
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
