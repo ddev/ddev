@@ -642,7 +642,7 @@ func (app *DdevApp) Start() error {
 	}
 
 	if !util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent") {
-		err = EnsureSSHAuthContainer()
+		err = EnsureSSHAgentContainer()
 		if err != nil {
 			return err
 		}

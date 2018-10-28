@@ -23,8 +23,8 @@ func SSHAuthComposeYAMLPath() string {
 	return dest
 }
 
-// EnsureSSHAuthContainer ensures the ssh-auth container is running.
-func EnsureSSHAuthContainer() error {
+// EnsureSSHAgentContainer ensures the ssh-auth container is running.
+func EnsureSSHAgentContainer() error {
 	sshContainer, err := findDdevSSHAuth()
 	if err != nil {
 		return err
@@ -33,33 +33,10 @@ func EnsureSSHAuthContainer() error {
 	if sshContainer != nil && sshContainer.State == "running" {
 		return nil
 	}
-	// In all other cases we'll create/force-recreate
+
+	CreateSSHAuthComposeFile()
 
 	sshAuthComposePath := SSHAuthComposeYAMLPath()
-
-	var doc bytes.Buffer
-	f, ferr := os.Create(sshAuthComposePath)
-	if ferr != nil {
-		return ferr
-	}
-	defer util.CheckClose(f)
-
-	templ := template.New("compose template")
-	templ, err = templ.Parse(DdevSSHAuthTemplate)
-	if err != nil {
-		return err
-	}
-
-	templateVars := map[string]interface{}{
-		"ssh_auth_image":  version.SSHAuthImage,
-		"ssh_auth_tag":    version.SSHAuthTag,
-		"compose_version": version.DockerComposeFileFormatVersion,
-	}
-
-	err = templ.Execute(&doc, templateVars)
-	util.CheckErr(err)
-	_, err = f.WriteString(doc.String())
-	util.CheckErr(err)
 
 	// run docker-compose up -d
 	// This will force-recreate, discarding existing auth if there is a stopped container.
@@ -76,6 +53,63 @@ func EnsureSSHAuthContainer() error {
 	}
 
 	util.Warning("ssh-agent container is running: If you want to add authentication to to the ssh-agent container, run 'ddev auth ssh' to enable your keys.")
+	return nil
+}
+
+// StopSSHAgentContainer brings down the ddev-ssh-agent if it's running.
+func StopSSHAgentContainer() error {
+	sshContainer, err := findDdevSSHAuth()
+	if err != nil {
+		return err
+	}
+	// If we don't have a container, there's nothing to do.
+	if sshContainer == nil {
+		return nil
+	}
+
+	// Otherwise we'll "rm"
+	CreateSSHAuthComposeFile()
+
+	sshAuthComposePath := SSHAuthComposeYAMLPath()
+
+	// run docker-compose rm -f
+	_, _, err = dockerutil.ComposeCmd([]string{sshAuthComposePath}, "-p", SSHAuthName, "down")
+	if err != nil {
+		return fmt.Errorf("failed to rm ddev-ssh-agent: %v", err)
+	}
+
+	util.Warning("The ddev-ssh-agent container has been removed. When you start it again you will have to use 'ddev auth ssh' to provide key authentication again.")
+	return nil
+}
+
+// CreateSSHAuthComposeFile creates the docker-compose file for the ddev-ssh-agent
+func CreateSSHAuthComposeFile() error {
+
+	sshAuthComposePath := SSHAuthComposeYAMLPath()
+
+	var doc bytes.Buffer
+	f, ferr := os.Create(sshAuthComposePath)
+	if ferr != nil {
+		return ferr
+	}
+	defer util.CheckClose(f)
+
+	templ := template.New("compose template")
+	templ, err := templ.Parse(DdevSSHAuthTemplate)
+	if err != nil {
+		return err
+	}
+
+	templateVars := map[string]interface{}{
+		"ssh_auth_image":  version.SSHAuthImage,
+		"ssh_auth_tag":    version.SSHAuthTag,
+		"compose_version": version.DockerComposeFileFormatVersion,
+	}
+
+	err = templ.Execute(&doc, templateVars)
+	util.CheckErr(err)
+	_, err = f.WriteString(doc.String())
+	util.CheckErr(err)
 	return nil
 }
 

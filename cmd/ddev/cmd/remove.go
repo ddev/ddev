@@ -18,6 +18,9 @@ var createSnapshot bool
 // force omission of snapshot during remove-data
 var omitSnapshot bool
 
+// Stop the ddev-ssh-agent
+var stopSSHAgent bool
+
 // DdevRemoveCmd represents the remove command
 var DdevRemoveCmd = &cobra.Command{
 	Use:     "remove [projectname ...]",
@@ -63,6 +66,12 @@ To snapshot the database on remove, use "ddev remove --snapshot"; A snapshot is 
 
 			util.Success("Project %s has been removed.", app.GetName())
 		}
+		if stopSSHAgent {
+			err = ddevapp.StopSSHAgentContainer()
+			if err != nil {
+				util.Error("Failed to remove ddev-ssh-agent: %v", err)
+			}
+		}
 	},
 }
 
@@ -72,5 +81,7 @@ func init() {
 	DdevRemoveCmd.Flags().BoolVarP(&omitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")
 
 	DdevRemoveCmd.Flags().BoolVarP(&removeAll, "all", "a", false, "Remove all running and stopped projects")
+	DdevRemoveCmd.Flags().BoolVarP(&stopSSHAgent, "stop-ssh-agent", "", false, "Stop the ddev-ssh-agent container")
+
 	RootCmd.AddCommand(DdevRemoveCmd)
 }
