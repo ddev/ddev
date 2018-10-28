@@ -69,6 +69,7 @@ func GetVersionInfo() map[string]string {
 	versionInfo["db"] = DBImg + ":" + DBTag
 	versionInfo["dba"] = DBAImg + ":" + DBATag
 	versionInfo["router"] = RouterImage + ":" + RouterTag
+	versionInfo["ddev-ssh-agent"] = SSHAuthImage + ":" + SSHAuthTag
 	versionInfo["commit"] = COMMIT
 	versionInfo["domain"] = DDevTLD
 	versionInfo["build info"] = BUILDINFO
