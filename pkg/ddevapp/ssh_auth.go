@@ -34,13 +34,14 @@ func EnsureSSHAgentContainer() error {
 		return nil
 	}
 
-	CreateSSHAuthComposeFile()
-
-	sshAuthComposePath := SSHAuthComposeYAMLPath()
+	path, err := CreateSSHAuthComposeFile()
+	if err != nil {
+		return err
+	}
 
 	// run docker-compose up -d
 	// This will force-recreate, discarding existing auth if there is a stopped container.
-	_, _, err = dockerutil.ComposeCmd([]string{sshAuthComposePath}, "-p", SSHAuthName, "up", "--force-recreate", "-d")
+	_, _, err = dockerutil.ComposeCmd([]string{path}, "-p", SSHAuthName, "up", "--force-recreate", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
 	}
@@ -56,8 +57,8 @@ func EnsureSSHAgentContainer() error {
 	return nil
 }
 
-// StopSSHAgentContainer brings down the ddev-ssh-agent if it's running.
-func StopSSHAgentContainer() error {
+// RemoveSSHAgentContainer brings down the ddev-ssh-agent if it's running.
+func RemoveSSHAgentContainer() error {
 	sshContainer, err := findDdevSSHAuth()
 	if err != nil {
 		return err
@@ -67,13 +68,13 @@ func StopSSHAgentContainer() error {
 		return nil
 	}
 
-	// Otherwise we'll "rm"
-	CreateSSHAuthComposeFile()
-
-	sshAuthComposePath := SSHAuthComposeYAMLPath()
-
+	// Otherwise we'll "down" the container"
+	path, err := CreateSSHAuthComposeFile()
+	if err != nil {
+		return err
+	}
 	// run docker-compose rm -f
-	_, _, err = dockerutil.ComposeCmd([]string{sshAuthComposePath}, "-p", SSHAuthName, "down")
+	_, _, err = dockerutil.ComposeCmd([]string{path}, "-p", SSHAuthName, "down")
 	if err != nil {
 		return fmt.Errorf("failed to rm ddev-ssh-agent: %v", err)
 	}
@@ -83,21 +84,21 @@ func StopSSHAgentContainer() error {
 }
 
 // CreateSSHAuthComposeFile creates the docker-compose file for the ddev-ssh-agent
-func CreateSSHAuthComposeFile() error {
+func CreateSSHAuthComposeFile() (string, error) {
 
 	sshAuthComposePath := SSHAuthComposeYAMLPath()
 
 	var doc bytes.Buffer
 	f, ferr := os.Create(sshAuthComposePath)
 	if ferr != nil {
-		return ferr
+		return "", ferr
 	}
 	defer util.CheckClose(f)
 
 	templ := template.New("compose template")
 	templ, err := templ.Parse(DdevSSHAuthTemplate)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	templateVars := map[string]interface{}{
@@ -110,7 +111,7 @@ func CreateSSHAuthComposeFile() error {
 	util.CheckErr(err)
 	_, err = f.WriteString(doc.String())
 	util.CheckErr(err)
-	return nil
+	return sshAuthComposePath, nil
 }
 
 // findDdevSSHAuth usees FindContainerByLabels to get our sshAuth container and

@@ -67,7 +67,7 @@ To snapshot the database on remove, use "ddev remove --snapshot"; A snapshot is 
 			util.Success("Project %s has been removed.", app.GetName())
 		}
 		if stopSSHAgent {
-			err = ddevapp.StopSSHAgentContainer()
+			err = ddevapp.RemoveSSHAgentContainer()
 			if err != nil {
 				util.Error("Failed to remove ddev-ssh-agent: %v", err)
 			}
