@@ -23,6 +23,7 @@ func TestSSHAuth(t *testing.T) {
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
+	useWinPty := fileutil.IsCommandAvailable("winpty")
 
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
 
@@ -82,7 +83,11 @@ func TestSSHAuth(t *testing.T) {
 	// Add password/key to auth. This is an unfortunate perversion of using docker run directly, copied from
 	// ddev auth ssh command, and with an expect script to provide the passphrase.
 	_, _, uidStr, _ := util.GetContainerUIDGid()
-	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", filepath.Join(destDdev, ".ssh") + ":/tmp/.ssh", "-u", uidStr, version.SSHAuthImage + ":" + version.SSHAuthTag, "//test.expect.passphrase"})
+	commandString := fmt.Sprintf("docker run -t --rm --volumes-from=%s -v %s:/tmp/.ssh -u %s %s:%s //test.expect.passphrase", ddevapp.SSHAuthName, filepath.Join(destDdev, ".ssh"), uidStr, version.SSHAuthImage, version.SSHAuthTag)
+	if useWinPty {
+		commandString = "winpty " + commandString
+	}
+	err = exec.RunInteractiveCommand("bash", []string{"-c", commandString})
 	require.NoError(t, err)
 
 	// Try ssh, should succeed

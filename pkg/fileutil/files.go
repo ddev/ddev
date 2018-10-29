@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"strings"
@@ -188,4 +189,15 @@ func RandomFilenameBase() string {
 	randBytes := make([]byte, 16)
 	_, _ = rand.Read(randBytes)
 	return hex.EncodeToString(randBytes)
+}
+
+// IsCommandAvailable uses shell's "command" to find out if a command is available
+// https://siongui.github.io/2018/03/16/go-check-if-command-exists/
+func IsCommandAvailable(cmdName string) bool {
+	cmd := exec.Command("/bin/sh", "-c", "command -v "+cmdName)
+	if err := cmd.Run(); err != nil {
+		return false
+	}
+	return true
+
 }
