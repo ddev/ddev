@@ -27,6 +27,7 @@ FROM alpine:3.8
 # Install dependencies
 RUN apk add --no-cache \
 	bash \
+	expect \
 	openssh \
 	socat \
 	sudo \
