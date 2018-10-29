@@ -1,0 +1,6 @@
+#!/bin/bash 
+
+export DDEV_DRUD_S3_AWS_ACCESS_KEY_ID="AKIAAAAAAAAAAAAAAAAA";
+export DDEV_DRUD_S3_AWS_SECRET_ACCESS_KEY="rdtaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+export DDEV_PANTHEON_API_TOKEN="dPKNaaaaaaaaaaaaaaaaaaa-cBKyaaaaaaaaaaaaaaaaa";
+export DRUD_DEBUG="true";
