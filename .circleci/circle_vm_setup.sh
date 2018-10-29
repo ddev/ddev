@@ -39,8 +39,7 @@ curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v$GOTES
 
 # Install ghr
 GHR_RELEASE="ghr_v0.12.0_linux_amd64"
-curl -sL https://github.com/tcnksm/ghr/releases/download/v0.12.0/${GHR_RELEASE}.tar.gz -o ./${GHR_RELEASE}.tar.gz
-gunzip ${GHR_RELEASE}.tar.gz
-tar -xf ${GHR_RELEASE}.tar
-ln -s ./${GHR_RELEASE}/ghr /home/circleci/ghr
+curl -sL https://github.com/tcnksm/ghr/releases/download/v0.12.0/${GHR_RELEASE}.tar.gz > /home/circleci/${GHR_RELEASE}.tar.gz
+tar -xzf /home/circleci/${GHR_RELEASE}.tar.gz -C /home/circleci
+ln -s /home/circleci/${GHR_RELEASE}/ghr /home/circleci/ghr
 /home/circleci/ghr -v 
