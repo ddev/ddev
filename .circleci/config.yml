@@ -236,7 +236,7 @@ jobs:
             -u $GITHUB_USERNAME \
             -t $GITHUB_TOKEN \
             -n $(cat ./.version) \
-            -b "$(cat ./release_notes.md)" \
+            -b "$(cat ./.github/RELEASE_NOTES_TEMPLATE.md)" \
             $(cat ./.version) $ARTIFACTS
           name: Upload artifacts to GitHub release page
 
