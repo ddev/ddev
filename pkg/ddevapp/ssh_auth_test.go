@@ -57,7 +57,7 @@ func TestSSHAuth(t *testing.T) {
 	err = fileutil.CopyFile(filepath.Join(srcDdev, "docker-compose.sshserver.yaml"), filepath.Join(destDdev, "docker-compose.sshserver.yaml"))
 	require.NoError(t, err)
 
-	//nolint: errcheck
+	//`nolint: errcheck
 	defer fileutil.PurgeDirectory(filepath.Join(destDdev, ".ssh"))
 	//nolint: errcheck
 	defer os.Remove(filepath.Join(destDdev, "docker-compose.sshserver.yaml"))
@@ -90,6 +90,20 @@ func TestSSHAuth(t *testing.T) {
 	stdout = strings.Trim(stdout, "\n")
 	assert.Equal(stdout, "/root")
 	assert.NoError(err)
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	// Now start it up again; we shouldn't need to add the key this time
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Try ssh, should succeed
+	stdout, _, err = app.Exec("web", "bash", "-c", "ssh -o StrictHostKeyChecking=false root@test-ssh-server pwd")
+	stdout = strings.Trim(stdout, "\n")
+	assert.Equal(stdout, "/root")
+	assert.NoError(err)
+
 	err = app.Down(true, false)
 	assert.NoError(err)
 
