@@ -1,5 +1,11 @@
 #!/bin/bash 
 
+# This file contains public environment variables to be used by the test and
+# build process. All values defined in this file are exposed to fork builds
+# and are stored in a public repository.
+
+# Private environment variables should be configured using the CI provider.
+
 export DDEV_DRUD_S3_AWS_ACCESS_KEY_ID="AKIAAAAAAAAAAAAAAAAA";
 export DDEV_DRUD_S3_AWS_SECRET_ACCESS_KEY="rdtaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 export DDEV_PANTHEON_API_TOKEN="dPKNaaaaaaaaaaaaaaaaaaa-cBKyaaaaaaaaaaaaaaaaa";
