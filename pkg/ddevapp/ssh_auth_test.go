@@ -58,7 +58,7 @@ func TestSSHAuth(t *testing.T) {
 	err = fileutil.CopyFile(filepath.Join(srcDdev, "docker-compose.sshserver.yaml"), filepath.Join(destDdev, "docker-compose.sshserver.yaml"))
 	require.NoError(t, err)
 
-	//`nolint: errcheck
+	//nolint: errcheck
 	defer fileutil.PurgeDirectory(filepath.Join(destDdev, ".ssh"))
 	//nolint: errcheck
 	defer os.Remove(filepath.Join(destDdev, "docker-compose.sshserver.yaml"))

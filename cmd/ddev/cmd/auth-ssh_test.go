@@ -28,7 +28,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	assert.NoError(err)
 
 	// Run a simple ssh server to act on and get its internal IP address
-	out, err := exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev_default", "drud/test-ssh-server"})
+	_, err = exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev_default", "drud/test-ssh-server"})
 	assert.NoError(err)
 	//nolint: errcheck
 	defer dockerutil.RemoveContainer("test-cmd-ssh-server", 10)
@@ -50,7 +50,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	// Now we add the key with passphrase
 	testAuthSSHDir := filepath.Join(testDir, "testdata", "TestCmdAuthSSH")
 	sshDir := filepath.Join(testAuthSSHDir, ".ssh")
-	out, err = exec.RunCommand("expect", []string{filepath.Join(testAuthSSHDir, "ddevauthssh.expect"), DdevBin, sshDir, "testkey"})
+	out, err := exec.RunCommand("expect", []string{filepath.Join(testAuthSSHDir, "ddevauthssh.expect"), DdevBin, sshDir, "testkey"})
 	_ = out
 	assert.NoError(err)
 	assert.Contains(string(out), "Identity added:")
