@@ -289,4 +289,8 @@ services:
       - "socket_dir:/tmp/.ssh-agent"
     environment:
       - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
+networks:
+  default:
+    external:
+      name: ddev_default
 `
