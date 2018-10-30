@@ -206,7 +206,7 @@ jobs:
 
       - run:
           command: |
-            /home/circleci/go/bin/ghr \
+            /home/circleci/ghr \
             -draft \
             -recreate \
             -r $GITHUB_REPOSITORY \
