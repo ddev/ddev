@@ -1,0 +1,63 @@
+package cmd
+
+import (
+	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/stretchr/testify/require"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/drud/ddev/pkg/exec"
+	asrt "github.com/stretchr/testify/assert"
+)
+
+// TestCmdAuthSSH runs `ddev auth ssh` and checks that it actually worked out.
+func TestCmdAuthSSH(t *testing.T) {
+	assert := asrt.New(t)
+	if !fileutil.IsCommandAvailable("expect") {
+		t.Skip("Skipping TestCmdAuthSSH because expect scripting tool is not available")
+	}
+	testDir, _ := os.Getwd()
+	defer DevTestSites[0].Chdir()()
+
+	// Delete any existing identities from ddev-ssh-agent
+	_, err := exec.RunCommand("docker", []string{"exec", "ddev-ssh-agent", "ssh-add", "-D"})
+	assert.NoError(err)
+
+	// Run a simple ssh server to act on and get its internal IP address
+	out, err := exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev_default", "drud/test-ssh-server"})
+	assert.NoError(err)
+	//nolint: errcheck
+	defer dockerutil.RemoveContainer("test-cmd-ssh-server", 10)
+
+	internalIPAddr, err := exec.RunCommand("docker", []string{"inspect", "-f", "'{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'", "test-cmd-ssh-server"})
+	internalIPAddr = strings.Trim(internalIPAddr, "\n\"'")
+	assert.NoError(err)
+
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	app.DockerEnv()
+
+	// Before we add the password with ddev auth ssh, we should not be able to access the ssh server
+	_, stderr, err := app.Exec("web", "ssh", "root@"+internalIPAddr, "pwd")
+	assert.Error(err)
+	assert.Contains(stderr, "Permission denied (publickey,password")
+
+	// Now we add the key with passphrase
+	testAuthSSHDir := filepath.Join(testDir, "testdata", "TestCmdAuthSSH")
+	sshDir := filepath.Join(testAuthSSHDir, ".ssh")
+	out, err = exec.RunCommand("expect", []string{filepath.Join(testAuthSSHDir, "ddevauthssh.expect"), DdevBin, sshDir, "testkey"})
+	_ = out
+	assert.NoError(err)
+	assert.Contains(string(out), "Identity added:")
+
+	// And at this point we should be able to ssh into the test-cmd-ssh-server
+	out, _, err = app.Exec("web", "ssh", "root@"+internalIPAddr, "pwd")
+	assert.NoError(err)
+	assert.Contains(out, "/root")
+
+}

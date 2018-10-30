@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
@@ -10,8 +12,8 @@ import (
 	"path/filepath"
 )
 
-// SSHKeyPath is the full path to the *directory* containing ssh keys.
-var SSHKeyPath string
+// sshKeyPath is the full path to the *directory* containing ssh keys.
+var sshKeyPath string
 
 // AuthSSHCommand implements the "ddev auth ssh" command
 var AuthSSHCommand = &cobra.Command{
@@ -25,29 +27,33 @@ var AuthSSHCommand = &cobra.Command{
 		}
 
 		if len(args) == 1 {
-			SSHKeyPath = args[0]
+			sshKeyPath = args[0]
 		}
 
 		_, _, uidStr, _ := util.GetContainerUIDGid()
 
-		if SSHKeyPath == "" {
+		if sshKeyPath == "" {
 			homeDir, err := homedir.Dir()
 			if err != nil {
 				util.Failed("Unable to determine home directory: %v", err)
 			}
-			SSHKeyPath = filepath.Join(homeDir, ".ssh")
+			sshKeyPath = filepath.Join(homeDir, ".ssh")
 		}
-
-		err := exec.RunInteractiveCommand("docker", []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", SSHKeyPath + ":/tmp/.ssh", "-u", uidStr, version.SSHAuthImage + ":" + version.SSHAuthTag, "ssh-add"})
+		useWinPty := fileutil.IsCommandAvailable("winpty")
+		dockerCmd := fmt.Sprintf("docker run -it --rm --volumes-from=%s -v \"%s:/tmp/.ssh\" -u %s %s:%s ssh-add", ddevapp.SSHAuthName, sshKeyPath, uidStr, version.SSHAuthImage, version.SSHAuthTag)
+		if useWinPty {
+			dockerCmd = "winpth " + dockerCmd
+		}
+		err := exec.RunInteractiveCommand("sh", []string{"-c", dockerCmd})
 
 		if err != nil {
-			util.Failed("Docker command failed: %v", err)
+			util.Failed("Docker command '%s' failed: %v", dockerCmd, err)
 		}
 	},
 }
 
 func init() {
-	AuthSSHCommand.Flags().StringVarP(&SSHKeyPath, "ssh-key-path", "d", "", "full path to ssh key directory")
+	AuthSSHCommand.Flags().StringVarP(&sshKeyPath, "ssh-key-path", "d", "", "full path to ssh key directory")
 
 	AuthCmd.AddCommand(AuthSSHCommand)
 }

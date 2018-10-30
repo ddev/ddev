@@ -516,6 +516,18 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	return stdout.String(), nil
 }
 
+// RemoveContainer stops and removes a container
+func RemoveContainer(id string, timeout uint) error {
+	client := GetDockerClient()
+
+	err := client.StopContainer(id, timeout)
+	if err != nil {
+		return err
+	}
+	err = client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: false})
+	return err
+}
+
 // ImageExistsLocally determines if an image is available locally.
 func ImageExistsLocally(imageName string) (bool, error) {
 	client := GetDockerClient()
