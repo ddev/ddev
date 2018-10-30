@@ -22,12 +22,8 @@ var AuthSSHCommand = &cobra.Command{
 	Long:  `Use this command to provide the password to your ssh key to the ddev-ssh-agent container, where it can be used by other containers. Normal usage is just "ddev auth ssh", or if your key is not in ~/.ssh, ddev auth ssh --keydir=/some/path/.ssh"`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) > 1 {
-			util.Failed("This command only takes one optional argument: ssh-key-path")
-		}
-
-		if len(args) == 1 {
-			sshKeyPath = args[0]
+		if len(args) > 0 {
+			util.Failed("This command takes no arguments.")
 		}
 
 		_, _, uidStr, _ := util.GetContainerUIDGid()
@@ -42,7 +38,7 @@ var AuthSSHCommand = &cobra.Command{
 		useWinPty := fileutil.IsCommandAvailable("winpty")
 		dockerCmd := fmt.Sprintf("docker run -it --rm --volumes-from=%s -v \"%s:/tmp/.ssh\" -u %s %s:%s ssh-add", ddevapp.SSHAuthName, sshKeyPath, uidStr, version.SSHAuthImage, version.SSHAuthTag)
 		if useWinPty {
-			dockerCmd = "winpth " + dockerCmd
+			dockerCmd = "winpty" + dockerCmd
 		}
 		err := exec.RunInteractiveCommand("sh", []string{"-c", dockerCmd})
 
