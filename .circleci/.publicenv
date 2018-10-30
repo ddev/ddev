@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 # This file contains public environment variables to be used by the test and
 # build process. All values defined in this file are exposed to fork builds

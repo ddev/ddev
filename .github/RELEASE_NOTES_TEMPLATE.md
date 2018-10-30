@@ -28,5 +28,5 @@ To upgrade to this release with each existing project, please be cautious and:
 # Commits since _PREVIOUS VERSION_
 
 ```
-$ git log --oneline --decorate=no $PREVIOUS_VERSION...$VERSION
+$ git log --oneline --decorate=no $PREVIOUS_VERSION..$VERSION
 ```
