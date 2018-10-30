@@ -208,7 +208,6 @@ jobs:
           command: |
             /home/circleci/ghr \
             -draft \
-            -recreate \
             -r $GITHUB_REPOSITORY \
             -u $GITHUB_USERNAME \
             -t $GITHUB_TOKEN \
