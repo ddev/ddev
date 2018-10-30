@@ -55,6 +55,8 @@ func TestSSHAuth(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Chmod(filepath.Join(destDdev, ".ssh", "authorized_keys"), 0600)
 	require.NoError(t, err)
+	err = os.Chmod(filepath.Join(destDdev, ".ssh", "id_rsa"), 0600)
+	require.NoError(t, err)
 	err = fileutil.CopyFile(filepath.Join(srcDdev, "docker-compose.sshserver.yaml"), filepath.Join(destDdev, "docker-compose.sshserver.yaml"))
 	require.NoError(t, err)
 

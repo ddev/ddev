@@ -49,6 +49,8 @@ func TestCmdAuthSSH(t *testing.T) {
 
 	// Now we add the key with passphrase
 	testAuthSSHDir := filepath.Join(testDir, "testdata", "TestCmdAuthSSH")
+	err = os.Chmod(filepath.Join(testAuthSSHDir, ".ssh", "id_rsa"), 0600)
+	assert.NoError(err)
 	sshDir := filepath.Join(testAuthSSHDir, ".ssh")
 	out, err := exec.RunCommand("expect", []string{filepath.Join(testAuthSSHDir, "ddevauthssh.expect"), DdevBin, sshDir, "testkey"})
 	_ = out
