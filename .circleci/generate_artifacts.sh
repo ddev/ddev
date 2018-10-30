@@ -14,7 +14,6 @@ BASE_DIR=$PWD
 
 sudo mkdir -p $ARTIFACTS && sudo chmod 777 $ARTIFACTS
 export VERSION=$(git describe --tags --always --dirty)
-echo ${VERSION} > ${BASE_DIR}/.version;
 
 # Make sure we have all our docker images, and save them in a tarball
 .gotmp/bin/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt

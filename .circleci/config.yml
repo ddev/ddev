@@ -211,9 +211,9 @@ jobs:
             -r $GITHUB_REPOSITORY \
             -u $GITHUB_USERNAME \
             -t $GITHUB_TOKEN \
-            -n $(cat ./.version) \
+            -n $CIRCLE_TAG \
             -b "$(cat ./.github/RELEASE_NOTES_TEMPLATE.md)" \
-            $(cat ./.version) $ARTIFACTS
+            $CIRCLE_TAG $ARTIFACTS
           name: Upload artifacts to GitHub release page
 
 
