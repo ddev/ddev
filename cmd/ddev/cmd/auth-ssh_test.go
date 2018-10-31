@@ -43,9 +43,10 @@ func TestCmdAuthSSH(t *testing.T) {
 	app.DockerEnv()
 
 	// Before we add the password with ddev auth ssh, we should not be able to access the ssh server
-	_, stderr, err := app.Exec("web", "ssh", "root@"+internalIPAddr, "pwd")
+	// Turn off StrictHostChecking because the server can have been run more than once with different
+	// identity
+	_, _, err = app.Exec("web", "ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=false", "root@"+internalIPAddr, "pwd")
 	assert.Error(err)
-	assert.Contains(stderr, "Permission denied (publickey,password")
 
 	// Now we add the key with passphrase
 	testAuthSSHDir := filepath.Join(testDir, "testdata", "TestCmdAuthSSH")
@@ -58,7 +59,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	assert.Contains(string(out), "Identity added:")
 
 	// And at this point we should be able to ssh into the test-cmd-ssh-server
-	out, _, err = app.Exec("web", "ssh", "root@"+internalIPAddr, "pwd")
+	out, _, err = app.Exec("web", "ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=false", "root@"+internalIPAddr, "pwd")
 	assert.NoError(err)
 	assert.Contains(out, "/root")
 
