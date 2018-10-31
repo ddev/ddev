@@ -23,7 +23,7 @@ func TestSSHAuth(t *testing.T) {
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
-	useWinPty := fileutil.IsCommandAvailable("winpty")
+	//useWinPty := fileutil.IsCommandAvailable("winpty")
 
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
 
@@ -86,11 +86,8 @@ func TestSSHAuth(t *testing.T) {
 	// ddev auth ssh command, and with an expect script to provide the passphrase.
 	_, _, uidStr, _ := util.GetContainerUIDGid()
 	commandString := fmt.Sprintf("docker run -t --rm --volumes-from=%s -v %s:/tmp/.ssh -u %s %s:%s //test.expect.passphrase", ddevapp.SSHAuthName, filepath.Join(destDdev, ".ssh"), uidStr, version.SSHAuthImage, version.SSHAuthTag)
-	if useWinPty {
-		commandString = "winpty " + commandString
-	}
 	err = exec.RunInteractiveCommand("bash", []string{"-c", commandString})
-	require.NoError(t, err)
+	require.NoError(t, err, "bach -c \"%s\" failed", commandString)
 
 	// Try ssh, should succeed
 	stdout, _, err := app.Exec("web", "bash", "-c", "ssh -o StrictHostKeyChecking=false root@test-ssh-server pwd")
