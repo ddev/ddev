@@ -113,6 +113,9 @@ func TestConfigSetValues(t *testing.T) {
 	additionalHostnames := strings.Join(additionalHostnamesSlice, ",")
 	additionalFQDNsSlice := []string{"abc.com", "123.pizza", "xyz.co.uk"}
 	additionalFQDNs := strings.Join(additionalFQDNsSlice, ",")
+	omitContainersSlice := []string{"dba", "ddev-ssh-agent"}
+	omitContainers := strings.Join(omitContainersSlice, ",")
+
 	uploadDir := filepath.Join("custom", "config", "path")
 	webserverType := ddevapp.WebserverApacheFPM
 	webImage := "custom-web-image"
@@ -141,6 +144,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--web-working-dir", webWorkingDir,
 		"--db-working-dir", dbWorkingDir,
 		"--dba-working-dir", dbaWorkingDir,
+		"--omit-containers", omitContainers,
 	}
 
 	_, err = exec.RunCommand(DdevBin, args)

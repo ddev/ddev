@@ -95,6 +95,9 @@ var (
 
 	// workingDirDefaultsArg allows a user to unset all service working directory overrides
 	workingDirDefaultsArg bool
+
+	// omitContainersArg allows user to determine value of omit_containers
+	omitContainersArg string
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -179,6 +182,7 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", false, "Whether or not XDebug is enabled in the web container")
 	ConfigCommand.Flags().StringVar(&additionalHostnamesArg, "additional-hostnames", "", "A comma-delimited list of hostnames for the project")
 	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
+	ConfigCommand.Flags().StringVar(&omitContainersArg, "omit-containers", "", "A comma-delimited list of container types that should not be started when the project is started")
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
 	ConfigCommand.Flags().StringVar(&uploadDirArg, "upload-dir", "", "Sets the project's upload directory, the destination directory of the import-files command.")
@@ -353,6 +357,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if additionalFQDNsArg != "" {
 		app.AdditionalFQDNs = strings.Split(additionalFQDNsArg, ",")
+	}
+
+	if omitContainersArg != "" {
+		app.OmitContainers = strings.Split(omitContainersArg, ",")
 	}
 
 	if uploadDirArg != "" {

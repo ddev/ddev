@@ -173,7 +173,8 @@ const ConfigInstructions = `
 # directory in which commands passed into ddev exec are run. 
 
 # omit_containers: ["dba", "ddev-ssh-agent"]
-# would omit the dba (phpMyAdmin) and ddev-ssh-agent containers.
+# would omit the dba (phpMyAdmin) and ddev-ssh-agent containers. Currently
+# only those two containers can be omitted here.
 
 
 # provider: default # Currently either "default" or "pantheon"

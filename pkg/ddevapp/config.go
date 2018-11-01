@@ -306,6 +306,10 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("invalid webserver type: %s, must be one of %s", app.WebserverType, GetValidWebserverTypes()).(invalidWebserverType)
 	}
 
+	if !IsValidOmitContainers(app.OmitContainers) {
+		return fmt.Errorf("Invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(invalidOmitContainers)
+	}
+
 	return nil
 }
 
