@@ -453,11 +453,11 @@ Commands can also be executed using the shorter `ddev . <cmd>` alias.
 ### SSH Into Containers
 The `ddev ssh` command will open an interactive bash shell session to the container for a ddev service. The web service is connected to by default. The session can be ended by typing `exit`. To connect to another service, use the `--service` flag to specify the service you want to connect to. For example, to connect to the database container, you would run `ddev ssh --service db`. To specify the destination directory, use the `--dir` flag. For example, to connect to the database container and be placed into the `/home` directory, you would run `ddev ssh --service db --dir /home`.
 
+If you want to use your personal ssh keys within the web container, that's possible. Use `ddev auth ssh` to add the keys from your ~/.ssh directory and provide a passphrase, and then those keys will be usable from within the web container. You generally only have to `ddev auth ssh` one time per computer reboot.
+
 ### Log Access
 
-The `ddev logs` command allows you to easily view error logs from the web container (both nginx/apache and php-fpm logs are concatenated). To follow the log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. Similarly, `ddev logs -s db` will show logs from a running or stopped db container.
-
-To manually review additional log files use the `ddev ssh` command and review logs in /var/log and /var/log/nginx or /var/log/apache2. The web server stores access logs at `/var/log/nginx/access.log` or `/var/log/apache2/access.log`, for example.  (Error logs from webservers and php-fpm are *not* stored in logfiles but instead are captured by `ddev logs`.)
+The `ddev logs` command allows you to easily view error logs from the web container (both nginx/apache and php-fpm logs are concatenated). To follow the log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. Similarly, `ddev logs -s db` will show logs from a running or stopped db container. 
 
 ## Stopping a project
 
