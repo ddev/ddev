@@ -1,9 +1,10 @@
-package cmd
+package cmd_test
 
 import (
+	"github.com/drud/ddev/cmd/ddev/cmd"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -17,11 +18,11 @@ import (
 // TestCmdAuthSSH runs `ddev auth ssh` and checks that it actually worked out.
 func TestCmdAuthSSH(t *testing.T) {
 	assert := asrt.New(t)
-	if !fileutil.IsCommandAvailable("expect") {
+	if !util.IsCommandAvailable("expect") {
 		t.Skip("Skipping TestCmdAuthSSH because expect scripting tool is not available")
 	}
 	testDir, _ := os.Getwd()
-	defer DevTestSites[0].Chdir()()
+	defer cmd.DevTestSites[0].Chdir()()
 
 	// Delete any existing identities from ddev-ssh-agent
 	_, err := exec.RunCommand("docker", []string{"exec", "ddev-ssh-agent", "ssh-add", "-D"})
@@ -53,7 +54,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	err = os.Chmod(filepath.Join(testAuthSSHDir, ".ssh", "id_rsa"), 0600)
 	assert.NoError(err)
 	sshDir := filepath.Join(testAuthSSHDir, ".ssh")
-	out, err := exec.RunCommand("expect", []string{filepath.Join(testAuthSSHDir, "ddevauthssh.expect"), DdevBin, sshDir, "testkey"})
+	out, err := exec.RunCommand("expect", []string{filepath.Join(testAuthSSHDir, "ddevauthssh.expect"), cmd.DdevBin, sshDir, "testkey"})
 	_ = out
 	assert.NoError(err)
 	assert.Contains(string(out), "Identity added:")

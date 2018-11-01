@@ -22,6 +22,9 @@ import (
 // TestSSHAuth tests basic ssh authentication
 func TestSSHAuth(t *testing.T) {
 	assert := asrt.New(t)
+	if util.IsDockerToolbox() {
+		t.Skip("Skpping TestSSHAuth because running on Docker toolbox")
+	}
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 	//useWinPty := fileutil.IsCommandAvailable("winpty")

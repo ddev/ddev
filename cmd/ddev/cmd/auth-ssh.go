@@ -5,7 +5,6 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
@@ -38,7 +37,7 @@ var AuthSSHCommand = &cobra.Command{
 		}
 
 		sshKeyPath = dockerutil.MassageWindowsHostMountpoint(sshKeyPath)
-		useWinPty := fileutil.IsCommandAvailable("winpty")
+		useWinPty := util.IsCommandAvailable("winpty")
 		dockerCmd := fmt.Sprintf("docker run -it --rm --volumes-from=%s --mount 'type=bind,src=%s,dst=/tmp/.ssh' -u %s %s:%s ssh-add", ddevapp.SSHAuthName, sshKeyPath, uidStr, version.SSHAuthImage, version.SSHAuthTag)
 		if useWinPty {
 			dockerCmd = "winpty" + dockerCmd
