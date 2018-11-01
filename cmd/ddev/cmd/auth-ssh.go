@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
@@ -10,7 +11,6 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"path/filepath"
-	"strings"
 )
 
 // sshKeyPath is the full path to the *directory* containing ssh keys.
@@ -36,12 +36,8 @@ var AuthSSHCommand = &cobra.Command{
 			}
 			sshKeyPath = filepath.Join(homeDir, ".ssh")
 		}
-		// Sadly, if we have a Windows drive name, it has to be converted from C:/ to //c for Win10Home/Docker toolbox
-		if string(sshKeyPath[1]) == ":" {
-			pathPortion := strings.Replace(sshKeyPath[2:], `\`, "/", -1)
-			drive := strings.ToLower(string(sshKeyPath[0]))
-			sshKeyPath = "//" + drive + pathPortion
-		}
+
+		sshKeyPath = dockerutil.MassageWindowsHostMountpoint(sshKeyPath)
 		useWinPty := fileutil.IsCommandAvailable("winpty")
 		dockerCmd := fmt.Sprintf("docker run -it --rm --volumes-from=%s --mount 'type=bind,src=%s,dst=/tmp/.ssh' -u %s %s:%s ssh-add", ddevapp.SSHAuthName, sshKeyPath, uidStr, version.SSHAuthImage, version.SSHAuthTag)
 		if useWinPty {
