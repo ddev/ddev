@@ -52,33 +52,16 @@ case "$1" in
 	ssh-add)
   shift # remove argument from array
 
-  # .ssh folder from host is expected to be mounted on ~/.ssh
-  # We copy keys from there into /tmp/.ssh and fix permissions (necessary on Windows hosts)
-  host_ssh_path="/.ssh"
-  if [ -d $host_ssh_path ]; then
-    debug_msg "Copying host SSH keys and setting proper permissions..."
-    cp -a $host_ssh_path/. $SSH_KEY_DIR
-    chmod 600 $SSH_KEY_DIR/*
-    chmod 644 $SSH_KEY_DIR/*.pub
-  fi
-
-  # Make sure the key exists if provided.
-  # When $ssh_key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
-  ssh_key_path=""
-  if [ -n "$1" ] && [ -f "$SSH_KEY_DIR/$1" ]; then
-    ssh_key_path="$SSH_KEY_DIR/$1"
-    shift # remove argument from array
-  fi
-
-  # Calling ssh-add. This should handle all cases.
-  _command="ssh-add $ssh_key_path $@"
-  debug_msg "Executing: $_command"
-
-  # When $key_path is empty, ssh-agent will be looking for both id_rsa and id_dsa in the home directory.
-  # NOTE: We do a sed hack here to strip out '/root/.ssh' from the key path in the output from ssh-add, since this
-  # path may confuse people.
-  # echo "Press ENTER or CTRL+C to skip entering passphrase (if any)."
-  $_command 2>&1 0>&1 | sed "s%$SSH_KEY_DIR%%g"
+  # Add keys id_rsa and id_dsa from /root/.ssh using cat so it will work regardless of permisssions
+  # docker toolbox mounts files as 0777, which ruins the normal technique.
+  for key in ~/.ssh/id_[rd]sa; do
+    perm=$(stat -c %a "$key")
+    if [ $perm = "777" ] ; then
+        cat $key | ssh-add -k -
+    else
+        ssh-add $key
+    fi
+  done
 
   # Return first command exit code
   exit ${PIPESTATUS[0]}

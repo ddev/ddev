@@ -36,7 +36,7 @@ var AuthSSHCommand = &cobra.Command{
 			sshKeyPath = filepath.Join(homeDir, ".ssh")
 		}
 		useWinPty := fileutil.IsCommandAvailable("winpty")
-		dockerCmd := fmt.Sprintf("docker run -it --rm --volumes-from=%s -v \"%s:/tmp/.ssh\" -u %s %s:%s ssh-add", ddevapp.SSHAuthName, sshKeyPath, uidStr, version.SSHAuthImage, version.SSHAuthTag)
+		dockerCmd := fmt.Sprintf("docker run -it --rm --volumes-from=%s --mount 'type=bind,src=%s,dst=/tmp/.ssh' -u %s %s:%s ssh-add", ddevapp.SSHAuthName, sshKeyPath, uidStr, version.SSHAuthImage, version.SSHAuthTag)
 		if useWinPty {
 			dockerCmd = "winpty" + dockerCmd
 		}
