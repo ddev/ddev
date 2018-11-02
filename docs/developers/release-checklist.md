@@ -14,6 +14,7 @@
 - [ ] Upload the signed Windows installer and SHA checksum to the release page
 - [ ] Finish updating the release page, some copy-and-paste from previous release
 - [ ] Publish the release
+- [ ] Ensure the new version is marked as active on [ReadTheDocs](https://readthedocs.org/dashboard/ddev/versions/)
 
 ### Signing with Windows installer
 
