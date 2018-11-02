@@ -174,7 +174,7 @@ func GetContainerUIDGid() (uid int, gid int, uidStr string, gidStr string) {
 func IsDockerToolbox() bool {
 	if IsCommandAvailable("docker-machine") {
 		_, err := exec.RunCommand("docker-machine", []string{"env"})
-		if err != nil {
+		if err == nil {
 			return true
 		}
 	}
