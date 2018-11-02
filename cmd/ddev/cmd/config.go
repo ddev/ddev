@@ -227,11 +227,16 @@ func init() {
 
 // getConfigApp() does the basic setup of the app (with provider) and returns it.
 func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
-	appRoot, err := os.Getwd()
+	// Find app root
+	cd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	appRoot, err := ddevapp.CheckForConf(cd)
 	if err != nil {
 		return nil, fmt.Errorf("could not determine current working directory: %v", err)
 	}
-	// TODO: Handle case where config may be in parent directories.
 
 	app, err := ddevapp.NewApp(appRoot, providerName)
 	if err != nil {
