@@ -4,7 +4,7 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"math/rand"
 	"os"
-	exec2 "os/exec"
+	osexec "os/exec"
 	"os/user"
 	"strconv"
 	"strings"
@@ -172,7 +172,7 @@ func GetContainerUIDGid() (uid int, gid int, uidStr string, gidStr string) {
 // It shouldn't be run much as it requires actually running the executable.
 // This lives here instead of in dockerutils to avoid unecessary import cycles.
 func IsDockerToolbox() bool {
-	if IsCommandAvailable("docker-machine") {
+	if IsCommandAvailable("docker-machine9") {
 		_, err := exec.RunCommand("docker-machine", []string{"env"})
 		if err == nil {
 			return true
@@ -185,10 +185,9 @@ func IsDockerToolbox() bool {
 // https://siongui.github.io/2018/03/16/go-check-if-command-exists/
 // This lives here instead of in fileutil to avoid unecessary import cycles.
 func IsCommandAvailable(cmdName string) bool {
-	cmd := exec2.Command("/bin/sh", "-c", "command -v "+cmdName)
-	if err := cmd.Run(); err != nil {
-		return false
+	_, err := osexec.LookPath(cmdName)
+	if err == nil {
+		return true
 	}
-	return true
-
+	return false
 }
