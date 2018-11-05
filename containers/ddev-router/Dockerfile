@@ -29,4 +29,4 @@ ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["forego", "start", "-r"]
 WORKDIR /app/
 
-HEALTHCHECK --interval=5s --retries=5 CMD curl --fail http://localhost/healthcheck || exit 1
+HEALTHCHECK --interval=5s --retries=5 CMD curl --fail http://127.0.0.1/healthcheck || exit 1
