@@ -233,15 +233,18 @@ func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
 		return nil, err
 	}
 
+	// Check for an existing config in this or a parent dir
 	appRoot, err := ddevapp.CheckForConf(cd)
 	if err != nil {
-		return nil, fmt.Errorf("could not determine current working directory: %v", err)
+		// An error indicates no config file was found, use current directory
+		appRoot = cd
 	}
 
 	app, err := ddevapp.NewApp(appRoot, providerName)
 	if err != nil {
 		return nil, fmt.Errorf("could not create new config: %v", err)
 	}
+
 	return app, nil
 }
 
