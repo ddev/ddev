@@ -546,7 +546,11 @@ func (app *DdevApp) docrootPrompt() error {
 	// If there is a default docroot, display it in the prompt.
 	if defaultDocroot != "" {
 		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
+	} else if cd, _ := os.Getwd(); cd == filepath.Join(app.AppRoot, defaultDocroot) {
+		// Preserve the case where the docroot is the current directory
+		docrootPrompt = fmt.Sprintf("%s (current directory)", docrootPrompt)
 	} else {
+		// Explicitly state 'project root' when in a subdirectory
 		docrootPrompt = fmt.Sprintf("%s (project root)", docrootPrompt)
 	}
 
