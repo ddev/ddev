@@ -27,7 +27,6 @@ func TestSSHAuth(t *testing.T) {
 	}
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
-	//useWinPty := fileutil.IsCommandAvailable("winpty")
 
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestSSHAuth"))
 

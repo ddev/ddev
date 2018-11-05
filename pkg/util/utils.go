@@ -172,7 +172,7 @@ func GetContainerUIDGid() (uid int, gid int, uidStr string, gidStr string) {
 // It shouldn't be run much as it requires actually running the executable.
 // This lives here instead of in dockerutils to avoid unecessary import cycles.
 func IsDockerToolbox() bool {
-	if IsCommandAvailable("docker-machine9") {
+	if IsCommandAvailable("docker-machine") {
 		_, err := exec.RunCommand("docker-machine", []string{"env"})
 		if err == nil {
 			return true
