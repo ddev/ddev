@@ -166,8 +166,11 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		}
 	}
 
-	appDesc["router_status"] = GetRouterStatus()
 	appDesc["ssh_agent_status"] = GetSSHAuthStatus()
+	routerStatus, log := GetRouterStatus()
+	appDesc["router_status"] = routerStatus
+	appDesc["router_status_log"] = log
+
 	appDesc["php_version"] = app.GetPhpVersion()
 	appDesc["webserver_type"] = app.GetWebserverType()
 
@@ -401,7 +404,7 @@ func (app *DdevApp) SiteStatus() string {
 			services[service] = SiteNotFound
 			siteStatus = service + " service " + SiteNotFound
 		} else {
-			status := dockerutil.GetContainerHealth(*container)
+			status, _ := dockerutil.GetContainerHealth(container)
 
 			switch status {
 			case "exited":
@@ -929,9 +932,9 @@ func (app *DdevApp) Wait(containerTypes ...string) error {
 			"com.ddev.site-name":         app.GetName(),
 			"com.docker.compose.service": containerType,
 		}
-		err := dockerutil.ContainerWait(containerWaitTimeout, labels)
+		log, err := dockerutil.ContainerWait(containerWaitTimeout, labels)
 		if err != nil {
-			return fmt.Errorf("%s container failed: %v", containerType, err)
+			return fmt.Errorf("%s container failed: log=%s, err=%v", containerType, log, err)
 		}
 	}
 

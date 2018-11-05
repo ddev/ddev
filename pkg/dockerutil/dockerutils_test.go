@@ -102,13 +102,13 @@ func TestContainerWait(t *testing.T) {
 		"com.docker.compose.service": "web",
 	}
 
-	err := ContainerWait(0, labels)
+	_, err := ContainerWait(0, labels)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "health check timed out")
 	}
 
-	err = ContainerWait(5, labels)
+	_, err = ContainerWait(5, labels)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "health check timed out")
