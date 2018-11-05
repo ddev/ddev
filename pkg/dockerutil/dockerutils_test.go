@@ -18,33 +18,39 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-var (
-	// The image here can be any image, it just has to exist so it can be used for labels, etc.
-	TestRouterImage = "busybox"
-	TestRouterTag   = "1"
-)
+var TestContainerName = "dockerutils-test"
 
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
 	// prep docker container for docker util tests
 	client := GetDockerClient()
-
 	err := client.PullImage(docker.PullImageOptions{
-		Repository: TestRouterImage,
-		Tag:        TestRouterTag,
+		Repository: version.WebImg,
+		Tag:        version.WebTag,
 	}, docker.AuthConfiguration{})
 	if err != nil {
 		log.Fatal("failed to pull test image ", err)
 	}
 
+	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": "dockerutils-test"})
+
+	if foundContainer.ID != "" {
+		_ = client.StopContainer(foundContainer.ID, 10)
+
+		err = client.RemoveContainer(docker.RemoveContainerOptions{ID: foundContainer.ID})
+		if err != nil {
+			log.Fatalf("Failed to remove container %s: %v", foundContainer.ID, err)
+		}
+	}
+
 	container, err := client.CreateContainer(docker.CreateContainerOptions{
-		Name: "envtest",
+		Name: TestContainerName,
 		Config: &docker.Config{
-			Image: TestRouterImage + ":" + TestRouterTag,
+			Image: version.WebImg + ":" + version.WebTag,
 			Labels: map[string]string{
 				"com.docker.compose.service": "ddevrouter",
-				"com.ddev.site-name":         "dockertest",
+				"com.ddev.site-name":         "dockerutils-test",
 			},
 			Env: []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
 		},
@@ -52,14 +58,22 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal("failed to create/start docker container ", err)
 	}
+	err = client.StartContainer(container.ID, nil)
+	if err != nil {
+		log.Fatalf("failed to StartContainer: %v", err)
+	}
 	exitStatus := m.Run()
 	// teardown docker container from docker util tests
+	err = client.StopContainer(container.ID, 10)
+	if err != nil {
+		log.Fatalf("Failed to stop container: %v", err)
+	}
 	err = client.RemoveContainer(docker.RemoveContainerOptions{
 		ID:    container.ID,
 		Force: true,
 	})
 	if err != nil {
-		log.Fatal("failed to remove test container: ", err)
+		log.Fatalf("failed to remove test container: %v", err)
 	}
 
 	os.Exit(exitStatus)
@@ -68,29 +82,28 @@ func TestMain(m *testing.M) {
 // TestGetContainerHealth tests the function for processing container readiness.
 func TestGetContainerHealth(t *testing.T) {
 	assert := asrt.New(t)
-	container := docker.APIContainers{
-		Status: "Up 24 seconds (health: starting)",
-	}
-	out := GetContainerHealth(container)
-	assert.Equal(out, "starting")
+	client := GetDockerClient()
 
-	container = docker.APIContainers{
-		Status: "Up 14 minutes (healthy)",
+	labels := map[string]string{
+		"com.ddev.site-name": "dockerutils-test",
 	}
-	out = GetContainerHealth(container)
+	container, err := FindContainerByLabels(labels)
+	require.NoError(t, err)
+
+	err = client.StopContainer(container.ID, 10)
+	assert.NoError(err)
+
+	out, _ := GetContainerHealth(container)
+	assert.Equal(out, "unhealthy")
+
+	err = client.StartContainer(container.ID, nil)
+	assert.NoError(err)
+	_, err = ContainerWait(10, labels)
+	assert.NoError(err)
+
+	out, log = GetContainerHealth(container)
 	assert.Equal(out, "healthy")
-
-	container = docker.APIContainers{
-		State: "exited",
-	}
-	out = GetContainerHealth(container)
-	assert.Equal(out, container.State)
-
-	container = docker.APIContainers{
-		State: "restarting",
-	}
-	out = GetContainerHealth(container)
-	assert.Equal(out, container.State)
+	assert.Equal(log, "phpstatus: OK, /var/www/html: OK, mailhog: OK")
 }
 
 // TestContainerWait tests the error cases for the container check wait loop.
@@ -185,11 +198,12 @@ func TestCheckCompose(t *testing.T) {
 	assert.NoError(err)
 }
 
+// TestGetAppContainers looks for container with sitename dockerutils-test
 func TestGetAppContainers(t *testing.T) {
 	assert := asrt.New(t)
-	sites, err := GetAppContainers("dockertest")
+	containers, err := GetAppContainers("dockerutils-test")
 	assert.NoError(err)
-	assert.Equal(sites[0].Image, TestRouterImage+":"+TestRouterTag)
+	assert.Contains(containers[0].Image, version.WebImg)
 }
 
 func TestGetContainerEnv(t *testing.T) {
