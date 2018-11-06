@@ -790,7 +790,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 		return err
 	}
 
-	return dockerutil.ComposeNoCapture(files, exec...)
+	return dockerutil.ComposeWithStreams(files, os.Stdin, os.Stdout, os.Stderr, exec...)
 }
 
 // Logs returns logs for a site's given container.
