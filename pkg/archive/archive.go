@@ -13,8 +13,8 @@ import (
 	"github.com/drud/ddev/pkg/util"
 )
 
-// Ungzip accepts a gzipped file and uncompresses it to the provided destination path.
-func Ungzip(source string, dest string) error {
+// Ungzip accepts a gzipped file and uncompresses it to the provided destination directory.
+func Ungzip(source string, destDirectory string) error {
 	f, err := os.Open(source)
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func Ungzip(source string, dest string) error {
 	}()
 
 	fname := strings.TrimSuffix(filepath.Base(f.Name()), ".gz")
-	exFile, err := os.Create(filepath.Join(dest, fname))
+	exFile, err := os.Create(filepath.Join(destDirectory, fname))
 	if err != nil {
 		return err
 	}
