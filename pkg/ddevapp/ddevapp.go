@@ -369,6 +369,13 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 	if gzip {
 		opts.Cmd = []string{"bash", "-c", "mysqldump db | gzip"}
 	}
+	if outFile != "" {
+		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE, 0644)
+		if err != nil {
+			return fmt.Errorf("failed to open %s: %v", outFile, err)
+		}
+		opts.Stdout = f
+	}
 
 	_, _, err := app.Exec(opts)
 
@@ -703,6 +710,10 @@ type ExecOpts struct {
 	Cmd []string
 	// Nocapture if true causes use of ComposeNoCapture, so the stdout and stderr go right to stdout/stderr
 	NoCapture bool
+	// Stdout can be overridden with a File
+	Stdout *os.File
+	// Stderr can be overridden with a File
+	Stderr *os.File
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
@@ -733,14 +744,23 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		return "", "", err
 	}
 
-	var stdout, stderr string
-	if opts.NoCapture {
-		err = dockerutil.ComposeNoCapture(files, exec...)
-	} else {
-		stdout, stderr, err = dockerutil.ComposeCmd(files, exec...)
+	stdout := os.Stdout
+	stderr := os.Stderr
+	if opts.Stdout != nil {
+		stdout = opts.Stdout
+	}
+	if opts.Stderr != nil {
+		stderr = opts.Stderr
 	}
 
-	return stdout, stderr, err
+	var stdoutResult, stderrResult string
+	if opts.NoCapture {
+		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, exec...)
+	} else {
+		stdoutResult, stderrResult, err = dockerutil.ComposeCmd(files, exec...)
+	}
+
+	return stdoutResult, stderrResult, err
 }
 
 // ExecWithTty executes a given command in the container of given type.

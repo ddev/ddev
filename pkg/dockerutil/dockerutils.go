@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -213,6 +214,27 @@ func ComposeNoCapture(composeFiles []string, action ...string) error {
 	proc.Stdout = os.Stdout
 	proc.Stdin = os.Stdin
 	proc.Stderr = os.Stderr
+
+	_ = proc.Run()
+	return nil
+}
+
+// ComposeWithStreams executes a docker-compose command but allows the caller to specify
+// stdin/stdout/stderr
+func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, action ...string) error {
+	var arg []string
+
+	for _, file := range composeFiles {
+		arg = append(arg, "-f")
+		arg = append(arg, file)
+	}
+
+	arg = append(arg, action...)
+
+	proc := exec.Command("docker-compose", arg...)
+	proc.Stdout = stdout
+	proc.Stdin = stdin
+	proc.Stderr = stderr
 
 	_ = proc.Run()
 	return nil

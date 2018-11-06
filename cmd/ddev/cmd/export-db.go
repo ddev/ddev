@@ -12,11 +12,12 @@ import (
 var outFileName string
 var gzipOption bool
 
-// ImportDBCmd represents the `ddev import-db` command.
+// ExportDBCmd is the `ddev export-db` command.
 var ExportDBCmd = &cobra.Command{
-	Use:   "export-db",
-	Short: "Dump a database",
-	Long:  `Dump a database`,
+	Use:     "export-db",
+	Short:   "Dump a database to stdout or to a file",
+	Long:    `Dump a database to stdout or to a file.`,
+	Example: "ddev export-db >/tmp/db.sql.gz\nddev export-db --gzip=false >/tmp/db.sql\nddev export-db -f /tmp/db.sql.gz",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()
