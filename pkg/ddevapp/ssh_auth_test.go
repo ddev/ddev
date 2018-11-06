@@ -81,7 +81,11 @@ func TestSSHAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	// Try a simple ssh (with no auth set up), it should fail with "Permission denied"
-	_, stderr, err := app.Exec("web", "bash", "-c", "ssh -o BatchMode=yes -o StrictHostKeyChecking=false root@test-ssh-server pwd")
+	_, stderr, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"bash", "-c", "ssh -o BatchMode=yes -o StrictHostKeyChecking=false root@test-ssh-server pwd"},
+	})
+
 	assert.Error(err)
 	assert.Contains(stderr, "Permission denied")
 
@@ -95,7 +99,10 @@ func TestSSHAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	// Try ssh, should succeed
-	stdout, _, err := app.Exec("web", "bash", "-c", "ssh -o StrictHostKeyChecking=false root@test-ssh-server pwd")
+	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"bash", "-c", "ssh -o StrictHostKeyChecking=false root@test-ssh-server pwd"},
+	})
 	stdout = strings.Trim(stdout, "\n")
 	assert.Equal(stdout, "/root")
 	assert.NoError(err)
@@ -108,7 +115,10 @@ func TestSSHAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	// Try ssh, should succeed
-	stdout, _, err = app.Exec("web", "bash", "-c", "ssh -o StrictHostKeyChecking=false root@test-ssh-server pwd")
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"bash", "-c", "ssh -o StrictHostKeyChecking=false root@test-ssh-server pwd"},
+	})
 	stdout = strings.Trim(stdout, "\n")
 	assert.Equal(stdout, "/root")
 	assert.NoError(err)
