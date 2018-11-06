@@ -46,7 +46,10 @@ func TestCmdAuthSSH(t *testing.T) {
 	// Before we add the password with ddev auth ssh, we should not be able to access the ssh server
 	// Turn off StrictHostChecking because the server can have been run more than once with different
 	// identity
-	_, _, err = app.Exec("web", "ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=false", "root@"+internalIPAddr, "pwd")
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=false", "root@" + internalIPAddr, "pwd"},
+	})
 	assert.Error(err)
 
 	// Now we add the key with passphrase
@@ -60,7 +63,10 @@ func TestCmdAuthSSH(t *testing.T) {
 	assert.Contains(string(out), "Identity added:")
 
 	// And at this point we should be able to ssh into the test-cmd-ssh-server
-	out, _, err = app.Exec("web", "ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=false", "root@"+internalIPAddr, "pwd")
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=false", "root@" + internalIPAddr, "pwd"},
+	})
 	assert.NoError(err)
 	assert.Contains(out, "/root")
 
