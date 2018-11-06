@@ -1,7 +1,6 @@
 package util
 
 import (
-	"github.com/drud/ddev/pkg/exec"
 	"math/rand"
 	"os"
 	osexec "os/exec"
@@ -171,12 +170,11 @@ func GetContainerUIDGid() (uid int, gid int, uidStr string, gidStr string) {
 // IsDockerToolbox detects if the running docker is docker toolbox
 // It shouldn't be run much as it requires actually running the executable.
 // This lives here instead of in dockerutils to avoid unecessary import cycles.
+// Inspired by https://stackoverflow.com/questions/43242218/how-can-a-script-distinguish-docker-toolbox-and-docker-for-windows
 func IsDockerToolbox() bool {
-	if IsCommandAvailable("docker-machine") {
-		_, err := exec.RunCommand("docker-machine", []string{"env"})
-		if err == nil {
-			return true
-		}
+	dockerToolboxPath := os.Getenv("DOCKER_TOOLBOX_INSTALL_PATH")
+	if dockerToolboxPath != "" {
+		return true
 	}
 	return false
 }
