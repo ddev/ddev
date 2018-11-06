@@ -34,6 +34,8 @@ func EnsureSSHAgentContainer() error {
 		return nil
 	}
 
+	dockerutil.EnsureDdevNetwork()
+
 	path, err := CreateSSHAuthComposeFile()
 	if err != nil {
 		return err
