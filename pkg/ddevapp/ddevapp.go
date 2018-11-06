@@ -166,11 +166,10 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		}
 	}
 
-	appDesc["ssh_agent_status"] = GetSSHAuthStatus()
-	routerStatus, log := GetRouterStatus()
+	routerStatus, logOutput := GetRouterStatus()
 	appDesc["router_status"] = routerStatus
-	appDesc["router_status_log"] = log
-
+	appDesc["router_status_log"] = logOutput
+	appDesc["ssh_agent_status"] = GetSSHAuthStatus()
 	appDesc["php_version"] = app.GetPhpVersion()
 	appDesc["webserver_type"] = app.GetWebserverType()
 
@@ -932,9 +931,9 @@ func (app *DdevApp) Wait(containerTypes ...string) error {
 			"com.ddev.site-name":         app.GetName(),
 			"com.docker.compose.service": containerType,
 		}
-		log, err := dockerutil.ContainerWait(containerWaitTimeout, labels)
+		logOutput, err := dockerutil.ContainerWait(containerWaitTimeout, labels)
 		if err != nil {
-			return fmt.Errorf("%s container failed: log=%s, err=%v", containerType, log, err)
+			return fmt.Errorf("%s container failed: log=%s, err=%v", containerType, logOutput, err)
 		}
 	}
 

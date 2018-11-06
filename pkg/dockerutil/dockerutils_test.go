@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	log "github.com/sirupsen/logrus"
+	logOutput "github.com/sirupsen/logrus"
 
 	"path/filepath"
 
@@ -30,7 +30,7 @@ func TestMain(m *testing.M) {
 		Tag:        version.WebTag,
 	}, docker.AuthConfiguration{})
 	if err != nil {
-		log.Fatal("failed to pull test image ", err)
+		logOutput.Fatal("failed to pull test image ", err)
 	}
 
 	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": "dockerutils-test"})
@@ -40,7 +40,7 @@ func TestMain(m *testing.M) {
 
 		err = client.RemoveContainer(docker.RemoveContainerOptions{ID: foundContainer.ID})
 		if err != nil {
-			log.Fatalf("Failed to remove container %s: %v", foundContainer.ID, err)
+			logOutput.Fatalf("Failed to remove container %s: %v", foundContainer.ID, err)
 		}
 	}
 
@@ -56,24 +56,24 @@ func TestMain(m *testing.M) {
 		},
 	})
 	if err != nil {
-		log.Fatal("failed to create/start docker container ", err)
+		logOutput.Fatal("failed to create/start docker container ", err)
 	}
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
-		log.Fatalf("failed to StartContainer: %v", err)
+		logOutput.Fatalf("failed to StartContainer: %v", err)
 	}
 	exitStatus := m.Run()
 	// teardown docker container from docker util tests
 	err = client.StopContainer(container.ID, 10)
 	if err != nil {
-		log.Fatalf("Failed to stop container: %v", err)
+		logOutput.Fatalf("Failed to stop container: %v", err)
 	}
 	err = client.RemoveContainer(docker.RemoveContainerOptions{
 		ID:    container.ID,
 		Force: true,
 	})
 	if err != nil {
-		log.Fatalf("failed to remove test container: %v", err)
+		logOutput.Fatalf("failed to remove test container: %v", err)
 	}
 
 	os.Exit(exitStatus)
@@ -101,9 +101,9 @@ func TestGetContainerHealth(t *testing.T) {
 	_, err = ContainerWait(10, labels)
 	assert.NoError(err)
 
-	out, log = GetContainerHealth(container)
+	out, logOutput := GetContainerHealth(container)
 	assert.Equal(out, "healthy")
-	assert.Equal(log, "phpstatus: OK, /var/www/html: OK, mailhog: OK")
+	assert.Equal(logOutput, "phpstatus: OK, /var/www/html: OK, mailhog: OK")
 }
 
 // TestContainerWait tests the error cases for the container check wait loop.

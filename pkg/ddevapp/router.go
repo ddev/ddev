@@ -107,9 +107,9 @@ func StartDdevRouter() error {
 
 	// ensure we have a happy router
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
-	log, err := dockerutil.ContainerWait(containerWaitTimeout, label)
+	logOutput, err := dockerutil.ContainerWait(containerWaitTimeout, label)
 	if err != nil {
-		return fmt.Errorf("ddev-router failed to become ready: log=%s, err=%v", log, err)
+		return fmt.Errorf("ddev-router failed to become ready: logOutput=%s, err=%v", logOutput, err)
 	}
 
 	return nil
@@ -131,7 +131,7 @@ func findDdevRouter() (*docker.APIContainers, error) {
 
 // RenderRouterStatus returns a user-friendly string showing router-status
 func RenderRouterStatus() string {
-	status, log := GetRouterStatus()
+	status, logOutput := GetRouterStatus()
 	var renderedStatus string
 	badRouter := "\nThe router is not currently healthy. Your projects may not be inaccessible.\nTry running 'ddev start' on a site to recreate the router."
 
@@ -143,7 +143,7 @@ func RenderRouterStatus() string {
 	case "exited":
 		fallthrough
 	default:
-		renderedStatus = color.RedString(status) + badRouter + ":" + log
+		renderedStatus = color.RedString(status) + badRouter + ":" + logOutput
 	}
 	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", renderedStatus)
 }
@@ -152,7 +152,7 @@ func RenderRouterStatus() string {
 // running or healthy, as applicable.
 // return status and most recent log
 func GetRouterStatus() (string, string) {
-	var status, log string
+	var status, logOutput string
 
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
 	container, err := dockerutil.FindContainerByLabels(label)
@@ -160,10 +160,10 @@ func GetRouterStatus() (string, string) {
 	if err != nil {
 		status = SiteNotFound
 	} else {
-		status, log = dockerutil.GetContainerHealth(container)
+		status, logOutput = dockerutil.GetContainerHealth(container)
 	}
 
-	return status, log
+	return status, logOutput
 }
 
 // determineRouterPorts returns a list of port mappings retrieved from running site

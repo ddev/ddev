@@ -151,16 +151,16 @@ func ContainerWait(waittime time.Duration, labels map[string]string) (string, er
 			if err != nil {
 				return "", fmt.Errorf("failed to query container labels %v", labels)
 			}
-			status, log := GetContainerHealth(container)
+			status, logOutput := GetContainerHealth(container)
 
 			switch status {
 			case "healthy":
-				return log, nil
+				return logOutput, nil
 			case "unhealthy":
-				return log, fmt.Errorf("container %s unhealthy: %s", container.Names[0], log)
+				return logOutput, fmt.Errorf("container %s unhealthy: %s", container.Names[0], logOutput)
 			case "exited":
 				service := container.Labels["com.docker.compose.service"]
-				return log, fmt.Errorf("container exited, please use 'ddev logs -s %s` to find out why it failed", service)
+				return logOutput, fmt.Errorf("container exited, please use 'ddev logs -s %s` to find out why it failed", service)
 			}
 		}
 	}
@@ -188,12 +188,12 @@ func GetContainerHealth(container docker.APIContainers) (string, string) {
 	inspect, err := client.InspectContainer(container.ID)
 
 	status := inspect.State.Health.Status
-	log := ""
+	logOutput := ""
 	if err == nil && len(inspect.State.Health.Log) > 0 {
-		log = inspect.State.Health.Log[0].Output
+		logOutput = inspect.State.Health.Log[0].Output
 	}
 
-	return status, log
+	return status, logOutput
 }
 
 // ComposeWithStreams executes a docker-compose command but allows the caller to specify
