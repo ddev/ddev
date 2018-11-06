@@ -357,6 +357,28 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 	return nil
 }
 
+// ExportDB exports the db, with optional output to a file, default gzip
+func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
+	app.DockerEnv()
+
+	opts := &ExecOpts{
+		Service:   "db",
+		Cmd:       []string{"bash", "-c", "mysqldump db"},
+		NoCapture: true,
+	}
+	if gzip {
+		opts.Cmd = []string{"bash", "-c", "mysqldump db | gzip"}
+	}
+
+	_, _, err := app.Exec(opts)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // SiteStatus returns the current status of an application determined from web and db service health.
 func (app *DdevApp) SiteStatus() string {
 	var siteStatus string
@@ -673,13 +695,19 @@ func (app *DdevApp) Start() error {
 
 // ExecOpts contains options for running a command inside a container
 type ExecOpts struct {
+	// Service is the service, as in 'web', 'db', 'dba'
 	Service string
-	Dir     string
-	Cmd     []string
+	// Dir is the working directory inside the container
+	Dir string
+	// Cmd is the array of string to execute
+	Cmd []string
+	// Nocapture if true causes use of ComposeNoCapture, so the stdout and stderr go right to stdout/stderr
+	NoCapture bool
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
 // Returns ComposeCmd results of stdout, stderr, err
+// If Nocapture arg is true, stdout/stderr will be empty and output directly to stdout/stderr
 func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	app.DockerEnv()
 
@@ -705,7 +733,14 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		return "", "", err
 	}
 
-	return dockerutil.ComposeCmd(files, exec...)
+	var stdout, stderr string
+	if opts.NoCapture {
+		err = dockerutil.ComposeNoCapture(files, exec...)
+	} else {
+		stdout, stderr, err = dockerutil.ComposeCmd(files, exec...)
+	}
+
+	return stdout, stderr, err
 }
 
 // ExecWithTty executes a given command in the container of given type.
