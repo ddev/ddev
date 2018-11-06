@@ -129,7 +129,10 @@ func checkSolrService(t *testing.T, app *ddevapp.DdevApp) {
 
 	// Ensure service is accessible from web container
 	checkCommand := fmt.Sprintf("curl -sL -w '%%{http_code}' '%s' -o /dev/null", path)
-	out, _, err := app.Exec("web", "sh", "-c", checkCommand)
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"sh", "-c", checkCommand},
+	})
 	assert.NoError(err, "Unable to make request to http://%s:%s/solr/", service, port)
 	assert.Equal("200", out)
 }
@@ -161,7 +164,10 @@ func checkMemcachedService(t *testing.T, app *ddevapp.DdevApp) {
 	// Ensure service is accessible from web container
 	checkCommand := fmt.Sprintf("echo stats | nc -q 1 %s %s", service, port)
 
-	out, _, err := app.Exec("web", "sh", "-c", checkCommand)
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"sh", "-c", checkCommand},
+	})
 	assert.NoError(err)
 	assert.Contains(out, "STAT pid")
 }

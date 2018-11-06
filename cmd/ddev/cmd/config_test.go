@@ -118,6 +118,9 @@ func TestConfigSetValues(t *testing.T) {
 	webImage := "custom-web-image"
 	dbImage := "custom-db-image"
 	dbaImage := "custom-dba-image"
+	webWorkingDir := "/custom/web/dir"
+	dbWorkingDir := "/custom/db/dir"
+	dbaWorkingDir := "/custom/dba/dir"
 
 	args := []string{
 		"config",
@@ -135,6 +138,9 @@ func TestConfigSetValues(t *testing.T) {
 		"--web-image", webImage,
 		"--db-image", dbImage,
 		"--dba-image", dbaImage,
+		"--web-working-dir", webWorkingDir,
+		"--db-working-dir", dbWorkingDir,
+		"--dba-working-dir", dbaWorkingDir,
 	}
 
 	_, err = exec.RunCommand(DdevBin, args)
@@ -165,13 +171,19 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(webImage, app.WebImage)
 	assert.Equal(dbImage, app.DBImage)
 	assert.Equal(dbaImage, app.DBAImage)
+	assert.Equal(webWorkingDir, app.WorkingDir["web"])
+	assert.Equal(dbWorkingDir, app.WorkingDir["db"])
+	assert.Equal(dbaWorkingDir, app.WorkingDir["dba"])
 
-	// Test that container images can be unset with default flags
+	// Test that container images and working dirs can be unset with default flags
 	args = []string{
 		"config",
 		"--web-image-default",
 		"--db-image-default",
 		"--dba-image-default",
+		"--web-working-dir-default",
+		"--db-working-dir-default",
+		"--dba-working-dir-default",
 	}
 
 	_, err = exec.RunCommand(DdevBin, args)
@@ -187,13 +199,17 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(app.WebImage, "")
 	assert.Equal(app.DBImage, "")
 	assert.Equal(app.DBAImage, "")
+	assert.Equal(len(app.WorkingDir), 0)
 
-	// Test that all container images can be unset with single default images flag
+	// Test that all container images and working dirs can each be unset with single default images flag
 	args = []string{
 		"config",
 		"--web-image", webImage,
 		"--db-image", dbImage,
 		"--dba-image", dbaImage,
+		"--web-working-dir", webWorkingDir,
+		"--db-working-dir", dbWorkingDir,
+		"--dba-working-dir", dbaWorkingDir,
 	}
 
 	_, err = exec.RunCommand(DdevBin, args)
@@ -202,6 +218,7 @@ func TestConfigSetValues(t *testing.T) {
 	args = []string{
 		"config",
 		"--image-defaults",
+		"--working-dir-defaults",
 	}
 
 	_, err = exec.RunCommand(DdevBin, args)
@@ -217,6 +234,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(app.WebImage, "")
 	assert.Equal(app.DBImage, "")
 	assert.Equal(app.DBAImage, "")
+	assert.Equal(len(app.WorkingDir), 0)
 }
 
 // TestConfigInvalidProjectname tests to make sure that invalid projectnames

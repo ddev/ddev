@@ -94,6 +94,7 @@ type DdevApp struct {
 	providerInstance      Provider             `yaml:"-"`
 	Commands              map[string][]Command `yaml:"hooks,omitempty"`
 	UploadDir             string               `yaml:"upload_dir,omitempty"`
+	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -323,7 +324,11 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		return fmt.Errorf("no .sql or .mysql files found to import")
 	}
 
-	_, _, err = app.Exec("db", "bash", "-c", "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && cat /db/*.*sql | mysql db")
+	_, _, err = app.Exec(&ExecOpts{
+		Service: "db",
+		Cmd:     []string{"bash", "-c", "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && cat /db/*.*sql | mysql db"},
+	})
+
 	if err != nil {
 		return err
 	}
@@ -552,7 +557,11 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 				return fmt.Errorf("%s exec failed: %v", hookName, err)
 			}
 
-			stdout, stderr, err := app.Exec("web", args...)
+			stdout, stderr, err := app.Exec(&ExecOpts{
+				Service: "web",
+				Cmd:     args,
+			})
+
 			if err != nil {
 				return fmt.Errorf("%s exec failed: %v, stderr='%s'", hookName, err, stderr)
 			}
@@ -662,33 +671,70 @@ func (app *DdevApp) Start() error {
 	return nil
 }
 
+// ExecOpts contains options for running a command inside a container
+type ExecOpts struct {
+	Service string
+	Dir     string
+	Cmd     []string
+}
+
 // Exec executes a given command in the container of given type without allocating a pty
 // Returns ComposeCmd results of stdout, stderr, err
-func (app *DdevApp) Exec(service string, cmd ...string) (string, string, error) {
+func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	app.DockerEnv()
 
-	exec := []string{"exec", "-e", "DDEV_EXEC=true", "-T", service}
-	exec = append(exec, cmd...)
+	if opts.Service == "" {
+		return "", "", fmt.Errorf("no service provided")
+	}
+
+	exec := []string{"exec", "-e", "DDEV_EXEC=true"}
+	if workingDir := app.getWorkingDir(opts.Service, opts.Dir); workingDir != "" {
+		exec = append(exec, "-w", workingDir)
+	}
+
+	exec = append(exec, "-T", opts.Service)
+
+	if opts.Cmd == nil {
+		return "", "", fmt.Errorf("no command provided")
+	}
+
+	exec = append(exec, opts.Cmd...)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
 		return "", "", err
 	}
+
 	return dockerutil.ComposeCmd(files, exec...)
 }
 
 // ExecWithTty executes a given command in the container of given type.
 // It allocates a pty for interactive work.
-func (app *DdevApp) ExecWithTty(service string, cmd ...string) error {
+func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	app.DockerEnv()
 
-	exec := []string{"exec", service}
-	exec = append(exec, cmd...)
+	if opts.Service == "" {
+		return fmt.Errorf("no service provided")
+	}
+
+	exec := []string{"exec"}
+	if workingDir := app.getWorkingDir(opts.Service, opts.Dir); workingDir != "" {
+		exec = append(exec, "-w", workingDir)
+	}
+
+	exec = append(exec, opts.Service)
+
+	if opts.Cmd == nil {
+		return fmt.Errorf("no command provided")
+	}
+
+	exec = append(exec, opts.Cmd...)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
 		return err
 	}
+
 	return dockerutil.ComposeNoCapture(files, exec...)
 }
 
@@ -897,7 +943,11 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 	}
 
 	util.Warning("Creating database snapshot %s", snapshotName)
-	stdout, stderr, err := app.Exec("db", "bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir))
+	stdout, stderr, err := app.Exec(&ExecOpts{
+		Service: "db",
+		Cmd:     []string{"bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir)},
+	})
+
 	if err != nil {
 		util.Warning("Failed to create snapshot: %v, stdout=%s, stderr=%s", err, stdout, stderr)
 		return "", err
@@ -918,7 +968,12 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 
 	if !fileutil.FileExists(filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")) {
 		// This command returning an error indicates grep has failed to find the value
-		if _, _, err := app.Exec("db", "sh", "-c", "mariabackup --version 2>&1 | grep '10\\.1'"); err != nil {
+		opts := &ExecOpts{
+			Service: "db",
+			Cmd:     []string{"sh", "-c", "mariabackup --version 2>&1 | grep '10\\.1'"},
+		}
+
+		if _, _, err := app.Exec(opts); err != nil {
 			return fmt.Errorf("snapshot %s is not compatible with this version of ddev and mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/latest/users/troubleshooting/#old-snapshot")
 		}
 	}
@@ -1283,4 +1338,24 @@ func (app *DdevApp) migrateDbIfRequired() (bool, error) {
 		return false, fmt.Errorf("sorry, it is not possible to migrate bind-mounted databases using ddev v1.3+, please use ddev v1.2 to migrate, or just 'mv ~/.ddev/%s/mysql ~/.ddev/%s/mysql.saved' and then restart and reload with 'ddev import-db'", app.Name, app.Name)
 	}
 	return false, nil
+}
+
+// getWorkingDir will determine the appropriate working directory for an Exec/ExecWithTty command
+// by consulting with the project configuration. If no dir is specified for the service, an
+// empty string will be returned.
+func (app *DdevApp) getWorkingDir(service, dir string) string {
+	// Highest preference is for directories passed into the command directly
+	if dir != "" {
+		return dir
+	}
+
+	// The next highest preference is for directories defined in config.yaml
+	if app.WorkingDir != nil {
+		if workingDir := app.WorkingDir[service]; workingDir != "" {
+			return workingDir
+		}
+	}
+
+	// The next highest preference is for app type defaults
+	return app.DefaultWorkingDirMap()[service]
 }
