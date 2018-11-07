@@ -375,6 +375,8 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 			return fmt.Errorf("failed to open %s: %v", outFile, err)
 		}
 		opts.Stdout = f
+		// nolint: errcheck
+		defer f.Close()
 	}
 
 	_, _, err := app.Exec(opts)
