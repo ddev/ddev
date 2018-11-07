@@ -207,8 +207,6 @@ Here's an example of a database import using ddev:
 ddev import-db --src=dumpfile.sql.gz
 ```
 
-For in-depth application monitoring, use the command `ddev describe` to see details about the status of your ddev app.
-
 **Note for Backdrop users:** In addition to importing a Backdrop database, you will need to extract a copy of your Backdrop project's configuration into the local `active` directory. The location for this directory can vary depending on the contents of your Backdrop `settings.php` file, but the default location is `[docroot]/files/config_[random letters and numbers]/active`. Please refer to the Backdrop documentation for more information on [moving your Backdrop site](https://backdropcms.org/user-guide/moving-backdrop-site) into the `ddev` environment.
 
 ## Getting Started
@@ -365,6 +363,16 @@ Successfully imported database for drupal8
 If you want to use import-db without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Example:
 
 `ddev import-db --src=/tmp/mydb.sql.gz`
+
+### Exporting a Database
+
+You can export a database with `ddev export-db`, which outputs to stdout or with options to a file:
+
+```
+ddev export-db --file /tmp/db.sql.gz
+ddev export-db >/tmp/db.sql.gz
+ddev export-db --gzip=false >/tmp/db.sql
+```
 
 ### Importing static file assets
 
