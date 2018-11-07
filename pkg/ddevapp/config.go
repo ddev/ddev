@@ -556,15 +556,8 @@ func (app *DdevApp) docrootPrompt() error {
 		util.Warning("Warning: the provided docroot at %s does not currently exist.", fullPath)
 
 		// Ask the user for permission to create the docroot
-		for {
-			resp := util.Prompt(fmt.Sprintf("Create docroot at %s? [Y/n]", fullPath), "yes")
-			if strings.ToLower(resp) == "y" || strings.ToLower(resp) == "yes" {
-				break
-			}
-
-			if strings.ToLower(resp) == "n" || strings.ToLower(resp) == "no" {
-				return fmt.Errorf("docroot must exist to continue configuration")
-			}
+		if !util.Confirm(fmt.Sprintf("Create docroot at %s?", fullPath)) {
+			return fmt.Errorf("docroot must exist to continue configuration")
 		}
 
 		if err = os.MkdirAll(fullPath, 0755); err != nil {
