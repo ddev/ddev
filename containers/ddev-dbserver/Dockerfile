@@ -7,10 +7,9 @@ ENV MYSQL_ROOT_PASSWORD root
 
 # Install mariadb and other packages
 #RUN apk add --no-cache mariadb mariadb-client mariadb-backup mariadb-server-utils bash tzdata shadow sudo
-RUN apt-get update && apt-get install -y bash tzdata vim less sudo
+RUN apt-get -qq update && apt-get -qq install -y bash tzdata vim less sudo && rm -rf /var/lib/apt/lists/*
 
 # Remove the installed version as we need to set up our own from scratch
-
 RUN rm -rf /var/lib/mysql/* /etc/mysql
 RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql
 
