@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"os"
+	"fmt"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 
@@ -12,27 +12,23 @@ import (
 var ComposerCmd = &cobra.Command{
 	Use: "composer [command]",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			err := cmd.Usage()
-			util.CheckErr(err)
-			return
-		}
-
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed(err.Error())
 		}
 
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
+		stdout, _, _ := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     append([]string{"composer"}, args...),
 		})
-		if err != nil {
-			os.Exit(-1)
+
+		if len(stdout) > 0 {
+			fmt.Println(stdout)
 		}
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(ComposerCmd)
+	ComposerCmd.Flags().SetInterspersed(false)
 }
