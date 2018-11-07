@@ -37,7 +37,7 @@ func StopRouterIfNoContainers() error {
 
 	if !containersRunning {
 		dest := RouterComposeYAMLPath()
-		_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "down", "-v")
+		_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "down")
 		return err
 	}
 	return nil
@@ -91,7 +91,7 @@ func StartDdevRouter() error {
 	// we can access all ports.
 	// It might be possible to do this instead by reading from docker all the
 	// existing mapped ports.
-	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "down", "-v")
+	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "down")
 	util.CheckErr(err)
 
 	err = CheckRouterPorts()

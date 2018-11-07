@@ -246,10 +246,17 @@ services:
       {{ end }}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./certs:/etc/nginx/certs:cached
+      - type: "volume"
+        source: ddev-router-cert-cache
+        target: "/etc/nginx/certs"
+        volume:
+          nocopy: true
     restart: "no"
 networks:
    default:
      external:
        name: ddev_default
+volumes:
+  ddev-router-cert-cache:
+    name: "ddev-router-cert-cache"
 `
