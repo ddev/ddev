@@ -221,8 +221,7 @@ func (app *DdevApp) ReadConfig() error {
 		app.DBAImage = version.GetDBAImage()
 	}
 
-	dirPath := filepath.Join(util.GetGlobalDdevDir(), app.Name)
-	app.ImportDir = filepath.Join(dirPath, "import-db")
+	app.ImportDir = app.GetConfigPath("import-db")
 
 	app.SetApptypeSettingsPaths()
 
@@ -621,7 +620,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf")
+	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
