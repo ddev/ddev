@@ -52,16 +52,21 @@ case "$1" in
 	ssh-add)
   shift # remove argument from array
 
-  # Add keys id_rsa and id_dsa from /root/.ssh using cat so it will work regardless of permisssions
+  # Add keys id_rsa and id_dsa from /root/.ssh using cat so it will work regardless of permissions
   # docker toolbox mounts files as 0777, which ruins the normal technique.
-  for key in ~/.ssh/id_[rd]sa; do
-    perm=$(stat -c %a "$key")
-    if [ $perm = "777" ] ; then
-        cat $key | ssh-add -k -
-    else
-        ssh-add $key
-    fi
-  done
+  keyfiles=$(\ls ~/.ssh/id_[rs]sa 2>/dev/null || false)
+  if [ $keyfiles ] ; then
+      for key in $keyfiles; do
+        perm=$(stat -c %a "$key")
+        if [ $perm = "777" ] ; then
+            cat $key | ssh-add -k -
+        else
+            ssh-add $key
+        fi
+      done
+  else
+    echo "No keys matching id_[rd]sa were found in the directory."
+  fi 
 
   # Return first command exit code
   exit ${PIPESTATUS[0]}
