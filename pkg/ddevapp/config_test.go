@@ -217,6 +217,7 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 	assert := asrt.New(t)
 
 	noninteractive := "DRUD_NONINTERACTIVE"
+	// nolint: errcheck
 	defer os.Setenv(noninteractive, os.Getenv(noninteractive))
 	err := os.Unsetenv(noninteractive)
 	assert.NoError(err)

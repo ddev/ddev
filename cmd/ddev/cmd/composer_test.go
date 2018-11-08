@@ -15,6 +15,7 @@ func TestComposerCmd(t *testing.T) {
 
 	oldDir, err := os.Getwd()
 	assert.NoError(err)
+	// nolint: errcheck
 	defer os.Chdir(oldDir)
 
 	tmpDir := testcommon.CreateTmpDir(t.Name())
