@@ -13,6 +13,7 @@ if [ ! -z "$BUILDKITE_JOB_ID" ]; then
 fi
 
 export GOTEST_SHORT=1
+export DRUD_NONINTERACTIVE=true
 
 echo "--- cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
