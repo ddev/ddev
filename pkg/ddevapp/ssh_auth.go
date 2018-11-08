@@ -41,6 +41,12 @@ func EnsureSSHAgentContainer() error {
 		return err
 	}
 
+	// We need to start with correct user/group especially, so must get env info
+	// Most of the environment is useless to ssh-auth, all we're really after is the user/group,
+	//     user: "$DDEV_UID:$DDEV_GID"
+	app := &DdevApp{}
+	app.DockerEnv()
+
 	// run docker-compose up -d
 	// This will force-recreate, discarding existing auth if there is a stopped container.
 	_, _, err = dockerutil.ComposeCmd([]string{path}, "-p", SSHAuthName, "up", "--force-recreate", "-d")

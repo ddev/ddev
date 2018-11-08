@@ -36,13 +36,17 @@ var AuthSSHCommand = &cobra.Command{
 			sshKeyPath = filepath.Join(homeDir, ".ssh")
 		}
 
+		err := ddevapp.EnsureSSHAgentContainer()
+		if err != nil {
+			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
+		}
 		sshKeyPath = dockerutil.MassageWindowsHostMountpoint(sshKeyPath)
 		useWinPty := util.IsCommandAvailable("winpty")
 		dockerCmd := fmt.Sprintf("docker run -it --rm --volumes-from=%s --mount 'type=bind,src=%s,dst=/tmp/.ssh' -u %s %s:%s ssh-add", ddevapp.SSHAuthName, sshKeyPath, uidStr, version.SSHAuthImage, version.SSHAuthTag)
 		if useWinPty {
 			dockerCmd = "winpty" + dockerCmd
 		}
-		err := exec.RunInteractiveCommand("sh", []string{"-c", dockerCmd})
+		err = exec.RunInteractiveCommand("sh", []string{"-c", dockerCmd})
 
 		if err != nil {
 			util.Failed("Docker command '%s' failed: %v", dockerCmd, err)
