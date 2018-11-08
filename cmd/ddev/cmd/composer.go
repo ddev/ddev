@@ -17,6 +17,12 @@ var ComposerCmd = &cobra.Command{
 			util.Failed(err.Error())
 		}
 
+		if app.SiteStatus() != ddevapp.SiteRunning {
+			if err = app.Start(); err != nil {
+				util.Failed("Failed to start %s: %v", app.Name, err)
+			}
+		}
+
 		stdout, _, _ := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     append([]string{"composer"}, args...),
