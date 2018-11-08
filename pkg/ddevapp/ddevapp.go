@@ -357,6 +357,37 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 	return nil
 }
 
+// ExportDB exports the db, with optional output to a file, default gzip
+func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
+	app.DockerEnv()
+
+	opts := &ExecOpts{
+		Service:   "db",
+		Cmd:       []string{"bash", "-c", "mysqldump db"},
+		NoCapture: true,
+	}
+	if gzip {
+		opts.Cmd = []string{"bash", "-c", "mysqldump db | gzip"}
+	}
+	if outFile != "" {
+		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE, 0644)
+		if err != nil {
+			return fmt.Errorf("failed to open %s: %v", outFile, err)
+		}
+		opts.Stdout = f
+		// nolint: errcheck
+		defer f.Close()
+	}
+
+	_, _, err := app.Exec(opts)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // SiteStatus returns the current status of an application determined from web and db service health.
 func (app *DdevApp) SiteStatus() string {
 	var siteStatus string
@@ -673,13 +704,23 @@ func (app *DdevApp) Start() error {
 
 // ExecOpts contains options for running a command inside a container
 type ExecOpts struct {
+	// Service is the service, as in 'web', 'db', 'dba'
 	Service string
-	Dir     string
-	Cmd     []string
+	// Dir is the working directory inside the container
+	Dir string
+	// Cmd is the array of string to execute
+	Cmd []string
+	// Nocapture if true causes use of ComposeNoCapture, so the stdout and stderr go right to stdout/stderr
+	NoCapture bool
+	// Stdout can be overridden with a File
+	Stdout *os.File
+	// Stderr can be overridden with a File
+	Stderr *os.File
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
 // Returns ComposeCmd results of stdout, stderr, err
+// If Nocapture arg is true, stdout/stderr will be empty and output directly to stdout/stderr
 func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	app.DockerEnv()
 
@@ -705,7 +746,23 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		return "", "", err
 	}
 
-	return dockerutil.ComposeCmd(files, exec...)
+	stdout := os.Stdout
+	stderr := os.Stderr
+	if opts.Stdout != nil {
+		stdout = opts.Stdout
+	}
+	if opts.Stderr != nil {
+		stderr = opts.Stderr
+	}
+
+	var stdoutResult, stderrResult string
+	if opts.NoCapture {
+		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, exec...)
+	} else {
+		stdoutResult, stderrResult, err = dockerutil.ComposeCmd(files, exec...)
+	}
+
+	return stdoutResult, stderrResult, err
 }
 
 // ExecWithTty executes a given command in the container of given type.
@@ -735,7 +792,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 		return err
 	}
 
-	return dockerutil.ComposeNoCapture(files, exec...)
+	return dockerutil.ComposeWithStreams(files, os.Stdin, os.Stdout, os.Stderr, exec...)
 }
 
 // Logs returns logs for a site's given container.

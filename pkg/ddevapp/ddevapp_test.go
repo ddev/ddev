@@ -2,6 +2,7 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path"
@@ -612,6 +613,71 @@ func TestDdevImportDB(t *testing.T) {
 		runTime()
 		switchDir()
 	}
+}
+
+// TestDdevExportDB tests the functionality that is called when "ddev export-db" is executed
+func TestDdevExportDB(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+	testDir, _ := os.Getwd()
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevExportDB", site.Name))
+
+	testcommon.ClearDockerEnv()
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Down(true, false)
+	importPath := filepath.Join(testDir, "testdata", "users.sql")
+	err = app.ImportDB(importPath, "")
+	require.NoError(t, err)
+
+	err = os.Mkdir("tmp", 0777)
+	require.NoError(t, err)
+
+	err = fileutil.PurgeDirectory("tmp")
+	assert.NoError(err)
+
+	// Test that we can export-db to a gzipped file
+	err = app.ExportDB("tmp/users1.sql.gz", true)
+	assert.NoError(err)
+
+	// Validate contents
+	err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
+	assert.NoError(err)
+	stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+	assert.NoError(err)
+	assert.True(stringFound)
+
+	err = fileutil.PurgeDirectory("tmp")
+	assert.NoError(err)
+
+	// Export to an ungzipped file and validate
+	err = app.ExportDB("tmp/users2.sql", false)
+	assert.NoError(err)
+
+	// Validate contents
+	stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
+	assert.NoError(err)
+	assert.True(stringFound)
+
+	err = fileutil.PurgeDirectory("tmp")
+	assert.NoError(err)
+
+	// Capture to stdout without gzip compression
+	stdout := util.CaptureStdOut()
+	err = app.ExportDB("", false)
+	assert.NoError(err)
+	output := stdout()
+	assert.Contains(output, "Table structure for table `users`")
+
+	// Try it with capture to stdout, validate contents.
+	runTime()
+	switchDir()
 }
 
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if

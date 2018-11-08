@@ -33,7 +33,7 @@ var WebTag = "20181017_add_ssh" // Note that this can be overridden by make
 var DBImg = "drud/ddev-dbserver"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "v1.3.0" // Note that this may be overridden by make
+var DBTag = "20181106_export_db" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"

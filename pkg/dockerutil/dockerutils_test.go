@@ -1,6 +1,8 @@
 package dockerutil_test
 
 import (
+	"github.com/drud/ddev/pkg/util"
+	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 
@@ -137,6 +139,42 @@ func TestComposeCmd(t *testing.T) {
 	composeFiles = []string{"invalid.yml"}
 	_, _, err = ComposeCmd(composeFiles, "config", "--services")
 	assert.Error(err)
+}
+
+// TestComposeWithStreams tests execution of docker-compose commands with streams
+func TestComposeWithStreams(t *testing.T) {
+	assert := asrt.New(t)
+
+	composeFiles := []string{filepath.Join("testdata", "test-compose-with-streams.yaml")}
+	_, _, err := ComposeCmd(composeFiles, "up", "-d")
+	require.NoError(t, err)
+	//nolint: errcheck
+	defer ComposeCmd(composeFiles, "down")
+
+	err = ContainerWait(10, map[string]string{"com.ddev.site-name": "test-compose-with-streams"})
+	assert.NoError(err)
+
+	// Point stdout to os.Stdout and do simple ps -ef in web container
+	stdout := util.CaptureStdOut()
+	err = ComposeWithStreams(composeFiles, os.Stdin, os.Stdout, os.Stderr, "exec", "-T", "web", "ps", "-ef")
+	assert.NoError(err)
+	output := stdout()
+	assert.Contains(output, "supervisord")
+
+	// Reverse stdout and stderr and create an error and normal stdout. We should see only the error captured in stdout
+	stdout = util.CaptureStdOut()
+	err = ComposeWithStreams(composeFiles, os.Stdin, os.Stderr, os.Stdout, "exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2")
+	assert.NoError(err)
+	output = stdout()
+	assert.Equal(output, "ls: cannot access 'xx': No such file or directory\n")
+
+	// Flip stdout and stderr and create an error and normal stdout. We should see only the success captured in stdout
+	stdout = util.CaptureStdOut()
+	err = ComposeWithStreams(composeFiles, os.Stdin, os.Stdout, os.Stderr, "exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2")
+	assert.NoError(err)
+	output = stdout()
+	assert.Equal(output, "/var/run/apache2\n")
+
 }
 
 // TestCheckCompose tests detection of docker-compose.
