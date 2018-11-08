@@ -216,7 +216,9 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 
-	err := os.Unsetenv("DRUD_NONINTERACTIVE")
+	noninteractive := "DRUD_NONINTERACTIVE"
+	defer os.Setenv(noninteractive, os.Getenv(noninteractive))
+	err := os.Unsetenv(noninteractive)
 	assert.NoError(err)
 
 	testMatrix := map[string][]string{
