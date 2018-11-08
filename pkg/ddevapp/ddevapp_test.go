@@ -1952,9 +1952,9 @@ func TestDbMigration(t *testing.T) {
 
 	// Untar the to-migrate db into old-style dataDir (~/.ddev/projectname/mysql)
 	err = os.MkdirAll(dataDir, 0755)
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = archive.Untar(dbMigrationTarball, dataDir, "")
-	assert.NoError(err)
+	require.NoError(t, err)
 	defer os.RemoveAll(dataDir)
 
 	_, err = app.CreateSettingsFile()
