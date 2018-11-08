@@ -9,6 +9,7 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
+	"os"
 	"path/filepath"
 )
 
@@ -21,7 +22,7 @@ var AuthSSHCommand = &cobra.Command{
 	Short: "Add ssh key authentication to the ddev-ssh-auth container",
 	Long:  `Use this command to provide the password to your ssh key to the ddev-ssh-agent container, where it can be used by other containers. Normal usage is just "ddev auth ssh", or if your key is not in ~/.ssh, ddev auth ssh --keydir=/some/path/.ssh"`,
 	Run: func(cmd *cobra.Command, args []string) {
-
+		var err error
 		if len(args) > 0 {
 			util.Failed("This command takes no arguments.")
 		}
@@ -35,8 +36,24 @@ var AuthSSHCommand = &cobra.Command{
 			}
 			sshKeyPath = filepath.Join(homeDir, ".ssh")
 		}
+		if !filepath.IsAbs(sshKeyPath) {
+			sshKeyPath, err = filepath.Abs(sshKeyPath)
+			if err != nil {
+				util.Failed("Failed to derive absolute path for ssh key path %s: %v", sshKeyPath, err)
+			}
+		}
+		fi, err := os.Stat(sshKeyPath)
+		if os.IsNotExist(err) {
+			util.Failed("The ssh key directory %s was not found", sshKeyPath)
+		}
+		if err != nil {
+			util.Failed("Failed to check status of ssh key directory %s: %v", sshKeyPath, err)
+		}
+		if !fi.IsDir() {
+			util.Failed("The ssh key directory (%s) must be a directory", sshKeyPath)
+		}
 
-		err := ddevapp.EnsureSSHAgentContainer()
+		err = ddevapp.EnsureSSHAgentContainer()
 		if err != nil {
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
 		}
