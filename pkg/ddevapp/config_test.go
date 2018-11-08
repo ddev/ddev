@@ -216,6 +216,9 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 
+	err := os.Unsetenv("DRUD_NONINTERACTIVE")
+	assert.NoError(err)
+
 	testMatrix := map[string][]string{
 		"drupal6phpversion": {AppTypeDrupal6, PHP56},
 		"drupal7phpversion": {AppTypeDrupal7, PHP71},
