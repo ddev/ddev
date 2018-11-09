@@ -5,11 +5,22 @@ We have included several useful developer tools in our containers. Run `ddev des
 
 ### Command-line Tools
 - MySQL Client (mysql) - Command-line interface for interacting with MySQL.
-- [Composer](https://getcomposer.org/) - Dependency Manager for PHP.
 - [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 - [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations.
 
 These tools can be accessed for single commands using [`ddev exec <command>`](cli-usage.md#executing-commands-in-containers) or [`ddev ssh`](cli-usage.md#ssh-into-containers) for an interactive bash session.
+
+### DDEV and Composer 
+We have included a built-in command to simplify use of [Composer](https://getcomposer.org/), the dependency manager for PHP, that allows a user to create and manage projects without having Composer installed on the host machine. Generally, executing any Composer command through DDEV is as simple as prepending the command with `ddev`. DDEV will execute the command in the web container, passing all arguments and flags to Composer. For example:
+
+`ddev composer help`
+`ddev composer require <package>`
+
+Additionally, Composer can be used to initialize new projects with `ddev composer create-project`. DDEV will install new projects to a temporary directory within the container, then will move the project to the project root after installation. Because of this, it's not necessary to specify a destination directory in which to create the project. Whena directory argument must be supplied (for example, when specifying a package version), you can specify the current directory:
+
+`ddev composer create-project typo3/cms-base-distribution . ^9`
+
+Of course, a destination directory can be specified if necessary. In this case, the project will be created in the `${PROJECT_ROOT}/my-subdir` directory, and will be located at `/var/www/html/my-subdir` in the web container.
 
 ### Email Capture and Review
 

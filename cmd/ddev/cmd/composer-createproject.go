@@ -13,7 +13,7 @@ import (
 
 var ComposerCreateProjectCmd = &cobra.Command{
 	Use:   "create-project [options] [package] [directory] [version]",
-	Short: "passes arguments to 'composer create-project' within the container",
+	Short: "Executes 'composer create-project' within the web container",
 	Long:  `'ddev composer create-project' will direct the use of 'composer create-project' within the context of the container. Projects will be installed to a temporary directory and moved to the project root directory after installation.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Parse any positional arguments

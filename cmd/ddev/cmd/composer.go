@@ -10,7 +10,14 @@ import (
 )
 
 var ComposerCmd = &cobra.Command{
-	Use: "composer [command]",
+	Use:   "composer [command]",
+	Short: "Executes a composer command within the web container",
+	Long: `Executes a composer command within the web container. Generally, any composer
+command can be forwarded to the container context by prepending the command
+with 'ddev'. For example:
+
+ddev composer require <package>
+ddev composer outdated --minor-only`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {

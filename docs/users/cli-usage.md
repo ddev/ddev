@@ -130,11 +130,11 @@ If necessary, run build steps that you may require, like `composer install` in t
 
 **Composer Setup Example**
 
-*Do not use this technique with Windows, as composer on an NTFS filesystem can result in major problems with NTFS symlinks that can't be read in the Linux web container. Instead, use the [community-provided hints on Stack Overflow](https://stackoverflow.com/questions/49660082/how-can-i-run-composer-with-ddev)*
-
 ```
-composer create-project typo3/cms-base-distribution my-typo3-site "^9"
+mkdir my-typo3-site
 cd my-typo3-site
+ddev config --project-type php
+ddev composer create-project typo3/cms-base-distribution . ^9
 ```
 
 _Find more information [on composer and how to use it](https://composer.typo3.org)._
