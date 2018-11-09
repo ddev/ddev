@@ -148,8 +148,8 @@ func ContainerWait(waittime time.Duration, labels map[string]string) (string, er
 
 		case <-tickChan.C:
 			container, err := FindContainerByLabels(labels)
-			if err != nil {
-				return "", fmt.Errorf("failed to query container labels %v", labels)
+			if err != nil || container == nil {
+				return "", fmt.Errorf("failed to query container labels=%v: %v", labels, err)
 			}
 			status, logOutput := GetContainerHealth(container)
 
@@ -177,7 +177,11 @@ func ContainerName(container docker.APIContainers) string {
 
 // GetContainerHealth retrieves the status of a given container.
 // returns status, most-recent-log
-func GetContainerHealth(container docker.APIContainers) (string, string) {
+func GetContainerHealth(container *docker.APIContainers) (string, string) {
+	if container == nil {
+		return "no container", ""
+	}
+
 	// If the container is not running, then return exited as the health.
 	// "exited" means stopped.
 	if container.State == "exited" || container.State == "restarting" {

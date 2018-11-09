@@ -52,7 +52,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 	// ensure we have a happy sshAuth
 	label := map[string]string{"com.docker.compose.project": SSHAuthName}
-	err = dockerutil.ContainerWait(containerWaitTimeout, label)
+	_, err = dockerutil.ContainerWait(containerWaitTimeout, label)
 	if err != nil {
 		return fmt.Errorf("ddev-ssh-agent failed to become ready: %v", err)
 	}
@@ -163,6 +163,7 @@ func GetSSHAuthStatus() string {
 	if container == nil {
 		return SiteNotFound
 	}
-	return dockerutil.GetContainerHealth(*container)
+	health, _ := dockerutil.GetContainerHealth(container)
+	return health
 
 }

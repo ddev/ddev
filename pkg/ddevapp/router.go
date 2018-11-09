@@ -157,7 +157,7 @@ func GetRouterStatus() (string, string) {
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
 	container, err := dockerutil.FindContainerByLabels(label)
 
-	if err != nil {
+	if err != nil || container == nil {
 		status = SiteNotFound
 	} else {
 		status, logOutput = dockerutil.GetContainerHealth(container)

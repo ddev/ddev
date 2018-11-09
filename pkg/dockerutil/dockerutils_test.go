@@ -164,7 +164,7 @@ func TestComposeWithStreams(t *testing.T) {
 	//nolint: errcheck
 	defer ComposeCmd(composeFiles, "down")
 
-	err = ContainerWait(10, map[string]string{"com.ddev.site-name": "test-compose-with-streams"})
+	_, err = ContainerWait(10, map[string]string{"com.ddev.site-name": "test-compose-with-streams"})
 	assert.NoError(err)
 
 	// Point stdout to os.Stdout and do simple ps -ef in web container
