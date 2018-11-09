@@ -111,21 +111,28 @@ func TestContainerWait(t *testing.T) {
 	assert := asrt.New(t)
 
 	labels := map[string]string{
-		"com.ddev.site-name":         "foo",
-		"com.docker.compose.service": "web",
+		"com.ddev.site-name": "dockerutils-test",
 	}
 
+	// Try a zero-wait, should show timed-out
 	_, err := ContainerWait(0, labels)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "health check timed out")
 	}
 
-	_, err = ContainerWait(5, labels)
-	assert.Error(err)
-	if err != nil {
-		assert.Contains(err.Error(), "health check timed out")
+	// Try 5-second wait, should show OK
+	status, err := ContainerWait(5, labels)
+	assert.NoError(err)
+	assert.Contains(status, "phpstatus: OK")
+
+	// Try a nonexistent container, should get error
+	labels = map[string]string{
+		"com.ddev.site-name": "nothing-there",
 	}
+	_, err = ContainerWait(1, labels)
+	require.Error(t, err)
+	assert.Contains(err.Error(), "failed to query container")
 }
 
 // TestComposeCmd tests execution of docker-compose commands.
