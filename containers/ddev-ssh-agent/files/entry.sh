@@ -54,7 +54,10 @@ case "$1" in
 
   # Add keys id_rsa and id_dsa from /root/.ssh using cat so it will work regardless of permissions
   # docker toolbox mounts files as 0777, which ruins the normal technique.
-  keyfiles=$(\ls ~/.ssh/id_[rs]sa 2>/dev/null || false)
+  set +o errexit
+  keyfiles=$( \ls ~/.ssh/id_[rs]sa 2>/dev/null)
+  set -o errexit
+  true
   if [ $keyfiles ] ; then
       for key in $keyfiles; do
         perm=$(stat -c %a "$key")
@@ -66,7 +69,7 @@ case "$1" in
       done
   else
     echo "No keys matching id_[rd]sa were found in the directory."
-  fi 
+  fi
 
   # Return first command exit code
   exit ${PIPESTATUS[0]}
