@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 
 	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": "dockerutils-test"})
 
-	if foundContainer.ID != "" {
+	if foundContainer != nil {
 		_ = client.StopContainer(foundContainer.ID, 10)
 
 		err = client.RemoveContainer(docker.RemoveContainerOptions{ID: foundContainer.ID})
