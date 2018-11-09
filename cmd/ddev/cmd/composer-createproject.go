@@ -14,20 +14,27 @@ import (
 var ComposerCreateProjectCmd = &cobra.Command{
 	Use:   "create-project [options] [package] [directory] [version]",
 	Short: "Executes 'composer create-project' within the web container",
-	Long:  `'ddev composer create-project' will direct the use of 'composer create-project' within the context of the container. Projects will be installed to a temporary directory and moved to the project root directory after installation.`,
+	Long: `Directs the use of 'composer create-project' within the context of the web
+container. Projects will be installed to a temporary directory and moved to the
+project root directory after installation. Any existing files in the project
+root will be deleted when creating a project.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Parse any positional arguments
+		// Separate positional arguments from flags. Positional arguments will be manipulated
+		// to preserve the optionality of the package, directory, and version arguments, and
+		// flags will be collected and passed to the command unmodified.
 		positionals := make([]string, 0)
-		options := make([]string, 0)
+		flags := make([]string, 0)
 		for _, arg := range args {
 			if strings.HasPrefix(arg, "-") {
-				options = append(options, arg)
+				flags = append(flags, arg)
 				continue
 			}
 
 			positionals = append(positionals, arg)
 		}
 
+		// Package, directory, and version arguments are optional, positional, and difficult to parse.
+		// This will capture the possible argument combinations and assign them appropriately.
 		var pack, dir, ver string
 		if len(positionals) >= 3 {
 			pack = positionals[len(positionals)-3]
@@ -56,10 +63,10 @@ var ComposerCreateProjectCmd = &cobra.Command{
 		// Make the user confirm that existing contents will be deleted
 		// If the user hasn't passed any positional arguments, we're not actually executing an
 		// install and nothing will be deleted -- for example, 'ddev composer create-project -h'
-		removeData := false
+		doInstall := false
 		if len(positionals) > 0 {
 			util.Warning("Warning: Any existing contents of the project root will be overwritten")
-			removeData = true
+			doInstall = true
 			if !util.Confirm("Would you like to continue?") {
 				util.Failed("create-project cancelled")
 			}
@@ -67,7 +74,7 @@ var ComposerCreateProjectCmd = &cobra.Command{
 
 		// Only remove data if we expect an install
 		composerTmpDir := "/tmp/composer"
-		if removeData {
+		if doInstall {
 			// The install directory may be populated if a previous create-project was
 			// executed using the same container.
 			output.UserOut.Printf("Ensuring composer install directory is empty")
@@ -87,10 +94,11 @@ var ComposerCreateProjectCmd = &cobra.Command{
 		// Build container composer command
 		installDir := path.Join(composerTmpDir, dir)
 		composerCmd := append([]string{}, "composer", "create-project")
-		composerCmd = append(composerCmd, options...)
+		composerCmd = append(composerCmd, flags...)
 		composerCmd = append(composerCmd, pack, installDir, ver)
 
-		output.UserOut.Printf("Executing composer command: %s\n", strings.Join(composerCmd, " "))
+		composerCmdString := strings.TrimSpace(strings.Join(composerCmd, " "))
+		output.UserOut.Printf("Executing composer command: %s\n", composerCmdString)
 		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     composerCmd,
@@ -100,15 +108,16 @@ var ComposerCreateProjectCmd = &cobra.Command{
 		}
 
 		if len(stdout) > 0 {
-			fmt.Println(stdout)
+			fmt.Println(strings.TrimSpace(stdout))
 		}
 
 		// Move project to app root if an install is underway
-		if removeData {
+		if doInstall {
 			output.UserOut.Printf("Moving installation to project root")
+			bashCmdString := fmt.Sprintf("if [ -d %s ]; then mv %s /var/www/html/; fi", composerTmpDir, path.Join(composerTmpDir, "*"))
 			_, _, _ = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				Cmd:     []string{"sh", "-c", fmt.Sprintf("if [ -d %s ]; then mv %s /var/www/html/; fi", composerTmpDir, path.Join(composerTmpDir, "*"))},
+				Cmd:     []string{"sh", "-c", bashCmdString},
 			})
 		}
 	},
