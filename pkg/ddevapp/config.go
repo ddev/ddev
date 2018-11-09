@@ -306,6 +306,10 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("invalid webserver type: %s, must be one of %s", app.WebserverType, GetValidWebserverTypes()).(invalidWebserverType)
 	}
 
+	if !IsValidOmitContainers(app.OmitContainers) {
+		return fmt.Errorf("Invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(invalidOmitContainers)
+	}
+
 	return nil
 }
 
@@ -452,6 +456,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			}
 		}
 	}
+
+	var includeDBA = "includeItByDefault"
+	if util.ArrayContainsString(app.OmitContainers, "dba") {
+		includeDBA = ""
+	}
 	templateVars := map[string]string{
 		"name":            app.Name,
 		"plugin":          "ddev",
@@ -462,6 +471,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		"ddevgenerated":   DdevFileSignature,
 		"extra_host":      docker0Hostname + `:` + docker0Addr,
 		"compose_version": version.DockerComposeFileFormatVersion,
+		"IncludeDBA":      includeDBA,
 	}
 
 	err = templ.Execute(&doc, templateVars)

@@ -134,7 +134,7 @@ func TestMain(m *testing.M) {
 	// Attempt to remove all running containers before starting a test.
 	// If no projects are running, this will exit silently and without error.
 	// If a system doesn't have `ddev` in its $PATH, this will emit a warning but will not fail the test.
-	if _, err := exec.RunCommand("ddev", []string{"remove", "--all"}); err != nil {
+	if _, err := exec.RunCommand("ddev", []string{"remove", "--all", "--stop-ssh-agent"}); err != nil {
 		log.Warnf("Failed to remove all running projects: %v", err)
 	}
 
@@ -716,8 +716,8 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
 		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
-		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 40)
-		assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=$v: %v", rawurl, resp, err)
+		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 60)
+		assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=%v: %v", rawurl, resp, err)
 		if err != nil {
 			stdout := util.CaptureUserOut()
 			err = app.Logs("web", false, false, "")
@@ -2066,7 +2066,10 @@ func constructContainerName(containerType string, app *ddevapp.DdevApp) (string,
 	if err != nil {
 		return "", err
 	}
-	name := dockerutil.ContainerName(container)
+	if container == nil {
+		return "", fmt.Errorf("No container exists for containerType=%s app=%v", containerType, app)
+	}
+	name := dockerutil.ContainerName(*container)
 	return name, nil
 }
 

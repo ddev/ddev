@@ -7,4 +7,5 @@ type invalidAppType error
 type invalidPHPVersion error
 type invalidWebserverType error
 type invalidProvider error
+type invalidOmitContainers error
 type webContainerExists error

@@ -2,6 +2,7 @@ package testcommon
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -122,6 +123,8 @@ func TestValidTestSite(t *testing.T) {
 // TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
 func TestGetLocalHTTPResponse(t *testing.T) {
 	assert := asrt.New(t)
+
+	dockerutil.EnsureDdevNetwork()
 
 	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)

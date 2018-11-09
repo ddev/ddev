@@ -1,0 +1,7 @@
+#!/usr/bin/expect -f
+spawn ssh-add
+expect "Enter passphrase"
+send "testkey\n";
+expect "Identity added"
+interact
+

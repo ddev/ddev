@@ -27,7 +27,7 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20181017_add_ssh" // Note that this can be overridden by make
+var WebTag = "20181022_add_ssh_auth" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
@@ -47,6 +47,10 @@ var RouterImage = "drud/ddev-router"
 // RouterTag defines the tag used for the router.
 var RouterTag = "v1.3.0" // Note that this can be overridden by make
 
+var SSHAuthImage = "drud/ddev-ssh-agent"
+
+var SSHAuthTag = "20181022_add_ssh_auth"
+
 // COMMIT is the actual committish, supplied by make
 var COMMIT = "COMMIT should be overridden"
 
@@ -65,6 +69,7 @@ func GetVersionInfo() map[string]string {
 	versionInfo["db"] = DBImg + ":" + DBTag
 	versionInfo["dba"] = DBAImg + ":" + DBATag
 	versionInfo["router"] = RouterImage + ":" + RouterTag
+	versionInfo["ddev-ssh-agent"] = SSHAuthImage + ":" + SSHAuthTag
 	versionInfo["commit"] = COMMIT
 	versionInfo["domain"] = DDevTLD
 	versionInfo["build info"] = BUILDINFO

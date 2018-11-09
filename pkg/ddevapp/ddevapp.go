@@ -12,10 +12,6 @@ import (
 
 	osexec "os/exec"
 
-	"os/user"
-
-	"runtime"
-
 	"path"
 	"time"
 
@@ -54,18 +50,6 @@ const SiteStopped = "stopped"
 // If this string is found, we assume we can replace/update the file.
 const DdevFileSignature = "#ddev-generated"
 
-// UIDInt is the UID of the user used to run docker containers
-var UIDInt int
-
-// GIDInt is the GID of hte user used to run docker containers
-var GIDInt int
-
-// UIDStr is the UID (as a string) of the UID of the user used to run docker containers
-var UIDStr string
-
-// GIDStr is the GID (as string) of GID of user running docker containers
-var GIDStr string
-
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
@@ -95,6 +79,7 @@ type DdevApp struct {
 	Commands              map[string][]Command `yaml:"hooks,omitempty"`
 	UploadDir             string               `yaml:"upload_dir,omitempty"`
 	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
+	OmitContainers        []string             `yaml:"omit_containers,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -118,26 +103,25 @@ func (app *DdevApp) Init(basePath string) error {
 	*app = *newApp
 	web, err := app.FindContainerByType("web")
 
-	// if err == nil, it means we have found some containers. Make sure they have
-	// the right stuff in them.
-	if err == nil {
+	if err != nil {
+		return err
+	}
+
+	if web != nil {
 		containerApproot := web.Labels["com.ddev.approot"]
 		if containerApproot != app.AppRoot {
 			return fmt.Errorf("a project (web container) in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot).(webContainerExists)
 		}
 		return nil
-	} else if strings.Contains(err.Error(), "unable to find any running or stopped containers") {
-		// Init() is just putting together the DdevApp struct, the containers do
-		// not have to exist (app doesn't have to have been started, so the fact
-		// we didn't find any is not an error.
-		return nil
 	}
-
-	return err
+	// Init() is just putting together the DdevApp struct, the containers do
+	// not have to exist (app doesn't have to have been started, so the fact
+	// we didn't find any is not an error.
+	return nil
 }
 
 // FindContainerByType will find a container for this site denoted by the containerType if it is available.
-func (app *DdevApp) FindContainerByType(containerType string) (docker.APIContainers, error) {
+func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContainers, error) {
 	labels := map[string]string{
 		"com.ddev.site-name":         app.GetName(),
 		"com.docker.compose.service": containerType,
@@ -177,10 +161,13 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		appDesc["dbinfo"] = dbinfo
 
 		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("mailhog")
-		appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("dba")
+		if !util.ArrayContainsString(app.OmitContainers, "dba") {
+			appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("dba")
+		}
 	}
 
 	appDesc["router_status"] = GetRouterStatus()
+	appDesc["ssh_agent_status"] = GetSSHAuthStatus()
 	appDesc["php_version"] = app.GetPhpVersion()
 	appDesc["webserver_type"] = app.GetWebserverType()
 
@@ -200,7 +187,7 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 
 	privatePort, _ := strconv.ParseInt(appports.GetPort(serviceName), 10, 16)
 
-	publishedPort := dockerutil.GetPublishedPort(privatePort, dbContainer)
+	publishedPort := dockerutil.GetPublishedPort(privatePort, *dbContainer)
 	return publishedPort, nil
 }
 
@@ -407,10 +394,14 @@ func (app *DdevApp) SiteStatus() string {
 	for service := range services {
 		container, err := app.FindContainerByType(service)
 		if err != nil {
+			util.Error("app.FindContainerByType(%v) failed", service)
+			return ""
+		}
+		if container == nil {
 			services[service] = SiteNotFound
 			siteStatus = service + " service " + SiteNotFound
 		} else {
-			status := dockerutil.GetContainerHealth(container)
+			status := dockerutil.GetContainerHealth(*container)
 
 			switch status {
 			case "exited":
@@ -650,6 +641,13 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	if !util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent") {
+		err = app.EnsureSSHAgentContainer()
+		if err != nil {
+			return err
+		}
+	}
+
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 
@@ -802,6 +800,10 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 	if err != nil {
 		return err
 	}
+	if container == nil {
+		util.Warning("No running service container %s was found", service)
+		return nil
+	}
 
 	logOpts := docker.LogsOptions{
 		Container:    container.ID,
@@ -838,30 +840,12 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() {
-	curUser, err := user.Current()
-	util.CheckErr(err)
 
-	UIDStr = curUser.Uid
-	GIDStr = curUser.Gid
-	// For windows the UIDStr/GIDStr are usually way outside linux range (ends at 60000)
-	// so we have to run as arbitrary user 1000. We may have a host UIDStr/GIDStr greater in other contexts,
-	// 1000 seems not to cause file permissions issues at least on docker-for-windows.
-	if UIDInt, err = strconv.Atoi(curUser.Uid); err != nil {
-		UIDStr = "1000"
-	}
-	if GIDInt, err = strconv.Atoi(curUser.Gid); err != nil {
-		GIDStr = "1000"
-	}
+	uidInt, gidInt, uidStr, gidStr := util.GetContainerUIDGid()
 
 	// Warn about running as root if we're not on windows.
-	if runtime.GOOS != "windows" && (UIDInt > 60000 || GIDInt > 60000 || UIDInt == 0) {
+	if uidInt > 60000 || gidInt > 60000 || uidInt == 0 {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
-	}
-
-	// If the UIDStr or GIDStr is outside the range possible in container, use root
-	if UIDInt > 60000 || GIDInt > 60000 {
-		UIDStr = "1000"
-		GIDStr = "1000"
 	}
 
 	envVars := map[string]string{
@@ -876,8 +860,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_IMPORTDIR":                app.ImportDir,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
-		"DDEV_UID":                      UIDStr,
-		"DDEV_GID":                      GIDStr,
+		"DDEV_UID":                      uidStr,
+		"DDEV_GID":                      gidStr,
 		"DDEV_PHP_VERSION":              app.PHPVersion,
 		"DDEV_WEBSERVER_TYPE":           app.WebserverType,
 		"DDEV_PROJECT_TYPE":             app.Type,
@@ -889,7 +873,7 @@ func (app *DdevApp) DockerEnv() {
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
 	// It's used for special startup on restoring to a snapshot.
 	if len(os.Getenv("DDEV_MARIADB_LOCAL_COMMAND")) == 0 {
-		err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
+		err := os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
 		util.CheckErr(err)
 	}
 
@@ -1301,12 +1285,15 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		// nolint: vetshadow
 		webContainer, err := dockerutil.FindContainerByLabels(labels)
 		if err != nil {
+			return "", err
+		}
+		if webContainer == nil {
 			return "", fmt.Errorf("could not find a project named '%s'. Run 'ddev list' to see currently active projects", siteName)
 		}
 
 		siteDir, ok = webContainer.Labels["com.ddev.approot"]
 		if !ok {
-			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(webContainer))
+			return "", fmt.Errorf("could not determine the location of %s from container: %s", siteName, dockerutil.ContainerName(*webContainer))
 		}
 	}
 	appRoot, err := CheckForConf(siteDir)

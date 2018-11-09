@@ -61,7 +61,7 @@ func handleSequelProCommand(appLocation string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	dbPublishPort := fmt.Sprint(dockerutil.GetPublishedPort(dbPrivatePort, db))
+	dbPublishPort := fmt.Sprint(dockerutil.GetPublishedPort(dbPrivatePort, *db))
 
 	tmpFilePath := filepath.Join(app.GetAppRoot(), ".ddev/sequelpro.spf")
 	tmpFile, err := os.Create(tmpFilePath)

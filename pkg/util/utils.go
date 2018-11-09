@@ -3,6 +3,9 @@ package util
 import (
 	"math/rand"
 	"os"
+	osexec "os/exec"
+	"os/user"
+	"strconv"
 	"strings"
 	"time"
 
@@ -106,9 +109,9 @@ func AskForConfirmation() bool {
 	nokayResponses := []string{"n", "no", ""}
 	responseLower := strings.ToLower(response)
 
-	if containsString(okayResponses, responseLower) {
+	if ArrayContainsString(okayResponses, responseLower) {
 		return true
-	} else if containsString(nokayResponses, responseLower) {
+	} else if ArrayContainsString(nokayResponses, responseLower) {
 		return false
 	} else {
 		output.UserOut.Println("Please type yes or no and then press enter:")
@@ -116,8 +119,8 @@ func AskForConfirmation() bool {
 	}
 }
 
-// containsString returns true if slice contains element
-func containsString(slice []string, element string) bool {
+// ArrayContainsString returns true if slice contains element
+func ArrayContainsString(slice []string, element string) bool {
 	return !(posString(slice, element) == -1)
 }
 
@@ -139,4 +142,50 @@ func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
 		result = append(result, v)
 	}
 	return result
+}
+
+// GetContainerUIDGid() returns the uid and gid (and string forms) to be used running most containers.
+func GetContainerUIDGid() (uid int, gid int, uidStr string, gidStr string) {
+	var uidInt, gidInt int
+	curUser, err := user.Current()
+	CheckErr(err)
+
+	uidStr = curUser.Uid
+	gidStr = curUser.Gid
+	// For windows the uidStr/gidStr are usually way outside linux range (ends at 60000)
+	// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
+	// 1000 seems not to cause file permissions issues at least on docker-for-windows.
+	if uidInt, err = strconv.Atoi(curUser.Uid); err != nil {
+		uidStr = "1000"
+		uidInt = 1000
+	}
+	if gidInt, err = strconv.Atoi(curUser.Gid); err != nil {
+		gidStr = "1000"
+		gidInt = 1000
+	}
+	return uidInt, gidInt, uidStr, gidStr
+
+}
+
+// IsDockerToolbox detects if the running docker is docker toolbox
+// It shouldn't be run much as it requires actually running the executable.
+// This lives here instead of in dockerutils to avoid unecessary import cycles.
+// Inspired by https://stackoverflow.com/questions/43242218/how-can-a-script-distinguish-docker-toolbox-and-docker-for-windows
+func IsDockerToolbox() bool {
+	dockerToolboxPath := os.Getenv("DOCKER_TOOLBOX_INSTALL_PATH")
+	if dockerToolboxPath != "" {
+		return true
+	}
+	return false
+}
+
+// IsCommandAvailable uses shell's "command" to find out if a command is available
+// https://siongui.github.io/2018/03/16/go-check-if-command-exists/
+// This lives here instead of in fileutil to avoid unecessary import cycles.
+func IsCommandAvailable(cmdName string) bool {
+	_, err := osexec.LookPath(cmdName)
+	if err == nil {
+		return true
+	}
+	return false
 }

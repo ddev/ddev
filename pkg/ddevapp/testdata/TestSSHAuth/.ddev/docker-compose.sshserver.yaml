@@ -1,0 +1,13 @@
+version: '3.6'
+
+services:
+  test-ssh-server:
+    container_name: test-ssh-server
+    image: drud/test-ssh-server
+    restart: "no"
+    ports:
+    # Port is published for debugging reasons only. ssh -p 2222 root@localhost
+    - published: 2222
+      target: 22
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}

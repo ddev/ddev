@@ -43,6 +43,9 @@ services:
     volumes:
       - "../:/var/www/html:cached"
       - ".:/mnt/ddev_config:ro"
+      - type: "volume"
+        source: ddev-ssh-agent_socket_dir
+        target: "/home/.ssh-agent"
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     depends_on:
@@ -72,6 +75,7 @@ services:
       # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
       # To expose an HTTPS port, define the port as securePort:containerPort.
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80
+      - SSH_AUTH_SOCK=/home/.ssh-agent/socket
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .plugin }}
@@ -82,6 +86,7 @@ services:
     external_links:
       - ddev-router:$DDEV_HOSTNAME
 
+{{if  .IncludeDBA }}
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
@@ -104,6 +109,7 @@ services:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
       - HTTP_EXPOSE={{ .dbaport }}
+{{end}}
 networks:
   default:
     external:
@@ -111,6 +117,8 @@ networks:
 volumes:
   mariadb-database:
     name: "${DDEV_SITENAME}-mariadb"
+  ddev-ssh-agent_socket_dir:
+    external: true
   
 `
 
@@ -163,6 +171,11 @@ const ConfigInstructions = `
 # would set the default working directory for the web and db services. 
 # These values specify the destination directory for ddev ssh and the 
 # directory in which commands passed into ddev exec are run. 
+
+# omit_containers: ["dba", "ddev-ssh-agent"]
+# would omit the dba (phpMyAdmin) and ddev-ssh-agent containers. Currently
+# only those two containers can be omitted here.
+
 
 # provider: default # Currently either "default" or "pantheon"
 #
@@ -259,4 +272,26 @@ networks:
 volumes:
   ddev-router-cert-cache:
     name: "ddev-router-cert-cache"
+`
+
+const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'
+
+volumes:
+  dot_ssh:
+  socket_dir:
+
+services:
+  ddev-ssh-agent:
+    container_name: ddev-ssh-agent
+    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}
+    user: "$DDEV_UID:$DDEV_GID"
+    volumes:
+      - "dot_ssh:/tmp/.ssh"
+      - "socket_dir:/tmp/.ssh-agent"
+    environment:
+      - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
+networks:
+  default:
+    external:
+      name: ddev_default
 `

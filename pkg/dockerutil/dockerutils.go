@@ -64,9 +64,15 @@ func GetDockerClient() *docker.Client {
 }
 
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.
-func FindContainerByLabels(labels map[string]string) (docker.APIContainers, error) {
+func FindContainerByLabels(labels map[string]string) (*docker.APIContainers, error) {
 	containers, err := FindContainersByLabels(labels)
-	return containers[0], err
+	if err != nil {
+		return nil, err
+	}
+	if len(containers) > 0 {
+		return &containers[0], nil
+	}
+	return nil, nil
 }
 
 // GetDockerContainers returns a slice of all docker containers on the host system.
@@ -110,12 +116,6 @@ func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, e
 		}
 	}
 
-	// If we couldn't find a match return a list with a single (empty) element alongside the error.
-	if len(containerMatches) < 1 {
-		containerMatches = []docker.APIContainers{{}}
-		returnError = fmt.Errorf("unable to find any running or stopped containers")
-	}
-
 	return containerMatches, returnError
 }
 
@@ -151,7 +151,10 @@ func ContainerWait(waittime time.Duration, labels map[string]string) error {
 			if err != nil {
 				return fmt.Errorf("failed to query container labels %v", labels)
 			}
-			status = GetContainerHealth(container)
+			if container == nil {
+				continue
+			}
+			status = GetContainerHealth(*container)
 
 			switch status {
 			case "healthy":
@@ -174,7 +177,7 @@ func ContainerName(container docker.APIContainers) string {
 }
 
 // GetContainerHealth retrieves the status of a given container. The status string returned
-// by docker contains uptime and the health status in parenths. This function will filter the uptime and
+// by docker contains uptime and the health status in parens. This function will filter the uptime and
 // return only the health status.
 func GetContainerHealth(container docker.APIContainers) string {
 	// If the container is not running, then return exited as the health.
@@ -513,6 +516,18 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	return stdout.String(), nil
 }
 
+// RemoveContainer stops and removes a container
+func RemoveContainer(id string, timeout uint) error {
+	client := GetDockerClient()
+
+	err := client.StopContainer(id, timeout)
+	if err != nil {
+		return err
+	}
+	err = client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: false})
+	return err
+}
+
 // ImageExistsLocally determines if an image is available locally.
 func ImageExistsLocally(imageName string) (bool, error) {
 	client := GetDockerClient()
@@ -539,4 +554,16 @@ func ImageExistsLocally(imageName string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// MassageWindowsHostMountpoint changes C:/path/to/something to //c/path/to/something
+// THis is required for docker bind mounts on docker toolbox.
+// Sadly, if we have a Windows drive name, it has to be converted from C:/ to //c for Win10Home/Docker toolbox
+func MassageWindowsHostMountpoint(mountPoint string) string {
+	if string(mountPoint[1]) == ":" {
+		pathPortion := strings.Replace(mountPoint[2:], `\`, "/", -1)
+		drive := strings.ToLower(string(mountPoint[0]))
+		mountPoint = "//" + drive + pathPortion
+	}
+	return mountPoint
 }

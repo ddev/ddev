@@ -111,7 +111,7 @@ func TestContainerWait(t *testing.T) {
 	err = ContainerWait(5, labels)
 	assert.Error(err)
 	if err != nil {
-		assert.Contains(err.Error(), "failed to query container")
+		assert.Contains(err.Error(), "health check timed out")
 	}
 }
 
@@ -197,12 +197,13 @@ func TestGetContainerEnv(t *testing.T) {
 
 	container, err := FindContainerByLabels(map[string]string{"com.docker.compose.service": "ddevrouter"})
 	assert.NoError(err)
+	require.NotEmpty(t, container)
 
-	env := GetContainerEnv("HOTDOG", container)
+	env := GetContainerEnv("HOTDOG", *container)
 	assert.Equal("superior-to-corndog", env)
-	env = GetContainerEnv("POTATO", container)
+	env = GetContainerEnv("POTATO", *container)
 	assert.Equal("future-fry", env)
-	env = GetContainerEnv("NONEXISTENT", container)
+	env = GetContainerEnv("NONEXISTENT", *container)
 	assert.Equal("", env)
 }
 
