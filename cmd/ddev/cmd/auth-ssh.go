@@ -53,7 +53,9 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("The ssh key directory (%s) must be a directory", sshKeyPath)
 		}
 
-		err = ddevapp.EnsureSSHAgentContainer()
+		// We don't actually have to start ssh-agent in a project directory, so use a dummy app.
+		app := ddevapp.DdevApp{}
+		err = app.EnsureSSHAgentContainer()
 		if err != nil {
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
 		}

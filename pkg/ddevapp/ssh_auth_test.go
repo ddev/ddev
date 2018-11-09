@@ -77,7 +77,7 @@ func TestSSHAuth(t *testing.T) {
 		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
 	}
 
-	err = ddevapp.EnsureSSHAgentContainer()
+	err = app.EnsureSSHAgentContainer()
 	require.NoError(t, err)
 
 	// Try a simple ssh (with no auth set up), it should fail with "Permission denied"

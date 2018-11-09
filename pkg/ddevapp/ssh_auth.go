@@ -24,7 +24,7 @@ func SSHAuthComposeYAMLPath() string {
 }
 
 // EnsureSSHAgentContainer ensures the ssh-auth container is running.
-func EnsureSSHAgentContainer() error {
+func (app *DdevApp) EnsureSSHAgentContainer() error {
 	sshContainer, err := findDdevSSHAuth()
 	if err != nil {
 		return err
@@ -41,10 +41,6 @@ func EnsureSSHAgentContainer() error {
 		return err
 	}
 
-	// We need to start with correct user/group especially, so must get env info
-	// Most of the environment is useless to ssh-auth, all we're really after is the user/group,
-	//     user: "$DDEV_UID:$DDEV_GID"
-	app := &DdevApp{}
 	app.DockerEnv()
 
 	// run docker-compose up -d
