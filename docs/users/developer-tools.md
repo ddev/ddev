@@ -20,7 +20,9 @@ Additionally, Composer can be used to initialize new projects with `ddev compose
 
 `ddev composer create-project typo3/cms-base-distribution . ^9`
 
-Of course, a destination directory can be specified if necessary. In this case, the project will be created in the `${PROJECT_ROOT}/my-subdir` directory, and will be located at `/var/www/html/my-subdir` in the web container.
+A destination directory can be specified if necessary. In this case, the project will be created in the `${PROJECT_ROOT}/my-subdir` directory, and will be located at `/var/www/html/my-subdir` in the web container:
+
+`ddev composer create-project typo3/cms-base-distribution my-subdir ^9`
 
 ### Email Capture and Review
 
