@@ -46,6 +46,11 @@ services:
       - type: "volume"
         source: ddev-ssh-agent_socket_dir
         target: "/home/.ssh-agent"
+      - type: "volume"
+        source: ddev-composer-cache
+        target: "/mnt/composer_cache"
+        volume:
+          nocopy: true
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     depends_on:
@@ -119,6 +124,8 @@ volumes:
     name: "${DDEV_SITENAME}-mariadb"
   ddev-ssh-agent_socket_dir:
     external: true
+  ddev-composer-cache:
+    name: ddev-composer-cache
   
 `
 

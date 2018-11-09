@@ -20,6 +20,7 @@ ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
 
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
+ENV COMPOSER_CACHE_DIR /mnt/composer_cache
 
 # Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
 # NGINX_DOCROOT is for backward compatibility only, to break less people.
@@ -111,10 +112,11 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
 
 RUN chmod -R 777 /var/log
 
-RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2
+RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/composer_cache
 
 # All users will have their home directory in /home, make it fully writeable
-RUN mkdir -p /home/.composer/cache /home/.drush/commands /home/.drush/aliases && chmod -R ugo+rw /home
+RUN mkdir -p /home/.composer /home/.drush/commands /home/.drush/aliases && chmod -R ugo+rw /home /mnt/composer_cache
+
 # Except that .my.cnf can't be writeable or mysql won't use it.
 RUN chmod 444 /home/.my.cnf
 
