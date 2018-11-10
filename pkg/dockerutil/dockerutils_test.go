@@ -169,6 +169,7 @@ func TestComposeWithStreams(t *testing.T) {
 	// Use the current actual web container for this, so replace in base docker-compose file
 	composeBase := filepath.Join("testdata", "test-compose-with-streams.yaml")
 	tmp, err := ioutil.TempDir("", "")
+	assert.NoError(err)
 	realComposeFile := filepath.Join(tmp, "replaced-compose-with-streams.yaml")
 
 	err = fileutil.ReplaceStringInFile("TEST-COMPOSE-WITH-STREAMS-IMAGE", version.WebImg+":"+version.WebTag, composeBase, realComposeFile)
