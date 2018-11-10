@@ -133,7 +133,7 @@ func findDdevRouter() (*docker.APIContainers, error) {
 func RenderRouterStatus() string {
 	status, logOutput := GetRouterStatus()
 	var renderedStatus string
-	badRouter := "\nThe router is not currently healthy. Your projects may not be inaccessible.\nTry running 'ddev start' on a site to recreate the router."
+	badRouter := "\nThe router is not currently healthy. Your projects may not be accessible.\nTry running 'ddev start' on a site to recreate the router."
 
 	switch status {
 	case SiteNotFound:
