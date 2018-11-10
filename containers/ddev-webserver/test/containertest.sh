@@ -57,7 +57,7 @@ for v in 5.6 7.0 7.1 7.2; do
 
 	docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -d --name $CONTAINER_NAME -v "/$composercache:/home/.composer/cache:rw" -d $DOCKER_IMAGE
 	if ! containercheck; then
-        exit 1
+        exit 101
     fi
 
 	curl --fail localhost:$HOST_PORT/test/phptest.php
@@ -102,7 +102,7 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 	fi
 	docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
 	if ! containercheck; then
-        exit 1
+        exit 102
     fi
 	curl --fail localhost:$HOST_PORT/test/phptest.php
 	# Make sure that the project-specific config has been linked in.
@@ -114,24 +114,27 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
     docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
 
 	# Make sure we don't have lots of "closed keepalive connection" complaints
-	(docker logs $CONTAINER_NAME 2>&1 | grep -v "closed keepalive connection")  || (echo "Found unwanted closed keepalive connection messages" && exit 101)
+	(docker logs $CONTAINER_NAME 2>&1 | grep -v "closed keepalive connection")  || (echo "Found unwanted closed keepalive connection messages" && exit 103)
 	# Make sure both nginx logs and fpm logs are being tailed
     curl --fail localhost:$HOST_PORT/test/fatal.php
-	(docker logs $CONTAINER_NAME 2>&1 | grep "WARNING:.* said into stderr:.*fatal.php on line " >/dev/null) || (echo "Failed to find WARNING: .pool www" && exit 102)
-	(docker logs $CONTAINER_NAME 2>&1 | grep "FastCGI sent in stderr: .PHP message: PHP Fatal error:" >/dev/null) || (echo "failed to find FastCGI sent in stderr" && exit 103)
+	(docker logs $CONTAINER_NAME 2>&1 | grep "WARNING:.* said into stderr:.*fatal.php on line " >/dev/null) || (echo "Failed to find WARNING: .pool www" && exit 104)
+	(docker logs $CONTAINER_NAME 2>&1 | grep "FastCGI sent in stderr: .PHP message: PHP Fatal error:" >/dev/null) || (echo "failed to find FastCGI sent in stderr" && exit 105)
 
 	# Make sure that backdrop drush commands were added on backdrop and only backdrop
 	if [ "$project_type" == "backdrop" ] ; then
 	 	# The .drush/commands/backdrop directory should only exist for backdrop apptype
-		docker exec -t $CONTAINER_NAME bash -c 'if [ ! -d  ~/.drush/commands/backdrop ] ; then echo "Failed to find expected backdrop drush commands"; exit 1; fi'
+		docker exec -t $CONTAINER_NAME bash -c 'if [ ! -d  ~/.drush/commands/backdrop ] ; then echo "Failed to find expected backdrop drush commands"; exit 106; fi'
 	else
-		docker exec -t $CONTAINER_NAME bash -c 'if [ -d  ~/.drush/commands/backdrop ] ; then echo "Found unexpected backdrop drush commands"; exit 2; fi'
+		docker exec -t $CONTAINER_NAME bash -c 'if [ -d  ~/.drush/commands/backdrop ] ; then echo "Found unexpected backdrop drush commands"; exit 107; fi'
 	fi
 	docker rm -f $CONTAINER_NAME
 done
 
 echo "--- testing use of custom nginx and php configs"
 docker run  -u "$(id -u):$(id -g)" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v "/$PWD/test/testdata:/mnt/ddev_config:ro" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
+if ! containercheck; then
+    exit 108
+fi
 docker exec -t $CONTAINER_NAME grep "docroot is /var/www/html/potato in custom conf" //etc/nginx/sites-enabled/nginx-site.conf
 
 # Enable xdebug (and then disable again) and make sure it does the right thing.
