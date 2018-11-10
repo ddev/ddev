@@ -143,7 +143,7 @@ func RenderRouterStatus() string {
 	case "exited":
 		fallthrough
 	default:
-		renderedStatus = color.RedString(status) + badRouter + ":" + logOutput
+		renderedStatus = color.RedString(status) + badRouter + ":\n" + logOutput
 	}
 	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", renderedStatus)
 }
