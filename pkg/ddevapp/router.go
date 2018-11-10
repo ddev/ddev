@@ -107,9 +107,9 @@ func StartDdevRouter() error {
 
 	// ensure we have a happy router
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
-	err = dockerutil.ContainerWait(containerWaitTimeout, label)
+	logOutput, err := dockerutil.ContainerWait(containerWaitTimeout, label)
 	if err != nil {
-		return fmt.Errorf("ddev-router failed to become ready: %v", err)
+		return fmt.Errorf("ddev-router failed to become ready: logOutput=%s, err=%v", logOutput, err)
 	}
 
 	return nil
@@ -131,9 +131,9 @@ func findDdevRouter() (*docker.APIContainers, error) {
 
 // RenderRouterStatus returns a user-friendly string showing router-status
 func RenderRouterStatus() string {
-	status := GetRouterStatus()
+	status, logOutput := GetRouterStatus()
 	var renderedStatus string
-	badRouter := "\nThe router is not currently running. Your sites are likely inaccessible at this time.\nTry running 'ddev start' on a site to recreate the router."
+	badRouter := "\nThe router is not currently healthy. Your projects may not be accessible.\nTry running 'ddev start' on a site to recreate the router."
 
 	switch status {
 	case SiteNotFound:
@@ -143,30 +143,27 @@ func RenderRouterStatus() string {
 	case "exited":
 		fallthrough
 	default:
-		renderedStatus = color.RedString(status) + badRouter
+		renderedStatus = color.RedString(status) + badRouter + ":\n" + logOutput
 	}
 	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", renderedStatus)
 }
 
-// GetRouterStatus outputs router status and warning if not
+// GetRouterStatus retur s router status and warning if not
 // running or healthy, as applicable.
-func GetRouterStatus() string {
-	var status string
+// return status and most recent log
+func GetRouterStatus() (string, string) {
+	var status, logOutput string
 
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
 	container, err := dockerutil.FindContainerByLabels(label)
 
-	if err != nil {
-		util.Error("Failed to FindContainerByLabels(%v)", label)
-		return "error"
-	}
-	if container == nil {
-		return "no ddev-router found"
+	if err != nil || container == nil {
+		status = SiteNotFound
+	} else {
+		status, logOutput = dockerutil.GetContainerHealth(container)
 	}
 
-	status = dockerutil.GetContainerHealth(*container)
-
-	return status
+	return status, logOutput
 }
 
 // determineRouterPorts returns a list of port mappings retrieved from running site

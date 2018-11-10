@@ -1,6 +1,7 @@
 package fileutil
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -188,4 +189,19 @@ func RandomFilenameBase() string {
 	randBytes := make([]byte, 16)
 	_, _ = rand.Read(randBytes)
 	return hex.EncodeToString(randBytes)
+}
+
+// ReplaceStringInFile takes search and replace strings, an original path, and a dest path, returns error
+func ReplaceStringInFile(searchString string, replaceString string, origPath string, destPath string) error {
+	input, err := ioutil.ReadFile(origPath)
+	if err != nil {
+		return err
+	}
+
+	output := bytes.Replace(input, []byte(searchString), []byte(replaceString), -1)
+
+	if err = ioutil.WriteFile(destPath, output, 0666); err != nil {
+		return err
+	}
+	return nil
 }

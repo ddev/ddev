@@ -1,6 +1,7 @@
 package fileutil_test
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -128,4 +129,17 @@ func TestListFilesInDir(t *testing.T) {
 	assert.True(len(fileList) == 2)
 	assert.Contains(fileList[0], "one.txt")
 	assert.Contains(fileList[1], "two.txt")
+}
+
+// TestReplaceStringInFile tests the ReplaceStringInFile utility function.
+func TestReplaceStringInFile(t *testing.T) {
+	assert := asrt.New(t)
+	tmp, err := ioutil.TempDir("", "")
+	assert.NoError(err)
+	newFilePath := filepath.Join(tmp, "newfile.txt")
+	err = fileutil.ReplaceStringInFile("some needle we're looking for", "specialJUNKPattern", "testdata/fgrep_has_positive_contents.txt", newFilePath)
+	assert.NoError(err)
+	found, err := fileutil.FgrepStringInFile(newFilePath, "specialJUNKPattern")
+	assert.NoError(err)
+	assert.True(found)
 }

@@ -3,10 +3,11 @@ package dockerutil_test
 import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
+	"io/ioutil"
 	"os"
 	"testing"
 
-	log "github.com/sirupsen/logrus"
+	logOutput "github.com/sirupsen/logrus"
 
 	"path/filepath"
 
@@ -18,48 +19,62 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-var (
-	// The image here can be any image, it just has to exist so it can be used for labels, etc.
-	TestRouterImage = "busybox"
-	TestRouterTag   = "1"
-)
+var TestContainerName = "dockerutils-test"
 
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
 	// prep docker container for docker util tests
 	client := GetDockerClient()
-
 	err := client.PullImage(docker.PullImageOptions{
-		Repository: TestRouterImage,
-		Tag:        TestRouterTag,
+		Repository: version.WebImg,
+		Tag:        version.WebTag,
 	}, docker.AuthConfiguration{})
 	if err != nil {
-		log.Fatal("failed to pull test image ", err)
+		logOutput.Fatal("failed to pull test image ", err)
+	}
+
+	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": "dockerutils-test"})
+
+	if foundContainer != nil {
+		_ = client.StopContainer(foundContainer.ID, 10)
+
+		err = client.RemoveContainer(docker.RemoveContainerOptions{ID: foundContainer.ID})
+		if err != nil {
+			logOutput.Fatalf("Failed to remove container %s: %v", foundContainer.ID, err)
+		}
 	}
 
 	container, err := client.CreateContainer(docker.CreateContainerOptions{
-		Name: "envtest",
+		Name: TestContainerName,
 		Config: &docker.Config{
-			Image: TestRouterImage + ":" + TestRouterTag,
+			Image: version.WebImg + ":" + version.WebTag,
 			Labels: map[string]string{
 				"com.docker.compose.service": "ddevrouter",
-				"com.ddev.site-name":         "dockertest",
+				"com.ddev.site-name":         "dockerutils-test",
 			},
 			Env: []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
 		},
 	})
 	if err != nil {
-		log.Fatal("failed to create/start docker container ", err)
+		logOutput.Fatal("failed to create/start docker container ", err)
+	}
+	err = client.StartContainer(container.ID, nil)
+	if err != nil {
+		logOutput.Fatalf("failed to StartContainer: %v", err)
 	}
 	exitStatus := m.Run()
 	// teardown docker container from docker util tests
+	err = client.StopContainer(container.ID, 10)
+	if err != nil {
+		logOutput.Fatalf("Failed to stop container: %v", err)
+	}
 	err = client.RemoveContainer(docker.RemoveContainerOptions{
 		ID:    container.ID,
 		Force: true,
 	})
 	if err != nil {
-		log.Fatal("failed to remove test container: ", err)
+		logOutput.Fatalf("failed to remove test container: %v", err)
 	}
 
 	os.Exit(exitStatus)
@@ -68,29 +83,28 @@ func TestMain(m *testing.M) {
 // TestGetContainerHealth tests the function for processing container readiness.
 func TestGetContainerHealth(t *testing.T) {
 	assert := asrt.New(t)
-	container := docker.APIContainers{
-		Status: "Up 24 seconds (health: starting)",
-	}
-	out := GetContainerHealth(container)
-	assert.Equal(out, "starting")
+	client := GetDockerClient()
 
-	container = docker.APIContainers{
-		Status: "Up 14 minutes (healthy)",
+	labels := map[string]string{
+		"com.ddev.site-name": "dockerutils-test",
 	}
-	out = GetContainerHealth(container)
+	container, err := FindContainerByLabels(labels)
+	require.NoError(t, err)
+
+	err = client.StopContainer(container.ID, 10)
+	assert.NoError(err)
+
+	out, _ := GetContainerHealth(container)
+	assert.Equal(out, "unhealthy")
+
+	err = client.StartContainer(container.ID, nil)
+	assert.NoError(err)
+	_, err = ContainerWait(10, labels)
+	assert.NoError(err)
+
+	out, logOutput := GetContainerHealth(container)
 	assert.Equal(out, "healthy")
-
-	container = docker.APIContainers{
-		State: "exited",
-	}
-	out = GetContainerHealth(container)
-	assert.Equal(out, container.State)
-
-	container = docker.APIContainers{
-		State: "restarting",
-	}
-	out = GetContainerHealth(container)
-	assert.Equal(out, container.State)
+	assert.Equal(logOutput, "phpstatus: OK, /var/www/html: OK, mailhog: OK")
 }
 
 // TestContainerWait tests the error cases for the container check wait loop.
@@ -98,21 +112,28 @@ func TestContainerWait(t *testing.T) {
 	assert := asrt.New(t)
 
 	labels := map[string]string{
-		"com.ddev.site-name":         "foo",
-		"com.docker.compose.service": "web",
+		"com.ddev.site-name": "dockerutils-test",
 	}
 
-	err := ContainerWait(0, labels)
+	// Try a zero-wait, should show timed-out
+	_, err := ContainerWait(0, labels)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "health check timed out")
 	}
 
-	err = ContainerWait(5, labels)
-	assert.Error(err)
-	if err != nil {
-		assert.Contains(err.Error(), "health check timed out")
+	// Try 5-second wait, should show OK
+	status, err := ContainerWait(5, labels)
+	assert.NoError(err)
+	assert.Contains(status, "phpstatus: OK")
+
+	// Try a nonexistent container, should get error
+	labels = map[string]string{
+		"com.ddev.site-name": "nothing-there",
 	}
+	_, err = ContainerWait(1, labels)
+	require.Error(t, err)
+	assert.Contains(err.Error(), "failed to query container")
 }
 
 // TestComposeCmd tests execution of docker-compose commands.
@@ -145,13 +166,24 @@ func TestComposeCmd(t *testing.T) {
 func TestComposeWithStreams(t *testing.T) {
 	assert := asrt.New(t)
 
-	composeFiles := []string{filepath.Join("testdata", "test-compose-with-streams.yaml")}
-	_, _, err := ComposeCmd(composeFiles, "up", "-d")
+	// Use the current actual web container for this, so replace in base docker-compose file
+	composeBase := filepath.Join("testdata", "test-compose-with-streams.yaml")
+	tmp, err := ioutil.TempDir("", "")
+	assert.NoError(err)
+	realComposeFile := filepath.Join(tmp, "replaced-compose-with-streams.yaml")
+
+	err = fileutil.ReplaceStringInFile("TEST-COMPOSE-WITH-STREAMS-IMAGE", version.WebImg+":"+version.WebTag, composeBase, realComposeFile)
+	assert.NoError(err)
+	defer os.Remove(realComposeFile)
+
+	composeFiles := []string{realComposeFile}
+
+	_, _, err = ComposeCmd(composeFiles, "up", "-d")
 	require.NoError(t, err)
 	//nolint: errcheck
 	defer ComposeCmd(composeFiles, "down")
 
-	err = ContainerWait(10, map[string]string{"com.ddev.site-name": "test-compose-with-streams"})
+	_, err = ContainerWait(10, map[string]string{"com.ddev.site-name": "test-compose-with-streams"})
 	assert.NoError(err)
 
 	// Point stdout to os.Stdout and do simple ps -ef in web container
@@ -185,11 +217,12 @@ func TestCheckCompose(t *testing.T) {
 	assert.NoError(err)
 }
 
+// TestGetAppContainers looks for container with sitename dockerutils-test
 func TestGetAppContainers(t *testing.T) {
 	assert := asrt.New(t)
-	sites, err := GetAppContainers("dockertest")
+	containers, err := GetAppContainers("dockerutils-test")
 	assert.NoError(err)
-	assert.Equal(sites[0].Image, TestRouterImage+":"+TestRouterTag)
+	assert.Contains(containers[0].Image, version.WebImg)
 }
 
 func TestGetContainerEnv(t *testing.T) {
