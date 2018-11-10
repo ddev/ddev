@@ -34,7 +34,7 @@ func TestComposerCmd(t *testing.T) {
 	assert.Contains(out, "Available commands:")
 
 	// Test create-project
-	args = []string{"composer", "create-project", "--no-install", "typo3/cms-base-distribution", ".", "^9"}
+	args = []string{"composer", "create", "--dev", "typo3/cms-base-distribution", "^9"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(out, "Created project in /tmp/composer")
