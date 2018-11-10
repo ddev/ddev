@@ -143,7 +143,9 @@ docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
 
 # Verify that the custom php configuration in ddev_config/php is activated.
 echo "--- Verify that /mnt/ddev_config is mounted and we have php overrides there.
-docker exec -t $CONTAINER_NAME ls -lR //mnt/ddev_config >/dev/null
+
+# First see if /mnt/ddev_config "works"
+docker exec -t $CONTAINER_NAME bash -c "ls -l //mnt/ddev_config/php/my-php.ini || (echo 'Failed to ls /mnt/ddev_config' && exit 201)"
 
 # With overridden value we should have assert.active=0, not the default
 echo "--- Check that assert.active override is working"
