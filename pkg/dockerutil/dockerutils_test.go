@@ -3,6 +3,7 @@ package dockerutil_test
 import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -165,8 +166,18 @@ func TestComposeCmd(t *testing.T) {
 func TestComposeWithStreams(t *testing.T) {
 	assert := asrt.New(t)
 
-	composeFiles := []string{filepath.Join("testdata", "test-compose-with-streams.yaml")}
-	_, _, err := ComposeCmd(composeFiles, "up", "-d")
+	// Use the current actual web container for this, so replace in base docker-compose file
+	composeBase := filepath.Join("testdata", "test-compose-with-streams.yaml")
+	tmp, err := ioutil.TempDir("", "")
+	realComposeFile := filepath.Join(tmp, "replaced-compose-with-streams.yaml")
+
+	err = fileutil.ReplaceStringInFile("TEST-COMPOSE-WITH-STREAMS-IMAGE", version.WebImg+":"+version.WebTag, composeBase, realComposeFile)
+	assert.NoError(err)
+	defer os.Remove(realComposeFile)
+
+	composeFiles := []string{realComposeFile}
+
+	_, _, err = ComposeCmd(composeFiles, "up", "-d")
 	require.NoError(t, err)
 	//nolint: errcheck
 	defer ComposeCmd(composeFiles, "down")
