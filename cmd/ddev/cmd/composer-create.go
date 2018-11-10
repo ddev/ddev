@@ -31,7 +31,7 @@ the project root directory after installation. Any existing files in the
 project root will be deleted when creating a project.`,
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		pack := args[len(args)-2]
+		pkg := args[len(args)-2]
 		ver := args[len(args)-1]
 
 		app, err := ddevapp.GetActiveApp("")
@@ -73,7 +73,7 @@ project root will be deleted when creating a project.`,
 		composerCmd := []string{
 			"composer",
 			"create-project",
-			pack,
+			pkg,
 			installDir,
 			ver,
 		}
