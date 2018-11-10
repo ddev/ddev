@@ -16,13 +16,17 @@ We have included a built-in command to simplify use of [Composer](https://getcom
 `ddev composer help`
 `ddev composer require <package>`
 
-Additionally, Composer can be used to initialize new projects with `ddev composer create-project`. DDEV will install new projects to a temporary directory within the container, then will move the project to the project root after installation. Because of this, it's not necessary to specify a destination directory in which to create the project. Whena directory argument must be supplied (for example, when specifying a package version), you can specify the current directory:
+Additionally, Composer can be used to initialize new projects with `ddev composer create`. This command supports limited argument and flag options, and will install a new project to the project root in `/var/www/html`. The package and version arguments are required:
 
-`ddev composer create-project typo3/cms-base-distribution . ^9`
+`ddev composer create [<flags>] <package> <version>`
 
-A destination directory can be specified if necessary. In this case, the project will be created in the `${PROJECT_ROOT}/my-subdir` directory, and will be located at `/var/www/html/my-subdir` in the web container:
+For example:
 
-`ddev composer create-project typo3/cms-base-distribution my-subdir ^9`
+`ddev composer create --no-dev typo3/cms-base-distribution ^9`
+
+To execute a fully-featured `composer create-project` command, you can execute the command from within the container after executing `ddev ssh`, or pass the full command to `ddev exec`, like so:
+
+`ddev exec composer create-project ...`
 
 ### Email Capture and Review
 
