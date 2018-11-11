@@ -47,9 +47,9 @@ mkdir -p $composercache && chmod 777 $composercache
 
 export MOUNTUID=$UID
 export MOUNTGID=$(id -g)
-if [[ "$MOUNTUID" -gt "60000" || "$MOUNTGID" -gt "60000" ]] ; then
-	MOUNTUID=1
-	MOUNTGID=1
+if [ "$OS" = "Windows_NT" ] ; then
+	MOUNTUID=1000
+	MOUNTGID=1000
 fi
 
 for v in 5.6 7.0 7.1 7.2; do
@@ -131,7 +131,7 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 done
 
 echo "--- testing use of custom nginx and php configs"
-docker run  -u "$(id -u):$(id -g)" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v "/$PWD/test/testdata:/mnt/ddev_config:ro" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
+docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v "/$PWD/test/testdata:/mnt/ddev_config:ro" -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
 if ! containercheck; then
     exit 108
 fi
