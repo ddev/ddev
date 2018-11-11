@@ -176,7 +176,7 @@ func ContainerName(container docker.APIContainers) string {
 	return container.Names[0][1:]
 }
 
-// GetContainerHealth retrieves the status of a given container.
+// GetContainerHealth retrieves the health status of a given container.
 // returns status, most-recent-log
 func GetContainerHealth(container *docker.APIContainers) (string, string) {
 	if container == nil {
