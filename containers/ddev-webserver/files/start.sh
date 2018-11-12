@@ -89,6 +89,8 @@ fi
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
+sudo chown -R "$(id -u):$(id -g)" /mnt/composer_cache/
+
 echo 'Server started'
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
