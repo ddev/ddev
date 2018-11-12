@@ -19,7 +19,7 @@ import (
 var (
 	updateInterval = time.Hour * 24 * 7 // One week interval between updates
 	serviceType    string
-	updateDocURL   = "https://ddev.readthedocs.io/en/latest/#installation"
+	updateDocURL   = "https://ddev.readthedocs.io/en/stable/#installation"
 )
 
 // RootCmd represents the base command when called without any subcommands

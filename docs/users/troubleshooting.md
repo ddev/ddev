@@ -1,6 +1,6 @@
 <h1>Troubleshooting</h1>
 
-Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](https://ddev.readthedocs.io/en/latest/#support). And see [Docker troubleshooting suggstions](./docker_installation.md#troubleshooting).
+Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](https://ddev.readthedocs.io/en/stable/#support). And see [Docker troubleshooting suggstions](./docker_installation.md#troubleshooting).
 
 <a name="unable-listen"></a>
 ## Webserver ports are already occupied by another webserver
@@ -112,4 +112,4 @@ Database snapshot from before v1.3.0 are not compatible with ddev v1.3+ because 
 
 ## More Support
 
-[Support options](https://ddev.readthedocs.io/en/latest/#support) has a variety of options.
+[Support options](https://ddev.readthedocs.io/en/stable/#support) has a variety of options.
