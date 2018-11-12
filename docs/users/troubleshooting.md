@@ -101,7 +101,7 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 
 Database snapshot from before v1.3.0 are not compatible with ddev v1.3+ because the mariabackup with MariaDB 10.2 is not compatible with earlier backups. However, if you really need that snapshot and don't have a database dump to run with `ddev import-db`, there's a fairly easy workaround:
 
-1. Add or alter a line in your .ddev/config.yaml: `dbimage: drud/ddev-dbserver:v1.2.0`
+1. `ddev config --db-image drud/ddev-dbserver:v1.2.0`
 2. `ddev rm --remove-data` to remove an existing MariaDB 10.2 database
 3. `ddev start` to start with the new version
 4. Use `ddev restore-snapshot` to restore the snapshot by name
