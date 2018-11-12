@@ -26,12 +26,18 @@ func TestMain(m *testing.M) {
 
 	// prep docker container for docker util tests
 	client := GetDockerClient()
-	err := client.PullImage(docker.PullImageOptions{
-		Repository: version.WebImg,
-		Tag:        version.WebTag,
-	}, docker.AuthConfiguration{})
+	imageExists, err := ImageExistsLocally(version.WebImg + ":" + version.WebTag)
 	if err != nil {
-		logOutput.Fatal("failed to pull test image ", err)
+		logOutput.Fatalf("Failed to check for local image %s: %v", version.WebImg+":"+version.WebTag, err)
+	}
+	if !imageExists {
+		err := client.PullImage(docker.PullImageOptions{
+			Repository: version.WebImg,
+			Tag:        version.WebTag,
+		}, docker.AuthConfiguration{})
+		if err != nil {
+			logOutput.Fatal("failed to pull test image ", err)
+		}
 	}
 
 	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": "dockerutils-test"})
