@@ -6,6 +6,7 @@ jobs:
     working_directory: ~/go/src/github.com/drud/ddev
     environment:
       GOPATH: /home/circleci/go
+      DRUD_NONINTERACTIVE: "true"
     steps:
     - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
     - checkout
@@ -28,6 +29,7 @@ jobs:
     environment:
       GOPATH: /home/circleci/go
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
+      DRUD_NONINTERACTIVE: "true"
     steps:
     - attach_workspace:
         at: ~/
@@ -50,6 +52,7 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
       # Experiment with only testing TYPO3 with the apache run.
       GOTEST_SHORT: 5
+      DRUD_NONINTERACTIVE: "true"
     steps:
     - attach_workspace:
         at: ~/
@@ -72,6 +75,7 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: apache-cgi
       # Experiment with only testing TYPO3 with the apache run.
       GOTEST_SHORT: 5
+      DRUD_NONINTERACTIVE: "true"
     steps:
     - attach_workspace:
         at: ~/
@@ -128,6 +132,7 @@ jobs:
       DRUD_DEBUG: "true"
       GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
+      DRUD_NONINTERACTIVE: "true"
     steps:
       - checkout
 

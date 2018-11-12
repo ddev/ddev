@@ -1526,12 +1526,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
 
-	// Cleanup the global site database dirs. This does the work instead of running site.Cleanup()
-	// because site.Cleanup() removes site directories that we'll need in other tests.
-	dir := filepath.Join(util.GetGlobalDdevDir(), site.Name)
-	err = os.RemoveAll(dir)
-	assert.NoError(err)
-
 	revertDir()
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
@@ -1958,9 +1952,9 @@ func TestDbMigration(t *testing.T) {
 
 	// Untar the to-migrate db into old-style dataDir (~/.ddev/projectname/mysql)
 	err = os.MkdirAll(dataDir, 0755)
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = archive.Untar(dbMigrationTarball, dataDir, "")
-	assert.NoError(err)
+	require.NoError(t, err)
 	defer os.RemoveAll(dataDir)
 
 	_, err = app.CreateSettingsFile()
