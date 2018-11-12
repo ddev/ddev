@@ -62,7 +62,7 @@ var (
 		},
 		{
 			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.59.tar.gz",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.61.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-7.59/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59-db.tar.gz",
@@ -776,6 +776,9 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 			t.Fatalf("app.Init() failed on site %s in dir %s, err=%v", site.Name, site.Dir, err)
 		}
 	}
+
+	// Try using php72 to avoid SIGBUS failures after restore.
+	app.PHPVersion = ddevapp.PHP72
 
 	err = app.Start()
 	if err != nil {
