@@ -12,9 +12,9 @@ import (
 var ComposerCmd = &cobra.Command{
 	Use:   "composer [command]",
 	Short: "Executes a composer command within the web container",
-	Long: `Executes a composer command within the web container. Generally, any composer
-command can be forwarded to the container context by prepending the command
-with 'ddev'. For example:
+	Long: `Executes a composer command at the project root in the web container. Generally,
+any composer command can be forwarded to the container context by prepending
+the command with 'ddev'. For example:
 
 ddev composer require <package>
 ddev composer outdated --minor-only`,
@@ -32,6 +32,7 @@ ddev composer outdated --minor-only`,
 
 		stdout, _, _ := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
+			Dir:     "/var/www/html",
 			Cmd:     append([]string{"composer"}, args...),
 		})
 
