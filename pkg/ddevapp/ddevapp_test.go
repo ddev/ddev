@@ -63,7 +63,7 @@ var (
 		{
 			Name:                          "TestPkgDrupal7", // Drupal Kickstart on D7
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.61.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-7.59/",
+			ArchiveInternalExtractionPath: "drupal-7.61/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59-db.tar.gz",
 			FullSiteTarballURL:            "",
