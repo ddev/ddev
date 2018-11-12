@@ -88,7 +88,7 @@ cd my-drupal8-site
 ```
 mkdir my-drupal8-site
 cd my-drupal8-site
-ddev config --project-type php
+ddev config --project-type php --php-version 7.1
 ddev composer create drupal-composer/drupal-project:8.x-dev ^8 --stability dev
 ```
 
@@ -133,7 +133,7 @@ If necessary, run build steps that you may require, like `composer install` in t
 ```
 mkdir my-typo3-site
 cd my-typo3-site
-ddev config --project-type php
+ddev config --project-type php --php version 7.2
 ddev composer create typo3/cms-base-distribution ^9
 ```
 
@@ -218,7 +218,7 @@ $ mkdir drupal8
 $ cd drupal8
 $ ddev config --project-type php
 $ ddev composer create drupal-composer/drupal-project:8.x-dev ^8 --stability dev
-$ ddev config --project-type drupal8 --docroot web 
+$ ddev config --project-type drupal8
 ```
 
 Configuration files have now been created for your project. Take a look at the project's .ddev/config.yaml file.

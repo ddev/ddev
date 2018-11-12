@@ -55,7 +55,7 @@ project root will be deleted when creating a project.`,
 
 		// The install directory may be populated if the command has been
 		// previously executed using the same container.
-		output.UserOut.Printf("Ensuring composer install directory is empty")
+		output.UserOut.Printf("Ensuring temporary composer install directory in web container is empty")
 		installDir := "/tmp/composer"
 		_, _, _ = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
