@@ -188,7 +188,7 @@ const ConfigInstructions = `
 #
 # Many ddev commands can be extended to run tasks after the ddev command is
 # executed.
-# See https://ddev.readthedocs.io/en/latest/users/extending-commands/ for more
+# See https://ddev.readthedocs.io/en/stable/users/extending-commands/ for more
 # information on the commands that can be extended and the tasks you can define
 # for them. Example:
 #hooks:`

@@ -7,16 +7,16 @@ ddev is an open source tool that makes it simple to get local PHP development en
 
 ## Getting Started
 
-1. **Check System Requirements:** We support recent versions of macOS, Windows 10, and Linux distributions that will run docker-ce (ddev requires Docker and docker-compose). ([more info here](https://ddev.readthedocs.io/en/latest/#system-requirements)). 
-2. **Install ddev:** [Options include](https://ddev.readthedocs.io/en/latest/#installation) macOS homebrew (recommended), an install script, or manual installation.
+1. **Check System Requirements:** We support recent versions of macOS, Windows 10, and Linux distributions that will run docker-ce (ddev requires Docker and docker-compose). ([more info here](https://ddev.readthedocs.io/en/stable/#system-requirements)). 
+2. **Install ddev:** [Options include](https://ddev.readthedocs.io/en/stable/#installation) macOS homebrew (recommended), an install script, or manual installation.
 3. **Choose a CMS Quick Start Guide:** 
-  - [WordPress](https://ddev.readthedocs.io/en/latest/users/cli-usage#wordpress-quickstart)
-  - [Drupal 6 and 7](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-6/7-quickstart)
-  - [Drupal 8](https://ddev.readthedocs.io/en/latest/users/cli-usage#drupal-8-quickstart)
-  - [Backdrop](https://ddev.readthedocs.io/en/latest/users/cli-usage/#backdrop-quickstart) 
-  - [TYPO3](https://ddev.readthedocs.io/en/latest/users/cli-usage#typo3-quickstart)
+  - [WordPress](https://ddev.readthedocs.io/en/stable/users/cli-usage#wordpress-quickstart)
+  - [Drupal 6 and 7](https://ddev.readthedocs.io/en/stable/users/cli-usage#drupal-6/7-quickstart)
+  - [Drupal 8](https://ddev.readthedocs.io/en/stable/users/cli-usage#drupal-8-quickstart)
+  - [Backdrop](https://ddev.readthedocs.io/en/stable/users/cli-usage/#backdrop-quickstart) 
+  - [TYPO3](https://ddev.readthedocs.io/en/stable/users/cli-usage#typo3-quickstart)
 
-Having trouble? See our [support options below](#support). You might have trouble if [another local development tool is already using port 80 or 443](https://ddev.readthedocs.io/en/latest/#using-ddev-with-other-development-environments).
+Having trouble? See our [support options below](#support). You might have trouble if [another local development tool is already using port 80 or 443](https://ddev.readthedocs.io/en/stable/#using-ddev-with-other-development-environments).
 
 ## Current Feature List
 

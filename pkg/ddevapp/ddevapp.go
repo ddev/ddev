@@ -1017,7 +1017,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 
 		if _, _, err := app.Exec(opts); err != nil {
-			return fmt.Errorf("snapshot %s is not compatible with this version of ddev and mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/latest/users/troubleshooting/#old-snapshot")
+			return fmt.Errorf("snapshot %s is not compatible with this version of ddev and mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
 		}
 	}
 

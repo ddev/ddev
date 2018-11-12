@@ -150,7 +150,7 @@ _Note: ddev config will prompt you for a project name, docroot, and project type
 * The project name will be part of the URL, so make sure to avoid whitespace, underscores and special characters to avoid problems down the road.
 * After the command runs through, prepare to edit the generated config.yaml file:
 ** Review the PHP version. Available options: 5.6, 7.0, 7.1, and 7.2.
-** Review the ports the system wants to use. If you run a local stack already, you will need to adjust here, or shut down your local stack. See [additional troubleshooting information here](https://ddev.readthedocs.io/en/latest/users/troubleshooting/#unable-listen).
+** Review the ports the system wants to use. If you run a local stack already, you will need to adjust here, or shut down your local stack. See [additional troubleshooting information here](https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen).
 
 After you've run `ddev config`, you're ready to start running your project. To start running ddev, simply enter:
 
@@ -165,7 +165,7 @@ Successfully started example-typo3-site
 Your application can be reached at: http://example-typo3-site.ddev.local
 ```
 
-For those wanting/needing to connect to the database within the database container directly, please see the [developer tools page](https://ddev.readthedocs.io/en/latest/users/developer-tools/#using-development-tools-on-the-host-machine).
+For those wanting/needing to connect to the database within the database container directly, please see the [developer tools page](https://ddev.readthedocs.io/en/stable/users/developer-tools/#using-development-tools-on-the-host-machine).
 
 ### Backdrop Quickstart
 
