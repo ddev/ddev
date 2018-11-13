@@ -20,6 +20,9 @@ var (
 
 	// Allows the user to pass a --stability <arg> option to composer create-project
 	stabilityArg string
+
+	// Allows a user to specify that Composer shouldn't require user interaction
+	noInteractionArg bool
 )
 
 var ComposerCreateCmd = &cobra.Command{
@@ -90,6 +93,10 @@ project root will be deleted when creating a project.`,
 			composerCmd = append(composerCmd, "--stability", stabilityArg)
 		}
 
+		if noInteractionArg {
+			composerCmd = append(composerCmd, "--no-interaction")
+		}
+
 		composerCmdString := strings.TrimSpace(strings.Join(composerCmd, " "))
 		output.UserOut.Printf("Executing composer command: %s\n", composerCmdString)
 		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -126,6 +133,7 @@ func init() {
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
 	ComposerCreateCmd.Flags().BoolVar(&devArg, "dev", false, "Pass the --dev flag to composer create-project")
-	ComposerCreateCmd.Flags().BoolVar(&noDevArg, "no-dev", false, "Pass the --no-dev flag to composer create-projet")
+	ComposerCreateCmd.Flags().BoolVar(&noDevArg, "no-dev", false, "Pass the --no-dev flag to composer create-project")
 	ComposerCreateCmd.Flags().StringVar(&stabilityArg, "stability", "", "Pass the --stability <arg> option to composer create-project")
+	ComposerCreateCmd.Flags().BoolVar(&noInteractionArg, "no-interaction", false, "Pass the --no-interaction flag to composer create-project")
 }
