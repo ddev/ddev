@@ -5,11 +5,28 @@ We have included several useful developer tools in our containers. Run `ddev des
 
 ### Command-line Tools
 - MySQL Client (mysql) - Command-line interface for interacting with MySQL.
-- [Composer](https://getcomposer.org/) - Dependency Manager for PHP.
 - [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 - [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations.
 
 These tools can be accessed for single commands using [`ddev exec <command>`](cli-usage.md#executing-commands-in-containers) or [`ddev ssh`](cli-usage.md#ssh-into-containers) for an interactive bash session.
+
+### DDEV and Composer 
+We have included a built-in command to simplify use of [Composer](https://getcomposer.org/), the dependency manager for PHP, that allows a user to create and manage projects without having Composer installed on the host machine. Generally, executing any Composer command through DDEV is as simple as prepending the command with `ddev`. DDEV will execute the command at the project root in the web container, passing all arguments and flags to Composer. To execute Composer in other directories within the container, use `ddev ssh` or `ddev exec -d <dir>`. For example:
+
+`ddev composer help`
+`ddev composer require <package>`
+
+Additionally, Composer can be used to initialize new projects with `ddev composer create`. This command supports limited argument and flag options, and will install a new project to the project root in `/var/www/html`. The package and version arguments are required:
+
+`ddev composer create [<flags>] <package> <version>`
+
+For example:
+
+`ddev composer create --no-dev typo3/cms-base-distribution ^9`
+
+To execute a fully-featured `composer create-project` command, you can execute the command from within the container after executing `ddev ssh`, or pass the full command to `ddev exec`, like so:
+
+`ddev exec composer create-project ...`
 
 ### Email Capture and Review
 

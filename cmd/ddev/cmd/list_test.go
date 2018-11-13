@@ -88,7 +88,7 @@ func TestDdevListContinuous(t *testing.T) {
 
 	// Take a snapshot of the output a little over one second apart.
 	output1 := len(cmdOutput.Bytes())
-	time.Sleep(time.Millisecond * 1020)
+	time.Sleep(time.Millisecond * 1500)
 	output2 := len(cmdOutput.Bytes())
 
 	// Kill the process we started.

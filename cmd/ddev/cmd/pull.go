@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"os"
-	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -66,10 +65,8 @@ func appPull(skipConfirmation bool) {
 		}
 
 		util.Warning("You're about to delete the current %s and replace with the results of a fresh pull.", message)
-		resp := strings.ToLower(util.Prompt("Would you like to continue? [Y/n]", "yes"))
-		if resp != "y" && resp != "yes" {
-			util.Warning("Pull cancelled.")
-			os.Exit(2)
+		if !util.Confirm("Would you like to continue?") {
+			util.Failed("Pull cancelled")
 		}
 	}
 

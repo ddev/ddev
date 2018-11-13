@@ -85,11 +85,11 @@ cd my-drupal8-site
 
 **Composer Setup Example**
 
-*Do not use this technique with Windows, as composer on an NTFS filesystem can result in major problems with NTFS symlinks that can't be read in the Linux web container. Instead, use the [community-provided hints on Stack Overflow](https://stackoverflow.com/questions/49660082/how-can-i-run-composer-with-ddev)*
-
 ```
-composer create-project drupal-composer/drupal-project:8.x-dev my-drupal8-site --stability dev --no-interaction
+mkdir my-drupal8-site
 cd my-drupal8-site
+ddev config --project-type php --php-version 7.1
+ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev
 ```
 
 _Find more information [on composer and how to use it](https://github.com/drupal-composer/drupal-project)._
@@ -130,11 +130,11 @@ If necessary, run build steps that you may require, like `composer install` in t
 
 **Composer Setup Example**
 
-*Do not use this technique with Windows, as composer on an NTFS filesystem can result in major problems with NTFS symlinks that can't be read in the Linux web container. Instead, use the [community-provided hints on Stack Overflow](https://stackoverflow.com/questions/49660082/how-can-i-run-composer-with-ddev)*
-
 ```
-composer create-project typo3/cms-base-distribution my-typo3-site "^9"
+mkdir my-typo3-site
 cd my-typo3-site
+ddev config --project-type php --php version 7.2
+ddev composer create typo3/cms-base-distribution ^9
 ```
 
 _Find more information [on composer and how to use it](https://composer.typo3.org)._
@@ -214,20 +214,11 @@ ddev import-db --src=dumpfile.sql.gz
 Check out the git repository for the project you want to work on. `cd` into the directory, run `ddev config`, and follow the prompts.
 
 ```
-$ cd ~/Projects
-$ composer create-project drupal-composer/drupal-project:8.x-dev drupal8 --stability dev --no-interaction
+$ mkdir drupal8
 $ cd drupal8
-$ ddev config
-Creating a new ddev project config in the current directory (/Users/username/Projects/drupal8)
-Once completed, your configuration will be written to /Users/username/Projects/drupal8/.ddev/config.yaml
-
-
-Project name (drupal8):
-
-The docroot is the directory from which your site is served. This is a relative path from your project root (/Users/username/Projects/drupal8)
-You may leave this value blank if your site files are in the application root
-Docroot Location: web
-Found a drupal8 codebase at /Users/username/Projects/drupal8/web
+$ ddev config --project-type php
+$ ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev
+$ ddev config --project-type drupal8
 ```
 
 Configuration files have now been created for your project. Take a look at the project's .ddev/config.yaml file.

@@ -3,11 +3,12 @@ package util_test
 import (
 	"bufio"
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
 )
 
 // TestRandString ensures that RandString only generates string of the correct value and characters.
@@ -78,4 +79,51 @@ func TestCaptureStdOut(t *testing.T) {
 	out := restoreOutput()
 
 	assert.Contains(out, text)
+}
+
+// TestConfirm ensures that the confirmation prompt works as expected.
+func TestConfirm(t *testing.T) {
+	assert := asrt.New(t)
+
+	yesses := []string{"YES", "Yes", "yes", "Y", "y"}
+	for _, y := range yesses {
+		text := util.RandString(32)
+		scanner := bufio.NewScanner(strings.NewReader(y))
+		util.SetInputScanner(scanner)
+
+		getOutput := util.CaptureStdOut()
+		resp := util.Confirm(text)
+		assert.True(resp)
+		assert.Contains(getOutput(), text)
+	}
+
+	nos := []string{"NO", "No", "no", "N", "n"}
+	for _, n := range nos {
+		text := util.RandString(32)
+		scanner := bufio.NewScanner(strings.NewReader(n))
+		util.SetInputScanner(scanner)
+
+		getOutput := util.CaptureStdOut()
+		resp := util.Confirm(text)
+		assert.False(resp)
+		assert.Contains(getOutput(), text)
+	}
+
+	// Test that junk answers (not yes, no, or <enter>) eventually return a false
+	scanner := bufio.NewScanner(strings.NewReader("a\nb\na\nb\na\nb\na\nb\na\nb\n"))
+	util.SetInputScanner(scanner)
+	getOutput := util.CaptureStdOut()
+	text := util.RandString(32)
+	resp := util.Confirm(text)
+	assert.False(resp)
+	assert.Contains(getOutput(), text)
+
+	// Test that <enter> returns true
+	scanner = bufio.NewScanner(strings.NewReader("\n"))
+	util.SetInputScanner(scanner)
+	getOutput = util.CaptureStdOut()
+	text = util.RandString(32)
+	resp = util.Confirm(text)
+	assert.True(resp)
+	assert.Contains(getOutput(), text)
 }
