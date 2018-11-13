@@ -3,6 +3,7 @@ package util_test
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -84,6 +85,13 @@ func TestCaptureStdOut(t *testing.T) {
 // TestConfirm ensures that the confirmation prompt works as expected.
 func TestConfirm(t *testing.T) {
 	assert := asrt.New(t)
+
+	noninteractiveEnv := "DRUD_NONINTERACTIVE"
+	defer os.Setenv(noninteractiveEnv, os.Getenv(noninteractiveEnv))
+	err := os.Unsetenv(noninteractiveEnv)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
 
 	yesses := []string{"YES", "Yes", "yes", "Y", "y"}
 	for _, y := range yesses {
