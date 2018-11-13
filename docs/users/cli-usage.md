@@ -89,7 +89,7 @@ cd my-drupal8-site
 mkdir my-drupal8-site
 cd my-drupal8-site
 ddev config --project-type php --php-version 7.1
-ddev composer create drupal-composer/drupal-project:8.x-dev ^8 --stability dev
+ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev
 ```
 
 _Find more information [on composer and how to use it](https://github.com/drupal-composer/drupal-project)._
@@ -217,7 +217,7 @@ Check out the git repository for the project you want to work on. `cd` into the 
 $ mkdir drupal8
 $ cd drupal8
 $ ddev config --project-type php
-$ ddev composer create drupal-composer/drupal-project:8.x-dev ^8 --stability dev
+$ ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev
 $ ddev config --project-type drupal8
 ```
 

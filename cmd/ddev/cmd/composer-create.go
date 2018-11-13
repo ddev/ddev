@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"strings"
 
@@ -26,16 +27,26 @@ var (
 )
 
 var ComposerCreateCmd = &cobra.Command{
-	Use:   "create [flags] <package> <version>",
+	Use:   "create [flags] <package> [<version>]",
 	Short: "Executes 'composer create-project' within the web container",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
 the project root directory after installation. Any existing files in the
 project root will be deleted when creating a project.`,
-	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		pkg := args[len(args)-2]
-		ver := args[len(args)-1]
+		if len(args) < 1 || len(args) > 2 {
+			err := cmd.Usage()
+			util.CheckErr(err)
+			os.Exit(-1)
+		}
+
+		var pkg, ver string
+		if len(args) == 2 {
+			pkg = args[len(args)-2]
+			ver = args[len(args)-1]
+		} else if len(args) == 1 {
+			pkg = args[len(args)-1]
+		}
 
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
@@ -51,9 +62,11 @@ project root will be deleted when creating a project.`,
 		}
 
 		// Make the user confirm that existing contents will be deleted
-		util.Warning("Warning: Any existing contents of the project root will be overwritten")
-		if !util.Confirm("Would you like to continue?") {
-			util.Failed("create-project cancelled")
+		util.Warning("Warning: Any existing contents of the project root (%s) will be removed", app.AppRoot)
+		if !noInteractionArg {
+			if !util.Confirm("Would you like to continue?") {
+				util.Failed("create-project cancelled")
+			}
 		}
 
 		// The install directory may be populated if the command has been
@@ -78,7 +91,10 @@ project root will be deleted when creating a project.`,
 			"create-project",
 			pkg,
 			installDir,
-			ver,
+		}
+
+		if ver != "" {
+			composerCmd = append(composerCmd, ver)
 		}
 
 		if devArg {
