@@ -133,7 +133,7 @@ If necessary, run build steps that you may require, like `composer install` in t
 ```
 mkdir my-typo3-site
 cd my-typo3-site
-ddev config --project-type php --php version 7.2
+ddev config --project-type php --php-version 7.2
 ddev composer create typo3/cms-base-distribution ^9
 ```
 
