@@ -86,6 +86,7 @@ func TestCaptureStdOut(t *testing.T) {
 func TestConfirm(t *testing.T) {
 	assert := asrt.New(t)
 
+	// Unset the env var, then reset after the test
 	noninteractiveEnv := "DRUD_NONINTERACTIVE"
 	defer os.Setenv(noninteractiveEnv, os.Getenv(noninteractiveEnv))
 	err := os.Unsetenv(noninteractiveEnv)
