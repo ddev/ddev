@@ -148,6 +148,9 @@ project root will be deleted when creating a project.`,
 			Service: "web",
 			Cmd:     []string{"sh", "-c", fmt.Sprintf("rm -rf %s", installDir)},
 		})
+		if err != nil {
+			util.Warning("Failed to remove the temporary install directory %s: %v", installDir, err)
+		}
 	},
 }
 
