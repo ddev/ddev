@@ -37,7 +37,7 @@ func TestComposerCmd(t *testing.T) {
 	args = []string{"composer", "create", "--dev", "typo3/cms-base-distribution", "^9"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(out, "Created project in /tmp/composer")
+	assert.Contains(out, "Created project in ")
 
 	// Test a composer require
 	args = []string{"composer", "require", "twitter/bootstrap"}
