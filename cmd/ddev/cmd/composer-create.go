@@ -69,18 +69,6 @@ project root will be deleted when creating a project.`,
 			}
 		}
 
-		// The install directory may be populated if the command has been
-		// previously executed using the same container.
-		output.UserOut.Printf("Ensuring temporary install directory in web container is empty")
-		installDir := "/var/www/html/.tmp-install"
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     []string{"sh", "-c", fmt.Sprintf("rm -rf %s", installDir)},
-		})
-		if err != nil {
-			util.Failed("Failed to create project: %v", err)
-		}
-
 		// Remove any contents of project root
 		util.Warning("Removing any existing files in project root")
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -90,6 +78,9 @@ project root will be deleted when creating a project.`,
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
+
+		// Define a randomly named temp directory for install target
+		installDir := fmt.Sprintf("/var/www/html/.tmp_%s", util.RandString(6))
 
 		// Build container composer command
 		composerCmd := []string{
@@ -126,7 +117,7 @@ project root will be deleted when creating a project.`,
 			Cmd:     composerCmd,
 		})
 		if err != nil {
-			util.Failed("Failed to execute create-project command")
+			util.Failed("Failed to create project")
 		}
 
 		if len(stdout) > 0 {
