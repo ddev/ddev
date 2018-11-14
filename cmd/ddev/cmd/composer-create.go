@@ -71,19 +71,25 @@ project root will be deleted when creating a project.`,
 
 		// The install directory may be populated if the command has been
 		// previously executed using the same container.
-		output.UserOut.Printf("Ensuring temporary composer install directory in web container is empty")
-		installDir := "/tmp/composer"
-		_, _, _ = app.Exec(&ddevapp.ExecOpts{
+		output.UserOut.Printf("Ensuring temporary install directory in web container is empty")
+		installDir := "/var/www/html/.tmp-install"
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     []string{"sh", "-c", fmt.Sprintf("rm -rf %s", installDir)},
 		})
+		if err != nil {
+			util.Failed("Failed to create project: %v", err)
+		}
 
 		// Remove any contents of project root
 		util.Warning("Removing any existing files in project root")
-		_, _, _ = app.Exec(&ddevapp.ExecOpts{
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     []string{"sh", "-c", "rm -rf /var/www/html/*"},
 		})
+		if err != nil {
+			util.Failed("Failed to create project: %v", err)
+		}
 
 		// Build container composer command
 		composerCmd := []string{
@@ -129,10 +135,22 @@ project root will be deleted when creating a project.`,
 
 		output.UserOut.Printf("Moving installation to project root")
 		bashCmdString := fmt.Sprintf("if [ -d %s ]; then mv %s /var/www/html/; fi", installDir, path.Join(installDir, "*"))
-		_, _, _ = app.Exec(&ddevapp.ExecOpts{
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     []string{"sh", "-c", bashCmdString},
 		})
+		if err != nil {
+			util.Failed("Failed to create project: %v", err)
+		}
+
+		output.UserOut.Println("Removing temporary install directory")
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "web",
+			Cmd:     []string{"sh", "-c", fmt.Sprintf("rm -rf %s", installDir)},
+		})
+		if err != nil {
+			util.Warning("Failed to remove the temporary install directory %s: %v", installDir, err)
+		}
 	},
 }
 
