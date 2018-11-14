@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
+
+	"github.com/drud/ddev/pkg/fileutil"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/output"
@@ -83,14 +86,15 @@ project root will be deleted when creating a project.`,
 		}
 
 		// Define a randomly named temp directory for install target
-		installDir := fmt.Sprintf("/var/www/html/.tmp_%s", util.RandString(6))
+		tmpDir := fmt.Sprintf(".tmp_%s", util.RandString(6))
+		containerInstallPath := path.Join("/var/www/html", tmpDir)
 
 		// Build container composer command
 		composerCmd := []string{
 			"composer",
 			"create-project",
 			pkg,
-			installDir,
+			containerInstallPath,
 		}
 
 		if ver != "" {
@@ -132,7 +136,7 @@ project root will be deleted when creating a project.`,
 		}
 
 		output.UserOut.Printf("Moving installation to project root")
-		bashCmdString := fmt.Sprintf("if [ -d %s ]; then mv %s /var/www/html/; fi", installDir, path.Join(installDir, "*"))
+		bashCmdString := fmt.Sprintf("if [ -d %s ]; then mv %s /var/www/html/; fi", containerInstallPath, path.Join(containerInstallPath, "*"))
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     []string{"sh", "-c", bashCmdString},
@@ -141,13 +145,16 @@ project root will be deleted when creating a project.`,
 			util.Failed("Failed to create project: %v", err)
 		}
 
+		hostInstallPath := filepath.Join(app.AppRoot, tmpDir)
 		output.UserOut.Println("Removing temporary install directory")
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     []string{"sh", "-c", fmt.Sprintf("rm -rf %s", installDir)},
-		})
-		if err != nil {
-			util.Warning("Failed to remove the temporary install directory %s: %v", installDir, err)
+		if err = fileutil.PurgeDirectory(hostInstallPath); err != nil {
+			util.Warning("Failed to purge the temporary install directory %s: %v", hostInstallPath, err)
+			return
+		}
+
+		if err = os.Remove(hostInstallPath); err != nil {
+			util.Warning("Failed to remove temporary install directory %v: %v", hostInstallPath, err)
+			return
 		}
 	},
 }
