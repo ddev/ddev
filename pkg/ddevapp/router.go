@@ -126,6 +126,9 @@ func findDdevRouter() (*docker.APIContainers, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute findContainersByLabels, %v", err)
 	}
+	if container == nil {
+		return nil, fmt.Errorf("No ddev-router was found")
+	}
 	return container, nil
 }
 
