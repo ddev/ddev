@@ -146,7 +146,7 @@ project root will be deleted when creating a project.`,
 		output.UserOut.Println("Removing temporary install directory")
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd: []string{"sh", "-c", fmt.Sprintf("rm -rf %s", installDir)},
+			Cmd:     []string{"sh", "-c", fmt.Sprintf("rm -rf %s", installDir)},
 		})
 	},
 }
