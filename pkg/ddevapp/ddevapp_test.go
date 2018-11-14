@@ -492,7 +492,7 @@ func TestGetApps(t *testing.T) {
 	}
 
 	apps := ddevapp.GetApps()
-	assert.Equal(len(apps), len(TestSites))
+	assert.Equal(len(TestSites), len(apps))
 
 	for _, testSite := range TestSites {
 		var found bool
@@ -1557,17 +1557,18 @@ func TestGetAppsEmpty(t *testing.T) {
 	}
 
 	apps := ddevapp.GetApps()
-	assert.Equal(len(apps), 0, "Expected to find no apps but found %d apps=%v", len(apps), apps)
+	assert.Equal(0, len(apps), "Expected to find no apps but found %d apps=%v", len(apps), apps)
 }
 
 // TestRouterNotRunning ensures the router is shut down after all sites are stopped.
+// This depends on TestGetAppsEmpty() having shut everything down.
 func TestRouterNotRunning(t *testing.T) {
 	assert := asrt.New(t)
 	containers, err := dockerutil.GetDockerContainers(false)
 	assert.NoError(err)
 
 	for _, container := range containers {
-		assert.NotEqual(dockerutil.ContainerName(container), "ddev-router", "ddev-router was not supposed to be running but it was")
+		assert.NotEqual("ddev-router", dockerutil.ContainerName(container), "ddev-router was not supposed to be running but it was")
 	}
 }
 
