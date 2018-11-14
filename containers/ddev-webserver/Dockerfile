@@ -21,6 +21,8 @@ ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV COMPOSER_CACHE_DIR /mnt/composer_cache
+# Windows, especially Win10 Home/Docker toolbox, can take forever on composer build.
+ENV COMPOSER_PROCESS_TIMEOUT 2000
 
 # Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
 # NGINX_DOCROOT is for backward compatibility only, to break less people.
