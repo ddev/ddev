@@ -96,6 +96,8 @@ project root will be deleted when creating a project.`,
 		// Define a randomly named temp directory for install target
 		tmpDir := fmt.Sprintf(".tmp_%s", util.RandString(6))
 		containerInstallPath := path.Join("/var/www/html", tmpDir)
+		hostInstallPath := filepath.Join(app.AppRoot, tmpDir)
+		defer cleanupTmpDir(hostInstallPath)
 
 		// Build container composer command
 		composerCmd := []string{
@@ -152,18 +154,6 @@ project root will be deleted when creating a project.`,
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
-
-		hostInstallPath := filepath.Join(app.AppRoot, tmpDir)
-		output.UserOut.Println("Removing temporary install directory")
-		if err = fileutil.PurgeDirectory(hostInstallPath); err != nil {
-			util.Warning("Failed to purge the temporary install directory %s: %v", hostInstallPath, err)
-			return
-		}
-
-		if err = os.Remove(hostInstallPath); err != nil {
-			util.Warning("Failed to remove temporary install directory %v: %v", hostInstallPath, err)
-			return
-		}
 	},
 }
 
@@ -184,4 +174,17 @@ func init() {
 	ComposerCreateCmd.Flags().StringVar(&stabilityArg, "stability", "", "Pass the --stability <arg> option to composer create-project")
 	ComposerCreateCmd.Flags().BoolVar(&noInteractionArg, "no-interaction", false, "Pass the --no-interaction flag to composer create-project")
 	ComposerCreateCmd.Flags().BoolVar(&preferDistArg, "prefer-dist", false, "Pass the --prefer-dist flag to composer create-project")
+}
+
+func cleanupTmpDir(hostTmpDir string) {
+	output.UserOut.Println("Removing temporary install directory")
+	if err := fileutil.PurgeDirectory(hostTmpDir); err != nil {
+		util.Warning("Failed to purge the temporary install directory %s: %v", hostTmpDir, err)
+		return
+	}
+
+	if err := os.Remove(hostTmpDir); err != nil {
+		util.Warning("Failed to remove temporary install directory %v: %v", hostTmpDir, err)
+		return
+	}
 }
