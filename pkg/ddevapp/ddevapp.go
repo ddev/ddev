@@ -1138,7 +1138,7 @@ func (app *DdevApp) GetWebContainerDirectURL() string {
 func (app *DdevApp) GetWebContainerPublicPort() (int, error) {
 
 	webContainer, err := app.FindContainerByType("web")
-	if err != nil {
+	if err != nil || webContainer == nil {
 		return -1, fmt.Errorf("Unable to find web container for app: %s, err %v", app.Name, err)
 	}
 

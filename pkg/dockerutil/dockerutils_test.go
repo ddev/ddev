@@ -96,6 +96,7 @@ func TestGetContainerHealth(t *testing.T) {
 	}
 	container, err := FindContainerByLabels(labels)
 	require.NoError(t, err)
+	require.NotNil(t, container)
 
 	err = client.StopContainer(container.ID, 10)
 	assert.NoError(err)
