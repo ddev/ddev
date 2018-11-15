@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
+
+	"github.com/drud/ddev/pkg/fileutil"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/output"
@@ -24,6 +27,9 @@ var (
 
 	// Allows a user to specify that Composer shouldn't require user interaction
 	noInteractionArg bool
+
+	// Allows a user to pass the --prefer-dist flag to composer create-project
+	preferDistArg bool
 )
 
 var ComposerCreateCmd = &cobra.Command{
@@ -69,34 +75,36 @@ project root will be deleted when creating a project.`,
 			}
 		}
 
-		// The install directory may be populated if the command has been
-		// previously executed using the same container.
-		output.UserOut.Printf("Ensuring temporary install directory in web container is empty")
-		installDir := "/var/www/html/.tmp-install"
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     []string{"sh", "-c", fmt.Sprintf("rm -rf %s", installDir)},
-		})
+		// Remove any contents of project root
+		util.Warning("Removing any existing files in project root")
+		objs, err := fileutil.ListFilesInDir(app.AppRoot)
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
 
-		// Remove any contents of project root
-		util.Warning("Removing any existing files in project root")
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     []string{"sh", "-c", "rm -rf /var/www/html/*"},
-		})
-		if err != nil {
-			util.Failed("Failed to create project: %v", err)
+		for _, o := range objs {
+			// Preserve .ddev/
+			if o == ".ddev" {
+				continue
+			}
+
+			if err = os.RemoveAll(filepath.Join(app.AppRoot, o)); err != nil {
+				util.Failed("Failed to create project: %v", err)
+			}
 		}
+
+		// Define a randomly named temp directory for install target
+		tmpDir := fmt.Sprintf(".tmp_%s", util.RandString(6))
+		containerInstallPath := path.Join("/var/www/html", tmpDir)
+		hostInstallPath := filepath.Join(app.AppRoot, tmpDir)
+		defer cleanupTmpDir(hostInstallPath)
 
 		// Build container composer command
 		composerCmd := []string{
 			"composer",
 			"create-project",
 			pkg,
-			installDir,
+			containerInstallPath,
 		}
 
 		if ver != "" {
@@ -119,6 +127,10 @@ project root will be deleted when creating a project.`,
 			composerCmd = append(composerCmd, "--no-interaction")
 		}
 
+		if preferDistArg {
+			composerCmd = append(composerCmd, "--prefer-dist")
+		}
+
 		composerCmdString := strings.TrimSpace(strings.Join(composerCmd, " "))
 		output.UserOut.Printf("Executing composer command: %s\n", composerCmdString)
 		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -126,7 +138,7 @@ project root will be deleted when creating a project.`,
 			Cmd:     composerCmd,
 		})
 		if err != nil {
-			util.Failed("Failed to execute create-project command")
+			util.Failed("Failed to create project")
 		}
 
 		if len(stdout) > 0 {
@@ -134,22 +146,33 @@ project root will be deleted when creating a project.`,
 		}
 
 		output.UserOut.Printf("Moving installation to project root")
-		bashCmdString := fmt.Sprintf("if [ -d %s ]; then mv %s /var/www/html/; fi", installDir, path.Join(installDir, "*"))
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     []string{"sh", "-c", bashCmdString},
+		err = filepath.Walk(hostInstallPath, func(path string, info os.FileInfo, err error) error {
+			// Skip the initial tmp install directory
+			if path == hostInstallPath {
+				return nil
+			}
+
+			elements := strings.Split(path, tmpDir)
+			newPath := filepath.Join(elements...)
+
+			// Dirs must be created, not renamed
+			if info.IsDir() {
+				if err := os.MkdirAll(newPath, info.Mode()); err != nil {
+					return fmt.Errorf("unable to move %s to %s: %v", path, newPath, err)
+				}
+
+				return nil
+			}
+
+			// Rename files to to a path excluding the tmpDir
+			if err := os.Rename(path, newPath); err != nil {
+				return fmt.Errorf("unable to move %s to %s: %v", path, newPath, err)
+			}
+
+			return nil
 		})
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
-		}
-
-		output.UserOut.Println("Removing temporary install directory")
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     []string{"sh", "-c", fmt.Sprintf("rm -rf %s", installDir)},
-		})
-		if err != nil {
-			util.Warning("Failed to remove the temporary install directory %s: %v", installDir, err)
 		}
 	},
 }
@@ -170,4 +193,18 @@ func init() {
 	ComposerCreateCmd.Flags().BoolVar(&noDevArg, "no-dev", false, "Pass the --no-dev flag to composer create-project")
 	ComposerCreateCmd.Flags().StringVar(&stabilityArg, "stability", "", "Pass the --stability <arg> option to composer create-project")
 	ComposerCreateCmd.Flags().BoolVar(&noInteractionArg, "no-interaction", false, "Pass the --no-interaction flag to composer create-project")
+	ComposerCreateCmd.Flags().BoolVar(&preferDistArg, "prefer-dist", false, "Pass the --prefer-dist flag to composer create-project")
+}
+
+func cleanupTmpDir(hostTmpDir string) {
+	output.UserOut.Println("Removing temporary install directory")
+	if err := fileutil.PurgeDirectory(hostTmpDir); err != nil {
+		util.Warning("Failed to purge the temporary install directory %s: %v", hostTmpDir, err)
+		return
+	}
+
+	if err := os.RemoveAll(hostTmpDir); err != nil {
+		util.Warning("Failed to remove temporary install directory %v: %v", hostTmpDir, err)
+		return
+	}
 }
