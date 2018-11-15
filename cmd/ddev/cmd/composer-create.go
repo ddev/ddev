@@ -146,10 +146,30 @@ project root will be deleted when creating a project.`,
 		}
 
 		output.UserOut.Printf("Moving installation to project root")
-		bashCmdString := fmt.Sprintf("if [ -d %s ]; then mv %s /var/www/html/; fi", containerInstallPath, path.Join(containerInstallPath, "*"))
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     []string{"sh", "-c", bashCmdString},
+		err = filepath.Walk(hostInstallPath, func(path string, info os.FileInfo, err error) error {
+			// Skip the initial tmp install directory
+			if path == hostInstallPath {
+				return nil
+			}
+
+			elements := strings.Split(path, tmpDir)
+			newPath := filepath.Join(elements...)
+
+			// Dirs must be created, not renamed
+			if info.IsDir() {
+				if err := os.MkdirAll(newPath, info.Mode()); err != nil {
+					return fmt.Errorf("unable to move %s to %s: %v", path, newPath, err)
+				}
+
+				return nil
+			}
+
+			// Rename files to to a path excluding the tmpDir
+			if err := os.Rename(path, newPath); err != nil {
+				return fmt.Errorf("unable to move %s to %s: %v", path, newPath, err)
+			}
+
+			return nil
 		})
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
@@ -183,7 +203,7 @@ func cleanupTmpDir(hostTmpDir string) {
 		return
 	}
 
-	if err := os.Remove(hostTmpDir); err != nil {
+	if err := os.RemoveAll(hostTmpDir); err != nil {
 		util.Warning("Failed to remove temporary install directory %v: %v", hostTmpDir, err)
 		return
 	}
