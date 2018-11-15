@@ -77,12 +77,20 @@ project root will be deleted when creating a project.`,
 
 		// Remove any contents of project root
 		util.Warning("Removing any existing files in project root")
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     []string{"sh", "-c", "rm -rf /var/www/html/*"},
-		})
+		objs, err := fileutil.ListFilesInDir(app.AppRoot)
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
+		}
+
+		for _, o := range objs {
+			// Preserve .ddev/
+			if o == ".ddev" {
+				continue
+			}
+
+			if err = os.RemoveAll(filepath.Join(app.AppRoot, o)); err != nil {
+				util.Failed("Failed to create project: %v", err)
+			}
 		}
 
 		// Define a randomly named temp directory for install target
