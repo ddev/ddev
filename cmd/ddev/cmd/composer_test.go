@@ -35,7 +35,7 @@ func TestComposerCmd(t *testing.T) {
 
 	// Test create-project
 	// ddev composer create cweagans/composer-patches --prefer-dist --no-interaction
-	args = []string{"composer", "create", "--prefer-dist", "--no-interaction", "cweagans/composer-patches"}
+	args = []string{"composer", "create", "--prefer-dist", "--no-interaction", "cweagans/composer-patches", "1.6.5"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, out)
 	assert.Contains(out, "Created project in ")
