@@ -56,7 +56,7 @@ func TestComposerCmd(t *testing.T) {
 	// Test a composer remove
 	if util.IsDockerToolbox() {
 		// On docker toolbox, git objects are read-only, causing the composer remove to fail.
-		_, err = exec.RunCommand("bash", []string{"-c", "chmod -R u+w /var/www/html/*"})
+		_, err = exec.RunCommand(DdevBin, []string{"exec", "bash", "-c", "chmod -R u+w /var/www/html/"})
 		assert.NoError(err)
 	}
 	args = []string{"composer", "remove", "twitter/bootstrap"}
