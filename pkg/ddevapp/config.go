@@ -466,6 +466,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if util.ArrayContainsString(app.OmitContainers, "dba") {
 		includeDBA = ""
 	}
+	var includeBGSYNC = "includeItByDefault"
+	if util.ArrayContainsString(app.OmitContainers, "bgsync") {
+		includeBGSYNC = ""
+	}
+
 	templateVars := map[string]string{
 		"name":            app.Name,
 		"plugin":          "ddev",
@@ -477,6 +482,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		"extra_host":      docker0Hostname + `:` + docker0Addr,
 		"compose_version": version.DockerComposeFileFormatVersion,
 		"IncludeDBA":      includeDBA,
+		"IncludeBGSYNC":   includeBGSYNC,
 	}
 
 	err = templ.Execute(&doc, templateVars)

@@ -44,8 +44,8 @@ services:
     cap_add:
       - SYS_PTRACE
     volumes:
-      - "../:/var/www/html:cached"
       - ".:/mnt/ddev_config:ro"
+      - "webdir:/var/www/html"
       - type: "volume"
         source: ddev-ssh-agent_socket_dir
         target: "/home/.ssh-agent"
@@ -91,9 +91,33 @@ services:
     extra_hosts: ["{{ .extra_host }}"]
     external_links:
       - ddev-router:$DDEV_HOSTNAME
-    healthcheck:
-      interval: 5s
-      retries: 2
+{{if  .IncludeBGSYNC }}
+  bgsync:
+    container_name: ddev-${DDEV_SITENAME}-bgsync
+    image: randyfay/bg-sync:latest
+    restart: "no"
+    user: "$DDEV_UID:$DDEV_GID"
+    volumes:
+      - ..:/source
+      - webdir:/destination
+      - unisondir:/root/.unison
+
+    environment:
+    - SYNC_DESTINATION=/destination
+    - SYNC_SOURCE=/source
+#    - SYNC_MAX_INOTIFY_WATCHES=40000
+    - SYNC_VERBOSE=1
+    - UNISON_UID=$DDEV_UID
+    - UNISON_GID=$DDEV_GID
+    privileged: true
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.platform: ddev
+      com.ddev.app-type: drupal8
+      com.ddev.approot: $DDEV_APPROOT
+      com.ddev.app-url: $DDEV_URL
+
+{{end}}
 
 {{if  .IncludeDBA }}
   dba:
@@ -133,7 +157,9 @@ volumes:
     external: true
   ddev-composer-cache:
     name: ddev-composer-cache
-  
+  webdir:
+  unisondir:
+
 `
 
 // ConfigInstructions is used to add example hooks usage

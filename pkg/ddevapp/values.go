@@ -39,6 +39,7 @@ const (
 	DBContainer           = "db"
 	WebContainer          = "web"
 	RouterContainer       = "ddev-router"
+	BGSYNCContainer       = "bgsync"
 )
 
 // PHPDefault is the default PHP version, overridden by $DDEV_PHP_VERSION
@@ -69,6 +70,7 @@ const (
 var ValidOmitContainers = map[string]bool{
 	DdevSSHAgentContainer: true,
 	DBAContainer:          true,
+	BGSYNCContainer:       true,
 }
 
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
