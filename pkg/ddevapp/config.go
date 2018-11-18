@@ -471,6 +471,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		includeBGSYNC = ""
 	}
 
+	isWindowsFS := "false"
+	if runtime.GOOS == "Windows" {
+		isWindowsFS = "true"
+	}
 	templateVars := map[string]string{
 		"name":            app.Name,
 		"plugin":          "ddev",
@@ -483,6 +487,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		"compose_version": version.DockerComposeFileFormatVersion,
 		"IncludeDBA":      includeDBA,
 		"IncludeBGSYNC":   includeBGSYNC,
+		"IsWindowsFS":     isWindowsFS,
 	}
 
 	err = templ.Execute(&doc, templateVars)
