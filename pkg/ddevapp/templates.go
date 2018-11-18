@@ -105,7 +105,7 @@ services:
     environment:
     - SYNC_DESTINATION=/destination
     - SYNC_SOURCE=/source
-#    - SYNC_MAX_INOTIFY_WATCHES=40000
+    - SYNC_MAX_INOTIFY_WATCHES=100000
     - SYNC_WINDOWS_FS={{ .IsWindowsFS }}
     - SYNC_VERBOSE=1
     - UNISON_UID=$DDEV_UID

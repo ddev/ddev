@@ -472,7 +472,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	isWindowsFS := "false"
-	if runtime.GOOS == "Windows" {
+	if runtime.GOOS == "windows" {
 		isWindowsFS = "true"
 	}
 	templateVars := map[string]string{

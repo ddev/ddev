@@ -1098,7 +1098,7 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 		}
 
 		client := dockerutil.GetDockerClient()
-		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.Name + "_unisondir", "ddev-" + app.Name + "webdir"} {
+		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.Name + "_unisondir", "ddev-" + app.Name + "_webdir"} {
 			err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volName})
 			if err != nil {
 				return err
