@@ -561,6 +561,27 @@ func ImageExistsLocally(imageName string) (bool, error) {
 	return false, nil
 }
 
+// GetExposedContainerPorts takes a container pointer and returns an array
+// of exposed ports (and error)
+func GetExposedContainerPorts(containerID string) ([]string, error) {
+	client := GetDockerClient()
+	inspectInfo, err := client.InspectContainer(containerID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ports := []string{}
+	for _, portMapping := range inspectInfo.NetworkSettings.Ports {
+		if portMapping != nil && len(portMapping) > 0 {
+			for _, item := range portMapping {
+				ports = append(ports, item.HostPort)
+			}
+		}
+	}
+	return ports, nil
+}
+
 // MassageWindowsHostMountpoint changes C:/path/to/something to //c/path/to/something
 // THis is required for docker bind mounts on docker toolbox.
 // Sadly, if we have a Windows drive name, it has to be converted from C:/ to //c for Win10Home/Docker toolbox
