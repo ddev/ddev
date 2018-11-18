@@ -194,8 +194,10 @@ func GetContainerHealth(container *docker.APIContainers) (string, string) {
 
 	status := inspect.State.Health.Status
 	logOutput := ""
+	// The last log is the most recent
 	if err == nil && len(inspect.State.Health.Log) > 0 {
-		logOutput = inspect.State.Health.Log[0].Output
+		numLogs := len(inspect.State.Health.Log)
+		logOutput = inspect.State.Health.Log[numLogs-1].Output
 	}
 
 	return status, logOutput

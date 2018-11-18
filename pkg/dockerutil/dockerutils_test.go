@@ -109,16 +109,11 @@ func TestGetContainerHealth(t *testing.T) {
 	healthDetail, err := ContainerWait(15, labels)
 	assert.NoError(err)
 
-	// The log/detail doesn't seem to come through in a timely fashion on Docker Toolbox
-	if !util.IsDockerToolbox() {
-		assert.Equal("phpstatus: OK, /var/www/html: OK, mailhog: OK", healthDetail)
-	}
+	assert.Equal("phpstatus: OK, /var/www/html: OK, mailhog: OK", healthDetail)
 
 	status, healthDetail = GetContainerHealth(container)
 	assert.Equal(status, "healthy")
-	if !util.IsDockerToolbox() {
-		assert.Equal("phpstatus: OK, /var/www/html: OK, mailhog: OK", healthDetail)
-	}
+	assert.Equal("phpstatus: OK, /var/www/html: OK, mailhog: OK", healthDetail)
 }
 
 // TestContainerWait tests the error cases for the container check wait loop.
