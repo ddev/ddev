@@ -59,7 +59,7 @@ func TestPortOverride(t *testing.T) {
 
 		err = app.Start()
 		assert.NoError(err)
-		err = app.Wait("web")
+		err = app.Wait([]string{"web"})
 		assert.NoError(err)
 		assert.True(util.IsPortActive(app.RouterHTTPPort))
 		assert.True(util.IsPortActive(app.RouterHTTPSPort))
