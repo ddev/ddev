@@ -30,7 +30,8 @@ import (
 	"github.com/mattn/go-shellwords"
 )
 
-const containerWaitTimeout = 61
+// containerWaitTimeout is the max time we wait for all containers to become ready.
+const containerWaitTimeout = 300
 
 // SiteRunning defines the string used to denote running sites.
 const SiteRunning = "running"
@@ -690,7 +691,11 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.Wait("db", "web")
+	requiredContainers := []string{"db", "web"}
+	if !util.ArrayContainsString(app.OmitContainers, "bgsync") {
+		requiredContainers = append(requiredContainers, "bgsync")
+	}
+	err = app.Wait(requiredContainers)
 	if err != nil {
 		return err
 	}
@@ -940,8 +945,8 @@ func (app *DdevApp) Stop() error {
 }
 
 // Wait ensures that the app service containers are healthy.
-func (app *DdevApp) Wait(containerTypes ...string) error {
-	for _, containerType := range containerTypes {
+func (app *DdevApp) Wait(requiredContainers []string) error {
+	for _, containerType := range requiredContainers {
 		labels := map[string]string{
 			"com.ddev.site-name":         app.GetName(),
 			"com.docker.compose.service": containerType,
