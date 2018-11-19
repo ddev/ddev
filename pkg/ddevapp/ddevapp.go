@@ -846,7 +846,7 @@ func (app *DdevApp) DockerEnv() {
 	uidInt, gidInt, uidStr, gidStr := util.GetContainerUIDGid()
 
 	// Warn about running as root if we're not on windows.
-	if uidInt > 60000 || gidInt > 60000 || uidInt == 0 {
+	if uidInt == 0 || gidInt == 0 {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
