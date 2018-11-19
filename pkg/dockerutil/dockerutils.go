@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -579,6 +580,9 @@ func GetExposedContainerPorts(containerID string) ([]string, error) {
 			}
 		}
 	}
+	sort.Slice(ports, func(i, j int) bool {
+		return ports[i] < ports[j]
+	})
 	return ports, nil
 }
 

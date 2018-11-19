@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 
 	"strings"
 
@@ -45,7 +46,7 @@ func StopRouterIfNoContainers() error {
 
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
-	exposedPorts := determineRouterPorts()
+	newExposedPorts := determineRouterPorts()
 
 	routerComposePath := RouterComposeYAMLPath()
 	routerdir := filepath.Dir(routerComposePath)
@@ -78,7 +79,7 @@ func StartDdevRouter() error {
 	templateVars := map[string]interface{}{
 		"router_image":    version.RouterImage,
 		"router_tag":      version.RouterTag,
-		"ports":           exposedPorts,
+		"ports":           newExposedPorts,
 		"compose_version": version.DockerComposeFileFormatVersion,
 	}
 
@@ -87,19 +88,12 @@ func StartDdevRouter() error {
 	_, err = f.WriteString(doc.String())
 	util.CheckErr(err)
 
-	// Since the ports in use may have changed, stop the router and make sure
-	// we can access all ports.
-	// It might be possible to do this instead by reading from docker all the
-	// existing mapped ports.
-	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "down")
-	util.CheckErr(err)
-
 	err = CheckRouterPorts()
 	if err != nil {
 		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen", err)
 	}
 
-	// run docker-compose up -d in the newly created directory
+	// run docker-compose up -d against the ddev-router compose file
 	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "up", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
@@ -219,6 +213,10 @@ func determineRouterPorts() []string {
 			}
 		}
 	}
+	sort.Slice(routerPorts, func(i, j int) bool {
+		return routerPorts[i] < routerPorts[j]
+	})
+
 	return routerPorts
 }
 
@@ -226,10 +224,24 @@ func determineRouterPorts() []string {
 // if they're available for docker to bind to. Returns an error if either one results
 // in a successful connection.
 func CheckRouterPorts() error {
-	routerPorts := determineRouterPorts()
-	for _, port := range routerPorts {
+
+	routerContainer, _ := findDdevRouter()
+	var existingExposedPorts []string
+	var err error
+	if routerContainer != nil {
+		existingExposedPorts, err = dockerutil.GetExposedContainerPorts(routerContainer.ID)
+		if err != nil {
+			return err
+		}
+	}
+	newRouterPorts := determineRouterPorts()
+
+	for _, port := range newRouterPorts {
+		if util.ArrayContainsString(existingExposedPorts, port) {
+			continue
+		}
 		if util.IsPortActive(port) {
-			return fmt.Errorf("localhost port %s is in use", port)
+			return fmt.Errorf("port %s is already in use", port)
 		}
 	}
 	return nil
