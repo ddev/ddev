@@ -315,7 +315,7 @@ func TestGetExposedContainerPorts(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, testContainer)
 	ports, err := GetExposedContainerPorts(testContainer.ID)
-
+	assert.NoError(err)
 	assert.NotNil(ports)
 	assert.Equal([]string{"8889", "8890"}, ports)
 }
