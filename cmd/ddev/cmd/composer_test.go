@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/util"
 	"os"
 	"testing"
 
@@ -34,7 +35,8 @@ func TestComposerCmd(t *testing.T) {
 	assert.Contains(out, "Available commands:")
 
 	// Test create-project
-	args = []string{"composer", "create", "--dev", "typo3/cms-base-distribution", "^9"}
+	// ddev composer create cweagans/composer-patches --prefer-dist --no-interaction
+	args = []string{"composer", "create", "--prefer-dist", "--no-interaction", "cweagans/composer-patches", "1.6.5"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, out)
 	assert.Contains(out, "Created project in ")
@@ -52,6 +54,11 @@ func TestComposerCmd(t *testing.T) {
 	assert.Contains(out, "--twitter/bootstrap")
 
 	// Test a composer remove
+	if util.IsDockerToolbox() {
+		// On docker toolbox, git objects are read-only, causing the composer remove to fail.
+		_, err = exec.RunCommand(DdevBin, []string{"exec", "bash", "-c", "chmod -R u+w /var/www/html/"})
+		assert.NoError(err)
+	}
 	args = []string{"composer", "remove", "twitter/bootstrap"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, out)
