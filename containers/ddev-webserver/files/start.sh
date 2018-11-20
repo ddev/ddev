@@ -67,14 +67,8 @@ fi
 envsubst "$NGINX_SITE_VARS" < "$NGINX_SITE_TEMPLATE" > /etc/nginx/sites-enabled/nginx-site.conf
 envsubst "$APACHE_SITE_VARS" < "$APACHE_SITE_TEMPLATE" > /etc/apache2/sites-enabled/apache-site.conf
 
-# Change the apache run user to current user/group if possible
-APACHE_USER=$(id -u)
-APACHE_GROUP=$(id -g)
-if [ "$APACHE_USER" -ge 60000 ]; then
-  APACHE_USER=1001
-  APACHE_GROUP=1001
-fi
-printf "\nexport APACHE_RUN_USER=uid_${APACHE_USER}\nexport APACHE_RUN_GROUP=gid_${APACHE_GROUP}\n" >>/etc/apache2/envvars
+# Change the apache run user to current user/group
+printf "\nexport APACHE_RUN_USER=uid_$(id -u)\nexport APACHE_RUN_GROUP=gid_$(id -g)\n" >>/etc/apache2/envvars
 if [ "$DDEV_WEBSERVER_TYPE" = "apache-cgi" ] ; then
     a2enmod php${DDEV_PHP_VERSION}
     a2dismod proxy_fcgi
