@@ -49,7 +49,7 @@ mkdir -p $composercache && chmod 777 $composercache
 
 export MOUNTUID=$UID
 export MOUNTGID=$(id -g)
-if [ "$UNAME" = "MINGW64_NT-10.0" ] ; then
+if [ "$UNAME" = "MINGW64_NT-10.0" -o "$MOUNTUID" -ge 60000 ] ; then
 	MOUNTUID=1000
 	MOUNTGID=1000
 fi
