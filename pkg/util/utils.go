@@ -155,11 +155,12 @@ func GetContainerUIDGid() (uid int, gid int, uidStr string, gidStr string) {
 	// For windows the uidStr/gidStr are usually way outside linux range (ends at 60000)
 	// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
 	// 1000 seems not to cause file permissions issues at least on docker-for-windows.
-	if uidInt, err = strconv.Atoi(curUser.Uid); err != nil {
+	// TODO: For large macOS UIDs we might be better to add the UID to /etc/passwd at startup
+	if uidInt, err = strconv.Atoi(curUser.Uid); err != nil || uidInt > 60000 {
 		uidStr = "1000"
 		uidInt = 1000
 	}
-	if gidInt, err = strconv.Atoi(curUser.Gid); err != nil {
+	if gidInt, err = strconv.Atoi(curUser.Gid); err != nil || gidInt > 60000 {
 		gidStr = "1000"
 		gidInt = 1000
 	}
