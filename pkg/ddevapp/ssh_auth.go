@@ -57,7 +57,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 		return fmt.Errorf("ddev-ssh-agent failed to become ready: %v", err)
 	}
 
-	util.Warning("ssh-agent container is running: If you want to add authentication to to the ssh-agent container, run 'ddev auth ssh' to enable your keys.")
+	util.Warning("ssh-agent container is running: If you want to add authentication to the ssh-agent container, run 'ddev auth ssh' to enable your keys.")
 	return nil
 }
 
