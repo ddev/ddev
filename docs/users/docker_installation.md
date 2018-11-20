@@ -28,9 +28,9 @@ On Docker Toolbox you must by default have your project directory somewhere insi
 
 ## Linux Installation: Docker-ce
 
-__Please don't forget that Linux installation absolutely requires post-install steps (below).__
+* __Please don't forget that Linux installation absolutely requires post-install steps (below).__
 
-__docker-compose must be installed separately, as it is not bundled with docker-ce on Linux, see below.__
+* __docker-compose must be installed or upgraded separately, as it is not bundled with docker-ce on Linux, see below.__
 
 docker-ce installation on Linux depends on what flavor you're using. In all cases using the Ubuntu/Deb/yum repository is the preferred technique.
 
