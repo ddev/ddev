@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -370,7 +369,7 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 		return "", fmt.Errorf("multiple subdirectories contain %s", needle)
 	}
 
-	absPath := path.Base(path.Dir(subDirMatches[0]))
+	absPath := filepath.Base(filepath.Dir(subDirMatches[0]))
 
 	return absPath, nil
 }
