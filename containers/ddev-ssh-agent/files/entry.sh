@@ -49,16 +49,15 @@ case "$1" in
   ;;
 
 	# Manage SSH identities
-	ssh-add)
+  ssh-add)
   shift # remove argument from array
 
   # Add keys id_rsa and id_dsa from /root/.ssh using cat so it will work regardless of permissions
   # docker toolbox mounts files as 0777, which ruins the normal technique.
   set +o errexit
-  keyfiles=$( \ls ~/.ssh/id_[rs]sa 2>/dev/null)
+  keyfiles=$(file ~/.ssh/* | awk -F: '/private key/ {  print $1 }')
   set -o errexit
-  true
-  if [ $keyfiles ] ; then
+  if [ ! -z "$keyfiles" ] ; then
       for key in $keyfiles; do
         perm=$(stat -c %a "$key")
         if [ $perm = "777" ] ; then
@@ -68,7 +67,7 @@ case "$1" in
         fi
       done
   else
-    echo "No keys matching id_[rd]sa were found in the directory."
+    echo "No private keys were found in the directory."
   fi
 
   # Return first command exit code
