@@ -60,7 +60,7 @@ var AuthSSHCommand = &cobra.Command{
 		}
 		sshKeyPath = dockerutil.MassageWindowsHostMountpoint(sshKeyPath)
 
-		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user="+uidStr, "--mount=type=bind,src="+sshKeyPath+",dst=/tmp/.ssh", version.SSHAuthImage + ":" + version.SSHAuthTag, "ssh-add"}
+		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user=" + uidStr, "--mount=type=bind,src=" + sshKeyPath + ",dst=/tmp/.ssh", version.SSHAuthImage + ":" + version.SSHAuthTag, "ssh-add"}
 		err = exec.RunInteractiveCommand("docker", dockerCmd)
 
 		if err != nil {
