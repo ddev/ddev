@@ -20,7 +20,7 @@ hooks:
 ## Supported Command Hooks
 
 - `pre-start`: Hooks into "ddev start". Execute tasks before the project environment starts. **Note:** Only `exec-host` tasks can be run successfully for pre-start. See Supported Tasks below for more info.
-- `post-start`: Hooks into "ddev start". Execute tasks after the project environment has started
+- `post-start`: Hooks into "ddev start". Execute tasks after the project environment has started. This only runs when the web container is created or recreated.
 - `pre-import-db`: Hooks into "ddev import-db". Execute tasks before database import
 - `post-import-db`: Hooks into "ddev import-db". Execute tasks after database import
 - `pre-import-files`: Hooks into "ddev import-files". Execute tasks before files are imported
