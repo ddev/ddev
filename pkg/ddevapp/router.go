@@ -136,11 +136,13 @@ func RenderRouterStatus() string {
 	case SiteNotFound:
 		renderedStatus = color.RedString(status) + badRouter
 	case "healthy":
+		fallthrough
+	case "starting":
 		renderedStatus = color.CyanString(status)
 	case "exited":
 		fallthrough
 	default:
-		renderedStatus = color.RedString(status) + badRouter + ":\n" + logOutput
+		renderedStatus = color.RedString(status) + badRouter + "\n" + logOutput
 	}
 	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", renderedStatus)
 }
