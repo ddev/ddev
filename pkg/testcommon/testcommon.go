@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -375,6 +376,12 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string,
 	assert := asrt.New(t)
 
 	body, resp, err := GetLocalHTTPResponse(t, rawurl, httpTimeout)
+	// We see intermittent php-fpm SIGBUS failures, only on macOS.
+	// That results in a 502. If we get a 502 on macOS, try again.
+	if resp.StatusCode == 502 && runtime.GOOS == "darwin" {
+		time.Sleep(time.Second)
+		body, resp, err = GetLocalHTTPResponse(t, rawurl, httpTimeout)
+	}
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
 	assert.Contains(body, expectedContent)
 	return resp, err
