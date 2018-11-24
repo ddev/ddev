@@ -695,7 +695,7 @@ func (app *DdevApp) Start() error {
 
 	// Only check for start if there are post-start commands for performance reasons
 	if postStartCmds := app.Commands["post-start"]; len(postStartCmds) > 0 {
-		stdout, _, err := app.Exec(&ExecOpts{
+		stdout, _, _ := app.Exec(&ExecOpts{
 			Service: "web",
 			Cmd:     []string{"bash", "-c", "if [ -f /var/tmp/ddev_started.txt ]; then echo -n 'already started'; else touch /var/tmp/ddev_started.txt && echo -n 'starting'; fi"},
 		})
