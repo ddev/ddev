@@ -35,6 +35,12 @@ services:
       - COLUMNS=$COLUMNS
       - LINES=$LINES
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
+    healthcheck:
+      interval: 30s
+      timeout: 2s
+      retries: 3
+      start_period: 2s
+
   web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
@@ -90,6 +96,12 @@ services:
     extra_hosts: ["{{ .extra_host }}"]
     external_links:
       - ddev-router:$DDEV_HOSTNAME
+    healthcheck:
+      interval: 30s
+      timeout: 2s
+      retries: 3
+      start_period: 2s
+
 
 {{if  .IncludeDBA }}
   dba:
@@ -114,6 +126,10 @@ services:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
       - HTTP_EXPOSE={{ .dbaport }}
+    healthcheck:
+      interval: 60s
+      retries: 3
+
 {{end}}
 networks:
   default:
@@ -272,6 +288,7 @@ services:
         volume:
           nocopy: true
     restart: "no"
+
 networks:
    default:
      external:
@@ -297,6 +314,8 @@ services:
       - "socket_dir:/tmp/.ssh-agent"
     environment:
       - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
+    healthcheck:
+      interval: 60s
 networks:
   default:
     external:
