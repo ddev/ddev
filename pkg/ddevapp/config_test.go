@@ -547,15 +547,15 @@ func TestWriteConfig(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestConfigOverrideDetection tests to make sure we tell them about config overrides.
-func TestConfigOverrideDetection(t *testing.T) {
+// TestPkgConfigOverrideDetection tests to make sure we tell them about config overrides.
+func TestPkgConfigOverrideDetection(t *testing.T) {
 	assert := asrt.New(t)
 
 	testcommon.ClearDockerEnv()
 
-	testDir := testcommon.CreateTmpDir("TestConfigOverrideDetection")
+	testDir := testcommon.CreateTmpDir("TestPkgConfigOverrideDetection")
 
-	targetDdev := filepath.Join(testDir, ".ddev")
+	targetDdev := filepath.Join(testDir, "TestPkgConfigOverrideDetection", ".ddev")
 	err := fileutil.CopyDir("testdata/.ddev", targetDdev)
 	assert.NoError(err)
 
@@ -568,6 +568,9 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	err = app.ReadConfig()
 	assert.NoError(err)
+
+	//nolint: errcheck
+	defer app.Down(true, false)
 
 	restoreOutput := util.CaptureUserOut()
 	startErr := app.Start()
@@ -591,6 +594,4 @@ func TestConfigOverrideDetection(t *testing.T) {
 		assert.NotContains(out, "nginx-site.conf")
 	}
 	assert.Contains(out, "Custom configuration takes effect")
-
-	_ = app.Down(true, false)
 }
