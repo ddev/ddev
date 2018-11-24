@@ -39,6 +39,7 @@ var ComposerCreateCmd = &cobra.Command{
 web container. Projects will be installed to a temporary directory and moved to
 the project root directory after installation. Any existing files in the
 project root will be deleted when creating a project.`,
+	Example: "ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev\nddev composer create typo3/cms-base-distribution ^9",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 || len(args) > 2 {
 			err := cmd.Usage()
