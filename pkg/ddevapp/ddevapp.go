@@ -693,9 +693,18 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.ProcessHooks("post-start")
-	if err != nil {
-		return err
+	// Only check for start if there are post-start commands for performance reasons
+	if postStartCmds := app.Commands["post-start"]; len(postStartCmds) > 0 {
+		stdout, _, err := app.Exec(&ExecOpts{
+			Service: "web",
+			Cmd:     []string{"bash", "-c", "if [ -f /var/tmp/ddev_started.txt ]; then echo -n 'already started'; else touch /var/tmp/ddev_started.txt && echo -n 'starting'; fi"},
+		})
+		if stdout != "already started" {
+			err = app.ProcessHooks("post-start")
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
