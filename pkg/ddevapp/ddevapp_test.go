@@ -41,9 +41,9 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
 			Docroot:                       "htdocs",
 			Type:                          ddevapp.AppTypeWordPress,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
-			FilesImageURI:                 "/wp-content/uploads/2017/04/pexels-photo-265186-1024x683.jpeg",
+			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
+			DynamicURI:                testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
+			FilesImageURI:             "/wp-content/uploads/2017/04/pexels-photo-265186-1024x683.jpeg",
 		},
 		{
 			Name:                          "TestPkgDrupal8",
@@ -69,10 +69,10 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          ddevapp.AppTypeDrupal7,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "D7 test project, kittens edition"},
-			FilesImageURI:                 "/sites/default/files/field/image/kittens-large.jpg",
-			FullSiteArchiveExtPath:        "docroot/sites/default/files",
+			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                testcommon.URIWithExpect{URI: "/node/1", Expect: "D7 test project, kittens edition"},
+			FilesImageURI:             "/sites/default/files/field/image/kittens-large.jpg",
+			FullSiteArchiveExtPath:    "docroot/sites/default/files",
 		},
 		{
 			Name:                          "TestPkgDrupal6",
@@ -83,9 +83,9 @@ var (
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
 			Type:                          ddevapp.AppTypeDrupal6,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
-			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
+			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
+			DynamicURI:                testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
+			FilesImageURI:             "/sites/default/files/garland_logo.jpg",
 		},
 		{
 			Name:                          "TestPkgBackdrop",
@@ -96,9 +96,9 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          ddevapp.AppTypeBackdrop,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/first-post-all-about-kittens", Expect: "Lots of kittens are a good thing"},
-			FilesImageURI:                 "/files/styles/large/public/field/image/kittens-large.jpg",
+			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
+			DynamicURI:                testcommon.URIWithExpect{URI: "/posts/first-post-all-about-kittens", Expect: "Lots of kittens are a good thing"},
+			FilesImageURI:             "/files/styles/large/public/field/image/kittens-large.jpg",
 		},
 		{
 			Name:                          "TestPkgTypo3",
@@ -109,9 +109,9 @@ var (
 			FullSiteTarballURL:            "",
 			Docroot:                       "public",
 			Type:                          ddevapp.AppTypeTYPO3,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
-			FilesImageURI:                 "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
+			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
+			DynamicURI:                testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
+			FilesImageURI:             "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
 		},
 	}
 	FullTestSites = TestSites
@@ -223,45 +223,59 @@ func TestDdevStart(t *testing.T) {
 	//nolint: errcheck
 	defer os.Chdir(testDir)
 
-	for _, site := range TestSites {
-		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
-
-		err := app.Init(site.Dir)
-		assert.NoError(err)
-
-		err = app.Start()
-		assert.NoError(err)
-
-		// ensure docker-compose.yaml exists inside .ddev site folder
-		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
-		assert.True(composeFile)
-
-		for _, containerType := range [3]string{"web", "db", "dba"} {
-			containerName, err := constructContainerName(containerType, app)
-			assert.NoError(err)
-			check, err := testcommon.ContainerCheck(containerName, "running")
-			assert.NoError(err)
-			assert.True(check, "Container check on %s failed", containerType)
-		}
-
-		err = app.Down(true, false)
-		assert.NoError(err)
-		runTime()
-		switchDir()
-	}
-
-	// Start up TestSites[0] again
 	site := TestSites[0]
-	err := os.Chdir(site.Dir)
+	switchDir := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
+
+	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.Init(site.Dir)
-	assert.NoError(err)
+
 	err = app.Start()
 	assert.NoError(err)
 
+	// ensure docker-compose.yaml exists inside .ddev site folder
+	composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
+	assert.True(composeFile)
+
+	for _, containerType := range [3]string{"web", "db", "dba"} {
+		containerName, err := constructContainerName(containerType, app)
+		assert.NoError(err)
+		check, err := testcommon.ContainerCheck(containerName, "running")
+		assert.NoError(err)
+		assert.True(check, "Container check on %s failed", containerType)
+	}
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+	runTime()
+	switchDir()
+
+	// Start up TestSites[0] again with a post-start hook
+	// When run the first time, it should execute the hook, second time it should not
+	err = os.Chdir(site.Dir)
+	assert.NoError(err)
+	err = app.Init(site.Dir)
+	app.Commands = map[string][]ddevapp.Command{"post-start": {{Exec: "bash -c 'echo hello'"}}}
+
+	assert.NoError(err)
+	stdout := util.CaptureUserOut()
+	err = app.Start()
+	assert.NoError(err)
+	out := stdout()
+	assert.Contains(out, "Running exec command")
+	assert.Contains(out, "hello\n")
+
+	// When we run it again, it should not execute the post-start hook because the
+	// container has already been created and does not need to be recreated.
+	stdout = util.CaptureUserOut()
+	err = app.Start()
+	assert.NoError(err)
+	out = stdout()
+	assert.NotContains(out, "Running exec command")
+	assert.NotContains(out, "hello\n")
+
 	// try to start a site of same name at different path
-	another := TestSites[0]
+	another := site
 	err = another.Prepare()
 	if err != nil {
 		assert.FailNow("TestDdevStart: Prepare() failed on another.Prepare(), err=%v", err)
@@ -277,7 +291,7 @@ func TestDdevStart(t *testing.T) {
 	}
 
 	// Make sure that GetActiveApp() also fails when trying to start app of duplicate name in current directory.
-	switchDir := another.Chdir()
+	switchDir = another.Chdir()
 	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
 	if err != nil {
