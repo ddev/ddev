@@ -683,7 +683,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.Wait("web", "db")
+	err = app.Wait("db", "web")
 	if err != nil {
 		return err
 	}
