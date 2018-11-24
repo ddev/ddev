@@ -238,7 +238,6 @@ func TestDdevStart(t *testing.T) {
 		assert.True(composeFile)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
-			//nolint: vetshadow
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "running")
@@ -331,7 +330,6 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		assert.True(composeFile)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
-			//nolint: vetshadow
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "running")
@@ -1286,7 +1284,6 @@ func TestDdevStop(t *testing.T) {
 		assert.NoError(err)
 
 		for _, containerType := range [3]string{"web", "db", "dba"} {
-			//nolint: vetshadow
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "exited")
@@ -1985,7 +1982,6 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		//nolint: vet
 		for _, pair := range []testcommon.PortPair{{"80", "443"}, {"8080", "8443"}} {
 			testcommon.ClearDockerEnv()
 			app.RouterHTTPPort = pair.HTTPPort
