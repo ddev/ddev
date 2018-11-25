@@ -547,16 +547,16 @@ func TestWriteConfig(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestPkgConfigOverrideDetection tests to make sure we tell them about config overrides.
-func TestPkgConfigOverrideDetection(t *testing.T) {
+// TestConfigOverrideDetection tests to make sure we tell them about config overrides.
+func TestConfigOverrideDetection(t *testing.T) {
 	assert := asrt.New(t)
 
 	testcommon.ClearDockerEnv()
 
-	testDir := testcommon.CreateTmpDir("TestPkgConfigOverrideDetection")
+	testDir := testcommon.CreateTmpDir("TestConfigConfigOverrideDetection")
 
-	targetDdev := filepath.Join(testDir, "TestPkgConfigOverrideDetection", ".ddev")
-	err := fileutil.CopyDir("testdata/.ddev", targetDdev)
+	targetDdev := filepath.Join(testDir, ".ddev")
+	err := fileutil.CopyDir("testdata/TestConfigOverrideDetection/.ddev", targetDdev)
 	assert.NoError(err)
 
 	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
