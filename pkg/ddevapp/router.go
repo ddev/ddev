@@ -136,8 +136,6 @@ func RenderRouterStatus() string {
 	case SiteNotFound:
 		renderedStatus = color.RedString(status) + badRouter
 	case "healthy":
-		fallthrough
-	case "starting":
 		renderedStatus = color.CyanString(status)
 	case "exited":
 		fallthrough

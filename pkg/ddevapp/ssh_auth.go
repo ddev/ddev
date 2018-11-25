@@ -30,7 +30,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 		return err
 	}
 	// If we already have a running ssh container, there's nothing to do.
-	if sshContainer != nil && sshContainer.State == "running" {
+	if sshContainer != nil && (sshContainer.State == "running" || sshContainer.State == "starting") {
 		return nil
 	}
 

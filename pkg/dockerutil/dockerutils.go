@@ -156,9 +156,6 @@ func ContainerWait(waittime time.Duration, labels map[string]string) (string, er
 			status, logOutput := GetContainerHealth(container)
 
 			switch status {
-			// Both "starting" and "healthy" are "OK" checks (to speed up start)
-			case "starting":
-				fallthrough
 			case "healthy":
 				return logOutput, nil
 			case "unhealthy":

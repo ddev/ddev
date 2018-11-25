@@ -316,6 +316,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		assert.NoError(err)
 
 		err = app.Start()
+
 		assert.NoError(err)
 		if err != nil && strings.Contains(err.Error(), "db container failed") {
 			stdout := util.CaptureUserOut()
