@@ -33,7 +33,7 @@ var WebTag = "readd_apt_user_to_etc_passwd_file" // Note that this can be overri
 var DBImg = "drud/ddev-dbserver"
 
 // DBTag defines the default db image tag for drud dev
-var DBTag = "readd_apt_user_to_etc_passwd_file" // Note that this may be overridden by make
+var DBTag = "v1.4.0" // Note that this may be overridden by make
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
