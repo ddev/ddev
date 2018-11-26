@@ -43,7 +43,7 @@ jobs:
     - run:
         command: make -s test
         name: ddev tests
-        no_output_timeout: "40m"
+        no_output_timeout: "120m"
     - store_test_results:
         path: /tmp/test-results
 
@@ -69,7 +69,7 @@ jobs:
     - run:
         command: make -s test
         name: ddev tests
-        no_output_timeout: "40m"
+        no_output_timeout: "120m"
     - store_test_results:
         path: /tmp/test-results
 
@@ -93,7 +93,7 @@ jobs:
     - run:
         command: make -s test
         name: ddev tests
-        no_output_timeout: "40m"
+        no_output_timeout: "120m"
     - store_test_results:
         path: /tmp/test-results
 
@@ -163,7 +163,7 @@ jobs:
       - run:
           command: ./.circleci/generate_artifacts.sh $ARTIFACTS
           name: tar/zip up artifacts and make hashes
-          no_output_timeout: "20m"
+          no_output_timeout: "40m"
 
       - store_artifacts:
           path: /artifacts
@@ -173,7 +173,7 @@ jobs:
       - run:
           command: make -s test
           name: ddev tests, with normal clean ddev binaries (normal image tags)
-          no_output_timeout: "20m"
+          no_output_timeout: "120m"
       - store_test_results:
           path: /tmp/test-results
 
@@ -181,7 +181,7 @@ jobs:
           command: |
             make -f nightly_build.mak clean  # Remove any existing binaries
             make -f nightly_build.mak -s --print-directory DOCKER_ARGS=--no-cache
-          no_output_timeout: "40m"
+          no_output_timeout: "120m"
           name: Full nightly build and test with containers
 
 

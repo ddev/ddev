@@ -62,7 +62,7 @@ include build-tools/makefile_components/base_build_go.mak
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
-TEST_TIMEOUT=60m
+TEST_TIMEOUT=120m
 BUILD_ARCH = $(shell go env GOARCH)
 ifeq ($(BUILD_OS),linux)
     DDEV_BINARY_FULLPATH=$(PWD)/bin/$(BUILD_OS)/ddev
@@ -70,7 +70,6 @@ endif
 
 ifeq ($(BUILD_OS),windows)
     DDEV_BINARY_FULLPATH=$(PWD)/bin/$(BUILD_OS)/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
-    TEST_TIMEOUT=80m
 endif
 
 ifeq ($(BUILD_OS),darwin)
