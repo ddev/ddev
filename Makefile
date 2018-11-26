@@ -5,7 +5,8 @@ GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --en
 
 WINDOWS_SUDO_VERSION=v0.0.1
 
-TESTTOOL ?= $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --junitfile '/tmp/$(@).xml'  --"; else echo "go test"; fi)
+TESTTMP=/tmp/testresults
+TESTTOOL ?= $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --junitfile '$(TESTTMP)/$(@).xml'  --"; else echo "go test"; fi)
 
 ##### These variables need to be adjusted in most repositories #####
 
@@ -79,10 +80,13 @@ endif
 # Override test section with tests specific to ddev
 test: testpkg testcmd
 
-testcmd: $(BUILD_OS) setup
+$(TESTTMP):
+	mkdir -p $(TESTTMP)
+
+testcmd: $(TESTTMP) $(BUILD_OS) setup
 	CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) $(TESTTOOL) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
 
-testpkg:
+testpkg: $(TESTTMP)
 	CGO_ENABLED=0 $(TESTTOOL) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
 
 setup:
