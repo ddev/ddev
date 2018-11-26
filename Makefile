@@ -5,8 +5,7 @@ GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --en
 
 WINDOWS_SUDO_VERSION=v0.0.1
 
-TESTTOOL=$(shell if [ command gotestsum ]; then echo GOTESTSUM; else echo
-TESTTOOL = $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --"; else echo "go test"; fi)
+TESTTOOL ?= $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --"; else echo "go test"; fi)
 
 ##### These variables need to be adjusted in most repositories #####
 
