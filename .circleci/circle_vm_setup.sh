@@ -34,3 +34,6 @@ sudo add-apt-repository \
 sudo apt-get update -qq
 sudo apt-get install -qq docker-ce
 
+# gotestsum
+GOTESTSUM_VERSION=0.3.2
+curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v$GOTESTSUM_VERSION/gotestsum_${GOTESTSUM_VERSION}_linux_amd64.tar.gz" | tar -xz -C /usr/local/bin gotestsum && chmod +x /usr/local/bin/gotestsum

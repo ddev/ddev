@@ -5,6 +5,9 @@ GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --en
 
 WINDOWS_SUDO_VERSION=v0.0.1
 
+TESTTOOL=$(shell if [ command gotestsum ]; then echo GOTESTSUM; else echo
+TESTTOOL = $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --"; else echo "go test"; fi)
+
 ##### These variables need to be adjusted in most repositories #####
 
 # This repo's root import path (under GOPATH).
@@ -79,10 +82,10 @@ endif
 test: testpkg testcmd
 
 testcmd: $(BUILD_OS) setup
-	CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
+	CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) $(TESTTOOL) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
 
 testpkg:
-	CGO_ENABLED=0 go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
+	CGO_ENABLED=0 $(TESTTOOL) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
 
 setup:
 	@mkdir -p bin/darwin bin/linux
