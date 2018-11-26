@@ -7,7 +7,6 @@ jobs:
     environment:
       GOPATH: /home/circleci/go
       DRUD_NONINTERACTIVE: "true"
-      TESTTOOL: "gotestsum --junitfile unit-tests.xml --"
     steps:
     - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
     - checkout
@@ -31,7 +30,6 @@ jobs:
       GOPATH: /home/circleci/go
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
       DRUD_NONINTERACTIVE: "true"
-      TESTTOOL: "gotestsum --junitfile unit-tests.xml --"
     steps:
     - attach_workspace:
         at: ~/
@@ -45,7 +43,7 @@ jobs:
         name: ddev tests
         no_output_timeout: "120m"
     - store_test_results:
-        path: /tmp/test-results
+        path: /tmp/testresults
 
   golang_test_apache_fpm:
     machine:
@@ -57,7 +55,6 @@ jobs:
       # Experiment with only testing TYPO3 with the apache run.
       GOTEST_SHORT: 5
       DRUD_NONINTERACTIVE: "true"
-      TESTTOOL: "gotestsum --junitfile unit-tests.xml --"
     steps:
     - attach_workspace:
         at: ~/
@@ -71,7 +68,7 @@ jobs:
         name: ddev tests
         no_output_timeout: "120m"
     - store_test_results:
-        path: /tmp/test-results
+        path: /tmp/testresults
 
   golang_test_apache_cgi:
     machine:
@@ -83,7 +80,6 @@ jobs:
       # Experiment with only testing TYPO3 with the apache run.
       GOTEST_SHORT: 5
       DRUD_NONINTERACTIVE: "true"
-      TESTTOOL: "gotestsum --junitfile unit-tests.xml --"
     steps:
     - attach_workspace:
         at: ~/
@@ -95,7 +91,7 @@ jobs:
         name: ddev tests
         no_output_timeout: "120m"
     - store_test_results:
-        path: /tmp/test-results
+        path: /tmp/testresults
 
   staticrequired:
     machine:
@@ -143,7 +139,6 @@ jobs:
       GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
       DRUD_NONINTERACTIVE: "true"
-      TESTTOOL: "gotestsum --junitfile unit-tests.xml --"
     steps:
       - checkout
 
@@ -175,7 +170,7 @@ jobs:
           name: ddev tests, with normal clean ddev binaries (normal image tags)
           no_output_timeout: "120m"
       - store_test_results:
-          path: /tmp/test-results
+          path: /tmp/testresults
 
       - run:
           command: |
