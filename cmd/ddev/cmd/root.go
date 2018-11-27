@@ -62,20 +62,7 @@ var RootCmd = &cobra.Command{
 			}
 		}
 
-		// Ensure that the ~/.ddev exists
-		globalDir := globalconfig.GetGlobalDdevDir()
-		err = globalconfig.ReadGlobalConfig()
-		if err != nil {
-			util.Failed(err.Error())
-		}
-
-		// Look for version change
-		err = checkVersionAndOptIn()
-		if err != nil {
-			util.Failed(err.Error())
-		}
-
-		updateFile := filepath.Join(globalDir, ".update")
+		updateFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".update")
 
 		// Do periodic detection of whether an update is available for ddev users.
 		timeToCheckForUpdates, err := updatecheck.IsUpdateNeeded(updateFile, updateInterval)
@@ -112,7 +99,8 @@ var RootCmd = &cobra.Command{
 			return
 		}
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-			raven.CaptureMessageAndWait("ddev "+cmd.CalledAs(), map[string]string{"level": "info"})
+			result := raven.CaptureMessageAndWait("ddev "+cmd.CalledAs(), map[string]string{"level": "info"})
+			_ = result
 		}
 	},
 }
@@ -131,6 +119,26 @@ func Execute() {
 
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
+
+	// Ensure that the ~/.ddev exists
+	_ = globalconfig.GetGlobalDdevDir()
+	err := globalconfig.ReadGlobalConfig()
+	if err != nil {
+		util.Failed(err.Error())
+	}
+
+	// Look for version change
+	err = checkVersionAndOptIn()
+	if err != nil {
+		util.Failed(err.Error())
+	}
+	setupSentry()
+}
+
+func setupSentry() {
+	if version.SentryDSN == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+		output.UserOut.Warning("Instrumentation is opted in, but SentryDSN was not provided at build time.")
+	}
 }
 
 // checkVersionAndOptIn() reads global config and checks to see if current version is different
@@ -138,7 +146,7 @@ func init() {
 // and update the info.
 func checkVersionAndOptIn() error {
 	if version.COMMIT != globalconfig.DdevGlobalConfig.LastRunVersion {
-		allowStats := util.Confirm("It looks like you have a new ddev version.\nMay we send anonymous ddev usage statistics and errors")
+		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
 		}

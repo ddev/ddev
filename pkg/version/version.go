@@ -10,6 +10,10 @@ var VERSION = ""
 // DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
 var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by make
 
+// SentryDSN is the ddev-specific key for the Sentry service.
+// It is compiled in using link-time variables
+var SentryDSN = ""
+
 // DockerVersionConstraint is the current minimum version of docker required for ddev.
 // See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.

@@ -16,8 +16,6 @@ var (
 	UserOutFormatter = new(TextFormatter)
 	// JSONOutput is a bool telling whether we're outputting in json. Set by command-line args.
 	JSONOutput = false
-	// SentryDSN is the ddev-specific key for the Sentry service.
-	SentryDSN = "https://ad3abb1deb8447398c5a2ad8f4287fad:70e11b442a9243719f150e4d922cfde6@sentry.io/160826"
 )
 
 // LogSetUp sets up UserOut and log loggers as needed by ddev
@@ -36,7 +34,7 @@ func LogSetUp() {
 	}
 
 	// Report errors and panics to Sentry
-	hook, err := logrus_sentry.NewAsyncWithTagsSentryHook(SentryDSN, tags, levels)
+	hook, err := logrus_sentry.NewAsyncWithTagsSentryHook(version.SentryDSN, tags, levels)
 
 	if err == nil {
 		UserOut.Hooks.Add(hook)
@@ -60,3 +58,4 @@ func LogSetUp() {
 	}
 	log.SetLevel(logLevel)
 }
+

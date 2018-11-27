@@ -4,7 +4,6 @@ GOMETALINTER_ARGS := --vendored-linters --disable-all --enable=gofmt --enable=ve
 GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode
 
 WINDOWS_SUDO_VERSION=v0.0.1
-
 GOTESTSUM_FORMAT ?= short-verbose
 TESTTMP=/tmp/testresults
 TESTTOOL ?= $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --format $(GOTESTSUM_FORMAT) --junitfile '$(TESTTMP)/$(@).xml'  --"; else echo "go test"; fi)
@@ -23,7 +22,7 @@ PKG := github.com/drud/ddev
 SRC_DIRS := cmd pkg
 
 # Version variables to replace in build
-VERSION_VARIABLES ?= DdevVersion
+VERSION_VARIABLES ?= DdevVersion SentryDSN
 
 # These variables will be used as the default unless overridden by the make
 DdevVersion ?= $(VERSION)

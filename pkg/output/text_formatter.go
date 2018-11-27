@@ -127,7 +127,8 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 	}
 
 	if entry.Level == log.FatalLevel && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		raven.CaptureMessageAndWait(entry.Message, nil)
+		result := raven.CaptureMessageAndWait(entry.Message, nil)
+		_ = result
 	}
 	b.WriteByte('\n')
 	return b.Bytes(), nil
