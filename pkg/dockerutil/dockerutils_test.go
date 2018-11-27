@@ -61,6 +61,17 @@ func TestMain(m *testing.M) {
 			},
 			Env: []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
 		},
+		//          "PortBindings": { "22/tcp": [{ "HostPort": "11022" }] },
+		HostConfig: &docker.HostConfig{
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"80/tcp": {
+					{HostPort: "8889"},
+				},
+				"8025/tcp": {
+					{HostPort: "8890"},
+				},
+			},
+		},
 	})
 	if err != nil {
 		logOutput.Fatal("failed to create/start docker container ", err)
@@ -293,4 +304,18 @@ func TestRunSimpleContainer(t *testing.T) {
 	if err != nil {
 		assert.Contains(err.Error(), "malformed tag provided")
 	}
+}
+
+// TestGetExposedContainerPorts() checks to see that the ports expected
+// to be exposed on a container actually are exposed.
+func TestGetExposedContainerPorts(t *testing.T) {
+	assert := asrt.New(t)
+
+	testContainer, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": "dockerutils-test"})
+	require.NoError(t, err)
+	require.NotNil(t, testContainer)
+	ports, err := GetExposedContainerPorts(testContainer.ID)
+	assert.NoError(err)
+	assert.NotNil(ports)
+	assert.Equal([]string{"8889", "8890"}, ports)
 }

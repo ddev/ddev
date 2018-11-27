@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -559,6 +560,30 @@ func ImageExistsLocally(imageName string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// GetExposedContainerPorts takes a container pointer and returns an array
+// of exposed ports (and error)
+func GetExposedContainerPorts(containerID string) ([]string, error) {
+	client := GetDockerClient()
+	inspectInfo, err := client.InspectContainer(containerID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ports := []string{}
+	for _, portMapping := range inspectInfo.NetworkSettings.Ports {
+		if portMapping != nil && len(portMapping) > 0 {
+			for _, item := range portMapping {
+				ports = append(ports, item.HostPort)
+			}
+		}
+	}
+	sort.Slice(ports, func(i, j int) bool {
+		return ports[i] < ports[j]
+	})
+	return ports, nil
 }
 
 // MassageWindowsHostMountpoint changes C:/path/to/something to //c/path/to/something
