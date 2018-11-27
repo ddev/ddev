@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/getsentry/raven-go"
 	"os"
 	"path/filepath"
@@ -62,19 +63,19 @@ var RootCmd = &cobra.Command{
 		}
 
 		// Ensure that the ~/.ddev exists
-		userDdevDir := util.GetGlobalDdevDir()
-		err = util.ReadGlobalConfig()
-		if (err != nil) {
+		globalDir := globalconfig.GetGlobalDdevDir()
+		err = globalconfig.ReadGlobalConfig()
+		if err != nil {
 			util.Failed(err.Error())
 		}
 
 		// Look for version change
-		err = checkVersionAndOptIn();
-		if (err != nil) {
+		err = checkVersionAndOptIn()
+		if err != nil {
 			util.Failed(err.Error())
 		}
 
-		updateFile := filepath.Join(userDdevDir, ".update")
+		updateFile := filepath.Join(globalDir, ".update")
 
 		// Do periodic detection of whether an update is available for ddev users.
 		timeToCheckForUpdates, err := updatecheck.IsUpdateNeeded(updateFile, updateInterval)
@@ -106,11 +107,13 @@ var RootCmd = &cobra.Command{
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		// Do not report these comamnds
-		ignores := map[string]bool{"list": true, "version": true, "help": true, "auth-pantheon": true,}
-		if _,ok := ignores[cmd.CalledAs()]; ok {
+		ignores := map[string]bool{"list": true, "version": true, "help": true, "auth-pantheon": true}
+		if _, ok := ignores[cmd.CalledAs()]; ok {
 			return
 		}
-		raven.CaptureMessageAndWait("ddev " + cmd.CalledAs(), map[string]string{"level": "info"})
+		if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+			raven.CaptureMessageAndWait("ddev "+cmd.CalledAs(), map[string]string{"level": "info"})
+		}
 	},
 }
 
@@ -119,7 +122,6 @@ var RootCmd = &cobra.Command{
 func Execute() {
 	// bind flags to viper config values...allows override by flag
 	viper.AutomaticEnv() // read in environment variables that match
-
 
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
@@ -135,14 +137,14 @@ func init() {
 // from the last saved version. If it is, prompt to request anon ddev usage stats
 // and update the info.
 func checkVersionAndOptIn() error {
-	if version.COMMIT != util.DdevGlobalConfig.LastRunVersion {
+	if version.COMMIT != globalconfig.DdevGlobalConfig.LastRunVersion {
 		allowStats := util.Confirm("It looks like you have a new ddev version.\nMay we send anonymous ddev usage statistics and errors")
-		if (allowStats) {
-			util.DdevGlobalConfig.InstrumentationOptIn = true
+		if allowStats {
+			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
 		}
-		util.DdevGlobalConfig.LastRunVersion = version.COMMIT
-		err := util.WriteGlobalConfig(util.DdevGlobalConfig)
-		if (err != nil) {
+		globalconfig.DdevGlobalConfig.LastRunVersion = version.COMMIT
+		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		if err != nil {
 			return err
 		}
 	}

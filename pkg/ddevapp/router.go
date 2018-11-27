@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"html/template"
 	"os"
 	"path"
@@ -23,8 +24,8 @@ const RouterProjectName = "ddev-router"
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
-	ddevDir := util.GetGlobalDdevDir()
-	dest := path.Join(ddevDir, "router-compose.yaml")
+	globalDir := globalconfig.GetGlobalDdevDir()
+	dest := path.Join(globalDir, "router-compose.yaml")
 	return dest
 }
 
@@ -55,7 +56,7 @@ func StartDdevRouter() error {
 		return fmt.Errorf("unable to create directory for ddev router: %v", err)
 	}
 
-	certDir := filepath.Join(util.GetGlobalDdevDir(), "certs")
+	certDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "certs")
 	if _, err = os.Stat(certDir); os.IsNotExist(err) {
 		err = os.MkdirAll(certDir, 0755)
 		if err != nil {

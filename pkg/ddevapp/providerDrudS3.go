@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -176,8 +177,8 @@ func (p *DrudS3Provider) prepDownloadDir() {
 }
 
 func (p *DrudS3Provider) getDownloadDir() string {
-	ddevDir := util.GetGlobalDdevDir()
-	destDir := filepath.Join(ddevDir, "drud-s3", p.app.Name)
+	globalDir := globalconfig.GetGlobalDdevDir()
+	destDir := filepath.Join(globalDir, "drud-s3", p.app.Name)
 
 	return destDir
 }

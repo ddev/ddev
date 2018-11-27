@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/fatih/color"
@@ -18,8 +19,8 @@ const SSHAuthName = "ddev-ssh-agent"
 
 // SSHAuthComposeYAMLPath returns the full filepath to the ssh-auth docker-compose yaml file.
 func SSHAuthComposeYAMLPath() string {
-	ddevDir := util.GetGlobalDdevDir()
-	dest := path.Join(ddevDir, "ssh-auth-compose.yaml")
+	globalDir := globalconfig.GetGlobalDdevDir()
+	dest := path.Join(globalDir, "ssh-auth-compose.yaml")
 	return dest
 }
 

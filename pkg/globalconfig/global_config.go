@@ -1,10 +1,13 @@
-package util
+package globalconfig
 
 import (
 	"fmt"
+	"github.com/mitchellh/go-homedir"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 )
 
@@ -18,14 +21,14 @@ var (
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainers            []string               `yaml:"omit_containers"`
-	LastRunVersion string `yaml:"last_run_version"`
-	InstrumentationOptIn bool `yaml:"instrumentation_opt_in"`
+	OmitContainers       []string `yaml:"omit_containers"`
+	LastRunVersion       string   `yaml:"last_run_version"`
+	InstrumentationOptIn bool     `yaml:"instrumentation_opt_in"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
 func GetGlobalConfigPath() string {
-	return filepath.Join(GetGlobalDdevDir(),DdevGlobalConfigName)
+	return filepath.Join(GetGlobalDdevDir(), DdevGlobalConfigName)
 
 }
 
@@ -71,4 +74,22 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	}
 
 	return nil
+}
+
+// GetGlobalDdevDir returns ~/.ddev, the global caching directory
+func GetGlobalDdevDir() string {
+	userHome, err := homedir.Dir()
+	if err != nil {
+		logrus.Fatal("could not get home directory for current user. is it set?")
+	}
+	ddevDir := path.Join(userHome, ".ddev")
+
+	// Create the directory if it is not already present.
+	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
+		err = os.MkdirAll(ddevDir, 0700)
+		if err != nil {
+			logrus.Fatalf("Failed to create required directory %s, err: %v", ddevDir, err)
+		}
+	}
+	return ddevDir
 }

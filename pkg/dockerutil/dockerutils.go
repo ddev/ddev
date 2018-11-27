@@ -298,10 +298,10 @@ func GetContainerEnv(key string, container docker.APIContainers) string {
 	return ""
 }
 
-func GetDockerVersion() (string, error){
+func GetDockerVersion() (string, error) {
 	client := GetDockerClient()
 	version, err := client.Version()
-	if (err != nil ) {
+	if err != nil {
 		return "", err
 	}
 	dockerVersion := version.Get("Version")
@@ -313,7 +313,7 @@ func GetDockerVersion() (string, error){
 // for examples defining version constraints.
 func CheckDockerVersion(versionConstraint string) error {
 	currentVersion, err := GetDockerVersion()
-	if (err != nil) {
+	if err != nil {
 		return fmt.Errorf("no docker")
 	}
 	dockerVersion, err := semver.NewVersion(currentVersion)
@@ -341,7 +341,7 @@ func CheckDockerVersion(versionConstraint string) error {
 	return nil
 }
 
-func GetDockerComposeVersion() (string, error){
+func GetDockerComposeVersion() (string, error) {
 	executableName := "docker-compose"
 
 	path, err := exec.LookPath(executableName)
@@ -358,11 +358,12 @@ func GetDockerComposeVersion() (string, error){
 	version = strings.TrimSpace(version)
 	return version, nil
 }
+
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This
 // relies on docker-compose being somewhere in the user's $PATH.
 func CheckDockerCompose(versionConstraint string) error {
 	version, err := GetDockerComposeVersion()
-	if (err != nil) {
+	if err != nil {
 		return err
 	}
 	dockerComposeVersion, err := semver.NewVersion(version)

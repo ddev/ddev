@@ -3,6 +3,7 @@ package output
 import (
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/getsentry/raven-go"
 	"io"
 	"os"
@@ -125,7 +126,7 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 		}
 	}
 
-	if entry.Level == log.FatalLevel {
+	if entry.Level == log.FatalLevel && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		raven.CaptureMessageAndWait(entry.Message, nil)
 	}
 	b.WriteByte('\n')

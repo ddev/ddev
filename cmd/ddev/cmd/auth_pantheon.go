@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/globalconfig"
 	"path/filepath"
 
 	"github.com/drud/ddev/pkg/util"
@@ -22,8 +23,8 @@ var PantheonAuthCommand = &cobra.Command{
 			util.Failed("Too many arguments detected. Please provide only your Pantheon Machine token., e.g. 'ddev auth-pantheon [token]'. See https://pantheon.io/docs/machine-tokens/ for instructions on creating a token.")
 		}
 
-		ddevDir := util.GetGlobalDdevDir()
-		sessionLocation := filepath.Join(ddevDir, "pantheonconfig.json")
+		globalDir := globalconfig.GetGlobalDdevDir()
+		sessionLocation := filepath.Join(globalDir, "pantheonconfig.json")
 
 		session := pantheon.NewAuthSession(args[0])
 		err := session.Auth()
