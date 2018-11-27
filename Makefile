@@ -5,9 +5,9 @@ GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --en
 
 WINDOWS_SUDO_VERSION=v0.0.1
 
+GOTESTSUM_FORMAT ?= short-verbose
 TESTTMP=/tmp/testresults
-TESTTOOL ?= $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --junitfile '$(TESTTMP)/$(@).xml'  --"; else echo "go test"; fi)
-
+TESTTOOL ?= $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --format $(GOTESTSUM_FORMAT) --junitfile '$(TESTTMP)/$(@).xml'  --"; else echo "go test"; fi)
 ##### These variables need to be adjusted in most repositories #####
 
 # This repo's root import path (under GOPATH).
