@@ -89,7 +89,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	} else {
 		return app, fmt.Errorf("provider '%s' is not implemented", provider)
 	}
-
+	app.SetRavenTags()
 	return app, nil
 }
 

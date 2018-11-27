@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/getsentry/raven-go"
 	"os"
 	"path/filepath"
 	"strings"
@@ -93,6 +94,14 @@ var RootCmd = &cobra.Command{
 		}
 
 	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		// Do not report these comamnds
+		ignores := map[string]bool{"list": true, "version": true, "help": true, "auth-pantheon": true,}
+		if _,ok := ignores[cmd.CalledAs()]; ok {
+			return
+		}
+		raven.CaptureMessageAndWait("ddev " + cmd.CalledAs(), map[string]string{"level": "info"})
+	},
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -100,6 +109,7 @@ var RootCmd = &cobra.Command{
 func Execute() {
 	// bind flags to viper config values...allows override by flag
 	viper.AutomaticEnv() // read in environment variables that match
+
 
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)

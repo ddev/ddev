@@ -3,6 +3,7 @@ package output
 import (
 	"bytes"
 	"fmt"
+	"github.com/getsentry/raven-go"
 	"io"
 	"os"
 	"sort"
@@ -124,6 +125,9 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 		}
 	}
 
+	if entry.Level == log.FatalLevel {
+		raven.CaptureMessageAndWait(entry.Message, nil)
+	}
 	b.WriteByte('\n')
 	return b.Bytes(), nil
 }

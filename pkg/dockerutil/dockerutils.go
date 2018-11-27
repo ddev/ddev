@@ -298,18 +298,24 @@ func GetContainerEnv(key string, container docker.APIContainers) string {
 	return ""
 }
 
+func GetDockerVersion() (string, error){
+	client := GetDockerClient()
+	version, err := client.Version()
+	if (err != nil ) {
+		return "", err
+	}
+	dockerVersion := version.Get("Version")
+	return dockerVersion, nil
+}
+
 // CheckDockerVersion determines if the docker version of the host system meets the provided version
 // constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
 func CheckDockerVersion(versionConstraint string) error {
-	client := GetDockerClient()
-	version, err := client.Version()
-	if err != nil {
+	currentVersion, err := GetDockerVersion()
+	if (err != nil) {
 		return fmt.Errorf("no docker")
 	}
-
-	currentVersion := version.Get("Version")
-
 	dockerVersion, err := semver.NewVersion(currentVersion)
 	if err != nil {
 		return err
@@ -335,24 +341,30 @@ func CheckDockerVersion(versionConstraint string) error {
 	return nil
 }
 
-// CheckDockerCompose determines if docker-compose is present and executable on the host system. This
-// relies on docker-compose being somewhere in the user's $PATH.
-func CheckDockerCompose(versionConstraint string) error {
+func GetDockerComposeVersion() (string, error){
 	executableName := "docker-compose"
 
 	path, err := exec.LookPath(executableName)
 	if err != nil {
-		return fmt.Errorf("no docker-compose")
+		return "", fmt.Errorf("no docker-compose")
 	}
 
 	out, err := exec.Command(path, "version", "--short").Output()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	version := string(out)
 	version = strings.TrimSpace(version)
-
+	return version, nil
+}
+// CheckDockerCompose determines if docker-compose is present and executable on the host system. This
+// relies on docker-compose being somewhere in the user's $PATH.
+func CheckDockerCompose(versionConstraint string) error {
+	version, err := GetDockerComposeVersion()
+	if (err != nil) {
+		return err
+	}
 	dockerComposeVersion, err := semver.NewVersion(version)
 	if err != nil {
 		return err
