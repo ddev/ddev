@@ -61,8 +61,18 @@ var RootCmd = &cobra.Command{
 			}
 		}
 
-		// Verify that the ~/.ddev exists
+		// Ensure that the ~/.ddev exists
 		userDdevDir := util.GetGlobalDdevDir()
+		err = util.ReadGlobalConfig()
+		if (err != nil) {
+			util.Failed(err.Error())
+		}
+
+		// Look for version change
+		err = checkVersionAndOptIn();
+		if (err != nil) {
+			util.Failed(err.Error())
+		}
 
 		updateFile := filepath.Join(userDdevDir, ".update")
 
@@ -119,4 +129,22 @@ func Execute() {
 
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
+}
+
+// checkVersionAndOptIn() reads global config and checks to see if current version is different
+// from the last saved version. If it is, prompt to request anon ddev usage stats
+// and update the info.
+func checkVersionAndOptIn() error {
+	if version.COMMIT != util.DdevGlobalConfig.LastRunVersion {
+		allowStats := util.Confirm("It looks like you have a new ddev version.\nMay we send anonymous ddev usage statistics and errors")
+		if (allowStats) {
+			util.DdevGlobalConfig.InstrumentationOptIn = true
+		}
+		util.DdevGlobalConfig.LastRunVersion = version.COMMIT
+		err := util.WriteGlobalConfig(util.DdevGlobalConfig)
+		if (err != nil) {
+			return err
+		}
+	}
+	return nil
 }
