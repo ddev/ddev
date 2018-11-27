@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -155,9 +154,9 @@ Project ddev settings have been written to:
 
 %s
 
-Please comment out all existing database connection settings add the following
-snippet to your wp-config.php file before the include of wp-settings.php near 
-the bottom of the file:
+Please comment out any database connection settings in your wp-config.php and
+add the following snippet to your wp-config.php, near the bottom of the file
+and before the include of wp-settings.php:
 
 // Include for ddev-managed settings in wp-config-ddev.php.
 $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
@@ -370,7 +369,7 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 		return "", fmt.Errorf("multiple subdirectories contain %s", needle)
 	}
 
-	absPath := path.Base(path.Dir(subDirMatches[0]))
+	absPath := filepath.Base(filepath.Dir(subDirMatches[0]))
 
 	return absPath, nil
 }
