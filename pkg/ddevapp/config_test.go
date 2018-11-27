@@ -553,10 +553,10 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	testDir := testcommon.CreateTmpDir("TestConfigOverrideDetection")
+	testDir := testcommon.CreateTmpDir("TestConfigConfigOverrideDetection")
 
 	targetDdev := filepath.Join(testDir, ".ddev")
-	err := fileutil.CopyDir("testdata/.ddev", targetDdev)
+	err := fileutil.CopyDir("testdata/TestConfigOverrideDetection/.ddev", targetDdev)
 	assert.NoError(err)
 
 	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
@@ -568,6 +568,9 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	err = app.ReadConfig()
 	assert.NoError(err)
+
+	//nolint: errcheck
+	defer app.Down(true, false)
 
 	restoreOutput := util.CaptureUserOut()
 	startErr := app.Start()
@@ -591,6 +594,4 @@ func TestConfigOverrideDetection(t *testing.T) {
 		assert.NotContains(out, "nginx-site.conf")
 	}
 	assert.Contains(out, "Custom configuration takes effect")
-
-	_ = app.Down(true, false)
 }
