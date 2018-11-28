@@ -149,7 +149,7 @@ _Note: ddev config will prompt you for a project name, docroot, and project type
 
 * The project name will be part of the URL, so make sure to avoid whitespace, underscores and special characters to avoid problems down the road.
 * After the command runs through, prepare to edit the generated config.yaml file:
-** Review the PHP version. Available options: 5.6, 7.0, 7.1, and 7.2.
+** Review the PHP version. Available options: 5.6, 7.0, 7.1, 7.2 and 7.3.
 ** Review the ports the system wants to use. If you run a local stack already, you will need to adjust here, or shut down your local stack. See [additional troubleshooting information here](https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen).
 
 After you've run `ddev config`, you're ready to start running your project. To start running ddev, simply enter:

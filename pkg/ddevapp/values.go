@@ -23,6 +23,7 @@ const (
 	PHP70 = "7.0"
 	PHP71 = "7.1"
 	PHP72 = "7.2"
+	PHP73 = "7.3"
 )
 
 // Container types used with ddev
@@ -44,6 +45,7 @@ var ValidPHPVersions = map[string]bool{
 	PHP70: true,
 	PHP71: true,
 	PHP72: true,
+	PHP73: true,
 }
 
 // Webserver types

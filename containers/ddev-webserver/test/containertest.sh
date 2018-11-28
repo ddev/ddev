@@ -54,7 +54,7 @@ if [ "$UNAME" = "MINGW64_NT-10.0" -o "$MOUNTUID" -ge 60000 ] ; then
 	MOUNTGID=1000
 fi
 
-for v in 5.6 7.0 7.1 7.2; do
+for v in 5.6 7.0 7.1 7.2 7.3; do
 	echo "starting container for tests on php$v"
 
 	docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -d --name $CONTAINER_NAME -v "/$composercache:/home/.composer/cache:rw" -d $DOCKER_IMAGE

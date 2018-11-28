@@ -27,7 +27,7 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "readd_apt_user_to_etc_passwd_file" // Note that this can be overridden by make
+var WebTag = "20181122_add_php_7_3" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
