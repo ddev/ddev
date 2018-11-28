@@ -104,6 +104,7 @@ var RootCmd = &cobra.Command{
 		if _, ok := ignores[cmd.CalledAs()]; ok {
 			return
 		}
+		sentryNotOnWarning()
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" {
 			_ = raven.CaptureMessageAndWait("ddev "+cmd.CalledAs(), map[string]string{"level": "info"})
 		}
@@ -131,10 +132,9 @@ func init() {
 	if err != nil {
 		util.Failed(err.Error())
 	}
-	setupSentry()
 }
 
-func setupSentry() {
+func sentryNotOnWarning() {
 	if version.SentryDSN == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		output.UserOut.Warning("Instrumentation is opted in, but SentryDSN is not available.")
 	}
