@@ -62,6 +62,12 @@ var RootCmd = &cobra.Command{
 			}
 		}
 
+		// Look for version change
+		err = checkVersionAndOptIn()
+		if err != nil {
+			util.Failed(err.Error())
+		}
+
 		updateFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".update")
 
 		// Do periodic detection of whether an update is available for ddev users.
@@ -123,12 +129,6 @@ func init() {
 	// Ensure that the ~/.ddev exists
 	_ = globalconfig.GetGlobalDdevDir()
 	err := globalconfig.ReadGlobalConfig()
-	if err != nil {
-		util.Failed(err.Error())
-	}
-
-	// Look for version change
-	err = checkVersionAndOptIn()
 	if err != nil {
 		util.Failed(err.Error())
 	}

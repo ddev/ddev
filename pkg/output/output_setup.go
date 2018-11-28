@@ -58,4 +58,3 @@ func LogSetUp() {
 	}
 	log.SetLevel(logLevel)
 }
-

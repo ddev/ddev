@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/version"
 	"io"
 	"log"
 	"os"
@@ -298,14 +299,18 @@ func GetContainerEnv(key string, container docker.APIContainers) string {
 	return ""
 }
 
+// GetDockerVersion gets the cached or api-sourced version of docker engine
 func GetDockerVersion() (string, error) {
+	if version.DockerVersion != "" {
+		return version.DockerVersion, nil
+	}
 	client := GetDockerClient()
-	version, err := client.Version()
+	v, err := client.Version()
 	if err != nil {
 		return "", err
 	}
-	dockerVersion := version.Get("Version")
-	return dockerVersion, nil
+	version.DockerVersion = v.Get("Version")
+	return version.DockerVersion, nil
 }
 
 // CheckDockerVersion determines if the docker version of the host system meets the provided version
@@ -341,7 +346,12 @@ func CheckDockerVersion(versionConstraint string) error {
 	return nil
 }
 
+// GetDockerComposeVersion runs docker-compose -v to get the current version
 func GetDockerComposeVersion() (string, error) {
+	if version.DockerComposeVersion != "" {
+		return version.DockerComposeVersion, nil
+	}
+
 	executableName := "docker-compose"
 
 	path, err := exec.LookPath(executableName)
@@ -354,9 +364,9 @@ func GetDockerComposeVersion() (string, error) {
 		return "", err
 	}
 
-	version := string(out)
-	version = strings.TrimSpace(version)
-	return version, nil
+	v := string(out)
+	version.DockerComposeVersion = strings.TrimSpace(v)
+	return version.DockerComposeVersion, nil
 }
 
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This

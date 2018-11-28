@@ -61,6 +61,12 @@ var COMMIT = "COMMIT should be overridden"
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
 
+// DockerVersion is cached version of docker
+var DockerVersion = ""
+
+// DockerComposeVersion is filled with the version we find for docker-compose
+var DockerComposeVersion = ""
+
 // DDevTLD defines the tld to use for DDev site URLs.
 const DDevTLD = "ddev.local"
 
@@ -77,6 +83,8 @@ func GetVersionInfo() map[string]string {
 	versionInfo["commit"] = COMMIT
 	versionInfo["domain"] = DDevTLD
 	versionInfo["build info"] = BUILDINFO
+	versionInfo["docker"] = DockerVersion
+	versionInfo["docker-compose"] = DockerComposeVersion
 
 	return versionInfo
 }
