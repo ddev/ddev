@@ -94,7 +94,7 @@ func TestCmdDescribe(t *testing.T) {
 				}
 			}
 		}
-		require.True(t, rawFound, "did not find 'raw' in item in logItems\n===%s\n===\n", out)
+		require.True(t, rawFound, "did not find 'raw' in item in logItems\n===\n%s\n===\n", out)
 		assert.EqualValues(raw["status"], "running")
 		assert.EqualValues(raw["name"], v.Name)
 		assert.EqualValues(raw["shortroot"].(string), ddevapp.RenderHomeRootedDir(v.Dir))
@@ -196,10 +196,10 @@ func TestCmdDescribeAppWithInvalidParams(t *testing.T) {
 func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 	logData := make([]log.Fields, 0)
 	logStrings := strings.Split(in, "\n")
-	data := make(log.Fields, 4)
 
 	for _, logLine := range logStrings {
 		if logLine != "" {
+			data := make(log.Fields, 4)
 			err := json.Unmarshal([]byte(logLine), &data)
 			if err != nil {
 				return []log.Fields{}, err
