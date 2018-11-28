@@ -96,6 +96,6 @@ func TestDdevListContinuous(t *testing.T) {
 	assert.NoError(err)
 
 	// The two snapshots of output should be different, and output2 should be larger.
-	assert.NotEqual(output1, output2)
+	assert.NotEqual(output1, output2, "Outputs at 2 times should have been different. output1=\n===\n%s\n===\noutput2=\n===\n%s\n===\n", output1, output2)
 	assert.True((output2 > output1))
 }
