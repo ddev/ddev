@@ -100,11 +100,11 @@ var RootCmd = &cobra.Command{
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		// Do not report these comamnds
-		ignores := map[string]bool{"list": true, "version": true, "help": true, "auth-pantheon": true}
+		ignores := map[string]bool{"list": true, "version": true, "help": true, "auth-pantheon": true, "hostname": true}
 		if _, ok := ignores[cmd.CalledAs()]; ok {
 			return
 		}
-		sentryNotOnWarning()
+		sentryNotSetupWarning()
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" {
 			_ = raven.CaptureMessageAndWait("ddev "+cmd.CalledAs(), map[string]string{"level": "info"})
 		}
@@ -134,7 +134,7 @@ func init() {
 	}
 }
 
-func sentryNotOnWarning() {
+func sentryNotSetupWarning() {
 	if version.SentryDSN == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		output.UserOut.Warning("Instrumentation is opted in, but SentryDSN is not available.")
 	}
