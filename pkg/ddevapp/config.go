@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"html/template"
 	"io/ioutil"
 	"os"
@@ -219,6 +220,10 @@ func (app *DdevApp) ReadConfig() error {
 
 	if app.DBAImage == "" {
 		app.DBAImage = version.GetDBAImage()
+	}
+
+	if app.OmitContainers == nil {
+		app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
 	}
 
 	app.ImportDir = app.GetConfigPath("import-db")
