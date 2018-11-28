@@ -144,12 +144,12 @@ func sentryNotSetupWarning() {
 // from the last saved version. If it is, prompt to request anon ddev usage stats
 // and update the info.
 func checkVersionAndOptIn() error {
-	if version.COMMIT != globalconfig.DdevGlobalConfig.LastRunVersion {
+	if version.COMMIT != globalconfig.DdevGlobalConfig.LastUsedVersion {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
 		}
-		globalconfig.DdevGlobalConfig.LastRunVersion = version.COMMIT
+		globalconfig.DdevGlobalConfig.LastUsedVersion = version.COMMIT
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		if err != nil {
 			return err

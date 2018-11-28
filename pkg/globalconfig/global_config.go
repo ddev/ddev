@@ -2,6 +2,7 @@ package globalconfig
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -21,9 +22,10 @@ var (
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
+	APIVersion           string   `yaml:"APIVersion"`
 	OmitContainers       []string `yaml:"omit_containers"`
-	LastRunVersion       string   `yaml:"last_run_version"`
 	InstrumentationOptIn bool     `yaml:"instrumentation_opt_in"`
+	LastUsedVersion      string   `yaml:"last_used_version"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
@@ -35,6 +37,9 @@ func GetGlobalConfigPath() string {
 // ReadGlobalConfig() reads the global config file into DdevGlobalConfig
 func ReadGlobalConfig() error {
 	globalConfigFile := GetGlobalConfigPath()
+	// This is added just so we can see it in global; not checked.
+	DdevGlobalConfig.APIVersion = version.DdevVersion
+
 	// Can't use fileutil.FileExists() here because of import cycle.
 	if _, err := os.Stat(globalConfigFile); err != nil {
 		if os.IsNotExist(err) {
@@ -58,6 +63,7 @@ func ReadGlobalConfig() error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -67,6 +73,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	if err != nil {
 		return err
 	}
+
+	// Append current image information
+	instructions := "\n# You can turn off usage of the dba (phpmyadmin) container and/or \n# ddev-ssh-agent containers with\n# omit_containers[\"dba\", \"ddev-ssh-agent\"]\n\n# and you can opt in or out of sending instrumentation the ddev developers with \n# instrumentation_opt_in: true # or false\n"
+	cfgbytes = append(cfgbytes, instructions...)
 
 	err = ioutil.WriteFile(GetGlobalConfigPath(), cfgbytes, 0644)
 	if err != nil {
