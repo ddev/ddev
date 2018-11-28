@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/ravenutils"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/getsentry/raven-go"
@@ -28,6 +29,7 @@ func SetRavenBaseTags() {
 			"dockerToolbox":  strconv.FormatBool(isToolbox),
 			"ddevCommand":    strings.Join(os.Args, " "),
 		}
+		ravenutils.AddRavenTags(tags)
 		raven.SetTagsContext(tags)
 	}
 }
@@ -48,6 +50,7 @@ func (app *DdevApp) SetRavenTags() {
 				tags[key] = tagVal
 			}
 		}
+		ravenutils.AddRavenTags(tags)
 		raven.SetTagsContext(tags)
 	}
 }
