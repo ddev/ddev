@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -13,8 +14,8 @@ func TestDevRemove(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Make sure we have running sites.
-	addSites()
-
+	err := addSites()
+	require.NoError(t, err)
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
 
@@ -32,8 +33,8 @@ func TestDevRemove(t *testing.T) {
 	}
 
 	// Re-create running sites.
-	addSites()
-
+	err = addSites()
+	require.NoError(t, err)
 	// Ensure a user can't accidentally wipe out everything.
 	appsBefore := len(ddevapp.GetApps())
 	out, err := exec.RunCommand(DdevBin, []string{"remove", "--remove-data", "--all"})
@@ -50,5 +51,6 @@ func TestDevRemove(t *testing.T) {
 	assert.Equal(0, len(ddevapp.GetApps()), "Not all apps were removed after ddev remove --all")
 
 	// Now put the sites back together so other tests can use them.
-	addSites()
+	err = addSites()
+	require.NoError(t, err)
 }

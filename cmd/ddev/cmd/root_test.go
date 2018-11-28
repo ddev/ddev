@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -63,7 +64,11 @@ func TestMain(m *testing.M) {
 			log.Fatalf("Prepare() failed in TestMain site=%s, err=%v\n", DevTestSites[i].Name, err)
 		}
 	}
-	addSites()
+	err = addSites()
+	if err != nil {
+		removeSites()
+		output.UserOut.Fatalf("addSites() failed: %v", err)
+	}
 
 	log.Debugln("Running tests.")
 	testRun := m.Run()
@@ -138,9 +143,10 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 }
 
 // addSites runs `ddev start` on the test apps
-func addSites() {
+func addSites() error {
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
+		defer cleanup()
 
 		// test that you get an error when you run with no args
 		args := []string{"start"}
@@ -173,12 +179,12 @@ func addSites() {
 			o.Headers["Host"] = app.HostName()
 			err = util.EnsureHTTPStatus(o)
 			if err != nil {
-				log.Fatalln("Failed to ensureHTTPStatus on", app.HostName(), url)
+				return fmt.Errorf("failed to ensureHTTPStatus on %s url=%s", app.HostName(), url)
 			}
 		}
 
-		cleanup()
 	}
+	return nil
 }
 
 // removeSites runs `ddev remove` on the test apps
