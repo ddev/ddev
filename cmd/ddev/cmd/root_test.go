@@ -48,6 +48,9 @@ func TestMain(m *testing.M) {
 		log.Errorln("could not set noninteractive mode, failed to Setenv, err: ", err)
 	}
 
+	// We don't want the tests reporting to Sentry.
+	_ = os.Setenv("DDEV_NO_SENTRY", "true")
+
 	// Attempt to remove all running containers before starting a test.
 	// If no projects are running, this will exit silently and without error.
 	if _, err = exec.RunCommand(DdevBin, []string{"remove", "--all"}); err != nil {
