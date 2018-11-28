@@ -82,11 +82,12 @@ test: testpkg testcmd
 $(TESTTMP):
 	mkdir -p $(TESTTMP)
 
+
 testcmd: $(TESTTMP) $(BUILD_OS) setup
-	CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) $(TESTTOOL) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
+	DDEV_NO_SENTRY=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
 
 testpkg: $(TESTTMP)
-	CGO_ENABLED=0 $(TESTTOOL) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
+	DDEV_NO_SENTRY=true CGO_ENABLED=0 go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
 
 setup:
 	@mkdir -p bin/darwin bin/linux

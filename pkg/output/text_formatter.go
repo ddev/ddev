@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/getsentry/raven-go"
 	"io"
 	"os"
@@ -126,7 +127,7 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 		}
 	}
 
-	if entry.Level == log.FatalLevel && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+	if entry.Level == log.FatalLevel && globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" {
 		result := raven.CaptureMessageAndWait(entry.Message, nil)
 		_ = result
 	}

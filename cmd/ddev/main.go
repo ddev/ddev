@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/getsentry/raven-go"
+	"os"
 )
 
 func main() {
@@ -12,6 +13,9 @@ func main() {
 }
 
 func init() {
-	_ = raven.SetDSN(version.SentryDSN)
-	ddevapp.SetRavenBaseTags()
+	noSentry := os.Getenv("DDEV_NO_SENTRY")
+	if noSentry == "" {
+		_ = raven.SetDSN(version.SentryDSN)
+		ddevapp.SetRavenBaseTags()
+	}
 }

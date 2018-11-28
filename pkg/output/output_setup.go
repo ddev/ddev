@@ -34,10 +34,11 @@ func LogSetUp() {
 	}
 
 	// Report errors and panics to Sentry
-	hook, err := logrus_sentry.NewAsyncWithTagsSentryHook(version.SentryDSN, tags, levels)
-
-	if err == nil {
-		UserOut.Hooks.Add(hook)
+	if version.SentryDSN != "" {
+		hook, err := logrus_sentry.NewAsyncWithTagsSentryHook(version.SentryDSN, tags, levels)
+		if err == nil {
+			UserOut.Hooks.Add(hook)
+		}
 	}
 
 	if !JSONOutput {
