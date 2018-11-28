@@ -28,7 +28,7 @@ func TestDevList(t *testing.T) {
 	jsonOut, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 
-	logItems, err := unmarshallJSONLogs(jsonOut)
+	logItems, err := unmarshalJSONLogs(jsonOut)
 	assert.NoError(err)
 
 	// The list should be the last item; there may be a warning

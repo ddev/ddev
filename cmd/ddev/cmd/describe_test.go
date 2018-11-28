@@ -79,21 +79,28 @@ func TestCmdDescribe(t *testing.T) {
 		args = []string{"describe", "-j"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		logItems, err := unmarshallJSONLogs(out)
+		logItems, err := unmarshalJSONLogs(out)
 		require.NoError(t, err, "Unable to unmarshall ===\n%s\n===\n", logItems)
 
-		// The description log should be the last item; there may be a warning
+		// The description log should be next last item; there may be a warning
 		// or other info before that.
-		data := logItems[len(logItems)-1]
-		assert.EqualValues(data["level"], "info")
-		raw, ok := data["raw"].(map[string]interface{})
-		assert.True(ok)
+		var raw map[string]interface{}
+		rawFound := false
+		var item map[string]interface{}
+		for _, item = range logItems {
+			if item["level"] == "info" {
+				if raw, rawFound = item["raw"].(map[string]interface{}); rawFound {
+					break
+				}
+			}
+		}
+		require.True(t, rawFound, "did not find 'raw' in item in logItems\n===%s\n===\n", out)
 		assert.EqualValues(raw["status"], "running")
 		assert.EqualValues(raw["name"], v.Name)
 		assert.EqualValues(raw["shortroot"].(string), ddevapp.RenderHomeRootedDir(v.Dir))
 		assert.EqualValues(raw["approot"].(string), v.Dir)
 
-		assert.NotEmpty(data["msg"])
+		assert.NotEmpty(item["msg"])
 	}
 }
 
@@ -184,9 +191,9 @@ func TestCmdDescribeAppWithInvalidParams(t *testing.T) {
 	cleanup()
 }
 
-// unmarshallJSONLogs takes a string buffer and splits it into lines,
+// unmarshalJSONLogs takes a string buffer and splits it into lines,
 // discards empty lines, and unmarshalls into an array of logs
-func unmarshallJSONLogs(in string) ([]log.Fields, error) {
+func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 	logData := make([]log.Fields, 0)
 	logStrings := strings.Split(in, "\n")
 	data := make(log.Fields, 4)
