@@ -106,7 +106,7 @@ var RootCmd = &cobra.Command{
 		}
 		sentryNotSetupWarning()
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" {
-			_ = raven.CaptureMessageAndWait("ddev "+cmd.CalledAs(), map[string]string{"severity-level": "info", "report-type": "usage"})
+			_ = raven.CaptureMessageAndWait("Usage: ddev "+cmd.CalledAs(), map[string]string{"severity-level": "info", "report-type": "usage"})
 		}
 	},
 }
