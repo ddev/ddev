@@ -107,7 +107,7 @@ var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.
 
 // ConfigCommand represents the `ddev config` command
 var ConfigCommand *cobra.Command = &cobra.Command{
-	Use:     "config [provider]",
+	Use:     "config [provider or 'global']",
 	Short:   "Create or modify a ddev project configuration in the current directory",
 	Example: `"ddev config" or "ddev config --docroot=. --project-name=d7-kickstart --project-type=drupal7"`,
 	Args:    cobra.ExactArgs(0),
