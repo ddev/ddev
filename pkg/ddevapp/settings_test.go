@@ -118,7 +118,6 @@ func TestWriteDrushConfig(t *testing.T) {
 		switch app.Type {
 		case AppTypeDrupal6, AppTypeDrupal7, AppTypeDrupal8, AppTypeBackdrop:
 			require.True(t, fileutil.FileExists(drushFilePath))
-			//nolint: vetshadow
 			hostFound, err := fileutil.FgrepStringInFile(drushFilePath, fmt.Sprintf("'host' => \"%s\"", dockerIP))
 			assert.NoError(err)
 			assert.True(hostFound)
