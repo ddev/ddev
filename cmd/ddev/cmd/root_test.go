@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"os"
 	"testing"
 
@@ -38,6 +40,12 @@ var (
 
 func TestMain(m *testing.M) {
 	output.LogSetUp()
+
+	// Start with no global config file so we're sure to have defaults
+	configFile := globalconfig.GetGlobalConfigPath()
+	if fileutil.FileExists(configFile) {
+		_ = os.Remove(configFile)
+	}
 
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
