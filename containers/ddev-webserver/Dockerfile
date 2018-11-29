@@ -1,6 +1,6 @@
 FROM bitnami/minideb:stretch
 
-ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2"
+ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3"
 ENV PHP_DEFAULT_VERSION="7.1"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 
