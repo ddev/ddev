@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 // DdevGlobalConfigName is the name of the global config file.
@@ -32,6 +33,25 @@ type GlobalConfig struct {
 func GetGlobalConfigPath() string {
 	return filepath.Join(GetGlobalDdevDir(), DdevGlobalConfigName)
 
+}
+
+// ValidateGlobalConfig validates global config
+func ValidateGlobalConfig() error {
+	if !IsValidOmitContainers(DdevGlobalConfig.OmitContainers) {
+		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainers, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
+	}
+
+	return nil
+}
+
+// isValidOmitContainers is a helper function to determine if a the OmitContainers array is valid
+func isValidOmitContainers(containerList []string) bool {
+	for _, containerName := range containerList {
+		if _, ok := ValidOmitContainers[containerName]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 // ReadGlobalConfig() reads the global config file into DdevGlobalConfig
@@ -64,11 +84,20 @@ func ReadGlobalConfig() error {
 		return err
 	}
 
+	err = ValidateGlobalConfig()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // WriteGlobalConfig writes the global config into ~/.ddev.
 func WriteGlobalConfig(config GlobalConfig) error {
+
+	err := ValidateGlobalConfig()
+	if err != nil {
+		return err
+	}
 	cfgbytes, err := yaml.Marshal(config)
 	if err != nil {
 		return err

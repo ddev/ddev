@@ -1,0 +1,4 @@
+package globalconfig
+
+type InvalidOmitContainers error
+type invalidInstrumentationOptIn error

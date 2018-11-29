@@ -41,6 +41,10 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 			globalconfig.DdevGlobalConfig.OmitContainers = strings.Split(omitContainers, ",")
 		}
 	}
+	err = globalconfig.ValidateGlobalConfig()
+	if err != nil {
+		util.Failed("Invalid configuration in %s: %v", globalconfig.GetGlobalConfigPath(), err)
+	}
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	if err != nil {
 		util.Failed("Failed to write global config: %v", err)
@@ -48,7 +52,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 
 	util.Success("Global configuration:")
 	output.UserOut.Printf("instrumentation-opt-in=%v", globalconfig.DdevGlobalConfig.InstrumentationOptIn)
-	output.UserOut.Printf("omit-containers=%v", globalconfig.DdevGlobalConfig.OmitContainers)
+	output.UserOut.Printf("omit-containers=[%s]", strings.Join(globalconfig.DdevGlobalConfig.OmitContainers, ","))
 }
 
 func init() {

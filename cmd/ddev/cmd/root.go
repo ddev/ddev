@@ -126,11 +126,9 @@ func Execute() {
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 
-	// Ensure that the ~/.ddev exists
-	_ = globalconfig.GetGlobalDdevDir()
 	err := globalconfig.ReadGlobalConfig()
 	if err != nil {
-		util.Failed(err.Error())
+		util.Failed("Failed to read global config file %s: %v", globalconfig.GetGlobalConfigPath(), err)
 	}
 }
 

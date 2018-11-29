@@ -312,7 +312,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !IsValidOmitContainers(app.OmitContainers) {
-		return fmt.Errorf("Invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(invalidOmitContainers)
+		return fmt.Errorf("Invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
 	return nil
