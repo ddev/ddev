@@ -44,16 +44,6 @@ func ValidateGlobalConfig() error {
 	return nil
 }
 
-// isValidOmitContainers is a helper function to determine if a the OmitContainers array is valid
-func isValidOmitContainers(containerList []string) bool {
-	for _, containerName := range containerList {
-		if _, ok := ValidOmitContainers[containerName]; !ok {
-			return false
-		}
-	}
-	return true
-}
-
 // ReadGlobalConfig() reads the global config file into DdevGlobalConfig
 func ReadGlobalConfig() error {
 	globalConfigFile := GetGlobalConfigPath()
@@ -131,4 +121,25 @@ func GetGlobalDdevDir() string {
 		}
 	}
 	return ddevDir
+}
+
+// IsValidOmitContainers is a helper function to determine if a the OmitContainers array is valid
+func IsValidOmitContainers(containerList []string) bool {
+	for _, containerName := range containerList {
+		if _, ok := ValidOmitContainers[containerName]; !ok {
+			return false
+		}
+	}
+	return true
+}
+
+// GetValidOmitContainers is a helper function that returns a list of valid containers for OmitContainers.
+func GetValidOmitContainers() []string {
+	s := make([]string, 0, len(ValidOmitContainers))
+
+	for p := range ValidOmitContainers {
+		s = append(s, p)
+	}
+
+	return s
 }
