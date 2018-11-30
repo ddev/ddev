@@ -79,11 +79,7 @@ endif
 # Override test section with tests specific to ddev
 test: testpkg testcmd
 
-$(TESTTMP):
-	mkdir -p $(TESTTMP)
-
-
-testcmd: $(TESTTMP) $(BUILD_OS) setup
+testcmd: $(BUILD_OS) setup
 	DDEV_NO_SENTRY=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
 
 testpkg: setup
@@ -93,6 +89,7 @@ setup:
 	@(mv -f ~/.ddev/global_config.yaml ~/.ddev/global_config.yaml.bak 2>/dev/null && echo "Warning: Moved your global ddev config file") || true
 	@mkdir -p bin/darwin bin/linux
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
+	mkdir -p $(TESTTMP)
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: golangci-lint
