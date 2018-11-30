@@ -582,11 +582,9 @@ func TestConfigOverrideDetection(t *testing.T) {
 		assert.NoError(err)
 		t.Logf("ddev-ssh-agent failed to become ready, docker logs:\n=======\n%s\n========\n", dockerLogs)
 	} else if startErr != nil && strings.Contains(out, "web container failed") {
-		restoreOutput := util.CaptureUserOut()
-		err := app.Logs("web", false, false, "")
+		logs, err := GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
-		webLogs := restoreOutput()
-		t.Logf("web container failed, web logs:\n=======\n%s\n========\n ", webLogs)
+		t.Logf("web container failed: logs:\n=======\n%s\n========\n", logs)
 	}
 	require.NoError(t, err, "Aborting test because app.Start() failed")
 

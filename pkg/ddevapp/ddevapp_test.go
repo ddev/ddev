@@ -785,10 +785,10 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.ImportDB(d7testerTest1Dump, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 	_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
-	if err != nil {
-		logs, err := app.CaptureLogs("web", false, "20")
+	if err != nil && strings.Contains(err.Error(), "container failed") {
+		logs, err := ddevapp.GetErrLogsFromApp(app, err)
 		assert.NoError(err)
-		t.Logf("Failed http content assertion; web container logs:\n=======%s==========\n", logs)
+		t.Logf("container failed: logs:\n=======\n%s\n========\n", logs)
 	}
 
 	// Make a snapshot of d7 tester test 1
@@ -1879,7 +1879,12 @@ func TestWebserverType(t *testing.T) {
 
 			err = app.Start()
 			assert.NoError(err)
-
+			if err != nil {
+				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
+				if getLogsErr != nil {
+					t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
+				}
+			}
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectURL()+"/servertype.php")
 			assert.NoError(err)
 

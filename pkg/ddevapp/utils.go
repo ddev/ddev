@@ -265,3 +265,21 @@ func isZip(filepath string) bool {
 
 	return false
 }
+
+// GetErrLogsFromApp is used to do app.Logs on an app after an error has
+// been received, especially on app.Start. This is really for testing only
+func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
+	var serviceName string
+	if strings.Contains(errorReceived.Error(), "container failed") {
+		ary := strings.Split(errorReceived.Error(), " ")
+		if len(ary) > 0 && (ary[0] == "web" || ary[0] == "db") {
+			serviceName = ary[0]
+			logs, err := app.CaptureLogs(serviceName, false, "")
+			if err != nil {
+				return "", err
+			}
+			return logs, nil
+		}
+	}
+	return "", fmt.Errorf("no logs found for service %s", serviceName)
+}
