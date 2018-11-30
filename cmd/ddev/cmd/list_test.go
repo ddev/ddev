@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"io/ioutil"
 	"runtime"
 	"testing"
 
@@ -81,20 +82,26 @@ func TestDdevListContinuous(t *testing.T) {
 
 	// Execute "ddev list --continuous"
 	cmd := oexec.Command(DdevBin, "list", "--continuous")
-	var cmdOutput bytes.Buffer
-	cmd.Stdout = &cmdOutput
-	err := cmd.Start()
+	stdout, err := cmd.StdoutPipe()
+	assert.NoError(err)
+
+	err = cmd.Start()
 	assert.NoError(err)
 
 	// Take a snapshot of the output a little over one second apart.
-	output1 := string(cmdOutput.Bytes())
+	output1, err := ioutil.ReadAll(stdout)
+	assert.NoError(err)
+
 	time.Sleep(time.Millisecond * 1500)
-	output2 := string(cmdOutput.Bytes())
+
+	output2, err := ioutil.ReadAll(stdout)
+	assert.NoError(err)
 
 	// Kill the process we started.
 	err = cmd.Process.Kill()
 	assert.NoError(err)
 
+	t.Log("ddev list output 1=\n=======\n%s\n=======\nand output 2=\n=========\n%s\n========\n", output1, output2)
 	// The two snapshots of output should be different, and output2 should be larger.
 	assert.NotEqual(output1, output2, "Outputs at 2 times should have been different. output1=\n===\n%s\n===\noutput2=\n===\n%s\n===\n", output1, output2)
 	assert.True((len(output2) > len(output1)))
