@@ -87,9 +87,9 @@ func TestDdevListContinuous(t *testing.T) {
 	assert.NoError(err)
 
 	// Take a snapshot of the output a little over one second apart.
-	output1 := len(cmdOutput.Bytes())
+	output1 := string(cmdOutput.Bytes())
 	time.Sleep(time.Millisecond * 1500)
-	output2 := len(cmdOutput.Bytes())
+	output2 := string(cmdOutput.Bytes())
 
 	// Kill the process we started.
 	err = cmd.Process.Kill()
@@ -97,5 +97,5 @@ func TestDdevListContinuous(t *testing.T) {
 
 	// The two snapshots of output should be different, and output2 should be larger.
 	assert.NotEqual(output1, output2, "Outputs at 2 times should have been different. output1=\n===\n%s\n===\noutput2=\n===\n%s\n===\n", output1, output2)
-	assert.True((output2 > output1))
+	assert.True((len(output2) > len(output1)))
 }
