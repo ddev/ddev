@@ -76,7 +76,8 @@ RUN apt-get -qq update && \
         locales-all \
         libpcre3 \
         openssh-client \
-        php-imagick && \
+        php-imagick \
+        php-uploadprogress && \
     for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring $v-opcache $v-redis $v-soap $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
     for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
     for v in php5.6 php7.0 php7.1 php7.2; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-memcached; done && \
