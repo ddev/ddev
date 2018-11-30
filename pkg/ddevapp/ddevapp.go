@@ -291,7 +291,6 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 	case strings.HasSuffix(importPath, "tar.gz"):
 		fallthrough
 	case strings.HasSuffix(importPath, "tgz"):
-		// nolint: vetshadow
 		err := archive.Untar(importPath, dbPath, extPath)
 		if err != nil {
 			return fmt.Errorf("failed to extract provided archive: %v", err)
@@ -1284,7 +1283,6 @@ func GetActiveAppRoot(siteName string) (string, error) {
 			"com.docker.compose.service": "web",
 		}
 
-		// nolint: vetshadow
 		webContainer, err := dockerutil.FindContainerByLabels(labels)
 		if err != nil {
 			return "", err

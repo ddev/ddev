@@ -542,17 +542,14 @@ func TestDdevImportDB(t *testing.T) {
 			// Test that a settings file has correct hash_salt format
 			switch app.Type {
 			case ddevapp.AppTypeDrupal7:
-				// nolint: vetshadow
 				drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "$drupal_hash_salt")
 				assert.NoError(err)
 				assert.True(drupalHashSalt)
 			case ddevapp.AppTypeDrupal8:
-				// nolint: vetshadow
 				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, "settings['hash_salt']")
 				assert.NoError(err)
 				assert.True(settingsHashSalt)
 			case ddevapp.AppTypeWordPress:
-				// nolint: vetshadow
 				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
 				assert.NoError(err)
 				assert.True(hasAuthSalt)
@@ -560,7 +557,6 @@ func TestDdevImportDB(t *testing.T) {
 		}
 
 		if site.DBTarURL != "" {
-			// nolint: vetshadow
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
 			err = app.ImportDB(cachedArchive, "")
@@ -579,7 +575,6 @@ func TestDdevImportDB(t *testing.T) {
 		}
 
 		if site.DBZipURL != "" {
-			// nolint: vetshadow
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteZipArchive", "", site.DBZipURL)
 
 			assert.NoError(err)
@@ -597,7 +592,6 @@ func TestDdevImportDB(t *testing.T) {
 		}
 
 		if site.FullSiteTarballURL != "" {
-			// nolint: vetshadow
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_FullSiteTarballURL", "", site.FullSiteTarballURL)
 			assert.NoError(err)
 
@@ -696,14 +690,12 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NoError(err)
 
 		if site.DBTarURL != "" {
-			// nolint: vetshadow
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
 			err = app.ImportDB(cachedArchive, "")
 			assert.NoError(err)
 		}
 		if site.FilesTarballURL != "" {
-			// nolint: vetshadow
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			assert.NoError(err)
 			err = app.ImportFiles(tarballPath, "")
@@ -727,7 +719,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// Load an image from the files section
 		if site.FilesImageURI != "" {
-			// nolint: vetshadow
 			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+site.FilesImageURI)
 			assert.NoError(err)
 			assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
@@ -892,7 +883,6 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 			// Now try to append to the file on the host.
 			// os.OpenFile() for append here fails if the file does not already exist.
-			//nolint: vetshadow
 			f, err := os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
 			assert.NoError(err)
 			_, err = f.WriteString("this addition to the file was added on the host side")
@@ -1513,7 +1503,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
-		// nolint: vetshadow
 		_, err := constructContainerName(containerType, app)
 		assert.Error(err)
 	}
@@ -1620,7 +1609,6 @@ func TestListWithoutDir(t *testing.T) {
 	// array first.
 	table := ddevapp.CreateAppTable()
 	for _, site := range apps {
-		// nolint: vetshadow
 		desc, err := site.Describe()
 		if err != nil {
 			t.Fatalf("Failed to describe site %s: %v", site.GetName(), err)
@@ -1694,7 +1682,6 @@ func TestHttpsRedirection(t *testing.T) {
 		for _, parts := range expectations {
 
 			reqURL := parts.scheme + "://" + app.GetHostname() + parts.uri
-			// nolint: vetshadow
 			_, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
 			assert.Error(err)
 			assert.NotNil(resp, "resp was nil for webserver_type=%s url=%s", webserverType, reqURL)
@@ -1885,7 +1872,6 @@ func TestWebserverType(t *testing.T) {
 			err = app.Start()
 			assert.NoError(err)
 
-			// nolint: vetshadow
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectURL()+"/servertype.php")
 			assert.NoError(err)
 

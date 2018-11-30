@@ -132,7 +132,6 @@ func Untar(source string, dest string, extractionDir string) error {
 		switch file.Typeflag {
 		case tar.TypeDir:
 			// For a directory, if it doesn't exist, we create it.
-			// nolint: vetshadow
 			finfo, err := os.Stat(fullPath)
 			if err == nil && finfo.IsDir() {
 				continue
