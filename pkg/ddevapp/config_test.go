@@ -586,7 +586,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 		err := app.Logs("web", false, false, "")
 		assert.NoError(err)
 		webLogs := restoreOutput()
-		t.Logf("web continer failed, web logs:\n=======\n%s\n========\n ", webLogs)
+		t.Logf("web container failed, web logs:\n=======\n%s\n========\n ", webLogs)
 	}
 	require.NoError(t, err, "Aborting test because app.Start() failed")
 
