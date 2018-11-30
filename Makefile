@@ -5,6 +5,9 @@ GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --en
 
 WINDOWS_SUDO_VERSION=v0.0.1
 
+GOTESTSUM_FORMAT ?= short-verbose
+TESTTMP=/tmp/testresults
+TESTTOOL ?= $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --format $(GOTESTSUM_FORMAT) --junitfile '$(TESTTMP)/$(@).xml'  --"; else echo "go test"; fi)
 ##### These variables need to be adjusted in most repositories #####
 
 # This repo's root import path (under GOPATH).
@@ -60,7 +63,7 @@ include build-tools/makefile_components/base_build_go.mak
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
-TEST_TIMEOUT=60m
+TEST_TIMEOUT=120m
 BUILD_ARCH = $(shell go env GOARCH)
 ifeq ($(BUILD_OS),linux)
     DDEV_BINARY_FULLPATH=$(PWD)/bin/$(BUILD_OS)/ddev
@@ -68,7 +71,6 @@ endif
 
 ifeq ($(BUILD_OS),windows)
     DDEV_BINARY_FULLPATH=$(PWD)/bin/$(BUILD_OS)/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
-    TEST_TIMEOUT=80m
 endif
 
 ifeq ($(BUILD_OS),darwin)
@@ -78,11 +80,14 @@ endif
 # Override test section with tests specific to ddev
 test: testpkg testcmd
 
-testcmd: $(BUILD_OS) setup
-	CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
+$(TESTTMP):
+	mkdir -p $(TESTTMP)
 
-testpkg:
-	CGO_ENABLED=0 go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
+testcmd: $(TESTTMP) $(BUILD_OS) setup
+	CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) $(TESTTOOL) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
+
+testpkg: $(TESTTMP)
+	CGO_ENABLED=0 $(TESTTOOL) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
 
 setup:
 	@mkdir -p bin/darwin bin/linux
