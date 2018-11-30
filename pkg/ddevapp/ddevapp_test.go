@@ -165,7 +165,6 @@ func TestMain(m *testing.M) {
 		}
 
 		switchDir := TestSites[i].Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s Start", TestSites[i].Name))
 
 		testcommon.ClearDockerEnv()
 
@@ -177,8 +176,6 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
-
-		runTime()
 		switchDir()
 	}
 
@@ -188,8 +185,6 @@ func TestMain(m *testing.M) {
 	}
 
 	for i, site := range TestSites {
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s Remove", site.Name))
-
 		testcommon.ClearDockerEnv()
 
 		app := &ddevapp.DdevApp{}
@@ -205,8 +200,6 @@ func TestMain(m *testing.M) {
 				log.Fatalf("TestMain shutdown: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
 			}
 		}
-
-		runTime()
 		site.Cleanup()
 	}
 

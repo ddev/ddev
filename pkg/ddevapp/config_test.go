@@ -575,12 +575,20 @@ func TestConfigOverrideDetection(t *testing.T) {
 	restoreOutput := util.CaptureUserOut()
 	startErr := app.Start()
 	out := restoreOutput()
-	if strings.Contains(out, "ddev-ssh-agent failed to become ready") {
+	assert.NoError(startErr, "app.Start() did not succeed: output:===\n%s\n===", out)
+
+	if startErr != nil && strings.Contains(out, "ddev-ssh-agent failed to become ready") {
 		dockerLogs, err := exec.RunCommand("docker", []string{"logs", "ddev-ssh-agent"})
 		assert.NoError(err)
-		t.Logf("ddev-ssh-agent failed to become ready, docker logs:===\n%s\n===", dockerLogs)
+		t.Logf("ddev-ssh-agent failed to become ready, docker logs:\n=======\n%s\n========\n", dockerLogs)
+	} else if startErr != nil && strings.Contains(out, "web container failed") {
+		restoreOutput := util.CaptureUserOut()
+		err := app.Logs("web", false, false, "")
+		assert.NoError(err)
+		webLogs := restoreOutput()
+		t.Logf("web continer failed, web logs:\n=======\n%s\n========\n ", webLogs)
 	}
-	require.NoError(t, startErr, "app.Start() did not succeed: output:===\n%s\n===", out)
+	require.NoError(t, err, "Aborting test because app.Start() failed")
 
 	assert.Contains(out, "utf.cnf")
 	assert.Contains(out, "my-php.ini")

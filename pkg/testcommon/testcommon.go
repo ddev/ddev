@@ -74,8 +74,6 @@ type TestSite struct {
 func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
-	log.Debugf("Preparing test site %s", site.Name)
-	runTime := TimeTrack(time.Now(), fmt.Sprintf("Prepare() site %s (CopyDir etc.)", site.Name))
 
 	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
 	util.CheckErr(err)
@@ -117,7 +115,6 @@ func (site *TestSite) Prepare() error {
 		return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", site.Name, site.Dir, err)
 	}
 
-	runTime()
 	return nil
 }
 
