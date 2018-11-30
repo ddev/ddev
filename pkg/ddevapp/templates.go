@@ -35,6 +35,9 @@ services:
       - COLUMNS=$COLUMNS
       - LINES=$LINES
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
+    healthcheck:
+      interval: 5s
+      retries: 3
   web:
     container_name: {{ .plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
@@ -53,8 +56,6 @@ services:
           nocopy: true
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
-    depends_on:
-      - db
     links:
       - db:db
     # ports is list of exposed *container* ports
@@ -90,6 +91,9 @@ services:
     extra_hosts: ["{{ .extra_host }}"]
     external_links:
       - ddev-router:$DDEV_HOSTNAME
+    healthcheck:
+      interval: 5s
+      retries: 2
 
 {{if  .IncludeDBA }}
   dba:
@@ -102,8 +106,6 @@ services:
       com.ddev.app-type: {{ .appType }}
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
-    depends_on:
-      - db
     links:
       - db:db
     ports:
@@ -114,6 +116,11 @@ services:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
       - HTTP_EXPOSE={{ .dbaport }}
+    healthcheck:
+      interval: 90s
+      timeout: 2s
+      retries: 1
+
 {{end}}
 networks:
   default:
@@ -272,6 +279,10 @@ services:
         volume:
           nocopy: true
     restart: "no"
+    healthcheck:
+      interval: 5s
+      retries: 1
+
 networks:
    default:
      external:
@@ -297,6 +308,9 @@ services:
       - "socket_dir:/tmp/.ssh-agent"
     environment:
       - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
+    healthcheck:
+      interval: 2s
+      retries: 5
 networks:
   default:
     external:
