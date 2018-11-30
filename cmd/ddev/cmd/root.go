@@ -79,7 +79,6 @@ var RootCmd = &cobra.Command{
 				return // Do not continue as we'll end up with github api violations.
 			}
 
-			// nolint: vetshadow
 			updateNeeded, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version.DdevVersion)
 
 			if err != nil {

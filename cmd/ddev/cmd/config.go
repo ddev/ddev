@@ -246,7 +246,6 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	// Support the show-config-location flag.
 	if showConfigLocation {
-		// nolint: vetshadow
 		activeApp, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			if strings.Contains(err.Error(), "Have you run 'ddev config'") {
@@ -276,7 +275,6 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	} else if projectNameArg != "" { // if we have a siteNameArg passed in, use it for c.Name
 		app.Name = projectNameArg
 	} else { // No siteNameArg passed, c.Name not set: use c.Name from the directory
-		// nolint: vetshadow
 		pwd, err := os.Getwd()
 		util.CheckErr(err)
 		app.Name = filepath.Base(pwd)

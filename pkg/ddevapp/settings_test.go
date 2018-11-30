@@ -66,13 +66,11 @@ func TestWriteSettings(t *testing.T) {
 		expectedSettingsFile := filepath.Join(dir, settingsRelativePath)
 		_, err = os.Stat(expectedSettingsFile)
 		assert.True(os.IsNotExist(err))
-		// nolint: vetshadow
 		createdFile, err := app.CreateSettingsFile()
 		assert.NoError(err)
 		assert.EqualValues(expectedSettingsFile, createdFile)
 		_, err = os.Stat(expectedSettingsFile)
 		assert.NoError(err)
-		// nolint: vetshadow
 		signatureFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, DdevFileSignature)
 		assert.NoError(err)
 		assert.True(signatureFound, "Failed to find %s in %s", DdevFileSignature, expectedSettingsFile)
