@@ -1,21 +1,20 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/getsentry/raven-go"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
-
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/getsentry/raven-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 )
 
 var (
@@ -105,8 +104,24 @@ var RootCmd = &cobra.Command{
 			return
 		}
 		sentryNotSetupWarning()
+
+		// All this nonsense is to capture the official usage we used for this command.
+		// Unfortunately cobra doesn't seem to provide this easily.
+		// We use the first word of Use: to get it.
+		cmdCopy := cmd
+		var fullCommand = make([]string, 0)
+		fullCommand = append(fullCommand, util.GetFirstWord(cmdCopy.Use))
+		for cmdCopy.HasParent() {
+			fullCommand = append(fullCommand, util.GetFirstWord(cmdCopy.Parent().Use))
+			cmdCopy = cmdCopy.Parent()
+		}
+		uString := "Usage:"
+		for i := len(fullCommand) - 1; i >= 0; i = i - 1 {
+			uString = uString + " " + fullCommand[i]
+		}
+
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" {
-			_ = raven.CaptureMessageAndWait("Usage: ddev "+cmd.CalledAs(), map[string]string{"severity-level": "info", "report-type": "usage"})
+			_ = raven.CaptureMessageAndWait(uString, map[string]string{"severity-level": "info", "report-type": "usage"})
 		}
 	},
 }

@@ -169,3 +169,9 @@ func IsCommandAvailable(cmdName string) bool {
 	}
 	return false
 }
+
+// GetFirstWord just returns the first space-separated word in a string.
+func GetFirstWord(s string) string {
+	arr := strings.Split(s, " ")
+	return arr[0]
+}

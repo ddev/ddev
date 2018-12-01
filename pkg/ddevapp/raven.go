@@ -23,11 +23,11 @@ func SetRavenBaseTags() {
 		raven.SetRelease("ddev@" + version.COMMIT)
 
 		tags := map[string]string{
-			"OS":             runtime.GOOS,
-			"dockerVersion":  dockerVersion,
-			"composeVersion": composeVersion,
-			"dockerToolbox":  strconv.FormatBool(isToolbox),
-			"ddevCommand":    strings.Join(os.Args, " "),
+			"OS":                   runtime.GOOS,
+			"dockerVersion":        dockerVersion,
+			"dockerComposeVersion": composeVersion,
+			"dockerToolbox":        strconv.FormatBool(isToolbox),
+			"ddevCommand":          strings.Join(os.Args, " "),
 		}
 		ravenutils.AddRavenTags(tags)
 		raven.SetTagsContext(tags)
