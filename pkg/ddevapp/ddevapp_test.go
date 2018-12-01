@@ -223,45 +223,59 @@ func TestDdevStart(t *testing.T) {
 	//nolint: errcheck
 	defer os.Chdir(testDir)
 
-	for _, site := range TestSites {
-		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
-
-		err := app.Init(site.Dir)
-		assert.NoError(err)
-
-		err = app.Start()
-		assert.NoError(err)
-
-		// ensure docker-compose.yaml exists inside .ddev site folder
-		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
-		assert.True(composeFile)
-
-		for _, containerType := range [3]string{"web", "db", "dba"} {
-			containerName, err := constructContainerName(containerType, app)
-			assert.NoError(err)
-			check, err := testcommon.ContainerCheck(containerName, "running")
-			assert.NoError(err)
-			assert.True(check, "Container check on %s failed", containerType)
-		}
-
-		err = app.Down(true, false)
-		assert.NoError(err)
-		runTime()
-		switchDir()
-	}
-
-	// Start up TestSites[0] again
 	site := TestSites[0]
-	err := os.Chdir(site.Dir)
+	switchDir := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
+
+	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.Init(site.Dir)
-	assert.NoError(err)
+
 	err = app.Start()
 	assert.NoError(err)
 
+	// ensure docker-compose.yaml exists inside .ddev site folder
+	composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
+	assert.True(composeFile)
+
+	for _, containerType := range [3]string{"web", "db", "dba"} {
+		containerName, err := constructContainerName(containerType, app)
+		assert.NoError(err)
+		check, err := testcommon.ContainerCheck(containerName, "running")
+		assert.NoError(err)
+		assert.True(check, "Container check on %s failed", containerType)
+	}
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+	runTime()
+	switchDir()
+
+	// Start up TestSites[0] again with a post-start hook
+	// When run the first time, it should execute the hook, second time it should not
+	err = os.Chdir(site.Dir)
+	assert.NoError(err)
+	err = app.Init(site.Dir)
+	app.Commands = map[string][]ddevapp.Command{"post-start": {{Exec: "bash -c 'echo hello'"}}}
+
+	assert.NoError(err)
+	stdout := util.CaptureUserOut()
+	err = app.Start()
+	assert.NoError(err)
+	out := stdout()
+	assert.Contains(out, "Running exec command")
+	assert.Contains(out, "hello\n")
+
+	// When we run it again, it should not execute the post-start hook because the
+	// container has already been created and does not need to be recreated.
+	stdout = util.CaptureUserOut()
+	err = app.Start()
+	assert.NoError(err)
+	out = stdout()
+	assert.NotContains(out, "Running exec command")
+	assert.NotContains(out, "hello\n")
+
 	// try to start a site of same name at different path
-	another := TestSites[0]
+	another := site
 	err = another.Prepare()
 	if err != nil {
 		assert.FailNow("TestDdevStart: Prepare() failed on another.Prepare(), err=%v", err)
@@ -277,7 +291,7 @@ func TestDdevStart(t *testing.T) {
 	}
 
 	// Make sure that GetActiveApp() also fails when trying to start app of duplicate name in current directory.
-	switchDir := another.Chdir()
+	switchDir = another.Chdir()
 	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
 	if err != nil {
