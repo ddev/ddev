@@ -1393,7 +1393,12 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)
-
+	if err != nil {
+		logs, err := ddevapp.GetErrLogsFromApp(app, err)
+		if err != nil {
+			t.Logf("logs from broken container:\n=======\n%s\n========\n", logs)
+		}
+	}
 	// Move the site directory to a temp location to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
@@ -2030,6 +2035,9 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 
 // TestCaptureLogs checks that app.CaptureLogs() works
 func TestCaptureLogs(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping TestCaptureLogs on windows, it sometimes hangs")
+	}
 	assert := asrt.New(t)
 
 	site := TestSites[0]
