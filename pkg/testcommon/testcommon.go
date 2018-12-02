@@ -375,7 +375,7 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string,
 	body, resp, err := GetLocalHTTPResponse(t, rawurl, httpTimeout)
 	// We see intermittent php-fpm SIGBUS failures, only on macOS.
 	// That results in a 502. If we get a 502 on macOS, try again.
-	if resp.StatusCode == 502 && runtime.GOOS == "darwin" {
+	if runtime.GOOS == "darwin" && resp != nil && resp.StatusCode == 502 {
 		t.Log("Received 502 error on macOS, retrying GetLocalHTTPResponse")
 		time.Sleep(time.Second)
 		body, resp, err = GetLocalHTTPResponse(t, rawurl, httpTimeout)
