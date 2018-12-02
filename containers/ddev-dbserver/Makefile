@@ -41,15 +41,27 @@ include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
 include ../../build-tools/makefile_components/base_test_python.mak
 
-MYSQL_VERSION=10.2
-DIRS = mariadb10.1 mariadb10.2
+DIRS = 10.1 10.2
+build: containers
+
 containers:
 	for item in $(DIRS); do \
-		set -x; \
 		mkdir -p $$item/.files && cp -r files.master/ $$item/.files; \
-		echo $$item && $(MAKE) -C $$item container; \
+		echo $$item && $(MAKE) -C $$item container VERSION=$(VERSION)-$$item DOCKER_ARGS="--build-arg=FROM_IMAGE=mariadb:$$item"; \
 	done
 
+push: containers
+	for item in $(DIRS); do \
+		echo $$item && $(MAKE) -C $$item container VERSION=$(VERSION)-$$item DOCKER_ARGS="--build-arg=FROM_IMAGE=mariadb:$$item"; \
+	done
 
-test: container
-	./test/testserver.sh $(DOCKER_REPO):$(VERSION) $(MYSQL_VERSION) 
+clean:
+	for item in $(DIRS); do \
+		$(MAKE) -C $$item container clean \
+	done
+	$(MAKE) clean
+
+test: containers
+	for item in $(DIRS); do \
+		./test/testserver.sh $(DOCKER_REPO):$(VERSION)-$$item $$item
+	done

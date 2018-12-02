@@ -1,4 +1,5 @@
-FROM mariadb:10.2
+ARG FROM_IMAGE=mariadb:latest
+FROM $FROM_IMAGE
 
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
@@ -13,7 +14,7 @@ RUN apt-get -qq update && apt-get -qq install -y bash tzdata vim less sudo && rm
 RUN rm -rf /var/lib/mysql/* /etc/mysql
 RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql
 
-ADD ../.files /
+ADD .files /
 
 RUN chmod ugo+x /healthcheck.sh
 
