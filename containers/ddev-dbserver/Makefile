@@ -50,9 +50,9 @@ containers:
 		echo $$item && $(MAKE) -C $$item container VERSION=$(VERSION)-$$item DOCKER_ARGS="--build-arg=FROM_IMAGE=mariadb:$$item"; \
 	done
 
-push: containers
+pushes:
 	for item in $(DIRS); do \
-		echo $$item && $(MAKE) -C $$item container VERSION=$(VERSION)-$$item DOCKER_ARGS="--build-arg=FROM_IMAGE=mariadb:$$item"; \
+		$(MAKE) -C $$item push VERSION=$(VERSION)-$$item DOCKER_ARGS="--build-arg=FROM_IMAGE=mariadb:$$item"; \
 	done
 
 clean:
@@ -63,5 +63,5 @@ clean:
 
 test: containers
 	for item in $(DIRS); do \
-		./test/testserver.sh $(DOCKER_REPO):$(VERSION)-$$item $$item
+		./test/testserver.sh $(DOCKER_REPO):$(VERSION)-$$item $$item ; \
 	done
