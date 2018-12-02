@@ -13,6 +13,8 @@ import (
 
 	"github.com/cheggaaa/pb"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/output"
+	log "github.com/sirupsen/logrus"
 )
 
 // DownloadFile retrieves a file.
