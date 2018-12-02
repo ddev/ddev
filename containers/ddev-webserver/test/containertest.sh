@@ -43,10 +43,6 @@ cleanup
 
 UNAME=$(uname)
 
-# Using a static composer dir saves the composer downloads for each php version.
-composercache=${HOME}/tmp/composercache_${RANDOM}_$$
-mkdir -p $composercache && chmod 777 $composercache
-
 export MOUNTUID=$UID
 export MOUNTGID=$(id -g)
 if [ "$UNAME" = "MINGW64_NT-10.0" -o "$MOUNTUID" -ge 60000 ] ; then
@@ -57,7 +53,7 @@ fi
 for v in 5.6 7.0 7.1 7.2 7.3; do
 	echo "starting container for tests on php$v"
 
-	docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -d --name $CONTAINER_NAME -v "/$composercache:/home/.composer/cache:rw" -d $DOCKER_IMAGE
+	docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -d --name $CONTAINER_NAME -v ddev-composer-cache:/mnt/composer-cache -d $DOCKER_IMAGE
 	if ! containercheck; then
         exit 101
     fi
@@ -69,7 +65,7 @@ for v in 5.6 7.0 7.1 7.2 7.3; do
 	docker exec -t $CONTAINER_NAME wp --version
 
 	# Make sure composer create-project is working.
-	docker exec -t $CONTAINER_NAME composer create-project -d //tmp drupal-composer/drupal-project:8.x-dev my-drupal8-site --stability dev --no-interaction
+	docker exec -t $CONTAINER_NAME composer create-project -d //tmp psr/log --no-dev --no-interaction
 
     # Default settings for assert.active should be 1
     docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 1 => 1"

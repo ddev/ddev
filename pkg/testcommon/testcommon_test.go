@@ -154,6 +154,12 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 
 		err = app.Start()
 		assert.NoError(err)
+		if err != nil {
+			logs, err := ddevapp.GetErrLogsFromApp(app, err)
+			if err != nil {
+				t.Logf("logs from broken container:\n=======\n%s\n========\n", logs)
+			}
+		}
 
 		safeURL := app.GetHTTPURL() + site.Safe200URIWithExpectation.URI
 		out, _, err := GetLocalHTTPResponse(t, safeURL)

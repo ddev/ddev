@@ -165,7 +165,6 @@ func TestMain(m *testing.M) {
 		}
 
 		switchDir := TestSites[i].Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s Start", TestSites[i].Name))
 
 		testcommon.ClearDockerEnv()
 
@@ -177,8 +176,6 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
-
-		runTime()
 		switchDir()
 	}
 
@@ -188,8 +185,6 @@ func TestMain(m *testing.M) {
 	}
 
 	for i, site := range TestSites {
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s Remove", site.Name))
-
 		testcommon.ClearDockerEnv()
 
 		app := &ddevapp.DdevApp{}
@@ -205,8 +200,6 @@ func TestMain(m *testing.M) {
 				log.Fatalf("TestMain shutdown: app.Down() failed on site %s, err=%v", TestSites[i].Name, err)
 			}
 		}
-
-		runTime()
 		site.Cleanup()
 	}
 
@@ -792,10 +785,10 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.ImportDB(d7testerTest1Dump, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 	_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
-	if err != nil {
-		logs, err := app.CaptureLogs("web", false, "20")
+	if err != nil && strings.Contains(err.Error(), "container failed") {
+		logs, err := ddevapp.GetErrLogsFromApp(app, err)
 		assert.NoError(err)
-		t.Logf("Failed http content assertion; web container logs:\n=======%s==========\n", logs)
+		t.Logf("container failed: logs:\n=======\n%s\n========\n", logs)
 	}
 
 	// Make a snapshot of d7 tester test 1
@@ -1400,7 +1393,12 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)
-
+	if err != nil {
+		logs, err := ddevapp.GetErrLogsFromApp(app, err)
+		if err != nil {
+			t.Logf("logs from broken container:\n=======\n%s\n========\n", logs)
+		}
+	}
 	// Move the site directory to a temp location to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
@@ -1886,7 +1884,12 @@ func TestWebserverType(t *testing.T) {
 
 			err = app.Start()
 			assert.NoError(err)
-
+			if err != nil {
+				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
+				if getLogsErr != nil {
+					t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
+				}
+			}
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectURL()+"/servertype.php")
 			assert.NoError(err)
 
@@ -2032,6 +2035,9 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 
 // TestCaptureLogs checks that app.CaptureLogs() works
 func TestCaptureLogs(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping TestCaptureLogs on windows, it sometimes hangs")
+	}
 	assert := asrt.New(t)
 
 	site := TestSites[0]

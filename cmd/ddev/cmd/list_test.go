@@ -1,12 +1,13 @@
 package cmd
 
 import (
-	"bytes"
+	"bufio"
+	"github.com/stretchr/testify/require"
 	"runtime"
 	"testing"
+	"time"
 
 	oexec "os/exec"
-	"time"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
@@ -80,22 +81,49 @@ func TestDdevListContinuous(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Execute "ddev list --continuous"
-	cmd := oexec.Command(DdevBin, "list", "--continuous")
-	var cmdOutput bytes.Buffer
-	cmd.Stdout = &cmdOutput
-	err := cmd.Start()
+	cmd := oexec.Command(DdevBin, "list", "-j", "--continuous")
+	stdout, err := cmd.StdoutPipe()
 	assert.NoError(err)
 
-	// Take a snapshot of the output a little over one second apart.
-	output1 := len(cmdOutput.Bytes())
+	err = cmd.Start()
+	assert.NoError(err)
+
+	reader := bufio.NewReader(stdout)
+
+	blob := make([]byte, 4096)
+	byteCount, err := reader.Read(blob)
+	assert.NoError(err)
+	blob = blob[:byteCount-1]
+	require.True(t, byteCount > 1000)
+
+	f, err := unmarshallJSONLogs(string(blob))
+	require.NoError(t, err)
+	assert.NotEmpty(f[0]["raw"])
+	time1 := f[0]["time"]
+	if len(f) > 1 {
+		t.Logf("Expected just one line in initial read, but got %d lines instead", len(f))
+	}
+
 	time.Sleep(time.Millisecond * 1500)
-	output2 := len(cmdOutput.Bytes())
+
+	// Now read more from the pipe after resetting blob
+	blob = make([]byte, 4096)
+	byteCount, err = reader.Read(blob)
+	assert.NoError(err)
+	blob = blob[:byteCount-1]
+	require.True(t, byteCount > 1000)
+	f, err = unmarshallJSONLogs(string(blob))
+	require.NoError(t, err)
+	if len(f) > 1 {
+		t.Logf("Expected just one line in second read, but got %d lines instead", len(f))
+	}
+	assert.NotEmpty(f[0]["raw"]) // Just to make sure it's a list object
+	time2 := f[0]["time"]
+	assert.NotEqual(time1, time2)
+	assert.True(time2.(string) > time1.(string))
 
 	// Kill the process we started.
 	err = cmd.Process.Kill()
 	assert.NoError(err)
 
-	// The two snapshots of output should be different, and output2 should be larger.
-	assert.NotEqual(output1, output2, "Outputs at 2 times should have been different. output1=\n===\n%s\n===\noutput2=\n===\n%s\n===\n", output1, output2)
-	assert.True((output2 > output1))
 }
