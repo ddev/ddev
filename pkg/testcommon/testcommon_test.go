@@ -138,8 +138,9 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 		}
 	}
-
+	defer site.Cleanup()
 	cleanup := site.Chdir()
+	defer cleanup()
 
 	app := &ddevapp.DdevApp{}
 	err := app.Init(site.Dir)
@@ -153,6 +154,8 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		assert.NoError(err)
 
 		err = app.Start()
+		//nolint: errcheck
+		defer app.Down(true, false)
 		assert.NoError(err)
 		if err != nil {
 			logs, err := ddevapp.GetErrLogsFromApp(app, err)
@@ -179,13 +182,6 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	app.RouterHTTPPort = "80"
 	err = app.WriteConfig()
 	assert.NoError(err)
-
-	err = app.Down(true, false)
-	assert.NoError(err)
-
-	cleanup()
-
-	site.Cleanup()
 }
 
 // TestGetCachedArchive tests download and extraction of archives for test sites
