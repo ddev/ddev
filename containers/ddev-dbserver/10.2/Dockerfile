@@ -1,4 +1,4 @@
-ARG FROM_IMAGE=mariadb:latest
+ARG FROM_IMAGE=mariadb:broken
 FROM $FROM_IMAGE
 
 ENV MYSQL_DATABASE db

@@ -43,9 +43,11 @@ VERSION := $(shell git describe --tags --always --dirty)
 
 DIRS = 10.1 10.2
 
+build: container
+
 container:
 	for item in $(DIRS); do \
-		mkdir -p $$item/.files && cp -r files.master/ $$item/.files; \
+		rm -rf $$item/.files && cp -r files/ $$item/.files ; \
 		echo $$item && $(MAKE) -C $$item container VERSION=$(VERSION)-$$item DOCKER_ARGS="--build-arg=FROM_IMAGE=mariadb:$$item"; \
 	done
 

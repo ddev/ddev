@@ -39,8 +39,9 @@ include ../../../build-tools/makefile_components/base_build_python-docker.mak
 include ../../../build-tools/makefile_components/base_container.mak
 include ../../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
-include ../../../build-tools/makefile_components/base_test_python.mak
+#include ../../../build-tools/makefile_components/base_test_python.mak
 
+build: container
 
 test: container
 	./test/testserver.sh $(DOCKER_REPO):$(VERSION) $(MYSQL_VERSION) 
