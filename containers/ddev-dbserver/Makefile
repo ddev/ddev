@@ -35,33 +35,31 @@ VERSION := $(shell git describe --tags --always --dirty)
 # include. That way the base components can easily be updated as our general needs
 # change.
 #include build-tools/makefile_components/base_build_go.mak
-include ../../build-tools/makefile_components/base_build_python-docker.mak
-include ../../build-tools/makefile_components/base_container.mak
-include ../../build-tools/makefile_components/base_push.mak
+#include ../../build-tools/makefile_components/base_build_python-docker.mak
+#include ../../build-tools/makefile_components/base_container.mak
+#include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
-include ../../build-tools/makefile_components/base_test_python.mak
+#include ../../build-tools/makefile_components/base_test_python.mak
 
 DIRS = 10.1 10.2
-build: containers
 
-containers:
+container:
 	for item in $(DIRS); do \
 		mkdir -p $$item/.files && cp -r files.master/ $$item/.files; \
 		echo $$item && $(MAKE) -C $$item container VERSION=$(VERSION)-$$item DOCKER_ARGS="--build-arg=FROM_IMAGE=mariadb:$$item"; \
 	done
 
-pushes:
+push:
 	for item in $(DIRS); do \
 		$(MAKE) -C $$item push VERSION=$(VERSION)-$$item DOCKER_ARGS="--build-arg=FROM_IMAGE=mariadb:$$item"; \
 	done
 
 clean:
 	for item in $(DIRS); do \
-		$(MAKE) -C $$item container clean \
+		$(MAKE) -C $$item container clean ; \
 	done
-	$(MAKE) clean
 
-test: containers
+test: container
 	for item in $(DIRS); do \
 		./test/testserver.sh $(DOCKER_REPO):$(VERSION)-$$item $$item ; \
 	done
