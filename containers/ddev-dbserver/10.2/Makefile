@@ -25,7 +25,7 @@ DOCKER_REPO ?= drud/ddev-dbserver
 
 # This version-strategy uses git tags to set the version string
 # VERSION can be overridden on make commandline: make VERSION=0.9.1 push
-VERSION := $(shell git describe --tags --always --dirty)
+VERSION := $(shell git describe --tags --always --dirty)-10.2
 #
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
@@ -35,13 +35,15 @@ VERSION := $(shell git describe --tags --always --dirty)
 # include. That way the base components can easily be updated as our general needs
 # change.
 #include build-tools/makefile_components/base_build_go.mak
-include ../../build-tools/makefile_components/base_build_python-docker.mak
-include ../../build-tools/makefile_components/base_container.mak
-include ../../build-tools/makefile_components/base_push.mak
+include ../../../build-tools/makefile_components/base_build_python-docker.mak
+include ../../../build-tools/makefile_components/base_container.mak
+include ../../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
-include ../../build-tools/makefile_components/base_test_python.mak
+#include ../../build-tools/makefile_components/base_test_python.mak
 
 MYSQL_VERSION=10.2
 
+build: container
+
 test: container
-	./test/testserver.sh $(DOCKER_REPO):$(VERSION) $(MYSQL_VERSION) 
+	../test/testserver.sh $(DOCKER_REPO):$(VERSION) $(MYSQL_VERSION)
