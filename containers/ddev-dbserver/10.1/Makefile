@@ -51,4 +51,4 @@ include ../../../build-tools/makefile_components/base_push.mak
 build: container
 
 test: container
-	../test/testserver.sh $(DOCKER_REPO):$(VERSION) $(MYSQL_VERSION)
+	cd .. &&  ./test/testserver.sh $(DOCKER_REPO):$(VERSION) $(MARIADB_VERSION)

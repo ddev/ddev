@@ -8,6 +8,8 @@
 # Docker repo for a push
 DOCKER_REPO ?= drud/ddev-dbserver
 
+MARIADB_VERSION=10.2
+
 # Upstream repo used in the Dockerfile
 # UPSTREAM_REPO ?= oraclelinux:7.3
 
@@ -25,7 +27,12 @@ DOCKER_REPO ?= drud/ddev-dbserver
 
 # This version-strategy uses git tags to set the version string
 # VERSION can be overridden on make commandline: make VERSION=0.9.1 push
-VERSION := $(shell git describe --tags --always --dirty)-10.2
+ifndef VERSION
+	VERSION := $(shell git describe --tags --always --dirty)
+else
+override VERSION := $(VERSION)-$(MARIADB_VERSION)
+endif
+
 #
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
@@ -41,9 +48,7 @@ include ../../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include ../../build-tools/makefile_components/base_test_python.mak
 
-MYSQL_VERSION=10.2
-
 build: container
 
 test: container
-	../test/testserver.sh $(DOCKER_REPO):$(VERSION) $(MYSQL_VERSION)
+	cd .. &&  ./test/testserver.sh $(DOCKER_REPO):$(VERSION) $(MARIADB_VERSION)
