@@ -29,9 +29,8 @@ MARIADB_VERSION=10.1
 # VERSION can be overridden on make commandline: make VERSION=0.9.1 push
 ifndef VERSION
 	VERSION := $(shell git describe --tags --always --dirty)
-else
-override VERSION := $(VERSION)-$(MARIADB_VERSION)
 endif
+override VERSION := $(VERSION)-$(MARIADB_VERSION)
 
 #
 # This version-strategy uses a manual value to set the version string
