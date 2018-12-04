@@ -62,6 +62,7 @@ type DdevApp struct {
 	PHPVersion            string               `yaml:"php_version"`
 	WebserverType         string               `yaml:"webserver_type"`
 	WebImage              string               `yaml:"webimage,omitempty"`
+	BgsyncImage           string               `yaml:"dbsyncimage,omitempty"`
 	DBImage               string               `yaml:"dbimage,omitempty"`
 	DBAImage              string               `yaml:"dbaimage,omitempty"`
 	RouterHTTPPort        string               `yaml:"router_http_port"`
@@ -657,11 +658,6 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	err = app.setUpCaching()
-	if err != nil {
-		return err
-	}
-
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 
@@ -686,12 +682,20 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	//TODO: Delete the webcachevol if necessary
+
 	_, _, err = dockerutil.ComposeCmd(files, "up", "-d")
 	if err != nil {
 		return err
 	}
 
 	err = StartDdevRouter()
+	if err != nil {
+		return err
+	}
+
+	//TODO: We don't need to do this if not caching.
+	err = app.precacheWebdir()
 	if err != nil {
 		return err
 	}
@@ -882,6 +886,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_DBIMAGE":                  app.DBImage,
 		"DDEV_DBAIMAGE":                 app.DBAImage,
 		"DDEV_WEBIMAGE":                 app.WebImage,
+		"DDEV_BGSYNCIMAGE":              app.BgsyncImage,
 		"DDEV_APPROOT":                  app.AppRoot,
 		"DDEV_DOCROOT":                  app.Docroot,
 		"DDEV_IMPORTDIR":                app.ImportDir,
@@ -1444,28 +1449,18 @@ func (app *DdevApp) getWorkingDir(service, dir string) string {
 	return app.DefaultWorkingDirMap()[service]
 }
 
-// setUpCaching() runs a container which just exits, but has the webcachedir mounted
+// precacheWebdir() runs a container which just exits, but has the webcachedir mounted
 // so we can "docker cp" to it.
-func (app *DdevApp) setUpCaching() error {
-	cacheVolumeName := app.Name + "-webcachevol"
-
-	_, _, uidStr, _ := util.GetContainerUIDGid()
-	//TODO: Remove any existing container.
+func (app *DdevApp) precacheWebdir() error {
 
 	// TODO: Are we sure we should delete?
 	// We don't care if the volume wasn't there
-	_ = dockerutil.RemoveVolume(cacheVolumeName)
+	//_ = dockerutil.RemoveVolume(cacheVolumeName)
 
-	containerName := "ddev-" + app.Name + "-dummycopy-" + fileutil.RandomFilenameBase()
-	containerID, _, err := dockerutil.RunSimpleContainer("busybox:latest", containerName, nil, nil, nil, []string{cacheVolumeName + ":/webcache"}, uidStr, false)
-	if err != nil {
-		return err
-	}
+	containerName := "ddev-" + app.Name + "-" + BGSYNCContainer
 
-	//nolint: errcheck
-	defer dockerutil.RemoveContainer(containerID, 10)
+	dockerArgs := []string{"docker", "cp", app.AppRoot + "/", containerName + ":/destination"}
 
-	dockerArgs := []string{"docker", "cp", app.AppRoot + "/", cacheVolumeName + ":/webcache"}
 	out, err := exec.RunCommand("time", dockerArgs)
 	if err != nil {
 		return fmt.Errorf("docker %v failed: %v out=%s", dockerArgs, err, out)

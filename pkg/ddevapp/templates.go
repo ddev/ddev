@@ -94,7 +94,7 @@ services:
 {{if  .IncludeBGSYNC }}
   bgsync:
     container_name: ddev-${DDEV_SITENAME}-bgsync
-    image: randyfay/bg-sync:latest
+    image:     image: $DDEV_BGSYNCIMAGE
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
