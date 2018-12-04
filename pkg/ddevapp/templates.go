@@ -46,14 +46,8 @@ services:
     volumes:
       - ".:/mnt/ddev_config:ro"
       - "webcachevol:/var/www/html"
-      - type: "volume"
-        source: ddev-ssh-agent_socket_dir
-        target: "/home/.ssh-agent"
-      - type: "volume"
-        source: ddev-composer-cache
-        target: "/mnt/composer_cache"
-        volume:
-          nocopy: true
+      - ddev-ssh-agent_socket_dir:/home/.ssh-agent"
+      - ddev-composer-cache:/mnt/composer_cache"
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     links:
@@ -94,7 +88,7 @@ services:
 {{if  .IncludeBGSYNC }}
   bgsync:
     container_name: ddev-${DDEV_SITENAME}-bgsync
-    image:     image: $DDEV_BGSYNCIMAGE
+    image: $DDEV_BGSYNCIMAGE
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     volumes:

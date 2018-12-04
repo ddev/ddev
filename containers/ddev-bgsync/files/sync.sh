@@ -138,6 +138,13 @@ $SYNC_EXTRA_UNISON_PROFILE_OPTS
 
 " > ${HOME}/.unison/default.prf
 
+# Wait for the "start sync" flag to appear (typically after docker cp has been done to /destination"
+log_heading "Waiting for /var/tmp/unison_start_authorized to appear."
+
+while [ ! -f /var/tmp/unison_start_authorized ]; do
+    sleep 1
+done
+
 # Start syncing files.
 log_heading "Starting unison continuous sync."
 

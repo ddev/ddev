@@ -1118,10 +1118,10 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 
 		client := dockerutil.GetDockerClient()
 		//TODO: webcachevol name should be exposed variable
-		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.Name + "_unisondir", "ddev-" + app.Name + "_webcachevol"} {
+		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.Name + "_unisoncatalogdir", "ddev-" + app.Name + "_webcachevol"} {
 			err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volName})
 			if err != nil {
-				return err
+				return fmt.Errorf("could not remove volume %s: %v", volName, err)
 			}
 		}
 		util.Success("Project data/database removed from docker volume for project %s", app.Name)
@@ -1463,12 +1463,19 @@ func (app *DdevApp) precacheWebdir() error {
 
 	containerName := "ddev-" + app.Name + "-" + BGSYNCContainer
 
-	dockerArgs := []string{"docker", "cp", app.AppRoot + "/", containerName + ":/destination"}
+	dockerArgs := []string{"docker", "cp", app.AppRoot + "/", containerName + ":/destination/"}
 
 	out, err := exec.RunCommand("time", dockerArgs)
 	if err != nil {
 		return fmt.Errorf("docker %v failed: %v out=%s", dockerArgs, err, out)
 	}
+
+	// Set the flag to tell unison it can start syncing
+	_, _, err = app.Exec(&ExecOpts{
+		Service: BGSYNCContainer,
+		Cmd:     []string{"touch", "/var/tmp/unison_start_authorized"},
+	})
+
 	return nil
 
 }
