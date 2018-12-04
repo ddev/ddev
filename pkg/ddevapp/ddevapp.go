@@ -185,6 +185,10 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["router_http_port"] = app.RouterHTTPPort
 	appDesc["router_https_port"] = app.RouterHTTPSPort
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
+	appDesc["webimg"] = app.WebImage
+	appDesc["dbimg"] = app.WebImage
+	appDesc["bgsyncimg"] = app.BgsyncImage
+	appDesc["dbaimg"] = app.DBAImage
 
 	return appDesc, nil
 }
