@@ -393,6 +393,9 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 func (app *DdevApp) SiteStatus() string {
 	var siteStatus string
 	services := map[string]string{"web": "", "db": ""}
+	if !util.ArrayContainsString(app.OmitContainers, "bgsync") {
+		services["bgsync"] = ""
+	}
 
 	if !fileutil.FileExists(app.GetAppRoot()) {
 		siteStatus = fmt.Sprintf("%s: %v", SiteDirMissing, app.GetAppRoot())
@@ -1456,14 +1459,13 @@ func (app *DdevApp) getWorkingDir(service, dir string) string {
 // precacheWebdir() runs a container which just exits, but has the webcachedir mounted
 // so we can "docker cp" to it.
 func (app *DdevApp) precacheWebdir() error {
-
-	// TODO: Are we sure we should delete?
+	cacheVolumeName := "ddev-" + app.Name + "_webcachevol"
 	// We don't care if the volume wasn't there
-	//_ = dockerutil.RemoveVolume(cacheVolumeName)
+	_ = dockerutil.RemoveVolume(cacheVolumeName)
 
 	containerName := "ddev-" + app.Name + "-" + BGSYNCContainer
 
-	dockerArgs := []string{"docker", "cp", app.AppRoot + "/", containerName + ":/destination/"}
+	dockerArgs := []string{"docker", "cp", app.AppRoot + "/.", containerName + ":/destination"}
 
 	out, err := exec.RunCommand("time", dockerArgs)
 	if err != nil {

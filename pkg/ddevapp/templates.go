@@ -89,7 +89,7 @@ services:
   bgsync:
     container_name: ddev-${DDEV_SITENAME}-bgsync
     image: $DDEV_BGSYNCIMAGE
-    restart: "no"
+    restart: "on-failure"
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
       - ..:/source

@@ -18,13 +18,9 @@ log_error_exit() {
   exit 1
 }
 
-# If SYNC_WINDOWS_FS=true, we will use fat=true in unison profile
-export SYNC_WINDOWS_FS=${SYNC_WINDOWS_FS:=false}
+## If SYNC_WINDOWS_FS=true, we will use fat=true in unison profile
+#export SYNC_WINDOWS_FS=${SYNC_WINDOWS_FS:=false}
 
-export UNISON_UID=$(id -u)
-export UNISON_GID=$(id -g)
-log_heading "Setting up HOME for user uid ${UNISON_UID}."
-sudo chown -R ${UNISON_UID}:${UNISON_GID} ${HOME} ${SYNC_DESTINATION}
 
 #if [ ! -z "${SYNC_WINDOWS_FS}" ]; then
 #  log_heading "Making all SYNC_SOURCE files writable (for Windows NTFS) so they can be written when necessary"
@@ -57,7 +53,7 @@ sudo chown -R ${UNISON_UID}:${UNISON_GID} ${HOME} ${SYNC_DESTINATION}
 : ${SYNC_EXTRA_UNISON_PROFILE_OPTS:=''}
 
 # If set, the source will allow files to be deleted.
-: ${SYNC_NODELETE_SOURCE:="1"}
+: ${SYNC_NODELETE_SOURCE:="0"}
 
 log_heading "Starting bg-sync"
 
@@ -121,7 +117,6 @@ root = $SYNC_DESTINATION
 
 # Sync options
 auto=true
-fat=${SYNC_WINDOWS_FS}
 backups=false
 batch=true
 contactquietly=true
@@ -132,6 +127,7 @@ prefer=$SYNC_PREFER
 repeat=watch
 silent=$unisonsilent
 logfile=/dev/stdout
+ignore= Name db_snapshots
 
 # Additional user configuration
 $SYNC_EXTRA_UNISON_PROFILE_OPTS
@@ -144,6 +140,11 @@ log_heading "Waiting for /var/tmp/unison_start_authorized to appear."
 while [ ! -f /var/tmp/unison_start_authorized ]; do
     sleep 1
 done
+
+UNISON_UID=$(id -u)
+UNISON_GID=$(id -g)
+log_heading "Setting up permissions for user uid ${UNISON_UID}."
+sudo chown -R ${UNISON_UID}:${UNISON_GID} ${HOME} ${SYNC_DESTINATION}
 
 # Start syncing files.
 log_heading "Starting unison continuous sync."
