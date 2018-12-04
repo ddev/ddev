@@ -657,6 +657,11 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
+	err = app.setUpCaching()
+	if err != nil {
+		return err
+	}
+
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 
@@ -1103,7 +1108,8 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 		}
 
 		client := dockerutil.GetDockerClient()
-		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.Name + "_unisondir", "ddev-" + app.Name + "_webdir"} {
+		//TODO: webcachevol name should be exposed variable
+		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.Name + "_unisondir", "ddev-" + app.Name + "_webcachevol"} {
 			err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volName})
 			if err != nil {
 				return err
@@ -1436,4 +1442,34 @@ func (app *DdevApp) getWorkingDir(service, dir string) string {
 
 	// The next highest preference is for app type defaults
 	return app.DefaultWorkingDirMap()[service]
+}
+
+// setUpCaching() runs a container which just exits, but has the webcachedir mounted
+// so we can "docker cp" to it.
+func (app *DdevApp) setUpCaching() error {
+	cacheVolumeName := app.Name + "-webcachevol"
+
+	_, _, uidStr, _ := util.GetContainerUIDGid()
+	//TODO: Remove any existing container.
+
+	// TODO: Are we sure we should delete?
+	// We don't care if the volume wasn't there
+	_ = dockerutil.RemoveVolume(cacheVolumeName)
+
+	containerName := "ddev-" + app.Name + "-dummycopy-" + fileutil.RandomFilenameBase()
+	containerID, _, err := dockerutil.RunSimpleContainer("busybox:latest", containerName, nil, nil, nil, []string{cacheVolumeName + ":/webcache"}, uidStr, false)
+	if err != nil {
+		return err
+	}
+
+	//nolint: errcheck
+	defer dockerutil.RemoveContainer(containerID, 10)
+
+	dockerArgs := []string{"docker", "cp", app.AppRoot + "/", cacheVolumeName + ":/webcache"}
+	out, err := exec.RunCommand("time", dockerArgs)
+	if err != nil {
+		return fmt.Errorf("docker %v failed: %v out=%s", dockerArgs, err, out)
+	}
+	return nil
+
 }

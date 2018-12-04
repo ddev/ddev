@@ -45,7 +45,7 @@ services:
       - SYS_PTRACE
     volumes:
       - ".:/mnt/ddev_config:ro"
-      - "webdir:/var/www/html"
+      - "webcachevol:/var/www/html"
       - type: "volume"
         source: ddev-ssh-agent_socket_dir
         target: "/home/.ssh-agent"
@@ -99,8 +99,8 @@ services:
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
       - ..:/source
-      - webdir:/destination
-      - unisondir:/root/.unison
+      - webcachevol:/destination
+      - unisoncatalogdir:/root/.unison
 
     environment:
     - SYNC_DESTINATION=/destination
@@ -117,6 +117,10 @@ services:
       com.ddev.app-type: drupal8
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
+    healthcheck:
+      interval: 10s
+      retries: 1
+      start_period: 120s
 
 {{end}}
 
@@ -158,8 +162,8 @@ volumes:
     external: true
   ddev-composer-cache:
     name: ddev-composer-cache
-  webdir:
-  unisondir:
+  webcachevol:
+  unisoncatalogdir:
 
 `
 
