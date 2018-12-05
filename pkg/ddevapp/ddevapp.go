@@ -1472,12 +1472,14 @@ func (app *DdevApp) getWorkingDir(service, dir string) string {
 // so we can "docker cp" to it.
 func (app *DdevApp) precacheWebdir() error {
 	containerName := "ddev-" + app.Name + "-bgsync"
-	dockerArgs := []string{"docker", "cp", app.AppRoot + "/.", containerName + ":/destination"}
+	dockerArgs := []string{"cp", app.AppRoot + "/.", containerName + ":/destination"}
 
-	out, err := exec.RunCommand("time", dockerArgs)
+	start := time.Now()
+	out, err := exec.RunCommand("docker", dockerArgs)
 	if err != nil {
 		return fmt.Errorf("docker %v failed: %v out=%s", dockerArgs, err, out)
 	}
+	util.Warning("docker cp command took %v seconds", time.Now().Sub(start))
 
 	// Set the flag to tell unison it can start syncing
 	_, _, err = app.Exec(&ExecOpts{
