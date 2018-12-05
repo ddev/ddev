@@ -711,6 +711,8 @@ func (app *DdevApp) Start() error {
 	if !util.ArrayContainsString(app.OmitContainers, "bgsync") {
 		requiredContainers = append(requiredContainers, "bgsync")
 	}
+
+	output.UserOut.Printf("Waiting for containers: %v", requiredContainers)
 	err = app.Wait(requiredContainers)
 	if err != nil {
 		return err

@@ -8,7 +8,7 @@ set -o errexit
 
 
 WAIT_FOR_SYNC=2
-CHECKFILE="healthcheck.$(date +%s)"
+CHECKFILE="healthcheck.$(date +%Y%m%d%H%M%S)"
 
 SYNC_SOURCE=${SYNC_SOURCE:-/source}
 SYNC_DESTINATION=${SYNC_DESTINATION:-/destination}
