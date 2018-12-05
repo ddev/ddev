@@ -689,7 +689,10 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	//TODO: Delete the webcachevol if necessary
+	// Delete the webcachevol before we bring up docker-compose.
+	cacheVolumeName := "ddev-" + app.Name + "_webcachevol"
+	// We don't care if the volume wasn't there
+	_ = dockerutil.RemoveVolume(cacheVolumeName)
 
 	_, _, err = dockerutil.ComposeCmd(files, "up", "-d")
 	if err != nil {
@@ -1461,9 +1464,6 @@ func (app *DdevApp) getWorkingDir(service, dir string) string {
 // precacheWebdir() runs a container which just exits, but has the webcachedir mounted
 // so we can "docker cp" to it.
 func (app *DdevApp) precacheWebdir() error {
-	cacheVolumeName := "ddev-" + app.Name + "_webcachevol"
-	// We don't care if the volume wasn't there
-	_ = dockerutil.RemoveVolume(cacheVolumeName)
 
 	containerName := "ddev-" + app.Name + "-" + BGSYNCContainer
 
