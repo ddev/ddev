@@ -1129,7 +1129,7 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.Name + "_unisoncatalogdir", "ddev-" + app.Name + "_webcachevol"} {
 			err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volName})
 			if err != nil {
-				return fmt.Errorf("could not remove volume %s: %v", volName, err)
+				util.Warning("could not remove volume %s: %v", volName, err)
 			}
 		}
 		util.Success("Project data/database removed from docker volume for project %s", app.Name)
