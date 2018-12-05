@@ -44,10 +44,10 @@ services:
     cap_add:
       - SYS_PTRACE
     volumes:
-      - ".:/mnt/ddev_config:ro"
-      - "webcachevol:/var/www/html"
-      - ddev-ssh-agent_socket_dir:/home/.ssh-agent"
-      - ddev-composer-cache:/mnt/composer_cache"
+      - .:/mnt/ddev_config:ro
+      - "{{ .webMount }}:/var/www/html"
+      - ddev-ssh-agent_socket_dir:/home/.ssh-agent
+      - ddev-composer-cache:/mnt/composer_cache
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     links:

@@ -469,8 +469,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		includeDBA = ""
 	}
 	var includeBGSYNC = ""
+
+	webMount := "../"
 	if app.WebcacheEnabled {
 		includeBGSYNC = "true"
+		webMount = "webcachevol"
 	}
 
 	isWindowsFS := "false"
@@ -481,6 +484,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		"name":            app.Name,
 		"plugin":          "ddev",
 		"appType":         app.Type,
+		"webMount":        webMount,
 		"mailhogport":     appports.GetPort("mailhog"),
 		"dbaport":         appports.GetPort("dba"),
 		"dbport":          appports.GetPort("db"),
