@@ -89,6 +89,7 @@ func GetVersionInfo() map[string]string {
 	versionInfo["web"] = GetWebImage()
 	versionInfo["db"] = GetDBImage()
 	versionInfo["dba"] = GetDBAImage()
+	versionInfo["bgsync"] = BgsyncImg + ":" + BgsyncTag
 	versionInfo["router"] = RouterImage + ":" + RouterTag
 	versionInfo["ddev-ssh-agent"] = SSHAuthImage + ":" + SSHAuthTag
 	versionInfo["commit"] = COMMIT
