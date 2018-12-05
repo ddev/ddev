@@ -691,9 +691,8 @@ func (app *DdevApp) Start() error {
 	}
 
 	// Delete the webcachevol before we bring up docker-compose.
-	cacheVolumeName := "ddev-" + app.Name + "_webcachevol"
 	// We don't care if the volume wasn't there
-	_ = dockerutil.RemoveVolume(cacheVolumeName)
+	_ = dockerutil.RemoveVolume(app.GetWebcacheVolName())
 
 	_, _, err = dockerutil.ComposeCmd(files, "up", "-d")
 	if err != nil {
@@ -1127,7 +1126,7 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 
 		client := dockerutil.GetDockerClient()
 		//TODO: webcachevol name should be exposed variable
-		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.Name + "_unisoncatalogdir", "ddev-" + app.Name + "_webcachevol"} {
+		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.GetUnisonCatalogVolName(), app.GetWebcacheVolName()} {
 			err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volName})
 			if err != nil {
 				util.Warning("could not remove volume %s: %v", volName, err)
@@ -1486,4 +1485,14 @@ func (app *DdevApp) precacheWebdir() error {
 
 	return nil
 
+}
+
+// Returns the docker volume name of the webcachevol
+func (app *DdevApp) GetWebcacheVolName() string {
+	return strings.ToLower("ddev-" + app.Name + "_webcachevol")
+}
+
+// Returns the docker volume name of the unisoncatalogvolume
+func (app *DdevApp) GetUnisonCatalogVolName() string {
+	return strings.ToLower("ddev-" + app.Name + "_unisoncatalogvol")
 }

@@ -94,7 +94,7 @@ services:
     volumes:
       - ..:/source
       - webcachevol:/destination
-      - unisoncatalogdir:/root/.unison
+      - unisoncatalogvol:/root/.unison
 
     environment:
     - SYNC_DESTINATION=/destination
@@ -157,7 +157,7 @@ volumes:
   ddev-composer-cache:
     name: ddev-composer-cache
   webcachevol:
-  unisoncatalogdir:
+  unisoncatalogvol:
 
 `
 
