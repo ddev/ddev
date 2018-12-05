@@ -137,9 +137,9 @@ func NetExists(client *docker.Client, name string) bool {
 // timeout is in seconds.
 // This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 // Returns logoutput, error, returns error if not "healthy"
-func ContainerWait(waittime time.Duration, labels map[string]string) (string, error) {
+func ContainerWait(waittime int, labels map[string]string) (string, error) {
 
-	timeoutChan := time.After(waittime * time.Second)
+	timeoutChan := time.After(time.Duration(waittime) * time.Second)
 	tickChan := time.NewTicker(500 * time.Millisecond)
 	defer tickChan.Stop()
 

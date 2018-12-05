@@ -31,8 +31,7 @@ import (
 )
 
 // containerWaitTimeout is the max time we wait for all containers to become ready.
-//TODO: Turn this back down, or figure out how to make it variable
-const containerWaitTimeout = 600
+var containerWaitTimeout = 300
 
 // SiteRunning defines the string used to denote running sites.
 const SiteRunning = "running"
@@ -977,7 +976,11 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 			"com.ddev.site-name":         app.GetName(),
 			"com.docker.compose.service": containerType,
 		}
-		logOutput, err := dockerutil.ContainerWait(containerWaitTimeout, labels)
+		waitTime := containerWaitTimeout
+		if containerType == BGSYNCContainer {
+			waitTime = 600
+		}
+		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
 		if err != nil {
 			return fmt.Errorf("%s container failed: log=%s, err=%v", containerType, logOutput, err)
 		}
