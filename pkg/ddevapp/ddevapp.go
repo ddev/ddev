@@ -31,7 +31,8 @@ import (
 )
 
 // containerWaitTimeout is the max time we wait for all containers to become ready.
-const containerWaitTimeout = 300
+//TODO: Turn this back down, or figure out how to make it variable
+const containerWaitTimeout = 600
 
 // SiteRunning defines the string used to denote running sites.
 const SiteRunning = "running"
