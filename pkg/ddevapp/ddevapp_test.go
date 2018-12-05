@@ -992,6 +992,8 @@ func TestWriteableFilesDirectory(t *testing.T) {
 			assert.NoError(err)
 
 			// Now try to append to the file on the host.
+			// Sleep a moment for it to get synced
+			time.Sleep(time.Second * 2)
 			// os.OpenFile() for append here fails if the file does not already exist.
 			f, err := os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
 			assert.NoError(err)
