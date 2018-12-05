@@ -128,6 +128,9 @@ repeat=watch
 silent=$unisonsilent
 logfile=/dev/stdout
 ignore= Name db_snapshots
+perms=0
+dontchmod=true
+
 
 # Additional user configuration
 $SYNC_EXTRA_UNISON_PROFILE_OPTS
