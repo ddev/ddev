@@ -1479,6 +1479,9 @@ func (app *DdevApp) precacheWebdir() error {
 		Service: BGSYNCContainer,
 		Cmd:     []string{"touch", "/var/tmp/unison_start_authorized"},
 	})
+	if err != nil {
+		return fmt.Errorf("could not start bgsync container syncing: %v", err)
+	}
 
 	return nil
 

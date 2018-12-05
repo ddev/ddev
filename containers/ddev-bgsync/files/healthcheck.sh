@@ -15,7 +15,7 @@ SYNC_DESTINATION=${SYNC_DESTINATION:-/destination}
 HEALTHCHECK_DIR=.bgsync_healthcheck
 
 function cleanup {
-    rm -f "${SYNC_SOURCE}/${HEALTHCHECK_DIR}/$CHECKFILE" "${SYNC_DESTINATION}/${HEALTHCHECK_DIR}/$CHECKFILE"}
+    rm -f ${SYNC_SOURCE}/${HEALTHCHECK_DIR}/healthcheck.* ${SYNC_DESTINATION}/${HEALTHCHECK_DIR}/healthcheck.*
 }
 trap cleanup EXIT
 
