@@ -85,7 +85,7 @@ services:
     extra_hosts: ["{{ .extra_host }}"]
     external_links:
       - ddev-router:$DDEV_HOSTNAME
-{{if  .IncludeBGSYNC }}
+{{ if  .IncludeBGSYNC }}
   bgsync:
     container_name: ddev-${DDEV_SITENAME}-bgsync
     image: $DDEV_BGSYNCIMAGE

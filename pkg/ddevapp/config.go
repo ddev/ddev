@@ -468,9 +468,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if util.ArrayContainsString(app.OmitContainers, "dba") {
 		includeDBA = ""
 	}
-	var includeBGSYNC = "includeItByDefault"
-	if util.ArrayContainsString(app.OmitContainers, "bgsync") {
-		includeBGSYNC = ""
+	var includeBGSYNC = ""
+	if app.WebcacheEnabled {
+		includeBGSYNC = "true"
 	}
 
 	isWindowsFS := "false"

@@ -72,6 +72,7 @@ type DdevApp struct {
 	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string             `yaml:"additional_fqdns"`
 	MariaDBVersion        string               `yaml:"mariadb_version"`
+	WebcacheEnabled       bool                 `yaml:"webcache_enabled"`
 	ConfigPath            string               `yaml:"-"`
 	AppRoot               string               `yaml:"-"`
 	Platform              string               `yaml:"-"`
@@ -394,7 +395,7 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 func (app *DdevApp) SiteStatus() string {
 	var siteStatus string
 	services := map[string]string{"web": "", "db": ""}
-	if !util.ArrayContainsString(app.OmitContainers, "bgsync") {
+	if app.WebcacheEnabled {
 		services["bgsync"] = ""
 	}
 
@@ -711,11 +712,14 @@ func (app *DdevApp) Start() error {
 	}
 
 	requiredContainers := []string{"db", "web"}
-	if !util.ArrayContainsString(app.OmitContainers, "bgsync") {
+	if app.WebcacheEnabled {
 		requiredContainers = append(requiredContainers, "bgsync")
+
+		//TODO: We probably want to remove this output after things stabilize
+		output.UserOut.Printf("Waiting for containers: %v", requiredContainers)
+
 	}
 
-	output.UserOut.Printf("Waiting for containers: %v", requiredContainers)
 	err = app.Wait(requiredContainers)
 	if err != nil {
 		return err
@@ -1465,9 +1469,7 @@ func (app *DdevApp) getWorkingDir(service, dir string) string {
 // so we can "docker cp" to it.
 func (app *DdevApp) precacheWebdir() error {
 
-	containerName := "ddev-" + app.Name + "-" + BGSYNCContainer
-
-	dockerArgs := []string{"docker", "cp", app.AppRoot + "/.", containerName + ":/destination"}
+	dockerArgs := []string{"docker", "cp", app.AppRoot + "/.", app.BgsyncImage + ":/destination"}
 
 	out, err := exec.RunCommand("time", dockerArgs)
 	if err != nil {

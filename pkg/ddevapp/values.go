@@ -70,7 +70,6 @@ const (
 var ValidOmitContainers = map[string]bool{
 	DdevSSHAgentContainer: true,
 	DBAContainer:          true,
-	BGSYNCContainer:       true,
 }
 
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
