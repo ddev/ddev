@@ -181,6 +181,7 @@ const ConfigInstructions = `
 # webimage: <docker_image>  # nginx/php docker image.
 # dbimage: <docker_image>  # mariadb docker image.
 # dbaimage: <docker_image>
+# bgsyncimage: <docker_image>
 
 # router_http_port: <port>  # Port to be used for http (defaults to port 80)
 # router_https_port: <port> # Port for https (defaults to 443)

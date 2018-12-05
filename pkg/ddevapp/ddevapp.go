@@ -62,7 +62,7 @@ type DdevApp struct {
 	PHPVersion            string               `yaml:"php_version"`
 	WebserverType         string               `yaml:"webserver_type"`
 	WebImage              string               `yaml:"webimage,omitempty"`
-	BgsyncImage           string               `yaml:"dbsyncimage,omitempty"`
+	BgsyncImage           string               `yaml:"bgsyncimage,omitempty"`
 	DBImage               string               `yaml:"dbimage,omitempty"`
 	DBAImage              string               `yaml:"dbaimage,omitempty"`
 	RouterHTTPPort        string               `yaml:"router_http_port"`
@@ -704,19 +704,19 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	//TODO: We don't need to do this if not caching.
-	err = app.precacheWebdir()
-	if err != nil {
-		return err
-	}
-
 	requiredContainers := []string{"db", "web"}
 	if app.WebcacheEnabled {
 		requiredContainers = append(requiredContainers, "bgsync")
 
 		//TODO: We probably want to remove this output after things stabilize
 		output.UserOut.Printf("Waiting for containers: %v", requiredContainers)
+	}
 
+	if app.WebcacheEnabled {
+		err = app.precacheWebdir()
+		if err != nil {
+			return err
+		}
 	}
 
 	err = app.Wait(requiredContainers)
@@ -1471,8 +1471,8 @@ func (app *DdevApp) getWorkingDir(service, dir string) string {
 // precacheWebdir() runs a container which just exits, but has the webcachedir mounted
 // so we can "docker cp" to it.
 func (app *DdevApp) precacheWebdir() error {
-
-	dockerArgs := []string{"docker", "cp", app.AppRoot + "/.", app.BgsyncImage + ":/destination"}
+	containerName := "ddev-" + app.Name + "-bgsync"
+	dockerArgs := []string{"docker", "cp", app.AppRoot + "/.", containerName + ":/destination"}
 
 	out, err := exec.RunCommand("time", dockerArgs)
 	if err != nil {
