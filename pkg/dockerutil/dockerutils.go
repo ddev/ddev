@@ -568,15 +568,6 @@ func RemoveContainer(id string, timeout uint) error {
 	return err
 }
 
-// RemoveContainerByName stops and removes a container
-//func RemoveContainerByName(name string, timeout uint) error {
-//	client := GetDockerClient()
-//
-//	client.
-//	err := client.RemoveContainer(docker.RemoveContainerOptions{Name: name, Force: false})
-//	return err
-//}
-
 // ImageExistsLocally determines if an image is available locally.
 func ImageExistsLocally(imageName string) (bool, error) {
 	client := GetDockerClient()

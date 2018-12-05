@@ -31,7 +31,7 @@ import (
 )
 
 // containerWaitTimeout is the max time we wait for all containers to become ready.
-var containerWaitTimeout = 300
+var containerWaitTimeout = 61
 
 // SiteRunning defines the string used to denote running sites.
 const SiteRunning = "running"
@@ -707,16 +707,13 @@ func (app *DdevApp) Start() error {
 	requiredContainers := []string{"db", "web"}
 	if app.WebcacheEnabled {
 		requiredContainers = append(requiredContainers, "bgsync")
-
-		//TODO: We probably want to remove this output after things stabilize
-		output.UserOut.Printf("Waiting for containers: %v", requiredContainers)
-	}
-
-	if app.WebcacheEnabled {
 		err = app.precacheWebdir()
 		if err != nil {
 			return err
 		}
+
+		//TODO: We probably want to remove this output after things stabilize
+		output.UserOut.Printf("Waiting for containers: %v", requiredContainers)
 	}
 
 	err = app.Wait(requiredContainers)
@@ -1132,10 +1129,10 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 		}
 
 		client := dockerutil.GetDockerClient()
-		//TODO: webcachevol name should be exposed variable
 		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.GetUnisonCatalogVolName(), app.GetWebcacheVolName()} {
 			err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volName})
 			if err != nil {
+				//TODO: This should probably turn back to an error before release
 				util.Warning("could not remove volume %s: %v", volName, err)
 			}
 		}
