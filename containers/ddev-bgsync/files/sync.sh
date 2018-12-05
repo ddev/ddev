@@ -127,7 +127,7 @@ prefer=$SYNC_PREFER
 repeat=watch
 silent=$unisonsilent
 logfile=/dev/stdout
-ignore= Name db_snapshots
+ignore= Name {db_snapshots,.git}
 perms=0
 dontchmod=true
 
