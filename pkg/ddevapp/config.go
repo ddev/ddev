@@ -469,11 +469,12 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		includeDBA = ""
 	}
 	var includeBGSYNC = ""
-
+	var mountType = "bind"
 	webMount := "../"
 	if app.WebcacheEnabled {
 		includeBGSYNC = "true"
 		webMount = "webcachevol"
+		mountType = "volume"
 	}
 
 	isWindowsFS := "false"
@@ -494,6 +495,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		"IncludeDBA":      includeDBA,
 		"IncludeBGSYNC":   includeBGSYNC,
 		"IsWindowsFS":     isWindowsFS,
+		"mountType":       mountType,
 	}
 
 	err = templ.Execute(&doc, templateVars)

@@ -45,11 +45,13 @@ services:
       - SYS_PTRACE
     volumes:
       - .:/mnt/ddev_config:ro
-      - type: volume
+      - type: {{ .mountType }}
         source: {{ .webMount }}
         target: /var/www/html
+        {{ if eq .mountType "volume" }}
         volume:
           nocopy: true
+        {{ end }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       - ddev-composer-cache:/mnt/composer_cache
     restart: "no"
@@ -157,9 +159,10 @@ volumes:
     external: true
   ddev-composer-cache:
     name: ddev-composer-cache
+  {{ if eq .mountType "volume" }}
   webcachevol:
   unisoncatalogvol:
-
+  {{ end }}
 `
 
 // ConfigInstructions is used to add example hooks usage
