@@ -112,13 +112,17 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == version.GetWebImage() {
 		appcopy.WebImage = ""
 	}
-
 	if appcopy.DBImage == version.GetDBImage(appcopy.MariaDBVersion) {
 		appcopy.DBImage = ""
 	}
-
 	if appcopy.DBAImage == version.GetDBAImage() {
 		appcopy.DBAImage = ""
+	}
+	if appcopy.DBAImage == version.GetDBAImage() {
+		appcopy.DBAImage = ""
+	}
+	if appcopy.BgsyncImage == version.GetBgsyncImage() {
+		appcopy.BgsyncImage = ""
 	}
 
 	// Don't write default working dir values to config
