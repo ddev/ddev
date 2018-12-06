@@ -32,11 +32,11 @@ log_error_exit() {
 #
 
 # The source for the sync. This will also be recursively monitored by inotifywatch.
-: ${SYNC_SOURCE:="/source"}
+: ${SYNC_SOURCE:="/hostmount"}
 
 # The destination for sync. When files are changed in the source, they are automatically
 # synced to the destination.
-: ${SYNC_DESTINATION:="/destination"}
+: ${SYNC_DESTINATION:="/fastdockermount"}
 
 # The preferred approach to deal with conflicts
 : ${SYNC_PREFER:=$SYNC_SOURCE}
@@ -127,7 +127,7 @@ prefer=$SYNC_PREFER
 repeat=watch
 silent=$unisonsilent
 logfile=/dev/stdout
-ignore= Name {db_snapshots,.git}
+ignore= Name {db_snapshots,.git,.tmp_ddev_composer*}
 perms=0
 dontchmod=true
 

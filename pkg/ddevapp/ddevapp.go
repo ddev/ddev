@@ -1469,7 +1469,7 @@ func (app *DdevApp) getWorkingDir(service, dir string) string {
 // so we can "docker cp" to it.
 func (app *DdevApp) precacheWebdir() error {
 	containerName := "ddev-" + app.Name + "-bgsync"
-	dockerArgs := []string{"cp", app.AppRoot + "/.", containerName + ":/destination"}
+	dockerArgs := []string{"cp", app.AppRoot + "/.", containerName + ":/fastdockermount"}
 
 	start := time.Now()
 	out, err := exec.RunCommand("docker", dockerArgs)

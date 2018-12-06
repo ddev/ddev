@@ -95,7 +95,7 @@ project root will be deleted when creating a project.`,
 		}
 
 		// Define a randomly named temp directory for install target
-		tmpDir := fmt.Sprintf(".tmp_%s", util.RandString(6))
+		tmpDir := fmt.Sprintf(".tmp_ddev_composer_create_%s", util.RandString(6))
 		containerInstallPath := path.Join("/var/www/html", tmpDir)
 		hostInstallPath := filepath.Join(app.AppRoot, tmpDir)
 		defer cleanupTmpDir(hostInstallPath)
