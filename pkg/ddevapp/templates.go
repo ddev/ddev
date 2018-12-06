@@ -45,7 +45,11 @@ services:
       - SYS_PTRACE
     volumes:
       - .:/mnt/ddev_config:ro
-      - "{{ .webMount }}:/var/www/html"
+      - type: volume
+        source: {{ .webMount }}
+        target: /var/www/html
+        volume:
+          nocopy: true
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       - ddev-composer-cache:/mnt/composer_cache
     restart: "no"
