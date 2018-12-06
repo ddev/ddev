@@ -45,10 +45,15 @@ type Provider interface {
 }
 
 // init() is for testing situations only, allowing us to override the default webserver type
+// or caching behavior
+
 func init() {
 	// This is for automated testing only. It allows us to override the webserver type.
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		WebserverDefault = testWebServerType
+	}
+	if testWebCache := os.Getenv("DDEV_TEST_USE_WEBCACHE"); testWebCache != "" {
+		WebCacheEnabledDefault = true
 	}
 }
 
@@ -62,6 +67,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.APIVersion = version.DdevVersion
 	app.PHPVersion = PHPDefault
 	app.WebserverType = WebserverDefault
+	app.WebcacheEnabled = WebCacheEnabledDefault
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 	app.MariaDBVersion = version.MariaDBDefaultVersion
@@ -205,6 +211,10 @@ func (app *DdevApp) ReadConfig() error {
 
 	if app.WebserverType == "" {
 		app.WebserverType = WebserverDefault
+	}
+
+	if WebCacheEnabledDefault == true {
+		app.WebcacheEnabled = WebCacheEnabledDefault
 	}
 
 	if app.RouterHTTPPort == "" {
