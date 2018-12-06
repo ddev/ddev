@@ -36,6 +36,9 @@ var containerWaitTimeout = 61
 // SiteRunning defines the string used to denote running sites.
 const SiteRunning = "running"
 
+// SiteStarting
+const SiteStarting = "starting"
+
 // SiteNotFound defines the string used to denote a site where the containers were not found/do not exist.
 const SiteNotFound = "not found"
 
@@ -424,23 +427,23 @@ func (app *DdevApp) SiteStatus() string {
 			switch status {
 			case "exited":
 				services[service] = SiteStopped
-				siteStatus = service + " service " + SiteStopped
 			case "healthy":
 				services[service] = SiteRunning
+			case "starting":
+				services[service] = SiteStarting
 			default:
 				services[service] = status
 			}
 		}
 	}
 
-	if services["web"] == services["db"] {
-		siteStatus = services["web"]
-	} else {
-		for service, status := range services {
-			if status != SiteRunning {
-				siteStatus = service + " service " + status
-			}
+	for service, status := range services {
+		if status != SiteRunning {
+			siteStatus = service + " service " + status
 		}
+	}
+	if siteStatus == "" {
+		siteStatus = SiteRunning
 	}
 
 	return siteStatus
