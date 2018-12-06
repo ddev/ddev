@@ -101,13 +101,10 @@ services:
       - unisoncatalogvol:/root/.unison
 
     environment:
-    - SYNC_DESTINATION=/destination
-    - SYNC_SOURCE=/source
+    - SYNC_DESTINATION=/fastdockermount
+    - SYNC_SOURCE=/hostmount
     - SYNC_MAX_INOTIFY_WATCHES=100000
-    - SYNC_WINDOWS_FS={{ .IsWindowsFS }}
     - SYNC_VERBOSE=1
-    - UNISON_UID=$DDEV_UID
-    - UNISON_GID=$DDEV_GID
     privileged: true
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
