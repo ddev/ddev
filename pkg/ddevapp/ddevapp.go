@@ -33,6 +33,9 @@ import (
 // containerWaitTimeout is the max time we wait for all containers to become ready.
 var containerWaitTimeout = 61
 
+// bgsyncSyncWaitTimeout is the max time in seconds we wait for bgsync to be syncing.
+var bgsyncSyncWaitTimeout = 600
+
 // SiteRunning defines the string used to denote running sites.
 const SiteRunning = "running"
 
@@ -994,6 +997,47 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 		}
 	}
 
+	return nil
+}
+
+// WaitSync waits for bgsync container to be consistently syncing.
+func (app *DdevApp) WaitSync() error {
+	labels := map[string]string{
+		"com.ddev.site-name":         app.GetName(),
+		"com.docker.compose.service": BGSYNCContainer,
+	}
+
+	if !app.WebcacheEnabled {
+		return nil
+	}
+
+	logOutput, err := dockerutil.ContainerWaitLog(bgsyncSyncWaitTimeout, labels, "sync active")
+	if err != nil {
+		return fmt.Errorf("bgsync container did not become ready: log=%s, err=%v", logOutput, err)
+	}
+
+	return nil
+}
+
+// StartAndWaitForSync() is primarily for use in tests.
+// It does app.Start() but then waits for syncing to be in progress
+// before returning.
+// extraSleep arg in seconds is the time to wait if > 0
+func (app *DdevApp) StartAndWaitForSync(extraSleep int) error {
+	err := app.Start()
+	if err != nil {
+		return err
+	}
+	// Wait to make sure that sync is working, sleep a little for sync to have completed.
+	if app.WebcacheEnabled {
+		err = app.WaitSync()
+		if err != nil {
+			return err
+		}
+		if extraSleep > 0 {
+			time.Sleep(time.Duration(extraSleep) * time.Second)
+		}
+	}
 	return nil
 }
 

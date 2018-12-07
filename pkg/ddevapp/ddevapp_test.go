@@ -565,7 +565,7 @@ func TestDdevImportDB(t *testing.T) {
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
-		err = app.Start()
+		err = app.StartAndWaitForSync(2)
 		assert.NoError(err)
 
 		// Test simple db loads.
@@ -804,7 +804,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		err = app.Start()
+		err = app.StartAndWaitForSync(2)
 		assert.NoError(err)
 
 		if site.DBTarURL != "" {
@@ -881,7 +881,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// Try using php72 to avoid SIGBUS failures after restore.
 	app.PHPVersion = ddevapp.PHP72
 
-	err = app.Start()
+	err = app.StartAndWaitForSync(2)
 	require.NoError(t, err, "app.Start() failed on site %s, err=%v", site.Name, err)
 
 	err = app.ImportDB(d7testerTest1Dump, "")
@@ -951,96 +951,100 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 func TestWriteableFilesDirectory(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestWritableFilesDirectory", site.Name))
 
-	for _, site := range TestSites {
-		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevImportDB", site.Name))
+	testcommon.ClearDockerEnv()
+	err := app.Init(site.Dir)
+	assert.NoError(err)
 
-		testcommon.ClearDockerEnv()
-		err := app.Init(site.Dir)
-		assert.NoError(err)
+	err = app.StartAndWaitForSync(0)
+	assert.NoError(err)
 
-		err = app.Start()
-		assert.NoError(err)
+	uploadDir := app.GetUploadDir()
+	assert.NotEmpty(uploadDir)
 
-		uploadDir := app.GetUploadDir()
-		if uploadDir != "" {
+	// Use exec to touch a file in the container and see what the result is. Make sure it comes out with ownership
+	// making it writeable on the host.
+	filename := fileutil.RandomFilenameBase()
+	dirname := fileutil.RandomFilenameBase()
+	// Use path.Join for items on th container (linux) and filepath.Join for items on the host.
+	inContainerDir := path.Join(uploadDir, dirname)
+	onHostDir := filepath.Join(app.Docroot, inContainerDir)
 
-			// Use exec to touch a file in the container and see what the result is. Make sure it comes out with ownership
-			// making it writeable on the host.
-			filename := fileutil.RandomFilenameBase()
-			dirname := fileutil.RandomFilenameBase()
-			// Use path.Join for items on th container (linux) and filepath.Join for items on the host.
-			inContainerDir := path.Join(uploadDir, dirname)
-			onHostDir := filepath.Join(app.Docroot, inContainerDir)
-
-			// The container execution directory is dependent on the app type
-			switch app.Type {
-			case ddevapp.AppTypeWordPress, ddevapp.AppTypeTYPO3, ddevapp.AppTypePHP:
-				inContainerDir = path.Join(app.Docroot, inContainerDir)
-			}
-
-			inContainerRelativePath := path.Join(inContainerDir, filename)
-			onHostRelativePath := path.Join(onHostDir, filename)
-
-			err = os.MkdirAll(onHostDir, 0775)
-			assert.NoError(err)
-			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     []string{"sh", "-c", "echo 'content created inside container\n' >" + inContainerRelativePath},
-			})
-			assert.NoError(err)
-
-			// Now try to append to the file on the host.
-			// os.OpenFile() for append here fails if the file does not already exist.
-			f, err := os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
-			assert.NoError(err)
-			_, err = f.WriteString("this addition to the file was added on the host side")
-			assert.NoError(err)
-			_ = f.Close()
-
-			// Create a file on the host and see what the result is. Make sure we can not append/write to it in the container.
-			filename = fileutil.RandomFilenameBase()
-			dirname = fileutil.RandomFilenameBase()
-			inContainerDir = path.Join(uploadDir, dirname)
-			onHostDir = filepath.Join(app.Docroot, inContainerDir)
-			// The container execution directory is dependent on the app type
-			switch app.Type {
-			case ddevapp.AppTypeWordPress, ddevapp.AppTypeTYPO3, ddevapp.AppTypePHP:
-				inContainerDir = path.Join(app.Docroot, inContainerDir)
-			}
-
-			inContainerRelativePath = path.Join(inContainerDir, filename)
-			onHostRelativePath = filepath.Join(onHostDir, filename)
-
-			err = os.MkdirAll(onHostDir, 0775)
-			assert.NoError(err)
-
-			f, err = os.OpenFile(onHostRelativePath, os.O_CREATE|os.O_RDWR, 0660)
-			assert.NoError(err)
-			_, err = f.WriteString("this base content was inserted on the host side\n")
-			assert.NoError(err)
-			_ = f.Close()
-			// if the file exists, add to it. We don't want to add if it's not already there.
-			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     []string{"sh", "-c", "if [ -f " + inContainerRelativePath + " ]; then echo 'content added inside container\n' >>" + inContainerRelativePath + "; fi"},
-			})
-			assert.NoError(err)
-			// grep the file for both the content added on host and that added in container.
-			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     []string{"sh", "-c", "grep 'base content was inserted on the host' " + inContainerRelativePath + "&& grep 'content added inside container' " + inContainerRelativePath},
-			})
-			assert.NoError(err)
-		}
-
-		err = app.Down(true, false)
-		assert.NoError(err)
-
-		runTime()
-		switchDir()
+	// The container execution directory is dependent on the app type
+	switch app.Type {
+	case ddevapp.AppTypeWordPress, ddevapp.AppTypeTYPO3, ddevapp.AppTypePHP:
+		inContainerDir = path.Join(app.Docroot, inContainerDir)
 	}
+
+	inContainerRelativePath := path.Join(inContainerDir, filename)
+	onHostRelativePath := path.Join(onHostDir, filename)
+
+	err = os.MkdirAll(onHostDir, 0775)
+	assert.NoError(err)
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"sh", "-c", "echo 'content created inside container\n' >" + inContainerRelativePath},
+	})
+	assert.NoError(err)
+	if app.WebcacheEnabled {
+		time.Sleep(time.Duration(2) * time.Second)
+	}
+	// Now try to append to the file on the host.
+	// os.OpenFile() for append here fails if the file does not already exist.
+	f, err := os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
+	assert.NoError(err)
+	_, err = f.WriteString("this addition to the file was added on the host side")
+	assert.NoError(err)
+	_ = f.Close()
+
+	// Create a file on the host and see what the result is. Make sure we can not append/write to it in the container.
+	filename = fileutil.RandomFilenameBase()
+	dirname = fileutil.RandomFilenameBase()
+	inContainerDir = path.Join(uploadDir, dirname)
+	onHostDir = filepath.Join(app.Docroot, inContainerDir)
+	// The container execution directory is dependent on the app type
+	switch app.Type {
+	case ddevapp.AppTypeWordPress, ddevapp.AppTypeTYPO3, ddevapp.AppTypePHP:
+		inContainerDir = path.Join(app.Docroot, inContainerDir)
+	}
+
+	inContainerRelativePath = path.Join(inContainerDir, filename)
+	onHostRelativePath = filepath.Join(onHostDir, filename)
+
+	err = os.MkdirAll(onHostDir, 0775)
+	assert.NoError(err)
+
+	f, err = os.OpenFile(onHostRelativePath, os.O_CREATE|os.O_RDWR, 0660)
+	assert.NoError(err)
+	_, err = f.WriteString("this base content was inserted on the host side\n")
+	assert.NoError(err)
+	_ = f.Close()
+
+	if app.WebcacheEnabled {
+		time.Sleep(time.Duration(2) * time.Second)
+	}
+
+	// if the file exists, add to it. We don't want to add if it's not already there.
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"sh", "-c", "if [ -f " + inContainerRelativePath + " ]; then echo 'content added inside container\n' >>" + inContainerRelativePath + "; fi"},
+	})
+	assert.NoError(err)
+	// grep the file for both the content added on host and that added in container.
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     []string{"sh", "-c", "grep 'base content was inserted on the host' " + inContainerRelativePath + "&& grep 'content added inside container' " + inContainerRelativePath},
+	})
+	assert.NoError(err)
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	runTime()
+	switchDir()
 }
 
 // TestDdevImportFilesDir tests that "ddev import-files" can successfully import non-archive directories
@@ -1202,7 +1206,7 @@ func TestDdevExec(t *testing.T) {
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
-		err = app.Start()
+		err = app.StartAndWaitForSync(0)
 		assert.NoError(err)
 
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -1273,96 +1277,93 @@ func TestDdevLogs(t *testing.T) {
 
 	app := &ddevapp.DdevApp{}
 
-	for _, site := range TestSites {
-		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevLogs", site.Name))
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevLogs", site.Name))
 
-		err := app.Init(site.Dir)
-		assert.NoError(err)
+	err := app.Init(site.Dir)
+	assert.NoError(err)
 
-		err = app.Start()
-		assert.NoError(err)
+	err = app.StartAndWaitForSync(0)
+	assert.NoError(err)
 
-		stdout := util.CaptureUserOut()
-		err = app.Logs("web", false, false, "")
-		assert.NoError(err)
-		out := stdout()
-		assert.Contains(out, "Server started")
+	stdout := util.CaptureUserOut()
+	err = app.Logs("web", false, false, "")
+	assert.NoError(err)
+	out := stdout()
+	assert.Contains(out, "Server started")
 
-		stdout = util.CaptureUserOut()
-		err = app.Logs("db", false, false, "")
-		assert.NoError(err)
-		out = stdout()
-		assert.Contains(out, "MySQL init process done. Ready for start up.")
+	stdout = util.CaptureUserOut()
+	err = app.Logs("db", false, false, "")
+	assert.NoError(err)
+	out = stdout()
+	assert.Contains(out, "MySQL init process done. Ready for start up.")
 
-		// Test that we can get logs when project is stopped also
-		err = app.Stop()
-		assert.NoError(err)
+	// Test that we can get logs when project is stopped also
+	err = app.Stop()
+	assert.NoError(err)
 
-		stdout = util.CaptureUserOut()
-		err = app.Logs("web", false, false, "")
-		assert.NoError(err)
-		out = stdout()
-		assert.Contains(out, "Server started")
+	stdout = util.CaptureUserOut()
+	err = app.Logs("web", false, false, "")
+	assert.NoError(err)
+	out = stdout()
+	assert.Contains(out, "Server started")
 
-		stdout = util.CaptureUserOut()
-		err = app.Logs("db", false, false, "")
-		assert.NoError(err)
-		out = stdout()
-		assert.Contains(out, "MySQL init process done. Ready for start up.")
+	stdout = util.CaptureUserOut()
+	err = app.Logs("db", false, false, "")
+	assert.NoError(err)
+	out = stdout()
+	assert.Contains(out, "MySQL init process done. Ready for start up.")
 
-		err = app.Down(true, false)
-		assert.NoError(err)
+	err = app.Down(true, false)
+	assert.NoError(err)
 
-		runTime()
-		switchDir()
-	}
+	runTime()
+	switchDir()
 }
 
 // TestProcessHooks tests execution of commands defined in config.yaml
 func TestProcessHooks(t *testing.T) {
 	assert := asrt.New(t)
 
-	for _, site := range TestSites {
-		cleanup := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
+	site := TestSites[0]
+	cleanup := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
-		testcommon.ClearDockerEnv()
-		app, err := ddevapp.NewApp(site.Dir, ddevapp.ProviderDefault)
-		assert.NoError(err)
-		err = app.Start()
-		assert.NoError(err)
+	testcommon.ClearDockerEnv()
+	app, err := ddevapp.NewApp(site.Dir, ddevapp.ProviderDefault)
+	assert.NoError(err)
+	err = app.StartAndWaitForSync(0)
+	assert.NoError(err)
 
-		// Note that any ExecHost commands must be able to run on Windows.
-		// echo and pwd are things that work pretty much the same in both places.
-		app.Commands = map[string][]ddevapp.Command{
-			"hook-test": {
-				{
-					Exec: "ls /usr/local/bin/composer",
-				},
-				{
-					ExecHost: "echo something",
-				},
+	// Note that any ExecHost commands must be able to run on Windows.
+	// echo and pwd are things that work pretty much the same in both places.
+	app.Commands = map[string][]ddevapp.Command{
+		"hook-test": {
+			{
+				Exec: "ls /usr/local/bin/composer",
 			},
-		}
-
-		stdout := util.CaptureUserOut()
-		err = app.ProcessHooks("hook-test")
-		assert.NoError(err)
-
-		// Ignore color in putput, can be different in different OS's
-		out := vtclean.Clean(stdout(), false)
-
-		assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
-		assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
-
-		err = app.Down(true, false)
-		assert.NoError(err)
-
-		runTime()
-		cleanup()
-
+			{
+				ExecHost: "echo something",
+			},
+		},
 	}
+
+	stdout := util.CaptureUserOut()
+	err = app.ProcessHooks("hook-test")
+	assert.NoError(err)
+
+	// Ignore color in putput, can be different in different OS's
+	out := vtclean.Clean(stdout(), false)
+
+	assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
+	assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
+
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	runTime()
+	cleanup()
 }
 
 // TestDdevStop tests the functionality that is called when "ddev stop" is executed
@@ -1371,31 +1372,30 @@ func TestDdevStop(t *testing.T) {
 
 	app := &ddevapp.DdevApp{}
 
-	for _, site := range TestSites {
-		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStop", site.Name))
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStop", site.Name))
 
-		testcommon.ClearDockerEnv()
-		err := app.Init(site.Dir)
-		assert.NoError(err)
-		err = app.Start()
-		assert.NoError(err)
-		err = app.Stop()
-		assert.NoError(err)
+	testcommon.ClearDockerEnv()
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.StartAndWaitForSync(0)
+	assert.NoError(err)
+	err = app.Stop()
+	assert.NoError(err)
 
-		for _, containerType := range [3]string{"web", "db", "dba"} {
-			containerName, err := constructContainerName(containerType, app)
-			assert.NoError(err)
-			check, err := testcommon.ContainerCheck(containerName, "exited")
-			assert.NoError(err)
-			assert.True(check, containerType, "container has exited")
-		}
-		err = app.Down(true, false)
+	for _, containerType := range [3]string{"web", "db", "dba"} {
+		containerName, err := constructContainerName(containerType, app)
 		assert.NoError(err)
-
-		runTime()
-		switchDir()
+		check, err := testcommon.ContainerCheck(containerName, "exited")
+		assert.NoError(err)
+		assert.True(check, containerType, "container has exited")
 	}
+	err = app.Down(true, false)
+	assert.NoError(err)
+
+	runTime()
+	switchDir()
 }
 
 // TestDdevStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or ddev configs.
@@ -1408,11 +1408,8 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	// Restart the site since it was stopped in the previous test.
-	if app.SiteStatus() != ddevapp.SiteRunning {
-		err = app.Start()
-		assert.NoError(err)
-	}
+	err = app.StartAndWaitForSync(0)
+	assert.NoError(err)
 
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
@@ -1438,48 +1435,46 @@ func TestDescribe(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
-	for _, site := range TestSites {
-		switchDir := site.Chdir()
+	site := TestSites[0]
+	switchDir := site.Chdir()
 
-		testcommon.ClearDockerEnv()
-		err := app.Init(site.Dir)
-		assert.NoError(err)
+	testcommon.ClearDockerEnv()
+	err := app.Init(site.Dir)
+	assert.NoError(err)
 
-		// It may already be running, but start does no harm.
-		err = app.Start()
+	err = app.StartAndWaitForSync(0)
 
-		// If we have a problem starting, get the container logs and output.
-		if err != nil {
-			stdout := util.CaptureUserOut()
-			logsErr := app.Logs("web", false, false, "")
-			assert.NoError(logsErr)
-			out := stdout()
+	// If we have a problem starting, get the container logs and output.
+	if err != nil {
+		stdout := util.CaptureUserOut()
+		logsErr := app.Logs("web", false, false, "")
+		assert.NoError(logsErr)
+		out := stdout()
 
-			healthcheck, inspectErr := exec.RunCommandPipe("bash", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
-			assert.NoError(inspectErr)
+		healthcheck, inspectErr := exec.RunCommandPipe("bash", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
+		assert.NoError(inspectErr)
 
-			assert.NoError(err, "app.Start(%s) failed: %v, \nweb container healthcheck='%s', \n=== web container logs=\n%s\n=== END web container logs ===", site.Name, err, healthcheck, out)
-		}
-
-		desc, err := app.Describe()
-		assert.NoError(err)
-		assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
-		assert.EqualValues(app.GetName(), desc["name"])
-		assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), desc["shortroot"])
-		assert.EqualValues(app.GetAppRoot(), desc["approot"])
-		assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
-
-		// Now stop it and test behavior.
-		err = app.Stop()
-		assert.NoError(err)
-
-		desc, err = app.Describe()
-		assert.NoError(err)
-		assert.EqualValues(ddevapp.SiteStopped, desc["status"])
-		err = app.Down(true, false)
-		assert.NoError(err)
-		switchDir()
+		assert.NoError(err, "app.Start(%s) failed: %v, \nweb container healthcheck='%s', \n=== web container logs=\n%s\n=== END web container logs ===", site.Name, err, healthcheck, out)
 	}
+
+	desc, err := app.Describe()
+	assert.NoError(err)
+	assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
+	assert.EqualValues(app.GetName(), desc["name"])
+	assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), desc["shortroot"])
+	assert.EqualValues(app.GetAppRoot(), desc["approot"])
+	assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
+
+	// Now stop it and test behavior.
+	err = app.Stop()
+	assert.NoError(err)
+
+	desc, err = app.Describe()
+	assert.NoError(err)
+	assert.EqualValues(ddevapp.SiteStopped, desc["status"])
+	err = app.Down(true, false)
+	assert.NoError(err)
+	switchDir()
 }
 
 // TestDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or ddev configs.
@@ -1493,7 +1488,7 @@ func TestDescribeMissingDirectory(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.Start()
+	err = app.StartAndWaitForSync(0)
 	assert.NoError(err)
 	if err != nil {
 		logs, err := ddevapp.GetErrLogsFromApp(app, err)
@@ -1544,7 +1539,7 @@ func TestRouterPortsCheck(t *testing.T) {
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.Start()
+	err = app.StartAndWaitForSync(0)
 	assert.NoError(err)
 
 	app, err = ddevapp.GetActiveApp(site.Name)
