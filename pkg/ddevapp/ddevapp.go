@@ -395,7 +395,7 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 
 // SiteStatus returns the current status of an application determined from web and db service health.
 func (app *DdevApp) SiteStatus() string {
-	var siteStatus string
+	var siteStatus, syncStatus string
 	statuses := map[string]string{"web": "", "db": ""}
 	if app.WebcacheEnabled {
 		statuses["bgsync"] = ""
@@ -434,6 +434,11 @@ func (app *DdevApp) SiteStatus() string {
 			default:
 				statuses[service] = status
 			}
+
+			if service == BGSYNCContainer {
+				_, syncStatus = dockerutil.GetContainerHealth(container)
+			}
+
 		}
 	}
 
@@ -443,10 +448,12 @@ func (app *DdevApp) SiteStatus() string {
 	}
 	for serviceName, status := range statuses {
 		if status != siteStatus {
-			siteStatus = siteStatus + ", " + serviceName + ": " + status
+			siteStatus = siteStatus + "\n" + serviceName + ": " + status
 		}
 	}
-
+	if syncStatus != "" {
+		siteStatus = siteStatus + "\n" + syncStatus
+	}
 	return siteStatus
 }
 

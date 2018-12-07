@@ -9,12 +9,12 @@ set -o errexit
 
 
 if [ ! -f "/var/tmp/unison_start_authorized" ] ; then
-  echo -n "unison start has not yet been authorized"
+  echo -n "waiting to start unison"
   exit 101
 fi
 
 if ! pkill -0 unison ; then
-  echo -n "unison does not appear to be running"
+  echo -n "unison not running"
   exit 102
 fi
 
@@ -33,10 +33,9 @@ trap cleanup EXIT
 mkdir -p "$SYNC_DESTINATION/$HEALTHCHECK_DIR" "$SYNC_SOURCE/$HEALTHCHECK_DIR"
 touch "${SYNC_SOURCE}/${HEALTHCHECK_DIR}/$CHECKFILE" && sleep "$WAIT_FOR_SYNC"
 if [ ! -f "${SYNC_DESTINATION}/${HEALTHCHECK_DIR}/$CHECKFILE" ]; then
-  echo -n "Sync not yet fully active"
-else
-    echo -n "Sync active"
-    touch /var/tmp/sync_active.txt
+  echo -n "sync starting"
+  rm -f /var/tmp/sync_active.txt
+  exit 0
 fi
-
-exit 0
+echo -n "sync active"
+touch /var/tmp/sync_active.txt
