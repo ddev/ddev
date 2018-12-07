@@ -192,21 +192,17 @@ func GetContainerHealth(container *docker.APIContainers) (string, string) {
 
 	client := GetDockerClient()
 	inspect, err := client.InspectContainer(container.ID)
-	if err != nil {
+	if err != nil || inspect == nil {
 		output.UserOut.Warnf("Error getting container to inspect: %v", err)
 		return "", ""
 	}
 
-	status := ""
 	logOutput := ""
-	if inspect != nil {
-		status = inspect.State.Health.Status
-		logOutput = ""
-		// The last log is the most recent
-		if err == nil && len(inspect.State.Health.Log) > 0 {
-			numLogs := len(inspect.State.Health.Log)
-			logOutput = inspect.State.Health.Log[numLogs-1].Output
-		}
+	status := inspect.State.Health.Status
+	// The last log is the most recent
+	if len(inspect.State.Health.Log) > 0 {
+		numLogs := len(inspect.State.Health.Log)
+		logOutput = inspect.State.Health.Log[numLogs-1].Output
 	}
 
 	return status, logOutput
