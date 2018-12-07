@@ -396,9 +396,9 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 // SiteStatus returns the current status of an application determined from web and db service health.
 func (app *DdevApp) SiteStatus() string {
 	var siteStatus string
-	services := map[string]string{"web": "", "db": ""}
+	statuses := map[string]string{"web": "", "db": ""}
 	if app.WebcacheEnabled {
-		services["bgsync"] = ""
+		statuses["bgsync"] = ""
 	}
 
 	if !fileutil.FileExists(app.GetAppRoot()) {
@@ -412,38 +412,39 @@ func (app *DdevApp) SiteStatus() string {
 		return siteStatus
 	}
 
-	for service := range services {
+	for service := range statuses {
 		container, err := app.FindContainerByType(service)
 		if err != nil {
 			util.Error("app.FindContainerByType(%v) failed", service)
 			return ""
 		}
 		if container == nil {
-			services[service] = SiteNotFound
+			statuses[service] = SiteNotFound
 			siteStatus = service + " service " + SiteNotFound
 		} else {
 			status, _ := dockerutil.GetContainerHealth(container)
 
 			switch status {
 			case "exited":
-				services[service] = SiteStopped
+				statuses[service] = SiteStopped
 			case "healthy":
-				services[service] = SiteRunning
+				statuses[service] = SiteRunning
 			case "starting":
-				services[service] = SiteStarting
+				statuses[service] = SiteStarting
 			default:
-				services[service] = status
+				statuses[service] = status
 			}
 		}
 	}
 
-	for service, status := range services {
-		if status != SiteRunning {
-			siteStatus = service + " service " + status
-		}
+	// Base the siteStatus on web container. Then override it if others are not the same.
+	if statuses["web"] == SiteStopped || statuses["web"] == SiteRunning {
+		siteStatus = statuses["web"]
 	}
-	if siteStatus == "" {
-		siteStatus = SiteRunning
+	for serviceName, status := range statuses {
+		if status != siteStatus {
+			siteStatus = siteStatus + ", " + serviceName + ": " + status
+		}
 	}
 
 	return siteStatus
