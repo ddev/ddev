@@ -804,7 +804,15 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		err = app.StartAndWaitForSync(2)
+		// Get files before start, as syncing can start immediately.
+		if site.FilesTarballURL != "" {
+			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+			assert.NoError(err)
+			err = app.ImportFiles(tarballPath, "")
+			assert.NoError(err)
+		}
+
+		err = app.Start()
 		assert.NoError(err)
 
 		if site.DBTarURL != "" {
@@ -813,32 +821,27 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			err = app.ImportDB(cachedArchive, "")
 			assert.NoError(err)
 		}
-		if site.FilesTarballURL != "" {
-			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
-			assert.NoError(err)
-			err = app.ImportFiles(tarballPath, "")
-			assert.NoError(err)
-		}
+
+		err = app.StartAndWaitForSync(2)
+		assert.NoError(err)
 
 		// Test static content.
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
 		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 60)
-		assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=%v: %v", rawurl, resp, err)
+		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
 		if err != nil {
-			stdout := util.CaptureUserOut()
-			err = app.Logs("web", false, false, "")
+			logs, err := ddevapp.GetErrLogsFromApp(app, err)
 			assert.NoError(err)
-			out := stdout()
-			t.Logf("Logs after GetLocalHTTPResponse: %s", out)
+			t.Logf("Logs after GetLocalHTTPResponse: %s", logs)
 		}
-		assert.Contains(body, site.DynamicURI.Expect)
+		assert.Contains(body, site.DynamicURI.Expect, "expected %s on project %s", site.DynamicURI.Expect, site.Name)
 
 		// Load an image from the files section
 		if site.FilesImageURI != "" {
 			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+site.FilesImageURI)
-			assert.NoError(err)
+			assert.NoError(err, "failed ImageURI response on project %s: %v", site.Name, err)
 			assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
 		}
 

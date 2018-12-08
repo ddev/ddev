@@ -1526,7 +1526,7 @@ func (app *DdevApp) precacheWebdir() error {
 	if err != nil {
 		return fmt.Errorf("docker %v failed: %v out=%s", dockerArgs, err, out)
 	}
-	util.Warning("docker cp command took %v seconds", time.Now().Sub(start))
+	util.Success("repo files push to container completed in %v", time.Now().Sub(start))
 
 	// Set the flag to tell unison it can start syncing
 	_, _, err = app.Exec(&ExecOpts{
