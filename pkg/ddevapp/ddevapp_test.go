@@ -881,11 +881,15 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// Try using php72 to avoid SIGBUS failures after restore.
 	app.PHPVersion = ddevapp.PHP72
 
+	// First do regular start, which is good enough to get us to an ImportDB()
+	err = app.Start()
+	require.NoError(t, err)
 	err = app.StartAndWaitForSync(2)
 	require.NoError(t, err, "app.Start() failed on site %s, err=%v", site.Name, err)
 
 	err = app.ImportDB(d7testerTest1Dump, "")
-	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
+	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
+
 	_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
 	if err != nil && strings.Contains(err.Error(), "container failed") {
 		logs, err := ddevapp.GetErrLogsFromApp(app, err)
@@ -1788,7 +1792,7 @@ func TestHttpsRedirection(t *testing.T) {
 		// Do a start on the configured site.
 		app, err = ddevapp.GetActiveApp("")
 		assert.NoError(err)
-		err = app.Start()
+		err = app.StartAndWaitForSync(2)
 		assert.NoError(err)
 
 		// Test for directory redirects under https and http

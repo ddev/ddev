@@ -724,9 +724,6 @@ func (app *DdevApp) Start() error {
 		if err != nil {
 			return err
 		}
-
-		//TODO: We probably want to remove this output after things stabilize
-		output.UserOut.Printf("Waiting for containers: %v", requiredContainers)
 	}
 
 	err = app.Wait(requiredContainers)
