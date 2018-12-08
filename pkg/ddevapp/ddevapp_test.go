@@ -1462,7 +1462,7 @@ func TestDdevDescribe(t *testing.T) {
 
 	desc, err := app.Describe()
 	assert.NoError(err)
-	assert.EqualValues(ddevapp.SiteRunning+"\nsync active", desc["status"], "")
+	assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
 	assert.EqualValues(app.GetName(), desc["name"])
 	assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), desc["shortroot"])
 	assert.EqualValues(app.GetAppRoot(), desc["approot"])
