@@ -1183,7 +1183,6 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.GetUnisonCatalogVolName(), app.GetWebcacheVolName()} {
 			err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volName})
 			if err != nil {
-				//TODO: This should probably turn back to an error before release
 				util.Warning("could not remove volume %s: %v", volName, err)
 			}
 		}
