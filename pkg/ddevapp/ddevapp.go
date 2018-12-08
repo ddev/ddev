@@ -33,6 +33,10 @@ import (
 // containerWaitTimeout is the max time we wait for all containers to become ready.
 var containerWaitTimeout = 61
 
+// bgsyncWaitTimeout is time time in seconds to wait for the bgsync container
+// to become ready. This is normally just the normal container start time + docker cp
+var bgsyncWaitTimeout = 900
+
 // bgsyncSyncWaitTimeout is the max time in seconds we wait for bgsync to be syncing.
 var bgsyncSyncWaitTimeout = 600
 
@@ -985,7 +989,7 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 		}
 		waitTime := containerWaitTimeout
 		if containerType == BGSYNCContainer {
-			waitTime = 600
+			waitTime = bgsyncWaitTimeout
 		}
 		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
 		if err != nil {

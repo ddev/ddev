@@ -824,6 +824,12 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		err = app.StartAndWaitForSync(2)
 		assert.NoError(err)
+		if err != nil {
+			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
+			if getLogsErr != nil {
+				t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
+			}
+		}
 
 		// Test static content.
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
@@ -1796,7 +1802,13 @@ func TestHttpsRedirection(t *testing.T) {
 		app, err = ddevapp.GetActiveApp("")
 		assert.NoError(err)
 		err = app.StartAndWaitForSync(2)
-		assert.NoError(err)
+		assert.NoError(err, "failed to StartAndWaitForSync on project %s webserverType=%s: %v", app.Name, webserverType, err)
+		if err != nil {
+			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
+			if getLogsErr != nil {
+				t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
+			}
+		}
 
 		// Test for directory redirects under https and http
 		for _, parts := range expectations {
