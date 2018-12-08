@@ -1432,9 +1432,9 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	assert.NoError(err)
 }
 
-// TestDescribe tests that the describe command works properly on a running
+// TestDdevDescribe tests that the describe command works properly on a running
 // and also a stopped project.
-func TestDescribe(t *testing.T) {
+func TestDdevDescribe(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -1480,8 +1480,8 @@ func TestDescribe(t *testing.T) {
 	switchDir()
 }
 
-// TestDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or ddev configs.
-func TestDescribeMissingDirectory(t *testing.T) {
+// TestDdevDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or ddev configs.
+func TestDdevDescribeMissingDirectory(t *testing.T) {
 	assert := asrt.New(t)
 	site := TestSites[0]
 	tempPath := testcommon.CreateTmpDir("site-copy")

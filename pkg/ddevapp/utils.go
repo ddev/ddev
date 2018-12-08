@@ -89,6 +89,10 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 	default:
 		status = color.CyanString(status)
 	}
+	syncStatus := row["sync_status"].(string)
+	if syncStatus != "" {
+		status = status + "\n" + syncStatus
+	}
 
 	urls := row["httpurl"].(string)
 	if row["httpsurl"] != "" {

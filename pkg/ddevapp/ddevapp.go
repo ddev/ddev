@@ -154,6 +154,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["name"] = app.GetName()
 	appDesc["hostnames"] = app.GetHostnames()
 	appDesc["status"] = app.SiteStatus()
+	appDesc["sync_status"], _ = app.SyncStatus()
 	appDesc["type"] = app.GetType()
 	appDesc["approot"] = app.GetAppRoot()
 	appDesc["shortroot"] = shortRoot
@@ -398,7 +399,7 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 
 // SiteStatus returns the current status of an application determined from web and db service health.
 func (app *DdevApp) SiteStatus() string {
-	var siteStatus, syncStatus string
+	var siteStatus string
 	statuses := map[string]string{"web": "", "db": ""}
 	if app.WebcacheEnabled {
 		statuses["bgsync"] = ""
@@ -423,7 +424,6 @@ func (app *DdevApp) SiteStatus() string {
 		}
 		if container == nil {
 			statuses[service] = SiteNotFound
-			siteStatus = service + " service " + SiteNotFound
 		} else {
 			status, _ := dockerutil.GetContainerHealth(container)
 
@@ -437,27 +437,26 @@ func (app *DdevApp) SiteStatus() string {
 			default:
 				statuses[service] = status
 			}
-
-			if service == BGSYNCContainer {
-				_, syncStatus = dockerutil.GetContainerHealth(container)
-			}
-
 		}
 	}
 
 	// Base the siteStatus on web container. Then override it if others are not the same.
-	if statuses["web"] == SiteStopped || statuses["web"] == SiteRunning {
-		siteStatus = statuses["web"]
-	}
+	siteStatus = statuses["web"]
 	for serviceName, status := range statuses {
 		if status != siteStatus {
 			siteStatus = siteStatus + "\n" + serviceName + ": " + status
 		}
 	}
-	if syncStatus != "" {
-		siteStatus = siteStatus + "\n" + syncStatus
-	}
 	return siteStatus
+}
+
+func (app *DdevApp) SyncStatus() (string, error) {
+	container, err := app.FindContainerByType("bgsync")
+	if err != nil || container == nil {
+		return "", err
+	}
+	_, syncStatus := dockerutil.GetContainerHealth(container)
+	return syncStatus, nil
 }
 
 // PullOptions allows for customization of the pull process.
