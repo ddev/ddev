@@ -826,6 +826,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NoError(err)
 		if err != nil {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
+			assert.NoError(getLogsErr)
 			if getLogsErr != nil {
 				t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
 			}

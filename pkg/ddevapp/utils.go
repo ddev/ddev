@@ -273,9 +273,9 @@ func isZip(filepath string) bool {
 func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 	var serviceName string
 	if strings.Contains(errorReceived.Error(), "container failed") || strings.Contains(errorReceived.Error(), "container did not become ready") {
-		ary := strings.Split(errorReceived.Error(), " ")
-		if len(ary) > 0 && (ary[0] == "web" || ary[0] == "db" || ary[0] == "bgsync") {
-			serviceName = ary[0]
+		splitError := strings.Split(errorReceived.Error(), " ")
+		if len(splitError) > 0 && util.ArrayContainsString([]string{"web", "db", "bgsync"}, splitError[0]) {
+			serviceName = splitError[0]
 			logs, err := app.CaptureLogs(serviceName, false, "")
 			if err != nil {
 				return "", err
