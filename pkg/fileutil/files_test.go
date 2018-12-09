@@ -152,7 +152,7 @@ func TestFindSimulatedXsymSymlinks(t *testing.T) {
 	targetDir := filepath.Join(testDir, "testdata", "TestFindSimulatedXsymSymlinks", "links")
 	links, err := fileutil.FindSimulatedXsymSymlinks(targetDir)
 	assert.NoError(err)
-	assert.Len(links, 6)
+	assert.Len(links, 7)
 }
 
 func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
@@ -178,6 +178,7 @@ func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
 			// Read the symlink as a file. It should resolve with the actual content of target
 			contents, err := ioutil.ReadFile(link.LinkLocation)
 			assert.NoError(err)
+			// TODO: Check the content of the target file
 			//assert.Equal("This is really really deep\n", string(contents))
 			_ = contents
 		}
