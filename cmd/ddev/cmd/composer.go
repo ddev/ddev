@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/fileutil"
+	"runtime"
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -38,6 +40,22 @@ ddev composer outdated --minor-only`,
 			Dir:     "/var/www/html",
 			Cmd:     append([]string{"composer"}, args...),
 		})
+		if runtime.GOOS == "windows" && !util.IsDockerToolbox() {
+			if fileutil.CanCreateSymlinks() {
+				links, err := fileutil.FindSimulatedXsymSymlinks(app.AppRoot)
+				if err == nil {
+					err = fileutil.ReplaceSimulatedXsymSymlinks(links)
+					if err != nil {
+						util.Warning("Failed replacing simulated symlinks: %v", err)
+					}
+					util.Success("Replaced simulated symlinks with real symlinks: %v", links)
+				} else {
+					util.Warning("Error finding simulated symlinks")
+				}
+			} else {
+				util.Warning("This host computer is unable to create symlinks, please see the docs to enable developer mode.")
+			}
+		}
 
 		if len(stdout) > 0 {
 			fmt.Println(stdout)
