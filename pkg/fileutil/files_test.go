@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/drud/ddev/pkg/fileutil"
@@ -155,11 +156,18 @@ func TestFindSimulatedXsymSymlinks(t *testing.T) {
 	assert.Len(links, 8)
 }
 
+// TestReplaceSimulatedXsymSymlinks tries a number of symlinks to make
+// sure we can parse and replace symlinks.
 func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
 	assert := asrt.New(t)
+	if runtime.GOOS == "windows" && !fileutil.CanCreateSymlinks() {
+		t.Skip("Skipping on Windows because test machine can't create symlnks")
+	}
 	testDir, _ := os.Getwd()
 	sourceDir := filepath.Join(testDir, "testdata", "symlinks")
 	targetDir := testcommon.CreateTmpDir("TestReplaceSimulated")
+	//nolint: errcheck
+	defer os.RemoveAll(targetDir)
 	err := os.Chdir(targetDir)
 	assert.NoError(err)
 	// CopyDir skips real symlinks, but we only care about simulated ones, so it's OK
@@ -174,18 +182,17 @@ func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
 	for _, link := range links {
 		fi, err := os.Stat(link.LinkLocation)
 		assert.NoError(err)
+		linkFi, err := os.Lstat(link.LinkLocation)
+		assert.NoError(err)
 		if err == nil && fi != nil && !fi.IsDir() {
 			// Read the symlink as a file. It should resolve with the actual content of target
 			contents, err := ioutil.ReadFile(link.LinkLocation)
 			assert.NoError(err)
-			// TODO: Check the content of the target file
-			//assert.Equal("This is really really deep\n", string(contents))
-			_ = contents
+			expectedContent := "textfile " + filepath.Base(link.LinkTarget) + "\n"
+			assert.Equal(expectedContent, string(contents))
 		}
-		fi, err = os.Lstat(link.LinkLocation)
-		assert.NoError(err)
 		// Now stat the link and make sure it's a link and points where it should
-		if fi.Mode()&os.ModeSymlink != 0 {
+		if linkFi.Mode()&os.ModeSymlink != 0 {
 			targetFile, err := os.Readlink(link.LinkLocation)
 			assert.NoError(err)
 			assert.Equal(link.LinkTarget, targetFile)

@@ -282,3 +282,17 @@ func ReplaceSimulatedXsymSymlinks(links []XSymContents) error {
 	}
 	return nil
 }
+
+// CanCreateSymlinks tests to see if it's possible to create a symlink
+func CanCreateSymlinks() bool {
+	tmpdir := os.TempDir()
+	linkPath := filepath.Join(tmpdir, RandomFilenameBase())
+	// This doesn't attempt to create the real file; we don't need it.
+	err := os.Symlink(filepath.Join(tmpdir, "realfile.txt"), linkPath)
+	//nolint: errcheck
+	defer os.Remove(linkPath)
+	if err != nil {
+		return false
+	}
+	return true
+}
