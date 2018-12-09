@@ -41,20 +41,7 @@ ddev composer outdated --minor-only`,
 			Cmd:     append([]string{"composer"}, args...),
 		})
 		if runtime.GOOS == "windows" && !util.IsDockerToolbox() {
-			if fileutil.CanCreateSymlinks() {
-				links, err := fileutil.FindSimulatedXsymSymlinks(app.AppRoot)
-				if err == nil {
-					err = fileutil.ReplaceSimulatedXsymSymlinks(links)
-					if err != nil {
-						util.Warning("Failed replacing simulated symlinks: %v", err)
-					}
-					util.Success("Replaced simulated symlinks with real symlinks: %v", links)
-				} else {
-					util.Warning("Error finding simulated symlinks")
-				}
-			} else {
-				util.Warning("This host computer is unable to create symlinks, please see the docs to enable developer mode.")
-			}
+			replaceSimulatedLinks(app.AppRoot)
 		}
 
 		if len(stdout) > 0 {
@@ -66,4 +53,32 @@ ddev composer outdated --minor-only`,
 func init() {
 	RootCmd.AddCommand(ComposerCmd)
 	ComposerCmd.Flags().SetInterspersed(false)
+}
+
+// replaceSimulatedLinks() walks the path provided and tries to replace XSym links with real ones.
+func replaceSimulatedLinks(path string) {
+	links, err := fileutil.FindSimulatedXsymSymlinks(path)
+	if err != nil {
+		util.Warning("Error finding XSym Symlinks: %v", err)
+	}
+	if len(links) == 0 {
+		return
+	}
+
+	if !fileutil.CanCreateSymlinks() {
+		//TODO: Link to actual docs
+		util.Warning("This host computer is unable to create real symlinks, please see the docs to enable developer mode.\nNote that the simulated symlinks created inside the container will work fine for most projects.")
+		return
+	}
+
+	err = fileutil.ReplaceSimulatedXsymSymlinks(links)
+	if err != nil {
+		util.Warning("Failed replacing simulated symlinks: %v", err)
+	}
+	replacedLinks := make([]string, 0)
+	for _, l := range links {
+		replacedLinks = append(replacedLinks, l.LinkLocation)
+	}
+	util.Success("Replaced these simulated symlinks with real symlinks: %v", replacedLinks)
+	return
 }

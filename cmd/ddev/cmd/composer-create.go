@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/drud/ddev/pkg/fileutil"
@@ -191,6 +192,9 @@ project root will be deleted when creating a project.`,
 		// This err check picks up either of the above: The filepath.Walk and the mv
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
+		}
+		if runtime.GOOS == "windows" && !util.IsDockerToolbox() {
+			replaceSimulatedLinks(app.AppRoot)
 		}
 
 	},
