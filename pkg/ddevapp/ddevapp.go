@@ -853,7 +853,16 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 // Logs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
-	container, err := app.FindContainerByType(service)
+	client := dockerutil.GetDockerClient()
+
+	var container *docker.APIContainers
+	var err error
+	// Let people access ddev-router and ddev-ssh-agent logs as well.
+	if service == "ddev-router" || service == "ddev-ssh-agent" {
+		container, err = dockerutil.FindContainerByLabels(map[string]string{"com.docker.compose.service": service})
+	} else {
+		container, err = app.FindContainerByType(service)
+	}
 	if err != nil {
 		return err
 	}
@@ -875,8 +884,6 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 	if tailLines != "" {
 		logOpts.Tail = tailLines
 	}
-
-	client := dockerutil.GetDockerClient()
 
 	err = client.Logs(logOpts)
 	if err != nil {
