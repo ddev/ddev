@@ -272,9 +272,13 @@ func isZip(filepath string) bool {
 // been received, especially on app.Start. This is really for testing only
 func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 	var serviceName string
-	if strings.Contains(errorReceived.Error(), "container failed") || strings.Contains(errorReceived.Error(), "container did not become ready") {
-		splitError := strings.Split(errorReceived.Error(), " ")
-		if len(splitError) > 0 && util.ArrayContainsString([]string{"web", "db", "bgsync"}, splitError[0]) {
+	errString := errorReceived.Error()
+	errString = strings.Replace(errString, "Received unexpected error:", "", -1)
+	errString = strings.Replace(errString, "\n", "", -1)
+	errString = strings.Trim(errString, " \t\n\r")
+	if strings.Contains(errString, "container failed") || strings.Contains(errString, "container did not become ready") || strings.Contains(errString, "failed to become ready") {
+		splitError := strings.Split(errString, " ")
+		if len(splitError) > 0 && util.ArrayContainsString([]string{"web", "db", "bgsync", "ddev-router", "ddev-ssh-agent"}, splitError[0]) {
 			serviceName = splitError[0]
 			logs, err := app.CaptureLogs(serviceName, false, "")
 			if err != nil {

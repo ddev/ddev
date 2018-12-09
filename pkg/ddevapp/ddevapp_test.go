@@ -827,9 +827,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		if err != nil {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
 			assert.NoError(getLogsErr)
-			if getLogsErr != nil {
-				t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
-			}
+			t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
 		}
 
 		// Test static content.
@@ -1806,9 +1804,8 @@ func TestHttpsRedirection(t *testing.T) {
 		assert.NoError(err, "failed to StartAndWaitForSync on project %s webserverType=%s: %v", app.Name, webserverType, err)
 		if err != nil {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
-			if getLogsErr != nil {
-				t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
-			}
+			assert.NoError(getLogsErr)
+			t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
 		}
 
 		// Test for directory redirects under https and http
@@ -1982,7 +1979,7 @@ func TestWebserverType(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, site := range TestSites {
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s GetAllURLs", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestWebserverType", site.Name))
 
 		app := new(ddevapp.DdevApp)
 
@@ -2006,9 +2003,8 @@ func TestWebserverType(t *testing.T) {
 			assert.NoError(err)
 			if err != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
-				if getLogsErr != nil {
-					t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
-				}
+				assert.NoError(getLogsErr)
+				t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
 			}
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectURL()+"/servertype.php")
 			assert.NoError(err)
