@@ -300,11 +300,11 @@ func TestDdevStart(t *testing.T) {
 	// Try to start a site of same name at an equivalent but different path. It should work.
 	tmpDir, err := testcommon.OsTempDir()
 	assert.NoError(err)
-	//nolint: errcheck
-	defer os.RemoveAll(tmpDir)
 	symlink := filepath.Join(tmpDir, "a-symlink")
 	err = os.Symlink(app.AppRoot, symlink)
 	assert.NoError(err)
+	//nolint: errcheck
+	defer os.Remove(symlink)
 	symlinkApp := &ddevapp.DdevApp{}
 
 	err = symlinkApp.Init(symlink)
