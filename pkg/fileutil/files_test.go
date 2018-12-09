@@ -143,3 +143,22 @@ func TestReplaceStringInFile(t *testing.T) {
 	assert.NoError(err)
 	assert.True(found)
 }
+
+// TestIsSameFile tests the IsSameFile utility function.
+func TestIsSameFile(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Test with directories that are equivalent
+	isSame, err := fileutil.IsSameFile("testdata/IsSameFile/dir1", "testdata/IsSameFile/symlink_to_dir1")
+	assert.NoError(err)
+	assert.True(isSame)
+	// Test with files that are equivalent (through symlink)
+	isSame, err = fileutil.IsSameFile("testdata/IsSameFile/dir1/targetFile.txt", "testdata/IsSameFile/symlink_to_dir1/targetFile.txt")
+	assert.NoError(err)
+	assert.True(isSame)
+
+	// Test files that are *not* equivalent.
+	isSame, err = fileutil.IsSameFile("testdata/IsSameFile/dir1/targetFile.txt", "testdata/testfiles/one.txt")
+	assert.NoError(err)
+	assert.False(isSame)
+}
