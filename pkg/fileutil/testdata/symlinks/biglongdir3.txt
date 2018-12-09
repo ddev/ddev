@@ -1,0 +1,5 @@
+XSym
+0042
+9b4557f4243981cf847cf7fd304af785
+subdir/bigdir2/biglongdir3/biglongdir3.txt
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     

@@ -1,5 +1,0 @@
-XSym
-0117
-2a2f97bbfe0095afe76622482dc8a97d
-subdir/bigdir2/biglongdir3/evenlongerdir4/reallyreallydeepdir5/evenmoreandmoredeeeperreallyreallydeep6/reallydeep.txt
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          

@@ -149,25 +149,25 @@ func TestReplaceStringInFile(t *testing.T) {
 func TestFindSimulatedXsymSymlinks(t *testing.T) {
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
-	targetDir := filepath.Join(testDir, "testdata", "TestFindSimulatedXsymSymlinks", "links")
+	targetDir := filepath.Join(testDir, "testdata", "symlinks")
 	links, err := fileutil.FindSimulatedXsymSymlinks(targetDir)
 	assert.NoError(err)
-	assert.Len(links, 7)
+	assert.Len(links, 8)
 }
 
 func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
-	sourceDir := filepath.Join(testDir, "testdata", "TestFindSimulatedXsymSymlinks", "links")
+	sourceDir := filepath.Join(testDir, "testdata", "symlinks")
 	targetDir := testcommon.CreateTmpDir("TestReplaceSimulated")
 	err := os.Chdir(targetDir)
 	assert.NoError(err)
 	// CopyDir skips real symlinks, but we only care about simulated ones, so it's OK
-	err = fileutil.CopyDir(sourceDir, filepath.Join(targetDir, "links"))
+	err = fileutil.CopyDir(sourceDir, filepath.Join(targetDir, "symlinks"))
 	assert.NoError(err)
 	links, err := fileutil.FindSimulatedXsymSymlinks(targetDir)
 	assert.NoError(err)
-	assert.Len(links, 7)
+	assert.Len(links, 8)
 	err = fileutil.ReplaceSimulatedXsymSymlinks(links)
 	assert.NoError(err)
 
