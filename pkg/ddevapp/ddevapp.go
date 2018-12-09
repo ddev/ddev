@@ -111,7 +111,11 @@ func (app *DdevApp) Init(basePath string) error {
 
 	if web != nil {
 		containerApproot := web.Labels["com.ddev.approot"]
-		if containerApproot != app.AppRoot {
+		isSameFile, err := fileutil.IsSameFile(containerApproot, app.AppRoot)
+		if err != nil {
+			return err
+		}
+		if !isSameFile {
 			return fmt.Errorf("a project (web container) in %s state already exists for %s that was created at %s", web.State, app.Name, containerApproot).(webContainerExists)
 		}
 		return nil
