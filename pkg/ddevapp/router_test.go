@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 
@@ -58,7 +59,11 @@ func TestPortOverride(t *testing.T) {
 		}
 
 		err = app.Start()
-		assert.NoError(err)
+		var logs string
+		if err != nil {
+			logs, _ = ddevapp.GetErrLogsFromApp(app, err)
+		}
+		require.NoError(t, err, "failed to start app, logs=\n=========\n%s\n===========\n", logs)
 		err = app.Wait([]string{"web"})
 		assert.NoError(err)
 		assert.True(util.IsPortActive(app.RouterHTTPPort))

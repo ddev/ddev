@@ -272,6 +272,9 @@ func isZip(filepath string) bool {
 // been received, especially on app.Start. This is really for testing only
 func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 	var serviceName string
+	if errorReceived == nil {
+		return "no error detected", nil
+	}
 	errString := errorReceived.Error()
 	errString = strings.Replace(errString, "Received unexpected error:", "", -1)
 	errString = strings.Replace(errString, "\n", "", -1)

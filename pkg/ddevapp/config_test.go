@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/exec"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
@@ -570,24 +569,18 @@ func TestConfigOverrideDetection(t *testing.T) {
 	err = app.ReadConfig()
 	assert.NoError(err)
 
-	//nolint: errcheck
-	defer app.Down(true, false)
-
 	restoreOutput := util.CaptureUserOut()
 	startErr := app.Start()
 	out := restoreOutput()
-	assert.NoError(startErr, "app.Start() did not succeed: output:===\n%s\n===", out)
+	//nolint: errcheck
+	defer app.Down(true, false)
 
-	if startErr != nil && strings.Contains(out, "ddev-ssh-agent failed to become ready") {
-		dockerLogs, err := exec.RunCommand("docker", []string{"logs", "ddev-ssh-agent"})
-		assert.NoError(err)
-		t.Logf("ddev-ssh-agent failed to become ready, docker logs:\n=======\n%s\n========\n", dockerLogs)
-	} else if startErr != nil && strings.Contains(out, "web container failed") {
-		logs, err := GetErrLogsFromApp(app, startErr)
-		assert.NoError(err)
-		t.Logf("web container failed: logs:\n=======\n%s\n========\n", logs)
+	var logs string
+	if startErr != nil {
+		logs, _ = GetErrLogsFromApp(app, startErr)
 	}
-	require.NoError(t, err, "Aborting test because app.Start() failed")
+
+	require.NoError(t, startErr, "app.Start() did not succeed: output:\n=====\n%s\n===== logs:\n========= logs =======\n%s\n========\n", out, logs)
 
 	assert.Contains(out, "utf.cnf")
 	assert.Contains(out, "my-php.ini")
