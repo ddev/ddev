@@ -61,12 +61,6 @@ var RootCmd = &cobra.Command{
 			}
 		}
 
-		// Look for version change
-		err = checkVersionAndOptIn()
-		if err != nil {
-			util.Failed(err.Error())
-		}
-
 		updateFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".update")
 
 		// Do periodic detection of whether an update is available for ddev users.
@@ -153,10 +147,10 @@ func sentryNotSetupWarning() {
 	}
 }
 
-// checkVersionAndOptIn() reads global config and checks to see if current version is different
+// checkDdevVersionAndOptInSentry() reads global config and checks to see if current version is different
 // from the last saved version. If it is, prompt to request anon ddev usage stats
 // and update the info.
-func checkVersionAndOptIn() error {
+func checkDdevVersionAndOptInSentry() error {
 	if version.COMMIT != globalconfig.DdevGlobalConfig.LastUsedVersion {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/latest/users/cli-usage/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
