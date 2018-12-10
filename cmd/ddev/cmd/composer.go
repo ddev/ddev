@@ -66,8 +66,7 @@ func replaceSimulatedLinks(path string) {
 	}
 
 	if !fileutil.CanCreateSymlinks() {
-		//TODO: Link to actual docs
-		util.Warning("This host computer is unable to create real symlinks, please see the docs to enable developer mode.\nNote that the simulated symlinks created inside the container will work fine for most projects.")
+		util.Warning("This host computer is unable to create real symlinks, please see the docs to enable developer mode:\n%s\nNote that the simulated symlinks created inside the container will work fine for most projects.", "https://ddev.readthedocs.io/en/latest/users/developer-tools/#windows-os-and-ddev-composer")
 		return
 	}
 
