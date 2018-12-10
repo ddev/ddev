@@ -812,6 +812,11 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			assert.NoError(err)
 		}
 
+		// Running WriteConfig assures that settings.ddev.php gets written
+		// so Drupal 8 won't try to set things unwriteable
+		err = app.WriteConfig()
+		assert.NoError(err)
+
 		err = app.Start()
 		assert.NoError(err)
 
