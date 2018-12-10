@@ -469,8 +469,10 @@ Bash auto-completion is available for ddev. Bash auto-completion is included in 
 <a name="opt-in-usage-information" />
 ## Opt-In Usage Information
 
-When you start ddev for the first time (or install a new release) you'll be asked to decide whether to opt-in to send usage and error information to the dedevelopers. You can change this at any time by editing the ~/.ddev/global_config.yaml file.
+When you start ddev for the first time (or install a new release) you'll be asked to decide whether to opt-in to send usage and error information to the developers. You can change this at any time by editing the ~/.ddev/global_config.yaml file.
 
 If you do choose to send the diagnostics it helps us tremendously in our effort to improve this tool. What information gets sent? Here's an example of what we might see:
 
 ![usage_stats](images/usage_stats.png)
+
+Of course if you have any reservations about this, please just opt-out (`ddev config global --instrumentation-opt-in=false`). If you have any problems or concerns with it, we'd like to know. One person did report slow ddev command completion on a network that was apparently not friendly to sentry.io.
