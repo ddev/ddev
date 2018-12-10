@@ -4,6 +4,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -32,6 +33,8 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 
 	if cmd.Flag("instrumentation-opt-in").Changed {
 		globalconfig.DdevGlobalConfig.InstrumentationOptIn = instrumentationOptIn
+		// Make sure that they don't get prompted again right after they opted out.
+		globalconfig.DdevGlobalConfig.LastUsedVersion = version.VERSION
 	}
 	if cmd.Flag("omit-containers").Changed {
 		omitContainers = strings.Replace(omitContainers, " ", "", -1)
