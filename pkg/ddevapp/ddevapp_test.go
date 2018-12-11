@@ -831,28 +831,20 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
 	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
 		err = site.Prepare()
-		if err != nil {
-			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
-		}
+		require.NoError(t, err)
 	}
 
 	switchDir := site.Chdir()
 	testcommon.ClearDockerEnv()
 
 	err = app.Init(site.Dir)
-	if err != nil {
-		if app.SiteStatus() != ddevapp.SiteRunning {
-			t.Fatalf("app.Init() failed on site %s in dir %s, err=%v", site.Name, site.Dir, err)
-		}
-	}
+	require.Equal(t, ddevapp.SiteRunning, app.SiteStatus())
 
 	// Try using php72 to avoid SIGBUS failures after restore.
 	app.PHPVersion = ddevapp.PHP72
 
 	err = app.Start()
-	if err != nil {
-		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
-	}
+	require.NoError(t, err, "app.Start() failed on site %s, err=%v", site.Name, err)
 
 	err = app.ImportDB(d7testerTest1Dump, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)

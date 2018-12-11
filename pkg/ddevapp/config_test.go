@@ -35,9 +35,9 @@ func TestNewConfig(t *testing.T) {
 
 	// Ensure the config uses specified defaults.
 	assert.Equal(app.APIVersion, version.DdevVersion)
-	assert.Equal(app.DBImage, version.DBImg+":"+version.DBTag)
-	assert.Equal(app.WebImage, version.WebImg+":"+version.WebTag)
-	assert.Equal(app.DBAImage, version.DBAImg+":"+version.DBATag)
+	assert.Equal(app.DBImage, version.GetDBImage())
+	assert.Equal(app.WebImage, version.GetWebImage())
+	assert.Equal(app.DBAImage, version.GetDBAImage())
 	app.Name = util.RandString(32)
 	app.Type = AppTypeDrupal8
 
@@ -520,9 +520,9 @@ func TestWriteConfig(t *testing.T) {
 		AppRoot:    testDir,
 		APIVersion: version.DdevVersion,
 		Name:       "TestWrite",
-		WebImage:   version.WebImg + ":" + version.WebTag,
-		DBImage:    version.DBImg + ":" + version.DBTag,
-		DBAImage:   version.DBAImg + ":" + version.DBATag,
+		WebImage:   version.GetWebImage(),
+		DBImage:    version.GetDBImage(),
+		DBAImage:   version.GetDBAImage(),
 		Type:       AppTypeDrupal8,
 		Provider:   ProviderDefault,
 	}
