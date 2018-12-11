@@ -1,6 +1,11 @@
 package version
 
-import "fmt"
+import (
+	"fmt"
+)
+
+// MariaDBDefaultVersion is the default version we use in the db container
+const MariaDBDefaultVersion = "10.2"
 
 // VERSION is supplied with the git committish this is built from
 var VERSION = ""
@@ -39,12 +44,6 @@ var DBImg = "drud/ddev-dbserver"
 // BaseDBTag is the main tag, DBTag is constructed from it
 var BaseDBTag = "20181203_mariadb_2_versions"
 
-// MariaDBDefaultVersion is used to create DBTag
-var MariaDBDefaultVersion = "10.2"
-
-// DBTag defines the default db image tag for drud dev
-var DBTag = BaseDBTag + "-" + MariaDBDefaultVersion // Note that this may be overridden by make
-
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
 
@@ -81,9 +80,9 @@ func GetVersionInfo() map[string]string {
 	versionInfo := make(map[string]string)
 
 	versionInfo["cli"] = DdevVersion
-	versionInfo["web"] = WebImg + ":" + WebTag
-	versionInfo["db"] = DBImg + ":" + DBTag
-	versionInfo["dba"] = DBAImg + ":" + DBATag
+	versionInfo["web"] = GetWebImage()
+	versionInfo["db"] = GetDBImage()
+	versionInfo["dba"] = GetDBAImage()
 	versionInfo["router"] = RouterImage + ":" + RouterTag
 	versionInfo["ddev-ssh-agent"] = SSHAuthImage + ":" + SSHAuthTag
 	versionInfo["commit"] = COMMIT
@@ -101,8 +100,12 @@ func GetWebImage() string {
 }
 
 // GetDBImage returns the correctly formatted db image:tag reference
-func GetDBImage() string {
-	return fmt.Sprintf("%s:%s", DBImg, DBTag)
+func GetDBImage(mariaDBVersion ...string) string {
+	version := MariaDBDefaultVersion
+	if len(mariaDBVersion) > 0 {
+		version = mariaDBVersion[0]
+	}
+	return fmt.Sprintf("%s:%s", DBImg, BaseDBTag+"-"+version)
 }
 
 // GetDBAImage returns the correctly formatted dba image:tag reference

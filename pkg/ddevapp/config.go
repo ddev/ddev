@@ -21,7 +21,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	log "github.com/sirupsen/logrus"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
 
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
@@ -64,10 +64,11 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.WebserverType = WebserverDefault
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
+	app.MariaDBVersion = version.MariaDBDefaultVersion
 
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
-	app.DBImage = version.GetDBImage()
+	app.DBImage = version.GetDBImage(app.MariaDBVersion)
 	app.DBAImage = version.GetDBAImage()
 
 	// Load from file if available. This will return an error if the file doesn't exist,
@@ -112,7 +113,7 @@ func (app *DdevApp) WriteConfig() error {
 		appcopy.WebImage = ""
 	}
 
-	if appcopy.DBImage == version.GetDBImage() {
+	if appcopy.DBImage == version.GetDBImage(appcopy.MariaDBVersion) {
 		appcopy.DBImage = ""
 	}
 
@@ -214,9 +215,7 @@ func (app *DdevApp) ReadConfig() error {
 		app.WebImage = version.GetWebImage()
 	}
 
-	if app.DBImage == "" {
-		app.DBImage = version.GetDBImage()
-	}
+	app.DBImage = version.GetDBImage(app.MariaDBVersion)
 
 	if app.DBAImage == "" {
 		app.DBAImage = version.GetDBAImage()

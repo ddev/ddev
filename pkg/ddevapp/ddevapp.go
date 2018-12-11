@@ -68,6 +68,7 @@ type DdevApp struct {
 	XdebugEnabled         bool                 `yaml:"xdebug_enabled"`
 	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string             `yaml:"additional_fqdns"`
+	MariaDBVersion        string               `yaml:"mariadb_version"`
 	ConfigPath            string               `yaml:"-"`
 	AppRoot               string               `yaml:"-"`
 	Platform              string               `yaml:"-"`
@@ -159,6 +160,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		dbinfo["dbPort"] = appports.GetPort("db")
 		util.CheckErr(err)
 		dbinfo["published_port"] = dbPublicPort
+		dbinfo["mariadb_version"] = app.MariaDBVersion
 		appDesc["dbinfo"] = dbinfo
 
 		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("mailhog")
@@ -1018,17 +1020,27 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("Failed to find a snapshot in %s", hostSnapshotDir)
 	}
 
-	if !fileutil.FileExists(filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")) {
-		// This command returning an error indicates grep has failed to find the value
-		opts := &ExecOpts{
-			Service: "db",
-			Cmd:     []string{"sh", "-c", "mariabackup --version 2>&1 | grep '10\\.1'"},
-		}
+	// TODO: We're going to have to set this after all. Will need config.
+	// TODO: Don't allow starting up a container with a 10.2 on it if we're running 10.1
+	// TODO: Add config and setters/getters
 
-		if _, _, err := app.Exec(opts); err != nil {
-			return fmt.Errorf("snapshot %s is not compatible with this version of ddev and mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
+	// Strategy here:
+	// Find out the version in the snapshot.
+	// Find out the version in the container.
+	// Declare whether they're compatible.
+	if fileutil.FileExists(filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")) {
+		// TODO: Set it to what's in that file
+	} else {
+		//
+		// This command returning an error indicates fgrep has failed to find the value
+		if _, _, err := app.Exec(&ExecOpts{
+			Service: "db",
+			Cmd:     []string{"sh", "-c", "mariabackup --version 2>&1 | fgrep 'MariadDB server 10.1'"},
+		}); err != nil {
 		}
 	}
+	// TODO: If incompatible, return here
+	// return fmt.Errorf("snapshot %s is not compatible with this version of mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
 		err := app.Down(false, false)
