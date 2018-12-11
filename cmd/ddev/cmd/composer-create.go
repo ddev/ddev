@@ -185,10 +185,10 @@ project root will be deleted when creating a project.`,
 			// If webcacheEnabled, we can move the contents easily and quickly inside the container.
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				Cmd:     []string{"bash", "-c", fmt.Sprintf("mv (%s/*,%s/.*) /var/www/html && rmdir %s", containerInstallPath, containerInstallPath, containerInstallPath)},
+				Cmd:     []string{"bash", "-c", fmt.Sprintf("shopt -s dotglob && mv %s/* /var/www/html && rmdir %s", containerInstallPath, containerInstallPath)},
 			})
 		}
-		// This err check picks up both of the above: The filepath.Walk and the mv
+		// This err check picks up either of the above: The filepath.Walk and the mv
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
