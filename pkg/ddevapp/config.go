@@ -314,6 +314,10 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("Invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
+	// Validate mariadb version
+	if !IsValidMariaDBVersion(app.MariaDBVersion) {
+		return fmt.Errorf("Invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
+	}
 	return nil
 }
 

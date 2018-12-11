@@ -98,6 +98,9 @@ var (
 
 	// omitContainersArg allows user to determine value of omit_containers
 	omitContainersArg string
+
+	// mariadbVersionArg is mariadb version 10.1 or 10.2
+	mariaDBVersionArg string
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -201,6 +204,7 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, "Unsets a db service working directory override")
 	ConfigCommand.Flags().BoolVar(&dbaWorkingDirDefaultArg, "dba-working-dir-default", false, "Unsets a dba service working directory override")
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
+	ConfigCommand.Flags().StringVar(&mariaDBVersionArg, "mariadb-version", "10.2", "mariadb version to use")
 
 	// projectname flag exists for backwards compatability.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
@@ -352,6 +356,9 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.RouterHTTPSPort = httpsPortArg
 	}
 
+	if mariaDBVersionArg != "" {
+		app.MariaDBVersion = mariaDBVersionArg
+	}
 	// This bool flag is false by default, so only use the value if the flag was explicity set.
 	if cmd.Flag("xdebug-enabled").Changed {
 		app.XdebugEnabled = xdebugEnabledArg
