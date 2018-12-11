@@ -55,6 +55,10 @@ log_error_exit() {
 # If set, the source will allow files to be deleted.
 : ${SYNC_NODELETE_SOURCE:="0"}
 
+# Healthcheck dir is used to make sure sync is occuring.
+# TODO: Remove the directory when stopping container.
+export HEALTHCHECK_DIR=${HEALTHCHECK_DIR:-.bgsync_healthcheck}
+
 log_heading "Starting bg-sync"
 
 # Dump the configuration to the log to aid bug reports.
@@ -140,14 +144,17 @@ $SYNC_EXTRA_UNISON_PROFILE_OPTS
 # Wait for the "start sync" flag to appear (typically after docker cp has been done to /destination"
 log_heading "Waiting for /var/tmp/unison_start_authorized to appear."
 
-while [ ! -f /var/tmp/unison_start_authorized ]; do
-    sleep 1
-done
-
 UNISON_UID=$(id -u)
 UNISON_GID=$(id -g)
 log_heading "Setting up permissions for user uid ${UNISON_UID}."
 sudo chown -R ${UNISON_UID}:${UNISON_GID} ${HOME} ${SYNC_DESTINATION}
+sudo mkdir -p ${SYNC_SOURCE}/${HEALTHCHECK_DIR} ${SYNC_DESTINATION}/${HEALTHCHECK_DIR}
+sudo chmod 777 ${SYNC_SOURCE}/${HEALTHCHECK_DIR} ${SYNC_DESTINATION}/${HEALTHCHECK_DIR}
+sudo rm -f ${SYNC_SOURCE}/${HEALTHCHECK_DIR}/* ${SYNC_DESTINATION}/${HEALTHCHECK_DIR}/*
+
+while [ ! -f /var/tmp/unison_start_authorized ]; do
+    sleep 1
+done
 
 # Start syncing files.
 log_heading "Starting unison continuous sync."
