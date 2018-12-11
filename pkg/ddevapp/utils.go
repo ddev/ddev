@@ -138,12 +138,12 @@ func Cleanup(app *DdevApp) error {
 
 // CheckForConf checks for a config.yaml at the cwd or parent dirs.
 func CheckForConf(confPath string) (string, error) {
-	if fileutil.FileExists(confPath + "/.ddev/config.yaml") {
+	if fileutil.FileExists(filepath.Join(confPath, ".ddev", "config.yaml")) {
 		return confPath, nil
 	}
-	pathList := filepath.SplitList(confPath)
 
-	for range pathList {
+	// Keep going until we can't go any higher
+	for filepath.Dir(confPath) != confPath {
 		confPath = filepath.Dir(confPath)
 		if fileutil.FileExists(filepath.Join(confPath, ".ddev", "config.yaml")) {
 			return confPath, nil
