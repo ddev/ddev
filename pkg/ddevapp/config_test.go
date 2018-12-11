@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -550,23 +551,29 @@ func TestWriteConfig(t *testing.T) {
 // TestConfigOverrideDetection tests to make sure we tell them about config overrides.
 func TestConfigOverrideDetection(t *testing.T) {
 	assert := asrt.New(t)
+	app := &DdevApp{}
+	testDir, _ := os.Getwd()
 
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ConfigOverrideDetection", site.Name))
+
+	// Copy test overrides into the project .ddev directory
+	for _, item := range []string{"apache", "php", "mysql"} {
+		err := fileutil.CopyDir(filepath.Join(testDir, "testdata/TestConfigOverrideDetection/.ddev", item), filepath.Join(site.Dir, ".ddev", item))
+		assert.NoError(err)
+		err = fileutil.CopyFile(filepath.Join(testDir, "testdata/TestConfigOverrideDetection/.ddev", "nginx-site.conf"), filepath.Join(site.Dir, ".ddev", "nginx-site.conf"))
+		assert.NoError(err)
+	}
+
+	// And when we're done, we have to clean those out again.
+	defer func() {
+		for _, item := range []string{"apache", "php", "mysql", "nginx-site.conf"} {
+			_ = os.RemoveAll(filepath.Join(".ddev", item))
+		}
+	}()
 	testcommon.ClearDockerEnv()
-
-	testDir := testcommon.CreateTmpDir("TestConfigConfigOverrideDetection")
-
-	targetDdev := filepath.Join(testDir, ".ddev")
-	err := fileutil.CopyDir("testdata/TestConfigOverrideDetection/.ddev", targetDdev)
-	assert.NoError(err)
-
-	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
-
-	app, err := NewApp(testDir, ProviderDefault)
-	assert.NoError(err)
-
-	err = app.ReadConfig()
+	err := app.Init(site.Dir)
 	assert.NoError(err)
 
 	restoreOutput := util.CaptureUserOut()
@@ -594,4 +601,6 @@ func TestConfigOverrideDetection(t *testing.T) {
 		assert.NotContains(out, "nginx-site.conf")
 	}
 	assert.Contains(out, "Custom configuration takes effect")
+	switchDir()
+	runTime()
 }
