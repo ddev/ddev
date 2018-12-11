@@ -10,8 +10,6 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
 
-	"errors"
-
 	"os"
 	"text/template"
 
@@ -143,16 +141,16 @@ func CheckForConf(confPath string) (string, error) {
 	if fileutil.FileExists(confPath + "/.ddev/config.yaml") {
 		return confPath, nil
 	}
-	pathList := strings.Split(confPath, "/")
+	pathList := filepath.SplitList(confPath)
 
 	for range pathList {
 		confPath = filepath.Dir(confPath)
-		if fileutil.FileExists(confPath + "/.ddev/config.yaml") {
+		if fileutil.FileExists(filepath.Join(confPath, ".ddev", "config.yaml")) {
 			return confPath, nil
 		}
 	}
 
-	return "", errors.New("no .ddev/config.yaml file was found in this directory or any parent")
+	return "", fmt.Errorf("no %s file was found in this directory or any parent", filepath.Join(".ddev", "config.yaml"))
 }
 
 // ddevContainersRunning determines if any ddev-controlled containers are currently running.
