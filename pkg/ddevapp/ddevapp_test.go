@@ -1009,9 +1009,8 @@ func TestWriteableFilesDirectory(t *testing.T) {
 		Cmd:     []string{"sh", "-c", "echo 'content created inside container\n' >" + inContainerRelativePath},
 	})
 	assert.NoError(err)
-	if app.WebcacheEnabled {
-		time.Sleep(time.Duration(2) * time.Second)
-	}
+	ddevapp.WaitForSync(app, 5)
+
 	// Now try to append to the file on the host.
 	// os.OpenFile() for append here fails if the file does not already exist.
 	f, err := os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
@@ -1043,9 +1042,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	assert.NoError(err)
 	_ = f.Close()
 
-	if app.WebcacheEnabled {
-		time.Sleep(time.Duration(2) * time.Second)
-	}
+	ddevapp.WaitForSync(app, 5)
 
 	// if the file exists, add to it. We don't want to add if it's not already there.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{

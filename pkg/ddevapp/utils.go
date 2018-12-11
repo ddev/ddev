@@ -5,6 +5,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
@@ -291,4 +292,14 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("no logs found for service %s", serviceName)
+}
+
+// WaitForSync is a test helper; it's hard to know exactly when the bgsync
+// container will have completed syncing an operation, so we do app.WaitSync() and
+// add the number of seconds provided.
+func WaitForSync(app *DdevApp, seconds int) {
+	if app.WebcacheEnabled {
+		_ = app.WaitSync()
+		time.Sleep(time.Duration(seconds) * time.Second)
+	}
 }
