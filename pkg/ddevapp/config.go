@@ -233,7 +233,7 @@ func (app *DdevApp) ReadConfig() error {
 
 	if app.DBAImage == "" {
 		app.DBAImage = version.GetDBAImage()
-	}'
+	}
 	if app.BgsyncImage == "" {
 		app.BgsyncImage = version.GetBgsyncImage()
 	}
