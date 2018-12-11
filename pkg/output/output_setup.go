@@ -1,6 +1,9 @@
 package output
 
 import (
+	"github.com/drud/ddev/pkg/ravenutils"
+	"github.com/drud/ddev/pkg/version"
+	"github.com/evalphobia/logrus_sentry"
 	"os"
 
 	"github.com/fatih/color"
@@ -21,6 +24,20 @@ func LogSetUp() {
 	// Use color.Output instead of stderr for all user output
 	log.SetOutput(color.Output)
 	UserOut.Out = color.Output
+
+	levels := []log.Level{
+		log.PanicLevel,
+		log.FatalLevel,
+		log.ErrorLevel,
+	}
+
+	// Report errors and panics to Sentry
+	if version.SentryDSN != "" && os.Getenv("DDEV_NO_SENTRY") == "" {
+		hook, err := logrus_sentry.NewAsyncWithTagsSentryHook(version.SentryDSN, ravenutils.RavenTags, levels)
+		if err == nil {
+			UserOut.Hooks.Add(hook)
+		}
+	}
 
 	if !JSONOutput {
 		UserOut.Formatter = UserOutFormatter

@@ -3,6 +3,7 @@ package testcommon
 import (
 	"crypto/tls"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -128,7 +129,7 @@ func (site *TestSite) Cleanup() {
 	// CleanupDir checks its own errors.
 	CleanupDir(site.Dir)
 
-	siteData := filepath.Join(util.GetGlobalDdevDir(), site.Name)
+	siteData := filepath.Join(globalconfig.GetGlobalDdevDir(), site.Name)
 	if fileutil.FileExists(siteData) {
 		CleanupDir(siteData)
 	}
@@ -262,7 +263,7 @@ func TimeTrack(start time.Time, name string) func() {
 // Returns the extracted path, the tarball path (both possibly cached), and an error value.
 func GetCachedArchive(siteName string, prefixString string, internalExtractionPath string, sourceURL string) (string, string, error) {
 	uniqueName := prefixString + "_" + path.Base(sourceURL)
-	testCache := filepath.Join(util.GetGlobalDdevDir(), "testcache", siteName)
+	testCache := filepath.Join(globalconfig.GetGlobalDdevDir(), "testcache", siteName)
 	archiveFullPath := filepath.Join(testCache, "tarballs", uniqueName)
 	_ = os.MkdirAll(filepath.Dir(archiveFullPath), 0777)
 	extractPath := filepath.Join(testCache, prefixString)

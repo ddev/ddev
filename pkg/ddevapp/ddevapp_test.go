@@ -2,6 +2,7 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
@@ -121,7 +122,7 @@ func TestMain(m *testing.M) {
 	output.LogSetUp()
 
 	// Ensure the ddev directory is created before tests run.
-	_ = util.GetGlobalDdevDir()
+	_ = globalconfig.GetGlobalDdevDir()
 
 	// Since this may be first time ddev has been used, we need the
 	// ddev_default network available.
@@ -1943,7 +1944,7 @@ func TestDbMigration(t *testing.T) {
 	err = app.Init(site.Dir)
 	assert.NoError(err)
 
-	dataDir := filepath.Join(util.GetGlobalDdevDir(), app.Name, "mysql")
+	dataDir := filepath.Join(globalconfig.GetGlobalDdevDir(), app.Name, "mysql")
 
 	// Remove any existing dataDir or migration backups
 	if fileutil.FileExists(dataDir) {

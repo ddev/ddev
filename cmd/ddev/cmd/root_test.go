@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"os"
 	"testing"
 
@@ -38,6 +41,12 @@ var (
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
+	// Start with no global config file so we're sure to have defaults
+	configFile := globalconfig.GetGlobalConfigPath()
+	if fileutil.FileExists(configFile) {
+		_ = os.Remove(configFile)
+	}
+
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
@@ -47,6 +56,9 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Errorln("could not set noninteractive mode, failed to Setenv, err: ", err)
 	}
+
+	// We don't want the tests reporting to Sentry.
+	_ = os.Setenv("DDEV_NO_SENTRY", "true")
 
 	// Attempt to remove all running containers before starting a test.
 	// If no projects are running, this will exit silently and without error.
@@ -60,7 +72,11 @@ func TestMain(m *testing.M) {
 			log.Fatalf("Prepare() failed in TestMain site=%s, err=%v\n", DevTestSites[i].Name, err)
 		}
 	}
-	addSites()
+	err = addSites()
+	if err != nil {
+		removeSites()
+		output.UserOut.Fatalf("addSites() failed: %v", err)
+	}
 
 	log.Debugln("Running tests.")
 	testRun := m.Run()
@@ -135,9 +151,10 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 }
 
 // addSites runs `ddev start` on the test apps
-func addSites() {
+func addSites() error {
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
+		defer cleanup()
 
 		// test that you get an error when you run with no args
 		args := []string{"start"}
@@ -170,12 +187,12 @@ func addSites() {
 			o.Headers["Host"] = app.HostName()
 			err = util.EnsureHTTPStatus(o)
 			if err != nil {
-				log.Fatalln("Failed to ensureHTTPStatus on", app.HostName(), url)
+				return fmt.Errorf("failed to ensureHTTPStatus on %s url=%s", app.HostName(), url)
 			}
 		}
 
-		cleanup()
 	}
+	return nil
 }
 
 // removeSites runs `ddev remove` on the test apps

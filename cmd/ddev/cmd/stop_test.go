@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -13,7 +14,8 @@ func TestDdevStop(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Make sure we have running sites.
-	addSites()
+	err := addSites()
+	require.NoError(t, err)
 
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
@@ -35,7 +37,8 @@ func TestDdevStop(t *testing.T) {
 	}
 
 	// Re-create running sites.
-	addSites()
+	err = addSites()
+	require.NoError(t, err)
 	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
 	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
 
@@ -46,5 +49,6 @@ func TestDdevStop(t *testing.T) {
 	}
 
 	// Now put the sites back together so other tests can use them.
-	addSites()
+	err = addSites()
+	require.NoError(t, err)
 }

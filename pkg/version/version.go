@@ -10,6 +10,10 @@ var VERSION = ""
 // DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
 var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by make
 
+// SentryDSN is the ddev-specific key for the Sentry service.
+// It is compiled in using link-time variables
+var SentryDSN = ""
+
 // DockerVersionConstraint is the current minimum version of docker required for ddev.
 // See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
@@ -57,6 +61,12 @@ var COMMIT = "COMMIT should be overridden"
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
 
+// DockerVersion is cached version of docker
+var DockerVersion = ""
+
+// DockerComposeVersion is filled with the version we find for docker-compose
+var DockerComposeVersion = ""
+
 // DDevTLD defines the tld to use for DDev site URLs.
 const DDevTLD = "ddev.local"
 
@@ -73,6 +83,8 @@ func GetVersionInfo() map[string]string {
 	versionInfo["commit"] = COMMIT
 	versionInfo["domain"] = DDevTLD
 	versionInfo["build info"] = BUILDINFO
+	versionInfo["docker"] = DockerVersion
+	versionInfo["docker-compose"] = DockerComposeVersion
 
 	return versionInfo
 }

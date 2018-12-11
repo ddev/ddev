@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -13,10 +14,11 @@ func TestDdevStart(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Make sure we have running sites.
-	addSites()
+	err := addSites()
+	require.NoError(t, err)
 
 	// Stop all sites.
-	_, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
+	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all"})
 	assert.NoError(err)
 
 	// Ensure all sites are started after ddev start --all.

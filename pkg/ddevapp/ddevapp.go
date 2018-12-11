@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -1385,7 +1386,7 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 // irrelevant after that and can eventually be removed.
 // Returns bool (true if migration was done) and err
 func (app *DdevApp) migrateDbIfRequired() (bool, error) {
-	dataDir := filepath.Join(util.GetGlobalDdevDir(), app.Name, "mysql")
+	dataDir := filepath.Join(globalconfig.GetGlobalDdevDir(), app.Name, "mysql")
 
 	if fileutil.FileExists(dataDir) {
 		return false, fmt.Errorf("sorry, it is not possible to migrate bind-mounted databases using ddev v1.3+, please use ddev v1.2 to migrate, or just 'mv ~/.ddev/%s/mysql ~/.ddev/%s/mysql.saved' and then restart and reload with 'ddev import-db'", app.Name, app.Name)

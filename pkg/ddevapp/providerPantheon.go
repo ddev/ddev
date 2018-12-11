@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"github.com/drud/ddev/pkg/globalconfig"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -138,8 +139,8 @@ func (p *PantheonProvider) prepDownloadDir() {
 }
 
 func (p *PantheonProvider) getDownloadDir() string {
-	ddevDir := util.GetGlobalDdevDir()
-	destDir := filepath.Join(ddevDir, "pantheon", p.app.Name)
+	globalDir := globalconfig.GetGlobalDdevDir()
+	destDir := filepath.Join(globalDir, "pantheon", p.app.Name)
 
 	return destDir
 }
@@ -307,8 +308,8 @@ func findPantheonSite(name string) (pantheon.Site, error) {
 
 // getPantheonSession loads the pantheon API config from disk and returns a pantheon session struct.
 func getPantheonSession() *pantheon.AuthSession {
-	ddevDir := util.GetGlobalDdevDir()
-	sessionLocation := filepath.Join(ddevDir, "pantheonconfig.json")
+	globalDir := globalconfig.GetGlobalDdevDir()
+	sessionLocation := filepath.Join(globalDir, "pantheonconfig.json")
 
 	// Generate a session object based on the DDEV_PANTHEON_API_TOKEN environment var.
 	session := &pantheon.AuthSession{}

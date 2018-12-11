@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"html/template"
 	"io/ioutil"
 	"os"
@@ -89,7 +90,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	} else {
 		return app, fmt.Errorf("provider '%s' is not implemented", provider)
 	}
-
+	app.SetRavenTags()
 	return app, nil
 }
 
@@ -221,6 +222,10 @@ func (app *DdevApp) ReadConfig() error {
 		app.DBAImage = version.GetDBAImage()
 	}
 
+	if app.OmitContainers == nil {
+		app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
+	}
+
 	app.ImportDir = app.GetConfigPath("import-db")
 
 	app.SetApptypeSettingsPaths()
@@ -307,7 +312,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !IsValidOmitContainers(app.OmitContainers) {
-		return fmt.Errorf("Invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(invalidOmitContainers)
+		return fmt.Errorf("Invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
 	return nil

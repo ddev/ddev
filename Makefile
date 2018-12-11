@@ -4,7 +4,6 @@ GOMETALINTER_ARGS := --vendored-linters --disable-all --enable=gofmt --enable=ve
 GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode
 
 WINDOWS_SUDO_VERSION=v0.0.1
-
 GOTESTSUM_FORMAT ?= short-verbose
 TESTTMP=/tmp/testresults
 TESTTOOL ?= $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --format $(GOTESTSUM_FORMAT) --junitfile '$(TESTTMP)/$(@).xml'  --"; else echo "go test"; fi)
@@ -23,7 +22,7 @@ PKG := github.com/drud/ddev
 SRC_DIRS := cmd pkg
 
 # Version variables to replace in build
-VERSION_VARIABLES ?= DdevVersion
+VERSION_VARIABLES ?= DdevVersion SentryDSN
 
 # These variables will be used as the default unless overridden by the make
 DdevVersion ?= $(VERSION)
@@ -80,18 +79,17 @@ endif
 # Override test section with tests specific to ddev
 test: testpkg testcmd
 
-$(TESTTMP):
-	mkdir -p $(TESTTMP)
+testcmd: $(BUILD_OS) setup
+	DDEV_NO_SENTRY=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
 
-testcmd: $(TESTTMP) $(BUILD_OS) setup
-	CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) $(TESTTOOL) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
-
-testpkg: $(TESTTMP)
-	CGO_ENABLED=0 $(TESTTOOL) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
+testpkg: setup
+	DDEV_NO_SENTRY=true CGO_ENABLED=0 go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
 
 setup:
+	@(mv -f ~/.ddev/global_config.yaml ~/.ddev/global_config.yaml.bak 2>/dev/null && echo "Warning: Moved your global ddev config file") || true
 	@mkdir -p bin/darwin bin/linux
 	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
+	mkdir -p $(TESTTMP)
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: golangci-lint

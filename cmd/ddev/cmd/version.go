@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"sort"
 
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -25,9 +26,16 @@ var versionCmd = &cobra.Command{
 		v := version.GetVersionInfo()
 
 		versionOutput := uitable.New()
-		for label, value := range v {
+
+		keys := make([]string, 0, len(v))
+		for k := range v {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+
+		for _, label := range keys {
 			if label != "build info" {
-				versionOutput.AddRow(label, value)
+				versionOutput.AddRow(label, v[label])
 			}
 		}
 

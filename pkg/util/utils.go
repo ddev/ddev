@@ -9,11 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"path"
-
 	"github.com/drud/ddev/pkg/output"
 	"github.com/fatih/color"
-	gohomedir "github.com/mitchellh/go-homedir"
 )
 
 func init() {
@@ -82,24 +79,6 @@ func RandString(n int) string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
-}
-
-// GetGlobalDdevDir returns ~/.ddev, the global caching directory
-func GetGlobalDdevDir() string {
-	userHome, err := gohomedir.Dir()
-	if err != nil {
-		Failed("could not get home directory for current user. is it set?")
-	}
-	ddevDir := path.Join(userHome, ".ddev")
-
-	// Create the directory if it is not already present.
-	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
-		err = os.MkdirAll(ddevDir, 0700)
-		if err != nil {
-			Failed("Failed to create required directory %s, err: %v", ddevDir, err)
-		}
-	}
-	return ddevDir
 }
 
 // AskForConfirmation requests a y/n from user.
@@ -189,4 +168,10 @@ func IsCommandAvailable(cmdName string) bool {
 		return true
 	}
 	return false
+}
+
+// GetFirstWord just returns the first space-separated word in a string.
+func GetFirstWord(s string) string {
+	arr := strings.Split(s, " ")
+	return arr[0]
 }

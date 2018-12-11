@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 
@@ -43,8 +44,8 @@ func TestDescribeBadArgs(t *testing.T) {
 
 }
 
-// TestDescribe tests that the describe command works properly when using the binary.
-func TestDescribe(t *testing.T) {
+// TestCmdDescribe tests that the describe command works properly when using the binary.
+func TestCmdDescribe(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, v := range DevTestSites {
@@ -64,6 +65,7 @@ func TestDescribe(t *testing.T) {
 		cleanup()
 
 		cleanup = v.Chdir()
+		defer cleanup()
 
 		args = []string{"describe"}
 		out, err = exec.RunCommand(DdevBin, args)
@@ -77,28 +79,33 @@ func TestDescribe(t *testing.T) {
 		args = []string{"describe", "-j"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		logItems, err := unmarshallJSONLogs(out)
-		assert.NoError(err)
+		logItems, err := unmarshalJSONLogs(out)
+		require.NoError(t, err, "Unable to unmarshall ===\n%s\n===\n", logItems)
 
-		// The description log should be the last item; there may be a warning
+		// The description log should be next last item; there may be a warning
 		// or other info before that.
-		data := logItems[len(logItems)-1]
-		assert.EqualValues(data["level"], "info")
-		raw, ok := data["raw"].(map[string]interface{})
-		assert.True(ok)
+		var raw map[string]interface{}
+		rawFound := false
+		var item map[string]interface{}
+		for _, item = range logItems {
+			if item["level"] == "info" {
+				if raw, rawFound = item["raw"].(map[string]interface{}); rawFound {
+					break
+				}
+			}
+		}
+		require.True(t, rawFound, "did not find 'raw' in item in logItems\n===\n%s\n===\n", out)
 		assert.EqualValues(raw["status"], "running")
 		assert.EqualValues(raw["name"], v.Name)
 		assert.EqualValues(raw["shortroot"].(string), ddevapp.RenderHomeRootedDir(v.Dir))
 		assert.EqualValues(raw["approot"].(string), v.Dir)
 
-		assert.NotEmpty(data["msg"])
-
-		cleanup()
+		assert.NotEmpty(item["msg"])
 	}
 }
 
-// TestDescribeAppFunction performs unit tests on the describeApp function from the working directory.
-func TestDescribeAppFunction(t *testing.T) {
+// TestCmdDescribeAppFunction performs unit tests on the describeApp function from the working directory.
+func TestCmdDescribeAppFunction(t *testing.T) {
 	assert := asrt.New(t)
 	for _, v := range DevTestSites {
 		cleanup := v.Chdir()
@@ -134,8 +141,8 @@ func TestDescribeAppFunction(t *testing.T) {
 	}
 }
 
-// TestDescribeAppUsingSitename performs unit tests on the describeApp function using the sitename as an argument.
-func TestDescribeAppUsingSitename(t *testing.T) {
+// TestCmdDescribeAppUsingSitename performs unit tests on the describeApp function using the sitename as an argument.
+func TestCmdDescribeAppUsingSitename(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
@@ -160,12 +167,12 @@ func TestDescribeAppUsingSitename(t *testing.T) {
 	}
 }
 
-// TestDescribeAppWithInvalidParams performs unit tests on the describeApp function using a variety of invalid parameters.
-func TestDescribeAppWithInvalidParams(t *testing.T) {
+// TestCmdDescribeAppWithInvalidParams performs unit tests on the describeApp function using a variety of invalid parameters.
+func TestCmdDescribeAppWithInvalidParams(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it for the duration of this test.
-	tmpdir := testcommon.CreateTmpDir("TestDescribeAppWithInvalidParams")
+	tmpdir := testcommon.CreateTmpDir("TestCmdDescribeAppWithInvalidParams")
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 
@@ -184,15 +191,15 @@ func TestDescribeAppWithInvalidParams(t *testing.T) {
 	cleanup()
 }
 
-// unmarshallJSONLogs takes a string buffer and splits it into lines,
+// unmarshalJSONLogs takes a string buffer and splits it into lines,
 // discards empty lines, and unmarshalls into an array of logs
-func unmarshallJSONLogs(in string) ([]log.Fields, error) {
+func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 	logData := make([]log.Fields, 0)
 	logStrings := strings.Split(in, "\n")
-	data := make(log.Fields, 4)
 
 	for _, logLine := range logStrings {
 		if logLine != "" {
+			data := make(log.Fields, 4)
 			err := json.Unmarshal([]byte(logLine), &data)
 			if err != nil {
 				return []log.Fields{}, err

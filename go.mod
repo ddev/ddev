@@ -9,6 +9,7 @@ require (
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/aokoli/goutils v1.0.1 // indirect
 	github.com/aws/aws-sdk-go v1.14.31
+	github.com/certifi/gocertifi v0.0.0-20180905225744-ee1a9a0726d2 // indirect
 	github.com/cheggaaa/pb v1.0.25
 	github.com/containerd/continuity v0.0.0-20180712174259-0377f7d76720 // indirect
 	github.com/davecgh/go-spew v1.1.0 // indirect
@@ -16,8 +17,10 @@ require (
 	github.com/docker/go-connections v0.3.0 // indirect
 	github.com/docker/go-units v0.3.3 // indirect
 	github.com/drud/go-pantheon v0.1.0
+	github.com/evalphobia/logrus_sentry v0.5.0
 	github.com/fatih/color v1.7.0
 	github.com/fsouza/go-dockerclient v1.2.2
+	github.com/getsentry/raven-go v0.2.0
 	github.com/go-ini/ini v1.38.1 // indirect
 	github.com/gogo/protobuf v1.1.1 // indirect
 	github.com/google/go-cmp v0.2.0 // indirect

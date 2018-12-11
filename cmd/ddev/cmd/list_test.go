@@ -28,7 +28,7 @@ func TestDevList(t *testing.T) {
 	jsonOut, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 
-	logItems, err := unmarshallJSONLogs(jsonOut)
+	logItems, err := unmarshalJSONLogs(jsonOut)
 	assert.NoError(err)
 
 	// The list should be the last item; there may be a warning
@@ -96,7 +96,7 @@ func TestDdevListContinuous(t *testing.T) {
 	blob = blob[:byteCount-1]
 	require.True(t, byteCount > 1000)
 
-	f, err := unmarshallJSONLogs(string(blob))
+	f, err := unmarshalJSONLogs(string(blob))
 	require.NoError(t, err)
 	assert.NotEmpty(f[0]["raw"])
 	time1 := f[0]["time"]
@@ -112,7 +112,7 @@ func TestDdevListContinuous(t *testing.T) {
 	assert.NoError(err)
 	blob = blob[:byteCount-1]
 	require.True(t, byteCount > 1000)
-	f, err = unmarshallJSONLogs(string(blob))
+	f, err = unmarshalJSONLogs(string(blob))
 	require.NoError(t, err)
 	if len(f) > 1 {
 		t.Logf("Expected just one line in second read, but got %d lines instead", len(f))

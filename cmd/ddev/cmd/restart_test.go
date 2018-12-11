@@ -36,6 +36,7 @@ func TestDevRestartJSON(t *testing.T) {
 	assert := asrt.New(t)
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
+		defer cleanup()
 
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
@@ -46,15 +47,18 @@ func TestDevRestartJSON(t *testing.T) {
 		out, err := exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 
-		logItems, err := unmarshallJSONLogs(out)
+		logItems, err := unmarshalJSONLogs(out)
 		assert.NoError(err)
 
 		// The key item should be the last item; there may be a warning
 		// or other info before that.
-		data := logItems[len(logItems)-1]
-		assert.EqualValues(data["level"], "info")
-		assert.Contains(data["msg"], "Your project can be reached at "+strings.Join(app.GetAllURLs(), ", "))
 
-		cleanup()
+		var item map[string]interface{}
+		for _, item = range logItems {
+			if item["level"] == "info" && item["msg"] != nil && strings.Contains(item["msg"].(string), "Your project can be reached at "+strings.Join(app.GetAllURLs(), ", ")) {
+				break
+			}
+		}
+		assert.Contains(item["msg"], "Your project can be reached at "+strings.Join(app.GetAllURLs(), ", "))
 	}
 }
