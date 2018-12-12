@@ -629,11 +629,13 @@ func TestDdevOldMariaDB(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	app.DBImage = version.DBImg + ":" + version.BaseDBTag + "-10.1"
+	app.MariaDBVersion = ddevapp.MariaDB101
+	app.DBImage = version.GetDBImage(app.MariaDBVersion)
 	err = app.Start()
-	assert.NoError(err)
 	//nolint: errcheck
 	defer app.Down(true, false)
+
+	require.NoError(t, err)
 	importPath := filepath.Join(testDir, "testdata", "users.sql")
 	err = app.ImportDB(importPath, "")
 	require.NoError(t, err)
@@ -674,8 +676,8 @@ func TestDdevOldMariaDB(t *testing.T) {
 	stdout := util.CaptureStdOut()
 	err = app.ExportDB("", false)
 	assert.NoError(err)
-	output := stdout()
-	assert.Contains(output, "Table structure for table `users`")
+	out := stdout()
+	assert.Contains(out, "Table structure for table `users`")
 
 	snapshotName := fileutil.RandomFilenameBase()
 	_, err = app.SnapshotDatabase(snapshotName)

@@ -449,22 +449,23 @@ func TestReadConfig(t *testing.T) {
 	assert.Equal(app.WebImage, "test/testimage:latest")
 }
 
-// TestValidate tests validation of configuration values.
-func TestValidate(t *testing.T) {
+// TestConfigValidate tests validation of configuration values.
+func TestConfigValidate(t *testing.T) {
 	assert := asrt.New(t)
 
 	cwd, err := os.Getwd()
 	assert.NoError(err)
 
 	app := &DdevApp{
-		Name:          "TestValidate",
-		ConfigPath:    filepath.Join("testdata", "config.yaml"),
-		AppRoot:       cwd,
-		Docroot:       "testdata",
-		Type:          AppTypeWordPress,
-		PHPVersion:    PHPDefault,
-		WebserverType: WebserverDefault,
-		Provider:      ProviderDefault,
+		Name:           "TestConfigValidate",
+		ConfigPath:     filepath.Join("testdata", "config.yaml"),
+		AppRoot:        cwd,
+		Docroot:        "testdata",
+		Type:           AppTypeWordPress,
+		PHPVersion:     PHPDefault,
+		MariaDBVersion: version.MariaDBDefaultVersion,
+		WebserverType:  WebserverDefault,
+		Provider:       ProviderDefault,
 	}
 
 	err = app.ValidateConfig()
