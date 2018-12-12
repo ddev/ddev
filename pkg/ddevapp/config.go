@@ -501,6 +501,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if runtime.GOOS == "windows" {
 		isWindowsFS = "true"
 	}
+	var includeSSHAgent = "includeItByDefault"
+	if util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent") {
+		includeSSHAgent = ""
+	}
+
 	templateVars := map[string]string{
 		"name":            app.Name,
 		"plugin":          "ddev",
@@ -516,6 +521,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		"IncludeBGSYNC":   includeBGSYNC,
 		"IsWindowsFS":     isWindowsFS,
 		"mountType":       mountType,
+		"includeSSHAgent": includeSSHAgent,
 	}
 
 	err = templ.Execute(&doc, templateVars)

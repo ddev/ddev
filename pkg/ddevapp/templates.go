@@ -44,11 +44,22 @@ services:
     cap_add:
       - SYS_PTRACE
     volumes:
-      - .:/mnt/ddev_config:ro
       - type: {{ .mountType }}
         source: {{ .webMount }}
         target: /var/www/html
         {{ if eq .mountType "volume" }}
+        volume:
+          nocopy: true
+        {{ end }}
+      - ".:/mnt/ddev_config:ro"
+      {{ if .includeSSHAgent }}
+      - type: "volume"
+        source: ddev-ssh-agent_socket_dir
+        target: "/home/.ssh-agent"
+      {{ end }}
+      - type: "volume"
+        source: ddev-composer-cache
+        target: "/mnt/composer_cache"
         volume:
           nocopy: true
         {{ end }}
@@ -155,8 +166,10 @@ networks:
 volumes:
   mariadb-database:
     name: "${DDEV_SITENAME}-mariadb"
+  {{ if .includeSSHAgent }}
   ddev-ssh-agent_socket_dir:
     external: true
+  {{ end }}
   ddev-composer-cache:
     name: ddev-composer-cache
   {{ if eq .mountType "volume" }}
