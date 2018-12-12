@@ -311,7 +311,8 @@ services:
     restart: "no"
     healthcheck:
       interval: 5s
-      retries: 1
+      retries: 3
+      start_period: 10s
 
 networks:
    default:
