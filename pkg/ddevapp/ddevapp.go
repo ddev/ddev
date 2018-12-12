@@ -1020,10 +1020,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("Failed to find a snapshot in %s", hostSnapshotDir)
 	}
 
-	// Strategy here:
-	// Find out the version in the snapshot.
-	// Find out the version in the container.
-	// Declare whether they're compatible.
+	// Find out the mariadb version that correlates to the snapshot.
 	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
 	var snapshotMariaDBVersion string
 	var err error
@@ -1033,12 +1030,15 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
 		}
 	} else {
-		snapshotMariaDBVersion = "10.1"
+		snapshotMariaDBVersion = MariaDB101
 	}
+	snapshotMariaDBVersion = strings.Trim(snapshotMariaDBVersion, " \n\t")
 
-	if snapshotMariaDBVersion == "10.1" && app.MariaDBVersion != "10.1" {
+	if snapshotMariaDBVersion == MariaDB101 && app.MariaDBVersion != MariaDB101 {
 		return fmt.Errorf("snapshot %s is a MariaDB 10.1 snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).\nPlease use the instructions at %s to change the MariaDB version so you can restore it.", snapshotDir, app.MariaDBVersion, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
-
+	}
+	if snapshotMariaDBVersion != MariaDB101 && app.MariaDBVersion == MariaDB101 {
+		return fmt.Errorf("snapshot %s is a MariaDB %s snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).", snapshotDir, snapshotMariaDBVersion, app.MariaDBVersion)
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
