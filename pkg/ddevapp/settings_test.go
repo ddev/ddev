@@ -342,8 +342,8 @@ func TestDrupalBackdropOverwriteDdevSettings(t *testing.T) {
 		relativeSettingsDdevLocation := relativeSettingsLocations.local
 		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
 
-		// Ensure that a settings.ddev.php file exists
-		originalContents := "not empty"
+		// Ensure that a settings.ddev.php file exists, WITH the #ddev-generated signature
+		originalContents := "not empty " + DdevFileSignature
 		settingsFile, err := os.Create(expectedSettingsDdevLocation)
 		assert.NoError(err)
 		_, err = settingsFile.Write([]byte(originalContents))
@@ -353,12 +353,27 @@ func TestDrupalBackdropOverwriteDdevSettings(t *testing.T) {
 		_, err = app.CreateSettingsFile()
 		assert.NoError(err)
 
-		// Ensure settings.ddev.php exists
-		assert.True(fileutil.FileExists(expectedSettingsDdevLocation))
-
-		// Ensure settings.ddev.php was overwritten with new contents
+		// Ensure settings.ddev.php was overwritten; It had the signature in it
+		// so it was valid to overwrite. The original string should no longer be there.
 		containsOriginalString, err := fileutil.FgrepStringInFile(expectedSettingsDdevLocation, originalContents)
 		assert.NoError(err)
-		assert.False(containsOriginalString, "Found unexpected %s in %s", originalContents, expectedSettingsDdevLocation)
+		assert.False(containsOriginalString, "The file should not have contained the original string %s and it did not.", originalContents)
+
+		// Now do the whole thing again, but this time the settings.ddev.php does *not* have
+		// the #ddev-generated signature, so the file will be respected and not replaced
+		originalContents = "nearly empty "
+		settingsFile, err = os.Create(expectedSettingsDdevLocation)
+		assert.NoError(err)
+		_, err = settingsFile.Write([]byte(originalContents))
+		assert.NoError(err)
+
+		// Invoke the settings file creation process
+		_, err = app.CreateSettingsFile()
+		assert.NoError(err)
+
+		// Ensure settings.ddev.php was overwritten with new contents
+		containsOriginalString, err = fileutil.FgrepStringInFile(expectedSettingsDdevLocation, originalContents)
+		assert.NoError(err)
+		assert.True(containsOriginalString, "Did not find %s in the settings file; it should have still been there", originalContents)
 	}
 }
