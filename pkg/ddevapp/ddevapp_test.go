@@ -1256,8 +1256,11 @@ func TestDdevExec(t *testing.T) {
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
-		err = app.StartAndWaitForSync(0)
-		assert.NoError(err)
+		startErr := app.StartAndWaitForSync(0)
+		if startErr != nil {
+			logs, _ := ddevapp.GetErrLogsFromApp(app, startErr)
+			require.NoError(t, startErr, "Start() failed: %v, logs from broken container:\n=======\n%s\n========\n", startErr, logs)
+		}
 
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
