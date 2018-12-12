@@ -1001,19 +1001,22 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 	err = os.MkdirAll(onHostDir, 0775)
 	assert.NoError(err)
-
+	// Create a file in the directory to make sure it syncs
+	f, err := os.OpenFile(filepath.Join(onHostDir, "junk.txt"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
+	assert.NoError(err)
+	_ = f.Close()
 	ddevapp.WaitForSync(app, 5)
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     []string{"sh", "-c", "echo 'content created inside container\n' >" + inContainerRelativePath},
 	})
-	assert.NoError(err)
+	require.NoError(t, err)
 	ddevapp.WaitForSync(app, 5)
 
 	// Now try to append to the file on the host.
 	// os.OpenFile() for append here fails if the file does not already exist.
-	f, err := os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
+	f, err = os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
 	assert.NoError(err)
 	_, err = f.WriteString("this addition to the file was added on the host side")
 	assert.NoError(err)
