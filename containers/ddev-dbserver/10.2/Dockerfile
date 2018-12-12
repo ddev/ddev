@@ -4,6 +4,7 @@ ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
 ENV MYSQL_PASSWORD db
 ENV MYSQL_ROOT_PASSWORD root
+ENV MARIADB_VERSION 10.2
 
 # Install mariadb and other packages
 RUN apk add --no-cache mariadb mariadb-client mariadb-backup mariadb-server-utils bash tzdata shadow sudo
