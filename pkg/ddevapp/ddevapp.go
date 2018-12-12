@@ -1093,8 +1093,7 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
 
-		client := dockerutil.GetDockerClient()
-		err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: app.Name + "-mariadb"})
+		err = dockerutil.RemoveVolume(app.Name + "-mariadb")
 		if err != nil {
 			return err
 		}

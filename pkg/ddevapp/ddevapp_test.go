@@ -139,6 +139,13 @@ func TestMain(m *testing.M) {
 		log.Warnf("Failed to remove all running projects: %v", err)
 	}
 
+	for _, volume := range []string{"ddev-composer-cache", "ddev-router-cert-cache", "ddev-ssh-agent_dot_ssh", "ddev-ssh-agent_socket_dir"} {
+		err := dockerutil.RemoveVolume(volume)
+		if err != nil {
+			log.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
+		}
+	}
+
 	count := len(ddevapp.GetApps())
 	if count > 0 {
 		log.Fatalf("ddevapp tests require no projects running. You have %v project(s) running.", count)
@@ -171,12 +178,20 @@ func TestMain(m *testing.M) {
 
 		app := &ddevapp.DdevApp{}
 
+		// TODO: webcache PR will add other volumes that should be removed here.
+		for _, volume := range []string{app.Name + "-mariadb"} {
+			err = dockerutil.RemoveVolume(volume)
+			if err != nil {
+				log.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
+			}
+		}
 		err = app.Init(TestSites[i].Dir)
 		if err != nil {
 			testRun = -1
 			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
+
 		switchDir()
 	}
 
