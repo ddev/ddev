@@ -838,6 +838,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	testcommon.ClearDockerEnv()
 
 	err = app.Init(site.Dir)
+	require.NoError(t, err)
 	require.Equal(t, ddevapp.SiteRunning, app.SiteStatus())
 
 	// Try using php72 to avoid SIGBUS failures after restore.

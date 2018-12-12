@@ -18,7 +18,7 @@ func TestVersion(t *testing.T) {
 	assert.Contains(string(out), version.WebImg)
 	assert.Contains(string(out), version.WebTag)
 	assert.Contains(string(out), version.DBImg)
-	assert.Contains(string(out), version.DBTag)
+	assert.Contains(string(out), version.GetDBImage())
 	assert.Contains(string(out), version.DBAImg)
 	assert.Contains(string(out), version.DBATag)
 	assert.Contains(string(out), version.DDevTLD)
