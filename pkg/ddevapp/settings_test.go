@@ -101,8 +101,11 @@ func TestWriteDrushConfig(t *testing.T) {
 		assert.NoError(err)
 
 		if app.SiteStatus() != SiteRunning {
-			err = app.Start()
-			assert.NoError(err)
+			startErr := app.Start()
+			if startErr != nil {
+				logs, _ := GetErrLogsFromApp(app, startErr)
+				t.Fatalf("app.Start failed, startErr=%v, logs=\n========\n%s\n===========\n", startErr, logs)
+			}
 		}
 
 		dockerIP, err := dockerutil.GetDockerIP()

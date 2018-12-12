@@ -1001,9 +1001,9 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 	err = os.MkdirAll(onHostDir, 0775)
 	assert.NoError(err)
-	if app.WebcacheEnabled {
-		time.Sleep(time.Duration(2) * time.Second)
-	}
+
+	ddevapp.WaitForSync(app, 5)
+
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     []string{"sh", "-c", "echo 'content created inside container\n' >" + inContainerRelativePath},
@@ -1301,8 +1301,11 @@ func TestDdevLogs(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	err = app.StartAndWaitForSync(0)
-	assert.NoError(err)
+	startErr := app.StartAndWaitForSync(0)
+	if err != nil {
+		logs, _ := ddevapp.GetErrLogsFromApp(app, startErr)
+		t.Fatalf("app.Start failed, err=%v, logs=\n========\n%s\n===========\n", startErr, logs)
+	}
 
 	stdout := util.CaptureUserOut()
 	err = app.Logs("web", false, false, "")
