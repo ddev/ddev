@@ -97,18 +97,20 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 * Docker not mounting your code: If you `ddev ssh` and `ls` and there's nothing there, Docker may not be mounting your code. See [docker installation](./docker_installation.md) for testing docker install. (Is Docker, the drive or directory where your project is must be shared. In Docker Toolbox it *must* be a subdirectory of your home directory unless you [make special accomodations for Docker Toolbox](http://support.divio.com/local-development/docker/how-to-use-a-directory-outside-cusers-with-docker-toolbox-on-windowsdocker-for-windows)).
 
 <a name="old-snapshot"></a>
-## Can't restore snapshot created before ddev v1.3
+## Can't restore snapshot from a MariaDB 10.1 database (before ddev v1.3)
 
-Database snapshot from before v1.3.0 are not compatible with ddev v1.3+ because the mariabackup with MariaDB 10.2 is not compatible with earlier backups. However, if you really need that snapshot and don't have a database dump to run with `ddev import-db`, there's a fairly easy workaround:
+Database snapshots from MariaDB 10.1 (normally from before ddev v1.3) cannot be restored into a MariaDB 10.2 environment. If you need to restore a 10.1 snapshot, here's how to do it. 
 
-1. `ddev config --db-image drud/ddev-dbserver:v1.2.0`
-2. `ddev rm --remove-data` to remove an existing MariaDB 10.2 database
-3. `ddev start` to start with the new version
-4. Use `ddev restore-snapshot` to restore the snapshot by name
-5. `ddev rm`
-6. `ddev config --db-image-default`
-7. `ddev start`
-8. Make a new snapshot with `ddev snapshot`
+1. Back up any existing database you have running with `ddev export-db` or something like `ddev snapshot --name=before_reverting_to_10.1`
+2. `ddev rm --remove-data` will completely remove the existing (10.2) database.
+3. `ddev config --mariadb-version=10.1`
+4. `ddev start` to start with MariaDB 10.1
+5. Use `ddev restore-snapshot` to restore the snapshot by name
+6. If you want to go upgrade your restored database to MariaDB 10.2, you can 
+  * `ddev config --mariadb-version=10.2`
+  * `ddev rm`
+  * `ddev start`
+ 
 
 ## More Support
 

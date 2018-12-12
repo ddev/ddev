@@ -1020,27 +1020,26 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("Failed to find a snapshot in %s", hostSnapshotDir)
 	}
 
-	// TODO: We're going to have to set this after all. Will need config.
-	// TODO: Don't allow starting up a container with a 10.2 on it if we're running 10.1
-	// TODO: Add config and setters/getters
-
 	// Strategy here:
 	// Find out the version in the snapshot.
 	// Find out the version in the container.
 	// Declare whether they're compatible.
-	if fileutil.FileExists(filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")) {
-		// TODO: Set it to what's in that file
-	} else {
-		//
-		// This command returning an error indicates fgrep has failed to find the value
-		if _, _, err := app.Exec(&ExecOpts{
-			Service: "db",
-			Cmd:     []string{"sh", "-c", "mariabackup --version 2>&1 | fgrep 'MariadDB server 10.1'"},
-		}); err != nil {
+	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
+	var snapshotMariaDBVersion string
+	var err error
+	if fileutil.FileExists(versionFile) {
+		snapshotMariaDBVersion, err = fileutil.ReadFileIntoString(versionFile)
+		if err != nil {
+			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
 		}
+	} else {
+		snapshotMariaDBVersion = "10.1"
 	}
-	// TODO: If incompatible, return here
-	// return fmt.Errorf("snapshot %s is not compatible with this version of mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
+
+	if snapshotMariaDBVersion == "10.1" && app.MariaDBVersion != "10.1" {
+		return fmt.Errorf("snapshot %s is a MariaDB 10.1 snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).\nPlease use the instructions at %s to change the MariaDB version so you can restore it.", snapshotDir, app.MariaDBVersion, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
+
+	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
 		err := app.Down(false, false)
@@ -1049,7 +1048,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 	}
 
-	err := os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
+	err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
 	util.CheckErr(err)
 	err = app.Start()
 	if err != nil {
