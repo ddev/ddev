@@ -37,18 +37,18 @@ if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
   fi
 fi
 
-if [ -d /var/lib/mysql/mysql ]; then
-   if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
-     database_mariadb_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
-   else
-     database_mariadb_version=10.1
-   fi
-fi
 
-if [ "$database_mariadb_version" != "" ] && [ "$database_mariadb_version" != "$MARIADB_VERSION" ]; then
-   echo "Can't start MariaDB 10.1 server with a database from $database_mariadb_version."
-   echo "Please export your database, remove it completely, and retry if you need to start it with MariaDB $MARIADB_VERSION."
-   exit 102
+if [ -d /var/lib/mysql/mysql ]; then
+    database_mariadb_version=10.1
+    if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
+       database_mariadb_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
+    fi
+
+    if [  "$MARIADB_VERSION" == "10.1" ] && [ "$database_mariadb_version" != "10.1" ]; then
+       echo "Can't start MariaDB 10.1 server with a database from $database_mariadb_version."
+       echo "Please export your database, remove it completely, and retry if you need to start it with MariaDB $MARIADB_VERSION."
+       exit 102
+    fi
 fi
 
 sudo chown -R "$UID:$(id -g)" /var/lib/mysql
