@@ -1,6 +1,7 @@
 package fileutil_test
 
 import (
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -142,4 +143,35 @@ func TestReplaceStringInFile(t *testing.T) {
 	found, err := fileutil.FgrepStringInFile(newFilePath, "specialJUNKPattern")
 	assert.NoError(err)
 	assert.True(found)
+}
+
+// TestIsSameFile tests the IsSameFile utility function.
+func TestIsSameFile(t *testing.T) {
+	assert := asrt.New(t)
+
+	tmpDir, err := testcommon.OsTempDir()
+	assert.NoError(err)
+
+	dirSymlink, err := filepath.Abs(filepath.Join(tmpDir, fileutil.RandomFilenameBase()))
+	require.NoError(t, err)
+	testdataAbsolute, err := filepath.Abs("testdata")
+	require.NoError(t, err)
+	err = os.Symlink(testdataAbsolute, dirSymlink)
+	assert.NoError(err)
+	//nolint: errcheck
+	defer os.Remove(dirSymlink)
+
+	// At this point, dirSymLink and "testdata" should be equivalent
+	isSame, err := fileutil.IsSameFile("testdata", dirSymlink)
+	assert.NoError(err)
+	assert.True(isSame)
+	// Test with files that are equivalent (through symlink)
+	isSame, err = fileutil.IsSameFile("testdata/testfiles/one.txt", filepath.Join(dirSymlink, "testfiles", "one.txt"))
+	assert.NoError(err)
+	assert.True(isSame)
+
+	// Test files that are *not* equivalent.
+	isSame, err = fileutil.IsSameFile("testdata/testfiles/one.txt", "testdata/testfiles/two.txt")
+	assert.NoError(err)
+	assert.False(isSame)
 }

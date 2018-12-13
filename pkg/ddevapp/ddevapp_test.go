@@ -297,6 +297,19 @@ func TestDdevStart(t *testing.T) {
 		assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
 	}
 
+	// Try to start a site of same name at an equivalent but different path. It should work.
+	tmpDir, err := testcommon.OsTempDir()
+	assert.NoError(err)
+	symlink := filepath.Join(tmpDir, "a-symlink")
+	err = os.Symlink(app.AppRoot, symlink)
+	assert.NoError(err)
+	//nolint: errcheck
+	defer os.Remove(symlink)
+	symlinkApp := &ddevapp.DdevApp{}
+
+	err = symlinkApp.Init(symlink)
+	assert.NoError(err)
+
 	// Make sure that GetActiveApp() also fails when trying to start app of duplicate name in current directory.
 	switchDir = another.Chdir()
 	_, err = ddevapp.GetActiveApp("")

@@ -206,6 +206,19 @@ func ReplaceStringInFile(searchString string, replaceString string, origPath str
 	return nil
 }
 
+// IsSameFile() determines whether two paths refer to the same file/dir
+func IsSameFile(path1 string, path2 string) (bool, error) {
+	path1fi, err := os.Stat(path1)
+	if err != nil {
+		return false, err
+	}
+	path2fi, err := os.Stat(path2)
+	if err != nil {
+		return false, err
+	}
+	return os.SameFile(path1fi, path2fi), nil
+}
+
 // ReadFileIntoString just gets the contents of file into string
 func ReadFileIntoString(path string) (string, error) {
 
