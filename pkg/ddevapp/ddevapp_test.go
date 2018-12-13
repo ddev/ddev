@@ -903,11 +903,16 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.ImportDB(d7testerTest1Dump, "")
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 
-	_, err = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
-	if err != nil && strings.Contains(err.Error(), "container failed") {
+	resp, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
+	if ensureErr != nil && strings.Contains(ensureErr.Error(), "container failed") {
 		logs, err := ddevapp.GetErrLogsFromApp(app, err)
 		assert.NoError(err)
-		t.Logf("container failed: logs:\n=======\n%s\n========\n", logs)
+		t.Fatalf("container failed: logs:\n=======\n%s\n========\n", logs)
+	}
+	if ensureErr != nil && resp.StatusCode != 200 {
+		logs, err := app.CaptureLogs("web", false, "")
+		assert.NoError(err)
+		t.Logf("EnsureLocalHTTPContent received %d. Resp=%v, web logs=\n========\n%s\n=========\n", resp.StatusCode, resp, logs)
 	}
 
 	// Make a snapshot of d7 tester test 1
