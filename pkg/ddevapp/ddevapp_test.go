@@ -1017,13 +1017,13 @@ func TestWriteableFilesDirectory(t *testing.T) {
 		assert.NoError(err)
 
 		// ls -lR on host
-		onHostList, err := exec.RunCommand("ls", []string{"-lR", onHostDir})
+		onHostList, err := exec.RunCommand("ls", []string{"-lR", filepath.Dir(uploadDir)})
 		assert.NoError(err)
 
 		// ls -lR in container
 		inContainerList, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     []string{"ls", "-lR", inContainerDir},
+			Cmd:     []string{"ls", "-lR", filepath.Dir(uploadDir)},
 		})
 		assert.NoError(err)
 		t.Fatalf("Unable to create file %s inside container; onHost ls=\n====\n%s\n====\ninContainer ls=\n======\n%s\n=====\nContainer Sync logs=\n=======\n%s\n===========\n", inContainerRelativePath, onHostList, inContainerList, syncLogs)
