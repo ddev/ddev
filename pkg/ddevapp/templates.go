@@ -165,7 +165,7 @@ networks:
 volumes:
   mariadb-database:
     name: "${DDEV_SITENAME}-mariadb"
-  {{ if .OmitSSHAgent }}
+  {{ if not .OmitSSHAgent }}
   ddev-ssh-agent_socket_dir:
     external: true
   {{ end }}
@@ -231,6 +231,8 @@ const ConfigInstructions = `
 # omit_containers: ["dba", "ddev-ssh-agent"]
 # would omit the dba (phpMyAdmin) and ddev-ssh-agent containers. Currently
 # only those two containers can be omitted here.
+# Note that these containers can also be omitted globally in the 
+# ~/.ddev/global_config.yaml or with the "ddev config global" command.
 
 
 # provider: default # Currently either "default" or "pantheon"
