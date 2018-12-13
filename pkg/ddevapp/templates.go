@@ -44,16 +44,16 @@ services:
     cap_add:
       - SYS_PTRACE
     volumes:
-      - "../:/var/www/html:cached"
-      - ".:/mnt/ddev_config:ro"
-      - type: "volume"
-        source: ddev-ssh-agent_socket_dir
-        target: "/home/.ssh-agent"
-      - type: "volume"
-        source: ddev-composer-cache
-        target: "/mnt/composer_cache"
+      - .:/mnt/ddev_config:ro
+      - type: {{ .mountType }}
+        source: {{ .webMount }}
+        target: /var/www/html
+        {{ if eq .mountType "volume" }}
         volume:
           nocopy: true
+        {{ end }}
+      - ddev-ssh-agent_socket_dir:/home/.ssh-agent
+      - ddev-composer-cache:/mnt/composer_cache
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     links:
@@ -91,9 +91,35 @@ services:
     extra_hosts: ["{{ .extra_host }}"]
     external_links:
       - ddev-router:$DDEV_HOSTNAME
+{{ if  .IncludeBGSYNC }}
+  bgsync:
+    container_name: ddev-${DDEV_SITENAME}-bgsync
+    image: $DDEV_BGSYNCIMAGE
+    restart: "on-failure"
+    user: "$DDEV_UID:$DDEV_GID"
+    volumes:
+      - ..:/hostmount
+      - webcachevol:/fastdockermount
+      - unisoncatalogvol:/root/.unison
+
+    environment:
+    - SYNC_DESTINATION=/fastdockermount
+    - SYNC_SOURCE=/hostmount
+    - SYNC_MAX_INOTIFY_WATCHES=100000
+    - SYNC_VERBOSE=1
+    privileged: true
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.platform: ddev
+      com.ddev.app-type: drupal8
+      com.ddev.approot: $DDEV_APPROOT
+      com.ddev.app-url: $DDEV_URL
     healthcheck:
-      interval: 5s
-      retries: 2
+      interval: 10s
+      retries: 3
+      start_period: 180s
+
+{{end}}
 
 {{if  .IncludeDBA }}
   dba:
@@ -133,7 +159,10 @@ volumes:
     external: true
   ddev-composer-cache:
     name: ddev-composer-cache
-  
+  {{ if eq .mountType "volume" }}
+  webcachevol:
+  unisoncatalogvol:
+  {{ end }}
 `
 
 // ConfigInstructions is used to add example hooks usage
@@ -156,6 +185,7 @@ const ConfigInstructions = `
 # webimage: <docker_image>  # nginx/php docker image.
 # dbimage: <docker_image>  # mariadb docker image.
 # dbaimage: <docker_image>
+# bgsyncimage: <docker_image>
 
 # router_http_port: <port>  # Port to be used for http (defaults to port 80)
 # router_https_port: <port> # Port for https (defaults to 443)
@@ -281,7 +311,8 @@ services:
     restart: "no"
     healthcheck:
       interval: 5s
-      retries: 1
+      retries: 3
+      start_period: 10s
 
 networks:
    default:

@@ -1,5 +1,0 @@
-APIVersion: "1"
-name: testoverride
-type: php
-docroot: ""
-provider: default

@@ -3,13 +3,13 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/exec"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -551,43 +551,43 @@ func TestWriteConfig(t *testing.T) {
 // TestConfigOverrideDetection tests to make sure we tell them about config overrides.
 func TestConfigOverrideDetection(t *testing.T) {
 	assert := asrt.New(t)
+	app := &DdevApp{}
+	testDir, _ := os.Getwd()
 
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ConfigOverrideDetection", site.Name))
+
+	// Copy test overrides into the project .ddev directory
+	for _, item := range []string{"apache", "php", "mysql"} {
+		err := fileutil.CopyDir(filepath.Join(testDir, "testdata/TestConfigOverrideDetection/.ddev", item), filepath.Join(site.Dir, ".ddev", item))
+		assert.NoError(err)
+		err = fileutil.CopyFile(filepath.Join(testDir, "testdata/TestConfigOverrideDetection/.ddev", "nginx-site.conf"), filepath.Join(site.Dir, ".ddev", "nginx-site.conf"))
+		assert.NoError(err)
+	}
+
+	// And when we're done, we have to clean those out again.
+	defer func() {
+		for _, item := range []string{"apache", "php", "mysql", "nginx-site.conf"} {
+			_ = os.RemoveAll(filepath.Join(".ddev", item))
+		}
+	}()
 	testcommon.ClearDockerEnv()
-
-	testDir := testcommon.CreateTmpDir("TestConfigConfigOverrideDetection")
-
-	targetDdev := filepath.Join(testDir, ".ddev")
-	err := fileutil.CopyDir("testdata/TestConfigOverrideDetection/.ddev", targetDdev)
+	err := app.Init(site.Dir)
 	assert.NoError(err)
-
-	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
-
-	app, err := NewApp(testDir, ProviderDefault)
-	assert.NoError(err)
-
-	err = app.ReadConfig()
-	assert.NoError(err)
-
-	//nolint: errcheck
-	defer app.Down(true, false)
 
 	restoreOutput := util.CaptureUserOut()
 	startErr := app.Start()
 	out := restoreOutput()
-	assert.NoError(startErr, "app.Start() did not succeed: output:===\n%s\n===", out)
+	//nolint: errcheck
+	defer app.Down(true, false)
 
-	if startErr != nil && strings.Contains(out, "ddev-ssh-agent failed to become ready") {
-		dockerLogs, err := exec.RunCommand("docker", []string{"logs", "ddev-ssh-agent"})
-		assert.NoError(err)
-		t.Logf("ddev-ssh-agent failed to become ready, docker logs:\n=======\n%s\n========\n", dockerLogs)
-	} else if startErr != nil && strings.Contains(out, "web container failed") {
-		logs, err := GetErrLogsFromApp(app, startErr)
-		assert.NoError(err)
-		t.Logf("web container failed: logs:\n=======\n%s\n========\n", logs)
+	var logs string
+	if startErr != nil {
+		logs, _ = GetErrLogsFromApp(app, startErr)
 	}
-	require.NoError(t, err, "Aborting test because app.Start() failed")
+
+	require.NoError(t, startErr, "app.Start() did not succeed: output:\n=====\n%s\n===== logs:\n========= logs =======\n%s\n========\n", out, logs)
 
 	assert.Contains(out, "utf.cnf")
 	assert.Contains(out, "my-php.ini")
@@ -601,4 +601,6 @@ func TestConfigOverrideDetection(t *testing.T) {
 		assert.NotContains(out, "nginx-site.conf")
 	}
 	assert.Contains(out, "Custom configuration takes effect")
+	switchDir()
+	runTime()
 }

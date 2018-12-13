@@ -5,6 +5,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
@@ -88,6 +89,10 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 		status = color.RedString(status)
 	default:
 		status = color.CyanString(status)
+	}
+	syncStatus := row["sync_status"].(string)
+	if syncStatus != "" {
+		status = status + "\n" + syncStatus
 	}
 
 	urls := row["httpurl"].(string)
@@ -268,10 +273,17 @@ func isZip(filepath string) bool {
 // been received, especially on app.Start. This is really for testing only
 func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 	var serviceName string
-	if strings.Contains(errorReceived.Error(), "container failed") {
-		ary := strings.Split(errorReceived.Error(), " ")
-		if len(ary) > 0 && (ary[0] == "web" || ary[0] == "db") {
-			serviceName = ary[0]
+	if errorReceived == nil {
+		return "no error detected", nil
+	}
+	errString := errorReceived.Error()
+	errString = strings.Replace(errString, "Received unexpected error:", "", -1)
+	errString = strings.Replace(errString, "\n", "", -1)
+	errString = strings.Trim(errString, " \t\n\r")
+	if strings.Contains(errString, "container failed") || strings.Contains(errString, "container did not become ready") || strings.Contains(errString, "failed to become ready") {
+		splitError := strings.Split(errString, " ")
+		if len(splitError) > 0 && util.ArrayContainsString([]string{"web", "db", "bgsync", "ddev-router", "ddev-ssh-agent"}, splitError[0]) {
+			serviceName = splitError[0]
 			logs, err := app.CaptureLogs(serviceName, false, "")
 			if err != nil {
 				return "", err
@@ -280,4 +292,14 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("no logs found for service %s", serviceName)
+}
+
+// WaitForSync is a test helper; it's hard to know exactly when the bgsync
+// container will have completed syncing an operation, so we do app.WaitSync() and
+// add the number of seconds provided.
+func WaitForSync(app *DdevApp, seconds int) {
+	if app.WebcacheEnabled {
+		_ = app.WaitSync()
+		time.Sleep(time.Duration(seconds) * time.Second)
+	}
 }

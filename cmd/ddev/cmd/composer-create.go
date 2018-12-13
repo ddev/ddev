@@ -95,10 +95,14 @@ project root will be deleted when creating a project.`,
 		}
 
 		// Define a randomly named temp directory for install target
-		tmpDir := fmt.Sprintf(".tmp_%s", util.RandString(6))
+		tmpDir := fmt.Sprintf(".tmp_ddev_composer_create_%s", util.RandString(6))
 		containerInstallPath := path.Join("/var/www/html", tmpDir)
 		hostInstallPath := filepath.Join(app.AppRoot, tmpDir)
-		defer cleanupTmpDir(hostInstallPath)
+
+		// If WebcacheEnabled, the cleanup is done inline and doesn't have to be done here.
+		if !app.WebcacheEnabled {
+			defer cleanupTmpDir(hostInstallPath)
+		}
 
 		// Build container composer command
 		composerCmd := []string{
@@ -147,34 +151,48 @@ project root will be deleted when creating a project.`,
 		}
 
 		output.UserOut.Printf("Moving installation to project root")
-		err = filepath.Walk(hostInstallPath, func(path string, info os.FileInfo, err error) error {
-			// Skip the initial tmp install directory
-			if path == hostInstallPath {
-				return nil
-			}
 
-			elements := strings.Split(path, tmpDir)
-			newPath := filepath.Join(elements...)
+		// If not webcacheenabled, we will move the contents of the temp installation
+		// using host-side manipulation, but can't do that with cached filesystem.
+		if !app.WebcacheEnabled {
 
-			// Dirs must be created, not renamed
-			if info.IsDir() {
-				if err := os.MkdirAll(newPath, info.Mode()); err != nil {
+			err = filepath.Walk(hostInstallPath, func(path string, info os.FileInfo, err error) error {
+				// Skip the initial tmp install directory
+				if path == hostInstallPath {
+					return nil
+				}
+
+				elements := strings.Split(path, tmpDir)
+				newPath := filepath.Join(elements...)
+
+				// Dirs must be created, not renamed
+				if info.IsDir() {
+					if err := os.MkdirAll(newPath, info.Mode()); err != nil {
+						return fmt.Errorf("unable to move %s to %s: %v", path, newPath, err)
+					}
+
+					return nil
+				}
+
+				// Rename files to to a path excluding the tmpDir
+				if err := os.Rename(path, newPath); err != nil {
 					return fmt.Errorf("unable to move %s to %s: %v", path, newPath, err)
 				}
 
 				return nil
-			}
-
-			// Rename files to to a path excluding the tmpDir
-			if err := os.Rename(path, newPath); err != nil {
-				return fmt.Errorf("unable to move %s to %s: %v", path, newPath, err)
-			}
-
-			return nil
-		})
+			})
+		} else {
+			// If webcacheEnabled, we can move the contents easily and quickly inside the container.
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     []string{"bash", "-c", fmt.Sprintf("shopt -s dotglob && mv %s/* /var/www/html && rmdir %s", containerInstallPath, containerInstallPath)},
+			})
+		}
+		// This err check picks up either of the above: The filepath.Walk and the mv
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
+
 	},
 }
 

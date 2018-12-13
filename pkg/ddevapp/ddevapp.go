@@ -30,10 +30,21 @@ import (
 	"github.com/mattn/go-shellwords"
 )
 
-const containerWaitTimeout = 61
+// containerWaitTimeout is the max time we wait for all containers to become ready.
+var containerWaitTimeout = 61
+
+// bgsyncWaitTimeout is time time in seconds to wait for the bgsync container
+// to become ready. This is normally just the normal container start time + docker cp
+var bgsyncWaitTimeout = 900
+
+// bgsyncSyncWaitTimeout is the max time in seconds we wait for bgsync to be syncing.
+var bgsyncSyncWaitTimeout = 600
 
 // SiteRunning defines the string used to denote running sites.
 const SiteRunning = "running"
+
+// SiteStarting
+const SiteStarting = "starting"
 
 // SiteNotFound defines the string used to denote a site where the containers were not found/do not exist.
 const SiteNotFound = "not found"
@@ -61,6 +72,7 @@ type DdevApp struct {
 	PHPVersion            string               `yaml:"php_version"`
 	WebserverType         string               `yaml:"webserver_type"`
 	WebImage              string               `yaml:"webimage,omitempty"`
+	BgsyncImage           string               `yaml:"bgsyncimage,omitempty"`
 	DBImage               string               `yaml:"dbimage,omitempty"`
 	DBAImage              string               `yaml:"dbaimage,omitempty"`
 	RouterHTTPPort        string               `yaml:"router_http_port"`
@@ -69,6 +81,7 @@ type DdevApp struct {
 	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string             `yaml:"additional_fqdns"`
 	MariaDBVersion        string               `yaml:"mariadb_version"`
+	WebcacheEnabled       bool                 `yaml:"webcache_enabled"`
 	ConfigPath            string               `yaml:"-"`
 	AppRoot               string               `yaml:"-"`
 	Platform              string               `yaml:"-"`
@@ -145,6 +158,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["name"] = app.GetName()
 	appDesc["hostnames"] = app.GetHostnames()
 	appDesc["status"] = app.SiteStatus()
+	appDesc["sync_status"], _ = app.SyncStatus()
 	appDesc["type"] = app.GetType()
 	appDesc["approot"] = app.GetAppRoot()
 	appDesc["shortroot"] = shortRoot
@@ -183,6 +197,10 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["router_http_port"] = app.RouterHTTPPort
 	appDesc["router_https_port"] = app.RouterHTTPSPort
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
+	appDesc["webimg"] = app.WebImage
+	appDesc["dbimg"] = app.WebImage
+	appDesc["bgsyncimg"] = app.BgsyncImage
+	appDesc["dbaimg"] = app.DBAImage
 
 	return appDesc, nil
 }
@@ -386,7 +404,10 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 // SiteStatus returns the current status of an application determined from web and db service health.
 func (app *DdevApp) SiteStatus() string {
 	var siteStatus string
-	services := map[string]string{"web": "", "db": ""}
+	statuses := map[string]string{"web": "", "db": ""}
+	if app.WebcacheEnabled {
+		statuses["bgsync"] = ""
+	}
 
 	if !fileutil.FileExists(app.GetAppRoot()) {
 		siteStatus = fmt.Sprintf("%s: %v", SiteDirMissing, app.GetAppRoot())
@@ -399,41 +420,47 @@ func (app *DdevApp) SiteStatus() string {
 		return siteStatus
 	}
 
-	for service := range services {
+	for service := range statuses {
 		container, err := app.FindContainerByType(service)
 		if err != nil {
 			util.Error("app.FindContainerByType(%v) failed", service)
 			return ""
 		}
 		if container == nil {
-			services[service] = SiteNotFound
-			siteStatus = service + " service " + SiteNotFound
+			statuses[service] = SiteNotFound
 		} else {
 			status, _ := dockerutil.GetContainerHealth(container)
 
 			switch status {
 			case "exited":
-				services[service] = SiteStopped
-				siteStatus = service + " service " + SiteStopped
+				statuses[service] = SiteStopped
 			case "healthy":
-				services[service] = SiteRunning
+				statuses[service] = SiteRunning
+			case "starting":
+				statuses[service] = SiteStarting
 			default:
-				services[service] = status
+				statuses[service] = status
 			}
 		}
 	}
 
-	if services["web"] == services["db"] {
-		siteStatus = services["web"]
-	} else {
-		for service, status := range services {
-			if status != SiteRunning {
-				siteStatus = service + " service " + status
-			}
+	// Base the siteStatus on web container. Then override it if others are not the same.
+	siteStatus = statuses["web"]
+	for serviceName, status := range statuses {
+		if status != siteStatus {
+			siteStatus = siteStatus + "\n" + serviceName + ": " + status
 		}
 	}
-
 	return siteStatus
+}
+
+func (app *DdevApp) SyncStatus() (string, error) {
+	container, err := app.FindContainerByType("bgsync")
+	if err != nil || container == nil {
+		return "", err
+	}
+	_, syncStatus := dockerutil.GetContainerHealth(container)
+	return syncStatus, nil
 }
 
 // PullOptions allows for customization of the pull process.
@@ -680,6 +707,10 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	// Delete the webcachevol before we bring up docker-compose.
+	// We don't care if the volume wasn't there
+	_ = dockerutil.RemoveVolume(app.GetWebcacheVolName())
+
 	_, _, err = dockerutil.ComposeCmd(files, "up", "-d")
 	if err != nil {
 		return err
@@ -690,7 +721,16 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.Wait("db", "web")
+	requiredContainers := []string{"db", "web"}
+	if app.WebcacheEnabled {
+		requiredContainers = append(requiredContainers, "bgsync")
+		err = app.precacheWebdir()
+		if err != nil {
+			return err
+		}
+	}
+
+	err = app.Wait(requiredContainers)
 	if err != nil {
 		return err
 	}
@@ -813,7 +853,16 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 // Logs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
-	container, err := app.FindContainerByType(service)
+	client := dockerutil.GetDockerClient()
+
+	var container *docker.APIContainers
+	var err error
+	// Let people access ddev-router and ddev-ssh-agent logs as well.
+	if service == "ddev-router" || service == "ddev-ssh-agent" {
+		container, err = dockerutil.FindContainerByLabels(map[string]string{"com.docker.compose.service": service})
+	} else {
+		container, err = app.FindContainerByType(service)
+	}
 	if err != nil {
 		return err
 	}
@@ -835,8 +884,6 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 	if tailLines != "" {
 		logOpts.Tail = tailLines
 	}
-
-	client := dockerutil.GetDockerClient()
 
 	err = client.Logs(logOpts)
 	if err != nil {
@@ -872,6 +919,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_DBIMAGE":                  app.DBImage,
 		"DDEV_DBAIMAGE":                 app.DBAImage,
 		"DDEV_WEBIMAGE":                 app.WebImage,
+		"DDEV_BGSYNCIMAGE":              app.BgsyncImage,
 		"DDEV_APPROOT":                  app.AppRoot,
 		"DDEV_DOCROOT":                  app.Docroot,
 		"DDEV_IMPORTDIR":                app.ImportDir,
@@ -940,18 +988,63 @@ func (app *DdevApp) Stop() error {
 }
 
 // Wait ensures that the app service containers are healthy.
-func (app *DdevApp) Wait(containerTypes ...string) error {
-	for _, containerType := range containerTypes {
+func (app *DdevApp) Wait(requiredContainers []string) error {
+	for _, containerType := range requiredContainers {
 		labels := map[string]string{
 			"com.ddev.site-name":         app.GetName(),
 			"com.docker.compose.service": containerType,
 		}
-		logOutput, err := dockerutil.ContainerWait(containerWaitTimeout, labels)
+		waitTime := containerWaitTimeout
+		if containerType == BGSYNCContainer {
+			waitTime = bgsyncWaitTimeout
+		}
+		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
 		if err != nil {
 			return fmt.Errorf("%s container failed: log=%s, err=%v", containerType, logOutput, err)
 		}
 	}
 
+	return nil
+}
+
+// WaitSync waits for bgsync container to be consistently syncing.
+func (app *DdevApp) WaitSync() error {
+	labels := map[string]string{
+		"com.ddev.site-name":         app.GetName(),
+		"com.docker.compose.service": BGSYNCContainer,
+	}
+
+	if !app.WebcacheEnabled {
+		return nil
+	}
+
+	logOutput, err := dockerutil.ContainerWaitLog(bgsyncSyncWaitTimeout, labels, "sync active")
+	if err != nil {
+		return fmt.Errorf("bgsync container did not become ready: log=%s, err=%v", logOutput, err)
+	}
+
+	return nil
+}
+
+// StartAndWaitForSync() is primarily for use in tests.
+// It does app.Start() but then waits for syncing to be in progress
+// before returning.
+// extraSleep arg in seconds is the time to wait if > 0
+func (app *DdevApp) StartAndWaitForSync(extraSleep int) error {
+	err := app.Start()
+	if err != nil {
+		return err
+	}
+	// Wait to make sure that sync is working, sleep a little for sync to have completed.
+	if app.WebcacheEnabled {
+		err = app.WaitSync()
+		if err != nil {
+			return err
+		}
+		if extraSleep > 0 {
+			time.Sleep(time.Duration(extraSleep) * time.Second)
+		}
+	}
 	return nil
 }
 
@@ -1097,9 +1190,12 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
 
-		err = dockerutil.RemoveVolume(app.Name + "-mariadb")
-		if err != nil {
-			return err
+		client := dockerutil.GetDockerClient()
+		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.GetUnisonCatalogVolName(), app.GetWebcacheVolName()} {
+			err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volName})
+			if err != nil {
+				util.Warning("could not remove volume %s: %v", volName, err)
+			}
 		}
 		util.Success("Project data/database removed from docker volume for project %s", app.Name)
 	}
@@ -1428,4 +1524,40 @@ func (app *DdevApp) getWorkingDir(service, dir string) string {
 
 	// The next highest preference is for app type defaults
 	return app.DefaultWorkingDirMap()[service]
+}
+
+// precacheWebdir() runs a container which just exits, but has the webcachedir mounted
+// so we can "docker cp" to it.
+func (app *DdevApp) precacheWebdir() error {
+	containerName := "ddev-" + app.Name + "-bgsync"
+	dockerArgs := []string{"cp", app.AppRoot + "/.", containerName + ":/fastdockermount"}
+
+	start := time.Now()
+	out, err := exec.RunCommand("docker", dockerArgs)
+	if err != nil {
+		return fmt.Errorf("docker %v failed: %v out=%s", dockerArgs, err, out)
+	}
+	util.Success("repo files push to container completed in %v", time.Now().Sub(start))
+
+	// Set the flag to tell unison it can start syncing
+	_, _, err = app.Exec(&ExecOpts{
+		Service: BGSYNCContainer,
+		Cmd:     []string{"touch", "/var/tmp/unison_start_authorized"},
+	})
+	if err != nil {
+		return fmt.Errorf("could not start bgsync container syncing: %v", err)
+	}
+
+	return nil
+
+}
+
+// Returns the docker volume name of the webcachevol
+func (app *DdevApp) GetWebcacheVolName() string {
+	return strings.ToLower("ddev-" + app.Name + "_webcachevol")
+}
+
+// Returns the docker volume name of the unisoncatalogvolume
+func (app *DdevApp) GetUnisonCatalogVolName() string {
+	return strings.ToLower("ddev-" + app.Name + "_unisoncatalogvol")
 }

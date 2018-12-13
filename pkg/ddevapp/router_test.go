@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 
@@ -58,16 +59,21 @@ func TestPortOverride(t *testing.T) {
 		}
 
 		err = app.Start()
-		assert.NoError(err)
-		err = app.Wait("web")
-		assert.NoError(err)
-		assert.True(util.IsPortActive(app.RouterHTTPPort))
-		assert.True(util.IsPortActive(app.RouterHTTPSPort))
 		// defer the app.Down so we have a more diverse set of tests. If we brought
 		// each down before testing the next that would be a more trivial test.
 		// Don't worry about the possible error case as this is just a test cleanup
 		// nolint: errcheck
 		defer app.Down(true, false)
+
+		var logs string
+		if err != nil {
+			logs, _ = ddevapp.GetErrLogsFromApp(app, err)
+		}
+		require.NoError(t, err, "failed to app.Start(), logs=\n=========\n%s\n===========\n", logs)
+		err = app.Wait([]string{"web"})
+		assert.NoError(err)
+		assert.True(util.IsPortActive(app.RouterHTTPPort))
+		assert.True(util.IsPortActive(app.RouterHTTPSPort))
 	}
 
 }

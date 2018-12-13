@@ -45,10 +45,15 @@ type Provider interface {
 }
 
 // init() is for testing situations only, allowing us to override the default webserver type
+// or caching behavior
+
 func init() {
 	// This is for automated testing only. It allows us to override the webserver type.
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		WebserverDefault = testWebServerType
+	}
+	if testWebCache := os.Getenv("DDEV_TEST_USE_WEBCACHE"); testWebCache != "" {
+		WebCacheEnabledDefault = true
 	}
 }
 
@@ -62,6 +67,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.APIVersion = version.DdevVersion
 	app.PHPVersion = PHPDefault
 	app.WebserverType = WebserverDefault
+	app.WebcacheEnabled = WebCacheEnabledDefault
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 	app.MariaDBVersion = version.MariaDBDefaultVersion
@@ -112,13 +118,17 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == version.GetWebImage() {
 		appcopy.WebImage = ""
 	}
-
 	if appcopy.DBImage == version.GetDBImage(appcopy.MariaDBVersion) {
 		appcopy.DBImage = ""
 	}
-
 	if appcopy.DBAImage == version.GetDBAImage() {
 		appcopy.DBAImage = ""
+	}
+	if appcopy.DBAImage == version.GetDBAImage() {
+		appcopy.DBAImage = ""
+	}
+	if appcopy.BgsyncImage == version.GetBgsyncImage() {
+		appcopy.BgsyncImage = ""
 	}
 
 	// Don't write default working dir values to config
@@ -140,7 +150,7 @@ func (app *DdevApp) WriteConfig() error {
 	}
 
 	// Append current image information
-	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s \n# webimage: %s\n# dbimage: %s\n# dbaimage: %s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.GetWebImage(), version.GetDBImage(), version.GetDBAImage()))...)
+	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s \n# webimage: %s\n# dbimage: %s\n# dbaimage: %s\n# bgsyncimage: %s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.GetWebImage(), version.GetDBImage(), version.GetDBAImage(), version.GetBgsyncImage()))...)
 
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(ConfigInstructions)...)
@@ -203,6 +213,10 @@ func (app *DdevApp) ReadConfig() error {
 		app.WebserverType = WebserverDefault
 	}
 
+	if WebCacheEnabledDefault == true {
+		app.WebcacheEnabled = WebCacheEnabledDefault
+	}
+
 	if app.RouterHTTPPort == "" {
 		app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	}
@@ -220,7 +234,9 @@ func (app *DdevApp) ReadConfig() error {
 	if app.DBAImage == "" {
 		app.DBAImage = version.GetDBAImage()
 	}
-
+	if app.BgsyncImage == "" {
+		app.BgsyncImage = version.GetBgsyncImage()
+	}
 	if app.OmitContainers == nil {
 		app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
 	}
@@ -318,6 +334,12 @@ func (app *DdevApp) ValidateConfig() error {
 	if !IsValidMariaDBVersion(app.MariaDBVersion) {
 		return fmt.Errorf("Invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
 	}
+
+	// Validate webcache_enabled
+	if runtime.GOOS != "darwin" && app.WebcacheEnabled && !globalconfig.DdevGlobalConfig.DeveloperMode {
+		return fmt.Errorf("webcache_enabled: true is not yet avalable for %s", runtime.GOOS)
+	}
+
 	return nil
 }
 
@@ -466,10 +488,24 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if util.ArrayContainsString(app.OmitContainers, "dba") {
 		includeDBA = ""
 	}
+	var includeBGSYNC = ""
+	var mountType = "bind"
+	webMount := "../"
+	if app.WebcacheEnabled {
+		includeBGSYNC = "true"
+		webMount = "webcachevol"
+		mountType = "volume"
+	}
+
+	isWindowsFS := "false"
+	if runtime.GOOS == "windows" {
+		isWindowsFS = "true"
+	}
 	templateVars := map[string]string{
 		"name":            app.Name,
 		"plugin":          "ddev",
 		"appType":         app.Type,
+		"webMount":        webMount,
 		"mailhogport":     appports.GetPort("mailhog"),
 		"dbaport":         appports.GetPort("dba"),
 		"dbport":          appports.GetPort("db"),
@@ -477,6 +513,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		"extra_host":      docker0Hostname + `:` + docker0Addr,
 		"compose_version": version.DockerComposeFileFormatVersion,
 		"IncludeDBA":      includeDBA,
+		"IncludeBGSYNC":   includeBGSYNC,
+		"IsWindowsFS":     isWindowsFS,
+		"mountType":       mountType,
 	}
 
 	err = templ.Execute(&doc, templateVars)
@@ -633,7 +672,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db")
+	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", ".bgsync*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

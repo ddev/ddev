@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -136,9 +137,9 @@ func NetExists(client *docker.Client, name string) bool {
 // timeout is in seconds.
 // This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 // Returns logoutput, error, returns error if not "healthy"
-func ContainerWait(waittime time.Duration, labels map[string]string) (string, error) {
+func ContainerWait(waittime int, labels map[string]string) (string, error) {
 
-	timeoutChan := time.After(waittime * time.Second)
+	timeoutChan := time.After(time.Duration(waittime) * time.Second)
 	tickChan := time.NewTicker(500 * time.Millisecond)
 	defer tickChan.Stop()
 
@@ -171,6 +172,48 @@ func ContainerWait(waittime time.Duration, labels map[string]string) (string, er
 	// We should never get here.
 	//nolint: govet
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
+}
+
+// ContainerWaitLog provides a wait loop to check for container in "healthy" status.
+// with a given log output
+// timeout is in seconds.
+// This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
+// Returns logoutput, error, returns error if not "healthy"
+func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string) (string, error) {
+
+	timeoutChan := time.After(time.Duration(waittime) * time.Second)
+	tickChan := time.NewTicker(500 * time.Millisecond)
+	defer tickChan.Stop()
+
+	status := ""
+
+	for {
+		select {
+		case <-timeoutChan:
+			return "", fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
+
+		case <-tickChan.C:
+			container, err := FindContainerByLabels(labels)
+			if err != nil || container == nil {
+				return "", fmt.Errorf("failed to query container labels=%v: %v", labels, err)
+			}
+			status, logOutput := GetContainerHealth(container)
+
+			switch {
+			case status == "healthy" && expectedLog == logOutput:
+				return logOutput, nil
+			case status == "unhealthy":
+				return logOutput, fmt.Errorf("container %s unhealthy: %s", container.Names[0], logOutput)
+			case status == "exited":
+				service := container.Labels["com.docker.compose.service"]
+				return logOutput, fmt.Errorf("container exited, please use 'ddev logs -s %s` to find out why it failed", service)
+			}
+		}
+	}
+
+	// We should never get here.
+	//nolint: govet
+	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWaitLog() waiting for container labels %v", labels)
 }
 
 // ContainerName returns the containers human readable name.
@@ -448,24 +491,25 @@ func GetDockerIP() (string, error) {
 // This should be the equivalent of something like
 // docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
-func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string) (string, error) {
+// Returns containerID, output, error
+func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool) (containerID string, output string, returnErr error) {
 	client := GetDockerClient()
 
 	// Ensure image string includes a tag
 	imageChunks := strings.Split(image, ":")
 	if len(imageChunks) == 1 {
 		// Image does not specify tag
-		return "", fmt.Errorf("image name must specify tag: %s", image)
+		return "", "", fmt.Errorf("image name must specify tag: %s", image)
 	}
 
 	if tag := imageChunks[len(imageChunks)-1]; len(tag) == 0 {
 		// Image specifies malformed tag (ends with ':')
-		return "", fmt.Errorf("malformed tag provided: %s", image)
+		return "", "", fmt.Errorf("malformed tag provided: %s", image)
 	}
 
 	existsLocally, err := ImageExistsLocally(image)
 	if err != nil {
-		return "", fmt.Errorf("failed to check if image %s is available locally: %v", image, err)
+		return "", "", fmt.Errorf("failed to check if image %s is available locally: %v", image, err)
 	}
 
 	if !existsLocally {
@@ -473,24 +517,26 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		pullErr := client.PullImage(docker.PullImageOptions{Repository: image, OutputStream: &buf},
 			docker.AuthConfiguration{})
 		if pullErr != nil {
-			return "", fmt.Errorf("failed to pull image %s: %v", image, pullErr)
+			return "", "", fmt.Errorf("failed to pull image %s: %v", image, pullErr)
 		}
 	}
 
 	// Windows 10 Docker toolbox won't handle a bind mount like C:\..., so must convert to /c/...
-	for i := range binds {
-		binds[i] = strings.Replace(binds[i], `\`, `/`, -1)
-		if strings.Index(binds[i], ":") == 1 {
-			binds[i] = strings.Replace(binds[i], ":", "", 1)
-			binds[i] = "/" + binds[i]
-			// And amazingly, the drive letter must be lower-case.
-			re := regexp.MustCompile("^/[A-Z]/")
-			driveLetter := re.FindString(binds[i])
-			if len(driveLetter) == 3 {
-				binds[i] = strings.TrimPrefix(binds[i], driveLetter)
-				binds[i] = strings.ToLower(driveLetter) + binds[i]
-			}
+	if runtime.GOOS == "windows" {
+		for i := range binds {
+			binds[i] = strings.Replace(binds[i], `\`, `/`, -1)
+			if strings.Index(binds[i], ":") == 1 {
+				binds[i] = strings.Replace(binds[i], ":", "", 1)
+				binds[i] = "/" + binds[i]
+				// And amazingly, the drive letter must be lower-case.
+				re := regexp.MustCompile("^/[A-Z]/")
+				driveLetter := re.FindString(binds[i])
+				if len(driveLetter) == 3 {
+					binds[i] = strings.TrimPrefix(binds[i], driveLetter)
+					binds[i] = strings.ToLower(driveLetter) + binds[i]
+				}
 
+			}
 		}
 	}
 
@@ -512,21 +558,24 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 
 	container, err := client.CreateContainer(options)
 	if err != nil {
-		return "", fmt.Errorf("failed to create/start docker container (%v):%v", options, err)
+		return "", "", fmt.Errorf("failed to create/start docker container (%v):%v", options, err)
 	}
+	containerID = container.ID
 
-	// nolint: errcheck
-	defer client.RemoveContainer(docker.RemoveContainerOptions{
-		Force: true,
-		ID:    container.ID,
-	})
+	if removeContainerAfterRun {
+		// nolint: errcheck
+		defer client.RemoveContainer(docker.RemoveContainerOptions{
+			Force: true,
+			ID:    container.ID,
+		})
+	}
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
-		return "", fmt.Errorf("failed to StartContainer: %v", err)
+		return containerID, "", fmt.Errorf("failed to StartContainer: %v", err)
 	}
 	exitCode, err := client.WaitContainer(container.ID)
 	if err != nil {
-		return "", fmt.Errorf("failed to WaitContainer: %v", err)
+		return containerID, "", fmt.Errorf("failed to WaitContainer: %v", err)
 	}
 
 	// Get logs so we can report them if exitCode failed
@@ -538,15 +587,15 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		OutputStream: &stdout,
 	})
 	if err != nil {
-		return "", fmt.Errorf("failed to get Logs(): %v", err)
+		return containerID, "", fmt.Errorf("failed to get Logs(): %v", err)
 	}
 
 	// This is the exitCode from the client.WaitContainer()
 	if exitCode != 0 {
-		return stdout.String(), fmt.Errorf("container run failed with exit code %d", exitCode)
+		return containerID, stdout.String(), fmt.Errorf("container run failed with exit code %d", exitCode)
 	}
 
-	return stdout.String(), nil
+	return containerID, stdout.String(), nil
 }
 
 // RemoveContainer stops and removes a container
@@ -625,9 +674,11 @@ func MassageWindowsHostMountpoint(mountPoint string) string {
 	return mountPoint
 }
 
-// RemoveVolume removes a docker volume
 func RemoveVolume(volumeName string) error {
 	client := GetDockerClient()
 	err := client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volumeName})
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }

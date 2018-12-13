@@ -27,6 +27,7 @@ type GlobalConfig struct {
 	OmitContainers       []string `yaml:"omit_containers"`
 	InstrumentationOptIn bool     `yaml:"instrumentation_opt_in"`
 	LastUsedVersion      string   `yaml:"last_used_version"`
+	DeveloperMode        bool     `yaml:"developer_mode,omitempty"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
