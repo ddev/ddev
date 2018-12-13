@@ -159,17 +159,21 @@ func TestFindSimulatedXsymSymlinks(t *testing.T) {
 // TestReplaceSimulatedXsymSymlinks tries a number of symlinks to make
 // sure we can parse and replace symlinks.
 func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
+	testDir, _ := os.Getwd()
 	assert := asrt.New(t)
 	if runtime.GOOS == "windows" && !fileutil.CanCreateSymlinks() {
 		t.Skip("Skipping on Windows because test machine can't create symlnks")
 	}
-	testDir, _ := os.Getwd()
 	sourceDir := filepath.Join(testDir, "testdata", "symlinks")
 	targetDir := testcommon.CreateTmpDir("TestReplaceSimulated")
 	//nolint: errcheck
 	defer os.RemoveAll(targetDir)
 	err := os.Chdir(targetDir)
 	assert.NoError(err)
+
+	// Make sure we leave the testDir as we found it..
+	//nolint: errcheck
+	defer os.Chdir(testDir)
 	// CopyDir skips real symlinks, but we only care about simulated ones, so it's OK
 	err = fileutil.CopyDir(sourceDir, filepath.Join(targetDir, "symlinks"))
 	assert.NoError(err)
