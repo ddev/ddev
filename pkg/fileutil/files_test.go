@@ -202,7 +202,6 @@ func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
 
 }
 
-
 // TestIsSameFile tests the IsSameFile utility function.
 func TestIsSameFile(t *testing.T) {
 	assert := asrt.New(t)
@@ -233,4 +232,3 @@ func TestIsSameFile(t *testing.T) {
 	assert.NoError(err)
 	assert.False(isSame)
 }
-
