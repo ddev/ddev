@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/version"
 	"path/filepath"
@@ -13,9 +14,9 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDevLogsNoConfig tests what happens with when running "ddev logs" when
+// TestLogsNoConfig tests what happens with when running "ddev logs" when
 // the directory has not been configured (and no project name is given)
-func TestDevLogsNoConfig(t *testing.T) {
+func TestLogsNoConfig(t *testing.T) {
 	assert := asrt.New(t)
 	testDir := testcommon.CreateTmpDir("no-valid-ddev-config")
 	defer testcommon.CleanupDir(testDir)
@@ -27,8 +28,8 @@ func TestDevLogsNoConfig(t *testing.T) {
 	assert.Contains(string(out), "Please specify a project name or change directories")
 }
 
-// TestDevLogs tests that the Dev logs functionality is working.
-func TestDevLogs(t *testing.T) {
+// TestLogs tests that the ddev logs functionality is working.
+func TestLogs(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, v := range DevTestSites {
@@ -38,6 +39,11 @@ func TestDevLogs(t *testing.T) {
 		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "logtest.php"), filepath.Join(v.Dir, v.Docroot, "logtest.php"))
 		assert.NoError(err)
 		cleanup := v.Chdir()
+
+		app, err := ddevapp.NewApp(v.Dir, "")
+		assert.NoError(err)
+
+		ddevapp.WaitForSync(app, 2)
 
 		url := "http://" + v.Name + "." + version.DDevTLD + "/logtest.php"
 		_, _, err = testcommon.GetLocalHTTPResponse(t, url)
