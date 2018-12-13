@@ -205,3 +205,13 @@ func ReplaceStringInFile(searchString string, replaceString string, origPath str
 	}
 	return nil
 }
+
+// ReadFileIntoString just gets the contents of file into string
+func ReadFileIntoString(path string) (string, error) {
+
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), err
+}

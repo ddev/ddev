@@ -624,3 +624,10 @@ func MassageWindowsHostMountpoint(mountPoint string) string {
 	}
 	return mountPoint
 }
+
+// RemoveVolume removes a docker volume
+func RemoveVolume(volumeName string) error {
+	client := GetDockerClient()
+	err := client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volumeName})
+	return err
+}

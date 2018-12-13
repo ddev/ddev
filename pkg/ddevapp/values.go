@@ -26,6 +26,12 @@ const (
 	PHP73 = "7.3"
 )
 
+// MariaDB Versions
+const (
+	MariaDB101 = "10.1"
+	MariaDB102 = "10.2"
+)
+
 // Container types used with ddev
 const (
 	DdevSSHAgentContainer = "ddev-ssh-agent"
@@ -46,6 +52,11 @@ var ValidPHPVersions = map[string]bool{
 	PHP71: true,
 	PHP72: true,
 	PHP73: true,
+}
+
+var ValidMariaDBVersions = map[string]bool{
+	MariaDB101: true,
+	MariaDB102: true,
 }
 
 // Webserver types
@@ -127,6 +138,27 @@ func GetValidPHPVersions() []string {
 	s := make([]string, 0, len(ValidPHPVersions))
 
 	for p := range ValidPHPVersions {
+		s = append(s, p)
+	}
+
+	return s
+}
+
+// IsValidMariaDBVersion is a helper function to determine if a MariaDB version is valid, returning
+// true if the supplied MariaDB version is valid and false otherwise.
+func IsValidMariaDBVersion(MariaDBVersion string) bool {
+	if _, ok := ValidMariaDBVersions[MariaDBVersion]; !ok {
+		return false
+	}
+
+	return true
+}
+
+// GetValidMariaDBVersions is a helper function that returns a list of valid MariaDB versions.
+func GetValidMariaDBVersions() []string {
+	s := make([]string, 0, len(ValidMariaDBVersions))
+
+	for p := range ValidMariaDBVersions {
 		s = append(s, p)
 	}
 

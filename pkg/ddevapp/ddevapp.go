@@ -68,6 +68,7 @@ type DdevApp struct {
 	XdebugEnabled         bool                 `yaml:"xdebug_enabled"`
 	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string             `yaml:"additional_fqdns"`
+	MariaDBVersion        string               `yaml:"mariadb_version"`
 	ConfigPath            string               `yaml:"-"`
 	AppRoot               string               `yaml:"-"`
 	Platform              string               `yaml:"-"`
@@ -159,6 +160,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		dbinfo["dbPort"] = appports.GetPort("db")
 		util.CheckErr(err)
 		dbinfo["published_port"] = dbPublicPort
+		dbinfo["mariadb_version"] = app.MariaDBVersion
 		appDesc["dbinfo"] = dbinfo
 
 		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("mailhog")
@@ -1018,16 +1020,27 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("Failed to find a snapshot in %s", hostSnapshotDir)
 	}
 
-	if !fileutil.FileExists(filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")) {
-		// This command returning an error indicates grep has failed to find the value
-		opts := &ExecOpts{
-			Service: "db",
-			Cmd:     []string{"sh", "-c", "mariabackup --version 2>&1 | grep '10\\.1'"},
+	// Find out the mariadb version that correlates to the snapshot.
+	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
+	var snapshotMariaDBVersion string
+	var err error
+	if fileutil.FileExists(versionFile) {
+		snapshotMariaDBVersion, err = fileutil.ReadFileIntoString(versionFile)
+		if err != nil {
+			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
 		}
+	} else {
+		snapshotMariaDBVersion = MariaDB101
+	}
+	snapshotMariaDBVersion = strings.Trim(snapshotMariaDBVersion, " \n\t")
 
-		if _, _, err := app.Exec(opts); err != nil {
-			return fmt.Errorf("snapshot %s is not compatible with this version of ddev and mariadb. Please use the instructions at %s for a workaround to restore it", snapshotDir, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
-		}
+	if snapshotMariaDBVersion == MariaDB101 && app.MariaDBVersion != MariaDB101 {
+		//nolint: golint
+		return fmt.Errorf("snapshot %s is a MariaDB 10.1 snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).\nPlease use the instructions at %s to change the MariaDB version so you can restore it.", snapshotDir, app.MariaDBVersion, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
+	}
+	if snapshotMariaDBVersion != MariaDB101 && app.MariaDBVersion == MariaDB101 {
+		//nolint: golint
+		return fmt.Errorf("snapshot %s is a MariaDB %s snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).", snapshotDir, snapshotMariaDBVersion, app.MariaDBVersion)
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
@@ -1037,7 +1050,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 	}
 
-	err := os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
+	err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
 	util.CheckErr(err)
 	err = app.Start()
 	if err != nil {
@@ -1080,8 +1093,7 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
 
-		client := dockerutil.GetDockerClient()
-		err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: app.Name + "-mariadb"})
+		err = dockerutil.RemoveVolume(app.Name + "-mariadb")
 		if err != nil {
 			return err
 		}

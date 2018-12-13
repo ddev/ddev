@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/output"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -275,13 +276,14 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 		return extractPath, archiveFullPath, nil
 	}
 
+	output.UserOut.Printf("Downloading %s", archiveFullPath)
 	_ = os.MkdirAll(extractPath, 0777)
 	err := util.DownloadFile(archiveFullPath, sourceURL, false)
 	if err != nil {
 		return extractPath, archiveFullPath, fmt.Errorf("Failed to download url=%s into %s, err=%v", sourceURL, archiveFullPath, err)
 	}
 
-	log.Debugf("Downloaded %s into %s", sourceURL, archiveFullPath)
+	output.UserOut.Printf("Downloaded %s into %s", sourceURL, archiveFullPath)
 
 	if filepath.Ext(archiveFullPath) == ".zip" {
 		err = archive.Unzip(archiveFullPath, extractPath, internalExtractionPath)

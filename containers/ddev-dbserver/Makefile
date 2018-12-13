@@ -35,13 +35,32 @@ VERSION := $(shell git describe --tags --always --dirty)
 # include. That way the base components can easily be updated as our general needs
 # change.
 #include build-tools/makefile_components/base_build_go.mak
-include ../../build-tools/makefile_components/base_build_python-docker.mak
-include ../../build-tools/makefile_components/base_container.mak
-include ../../build-tools/makefile_components/base_push.mak
+#include ../../build-tools/makefile_components/base_build_python-docker.mak
+#include ../../build-tools/makefile_components/base_container.mak
+#include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
-include ../../build-tools/makefile_components/base_test_python.mak
+#include ../../build-tools/makefile_components/base_test_python.mak
 
-MYSQL_VERSION=10.2
+DIRS = 10.1 10.2
+
+build: container
+
+container:
+	for item in $(DIRS); do \
+		echo $$item && $(MAKE) -C $$item container; \
+	done
+
+push:
+	for item in $(DIRS); do \
+		echo $$item && $(MAKE) -C $$item push; \
+	done
+
+clean:
+	for item in $(DIRS); do \
+		echo $$item && $(MAKE) -C $$item clean; \
+	done
 
 test: container
-	./test/testserver.sh $(DOCKER_REPO):$(VERSION) $(MYSQL_VERSION) 
+	for item in $(DIRS); do \
+		echo $$item && $(MAKE) -C $$item test; \
+	done

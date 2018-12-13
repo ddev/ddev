@@ -139,6 +139,13 @@ func TestMain(m *testing.M) {
 		log.Warnf("Failed to remove all running projects: %v", err)
 	}
 
+	for _, volume := range []string{"ddev-composer-cache", "ddev-router-cert-cache", "ddev-ssh-agent_dot_ssh", "ddev-ssh-agent_socket_dir"} {
+		err := dockerutil.RemoveVolume(volume)
+		if err != nil && err.Error() != "no such volume" {
+			log.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
+		}
+	}
+
 	count := len(ddevapp.GetApps())
 	if count > 0 {
 		log.Fatalf("ddevapp tests require no projects running. You have %v project(s) running.", count)
@@ -170,12 +177,18 @@ func TestMain(m *testing.M) {
 		testcommon.ClearDockerEnv()
 
 		app := &ddevapp.DdevApp{}
-
 		err = app.Init(TestSites[i].Dir)
 		if err != nil {
 			testRun = -1
 			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
+		}
+		// TODO: webcache PR will add other volumes that should be removed here.
+		for _, volume := range []string{app.Name + "-mariadb"} {
+			err = dockerutil.RemoveVolume(volume)
+			if err != nil && err.Error() != "no such volume" {
+				log.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
+			}
 		}
 		switchDir()
 	}
@@ -616,6 +629,90 @@ func TestDdevImportDB(t *testing.T) {
 	}
 }
 
+// TestDdevOldMariaDB tests db import/export/start with Mariadb 10.1
+func TestDdevOldMariaDB(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+	testDir, _ := os.Getwd()
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevOldMariaDB", site.Name))
+
+	testcommon.ClearDockerEnv()
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	app.MariaDBVersion = ddevapp.MariaDB101
+	app.DBImage = version.GetDBImage(app.MariaDBVersion)
+	err = app.Start()
+	//nolint: errcheck
+	defer app.Down(true, false)
+
+	require.NoError(t, err)
+	importPath := filepath.Join(testDir, "testdata", "users.sql")
+	err = app.ImportDB(importPath, "")
+	require.NoError(t, err)
+
+	err = os.Mkdir("tmp", 0777)
+	require.NoError(t, err)
+
+	err = fileutil.PurgeDirectory("tmp")
+	assert.NoError(err)
+
+	// Test that we can export-db to a gzipped file
+	err = app.ExportDB("tmp/users1.sql.gz", true)
+	assert.NoError(err)
+
+	// Validate contents
+	err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
+	assert.NoError(err)
+	stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+	assert.NoError(err)
+	assert.True(stringFound)
+
+	err = fileutil.PurgeDirectory("tmp")
+	assert.NoError(err)
+
+	// Export to an ungzipped file and validate
+	err = app.ExportDB("tmp/users2.sql", false)
+	assert.NoError(err)
+
+	// Validate contents
+	stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
+	assert.NoError(err)
+	assert.True(stringFound)
+
+	err = fileutil.PurgeDirectory("tmp")
+	assert.NoError(err)
+
+	// Capture to stdout without gzip compression
+	stdout := util.CaptureStdOut()
+	err = app.ExportDB("", false)
+	assert.NoError(err)
+	out := stdout()
+	assert.Contains(out, "Table structure for table `users`")
+
+	snapshotName := fileutil.RandomFilenameBase()
+	_, err = app.SnapshotDatabase(snapshotName)
+	assert.NoError(err)
+	err = app.RestoreSnapshot(snapshotName)
+	assert.NoError(err)
+
+	// Restore of a 10.2 snapshot should fail.
+	// Attempt a restore with a pre-mariadb_10.2 snapshot. It should fail and give a link.
+	newerSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_2.tgz"))
+	assert.NoError(err)
+
+	err = archive.Untar(newerSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots"), "")
+	assert.NoError(err)
+	err = app.RestoreSnapshot("d7testerTest1")
+	assert.Error(err)
+	assert.Contains(err.Error(), "is not compatible")
+
+	runTime()
+}
+
 // TestDdevExportDB tests the functionality that is called when "ddev export-db" is executed
 func TestDdevExportDB(t *testing.T) {
 	assert := asrt.New(t)
@@ -637,9 +734,8 @@ func TestDdevExportDB(t *testing.T) {
 	err = app.ImportDB(importPath, "")
 	require.NoError(t, err)
 
-	err = os.Mkdir("tmp", 0777)
-	require.NoError(t, err)
-
+	_ = os.Mkdir("tmp", 0777)
+	// Most likely reason for failure is it exists, so let that go
 	err = fileutil.PurgeDirectory("tmp")
 	assert.NoError(err)
 
@@ -742,7 +838,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 	}
 }
 
-// TestDdevRestoreSnapshot tests creating a snapshot and reverting to it
+// TestDdevRestoreSnapshot tests creating a snapshot and reverting to it. This runs with Mariadb 10.2
 func TestDdevRestoreSnapshot(t *testing.T) {
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
@@ -760,28 +856,20 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
 	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
 		err = site.Prepare()
-		if err != nil {
-			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
-		}
+		require.NoError(t, err)
 	}
 
 	switchDir := site.Chdir()
 	testcommon.ClearDockerEnv()
 
 	err = app.Init(site.Dir)
-	if err != nil {
-		if app.SiteStatus() != ddevapp.SiteRunning {
-			t.Fatalf("app.Init() failed on site %s in dir %s, err=%v", site.Name, site.Dir, err)
-		}
-	}
+	require.NoError(t, err)
 
 	// Try using php72 to avoid SIGBUS failures after restore.
 	app.PHPVersion = ddevapp.PHP72
 
 	err = app.Start()
-	if err != nil {
-		t.Fatalf("TestMain startup: app.Start() failed on site %s, err=%v", site.Name, err)
-	}
+	require.NoError(t, err, "app.Start() failed on site %s, err=%v", site.Name, err)
 
 	err = app.ImportDB(d7testerTest1Dump, "")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
@@ -834,7 +922,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 	err = app.RestoreSnapshot("oldsnapshot")
 	assert.Error(err)
-	assert.Contains(err.Error(), "is not compatible with this version of ddev and mariadb")
+	assert.Contains(err.Error(), "is not compatible")
 
 	err = app.Down(true, false)
 	assert.NoError(err)
@@ -1739,8 +1827,8 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	files, err := app.ComposeFiles()
 	assert.NoError(err)
-	assert.True(files[0] == filepath.Join(app.AppConfDir(), "docker-compose.yaml"))
-	assert.True(files[len(files)-1] == filepath.Join(app.AppConfDir(), "docker-compose.override.yaml"))
+	require.Equal(t, files[0], filepath.Join(app.AppConfDir(), "docker-compose.yaml"))
+	require.Equal(t, files[len(files)-1], filepath.Join(app.AppConfDir(), "docker-compose.override.yaml"))
 
 	// Make sure that some docker-compose.yml and docker-compose.yaml conflict gets noted properly
 	app, err = ddevapp.NewApp("./testdata/testConflictingYamlYml", "")
