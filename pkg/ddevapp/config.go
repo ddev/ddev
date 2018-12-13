@@ -469,8 +469,8 @@ type composeYAMLVars struct {
 	ComposeVersion  string
 	MountType       string
 	WebMount        string
-	IncludeDBA      bool
-	IncludeSSHAgent bool
+	OmitDBA         bool
+	OmitSSHAgent    bool
 	WebcacheEnabled bool
 	IsWindowsFS     bool
 }
@@ -514,8 +514,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DdevGenerated:   DdevFileSignature,
 		ExtraHost:       docker0Hostname + `:` + docker0Addr,
 		ComposeVersion:  version.DockerComposeFileFormatVersion,
-		IncludeDBA:      !util.ArrayContainsString(app.OmitContainers, "dba"),
-		IncludeSSHAgent: !util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
+		OmitDBA:         util.ArrayContainsString(app.OmitContainers, "dba"),
+		OmitSSHAgent:    util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
 		WebcacheEnabled: app.WebcacheEnabled,
 		IsWindowsFS:     runtime.GOOS == "windows",
 		MountType:       "bind",

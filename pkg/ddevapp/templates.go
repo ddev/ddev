@@ -52,7 +52,7 @@ services:
           nocopy: true
         {{ end }}
       - ".:/mnt/ddev_config:ro"
-      {{ if .IncludeSSHAgent }}
+      {{ if not .OmitSSHAgent }}
       - type: "volume"
         source: ddev-ssh-agent_socket_dir
         target: "/home/.ssh-agent"
@@ -131,7 +131,7 @@ services:
 
 {{end}}
 
-{{if  .IncludeDBA }}
+{{if not .OmitDBA }}
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
@@ -165,7 +165,7 @@ networks:
 volumes:
   mariadb-database:
     name: "${DDEV_SITENAME}-mariadb"
-  {{ if .IncludeSSHAgent }}
+  {{ if .OmitSSHAgent }}
   ddev-ssh-agent_socket_dir:
     external: true
   {{ end }}
