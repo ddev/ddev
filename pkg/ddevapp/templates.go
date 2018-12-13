@@ -2,11 +2,11 @@ package ddevapp
 
 // DDevComposeTemplate is used to create the main docker-compose.yaml
 // file for a ddev site.
-const DDevComposeTemplate = `version: '{{ .compose_version }}'
-{{ .ddevgenerated }}
+const DDevComposeTemplate = `version: '{{ .ComposeVersion }}'
+{{ .DdevGenerated }}
 services:
   db:
-    container_name: {{ .plugin }}-${DDEV_SITENAME}-db
+    container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
     image: $DDEV_DBIMAGE
     stop_grace_period: 60s
     volumes:
@@ -27,8 +27,8 @@ services:
       - "3306"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.platform: {{ .plugin }}
-      com.ddev.app-type: {{ .appType }}
+      com.ddev.platform: {{ .Plugin }}
+      com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
     environment:
@@ -39,20 +39,20 @@ services:
       interval: 5s
       retries: 3
   web:
-    container_name: {{ .plugin }}-${DDEV_SITENAME}-web
+    container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
     cap_add:
       - SYS_PTRACE
     volumes:
-      - type: {{ .mountType }}
-        source: {{ .webMount }}
+      - type: {{ .MountType }}
+        source: {{ .WebMount }}
         target: /var/www/html
-        {{ if eq .mountType "volume" }}
+        {{ if eq .MountType "volume" }}
         volume:
           nocopy: true
         {{ end }}
       - ".:/mnt/ddev_config:ro"
-      {{ if .includeSSHAgent }}
+      {{ if .IncludeSSHAgent }}
       - type: "volume"
         source: ddev-ssh-agent_socket_dir
         target: "/home/.ssh-agent"
@@ -62,7 +62,6 @@ services:
         target: "/mnt/composer_cache"
         volume:
           nocopy: true
-        {{ end }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       - ddev-composer-cache:/mnt/composer_cache
     restart: "no"
@@ -72,7 +71,7 @@ services:
     # ports is list of exposed *container* ports
     ports:
       - "80"
-      - "{{ .mailhogport }}"
+      - "{{ .MailhogPort }}"
     environment:
       - DDEV_URL=$DDEV_URL
       - DOCROOT=$DDEV_DOCROOT
@@ -88,21 +87,21 @@ services:
       - LINES=$LINES
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
       # To expose a container port to a different host port, define the port as hostPort:containerPort
-      - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,{{ .mailhogport }}
+      - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,{{ .MailhogPort }}
       # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
       # To expose an HTTPS port, define the port as securePort:containerPort.
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.platform: {{ .plugin }}
-      com.ddev.app-type: {{ .appType }}
+      com.ddev.platform: {{ .Plugin }}
+      com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
-    extra_hosts: ["{{ .extra_host }}"]
+    extra_hosts: ["{{ .ExtraHost }}"]
     external_links:
       - ddev-router:$DDEV_HOSTNAME
-{{ if  .IncludeBGSYNC }}
+{{ if .WebcacheEnabled }}
   bgsync:
     container_name: ddev-${DDEV_SITENAME}-bgsync
     image: $DDEV_BGSYNCIMAGE
@@ -139,8 +138,8 @@ services:
     restart: "no"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.platform: {{ .plugin }}
-      com.ddev.app-type: {{ .appType }}
+      com.ddev.platform: {{ .Plugin }}
+      com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
     links:
@@ -152,7 +151,7 @@ services:
       - PMA_PASSWORD=db
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
-      - HTTP_EXPOSE={{ .dbaport }}
+      - HTTP_EXPOSE={{ .DBAPort }}
     healthcheck:
       interval: 90s
       timeout: 2s
@@ -166,13 +165,13 @@ networks:
 volumes:
   mariadb-database:
     name: "${DDEV_SITENAME}-mariadb"
-  {{ if .includeSSHAgent }}
+  {{ if .IncludeSSHAgent }}
   ddev-ssh-agent_socket_dir:
     external: true
   {{ end }}
   ddev-composer-cache:
     name: ddev-composer-cache
-  {{ if eq .mountType "volume" }}
+  {{ if eq .MountType "volume" }}
   webcachevol:
   unisoncatalogvol:
   {{ end }}
