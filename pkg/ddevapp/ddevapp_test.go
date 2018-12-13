@@ -897,11 +897,12 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// First do regular start, which is good enough to get us to an ImportDB()
 	err = app.Start()
 	require.NoError(t, err)
-	err = app.StartAndWaitForSync(2)
-	require.NoError(t, err, "app.Start() failed on site %s, err=%v", site.Name, err)
 
 	err = app.ImportDB(d7testerTest1Dump, "")
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
+
+	err = app.StartAndWaitForSync(2)
+	require.NoError(t, err, "app.Start() failed on site %s, err=%v", site.Name, err)
 
 	resp, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
 	if ensureErr != nil && strings.Contains(ensureErr.Error(), "container failed") {
