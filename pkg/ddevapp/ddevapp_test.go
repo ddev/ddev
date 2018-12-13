@@ -1007,11 +1007,28 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	_ = f.Close()
 	ddevapp.WaitForSync(app, 5)
 
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
+	_, _, createFileErr := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     []string{"sh", "-c", "echo 'content created inside container\n' >" + inContainerRelativePath},
 	})
-	require.NoError(t, err)
+	assert.NoError(createFileErr)
+	if app.WebcacheEnabled && createFileErr != nil {
+		syncLogs, err := app.CaptureLogs("bgsync", false, "")
+		assert.NoError(err)
+
+		// ls -lR on host
+		onHostList, err := exec.RunCommand("ls", []string{"-lR", onHostDir})
+		assert.NoError(err)
+
+		// ls -lR in container
+		inContainerList, _, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "web",
+			Cmd:     []string{"ls", "-lR", inContainerDir},
+		})
+		assert.NoError(err)
+		t.Fatalf("Unable to create file %s inside container; onHost ls=\n====\n%s\n====\ninContainer ls=\n======\n%s\n=====\nContainer Sync logs=\n=======\n%s\n===========\n", inContainerRelativePath, onHostList, inContainerList, syncLogs)
+	}
+
 	ddevapp.WaitForSync(app, 5)
 
 	// Now try to append to the file on the host.
