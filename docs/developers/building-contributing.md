@@ -2,7 +2,6 @@
 
 ## Building
 
-As with all golang projects, you need to have your $GOPATH set up and ddev code must in the $GOPATH. This is an inflexibility of golang. We recommend that you set `GOPATH=~/go` and clone ddev into `~/go/src/github.com/drud/ddev`.
 
  ```
  make
@@ -13,21 +12,22 @@ As with all golang projects, you need to have your $GOPATH set up and ddev code 
  make clean
  ```
 
- Note that although this git repository contains submodules (in the containers/ directory) they are not used in a normal build, but rather by the nightly build. You can safely ignore the git submodules and the containers/ directory.
-
 
 ## Testing
 Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...`
 
 To see which ddev commands the tests are executing, set the environment variable DRUD_DEBUG=true.
 
+Use GOTEST_SHORT=true to run just one CMS in each test.
+
 ## Docker container development
 
-The four docker containers that ddev users are included in the containers/ directory:
+The docker containers that ddev uses are included in the containers/ directory:
 
 * containers/ddev-webserver: Provides the web servers (the "web" container).
 * containers/ddev-dbserver: Provides the "db" container.
-* containers/phpmyadmin: Provides the phpmyadmin container
+* containers/ddev-bgsync: Fast web directory syncing
+* containers/phpmyadmin: Provides the phpmyadmin (dba) container
 * containers/ddev-router: The router image
 
 ## Contributing

@@ -6,8 +6,8 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 1. Install [chocolatey](https://chocolatey.org/)
-2. Install golang/mysql-cli/make/git/docker-ce/nssm with `choco install -y git mysql-cli golang make docker-for-windows nssm GoogleChrome zip jq composer` (If docker-toolbox, use that instead; you may have to download the release separately to get correct version.)
-3. Enable gd and curl extensions in /c/tools/php72/php.ini
+2. Install golang/mysql-cli/make/git/docker-ce/nssm with `choco install -y git mysql-cli golang make docker-desktop nssm GoogleChrome zip jq composer cmder` (If docker-toolbox, use that instead; you may have to download the release separately to get correct version.)
+3. Enable gd and curl extensions in /c/tools/php73/php.ini
 3. Install bats: `git clone git://github.com/bats-core/bats-core; cd bats-core; git checkout v1.1.0; ./install.sh`
 3. If a laptop, set the "lid closing" setting in settings to do nothing.
 4. Set the "Sleep after time" setting in settings to never.
