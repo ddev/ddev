@@ -228,4 +228,3 @@ func ReadFileIntoString(path string) (string, error) {
 	}
 	return string(bytes), err
 }
-
