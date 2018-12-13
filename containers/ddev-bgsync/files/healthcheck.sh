@@ -23,7 +23,7 @@ CHECKFILE="healthcheck.$(date +%Y%m%d%H%M%S)"
 
 SYNC_SOURCE=${SYNC_SOURCE:-/source}
 SYNC_DESTINATION=${SYNC_DESTINATION:-/destination}
-HEALTHCHECK_DIR=${HEALTHCHECK_DIR:-.bgsync_healthcheck}
+HEALTHCHECK_DIR=${HEALTHCHECK_DIR:-.ddev/.bgsync_healthcheck}
 
 function cleanup {
     rm -f ${SYNC_SOURCE}/${HEALTHCHECK_DIR}/healthcheck.* ${SYNC_DESTINATION}/${HEALTHCHECK_DIR}/healthcheck.*

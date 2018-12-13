@@ -57,7 +57,7 @@ log_error_exit() {
 
 # Healthcheck dir is used to make sure sync is occuring.
 # TODO: Remove the directory when stopping container.
-export HEALTHCHECK_DIR=${HEALTHCHECK_DIR:-.bgsync_healthcheck}
+export HEALTHCHECK_DIR=${HEALTHCHECK_DIR:-.ddev/.bgsync_healthcheck}
 
 log_heading "Starting bg-sync"
 
