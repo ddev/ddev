@@ -52,18 +52,11 @@ services:
           nocopy: true
         {{ end }}
       - ".:/mnt/ddev_config:ro"
-      {{ if not .OmitSSHAgent }}
-      - type: "volume"
-        source: ddev-ssh-agent_socket_dir
-        target: "/home/.ssh-agent"
-      {{ end }}
-      - type: "volume"
-        source: ddev-composer-cache
-        target: "/mnt/composer_cache"
-        volume:
-          nocopy: true
-      - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       - ddev-composer-cache:/mnt/composer_cache
+      {{ if not .OmitSSHAgent }}
+      - ddev-ssh-agent_socket_dir:/home/.ssh-agent
+      {{ end }}
+
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     links:
