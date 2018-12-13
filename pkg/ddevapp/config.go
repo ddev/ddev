@@ -334,6 +334,12 @@ func (app *DdevApp) ValidateConfig() error {
 	if !IsValidMariaDBVersion(app.MariaDBVersion) {
 		return fmt.Errorf("Invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
 	}
+
+	// Validate webcache_enabled
+	if runtime.GOOS != "darwin" && app.WebcacheEnabled && !globalconfig.DdevGlobalConfig.DeveloperMode {
+		return fmt.Errorf("webcache_enabled: true is not yet avalable for %s", runtime.GOOS)
+	}
+
 	return nil
 }
 
