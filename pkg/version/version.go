@@ -100,10 +100,10 @@ func GetVersionInfo() map[string]string {
 	versionInfo["domain"] = DDevTLD
 	versionInfo["build info"] = BUILDINFO
 	if versionInfo["docker"], err = GetDockerVersion(); err != nil {
-		_ = fmt.Errorf("failed to GetDockerVersion(): %v", err)
+		versionInfo["docker"] = fmt.Sprintf("failed to GetDockerVersion(): %v", err)
 	}
 	if versionInfo["docker-compose"], err = GetDockerComposeVersion(); err != nil {
-		_ = fmt.Errorf("failed to GetDockerComposeVersion(): %v", err)
+		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
 	}
 
 	return versionInfo
