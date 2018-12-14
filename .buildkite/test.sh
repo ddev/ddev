@@ -4,12 +4,7 @@
 
 # Manufacture a $GOPATH environment that can mount on docker (when buildkite build)
 if [ ! -z "$BUILDKITE_JOB_ID" ]; then
-	export GOPATH=~/tmp/buildkite/$BUILDKITE_JOB_ID
-	DRUDSRC=$GOPATH/src/github.com/drud
-	mkdir -p $DRUDSRC
-	ln -s $PWD $DRUDSRC/ddev
-	cd $DRUDSRC/ddev
-	echo "--- buildkite building $BUILDKITE_JOB_ID at $(date) on $(hostname) for OS=$(go env GOOS) in $DRUDSRC/ddev"
+	echo "--- buildkite building $BUILDKITE_JOB_ID at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with docker $(docker version)"
 fi
 
 export GOTEST_SHORT=1
