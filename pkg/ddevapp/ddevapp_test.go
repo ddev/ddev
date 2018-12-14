@@ -1650,12 +1650,19 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure we have a site started so we have something to cleanup
-	err = app.Start()
+	err = app.StartAndWaitForSync(2)
 	assert.NoError(err)
 	// Setup by creating temp directory and nesting a folder for our site.
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
-	defer removeAllErrCheck(tempPath, assert)
+
+	//nolint: errcheck
+	defer os.RemoveAll(tempPath)
+	//nolint: errcheck
+	defer revertDir()
+	// Move the site directory back to its original location.
+	//nolint: errcheck
+	defer os.Rename(siteCopyDest, site.Dir)
 
 	// Move site directory to a temp directory to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
@@ -1681,10 +1688,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
 
-	revertDir()
-	// Move the site directory back to its original location.
-	err = os.Rename(siteCopyDest, site.Dir)
-	assert.NoError(err)
 }
 
 // TestGetappsEmpty ensures that GetApps returns an empty list when no applications are running.
