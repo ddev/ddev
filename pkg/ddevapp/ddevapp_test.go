@@ -183,6 +183,12 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
+		err = app.WriteConfig()
+		if err != nil {
+			testRun = -1
+			log.Errorf("TestMain startup: app.WriteConfig() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			continue
+		}
 		// TODO: webcache PR will add other volumes that should be removed here.
 		for _, volume := range []string{app.Name + "-mariadb"} {
 			err = dockerutil.RemoveVolume(volume)
@@ -190,6 +196,7 @@ func TestMain(m *testing.M) {
 				log.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
 			}
 		}
+
 		switchDir()
 	}
 
@@ -1249,8 +1256,11 @@ func TestDdevExec(t *testing.T) {
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
-		err = app.StartAndWaitForSync(0)
-		assert.NoError(err)
+		startErr := app.StartAndWaitForSync(0)
+		if startErr != nil {
+			logs, _ := ddevapp.GetErrLogsFromApp(app, startErr)
+			require.NoError(t, startErr, "Start() failed: %v, logs from broken container:\n=======\n%s\n========\n", startErr, logs)
+		}
 
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",

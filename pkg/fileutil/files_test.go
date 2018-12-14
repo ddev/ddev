@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/drud/ddev/pkg/fileutil"
@@ -143,6 +144,66 @@ func TestReplaceStringInFile(t *testing.T) {
 	found, err := fileutil.FgrepStringInFile(newFilePath, "specialJUNKPattern")
 	assert.NoError(err)
 	assert.True(found)
+}
+
+// TestFindSimulatedXsymSymlinks tests FindSimulatedXsymSymlinks
+func TestFindSimulatedXsymSymlinks(t *testing.T) {
+	assert := asrt.New(t)
+	testDir, _ := os.Getwd()
+	targetDir := filepath.Join(testDir, "testdata", "symlinks")
+	links, err := fileutil.FindSimulatedXsymSymlinks(targetDir)
+	assert.NoError(err)
+	assert.Len(links, 8)
+}
+
+// TestReplaceSimulatedXsymSymlinks tries a number of symlinks to make
+// sure we can parse and replace symlinks.
+func TestReplaceSimulatedXsymSymlinks(t *testing.T) {
+	testDir, _ := os.Getwd()
+	assert := asrt.New(t)
+	if runtime.GOOS == "windows" && !fileutil.CanCreateSymlinks() {
+		t.Skip("Skipping on Windows because test machine can't create symlnks")
+	}
+	sourceDir := filepath.Join(testDir, "testdata", "symlinks")
+	targetDir := testcommon.CreateTmpDir("TestReplaceSimulated")
+	//nolint: errcheck
+	defer os.RemoveAll(targetDir)
+	err := os.Chdir(targetDir)
+	assert.NoError(err)
+
+	// Make sure we leave the testDir as we found it..
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+	// CopyDir skips real symlinks, but we only care about simulated ones, so it's OK
+	err = fileutil.CopyDir(sourceDir, filepath.Join(targetDir, "symlinks"))
+	assert.NoError(err)
+	links, err := fileutil.FindSimulatedXsymSymlinks(targetDir)
+	assert.NoError(err)
+	assert.Len(links, 8)
+	err = fileutil.ReplaceSimulatedXsymSymlinks(links)
+	assert.NoError(err)
+
+	for _, link := range links {
+		fi, err := os.Stat(link.LinkLocation)
+		assert.NoError(err)
+		linkFi, err := os.Lstat(link.LinkLocation)
+		assert.NoError(err)
+		if err == nil && fi != nil && !fi.IsDir() {
+			// Read the symlink as a file. It should resolve with the actual content of target
+			contents, err := ioutil.ReadFile(link.LinkLocation)
+			assert.NoError(err)
+			expectedContent := "textfile " + filepath.Base(link.LinkTarget) + "\n"
+			assert.Equal(expectedContent, string(contents))
+		}
+		// Now stat the link and make sure it's a link and points where it should
+		if linkFi.Mode()&os.ModeSymlink != 0 {
+			targetFile, err := os.Readlink(link.LinkLocation)
+			assert.NoError(err)
+			assert.Equal(link.LinkTarget, targetFile)
+			_ = targetFile
+		}
+	}
+
 }
 
 // TestIsSameFile tests the IsSameFile utility function.
