@@ -2,6 +2,7 @@ package version
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/dockerutil"
 )
 
 // MariaDBDefaultVersion is the default version we use in the db container
@@ -83,6 +84,7 @@ const DDevTLD = "ddev.local"
 
 // GetVersionInfo returns a map containing the version info defined above.
 func GetVersionInfo() map[string]string {
+	var err error
 	versionInfo := make(map[string]string)
 
 	versionInfo["cli"] = DdevVersion
@@ -95,8 +97,12 @@ func GetVersionInfo() map[string]string {
 	versionInfo["commit"] = COMMIT
 	versionInfo["domain"] = DDevTLD
 	versionInfo["build info"] = BUILDINFO
-	versionInfo["docker"] = DockerVersion
-	versionInfo["docker-compose"] = DockerComposeVersion
+	if versionInfo["docker"], err = dockerutil.GetDockerVersion(); err != nil {
+		_ = fmt.Errorf("failed to GetDockerVersion(): %v", err)
+	}
+	if versionInfo["docker-compose"], err = dockerutil.GetDockerComposeVersion(); err != nil {
+		_ = fmt.Errorf("failed to GetDockerComposeVersion(): %v", err)
+	}
 
 	return versionInfo
 }
