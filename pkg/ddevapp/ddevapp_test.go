@@ -1841,7 +1841,7 @@ func TestHttpsRedirection(t *testing.T) {
 		// Do a start on the configured site.
 		app, err = ddevapp.GetActiveApp("")
 		assert.NoError(err)
-		err = app.StartAndWaitForSync(2)
+		err = app.StartAndWaitForSync(5)
 		assert.NoError(err, "failed to StartAndWaitForSync on project %s webserverType=%s: %v", app.Name, webserverType, err)
 		if err != nil {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
