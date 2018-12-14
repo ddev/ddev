@@ -556,6 +556,8 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
+	defer switchDir()
+
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ConfigOverrideDetection", site.Name))
 
 	// Copy test overrides into the project .ddev directory
@@ -577,7 +579,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	assert.NoError(err)
 
 	restoreOutput := util.CaptureUserOut()
-	startErr := app.Start()
+	startErr := app.StartAndWaitForSync(2)
 	out := restoreOutput()
 	//nolint: errcheck
 	defer app.Down(true, false)
@@ -587,7 +589,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 		logs, _ = GetErrLogsFromApp(app, startErr)
 	}
 
-	require.NoError(t, startErr, "app.Start() did not succeed: output:\n=====\n%s\n===== logs:\n========= logs =======\n%s\n========\n", out, logs)
+	require.NoError(t, startErr, "app.StartAndWaitForSync() did not succeed: output:\n=====\n%s\n===== logs:\n========= logs =======\n%s\n========\n", out, logs)
 
 	assert.Contains(out, "utf.cnf")
 	assert.Contains(out, "my-php.ini")
@@ -601,6 +603,5 @@ func TestConfigOverrideDetection(t *testing.T) {
 		assert.NotContains(out, "nginx-site.conf")
 	}
 	assert.Contains(out, "Custom configuration takes effect")
-	switchDir()
 	runTime()
 }

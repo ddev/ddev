@@ -580,6 +580,9 @@ func TestDdevImportDB(t *testing.T) {
 			path := filepath.Join(testDir, "testdata", file)
 			err = app.ImportDB(path, "")
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+			if err != nil {
+				continue
+			}
 
 			// Test that a settings file has correct hash_salt format
 			switch app.Type {
@@ -665,7 +668,7 @@ func TestDdevOldMariaDB(t *testing.T) {
 	assert.NoError(err)
 	app.MariaDBVersion = ddevapp.MariaDB101
 	app.DBImage = version.GetDBImage(app.MariaDBVersion)
-	err = app.Start()
+	err = app.StartAndWaitForSync(2)
 	//nolint: errcheck
 	defer app.Down(true, false)
 
@@ -746,7 +749,7 @@ func TestDdevExportDB(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.Start()
+	err = app.StartAndWaitForSync(0)
 	assert.NoError(err)
 	//nolint: errcheck
 	defer app.Down(true, false)
