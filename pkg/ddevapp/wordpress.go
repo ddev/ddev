@@ -120,7 +120,8 @@ const wordpressDdevSettingsTemplate = `<?php
 {{ $config := . }}
 /**
 {{ $config.Signature }}: Automatically generated WordPress settings file.
-This file is managed by ddev and may be deleted or overwritten.
+ ddev manages this file and may delete or overwrite the file unless this comment is removed.
+
 */
 
 /** The name of the database for WordPress */
