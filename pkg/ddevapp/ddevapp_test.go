@@ -1968,8 +1968,8 @@ func TestGetAllURLs(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		err = app.Start()
-		assert.NoError(err)
+		err = app.StartAndWaitForSync(0)
+		require.NoError(t, err)
 
 		urls := app.GetAllURLs()
 
@@ -1986,9 +1986,10 @@ func TestGetAllURLs(t *testing.T) {
 		// Ensure urlMap contains direct address of the web container
 		webContainer, err := app.FindContainerByType("web")
 		assert.NoError(err)
+		require.NotEmpty(t, webContainer)
 
 		dockerIP, err := dockerutil.GetDockerIP()
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		// Find HTTP port of web container
 		var port docker.APIPort
