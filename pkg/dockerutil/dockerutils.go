@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"io"
 	"log"
@@ -346,25 +347,11 @@ func GetContainerEnv(key string, container docker.APIContainers) string {
 	return ""
 }
 
-// GetDockerVersion gets the cached or api-sourced version of docker engine
-func GetDockerVersion() (string, error) {
-	if version.DockerVersion != "" {
-		return version.DockerVersion, nil
-	}
-	client := GetDockerClient()
-	v, err := client.Version()
-	if err != nil {
-		return "", err
-	}
-	version.DockerVersion = v.Get("Version")
-	return version.DockerVersion, nil
-}
-
 // CheckDockerVersion determines if the docker version of the host system meets the provided version
 // constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
 func CheckDockerVersion(versionConstraint string) error {
-	currentVersion, err := GetDockerVersion()
+	currentVersion, err := util.GetDockerVersion()
 	if err != nil {
 		return fmt.Errorf("no docker")
 	}

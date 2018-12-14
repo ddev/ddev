@@ -1,6 +1,8 @@
 package util
 
 import (
+	"github.com/drud/ddev/pkg/version"
+	"github.com/fsouza/go-dockerclient"
 	"math/rand"
 	"os"
 	osexec "os/exec"
@@ -174,4 +176,23 @@ func IsCommandAvailable(cmdName string) bool {
 func GetFirstWord(s string) string {
 	arr := strings.Split(s, " ")
 	return arr[0]
+}
+
+// GetDockerVersion gets the cached or api-sourced version of docker engine
+func GetDockerVersion() (string, error) {
+	if version.DockerVersion != "" {
+		return version.DockerVersion, nil
+	}
+	var client *docker.Client
+	var err error
+	if client, err = docker.NewClientFromEnv(); err != nil {
+		return "", err
+	}
+
+	v, err := client.Version()
+	if err != nil {
+		return "", err
+	}
+	version.DockerVersion = v.Get("Version")
+	return version.DockerVersion, nil
 }

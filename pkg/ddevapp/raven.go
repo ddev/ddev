@@ -16,7 +16,7 @@ import (
 // Set the basic always-used tags for Sentry/Raven
 func SetRavenBaseTags() {
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		dockerVersion, _ := dockerutil.GetDockerVersion()
+		dockerVersion, _ := util.GetDockerVersion()
 		composeVersion, _ := dockerutil.GetDockerComposeVersion()
 		isToolbox := util.IsDockerToolbox()
 
