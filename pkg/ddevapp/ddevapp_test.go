@@ -580,6 +580,9 @@ func TestDdevImportDB(t *testing.T) {
 			path := filepath.Join(testDir, "testdata", file)
 			err = app.ImportDB(path, "")
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+			if err != nil {
+				continue
+			}
 
 			// Test that a settings file has correct hash_salt format
 			switch app.Type {
@@ -665,7 +668,7 @@ func TestDdevOldMariaDB(t *testing.T) {
 	assert.NoError(err)
 	app.MariaDBVersion = ddevapp.MariaDB101
 	app.DBImage = version.GetDBImage(app.MariaDBVersion)
-	err = app.Start()
+	err = app.StartAndWaitForSync(2)
 	//nolint: errcheck
 	defer app.Down(true, false)
 
@@ -746,7 +749,7 @@ func TestDdevExportDB(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.Start()
+	err = app.StartAndWaitForSync(0)
 	assert.NoError(err)
 	//nolint: errcheck
 	defer app.Down(true, false)
@@ -1650,12 +1653,19 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure we have a site started so we have something to cleanup
-	err = app.Start()
+	err = app.StartAndWaitForSync(2)
 	assert.NoError(err)
 	// Setup by creating temp directory and nesting a folder for our site.
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
-	defer removeAllErrCheck(tempPath, assert)
+
+	//nolint: errcheck
+	defer os.RemoveAll(tempPath)
+	//nolint: errcheck
+	defer revertDir()
+	// Move the site directory back to its original location.
+	//nolint: errcheck
+	defer os.Rename(siteCopyDest, site.Dir)
 
 	// Move site directory to a temp directory to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
@@ -1681,10 +1691,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 		assert.False(volume.Labels["com.docker.compose.project"] == "ddev"+strings.ToLower(app.GetName()))
 	}
 
-	revertDir()
-	// Move the site directory back to its original location.
-	err = os.Rename(siteCopyDest, site.Dir)
-	assert.NoError(err)
 }
 
 // TestGetappsEmpty ensures that GetApps returns an empty list when no applications are running.
@@ -1841,7 +1847,7 @@ func TestHttpsRedirection(t *testing.T) {
 		// Do a start on the configured site.
 		app, err = ddevapp.GetActiveApp("")
 		assert.NoError(err)
-		err = app.StartAndWaitForSync(2)
+		err = app.StartAndWaitForSync(5)
 		assert.NoError(err, "failed to StartAndWaitForSync on project %s webserverType=%s: %v", app.Name, webserverType, err)
 		if err != nil {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
@@ -1965,8 +1971,8 @@ func TestGetAllURLs(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		err = app.Start()
-		assert.NoError(err)
+		err = app.StartAndWaitForSync(0)
+		require.NoError(t, err)
 
 		urls := app.GetAllURLs()
 
@@ -1983,9 +1989,10 @@ func TestGetAllURLs(t *testing.T) {
 		// Ensure urlMap contains direct address of the web container
 		webContainer, err := app.FindContainerByType("web")
 		assert.NoError(err)
+		require.NotEmpty(t, webContainer)
 
 		dockerIP, err := dockerutil.GetDockerIP()
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		// Find HTTP port of web container
 		var port docker.APIPort

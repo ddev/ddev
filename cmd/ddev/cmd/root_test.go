@@ -1,20 +1,16 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"os"
 	"testing"
 
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
 	log "github.com/sirupsen/logrus"
 
 	"path/filepath"
 
-	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/output"
@@ -162,35 +158,6 @@ func addSites() error {
 		if err != nil {
 			log.Fatalln("Error Output from ddev start:", out, "err:", err)
 		}
-
-		app, err := ddevapp.GetActiveApp("")
-		if err != nil {
-			log.Fatalln("Could not find an active ddev configuration:", err)
-		}
-
-		// Warning: assumes web at port 80, will need adjustment in the future.
-		dockerIP, err := dockerutil.GetDockerIP()
-		if err != nil {
-			util.Warning("Unable to GetDockerIP: %v", err)
-		}
-
-		urls := []string{
-			"http://" + dockerIP + "/" + site.HTTPProbeURI,
-			"http://" + dockerIP + ":" + appports.GetPort("mailhog"),
-			"http://" + dockerIP + ":" + appports.GetPort("dba"),
-		}
-
-		for _, url := range urls {
-			o := util.NewHTTPOptions(url)
-			o.ExpectedStatus = 200
-			o.Timeout = 180
-			o.Headers["Host"] = app.HostName()
-			err = util.EnsureHTTPStatus(o)
-			if err != nil {
-				return fmt.Errorf("failed to ensureHTTPStatus on %s url=%s", app.HostName(), url)
-			}
-		}
-
 	}
 	return nil
 }

@@ -384,9 +384,8 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string,
 		time.Sleep(time.Second)
 		body, resp, err = GetLocalHTTPResponse(t, rawurl, httpTimeout)
 	}
-	t.Logf("request %s got resp=%v, body:\n========\n%s\n==========\n", rawurl, resp, body)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
-	assert.Contains(body, expectedContent)
+	assert.Contains(body, expectedContent, "request %s got resp=%v, body:\n========\n%s\n==========\n", rawurl, resp, body)
 	return resp, err
 }
 

@@ -3,12 +3,13 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
 	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/drud/ddev/pkg/globalconfig"
 
 	"regexp"
 
@@ -456,6 +457,24 @@ func (app *DdevApp) CheckCustomConfig() {
 
 }
 
+type composeYAMLVars struct {
+	Name            string
+	Plugin          string
+	AppType         string
+	MailhogPort     string
+	DBAPort         string
+	DBPort          string
+	DdevGenerated   string
+	ExtraHost       string
+	ComposeVersion  string
+	MountType       string
+	WebMount        string
+	OmitDBA         bool
+	OmitSSHAgent    bool
+	WebcacheEnabled bool
+	IsWindowsFS     bool
+}
+
 // RenderComposeYAML renders the contents of docker-compose.yaml.
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
@@ -467,6 +486,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	// Docker 18.03 on linux doesn't define host.docker.internal
 	// so we need to go get the ip address of docker0
 	// We would hope to be able to remove this when
@@ -484,38 +504,26 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	}
 
-	var includeDBA = "includeItByDefault"
-	if util.ArrayContainsString(app.OmitContainers, "dba") {
-		includeDBA = ""
+	templateVars := composeYAMLVars{
+		Name:            app.Name,
+		Plugin:          "ddev",
+		AppType:         app.Type,
+		MailhogPort:     appports.GetPort("mailhog"),
+		DBAPort:         appports.GetPort("dba"),
+		DBPort:          appports.GetPort("db"),
+		DdevGenerated:   DdevFileSignature,
+		ExtraHost:       docker0Hostname + `:` + docker0Addr,
+		ComposeVersion:  version.DockerComposeFileFormatVersion,
+		OmitDBA:         util.ArrayContainsString(app.OmitContainers, "dba"),
+		OmitSSHAgent:    util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
+		WebcacheEnabled: app.WebcacheEnabled,
+		IsWindowsFS:     runtime.GOOS == "windows",
+		MountType:       "bind",
+		WebMount:        "../",
 	}
-	var includeBGSYNC = ""
-	var mountType = "bind"
-	webMount := "../"
-	if app.WebcacheEnabled {
-		includeBGSYNC = "true"
-		webMount = "webcachevol"
-		mountType = "volume"
-	}
-
-	isWindowsFS := "false"
-	if runtime.GOOS == "windows" {
-		isWindowsFS = "true"
-	}
-	templateVars := map[string]string{
-		"name":            app.Name,
-		"plugin":          "ddev",
-		"appType":         app.Type,
-		"webMount":        webMount,
-		"mailhogport":     appports.GetPort("mailhog"),
-		"dbaport":         appports.GetPort("dba"),
-		"dbport":          appports.GetPort("db"),
-		"ddevgenerated":   DdevFileSignature,
-		"extra_host":      docker0Hostname + `:` + docker0Addr,
-		"compose_version": version.DockerComposeFileFormatVersion,
-		"IncludeDBA":      includeDBA,
-		"IncludeBGSYNC":   includeBGSYNC,
-		"IsWindowsFS":     isWindowsFS,
-		"mountType":       mountType,
+	if templateVars.WebcacheEnabled {
+		templateVars.MountType = "volume"
+		templateVars.WebMount = "webcachevol"
 	}
 
 	err = templ.Execute(&doc, templateVars)
