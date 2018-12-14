@@ -22,4 +22,8 @@ func TestVersion(t *testing.T) {
 	assert.Contains(string(out), version.DBAImg)
 	assert.Contains(string(out), version.DBATag)
 	assert.Contains(string(out), version.DDevTLD)
+	assert.NotEmpty(version.DockerVersion)
+	assert.NotEmpty(version.DockerComposeVersion)
+	assert.Contains(string(out), version.DockerVersion)
+	assert.Contains(string(out), version.DockerComposeVersion)
 }
