@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"io"
 	"log"
@@ -351,7 +350,7 @@ func GetContainerEnv(key string, container docker.APIContainers) string {
 // constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
 func CheckDockerVersion(versionConstraint string) error {
-	currentVersion, err := util.GetDockerVersion()
+	currentVersion, err := version.GetDockerVersion()
 	if err != nil {
 		return fmt.Errorf("no docker")
 	}
@@ -380,33 +379,10 @@ func CheckDockerVersion(versionConstraint string) error {
 	return nil
 }
 
-// GetDockerComposeVersion runs docker-compose -v to get the current version
-func GetDockerComposeVersion() (string, error) {
-	if version.DockerComposeVersion != "" {
-		return version.DockerComposeVersion, nil
-	}
-
-	executableName := "docker-compose"
-
-	path, err := exec.LookPath(executableName)
-	if err != nil {
-		return "", fmt.Errorf("no docker-compose")
-	}
-
-	out, err := exec.Command(path, "version", "--short").Output()
-	if err != nil {
-		return "", err
-	}
-
-	v := string(out)
-	version.DockerComposeVersion = strings.TrimSpace(v)
-	return version.DockerComposeVersion, nil
-}
-
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This
 // relies on docker-compose being somewhere in the user's $PATH.
 func CheckDockerCompose(versionConstraint string) error {
-	version, err := GetDockerComposeVersion()
+	version, err := version.GetDockerComposeVersion()
 	if err != nil {
 		return err
 	}
