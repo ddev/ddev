@@ -2,10 +2,7 @@
 
 # This script is used to build drud/ddev using buildkite
 
-# Manufacture a $GOPATH environment that can mount on docker (when buildkite build)
-if [ ! -z "$BUILDKITE_JOB_ID" ]; then
-	echo "--- buildkite building $BUILDKITE_JOB_ID at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with docker $(docker version)"
-fi
+echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with docker $(docker version) and docker-compose $(docker-compose -v)"
 
 export GOTEST_SHORT=1
 export DRUD_NONINTERACTIVE=true
