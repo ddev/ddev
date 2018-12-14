@@ -252,7 +252,7 @@ if (version_compare($version, "7.0") > 0) {
   );
 } else {
   // or the old db_url format for d6
-  $db_url = 'mysql://db:db@{{ $config.DatabaseHost }}:{{ $config.DatabasePort }}/db';
+  $db_url = 'mysqli://db:db@{{ $config.DatabaseHost }}:{{ $config.DatabasePort }}/db';
 }
 `
 
@@ -366,6 +366,8 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings()
+	// mysqli is required in latest D6LTS and works fine in ddev in old D6
+	drupalConfig.DatabaseDriver = "mysqli"
 
 	if err := manageDrupalSettingsFile(app, drupalConfig, drupal6SettingsTemplate, drupal6SettingsAppendTemplate); err != nil {
 		return "", err
