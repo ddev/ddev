@@ -755,6 +755,8 @@ func TestDdevExportDB(t *testing.T) {
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
+	defer switchDir()
+
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevExportDB", site.Name))
 
 	testcommon.ClearDockerEnv()
@@ -808,7 +810,6 @@ func TestDdevExportDB(t *testing.T) {
 
 	// Try it with capture to stdout, validate contents.
 	runTime()
-	switchDir()
 }
 
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
