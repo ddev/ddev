@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/netutil"
 	"html/template"
 	"os"
 	"path"
@@ -241,7 +242,7 @@ func CheckRouterPorts() error {
 		if util.ArrayContainsString(existingExposedPorts, port) {
 			continue
 		}
-		if util.IsPortActive(port) {
+		if netutil.IsPortActive(port) {
 			return fmt.Errorf("port %s is already in use", port)
 		}
 	}

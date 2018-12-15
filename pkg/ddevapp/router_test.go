@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"github.com/drud/ddev/pkg/netutil"
 	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
@@ -8,7 +9,6 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -54,8 +54,8 @@ func TestPortOverride(t *testing.T) {
 		// These ports will already be active if on the standard port, because
 		// the TestMain has started stuff up on the standard ports.
 		if i != 0 {
-			assert.False(util.IsPortActive(app.RouterHTTPPort))
-			assert.False(util.IsPortActive(app.RouterHTTPSPort))
+			assert.False(netutil.IsPortActive(app.RouterHTTPPort))
+			assert.False(netutil.IsPortActive(app.RouterHTTPSPort))
 		}
 
 		err = app.Start()
@@ -72,8 +72,8 @@ func TestPortOverride(t *testing.T) {
 		require.NoError(t, err, "failed to app.Start(), logs=\n=========\n%s\n===========\n", logs)
 		err = app.Wait([]string{"web"})
 		assert.NoError(err)
-		assert.True(util.IsPortActive(app.RouterHTTPPort))
-		assert.True(util.IsPortActive(app.RouterHTTPSPort))
+		assert.True(netutil.IsPortActive(app.RouterHTTPPort))
+		assert.True(netutil.IsPortActive(app.RouterHTTPSPort))
 	}
 
 }

@@ -1,7 +1,6 @@
 package ddevapp
 
 import (
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/ravenutils"
 	"github.com/drud/ddev/pkg/util"
@@ -16,8 +15,8 @@ import (
 // Set the basic always-used tags for Sentry/Raven
 func SetRavenBaseTags() {
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		dockerVersion, _ := dockerutil.GetDockerVersion()
-		composeVersion, _ := dockerutil.GetDockerComposeVersion()
+		dockerVersion, _ := version.GetDockerVersion()
+		composeVersion, _ := version.GetDockerComposeVersion()
 		isToolbox := util.IsDockerToolbox()
 
 		raven.SetRelease("ddev@" + version.COMMIT)

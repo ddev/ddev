@@ -20,4 +20,6 @@ func TestGetVersionInfo(t *testing.T) {
 	assert.Equal(COMMIT, v["commit"])
 	assert.Equal(DDevTLD, v["domain"])
 	assert.Equal(BUILDINFO, v["build info"])
+	assert.NotEmpty(v["docker-compose"])
+	assert.NotEmpty(v["docker"])
 }

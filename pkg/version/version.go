@@ -2,6 +2,9 @@ package version
 
 import (
 	"fmt"
+	"github.com/fsouza/go-dockerclient"
+	"os/exec"
+	"strings"
 )
 
 // MariaDBDefaultVersion is the default version we use in the db container
@@ -83,6 +86,7 @@ const DDevTLD = "ddev.local"
 
 // GetVersionInfo returns a map containing the version info defined above.
 func GetVersionInfo() map[string]string {
+	var err error
 	versionInfo := make(map[string]string)
 
 	versionInfo["cli"] = DdevVersion
@@ -95,8 +99,12 @@ func GetVersionInfo() map[string]string {
 	versionInfo["commit"] = COMMIT
 	versionInfo["domain"] = DDevTLD
 	versionInfo["build info"] = BUILDINFO
-	versionInfo["docker"] = DockerVersion
-	versionInfo["docker-compose"] = DockerComposeVersion
+	if versionInfo["docker"], err = GetDockerVersion(); err != nil {
+		versionInfo["docker"] = fmt.Sprintf("failed to GetDockerVersion(): %v", err)
+	}
+	if versionInfo["docker-compose"], err = GetDockerComposeVersion(); err != nil {
+		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
+	}
 
 	return versionInfo
 }
@@ -123,4 +131,46 @@ func GetDBAImage() string {
 // GetDBAImage returns the correctly formatted dba image:tag reference
 func GetBgsyncImage() string {
 	return fmt.Sprintf("%s:%s", BgsyncImg, BgsyncTag)
+}
+
+// GetDockerComposeVersion runs docker-compose -v to get the current version
+func GetDockerComposeVersion() (string, error) {
+	if DockerComposeVersion != "" {
+		return DockerComposeVersion, nil
+	}
+
+	executableName := "docker-compose"
+
+	path, err := exec.LookPath(executableName)
+	if err != nil {
+		return "", fmt.Errorf("no docker-compose")
+	}
+
+	out, err := exec.Command(path, "version", "--short").Output()
+	if err != nil {
+		return "", err
+	}
+
+	v := string(out)
+	DockerComposeVersion = strings.TrimSpace(v)
+	return DockerComposeVersion, nil
+}
+
+// GetDockerVersion gets the cached or api-sourced version of docker engine
+func GetDockerVersion() (string, error) {
+	if DockerVersion != "" {
+		return DockerVersion, nil
+	}
+	var client *docker.Client
+	var err error
+	if client, err = docker.NewClientFromEnv(); err != nil {
+		return "", err
+	}
+
+	v, err := client.Version()
+	if err != nil {
+		return "", err
+	}
+	DockerVersion = v.Get("Version")
+	return DockerVersion, nil
 }

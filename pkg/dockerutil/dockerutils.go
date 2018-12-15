@@ -346,25 +346,11 @@ func GetContainerEnv(key string, container docker.APIContainers) string {
 	return ""
 }
 
-// GetDockerVersion gets the cached or api-sourced version of docker engine
-func GetDockerVersion() (string, error) {
-	if version.DockerVersion != "" {
-		return version.DockerVersion, nil
-	}
-	client := GetDockerClient()
-	v, err := client.Version()
-	if err != nil {
-		return "", err
-	}
-	version.DockerVersion = v.Get("Version")
-	return version.DockerVersion, nil
-}
-
 // CheckDockerVersion determines if the docker version of the host system meets the provided version
 // constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
 func CheckDockerVersion(versionConstraint string) error {
-	currentVersion, err := GetDockerVersion()
+	currentVersion, err := version.GetDockerVersion()
 	if err != nil {
 		return fmt.Errorf("no docker")
 	}
@@ -393,33 +379,10 @@ func CheckDockerVersion(versionConstraint string) error {
 	return nil
 }
 
-// GetDockerComposeVersion runs docker-compose -v to get the current version
-func GetDockerComposeVersion() (string, error) {
-	if version.DockerComposeVersion != "" {
-		return version.DockerComposeVersion, nil
-	}
-
-	executableName := "docker-compose"
-
-	path, err := exec.LookPath(executableName)
-	if err != nil {
-		return "", fmt.Errorf("no docker-compose")
-	}
-
-	out, err := exec.Command(path, "version", "--short").Output()
-	if err != nil {
-		return "", err
-	}
-
-	v := string(out)
-	version.DockerComposeVersion = strings.TrimSpace(v)
-	return version.DockerComposeVersion, nil
-}
-
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This
 // relies on docker-compose being somewhere in the user's $PATH.
 func CheckDockerCompose(versionConstraint string) error {
-	version, err := GetDockerComposeVersion()
+	version, err := version.GetDockerComposeVersion()
 	if err != nil {
 		return err
 	}
