@@ -120,7 +120,8 @@ const wordpressDdevSettingsTemplate = `<?php
 {{ $config := . }}
 /**
 {{ $config.Signature }}: Automatically generated WordPress settings file.
-This file is managed by ddev and may be deleted or overwritten.
+ ddev manages this file and may delete or overwrite the file unless this comment is removed.
+
 */
 
 /** The name of the database for WordPress */
@@ -176,7 +177,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 
 	config := NewWordpressConfig(app, absPath)
 
-	// Unconditionally write ddev settings file
+	//  write ddev settings file
 	if err := writeWordpressDdevSettingsFile(config, app.SiteLocalSettingsPath); err != nil {
 		return "", err
 	}
@@ -242,6 +243,20 @@ func writeWordpressSettingsFile(wordpressConfig *WordpressConfig, filePath strin
 
 // writeWordpressDdevSettingsFile unconditionally creates the file that contains ddev-specific settings.
 func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) error {
+	if fileutil.FileExists(filePath) {
+		// Check if the file is managed by ddev.
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		if err != nil {
+			return err
+		}
+
+		// If the signature wasn't found, warn the user and return.
+		if !signatureFound {
+			util.Warning("%s already exists and is managed by the user.", filepath.Base(filePath))
+			return nil
+		}
+	}
+
 	tmpl, err := template.New("wordpressConfig").Funcs(sprig.TxtFuncMap()).Parse(wordpressDdevSettingsTemplate)
 	if err != nil {
 		return err

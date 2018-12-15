@@ -169,6 +169,19 @@ func writeBackdropMainSettingsFile(settings *BackdropSettings, filePath string) 
 // writeBackdropDdevSettingsFile dynamically produces a valid settings.ddev.php file
 // by combining a configuration object with a data-driven template.
 func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) error {
+	if fileutil.FileExists(filePath) {
+		// Check if the file is managed by ddev.
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		if err != nil {
+			return err
+		}
+
+		// If the signature wasn't found, warn the user and return.
+		if !signatureFound {
+			util.Warning("%s already exists and is managed by the user.", filepath.Base(filePath))
+			return nil
+		}
+	}
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(backdropLocalSettingsTemplate)
 	if err != nil {
 		return err

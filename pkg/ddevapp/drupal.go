@@ -383,6 +383,20 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 // writeDrupal8DdevSettingsFile dynamically produces valid settings.ddev.php file by combining a configuration
 // object with a data-driven template.
 func writeDrupal8DdevSettingsFile(settings *DrupalSettings, filePath string) error {
+	if fileutil.FileExists(filePath) {
+		// Check if the file is managed by ddev.
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		if err != nil {
+			return err
+		}
+
+		// If the signature wasn't found, warn the user and return.
+		if !signatureFound {
+			util.Warning("%s already exists and is managed by the user.", filepath.Base(filePath))
+			return nil
+		}
+	}
+
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupal8DdevSettingsTemplate)
 	if err != nil {
 		return err
@@ -414,6 +428,20 @@ func writeDrupal8DdevSettingsFile(settings *DrupalSettings, filePath string) err
 // writeDrupal7DdevSettingsFile dynamically produces valid settings.ddev.php file by combining a configuration
 // object with a data-driven template.
 func writeDrupal7DdevSettingsFile(settings *DrupalSettings, filePath string) error {
+	if fileutil.FileExists(filePath) {
+		// Check if the file is managed by ddev.
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		if err != nil {
+			return err
+		}
+
+		// If the signature wasn't found, warn the user and return.
+		if !signatureFound {
+			util.Warning("%s already exists and is managed by the user.", filepath.Base(filePath))
+			return nil
+		}
+	}
+
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupal7DdevSettingsTemplate)
 	if err != nil {
 		return err
@@ -444,6 +472,19 @@ func writeDrupal7DdevSettingsFile(settings *DrupalSettings, filePath string) err
 // writeDrupal6DdevSettingsFile dynamically produces valid settings.ddev.php file by combining a configuration
 // object with a data-driven template.
 func writeDrupal6DdevSettingsFile(settings *DrupalSettings, filePath string) error {
+	if fileutil.FileExists(filePath) {
+		// Check if the file is managed by ddev.
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		if err != nil {
+			return err
+		}
+
+		// If the signature wasn't found, warn the user and return.
+		if !signatureFound {
+			util.Warning("%s already exists and is managed by the user.", filepath.Base(filePath))
+			return nil
+		}
+	}
 	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(drupal6DdevSettingsTemplate)
 	if err != nil {
 		return err

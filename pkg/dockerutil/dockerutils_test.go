@@ -24,6 +24,8 @@ var TestContainerName = "dockerutils-test"
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
+	EnsureDdevNetwork()
+
 	// prep docker container for docker util tests
 	client := GetDockerClient()
 	imageExists, err := ImageExistsLocally(version.WebImg + ":" + version.WebTag)
@@ -229,7 +231,6 @@ func TestComposeWithStreams(t *testing.T) {
 	assert.NoError(err)
 	output = stdout()
 	assert.Equal(output, "/var/run/apache2\n")
-
 }
 
 // TestCheckCompose tests detection of docker-compose.

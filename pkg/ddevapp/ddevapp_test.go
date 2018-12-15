@@ -307,7 +307,7 @@ func TestDdevStart(t *testing.T) {
 	// Try to start a site of same name at an equivalent but different path. It should work.
 	tmpDir, err := testcommon.OsTempDir()
 	assert.NoError(err)
-	symlink := filepath.Join(tmpDir, "a-symlink")
+	symlink := filepath.Join(tmpDir, fileutil.RandomFilenameBase())
 	err = os.Symlink(app.AppRoot, symlink)
 	assert.NoError(err)
 	//nolint: errcheck
@@ -666,13 +666,24 @@ func TestDdevOldMariaDB(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
+
+	// Make sure there isn't an old db laying around
+	_ = dockerutil.RemoveVolume(app.Name + "-mariadb")
+	//nolint: errcheck
+	defer dockerutil.RemoveVolume(app.Name + "-mariadb")
+
 	app.MariaDBVersion = ddevapp.MariaDB101
 	app.DBImage = version.GetDBImage(app.MariaDBVersion)
-	err = app.StartAndWaitForSync(2)
+	startErr := app.StartAndWaitForSync(5)
+	if startErr != nil {
+		appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+		assert.NoError(err)
+		require.NoError(t, err, "app start failure; logs:\n=====\n%s\n=====\n", appLogs)
+	}
+
 	//nolint: errcheck
 	defer app.Down(true, false)
 
-	require.NoError(t, err)
 	importPath := filepath.Join(testDir, "testdata", "users.sql")
 	err = app.ImportDB(importPath, "")
 	require.NoError(t, err)
