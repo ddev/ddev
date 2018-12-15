@@ -6,7 +6,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with docker $(docker version) and docker-compose $(docker-compose -v)"
+echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with docker $(docker version --format '{{.Server.Version}}') and docker-compose $(docker-compose version --short)"
 
 function cleanup {
     set +x

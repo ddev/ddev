@@ -2,7 +2,7 @@
 
 # This script is used to build drud/ddev using buildkite
 
-echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with docker $(docker version) and docker-compose $(docker-compose -v)"
+echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with docker $(docker version --format '{{.Server.Version}}') and docker-compose $(docker-compose version --short)"
 
 export GOTEST_SHORT=1
 export DRUD_NONINTERACTIVE=true
