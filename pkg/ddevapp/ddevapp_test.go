@@ -668,7 +668,7 @@ func TestDdevOldMariaDB(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure there isn't an old db laying around
-	_ := dockerutil.RemoveVolume(app.Name + "-mariadb")
+	_ = dockerutil.RemoveVolume(app.Name + "-mariadb")
 	//nolint: errcheck
 	defer dockerutil.RemoveVolume(app.Name + "-mariadb")
 

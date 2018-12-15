@@ -24,6 +24,8 @@ var TestContainerName = "dockerutils-test"
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
+	EnsureDdevNetwork()
+
 	// prep docker container for docker util tests
 	client := GetDockerClient()
 	imageExists, err := ImageExistsLocally(version.WebImg + ":" + version.WebTag)
@@ -189,7 +191,6 @@ func TestComposeCmd(t *testing.T) {
 func TestComposeWithStreams(t *testing.T) {
 	assert := asrt.New(t)
 
-	EnsureDdevNetwork()
 	// Use the current actual web container for this, so replace in base docker-compose file
 	composeBase := filepath.Join("testdata", "test-compose-with-streams.yaml")
 	tmp, err := ioutil.TempDir("", "")
