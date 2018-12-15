@@ -32,7 +32,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 1. Install [homebrew](https://brew.sh/)
-2. Install golang/git/docker with `brew install golang git buildkite-agent mariadb jq p7zip bats-core composer`
+2. Install golang/git/docker with `brew cask install google-chrome && brew tap buildkite/buildkite && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer`
 3. Install docker with `brew cask install docker`
 4. If the xcode command line tools are not yet installed, install them with `xcode select --install`
 5. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add the agent token and the tags. Tags will probably be like `"os=macos,osvariant=highsierra,dockertype=dockerformac"` - Also edit with `build-path="~/tmp/buildkite-agent/builds"`
