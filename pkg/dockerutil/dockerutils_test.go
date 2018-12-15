@@ -272,9 +272,10 @@ func TestRunSimpleContainer(t *testing.T) {
 	pwd, _ := os.Getwd()
 	pwd, _ = filepath.Abs(pwd)
 	testdata := filepath.Join(pwd, "testdata")
+	assert.FileExists(testdata)
 
 	// Try the success case; script found, runs, all good.
-	_, out, err := RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true)
+	_, out, err := RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + "://tempmount"}, "25", true)
 	assert.NoError(err)
 	assert.Contains(out, "simplescript.sh; TEMPENV=someenv UID=25")
 
