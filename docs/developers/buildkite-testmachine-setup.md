@@ -23,6 +23,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 13. Edit /c/ProgramData/git/config to `autocrlf: false` and verify that `git config --list` shows only autocrlf: false. 
 14. Run `winpty docker run -it -p 80 busybox ls` to trigger the Windows Defender warning, and "allow access".
 15. Try running .buildkite/sanetestbot.sh to check your work.
+16. Install ddev using the ddev_windows_installer.exe from https://github.com/drud/ddev/releases 
 16. Change the name of the machine to something in keeping with current style. Maybe `testbot-dell-toolbox-3`.
 17. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.)
 18. Set the timezone properly (US MT)
@@ -33,9 +34,12 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 1. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
 1. Install [homebrew](https://brew.sh/) `xcode select --install` and `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-2. Install golang/git/docker with `brew cask install item2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer`
+2. Install golang/git/docker with `brew cask install item2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew tap drud/ddev && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer ddev`
 4. If the xcode command line tools are not yet installed, install them with `xcode select --install`
-5. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add the agent token and the tags. Tags will probably be like `"os=macos,osvariant=highsierra,dockertype=dockerformac"`
+5. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add 
+    * the agent token 
+    * Tags, like `"os=macos,osvariant=highsierra,dockertype=dockerformac"`
+    *  `build-path="~/tmp/buildkite-agent/builds"`
 7. Enable nosleep using its shortcut in the Mac status bar.
 8. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
 9. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
