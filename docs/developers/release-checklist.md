@@ -1,6 +1,5 @@
 ## `ddev` Release Checklist 
-
-- [ ] For each container directory in `containers/`, `make push VERSION=vXXX` to ensure the current container version exists for building and testing
+- [ ] Create provisional tagged images. `git fetch upstream && git checkout upstream/master && cd containers` and `foreach item in *; do pushd $item; make push VERSION=<release_version> DOCKER_ARGS=--no-cache ; popd; done`
 - [ ] Update the default container versions in `pkg/version/version.go` and create a pull request
 - [ ] Once all updates have been merged into the master branch, [create a release](https://github.com/drud/ddev/releases/new) for the new version, initiating a tag build
 - [ ] Add the commit list (`git log vXXX..vYYY --oneline`) to the release page
