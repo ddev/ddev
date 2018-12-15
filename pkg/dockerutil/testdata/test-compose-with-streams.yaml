@@ -1,9 +1,8 @@
 networks:
   default:
-    external: true
-    name: ddev_default
+    external:
+      name: ddev_default
 services:
-
   web:
     container_name: ddev-test-compose-with-streams-web
     environment:

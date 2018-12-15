@@ -189,6 +189,7 @@ func TestComposeCmd(t *testing.T) {
 func TestComposeWithStreams(t *testing.T) {
 	assert := asrt.New(t)
 
+	EnsureDdevNetwork()
 	// Use the current actual web container for this, so replace in base docker-compose file
 	composeBase := filepath.Join("testdata", "test-compose-with-streams.yaml")
 	tmp, err := ioutil.TempDir("", "")
@@ -229,7 +230,6 @@ func TestComposeWithStreams(t *testing.T) {
 	assert.NoError(err)
 	output = stdout()
 	assert.Equal(output, "/var/run/apache2\n")
-
 }
 
 // TestCheckCompose tests detection of docker-compose.
