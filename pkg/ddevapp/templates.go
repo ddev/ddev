@@ -94,6 +94,10 @@ services:
     extra_hosts: ["{{ .ExtraHost }}"]
     external_links:
       - ddev-router:$DDEV_HOSTNAME
+    healthcheck:
+      interval: 4s
+      retries: 6
+      start_period: 10s
 {{ if .WebcacheEnabled }}
   bgsync:
     container_name: ddev-${DDEV_SITENAME}-bgsync
