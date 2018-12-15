@@ -31,17 +31,15 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 ### macOS Test Agent Setup
 
 0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
+1. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
 1. Install [homebrew](https://brew.sh/)
-2. Install golang/git/docker with `brew cask install google-chrome && brew tap buildkite/buildkite && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer`
-3. Install docker with `brew cask install docker`
+2. Install golang/git/docker with `brew cask install google-chrome && brew cask install docker && brew cask install nosleep && brew tap buildkite/buildkite && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer`
 4. If the xcode command line tools are not yet installed, install them with `xcode select --install`
 5. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add the agent token and the tags. Tags will probably be like `"os=macos,osvariant=highsierra,dockertype=dockerformac"` - Also edit with `build-path="~/tmp/buildkite-agent/builds"`
-6. Install nosleep `brew cask install nosleep`
 7. Enable nosleep using its shortcut in the Mac status bar.
 8. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
 9. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
-10. Try running .buildkite/sanetestbot.sh to check your work.
-11. Change the name of the machine to something in keeping with current style. Maybe `testbot-mbp2017-macos-3`.
+10. Try checking out ddev and running .buildkite/sanetestbot.sh to check your work.
 12. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
 13. Set the timezone properly (US MT)
 14. Reboot the machine and do a test run.
