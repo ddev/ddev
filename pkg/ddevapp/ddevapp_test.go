@@ -678,7 +678,7 @@ func TestDdevOldMariaDB(t *testing.T) {
 	if startErr != nil {
 		appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
-		require.NoError(t, err, "app start failure; logs:\n=====\n%s\n=====\n", appLogs)
+		require.NoError(t, err, "app start failure %v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
 	}
 
 	//nolint: errcheck
