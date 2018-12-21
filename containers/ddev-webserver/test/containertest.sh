@@ -51,44 +51,46 @@ if [ "$UNAME" = "MINGW64_NT-10.0" -o "$MOUNTUID" -ge 60000 ] ; then
 fi
 
 for v in 5.6 7.0 7.1 7.2 7.3; do
-	echo "starting container for tests on php$v"
+    for webserver_type in nginx-fpm apache-fpm apache-cgi; do
+        echo "starting container for tests on webserver=${webserver_type} php${v}"
 
-	docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -d --name $CONTAINER_NAME -v ddev-composer-cache:/mnt/composer-cache -d $DOCKER_IMAGE
-	if ! containercheck; then
-        exit 101
-    fi
+        docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -e "DDEV_WEBSERVER_TYPE=${webserver_type}" -d --name $CONTAINER_NAME -v ddev-composer-cache:/mnt/composer-cache -d $DOCKER_IMAGE
+        if ! containercheck; then
+            exit 101
+        fi
 
-	curl --fail localhost:$HOST_PORT/test/phptest.php
-	curl -s localhost:$HOST_PORT/test/test-email.php | grep "Test email sent"
-	docker exec -t $CONTAINER_NAME php --version | grep "PHP $v"
-	docker exec -t $CONTAINER_NAME drush --version
-	docker exec -t $CONTAINER_NAME wp --version
+        curl --fail localhost:$HOST_PORT/test/phptest.php
+        curl -s localhost:$HOST_PORT/test/test-email.php | grep "Test email sent"
+        docker exec -t $CONTAINER_NAME php --version | grep "PHP $v"
+        docker exec -t $CONTAINER_NAME drush --version
+        docker exec -t $CONTAINER_NAME wp --version
 
-	# Make sure composer create-project is working.
-	docker exec -t $CONTAINER_NAME composer create-project -d //tmp psr/log --no-dev --no-interaction
+        # Make sure composer create-project is working.
+        docker exec -t $CONTAINER_NAME composer create-project -d //tmp psr/log --no-dev --no-interaction
 
-    # Default settings for assert.active should be 1
-    docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 1 => 1"
+        # Default settings for assert.active should be 1
+        docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 1 => 1"
 
-	echo "testing error states for php$v"
-	# These are just the standard nginx 403 and 404 pages
-	curl localhost:$HOST_PORT/ | grep "403 Forbidden"
-	curl localhost:$HOST_PORT/asdf | grep "404 Not Found"
-	# We're just checking the error code here - there's not much more we can do in
-	# this case because the container is *NOT* intercepting 50x errors.
-	curl -w "%{http_code}" localhost:$HOST_PORT/test/500.php | grep 500
-	# 400 and 401 errors are intercepted by the same page.
-	curl localhost:$HOST_PORT/test/400.php | grep "ddev web container.*400"
-	curl localhost:$HOST_PORT/test/401.php | grep "ddev web container.*401"
+        echo "testing error states for php$v"
+        # These are just the standard nginx 403 and 404 pages
+        curl localhost:$HOST_PORT/ | grep "403 Forbidden"
+        curl localhost:$HOST_PORT/asdf | grep "404 Not Found"
+        # We're just checking the error code here - there's not much more we can do in
+        # this case because the container is *NOT* intercepting 50x errors.
+        curl -w "%{http_code}" localhost:$HOST_PORT/test/500.php | grep 500
+        # 400 and 401 errors are intercepted by the same page.
+        curl localhost:$HOST_PORT/test/400.php | grep "ddev web container.*400"
+        curl localhost:$HOST_PORT/test/401.php | grep "ddev web container.*401"
 
-	echo "testing php and email for php$v"
-	curl --fail localhost:$HOST_PORT/test/phptest.php
-	curl -s localhost:$HOST_PORT/test/test-email.php | grep "Test email sent"
+        echo "testing php and email for php$v"
+        curl --fail localhost:$HOST_PORT/test/phptest.php
+        curl -s localhost:$HOST_PORT/test/test-email.php | grep "Test email sent"
 
-    # Make sure the phpstatus url is working for testing php-fpm.
-    curl -s localhost:$HOST_PORT/phpstatus | grep "idle processes"
+        # Make sure the phpstatus url is working for testing php-fpm.
+        curl -s localhost:$HOST_PORT/phpstatus | grep "idle processes"
 
-	docker rm -f $CONTAINER_NAME
+        docker rm -f $CONTAINER_NAME
+	done
 done
 
 # Run various project_types and check behavior.
