@@ -52,10 +52,11 @@ fi
 
 for v in 5.6 7.0 7.1 7.2 7.3; do
     for webserver_type in nginx-fpm apache-fpm apache-cgi; do
-        echo "starting container for tests on webserver=${webserver_type} php${v}"
+        echo "================\nstarting container for tests on webserver=${webserver_type} php${v}\n============="
 
         docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -e "DDEV_WEBSERVER_TYPE=${webserver_type}" -d --name $CONTAINER_NAME -v ddev-composer-cache:/mnt/composer-cache -d $DOCKER_IMAGE
         if ! containercheck; then
+            echo "===============\nFailed containercheck after running DDEV_WEBSERVER_TYPE=${webserver_type} DDEV_PHP_VERSION=$v\n==================="
             exit 101
         fi
 
@@ -79,15 +80,15 @@ for v in 5.6 7.0 7.1 7.2 7.3; do
         # this case because the container is *NOT* intercepting 50x errors.
         curl -w "%{http_code}" localhost:$HOST_PORT/test/500.php | grep 500
         # 400 and 401 errors are intercepted by the same page.
-        curl localhost:$HOST_PORT/test/400.php | grep "ddev web container.*400"
-        curl localhost:$HOST_PORT/test/401.php | grep "ddev web container.*401"
+        curl -I localhost:$HOST_PORT/test/400.php | grep "HTTP/1.1 400"
+        curl -I localhost:$HOST_PORT/test/401.php | grep "HTTP/1.1 401"
 
         echo "testing php and email for php$v"
         curl --fail localhost:$HOST_PORT/test/phptest.php
         curl -s localhost:$HOST_PORT/test/test-email.php | grep "Test email sent"
 
         # Make sure the phpstatus url is working for testing php-fpm.
-        curl -s localhost:$HOST_PORT/phpstatus | grep "idle processes"
+        curl -s localhost:$HOST_PORT/phpstatus | egrep "idle processes|php is working"
 
         docker rm -f $CONTAINER_NAME
 	done
