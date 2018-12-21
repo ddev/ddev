@@ -24,7 +24,7 @@ a project directory to stop that project, or you can specify a project to descri
 running 'ddev stop <projectname>.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
-			util.Failed("Too many arguments provided. Please use 'ddev describe' or 'ddev describe [appname]'")
+			util.Failed("Too many arguments provided. Please use 'ddev describe' or 'ddev describe [projectname]'")
 		}
 
 		projects, err := getRequestedProjects(args, false)
