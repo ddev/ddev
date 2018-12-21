@@ -28,6 +28,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-shellwords"
+	"github.com/mattn/go-isatty"
 )
 
 // containerWaitTimeout is the max time we wait for all containers to become ready.
@@ -257,7 +258,7 @@ func (app *DdevApp) GetWebserverType() string {
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
-func (app *DdevApp) ImportDB(imPath string, extPath string) error {
+func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error {
 	app.DockerEnv()
 	var extPathPrompt bool
 	dbPath := app.ImportDir
@@ -337,9 +338,10 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		return fmt.Errorf("no .sql or .mysql files found to import")
 	}
 
-	err = app.ExecWithTty(&ExecOpts{
+	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     []string{"bash", "-c", "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && pv /db/*.*sql | mysql db"},
+		Tty:     progress && isatty.IsTerminal(os.Stderr.Fd()),
 	})
 
 	if err != nil {
@@ -503,7 +505,7 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 			output.UserOut.Println("Skipping database import.")
 		} else {
 			output.UserOut.Println("Importing database...")
-			err = app.ImportDB(fileLocation, importPath)
+			err = app.ImportDB(fileLocation, importPath, true)
 			if err != nil {
 				return err
 			}
