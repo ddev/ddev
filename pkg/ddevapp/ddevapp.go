@@ -767,6 +767,8 @@ type ExecOpts struct {
 	Cmd []string
 	// Nocapture if true causes use of ComposeNoCapture, so the stdout and stderr go right to stdout/stderr
 	NoCapture bool
+	// Tty if true causes a tty to be allocated
+	Tty bool
 	// Stdout can be overridden with a File
 	Stdout *os.File
 	// Stderr can be overridden with a File
@@ -788,7 +790,11 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		exec = append(exec, "-w", workingDir)
 	}
 
-	exec = append(exec, "-T", opts.Service)
+	if !opts.Tty {
+		exec = append(exec, "-T")
+        }
+
+	exec = append(exec, opts.Service)
 
 	if opts.Cmd == nil {
 		return "", "", fmt.Errorf("no command provided")
@@ -811,7 +817,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 
 	var stdoutResult, stderrResult string
-	if opts.NoCapture {
+	if opts.NoCapture || opts.Tty {
 		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, exec...)
 	} else {
 		stdoutResult, stderrResult, err = dockerutil.ComposeCmd(files, exec...)
