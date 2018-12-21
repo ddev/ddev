@@ -39,36 +39,32 @@ To snapshot the database on remove, use "ddev remove --snapshot"; A snapshot is 
 "ddev remove --remove-data" unless you use "ddev remove --remove-data --omit-snapshot".
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Prevent users from destroying everything
-		if removeAll && removeData {
-			util.Failed("Illegal option combination: --all and --remove-data")
-		}
 		if createSnapshot && omitSnapshot {
 			util.Failed("Illegal option combination: --snapshot and --omit-snapshot:")
 		}
 
-		apps, err := getRequestedApps(args, removeAll)
+		projects, err := getRequestedProjects(args, removeAll)
 		if err != nil {
-			util.Failed("Unable to get project(s): %v", err)
+			util.Failed("Failed to get project(s): %v", err)
 		}
 
-		// Iterate through the list of apps built above, removing each one.
-		for _, app := range apps {
-			if app.SiteStatus() == ddevapp.SiteNotFound {
-				util.Warning("Project %s is not currently running. Try 'ddev start'.", app.GetName())
+		// Iterate through the list of projects built above, removing each one.
+		for _, project := range projects {
+			if project.SiteStatus() == ddevapp.SiteNotFound {
+				util.Warning("Project %s is not currently running. Try 'ddev start'.", project.GetName())
 			}
 
 			// We do the snapshot if either --snapshot or --remove-data UNLESS omit-snapshot is set
-			doSnapshot := ((createSnapshot || removeData) && !omitSnapshot)
-			if err := app.Down(removeData, doSnapshot); err != nil {
-				util.Failed("Failed to remove project %s: \n%v", app.GetName(), err)
+			doSnapshot := (createSnapshot || removeData) && !omitSnapshot
+			if err := project.Down(removeData, doSnapshot); err != nil {
+				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
 			}
 
-			util.Success("Project %s has been removed.", app.GetName())
+			util.Success("Project %s has been removed.", project.GetName())
 		}
+
 		if stopSSHAgent {
-			err = ddevapp.RemoveSSHAgentContainer()
-			if err != nil {
+			if err := ddevapp.RemoveSSHAgentContainer(); err != nil {
 				util.Error("Failed to remove ddev-ssh-agent: %v", err)
 			}
 		}

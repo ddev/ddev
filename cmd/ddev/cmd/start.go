@@ -24,13 +24,9 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		apps, err := getRequestedApps(args, startAll)
+		projects, err := getRequestedProjects(args, startAll)
 		if err != nil {
-			util.Failed("Unable to get project(s): %v", err)
-		}
-
-		if len(apps) == 0 {
-			output.UserOut.Printf("There are no projects to start.")
+			util.Failed("Failed to get project(s): %v", err)
 		}
 
 		// Look for version change and opt-in Sentry if it has changed.
@@ -39,17 +35,20 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 			util.Failed(err.Error())
 		}
 
-		for _, app := range apps {
-			output.UserOut.Printf("Starting %s...", app.GetName())
+		for _, project := range projects {
+			if err := checkForMissingProjectFiles(project); err != nil {
+				util.Failed("Failed to start %s: %v", project.GetName(), err)
+			}
 
-			if err := app.Start(); err != nil {
-				util.Failed("Failed to start %s: %v", app.GetName(), err)
+			output.UserOut.Printf("Starting %s...", project.GetName())
+			if err := project.Start(); err != nil {
+				util.Failed("Failed to start %s: %v", project.GetName(), err)
 				continue
 			}
 
-			util.Success("Successfully started %s", app.GetName())
-			util.Success("Project can be reached at %s", strings.Join(app.GetAllURLs(), ", "))
-			if app.WebcacheEnabled {
+			util.Success("Successfully started %s", project.GetName())
+			util.Success("Project can be reached at %s", strings.Join(project.GetAllURLs(), ", "))
+			if project.WebcacheEnabled {
 				util.Warning("All contents were copied to fast docker filesystem,\nbut bidirectional sync operation may not be fully functional for a few minutes.")
 			}
 		}
