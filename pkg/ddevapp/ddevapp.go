@@ -337,9 +337,9 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 		return fmt.Errorf("no .sql or .mysql files found to import")
 	}
 
-	_, _, err = app.Exec(&ExecOpts{
+	err = app.ExecWithTty(&ExecOpts{
 		Service: "db",
-		Cmd:     []string{"bash", "-c", "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && cat /db/*.*sql | mysql db"},
+		Cmd:     []string{"bash", "-c", "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && pv /db/*.*sql | mysql db"},
 	})
 
 	if err != nil {
