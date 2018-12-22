@@ -4,4 +4,5 @@
       - "dockertype=dockerforwindows"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_GIT_CLONE_FLAGS: "-v --config core.symlinks=true --config core.autocrlf=false"
     parallelism: 1
