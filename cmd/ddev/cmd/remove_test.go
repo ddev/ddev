@@ -40,15 +40,9 @@ func TestDevRemove(t *testing.T) {
 	// Re-create running sites.
 	err = addSites()
 	require.NoError(t, err)
-	// Ensure a user can't accidentally wipe out everything.
-	appsBefore := len(ddevapp.GetApps())
-	out, err := exec.RunCommand(DdevBin, []string{"remove", "--remove-data", "--all"})
-	assert.Error(err, "ddev remove --all --remove-data should error, but succeeded")
-	assert.Contains(out, "Illegal option")
-	assert.EqualValues(appsBefore, len(ddevapp.GetApps()), "No apps should be removed or added after ddev remove --all --remove-data")
 
 	// Ensure the --all option can remove all active apps
-	out, err = exec.RunCommand(DdevBin, []string{"remove", "--all"})
+	out, err := exec.RunCommand(DdevBin, []string{"remove", "--all"})
 	assert.NoError(err, "ddev remove --all should succeed but failed, err: %v, output: %s", err, out)
 	out, err = exec.RunCommand(DdevBin, []string{"list"})
 	assert.NoError(err)
