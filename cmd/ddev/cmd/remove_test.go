@@ -1,11 +1,16 @@
 package cmd
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"os"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -53,4 +58,30 @@ func TestDevRemove(t *testing.T) {
 	// Now put the sites back together so other tests can use them.
 	err = addSites()
 	require.NoError(t, err)
+}
+
+// TestDdevRemoveMissingProjectDirectory ensures the `ddev remove` command can operate on a project when the
+// project's directory has been removed.
+func TestDdevRemoveMissingProjectDirectory(t *testing.T) {
+	var err error
+	var out string
+	assert := asrt.New(t)
+
+	projectName := util.RandString(6)
+
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.Chdir(tmpDir)()
+
+	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
+	assert.NoError(err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	assert.NoError(err)
+
+	err = os.RemoveAll(tmpDir)
+	assert.NoError(err)
+
+	out, err = exec.RunCommand(DdevBin, []string{"remove", projectName})
+	assert.NoError(err)
+	assert.Contains(out, "has been removed")
 }

@@ -1,11 +1,14 @@
 package cmd
 
 import (
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"encoding/json"
+
+	"os"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
@@ -208,4 +211,31 @@ func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 		}
 	}
 	return logData, nil
+}
+
+// TestDdevDescribeMissingProjectDirectory ensures the `ddev describe` command returns the expected help text when
+// a project's directory no longer exists.
+func TestDdevDescribeMissingProjectDirectory(t *testing.T) {
+	var err error
+	var out string
+	assert := asrt.New(t)
+
+	projectName := util.RandString(6)
+
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.Chdir(tmpDir)()
+
+	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
+	assert.NoError(err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", projectName})
+	assert.NoError(err)
+
+	err = os.RemoveAll(tmpDir)
+	assert.NoError(err)
+
+	out, err = exec.RunCommand(DdevBin, []string{"describe", projectName})
+	assert.Error(err, "Expected an error when describing project with no project directory")
+	assert.Contains(out, "ddev can no longer find your project files")
 }
