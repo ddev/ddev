@@ -3,8 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net"
 	"os"
@@ -16,6 +14,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/stretchr/testify/require"
 
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
