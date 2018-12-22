@@ -74,6 +74,7 @@ func TestDdevStopMissingProjectDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	//nolint: errcheck
 	defer exec.RunCommand(DdevBin, []string{"remove", projectName})
 	assert.NoError(err)
 
