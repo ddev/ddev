@@ -25,11 +25,14 @@ function containercheck {
 		fi
 		sleep 1
 	done
-	echo "nginx container did not become ready"
-	echo "--- FAIL: ddev-webserver container failure info"
+	echo "================== web container did not become ready ======================="
+	echo "================= FAIL: ddev-webserver container failure info=================="
     docker ps -a
+    echo "============== docker logs $CONTAINER_NAME =================="
     docker logs $CONTAINER_NAME
+    echo "============== docker inspect $CONTAINER_NAME ==============="
     docker inspect $CONTAINER_NAME
+    echo "============== END docker inspect ==========================="
 	return 1
 }
 
@@ -56,7 +59,7 @@ for v in 5.6 7.0 7.1 7.2 7.3; do
 
         docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -e "DDEV_WEBSERVER_TYPE=${webserver_type}" -d --name $CONTAINER_NAME -v ddev-composer-cache:/mnt/composer-cache -d $DOCKER_IMAGE
         if ! containercheck; then
-            echo "===============\nFailed containercheck after running DDEV_WEBSERVER_TYPE=${webserver_type} DDEV_PHP_VERSION=$v\n==================="
+            echo "=============== Failed containercheck after docker run with  DDEV_WEBSERVER_TYPE=${webserver_type} DDEV_PHP_VERSION=$v ==================="
             exit 101
         fi
 
