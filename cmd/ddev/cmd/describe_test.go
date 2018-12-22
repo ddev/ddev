@@ -37,7 +37,7 @@ func TestDescribeBadArgs(t *testing.T) {
 	args = []string{"describe", util.RandString(16)}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Unable to find any active project")
+	assert.Contains(string(out), "could not find project")
 
 	// Ensure we get a failure if using too many arguments.
 	args = []string{"describe", util.RandString(16), util.RandString(16)}
