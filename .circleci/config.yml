@@ -130,56 +130,6 @@ jobs:
         path: /artifacts
         name: Artifact storage
 
-  nightly_build:
-    machine:
-      image: circleci/classic:201711-01
-    working_directory: ~/go/src/github.com/drud/ddev
-    environment:
-      DRUD_DEBUG: "true"
-      GOPATH: /home/circleci/go
-      ARTIFACTS: /artifacts
-      DRUD_NONINTERACTIVE: "true"
-    steps:
-      - checkout
-
-      - run:
-          command: ./.circleci/circle_vm_setup.sh
-          name: NIGHTLY BUILD Circle VM setup - tools, docker, golang
-
-      - run:
-          command: echo "go version:$(go version) docker version=$(docker --version) docker-compose version=$(docker-compose --version) HOME=$HOME USER=$(whoami) PWD=$PWD"
-          name: Show installed tool versions
-
-      - run:
-          command: |
-            make -s linux darwin windows_install
-          name: Build the ddev executables normally, with normal image tags
-
-      - run:
-          command: ./.circleci/generate_artifacts.sh $ARTIFACTS
-          name: tar/zip up artifacts and make hashes
-          no_output_timeout: "40m"
-
-      - store_artifacts:
-          path: /artifacts
-          name: Artifact storage
-
-      # Run the built-in ddev tests with the clean binaries just built.
-      - run:
-          command: make -s test
-          name: ddev tests, with normal clean ddev binaries (normal image tags)
-          no_output_timeout: "120m"
-      - store_test_results:
-          path: /tmp/testresults
-
-      - run:
-          command: |
-            make -f nightly_build.mak clean  # Remove any existing binaries
-            make -f nightly_build.mak -s --print-directory DOCKER_ARGS=--no-cache
-          no_output_timeout: "120m"
-          name: Full nightly build and test with containers
-
-
   # 'tag_build' is used to build a tag for release.
   tag_build:
     machine:
@@ -241,13 +191,21 @@ workflows:
   nightly_build:
     triggers:
       - schedule:
-          cron: "0 3 * * 1-5"
+          cron: "0 3 * * *"
           filters:
             branches:
               only:
                 - master
+                - "pull/[0-9]+"
     jobs:
-      - nightly_build
+    - golang_build
+    - golang_test_nginx_fpm:
+        requires:
+        - golang_build
+    - artifacts:
+        requires:
+        - golang_build
+
   tag_build:
     jobs:
       - tag_build:
