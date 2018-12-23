@@ -466,7 +466,7 @@ To remove the imported database for a project, use the flag `--remove-data`, as 
 
 Bash auto-completion is available for ddev. Bash auto-completion is included in the homebrew install on macOS. For other platforms, download the [latest ddev release](https://github.com/drud/ddev/releases) tarball and locate `ddev_bash_completion.sh` inside it. This can be installed wherever your bash_completions.d is. For example, `cp ddev_bash_completion.sh /etc/bash_completion.d/ddev`.
 
-<a name="opt-in-usage-information" />
+<a name="opt-in-usage-information"></a>
 ## Opt-In Usage Information
 
 When you start ddev for the first time (or install a new release) you'll be asked to decide whether to opt-in to send usage and error information to the developers. You can change this at any time by editing the ~/.ddev/global_config.yaml file.
