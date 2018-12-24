@@ -307,7 +307,6 @@ func TestDdevStart(t *testing.T) {
 		assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
 	}
 
-
 	// Try to start a site of same name at an equivalent but different path. It should work.
 	tmpDir, err := testcommon.OsTempDir()
 	assert.NoError(err)
@@ -420,6 +419,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	err = app.WriteConfig()
 	assert.NoError(err)
 	err = app.StartAndWaitForSync(0)
+	//nolint: errcheck
 	defer app.Down(true, false)
 	require.NoError(t, err)
 
@@ -461,6 +461,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 	err = app.StartAndWaitForSync(0)
+	//nolint: errcheck
 	defer app.Down(true, false)
 	require.NoError(t, err)
 
