@@ -69,16 +69,18 @@ envsubst "$APACHE_SITE_VARS" < "$APACHE_SITE_TEMPLATE" > /etc/apache2/sites-enab
 
 # Change the apache run user to current user/group
 printf "\nexport APACHE_RUN_USER=uid_$(id -u)\nexport APACHE_RUN_GROUP=gid_$(id -g)\n" >>/etc/apache2/envvars
+
+a2enmod access_compat alias auth_basic authn_core authn_file authz_core authz_host authz_user autoindex deflate dir env filter mime mpm_prefork negotiation reqtimeout rewrite setenvif status
+a2enconf charset localized-error-pages other-vhosts-access-log security serve-cgi-bin
+
 if [ "$DDEV_WEBSERVER_TYPE" = "apache-cgi" ] ; then
     a2enmod php${DDEV_PHP_VERSION}
     a2dismod proxy_fcgi
-    a2enmod rewrite
     a2dissite 000-default
 fi
 if [ "$DDEV_WEBSERVER_TYPE" = "apache-fpm" ] ; then
-    a2enmod proxy_fcgi setenvif
+    a2enmod proxy_fcgi 
     a2enconf php${DDEV_PHP_VERSION}-fpm
-    a2enmod rewrite
     a2dissite 000-default
 fi
 

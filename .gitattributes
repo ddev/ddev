@@ -1,0 +1,6 @@
+# On Windows the wrong line endings break docker containers
+# Article: https://help.github.com/articles/dealing-with-line-endings/
+* text eol=lf
+*.png binary
+*.jpg binary
+

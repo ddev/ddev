@@ -299,7 +299,10 @@ func TestDdevStart(t *testing.T) {
 	badapp := &ddevapp.DdevApp{}
 
 	err = badapp.Init(another.Dir)
-	assert.Error(err)
+	if err == nil {
+		logs, logErr := app.CaptureLogs("web", false, "")
+		require.Error(t, err, "did not receive err from badapp.Init, logErr=%v, logs:\n======================= logs from app webserver =================\n%s\n============ end logs =========\n", logErr, logs)
+	}
 	if err != nil {
 		assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
 	}
@@ -415,8 +418,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	app.XdebugEnabled = false
 	err = app.WriteConfig()
 	assert.NoError(err)
-	err = app.Start()
-	assert.NoError(err)
+	err = app.StartAndWaitForSync(0)
+	//nolint: errcheck
+	defer app.Down(true, false)
+	require.NoError(t, err)
 
 	opts := &ddevapp.ExecOpts{
 		Service: "web",
@@ -439,9 +444,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	assert.Contains(stdout, "xdebug support => enabled")
 	assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
 
-	err = app.Down(true, false)
-	assert.NoError(err)
-
 	runTime()
 
 }
@@ -458,8 +460,10 @@ func TestDdevMysqlWorks(t *testing.T) {
 	assert.NoError(err)
 
 	testcommon.ClearDockerEnv()
-	err = app.Start()
-	assert.NoError(err)
+	err = app.StartAndWaitForSync(0)
+	//nolint: errcheck
+	defer app.Down(true, false)
+	require.NoError(t, err)
 
 	// Test that mysql + .my.cnf works on web container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
