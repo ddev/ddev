@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -66,6 +67,7 @@ func TestDdevStartMissingProjectDirectory(t *testing.T) {
 	projectName := util.RandString(6)
 
 	tmpDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpDir)
 	defer testcommon.Chdir(tmpDir)()
 
 	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
@@ -77,7 +79,8 @@ func TestDdevStartMissingProjectDirectory(t *testing.T) {
 	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", projectName})
 	assert.NoError(err)
 
-	err = os.RemoveAll(tmpDir)
+	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
+	err = os.Rename(tmpDir, copyDir)
 	assert.NoError(err)
 
 	out, err = exec.RunCommand(DdevBin, []string{"start", projectName})
