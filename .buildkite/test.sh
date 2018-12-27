@@ -24,6 +24,11 @@ set -x
 
 rm -rf ~/.ddev/Test*
 
+# There are discrepancies in golang hash checking in 1.11+, so kill off modcache to solve.
+# See https://github.com/golang/go/issues/27925
+# This can probably be removed when current work is merged 2018-12-27
+go clean -modcache
+
 # Our testbot should now be sane, run the testbot checker to make sure.
 ./.buildkite/sanetestbot.sh
 
