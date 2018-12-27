@@ -6,7 +6,8 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with docker $(docker version --format '{{.Server.Version}}') and docker-compose $(docker-compose version --short)"
+echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with golang=$(go version) docker=$(docker version --format '{{.Server.Version}}') and docker-compose $(docker-compose version --short)"
+
 
 function cleanup {
     set +x
@@ -25,6 +26,15 @@ function cleanup {
     if [ ! -z "${IMAGES:-}" ] ; then
       docker rmi --force $IMAGES 2>&1 >/dev/null || true
     fi
+
+    # There are discrepancies in golang hash checking in 1.11+, so kill off modcache to solve.
+    # See https://github.com/golang/go/issues/27925
+    # This can probably be removed when current work is merged 2018-12-27
+    # go clean -modcache  (Doesn't work due to current bug in golang)
+    chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
+
+    # Try to force it to actually check out things with the right line endings.
+    rm -rf containers vendor && git checkout containers vendor
 }
 
 # Now that we've got a container running, we need to make sure to clean up

@@ -28,7 +28,10 @@ rm -rf ~/.ddev/Test*
 # See https://github.com/golang/go/issues/27925
 # This can probably be removed when current work is merged 2018-12-27
 # go clean -modcache  (Doesn't work due to current bug in golang)
-chmod -R u+w ${GOPATH:-~/go}/pkg && rm -rf ${GOPATH:-~/go}/pkg/*
+chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
+
+# Try to force it to actually check out things with the right line endings.
+rm -rf containers vendor && git checkout containers vendor
 
 # Our testbot should now be sane, run the testbot checker to make sure.
 ./.buildkite/sanetestbot.sh
