@@ -18,7 +18,7 @@ jobs:
         name: Build the ddev executables
     - persist_to_workspace:
         root: ~/
-        paths: go
+        paths: ddev
 
   golang_test_nginx_fpm:
     machine:
