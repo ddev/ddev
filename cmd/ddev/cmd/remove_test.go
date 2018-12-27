@@ -77,6 +77,8 @@ func TestDdevRemoveMissingProjectDirectory(t *testing.T) {
 
 	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
 	err = os.Rename(tmpDir, copyDir)
+	defer testcommon.CleanupDir(copyDir)
+	defer testcommon.Chdir(copyDir)()
 	assert.NoError(err)
 
 	out, err = exec.RunCommand(DdevBin, []string{"remove", projectName})
