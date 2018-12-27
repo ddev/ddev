@@ -28,7 +28,7 @@ rm -rf ~/.ddev/Test*
 # See https://github.com/golang/go/issues/27925
 # This can probably be removed when current work is merged 2018-12-27
 # go clean -modcache  (Doesn't work due to current bug in golang)
-rm -rf ${GOPATH}/pkg/*
+chmod -R u+w ${GOPATH}/pkg && rm -rf ${GOPATH}/pkg/*
 
 # Our testbot should now be sane, run the testbot checker to make sure.
 ./.buildkite/sanetestbot.sh
