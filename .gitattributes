@@ -2,6 +2,7 @@
 # Article: https://help.github.com/articles/dealing-with-line-endings/
 * text=auto
 .gitignore text
+*.sh text eol=lf
 *.png binary
 *.jpg binary
 *.tqr binary
