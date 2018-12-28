@@ -1,11 +1,21 @@
-# On Windows the wrong line endings break docker containers
 # Article: https://help.github.com/articles/dealing-with-line-endings/
-* text=auto
+# Helpful examples: https://github.com/alexkaratarakis/gitattributes
+# Way more than you can stand to read: https://git-scm.com/docs/gitattributes
+
+* text=auto eol=lf
+Dockerfile text
+*.mak text
+*.md text
+*.php text
 .gitignore text
+.gitattributes text
 *.sh text eol=lf
 *.png binary
 *.jpg binary
-*.tqr binary
+*.jpeg binary
+*.gif binary
+*.tar binary
+*.pdf binary
 *gz binary
 *MY? binary
 

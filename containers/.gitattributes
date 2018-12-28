@@ -3,7 +3,7 @@
 # Helpful examples: https://github.com/alexkaratarakis/gitattributes
 # Way more than you can stand to read: https://git-scm.com/docs/gitattributes
 
-* text eol=lf
+* text=auto eol=lf
 *.sh text
 Dockerfile text
 .gitignore text
