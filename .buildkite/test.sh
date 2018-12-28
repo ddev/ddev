@@ -31,7 +31,7 @@ rm -rf ~/.ddev/Test*
 chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
 # Try to force it to actually check out things with the right line endings.
-rm -rf containers vendor && git checkout containers vendor
+rm -rf containers vendor pkg cmd && git checkout containers vendor pkg cmd
 
 # Our testbot should now be sane, run the testbot checker to make sure.
 ./.buildkite/sanetestbot.sh

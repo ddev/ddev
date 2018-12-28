@@ -26,15 +26,6 @@ function cleanup {
     if [ ! -z "${IMAGES:-}" ] ; then
       docker rmi --force $IMAGES 2>&1 >/dev/null || true
     fi
-
-    # There are discrepancies in golang hash checking in 1.11+, so kill off modcache to solve.
-    # See https://github.com/golang/go/issues/27925
-    # This can probably be removed when current work is merged 2018-12-27
-    # go clean -modcache  (Doesn't work due to current bug in golang)
-    chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
-
-    # Try to force it to actually check out things with the right line endings.
-    rm -rf containers vendor && git checkout containers vendor
 }
 
 # Now that we've got a container running, we need to make sure to clean up
@@ -43,6 +34,15 @@ trap cleanup EXIT
 
 # Do initial cleanup of images that might not be needed; they'll be cleaned at exit as well.
 cleanup
+
+# There are discrepancies in golang hash checking in 1.11+, so kill off modcache to solve.
+# See https://github.com/golang/go/issues/27925
+# This can probably be removed when current work is merged 2018-12-27
+# go clean -modcache  (Doesn't work due to current bug in golang)
+chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
+
+# Try to force it to actually check out things with the right line endings.
+rm -rf containers vendor pkg cmd && git checkout containers vendor pkg cmd
 
 # Our testbot should now be sane, run the testbot checker to make sure.
 ./.buildkite/sanetestbot.sh
