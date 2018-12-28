@@ -4,6 +4,8 @@
 
 * text=auto eol=lf
 Dockerfile text
+go.* text
+Gopkg.* text
 *.mak text
 *.md text
 *.php text
