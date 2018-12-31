@@ -42,7 +42,7 @@ running 'ddev stop <projectname>.`,
 			util.Failed("Unable to find any active project named %s: %v", project.Name, err)
 		}
 
-		// Do not show any describe output if we can't find the site.
+		// Do not show any describe output if we can't find the project.
 		if project.SiteStatus() == ddevapp.SiteNotFound {
 			util.Failed("no project found. have you run 'ddev start'?")
 		}
