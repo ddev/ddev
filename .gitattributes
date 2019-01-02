@@ -11,3 +11,11 @@
 # text=false here essentially is the same as core.autocrlf=false
 * text=false eol=lf
 
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.JPG binary
+*.JPEG binary
+*.tar binary
+*gz binary
+*MY? binary
