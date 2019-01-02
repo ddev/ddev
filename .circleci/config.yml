@@ -3,12 +3,10 @@ jobs:
   golang_build:
     machine:
       image: circleci/classic:201711-01
-    working_directory: ~/go/src/github.com/drud/ddev
+    working_directory: ~/ddev
     environment:
-      GOPATH: /home/circleci/go
       DRUD_NONINTERACTIVE: "true"
     steps:
-    - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
     - checkout
     - run:
         command: ./.circleci/circle_vm_setup.sh
@@ -20,14 +18,13 @@ jobs:
         name: Build the ddev executables
     - persist_to_workspace:
         root: ~/
-        paths: go
+        paths: ddev
 
   golang_test_nginx_fpm:
     machine:
       image: circleci/classic:201711-01
-    working_directory: ~/go/src/github.com/drud/ddev
+    working_directory: ~/ddev
     environment:
-      GOPATH: /home/circleci/go
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
       DRUD_NONINTERACTIVE: "true"
     steps:
@@ -48,9 +45,8 @@ jobs:
   golang_test_apache_fpm:
     machine:
       image: circleci/classic:201711-01
-    working_directory: ~/go/src/github.com/drud/ddev
+    working_directory: ~/ddev
     environment:
-      GOPATH: /home/circleci/go
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
       # Experiment with only testing TYPO3 with the apache run.
       GOTEST_SHORT: 5
@@ -73,9 +69,8 @@ jobs:
   golang_test_apache_cgi:
     machine:
       image: circleci/classic:201711-01
-    working_directory: ~/go/src/github.com/drud/ddev
+    working_directory: ~/ddev
     environment:
-      GOPATH: /home/circleci/go
       DDEV_TEST_WEBSERVER_TYPE: apache-cgi
       # Experiment with only testing TYPO3 with the apache run.
       GOTEST_SHORT: 5
@@ -96,9 +91,8 @@ jobs:
   staticrequired:
     machine:
       image: circleci/classic:201711-01
-    working_directory: ~/go/src/github.com/drud/ddev
+    working_directory: ~/ddev
     environment:
-      GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
     steps:
     - attach_workspace:
@@ -114,9 +108,8 @@ jobs:
   artifacts:
     machine:
       image: circleci/classic:201711-01
-    working_directory: ~/go/src/github.com/drud/ddev
+    working_directory: ~/ddev
     environment:
-      GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
     steps:
     - attach_workspace:
@@ -134,14 +127,11 @@ jobs:
   tag_build:
     machine:
       image: circleci/classic:201711-01
-    working_directory: ~/go/src/github.com/drud/ddev
+    working_directory: ~/ddev
     environment:
       DRUD_DEBUG: "true"
-      GOPATH: /home/circleci/go
       ARTIFACTS: /artifacts
     steps:
-      - run: mkdir -p ~/go/{lib,pkg,src/github.com/drud/ddev}
-
       - checkout
 
       - run:

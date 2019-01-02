@@ -2,15 +2,7 @@
 
 # This script is used to build drud/ddev using buildkite
 
-# Manufacture a $GOPATH environment that can mount on docker (when buildkite build)
-if [ ! -z "$BUILDKITE_JOB_ID" ]; then
-	export GOPATH=~/tmp/buildkite/$BUILDKITE_JOB_ID
-	DRUDSRC=$GOPATH/src/github.com/drud
-	mkdir -p $DRUDSRC
-	ln -s $PWD $DRUDSRC/ddev
-	cd $DRUDSRC/ddev
-	echo "--- buildkite building $BUILDKITE_JOB_ID at $(date) on $(hostname) for OS=$(go env GOOS) in $DRUDSRC/ddev"
-fi
+echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with golang=$(go version) docker=$(docker version --format '{{.Server.Version}}') and docker-compose $(docker-compose version --short)"
 
 export GOTEST_SHORT=1
 export DRUD_NONINTERACTIVE=true
@@ -31,6 +23,12 @@ set -o nounset
 set -x
 
 rm -rf ~/.ddev/Test*
+
+# There are discrepancies in golang hash checking in 1.11+, so kill off modcache to solve.
+# See https://github.com/golang/go/issues/27925
+# This can probably be removed when current work is merged 2018-12-27
+# go clean -modcache  (Doesn't work due to current bug in golang)
+chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
 # Our testbot should now be sane, run the testbot checker to make sure.
 ./.buildkite/sanetestbot.sh

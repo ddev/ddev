@@ -6,7 +6,8 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in ${PWD}"
+echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with golang=$(go version) docker=$(docker version --format '{{.Server.Version}}') and docker-compose $(docker-compose version --short)"
+
 
 function cleanup {
     set +x
@@ -33,6 +34,12 @@ trap cleanup EXIT
 
 # Do initial cleanup of images that might not be needed; they'll be cleaned at exit as well.
 cleanup
+
+# There are discrepancies in golang hash checking in 1.11+, so kill off modcache to solve.
+# See https://github.com/golang/go/issues/27925
+# This can probably be removed when current work is merged 2018-12-27
+# go clean -modcache  (Doesn't work due to current bug in golang)
+chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
 # Our testbot should now be sane, run the testbot checker to make sure.
 ./.buildkite/sanetestbot.sh
