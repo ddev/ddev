@@ -50,6 +50,8 @@ services:
         {{ if eq .MountType "volume" }}
         volume:
           nocopy: true
+        {{ else }}
+        consistency: cached
         {{ end }}
       - ".:/mnt/ddev_config:ro"
       - ddev-composer-cache:/mnt/composer_cache
