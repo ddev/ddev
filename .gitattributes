@@ -8,8 +8,8 @@
 # The incredibly big gotcha here is that if a *.sh gets checked out on WIndows with CRLF and then built
 # into a container with the CRLF, it can't run in linux.
 
-# text=false here essentially is the same as core.autocrlf=false
-* text=false eol=lf
+# -text here essentially is the same as core.autocrlf=false
+* -text eol=lf
 
 *.png binary
 *.jpg binary
