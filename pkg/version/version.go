@@ -45,7 +45,7 @@ var WebTag = "v1.5.1" // Note that this can be overridden by make
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.5.0"
+var BaseDBTag = "20190103_import-db-progress"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
