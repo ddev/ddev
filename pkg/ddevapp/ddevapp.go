@@ -27,8 +27,8 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
-	"github.com/mattn/go-shellwords"
 	"github.com/mattn/go-isatty"
+	"github.com/mattn/go-shellwords"
 )
 
 // containerWaitTimeout is the max time we wait for all containers to become ready.
@@ -794,7 +794,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	if !opts.Tty {
 		exec = append(exec, "-T")
-        }
+	}
 
 	exec = append(exec, opts.Service)
 
