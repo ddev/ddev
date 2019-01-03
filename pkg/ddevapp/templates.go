@@ -107,7 +107,7 @@ services:
     restart: "on-failure"
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
-      - ..:/hostmount
+      - ..:/hostmount:cached
       - webcachevol:/fastdockermount
       - unisoncatalogvol:/root/.unison
 
