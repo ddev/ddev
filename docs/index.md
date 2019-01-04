@@ -66,7 +66,7 @@ You can also easily perform the installation or upgrade manually if preferred. d
 
 Some Linux distributions may package ddev in a way that's convenient for your distro. Right now, we are aware of packages for the following distros:
 
-	* [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
+* [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
 
 Note that third party packaging is encouraged, but only supported on a best-effort basis.
 
