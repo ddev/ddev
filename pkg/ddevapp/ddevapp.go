@@ -90,7 +90,6 @@ type DdevApp struct {
 	Platform              string               `yaml:"-"`
 	Provider              string               `yaml:"provider,omitempty"`
 	DataDir               string               `yaml:"-"`
-	ImportDir             string               `yaml:"-"`
 	SiteSettingsPath      string               `yaml:"-"`
 	SiteLocalSettingsPath string               `yaml:"-"`
 	providerInstance      Provider             `yaml:"-"`
@@ -263,13 +262,13 @@ func (app *DdevApp) GetWebserverType() string {
 func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error {
 	app.DockerEnv()
 	var extPathPrompt bool
-	dbPath := app.ImportDir
 
 	err := app.ProcessHooks("pre-import-db")
 	if err != nil {
 		return err
 	}
 
+	err = os.MkdirAll(app.ImportDir, 0777)
 	err = fileutil.PurgeDirectory(dbPath)
 	if err != nil {
 		return fmt.Errorf("failed to cleanup %s before import: %v", dbPath, err)
@@ -696,11 +695,6 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.prepSiteDirs()
-	if err != nil {
-		return err
-	}
-
 	err = app.AddHostsEntries()
 	if err != nil {
 		return err
@@ -933,7 +927,6 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_BGSYNCIMAGE":              app.BgsyncImage,
 		"DDEV_APPROOT":                  app.AppRoot,
 		"DDEV_DOCROOT":                  app.Docroot,
-		"DDEV_IMPORTDIR":                app.ImportDir,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
 		"DDEV_UID":                      uidStr,
@@ -1361,31 +1354,6 @@ func (app *DdevApp) RemoveHostsEntries() error {
 
 		if _, err = exec.RunCommandPipe("sudo", hostnameArgs); err != nil {
 			util.Warning("Failed to execute sudo command, you will need to manually execute '%s' with administrative privileges", command)
-		}
-	}
-
-	return nil
-}
-
-// prepSiteDirs creates a site's directories for db container mounts
-func (app *DdevApp) prepSiteDirs() error {
-
-	dirs := []string{
-		app.ImportDir,
-	}
-
-	for _, dir := range dirs {
-		fileInfo, err := os.Stat(dir)
-
-		if os.IsNotExist(err) { // If it doesn't exist, create it.
-			err = os.MkdirAll(dir, os.FileMode(int(0774)))
-			if err != nil {
-				return fmt.Errorf("Failed to create directory %s, err: %v", dir, err)
-			}
-		} else if err == nil && fileInfo.IsDir() { // If the directory exists, we're fine and don't have to create it.
-			continue
-		} else { // But otherwise it must have existed as a file, so bail
-			return fmt.Errorf("error trying to create directory %s, err: %v", dir, err)
 		}
 	}
 
