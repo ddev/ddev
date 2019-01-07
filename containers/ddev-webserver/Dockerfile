@@ -38,6 +38,7 @@ RUN apt-get -qq update && \
         wget \
         fontconfig \
         bzip2 \
+        ghostscript \
         gnupg \
         locales-all && \
     wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
