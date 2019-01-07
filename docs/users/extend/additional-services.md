@@ -29,3 +29,14 @@ This recipe adds a Memcached 1.5 container to a project. The default configurati
 - The Memcached instance will listen on TCP port 11211 (the Memcached default).
 - Configure your application to access Memcached on the host:port `memcached:11211`.
 - To reach the Memcached admin interface, run `ddev ssh` to connect to the web container, then use `nc` or `telnet` to connect to the Memcached container on port 11211, i.e. `nc memcached 11211`. You can then run commands such as `stats` to see usage information.
+
+## Beanstalk (Work Queue)
+This recipe adds a [Beanstalk](https://beanstalkd.github.io/) container to a project.
+
+**Installation:**
+- Copy [docker-compose.beanstalk.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/docker-compose.beanstalkd.yaml) to the .ddev folder for your project.
+- Run `ddev start`.
+
+**Interacting with the Beanstalk Queue**
+- The Beanstalk instance will listen on TCP port 11300 (the beanstalkd default).
+- Configure your application to access Beanstalk on the host:port `beanstalk:11300`.
