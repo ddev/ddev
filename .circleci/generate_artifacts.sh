@@ -31,17 +31,17 @@ for dir in .gotmp/bin/darwin_amd64 .gotmp/bin .gotmp/bin/windows_amd64; do
 done
 
 # Generate macOS tarball/zipball
-cd $BASE_DIR/bin/darwin/darwin_amd64
+cd $BASE_DIR/.ddev/bin/darwin_amd64
 tar -czf $ARTIFACTS/ddev_macos.$VERSION.tar.gz ddev ddev_bash_completion.sh
 zip $ARTIFACTS/ddev_macos.$VERSION.zip ddev ddev_bash_completion.sh
 
 # Generate linux tarball/zipball
-cd $BASE_DIR/bin/linux
+cd $BASE_DIR/.ddev/bin
 tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev ddev_bash_completion.sh
 zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev ddev_bash_completion.sh
 
 # generate windows tarball/zipball
-cd $BASE_DIR/bin/windows/windows_amd64
+cd $BASE_DIR/.ddev/bin/windows_amd64
 tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe ddev_bash_completion.sh
 zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe ddev_bash_completion.sh
 cp ddev_windows_installer*.exe $ARTIFACTS
