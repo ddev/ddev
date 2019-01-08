@@ -91,7 +91,7 @@ fi
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-sudo time chown -R "$(id -u):$(id -g)" /mnt/composer_cache/ ~/.ssh* ~/.composer ~/.drush ~/.gitconfig ~/.my.cnf
+sudo chown -R "$(id -u):$(id -g)" /mnt/composer_cache/ ~/.ssh* ~/.drush ~/.gitconfig ~/.my.cnf
 
 echo 'Server started'
 

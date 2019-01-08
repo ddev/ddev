@@ -110,7 +110,6 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
     touch /var/log/nginx/error.log && \
     chmod -R ugo+rw /var/log/nginx/ && \
     chmod ugo+rx /usr/local/bin/* && \
-    chmod ugo+x /start.sh && \
     update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION} && \
     ln -s /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
 
@@ -132,6 +131,11 @@ RUN a2dismod mpm_event
 
 # ssh is very particular about permissions in ~/.ssh
 RUN chmod -R go-w /home/.ssh
+
+# scripts added last because they're most likely place to make changes, speeds up build
+ADD scripts /
+RUN chmod ugo+x /start.sh /healthcheck.sh
+
 
 EXPOSE 80 8025
 HEALTHCHECK --interval=3s --retries=6 CMD ["/healthcheck.sh"]
