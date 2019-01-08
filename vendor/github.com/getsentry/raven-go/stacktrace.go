@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"go/build"
 	"io/ioutil"
-	"net/url"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -62,14 +61,17 @@ func GetOrNewStacktrace(err error, skip int, context int, appPackagePrefixes []s
 		for _, f := range stacktracer.StackTrace() {
 			pc := uintptr(f) - 1
 			fn := runtime.FuncForPC(pc)
+			var fName string
 			var file string
 			var line int
 			if fn != nil {
 				file, line = fn.FileLine(pc)
+				fName = fn.Name()
 			} else {
 				file = "unknown"
+				fName = "unknown"
 			}
-			frame := NewStacktraceFrame(pc, file, line, context, appPackagePrefixes)
+			frame := NewStacktraceFrame(pc, fName, file, line, context, appPackagePrefixes)
 			if frame != nil {
 				frames = append([]*StacktraceFrame{frame}, frames...)
 			}
@@ -90,14 +92,27 @@ func GetOrNewStacktrace(err error, skip int, context int, appPackagePrefixes []s
 // be considered "in app".
 func NewStacktrace(skip int, context int, appPackagePrefixes []string) *Stacktrace {
 	var frames []*StacktraceFrame
-	for i := 1 + skip; ; i++ {
-		pc, file, line, ok := runtime.Caller(i)
-		if !ok {
-			break
+
+	callerPcs := make([]uintptr, 100)
+	numCallers := runtime.Callers(skip+2, callerPcs)
+
+	// If there are no callers, the entire stacktrace is nil
+	if numCallers == 0 {
+		return nil
+	}
+
+	callersFrames := runtime.CallersFrames(callerPcs)
+
+	for {
+		fr, more := callersFrames.Next()
+		if fr.Func != nil {
+			frame := NewStacktraceFrame(fr.PC, fr.Function, fr.File, fr.Line, context, appPackagePrefixes)
+			if frame != nil {
+				frames = append(frames, frame)
+			}
 		}
-		frame := NewStacktraceFrame(pc, file, line, context, appPackagePrefixes)
-		if frame != nil {
-			frames = append(frames, frame)
+		if !more {
+			break
 		}
 	}
 	// If there are no frames, the entire stacktrace is nil
@@ -123,9 +138,9 @@ func NewStacktrace(skip int, context int, appPackagePrefixes []string) *Stacktra
 //
 // appPackagePrefixes is a list of prefixes used to check whether a package should
 // be considered "in app".
-func NewStacktraceFrame(pc uintptr, file string, line, context int, appPackagePrefixes []string) *StacktraceFrame {
+func NewStacktraceFrame(pc uintptr, fName, file string, line, context int, appPackagePrefixes []string) *StacktraceFrame {
 	frame := &StacktraceFrame{AbsolutePath: file, Filename: trimPath(file), Lineno: line, InApp: false}
-	frame.Module, frame.Function = functionName(pc)
+	frame.Module, frame.Function = functionName(fName)
 
 	// `runtime.goexit` is effectively a placeholder that comes from
 	// runtime/asm_amd64.s and is meaningless.
@@ -167,33 +182,19 @@ func NewStacktraceFrame(pc uintptr, file string, line, context int, appPackagePr
 }
 
 // Retrieve the name of the package and function containing the PC.
-func functionName(pc uintptr) (string, string) {
-	fn := runtime.FuncForPC(pc)
-	if fn == nil {
-		return "", ""
+func functionName(fName string) (pack string, name string) {
+	name = fName
+	// We get this:
+	//	runtime/debug.*T·ptrmethod
+	// and want this:
+	//  pack = runtime/debug
+	//	name = *T.ptrmethod
+	if idx := strings.LastIndex(name, "."); idx != -1 {
+		pack = name[:idx]
+		name = name[idx+1:]
 	}
-
-	return splitFunctionName(fn.Name())
-}
-
-func splitFunctionName(name string) (string, string) {
-	var pack string
-
-	if pos := strings.LastIndex(name, "/"); pos != -1 {
-		pack = name[:pos+1]
-		name = name[pos+1:]
-	}
-
-	if pos := strings.Index(name, "."); pos != -1 {
-		pack += name[:pos]
-		name = name[pos+1:]
-	}
-
-	if p, err := url.QueryUnescape(pack); err == nil {
-		pack = p
-	}
-
-	return pack, name
+	name = strings.Replace(name, "·", ".", -1)
+	return
 }
 
 type SourceCodeLoader interface {

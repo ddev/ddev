@@ -313,7 +313,7 @@ func (hook *SentryHook) convertStackTrace(st errors.StackTrace) *raven.Stacktrac
 		pc := uintptr(stFrames[i])
 		fn := runtime.FuncForPC(pc)
 		file, line := fn.FileLine(pc)
-		frame := raven.NewStacktraceFrame(pc, file, line, stConfig.Context, stConfig.InAppPrefixes)
+		frame := raven.NewStacktraceFrame(pc, fn.Name(), file, line, stConfig.Context, stConfig.InAppPrefixes)
 		if frame != nil {
 			frames = append(frames, frame)
 		}
