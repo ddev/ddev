@@ -134,6 +134,6 @@ RUN a2dismod mpm_event
 RUN chmod -R go-w /home/.ssh
 
 EXPOSE 80 8025
-HEALTHCHECK --interval=2s --retries=5 CMD ["/healthcheck.sh"]
+HEALTHCHECK --interval=3s --retries=6 CMD ["/healthcheck.sh"]
 
 CMD ["/start.sh"]
