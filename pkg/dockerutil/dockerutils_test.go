@@ -58,7 +58,7 @@ func TestMain(m *testing.M) {
 		Config: &docker.Config{
 			Image: version.WebImg + ":" + version.WebTag,
 			Labels: map[string]string{
-				"com.docker.compose.service": "ddevrouter",
+				"com.docker.compose.service": "web",
 				"com.ddev.site-name":         "dockerutils-test",
 			},
 			Env: []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
@@ -81,6 +81,10 @@ func TestMain(m *testing.M) {
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
 		logOutput.Fatalf("failed to StartContainer: %v", err)
+	}
+	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": "dockerutils-test"})
+	if err != nil {
+		logOutput.Fatalf("Failed to ContainerWait for container: %v", err)
 	}
 	exitStatus := m.Run()
 	// teardown docker container from docker util tests
@@ -208,8 +212,8 @@ func TestComposeWithStreams(t *testing.T) {
 	//nolint: errcheck
 	defer ComposeCmd(composeFiles, "down")
 
-	_, err = ContainerWait(10, map[string]string{"com.ddev.site-name": "test-compose-with-streams"})
-	assert.NoError(err)
+	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": "test-compose-with-streams"})
+	require.NoError(t, err)
 
 	// Point stdout to os.Stdout and do simple ps -ef in web container
 	stdout := util.CaptureStdOut()
@@ -252,7 +256,7 @@ func TestGetAppContainers(t *testing.T) {
 func TestGetContainerEnv(t *testing.T) {
 	assert := asrt.New(t)
 
-	container, err := FindContainerByLabels(map[string]string{"com.docker.compose.service": "ddevrouter"})
+	container, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": "dockerutils-test"})
 	assert.NoError(err)
 	require.NotEmpty(t, container)
 
