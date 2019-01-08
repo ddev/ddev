@@ -678,7 +678,7 @@ func TestDdevOldMariaDB(t *testing.T) {
 
 	app.MariaDBVersion = ddevapp.MariaDB101
 	app.DBImage = version.GetDBImage(app.MariaDBVersion)
-	startErr := app.StartAndWaitForSync(5)
+	startErr := app.StartAndWaitForSync(15)
 	if startErr != nil {
 		appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
