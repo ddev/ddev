@@ -48,6 +48,11 @@ VERSION_LDFLAGS := $(foreach v,$(VERSION_VARIABLES),-X "$(PKG)/pkg/version.$(v)=
 LDFLAGS := -extldflags -static $(VERSION_LDFLAGS)
 DOCKERMOUNTFLAG := :delegated
 
+# In go 1.11 -mod=vendor is not autodetected; it probably will be in 1.12
+# See https://github.com/golang/go/issues/27227
+USEMODVENDOR := $(shell if [ -d vendor ]; then echo "-mod=vendor"; fi)
+
+
 PWD=$(shell pwd)
 S =
 ifeq ($(BUILD_OS),windows)
@@ -62,9 +67,9 @@ linux darwin windows: $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
 	@mkdir -p $(GOTMP)/{.cache,pkg,src,bin}
 	@$(DOCKERBUILDCMD) \
-        go install -installsuffix static -ldflags ' $(LDFLAGS) ' $(SRC_AND_UNDER)
+        go install $(USEMODVENDOR) -installsuffix static -ldflags ' $(LDFLAGS) ' $(SRC_AND_UNDER)
 	@$(shell touch $@)
-	@$(shell chmod -R u+w $(GOTMP))
+	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
 gofmt:

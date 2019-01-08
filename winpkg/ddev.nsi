@@ -17,7 +17,7 @@ CRCCheck On
 ; The name of the installer
 Name "ddev ${MUI_VERSION}"
 
-OutFile "../bin/windows/windows_amd64/ddev_windows_installer.${MUI_VERSION}.exe"
+OutFile "../.gotmp/bin/windows_amd64/ddev_windows_installer.${MUI_VERSION}.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES64\ddev
@@ -77,7 +77,7 @@ Section "ddev (github.com/drud/ddev)" SecDDEV
   SectionIn RO
   SetOutPath $INSTDIR
   
-  File "../bin/windows/windows_amd64/ddev.exe"
+  File "../.gotmp/bin/windows_amd64/ddev.exe"
 
   ; Write the installation path into the registry
   WriteRegStr HKLM SOFTWARE\NSIS_ddev "Install_Dir" "$INSTDIR"

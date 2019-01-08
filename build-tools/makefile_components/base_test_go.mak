@@ -17,7 +17,7 @@ test: build
 	    -e CGO_ENABLED=0	\
 	    -w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
-        go test -v -installsuffix static -ldflags '$(LDFLAGS)' $(SRC_AND_UNDER) $(TESTARGS)
+        go test $(USEMODVENDOR) -v -installsuffix static -ldflags '$(LDFLAGS)' $(SRC_AND_UNDER) $(TESTARGS)
 	@$(shell chmod -R u+w $(GOTMP))
 
 # test_precompile allows a full compilation of _test.go files, without execution of the tests.

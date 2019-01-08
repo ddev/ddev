@@ -144,7 +144,7 @@ jobs:
           name: Build the ddev executables
 
       - run:
-          command: bin/linux/ddev version
+          command: .gotmp/bin/ddev version
           name: ddev version information
 
       # We only build the xz version of the docker images on tag build.

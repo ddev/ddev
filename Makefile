@@ -65,25 +65,25 @@ TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 TEST_TIMEOUT=120m
 BUILD_ARCH = $(shell go env GOARCH)
 ifeq ($(BUILD_OS),linux)
-    DDEV_BINARY_FULLPATH=$(PWD)/bin/$(BUILD_OS)/ddev
+    DDEV_BINARY_FULLPATH=$(GOTMP)/bin/ddev
 endif
 
 ifeq ($(BUILD_OS),windows)
-    DDEV_BINARY_FULLPATH=$(PWD)/bin/$(BUILD_OS)/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
+    DDEV_BINARY_FULLPATH=$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
 endif
 
 ifeq ($(BUILD_OS),darwin)
-    DDEV_BINARY_FULLPATH=$(PWD)/bin/$(BUILD_OS)/$(BUILD_OS)_$(BUILD_ARCH)/ddev
+    DDEV_BINARY_FULLPATH=$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev
 endif
 
 # Override test section with tests specific to ddev
 test: testpkg testcmd
 
 testcmd: $(BUILD_OS) setup
-	DDEV_NO_SENTRY=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
+	DDEV_NO_SENTRY=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
 
 testpkg: setup
-	DDEV_NO_SENTRY=true CGO_ENABLED=0 go test -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
+	DDEV_NO_SENTRY=true CGO_ENABLED=0 go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
 
 setup:
 	@(mv -f ~/.ddev/global_config.yaml ~/.ddev/global_config.yaml.bak 2>/dev/null && echo "Warning: Removed your global ddev config file") || true

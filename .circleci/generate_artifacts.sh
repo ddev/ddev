@@ -14,7 +14,7 @@ sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
 export VERSION=$(git describe --tags --always --dirty)
 
 # Make sure we have all our docker images, and save them in a tarball
-$BASE_DIR/bin/linux/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt
+.gotmp/bin/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt
 for item in $(cat /tmp/images.txt); do
   docker pull $item
 done
@@ -25,9 +25,9 @@ if [ ! -z "$BUILD_XZ" ] ; then
 fi
 
 # Generate and place extra items like autocomplete
-bin/linux/ddev_gen_autocomplete
-for dir in bin/darwin/darwin_amd64 bin/linux bin/windows/windows_amd64; do
-  cp bin/ddev_bash_completion.sh $dir
+.gotmp/bin/ddev_gen_autocomplete
+for dir in .gotmp/bin/darwin_amd64 .gotmp/bin .gotmp/bin/windows_amd64; do
+  cp ddev_bash_completion.sh $dir
 done
 
 # Generate macOS tarball/zipball
