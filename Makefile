@@ -65,15 +65,15 @@ TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 TEST_TIMEOUT=120m
 BUILD_ARCH = $(shell go env GOARCH)
 ifeq ($(BUILD_OS),linux)
-    DDEV_BINARY_FULLPATH=$(GOTMP)/bin/ddev
+    DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/ddev
 endif
 
 ifeq ($(BUILD_OS),windows)
-    DDEV_BINARY_FULLPATH=$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
+    DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
 endif
 
 ifeq ($(BUILD_OS),darwin)
-    DDEV_BINARY_FULLPATH=$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev
+    DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev
 endif
 
 # Override test section with tests specific to ddev
