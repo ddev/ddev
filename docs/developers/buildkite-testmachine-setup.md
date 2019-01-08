@@ -32,6 +32,11 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 18. Set the timezone properly (US MT)
 19. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
 
+#### Docker Toolbox Extra Instructions
+
+1. `docker-machine rm default`
+2. `docker-machine create -d virtualbox --virtualbox-cpu-count=2 --virtualbox-memory=4096 --virtualbox-disk-size=50000 default`
+
 ### macOS Test Agent Setup
 
 0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
