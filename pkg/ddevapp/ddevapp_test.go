@@ -582,7 +582,7 @@ func TestDdevImportDB(t *testing.T) {
 		// Test simple db loads.
 		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip"} {
 			path := filepath.Join(testDir, "testdata", file)
-			err = app.ImportDB(path, "")
+			err = app.ImportDB(path, "", false)
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 			if err != nil {
 				continue
@@ -608,7 +608,7 @@ func TestDdevImportDB(t *testing.T) {
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
-			err = app.ImportDB(cachedArchive, "")
+			err = app.ImportDB(cachedArchive, "", false)
 			assert.NoError(err)
 
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -627,7 +627,7 @@ func TestDdevImportDB(t *testing.T) {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteZipArchive", "", site.DBZipURL)
 
 			assert.NoError(err)
-			err = app.ImportDB(cachedArchive, "")
+			err = app.ImportDB(cachedArchive, "", false)
 			assert.NoError(err)
 
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -644,7 +644,7 @@ func TestDdevImportDB(t *testing.T) {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_FullSiteTarballURL", "", site.FullSiteTarballURL)
 			assert.NoError(err)
 
-			err = app.ImportDB(cachedArchive, "data.sql")
+			err = app.ImportDB(cachedArchive, "data.sql", false)
 			assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
 		}
 		// We don't want all the projects running at once.
@@ -689,7 +689,7 @@ func TestDdevOldMariaDB(t *testing.T) {
 	defer app.Down(true, false)
 
 	importPath := filepath.Join(testDir, "testdata", "users.sql")
-	err = app.ImportDB(importPath, "")
+	err = app.ImportDB(importPath, "", false)
 	require.NoError(t, err)
 
 	err = os.Mkdir("tmp", 0777)
@@ -771,7 +771,7 @@ func TestDdevExportDB(t *testing.T) {
 	//nolint: errcheck
 	defer app.Down(true, false)
 	importPath := filepath.Join(testDir, "testdata", "users.sql")
-	err = app.ImportDB(importPath, "")
+	err = app.ImportDB(importPath, "", false)
 	require.NoError(t, err)
 
 	_ = os.Mkdir("tmp", 0777)
@@ -849,7 +849,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
-			err = app.ImportDB(cachedArchive, "")
+			err = app.ImportDB(cachedArchive, "", false)
 			assert.NoError(err)
 		}
 
@@ -924,7 +924,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	err = app.ImportDB(d7testerTest1Dump, "")
+	err = app.ImportDB(d7testerTest1Dump, "", false)
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 
 	err = app.StartAndWaitForSync(2)
@@ -949,7 +949,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.EqualValues(snapshotName, "d7testerTest1")
 	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
 
-	err = app.ImportDB(d7testerTest2Dump, "")
+	err = app.ImportDB(d7testerTest2Dump, "", false)
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes", 45)
 

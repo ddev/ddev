@@ -11,6 +11,7 @@ import (
 
 var dbSource string
 var dbExtPath string
+var progressOption bool
 
 // ImportDBCmd represents the `ddev import-db` command.
 var ImportDBCmd = &cobra.Command{
@@ -41,7 +42,7 @@ can be provided if it is not located at the top level of the archive.`,
 			}
 		}
 
-		err = app.ImportDB(dbSource, dbExtPath)
+		err = app.ImportDB(dbSource, dbExtPath, progressOption)
 		if err != nil {
 			util.Failed("Failed to import database for %s: %v", app.GetName(), err)
 		}
@@ -52,5 +53,6 @@ can be provided if it is not located at the top level of the archive.`,
 func init() {
 	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
 	ImportDBCmd.Flags().StringVarP(&dbExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
+	ImportDBCmd.Flags().BoolVarP(&progressOption, "progress", "p", true, "Display a progress bar during import")
 	RootCmd.AddCommand(ImportDBCmd)
 }

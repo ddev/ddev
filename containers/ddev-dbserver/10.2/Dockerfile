@@ -7,7 +7,7 @@ ENV MYSQL_ROOT_PASSWORD root
 ENV MARIADB_VERSION 10.2
 
 # Install mariadb and other packages
-RUN apk add --no-cache mariadb mariadb-client mariadb-backup mariadb-server-utils bash tzdata shadow sudo
+RUN apk add --no-cache mariadb mariadb-client mariadb-backup mariadb-server-utils bash tzdata shadow sudo pv
 # Remove the installed version as we need to set up our own from scratch
 
 RUN rm -rf /var/lib/mysql/* /etc/mysql

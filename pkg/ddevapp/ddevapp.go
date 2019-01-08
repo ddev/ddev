@@ -27,6 +27,7 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
+	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-shellwords"
 )
 
@@ -257,7 +258,7 @@ func (app *DdevApp) GetWebserverType() string {
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
-func (app *DdevApp) ImportDB(imPath string, extPath string) error {
+func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error {
 	app.DockerEnv()
 	var extPathPrompt bool
 	dbPath := app.ImportDir
@@ -339,7 +340,8 @@ func (app *DdevApp) ImportDB(imPath string, extPath string) error {
 
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     []string{"bash", "-c", "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && cat /db/*.*sql | mysql db"},
+		Cmd:     []string{"bash", "-c", "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && pv /db/*.*sql | mysql db"},
+		Tty:     progress && isatty.IsTerminal(os.Stderr.Fd()),
 	})
 
 	if err != nil {
@@ -503,7 +505,7 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 			output.UserOut.Println("Skipping database import.")
 		} else {
 			output.UserOut.Println("Importing database...")
-			err = app.ImportDB(fileLocation, importPath)
+			err = app.ImportDB(fileLocation, importPath, true)
 			if err != nil {
 				return err
 			}
@@ -767,6 +769,8 @@ type ExecOpts struct {
 	Cmd []string
 	// Nocapture if true causes use of ComposeNoCapture, so the stdout and stderr go right to stdout/stderr
 	NoCapture bool
+	// Tty if true causes a tty to be allocated
+	Tty bool
 	// Stdout can be overridden with a File
 	Stdout *os.File
 	// Stderr can be overridden with a File
@@ -788,7 +792,11 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		exec = append(exec, "-w", workingDir)
 	}
 
-	exec = append(exec, "-T", opts.Service)
+	if !opts.Tty {
+		exec = append(exec, "-T")
+	}
+
+	exec = append(exec, opts.Service)
 
 	if opts.Cmd == nil {
 		return "", "", fmt.Errorf("no command provided")
@@ -811,7 +819,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 
 	var stdoutResult, stderrResult string
-	if opts.NoCapture {
+	if opts.NoCapture || opts.Tty {
 		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, exec...)
 	} else {
 		stdoutResult, stderrResult, err = dockerutil.ComposeCmd(files, exec...)
