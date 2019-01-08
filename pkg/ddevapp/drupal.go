@@ -158,6 +158,9 @@ $settings['skip_permissions_hardening'] = TRUE;
 // Additional host patterns can be added for custom configurations.
 $settings['trusted_host_patterns'] = ['.*'];
 
+// Don't use Symfony's APCLoader. ddev includes APCu; Composer's APCu loader has better performance.
+$settings['class_loader_auto_detect'] = FALSE;
+
 // This specifies the default configuration sync directory.
 if (empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
   $config_directories[CONFIG_SYNC_DIRECTORY] = '{{ joinPath $config.SitePath $config.SyncDir }}';
