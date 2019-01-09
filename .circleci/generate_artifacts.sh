@@ -25,8 +25,8 @@ if [ ! -z "$BUILD_XZ" ] ; then
 fi
 
 # Generate and place extra items like autocomplete
-.ddev/bin/ddev_gen_autocomplete
-for dir in bin/darwin_amd64 bin bin/windows_amd64; do
+.gotmp/bin/ddev_gen_autocomplete
+for dir in bin/darwin_amd64 bin/windows_amd64; do
   cp bin/ddev_bash_completion.sh $dir
 done
 
