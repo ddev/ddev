@@ -21,9 +21,17 @@ Docker Toolbox is only recommended for systems that absolutely won't run Docker-
 
 [Download and install docker toolbox](https://download.docker.com/win/stable/DockerToolbox.exe). 
 
-[Chocolatey](https://chocolatey.org/install) users: `choco install docker-toolbox`
+[Chocolatey](https://chocolatey.org/install) users: `choco install -y docker-toolbox`
 
-On Docker Toolbox you must by default have your project directory somewhere inside your home directory, as only the home directory is shared with Docker by default.
+Special considerations for Docker Toolbox:
+
+* Your project directory must be inside your home directory, as only the home directory is shared with Docker by default. Docker Toolbox (via Virtualbox) can share other paths, see [link](https://stackoverflow.com/a/35498478/215713).
+* Please increase the memory allocated from the default 1GB to at least 2GB and increase the disk size to at least 50GB.
+
+    1. `docker-machine rm default`
+    2. `docker-machine create -d virtualbox --virtualbox-cpu-count=2 --virtualbox-memory=2048 --virtualbox-disk-size=50000 default`
+    3. `docker-machine stop`
+    4. Then exit Docker Quickstart Terminal and restart it to restart Docker Toolbox.
 
 
 ## Linux Installation: Docker-ce

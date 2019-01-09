@@ -14,9 +14,15 @@ If you find a bug in this project, have trouble following the documentation, or 
 - **Include system details** like what the browser, library or operating system you’re using and its version.
 - **Paste error output** or logs in your issue or in a [Gist](http://gist.github.com/). If pasting them in the issue, wrap it in three backticks: ` ``` ` so that it renders nicely.
 
+## Stack Overflow Questions and Documentation
+
+There are a number of situations where a particular approach to a ddev solution can be stated more easily in [Stack Overflow](https://stackoverflow.com/tags/ddev) (use the "ddev" tag). We respond there quickly, but if you know the answer already, create the question there and then click the checkbox at the bottom "Answer your own question". Stack Overflow is often the best place to incubate documentation that affects just a few people or that just needs time to get responses. And it's highly searchable on the web.
+
 ## Pull Request
 
 If you’re able to patch the bug or add the feature yourself – fantastic, make a pull request with the code! Once you’ve submitted a pull request the maintainer(s) can compare your branch to the existing one and decide whether or not to incorporate (pull in) your changes.
+
+Refer to [Building, Testing, and Contributing](docs/developers/building-contributing.md) for help with how to build and test the project.
 
 ### Pull Request Pro Tips
 
@@ -38,6 +44,8 @@ Adapted from [GitHub Guides](https://guides.github.com/activities/contributing-t
 Unless explicitly stated, we follow all coding guidelines from the Go community. While some of these standards may seem arbitrary, they somehow seem to result in a solid, consistent codebase.
 
 It is possible that the code base does not currently comply with these guidelines. We are not looking for a massive PR that fixes this since that goes against the spirit of the guidelines. All new contributions should make a best effort to clean up and make the code base better than they left it. Obviously, apply your best judgment. Remember, the goal here is to make the code base easier for humans to navigate and understand. Always keep that in mind when nudging others to comply.
+
+Just use `make staticrequired` to ensure that your code can pass the required static analysis tests.
 
 The rules:
 

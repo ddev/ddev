@@ -28,6 +28,7 @@ To execute a fully-featured `composer create-project` command, you can execute t
 
 `ddev exec composer create-project ...`
 
+<a name="windows-os-and-ddev-composer"></a>
 #### Windows OS and `ddev composer`
 
 Both composer and Docker for Windows introduce quite complex filesystem workarounds. DDEV attempts to help you with each of them.
