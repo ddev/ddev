@@ -28,8 +28,8 @@ fi
 
 # Generate and place extra items like autocomplete
 .gotmp/bin/ddev_gen_autocomplete
-for dir in bin/darwin_amd64 bin/windows_amd64; do
-  cp bin/ddev_bash_completion.sh $dir
+for dir in .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64; do
+  cp .gotmp/bin/ddev_bash_completion.sh $dir
 done
 
 # Generate macOS tarball/zipball
