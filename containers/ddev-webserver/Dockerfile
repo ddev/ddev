@@ -38,6 +38,7 @@ RUN apt-get -qq update && \
         wget \
         fontconfig \
         bzip2 \
+        ghostscript \
         gnupg \
         locales-all && \
     wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
@@ -78,9 +79,8 @@ RUN apt-get -qq update && \
         openssh-client \
         php-imagick \
         php-uploadprogress && \
-    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring $v-opcache $v-redis $v-soap $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
+    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-apcu $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring $v-memcached $v-opcache $v-redis $v-soap $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
     for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
-    for v in php5.6 php7.0 php7.1 php7.2; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-memcached; done && \
     apt-get -qq autoremove -y && \
     apt-get -qq clean -y && \
     rm -rf /var/lib/apt/lists/*
@@ -110,7 +110,6 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
     touch /var/log/nginx/error.log && \
     chmod -R ugo+rw /var/log/nginx/ && \
     chmod ugo+rx /usr/local/bin/* && \
-    chmod ugo+x /start.sh && \
     update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION} && \
     ln -s /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
 
@@ -133,7 +132,12 @@ RUN a2dismod mpm_event
 # ssh is very particular about permissions in ~/.ssh
 RUN chmod -R go-w /home/.ssh
 
+# scripts added last because they're most likely place to make changes, speeds up build
+ADD scripts /
+RUN chmod ugo+x /start.sh /healthcheck.sh
+
+
 EXPOSE 80 8025
-HEALTHCHECK --interval=2s --retries=5 CMD ["/healthcheck.sh"]
+HEALTHCHECK --interval=3s --retries=6 CMD ["/healthcheck.sh"]
 
 CMD ["/start.sh"]

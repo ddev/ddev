@@ -1097,7 +1097,10 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 		return snapshotName, err
 	}
 
-	if app.SiteStatus() != SiteRunning {
+	// Ensure that db container is up.
+	labels := map[string]string{"com.ddev.site-name": app.Name, "com.docker.compose.service": "db"}
+	_, err = dockerutil.ContainerWait(containerWaitTimeout, labels)
+	if err != nil {
 		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf removing, you can remove without a snapshot using \n'ddev remove --remove-data --omit-snapshot', \nwhich will destroy your database", app.Name)
 	}
 

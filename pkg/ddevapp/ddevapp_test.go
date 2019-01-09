@@ -678,15 +678,15 @@ func TestDdevOldMariaDB(t *testing.T) {
 
 	app.MariaDBVersion = ddevapp.MariaDB101
 	app.DBImage = version.GetDBImage(app.MariaDBVersion)
-	startErr := app.StartAndWaitForSync(5)
+	startErr := app.StartAndWaitForSync(15)
+	//nolint: errcheck
+	defer app.Down(true, false)
+
 	if startErr != nil {
 		appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
 		require.NoError(t, err, "app start failure %v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
 	}
-
-	//nolint: errcheck
-	defer app.Down(true, false)
 
 	importPath := filepath.Join(testDir, "testdata", "users.sql")
 	err = app.ImportDB(importPath, "", false)
