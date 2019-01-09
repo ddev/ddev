@@ -4,13 +4,15 @@
 # Optional second arg is whether to build xz version of ddev_docker_images.tar
 
 set -o errexit
+set -o pipefail
+set -o nounset
 
-ARTIFACTS=$1
+ARTIFACTS=${1:-/artifacts}
 # We only build the xz artifacts if $2 ($BUILD_XZ) is not empty.
-BUILD_XZ=$2
+BUILD_XZ=${2:-}
 BASE_DIR=$PWD
 
-sudo mkdir $ARTIFACTS && sudo chmod 777 $ARTIFACTS
+sudo mkdir -p $ARTIFACTS && sudo chmod 777 $ARTIFACTS
 export VERSION=$(git describe --tags --always --dirty)
 
 # Make sure we have all our docker images, and save them in a tarball
@@ -31,17 +33,17 @@ for dir in bin/darwin_amd64 bin/windows_amd64; do
 done
 
 # Generate macOS tarball/zipball
-cd $BASE_DIR/.ddev/bin/darwin_amd64
+cd $BASE_DIR/.gotmp/bin/darwin_amd64
 tar -czf $ARTIFACTS/ddev_macos.$VERSION.tar.gz ddev ddev_bash_completion.sh
 zip $ARTIFACTS/ddev_macos.$VERSION.zip ddev ddev_bash_completion.sh
 
 # Generate linux tarball/zipball
-cd $BASE_DIR/.ddev/bin
+cd $BASE_DIR/.gotmp/bin
 tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev ddev_bash_completion.sh
 zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev ddev_bash_completion.sh
 
 # generate windows tarball/zipball
-cd $BASE_DIR/.ddev/bin/windows_amd64
+cd $BASE_DIR/.gotmp/bin/windows_amd64
 tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe ddev_bash_completion.sh
 zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe ddev_bash_completion.sh
 cp ddev_windows_installer*.exe $ARTIFACTS
