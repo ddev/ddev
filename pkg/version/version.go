@@ -45,7 +45,7 @@ var WebTag = "20190107_web_container_maint" // Note that this can be overridden 
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20190103_import-db-progress"
+var BaseDBTag = "20190111_fix_toolbox_db_fail"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
