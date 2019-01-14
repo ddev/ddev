@@ -40,6 +40,8 @@ Special considerations for Docker Toolbox:
 
 * __docker-compose must be installed or upgraded separately, as it is not bundled with docker-ce on Linux, see below.__
 
+* __Please never use sudo to run `ddev start`. If you do this it will set wrong permissions on files, and it means that you didn't follow the post-install instructions below to add your user to the docker group.__
+
 docker-ce installation on Linux depends on what flavor you're using. In all cases using the Ubuntu/Deb/yum repository is the preferred technique.
 
 * [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
@@ -49,11 +51,11 @@ docker-ce installation on Linux depends on what flavor you're using. In all case
 * [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/)
 
 
-After installing docker-ce you *must* install docker-compose separately. [Follow download instructions](https://docs.docker.com/compose/install/#install-compose) (select "linux" tab). This really is just downloading docker-compose binary from https://github.com/docker/compose/releases and installing it in /usr/local/bin with executable permissions.
+After installing docker-ce you *must* install docker-compose separately. If using Linuxbrew you can `brew install docker-compose`, otherwise [Follow download instructions](https://docs.docker.com/compose/install/#install-compose) (select "linux" tab). This really is just downloading docker-compose binary from https://github.com/docker/compose/releases and installing it in /usr/local/bin with executable permissions.
 
 ### Linux Post-installation steps (required)
 
-See [Docker's post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user). You need to add your linux user to the "docker" group. and normally set up docker to start on boot.
+See [Docker's post-installation steps](https://ddev.readthedocs.io/en/stable/users/docker_installation/#linux-post-installation-steps-required). You need to add your linux user to the "docker" group. and normally set up docker to start on boot.  __Please do not ever use sudo to run `ddev start`, it will break things.__
 
 <a name="troubleshooting"></a>
 ## Testing and Troubleshooting Your Docker Installation

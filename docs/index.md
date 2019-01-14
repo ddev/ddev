@@ -9,8 +9,8 @@
 - [Docker](https://www.docker.com/community-edition) version 18.06 or higher. Linux users make sure you upgrade docker-compose and do the [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
 - docker-compose 1.21.0 and higher (bundled with Docker in Docker for Mac and Docker for Windows)
 - OS Support
-  - macOS Sierra and higher (macOS 10.12 and higher but it should runs anywhere docker-ce runs)
-  - Linux: Most recent Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
+  - macOS El Capitan and higher (macOS 10.11 and higher but it should run anywhere docker-ce runs)
+  - Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
   - Windows 10 Pro or Enterprise with [Docker-for-windows](https://docs.docker.com/docker-for-windows/install/)
   - Windows 10 Home (or other Windows version) with [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/)
 
@@ -28,7 +28,7 @@ Docker and docker-compose are required before anything will work with ddev. This
 
 ### Homebrew - macOS
 
-For macOS users, we recommend downloading, installing, and upgrading via [homebrew](https://brew.sh/):
+For macOS users and Linux users, we recommend downloading, installing, and upgrading via [homebrew](https://brew.sh/) (macOS) or [Linuxbrew](http://linuxbrew.sh/) (Linux):
 ```
 brew tap drud/ddev && brew install ddev
 ```
@@ -64,11 +64,7 @@ You can also easily perform the installation or upgrade manually if preferred. d
 
 ### Installation via package managers - Linux
 
-Some Linux distributions may package ddev in a way that's convenient for your distro. Right now, we are aware of packages for the following distros:
-
-* [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
-
-Note that third party packaging is encouraged, but only supported on a best-effort basis.
+The preferred Linux package manager is [Linuxbrew](http://linuxbrew.sh/) but we also currently maintain packages on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
 
 ### Uninstallation
 
