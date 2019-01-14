@@ -16,6 +16,7 @@ Build/test/check static analysis with:
  make staticrequired
  ```
 
+The binaries are built into .gotmp/bin; although normal command-line `go build` or `go install` will work (and everything works fine with IDEs like Goland or vscode) the official build technique is via `make` which uses a completely consistent golang-build-container so that the build is identical no matter what machine or OS it might be built on.
 
 ## Testing
 Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make testpkg TESTARGS="-run TestDevAddSites"`.
