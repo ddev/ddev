@@ -6,6 +6,7 @@
 - [ ] Download artifacts from CircleCI
 - [ ] Confirm the integrity of each artifact with `shasum -a256 -c <artifact>.sha256.txt`
 - [ ] Upload artifacts and checksums (except for the Windows installer and its checksum) to the Github release page
+- [ ] Build macOS and Linux bottles for the release,  push them to bintray.com, publish them as in [Readme](https://github.com/drud/homebrew-ddev/blob/master/README.md). Hopefully we'll get this done by CircleCI soonish.
 - [ ] Update the `ddev` [Homebrew formula](https://github.com/drud/homebrew-ddev) with the MacOS `.tar.gz` and SHA checksum
 - [ ] Test `brew upgrade ddev` and make sure ddev is the right version and behaves well
 - [ ] Sign the Windows installer and create a new sha256.txt according to steps below

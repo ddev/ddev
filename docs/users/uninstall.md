@@ -23,6 +23,6 @@ Otherwise:
 * To remove all ddev docker images that might exist: `docker rmi $(docker images | awk '/ddev/ {print $3}')`
 
 To remove the ddev binary:
-* On macOS with homebrew, `brew uninstall ddev`
+* On macOS with homebrew or Linux with Linuxbrew, `brew uninstall ddev`
 * For linux or other simple installs, just remove the binary, for example `sudo rm /usr/local/bin/ddev`
 * On Windows (if you used the ddev Windows installer) use the uninstall on the start menu.
