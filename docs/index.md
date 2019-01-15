@@ -26,9 +26,9 @@ _When upgrading, please check the [release notes](https://github.com/drud/ddev/r
 
 Docker and docker-compose are required before anything will work with ddev. This is pretty easy on most environments, but we have a [docker_installation](users/docker_installation.md) page to help sort out the nuances, especially on Windows and Linux.
 
-### Homebrew - macOS
+### Homebrew/Linuxbrew - macOS/Linux
 
-For macOS users and Linux users, we recommend downloading, installing, and upgrading via [homebrew](https://brew.sh/) (macOS) or [Linuxbrew](http://linuxbrew.sh/) (Linux):
+For macOS and Linux users, we recommend installing and upgrading via [homebrew](https://brew.sh/) (macOS) or [Linuxbrew](http://linuxbrew.sh/) (Linux):
 ```
 brew tap drud/ddev && brew install ddev
 ```

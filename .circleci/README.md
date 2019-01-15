@@ -1,10 +1,12 @@
-# Circle Script Usage
+# CircleCI Script Usage
 
 ## Tags build automatically
 
 If you just push a tag, circleci will build that tag and make its artifacts available. This is a result of the tag_build *workflow*, which calls the job.
 
-## trigger_build.sh
+## trigger_build.sh is obsolete since we use workflows
+
+Sadly, the below information is currently inoperative due to CircleCI not supporting access to their API if workflows are used...
 
 trigger_build.sh can trigger a nightly or a normal build. It triggers *jobs* not workflows.
 

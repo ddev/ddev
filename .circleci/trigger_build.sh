@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "This script is currently inoperative because we use CircleCI workflows, which can't be started via API" && exit 1
+
 # from https://circleci.com/docs/1.0/nightly-builds/
 # See also https://circleci.com/docs/2.0/defining-multiple-jobs/
 
