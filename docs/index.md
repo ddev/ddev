@@ -28,7 +28,7 @@ Docker and docker-compose are required before anything will work with ddev. This
 
 ### Homebrew/Linuxbrew - macOS/Linux
 
-For macOS Linux users, we recommend downloading, installing, and upgrading via [homebrew](https://brew.sh/) (macOS) or [Linuxbrew](http://linuxbrew.sh/) (Linux):
+For macOS and Linux users, we recommend installing and upgrading via [homebrew](https://brew.sh/) (macOS) or [Linuxbrew](http://linuxbrew.sh/) (Linux):
 ```
 brew tap drud/ddev && brew install ddev
 ```
