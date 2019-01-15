@@ -17,7 +17,7 @@ CRCCheck On
 ; The name of the installer
 Name "ddev ${MUI_VERSION}"
 
-OutFile "../bin/windows/windows_amd64/ddev_windows_installer.${MUI_VERSION}.exe"
+OutFile "../.gotmp/bin/windows_amd64/ddev_windows_installer.${MUI_VERSION}.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES64\ddev
@@ -50,7 +50,7 @@ RequestExecutionLevel admin
 
 !define MUI_LICENSEPAGE_TEXT_TOP "MIT License for github.com/mattn/sudo"
 !define MUI_LICENSEPAGE_BUTTON "I agree"
-!insertmacro MUI_PAGE_LICENSE "..\bin\windows\windows_amd64\sudo_license.txt"
+!insertmacro MUI_PAGE_LICENSE "../.gotmp/bin/windows_amd64/sudo_license.txt"
 
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
@@ -77,7 +77,7 @@ Section "ddev (github.com/drud/ddev)" SecDDEV
   SectionIn RO
   SetOutPath $INSTDIR
   
-  File "../bin/windows/windows_amd64/ddev.exe"
+  File "../.gotmp/bin/windows_amd64/ddev.exe"
 
   ; Write the installation path into the registry
   WriteRegStr HKLM SOFTWARE\NSIS_ddev "Install_Dir" "$INSTDIR"
@@ -93,7 +93,7 @@ SectionEnd
 Section "sudo (github.com/mattn/sudo)" SecSudo
   SectionIn 1
   SetOutPath $INSTDIR
-  File "../bin/windows/windows_amd64/sudo.exe"
+  File "../.gotmp/bin/windows_amd64/sudo.exe"
 SectionEnd
 
 Section "Add to PATH" SecAddToPath

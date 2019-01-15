@@ -8,7 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 )
 
-var targetDir = "bin"
+var targetDir = ".gotmp/bin"
 
 func main() {
 	if _, err := os.Stat(targetDir); os.IsNotExist(err) {

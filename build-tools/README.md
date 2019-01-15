@@ -40,10 +40,9 @@ make linux
 make darwin
 make gofmt
 make govet
-make govendor
 make golint
 make codecoroner
-make static (gofmt, govet, golint, govendor)
+make static (gofmt, govet, golint)
 make test
 make container
 make push
