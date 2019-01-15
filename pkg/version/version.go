@@ -39,35 +39,35 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20190107_web_container_maint" // Note that this can be overridden by make
+var WebTag = "v1.5.2" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20190111_fix_toolbox_db_fail"
+var BaseDBTag = "v1.5.2"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
 
 // DBATag defines the default phpmyadmin image tag used for applications.
-var DBATag = "v1.5.0" // Note that this can be overridden by make
+var DBATag = "v1.5.2" // Note that this can be overridden by make
 
 // BgsyncImg defines the default bgsync image tag used for applications.
 var BgsyncImg = "drud/ddev-bgsync"
 
 // BgsyncTag defines the default phpmyadmin image tag used for applications.
-var BgsyncTag = "v1.5.0" // Note that this can be overridden by make
+var BgsyncTag = "v1.5.2" // Note that this can be overridden by make
 
 // RouterImage defines the image used for the router.
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "v1.5.0" // Note that this can be overridden by make
+var RouterTag = "v1.5.2" // Note that this can be overridden by make
 
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
-var SSHAuthTag = "v1.5.0"
+var SSHAuthTag = "v1.5.2"
 
 // COMMIT is the actual committish, supplied by make
 var COMMIT = "COMMIT should be overridden"
