@@ -19,8 +19,9 @@ const typo3AdditionalConfigTemplate = `<?php
  */
 
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '.*';
+$ORIGINAL_CONFIG = isset($GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']) ? $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] : [];
 
-$GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge($GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'], [
+$GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge($ORIGINAL_CONFIG, [
                     'dbname' => 'db',
                     'host' => 'db',
                     'password' => 'db',
