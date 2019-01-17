@@ -4,8 +4,8 @@ ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3"
 ENV PHP_DEFAULT_VERSION="7.1"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 
-ENV DRUSH_VERSION=8.1.15
-ENV WP_CLI_VERSION=1.4.1
+ENV DRUSH_VERSION=8.1.18
+ENV WP_CLI_VERSION=2.1.0
 ENV MAILHOG_VERSION=1.0.0
 ENV BACKDROP_DRUSH_VERSION=0.0.6
 
@@ -17,6 +17,7 @@ ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV WEBSERVER_DOCROOT /var/www/html
 # For backward compatibility only
 ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
+ENV PATH "$PATH:/home/.composer/vendor/bin"
 
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
@@ -92,10 +93,10 @@ RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 ADD files /
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN composer global require consolidation/cgr
+RUN /home/.composer/vendor/bin/cgr drush/drush:$DRUSH_VERSION && ln -s /home/.composer/vendor/bin/drush /usr/local/bin/drush
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
 RUN curl -sSL "https://github.com/wp-cli/wp-cli/releases/download/v${WP_CLI_VERSION}/wp-cli-${WP_CLI_VERSION}.phar" -o /usr/local/bin/wp-cli
-
-RUN composer global require drush/drush:${DRUSH_VERSION} && ln -s /home/.composer/vendor/drush/drush/drush /usr/local/bin/drush && chmod -R ugo+rx /root
 
 RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal && chmod +x /usr/local/bin/drupal
 
