@@ -81,6 +81,7 @@ Get started with Drupal 8 projects on ddev either by cloning a git repository or
 ```
 git clone https://github.com/example-user/my-drupal8-site
 cd my-drupal8-site
+ddev composer install
 ```
 
 **Composer Setup Example**
@@ -124,9 +125,8 @@ To get started using ddev with a TYPO3 project, clone the project's repository a
 ```
 git clone https://github.com/example-user/example-typo3-site
 cd example-typo3-site
+ddev composer install
 ```
-
-If necessary, run build steps that you may require, like `composer install` in the correct directory.
 
 **Composer Setup Example**
 
