@@ -92,10 +92,10 @@ RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 ADD files /
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+RUN composer global require consolidation/cgr
+RUN cgr drush/drush:$DRUSH_VERSION
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
 RUN curl -sSL "https://github.com/wp-cli/wp-cli/releases/download/v${WP_CLI_VERSION}/wp-cli-${WP_CLI_VERSION}.phar" -o /usr/local/bin/wp-cli
-
-RUN composer global require drush/drush:${DRUSH_VERSION} && ln -s /home/.composer/vendor/drush/drush/drush /usr/local/bin/drush && chmod -R ugo+rx /root
 
 RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal && chmod +x /usr/local/bin/drupal
 
