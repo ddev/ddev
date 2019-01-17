@@ -17,6 +17,7 @@ ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV WEBSERVER_DOCROOT /var/www/html
 # For backward compatibility only
 ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
+ENV PATH "$PATH:/home/.composer/vendor/bin"
 
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
@@ -93,7 +94,7 @@ ADD files /
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 RUN composer global require consolidation/cgr
-RUN /home/.composer/vendor/bin/cgr drush/drush:$DRUSH_VERSION
+RUN /home/.composer/vendor/bin/cgr drush/drush:$DRUSH_VERSION && ln -s /home/.composer/vendor/bin/drush /usr/local/bin/drush
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
 RUN curl -sSL "https://github.com/wp-cli/wp-cli/releases/download/v${WP_CLI_VERSION}/wp-cli-${WP_CLI_VERSION}.phar" -o /usr/local/bin/wp-cli
 
