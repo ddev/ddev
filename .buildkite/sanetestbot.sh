@@ -23,7 +23,7 @@ docker ps >/dev/null
 docker pull busybox:latest >/dev/null
 # Try the docker run command twice because of the really annoying mkdir /c: file exists bug
 # Apparently https://github.com/docker/for-win/issues/1560
-sleep 1 && (docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || sleep 1 && docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null )
+(sleep 1 && (docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null) || (sleep 1 && docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null ))
 
 # Check that required commands are available.
 for command in mysql git go make; do
