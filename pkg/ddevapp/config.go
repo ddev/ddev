@@ -90,7 +90,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	// Turn off webcache_enabled except if macOS/darwin or global `developer_mode: true`
 	if runtime.GOOS != "darwin" && app.WebcacheEnabled && !globalconfig.DdevGlobalConfig.DeveloperMode {
 		app.WebcacheEnabled = false
-		util.Warning("webcache_enabled: true is not yet supported on %s, disabling it", runtime.GOOS)
+		util.Warning("webcache_enabled is not yet supported on %s, disabling it", runtime.GOOS)
 	}
 
 	// Allow override with provider.
