@@ -1615,14 +1615,22 @@ func TestRouterPortsCheck(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 	err = app.StartAndWaitForSync(0)
-	assert.NoError(err)
+	if err != nil {
+		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
+		assert.NoError(getLogsErr)
+		t.Logf("app.StartAndWaitForSync() failure; logs:\n=====\n%s\n=====\n", appLogs)
+	}
 
 	app, err = ddevapp.GetActiveApp(site.Name)
 	if err != nil {
 		t.Fatalf("Failed to GetActiveApp(%s), err:%v", site.Name, err)
 	}
 	err = app.Start()
-	assert.NoError(err, "app.Start(%s) failed, err: %v", app.GetName(), err)
+	if err != nil {
+		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
+		assert.NoError(getLogsErr)
+		t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
+	}
 
 	// Stop the router using code from StopRouterIfNoContainers().
 	// StopRouterIfNoContainers can't be used here because it checks to see if containers are running
