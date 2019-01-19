@@ -460,21 +460,22 @@ func (app *DdevApp) CheckCustomConfig() {
 }
 
 type composeYAMLVars struct {
-	Name            string
-	Plugin          string
-	AppType         string
-	MailhogPort     string
-	DBAPort         string
-	DBPort          string
-	DdevGenerated   string
-	ExtraHost       string
-	ComposeVersion  string
-	MountType       string
-	WebMount        string
-	OmitDBA         bool
-	OmitSSHAgent    bool
-	WebcacheEnabled bool
-	IsWindowsFS     bool
+	Name                       string
+	Plugin                     string
+	AppType                    string
+	MailhogPort                string
+	DBAPort                    string
+	DBPort                     string
+	DdevGenerated              string
+	HostDockerInternalHostname string
+	HostDockerInternalIP       string
+	ComposeVersion             string
+	MountType                  string
+	WebMount                   string
+	OmitDBA                    bool
+	OmitSSHAgent               bool
+	WebcacheEnabled            bool
+	IsWindowsFS                bool
 }
 
 // RenderComposeYAML renders the contents of docker-compose.yaml.
@@ -516,21 +517,22 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	templateVars := composeYAMLVars{
-		Name:            app.Name,
-		Plugin:          "ddev",
-		AppType:         app.Type,
-		MailhogPort:     appports.GetPort("mailhog"),
-		DBAPort:         appports.GetPort("dba"),
-		DBPort:          appports.GetPort("db"),
-		DdevGenerated:   DdevFileSignature,
-		ExtraHost:       hostDockerInternalHostname + `:` + hostDockerInternalIP,
-		ComposeVersion:  version.DockerComposeFileFormatVersion,
-		OmitDBA:         util.ArrayContainsString(app.OmitContainers, "dba"),
-		OmitSSHAgent:    util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
-		WebcacheEnabled: app.WebcacheEnabled,
-		IsWindowsFS:     runtime.GOOS == "windows",
-		MountType:       "bind",
-		WebMount:        "../",
+		Name:                       app.Name,
+		Plugin:                     "ddev",
+		AppType:                    app.Type,
+		MailhogPort:                appports.GetPort("mailhog"),
+		DBAPort:                    appports.GetPort("dba"),
+		DBPort:                     appports.GetPort("db"),
+		DdevGenerated:              DdevFileSignature,
+		HostDockerInternalHostname: hostDockerInternalHostname,
+		HostDockerInternalIP:       hostDockerInternalIP,
+		ComposeVersion:             version.DockerComposeFileFormatVersion,
+		OmitDBA:                    util.ArrayContainsString(app.OmitContainers, "dba"),
+		OmitSSHAgent:               util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
+		WebcacheEnabled:            app.WebcacheEnabled,
+		IsWindowsFS:                runtime.GOOS == "windows",
+		MountType:                  "bind",
+		WebMount:                   "../",
 	}
 	if templateVars.WebcacheEnabled {
 		templateVars.MountType = "volume"
