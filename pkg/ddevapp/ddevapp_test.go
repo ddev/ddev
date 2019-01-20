@@ -1,10 +1,12 @@
 package ddevapp_test
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
+	"net"
 	"os"
 	"path"
 	"path/filepath"
@@ -439,13 +441,30 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Down(true, false)
+
 	stdout, _, err = app.Exec(opts)
 	assert.NoError(err)
 	assert.Contains(stdout, "xdebug support => enabled")
 	assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
 
-	runTime()
+	// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
+	ln, err := net.Listen("tcp", ":9000")
+	assert.NoError(err)
+	// Curl to the project's index.php or anything else
+	_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 1)
 
+	conn, err := ln.Accept()
+	assert.NoError(err)
+
+	// Grab the Xdebug connection start and look in it for "Xdebug"
+	b := make([]byte, 650)
+	_, err = bufio.NewReader(conn).Read(b)
+	require.NoError(t, err)
+	lineString := string(b)
+	assert.Contains(lineString, "Xdebug")
+	runTime()
 }
 
 // TestDdevMysqlWorks tests that mysql client can be run in both containers.
