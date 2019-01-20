@@ -2,7 +2,6 @@ package ddevapp_test
 
 import (
 	"github.com/drud/ddev/pkg/netutil"
-	"github.com/stretchr/testify/require"
 	"strconv"
 	"testing"
 
@@ -58,7 +57,7 @@ func TestPortOverride(t *testing.T) {
 			assert.False(netutil.IsPortActive(app.RouterHTTPSPort))
 		}
 
-		err = app.Start()
+		startErr := app.StartAndWaitForSync(5)
 		// defer the app.Down so we have a more diverse set of tests. If we brought
 		// each down before testing the next that would be a more trivial test.
 		// Don't worry about the possible error case as this is just a test cleanup
@@ -66,10 +65,11 @@ func TestPortOverride(t *testing.T) {
 		defer app.Down(true, false)
 
 		var logs string
-		if err != nil {
-			logs, _ = ddevapp.GetErrLogsFromApp(app, err)
+		if startErr != nil {
+			logs, err = ddevapp.GetErrLogsFromApp(app, err)
+			assert.NoError(err)
+			t.Fatalf("failed to app.StartAndWaitForSync(), err=%v logs=\n=========\n%s\n===========\n", startErr, logs)
 		}
-		require.NoError(t, err, "failed to app.Start(), logs=\n=========\n%s\n===========\n", logs)
 		err = app.Wait([]string{"web"})
 		assert.NoError(err)
 		assert.True(netutil.IsPortActive(app.RouterHTTPPort))

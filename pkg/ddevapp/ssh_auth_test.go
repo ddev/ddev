@@ -73,7 +73,7 @@ func TestSSHAuth(t *testing.T) {
 	require.NoError(t, err)
 
 	startErr := app.StartAndWaitForSync(0)
-	if err != nil {
+	if startErr != nil {
 		logs, _ := ddevapp.GetErrLogsFromApp(app, startErr)
 		t.Fatalf("app.StartAndWaitForSync failed, err=%v, logs=\n========\n%s\n===========\n", startErr, logs)
 	}
