@@ -867,10 +867,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 60)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
-		if err != nil {
-			logs, err := ddevapp.GetErrLogsFromApp(app, err)
-			assert.NoError(err)
-			t.Logf("Logs after GetLocalHTTPResponse: %s", logs)
+		if err != nil && strings.Contains(err.Error(), "container ") {
+			logs, _ := ddevapp.GetErrLogsFromApp(app, err)
+			t.Logf("Logs after GetLocalHTTPResponse for err=%v: %s", err, logs)
 		}
 		assert.Contains(body, site.DynamicURI.Expect, "expected %s on project %s", site.DynamicURI.Expect, site.Name)
 
