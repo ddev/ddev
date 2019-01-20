@@ -37,7 +37,8 @@ services:
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
       interval: 5s
-      retries: 3
+      retries: 4
+      start_period: 20s
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
