@@ -94,7 +94,7 @@ services:
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
 {{ if .HostDockerInternalIP }}
-    extra_hosts: ["{{ .HostDockerInternalHostname }}":{{ .HostDockerInternalIP }}, ]
+    extra_hosts: [ "{{ .HostDockerInternalHostname }}:{{ .HostDockerInternalIP }}" ]
 {{ end }}
     external_links:
       - ddev-router:$DDEV_HOSTNAME
