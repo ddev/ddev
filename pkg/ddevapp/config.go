@@ -505,10 +505,17 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			}
 		}
 	} else if util.IsDockerToolbox() {
-		hostDockerInternalIP, err = dockerutil.GetDockerIP()
+		dockerIP, err := dockerutil.GetDockerIP()
 		if err != nil {
 			return "", err
 		}
+		octets := strings.Split(dockerIP, ".")
+		if len(octets) != 4 {
+			return "", fmt.Errorf("dockerIP %s does not have 4 octets", dockerIP)
+		}
+		// If the docker IP is 192.168.99.100, the *router* ip is 192.168.99.1
+		// So replace the final octet with 1.
+		hostDockerInternalIP = fmt.Sprintf("%s.%s.%s.1", octets[0], octets[1], octets[2])
 	}
 	// If we've come up with a host.docker.internal IP, set the hostname explicitly in
 	// docker-compose.yaml
