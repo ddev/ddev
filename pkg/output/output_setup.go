@@ -1,6 +1,7 @@
 package output
 
 import (
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/ravenutils"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/evalphobia/logrus_sentry"
@@ -32,7 +33,7 @@ func LogSetUp() {
 	}
 
 	// Report errors and panics to Sentry
-	if version.SentryDSN != "" && os.Getenv("DDEV_NO_SENTRY") == "" {
+	if version.SentryDSN != "" && !globalconfig.DdevNoSentry {
 		hook, err := logrus_sentry.NewAsyncWithTagsSentryHook(version.SentryDSN, ravenutils.RavenTags, levels)
 		if err == nil {
 			UserOut.Hooks.Add(hook)
