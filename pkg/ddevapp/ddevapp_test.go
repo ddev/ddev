@@ -867,10 +867,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 60)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
-		if err != nil {
-			logs, err := ddevapp.GetErrLogsFromApp(app, err)
-			assert.NoError(err)
-			t.Logf("Logs after GetLocalHTTPResponse: %s", logs)
+		if err != nil && strings.Contains(err.Error(), "container ") {
+			logs, _ := ddevapp.GetErrLogsFromApp(app, err)
+			t.Logf("Logs after GetLocalHTTPResponse for err=%v: %s", err, logs)
 		}
 		assert.Contains(body, site.DynamicURI.Expect, "expected %s on project %s", site.DynamicURI.Expect, site.Name)
 
@@ -1871,12 +1870,16 @@ func TestHttpsRedirection(t *testing.T) {
 		// Do a start on the configured site.
 		app, err = ddevapp.GetActiveApp("")
 		assert.NoError(err)
-		err = app.StartAndWaitForSync(5)
+		err = app.StartAndWaitForSync(30)
 		assert.NoError(err, "failed to StartAndWaitForSync on project %s webserverType=%s: %v", app.Name, webserverType, err)
 		if err != nil {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, err)
 			assert.NoError(getLogsErr)
-			t.Logf("app start failure; logs:\n=====\n%s\n=====\n", appLogs)
+			// Get healthcheck status on bgsync container
+			healthcheck, inspectErr := exec.RunCommandPipe("bash", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-bgsync|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
+			assert.NoError(inspectErr)
+
+			t.Logf("app.StartAndWaitForSync start failure; logs:\n==== container logs ======\n%s\n==== bgsync healthchecks ===\n%s\n=======", appLogs, healthcheck)
 		}
 
 		// Test for directory redirects under https and http

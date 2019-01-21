@@ -291,7 +291,7 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 			return logs, nil
 		}
 	}
-	return "", fmt.Errorf("no logs found for service %s", serviceName)
+	return "", fmt.Errorf("no logs found for service %s (Inspected err=%v)", serviceName, errorReceived)
 }
 
 // WaitForSync is a test helper; it's hard to know exactly when the bgsync

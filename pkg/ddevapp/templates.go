@@ -125,8 +125,8 @@ services:
       com.ddev.app-url: $DDEV_URL
     healthcheck:
       interval: 10s
-      retries: 5
-      start_period: 180s
+      retries: 24
+      start_period: 240s
 
 {{end}}
 
