@@ -1890,6 +1890,8 @@ func TestHttpsRedirection(t *testing.T) {
 		// Do a start on the configured site.
 		app, err = ddevapp.GetActiveApp("")
 		assert.NoError(err)
+		//nolint: errcheck
+		defer app.Down(true, false)
 		startErr := app.StartAndWaitForSync(30)
 		if startErr != nil {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
@@ -1924,10 +1926,9 @@ func TestHttpsRedirection(t *testing.T) {
 				assert.EqualValues(locHeader, expectedRedirect, "For webserver_type %s url %s expected redirect %s != actual %s", webserverType, reqURL, expectedRedirect, locHeader)
 			}
 		}
+		err = app.Down(true, false)
+		assert.NoError(err)
 	}
-
-	err = app.Down(true, false)
-	assert.NoError(err)
 
 	// Change back to package dir. Lots of things will have to be cleaned up
 	// in defers, and for windows we have to not be sitting in them.
@@ -1948,6 +1949,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	files, err := app.ComposeFiles()
 	assert.NoError(err)
+	require.NotEmpty(t, files)
 	require.Equal(t, files[0], filepath.Join(app.AppConfDir(), "docker-compose.yaml"))
 	require.Equal(t, files[len(files)-1], filepath.Join(app.AppConfDir(), "docker-compose.override.yaml"))
 
