@@ -2095,7 +2095,7 @@ func TestWebserverType(t *testing.T) {
 
 			testcommon.ClearDockerEnv()
 
-			startErr := app.StartAndWaitForSync(5)
+			startErr := app.StartAndWaitForSync(30)
 			if startErr != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(getLogsErr)
