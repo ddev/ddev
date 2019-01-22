@@ -87,6 +87,12 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 		}
 	}
 
+	// Turn off webcache_enabled except if macOS/darwin or global `developer_mode: true`
+	if runtime.GOOS != "darwin" && app.WebcacheEnabled && !globalconfig.DdevGlobalConfig.DeveloperMode {
+		app.WebcacheEnabled = false
+		util.Warning("webcache_enabled is not yet supported on %s, disabling it", runtime.GOOS)
+	}
+
 	// Allow override with provider.
 	// Otherwise we accept whatever might have been in config file if there was anything.
 	if provider == "" && app.Provider != "" {
@@ -334,11 +340,6 @@ func (app *DdevApp) ValidateConfig() error {
 	// Validate mariadb version
 	if !IsValidMariaDBVersion(app.MariaDBVersion) {
 		return fmt.Errorf("Invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
-	}
-
-	// Validate webcache_enabled
-	if runtime.GOOS != "darwin" && app.WebcacheEnabled && !globalconfig.DdevGlobalConfig.DeveloperMode {
-		return fmt.Errorf("webcache_enabled: true is not yet avalable for %s", runtime.GOOS)
 	}
 
 	return nil
