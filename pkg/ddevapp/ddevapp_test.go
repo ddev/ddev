@@ -2110,6 +2110,8 @@ func TestWebserverType(t *testing.T) {
 			}
 			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
 			assert.Contains(out, expectedServerType, "For app.WebserverType=%s phpinfo expected servertype.php to show %s", app.WebserverType, expectedServerType)
+			err = app.Down(true, false)
+			assert.NoError(err)
 		}
 
 		// Set the apptype back to whatever the default was so we don't break any following tests.
@@ -2119,8 +2121,6 @@ func TestWebserverType(t *testing.T) {
 			err = app.WriteConfig()
 			assert.NoError(err)
 		}
-		err = app.Down(true, false)
-		assert.NoError(err)
 
 		runTime()
 	}
