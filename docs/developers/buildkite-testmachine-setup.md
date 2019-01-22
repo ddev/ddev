@@ -6,7 +6,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 1. Install [chocolatey](https://chocolatey.org/)
-2. Install golang/mysql-cli/make/git/docker-ce/nssm with `choco install -y git mysql-cli golang make docker-desktop nssm GoogleChrome zip jq composer cmder` (If docker-toolbox, use that instead; you may have to download the release separately to get correct version.)
+2. Install golang/mysql-cli/make/git/docker-ce/nssm with `choco install -y git mysql-cli golang make docker-desktop nssm GoogleChrome zip jq composer cmder netcat` (If docker-toolbox, use that instead; you may have to download the release separately to get correct version.)
 3. Enable gd and curl extensions in /c/tools/php73/php.ini
 3. Install bats: `git clone git://github.com/bats-core/bats-core; cd bats-core; git checkout v1.1.0; ./install.sh`
 3. If a laptop, set the "lid closing" setting in settings to do nothing.
@@ -36,13 +36,14 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 1. `docker-machine rm default`
 2. `docker-machine create -d virtualbox --virtualbox-cpu-count=2 --virtualbox-memory=4096 --virtualbox-disk-size=50000 default`
+3. Disable "Windows Defender Firewall", as it always blocks our Xdebug test.
 
 ### macOS Test Agent Setup
 
 0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 1. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
 1. Install [homebrew](https://brew.sh/) `xcode select --install` and `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-2. Install golang/git/docker with `brew cask install item2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew tap drud/ddev && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer ddev`
+2. Install golang/git/docker with `brew cask install item2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew tap drud/ddev && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer ddev netcat`
 4. If the xcode command line tools are not yet installed, install them with `xcode select --install`
 5. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add 
     * the agent token 
