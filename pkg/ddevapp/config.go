@@ -54,8 +54,11 @@ func init() {
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		WebserverDefault = testWebServerType
 	}
-	if testWebCache := os.Getenv("DDEV_TEST_USE_WEBCACHE"); testWebCache != "" {
-		WebCacheEnabledDefault = true
+	if testWebcache := os.Getenv("DDEV_TEST_USE_WEBCACHE"); testWebcache != "" {
+		WebcacheEnabledDefault = true
+	}
+	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount != "" {
+		NFSMountEnabledDefault = true
 	}
 }
 
@@ -69,7 +72,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.APIVersion = version.DdevVersion
 	app.PHPVersion = PHPDefault
 	app.WebserverType = WebserverDefault
-	app.WebcacheEnabled = WebCacheEnabledDefault
+	app.WebcacheEnabled = WebcacheEnabledDefault
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 	app.MariaDBVersion = version.MariaDBDefaultVersion
@@ -221,8 +224,12 @@ func (app *DdevApp) ReadConfig() error {
 		app.WebserverType = WebserverDefault
 	}
 
-	if WebCacheEnabledDefault == true {
-		app.WebcacheEnabled = WebCacheEnabledDefault
+	if WebcacheEnabledDefault == true {
+		app.WebcacheEnabled = WebcacheEnabledDefault
+	}
+
+	if NFSMountEnabledDefault == true {
+		app.NFSMountEnabled = NFSMountEnabledDefault
 	}
 
 	if app.RouterHTTPPort == "" {
@@ -343,6 +350,10 @@ func (app *DdevApp) ValidateConfig() error {
 	// Validate mariadb version
 	if !IsValidMariaDBVersion(app.MariaDBVersion) {
 		return fmt.Errorf("Invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
+	}
+
+	if app.WebcacheEnabled && app.NFSMountEnabled {
+		return fmt.Errorf("webcache_enabled and nfsmount_enabled cannot both be set to true, use one or the other")
 	}
 
 	return nil
@@ -477,6 +488,8 @@ type composeYAMLVars struct {
 	OmitDBA                    bool
 	OmitSSHAgent               bool
 	WebcacheEnabled            bool
+	NFSMountEnabled            bool
+	NFSSource                  string
 	IsWindowsFS                bool
 }
 
@@ -539,13 +552,25 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitDBA:                    util.ArrayContainsString(app.OmitContainers, "dba"),
 		OmitSSHAgent:               util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
 		WebcacheEnabled:            app.WebcacheEnabled,
+		NFSMountEnabled:            app.NFSMountEnabled,
+		NFSSource:                  "",
 		IsWindowsFS:                runtime.GOOS == "windows",
 		MountType:                  "bind",
 		WebMount:                   "../",
 	}
-	if templateVars.WebcacheEnabled {
+	if app.WebcacheEnabled {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "webcachevol"
+	}
+	if app.NFSMountEnabled {
+		templateVars.MountType = "volume"
+		templateVars.WebMount = "nfsmount"
+		templateVars.NFSSource = app.AppRoot
+		if runtime.GOOS == "windows" {
+			// WinNFSD can only handle a mountpoint like /C/Users/rfay/workspace/d8git
+			// and completely chokes in C:\Users\rfay...
+			templateVars.NFSSource = dockerutil.MassageWindowsHostMountpoint(app.AppRoot)
+		}
 	}
 
 	err = templ.Execute(&doc, templateVars)

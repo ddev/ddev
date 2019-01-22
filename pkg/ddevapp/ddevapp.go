@@ -83,6 +83,7 @@ type DdevApp struct {
 	AdditionalFQDNs       []string             `yaml:"additional_fqdns"`
 	MariaDBVersion        string               `yaml:"mariadb_version"`
 	WebcacheEnabled       bool                 `yaml:"webcache_enabled"`
+	NFSMountEnabled       bool                 `yaml:"nfs_mount_enabled"`
 	ConfigPath            string               `yaml:"-"`
 	AppRoot               string               `yaml:"-"`
 	Platform              string               `yaml:"-"`
@@ -1570,4 +1571,9 @@ func (app *DdevApp) GetWebcacheVolName() string {
 // Returns the docker volume name of the unisoncatalogvolume
 func (app *DdevApp) GetUnisonCatalogVolName() string {
 	return strings.ToLower("ddev-" + app.Name + "_unisoncatalogvol")
+}
+
+// Returns the docker volume name of the nfs mount volume
+func (app *DdevApp) GetNFSMountVolName() string {
+	return strings.ToLower("ddev-" + app.Name + "_nfsmount")
 }

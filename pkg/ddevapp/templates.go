@@ -173,11 +173,20 @@ volumes:
   {{ end }}
   ddev-composer-cache:
     name: ddev-composer-cache
-  {{ if eq .MountType "volume" }}
+  {{ if .WebcacheEnabled }}
   webcachevol:
   unisoncatalogvol:
   {{ end }}
-`
+  {{ if .NFSMountEnabled }}
+  nfsmount:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: "addr=host.docker.internal,hard,nolock,rw"
+      device: ":{{ .NFSSource }}"
+  {{ end }}
+
+  `
 
 // ConfigInstructions is used to add example hooks usage
 const ConfigInstructions = `
