@@ -4,10 +4,9 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/version"
+	"os"
 	"path/filepath"
 	"testing"
-
-	"os"
 
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -46,7 +45,7 @@ func TestLogs(t *testing.T) {
 		ddevapp.WaitForSync(app, 2)
 
 		url := "http://" + v.Name + "." + version.DDevTLD + "/logtest.php"
-		_, _, err = testcommon.GetLocalHTTPResponse(t, url)
+		_, err = testcommon.EnsureLocalHTTPContent(t, url, "Notice to demonstrate logging", 5)
 		assert.NoError(err)
 
 		args := []string{"logs"}

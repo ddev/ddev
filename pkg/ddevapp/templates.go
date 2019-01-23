@@ -37,7 +37,8 @@ services:
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
       interval: 5s
-      retries: 3
+      retries: 4
+      start_period: 20s
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     image: $DDEV_WEBIMAGE
@@ -93,7 +94,9 @@ services:
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
-    extra_hosts: ["{{ .ExtraHost }}"]
+{{ if .HostDockerInternalIP }}
+    extra_hosts: [ "{{ .HostDockerInternalHostname }}:{{ .HostDockerInternalIP }}" ]
+{{ end }}
     external_links:
       - ddev-router:$DDEV_HOSTNAME
     healthcheck:

@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"html/template"
 	"io/ioutil"
 	"os"
@@ -459,36 +460,37 @@ func (app *DdevApp) CheckCustomConfig() {
 }
 
 type composeYAMLVars struct {
-	Name            string
-	Plugin          string
-	AppType         string
-	MailhogPort     string
-	DBAPort         string
-	DBPort          string
-	DdevGenerated   string
-	ExtraHost       string
-	ComposeVersion  string
-	MountType       string
-	WebMount        string
-	OmitDBA         bool
-	OmitSSHAgent    bool
-	WebcacheEnabled bool
-	IsWindowsFS     bool
+	Name                       string
+	Plugin                     string
+	AppType                    string
+	MailhogPort                string
+	DBAPort                    string
+	DBPort                     string
+	DdevGenerated              string
+	HostDockerInternalHostname string
+	HostDockerInternalIP       string
+	ComposeVersion             string
+	MountType                  string
+	WebMount                   string
+	OmitDBA                    bool
+	OmitSSHAgent               bool
+	WebcacheEnabled            bool
+	IsWindowsFS                bool
 }
 
 // RenderComposeYAML renders the contents of docker-compose.yaml.
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
-	var docker0Addr = "127.0.0.1"
-	var docker0Hostname = "unneeded"
+	var hostDockerInternalIP = ""
+	var hostDockerInternalHostname = "unneeded"
 	templ := template.New("compose template")
 	templ, err = templ.Parse(DDevComposeTemplate)
 	if err != nil {
 		return "", err
 	}
 
-	// Docker 18.03 on linux doesn't define host.docker.internal
+	// Docker 18.09 on linux and docker-toolbox don't define host.docker.internal
 	// so we need to go get the ip address of docker0
 	// We would hope to be able to remove this when
 	// https://github.com/docker/for-linux/issues/264 gets resolved.
@@ -499,28 +501,45 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			addr := regexp.MustCompile(`inet *[0-9\.]+`).FindString(out)
 			components := strings.Split(addr, " ")
 			if len(components) == 2 {
-				docker0Addr = components[1]
-				docker0Hostname = "host.docker.internal"
+				hostDockerInternalIP = components[1]
 			}
 		}
+	} else if util.IsDockerToolbox() {
+		dockerIP, err := dockerutil.GetDockerIP()
+		if err != nil {
+			return "", err
+		}
+		octets := strings.Split(dockerIP, ".")
+		if len(octets) != 4 {
+			return "", fmt.Errorf("dockerIP %s does not have 4 octets", dockerIP)
+		}
+		// If the docker IP is 192.168.99.100, the *router* ip is 192.168.99.1
+		// So replace the final octet with 1.
+		hostDockerInternalIP = fmt.Sprintf("%s.%s.%s.1", octets[0], octets[1], octets[2])
+	}
+	// If we've come up with a host.docker.internal IP, set the hostname explicitly in
+	// docker-compose.yaml
+	if hostDockerInternalIP != "" {
+		hostDockerInternalHostname = "host.docker.internal"
 	}
 
 	templateVars := composeYAMLVars{
-		Name:            app.Name,
-		Plugin:          "ddev",
-		AppType:         app.Type,
-		MailhogPort:     appports.GetPort("mailhog"),
-		DBAPort:         appports.GetPort("dba"),
-		DBPort:          appports.GetPort("db"),
-		DdevGenerated:   DdevFileSignature,
-		ExtraHost:       docker0Hostname + `:` + docker0Addr,
-		ComposeVersion:  version.DockerComposeFileFormatVersion,
-		OmitDBA:         util.ArrayContainsString(app.OmitContainers, "dba"),
-		OmitSSHAgent:    util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
-		WebcacheEnabled: app.WebcacheEnabled,
-		IsWindowsFS:     runtime.GOOS == "windows",
-		MountType:       "bind",
-		WebMount:        "../",
+		Name:                       app.Name,
+		Plugin:                     "ddev",
+		AppType:                    app.Type,
+		MailhogPort:                appports.GetPort("mailhog"),
+		DBAPort:                    appports.GetPort("dba"),
+		DBPort:                     appports.GetPort("db"),
+		DdevGenerated:              DdevFileSignature,
+		HostDockerInternalHostname: hostDockerInternalHostname,
+		HostDockerInternalIP:       hostDockerInternalIP,
+		ComposeVersion:             version.DockerComposeFileFormatVersion,
+		OmitDBA:                    util.ArrayContainsString(app.OmitContainers, "dba"),
+		OmitSSHAgent:               util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
+		WebcacheEnabled:            app.WebcacheEnabled,
+		IsWindowsFS:                runtime.GOOS == "windows",
+		MountType:                  "bind",
+		WebMount:                   "../",
 	}
 	if templateVars.WebcacheEnabled {
 		templateVars.MountType = "volume"
