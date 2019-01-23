@@ -6,10 +6,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-USER=`id -u`
-GROUP=`id -g`
-
-OS=`uname -s`
+OS=$(uname -s)
 
 if [ $OS != "Darwin" ]; then
   echo "This script is OSX-only. Please do not run it on any other Unix."
@@ -42,7 +39,7 @@ ddev rm -a
 echo "== Setting up nfs..."
 # Share /Users folder. If the projects are elsewhere the /etc/exports will need
 # to be adapted
-LINE="/Users -alldirs -mapall=${USER}:${GROUP} localhost"
+LINE="/Users -alldirs -mapall=$(id -u):$(id -g) localhost"
 FILE=/etc/exports
 sudo touch $FILE || ( echo "Failed to touch /etc/exports" && exit 103 )
 grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )

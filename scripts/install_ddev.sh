@@ -65,7 +65,7 @@ else
     sudo mv /tmp/ddev /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/
 fi
 
-if command -v brew >/dev/null &&  [ -f `brew --prefix`/etc/bash_completion ]; then
+if command -v brew >/dev/null &&  [ -f "$(brew --prefix)/etc/bash_completion" ]; then
 	bash_completion_dir=$(brew --prefix)/etc/bash_completion.d
     cp /tmp/ddev_bash_completion.sh $bash_completion_dir/ddev
     printf "${GREEN}Installed ddev bash completions in $bash_completion_dir${RESET}\n"
