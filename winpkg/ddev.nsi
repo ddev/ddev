@@ -104,13 +104,21 @@ SectionEnd
 Section "nssm (https://nssm.cc/download)" SecNSSM
   SectionIn 1
   SetOutPath $INSTDIR
+  SetOverwrite off
   File "../.gotmp/bin/windows_amd64/nssm.exe"
 SectionEnd
 
 Section "WinNFSd (github.com/winnfsd/winnfsd)" SecWinNFSd
   SectionIn 1
   SetOutPath $INSTDIR
+  SetOverwrite off
   File "../.gotmp/bin/windows_amd64/winnfsd.exe"
+SectionEnd
+
+Section "windows_ddev_nfs_setup.sh" SecNFSInstall
+  SectionIn 1
+  SetOutPath $INSTDIR
+  File "../scripts/windows_ddev_nfs_setup.sh"
 SectionEnd
 
 Section "Add to PATH" SecAddToPath
@@ -132,6 +140,7 @@ SectionEnd
   LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows allows for elevated privileges which are used to add hostnames to the Windows hosts file"
   LangString DESC_SecNSSM ${LANG_ENGLISH} "nssm is used to install services, specifically WinNFSd for NFS"
   LangString DESC_SecWinNFSd ${LANG_ENGLISH} "WinNFSd is an optional NFS server that can be used with ddev"
+  LangString DESC_SecNFSInstall ${LANG_ENGLISH} "NFS installation script windows_ddev_nfs_setup.sh"
   LangString DESC_SecAddToPath ${LANG_ENGLISH} "Adds the ddev (and sudo) path to the global PATH."
   LangString DESC_SecStartMenu ${LANG_ENGLISH} "Makes a shortcut for the uninstaller on the Start menu."
 
@@ -141,6 +150,7 @@ SectionEnd
     !insertmacro MUI_DESCRIPTION_TEXT ${SecSudo} $(DESC_SecSudo)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecNSSM} $(DESC_SecNSSM)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecWinNFSd} $(DESC_SecWinNFSd)
+    !insertmacro MUI_DESCRIPTION_TEXT ${SecNFSInstall} $(DESC_SecNFSInstall)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecAddToPath} $(DESC_SecAddToPath)
     !insertmacro MUI_DESCRIPTION_TEXT ${SecStartMenu} $(DESC_SecStartMenu)
   !insertmacro MUI_FUNCTION_DESCRIPTION_END
