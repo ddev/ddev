@@ -1504,8 +1504,12 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	err = app.StartAndWaitForSync(0)
-	assert.NoError(err)
+	startErr := app.StartAndWaitForSync(0)
+	if startErr != nil {
+		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+		assert.NoError(err)
+		t.Fatalf("app.StartAndWaitForSync failed err=%v logs from broken container: \n=======\n%s\n========\n", startErr, logs)
+	}
 
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
