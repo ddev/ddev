@@ -1513,18 +1513,23 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 		t.Fatalf("app.StartAndWaitForSync failed err=%v logs from broken container: \n=======\n%s\n========\n", startErr, logs)
 	}
 
-	tempPath := testcommon.CreateTmpDir("site-copy")
+	tempPath := testcommon.CreateTmpDir(t.Name() + "site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
 	defer removeAllErrCheck(tempPath, assert)
 
 	// Move the site directory to a temp location to mimic a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
+	err = os.Remove(site.Dir)
+	assert.NoError(err)
 
 	err = app.Stop()
 	assert.Error(err)
 	assert.Contains(err.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
+
 	// Move the site directory back to its original location.
+	err = os.MkdirAll(site.Dir, 0755)
+	assert.NoError(err)
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
 }
