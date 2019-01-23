@@ -473,24 +473,25 @@ func (app *DdevApp) CheckCustomConfig() {
 }
 
 type composeYAMLVars struct {
-	Name                       string
-	Plugin                     string
-	AppType                    string
-	MailhogPort                string
-	DBAPort                    string
-	DBPort                     string
-	DdevGenerated              string
-	HostDockerInternalHostname string
-	HostDockerInternalIP       string
-	ComposeVersion             string
-	MountType                  string
-	WebMount                   string
-	OmitDBA                    bool
-	OmitSSHAgent               bool
-	WebcacheEnabled            bool
-	NFSMountEnabled            bool
-	NFSSource                  string
-	IsWindowsFS                bool
+	Name                         string
+	Plugin                       string
+	AppType                      string
+	MailhogPort                  string
+	DBAPort                      string
+	DBPort                       string
+	DdevGenerated                string
+	HostDockerInternalHostname   string
+	HostDockerInternalIP         string
+	HostDockerInternalIdentifier string
+	ComposeVersion               string
+	MountType                    string
+	WebMount                     string
+	OmitDBA                      bool
+	OmitSSHAgent                 bool
+	WebcacheEnabled              bool
+	NFSMountEnabled              bool
+	NFSSource                    string
+	IsWindowsFS                  bool
 }
 
 // RenderComposeYAML renders the contents of docker-compose.yaml.
@@ -499,6 +500,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var err error
 	var hostDockerInternalIP = ""
 	var hostDockerInternalHostname = "unneeded"
+	// On linux and docker toolbox we know the IP and must use it.
+	// Elsewhere we know "host.docker.internal" and must use the name.
+	var hostDockerInternalIdentifier string
 	templ := template.New("compose template")
 	templ, err = templ.Parse(DDevComposeTemplate)
 	if err != nil {
@@ -517,6 +521,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			components := strings.Split(addr, " ")
 			if len(components) == 2 {
 				hostDockerInternalIP = components[1]
+				hostDockerInternalIdentifier = hostDockerInternalIP
 			}
 		}
 	} else if util.IsDockerToolbox() {
@@ -531,6 +536,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		// If the docker IP is 192.168.99.100, the *router* ip is 192.168.99.1
 		// So replace the final octet with 1.
 		hostDockerInternalIP = fmt.Sprintf("%s.%s.%s.1", octets[0], octets[1], octets[2])
+		hostDockerInternalIdentifier = hostDockerInternalIP
+	} else {
+		hostDockerInternalIdentifier = hostDockerInternalHostname
 	}
 	// If we've come up with a host.docker.internal IP, set the hostname explicitly in
 	// docker-compose.yaml
@@ -539,24 +547,25 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	templateVars := composeYAMLVars{
-		Name:                       app.Name,
-		Plugin:                     "ddev",
-		AppType:                    app.Type,
-		MailhogPort:                appports.GetPort("mailhog"),
-		DBAPort:                    appports.GetPort("dba"),
-		DBPort:                     appports.GetPort("db"),
-		DdevGenerated:              DdevFileSignature,
-		HostDockerInternalHostname: hostDockerInternalHostname,
-		HostDockerInternalIP:       hostDockerInternalIP,
-		ComposeVersion:             version.DockerComposeFileFormatVersion,
-		OmitDBA:                    util.ArrayContainsString(app.OmitContainers, "dba"),
-		OmitSSHAgent:               util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
-		WebcacheEnabled:            app.WebcacheEnabled,
-		NFSMountEnabled:            app.NFSMountEnabled,
-		NFSSource:                  "",
-		IsWindowsFS:                runtime.GOOS == "windows",
-		MountType:                  "bind",
-		WebMount:                   "../",
+		Name:                         app.Name,
+		Plugin:                       "ddev",
+		AppType:                      app.Type,
+		MailhogPort:                  appports.GetPort("mailhog"),
+		DBAPort:                      appports.GetPort("dba"),
+		DBPort:                       appports.GetPort("db"),
+		DdevGenerated:                DdevFileSignature,
+		HostDockerInternalHostname:   hostDockerInternalHostname,
+		HostDockerInternalIP:         hostDockerInternalIP,
+		HostDockerInternalIdentifier: hostDockerInternalIdentifier,
+		ComposeVersion:               version.DockerComposeFileFormatVersion,
+		OmitDBA:                      util.ArrayContainsString(app.OmitContainers, "dba"),
+		OmitSSHAgent:                 util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
+		WebcacheEnabled:              app.WebcacheEnabled,
+		NFSMountEnabled:              app.NFSMountEnabled,
+		NFSSource:                    "",
+		IsWindowsFS:                  runtime.GOOS == "windows",
+		MountType:                    "bind",
+		WebMount:                     "../",
 	}
 	if app.WebcacheEnabled {
 		templateVars.MountType = "volume"

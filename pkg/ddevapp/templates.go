@@ -182,7 +182,7 @@ volumes:
     driver: local
     driver_opts:
       type: nfs
-      o: "addr=host.docker.internal,hard,nolock,rw"
+      o: "addr={{ .HostDockerInternalIdentifier }},hard,nolock,rw"
       device: ":{{ .NFSSource }}"
   {{ end }}
 
