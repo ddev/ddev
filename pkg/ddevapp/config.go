@@ -353,7 +353,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if app.WebcacheEnabled && app.NFSMountEnabled {
-		return fmt.Errorf("webcache_enabled and nfsmount_enabled cannot both be set to true, use one or the other")
+		return fmt.Errorf("webcache_enabled and nfs_mount_enabled cannot both be set to true, use one or the other")
 	}
 
 	return nil
