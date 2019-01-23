@@ -11,7 +11,7 @@ sudo apt-get install -qq mysql-client realpath zip nsis jq expect nfs-kernel-ser
 # TODO: Figure out a more limited share; although there are no security implications,
 # we need to do better
 sudo bash -c "echo '/home      *' >>/etc/exports"
-sudo service nfs-kernel-server restart
+sudo systemctl restart nfs-kernel-server
 
 # golang of the version we want
 sudo apt-get remove -qq golang && sudo rm -rf /usr/local/go &&
