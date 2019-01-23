@@ -27,10 +27,11 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 14. Run `winpty docker run -it -p 80 busybox ls` to trigger the Windows Defender warning, and "allow access".
 15. Try running .buildkite/sanetestbot.sh to check your work.
 16. Install ddev using the ddev_windows_installer.exe from https://github.com/drud/ddev/releases 
-16. Change the name of the machine to something in keeping with current style. Maybe `testbot-dell-toolbox-3`.
-17. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.)
-18. Set the timezone properly (US MT)
-19. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
+17. Setup up winnfsd by running `windows_ddev_nfs_setup.sh`.
+18. Change the name of the machine to something in keeping with current style. Maybe `testbot-dell-toolbox-3`.
+19. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.)
+20. Set the timezone properly (US MT)
+21. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
 
 #### Docker Toolbox Extra Instructions
 
@@ -44,6 +45,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 1. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
 1. Install [homebrew](https://brew.sh/) `xcode select --install` and `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
 2. Install golang/git/docker with `brew cask install item2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew tap drud/ddev && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer ddev netcat`
+3. Set up nfsd by running `macos_ddev_nfs_setup.sh`
 4. If the xcode command line tools are not yet installed, install them with `xcode select --install`
 5. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add 
     * the agent token 
