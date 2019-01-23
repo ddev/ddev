@@ -25,5 +25,5 @@ esac
 
 
 docker volume create --driver local --opt type=nfs --opt o=addr=host.docker.internal,hard,nolock,rw --opt device=:${share} nfstest >/dev/null
-docker run -t --rm -v nfstest:/tmp/nfs busybox ls /tmp/nfs >/dev/null
+docker run -t --rm -v nfstest:/tmp/nfs busybox ls //tmp/nfs >/dev/null
 echo "nfsd seems to be set up ok"
