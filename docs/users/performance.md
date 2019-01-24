@@ -16,6 +16,11 @@ Download, inspect, and run the macos_ddev_nfs_setup.sh script provided by homebr
 
 The executable components required for Windows NFS (winnfsd and nssm) are packaged with the ddev_windows_installer in each release, so if you've used the windows installer, they're available already. To enable winnfsd as a service, please download, inspect and run the script "windows_ddev_nfs_setup.sh" installed by the installer (or download from [windows_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a git-bash session on windows. This is one-time setup. Note that this shares the C:\Users directory via NFS to any client, so it's critical to consider security issues and verify that your firewall is enabled and configured. If your DDEV-Local projects are set up outside C:\Users, you'll need to edit the configuration used here.
 
+### Debian/Ubuntu NFS Setup
+
+Note that for all Linux systems, you can and should install and configure the NFS daemon and configure /etc/exports as you see fit and share the directories that you choose to share. The debian/ubuntu script is just one way of accomplishing it. 
+
+Download, inspect, and run the [debian_ubuntu_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/debian_ubuntu_ddev_nfs_setup.sh)). This stops running ddev projects, adds the /home directory to the /etc/exports config file that nfs uses, and installs nfs-kernel-server  on your computer. This is one-time setup. Note that this shares the /home directory via NFS to all non-routeable ("public") IP addresses in your network, so it's critical to consider security issues and verify that your firewall is enabled and configured. If your DDEV-Local projects are set up outside /home, you'll need to edit /etc/exports for the correct values and restart nfs-kernel-server.
 
 ## Using webcache_enabled to Cache the Project Directory
 
