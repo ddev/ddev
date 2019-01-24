@@ -710,9 +710,10 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	// Delete the webcachevol before we bring up docker-compose.
+	// Delete the webcachevol and NFS volumes before we bring up docker-compose.
 	// We don't care if the volume wasn't there
 	_ = dockerutil.RemoveVolume(app.GetWebcacheVolName())
+	_ = dockerutil.RemoveVolume(app.GetNFSMountVolName())
 
 	_, _, err = dockerutil.ComposeCmd(files, "up", "-d")
 	if err != nil {
