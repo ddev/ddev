@@ -499,10 +499,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
 	var hostDockerInternalIP = ""
-	var hostDockerInternalHostname = "unneeded"
+	var hostDockerInternalHostname = "host.docker.internal"
 	// On linux and docker toolbox we know the IP and must use it.
 	// Elsewhere we know "host.docker.internal" and must use the name.
-	var hostDockerInternalIdentifier string
+	var hostDockerInternalIdentifier = hostDockerInternalHostname
 	templ := template.New("compose template")
 	templ, err = templ.Parse(DDevComposeTemplate)
 	if err != nil {
@@ -537,14 +537,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		// So replace the final octet with 1.
 		hostDockerInternalIP = fmt.Sprintf("%s.%s.%s.1", octets[0], octets[1], octets[2])
 		hostDockerInternalIdentifier = hostDockerInternalIP
-	} else {
-		hostDockerInternalIdentifier = hostDockerInternalHostname
 	}
-	// If we've come up with a host.docker.internal IP, set the hostname explicitly in
-	// docker-compose.yaml
-	if hostDockerInternalIP != "" {
-		hostDockerInternalHostname = "host.docker.internal"
-	}
+
+	// The fallthrough default for hostDockerInternalIdentifier is the
+	// hostDockerInternalHostname == host.docker.internal
 
 	templateVars := composeYAMLVars{
 		Name:                         app.Name,
