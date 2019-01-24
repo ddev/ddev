@@ -22,6 +22,21 @@ Note that for all Linux systems, you can and should install and configure the NF
 
 Download, inspect, and run the [debian_ubuntu_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/debian_ubuntu_ddev_nfs_setup.sh)). This stops running ddev projects, adds the /home directory to the /etc/exports config file that nfs uses, and installs nfs-kernel-server  on your computer. This is one-time setup. Note that this shares the /home directory via NFS to all non-routeable ("public") IP addresses in your network, so it's critical to consider security issues and verify that your firewall is enabled and configured. If your DDEV-Local projects are set up outside /home, you'll need to edit /etc/exports for the correct values and restart nfs-kernel-server.
 
+### Debugging `ddev start` failures with `nfs_mount_enabled: true`
+
+There are a number of reasons that the NFS mount can fail on `ddev start`:
+
+* NFS Server not running
+* Path of project not shared in /etc/exports (or service configuration on WIndows)
+* Docker container IP not listed in /etc/exports (Linux)
+
+Tools to debug and solve permission problems:
+
+* Inspect the /etc/exports (or nfsd service configuration on Windows via `nssm edit nfsd`)
+* Restart the server (`sudo nfsd restart` on macOS, `sudo nssm restart` on Windows, `sudo systemctl restart nfs-kernel-server` on Debian/Ubuntu, other commaonds for other Unices).
+* `showmount -e` on macOS or Linux will show the shared mounts.
+* On Linux, you may have to experiment with the client IP addresses in the /etc/exports. Temporarily set the share in /etc/exports to `/home *`, which shares /home with any client, and `sudo systemctl restart nfs-kernel-server`. Then start a ddev project doing an nfs mount, and `showmount -a` and you'll find out what the assigned IP address of the docker client is. You can add that address range to /etc/exports.
+
 ## Using webcache_enabled to Cache the Project Directory
 
 A separate webcache container is also provided as a separate experimental performance technique. It does not rely on any host configuration, but in some cases when large changes are made in the filesystem it can stop syncing and be unstable.
