@@ -45,7 +45,7 @@ var WebTag = "20190116_update_web_versions_drush" // Note that this can be overr
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.5.2"
+var BaseDBTag = "20190124_sql_triggers"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
