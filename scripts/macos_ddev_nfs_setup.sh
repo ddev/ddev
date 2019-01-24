@@ -38,7 +38,7 @@ ddev rm -a
 
 echo "== Setting up nfs..."
 # Share /Users folder. If the projects are elsewhere the /etc/exports will need
-# to be adapted
+# to be adapted.
 LINE="/Users -alldirs -mapall=$(id -u):$(id -g) localhost"
 FILE=/etc/exports
 sudo touch $FILE || ( echo "Failed to touch /etc/exports" && exit 103 )
