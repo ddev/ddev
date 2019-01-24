@@ -10,11 +10,11 @@ if [ "${DOCKER_TOOLBOX_INSTALL_PATH:-}" != "" ] && [ {$DOCKER_HOST} != "" ]; the
   ISTOOLBOX=true
 fi
 
-if [ ${OS} = "windows" ] && [ ${ISTOOLBOX} = "" ]; then echo "host.docker.internal" && exit; fi
+if [ "${OS}" = "windows" ] && [ "${ISTOOLBOX}" = "" ]; then echo "host.docker.internal" && exit; fi
 
-if [ ${OS} = "darwin" ] ; then echo "host.docker.internal" && exit; fi
+if [ "${OS}" = "darwin" ] ; then echo "host.docker.internal" && exit; fi
 
-if [ ${OS} = "linux" ]; then
+if [ "${OS}" = "linux" ]; then
     dockerIP=$(ip address show dev docker0 | awk  '$1 == "inet" { sub(/\/.*$/, "", $2); print $2 }')
     echo ${dockerIP}
     exit
