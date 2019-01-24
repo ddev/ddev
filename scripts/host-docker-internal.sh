@@ -6,7 +6,7 @@ set -o nounset
 
 OS=$(go env GOOS)
 ISTOOLBOX=""
-if [ "${DOCKER_TOOLBOX_INSTALL_PATH:-}" != "" ] && [ {$DOCKER_HOST} != "" ]; then
+if [ "$OS" = "windows" ] && [ "${DOCKER_TOOLBOX_INSTALL_PATH:-}" != "" ] && [ {$DOCKER_HOST} != "" ]; then
   ISTOOLBOX=true
 fi
 
@@ -21,7 +21,7 @@ if [ "${OS}" = "linux" ]; then
 fi
 
 if [ "${ISTOOLBOX}" != "" ] ; then
-    hostDockerInternalIP=$(echo $DOCKER_HOST | awk -F '.' ' { printf ("%d.%d.%d.1", $1, $2, $3) }')
+    hostDockerInternalIP=$(echo $DOCKER_HOST | awk -F '.' ' { sub(/tcp:\/\//,"",$1); printf ("%d.%d.%d.1", $1, $2, $3) }')
     echo ${hostDockerInternalIP} && exit
 fi
 
