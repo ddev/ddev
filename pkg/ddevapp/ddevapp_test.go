@@ -2100,6 +2100,8 @@ func TestWebserverType(t *testing.T) {
 			testcommon.ClearDockerEnv()
 
 			startErr := app.StartAndWaitForSync(30)
+			//nolint: errcheck
+			defer app.Down(true, false)
 			if startErr != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(getLogsErr)
@@ -2112,6 +2114,7 @@ func TestWebserverType(t *testing.T) {
 			if app.WebserverType == ddevapp.WebserverNginxFPM {
 				expectedServerType = "nginx"
 			}
+			require.NotEmpty(t, resp.Header["Server"][0])
 			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
 			assert.Contains(out, expectedServerType, "For app.WebserverType=%s phpinfo expected servertype.php to show %s", app.WebserverType, expectedServerType)
 			err = app.Down(true, false)
