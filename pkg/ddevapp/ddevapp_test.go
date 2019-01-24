@@ -1700,8 +1700,15 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure we have a site started so we have something to cleanup
-	err = app.StartAndWaitForSync(2)
-	assert.NoError(err)
+
+	startErr := app.StartAndWaitForSync(5)
+	//nolint: errcheck
+	defer app.Down(true, false)
+	if startErr != nil {
+		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+		assert.NoError(getLogsErr)
+		t.Fatalf("app.StartAndWaitForSync failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
+	}
 	// Setup by creating temp directory and nesting a folder for our site.
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
