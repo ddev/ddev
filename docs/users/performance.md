@@ -32,6 +32,7 @@ There are a number of reasons that the NFS mount can fail on `ddev start`:
 
 Tools to debug and solve permission problems:
 
+* When debugging, please do `ddev rm; ddev start` in between each change. Otherwise, you can have stale mounts inside the container and you'll miss any benefit you may find in the debugging process.
 * Inspect the /etc/exports (or nfsd service configuration on Windows via `nssm edit nfsd`)
 * Restart the server (`sudo nfsd restart` on macOS, `sudo nssm restart` on Windows, `sudo systemctl restart nfs-kernel-server` on Debian/Ubuntu, other commaonds for other Unices).
 * `showmount -e` on macOS or Linux will show the shared mounts.
