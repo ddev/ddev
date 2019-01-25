@@ -153,9 +153,11 @@ project root will be deleted when creating a project.`,
 
 		output.UserOut.Printf("Moving installation to project root")
 
-		// If not webcacheenabled, we will move the contents of the temp installation
-		// using host-side manipulation, but can't do that with cached filesystem.
-		if !app.WebcacheEnabled {
+		// Windows has serious problems with performance.
+		// If not webcacheenabled and not NFSMountEnabled,
+		// we will move the contents of the temp installation
+		// using host-side manipulation, but can't do that with a cached filesystem.
+		if runtime.GOOS == "windows" && !app.WebcacheEnabled && !app.NFSMountEnabled {
 
 			err = filepath.Walk(hostInstallPath, func(path string, info os.FileInfo, err error) error {
 				// Skip the initial tmp install directory
