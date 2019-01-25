@@ -78,6 +78,14 @@ if ! mysql -udb -pdb --database=db --host=127.0.0.1 --port=$HOSTPORT -e "SHOW TA
 	exit 104
 fi
 
+# Test to make sure trigger capability works for 'db' user
+# Triggers are needed occasionally, as for CiviCRM
+if ! mysql -udb -pdb --database=db --host=127.0.0.1 --port=$HOSTPORT -e 'CREATE TABLE account (acct_num INT, amount DECIMAL(10,2)); CREATE TRIGGER ins_sum BEFORE INSERT ON account
+       FOR EACH ROW SET @sum = @sum + NEW.amount;'; then
+   echo "Unable to create trigger"
+   exit 105
+fi
+
 # Make sure we have the right mysql version and can query it (and have root user setup)
 OUTPUT=$(mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW VARIABLES like \"version\";")
 RES=$?
