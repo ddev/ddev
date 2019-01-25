@@ -35,11 +35,14 @@ ddev composer outdated --minor-only`,
 		}
 
 		output.UserOut.Printf("Executing [composer %s] at the project root (/var/www/html in the container, %s on the host)", strings.Join(args, " "), app.AppRoot)
-		stdout, _, _ := app.Exec(&ddevapp.ExecOpts{
+		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Dir:     "/var/www/html",
 			Cmd:     append([]string{"composer"}, args...),
 		})
+		if err != nil {
+			util.Failed("composer command failed: %v", err)
+		}
 		if runtime.GOOS == "windows" && !util.IsDockerToolbox() {
 			replaceSimulatedLinks(app.AppRoot)
 		}
