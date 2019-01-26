@@ -237,7 +237,9 @@ func (app *DdevApp) ReadConfig() error {
 		app.WebImage = version.GetWebImage()
 	}
 
-	app.DBImage = version.GetDBImage(app.MariaDBVersion)
+	if app.DBImage == "" {
+		app.DBImage = version.GetDBImage(app.MariaDBVersion)
+	}
 
 	if app.DBAImage == "" {
 		app.DBAImage = version.GetDBAImage()
