@@ -61,6 +61,7 @@ case "$1" in
       for key in $keyfiles; do
         perm=$(stat -c %a "$key")
         if [ $perm = "777" ] ; then
+            echo "Please add password for ${key}..."
             cat $key | ssh-add -k -
         else
             ssh-add $key
