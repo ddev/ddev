@@ -6,3 +6,6 @@ in verifying that this package's contents are trustworthy.
 <If software vendor, explain that here - checksum verification instructions are optional>
 
 Verify https://github.com/drud/ddev/releases/download/REPLACE_DDEV_VERSION/ddev_windows_installer.REPLACE_DDEV_VERSION.exe with checksum from https://github.com/drud/ddev/releases/download/REPLACE_DDEV_VERSION/ddev_windows_installer.REPLACE_DDEV_VERSION.exe.sha256.txt
+
+For example,
+shasum -a 256 -c ddev_windows_installer.REPLACE_DDEV_VERSION.exe.sha256.txt

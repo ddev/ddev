@@ -45,6 +45,9 @@ DdevVersion ?= $(VERSION)
 # This version-strategy uses git tags to set the version string
 # VERSION can be overridden on make commandline: make VERSION=0.9.1 push
 VERSION := $(shell git describe --tags --always --dirty)
+# Some things insist on having the version without the leading 'v', so provide a
+# $(NO_V_VERSION) without it.
+NO_V_VERSION=$(shell echo $(VERSION) | awk '{sub(/^./, "", $$0); print $$0 }')
 
 #
 # This version-strategy uses a manual value to set the version string
@@ -98,6 +101,17 @@ staticrequired: setup golangci-lint
 
 windows_install: windows $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt
 	makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
+
+no_v_version:
+	@echo $(NO_V_VERSION)
+
+chocolatey: windows_install
+	rm -rf /tmp/chocolatey && cp -r winpkg/chocolatey /tmp/chocolatey
+	perl -pi -e 's/REPLACE_DDEV_VERSION/$(NO_V_VERSION)/g' /tmp/chocolatey/*.nuspec /tmp/chocolatey/tools/*.ps1
+	perl -pi -e 's/REPLACE_DDEV_VERSION/$(VERSION)/g' /tmp/chocolatey/tools/*.txt
+	docker run --rm -v /tmp/chocolatey:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco pack ddev.nuspec
+	echo "chocolatey package is in /tmp/chocolatey"
+
 
 $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt:
 	curl -sSL -o /tmp/sudo.zip -O  https://github.com/mattn/sudo/releases/download/$(WINDOWS_SUDO_VERSION)/sudo-x86_64.zip
