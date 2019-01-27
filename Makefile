@@ -47,7 +47,8 @@ DdevVersion ?= $(VERSION)
 VERSION := $(shell git describe --tags --always --dirty)
 # Some things insist on having the version without the leading 'v', so provide a
 # $(NO_V_VERSION) without it.
-NO_V_VERSION=$(shell echo $(VERSION) | awk '{sub(/^./, "", $$0); print $$0 }')
+# no_v_version removes the front v, keeps the special to 20 chars, uses -alpha before the rest.
+NO_V_VERSION=$(shell echo $(VERSION) | awk -F"-" '{sub(/^./, "", $$1); printf $$1; if (NF >3) { printf("-alpha-%s%s", $$3, $$4); } }')
 
 #
 # This version-strategy uses a manual value to set the version string
