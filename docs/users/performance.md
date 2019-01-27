@@ -16,6 +16,8 @@ Download, inspect, and run the macos_ddev_nfs_setup.sh script provided by homebr
 
 The executable components required for Windows NFS (winnfsd and nssm) are packaged with the ddev_windows_installer in each release, so if you've used the windows installer, they're available already. To enable winnfsd as a service, please download, inspect and run the script "windows_ddev_nfs_setup.sh" installed by the installer (or download from [windows_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a git-bash session on windows. This is one-time setup. Note that this shares the C:\Users directory via NFS to any client, so it's critical to consider security issues and verify that your firewall is enabled and configured. If your DDEV-Local projects are set up outside C:\Users, you'll need to edit the configuration used here.
 
+**Firewall issues**: On Windows 10 you may run afoul of the Windows Defender Firewall, and it may be necessary to allow winnfsd to bypass it. If you're getting a timeout with no information after `ddev start`, try going to "Windows Defender Firewall" -> "Allow an app or feature through Windows Defender Firewall", "Change Settings", "Allow another app". Then choose C:\Program Files\ddev\winnfsd.exe, assuming that's where you installed winnfsd.
+
 ### Debian/Ubuntu NFS Setup
 
 Note that for all Linux systems, you can and should install and configure the NFS daemon and configure /etc/exports as you see fit and share the directories that you choose to share. The debian/ubuntu script is just one way of accomplishing it. 
