@@ -11,9 +11,9 @@
 
     <title>ddev (Install)</title>
     <authors>Drud Tech</authors>
-    <projectUrl>https://_Software_Location_REMOVE_OR_FILL_OUT_</projectUrl>
+    <projectUrl>https://github.com/drud/ddev</projectUrl>
     <copyright>2019</copyright>
-    <licenseUrl>https://github.com/drud/ddev/>LICENSE</licenseUrl>
+    <licenseUrl>https://github.com/drud/ddev/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/drud/ddev</projectSourceUrl>
     <docsUrl>https://ddev.readthedocs.io/en/stable/</docsUrl>
