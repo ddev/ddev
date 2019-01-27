@@ -39,10 +39,8 @@ brew upgrade ddev
 
 ### Installation or Upgrade - Windows
 
-- A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. If you get a Windows Defender Smartscreen warning "Windows protected your PC", click "More info" and then "Run anyway". Open a new terminal or cmd window and start using ddev.
-- If using Docker Toolbox (on WIndows 10 Home, for example):
-    * Start Docker Toolbox by running the Docker Quickstart Terminal.
-    * Execute ddev commands within the Docker Quickstart Terminal.
+- A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new terminal or cmd window and start using ddev.
+- If you use [chocolatey](https://chocolatey.org/) (highly recommended), then you can just `choco install ddev` from an administrative-privileged shell. Upgrades are just `choco upgrade ddev`.
 
 ### Installation/Upgrade Script - Linux and macOS
 
