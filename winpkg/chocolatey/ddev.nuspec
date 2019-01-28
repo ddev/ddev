@@ -6,7 +6,7 @@
     <!-- == PACKAGE SPECIFIC SECTION == -->
     <id>ddev</id>
     <version>REPLACE_DDEV_VERSION</version>
-    <packageSourceUrl>https://github.com/drud/ddev/releases</packageSourceUrl>
+    <packageSourceUrl>https://github.com/drud/ddev/archive/REPLACE_DDEV_RELEASE.zip</packageSourceUrl>
     <owners>Randy Fay, Andrew French</owners>
 
     <title>ddev (Install)</title>
@@ -14,7 +14,6 @@
     <projectUrl>https://github.com/drud/ddev</projectUrl>
     <licenseUrl>https://github.com/drud/ddev/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <projectSourceUrl>https://github.com/drud/ddev</projectSourceUrl>
     <docsUrl>https://ddev.readthedocs.io/en/stable/</docsUrl>
     <bugTrackerUrl>https://github.com/drud/ddev/issues</bugTrackerUrl>
     <tags>ddev drupal TYPO3 backdrop php</tags>
