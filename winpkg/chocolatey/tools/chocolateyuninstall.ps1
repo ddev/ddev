@@ -4,7 +4,7 @@ $packageArgs = @{
   packageName   = $env:ChocolateyPackageName
   softwareName  = 'ddev*'
   fileType      = 'EXE'
-  silentArgs    = "/qn /norestart"
+  silentArgs    = "/S"
   validExitCodes= @(0, 3010, 1605, 1614, 1641)
 }
 
