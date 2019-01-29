@@ -637,10 +637,11 @@ func MassageWindowsHostMountpoint(mountPoint string) string {
 	return mountPoint
 }
 
+// RemoveVolume removes named volume. Does not throw error if the volume did not exist.
 func RemoveVolume(volumeName string) error {
 	client := GetDockerClient()
 	err := client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volumeName})
-	if err != nil {
+	if err != nil && err.Error() != "" && err.Error() != "no such volume" {
 		return err
 	}
 	return nil
