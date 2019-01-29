@@ -95,10 +95,10 @@ func TestCmdDescribe(t *testing.T) {
 			}
 		}
 		require.True(t, rawFound, "did not find 'raw' in item in logItems\n===\n%s\n===\n", out)
-		assert.EqualValues(raw["status"], "running")
-		assert.EqualValues(raw["name"], v.Name)
-		assert.EqualValues(raw["shortroot"].(string), ddevapp.RenderHomeRootedDir(v.Dir))
-		assert.EqualValues(raw["approot"].(string), v.Dir)
+		assert.EqualValues("running", raw["status"])
+		assert.EqualValues(v.Name, raw["name"])
+		assert.Equal(ddevapp.RenderHomeRootedDir(v.Dir), raw["shortroot"].(string))
+		assert.EqualValues(v.Dir, raw["approot"].(string))
 
 		assert.NotEmpty(item["msg"])
 	}
