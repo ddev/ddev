@@ -6,7 +6,7 @@
     <!-- == PACKAGE SPECIFIC SECTION == -->
     <id>ddev</id>
     <version>REPLACE_DDEV_VERSION</version>
-    <packageSourceUrl>https://github.com/drud/ddev/archive/REPLACE_DDEV_RELEASE.zip</packageSourceUrl>
+    <packageSourceUrl>https://github.com/drud/ddev/archive/vREPLACE_DDEV_VERSION.zip</packageSourceUrl>
     <owners>Randy Fay, Andrew French</owners>
 
     <title>ddev (Install)</title>
@@ -19,7 +19,7 @@
     <tags>ddev drupal TYPO3 backdrop php</tags>
     <summary>ddev is a local web development tool optimized for PHP projects and CMSs.</summary>
     <description>ddev allows developers to use both nginx and apache, and many versions of PHP, with no host configurations. It works for most web apps, but has a bias toward TYPO3 and Drupal and Wordpress.</description>
-    <releaseNotes>See https://github.com/drud/ddev/releases/tag/REPLACE_DDEV_RELEASE</releaseNotes>
+    <releaseNotes>See https://github.com/drud/ddev/releases/tag/vREPLACE_DDEV_VERSION</releaseNotes>
   </metadata>
   <files>
     <file src="tools/**" target="tools" />
