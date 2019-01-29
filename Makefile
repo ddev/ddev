@@ -49,6 +49,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 # $(NO_V_VERSION) without it.
 # no_v_version removes the front v, keeps the special to 20 chars, uses -alpha before the rest.
 NO_V_VERSION=$(shell echo $(VERSION) | awk -F"-" '{sub(/^./, "", $$1); printf $$1; if (NF >2) { printf("-alpha-%s-%s", $$2, $$3); } }')
+GITHUB_ORG := drud
 
 #
 # This version-strategy uses a manual value to set the version string
@@ -110,6 +111,7 @@ chocolatey: windows_install
 	rm -rf $(GOTMP)/bin/windows_amd64/chocolatey && cp -r winpkg/chocolatey $(GOTMP)/bin/windows_amd64/chocolatey
 	perl -pi -e 's/REPLACE_DDEV_VERSION/$(NO_V_VERSION)/g' $(GOTMP)/bin/windows_amd64/chocolatey/*.nuspec
 	perl -pi -e 's/REPLACE_DDEV_VERSION/$(VERSION)/g' $(GOTMP)/bin/windows_amd64/chocolatey/tools/*
+	perl -pi -e 's/REPLACE_GITHUB_ORG/$(GITHUB_ORG)/g' $(GOTMP)/bin/windows_amd64/chocolatey/* $(GOTMP)/bin/windows_amd64/chocolatey/tools/*
 	docker run --rm -v $(PWD)/$(GOTMP)/bin/windows_amd64/chocolatey:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco pack ddev.nuspec
 	@echo "chocolatey package is in $(GOTMP)/bin/windows_amd64/chocolatey"
 

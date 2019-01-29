@@ -6,7 +6,7 @@
     <!-- == PACKAGE SPECIFIC SECTION == -->
     <id>ddev</id>
     <version>REPLACE_DDEV_VERSION</version>
-    <packageSourceUrl>https://github.com/drud/ddev/archive/vREPLACE_DDEV_VERSION.zip</packageSourceUrl>
+    <packageSourceUrl>https://github.com/REPLACE_GITHUB_ORG/ddev/archive/vREPLACE_DDEV_VERSION.zip</packageSourceUrl>
     <owners>Randy Fay, Andrew French</owners>
 
     <title>ddev (Install)</title>
