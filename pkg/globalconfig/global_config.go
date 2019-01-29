@@ -53,8 +53,13 @@ func ReadGlobalConfig() error {
 
 	// Can't use fileutil.FileExists() here because of import cycle.
 	if _, err := os.Stat(globalConfigFile); err != nil {
+		// ~/.ddev doesn't exist and running as root (only ddev hostname could do this)
+		// Then create global config.
+		if os.Geteuid() == 0 {
+			logrus.Warning("not reading global config file because running with root privileges")
+			return nil
+		}
 		if os.IsNotExist(err) {
-
 			err := WriteGlobalConfig(DdevGlobalConfig)
 			if err != nil {
 				return err
@@ -116,7 +121,13 @@ func GetGlobalDdevDir() string {
 
 	// Create the directory if it is not already present.
 	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
-		err = os.MkdirAll(ddevDir, 0700)
+		// If they happen to be running as root/sudo, we won't create the directory
+		// but act like we did. This should only happen for ddev hostname, which
+		// doesn't need config or access to this dir anyway.
+		if os.Geteuid() == 0 {
+			return ddevDir
+		}
+		err = os.MkdirAll(ddevDir, 0755)
 		if err != nil {
 			logrus.Fatalf("Failed to create required directory %s, err: %v", ddevDir, err)
 		}
