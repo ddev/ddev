@@ -28,6 +28,9 @@ func AvailableUpdates(repoOrg string, repoName string, currentVersion string) (b
 			return false, "", err
 		}
 		for _, release := range releases {
+			if *release.Prerelease {
+				continue
+			}
 			releaseVersion, err := semver.NewVersion(*release.TagName)
 			if err != nil {
 				return false, "", err
