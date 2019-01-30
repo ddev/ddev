@@ -6,13 +6,13 @@
     <!-- == PACKAGE SPECIFIC SECTION == -->
     <id>ddev</id>
     <version>REPLACE_DDEV_VERSION</version>
-    <packageSourceUrl>https://github.com/REPLACE_GITHUB_ORG/ddev/archive/vREPLACE_DDEV_VERSION.zip</packageSourceUrl>
+    <packageSourceUrl>https://github.com/drud/ddev</packageSourceUrl>
     <owners>Randy Fay, Andrew French</owners>
 
     <title>ddev (Install)</title>
     <authors>Drud Tech</authors>
     <projectUrl>https://github.com/drud/ddev</projectUrl>
-    <licenseUrl>https://github.com/drud/ddev/LICENSE</licenseUrl>
+    <licenseUrl>https://github.com/drud/ddev/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <docsUrl>https://ddev.readthedocs.io/en/stable/</docsUrl>
     <bugTrackerUrl>https://github.com/drud/ddev/issues</bugTrackerUrl>
