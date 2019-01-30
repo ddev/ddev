@@ -574,7 +574,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		if runtime.GOOS == "windows" {
 			// WinNFSD can only handle a mountpoint like /C/Users/rfay/workspace/d8git
 			// and completely chokes in C:\Users\rfay...
-			templateVars.NFSSource = dockerutil.MassageWIndowsNGSMount(app.AppRoot)
+			templateVars.NFSSource = dockerutil.MassageWIndowsNFSMount(app.AppRoot)
 		}
 	}
 
