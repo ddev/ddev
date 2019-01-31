@@ -226,7 +226,7 @@ func (app *DdevApp) ImportFilesAction(importPath, extPath string) error {
 		return appFuncs.importFilesAction(app, importPath, extPath)
 	}
 
-	return nil
+	return fmt.Errorf("this project type (%s) does not support import-files", app.Type)
 }
 
 // DefaultWorkingDirMap returns the app type's default working directory map.
