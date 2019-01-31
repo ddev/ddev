@@ -34,8 +34,6 @@ echo ""
 
 ddev rm -a
 
-# osascript -e 'quit app "Docker"'
-
 echo "== Setting up nfs..."
 # Share /Users folder. If the projects are elsewhere the /etc/exports will need
 # to be adapted.
