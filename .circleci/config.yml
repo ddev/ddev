@@ -184,7 +184,6 @@ jobs:
 
     # We only build the xz version of the docker images on tag build.
     - run:
-        # DEBUG: Turn off (last arg) image building for debug time
         command: ./.circleci/generate_artifacts.sh $ARTIFACTS TRUE true
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
