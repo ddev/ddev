@@ -3,7 +3,7 @@
 - [ ] Update the default container versions in `pkg/version/version.go` and create a pull request
 - [ ] Ensure all updates have been merged into the master branch
 - [ ] Create a tag for the new version according to the instructions below, initiating a tag build
-- [ ] Wait for the tag build to automatically create a GitHub release and upload artifacts to the release page
+- [ ] Build and push artifacts with the .circleci/trigger_release.sh tool: `.circleci/trigger_release.sh circlepikey0908b3443ea58316baf928b <VERSION> githubpersonaltokenc590a1ad9f7c353962dea  | jq -r 'del(.circle_yml)'`
 - [ ] Add the commit list (`git log vXXX..vYYY --oneline --decorate=no`) to the release page
 - [ ] Download and sign the Windows installer executable according to the steps below
 - [ ] Generate a new SHA checksum for the signed Windows installer: `shasum -a256 ${artifact} > ${artifact}.sha256.txt`
