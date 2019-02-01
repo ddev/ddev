@@ -22,9 +22,11 @@ if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
     for item in $(cat /tmp/images.txt); do
       docker pull $item
     done
+    echo "Generating ddev_docker_images.$VERSION.tar.gz"
     docker save -o $ARTIFACTS/ddev_docker_images.$VERSION.tar $(cat /tmp/images.txt)
     gzip --keep $ARTIFACTS/ddev_docker_images.$VERSION.tar
     if [ ! -z "$BUILD_XZ" ] ; then
+        echo "Generating ddev_docker_images.$VERSION.tar.xz"
         xz $ARTIFACTS/ddev_docker_images.$VERSION.tar
     fi
 fi
