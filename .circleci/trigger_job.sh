@@ -1,11 +1,9 @@
 #!/bin/bash
 
-echo "This script is currently inoperative because we use CircleCI workflows, which can't be started via API" && exit 1
-
 # from https://circleci.com/docs/1.0/nightly-builds/
 # See also https://circleci.com/docs/2.0/defining-multiple-jobs/
 
-# trigger_build.sh $circle_token $project_optional $branch_optional
+# trigger_job.sh $circle_token $project_optional $branch_optional
 
 CIRCLE_TOKEN=$1
 JOB=${2:-nightly_build}
