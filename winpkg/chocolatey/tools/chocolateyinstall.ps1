@@ -7,14 +7,11 @@ $packageArgs = @{
   packageName   = $env:ChocolateyPackageName
   unzipLocation = $toolsDir
   fileType      = 'EXE'
-  url           = $url
   url64bit      = $url64
 
   softwareName  = 'ddev*'
 
-  checksum      = ''
-  checksumType  = 'sha256'
-  checksum64    = ''
+  checksum64 = 'REPLACE_INSTALLER_CHECKSUM'
   checksumType64= 'sha256'
 
   validExitCodes= @(0, 3010, 1641)
