@@ -26,11 +26,12 @@ if [ "$status" = "SERVICE_STOPPED" ] ; then
     exit 0
 fi
 
-if [ ! -f "/C/Program Files/ddev/winnfsd.exe" ] ; then
-    echo "winnfsd is not installed in C:\Program Files\ddev\ - Plesae use the ddev windows isntaller to get it installed, or do a manual installation."
+if ! command -v winnfsd.exe; then
+    echo "winnfsd.exe does not seem to be installed or is not in the PATH"
     exit 101
 fi
-sudo nssm install nfsd "C:\Program Files\ddev\winnfsd.exe" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -log off "C:\\Users"
+winnfsd=$(command -v winnfsd.exe)
+sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -log off "C:\\Users"
 sudo nssm start nfsd
 
 echo "winnfsd has been installed as service nfsd serving C:\Users"
