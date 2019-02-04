@@ -325,3 +325,17 @@ func TestGetExposedContainerPorts(t *testing.T) {
 	assert.NotNil(ports)
 	assert.Equal([]string{"8889", "8890"}, ports)
 }
+
+// TestCreateVolume does a trivial test of creating a trivial docker volume.
+func TestCreateVolume(t *testing.T) {
+	assert := asrt.New(t)
+	// Make sure there's no existing volume.
+	//nolint: errcheck
+	RemoveVolume("junker99")
+	volume, err := CreateVolume("junker99", "local", map[string]string{})
+	require.NoError(t, err)
+	//nolint: errcheck
+	defer RemoveVolume("junker99")
+	require.NotNil(t, volume)
+	assert.Equal("junker99", volume.Name)
+}

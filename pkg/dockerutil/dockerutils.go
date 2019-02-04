@@ -66,6 +66,21 @@ func GetDockerClient() *docker.Client {
 	return client
 }
 
+// FindContainerByName takes a container name and returns the container
+func FindContainerByName(name string) (*docker.APIContainers, error) {
+	containers, err := GetDockerContainers(true)
+	if err != nil {
+		return nil, err
+	}
+	// First, ensure a site name is set and matches the current application.
+	for _, container := range containers {
+		if len(container.Names) > 0 && container.Names[0] == "/"+name {
+			return &container, nil
+		}
+	}
+	return nil, nil
+}
+
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.
 func FindContainerByLabels(labels map[string]string) (*docker.APIContainers, error) {
 	containers, err := FindContainersByLabels(labels)
@@ -523,22 +538,18 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create/start docker container (%v):%v", options, err)
 	}
-	containerID = container.ID
 
 	if removeContainerAfterRun {
 		// nolint: errcheck
-		defer client.RemoveContainer(docker.RemoveContainerOptions{
-			Force: true,
-			ID:    container.ID,
-		})
+		defer RemoveContainer(container.ID, 20)
 	}
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
-		return containerID, "", fmt.Errorf("failed to StartContainer: %v", err)
+		return container.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
 	}
 	exitCode, err := client.WaitContainer(container.ID)
 	if err != nil {
-		return containerID, "", fmt.Errorf("failed to WaitContainer: %v", err)
+		return container.ID, "", fmt.Errorf("failed to WaitContainer: %v", err)
 	}
 
 	// Get logs so we can report them if exitCode failed
@@ -550,26 +561,23 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		OutputStream: &stdout,
 	})
 	if err != nil {
-		return containerID, "", fmt.Errorf("failed to get Logs(): %v", err)
+		return container.ID, "", fmt.Errorf("failed to get Logs(): %v", err)
 	}
 
 	// This is the exitCode from the client.WaitContainer()
 	if exitCode != 0 {
-		return containerID, stdout.String(), fmt.Errorf("container run failed with exit code %d", exitCode)
+		return container.ID, stdout.String(), fmt.Errorf("container run failed with exit code %d", exitCode)
 	}
 
-	return containerID, stdout.String(), nil
+	return container.ID, stdout.String(), nil
 }
 
 // RemoveContainer stops and removes a container
 func RemoveContainer(id string, timeout uint) error {
 	client := GetDockerClient()
 
-	err := client.StopContainer(id, timeout)
-	if err != nil {
-		return err
-	}
-	err = client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: false})
+	_ = client.StopContainer(id, timeout)
+	err := client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: false})
 	return err
 }
 
@@ -655,4 +663,11 @@ func RemoveVolume(volumeName string) error {
 		return err
 	}
 	return nil
+}
+
+// CreateVolume creates a docker volume
+func CreateVolume(volumeName string, driver string, driverOpts map[string]string) (volume *docker.Volume, err error) {
+	client := GetDockerClient()
+	volume, err = client.CreateVolume(docker.CreateVolumeOptions{Name: volumeName, Driver: driver, DriverOpts: driverOpts})
+	return volume, err
 }
