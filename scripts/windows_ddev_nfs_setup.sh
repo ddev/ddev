@@ -26,13 +26,25 @@ if [ "$status" = "SERVICE_STOPPED" ] ; then
     exit 0
 fi
 
-if ! command -v winnfsd.exe; then
+if ! command -v winnfsd.exe >/dev/null; then
     echo "winnfsd.exe does not seem to be installed or is not in the PATH"
     exit 101
 fi
 winnfsd=$(command -v winnfsd.exe)
-sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -log off "C:\\Users"
+
+if [ -f ~/.ddev/nfs_mounts.txt ]; then
+    echo "~/.ddev/nfs_mounts.txt already exists, not overwriting it"
+else
+    echo "
+# Exports for winnfsd
+# You can edit these yourself to match your workflow
+# But nfs must share your project directory
+C:\ > /C" >~/.ddev/nfs_mounts.txt
+fi
+sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -log off -pathFile "$HOME/.ddev/nfs_mounts.txt"
 sudo nssm start nfsd
 
-echo "winnfsd has been installed as service nfsd serving C:\Users"
-echo "You can edit its behavior with 'sudo nssm edit nfsd'"
+echo "winnfsd has been installed as service nfsd serving the mounts in ~/.ddev/nfs_mounts.txt"
+echo "You can edit that file and restart the nfsd service"
+echo "with 'sudo nssm restart nfsd'"
+echo "Or you can edit its behavior with 'sudo nssm edit nfsd'"
