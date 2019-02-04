@@ -364,8 +364,8 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.MariaDBVersion = mariaDBVersionArg
 	}
 
-	if nfsMountEnabled {
-		app.NFSMountEnabled = true
+	if cmd.Flag("nfs-mount-enabled").Changed {
+		app.NFSMountEnabled = nfsMountEnabled
 	}
 
 	// This bool flag is false by default, so only use the value if the flag was explicity set.
