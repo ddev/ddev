@@ -20,7 +20,7 @@ jobs:
         root: ~/
         paths: ddev
 
-  lx_tst_nginx_fpm:
+  lx_nginx_fpm_test:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -42,7 +42,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
 
-  mac_tst_nginx_fpm:
+  mac_nginx_fpm_test:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -65,14 +65,14 @@ jobs:
         command: make -s test
         name: ddev tests
         no_output_timeout: "40m"
-    - store_tst_results:
+    - store_test_results:
         path: /tmp/testresults
     - save_cache:
         key: homebrew-macos
         paths:
         - /usr/local/Homebrew
 
-  mac_tst_apache_fpm:
+  mac_apache_fpm_test:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -103,7 +103,7 @@ jobs:
         - /usr/local/Homebrew
 
 
-  mac_tst_use_webcache:
+  mac_webcache_test:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -133,7 +133,7 @@ jobs:
         paths:
         - /usr/local/Homebrew
 
-  mac_tst_use_nfsmount:
+  mac_nfsmount_test:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -163,7 +163,7 @@ jobs:
         paths:
         - /usr/local/Homebrew
 
-  lx_tst_apache_fpm:
+  lx_apache_fpm_test:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -187,7 +187,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
 
-  lx_tst_apache_cgi:
+  lx_apache_cgi_test:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -248,7 +248,7 @@ jobs:
         command: make staticrequired
         name: staticrequired
 
-  lx_tst_containers:
+  lx_container_test:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -269,7 +269,7 @@ jobs:
           done
         name: linux container test
 
-  mac_tst_containers:
+  mac_container_test:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -404,31 +404,31 @@ workflows:
   normal_build_and_test:
     jobs:
     - golang_build
-    - mac_tst_containers
-    - lx_tst_containers
+    - mac_container_test
+    - lx_container_test
     - staticrequired
     - artifacts:
         requires:
         - golang_build
-    - lx_tst_nginx_fpm:
+    - lx_nginx_fpm_test:
         requires:
         - golang_build
-    - mac_tst_nginx_fpm:
+    - mac_nginx_fpm_test:
         requires:
         - golang_build
-    - mac_tst_apache_fpm:
+    - mac_apache_fpm_test:
         requires:
         - golang_build
-    - mac_tst_use_webcache:
+    - mac_webcache_test:
         requires:
         - golang_build
 #    - mac_tst_use_nfsmount:
 #        requires:
 #        - golang_build
-    - lx_tst_apache_fpm:
+    - lx_apache_fpm_test:
         requires:
         - golang_build
-    - lx_tst_apache_cgi:
+    - lx_apache_cgi_test:
         requires:
         - golang_build
     - golang_test_nfs:
