@@ -2319,24 +2319,24 @@ func TestNFSMount(t *testing.T) {
 	assert.Contains(stdout, ":"+dockerutil.MassageWIndowsNFSMount(app.AppRoot))
 
 	// Create a host-side dir symlink; give a second for it to sync, make sure it can be used in container.
-	err = os.Symlink(".ddev", "linked_.ddev")
+	err = os.Symlink(".ddev", "nfslinked_.ddev")
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ls linked_.ddev/config.yaml"},
+		Cmd:     []string{"bash", "-c", "ls nfslinked_.ddev/config.yaml"},
 	})
 	assert.NoError(err)
 
 	// Create a host-side file symlink; give a second for it to sync, make sure it can be used in container.
-	err = os.Symlink(".ddev/config.yaml", "linked_config.yaml")
+	err = os.Symlink(".ddev/config.yaml", "nfslinked_config.yaml")
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ls linked_config.yaml"},
+		Cmd:     []string{"bash", "-c", "ls nfslinked_config.yaml"},
 	})
 	assert.NoError(err)
 
@@ -2344,21 +2344,21 @@ func TestNFSMount(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ln -s  .ddev containerlinked_ddev"},
+		Cmd:     []string{"bash", "-c", "ln -s  .ddev nfscontainerlinked_ddev"},
 	})
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)
-	assert.FileExists("containerlinked_ddev/config.yaml")
+	assert.FileExists("nfscontainerlinked_ddev/config.yaml")
 
 	// Create a container-side file symlink; give a second for it to sync, make sure it can be used on host.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ln -s  .ddev/config.yaml containerlinked_config.yaml"},
+		Cmd:     []string{"bash", "-c", "ln -s  .ddev/config.yaml nfscontainerlinked_config.yaml"},
 	})
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)
-	assert.FileExists("containerlinked_config.yaml")
+	assert.FileExists("nfscontainerlinked_config.yaml")
 
 	runTime()
 	switchDir()
@@ -2376,7 +2376,7 @@ func TestWebcache(t *testing.T) {
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestNFSMount", site.Name))
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestWebcache", site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -2388,13 +2388,13 @@ func TestWebcache(t *testing.T) {
 	require.NoError(t, startErr)
 
 	// Create a host-side dir symlink; give a second for it to sync, make sure it can be used in container.
-	err = os.Symlink(".ddev", "linked_.ddev")
+	err = os.Symlink(".ddev", "webcachelinked_.ddev")
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ls linked_.ddev/config.yaml"},
+		Cmd:     []string{"bash", "-c", "ls webcachelinked_.ddev/config.yaml"},
 	})
 	assert.NoError(err)
 
@@ -2402,21 +2402,21 @@ func TestWebcache(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ln -s  .ddev containerlinked_ddev"},
+		Cmd:     []string{"bash", "-c", "ln -s  .ddev webcachecontainerlinked_ddev"},
 	})
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)
-	assert.FileExists("containerlinked_ddev/config.yaml")
+	assert.FileExists("webcachecontainerlinked_ddev/config.yaml")
 
 	// Create a container-side file symlink; give a second for it to sync, make sure it can be used on host.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ln -s  .ddev/config.yaml containerlinked_config.yaml"},
+		Cmd:     []string{"bash", "-c", "ln -s  .ddev/config.yaml webcachecontainerlinked_config.yaml"},
 	})
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)
-	assert.FileExists("containerlinked_config.yaml")
+	assert.FileExists("webcachecontainerlinked_config.yaml")
 
 	runTime()
 	switchDir()
