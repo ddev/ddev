@@ -1201,7 +1201,7 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
 
-		for _, volName := range []string{app.Name + "-mariadb", "ddev-" + app.GetUnisonCatalogVolName(), app.GetWebcacheVolName()} {
+		for _, volName := range []string{app.Name + "-mariadb", app.GetUnisonCatalogVolName(), app.GetWebcacheVolName()} {
 			err = dockerutil.RemoveVolume(volName)
 			if err != nil {
 				util.Warning("could not remove volume %s: %v", volName, err)
