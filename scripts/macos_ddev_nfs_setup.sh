@@ -47,5 +47,5 @@ FILE=/etc/nfs.conf
 grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
 
 echo "== Restarting nfsd..."
-sudo nfsd restart
+sudo nfsd enable && sudo nfsd restart
 
