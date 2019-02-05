@@ -17,6 +17,7 @@ if [[ "$MOUNTUID" -gt "60000" || "$MOUNTGID" -gt "60000" ]] ; then
 	MOUNTGID=1000
 fi
 
+mkdir -p /usr/local/etc/my.cnf.d || sudo mkdir -p /usr/local/etc/my.cnf.d
 
 # Always clean up the container on exit.
 function cleanup {
