@@ -20,7 +20,7 @@ jobs:
         root: ~/
         paths: ddev
 
-  lx_test_nginx_fpm:
+  lx_tst_nginx_fpm:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -42,7 +42,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
 
-  mac_test_nginx_fpm:
+  mac_tst_nginx_fpm:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -53,6 +53,9 @@ jobs:
     steps:
     - attach_workspace:
         at: ~/
+    - restore_cache:
+        keys:
+        - homebrew-macos
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -62,11 +65,14 @@ jobs:
         command: make -s test
         name: ddev tests
         no_output_timeout: "40m"
-    - store_test_results:
+    - store_tst_results:
         path: /tmp/testresults
+    - save_cache:
+        key: homebrew-macos
+        paths:
+        - /usr/local/Homebrew
 
-
-  mac_test_apache_fpm:
+  mac_tst_apache_fpm:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -77,6 +83,9 @@ jobs:
     steps:
     - attach_workspace:
         at: ~/
+    - restore_cache:
+        keys:
+        - homebrew-macos
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -88,9 +97,13 @@ jobs:
         no_output_timeout: "40m"
     - store_test_results:
         path: /tmp/testresults
+    - save_cache:
+        key: homebrew-macos
+        paths:
+        - /usr/local/Homebrew
 
 
-  mac_test_use_webcache:
+  mac_tst_use_webcache:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -101,6 +114,9 @@ jobs:
     steps:
     - attach_workspace:
         at: ~/
+    - restore_cache:
+        keys:
+        - homebrew-macos
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -112,8 +128,12 @@ jobs:
         no_output_timeout: "40m"
     - store_test_results:
         path: /tmp/testresults
+    - save_cache:
+        key: homebrew-macos
+        paths:
+        - /usr/local/Homebrew
 
-  mac_test_use_nfsmount:
+  mac_tst_use_nfsmount:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -124,6 +144,9 @@ jobs:
     steps:
     - attach_workspace:
         at: ~/
+    - restore_cache:
+        keys:
+        - homebrew-macos
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -135,6 +158,10 @@ jobs:
         no_output_timeout: "40m"
     - store_test_results:
         path: /tmp/testresults
+    - save_cache:
+        key: homebrew-macos
+        paths:
+        - /usr/local/Homebrew
 
   lx_tst_apache_fpm:
     machine:
@@ -248,6 +275,9 @@ jobs:
     working_directory: ~/ddev
     steps:
     - checkout
+    - restore_cache:
+        keys:
+        - homebrew-macos
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
