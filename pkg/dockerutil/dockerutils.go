@@ -645,7 +645,7 @@ func MassageWindowsHostMountpoint(mountPoint string) string {
 	return mountPoint
 }
 
-// MassageWIndowsNFSMount changes C:\path\to\something to /C/path/to/something
+// MassageWIndowsNFSMount changes C:\Path\to\something to /C/Path/to/something
 func MassageWIndowsNFSMount(mountPoint string) string {
 	if string(mountPoint[1]) == ":" {
 		pathPortion := strings.Replace(mountPoint[2:], `\`, "/", -1)

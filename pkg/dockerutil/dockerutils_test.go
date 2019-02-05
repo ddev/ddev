@@ -339,3 +339,44 @@ func TestCreateVolume(t *testing.T) {
 	require.NotNil(t, volume)
 	assert.Equal("junker99", volume.Name)
 }
+
+// TestRemoveVolume makes sure we can remove a volume successfully
+func TestRemoveVolume(t *testing.T) {
+	assert := asrt.New(t)
+	client := GetDockerClient()
+
+	testVolume := "junker999"
+	spareVolume := "someVolumeThatCanNeverExit"
+
+	_ = RemoveVolume(testVolume)
+	pwd, err := os.Getwd()
+	assert.NoError(err)
+	volume, err := CreateVolume(
+		testVolume,
+		"local",
+		map[string]string{"type": "nfs", "o": "addr=host.docker.internal,hard,nolock,rw",
+			"device": ":" + MassageWIndowsNFSMount(pwd)},
+	)
+	assert.NoError(err)
+
+	volumes, err := client.ListVolumes(docker.ListVolumesOptions{Filters: map[string][]string{"name": {testVolume}}})
+	assert.NoError(err)
+	require.Len(t, volumes, 1)
+	assert.Equal(testVolume, volumes[0].Name)
+
+	require.NotNil(t, volume)
+	assert.Equal(testVolume, volume.Name)
+	err = RemoveVolume(testVolume)
+	assert.NoError(err)
+
+	volumes, err = client.ListVolumes(docker.ListVolumesOptions{Filters: map[string][]string{"name": {testVolume}}})
+	assert.NoError(err)
+	assert.Empty(volumes)
+
+	// Make sure spareVolume doesn't exist, then make sure removal
+	// of nonexistent volume doesn't result in error
+	_ = RemoveVolume(spareVolume)
+	err = RemoveVolume(spareVolume)
+	assert.NoError(err)
+
+}
