@@ -281,6 +281,10 @@ jobs:
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
+    - save_cache:
+        key: homebrew-macos
+        paths:
+        - /usr/local/Homebrew
     - run:
         command: |
           for dir in containers/*
