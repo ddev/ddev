@@ -19,9 +19,7 @@ curl -sSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/rele
 
 # gotestsum
 GOTESTSUM_VERSION=0.3.2
-curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v$GOTESTSUM_VERSION/gotestsum_${GOTESTSUM_VERSION}_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum && sudo chmod +x /usr/local/bin/gotestsum
-curl -sSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/releases/download/${GOTESTSUM_VERSION}/gotestsum_${GOTESTSUM_VERSION}_darwin_amd64.tar.gz && tar -C /usr/local/bin -zxf /tmp/gotestsum.tgz gotestsum
-
+curl -sSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VERSION}/gotestsum_${GOTESTSUM_VERSION}_darwin_amd64.tar.gz && tar -C /usr/local/bin -zxf /tmp/gotestsum.tgz gotestsum
 
 while ! docker ps 2>/dev/null ; do
   sleep 5
