@@ -47,20 +47,24 @@ build: container
 
 container:
 	for item in $(DIRS); do \
+		set -euo pipefail \
 		echo $$item && $(MAKE) -C $$item container; \
 	done
 
 push:
 	for item in $(DIRS); do \
+		set -euo pipefail \
 		echo $$item && $(MAKE) -C $$item push; \
 	done
 
 clean:
 	for item in $(DIRS); do \
+		set -euo pipefail \
 		echo $$item && $(MAKE) -C $$item clean; \
 	done
 
 test: container
 	for item in $(DIRS); do \
+		set -euo pipefail \
 		echo $$item && $(MAKE) -C $$item test; \
 	done
