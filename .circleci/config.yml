@@ -20,7 +20,7 @@ jobs:
         root: ~/
         paths: ddev
 
-  linux_golang_test_nginx_fpm:
+  linux_test_nginx_fpm:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -42,7 +42,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
 
-  macos_golang_test_nginx_fpm:
+  macos_test_nginx_fpm:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -66,7 +66,7 @@ jobs:
         path: /tmp/testresults
 
 
-  macos_golang_test_apache_fpm:
+  macos_test_apache_fpm:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -90,7 +90,7 @@ jobs:
         path: /tmp/testresults
 
 
-  macos_golang_test_use_webcache:
+  macos_test_use_webcache:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -113,7 +113,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
 
-  macos_golang_test_use_nfsmount:
+  macos_test_use_nfsmount:
     macos:
       xcode: "10.1.0"
     working_directory: ~/ddev
@@ -136,7 +136,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
 
-  linux_golang_test_apache_fpm:
+  linux_test_apache_fpm:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -160,7 +160,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
 
-  linux_golang_test_apache_cgi:
+  linux_test_apache_cgi:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -332,25 +332,25 @@ workflows:
   normal_build_and_test:
     jobs:
     - golang_build
-    - linux_golang_test_nginx_fpm:
+    - linux_test_nginx_fpm:
         requires:
         - golang_build
-    - macos_golang_test_nginx_fpm:
+    - macos_test_nginx_fpm:
         requires:
         - golang_build
-    - macos_golang_test_apache_fpm:
+    - macos_test_apache_fpm:
         requires:
         - golang_build
-    - macos_golang_test_use_webcache:
+    - macos_test_use_webcache:
         requires:
         - golang_build
-#    - macos_golang_test_Use_nfsmount:
+#    - macos_test_Use_nfsmount:
 #        requires:
 #        - golang_build
-    - linux_golang_test_apache_fpm:
+    - linux_test_apache_fpm:
         requires:
         - golang_build
-    - linux_golang_test_apache_cgi:
+    - linux_test_apache_cgi:
         requires:
         - golang_build
     - golang_test_nfs:
@@ -374,7 +374,7 @@ workflows:
                 - "pull/[0-9]+"
     jobs:
     - golang_build
-    - linux_golang_test_nginx_fpm:
+    - linux_test_nginx_fpm:
         requires:
         - golang_build
     - artifacts:
