@@ -17,8 +17,14 @@ else
    echo "Disk usage is ${DISK_AVAIL}% on $(hostname).";
 fi
 
-# Test to make sure docker is installed and working
+# Test to make sure docker is installed and working.
+# If it doesn't become ready then we just keep this testbot occupied :)
 docker ps >/dev/null
+while ! docker ps >/dev/null 2>&1 ; do
+    echo "Waiting for docker to be ready $(date)"
+    sleep 60
+done
+
 # Test that docker can allocate 80 and 443, get get busybox
 docker pull busybox:latest >/dev/null
 # Try the docker run command twice because of the really annoying mkdir /c: file exists bug
