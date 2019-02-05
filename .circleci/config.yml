@@ -149,13 +149,67 @@ jobs:
 
       # We only build the xz version of the docker images on tag build.
       - run:
-          command: ./.circleci/generate_artifacts.sh $ARTIFACTS TRUE
+          # Do not build the docker tarballs at simple tag build time
+          command: ./.circleci/generate_artifacts.sh $ARTIFACTS TRUE false
           name: tar/zip up artifacts and make hashes
           no_output_timeout: "40m"
 
       - store_artifacts:
           path: /artifacts
           name: Artifact storage
+
+  # 'release_build' is used to push a full release.
+  release_build:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: ~/ddev
+    environment:
+      DRUD_DEBUG: "true"
+      ARTIFACTS: /artifacts
+    steps:
+    - checkout
+
+    - run:
+        command: ./.circleci/circle_vm_setup.sh
+        name: RELEASE BUILD $RELEASE_TAG Circle VM setup - tools, docker, golang
+
+    # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - run:
+        command: make -s clean linux darwin windows_install
+        name: Build the ddev executables
+
+    - run:
+        command: .gotmp/bin/ddev version
+        name: ddev version information
+
+    # We only build the xz version of the docker images on tag build.
+    - run:
+        command: ./.circleci/generate_artifacts.sh $ARTIFACTS TRUE true
+        name: tar/zip up artifacts and make hashes
+        no_output_timeout: "40m"
+
+    - store_artifacts:
+        path: /artifacts
+        name: Artifact storage
+
+    - run:
+        command: |
+          if [ ! -z "${GITHUB_TOKEN}" ]; then
+            version=$(make version)
+            version="${version#*:}"  # Remove the VERSION: in front of make version
+            echo "GITHUB_TOKEN provided, pushing release $RELEASE_TAG"
+            /home/circleci/ghr \
+            -prerelease \
+            -r $CIRCLE_PROJECT_REPONAME \
+            -u $CIRCLE_PROJECT_USERNAME \
+            -b "$(cat ./.github/RELEASE_NOTES_TEMPLATE.md)" \
+            -t $GITHUB_TOKEN \
+            "${version}" $ARTIFACTS
+          else
+            echo "GITHUB_TOKEN not provided, not pushing release $CIRCLE_TAG"
+          fi
+        name: Upload artifacts to GitHub release page
+
 
 workflows:
   version: 2

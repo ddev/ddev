@@ -10,20 +10,25 @@ set -o nounset
 ARTIFACTS=${1:-/artifacts}
 # We only build the xz artifacts if $2 ($BUILD_XZ) is not empty.
 BUILD_XZ=${2:-}
+BUILD_IMAGE_TARBALLS=${3:-true}
 BASE_DIR=$PWD
 
 sudo mkdir -p $ARTIFACTS && sudo chmod 777 $ARTIFACTS
 export VERSION=$(git describe --tags --always --dirty)
 
-# Make sure we have all our docker images, and save them in a tarball
-.gotmp/bin/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt
-for item in $(cat /tmp/images.txt); do
-  docker pull $item
-done
-docker save -o $ARTIFACTS/ddev_docker_images.$VERSION.tar $(cat /tmp/images.txt)
-gzip --keep $ARTIFACTS/ddev_docker_images.$VERSION.tar
-if [ ! -z "$BUILD_XZ" ] ; then
-    xz $ARTIFACTS/ddev_docker_images.$VERSION.tar
+if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
+    # Make sure we have all our docker images, and save them in a tarball
+    .gotmp/bin/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt
+    for item in $(cat /tmp/images.txt); do
+      docker pull $item
+    done
+    echo "Generating ddev_docker_images.$VERSION.tar.gz"
+    docker save -o $ARTIFACTS/ddev_docker_images.$VERSION.tar $(cat /tmp/images.txt)
+    gzip --keep $ARTIFACTS/ddev_docker_images.$VERSION.tar
+    if [ ! -z "$BUILD_XZ" ] ; then
+        echo "Generating ddev_docker_images.$VERSION.tar.xz"
+        xz $ARTIFACTS/ddev_docker_images.$VERSION.tar
+    fi
 fi
 
 # Generate and place extra items like autocomplete
