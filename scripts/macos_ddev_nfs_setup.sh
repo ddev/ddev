@@ -39,7 +39,7 @@ echo "== Setting up nfs..."
 # to be adapted.
 LINE="/Users -alldirs -mapall=$(id -u):$(id -g) localhost"
 FILE=/etc/exports
-sudo touch $FILE || ( echo "Failed to touch /etc/exports" && exit 103 )
+sudo bash -c "echo >> $FILE" || ( echo "Unable to edit /etc/exports, need Full Disk Access on Mojave and later" && exit 103 )
 grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
 
 LINE="nfs.server.mount.require_resv_port = 0"
