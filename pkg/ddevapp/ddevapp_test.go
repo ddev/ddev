@@ -191,10 +191,9 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.WriteConfig() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
-		// TODO: webcache PR will add other volumes that should be removed here.
-		for _, volume := range []string{app.Name + "-mariadb"} {
+		for _, volume := range []string{app.Name + "-mariadb", app.GetUnisonCatalogVolName(), app.GetWebcacheVolName()} {
 			err = dockerutil.RemoveVolume(volume)
-			if err != nil && err.Error() != "no such volume" {
+			if err != nil {
 				log.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
 			}
 		}
