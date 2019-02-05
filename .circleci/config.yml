@@ -49,6 +49,78 @@ jobs:
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
       DRUD_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "true"
+    steps:
+    - attach_workspace:
+        at: ~/
+    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: ./.circleci/macos_circle_vm_setup.sh
+        name: macOS Circle VM setup - tools, docker, golang
+        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - run:
+        command: make -s test
+        name: ddev tests
+        no_output_timeout: "40m"
+    - store_test_results:
+        path: /tmp/testresults
+
+
+  macos_golang_test_apache_fpm:
+    macos:
+      xcode: "10.1.0"
+    working_directory: ~/ddev
+    environment:
+      DDEV_TEST_WEBSERVER_TYPE: apache-fpm
+      DRUD_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "true"
+    steps:
+    - attach_workspace:
+        at: ~/
+    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: ./.circleci/macos_circle_vm_setup.sh
+        name: macOS Circle VM setup - tools, docker, golang
+        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - run:
+        command: make -s test
+        name: ddev tests
+        no_output_timeout: "40m"
+    - store_test_results:
+        path: /tmp/testresults
+
+
+  macos_golang_test_use_webcache:
+    macos:
+      xcode: "10.1.0"
+    working_directory: ~/ddev
+    environment:
+      DDEV_TEST_USE_WEBCACHE: "true"
+      DRUD_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "true"
+    steps:
+    - attach_workspace:
+        at: ~/
+    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: ./.circleci/macos_circle_vm_setup.sh
+        name: macOS Circle VM setup - tools, docker, golang
+        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - run:
+        command: make -s test
+        name: ddev tests
+        no_output_timeout: "40m"
+    - store_test_results:
+        path: /tmp/testresults
+
+  macos_golang_test_use_nfsmount:
+    macos:
+      xcode: "10.1.0"
+    working_directory: ~/ddev
+    environment:
+      DDEV_TEST_USE_NFSMOUNT: "true"
+      DRUD_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "true"
     steps:
     - attach_workspace:
         at: ~/
@@ -266,6 +338,15 @@ workflows:
     - macos_golang_test_nginx_fpm:
         requires:
         - golang_build
+    - macos_golang_test_apache_fpm:
+        requires:
+        - golang_build
+    - macos_golang_test_use_webcache:
+        requires:
+        - golang_build
+#    - macos_golang_test_Use_nfsmount:
+#        requires:
+#        - golang_build
     - linux_golang_test_apache_fpm:
         requires:
         - golang_build
