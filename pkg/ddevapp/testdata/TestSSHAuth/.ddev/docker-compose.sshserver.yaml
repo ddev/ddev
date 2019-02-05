@@ -6,8 +6,8 @@ services:
     image: drud/test-ssh-server
     restart: "no"
     ports:
-    # Port is published for debugging reasons only. ssh -p 2222 root@localhost
-    - published: 2222
+    # Port is published for debugging reasons only. ssh -p 3333 root@localhost
+    - published: 3333
       target: 22
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
