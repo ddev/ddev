@@ -221,6 +221,48 @@ jobs:
         command: make staticrequired
         name: staticrequired
 
+  linux_test_containers:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: ~/ddev
+    steps:
+    - checkout
+    - run:
+        command: ./.circleci/linux_circle_vm_setup.sh
+        name: Circle VM setup - tools, docker, golang
+    - run:
+        command: |
+          for dir in containers/*
+              do pushd $dir
+              echo "--- Build container $dir"
+              time make container DOCKER_ARGS=--no-cache
+              echo "--- Test container $dir"
+              time make test
+              popd
+          done
+        name: linux container test
+
+  macos_test_containers:
+    macos:
+      xcode: "10.1.0"
+    working_directory: ~/ddev
+    steps:
+    - checkout
+    - run:
+        command: ./.circleci/macos_circle_vm_setup.sh
+        name: macOS Circle VM setup - tools, docker, golang
+    - run:
+        command: |
+          for dir in containers/*
+              do pushd $dir
+              echo "--- Build container $dir"
+              time make container DOCKER_ARGS=--no-cache
+              echo "--- Test container $dir"
+              time make test
+              popd
+          done
+        name: macos container test
+
   artifacts:
     machine:
       image: circleci/classic:201711-01
@@ -332,6 +374,12 @@ workflows:
   normal_build_and_test:
     jobs:
     - golang_build
+    - macos_test_containers
+    - linux_test_containers
+    - staticrequired
+    - artifacts:
+        requires:
+        - golang_build
     - linux_test_nginx_fpm:
         requires:
         - golang_build
@@ -344,7 +392,7 @@ workflows:
     - macos_test_use_webcache:
         requires:
         - golang_build
-#    - macos_test_Use_nfsmount:
+#    - macos_test_use_nfsmount:
 #        requires:
 #        - golang_build
     - linux_test_apache_fpm:
@@ -354,8 +402,6 @@ workflows:
         requires:
         - golang_build
     - golang_test_nfs:
-        requires:
-        - golang_build
         requires:
         - golang_build
     - staticrequired
