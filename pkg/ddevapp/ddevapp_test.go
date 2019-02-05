@@ -2286,6 +2286,73 @@ func TestCaptureLogs(t *testing.T) {
 	runTime()
 }
 
+// TestNFSMount tests ddev start functionality with nfs_mount_enabled: true
+// This requires that the test machine must have NFS shares working
+func TestNFSMount(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	// Make sure this leaves us in the original test directory
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestNFSMount", site.Name))
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	app.NFSMountEnabled = true
+
+	err = app.Start()
+	//nolint: errcheck
+	defer app.Down(true, false)
+	assert.NoError(err)
+
+	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "findmnt -T ."},
+	})
+	assert.NoError(err)
+	assert.Contains(stdout, ":"+dockerutil.MassageWIndowsNFSMount(app.AppRoot))
+
+	// Create a host-side dir symlink; give a second for it to sync, make sure it can be used in container.
+	err = os.Symlink(".ddev", "linked_.ddev")
+	assert.NoError(err)
+	time.Sleep(2 * time.Second)
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "ls linked_.ddev/config.yaml"},
+	})
+	assert.NoError(err)
+
+	// Create a container-side dir symlink; give a second for it to sync, make sure it can be used on host.
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "ln -s  .ddev containerlinked_ddev"},
+	})
+	assert.NoError(err)
+	time.Sleep(2 * time.Second)
+	assert.FileExists("containerlinked_ddev/config.yaml")
+
+	// Create a container-side file symlink; give a second for it to sync, make sure it can be used on host.
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "ln -s  .ddev/config.yaml containerlinked_config.yaml"},
+	})
+	assert.NoError(err)
+	time.Sleep(2 * time.Second)
+	assert.FileExists("containerlinked_config.yaml")
+
+	runTime()
+	switchDir()
+}
+
 // constructContainerName builds a container name given the type (web/db/dba) and the app
 func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
 	container, err := app.FindContainerByType(containerType)
