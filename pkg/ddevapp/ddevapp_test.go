@@ -2366,6 +2366,9 @@ func TestNFSMount(t *testing.T) {
 
 // TestWebcache tests ddev start functionality with webcache_enabled: true
 func TestWebcache(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("Skipping TestWebcache, not supported on %s", runtime.GOOS)
+	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
