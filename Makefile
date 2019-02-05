@@ -90,8 +90,8 @@ testpkg: setup
 
 setup:
 	@(mv -f ~/.ddev/global_config.yaml ~/.ddev/global_config.yaml.bak 2>/dev/null && echo "Warning: Removed your global ddev config file") || true
-	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
-	mkdir -p $(TESTTMP)
+	@mkdir -p $(GOTMP)/{src,pkg/mod/cache,.cache}
+	@mkdir -p $(TESTTMP)
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint
