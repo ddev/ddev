@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	exec2 "github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"io"
 	"log"
@@ -670,4 +672,40 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 	client := GetDockerClient()
 	volume, err = client.CreateVolume(docker.CreateVolumeOptions{Name: volumeName, Driver: driver, DriverOpts: driverOpts})
 	return volume, err
+}
+
+// GetHostDockerInternalIP() returns either "host.docker.internal"
+// (for docker-for-mac and Win10 Docker-for-windows) or a usable IP address
+// for docker toolbox and linux.
+func GetHostDockerInternalIP() (string, error) {
+	hostDockerInternal := ""
+
+	// Docker 18.09 on linux and docker-toolbox don't define host.docker.internal
+	// so we need to go get the ip address of docker0
+	// We would hope to be able to remove this when
+	// https://github.com/docker/for-linux/issues/264 gets resolved.
+	if runtime.GOOS == "linux" {
+		out, err := exec2.RunCommandPipe("ip", []string{"address", "show", "dev", "docker0"})
+		// Do not process if ip command fails, we'll just ignore and not act.
+		if err == nil {
+			addr := regexp.MustCompile(`inet *[0-9\.]+`).FindString(out)
+			components := strings.Split(addr, " ")
+			if len(components) == 2 {
+				hostDockerInternal = components[1]
+			}
+		}
+	} else if util.IsDockerToolbox() {
+		dockerIP, err := GetDockerIP()
+		if err != nil {
+			return "", err
+		}
+		octets := strings.Split(dockerIP, ".")
+		if len(octets) != 4 {
+			return "", fmt.Errorf("dockerIP %s does not have 4 octets", dockerIP)
+		}
+		// If the docker IP is 192.168.99.100, the *router* ip is 192.168.99.1
+		// So replace the final octet with 1.
+		hostDockerInternal = fmt.Sprintf("%s.%s.%s.1", octets[0], octets[1], octets[2])
+	}
+	return hostDockerInternal, nil
 }

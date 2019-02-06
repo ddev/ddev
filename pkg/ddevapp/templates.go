@@ -95,7 +95,7 @@ services:
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
 {{ if .HostDockerInternalIP }}
-    extra_hosts: [ "{{ .HostDockerInternalHostname }}:{{ .HostDockerInternalIP }}" ]
+    extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
 {{ end }}
     external_links:
       - ddev-router:$DDEV_HOSTNAME
@@ -182,7 +182,7 @@ volumes:
     driver: local
     driver_opts:
       type: nfs
-      o: "addr={{ .HostDockerInternalIdentifier }},hard,nolock,rw"
+      o: "addr={{ if .HostDockerInternalIP }}{{ .HostDockerInternalIP }}{{ else }}host.docker.internal{{end}},hard,nolock,rw"
       device: ":{{ .NFSSource }}"
   {{ end }}
 

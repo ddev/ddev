@@ -37,6 +37,7 @@ var DebugNFSMountCmd = &cobra.Command{
 		}
 		//nolint: errcheck
 		dockerutil.RemoveVolume(testVolume)
+
 		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": "addr=host.docker.internal,hard,nolock,rw", "device": ":" + dockerutil.MassageWIndowsNFSMount(app.AppRoot)})
 		//nolint: errcheck
 		defer dockerutil.RemoveVolume(testVolume)
