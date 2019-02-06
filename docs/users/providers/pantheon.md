@@ -24,7 +24,7 @@ If you have ddev installed, and have an active Pantheon account with an active W
 
     a. Navigate in your terminal to your checkout of the project codebase.
 
-    b. Run `ddev config pantheon`. When asked for the project name you must use the exact name of the Pantheon project.
+    b. Run `ddev config pantheon`. When asked for the project name you must use the exact name of the Pantheon project. The name is found in the URL of your Pantheon dev site. For example, if your site is viewed at http://dev-foo-bar.pantheonsite.io/ enter 'foo-bar' as the name (not 'Foo Bar').
 
     c. Configuration prompts will allow you to choose a Pantheon environment, suggesting "dev" as the default.
 
