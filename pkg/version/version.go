@@ -26,10 +26,14 @@ var SentryDSN = ""
 // See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
 // REMEMBER TO CHANGE docs/index.md if you touch this!
+// The constraint MUST HAVE a -pre of some kind on it for successful comparison.
+// See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
 var DockerVersionConstraint = ">= 18.06.1-alpha1"
 
 // DockerComposeVersionConstraint is the current minimum version of docker-compose required for ddev.
 // REMEMBER TO CHANGE docs/index.md if you touch this!
+// The constraint MUST HAVE a -pre of some kind on it for successful comparison.
+// See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
 var DockerComposeVersionConstraint = ">= 1.21.0-alpha1"
 
 // DockerComposeFileFormatVersion is the compose version to be used
