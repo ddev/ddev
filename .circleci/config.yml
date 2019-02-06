@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  golang_build:
+  build:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -209,7 +209,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
 
-  golang_test_nfs:
+  lx_nfsmount_test:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -222,7 +222,7 @@ jobs:
     - attach_workspace:
         at: ~/
     - run:
-        command: ./.circleci/circle_vm_setup.sh
+        command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
@@ -407,41 +407,41 @@ workflows:
   version: 2
   normal_build_and_test:
     jobs:
-    - golang_build
+    - build
     - mac_container_test
     - lx_container_test
     - staticrequired
     - artifacts:
         requires:
-        - golang_build
+        - build
     - lx_nginx_fpm_test:
         requires:
-        - golang_build
+        - build
     - mac_nginx_fpm_test:
         requires:
-        - golang_build
+        - build
     - mac_apache_fpm_test:
         requires:
-        - golang_build
+        - build
     - mac_webcache_test:
         requires:
-        - golang_build
+        - build
     - mac_nfsmount_test:
         requires:
-        - golang_build
+        - build
     - lx_apache_fpm_test:
         requires:
-        - golang_build
+        - build
     - lx_apache_cgi_test:
         requires:
-        - golang_build
-    - golang_test_nfs:
+        - build
+    - lx_nfsmount_test:
         requires:
-        - golang_build
+        - build
     - staticrequired
     - artifacts:
         requires:
-        - golang_build
+        - build
 
   nightly_build:
     triggers:
@@ -453,13 +453,13 @@ workflows:
                 - master
                 - "pull/[0-9]+"
     jobs:
-    - golang_build
+    - build
     - lx_tst_nginx_fpm:
         requires:
-        - golang_build
+        - build
     - artifacts:
         requires:
-        - golang_build
+        - build
 
   tag_build:
     jobs:
