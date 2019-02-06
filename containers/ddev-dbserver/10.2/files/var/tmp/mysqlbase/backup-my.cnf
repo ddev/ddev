@@ -2,7 +2,7 @@
 
 # The MySQL server
 [mysqld]
-innodb_checksum_algorithm=innodb
+innodb_checksum_algorithm=crc32
 innodb_data_file_path=ibdata1:12M:autoextend
 innodb_log_files_in_group=2
 innodb_log_file_size=67108864
