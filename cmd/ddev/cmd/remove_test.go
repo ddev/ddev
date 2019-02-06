@@ -16,8 +16,8 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDevRemove runs `ddev rm` on the test apps
-func TestDevRemove(t *testing.T) {
+// TestCmdRemove runs `ddev rm` on the test apps
+func TestCmdRemove(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Make sure we have running sites.
