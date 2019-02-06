@@ -95,7 +95,7 @@ services:
       com.ddev.approot: $DDEV_APPROOT
       com.ddev.app-url: $DDEV_URL
 {{ if .HostDockerInternalIP }}
-    extra_hosts: [ "{{ .HostDockerInternalHostname }}:{{ .HostDockerInternalIP }}" ]
+    extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
 {{ end }}
     external_links:
       - ddev-router:$DDEV_HOSTNAME
@@ -173,11 +173,20 @@ volumes:
   {{ end }}
   ddev-composer-cache:
     name: ddev-composer-cache
-  {{ if eq .MountType "volume" }}
+  {{ if .WebcacheEnabled }}
   webcachevol:
   unisoncatalogvol:
   {{ end }}
-`
+  {{ if .NFSMountEnabled }}
+  nfsmount:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: "addr={{ if .HostDockerInternalIP }}{{ .HostDockerInternalIP }}{{ else }}host.docker.internal{{end}},hard,nolock,rw"
+      device: ":{{ .NFSSource }}"
+  {{ end }}
+
+  `
 
 // ConfigInstructions is used to add example hooks usage
 const ConfigInstructions = `

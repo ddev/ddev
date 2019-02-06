@@ -4,6 +4,9 @@ GOMETALINTER_ARGS := --vendored-linters --disable-all --enable=gofmt --enable=ve
 GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode
 
 WINDOWS_SUDO_VERSION=v0.0.1
+WINNFSD_VERSION=2.4.0
+NSSM_VERSION=2.24-101-g897c7ad
+
 GOTESTSUM_FORMAT ?= short-verbose
 TESTTMP=/tmp/testresults
 TESTTOOL ?= $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --format $(GOTESTSUM_FORMAT) --junitfile '$(TESTTMP)/$(@).xml'  --"; else echo "go test"; fi)
@@ -94,10 +97,16 @@ setup:
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: golangci-lint
 
-windows_install: windows $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt
+windows_install: windows $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt
 	makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 
 $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt:
 	curl -sSL -o /tmp/sudo.zip -O  https://github.com/mattn/sudo/releases/download/$(WINDOWS_SUDO_VERSION)/sudo-x86_64.zip
 	unzip -o -d $(GOTMP)/bin/windows_amd64 /tmp/sudo.zip
 	curl -sSL -o $(GOTMP)/bin/windows_amd64/sudo_license.txt https://raw.githubusercontent.com/mattn/sudo/master/LICENSE
+
+$(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt $(GOTMP)/bin/windows_amd64/winnfsd.exe :
+	curl -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd.exe  https://github.com/winnfsd/winnfsd/releases/download/$(WINNFSD_VERSION)/WinNFSd.exe
+	curl -sSL -O https://nssm.cc/ci/nssm-$(NSSM_VERSION).zip
+	unzip -oj nssm-$(NSSM_VERSION).zip nssm-$(NSSM_VERSION)/win64/nssm.exe -d $(GOTMP)/bin/windows_amd64
+	curl -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd_license.txt https://www.gnu.org/licenses/gpl.txt

@@ -1,0 +1,52 @@
+<h1>Performance</h1>
+
+Every developer wants both quick starts of the environment and quick response to web page requests. DDEV-Local is always focused on improving this. However, both Docker for Windows and Docker for Mac have significant performance problems with mounted filesystems (like the mounted project where code can be edited either inside the container or on the host). There are currently two ways to work around this Docker performance issue.
+
+## Using NFS to Mount the Project into the Container
+
+NFS (Network File System) is a classic, mature Unix technique to mount a filesystem from one device to another. It's provided as an experimental technique for improving webserving performance. DDEV-Local supports this technique, but it **does requires a small amount of configuration on your host computer.**
+
+To enable NFS mounting, use `nfs_mount_enabled: true` in your .ddev/config.yaml, or `ddev config --nfs-mount-enabled=true`. This won't work until you have done the one-time configuration for your system described below.
+
+Note that you can use the NFS setup described here (and the scripts provided) or you can set up NFS any way that works for you. For example, if you're already using NFS with vagrant on macOS,and you already have a number of exports, the default export here (/Users) won't work, because you'll have mount overlaps. Or on Windows, you may want to use an NFS server other than Winnfsd, for example the [Allegrao NFS Server](https://nfsforwindows.com). The setups provided below and the scripts provided below are just intended to get you started if you don't already use NFS.
+
+### macOS NFS Setup
+
+__macOS Mojave (and later) warning:__ You'll need to give your terminal "Full disk access" before you (or the script provided) can edit /etc/exports. If you're using iterm2, here are [full instructions for iterm2](https://gitlab.com/gnachman/iterm2/wikis/fulldiskaccess). The basic idea is that in the Mac preferences -> Security and Privacy -> Privacy you need to give "Full Aisk Access" permissions to your terminal app.
+
+Download, inspect, and run the macos_ddev_nfs_setup.sh script  from [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh)). This stops running ddev projects, adds the /Users directory to the /etc/exports config file that nfsd uses, and enabled nfsd to run on your computer. This is one-time setup. Note that this shares the /Users directory via NFS to any client, so it's critical to consider security issues and verify that your firewall is enabled and configured. If your DDEV-Local projects are set up outside /Users, you'll need to edit /etc/exports for the correct values.
+
+### Windows NFS Setup
+
+The executable components required for Windows NFS (winnfsd and nssm) are packaged with the ddev_windows_installer in each release, so if you've used the windows installer, they're available already. To enable winnfsd as a service, please download, inspect and run the script "windows_ddev_nfs_setup.sh" installed by the installer (or download from [windows_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a git-bash session on windows. This is one-time setup. Note that this shares the C:\ directory via NFS to any local client, so it's critical to consider security issues and verify that your firewall is enabled and configured. If your DDEV-Local projects are set up outside C:\, you'll need to edit the ~/.ddev/nfs_exports.sh created by the script and then restart the service with `sudo nssm restart nfsd`.
+
+**Firewall issues**: On Windows 10 you may run afoul of the Windows Defender Firewall, and it may be necessary to allow winnfsd to bypass it. If you're getting a timeout with no information after `ddev start`, try going to "Windows Defender Firewall" -> "Allow an app or feature through Windows Defender Firewall", "Change Settings", "Allow another app". Then choose C:\Program Files\ddev\winnfsd.exe, assuming that's where you installed winnfsd.
+
+### Debian/Ubuntu NFS Setup
+
+Note that for all Linux systems, you can and should install and configure the NFS daemon and configure /etc/exports as you see fit and share the directories that you choose to share. The debian/ubuntu script is just one way of accomplishing it. 
+
+Download, inspect, and run the [debian_ubuntu_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/debian_ubuntu_ddev_nfs_setup.sh)). This stops running ddev projects, adds the /home directory to the /etc/exports config file that nfs uses, and installs nfs-kernel-server  on your computer. This is one-time setup. Note that this shares the /home directory via NFS to all non-routeable ("public") IP addresses in your network, so it's critical to consider security issues and verify that your firewall is enabled and configured. If your DDEV-Local projects are set up outside /home, you'll need to edit /etc/exports for the correct values and restart nfs-kernel-server.
+
+### Debugging `ddev start` failures with `nfs_mount_enabled: true`
+
+There are a number of reasons that the NFS mount can fail on `ddev start`:
+
+* NFS Server not running
+* Path of project not shared in `/etc/exports` (or `~/.ddev/nfs_exports.txt` on WIndows)
+* Docker container IP not listed in /etc/exports (Linux)
+
+Tools to debug and solve permission problems:
+
+* Try `ddev debug nfsmount` to see if basic NFS mounting is working. If that works, it's likely that everything else will.
+* When debugging, please do `ddev rm; ddev start` in between each change. Otherwise, you can have stale mounts inside the container and you'll miss any benefit you may find in the debugging process.
+* Inspect the /etc/exports (or `~/.ddev/nfs_mounts.txt` on Windows).
+* Restart the server (`sudo nfsd restart` on macOS, `sudo nssm restart nfsd` on Windows, `sudo systemctl restart nfs-kernel-server` on Debian/Ubuntu, other commaonds for other Unices).
+* `showmount -e` on macOS or Linux will show the shared mounts.
+* On Linux, you may have to experiment with the client IP addresses in the /etc/exports. Temporarily set the share in /etc/exports to `/home *`, which shares /home with any client, and `sudo systemctl restart nfs-kernel-server`. Then start a ddev project doing an nfs mount, and `showmount -a` and you'll find out what the assigned IP address of the docker client is. You can add that address range to /etc/exports.
+
+## Using webcache_enabled to Cache the Project Directory
+
+A separate webcache container is also provided as a separate experimental performance technique. It does not rely on any host configuration, but in some cases when large changes are made in the filesystem it can stop syncing and be unstable.
+
+To enable, edit .ddev/config.yaml to set `webcache_enabled:true` and `ddev start` to get a caching container going so that actual webserving happens on a much faster filesystem. This is experimental and has some risks, we want to know your experience. It takes longer to do a ddev start because your entire project has to be pushed into the container, but after that hitting a page is way, way more satisfying. Note that .git directories are not copied into the webcache, git won't work inside the web container. It just seemed too risky to combine 2-way file synchronization with your precious git repository, so do git operations on the host. Note that if you have a lot of files or big files in your repo, they have to be pushed into the container, and that can take time. For example, cleaning up the .ddev/db_snapshots directory rather than waiting for the docker cp is a good idea.

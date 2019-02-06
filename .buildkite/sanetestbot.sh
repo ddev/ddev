@@ -45,4 +45,7 @@ if command -v ddev >/dev/null && [ "$(ddev version -j | jq -r .raw.cli)" \< "${M
   echo "ddev version in $(command -v ddev) is inadequate: $(ddev version -j | jq -r .raw.cli)"
   exit 4
 fi
+
+$(dirname $0)/nfstest.sh
+
 echo "=== testbot $HOSTNAME seems to be set up OK ==="

@@ -101,6 +101,9 @@ var (
 
 	// mariadbVersionArg is mariadb version 10.1 or 10.2
 	mariaDBVersionArg string
+
+	// nfsMountEnabled sets nfs_mount_enabled
+	nfsMountEnabled bool
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -205,6 +208,7 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&dbaWorkingDirDefaultArg, "dba-working-dir-default", false, "Unsets a dba service working directory override")
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
 	ConfigCommand.Flags().StringVar(&mariaDBVersionArg, "mariadb-version", "10.2", "mariadb version to use")
+	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")
 
 	// projectname flag exists for backwards compatability.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
@@ -359,6 +363,11 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	if mariaDBVersionArg != "" {
 		app.MariaDBVersion = mariaDBVersionArg
 	}
+
+	if cmd.Flag("nfs-mount-enabled").Changed {
+		app.NFSMountEnabled = nfsMountEnabled
+	}
+
 	// This bool flag is false by default, so only use the value if the flag was explicity set.
 	if cmd.Flag("xdebug-enabled").Changed {
 		app.XdebugEnabled = xdebugEnabledArg

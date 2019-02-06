@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	exec2 "github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"io"
 	"log"
@@ -64,6 +66,21 @@ func GetDockerClient() *docker.Client {
 	}
 
 	return client
+}
+
+// FindContainerByName takes a container name and returns the container
+func FindContainerByName(name string) (*docker.APIContainers, error) {
+	containers, err := GetDockerContainers(true)
+	if err != nil {
+		return nil, err
+	}
+	// First, ensure a site name is set and matches the current application.
+	for _, container := range containers {
+		if len(container.Names) > 0 && container.Names[0] == "/"+name {
+			return &container, nil
+		}
+	}
+	return nil, nil
 }
 
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.
@@ -523,22 +540,18 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create/start docker container (%v):%v", options, err)
 	}
-	containerID = container.ID
 
 	if removeContainerAfterRun {
 		// nolint: errcheck
-		defer client.RemoveContainer(docker.RemoveContainerOptions{
-			Force: true,
-			ID:    container.ID,
-		})
+		defer RemoveContainer(container.ID, 20)
 	}
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
-		return containerID, "", fmt.Errorf("failed to StartContainer: %v", err)
+		return container.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
 	}
 	exitCode, err := client.WaitContainer(container.ID)
 	if err != nil {
-		return containerID, "", fmt.Errorf("failed to WaitContainer: %v", err)
+		return container.ID, "", fmt.Errorf("failed to WaitContainer: %v", err)
 	}
 
 	// Get logs so we can report them if exitCode failed
@@ -550,26 +563,23 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		OutputStream: &stdout,
 	})
 	if err != nil {
-		return containerID, "", fmt.Errorf("failed to get Logs(): %v", err)
+		return container.ID, "", fmt.Errorf("failed to get Logs(): %v", err)
 	}
 
 	// This is the exitCode from the client.WaitContainer()
 	if exitCode != 0 {
-		return containerID, stdout.String(), fmt.Errorf("container run failed with exit code %d", exitCode)
+		return container.ID, stdout.String(), fmt.Errorf("container run failed with exit code %d", exitCode)
 	}
 
-	return containerID, stdout.String(), nil
+	return container.ID, stdout.String(), nil
 }
 
 // RemoveContainer stops and removes a container
 func RemoveContainer(id string, timeout uint) error {
 	client := GetDockerClient()
 
-	err := client.StopContainer(id, timeout)
-	if err != nil {
-		return err
-	}
-	err = client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: false})
+	_ = client.StopContainer(id, timeout)
+	err := client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: false})
 	return err
 }
 
@@ -637,6 +647,16 @@ func MassageWindowsHostMountpoint(mountPoint string) string {
 	return mountPoint
 }
 
+// MassageWIndowsNFSMount changes C:\Path\to\something to /C/Path/to/something
+func MassageWIndowsNFSMount(mountPoint string) string {
+	if string(mountPoint[1]) == ":" {
+		pathPortion := strings.Replace(mountPoint[2:], `\`, "/", -1)
+		drive := string(mountPoint[0])
+		mountPoint = "/" + drive + pathPortion
+	}
+	return mountPoint
+}
+
 // RemoveVolume removes named volume. Does not throw error if the volume did not exist.
 func RemoveVolume(volumeName string) error {
 	client := GetDockerClient()
@@ -645,4 +665,47 @@ func RemoveVolume(volumeName string) error {
 		return err
 	}
 	return nil
+}
+
+// CreateVolume creates a docker volume
+func CreateVolume(volumeName string, driver string, driverOpts map[string]string) (volume *docker.Volume, err error) {
+	client := GetDockerClient()
+	volume, err = client.CreateVolume(docker.CreateVolumeOptions{Name: volumeName, Driver: driver, DriverOpts: driverOpts})
+	return volume, err
+}
+
+// GetHostDockerInternalIP() returns either "host.docker.internal"
+// (for docker-for-mac and Win10 Docker-for-windows) or a usable IP address
+// for docker toolbox and linux.
+func GetHostDockerInternalIP() (string, error) {
+	hostDockerInternal := ""
+
+	// Docker 18.09 on linux and docker-toolbox don't define host.docker.internal
+	// so we need to go get the ip address of docker0
+	// We would hope to be able to remove this when
+	// https://github.com/docker/for-linux/issues/264 gets resolved.
+	if runtime.GOOS == "linux" {
+		out, err := exec2.RunCommandPipe("ip", []string{"address", "show", "dev", "docker0"})
+		// Do not process if ip command fails, we'll just ignore and not act.
+		if err == nil {
+			addr := regexp.MustCompile(`inet *[0-9\.]+`).FindString(out)
+			components := strings.Split(addr, " ")
+			if len(components) == 2 {
+				hostDockerInternal = components[1]
+			}
+		}
+	} else if util.IsDockerToolbox() {
+		dockerIP, err := GetDockerIP()
+		if err != nil {
+			return "", err
+		}
+		octets := strings.Split(dockerIP, ".")
+		if len(octets) != 4 {
+			return "", fmt.Errorf("dockerIP %s does not have 4 octets", dockerIP)
+		}
+		// If the docker IP is 192.168.99.100, the *router* ip is 192.168.99.1
+		// So replace the final octet with 1.
+		hostDockerInternal = fmt.Sprintf("%s.%s.%s.1", octets[0], octets[1], octets[2])
+	}
+	return hostDockerInternal, nil
 }

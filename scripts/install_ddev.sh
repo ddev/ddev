@@ -1,5 +1,7 @@
 #!/bin/bash
-set -e
+set -o errexit
+set -o pipefail
+set -o nounset
 
 # Download and install latest ddev release
 
@@ -38,24 +40,32 @@ fi
 
 TARBALL="$FILEBASE.$LATEST_VERSION.tar.gz"
 SHAFILE="$TARBALL.sha256.txt"
+NFS_INSTALLER=macos_ddev_nfs_setup.sh
 
 curl -sSL "$URL/$TARBALL" -o "/tmp/$TARBALL"
 curl -sSL "$URL/$SHAFILE" -o "/tmp/$SHAFILE"
+curl -sSL "$URL/macos_ddev_nfs_setup.sh" -o /tmp/macos_ddev_nfs_setup.sh
 
 cd /tmp; $SHACMD -c "$SHAFILE"
 tar -xzf $TARBALL -C /tmp
-chmod ugo+x /tmp/ddev
+chmod ugo+x /tmp/ddev /tmp/macos_ddev_nfs_setup.sh
 
 printf "Download verified. Ready to place ddev in your /usr/local/bin.\n"
 
+if [ -L /usr/local/bin/ddev ] ; then
+    printf "${RED}ddev already exists as a link in /usr/local/bin. Was it installed with homebrew?${RESET}\n"
+    printf "${RED}Cowardly refusing to install over existing symlink${RESET}\n"
+    printf "${RED}Use 'brew unlink ddev' to remove the symlink. Or use 'brew upgrade ddev' to upgrade.${RESET}\n"
+    exit 101
+fi
 if [[ "$BINOWNER" == "$USER" ]]; then
-    mv /tmp/ddev /usr/local/bin/
+    mv /tmp/ddev /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/
 else
-    printf "${YELLOW}Running \"sudo mv /tmp/ddev /usr/local/bin/\" Please enter your password if prompted.${RESET}\n"
-    sudo mv /tmp/ddev /usr/local/bin/
+    printf "${YELLOW}Running \"sudo mv /tmp/ddev /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/\" Please enter your password if prompted.${RESET}\n"
+    sudo mv /tmp/ddev /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/
 fi
 
-if command -v brew >/dev/null &&  [ -f `brew --prefix`/etc/bash_completion ]; then
+if command -v brew >/dev/null &&  [ -f "$(brew --prefix)/etc/bash_completion" ]; then
 	bash_completion_dir=$(brew --prefix)/etc/bash_completion.d
     cp /tmp/ddev_bash_completion.sh $bash_completion_dir/ddev
     printf "${GREEN}Installed ddev bash completions in $bash_completion_dir${RESET}\n"

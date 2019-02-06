@@ -75,8 +75,11 @@ var ValidOmitContainers = map[string]bool{
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
 var WebserverDefault = WebserverNginxFPM
 
-// WebCacheEnabledDefault is the default value for app.WebCacheEnabled
-var WebCacheEnabledDefault = false
+// WebcacheEnabledDefault is the default value for app.WebCacheEnabled
+var WebcacheEnabledDefault = false
+
+// NFSMountEnabledDefault is default value for app.NFSMountEnabled
+var NFSMountEnabledDefault = false
 
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.

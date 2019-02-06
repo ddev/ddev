@@ -1701,8 +1701,15 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure we have a site started so we have something to cleanup
-	err = app.StartAndWaitForSync(2)
-	assert.NoError(err)
+
+	startErr := app.StartAndWaitForSync(5)
+	//nolint: errcheck
+	defer app.Down(true, false)
+	if startErr != nil {
+		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+		assert.NoError(getLogsErr)
+		t.Fatalf("app.StartAndWaitForSync failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
+	}
 	// Setup by creating temp directory and nesting a folder for our site.
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
@@ -2101,6 +2108,8 @@ func TestWebserverType(t *testing.T) {
 			testcommon.ClearDockerEnv()
 
 			startErr := app.StartAndWaitForSync(30)
+			//nolint: errcheck
+			defer app.Down(true, false)
 			if startErr != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(getLogsErr)
@@ -2113,6 +2122,7 @@ func TestWebserverType(t *testing.T) {
 			if app.WebserverType == ddevapp.WebserverNginxFPM {
 				expectedServerType = "nginx"
 			}
+			require.NotEmpty(t, resp.Header["Server"][0])
 			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
 			assert.Contains(out, expectedServerType, "For app.WebserverType=%s phpinfo expected servertype.php to show %s", app.WebserverType, expectedServerType)
 			err = app.Down(true, false)
@@ -2275,6 +2285,145 @@ func TestCaptureLogs(t *testing.T) {
 	assert.NoError(err)
 
 	runTime()
+}
+
+// TestNFSMount tests ddev start functionality with nfs_mount_enabled: true
+// This requires that the test machine must have NFS shares working
+func TestNFSMount(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	// Make sure this leaves us in the original test directory
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestNFSMount", site.Name))
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	app.NFSMountEnabled = true
+
+	err = app.Start()
+	//nolint: errcheck
+	defer app.Down(true, false)
+	require.NoError(t, err)
+
+	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "findmnt -T ."},
+	})
+	assert.NoError(err)
+	assert.Contains(stdout, ":"+dockerutil.MassageWIndowsNFSMount(app.AppRoot))
+
+	// Create a host-side dir symlink; give a second for it to sync, make sure it can be used in container.
+	err = os.Symlink(".ddev", "nfslinked_.ddev")
+	assert.NoError(err)
+	time.Sleep(2 * time.Second)
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "ls nfslinked_.ddev/config.yaml"},
+	})
+	assert.NoError(err)
+
+	// Create a host-side file symlink; give a second for it to sync, make sure it can be used in container.
+	err = os.Symlink(".ddev/config.yaml", "nfslinked_config.yaml")
+	assert.NoError(err)
+	time.Sleep(2 * time.Second)
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "ls nfslinked_config.yaml"},
+	})
+	assert.NoError(err)
+
+	// Create a container-side dir symlink; give a second for it to sync, make sure it can be used on host.
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "ln -s  .ddev nfscontainerlinked_ddev"},
+	})
+	assert.NoError(err)
+	time.Sleep(2 * time.Second)
+	assert.FileExists("nfscontainerlinked_ddev/config.yaml")
+
+	// Create a container-side file symlink; give a second for it to sync, make sure it can be used on host.
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "ln -s  .ddev/config.yaml nfscontainerlinked_config.yaml"},
+	})
+	assert.NoError(err)
+	time.Sleep(2 * time.Second)
+	assert.FileExists("nfscontainerlinked_config.yaml")
+
+	runTime()
+	switchDir()
+}
+
+// TestWebcache tests ddev start functionality with webcache_enabled: true
+func TestWebcache(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skipf("Skipping TestWebcache, not supported on %s", runtime.GOOS)
+	}
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	// Make sure this leaves us in the original test directory
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestWebcache", site.Name))
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	app.WebcacheEnabled = true
+
+	startErr := app.StartAndWaitForSync(1)
+	//nolint: errcheck
+	defer app.Down(true, false)
+	require.NoError(t, startErr)
+
+	// Create a host-side dir symlink; give a second for it to sync, make sure it can be used in container.
+	err = os.Symlink(".ddev", "webcachelinked_.ddev")
+	assert.NoError(err)
+	time.Sleep(2 * time.Second)
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "ls webcachelinked_.ddev/config.yaml"},
+	})
+	assert.NoError(err)
+
+	// Create a container-side dir symlink; give a second for it to sync, make sure it can be used on host.
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "ln -s  .ddev webcachecontainerlinked_ddev"},
+	})
+	assert.NoError(err)
+	time.Sleep(2 * time.Second)
+	assert.FileExists("webcachecontainerlinked_ddev/config.yaml")
+
+	// Create a container-side file symlink; give a second for it to sync, make sure it can be used on host.
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     []string{"bash", "-c", "ln -s  .ddev/config.yaml webcachecontainerlinked_config.yaml"},
+	})
+	assert.NoError(err)
+	time.Sleep(2 * time.Second)
+	assert.FileExists("webcachecontainerlinked_config.yaml")
+
+	runTime()
+	switchDir()
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app

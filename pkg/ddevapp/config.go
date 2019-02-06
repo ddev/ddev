@@ -17,7 +17,6 @@ import (
 	"runtime"
 
 	"github.com/drud/ddev/pkg/appports"
-	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -54,8 +53,11 @@ func init() {
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		WebserverDefault = testWebServerType
 	}
-	if testWebCache := os.Getenv("DDEV_TEST_USE_WEBCACHE"); testWebCache != "" {
-		WebCacheEnabledDefault = true
+	if testWebcache := os.Getenv("DDEV_TEST_USE_WEBCACHE"); testWebcache != "" {
+		WebcacheEnabledDefault = true
+	}
+	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount != "" {
+		NFSMountEnabledDefault = true
 	}
 }
 
@@ -69,7 +71,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.APIVersion = version.DdevVersion
 	app.PHPVersion = PHPDefault
 	app.WebserverType = WebserverDefault
-	app.WebcacheEnabled = WebCacheEnabledDefault
+	app.WebcacheEnabled = WebcacheEnabledDefault
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 	app.MariaDBVersion = version.MariaDBDefaultVersion
@@ -221,8 +223,12 @@ func (app *DdevApp) ReadConfig() error {
 		app.WebserverType = WebserverDefault
 	}
 
-	if WebCacheEnabledDefault == true {
-		app.WebcacheEnabled = WebCacheEnabledDefault
+	if WebcacheEnabledDefault == true {
+		app.WebcacheEnabled = WebcacheEnabledDefault
+	}
+
+	if NFSMountEnabledDefault == true {
+		app.NFSMountEnabled = NFSMountEnabledDefault
 	}
 
 	if app.RouterHTTPPort == "" {
@@ -345,6 +351,10 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("Invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
 	}
 
+	if app.WebcacheEnabled && app.NFSMountEnabled {
+		return fmt.Errorf("webcache_enabled and nfs_mount_enabled cannot both be set to true, use one or the other")
+	}
+
 	return nil
 }
 
@@ -462,90 +472,75 @@ func (app *DdevApp) CheckCustomConfig() {
 }
 
 type composeYAMLVars struct {
-	Name                       string
-	Plugin                     string
-	AppType                    string
-	MailhogPort                string
-	DBAPort                    string
-	DBPort                     string
-	DdevGenerated              string
-	HostDockerInternalHostname string
-	HostDockerInternalIP       string
-	ComposeVersion             string
-	MountType                  string
-	WebMount                   string
-	OmitDBA                    bool
-	OmitSSHAgent               bool
-	WebcacheEnabled            bool
-	IsWindowsFS                bool
+	Name                 string
+	Plugin               string
+	AppType              string
+	MailhogPort          string
+	DBAPort              string
+	DBPort               string
+	DdevGenerated        string
+	HostDockerInternalIP string
+	ComposeVersion       string
+	MountType            string
+	WebMount             string
+	OmitDBA              bool
+	OmitSSHAgent         bool
+	WebcacheEnabled      bool
+	NFSMountEnabled      bool
+	NFSSource            string
+	IsWindowsFS          bool
 }
 
 // RenderComposeYAML renders the contents of docker-compose.yaml.
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
-	var hostDockerInternalIP = ""
-	var hostDockerInternalHostname = "unneeded"
 	templ := template.New("compose template")
 	templ, err = templ.Parse(DDevComposeTemplate)
 	if err != nil {
 		return "", err
 	}
 
-	// Docker 18.09 on linux and docker-toolbox don't define host.docker.internal
-	// so we need to go get the ip address of docker0
-	// We would hope to be able to remove this when
-	// https://github.com/docker/for-linux/issues/264 gets resolved.
-	if runtime.GOOS == "linux" {
-		out, err := exec.RunCommandPipe("ip", []string{"address", "show", "dev", "docker0"})
-		// Do not process if ip command fails, we'll just ignore and not act.
-		if err == nil {
-			addr := regexp.MustCompile(`inet *[0-9\.]+`).FindString(out)
-			components := strings.Split(addr, " ")
-			if len(components) == 2 {
-				hostDockerInternalIP = components[1]
-			}
-		}
-	} else if util.IsDockerToolbox() {
-		dockerIP, err := dockerutil.GetDockerIP()
-		if err != nil {
-			return "", err
-		}
-		octets := strings.Split(dockerIP, ".")
-		if len(octets) != 4 {
-			return "", fmt.Errorf("dockerIP %s does not have 4 octets", dockerIP)
-		}
-		// If the docker IP is 192.168.99.100, the *router* ip is 192.168.99.1
-		// So replace the final octet with 1.
-		hostDockerInternalIP = fmt.Sprintf("%s.%s.%s.1", octets[0], octets[1], octets[2])
-	}
-	// If we've come up with a host.docker.internal IP, set the hostname explicitly in
-	// docker-compose.yaml
-	if hostDockerInternalIP != "" {
-		hostDockerInternalHostname = "host.docker.internal"
+	hostDockerInternalIP, err := dockerutil.GetHostDockerInternalIP()
+	if err != nil {
+		return "", err
 	}
 
+	// The fallthrough default for hostDockerInternalIdentifier is the
+	// hostDockerInternalHostname == host.docker.internal
+
 	templateVars := composeYAMLVars{
-		Name:                       app.Name,
-		Plugin:                     "ddev",
-		AppType:                    app.Type,
-		MailhogPort:                appports.GetPort("mailhog"),
-		DBAPort:                    appports.GetPort("dba"),
-		DBPort:                     appports.GetPort("db"),
-		DdevGenerated:              DdevFileSignature,
-		HostDockerInternalHostname: hostDockerInternalHostname,
-		HostDockerInternalIP:       hostDockerInternalIP,
-		ComposeVersion:             version.DockerComposeFileFormatVersion,
-		OmitDBA:                    util.ArrayContainsString(app.OmitContainers, "dba"),
-		OmitSSHAgent:               util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
-		WebcacheEnabled:            app.WebcacheEnabled,
-		IsWindowsFS:                runtime.GOOS == "windows",
-		MountType:                  "bind",
-		WebMount:                   "../",
+		Name:                 app.Name,
+		Plugin:               "ddev",
+		AppType:              app.Type,
+		MailhogPort:          appports.GetPort("mailhog"),
+		DBAPort:              appports.GetPort("dba"),
+		DBPort:               appports.GetPort("db"),
+		DdevGenerated:        DdevFileSignature,
+		HostDockerInternalIP: hostDockerInternalIP,
+		ComposeVersion:       version.DockerComposeFileFormatVersion,
+		OmitDBA:              util.ArrayContainsString(app.OmitContainers, "dba"),
+		OmitSSHAgent:         util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
+		WebcacheEnabled:      app.WebcacheEnabled,
+		NFSMountEnabled:      app.NFSMountEnabled,
+		NFSSource:            "",
+		IsWindowsFS:          runtime.GOOS == "windows",
+		MountType:            "bind",
+		WebMount:             "../",
 	}
-	if templateVars.WebcacheEnabled {
+	if app.WebcacheEnabled {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "webcachevol"
+	}
+	if app.NFSMountEnabled {
+		templateVars.MountType = "volume"
+		templateVars.WebMount = "nfsmount"
+		templateVars.NFSSource = app.AppRoot
+		if runtime.GOOS == "windows" {
+			// WinNFSD can only handle a mountpoint like /C/Users/rfay/workspace/d8git
+			// and completely chokes in C:\Users\rfay...
+			templateVars.NFSSource = dockerutil.MassageWIndowsNFSMount(app.AppRoot)
+		}
 	}
 
 	err = templ.Execute(&doc, templateVars)
