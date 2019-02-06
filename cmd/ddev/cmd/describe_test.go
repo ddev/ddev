@@ -222,6 +222,8 @@ func TestCmdDescribeMissingProjectDirectory(t *testing.T) {
 	var out string
 	assert := asrt.New(t)
 
+	projDir, _ := os.Getwd()
+
 	projectName := util.RandString(6)
 
 	tmpDir := testcommon.CreateTmpDir(t.Name())
@@ -236,13 +238,15 @@ func TestCmdDescribeMissingProjectDirectory(t *testing.T) {
 	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", projectName})
 	assert.NoError(err)
 
+	err = os.Chdir(projDir)
+	assert.NoError(err)
 	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
 	err = os.Rename(tmpDir, copyDir)
-	defer testcommon.CleanupDir(copyDir)
-	defer testcommon.Chdir(copyDir)()
 	assert.NoError(err)
 
 	out, err = exec.RunCommand(DdevBin, []string{"describe", projectName})
 	assert.Error(err, "Expected an error when describing project with no project directory")
 	assert.Contains(out, "ddev can no longer find your project files")
+	err = os.Rename(copyDir, tmpDir)
+	assert.NoError(err)
 }
