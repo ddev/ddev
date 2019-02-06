@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +22,7 @@ in any directory by running 'ddev stop projectname [projectname ...]'`,
 		}
 
 		for _, project := range projects {
-			if err := checkForMissingProjectFiles(project); err != nil {
+			if err := ddevapp.CheckForMissingProjectFiles(project); err != nil {
 				util.Failed("Failed to stop %s: %v", project.GetName(), err)
 			}
 

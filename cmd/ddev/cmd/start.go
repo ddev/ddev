@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/ddevapp"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -36,7 +37,7 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 		}
 
 		for _, project := range projects {
-			if err := checkForMissingProjectFiles(project); err != nil {
+			if err := ddevapp.CheckForMissingProjectFiles(project); err != nil {
 				util.Failed("Failed to start %s: %v", project.GetName(), err)
 			}
 

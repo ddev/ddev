@@ -33,7 +33,7 @@ running 'ddev stop <projectname>.`,
 		}
 		project := projects[0]
 
-		if err := checkForMissingProjectFiles(project); err != nil {
+		if err := ddevapp.CheckForMissingProjectFiles(project); err != nil {
 			util.Failed("Failed to describe %s: %v", project.Name, err)
 		}
 
