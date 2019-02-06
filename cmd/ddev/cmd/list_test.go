@@ -72,10 +72,10 @@ func TestDevList(t *testing.T) {
 
 }
 
-// TestDdevListContinuous tests the --continuous flag for ddev list.
-func TestDdevListContinuous(t *testing.T) {
+// TestCmdListContinuous tests the --continuous flag for ddev list.
+func TestCmdListContinuous(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("Skipping TestDdevListContinuous because Windows stdout capture doesn't work.")
+		t.Skip("Skipping TestCmdListContinuous because Windows stdout capture doesn't work.")
 	}
 
 	assert := asrt.New(t)

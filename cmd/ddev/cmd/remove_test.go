@@ -56,9 +56,9 @@ func TestDevRemove(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TestDdevRemoveMissingProjectDirectory ensures the `ddev remove` command can operate on a project when the
+// TestCmdRemoveMissingProjectDirectory ensures the `ddev remove` command can operate on a project when the
 // project's directory has been removed.
-func TestDdevRemoveMissingProjectDirectory(t *testing.T) {
+func TestCmdRemoveMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
 	assert := asrt.New(t)

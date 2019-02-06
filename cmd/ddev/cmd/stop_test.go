@@ -16,8 +16,8 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDdevStop runs `ddev stop` on the test apps
-func TestDdevStop(t *testing.T) {
+// TestCmdStop runs `ddev stop` on the test apps
+func TestCmdStop(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Make sure we have running sites.
@@ -60,9 +60,9 @@ func TestDdevStop(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TestDdevStopMissingProjectDirectory ensures the `ddev stop` command returns the expected help text when
+// TestCmdStopMissingProjectDirectory ensures the `ddev stop` command returns the expected help text when
 // a project's directory no longer exists.
-func TestDdevStopMissingProjectDirectory(t *testing.T) {
+func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
 	assert := asrt.New(t)

@@ -15,8 +15,8 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDdevStart runs `ddev start` on the test apps
-func TestDdevStart(t *testing.T) {
+// TestCmdStart runs `ddev start` on the test apps
+func TestCmdStart(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Make sure we have running sites.
@@ -57,9 +57,9 @@ func TestDdevStart(t *testing.T) {
 	}
 }
 
-// TestDdevStartMissingProjectDirectory ensures the `ddev start` command returns the expected help text when
+// TestCmdStartMissingProjectDirectory ensures the `ddev start` command returns the expected help text when
 // a project's directory no longer exists.
-func TestDdevStartMissingProjectDirectory(t *testing.T) {
+func TestCmdStartMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
 	assert := asrt.New(t)
