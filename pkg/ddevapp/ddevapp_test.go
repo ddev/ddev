@@ -191,10 +191,9 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.WriteConfig() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
-		// TODO: webcache PR will add other volumes that should be removed here.
-		for _, volume := range []string{app.Name + "-mariadb"} {
+		for _, volume := range []string{app.Name + "-mariadb", app.GetUnisonCatalogVolName(), app.GetWebcacheVolName()} {
 			err = dockerutil.RemoveVolume(volume)
-			if err != nil && err.Error() != "no such volume" {
+			if err != nil {
 				log.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
 			}
 		}
@@ -1476,7 +1475,9 @@ func TestDdevStop(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 	err = app.StartAndWaitForSync(0)
-	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Down(true, false)
+	require.NoError(t, err)
 	err = app.Stop()
 	assert.NoError(err)
 
@@ -1487,8 +1488,6 @@ func TestDdevStop(t *testing.T) {
 		assert.NoError(err)
 		assert.True(check, containerType, "container has exited")
 	}
-	err = app.Down(true, false)
-	assert.NoError(err)
 
 	runTime()
 	switchDir()
@@ -1505,6 +1504,8 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	startErr := app.StartAndWaitForSync(0)
+	//nolint: errcheck
+	defer app.Down(true, false)
 	if startErr != nil {
 		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
@@ -1525,8 +1526,6 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
-	err = app.Down(true, false)
-	assert.NoError(err)
 }
 
 // TestDdevDescribe tests that the describe command works properly on a running
@@ -1542,10 +1541,11 @@ func TestDdevDescribe(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	err = app.StartAndWaitForSync(0)
-
+	startErr := app.StartAndWaitForSync(0)
+	//nolint: errcheck
+	defer app.Down(true, false)
 	// If we have a problem starting, get the container logs and output.
-	if err != nil {
+	if startErr != nil {
 		stdout := util.CaptureUserOut()
 		logsErr := app.Logs("web", false, false, "")
 		assert.NoError(logsErr)
@@ -1554,7 +1554,7 @@ func TestDdevDescribe(t *testing.T) {
 		healthcheck, inspectErr := exec.RunCommandPipe("bash", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
 		assert.NoError(inspectErr)
 
-		assert.NoError(err, "app.Start(%s) failed: %v, \nweb container healthcheck='%s', \n=== web container logs=\n%s\n=== END web container logs ===", site.Name, err, healthcheck, out)
+		t.Fatalf("app.StartAndWaitForSync(%s) failed: %v, \nweb container healthcheck='%s', \n=== web container logs=\n%s\n=== END web container logs ===", site.Name, err, healthcheck, out)
 	}
 
 	desc, err := app.Describe()
@@ -1572,8 +1572,7 @@ func TestDdevDescribe(t *testing.T) {
 	desc, err = app.Describe()
 	assert.NoError(err)
 	assert.EqualValues(ddevapp.SiteStopped, desc["status"])
-	err = app.Down(true, false)
-	assert.NoError(err)
+
 	switchDir()
 }
 
@@ -1589,6 +1588,8 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 	startErr := app.StartAndWaitForSync(0)
+	//nolint: errcheck
+	defer app.Down(true, false)
 	if startErr != nil {
 		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
@@ -1603,8 +1604,6 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 	assert.Contains(desc["status"], ddevapp.SiteDirMissing, "Status did not include the phrase '%s' when describing a site with missing directories.", ddevapp.SiteDirMissing)
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
-	assert.NoError(err)
-	err = app.Down(true, false)
 	assert.NoError(err)
 }
 
@@ -1638,6 +1637,8 @@ func TestRouterPortsCheck(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 	startErr := app.StartAndWaitForSync(5)
+	//nolint: errcheck
+	defer app.Down(true, false)
 	if startErr != nil {
 		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(getLogsErr)
@@ -1649,6 +1650,8 @@ func TestRouterPortsCheck(t *testing.T) {
 		t.Fatalf("Failed to GetActiveApp(%s), err:%v", site.Name, err)
 	}
 	startErr = app.StartAndWaitForSync(5)
+	//nolint: errcheck
+	defer app.Down(true, false)
 	if startErr != nil {
 		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(getLogsErr)
@@ -1677,8 +1680,6 @@ func TestRouterPortsCheck(t *testing.T) {
 	// Remove our dummy busybox docker container.
 	out, err := exec.RunCommand("docker", []string{"rm", "-f", containerID})
 	assert.NoError(err, "Failed to docker rm the port-occupier container, err=%v output=%v", err, out)
-	err = app.Down(true, false)
-	assert.NoError(err)
 }
 
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
