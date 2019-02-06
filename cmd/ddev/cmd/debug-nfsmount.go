@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/version"
 	"strings"
 
@@ -38,7 +39,14 @@ var DebugNFSMountCmd = &cobra.Command{
 		//nolint: errcheck
 		dockerutil.RemoveVolume(testVolume)
 
-		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": "addr=host.docker.internal,hard,nolock,rw", "device": ":" + dockerutil.MassageWIndowsNFSMount(app.AppRoot)})
+		hostDockerInternal, err := dockerutil.GetHostDockerInternalIP()
+		if err != nil {
+			util.Failed("failed to GetHostDockerInternalIP(): %v", err)
+		}
+		if hostDockerInternal == "" {
+			hostDockerInternal = "host.docker.internal"
+		}
+		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw", hostDockerInternal), "device": ":" + dockerutil.MassageWIndowsNFSMount(app.AppRoot)})
 		//nolint: errcheck
 		defer dockerutil.RemoveVolume(testVolume)
 		if err != nil {
