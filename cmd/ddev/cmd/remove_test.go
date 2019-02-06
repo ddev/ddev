@@ -62,6 +62,7 @@ func TestCmdRemoveMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
 	assert := asrt.New(t)
+	projDir, _ := os.Getwd()
 
 	projectName := util.RandString(6)
 
@@ -75,13 +76,17 @@ func TestCmdRemoveMissingProjectDirectory(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"start"})
 	assert.NoError(err)
 
+	err = os.Chdir(projDir)
+	assert.NoError(err)
+
 	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
 	err = os.Rename(tmpDir, copyDir)
-	defer testcommon.CleanupDir(copyDir)
-	defer testcommon.Chdir(copyDir)()
 	assert.NoError(err)
 
 	out, err = exec.RunCommand(DdevBin, []string{"remove", projectName})
 	assert.NoError(err)
 	assert.Contains(out, "has been removed")
+
+	err = os.Rename(copyDir, tmpDir)
+	assert.NoError(err)
 }
