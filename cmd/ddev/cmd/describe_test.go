@@ -215,9 +215,9 @@ func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 	return logData, nil
 }
 
-// TestDdevDescribeMissingProjectDirectory ensures the `ddev describe` command returns the expected help text when
+// TestCmdDescribeMissingProjectDirectory ensures the `ddev describe` command returns the expected help text when
 // a project's directory no longer exists.
-func TestDdevDescribeMissingProjectDirectory(t *testing.T) {
+func TestCmdDescribeMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
 	assert := asrt.New(t)
