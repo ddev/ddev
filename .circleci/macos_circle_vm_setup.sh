@@ -22,6 +22,18 @@ curl -sSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/rele
 GOTESTSUM_VERSION=0.3.2
 curl -sSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VERSION}/gotestsum_${GOTESTSUM_VERSION}_darwin_amd64.tar.gz && tar -C /usr/local/bin -zxf /tmp/gotestsum.tgz gotestsum
 
+sudo bash -c "cat <<EOF >/etc/exports
+/Users -alldirs -mapall=$(id -u):$(id -g) localhost
+/private/var -alldirs -mapall=$(id -u):$(id -g) localhost
+EOF"
+
+LINE="nfs.server.mount.require_resv_port = 0"
+FILE=/etc/nfs.conf
+grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
+
+sudo nfsd enable && sudo nfsd restart
+
+
 while ! docker ps 2>/dev/null ; do
   sleep 5
   echo "Waiting for docker to come up: $(date)"
