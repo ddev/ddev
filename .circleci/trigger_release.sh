@@ -26,8 +26,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 
-OPTIONS=c:g:r:p:
-LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:
+OPTIONS=c:g:r:p:s:
+LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:windows-signing-password:
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -56,10 +56,12 @@ while true; do
         GITHUB_PROJECT=$2
         shift 2
         ;;
-    --)
-        shift
-        break
+    -s|--windows-signing-password)
+        DDEV_WINDOWS_SIGNING_PASSWORD=$2
+        shift 2
         ;;
+    --)
+        break;
     esac
 done
 
@@ -69,6 +71,9 @@ set -x
 BUILD_PARAMS="\"CIRCLE_JOB\": \"release_build\", \"job_name\": \"release_build\", \"GITHUB_TOKEN\":\"${GITHUB_TOKEN}\", \"RELEASE_TAG\": \"${RELEASE_TAG}\""
 if [ "${RELEASE_TAG}" != "" ]; then
     DATA="\"tag\": \"$RELEASE_TAG\","
+fi
+if [ "${DDEV_WINDOWS_SIGNING_PASSWORD:-}" != "" ]; then
+    DATA="\"DDEV_WINDOWS_SIGNING_PASSWORD\": \"$DDEV_WINDOWS_SIGNING_PASSWORD\","
 fi
 
 DATA="${DATA} \"build_parameters\": { ${BUILD_PARAMS} } "
