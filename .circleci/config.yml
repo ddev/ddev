@@ -17,7 +17,7 @@ jobs:
     - save_cache:
         key: homebrew-linux
         paths:
-        - ~linuxbrew
+        - /home/linuxbrew
 
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
@@ -48,7 +48,7 @@ jobs:
     - save_cache:
         key: homebrew-linux
         paths:
-        - ~linuxbrew
+        - /home/linuxbrew
 
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
@@ -200,7 +200,7 @@ jobs:
     - save_cache:
         key: homebrew-linux
         paths:
-        - ~linuxbrew
+        - /home/linuxbrew
 
     # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
@@ -232,7 +232,7 @@ jobs:
     - save_cache:
         key: homebrew-linux
         paths:
-        - ~linuxbrew
+        - /home/linuxbrew
     - run:
         command: make -s test
         name: ddev tests
@@ -261,7 +261,7 @@ jobs:
     - save_cache:
         key: homebrew-linux
         paths:
-        - ~linuxbrew
+        - /home/linuxbrew
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
@@ -288,7 +288,7 @@ jobs:
     - save_cache:
         key: homebrew-linux
         paths:
-        - ~linuxbrew
+        - /home/linuxbrew
     - run:
         command: make staticrequired
         name: staticrequired
@@ -308,7 +308,7 @@ jobs:
     - save_cache:
         key: homebrew-linux
         paths:
-        - ~linuxbrew
+        - /home/linuxbrew
     - run:
         command: |
           for dir in containers/*
@@ -365,7 +365,7 @@ jobs:
     - save_cache:
         key: homebrew-linux
         paths:
-        - ~linuxbrew
+        - /home/linuxbrew
     - store_artifacts:
         path: /artifacts
         name: Artifact storage
@@ -389,7 +389,7 @@ jobs:
       - save_cache:
           key: homebrew-linux
           paths:
-          - ~linuxbrew
+          - /home/linuxbrew
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
@@ -430,7 +430,7 @@ jobs:
     - save_cache:
         key: homebrew-linux
         paths:
-        - ~linuxbrew
+        - /home/linuxbrew
 
     # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
@@ -446,11 +446,7 @@ jobs:
         command: ./.circleci/generate_artifacts.sh $ARTIFACTS TRUE ${BUILD_IMAGE_TARBALLS:true}
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
-
-    - store_artifacts:
-        path: /artifacts
-        name: Artifact storage
-
+        
     - run:
         command: |
           if [ ! -z "${GITHUB_TOKEN}" ]; then
@@ -474,6 +470,10 @@ jobs:
           if [ ! -z "${CHOCOLATEY_API_KEY:-}" ]; then
             docker run --rm -v $PWD/.gotmp/bin/windows_amd64/chocolatey:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
           fi
+    - store_artifacts:
+        path: /artifacts
+        name: Artifact storage
+
 
 workflows:
   version: 2
