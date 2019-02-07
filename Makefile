@@ -45,6 +45,11 @@ DdevVersion ?= $(VERSION)
 # This version-strategy uses git tags to set the version string
 # VERSION can be overridden on make commandline: make VERSION=0.9.1 push
 VERSION := $(shell git describe --tags --always --dirty)
+# Some things insist on having the version without the leading 'v', so provide a
+# $(NO_V_VERSION) without it.
+# no_v_version removes the front v, keeps the special to 20 chars, uses -alpha before the rest.
+NO_V_VERSION=$(shell echo $(VERSION) | awk -F"-" '{sub(/^./, "", $$1); printf $$1; if (NF >2) { printf("-alpha-%s-%s", $$2, $$3); } }')
+GITHUB_ORG := drud
 
 #
 # This version-strategy uses a manual value to set the version string
@@ -98,6 +103,19 @@ staticrequired: setup golangci-lint
 
 windows_install: windows $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt
 	makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
+
+no_v_version:
+	@echo $(NO_V_VERSION)
+
+chocolatey: windows_install
+	rm -rf $(GOTMP)/bin/windows_amd64/chocolatey && cp -r winpkg/chocolatey $(GOTMP)/bin/windows_amd64/chocolatey
+	perl -pi -e 's/REPLACE_DDEV_VERSION/$(NO_V_VERSION)/g' $(GOTMP)/bin/windows_amd64/chocolatey/*.nuspec
+	perl -pi -e 's/REPLACE_DDEV_VERSION/$(VERSION)/g' $(GOTMP)/bin/windows_amd64/chocolatey/tools/*.ps1
+	perl -pi -e 's/REPLACE_GITHUB_ORG/$(GITHUB_ORG)/g' $(GOTMP)/bin/windows_amd64/chocolatey/*.nuspec $(GOTMP)/bin/windows_amd64/chocolatey/tools/*.ps1
+	perl -pi -e "s/REPLACE_INSTALLER_CHECKSUM/$$(cat $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe.sha256.txt | awk '{ print $$1; }')/g" $(GOTMP)/bin/windows_amd64/chocolatey/tools/*
+	docker run --rm -v $(PWD)/$(GOTMP)/bin/windows_amd64/chocolatey:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco pack ddev.nuspec
+	@echo "chocolatey package is in $(GOTMP)/bin/windows_amd64/chocolatey"
+
 
 $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt:
 	curl -sSL -o /tmp/sudo.zip -O  https://github.com/mattn/sudo/releases/download/$(WINDOWS_SUDO_VERSION)/sudo-x86_64.zip

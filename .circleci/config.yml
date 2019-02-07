@@ -14,7 +14,7 @@ jobs:
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
         command: |
-          make -s clean linux darwin windows_install
+          make -s clean linux darwin windows_install chocolatey
         name: Build the ddev executables
     - persist_to_workspace:
         root: ~/
@@ -332,7 +332,7 @@ jobs:
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
-          command: make -s clean linux darwin windows_install
+          command: make -s clean linux darwin windows_install chocolatey
           name: Build the ddev executables
 
       - run:

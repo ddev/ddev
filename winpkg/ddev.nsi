@@ -187,7 +187,7 @@ Function .onInit
     Pop $0 # return value/error/timeout
     Pop $1
     ${If} $0 != "0"
-      MessageBox MB_OK "Docker and docker-compose do not seem to be installed (or are not available in %PATH%), but they are required for ddev to function. Please install them after you complete ddev installation."
+      MessageBox MB_OK "Docker and docker-compose do not seem to be installed (or are not available in %PATH%), but they are required for ddev to function. Please install them after you complete ddev installation." /SD IDOK
     ${EndIf}
 FunctionEnd
 
