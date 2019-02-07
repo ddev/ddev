@@ -10,12 +10,12 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-linux
+        - homebrew-linux-$CACHE_VERSION
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux
+        key: homebrew-linux-$CACHE_VERSION
         paths:
         - /home/linuxbrew
 
@@ -40,13 +40,13 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-linux
+        - homebrew-linux-$CACHE_VERSION
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux
+        key: homebrew-linux-$CACHE_VERSION
         paths:
         - /home/linuxbrew
 
@@ -71,14 +71,14 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos
+        - homebrew-macos-$CACHE_VERSION
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - save_cache:
-        key: homebrew-macos
+        key: homebrew-macos-$CACHE_VERSION
         paths:
         - /usr/local/Homebrew
     - run:
@@ -101,7 +101,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos
+        - homebrew-macos-$CACHE_VERSION
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -114,7 +114,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: homebrew-macos
+        key: homebrew-macos-$CACHE_VERSION
         paths:
         - /usr/local/Homebrew
 
@@ -132,7 +132,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos
+        - homebrew-macos-$CACHE_VERSION
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -145,7 +145,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: homebrew-macos
+        key: homebrew-macos-$CACHE_VERSION
         paths:
         - /usr/local/Homebrew
 
@@ -162,13 +162,13 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos
+        - homebrew-macos-$CACHE_VERSION
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos
+        key: homebrew-macos-$CACHE_VERSION
         paths:
         - /usr/local/Homebrew
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
@@ -191,14 +191,14 @@ jobs:
     steps:
     - restore_cache:
         keys:
-        - homebrew-linux
+        - homebrew-linux-$CACHE_VERSION
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux
+        key: homebrew-linux-$CACHE_VERSION
         paths:
         - /home/linuxbrew
 
@@ -223,14 +223,14 @@ jobs:
     steps:
     - restore_cache:
         keys:
-        - homebrew-linux
+        - homebrew-linux-$CACHE_VERSION
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux
+        key: homebrew-linux-$CACHE_VERSION
         paths:
         - /home/linuxbrew
     - run:
@@ -252,14 +252,14 @@ jobs:
     steps:
     - restore_cache:
         keys:
-        - homebrew-linux
+        - homebrew-linux-$CACHE_VERSION
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux
+        key: homebrew-linux-$CACHE_VERSION
         paths:
         - /home/linuxbrew
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
@@ -281,12 +281,12 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-linux
+        - homebrew-linux-$CACHE_VERSION
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux
+        key: homebrew-linux-$CACHE_VERSION
         paths:
         - /home/linuxbrew
     - run:
@@ -301,12 +301,12 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-linux
+        - homebrew-linux-$CACHE_VERSION
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux
+        key: homebrew-linux-$CACHE_VERSION
         paths:
         - /home/linuxbrew
     - run:
@@ -329,12 +329,12 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-macos
+        - homebrew-macos-$CACHE_VERSION
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos
+        key: homebrew-macos-$CACHE_VERSION
         paths:
         - /usr/local/Homebrew
     - run:
@@ -363,7 +363,7 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: homebrew-linux
+        key: homebrew-linux-$CACHE_VERSION
         paths:
         - /home/linuxbrew
     - store_artifacts:
@@ -382,12 +382,12 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - homebrew-linux
+          - homebrew-linux-$CACHE_VERSION
       - run:
           command: ./.circleci/linux_circle_vm_setup.sh
           name: TAG BUILD Circle VM setup - tools, docker, golang
       - save_cache:
-          key: homebrew-linux
+          key: homebrew-linux-$CACHE_VERSION
           paths:
           - /home/linuxbrew
 
@@ -423,12 +423,12 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-linux
+        - homebrew-linux-$CACHE_VERSION
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: RELEASE BUILD Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux
+        key: homebrew-linux-$CACHE_VERSION
         paths:
         - /home/linuxbrew
 
