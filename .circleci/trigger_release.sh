@@ -27,7 +27,7 @@ fi
 
 
 OPTIONS=c:g:r:p:s:b:
-LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:windows-signing-password:,build-image-tarballs:
+LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:windows-signing-password:,build-image-tarballs:chocolatey-api-key:
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -65,6 +65,10 @@ while true; do
         BUILD_IMAGE_TARBALLS=$2
         shift 2
         ;;
+    --chocolatey-api-key)
+        CHOCOLATEY_API_KEY=$2
+        shift 2
+        ;;
     --)
         break;
     esac
@@ -79,6 +83,9 @@ if [ "${RELEASE_TAG}" != "" ]; then
 fi
 if [ "${DDEV_WINDOWS_SIGNING_PASSWORD:-}" != "" ]; then
     DATA="\"DDEV_WINDOWS_SIGNING_PASSWORD\": \"$DDEV_WINDOWS_SIGNING_PASSWORD\","
+fi
+if [ "${CHOCOLATEY_API_KEY:-}" != "" ]; then
+    DATA="\"CHOCOLATEY_API_KEY\": \"$CHOCOLATEY_API_KEY\","
 fi
 
 DATA="${DATA} \"build_parameters\": { ${BUILD_PARAMS} } "

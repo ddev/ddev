@@ -6,7 +6,14 @@ set -x
 # Basic tools
 
 sudo apt-get update -qq
-sudo apt-get install -qq mysql-client realpath zip nsis jq expect nfs-kernel-server
+sudo apt-get install -qq mysql-client realpath zip nsis jq expect nfs-kernel-server build-essential curl git
+
+if [ ! -d ~linuxbrew/.linuxbrew/bin ] ; then
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+    export PATH=$PATH:~linuxbrew/.linuxbrew/bin
+    echo "export PATH=$PATH:~linuxbrew/.linuxbrew/bin" >~/.bashrc
+fi
+brew update >/dev/null 2>/dev/null
 
 sudo bash -c "printf '/home 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)\n/tmp 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)' >>/etc/exports"
 sudo service nfs-kernel-server restart

@@ -8,9 +8,17 @@ jobs:
       DRUD_NONINTERACTIVE: "true"
     steps:
     - checkout
+    - restore_cache:
+        keys:
+        - homebrew-linux
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
+    - save_cache:
+        key: homebrew-linux
+        paths:
+        - ~linuxbrew
+
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
         command: |
@@ -30,10 +38,18 @@ jobs:
     steps:
     - attach_workspace:
         at: ~/
+    - restore_cache:
+        keys:
+        - homebrew-linux
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+    - save_cache:
+        key: homebrew-linux
+        paths:
+        - ~linuxbrew
+
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
         command: make -s test
@@ -61,16 +77,16 @@ jobs:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - save_cache:
+        key: homebrew-macos
+        paths:
+        - /usr/local/Homebrew
     - run:
         command: make -s test
         name: ddev tests
         no_output_timeout: "40m"
     - store_test_results:
         path: /tmp/testresults
-    - save_cache:
-        key: homebrew-macos
-        paths:
-        - /usr/local/Homebrew
 
   mac_apache_fpm_test:
     macos:
@@ -173,12 +189,20 @@ jobs:
       GOTEST_SHORT: 5
       DRUD_NONINTERACTIVE: "true"
     steps:
+    - restore_cache:
+        keys:
+        - homebrew-linux
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
-        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - save_cache:
+        key: homebrew-linux
+        paths:
+        - ~linuxbrew
+
+    # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: make -s test
@@ -197,11 +221,18 @@ jobs:
       GOTEST_SHORT: 5
       DRUD_NONINTERACTIVE: "true"
     steps:
+    - restore_cache:
+        keys:
+        - homebrew-linux
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+    - save_cache:
+        key: homebrew-linux
+        paths:
+        - ~linuxbrew
     - run:
         command: make -s test
         name: ddev tests
@@ -219,11 +250,18 @@ jobs:
       GOTEST_SHORT: 5
       DRUD_NONINTERACTIVE: "true"
     steps:
+    - restore_cache:
+        keys:
+        - homebrew-linux
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+    - save_cache:
+        key: homebrew-linux
+        paths:
+        - ~linuxbrew
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
@@ -241,9 +279,16 @@ jobs:
       ARTIFACTS: /artifacts
     steps:
     - checkout
+    - restore_cache:
+        keys:
+        - homebrew-linux
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+    - save_cache:
+        key: homebrew-linux
+        paths:
+        - ~linuxbrew
     - run:
         command: make staticrequired
         name: staticrequired
@@ -254,9 +299,16 @@ jobs:
     working_directory: ~/ddev
     steps:
     - checkout
+    - restore_cache:
+        keys:
+        - homebrew-linux
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+    - save_cache:
+        key: homebrew-linux
+        paths:
+        - ~linuxbrew
     - run:
         command: |
           for dir in containers/*
@@ -310,12 +362,15 @@ jobs:
         command: ./.circleci/generate_artifacts.sh $ARTIFACTS
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
-
+    - save_cache:
+        key: homebrew-linux
+        paths:
+        - ~linuxbrew
     - store_artifacts:
         path: /artifacts
         name: Artifact storage
 
-  # 'tag_build' is used to build a tag for release.
+  # 'tag_build' automatically builds a tag .
   tag_build:
     machine:
       image: circleci/classic:201711-01
@@ -325,10 +380,16 @@ jobs:
       ARTIFACTS: /artifacts
     steps:
       - checkout
-
+      - restore_cache:
+          keys:
+          - homebrew-linux
       - run:
           command: ./.circleci/linux_circle_vm_setup.sh
           name: TAG BUILD Circle VM setup - tools, docker, golang
+      - save_cache:
+          key: homebrew-linux
+          paths:
+          - ~linuxbrew
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
@@ -360,14 +421,20 @@ jobs:
       ARTIFACTS: /artifacts
     steps:
     - checkout
-
+    - restore_cache:
+        keys:
+        - homebrew-linux
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: RELEASE BUILD Circle VM setup - tools, docker, golang
+    - save_cache:
+        key: homebrew-linux
+        paths:
+        - ~linuxbrew
 
     # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
-        command: make -s clean linux darwin windows_install
+        command: make -s clean linux darwin windows_install chocolatey
         name: Build the ddev executables
 
     - run:
@@ -401,7 +468,12 @@ jobs:
             echo "GITHUB_TOKEN not provided, not pushing release $CIRCLE_TAG"
           fi
         name: Upload artifacts to GitHub release page
-
+    - run:
+        name: Upload chocolatey windows release
+        command: |
+          if [ ! -z "${CHOCOLATEY_API_KEY:-}" ]; then
+            docker run --rm -v $PWD/.gotmp/bin/windows_amd64/chocolatey:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
+          fi
 
 workflows:
   version: 2
