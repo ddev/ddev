@@ -7,12 +7,63 @@
 # api docs: https://circleci.com/docs/api
 # Trigger a new job: https://circleci.com/docs/api/v1-reference/#new-build
 
-CIRCLE_TOKEN=$1
-RELEASE_TAG=$2
-GITHUB_TOKEN=$3
-PROJECT=${4:-drud/ddev}
+set -o errexit -o pipefail -o noclobber -o nounset
 
-trigger_build_url=https://circleci.com/api/v1.1/project/github/$PROJECT?circle-token=${CIRCLE_TOKEN}
+GITHUB_PROJECT=drud/ddev
+
+# Long option parsing example: https://stackoverflow.com/a/29754866/215713
+# On macOS this requires `brew install gnu-getopt`
+OS=$(uname -s)
+if [ ${OS} = "Darwin" ]; then PATH="/usr/local/opt/gnu-getopt/bin:$PATH"; fi
+if [ ${OS} = "Darwin" ] && [ ! -f "/usr/local/opt/gnu-getopt/bin/getopt" ]; then
+    echo "This script requires `brew install gnu-getopt`" && exit 1
+fi
+
+! getopt --test > /dev/null
+if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+    echo '`getopt --test` failed in this environment.'
+    exit 1
+fi
+
+
+OPTIONS=c:g:r:p:
+LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:
+
+! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
+if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+    # e.g. return value is 1
+    #  then getopt has complained about wrong arguments to stdout
+    exit 2
+fi
+
+eval set -- "$PARSED"
+
+while true; do
+    case "$1" in
+    -c|--circleci-token)
+        CIRCLE_TOKEN=$2
+        shift 2
+        ;;
+    -g|--github-token)
+        GITHUB_TOKEN=$2
+        shift 2
+        ;;
+    -t|--release-tag)
+        RELEASE_TAG=$2
+        shift 2
+        ;;
+    -p|--github-project)
+        GITHUB_PROJECT=$2
+        shift 2
+        ;;
+    --)
+        shift
+        break
+        ;;
+    esac
+done
+
+trigger_build_url=https://circleci.com/api/v1.1/project/github/$GITHUB_PROJECT?circle-token=${CIRCLE_TOKEN}
 
 set -x
 BUILD_PARAMS="\"CIRCLE_JOB\": \"release_build\", \"job_name\": \"release_build\", \"GITHUB_TOKEN\":\"${GITHUB_TOKEN}\", \"RELEASE_TAG\": \"${RELEASE_TAG}\""

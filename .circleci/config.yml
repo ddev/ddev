@@ -362,7 +362,7 @@ jobs:
     - checkout
 
     - run:
-        command: ./.circleci/circle_vm_setup.sh
+        command: ./.circleci/linux_circle_vm_setup.sh
         name: RELEASE BUILD $RELEASE_TAG Circle VM setup - tools, docker, golang
 
     # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
