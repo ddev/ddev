@@ -446,7 +446,7 @@ jobs:
         command: ./.circleci/generate_artifacts.sh $ARTIFACTS TRUE ${BUILD_IMAGE_TARBALLS:true}
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
-        
+
     - run:
         command: |
           if [ ! -z "${GITHUB_TOKEN}" ]; then

@@ -8,9 +8,9 @@ set -x
 sudo apt-get update -qq
 sudo apt-get install -qq mysql-client realpath zip nsis jq expect nfs-kernel-server build-essential curl git
 
-if [ ! -d ~linuxbrew/.linuxbrew/bin ] ; then
+if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
-    export PATH=$PATH:~linuxbrew/.linuxbrew/bin
+    export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
     echo "export PATH=$PATH:/home/linuxbrew/linuxbrew/.linuxbrew/bin" >~/.bashrc
 fi
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin

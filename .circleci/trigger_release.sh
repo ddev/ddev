@@ -79,15 +79,9 @@ done
 trigger_build_url=https://circleci.com/api/v1.1/project/github/$GITHUB_PROJECT?circle-token=${CIRCLE_TOKEN}
 
 set -x
-BUILD_PARAMS="\"CIRCLE_JOB\": \"release_build\", \"job_name\": \"release_build\", \"GITHUB_TOKEN\":\"${GITHUB_TOKEN}\", \"RELEASE_TAG\": \"${RELEASE_TAG}\""
+BUILD_PARAMS="\"CIRCLE_JOB\": \"release_build\", \"job_name\": \"release_build\", \"GITHUB_TOKEN\":\"${GITHUB_TOKEN}\", \"RELEASE_TAG\": \"${RELEASE_TAG}\",\"DDEV_WINDOWS_SIGNING_PASSWORD\":\"${DDEV_WINDOWS_SIGNING_PASSWORD}\",\"CHOCOLATEY_API_KEY\":\"${CHOCOLATEY_API_KEY}\""
 if [ "${RELEASE_TAG}" != "" ]; then
     DATA="\"tag\": \"$RELEASE_TAG\","
-fi
-if [ "${DDEV_WINDOWS_SIGNING_PASSWORD:-}" != "" ]; then
-    DATA="\"DDEV_WINDOWS_SIGNING_PASSWORD\": \"$DDEV_WINDOWS_SIGNING_PASSWORD\","
-fi
-if [ "${CHOCOLATEY_API_KEY:-}" != "" ]; then
-    DATA="\"CHOCOLATEY_API_KEY\": \"$CHOCOLATEY_API_KEY\","
 fi
 
 DATA="${DATA} \"build_parameters\": { ${BUILD_PARAMS} } "
