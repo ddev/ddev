@@ -1,12 +1,12 @@
-uuid = 568216a0-f717-11e8-b03c-0242ac110002
+uuid = 3598fc8f-2a5c-11e9-9b3a-0242ac110002
 name = 
 tool_name = mariabackup
 tool_command = --backup --target-dir=/mysqlbase --user root --password=... root --socket=/var/tmp/mysql.sock
-tool_version = 10.1.32-MariaDB
-ibbackup_version = 10.1.32-MariaDB
-server_version = 10.1.32-MariaDB
-start_time = 2018-12-03 16:20:21
-end_time = 2018-12-03 16:20:24
+tool_version = 10.1.37-MariaDB
+ibbackup_version = 10.1.37-MariaDB
+server_version = 10.1.37-MariaDB
+start_time = 2019-02-06 22:11:51
+end_time = 2019-02-06 22:11:53
 lock_time = 0
 binlog_pos = filename 'on.000004', position '4206934', GTID of the last change '0-1-4734'
 innodb_from_lsn = 0
