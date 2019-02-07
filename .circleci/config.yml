@@ -454,7 +454,8 @@ workflows:
                 - "pull/[0-9]+"
     jobs:
     - build
-    - lx_tst_nginx_fpm:
+    - lx_container_test
+    - lx_nginx_fpm_test:
         requires:
         - build
     - artifacts:

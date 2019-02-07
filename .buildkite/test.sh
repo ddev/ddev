@@ -9,16 +9,6 @@ echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for
 export GOTEST_SHORT=1
 export DRUD_NONINTERACTIVE=true
 
-echo "--- cleaning up docker and Test directories"
-echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
-if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
-	docker rm -f $(docker ps -aq)
-fi
-docker system prune --volumes --force
-
-# Update all images that could have changed
-docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull
-
 set -o errexit
 set -o pipefail
 set -o nounset
@@ -32,8 +22,19 @@ rm -rf ~/.ddev/Test*
 # go clean -modcache  (Doesn't work due to current bug in golang)
 chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
-# Our testbot should now be sane, run the testbot checker to make sure.
+# Our testbot should be sane, run the testbot checker to make sure.
+echo "--- running sanetestbot.sh"
 ./.buildkite/sanetestbot.sh
+
+echo "--- cleaning up docker and Test directories"
+echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
+if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
+	docker rm -f $(docker ps -aq) || true
+fi
+docker system prune --volumes --force || true
+
+# Update all images that could have changed
+( docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
 
 echo "Running tests..."
 time make test
