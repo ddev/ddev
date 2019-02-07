@@ -101,8 +101,15 @@ setup:
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint
 
-windows_install: windows $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt
-	makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
+windows_install: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
+windows_install_unsigned: $(GOTMP)/bin/windows_amd64/ddev_windows_installer_unsigned.$(VERSION).exe
+
+$(GOTMP)/bin/windows_amd64/ddev_windows_installer_unsigned.$(VERSION).exe: windows $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt winpkg/ddev.nsi
+	@makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
+
+$(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe: $(GOTMP)/bin/windows_amd64/ddev_windows_installer_unsigned.$(VERSION).exe winpkg/drud_cs.p12
+	@if [ -z "$(DDEV_WINDOWS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev_windows_installer, no DDEV_WINDOWS_SIGNING_PASSWORD provided"; else osslsigncode sign -pkcs12 winpkg/drud_cs.p12  -n "DDEV-Local Installer" -i https://ddev.com -in $< -out $@ -t http://timestamp.digicert.com -pass $(DDEV_WINDOWS_SIGNING_PASSWORD) && rm $<; fi
+
 
 no_v_version:
 	@echo $(NO_V_VERSION)
@@ -124,6 +131,6 @@ $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt:
 
 $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt $(GOTMP)/bin/windows_amd64/winnfsd.exe :
 	curl -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd.exe  https://github.com/winnfsd/winnfsd/releases/download/$(WINNFSD_VERSION)/WinNFSd.exe
-	curl -sSL -O https://nssm.cc/ci/nssm-$(NSSM_VERSION).zip
-	unzip -oj nssm-$(NSSM_VERSION).zip nssm-$(NSSM_VERSION)/win64/nssm.exe -d $(GOTMP)/bin/windows_amd64
+	curl -sSL -o /tmp/nssm.zip https://nssm.cc/ci/nssm-$(NSSM_VERSION).zip
+	unzip -oj /tmp/nssm.zip -d $(GOTMP)/bin/windows_amd64
 	curl -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd_license.txt https://www.gnu.org/licenses/gpl.txt
