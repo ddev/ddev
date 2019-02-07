@@ -90,12 +90,11 @@ testpkg: setup
 
 setup:
 	@(mv -f ~/.ddev/global_config.yaml ~/.ddev/global_config.yaml.bak 2>/dev/null && echo "Warning: Removed your global ddev config file") || true
-	@mkdir -p bin/darwin bin/linux
-	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/linux
-	mkdir -p $(TESTTMP)
+	@mkdir -p $(GOTMP)/{src,pkg/mod/cache,.cache}
+	@mkdir -p $(TESTTMP)
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
-staticrequired: golangci-lint
+staticrequired: setup golangci-lint
 
 windows_install: windows $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt
 	makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows

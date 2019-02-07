@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  golang_build:
+  build:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -9,7 +9,7 @@ jobs:
     steps:
     - checkout
     - run:
-        command: ./.circleci/circle_vm_setup.sh
+        command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
@@ -20,7 +20,7 @@ jobs:
         root: ~/
         paths: ddev
 
-  golang_test_nginx_fpm:
+  lx_nginx_fpm_test:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -32,17 +32,138 @@ jobs:
         at: ~/
     # Run the built-in ddev tests with the executables just built.
     - run:
-        command: ./.circleci/circle_vm_setup.sh
+        command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
         command: make -s test
         name: ddev tests
-        no_output_timeout: "120m"
+        no_output_timeout: "40m"
     - store_test_results:
         path: /tmp/testresults
 
-  golang_test_apache_fpm:
+  mac_nginx_fpm_test:
+    macos:
+      xcode: "10.1.0"
+    working_directory: ~/ddev
+    environment:
+      DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
+      DRUD_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "true"
+    steps:
+    - attach_workspace:
+        at: ~/
+    - restore_cache:
+        keys:
+        - homebrew-macos
+    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: ./.circleci/macos_circle_vm_setup.sh
+        name: macOS Circle VM setup - tools, docker, golang
+        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - run:
+        command: make -s test
+        name: ddev tests
+        no_output_timeout: "40m"
+    - store_test_results:
+        path: /tmp/testresults
+    - save_cache:
+        key: homebrew-macos
+        paths:
+        - /usr/local/Homebrew
+
+  mac_apache_fpm_test:
+    macos:
+      xcode: "10.1.0"
+    working_directory: ~/ddev
+    environment:
+      DDEV_TEST_WEBSERVER_TYPE: apache-fpm
+      DRUD_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "true"
+    steps:
+    - attach_workspace:
+        at: ~/
+    - restore_cache:
+        keys:
+        - homebrew-macos
+    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: ./.circleci/macos_circle_vm_setup.sh
+        name: macOS Circle VM setup - tools, docker, golang
+        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - run:
+        command: make -s test
+        name: ddev tests
+        no_output_timeout: "40m"
+    - store_test_results:
+        path: /tmp/testresults
+    - save_cache:
+        key: homebrew-macos
+        paths:
+        - /usr/local/Homebrew
+
+
+  mac_webcache_test:
+    macos:
+      xcode: "10.1.0"
+    working_directory: ~/ddev
+    environment:
+      DDEV_TEST_USE_WEBCACHE: "true"
+      DRUD_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "true"
+    steps:
+    - attach_workspace:
+        at: ~/
+    - restore_cache:
+        keys:
+        - homebrew-macos
+    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: ./.circleci/macos_circle_vm_setup.sh
+        name: macOS Circle VM setup - tools, docker, golang
+        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - run:
+        command: make -s test
+        name: ddev tests
+        no_output_timeout: "40m"
+    - store_test_results:
+        path: /tmp/testresults
+    - save_cache:
+        key: homebrew-macos
+        paths:
+        - /usr/local/Homebrew
+
+  mac_nfsmount_test:
+    macos:
+      xcode: "10.1.0"
+    working_directory: ~/ddev
+    environment:
+      DDEV_TEST_USE_NFSMOUNT: "true"
+      DRUD_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "true"
+    steps:
+    - attach_workspace:
+        at: ~/
+    - restore_cache:
+        keys:
+        - homebrew-macos
+    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: ./.circleci/macos_circle_vm_setup.sh
+        name: macOS Circle VM setup - tools, docker, golang
+    - save_cache:
+        key: homebrew-macos
+        paths:
+        - /usr/local/Homebrew
+        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - run:
+        command: make -s test
+        name: ddev tests
+        no_output_timeout: "40m"
+    - store_test_results:
+        path: /tmp/testresults
+
+  lx_apache_fpm_test:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -55,7 +176,7 @@ jobs:
     - attach_workspace:
         at: ~/
     - run:
-        command: ./.circleci/circle_vm_setup.sh
+        command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
@@ -66,32 +187,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
 
-
-  golang_test_nfs:
-    machine:
-      image: circleci/classic:201711-01
-    working_directory: ~/ddev
-    environment:
-      DDEV_TEST_USE_NFSMOUNT: true
-      # Test only TYPO3 with the apache run.
-      GOTEST_SHORT: 5
-      DRUD_NONINTERACTIVE: "true"
-    steps:
-    - attach_workspace:
-        at: ~/
-    - run:
-        command: ./.circleci/circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
-        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
-    # Run the built-in ddev tests with the executables just built.
-    - run:
-        command: make -s test
-        name: ddev tests
-        no_output_timeout: "120m"
-    - store_test_results:
-        path: /tmp/testresults
-
-  golang_test_apache_cgi:
+  lx_apache_cgi_test:
     machine:
       image: circleci/classic:201711-01
     working_directory: ~/ddev
@@ -104,8 +200,32 @@ jobs:
     - attach_workspace:
         at: ~/
     - run:
-        command: ./.circleci/circle_vm_setup.sh
+        command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+    - run:
+        command: make -s test
+        name: ddev tests
+        no_output_timeout: "120m"
+    - store_test_results:
+        path: /tmp/testresults
+
+  lx_nfsmount_test:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: ~/ddev
+    environment:
+      DDEV_TEST_USE_NFSMOUNT: true
+      # Test only TYPO3 with the apache run.
+      GOTEST_SHORT: 5
+      DRUD_NONINTERACTIVE: "true"
+    steps:
+    - attach_workspace:
+        at: ~/
+    - run:
+        command: ./.circleci/linux_circle_vm_setup.sh
+        name: Circle VM setup - tools, docker, golang
+        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    # Run the built-in ddev tests with the executables just built.
     - run:
         command: make -s test
         name: ddev tests
@@ -120,15 +240,62 @@ jobs:
     environment:
       ARTIFACTS: /artifacts
     steps:
-    - attach_workspace:
-        at: ~/
-    # Run the built-in ddev tests with the executables just built.
+    - checkout
     - run:
-        command: ./.circleci/circle_vm_setup.sh
+        command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - run:
         command: make staticrequired
         name: staticrequired
+
+  lx_container_test:
+    machine:
+      image: circleci/classic:201711-01
+    working_directory: ~/ddev
+    steps:
+    - checkout
+    - run:
+        command: ./.circleci/linux_circle_vm_setup.sh
+        name: Circle VM setup - tools, docker, golang
+    - run:
+        command: |
+          for dir in containers/*
+              do pushd $dir
+              echo "--- Build container $dir"
+              time make container DOCKER_ARGS=--no-cache
+              echo "--- Test container $dir"
+              time make test
+              popd
+          done
+        name: linux container test
+
+  mac_container_test:
+    macos:
+      xcode: "10.1.0"
+    working_directory: ~/ddev
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - homebrew-macos
+    - run:
+        command: ./.circleci/macos_circle_vm_setup.sh
+        name: macOS Circle VM setup - tools, docker, golang
+    - save_cache:
+        key: homebrew-macos
+        paths:
+        - /usr/local/Homebrew
+    - run:
+        command: |
+          for dir in containers/*
+              do pushd $dir
+              echo "--- Build container $dir"
+              time make container DOCKER_ARGS=--no-cache
+              echo "--- Test container $dir"
+              time make test
+              popd
+          done
+        name: macos container test
 
   artifacts:
     machine:
@@ -160,7 +327,7 @@ jobs:
       - checkout
 
       - run:
-          command: ./.circleci/circle_vm_setup.sh
+          command: ./.circleci/linux_circle_vm_setup.sh
           name: TAG BUILD Circle VM setup - tools, docker, golang
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
@@ -240,25 +407,41 @@ workflows:
   version: 2
   normal_build_and_test:
     jobs:
-    - golang_build
-    - golang_test_nginx_fpm:
-        requires:
-        - golang_build
-    - golang_test_apache_fpm:
-        requires:
-        - golang_build
-    - golang_test_apache_cgi:
-        requires:
-        - golang_build
-    - golang_test_nfs:
-        requires:
-        - golang_build
-    - staticrequired:
-        requires:
-        - golang_build
+    - build
+    - mac_container_test
+    - lx_container_test
+    - staticrequired
     - artifacts:
         requires:
-        - golang_build
+        - build
+    - lx_nginx_fpm_test:
+        requires:
+        - build
+    - mac_nginx_fpm_test:
+        requires:
+        - build
+    - mac_apache_fpm_test:
+        requires:
+        - build
+    - mac_webcache_test:
+        requires:
+        - build
+    - mac_nfsmount_test:
+        requires:
+        - build
+    - lx_apache_fpm_test:
+        requires:
+        - build
+    - lx_apache_cgi_test:
+        requires:
+        - build
+    - lx_nfsmount_test:
+        requires:
+        - build
+    - staticrequired
+    - artifacts:
+        requires:
+        - build
 
   nightly_build:
     triggers:
@@ -270,13 +453,13 @@ workflows:
                 - master
                 - "pull/[0-9]+"
     jobs:
-    - golang_build
-    - golang_test_nginx_fpm:
+    - build
+    - lx_tst_nginx_fpm:
         requires:
-        - golang_build
+        - build
     - artifacts:
         requires:
-        - golang_build
+        - build
 
   tag_build:
     jobs:
