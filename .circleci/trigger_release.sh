@@ -10,6 +10,7 @@
 set -o errexit -o pipefail -o noclobber -o nounset
 
 GITHUB_PROJECT=drud/ddev
+BUILD_IMAGE_TARBALLS=true
 
 # Long option parsing example: https://stackoverflow.com/a/29754866/215713
 # On macOS this requires `brew install gnu-getopt`
@@ -79,7 +80,7 @@ done
 trigger_build_url=https://circleci.com/api/v1.1/project/github/$GITHUB_PROJECT?circle-token=${CIRCLE_TOKEN}
 
 set -x
-BUILD_PARAMS="\"CIRCLE_JOB\": \"release_build\", \"job_name\": \"release_build\", \"GITHUB_TOKEN\":\"${GITHUB_TOKEN}\", \"RELEASE_TAG\": \"${RELEASE_TAG}\",\"DDEV_WINDOWS_SIGNING_PASSWORD\":\"${DDEV_WINDOWS_SIGNING_PASSWORD}\",\"CHOCOLATEY_API_KEY\":\"${CHOCOLATEY_API_KEY}\""
+BUILD_PARAMS="\"CIRCLE_JOB\": \"release_build\", \"job_name\": \"release_build\", \"GITHUB_TOKEN\":\"${GITHUB_TOKEN}\", \"RELEASE_TAG\": \"${RELEASE_TAG}\",\"DDEV_WINDOWS_SIGNING_PASSWORD\":\"${DDEV_WINDOWS_SIGNING_PASSWORD}\",\"CHOCOLATEY_API_KEY\":\"${CHOCOLATEY_API_KEY}\",\"BUILD_IMAGE_TARBALLS\":\"${BUILD_IMAGE_TARBALLS}\""
 if [ "${RELEASE_TAG}" != "" ]; then
     DATA="\"tag\": \"$RELEASE_TAG\","
 fi
