@@ -26,8 +26,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 
-OPTIONS=c:g:r:p:s:
-LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:windows-signing-password:
+OPTIONS=c:g:r:p:s:b:
+LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:windows-signing-password:,build-image-tarballs:
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -58,6 +58,11 @@ while true; do
         ;;
     -s|--windows-signing-password)
         DDEV_WINDOWS_SIGNING_PASSWORD=$2
+        shift 2
+        ;;
+    # For debugging we can set BUILD_IMAGE_TARBALLS=false to avoid waiting for that.
+    -b|--build-image-tarballs)
+        BUILD_IMAGE_TARBALLS=$2
         shift 2
         ;;
     --)
