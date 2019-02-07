@@ -13,6 +13,7 @@ if [ ! -d ~linuxbrew/.linuxbrew/bin ] ; then
     export PATH=$PATH:~linuxbrew/.linuxbrew/bin
     echo "export PATH=$PATH:~linuxbrew/.linuxbrew/bin" >~/.bashrc
 fi
+export PATH=$PATH:~linuxbrew/.linuxbrew/bin
 brew update >/dev/null 2>/dev/null
 
 sudo bash -c "printf '/home 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)\n/tmp 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)' >>/etc/exports"

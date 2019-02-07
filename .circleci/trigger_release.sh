@@ -26,13 +26,15 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 
-OPTIONS=c:g:r:p:s:b:
-LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:windows-signing-password:,build-image-tarballs:chocolatey-api-key:
+OPTIONS=c:g:r:p:s:b:h:
+LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:,windows-signing-password:,build-image-tarballs:,chocolatey-api-key:
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
     # e.g. return value is 1
     #  then getopt has complained about wrong arguments to stdout
+    printf "\n\nFailed parsing options:\n"
+    getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@"
     exit 2
 fi
 
@@ -60,13 +62,13 @@ while true; do
         DDEV_WINDOWS_SIGNING_PASSWORD=$2
         shift 2
         ;;
+    -h|--chocolatey-api-key)
+        CHOCOLATEY_API_KEY=$2
+        shift 2
+        ;;
     # For debugging we can set BUILD_IMAGE_TARBALLS=false to avoid waiting for that.
     -b|--build-image-tarballs)
         BUILD_IMAGE_TARBALLS=$2
-        shift 2
-        ;;
-    --chocolatey-api-key)
-        CHOCOLATEY_API_KEY=$2
         shift 2
         ;;
     --)
