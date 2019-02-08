@@ -11,6 +11,7 @@ set -o errexit -o pipefail -o noclobber -o nounset
 
 GITHUB_PROJECT=drud/ddev
 BUILD_IMAGE_TARBALLS=true
+GITHUB_ORG=drud
 
 # Long option parsing example: https://stackoverflow.com/a/29754866/215713
 # On macOS this requires `brew install gnu-getopt`
@@ -27,8 +28,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 
-OPTIONS=c:g:r:p:s:b:h:
-LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:,windows-signing-password:,build-image-tarballs:,chocolatey-api-key:
+OPTIONS=c:g:r:p:s:b:h:o:
+LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:,windows-signing-password:,build-image-tarballs:,chocolatey-api-key:,github-org:
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -72,6 +73,11 @@ while true; do
         BUILD_IMAGE_TARBALLS=$2
         shift 2
         ;;
+    # For debugging we can set GITHUB_ORG=rfay so chocolatey will look there for the binaries.
+    -o|--github-org)
+        GITHUB_ORG=$2
+        shift 2
+        ;;
     --)
         break;
     esac
@@ -80,7 +86,7 @@ done
 trigger_build_url=https://circleci.com/api/v1.1/project/github/$GITHUB_PROJECT?circle-token=${CIRCLE_TOKEN}
 
 set -x
-BUILD_PARAMS="\"CIRCLE_JOB\": \"release_build\", \"job_name\": \"release_build\", \"GITHUB_TOKEN\":\"${GITHUB_TOKEN:-}\", \"RELEASE_TAG\": \"${RELEASE_TAG}\",\"DDEV_WINDOWS_SIGNING_PASSWORD\":\"${DDEV_WINDOWS_SIGNING_PASSWORD:-}\",\"CHOCOLATEY_API_KEY\":\"${CHOCOLATEY_API_KEY:-}\",\"BUILD_IMAGE_TARBALLS\":\"${BUILD_IMAGE_TARBALLS:-true}\""
+BUILD_PARAMS="\"CIRCLE_JOB\": \"release_build\", \"job_name\": \"release_build\", \"GITHUB_TOKEN\":\"${GITHUB_TOKEN:-}\", \"RELEASE_TAG\": \"${RELEASE_TAG}\",\"DDEV_WINDOWS_SIGNING_PASSWORD\":\"${DDEV_WINDOWS_SIGNING_PASSWORD:-}\",\"CHOCOLATEY_API_KEY\":\"${CHOCOLATEY_API_KEY:-}\",\"BUILD_IMAGE_TARBALLS\":\"${BUILD_IMAGE_TARBALLS:-true}\",\"GITHUB_ORG\":\"${GITHUB_ORG}\""
 if [ "${RELEASE_TAG:-}" != "" ]; then
     DATA="\"tag\": \"$RELEASE_TAG\","
 fi
