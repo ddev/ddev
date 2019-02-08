@@ -22,7 +22,7 @@ jobs:
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
         command: |
-          make -s clean linux darwin windows_install chocolatey
+          make -s clean linux darwin windows_install chocolatey EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: Build the ddev executables
     - persist_to_workspace:
         root: ~/
@@ -52,7 +52,7 @@ jobs:
 
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
-        command: make -s test
+        command: make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
         no_output_timeout: "40m"
     - store_test_results:
@@ -205,7 +205,7 @@ jobs:
     # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
-        command: make -s test
+        command: make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
         no_output_timeout: "120m"
     - store_test_results:
@@ -234,7 +234,7 @@ jobs:
         paths:
         - /home/linuxbrew
     - run:
-        command: make -s test
+        command: make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
         no_output_timeout: "120m"
     - store_test_results:
@@ -265,7 +265,7 @@ jobs:
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
-        command: make -s test
+        command: make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
         no_output_timeout: "120m"
     - store_test_results:
@@ -290,7 +290,7 @@ jobs:
         paths:
         - /home/linuxbrew
     - run:
-        command: make staticrequired
+        command: make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: staticrequired
 
   lx_container_test:
@@ -314,9 +314,9 @@ jobs:
           for dir in containers/*
               do pushd $dir
               echo "--- Build container $dir"
-              time make container DOCKER_ARGS=--no-cache
+              time make container DOCKER_ARGS=--no-cache EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
               echo "--- Test container $dir"
-              time make test
+              time make test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
               popd
           done
         name: linux container test
@@ -393,7 +393,7 @@ jobs:
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
-          command: make -s clean linux darwin windows_install chocolatey
+          command: make -s clean linux darwin windows_install chocolatey EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
           name: Build the ddev executables
 
       - run:
@@ -434,7 +434,7 @@ jobs:
 
     # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
-        command: make -s clean linux darwin windows_install chocolatey
+        command: make -s clean linux darwin windows_install chocolatey EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: Build the ddev executables
 
     - run:
@@ -468,6 +468,7 @@ jobs:
         name: Upload chocolatey windows release
         command: |
           if [ ! -z "${CHOCOLATEY_API_KEY:-}" ]; then
+            echo "Pushing release to chocolatey..."
             docker run --rm -v $PWD/.gotmp/bin/windows_amd64/chocolatey:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
           fi
     - store_artifacts:
