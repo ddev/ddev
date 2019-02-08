@@ -176,15 +176,13 @@ func Chdir(path string) func() {
 	curDir, _ := os.Getwd()
 	err := os.Chdir(path)
 	if err != nil {
-		// TODO: This should never Fatalf, as it terminates the process without test running finishing cleanup.
-		log.Fatalf("Could not change to directory %s: %v\n", path, err)
+		log.Errorf("Could not change to directory %s: %v\n", path, err)
 	}
 
 	return func() {
 		err := os.Chdir(curDir)
 		if err != nil {
-			// TODO: This should never Fatalf, as it terminates the process without test running finishing cleanup.
-			log.Fatalf("Failed to change directory to original dir=%s, err=%v", curDir, err)
+			log.Errorf("Failed to change directory to original dir=%s, err=%v", curDir, err)
 		}
 	}
 }

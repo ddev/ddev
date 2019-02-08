@@ -1,16 +1,23 @@
 package cmd
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"os"
+
+	"path/filepath"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDevRemove runs `ddev rm` on the test apps
-func TestDevRemove(t *testing.T) {
+// TestCmdRemove runs `ddev rm` on the test apps
+func TestCmdRemove(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Make sure we have running sites.
@@ -35,15 +42,9 @@ func TestDevRemove(t *testing.T) {
 	// Re-create running sites.
 	err = addSites()
 	require.NoError(t, err)
-	// Ensure a user can't accidentally wipe out everything.
-	appsBefore := len(ddevapp.GetApps())
-	out, err := exec.RunCommand(DdevBin, []string{"remove", "--remove-data", "--all"})
-	assert.Error(err, "ddev remove --all --remove-data should error, but succeeded")
-	assert.Contains(out, "Illegal option")
-	assert.EqualValues(appsBefore, len(ddevapp.GetApps()), "No apps should be removed or added after ddev remove --all --remove-data")
 
 	// Ensure the --all option can remove all active apps
-	out, err = exec.RunCommand(DdevBin, []string{"remove", "--all"})
+	out, err := exec.RunCommand(DdevBin, []string{"remove", "--all"})
 	assert.NoError(err, "ddev remove --all should succeed but failed, err: %v, output: %s", err, out)
 	out, err = exec.RunCommand(DdevBin, []string{"list"})
 	assert.NoError(err)
@@ -53,4 +54,39 @@ func TestDevRemove(t *testing.T) {
 	// Now put the sites back together so other tests can use them.
 	err = addSites()
 	require.NoError(t, err)
+}
+
+// TestCmdRemoveMissingProjectDirectory ensures the `ddev remove` command can operate on a project when the
+// project's directory has been removed.
+func TestCmdRemoveMissingProjectDirectory(t *testing.T) {
+	var err error
+	var out string
+	assert := asrt.New(t)
+	projDir, _ := os.Getwd()
+
+	projectName := util.RandString(6)
+
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpDir)
+	defer testcommon.Chdir(tmpDir)()
+
+	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
+	assert.NoError(err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	assert.NoError(err)
+
+	err = os.Chdir(projDir)
+	assert.NoError(err)
+
+	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
+	err = os.Rename(tmpDir, copyDir)
+	assert.NoError(err)
+
+	out, err = exec.RunCommand(DdevBin, []string{"remove", projectName})
+	assert.NoError(err)
+	assert.Contains(out, "has been removed")
+
+	err = os.Rename(copyDir, tmpDir)
+	assert.NoError(err)
 }

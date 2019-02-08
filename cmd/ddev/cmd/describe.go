@@ -23,29 +23,33 @@ additional services like MailHog and phpMyAdmin. You can run 'ddev describe' fro
 a project directory to stop that project, or you can specify a project to describe by
 running 'ddev stop <projectname>.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		var siteName string
-
 		if len(args) > 1 {
-			util.Failed("Too many arguments provided. Please use 'ddev describe' or 'ddev describe [appname]'")
+			util.Failed("Too many arguments provided. Please use 'ddev describe' or 'ddev describe [projectname]'")
 		}
 
-		if len(args) == 1 {
-			siteName = args[0]
-		}
-
-		site, err := ddevapp.GetActiveApp(siteName)
+		projects, err := getRequestedProjects(args, false)
 		if err != nil {
-			util.Failed("Unable to find any active project named %s: %v", siteName, err)
+			util.Failed("Failed to describe project(s): %v", err)
+		}
+		project := projects[0]
+
+		if err := ddevapp.CheckForMissingProjectFiles(project); err != nil {
+			util.Failed("Failed to describe %s: %v", project.Name, err)
 		}
 
-		// Do not show any describe output if we can't find the site.
-		if site.SiteStatus() == ddevapp.SiteNotFound {
+		project, err = ddevapp.GetActiveApp(project.Name)
+		if err != nil {
+			util.Failed("Unable to find any active project named %s: %v", project.Name, err)
+		}
+
+		// Do not show any describe output if we can't find the project.
+		if project.SiteStatus() == ddevapp.SiteNotFound {
 			util.Failed("no project found. have you run 'ddev start'?")
 		}
 
-		desc, err := site.Describe()
+		desc, err := project.Describe()
 		if err != nil {
-			util.Failed("Failed to describe project %s: %v", site.Name, err)
+			util.Failed("Failed to describe project %s: %v", project.Name, err)
 		}
 
 		renderedDesc, err := renderAppDescribe(desc)

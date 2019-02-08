@@ -3,8 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net"
 	"os"
@@ -16,6 +14,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/stretchr/testify/require"
 
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -1520,7 +1521,9 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
-	err = app.Stop()
+	// ddev stop (in cmd) actually does the check for missing project files,
+	// so we imitate that here.
+	err = ddevapp.CheckForMissingProjectFiles(app)
 	assert.Error(err)
 	assert.Contains(err.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
 	// Move the site directory back to its original location.

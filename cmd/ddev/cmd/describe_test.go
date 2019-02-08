@@ -1,11 +1,16 @@
 package cmd
 
 import (
-	"github.com/stretchr/testify/require"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"encoding/json"
+
+	"os"
+
+	"path/filepath"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
@@ -34,7 +39,7 @@ func TestDescribeBadArgs(t *testing.T) {
 	args = []string{"describe", util.RandString(16)}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
-	assert.Contains(string(out), "Unable to find any active project")
+	assert.Contains(string(out), "could not find project")
 
 	// Ensure we get a failure if using too many arguments.
 	args = []string{"describe", util.RandString(16), util.RandString(16)}
@@ -208,4 +213,40 @@ func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 		}
 	}
 	return logData, nil
+}
+
+// TestCmdDescribeMissingProjectDirectory ensures the `ddev describe` command returns the expected help text when
+// a project's directory no longer exists.
+func TestCmdDescribeMissingProjectDirectory(t *testing.T) {
+	var err error
+	var out string
+	assert := asrt.New(t)
+
+	projDir, _ := os.Getwd()
+
+	projectName := util.RandString(6)
+
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpDir)
+	defer testcommon.Chdir(tmpDir)()
+
+	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
+	assert.NoError(err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	//nolint: errcheck
+	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", projectName})
+	assert.NoError(err)
+
+	err = os.Chdir(projDir)
+	assert.NoError(err)
+	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
+	err = os.Rename(tmpDir, copyDir)
+	assert.NoError(err)
+
+	out, err = exec.RunCommand(DdevBin, []string{"describe", projectName})
+	assert.Error(err, "Expected an error when describing project with no project directory")
+	assert.Contains(out, "ddev can no longer find your project files")
+	err = os.Rename(copyDir, tmpDir)
+	assert.NoError(err)
 }

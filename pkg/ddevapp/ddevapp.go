@@ -2,10 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"github.com/drud/ddev/pkg/globalconfig"
 
 	"golang.org/x/crypto/ssh/terminal"
 
@@ -981,10 +982,6 @@ func (app *DdevApp) Stop() error {
 		return fmt.Errorf("no project to stop")
 	}
 
-	if strings.Contains(app.SiteStatus(), SiteDirMissing) || strings.Contains(app.SiteStatus(), SiteConfigMissing) {
-		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev remove %s'", app.GetAppRoot(), app.GetName())
-	}
-
 	files, err := app.ComposeFiles()
 	if err != nil {
 		return err
@@ -1432,8 +1429,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 	}
 	appRoot, err := CheckForConf(siteDir)
 	if err != nil {
-		// In the case of a missing .ddev/config.yml just return the site directory.
-		return siteDir, nil
+		return siteDir, err
 	}
 
 	return appRoot, nil
