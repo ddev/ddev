@@ -482,7 +482,11 @@ jobs:
         command: |
           if [ ! -z "${CHOCOLATEY_API_KEY:-}" ]; then
             echo "Pushing release to chocolatey..."
-            docker run --rm -v $PWD/.gotmp/bin/windows_amd64/chocolatey:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
+            pushd .gotmp/bin/windows_amd64/chocolatey
+            docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
+            popd
+          else
+            echo "NOT pushing release to chocolatey because no CHOCOLATEY_API_KEY was provided"
           fi
     - store_artifacts:
         path: /artifacts
