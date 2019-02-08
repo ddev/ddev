@@ -108,7 +108,7 @@ staticrequired: setup golangci-lint
 windows_install: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
 windows_install_unsigned: $(GOTMP)/bin/windows_amd64/ddev_windows_installer_unsigned.$(VERSION).exe
 
-$(GOTMP)/bin/windows_amd64/ddev_windows_installer_unsigned.$(VERSION).exe: windows $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt winpkg/ddev.nsi
+$(GOTMP)/bin/windows_amd64/ddev_windows_installer_unsigned.$(VERSION).exe: windows $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt winpkg/ddev.nsi $(GOTMP)/bin/windows_amd64/ddev.exe
 	@echo PATH=$(PATH)
 	@makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 
@@ -120,7 +120,7 @@ $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe: $(GOTMP)/bin/w
 no_v_version:
 	@echo $(NO_V_VERSION)
 
-chocolatey: windows_install
+chocolatey: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
 	rm -rf $(GOTMP)/bin/windows_amd64/chocolatey && cp -r winpkg/chocolatey $(GOTMP)/bin/windows_amd64/chocolatey
 	perl -pi -e 's/REPLACE_DDEV_VERSION/$(NO_V_VERSION)/g' $(GOTMP)/bin/windows_amd64/chocolatey/*.nuspec
 	perl -pi -e 's/REPLACE_DDEV_VERSION/$(VERSION)/g' $(GOTMP)/bin/windows_amd64/chocolatey/tools/*.ps1
@@ -138,5 +138,5 @@ $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt:
 $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt $(GOTMP)/bin/windows_amd64/winnfsd.exe :
 	curl -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd.exe  https://github.com/winnfsd/winnfsd/releases/download/$(WINNFSD_VERSION)/WinNFSd.exe
 	curl -sSL -o /tmp/nssm.zip https://nssm.cc/ci/nssm-$(NSSM_VERSION).zip
-	unzip -oj /tmp/nssm.zip -d $(GOTMP)/bin/windows_amd64
+	unzip -oj /tmp/nssm.zip  nssm-$(NSSM_VERSION)/win64/nssm.exe -d $(GOTMP)/bin/windows_amd64
 	curl -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd_license.txt https://www.gnu.org/licenses/gpl.txt
