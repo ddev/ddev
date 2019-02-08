@@ -22,6 +22,8 @@ rm -rf ~/.ddev/Test*
 # go clean -modcache  (Doesn't work due to current bug in golang)
 chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
+# Kill off any running containers before sanetestbot.
+docker rm -f $(docker ps -aq) || true
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"
 ./.buildkite/sanetestbot.sh
@@ -32,6 +34,7 @@ if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq) || true
 fi
 docker system prune --volumes --force || true
+docker rm -f $(docker ps -aq) || true
 
 # Update all images that could have changed
 ( docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
