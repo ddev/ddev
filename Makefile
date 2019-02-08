@@ -114,7 +114,7 @@ $(GOTMP)/bin/windows_amd64/ddev_windows_installer_unsigned.$(VERSION).exe: windo
 
 $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe: $(GOTMP)/bin/windows_amd64/ddev_windows_installer_unsigned.$(VERSION).exe winpkg/drud_cs.p12
 	@if [ -z "$(DDEV_WINDOWS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev_windows_installer, no DDEV_WINDOWS_SIGNING_PASSWORD provided"; else echo "Signing windows installer binary..."&& osslsigncode sign -pkcs12 winpkg/drud_cs.p12  -n "DDEV-Local Installer" -i https://ddev.com -in $< -out $@ -t http://timestamp.digicert.com -pass $(DDEV_WINDOWS_SIGNING_PASSWORD) && rm $< && shasum -a 256 $@ >$@.sha256.txt; fi
-	
+
 no_v_version:
 	@echo $(NO_V_VERSION)
 
