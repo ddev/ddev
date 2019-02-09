@@ -3,13 +3,8 @@
 - [ ] Update the default container versions in `pkg/version/version.go` and create a pull request
 - [ ] Ensure all updates have been merged into the master branch
 - [ ] Create a tag for the new version according to the instructions below, initiating a tag build
-- [ ] Build and push artifacts with the .circleci/trigger_release.sh tool: `.circleci/trigger_release.sh circlepikey0908b3443ea58316baf928b <VERSION> githubpersonaltokenc590a1ad9f7c353962dea  | jq -r 'del(.circle_yml)'`
+- [ ] Build and push artifacts with the .circleci/trigger_release.sh tool: `.circleci/trigger_release.sh --release-tag=v1.5.5 --circleci-token=circleToken900908b3443ea58316baf928b --github-token=githubPersonalToken853ae6f72c40525cd21036f742904a --chocolatey-api-key=chocolateykey8b8993913f7  --windows-signing-password=windowscodepassword | jq -r 'del(.circle_yml)'  | jq -r 'del(.circle_yml)'`
 - [ ] Add the commit list (`git log vXXX..vYYY --oneline --decorate=no`) to the release page
-- [ ] Download and sign the Windows installer executable according to the steps below
-- [ ] Generate a new SHA checksum for the signed Windows installer: `shasum -a256 ${artifact} > ${artifact}.sha256.txt`
-- [ ] Upload the signed Windows installer to the release page
-- [ ] Remove the unsigned Windows installer (if it still exists)
-- [ ] Download and confirm the integrity of each artifact with `shasum -a256 -c ${artifact}.sha256.txt`
 - [ ] Update the `ddev` [Homebrew formula](https://github.com/drud/homebrew-ddev) with the MacOS `.tar.gz` and SHA checksum
 - [ ] Test `brew upgrade ddev` and make sure ddev is the right version and behaves well
 - [ ] Test the Windows installer and confirm it's signed correctly

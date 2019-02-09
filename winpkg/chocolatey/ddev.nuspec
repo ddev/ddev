@@ -6,7 +6,7 @@
     <!-- == PACKAGE SPECIFIC SECTION == -->
     <id>ddev</id>
     <version>REPLACE_DDEV_VERSION</version>
-    <packageSourceUrl>https://github.com/rfay/ddev/tree/20190127_chocolatey/winpkg/chocolatey</packageSourceUrl>
+    <packageSourceUrl>https://github.com/drud/ddev/tree/master/winpkg/chocolatey</packageSourceUrl>
     <owners>Randy Fay, Andrew French</owners>
 
     <title>ddev (Install)</title>

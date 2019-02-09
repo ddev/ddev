@@ -6,15 +6,19 @@ set -x
 # Basic tools
 
 sudo apt-get update -qq
-sudo apt-get install -qq mysql-client realpath zip nsis jq expect nfs-kernel-server
+sudo apt-get install -qq mysql-client realpath zip nsis jq expect nfs-kernel-server build-essential curl git
+
+if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+    export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+    echo "export PATH=/home/linuxbrew/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
+fi
+export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+/home/linuxbrew/.linuxbrew/bin/brew update
+/home/linuxbrew/.linuxbrew/bin/brew install osslsigncode golang
 
 sudo bash -c "printf '/home 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)\n/tmp 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)' >>/etc/exports"
 sudo service nfs-kernel-server restart
-
-# golang of the version we want
-sudo apt-get remove -qq golang && sudo rm -rf /usr/local/go &&
-wget -q -O /tmp/golang.tgz https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz &&
-sudo tar -C /usr/local -xzf /tmp/golang.tgz
 
 # docker-compose
 sudo rm -f /usr/local/bin/docker-compose

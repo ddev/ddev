@@ -17,7 +17,7 @@ CRCCheck On
 ; The name of the installer
 Name "ddev ${MUI_VERSION}"
 
-OutFile "../.gotmp/bin/windows_amd64/ddev_windows_installer.${MUI_VERSION}.exe"
+OutFile "../.gotmp/bin/windows_amd64/ddev_windows_installer_unsigned.${MUI_VERSION}.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES64\ddev
