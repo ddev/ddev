@@ -32,19 +32,22 @@ if ! command -v winnfsd.exe >/dev/null; then
 fi
 winnfsd=$(command -v winnfsd.exe)
 
-if [ -f ~/.ddev/nfs_mounts.txt ]; then
-    echo "~/.ddev/nfs_mounts.txt already exists, not overwriting it"
+if [ -f ~/.ddev/nfs_exports.txt ]; then
+    echo "~/.ddev/nfs_exports.txt already exists, not overwriting it"
 else
     echo "
-# Exports for winnfsd
+# Exports for winnfsd for ddev
 # You can edit these yourself to match your workflow
 # But nfs must share your project directory
-C:\ > /C" >~/.ddev/nfs_mounts.txt
+# Additional lines can be added for additional directories or drives.
+C:\ > /C" >~/.ddev/nfs_exports.txt
 fi
-sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -log off -pathFile "$HOME/.ddev/nfs_mounts.txt"
-sudo nssm start nfsd
+sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -log off -pathFile "$HOME/.ddev/nfs_exports.txt"
+sudo nssm start nfsd || true
+sleep 2
+nssm status nfsd
 
-echo "winnfsd has been installed as service nfsd serving the mounts in ~/.ddev/nfs_mounts.txt"
+echo "winnfsd has been installed as service nfsd serving the mounts in ~/.ddev/nfs_exports.txt"
 echo "You can edit that file and restart the nfsd service"
 echo "with 'sudo nssm restart nfsd'"
 echo "Or you can edit its behavior with 'sudo nssm edit nfsd'"
