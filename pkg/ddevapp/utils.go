@@ -136,11 +136,9 @@ func Cleanup(app *DdevApp) error {
 			return fmt.Errorf("could not remove container %s: %v", containerName, err)
 		}
 	}
+	// Always kill the nfs volume on ddev remove
 	for _, volName := range []string{app.GetNFSMountVolName()} {
-		err = client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volName})
-		if err != nil {
-			util.Warning("could not remove volume %s: %v", volName, err)
-		}
+		_ = dockerutil.RemoveVolume(volName)
 	}
 
 	err = StopRouterIfNoContainers()
