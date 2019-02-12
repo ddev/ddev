@@ -316,3 +316,13 @@ func CheckForMissingProjectFiles(project *DdevApp) error {
 
 	return nil
 }
+
+// Check for string in array
+func stringInList(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}

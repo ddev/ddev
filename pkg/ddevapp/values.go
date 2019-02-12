@@ -78,6 +78,9 @@ var WebserverDefault = WebserverNginxFPM
 // WebcacheEnabledDefault is the default value for app.WebCacheEnabled
 var WebcacheEnabledDefault = false
 
+// WebcacheExcludedDefault is the default value for app.WebcacheExcluded
+var WebcacheExcludesDefault = false
+
 // NFSMountEnabledDefault is default value for app.NFSMountEnabled
 var NFSMountEnabledDefault = false
 

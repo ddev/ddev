@@ -84,6 +84,7 @@ type DdevApp struct {
 	AdditionalFQDNs       []string             `yaml:"additional_fqdns"`
 	MariaDBVersion        string               `yaml:"mariadb_version"`
 	WebcacheEnabled       bool                 `yaml:"webcache_enabled"`
+	WebcacheExcludes      []string             `yaml:"webcache_excludes"`
 	NFSMountEnabled       bool                 `yaml:"nfs_mount_enabled"`
 	ConfigPath            string               `yaml:"-"`
 	AppRoot               string               `yaml:"-"`

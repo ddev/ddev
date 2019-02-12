@@ -72,6 +72,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.PHPVersion = PHPDefault
 	app.WebserverType = WebserverDefault
 	app.WebcacheEnabled = WebcacheEnabledDefault
+	app.WebcacheExcludes = WebcacheExcludesDefault
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 	app.MariaDBVersion = version.MariaDBDefaultVersion
@@ -94,6 +95,12 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	if runtime.GOOS != "darwin" && app.WebcacheEnabled && !globalconfig.DdevGlobalConfig.DeveloperMode {
 		app.WebcacheEnabled = false
 		util.Warning("webcache_enabled is not yet supported on %s, disabling it", runtime.GOOS)
+	}
+
+	// Turn off webcache_enabled if the current OS is specifically excluded
+	if stringInList(runtime.GOOS, app.WebcacheExcludes) {
+		app.WebcacheEnabled = false
+		util.Warning("Your OS '%s' is excluded from the webcache feature", runtime.GOOS)
 	}
 
 	// Allow override with provider.
