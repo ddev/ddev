@@ -98,7 +98,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	}
 
 	// Turn off webcache_enabled if the current OS is specifically excluded
-	if stringInList(runtime.GOOS, app.WebcacheExcludes) {
+	if stringInSlice(runtime.GOOS, app.WebcacheExcludes) {
 		app.WebcacheEnabled = false
 		util.Warning("Your OS '%s' is excluded from the webcache feature", runtime.GOOS)
 	}
