@@ -466,7 +466,7 @@ jobs:
             version=$(make version)
             version="${version#*:}"  # Remove the VERSION: in front of make version
             echo "GITHUB_TOKEN provided, pushing release $RELEASE_TAG"
-            /home/circleci/ghr \
+            ghr \
             -prerelease \
             -r $CIRCLE_PROJECT_REPONAME \
             -u $CIRCLE_PROJECT_USERNAME \
