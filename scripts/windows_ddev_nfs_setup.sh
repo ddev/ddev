@@ -30,7 +30,7 @@ if ! command -v winnfsd.exe >/dev/null; then
     echo "winnfsd.exe does not seem to be installed or is not in the PATH"
     exit 101
 fi
-winnfsd=$(command -v winnfsd.exe)
+winnfsd=$(where winnfsd.exe)
 
 if [ -f "$HOME/.ddev/nfs_exports.txt" ]; then
     printf "$HOME/.ddev/nfs_exports.txt already exists, not overwriting it, you will be responsible for its exports.\n"
@@ -42,7 +42,7 @@ else
 # Additional lines can be added for additional directories or drives.
 C:\ > /C" >"$HOME/.ddev/nfs_exports.txt"
 fi
-sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -log off -pathFile "$HOME/.ddev/nfs_exports.txt"
+sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -log off -pathFile "\"$HOMEDRIVE$HOMEPATH\.ddev\nfs_exports.txt\""
 sudo nssm start nfsd || true
 sleep 2
 nssm status nfsd
