@@ -4,18 +4,21 @@
 ##### contents into ../Makefile and commenting out the include and adding a
 ##### comment about what you did and why.
 
+# The //workdir prevents docker and friends from trying to convert the thing to a non-unix path.
+# The $(S) in fromt of paths is a slash used only for Docker Toolbox, for the same reason.
 DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
-          	    -v "$(S)$$PWD/$(GOTMP):/go$(DOCKERMOUNTFLAG)"                                \
-          	    -v "$(S)$$PWD:/workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -v "$(S)$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -v "$(S)$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
           	    -e CGO_ENABLED=0                  \
           	    -e GOOS=$@						  \
-          	    -w $(S)/workdir              \
+          	    -e GOPATH="//workdir/$(GOTMP)" \
+          	    -w //workdir              \
           	    $(BUILD_IMAGE)
 
 DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
-          	    -v "$(S)$$PWD/$(GOTMP):/go$(DOCKERMOUNTFLAG)"                                \
-          	    -v "$(S)$$PWD:/workdir$(DOCKERMOUNTFLAG)"                              \
-          	    -w $(S)/workdir              \
+          	    -v "$(S)$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -e GOPATH="//workdir/$(GOTMP)" \
+          	    -w //workdir              \
           	    $(BUILD_IMAGE)
 
 .PHONY: all build test push clean container-clean bin-clean version static gofmt govet golint golangci-lint container
@@ -29,7 +32,7 @@ BUILD_OS = $(shell go env GOHOSTOS)
 
 BUILD_IMAGE ?= drud/golang-build-container:v1.11.4.2
 
-BUILD_BASE_DIR ?= $$PWD
+BUILD_BASE_DIR ?= $(PWD)
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
@@ -39,7 +42,7 @@ GOMETALINTER_ARGS ?= --vendored-linters --disable-all --enable=gofmt --enable=ve
 GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode
 
 COMMIT := $(shell git describe --tags --always --dirty)
-BUILDINFO = $(shell echo Built $$(date) $$(whoami)@$$(hostname) $(BUILD_IMAGE) )
+BUILDINFO = $(shell echo Built $$(date) $(BUILD_IMAGE) )
 
 VERSION_VARIABLES += VERSION COMMIT BUILDINFO
 
@@ -52,23 +55,33 @@ DOCKERMOUNTFLAG := :delegated
 # See https://github.com/golang/go/issues/27227
 USEMODVENDOR := $(shell if [ -d vendor ]; then echo "-mod=vendor"; fi)
 
-
-PWD=$(shell pwd)
-S =
 ifeq ($(BUILD_OS),windows)
     # On Windows docker toolbox, volume mounts oddly need a // at the beginning for things to work out, so
     # add that extra slash only on Windows.
+    DOCKERMOUNTFLAG=
+endif
+
+# On Docker Toolbox we can't use paths like C:\xxx\xxx, must use /C/xxx/xxx
+# However, on Docker-for-Windows/Appveyor we must use C:\xxx
+# On all other (macos/linux) $PWD will already be OK.
+ifneq ($(shell if [ "$(BUILD_OS)" = "windows" ] && [ -z "$(DOCKER_TOOLBOX_INSTALL_PATH)" ]; then echo true; fi),)
+	PWD=$(shell cmd //c "echo %cd%")
+endif
+ifneq ($(DOCKER_TOOLBOX_INSTALL_PATH),)
+	PWD=$(shell pwd)
     S=/
 endif
 
 build: $(BUILD_OS)
+pull:
+	@docker pull $(BUILD_IMAGE) >/dev/null 2>&1
 
-linux darwin windows: $(GOFILES)
+linux darwin windows: pull $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
+	@echo $(shell if [ "$(BUILD_OS)" = "windows" ]; then echo "windows build: BUILD_OS=$(BUILD_OS)  DOCKER_TOOLBOX_INSTALL_PATH=$(DOCKER_TOOLBOX_INSTALL_PATH) PWD=$(PWD) S=$(S)"; fi )
 	@mkdir -p $(GOTMP)/{.cache,pkg,src,bin}
-	@$(DOCKERBUILDCMD) \
-        go install $(USEMODVENDOR) -installsuffix static -ldflags ' $(LDFLAGS) ' $(SRC_AND_UNDER)
-	@$(shell touch $@)
+	$(DOCKERBUILDCMD) \
+        go install -installsuffix static -ldflags ' $(LDFLAGS) ' $(SRC_AND_UNDER) && touch $@
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
@@ -79,7 +92,7 @@ gofmt:
 
 govet:
 	@echo "Checking go vet: "
-	@$(DOCKERTESTCMD) \
+	$(DOCKERTESTCMD) \
 		bash -c 'go vet $(SRC_AND_UNDER)'
 
 golint:

@@ -9,16 +9,9 @@ TESTOS = $(BUILD_OS)
 test: build
 	@echo "Testing $(SRC_AND_UNDER) with TESTARGS=$(TESTARGS)"
 	@mkdir -p $(GOTMP)/{.cache,pkg,src,bin}
-	@docker run -t --rm  -u $(shell id -u):$(shell id -g)                 \
-	    -v $(PWD)/$(GOTMP):/go$(DOCKERMOUNTFLAG)                                                 \
-	    -v $(PWD):/go/src/$(PKG)$(DOCKERMOUNTFLAG)                                          \
-	    -v $(PWD)/bin/linux:/go/bin$(DOCKERMOUNTFLAG)                                     \
-	    -v $(PWD)/$(GOTMP)/std/linux:/usr/local/go/pkg/linux_amd64_static$(DOCKERMOUNTFLAG)  \
-	    -e CGO_ENABLED=0	\
-	    -w /go/src/$(PKG)                                                  \
-	    $(BUILD_IMAGE)                                                     \
+	@$(DOCKERTESTCMD) \
         go test $(USEMODVENDOR) -v -installsuffix static -ldflags '$(LDFLAGS)' $(SRC_AND_UNDER) $(TESTARGS)
-	@$(shell chmod -R u+w $(GOTMP))
+	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 
 # test_precompile allows a full compilation of _test.go files, without execution of the tests.
 # Setup and teardown in TestMain is still executed though, so this can cost some time.
