@@ -23,7 +23,7 @@ DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)               
           	    -w //workdir              \
           	    $(BUILD_IMAGE)
 
-.PHONY: all build test push clean container-clean bin-clean version static gofmt govet golint golangci-lint container
+.PHONY: all build test push clean container-clean bin-clean version static gofmt govet golint golangci-lint container pull
 GOTMP=.gotmp
 
 SHELL = /bin/bash
@@ -75,8 +75,10 @@ ifneq ($(DOCKER_TOOLBOX_INSTALL_PATH),)
 endif
 
 build: $(BUILD_OS)
+
 pull:
-	@docker pull $(BUILD_IMAGE) >/dev/null 2>&1
+	@if [[ "$(docker images -q $(BUILD_IMAGE)  2> /dev/null)" == "" ]]; then docker pull $(BUILD_IMAGE) >/dev/null 2>&1; fi
+
 
 linux darwin windows: pull $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
