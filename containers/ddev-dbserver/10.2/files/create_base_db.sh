@@ -24,7 +24,7 @@ sudo chmod ugo+w /var/tmp
 sudo mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && sudo rm -f /var/lib/mysql/* && sudo chmod -R ugo+w /var/lib/mysql
 
 echo 'Initializing mysql'
-mysql_install_db
+mysql_install_db --force
 echo 'Starting mysqld --skip-networking'
 mysqld --skip-networking &
 pid="$!"
