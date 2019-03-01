@@ -81,7 +81,7 @@ ifeq ($(BUILD_OS),linux)
 endif
 
 ifeq ($(BUILD_OS),windows)
-    DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
+    DDEV_BINARY_FULLPATH=$(shell pwd)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
 endif
 
 ifeq ($(BUILD_OS),darwin)
