@@ -15,7 +15,9 @@ if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
 fi
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 /home/linuxbrew/.linuxbrew/bin/brew update
-/home/linuxbrew/.linuxbrew/bin/brew install osslsigncode golang docker-compose
+for item in osslsigncode golang docker-compose; do
+    /home/linuxbrew/.linuxbrew/bin/brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
+done
 
 sudo bash -c "printf '/home 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)\n/tmp 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)' >>/etc/exports"
 sudo service nfs-kernel-server restart
