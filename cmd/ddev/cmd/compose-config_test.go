@@ -38,7 +38,7 @@ func TestComposeConfigCmd(t *testing.T) {
 	_, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(t, err)
 
-	// Ensure ddev compose-config works as expected
+	// Ensure ddev debug compose-config works as expected
 	args = []string{"debug", "compose-config"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(t, err)
@@ -49,7 +49,7 @@ func TestComposeConfigCmd(t *testing.T) {
 	err = ioutil.WriteFile(overrideFile, []byte(override), 0644)
 	assert.NoError(t, err)
 
-	// Ensure ddev compose-config includes override values
+	// Ensure ddev debug compose-config includes override values
 	args = []string{"debug", "compose-config"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(t, err)
