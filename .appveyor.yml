@@ -1,0 +1,19 @@
+# At this time the appveyor.yml doesn't help us much because we use
+# Linux docker containers extensively, and appveyor is unable to use them.
+# So even building (not to mention testing) isn't possible.
+version: "{build}"
+image: Windows Server 2019
+
+
+install:
+  # 2. choco install -y git mysql-cli golang make docker-desktop nssm GoogleChrome zip jq composer cmder netcat ddev` (If docker-toolbox, use that instead; you may have to download the release separately to get correct version.)
+  - cinst make golang git mysql-cli nssm netcat
+  - refreshenv
+  - git config --global core.autocrlf false
+
+build_script:
+  - docker version && docker-compose version
+  - cmd: .autotests/test.cmd
+
+test: off
+deploy: false
