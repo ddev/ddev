@@ -26,7 +26,7 @@ chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 docker rm -f $(docker ps -aq) || true
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"
-./.buildkite/sanetestbot.sh
+./.autotests/sanetestbot.sh
 
 echo "--- cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"

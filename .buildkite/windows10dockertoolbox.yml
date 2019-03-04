@@ -1,4 +1,4 @@
-  - command: ".buildkite/test.cmd"
+  - command: ".autotests/test.cmd"
     agents:
       - "os=windows"
       - "dockertype=toolbox"

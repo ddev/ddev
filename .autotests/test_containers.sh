@@ -42,7 +42,7 @@ cleanup
 chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
 # Our testbot should now be sane, run the testbot checker to make sure.
-./.buildkite/sanetestbot.sh
+./.autotests/sanetestbot.sh
 
 set -x
 

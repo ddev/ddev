@@ -1,4 +1,4 @@
-  - command: ".buildkite/test.sh"
+  - command: ".autotests/test.sh"
     agents:
       - "os=macos"
       - "dockertype=dockerformac"
