@@ -52,6 +52,6 @@ if command -v ddev >/dev/null && [ "$(ddev version -j | jq -r .raw.cli)" \< "${M
   exit 4
 fi
 
-$(dirname $0)/nfstest.sh
+# $(dirname $0)/nfstest.sh
 
 echo "=== testbot $HOSTNAME seems to be set up OK ==="
