@@ -7,7 +7,7 @@ image: Windows Server 2019
 
 install:
   # 2. choco install -y git mysql-cli golang make docker-desktop nssm GoogleChrome zip jq composer cmder netcat ddev` (If docker-toolbox, use that instead; you may have to download the release separately to get correct version.)
-  - cinst make golang git mysql-cli nssm netcat
+  - cinst make golang git mysql-cli nssm netcat ddev
   - refreshenv
   - git config --global core.autocrlf false
 
