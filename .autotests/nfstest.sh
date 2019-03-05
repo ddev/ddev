@@ -19,7 +19,8 @@ darwin)
   share=/Users
   ;;
 windows)
-  share=/C/Users
+  # todo: Have to support toolbox separately
+  share='C:\Users'
   ;;
 esac
 
@@ -27,6 +28,8 @@ esac
 hostDockerInternal=$($(dirname $0)/../scripts/host-docker-internal.sh)
 
 set -x
-docker volume create --driver local --opt type=nfs --opt o=addr=${hostDockerInternal},hard,nolock,rw --opt device=:${share} nfstest >/dev/null
+#docker volume create --driver local --opt type=nfs --opt o=addr=${hostDockerInternal},hard,nolock,rw --opt device=:${share} nfstest >/dev/null
+docker volume create --driver local --opt type=nfs junker99
+
 docker run -t --rm -v nfstest:/tmp/nfs busybox ls //tmp/nfs >/dev/null
 echo "nfsd seems to be set up ok"
