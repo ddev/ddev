@@ -1,6 +1,8 @@
 FROM bitnami/minideb:stretch
 
-ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3"
+ENV PHP_VERSIONS="php7.1 php7.2 php7.3"
+ENV OLD_PHP_TARBALL_VERSION=v1.0
+ENV OLD_PHP_TARBALL_BASE_URL=https://dl.bintray.com/drud/oldphptarballs/
 ENV PHP_DEFAULT_VERSION="7.1"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 
@@ -41,7 +43,7 @@ RUN apt-get -qq update && \
         bzip2 \
         ghostscript \
         gnupg \
-        locales-all && \
+        locales-all  && \
     wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     echo "deb https://packages.sury.org/php/ stretch main" > /etc/apt/sources.list.d/php.list && \
     wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
@@ -81,10 +83,11 @@ RUN apt-get -qq update && \
         php-imagick \
         php-uploadprogress && \
     for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-apcu $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring $v-memcached $v-opcache $v-redis $v-soap $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
-    for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
+    cd /tmp && apt-get -qq install -y libmcrypt4 libzip5; for item in php5.6_final php7.0_final unversionedphp5.6_7.0_final; do curl --fail -sSL -O ${OLD_PHP_TARBALL_BASE_URL}${item}.${OLD_PHP_TARBALL_VERSION}.tgz;  tar -zxf ${item}.${OLD_PHP_TARBALL_VERSION}.tgz; done && dpkg -i *.deb && \
     apt-get -qq autoremove -y && \
     apt-get -qq clean -y && \
     rm -rf /var/lib/apt/lists/*
+
 
 # Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
