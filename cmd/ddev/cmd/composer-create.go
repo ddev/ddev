@@ -100,11 +100,6 @@ project root will be deleted when creating a project.`,
 		containerInstallPath := path.Join("/var/www/html", tmpDir)
 		hostInstallPath := filepath.Join(app.AppRoot, tmpDir)
 
-		// If WebcacheEnabled, the cleanup is done inline and doesn't have to be done here.
-		if !app.WebcacheEnabled {
-			defer cleanupTmpDir(hostInstallPath)
-		}
-
 		// Build container composer command
 		composerCmd := []string{
 			"composer",
@@ -219,17 +214,4 @@ func init() {
 	ComposerCreateCmd.Flags().StringVar(&stabilityArg, "stability", "", "Pass the --stability <arg> option to composer create-project")
 	ComposerCreateCmd.Flags().BoolVar(&noInteractionArg, "no-interaction", false, "Pass the --no-interaction flag to composer create-project")
 	ComposerCreateCmd.Flags().BoolVar(&preferDistArg, "prefer-dist", false, "Pass the --prefer-dist flag to composer create-project")
-}
-
-func cleanupTmpDir(hostTmpDir string) {
-	output.UserOut.Println("Removing temporary install directory")
-	if err := fileutil.PurgeDirectory(hostTmpDir); err != nil {
-		util.Warning("Failed to purge the temporary install directory %s: %v", hostTmpDir, err)
-		return
-	}
-
-	if err := os.RemoveAll(hostTmpDir); err != nil {
-		util.Warning("Failed to remove temporary install directory %v: %v", hostTmpDir, err)
-		return
-	}
 }
