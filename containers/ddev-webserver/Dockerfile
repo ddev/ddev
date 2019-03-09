@@ -83,7 +83,7 @@ RUN apt-get -qq update && \
         php-imagick \
         php-uploadprogress && \
     for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-apcu $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-mbstring $v-memcached $v-opcache $v-redis $v-soap $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
-    cd /tmp && apt-get -qq install -y libmcrypt4 libzip5; for item in php5.6_final php7.0_final unversionedphp5.6_7.0_final; do curl --fail -sSL -O ${OLD_PHP_TARBALL_BASE_URL}${item}.${OLD_PHP_TARBALL_VERSION}.tgz;  tar -zxf ${item}.${OLD_PHP_TARBALL_VERSION}.tgz; done && dpkg -i *.deb && \
+    cd /tmp && apt-get -qq install -y libmcrypt4 libzip5; for item in php5.6_final php7.0_final ; do curl --fail -sSL -O ${OLD_PHP_TARBALL_BASE_URL}${item}.${OLD_PHP_TARBALL_VERSION}.tgz;  tar -zxf ${item}.${OLD_PHP_TARBALL_VERSION}.tgz; done && dpkg -i *.deb && \
     apt-get -qq autoremove -y && \
     apt-get -qq clean -y && \
     rm -rf /var/lib/apt/lists/*
