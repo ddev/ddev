@@ -67,7 +67,7 @@ var BgsyncTag = "v1.6.0" // Note that this can be overridden by make
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "v1.6.0" // Note that this can be overridden by make
+var RouterTag = "20190309_longer_server_names" // Note that this can be overridden by make
 
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
