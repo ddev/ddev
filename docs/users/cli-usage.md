@@ -199,7 +199,7 @@ Your application can be reached at: http://example-backdrop-site.ddev.local
 
 ### Database Imports
 
-Import a database with just one command; We offer support for several file formats, including: **.sql, sql.gz, tar, tar.gz, and zip**.
+Import a database with just one command; We offer support for several file formats, including: **.sql, sql.gz, mysql, mysql.gz, tar, tar.gz, and zip**.
 
 Here's an example of a database import using ddev:
 
