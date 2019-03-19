@@ -80,6 +80,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.WebImage = version.GetWebImage()
 	app.DBImage = version.GetDBImage(app.MariaDBVersion)
 	app.DBAImage = version.GetDBAImage()
+	app.BgsyncImage = version.GetBgsyncImage()
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
