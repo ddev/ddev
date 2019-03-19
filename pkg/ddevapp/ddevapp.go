@@ -2,6 +2,8 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/mattn/go-isatty"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -28,7 +30,6 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/lextoumbourou/goodhosts"
-	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-shellwords"
 )
 
@@ -262,16 +263,16 @@ func (app *DdevApp) GetWebserverType() string {
 func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error {
 	app.DockerEnv()
 	var extPathPrompt bool
-
-	err := app.ProcessHooks("pre-import-db")
+	dbPath, err := ioutil.TempDir(filepath.Dir(app.ConfigPath), "importdb")
+	//nolint: errcheck
+	defer os.RemoveAll(dbPath)
 	if err != nil {
 		return err
 	}
 
-	err = os.MkdirAll(app.ImportDir, 0777)
-	err = fileutil.PurgeDirectory(dbPath)
+	err = app.ProcessHooks("pre-import-db")
 	if err != nil {
-		return fmt.Errorf("failed to cleanup %s before import: %v", dbPath, err)
+		return err
 	}
 
 	if imPath == "" {
@@ -339,9 +340,11 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 		return fmt.Errorf("no .sql or .mysql files found to import")
 	}
 
+	// Inside the container, the dir for imports will be at /mnt/ddev_config/<tmpdir_name>
+	insideContainerImportPath := path.Join("/mnt/ddev_config", filepath.Base(dbPath))
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     []string{"bash", "-c", "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && pv /db/*.*sql | mysql db"},
+		Cmd:     []string{"bash", "-c", "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && pv " + insideContainerImportPath + "/*.*sql | mysql db"},
 		Tty:     progress && isatty.IsTerminal(os.Stderr.Fd()),
 	})
 
