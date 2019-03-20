@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -21,6 +22,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/phayes/freeport"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -75,6 +77,12 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 	app.MariaDBVersion = version.MariaDBDefaultVersion
+
+	dbPort, err := freeport.GetFreePort()
+	if err != nil {
+		return app, fmt.Errorf("Failed to find a free port for ddev-dbserver container binding: %v", err)
+	}
+	app.HostDBPort = strconv.Itoa(dbPort)
 
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
@@ -140,6 +148,16 @@ func (app *DdevApp) WriteConfig() error {
 	}
 	if appcopy.BgsyncImage == version.GetBgsyncImage() {
 		appcopy.BgsyncImage = ""
+	}
+
+	// We now want to reserve the port we're writing for DBport so it doesn't
+	// accidentally get used for other projects.
+	if !util.ArrayContainsString(globalconfig.DdevGlobalConfig.UsedHostDBPorts, app.HostDBPort) {
+		globalconfig.DdevGlobalConfig.UsedHostDBPorts = append(globalconfig.DdevGlobalConfig.UsedHostDBPorts, app.HostDBPort)
+		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Don't write default working dir values to config

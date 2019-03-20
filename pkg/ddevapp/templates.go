@@ -21,7 +21,7 @@ services:
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     ports:
-      - "3306"
+      - "127.0.0.1:$DDEV_HOST_DB_PORT:3306"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .Plugin }}
@@ -241,6 +241,11 @@ const ConfigInstructions = `
 # only those two containers can be omitted here.
 # Note that these containers can also be omitted globally in the 
 # ~/.ddev/global_config.yaml or with the "ddev config global" command.
+
+# host_db_port: "6667"
+# The host port binding for the ddev-dbserver can be explicitly specified. It's normally static
+# after first configuration
+
 
 
 # provider: default # Currently either "default" or "pantheon"
