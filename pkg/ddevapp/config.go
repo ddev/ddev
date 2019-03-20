@@ -80,6 +80,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	app.WebImage = version.GetWebImage()
 	app.DBImage = version.GetDBImage(app.MariaDBVersion)
 	app.DBAImage = version.GetDBAImage()
+	app.BgsyncImage = version.GetBgsyncImage()
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
@@ -205,6 +206,8 @@ func (app *DdevApp) ReadConfig() error {
 		return fmt.Errorf("invalid configuration in %s: %v", app.ConfigPath, err)
 	}
 
+	app.DBImage = "" // DBImage will be set below
+
 	// ReadConfig config values from file.
 	err = yaml.Unmarshal(source, app)
 	if err != nil {
@@ -215,12 +218,11 @@ func (app *DdevApp) ReadConfig() error {
 	if app.Name == "" {
 		app.Name = filepath.Base(app.AppRoot)
 	}
-	if app.PHPVersion == "" {
-		app.PHPVersion = PHPDefault
-	}
 
-	if app.WebserverType == "" {
-		app.WebserverType = WebserverDefault
+	// If app.DBImage has not has been overridden, use it,
+	// Otherwise just use GetDBImage to get the correct image.
+	if app.DBImage == "" {
+		app.DBImage = version.GetDBImage(app.MariaDBVersion)
 	}
 
 	if WebcacheEnabledDefault == true {
@@ -231,28 +233,6 @@ func (app *DdevApp) ReadConfig() error {
 		app.NFSMountEnabled = NFSMountEnabledDefault
 	}
 
-	if app.RouterHTTPPort == "" {
-		app.RouterHTTPPort = DdevDefaultRouterHTTPPort
-	}
-
-	if app.RouterHTTPSPort == "" {
-		app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
-	}
-
-	if app.WebImage == "" {
-		app.WebImage = version.GetWebImage()
-	}
-
-	if app.DBImage == "" {
-		app.DBImage = version.GetDBImage(app.MariaDBVersion)
-	}
-
-	if app.DBAImage == "" {
-		app.DBAImage = version.GetDBAImage()
-	}
-	if app.BgsyncImage == "" {
-		app.BgsyncImage = version.GetBgsyncImage()
-	}
 	if app.OmitContainers == nil {
 		app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
 	}
