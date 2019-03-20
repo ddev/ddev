@@ -44,14 +44,16 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 1. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
 1. Install [homebrew](https://brew.sh/) `xcode select --install` and `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-2. Install golang/git/docker with `brew cask install item2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew tap drud/ddev && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer ddev netcat`
+2. Install golang/git/docker with `brew cask install iterm2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew tap drud/ddev && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer ddev netcat`
+3. Run docker manually and go through its configuration routine.
+3. Run `iterm`. On Mojave it will prompt for requiring full disk access permissions, follow through with that.
 3. Set up nfsd by running `macos_ddev_nfs_setup.sh`
 4. Add the path `/private/var` to `/etc/exports` and `sudo nfsd restart`.
-4. If the xcode command line tools are not yet installed, install them with `xcode select --install`
 5. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add 
     * the agent token 
     * Tags, like `"os=macos,osvariant=highsierra,dockertype=dockerformac"`
     *  `build-path="~/tmp/buildkite-agent/builds"`
+6. `brew services start buildkite-agent`
 7. Enable nosleep using its shortcut in the Mac status bar.
 8. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
 9. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
