@@ -1,6 +1,9 @@
 package util
 
 import (
+	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/phayes/freeport"
 	"math/rand"
 	"os"
 	osexec "os/exec"
@@ -174,4 +177,22 @@ func IsCommandAvailable(cmdName string) bool {
 func GetFirstWord(s string) string {
 	arr := strings.Split(s, " ")
 	return arr[0]
+}
+
+// GetFreePort gets an ephemeral port currently available, but also not
+// listed in DdevGlobalConfig.UsedHostPorts
+func GetFreePort() (string, error) {
+	// Limit tries arbitrarily. It will normally succeed first try.
+	for i := 1; i < 1000; i++ {
+		port, err := freeport.GetFreePort()
+		strPort := strconv.Itoa(port)
+		if err != nil {
+			return "-1", err
+		}
+		if ArrayContainsString(globalconfig.DdevGlobalConfig.UsedHostPorts, strPort) {
+			continue
+		}
+		return strPort, nil
+	}
+	return "-1", fmt.Errorf("GetFreePort() failed to find a free port")
 }

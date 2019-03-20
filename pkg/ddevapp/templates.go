@@ -63,7 +63,7 @@ services:
       - db:db
     # ports is list of exposed *container* ports
     ports:
-      - "80"
+      - "127.0.0.1:$DDEV_HOST_WEBSERVER_PORT:80"
       - "{{ .MailhogPort }}"
     environment:
       - DDEV_URL=$DDEV_URL
@@ -241,6 +241,11 @@ const ConfigInstructions = `
 # only those two containers can be omitted here.
 # Note that these containers can also be omitted globally in the 
 # ~/.ddev/global_config.yaml or with the "ddev config global" command.
+
+# host_webserver_port: "6660"
+# The host port binding for the ddev-webserver can be explicitly specified. It's static
+# after first configuration. This is not used by most people, most people use the *router* instead
+# of the localhost port.
 
 # host_db_port: "6667"
 # The host port binding for the ddev-dbserver can be explicitly specified. It's normally static

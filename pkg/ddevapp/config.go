@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -22,7 +21,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/phayes/freeport"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -78,11 +76,16 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 	app.MariaDBVersion = version.MariaDBDefaultVersion
 
-	dbPort, err := freeport.GetFreePort()
+	var err error
+	app.HostWebserverPort, err = util.GetFreePort()
 	if err != nil {
-		return app, fmt.Errorf("Failed to find a free port for ddev-dbserver container binding: %v", err)
+		return app, err
 	}
-	app.HostDBPort = strconv.Itoa(dbPort)
+
+	app.HostDBPort, err = util.GetFreePort()
+	if err != nil {
+		return app, err
+	}
 
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
@@ -150,10 +153,17 @@ func (app *DdevApp) WriteConfig() error {
 		appcopy.BgsyncImage = ""
 	}
 
-	// We now want to reserve the port we're writing for DBport so it doesn't
+	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
 	// accidentally get used for other projects.
-	if !util.ArrayContainsString(globalconfig.DdevGlobalConfig.UsedHostDBPorts, app.HostDBPort) {
-		globalconfig.DdevGlobalConfig.UsedHostDBPorts = append(globalconfig.DdevGlobalConfig.UsedHostDBPorts, app.HostDBPort)
+	if !util.ArrayContainsString(globalconfig.DdevGlobalConfig.UsedHostPorts, app.HostDBPort) {
+		globalconfig.DdevGlobalConfig.UsedHostPorts = append(globalconfig.DdevGlobalConfig.UsedHostPorts, app.HostDBPort)
+		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		if err != nil {
+			return err
+		}
+	}
+	if !util.ArrayContainsString(globalconfig.DdevGlobalConfig.UsedHostPorts, app.HostWebserverPort) {
+		globalconfig.DdevGlobalConfig.UsedHostPorts = append(globalconfig.DdevGlobalConfig.UsedHostPorts, app.HostWebserverPort)
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		if err != nil {
 			return err

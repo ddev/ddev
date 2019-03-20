@@ -97,6 +97,7 @@ type DdevApp struct {
 	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
 	OmitContainers        []string             `yaml:"omit_containers,omitempty"`
 	HostDBPort            string               `yaml:"host_db_port"`
+	HostWebserverPort     string               `yaml:"host_webserver_port"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -919,6 +920,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_BGSYNCIMAGE":              app.BgsyncImage,
 		"DDEV_APPROOT":                  app.AppRoot,
 		"DDEV_HOST_DB_PORT":             app.HostDBPort,
+		"DDEV_HOST_WEBSERVER_PORT":      app.HostWebserverPort,
 		"DDEV_DOCROOT":                  app.Docroot,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
