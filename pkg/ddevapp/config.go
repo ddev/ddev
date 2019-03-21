@@ -195,23 +195,25 @@ func (app *DdevApp) WriteConfig() error {
 // back to defaults for config values not defined in the read config file.
 func (app *DdevApp) ReadConfig() error {
 
-	source, err := ioutil.ReadFile(app.ConfigPath)
+	// Load config.yaml
+	err := app.LoadConfigYamlFile(app.ConfigPath)
 	if err != nil {
-		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", app.ConfigPath, err)
+		return fmt.Errorf("unable to load config file %s: %v", app.ConfigPath, err)
 	}
-
-	// validate extend command keys
-	err = validateCommandYaml(source)
-	if err != nil {
-		return fmt.Errorf("invalid configuration in %s: %v", app.ConfigPath, err)
-	}
-
 	app.DBImage = "" // DBImage will be set below
 
-	// ReadConfig config values from file.
-	err = yaml.Unmarshal(source, app)
+	// Load config.*.y*ml after in glob order
+	glob := filepath.Join(filepath.Dir(app.ConfigPath), "config.*.y*ml")
+	matches, err := filepath.Glob(glob)
 	if err != nil {
 		return err
+	}
+
+	for _, item := range matches {
+		err = app.LoadConfigYamlFile(item)
+		if err != nil {
+			return fmt.Errorf("unable to load config file %s: %v", item, err)
+		}
 	}
 
 	// If any of these values aren't defined in the config file, set them to defaults.
@@ -239,6 +241,27 @@ func (app *DdevApp) ReadConfig() error {
 
 	app.SetApptypeSettingsPaths()
 
+	return nil
+}
+
+// LoadConfigYamlFile loads one config.yaml into app, overriding what might be there.
+func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
+	source, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", app.ConfigPath, err)
+	}
+
+	// validate extend command keys
+	err = validateCommandYaml(source)
+	if err != nil {
+		return fmt.Errorf("invalid configuration in %s: %v", app.ConfigPath, err)
+	}
+
+	// ReadConfig config values from file.
+	err = yaml.Unmarshal(source, app)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
