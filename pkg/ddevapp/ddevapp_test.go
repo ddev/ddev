@@ -2119,12 +2119,13 @@ func TestWebserverType(t *testing.T) {
 				t.Fatalf("app.StartAndWaitForSync failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
 			}
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectURL()+"/servertype.php")
-			assert.NoError(err)
+			require.NoError(t, err)
 
 			expectedServerType := "Apache/2"
 			if app.WebserverType == ddevapp.WebserverNginxFPM {
 				expectedServerType = "nginx"
 			}
+			require.NotEmpty(t, resp.Header["Server"])
 			require.NotEmpty(t, resp.Header["Server"][0])
 			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
 			assert.Contains(out, expectedServerType, "For app.WebserverType=%s phpinfo expected servertype.php to show %s", app.WebserverType, expectedServerType)
