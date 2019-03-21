@@ -56,7 +56,7 @@ func TestPostConfigAction(t *testing.T) {
 
 	appTypes := map[string]string{
 		ddevapp.AppTypeDrupal6:   ddevapp.PHP56,
-		ddevapp.AppTypeDrupal7:   ddevapp.PHP71,
+		ddevapp.AppTypeDrupal7:   ddevapp.PHPDefault,
 		ddevapp.AppTypeDrupal8:   ddevapp.PHPDefault,
 		ddevapp.AppTypeWordPress: ddevapp.PHPDefault,
 		ddevapp.AppTypeBackdrop:  ddevapp.PHPDefault,

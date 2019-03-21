@@ -143,8 +143,8 @@ func TestConfigCommand(t *testing.T) {
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
 		"drupal6phpversion": {AppTypeDrupal6, PHP56},
-		"drupal7phpversion": {AppTypeDrupal7, PHP71},
-		"drupal8phpversion": {AppTypeDrupal8, PHP71},
+		"drupal7phpversion": {AppTypeDrupal7, PHP72},
+		"drupal8phpversion": {AppTypeDrupal8, PHP72},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -205,7 +205,7 @@ func TestConfigCommand(t *testing.T) {
 		assert.Equal(name, app.Name)
 		assert.Equal(testValues[apptypePos], app.Type)
 		assert.Equal("docroot", app.Docroot)
-		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion)
+		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion, "PHP value incorrect for app %v", app)
 		err = PrepDdevDirectory(testDir)
 		assert.NoError(err)
 	}
@@ -224,8 +224,8 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 
 	testMatrix := map[string][]string{
 		"drupal6phpversion": {AppTypeDrupal6, PHP56},
-		"drupal7phpversion": {AppTypeDrupal7, PHP71},
-		"drupal8phpversion": {AppTypeDrupal8, PHP71},
+		"drupal7phpversion": {AppTypeDrupal7, PHP72},
+		"drupal8phpversion": {AppTypeDrupal8, PHP72},
 	}
 
 	for testName := range testMatrix {
@@ -270,8 +270,8 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
 		"drupal6phpversion": {AppTypeDrupal6, PHP56},
-		"drupal7phpversion": {AppTypeDrupal7, PHP71},
-		"drupal8phpversion": {AppTypeDrupal8, PHP71},
+		"drupal7phpversion": {AppTypeDrupal7, PHP72},
+		"drupal8phpversion": {AppTypeDrupal8, PHP72},
 	}
 
 	for testName, testValues := range testMatrix {
