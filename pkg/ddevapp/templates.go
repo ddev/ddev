@@ -16,9 +16,6 @@ services:
         volume:
           nocopy: true
       - type: "bind"
-        source: "${DDEV_IMPORTDIR}"
-        target: "/db"
-      - type: "bind"
         source: "."
         target: "/mnt/ddev_config"
     restart: "no"

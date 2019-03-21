@@ -237,8 +237,6 @@ func (app *DdevApp) ReadConfig() error {
 		app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
 	}
 
-	app.ImportDir = app.GetConfigPath("import-db")
-
 	app.SetApptypeSettingsPaths()
 
 	return nil
