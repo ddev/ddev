@@ -520,6 +520,7 @@ type composeYAMLVars struct {
 	WebcacheEnabled      bool
 	NFSMountEnabled      bool
 	NFSSource            string
+	DockerIP             string
 	IsWindowsFS          bool
 }
 
@@ -573,6 +574,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			// and completely chokes in C:\Users\rfay...
 			templateVars.NFSSource = dockerutil.MassageWIndowsNFSMount(app.AppRoot)
 		}
+	}
+	templateVars.DockerIP, err = dockerutil.GetDockerIP()
+	if err != nil {
+		return "", err
 	}
 
 	err = templ.Execute(&doc, templateVars)

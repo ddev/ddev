@@ -21,7 +21,7 @@ services:
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     ports:
-      - "127.0.0.1:$DDEV_HOST_DB_PORT:3306"
+      - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:3306"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .Plugin }}
@@ -63,7 +63,7 @@ services:
       - db:db
     # ports is list of exposed *container* ports
     ports:
-      - "127.0.0.1:$DDEV_HOST_WEBSERVER_PORT:80"
+      - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
       - "{{ .MailhogPort }}"
     environment:
       - DDEV_URL=$DDEV_URL
