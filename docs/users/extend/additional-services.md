@@ -18,6 +18,14 @@ This recipe adds an Apache Solr 5.4 container to a project. It will setup a solr
 - To access the Solr container from the web container use `http://solr:8983/solr/`
 - The Solr core will be "dev"
 
+### Drupal's Search API configuration
+
+In order to connect Search API with Solr:
+
+1. Add a new Solr server via `admin/config/search/search_api/add_server`, or edit an existing one.
+1. Under "Solr host" write `<projectname>.ddev.local`
+1. Under "Solr path" write `solr/dev`
+
 ## Memcached
 This recipe adds a Memcached 1.5 container to a project. The default configuration allocates 128 MB of RAM for the Memcached instance; to change that or other command line arguments, edit the `command` array within the docker-compose file.
 
