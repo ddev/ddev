@@ -3,8 +3,8 @@ package util
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/phayes/freeport"
 	"math/rand"
+	"net"
 	"os"
 	osexec "os/exec"
 	"os/user"
@@ -181,18 +181,29 @@ func GetFirstWord(s string) string {
 
 // GetFreePort gets an ephemeral port currently available, but also not
 // listed in DdevGlobalConfig.UsedHostPorts
-func GetFreePort() (string, error) {
-	// Limit tries arbitrarily. It will normally succeed first try.
+func GetFreePort(localIPAddr string) (string, error) {
+	// Limit tries arbitrarily. It will normally succeed on first try.
 	for i := 1; i < 1000; i++ {
-		port, err := freeport.GetFreePort()
-		strPort := strconv.Itoa(port)
+		// From https://github.com/phayes/freeport/blob/master/freeport.go#L8
+		// That code does not recognize that various IP addresses/interfaces may be in play
+		addr, err := net.ResolveTCPAddr("tcp", localIPAddr+":0")
 		if err != nil {
-			return "-1", err
+			return "", err
 		}
-		if ArrayContainsString(globalconfig.DdevGlobalConfig.UsedHostPorts, strPort) {
+
+		l, err := net.ListenTCP("tcp", addr)
+		if err != nil {
+			return "", err
+		}
+		// nolint: errcheck
+		defer l.Close()
+		port := strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
+
+		if ArrayContainsString(globalconfig.DdevGlobalConfig.UsedHostPorts, port) {
 			continue
 		}
-		return strPort, nil
+		return port, nil
 	}
 	return "-1", fmt.Errorf("GetFreePort() failed to find a free port")
+
 }
