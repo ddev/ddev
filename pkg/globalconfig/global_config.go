@@ -24,6 +24,10 @@ var (
 	DdevGlobalConfig GlobalConfig
 )
 
+func init() {
+	DdevGlobalConfig.UsedHostPorts = make(map[string][]string)
+}
+
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
 	APIVersion           string              `yaml:"APIVersion"`

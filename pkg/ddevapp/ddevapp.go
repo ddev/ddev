@@ -1194,6 +1194,11 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 		if err = app.RemoveHostsEntries(); err != nil {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
+		app.RemoveReservedHostPorts()
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		if err != nil {
+			util.Warning("could not WriteGlobalConfig: %v", err)
+		}
 
 		for _, volName := range []string{app.Name + "-mariadb", app.GetUnisonCatalogVolName(), app.GetWebcacheVolName()} {
 			err = dockerutil.RemoveVolume(volName)
@@ -1206,6 +1211,11 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 
 	err = StopRouterIfNoContainers()
 	return err
+}
+
+// RemoveReservedHostPorts() deletes the app from the UsedHostPorts
+func (app *DdevApp) RemoveReservedHostPorts() {
+	delete(globalconfig.DdevGlobalConfig.UsedHostPorts, app.Name)
 }
 
 // GetHTTPURL returns the HTTP URL for an app.

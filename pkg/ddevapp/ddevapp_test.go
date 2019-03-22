@@ -126,6 +126,8 @@ func TestMain(m *testing.M) {
 
 	// Ensure the ddev directory is created before tests run.
 	_ = globalconfig.GetGlobalDdevDir()
+	globalConfigFile := globalconfig.GetGlobalConfigPath()
+	_ = os.Rename(globalConfigFile, globalConfigFile+".bak")
 
 	// Since this may be first time ddev has been used, we need the
 	// ddev_default network available.
@@ -225,6 +227,9 @@ func TestMain(m *testing.M) {
 		}
 		site.Cleanup()
 	}
+
+	_ = os.Remove(globalConfigFile)
+	_ = os.Rename(globalConfigFile+".bak", globalConfigFile)
 
 	os.Exit(testRun)
 }
@@ -1735,6 +1740,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	// by ensuring any associated database files get cleaned up as well.
 	err = app.Down(true, false)
 	assert.NoError(err)
+	assert.Empty(globalconfig.DdevGlobalConfig.UsedHostPorts[app.Name])
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
 		_, err := constructContainerName(containerType, app)
@@ -2140,7 +2146,6 @@ func TestWebserverType(t *testing.T) {
 			err = app.WriteConfig()
 			assert.NoError(err)
 		}
-
 		runTime()
 	}
 }
@@ -2373,79 +2378,63 @@ func TestWebcache(t *testing.T) {
 
 // TestPortSpecifications tests to make sure that one project can't step on the
 // ports used by another
-//func TestPortSpecifications(t *testing.T) {
-//	assert := asrt.New(t)
-//	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprint("TestPortSpecifications"))
-//	defer runTime()
-//	testDir, _ := os.Getwd()
-//
-//	site0 := TestSites[0]
-//	switchDir := site0.Chdir()
-//	defer switchDir()
-//
-//	app1 := ddevapp.DdevApp{}
-//	err := app1.Init(site0.Dir)
-//	assert.NoError(err)
-//	err = app1.WriteConfig()
-//	require.NoError(t, err)
-//	err = app1.Start()
-//	require.NoError(t, err)
-//	//nolint: errcheck
-//	defer app1.Down(true, false)
-//
-//	app1DBPort := app1.HostDBPort
-//	app1WebPort := app1.HostWebserverPort
-//
-//	// Now that we have a working app1 with specified ports, test that we
-//	// can't use those ports for app1 is running
-//
-//	_ = os.Chdir(testDir)
-//	app2, err := ddevapp.NewApp("./testdata/TestPortSpecifications", "")
-//	assert.NoError(err)
-//
-//	// It should be able to start with the default host ports it came up with
-//	err = app2.Start()
-//	assert.NoError(err)
-//	err = app2.Down(true, false)
-//	require.NoError(t, err)
-//
-//	app2.HostDBPort = app1DBPort
-//	err = app2.Start()
-//	require.Error(t, err, "app2 should not be able to start with same ports as app1")
-//	defer app2.Down(true, false)
-//	assert.Contains(err.Error(), "port is already allocated")
-//	assert.Contains(err.Error(), app2.HostDBPort)
-//
-//	app2.HostWebserverPort = app1WebPort
-//	app2.HostDBPort = ""
-//	err = app2.Start()
-//	assert.Contains(err.Error(), "Bind failed")
-//	assert.Contains(err.Error(), app2.HostWebserverPort)
-//
-//	// Now turn off app1; we still should not be able to reuse these ports
-//	err = app1.Down(false, false)
-//	assert.NoError(err)
-//
-//	// It should be able to start with the default host ports it came up with
-//	err = app2.Start()
-//	assert.NoError(err)
-//	err = app2.Down(true, false)
-//	require.NoError(t, err)
-//
-//	app2.HostDBPort = app1DBPort
-//	err = app2.Start()
-//	require.Error(t, err, "app2 should not be able to start with same ports as app1")
-//	defer app2.Down(true, false)
-//	assert.Contains(err.Error(), "port is already allocated")
-//	assert.Contains(err.Error(), app2.HostDBPort)
-//
-//	app2.HostWebserverPort = app1WebPort
-//	app2.HostDBPort = ""
-//	err = app2.Start()
-//	assert.Contains(err.Error(), "Bind failed")
-//	assert.Contains(err.Error(), app2.HostWebserverPort)
-//
-//}
+func TestPortSpecifications(t *testing.T) {
+	assert := asrt.New(t)
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprint("TestPortSpecifications"))
+	defer runTime()
+	testDir, _ := os.Getwd()
+
+	site0 := TestSites[0]
+	switchDir := site0.Chdir()
+	defer switchDir()
+
+	app1 := ddevapp.DdevApp{}
+	err := app1.Init(site0.Dir)
+	assert.NoError(err)
+	err = app1.WriteConfig()
+	require.NoError(t, err)
+	require.NotEmpty(t, globalconfig.DdevGlobalConfig.UsedHostPorts[app1.Name])
+	assert.Contains(globalconfig.DdevGlobalConfig.UsedHostPorts[app1.Name], app1.HostWebserverPort)
+	assert.Contains(globalconfig.DdevGlobalConfig.UsedHostPorts[app1.Name], app1.HostDBPort)
+
+	app1DBPort := app1.HostDBPort
+	app1WebPort := app1.HostWebserverPort
+
+	// Now that we have a working app1 with specified ports, test that we
+	// can't use those ports for app1 is running
+
+	_ = os.Chdir(testDir)
+	app2, err := ddevapp.NewApp("./testdata/TestPortSpecifications", "")
+	assert.NoError(err)
+
+	// It should be able to WriteConfig and Start with the default host ports it came up with
+	err = app2.WriteConfig()
+	assert.NoError(err)
+	err = app2.Start()
+	assert.NoError(err)
+	//nolint: errcheck
+	err = app2.Down(true, false)
+	require.NoError(t, err)
+	// Verify that DdevGlobalConfig got updated properly
+	assert.Empty(globalconfig.DdevGlobalConfig.UsedHostPorts[app2.Name])
+
+	// However, if we change to a used port, we should not be able to config or start
+	app2.HostDBPort = app1DBPort
+	err = app2.WriteConfig()
+	assert.Error(err)
+	err = app2.Start()
+	assert.Error(err)
+
+	app2.HostWebserverPort = app1WebPort
+	app2.HostDBPort = ""
+	// However, if we change to a used port, we should not be able to config or start
+	app2.HostDBPort = app1DBPort
+	err = app2.WriteConfig()
+	assert.Error(err)
+	err = app2.Start()
+	assert.Error(err)
+
+}
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app
 func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
