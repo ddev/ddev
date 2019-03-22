@@ -77,12 +77,16 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.MariaDBVersion = version.MariaDBDefaultVersion
 
 	var err error
-	app.HostWebserverPort, err = util.GetFreePort()
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		return app, err
+	}
+	app.HostWebserverPort, err = util.GetFreePort(dockerIP)
 	if err != nil {
 		return app, err
 	}
 
-	app.HostDBPort, err = util.GetFreePort()
+	app.HostDBPort, err = util.GetFreePort(dockerIP)
 	if err != nil {
 		return app, err
 	}
