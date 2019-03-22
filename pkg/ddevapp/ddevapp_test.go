@@ -2371,6 +2371,82 @@ func TestWebcache(t *testing.T) {
 	switchDir()
 }
 
+// TestPortSpecifications tests to make sure that one project can't step on the
+// ports used by another
+//func TestPortSpecifications(t *testing.T) {
+//	assert := asrt.New(t)
+//	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprint("TestPortSpecifications"))
+//	defer runTime()
+//	testDir, _ := os.Getwd()
+//
+//	site0 := TestSites[0]
+//	switchDir := site0.Chdir()
+//	defer switchDir()
+//
+//	app1 := ddevapp.DdevApp{}
+//	err := app1.Init(site0.Dir)
+//	assert.NoError(err)
+//	err = app1.WriteConfig()
+//	require.NoError(t, err)
+//	err = app1.Start()
+//	require.NoError(t, err)
+//	//nolint: errcheck
+//	defer app1.Down(true, false)
+//
+//	app1DBPort := app1.HostDBPort
+//	app1WebPort := app1.HostWebserverPort
+//
+//	// Now that we have a working app1 with specified ports, test that we
+//	// can't use those ports for app1 is running
+//
+//	_ = os.Chdir(testDir)
+//	app2, err := ddevapp.NewApp("./testdata/TestPortSpecifications", "")
+//	assert.NoError(err)
+//
+//	// It should be able to start with the default host ports it came up with
+//	err = app2.Start()
+//	assert.NoError(err)
+//	err = app2.Down(true, false)
+//	require.NoError(t, err)
+//
+//	app2.HostDBPort = app1DBPort
+//	err = app2.Start()
+//	require.Error(t, err, "app2 should not be able to start with same ports as app1")
+//	defer app2.Down(true, false)
+//	assert.Contains(err.Error(), "port is already allocated")
+//	assert.Contains(err.Error(), app2.HostDBPort)
+//
+//	app2.HostWebserverPort = app1WebPort
+//	app2.HostDBPort = ""
+//	err = app2.Start()
+//	assert.Contains(err.Error(), "Bind failed")
+//	assert.Contains(err.Error(), app2.HostWebserverPort)
+//
+//	// Now turn off app1; we still should not be able to reuse these ports
+//	err = app1.Down(false, false)
+//	assert.NoError(err)
+//
+//	// It should be able to start with the default host ports it came up with
+//	err = app2.Start()
+//	assert.NoError(err)
+//	err = app2.Down(true, false)
+//	require.NoError(t, err)
+//
+//	app2.HostDBPort = app1DBPort
+//	err = app2.Start()
+//	require.Error(t, err, "app2 should not be able to start with same ports as app1")
+//	defer app2.Down(true, false)
+//	assert.Contains(err.Error(), "port is already allocated")
+//	assert.Contains(err.Error(), app2.HostDBPort)
+//
+//	app2.HostWebserverPort = app1WebPort
+//	app2.HostDBPort = ""
+//	err = app2.Start()
+//	assert.Contains(err.Error(), "Bind failed")
+//	assert.Contains(err.Error(), app2.HostWebserverPort)
+//
+//}
+
 // constructContainerName builds a container name given the type (web/db/dba) and the app
 func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
 	container, err := app.FindContainerByType(containerType)

@@ -170,7 +170,7 @@ func TestGetFreePort(t *testing.T) {
 		assert.NotContains(globalconfig.DdevGlobalConfig.UsedHostPorts, port)
 
 		// Make sure we can actually use the port.
-		dockerCommand := []string{"run", "--rm", "-p"+dockerIP+":"+port+":"+port, "busybox:latest"}
+		dockerCommand := []string{"run", "--rm", "-p" + dockerIP + ":" + port + ":" + port, "busybox:latest"}
 		_, err = exec.RunCommand("docker", dockerCommand)
 
 		assert.NoError(err, "failed to 'docker %v': %v", dockerCommand, err)
