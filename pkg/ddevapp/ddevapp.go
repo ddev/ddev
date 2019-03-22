@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mattn/go-isatty"
 	"io/ioutil"
 	"os"
@@ -185,7 +186,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		appDesc["dbinfo"] = dbinfo
 
 		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("mailhog")
-		if !util.ArrayContainsString(app.OmitContainers, "dba") {
+		if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
 			appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("dba")
 		}
 	}
@@ -667,12 +668,18 @@ func (app *DdevApp) Start() error {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
 	}
 
+	// Make sure that any ports allocated are available.
+	err = app.CheckAndReserveHostPorts()
+	if err != nil {
+		return err
+	}
+
 	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
 	}
 
-	if !util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent") {
+	if !nodeps.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent") {
 		err = app.EnsureSSHAgentContainer()
 		if err != nil {
 			return err

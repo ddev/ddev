@@ -1,10 +1,8 @@
 package util
 
 import (
-	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"math/rand"
-	"net"
 	"os"
 	osexec "os/exec"
 	"os/user"
@@ -91,30 +89,14 @@ func AskForConfirmation() bool {
 	nokayResponses := []string{"n", "no", ""}
 	responseLower := strings.ToLower(response)
 
-	if ArrayContainsString(okayResponses, responseLower) {
+	if nodeps.ArrayContainsString(okayResponses, responseLower) {
 		return true
-	} else if ArrayContainsString(nokayResponses, responseLower) {
+	} else if nodeps.ArrayContainsString(nokayResponses, responseLower) {
 		return false
 	} else {
 		output.UserOut.Println("Please type yes or no and then press enter:")
 		return AskForConfirmation()
 	}
-}
-
-// ArrayContainsString returns true if slice contains element
-func ArrayContainsString(slice []string, element string) bool {
-	return !(posString(slice, element) == -1)
-}
-
-// posString returns the first index of element in slice.
-// If slice does not contain element, returns -1.
-func posString(slice []string, element string) int {
-	for index, elem := range slice {
-		if elem == element {
-			return index
-		}
-	}
-	return -1
 }
 
 // MapKeysToArray takes the keys of the map and turns them into a string array
@@ -177,41 +159,4 @@ func IsCommandAvailable(cmdName string) bool {
 func GetFirstWord(s string) string {
 	arr := strings.Split(s, " ")
 	return arr[0]
-}
-
-// GetFreePort gets an ephemeral port currently available, but also not
-// listed in DdevGlobalConfig.UsedHostPorts
-func GetFreePort(localIPAddr string) (string, error) {
-	// Limit tries arbitrarily. It will normally succeed on first try.
-	for i := 1; i < 1000; i++ {
-		// From https://github.com/phayes/freeport/blob/master/freeport.go#L8
-		// Ignores that the actual listener may be on a docker toolbox interface,
-		// so this is just a heuristic.
-		addr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:0")
-		if err != nil {
-			return "", err
-		}
-
-		l, err := net.ListenTCP("tcp", addr)
-		if err != nil {
-			return "", err
-		}
-		port := strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
-		// nolint: errcheck
-		l.Close()
-
-		// In the case of Docker Toolbox, the actual listening IP may be something else
-		// like 192.168.99.100, so check that to make sure it's not currently occupied.
-		conn, _ := net.Dial("tcp", localIPAddr+":"+port)
-		if conn != nil {
-			continue
-		}
-
-		if ArrayContainsString(globalconfig.DdevGlobalConfig.UsedHostPorts, port) {
-			continue
-		}
-		return port, nil
-	}
-	return "-1", fmt.Errorf("GetFreePort() failed to find a free port")
-
 }

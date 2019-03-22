@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"html/template"
 	"io/ioutil"
 	"os"
@@ -81,12 +82,12 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	if err != nil {
 		return app, err
 	}
-	app.HostWebserverPort, err = util.GetFreePort(dockerIP)
+	app.HostWebserverPort, err = globalconfig.GetFreePort(dockerIP)
 	if err != nil {
 		return app, err
 	}
 
-	app.HostDBPort, err = util.GetFreePort(dockerIP)
+	app.HostDBPort, err = globalconfig.GetFreePort(dockerIP)
 	if err != nil {
 		return app, err
 	}
@@ -159,19 +160,9 @@ func (app *DdevApp) WriteConfig() error {
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
 	// accidentally get used for other projects.
-	if !util.ArrayContainsString(globalconfig.DdevGlobalConfig.UsedHostPorts, app.HostDBPort) {
-		globalconfig.DdevGlobalConfig.UsedHostPorts = append(globalconfig.DdevGlobalConfig.UsedHostPorts, app.HostDBPort)
-		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		if err != nil {
-			return err
-		}
-	}
-	if !util.ArrayContainsString(globalconfig.DdevGlobalConfig.UsedHostPorts, app.HostWebserverPort) {
-		globalconfig.DdevGlobalConfig.UsedHostPorts = append(globalconfig.DdevGlobalConfig.UsedHostPorts, app.HostWebserverPort)
-		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		if err != nil {
-			return err
-		}
+	err := app.CheckAndReserveHostPorts()
+	if err != nil {
+		return err
 	}
 
 	// Don't write default working dir values to config
@@ -182,7 +173,7 @@ func (app *DdevApp) WriteConfig() error {
 		}
 	}
 
-	err := PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
+	err = PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
 	if err != nil {
 		return err
 	}
@@ -220,6 +211,23 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
+	return nil
+}
+
+// CheckAndReserveHostPorts checks that configured host ports are not already
+// reserved by another project.
+func (app *DdevApp) CheckAndReserveHostPorts() error {
+	portsToReserve := []string{app.HostDBPort, app.HostWebserverPort}
+	err := globalconfig.CheckHostPortsAvailable(app.Name, portsToReserve)
+	if err != nil {
+		return err
+	}
+
+	globalconfig.DdevGlobalConfig.UsedHostPorts[app.Name] = portsToReserve
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -556,8 +564,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DdevGenerated:        DdevFileSignature,
 		HostDockerInternalIP: hostDockerInternalIP,
 		ComposeVersion:       version.DockerComposeFileFormatVersion,
-		OmitDBA:              util.ArrayContainsString(app.OmitContainers, "dba"),
-		OmitSSHAgent:         util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
+		OmitDBA:              nodeps.ArrayContainsString(app.OmitContainers, "dba"),
+		OmitSSHAgent:         nodeps.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
 		WebcacheEnabled:      app.WebcacheEnabled,
 		NFSMountEnabled:      app.NFSMountEnabled,
 		NFSSource:            "",
