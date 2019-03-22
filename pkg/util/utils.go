@@ -185,8 +185,9 @@ func GetFreePort(localIPAddr string) (string, error) {
 	// Limit tries arbitrarily. It will normally succeed on first try.
 	for i := 1; i < 1000; i++ {
 		// From https://github.com/phayes/freeport/blob/master/freeport.go#L8
-		// That code does not recognize that various IP addresses/interfaces may be in play
-		addr, err := net.ResolveTCPAddr("tcp", localIPAddr+":0")
+		// Ignores that the actual listener may be on a docker toolbox interface,
+		// so this is just a heuristic.
+		addr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:0")
 		if err != nil {
 			return "", err
 		}
@@ -195,9 +196,16 @@ func GetFreePort(localIPAddr string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		// nolint: errcheck
-		defer l.Close()
 		port := strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
+		// nolint: errcheck
+		l.Close()
+
+		// In the case of Docker Toolbox, the actual listening IP may be something else
+		// like 192.168.99.100, so check that to make sure it's not currently occupied.
+		conn, _ := net.Dial("tcp", localIPAddr+":"+port)
+		if conn != nil {
+			continue
+		}
 
 		if ArrayContainsString(globalconfig.DdevGlobalConfig.UsedHostPorts, port) {
 			continue
