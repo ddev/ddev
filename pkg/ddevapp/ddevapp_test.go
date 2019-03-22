@@ -1740,7 +1740,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	// by ensuring any associated database files get cleaned up as well.
 	err = app.Down(true, false)
 	assert.NoError(err)
-	assert.Empty(globalconfig.DdevGlobalConfig.UsedHostPorts[app.Name])
+	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[app.Name])
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
 		_, err := constructContainerName(containerType, app)
@@ -2393,9 +2393,9 @@ func TestPortSpecifications(t *testing.T) {
 	assert.NoError(err)
 	err = app1.WriteConfig()
 	require.NoError(t, err)
-	require.NotEmpty(t, globalconfig.DdevGlobalConfig.UsedHostPorts[app1.Name])
-	assert.Contains(globalconfig.DdevGlobalConfig.UsedHostPorts[app1.Name], app1.HostWebserverPort)
-	assert.Contains(globalconfig.DdevGlobalConfig.UsedHostPorts[app1.Name], app1.HostDBPort)
+	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[app1.Name])
+	assert.Contains(globalconfig.DdevGlobalConfig.ProjectList[app1.Name].UsedHostPorts, app1.HostWebserverPort)
+	assert.Contains(globalconfig.DdevGlobalConfig.ProjectList[app1.Name].UsedHostPorts, app1.HostDBPort)
 
 	app1DBPort := app1.HostDBPort
 	app1WebPort := app1.HostWebserverPort
@@ -2416,7 +2416,7 @@ func TestPortSpecifications(t *testing.T) {
 	err = app2.Down(true, false)
 	require.NoError(t, err)
 	// Verify that DdevGlobalConfig got updated properly
-	assert.Empty(globalconfig.DdevGlobalConfig.UsedHostPorts[app2.Name])
+	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[app2.Name])
 
 	// However, if we change to a used port, we should not be able to config or start
 	app2.HostDBPort = app1DBPort

@@ -28,14 +28,17 @@ func TestGetFreePort(t *testing.T) {
 	i = i + 1
 	max := i + 100
 	require.NoError(t, err)
+	ports := []string{}
 	for ; i < max; i++ {
-		globalconfig.DdevGlobalConfig.UsedHostPorts["TestGetFreePort"] = append(globalconfig.DdevGlobalConfig.UsedHostPorts["TestGetFreePort"], strconv.Itoa(i))
+		ports = append(ports, strconv.Itoa(i))
 	}
+	err = globalconfig.ReservePorts("TestGetFreePort", ports)
+	assert.NoError(err)
 
 	for try := 0; try < 5; try++ {
 		port, err := globalconfig.GetFreePort(dockerIP)
 		require.NoError(t, err)
-		assert.NotContains(globalconfig.DdevGlobalConfig.UsedHostPorts, port)
+		assert.NotContains(globalconfig.DdevGlobalConfig.ProjectList["TestGetFreePort"].UsedHostPorts, port)
 
 		// Make sure we can actually use the port.
 		dockerCommand := []string{"run", "--rm", "-p" + dockerIP + ":" + port + ":" + port, "busybox:latest"}

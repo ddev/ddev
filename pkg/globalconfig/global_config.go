@@ -25,23 +25,26 @@ var (
 )
 
 func init() {
-	DdevGlobalConfig.UsedHostPorts = make(map[string][]string)
+	DdevGlobalConfig.ProjectList = make(map[string]*ProjectInfo)
+}
+
+type ProjectInfo struct {
+	UsedHostPorts []string
 }
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	APIVersion           string              `yaml:"APIVersion"`
-	OmitContainers       []string            `yaml:"omit_containers"`
-	InstrumentationOptIn bool                `yaml:"instrumentation_opt_in"`
-	LastUsedVersion      string              `yaml:"last_used_version"`
-	UsedHostPorts        map[string][]string `yaml:"used_host_ports"`
-	DeveloperMode        bool                `yaml:"developer_mode,omitempty"`
+	APIVersion           string                  `yaml:"APIVersion"`
+	OmitContainers       []string                `yaml:"omit_containers"`
+	InstrumentationOptIn bool                    `yaml:"instrumentation_opt_in"`
+	LastUsedVersion      string                  `yaml:"last_used_version"`
+	ProjectList          map[string]*ProjectInfo `yaml:"project_info"`
+	DeveloperMode        bool                    `yaml:"developer_mode,omitempty"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
 func GetGlobalConfigPath() string {
 	return filepath.Join(GetGlobalDdevDir(), DdevGlobalConfigName)
-
 }
 
 // ValidateGlobalConfig validates global config
@@ -58,7 +61,6 @@ func ReadGlobalConfig() error {
 	globalConfigFile := GetGlobalConfigPath()
 	// This is added just so we can see it in global; not checked.
 	DdevGlobalConfig.APIVersion = version.DdevVersion
-	DdevGlobalConfig.UsedHostPorts = make(map[string][]string)
 
 	// Can't use fileutil.FileExists() here because of import cycle.
 	if _, err := os.Stat(globalConfigFile); err != nil {
@@ -168,8 +170,8 @@ func GetValidOmitContainers() []string {
 // HostPortIsAllocated returns the project name that has allocated
 // the port, or empty string.
 func HostPostIsAllocated(port string) string {
-	for project, item := range DdevGlobalConfig.UsedHostPorts {
-		if nodeps.ArrayContainsString(item, port) {
+	for project, item := range DdevGlobalConfig.ProjectList {
+		if nodeps.ArrayContainsString(item.UsedHostPorts, port) {
 			return project
 		}
 	}
@@ -222,4 +224,16 @@ func GetFreePort(localIPAddr string) (string, error) {
 	}
 	return "-1", fmt.Errorf("GetFreePort() failed to find a free port")
 
+}
+
+// ReservePorts() adds the ProjectInfo if necessary and assigns the reserved ports
+func ReservePorts(projectName string, ports []string) error {
+	// If the project doesn't exist, add it.
+	_, ok := DdevGlobalConfig.ProjectList[projectName]
+	if !ok {
+		DdevGlobalConfig.ProjectList[projectName] = &ProjectInfo{}
+	}
+	DdevGlobalConfig.ProjectList[projectName].UsedHostPorts = ports
+	err := WriteGlobalConfig(DdevGlobalConfig)
+	return err
 }

@@ -223,12 +223,9 @@ func (app *DdevApp) CheckAndReserveHostPorts() error {
 		return err
 	}
 
-	globalconfig.DdevGlobalConfig.UsedHostPorts[app.Name] = portsToReserve
-	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-	if err != nil {
-		return err
-	}
-	return nil
+	err = globalconfig.ReservePorts(app.Name, portsToReserve)
+
+	return err
 }
 
 // ReadConfig reads project configuration, falling
@@ -387,12 +384,12 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !IsValidOmitContainers(app.OmitContainers) {
-		return fmt.Errorf("Invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(InvalidOmitContainers)
+		return fmt.Errorf("invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
 	// Validate mariadb version
 	if !IsValidMariaDBVersion(app.MariaDBVersion) {
-		return fmt.Errorf("Invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
+		return fmt.Errorf("invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
 	}
 
 	if app.WebcacheEnabled && app.NFSMountEnabled {
