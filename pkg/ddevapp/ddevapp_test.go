@@ -2144,65 +2144,6 @@ func TestWebserverType(t *testing.T) {
 	}
 }
 
-// TestDbMigration tests migration from bind-mounted db to volume-mounted db
-// This should be important around the time of its release, 2018-08-02 or so, but should be increasingly
-// irrelevant after that and can eventually be removed.
-func TestDbMigration(t *testing.T) {
-	assert := asrt.New(t)
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDbMigration"))
-
-	app := &ddevapp.DdevApp{}
-	dbMigrationTarball, err := filepath.Abs(filepath.Join("testdata", "db_migration", "d7_to_migrate.tgz"))
-	assert.NoError(err)
-
-	// Use d7 only for this test
-	site := FullTestSites[2]
-
-	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
-		err = site.Prepare()
-		if err != nil {
-			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
-		}
-	}
-
-	switchDir := site.Chdir()
-	testcommon.ClearDockerEnv()
-
-	err = app.Init(site.Dir)
-	assert.NoError(err)
-
-	dataDir := filepath.Join(globalconfig.GetGlobalDdevDir(), app.Name, "mysql")
-
-	// Remove any existing dataDir or migration backups
-	if fileutil.FileExists(dataDir) {
-		err = os.RemoveAll(dataDir)
-		assert.NoError(err)
-	}
-	if fileutil.FileExists(dataDir + "_migrated.bak") {
-		err = os.RemoveAll(dataDir + "_migrated.bak")
-		assert.NoError(err)
-	}
-
-	// Untar the to-migrate db into old-style dataDir (~/.ddev/projectname/mysql)
-	err = os.MkdirAll(dataDir, 0755)
-	require.NoError(t, err)
-	err = archive.Untar(dbMigrationTarball, dataDir, "")
-	require.NoError(t, err)
-	defer os.RemoveAll(dataDir)
-
-	_, err = app.CreateSettingsFile()
-	assert.NoError(err)
-
-	// app.Start() will discover the mysql directory and migrate it to a snapshot.
-	err = app.Start()
-	assert.Error(err)
-	assert.Contains(err.Error(), "it is not possible to migrate bind-mounted")
-
-	runTime()
-	switchDir()
-}
-
 // TestInternalAndExternalAccessToURL checks we can access content from host and from inside container by URL (with port)
 func TestInternalAndExternalAccessToURL(t *testing.T) {
 	assert := asrt.New(t)

@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/drud/ddev/pkg/globalconfig"
-
 	"golang.org/x/crypto/ssh/terminal"
 
 	"strings"
@@ -665,16 +663,6 @@ func (app *DdevApp) Start() error {
 
 	if app.APIVersion != version.DdevVersion {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
-	}
-
-	// IF we need to do a DB migration to docker-volume, do it here.
-	// It actually does the app.Start() at the end of the migration, so we can return successfully here.
-	migrationDone, err := app.migrateDbIfRequired()
-	if err != nil {
-		return fmt.Errorf("Failed to migrate db from bind-mounted db: %v", err)
-	}
-	if migrationDone {
-		return nil
 	}
 
 	err = app.ProcessHooks("pre-start")
@@ -1470,19 +1458,6 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	}
 	app.providerInstance = provider
 	return app.providerInstance, err
-}
-
-// migrateDbIfRequired checks for need of db migration to docker-volume-mount and if needed, does the migration.
-// This should be important around the time of its release, 2018-08-02 or so, but should be increasingly
-// irrelevant after that and can eventually be removed.
-// Returns bool (true if migration was done) and err
-func (app *DdevApp) migrateDbIfRequired() (bool, error) {
-	dataDir := filepath.Join(globalconfig.GetGlobalDdevDir(), app.Name, "mysql")
-
-	if fileutil.FileExists(dataDir) {
-		return false, fmt.Errorf("sorry, it is not possible to migrate bind-mounted databases using ddev v1.3+, please use ddev v1.2 to migrate, or just 'mv ~/.ddev/%s/mysql ~/.ddev/%s/mysql.saved' and then restart and reload with 'ddev import-db'", app.Name, app.Name)
-	}
-	return false, nil
 }
 
 // getWorkingDir will determine the appropriate working directory for an Exec/ExecWithTty command
