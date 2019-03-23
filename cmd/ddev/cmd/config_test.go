@@ -269,6 +269,7 @@ func TestConfigInvalidProjectname(t *testing.T) {
 		assert.NoError(err)
 		assert.NotContains(out, "is not a valid project name")
 		assert.Contains(out, "You may now run 'ddev start'")
+		_ = os.Remove(filepath.Join(tmpdir, ".ddev", "config.yaml"))
 	}
 
 	// test some invalid project names.
@@ -282,6 +283,7 @@ func TestConfigInvalidProjectname(t *testing.T) {
 		assert.Error(err)
 		assert.Contains(out, fmt.Sprintf("%s is not a valid project name", projName))
 		assert.NotContains(out, "You may now run 'ddev start'")
+		_ = os.Remove(filepath.Join(tmpdir, ".ddev", "config.yaml"))
 	}
 }
 
