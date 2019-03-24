@@ -2404,7 +2404,8 @@ func TestPortSpecifications(t *testing.T) {
 	// can't use those ports for app1 is running
 
 	_ = os.Chdir(testDir)
-	app2, err := ddevapp.NewApp("./testdata/TestPortSpecifications", "")
+	root, _ := filepath.Abs("./testdata/TestPortSpecifications")
+	app2, err := ddevapp.NewApp(root, "")
 	assert.NoError(err)
 
 	// It should be able to WriteConfig and Start with the default host ports it came up with
