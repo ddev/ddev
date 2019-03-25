@@ -192,6 +192,7 @@ func getTemplateFuncMap() map[string]interface{} {
 // This template expects string slice to be provided, with each string corresponding to
 // a line in the resulting .gitignore.
 const gitIgnoreTemplate = `{{.Signature}}: Automatically generated ddev .gitignore.
+# You can remove the above line if you want to edit and maintain this file yourself.
 {{range .IgnoredItems}}
 /{{.}}{{end}}
 `
