@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ComposeConfigCmd implements the ddev debug compose-config command
-var ComposeConfigCmd = &cobra.Command{
+// DebugComposeConfigCmd implements the ddev debug compose-config command
+var DebugComposeConfigCmd = &cobra.Command{
 	Use:   "compose-config [project]",
 	Short: "Prints the docker-compose configuration of the current project",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -50,5 +50,5 @@ var ComposeConfigCmd = &cobra.Command{
 }
 
 func init() {
-	DebugCmd.AddCommand(ComposeConfigCmd)
+	DebugCmd.AddCommand(DebugComposeConfigCmd)
 }
