@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -604,4 +605,59 @@ func TestConfigOverrideDetection(t *testing.T) {
 	}
 	assert.Contains(out, "Custom configuration takes effect")
 	runTime()
+}
+
+// TestConfigLoadingOrder verifies that configs load in lexicographical order
+// AFTER config.yaml
+func TestConfigLoadingOrder(t *testing.T) {
+	assert := asrt.New(t)
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+
+	projDir, err := filepath.Abs(testcommon.CreateTmpDir("TestConfigLoadingOrder"))
+	require.NoError(t, err)
+
+	err = fileutil.CopyDir("./testdata/TestConfigLoadingOrder/.ddev", filepath.Join(projDir, ".ddev"))
+	require.NoError(t, err)
+	//nolint: errcheck
+	defer os.RemoveAll(projDir)
+
+	app, err := NewApp(projDir, "")
+	require.NoError(t, err)
+	err = os.Chdir(app.AppRoot)
+	assert.NoError(err)
+	err = app.ReadConfig()
+	assert.NoError(err)
+	assert.Equal("config.yaml", app.APIVersion)
+
+	matches, err := filepath.Glob(filepath.Join(projDir, ".ddev/linkedconfigs/config.*.y*ml"))
+	assert.NoError(err)
+
+	// First make sure that each possible item in .ddev/linkedconfigs can override by itself
+	for _, item := range matches {
+		linkedMatch := filepath.Join(app.AppConfDir(), filepath.Base(item))
+		assert.NoError(err)
+		err = os.Symlink(item, linkedMatch)
+		assert.NoError(err)
+		err = app.ReadConfig()
+		assert.Equal(filepath.Base(item), app.APIVersion)
+		err = os.Remove(linkedMatch)
+		assert.NoError(err)
+	}
+
+	// Now make sure that the matches are in lexicographical order and each larger one can override the others
+	orderedMatches := matches
+	sort.Strings(orderedMatches)
+	assert.Equal(matches, orderedMatches)
+
+	for _, item := range matches {
+		linkedMatch := filepath.Join(app.AppConfDir(), filepath.Base(item))
+		assert.NoError(err)
+		err = os.Symlink(item, linkedMatch)
+		assert.NoError(err)
+		err = app.ReadConfig()
+		assert.Equal(filepath.Base(item), app.APIVersion)
+	}
+
 }
