@@ -85,7 +85,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
 	if _, err := os.Stat(app.ConfigPath); !os.IsNotExist(err) {
-		err = app.ReadConfig()
+		err = app.ReadConfig(true)
 		if err != nil {
 			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
 		}
@@ -191,9 +191,9 @@ func (app *DdevApp) WriteConfig() error {
 	return nil
 }
 
-// ReadConfig reads app configuration from a specified location on disk, falling
+// ReadConfig reads project configuration, falling
 // back to defaults for config values not defined in the read config file.
-func (app *DdevApp) ReadConfig() error {
+func (app *DdevApp) ReadConfig(includeOverrides bool) error {
 
 	// Load config.yaml
 	err := app.LoadConfigYamlFile(app.ConfigPath)
@@ -203,16 +203,18 @@ func (app *DdevApp) ReadConfig() error {
 	app.DBImage = "" // DBImage will be set below
 
 	// Load config.*.y*ml after in glob order
-	glob := filepath.Join(filepath.Dir(app.ConfigPath), "config.*.y*ml")
-	matches, err := filepath.Glob(glob)
-	if err != nil {
-		return err
-	}
-
-	for _, item := range matches {
-		err = app.LoadConfigYamlFile(item)
+	if includeOverrides {
+		glob := filepath.Join(filepath.Dir(app.ConfigPath), "config.*.y*ml")
+		matches, err := filepath.Glob(glob)
 		if err != nil {
-			return fmt.Errorf("unable to load config file %s: %v", item, err)
+			return err
+		}
+
+		for _, item := range matches {
+			err = app.LoadConfigYamlFile(item)
+			if err != nil {
+				return fmt.Errorf("unable to load config file %s: %v", item, err)
+			}
 		}
 	}
 

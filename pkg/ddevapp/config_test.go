@@ -435,7 +435,7 @@ func TestReadConfig(t *testing.T) {
 		Provider:   ProviderDefault,
 	}
 
-	err := app.ReadConfig()
+	err := app.ReadConfig(false)
 	if err != nil {
 		t.Fatalf("Unable to c.ReadConfig(), err: %v", err)
 	}
@@ -514,39 +514,41 @@ func TestConfigValidate(t *testing.T) {
 // TestWriteConfig tests writing config values to file
 func TestWriteConfig(t *testing.T) {
 	assert := asrt.New(t)
-	testDir := testcommon.CreateTmpDir("TestConfigWrite")
 
-	// This closely resembles the values one would have from NewApp()
-	app := &DdevApp{
-		ConfigPath: filepath.Join(testDir, "config.yaml"),
-		AppRoot:    testDir,
-		APIVersion: version.DdevVersion,
-		Name:       "TestWrite",
-		WebImage:   version.GetWebImage(),
-		DBImage:    version.GetDBImage(),
-		DBAImage:   version.GetDBAImage(),
-		Type:       AppTypeDrupal8,
-		Provider:   ProviderDefault,
-	}
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
 
-	err := app.WriteConfig()
+	projDir, err := filepath.Abs(testcommon.CreateTmpDir("TestWriteConfig"))
+	require.NoError(t, err)
+
+	err = fileutil.CopyDir("./testdata/TestWriteConfig/.ddev", filepath.Join(projDir, ".ddev"))
+	require.NoError(t, err)
+	//nolint: errcheck
+	defer os.RemoveAll(projDir)
+
+	app, err := NewApp(projDir, "")
+	assert.NoError(err)
+	err = os.Chdir(projDir)
 	assert.NoError(err)
 
-	out, err := ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))
-	assert.NoError(err)
-	assert.Contains(string(out), "TestWrite")
-	assert.Contains(string(out), `exec: drush cr`)
+	// The default NewApp read should read config overrides, so we should have "config.extra.yaml"
+	// as the APIVersion
+	assert.Equal("config.extra.yaml", app.APIVersion)
 
-	app.Type = AppTypeWordPress
+	// However, if we ReadConfig() without includeOverrides, we should get "config.yaml" as the APIVersion
+	err = app.ReadConfig(false)
+	assert.NoError(err)
+	assert.Equal("config.yaml", app.APIVersion)
+
 	err = app.WriteConfig()
 	assert.NoError(err)
 
-	out, err = ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))
+	// Now read the config we just wrote; it should have config.yaml because ignored overrides.
+	err = app.ReadConfig(false)
 	assert.NoError(err)
-	assert.Contains(string(out), `- exec: wp cli version`)
-
-	err = os.RemoveAll(testDir)
-	assert.NoError(err)
+	// app.WriteConfig() writes the version.DdevVersion to the updated config.yaml
+	assert.Equal(version.DdevVersion, app.APIVersion)
 }
 
 // TestConfigOverrideDetection tests to make sure we tell them about config overrides.
@@ -627,7 +629,7 @@ func TestConfigLoadingOrder(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Chdir(app.AppRoot)
 	assert.NoError(err)
-	err = app.ReadConfig()
+	err = app.ReadConfig(true)
 	assert.NoError(err)
 	assert.Equal("config.yaml", app.APIVersion)
 
@@ -640,7 +642,8 @@ func TestConfigLoadingOrder(t *testing.T) {
 		assert.NoError(err)
 		err = os.Symlink(item, linkedMatch)
 		assert.NoError(err)
-		err = app.ReadConfig()
+		err = app.ReadConfig(true)
+		assert.NoError(err)
 		assert.Equal(filepath.Base(item), app.APIVersion)
 		err = os.Remove(linkedMatch)
 		assert.NoError(err)
@@ -656,8 +659,14 @@ func TestConfigLoadingOrder(t *testing.T) {
 		assert.NoError(err)
 		err = os.Symlink(item, linkedMatch)
 		assert.NoError(err)
-		err = app.ReadConfig()
+		err = app.ReadConfig(true)
 		assert.Equal(filepath.Base(item), app.APIVersion)
 	}
+
+	// Now we still have all those linked overrides, but do a ReadConfig() without allowing them
+	// and verify that they don't get loaded
+	err = app.ReadConfig(false)
+	assert.NoError(err)
+	assert.Equal("config.yaml", app.APIVersion)
 
 }
