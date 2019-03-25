@@ -1427,7 +1427,7 @@ func TestProcessHooks(t *testing.T) {
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
 	testcommon.ClearDockerEnv()
-	app, err := ddevapp.NewApp(site.Dir, ddevapp.ProviderDefault)
+	app, err := ddevapp.NewApp(site.Dir, true, ddevapp.ProviderDefault)
 	assert.NoError(err)
 	err = app.StartAndWaitForSync(0)
 	assert.NoError(err)
@@ -1808,7 +1808,7 @@ func TestListWithoutDir(t *testing.T) {
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(testDir, ddevapp.ProviderDefault)
+	app, err := ddevapp.NewApp(testDir, true, ddevapp.ProviderDefault)
 	assert.NoError(err)
 	app.Name = "junk"
 	app.Type = ddevapp.AppTypeDrupal7
@@ -1883,7 +1883,7 @@ func TestHttpsRedirection(t *testing.T) {
 	err = os.Chdir(appDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(appDir, ddevapp.ProviderDefault)
+	app, err := ddevapp.NewApp(appDir, true, ddevapp.ProviderDefault)
 	assert.NoError(err)
 	app.Name = "proj"
 	app.Type = ddevapp.AppTypePHP
@@ -1959,7 +1959,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Make sure that valid yaml files get properly loaded in the proper order
-	app, err := ddevapp.NewApp("./testdata/testMultipleComposeFiles", "")
+	app, err := ddevapp.NewApp("./testdata/testMultipleComposeFiles", true, "")
 	assert.NoError(err)
 
 	files, err := app.ComposeFiles()
@@ -1969,7 +1969,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	require.Equal(t, files[len(files)-1], filepath.Join(app.AppConfDir(), "docker-compose.override.yaml"))
 
 	// Make sure that some docker-compose.yml and docker-compose.yaml conflict gets noted properly
-	app, err = ddevapp.NewApp("./testdata/testConflictingYamlYml", "")
+	app, err = ddevapp.NewApp("./testdata/testConflictingYamlYml", true, "")
 	assert.NoError(err)
 
 	_, err = app.ComposeFiles()
@@ -1979,7 +1979,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	}
 
 	// Make sure that some docker-compose.override.yml and docker-compose.override.yaml conflict gets noted properly
-	app, err = ddevapp.NewApp("./testdata/testConflictingOverrideYaml", "")
+	app, err = ddevapp.NewApp("./testdata/testConflictingOverrideYaml", true, "")
 	assert.NoError(err)
 
 	_, err = app.ComposeFiles()
@@ -1989,7 +1989,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	}
 
 	// Make sure the error gets pointed out of there's no main docker-compose.yaml
-	app, err = ddevapp.NewApp("./testdata/testNoDockerCompose", "")
+	app, err = ddevapp.NewApp("./testdata/testNoDockerCompose", true, "")
 	assert.NoError(err)
 
 	_, err = app.ComposeFiles()
@@ -2000,7 +2000,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 
 	// Catch if we have no docker files at all.
 	// This should also fail if the docker-compose.yaml.bak gets loaded.
-	app, err = ddevapp.NewApp("./testdata/testNoDockerFilesAtAll", "")
+	app, err = ddevapp.NewApp("./testdata/testNoDockerFilesAtAll", true, "")
 	assert.NoError(err)
 
 	_, err = app.ComposeFiles()

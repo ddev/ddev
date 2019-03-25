@@ -62,7 +62,7 @@ func init() {
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
-func NewApp(AppRoot string, provider string) (*DdevApp, error) {
+func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, error) {
 	// Set defaults.
 	app := &DdevApp{}
 
@@ -85,7 +85,7 @@ func NewApp(AppRoot string, provider string) (*DdevApp, error) {
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
 	if _, err := os.Stat(app.ConfigPath); !os.IsNotExist(err) {
-		_, err = app.ReadConfig(true)
+		_, err = app.ReadConfig(includeOverrides)
 		if err != nil {
 			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
 		}

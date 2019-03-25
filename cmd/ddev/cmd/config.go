@@ -248,7 +248,7 @@ func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
 		appRoot = cd
 	}
 
-	app, err := ddevapp.NewApp(appRoot, providerName)
+	app, err := ddevapp.NewApp(appRoot, false, providerName)
 	if err != nil {
 		return nil, fmt.Errorf("could not create new config: %v", err)
 	}

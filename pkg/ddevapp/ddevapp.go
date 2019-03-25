@@ -106,7 +106,7 @@ func (app *DdevApp) GetType() string {
 // Init populates DdevApp config based on the current working directory.
 // It does not start the containers.
 func (app *DdevApp) Init(basePath string) error {
-	newApp, err := NewApp(basePath, "")
+	newApp, err := NewApp(basePath, true, "")
 	if err != nil {
 		return err
 	}
