@@ -904,6 +904,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
 		}
 
+		// Make sure we can do a simple hit against the host-mount of web container.
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetWebContainerDirectURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+
 		// We don't want all the projects running at once.
 		err = app.Down(true, false)
 		assert.NoError(err)
