@@ -435,7 +435,7 @@ func TestReadConfig(t *testing.T) {
 		Provider:   ProviderDefault,
 	}
 
-	err := app.ReadConfig(false)
+	_, err := app.ReadConfig(false)
 	if err != nil {
 		t.Fatalf("Unable to c.ReadConfig(), err: %v", err)
 	}
@@ -537,7 +537,7 @@ func TestWriteConfig(t *testing.T) {
 	assert.Equal("config.extra.yaml", app.APIVersion)
 
 	// However, if we ReadConfig() without includeOverrides, we should get "config.yaml" as the APIVersion
-	err = app.ReadConfig(false)
+	_, err = app.ReadConfig(false)
 	assert.NoError(err)
 	assert.Equal("config.yaml", app.APIVersion)
 
@@ -545,7 +545,7 @@ func TestWriteConfig(t *testing.T) {
 	assert.NoError(err)
 
 	// Now read the config we just wrote; it should have config.yaml because ignored overrides.
-	err = app.ReadConfig(false)
+	_, err = app.ReadConfig(false)
 	assert.NoError(err)
 	// app.WriteConfig() writes the version.DdevVersion to the updated config.yaml
 	assert.Equal(version.DdevVersion, app.APIVersion)
@@ -629,7 +629,7 @@ func TestConfigLoadingOrder(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Chdir(app.AppRoot)
 	assert.NoError(err)
-	err = app.ReadConfig(true)
+	_, err = app.ReadConfig(true)
 	assert.NoError(err)
 	assert.Equal("config.yaml", app.APIVersion)
 
@@ -642,7 +642,7 @@ func TestConfigLoadingOrder(t *testing.T) {
 		assert.NoError(err)
 		err = os.Symlink(item, linkedMatch)
 		assert.NoError(err)
-		err = app.ReadConfig(true)
+		_, err = app.ReadConfig(true)
 		assert.NoError(err)
 		assert.Equal(filepath.Base(item), app.APIVersion)
 		err = os.Remove(linkedMatch)
@@ -659,13 +659,13 @@ func TestConfigLoadingOrder(t *testing.T) {
 		assert.NoError(err)
 		err = os.Symlink(item, linkedMatch)
 		assert.NoError(err)
-		err = app.ReadConfig(true)
+		_, err = app.ReadConfig(true)
 		assert.Equal(filepath.Base(item), app.APIVersion)
 	}
 
 	// Now we still have all those linked overrides, but do a ReadConfig() without allowing them
 	// and verify that they don't get loaded
-	err = app.ReadConfig(false)
+	_, err = app.ReadConfig(false)
 	assert.NoError(err)
 	assert.Equal("config.yaml", app.APIVersion)
 

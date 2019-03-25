@@ -40,7 +40,7 @@ func TestPortOverride(t *testing.T) {
 		app.Type = ddevapp.AppTypePHP
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = app.ReadConfig(false)
+		_, err = app.ReadConfig(false)
 		assert.NoError(err)
 
 		stringFound, err := fileutil.FgrepStringInFile(app.ConfigPath, "router_http_port: \""+app.RouterHTTPPort+"\"")
