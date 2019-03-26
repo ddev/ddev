@@ -212,14 +212,14 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 
 // GetPublishedPort returns the host-exposed public port of a container.
 func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
-	dbContainer, err := app.FindContainerByType(serviceName)
-	if err != nil {
+	container, err := app.FindContainerByType(serviceName)
+	if err != nil || container == nil {
 		return -1, fmt.Errorf("Failed to find container of type %s: %v", serviceName, err)
 	}
 
 	privatePort, _ := strconv.ParseInt(appports.GetPort(serviceName), 10, 16)
 
-	publishedPort := dockerutil.GetPublishedPort(privatePort, *dbContainer)
+	publishedPort := dockerutil.GetPublishedPort(privatePort, *container)
 	return publishedPort, nil
 }
 

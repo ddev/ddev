@@ -267,8 +267,11 @@ func TestDdevStart(t *testing.T) {
 	}
 
 	if util.IsCommandAvailable("mysql") {
+		dbPort, err := app.GetPublishedPort("db")
+		assert.NoError(err)
+
 		dockerIP, _ := dockerutil.GetDockerIP()
-		out, err := exec.RunCommand("mysql", []string{"--user=db", "--password=db", "--port=" + app.HostDBPort, "--database=db", "--host=" + dockerIP, "-e", "SELECT 1;"})
+		out, err := exec.RunCommand("mysql", []string{"--user=db", "--password=db", "--port=" + strconv.Itoa(dbPort), "--database=db", "--host=" + dockerIP, "-e", "SELECT 1;"})
 		assert.NoError(err)
 		assert.Contains(out, "1")
 	} else {
@@ -2400,51 +2403,57 @@ func TestPortSpecifications(t *testing.T) {
 	switchDir := site0.Chdir()
 	defer switchDir()
 
-	app1 := ddevapp.DdevApp{}
-	err := app1.Init(site0.Dir)
+	nospecApp := ddevapp.DdevApp{}
+	err := nospecApp.Init(site0.Dir)
 	assert.NoError(err)
-	err = app1.WriteConfig()
+	err = nospecApp.WriteConfig()
 	require.NoError(t, err)
-	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[app1.Name])
-	assert.Contains(globalconfig.DdevGlobalConfig.ProjectList[app1.Name].UsedHostPorts, app1.HostWebserverPort)
-	assert.Contains(globalconfig.DdevGlobalConfig.ProjectList[app1.Name].UsedHostPorts, app1.HostDBPort)
+	// Since host ports were not explicitly set in nospecApp, they shouldn't be in globalconfig.
+	require.Empty(t, globalconfig.DdevGlobalConfig.ProjectList[nospecApp.Name].UsedHostPorts)
 
-	app1DBPort := app1.HostDBPort
-	app1WebPort := app1.HostWebserverPort
+	err = nospecApp.Start()
+	assert.NoError(err)
+	//nolint: errcheck
+	defer nospecApp.Down(true, false)
 
-	// Now that we have a working app1 with specified ports, test that we
-	// can't use those ports for app1 is running
+	app1DBPort, err := nospecApp.GetPublishedPort("db")
+	assert.NoError(err)
+	app1WebPort, err := nospecApp.GetPublishedPort("web")
+	assert.NoError(err)
+
+	// Now that we have a working nospecApp with unspecified ephemeral ports, test that we
+	// can't use those ports while nospecApp is running
 
 	_ = os.Chdir(testDir)
 	root, _ := filepath.Abs("./testdata/TestPortSpecifications")
-	app2, err := ddevapp.NewApp(root, "")
+	specAPP, err := ddevapp.NewApp(root, "")
 	assert.NoError(err)
 
-	// It should be able to WriteConfig and Start with the default host ports it came up with
-	err = app2.WriteConfig()
+	// It should be able to WriteConfig and Start with the configured host ports it came up with
+	err = specAPP.WriteConfig()
 	assert.NoError(err)
-	err = app2.Start()
+	err = specAPP.Start()
 	assert.NoError(err)
 	//nolint: errcheck
-	err = app2.Down(true, false)
+	err = specAPP.Down(true, false)
 	require.NoError(t, err)
 	// Verify that DdevGlobalConfig got updated properly
-	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[app2.Name])
+	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name])
 
 	// However, if we change to a used port, we should not be able to config or start
-	app2.HostDBPort = app1DBPort
-	err = app2.WriteConfig()
+	specAPP.HostDBPort = strconv.Itoa(app1DBPort)
+	err = specAPP.WriteConfig()
 	assert.Error(err)
-	err = app2.Start()
+	err = specAPP.Start()
 	assert.Error(err)
 
-	app2.HostWebserverPort = app1WebPort
-	app2.HostDBPort = ""
+	specAPP.HostWebserverPort = strconv.Itoa(app1WebPort)
+	specAPP.HostDBPort = ""
 	// However, if we change to a used port, we should not be able to config or start
-	app2.HostDBPort = app1DBPort
-	err = app2.WriteConfig()
+	specAPP.HostDBPort = strconv.Itoa(app1DBPort)
+	err = specAPP.WriteConfig()
 	assert.Error(err)
-	err = app2.Start()
+	err = specAPP.Start()
 	assert.Error(err)
 
 }

@@ -17,10 +17,14 @@ var mailhogPort = "8025"
 // dbPort defines the default DB (MySQL) port.
 var dbPort = "3306"
 
+// webPort defines the internal web port
+var webPort = "80"
+
 var ports = map[string]string{
 	"mailhog": mailhogPort,
 	"dba":     dbaPort,
 	"db":      dbPort,
+	"web":     webPort,
 }
 
 // GetPort returns the external router (as a string) for the given service. This can be used to find a given port for docker-compose manifests,
