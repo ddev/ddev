@@ -36,7 +36,7 @@ func TestComposerCmd(t *testing.T) {
 	assert.Contains(out, "Available commands:")
 
 	// Get an app just so we can do waits and check webcacheenabled etc.
-	app, err := ddevapp.NewApp(tmpDir, "")
+	app, err := ddevapp.NewApp(tmpDir, true, "")
 	assert.NoError(err)
 
 	// Test create-project

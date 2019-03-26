@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -30,7 +31,7 @@ func TestNewConfig(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	// Load a new Config
-	app, err := NewApp(testDir, ProviderDefault)
+	app, err := NewApp(testDir, true, ProviderDefault)
 	assert.NoError(err)
 
 	// Ensure the config uses specified defaults.
@@ -47,7 +48,7 @@ func TestNewConfig(t *testing.T) {
 	_, err = os.Stat(app.ConfigPath)
 	assert.NoError(err)
 
-	loadedConfig, err := NewApp(testDir, ProviderDefault)
+	loadedConfig, err := NewApp(testDir, true, ProviderDefault)
 	assert.NoError(err)
 	assert.Equal(app.Name, loadedConfig.Name)
 	assert.Equal(app.Type, loadedConfig.Type)
@@ -75,7 +76,7 @@ func TestPrepDirectory(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, ProviderDefault)
+	app, err := NewApp(testDir, true, ProviderDefault)
 	assert.NoError(err)
 
 	// Prep the directory.
@@ -93,7 +94,7 @@ func TestHostName(t *testing.T) {
 	testDir := testcommon.CreateTmpDir("TestHostName")
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
-	app, err := NewApp(testDir, ProviderDefault)
+	app, err := NewApp(testDir, true, ProviderDefault)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
 
@@ -108,7 +109,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, ProviderDefault)
+	app, err := NewApp(testDir, true, ProviderDefault)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
 	app.Type = GetValidAppTypes()[0]
@@ -163,7 +164,7 @@ func TestConfigCommand(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, ProviderDefault)
+		app, err := NewApp(testDir, true, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -237,7 +238,7 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, ProviderDefault)
+		app, err := NewApp(testDir, true, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -283,7 +284,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, ProviderDefault)
+		app, err := NewApp(testDir, true, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -339,7 +340,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, ProviderDefault)
+		app, err := NewApp(testDir, true, ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -394,7 +395,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 
 	// Create the ddevapp we'll use for testing.
 	// This will not return an error, since there is no existing configuration.
-	app, err := NewApp(testDir, ProviderDefault)
+	app, err := NewApp(testDir, true, ProviderDefault)
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -434,7 +435,7 @@ func TestReadConfig(t *testing.T) {
 		Provider:   ProviderDefault,
 	}
 
-	err := app.ReadConfig()
+	_, err := app.ReadConfig(false)
 	if err != nil {
 		t.Fatalf("Unable to c.ReadConfig(), err: %v", err)
 	}
@@ -513,39 +514,41 @@ func TestConfigValidate(t *testing.T) {
 // TestWriteConfig tests writing config values to file
 func TestWriteConfig(t *testing.T) {
 	assert := asrt.New(t)
-	testDir := testcommon.CreateTmpDir("TestConfigWrite")
 
-	// This closely resembles the values one would have from NewApp()
-	app := &DdevApp{
-		ConfigPath: filepath.Join(testDir, "config.yaml"),
-		AppRoot:    testDir,
-		APIVersion: version.DdevVersion,
-		Name:       "TestWrite",
-		WebImage:   version.GetWebImage(),
-		DBImage:    version.GetDBImage(),
-		DBAImage:   version.GetDBAImage(),
-		Type:       AppTypeDrupal8,
-		Provider:   ProviderDefault,
-	}
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
 
-	err := app.WriteConfig()
+	projDir, err := filepath.Abs(testcommon.CreateTmpDir("TestWriteConfig"))
+	require.NoError(t, err)
+
+	err = fileutil.CopyDir("./testdata/TestWriteConfig/.ddev", filepath.Join(projDir, ".ddev"))
+	require.NoError(t, err)
+	//nolint: errcheck
+	defer os.RemoveAll(projDir)
+
+	app, err := NewApp(projDir, true, "")
+	assert.NoError(err)
+	err = os.Chdir(projDir)
 	assert.NoError(err)
 
-	out, err := ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))
-	assert.NoError(err)
-	assert.Contains(string(out), "TestWrite")
-	assert.Contains(string(out), `exec: drush cr`)
+	// The default NewApp read should read config overrides, so we should have "config.extra.yaml"
+	// as the APIVersion
+	assert.Equal("config.extra.yaml", app.APIVersion)
 
-	app.Type = AppTypeWordPress
+	// However, if we ReadConfig() without includeOverrides, we should get "config.yaml" as the APIVersion
+	_, err = app.ReadConfig(false)
+	assert.NoError(err)
+	assert.Equal("config.yaml", app.APIVersion)
+
 	err = app.WriteConfig()
 	assert.NoError(err)
 
-	out, err = ioutil.ReadFile(filepath.Join(testDir, "config.yaml"))
+	// Now read the config we just wrote; it should have config.yaml because ignored overrides.
+	_, err = app.ReadConfig(false)
 	assert.NoError(err)
-	assert.Contains(string(out), `- exec: wp cli version`)
-
-	err = os.RemoveAll(testDir)
-	assert.NoError(err)
+	// app.WriteConfig() writes the version.DdevVersion to the updated config.yaml
+	assert.Equal(version.DdevVersion, app.APIVersion)
 }
 
 // TestConfigOverrideDetection tests to make sure we tell them about config overrides.
@@ -604,4 +607,66 @@ func TestConfigOverrideDetection(t *testing.T) {
 	}
 	assert.Contains(out, "Custom configuration takes effect")
 	runTime()
+}
+
+// TestConfigLoadingOrder verifies that configs load in lexicographical order
+// AFTER config.yaml
+func TestConfigLoadingOrder(t *testing.T) {
+	assert := asrt.New(t)
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+
+	projDir, err := filepath.Abs(testcommon.CreateTmpDir("TestConfigLoadingOrder"))
+	require.NoError(t, err)
+
+	err = fileutil.CopyDir("./testdata/TestConfigLoadingOrder/.ddev", filepath.Join(projDir, ".ddev"))
+	require.NoError(t, err)
+	//nolint: errcheck
+	defer os.RemoveAll(projDir)
+
+	app, err := NewApp(projDir, true, "")
+	require.NoError(t, err)
+	err = os.Chdir(app.AppRoot)
+	assert.NoError(err)
+	_, err = app.ReadConfig(true)
+	assert.NoError(err)
+	assert.Equal("config.yaml", app.APIVersion)
+
+	matches, err := filepath.Glob(filepath.Join(projDir, ".ddev/linkedconfigs/config.*.y*ml"))
+	assert.NoError(err)
+
+	// First make sure that each possible item in .ddev/linkedconfigs can override by itself
+	for _, item := range matches {
+		linkedMatch := filepath.Join(app.AppConfDir(), filepath.Base(item))
+		assert.NoError(err)
+		err = os.Symlink(item, linkedMatch)
+		assert.NoError(err)
+		_, err = app.ReadConfig(true)
+		assert.NoError(err)
+		assert.Equal(filepath.Base(item), app.APIVersion)
+		err = os.Remove(linkedMatch)
+		assert.NoError(err)
+	}
+
+	// Now make sure that the matches are in lexicographical order and each larger one can override the others
+	orderedMatches := matches
+	sort.Strings(orderedMatches)
+	assert.Equal(matches, orderedMatches)
+
+	for _, item := range matches {
+		linkedMatch := filepath.Join(app.AppConfDir(), filepath.Base(item))
+		assert.NoError(err)
+		err = os.Symlink(item, linkedMatch)
+		assert.NoError(err)
+		_, err = app.ReadConfig(true)
+		assert.Equal(filepath.Base(item), app.APIVersion)
+	}
+
+	// Now we still have all those linked overrides, but do a ReadConfig() without allowing them
+	// and verify that they don't get loaded
+	_, err = app.ReadConfig(false)
+	assert.NoError(err)
+	assert.Equal("config.yaml", app.APIVersion)
+
 }

@@ -39,7 +39,7 @@ func TestLogs(t *testing.T) {
 		assert.NoError(err)
 		cleanup := v.Chdir()
 
-		app, err := ddevapp.NewApp(v.Dir, "")
+		app, err := ddevapp.NewApp(v.Dir, true, "")
 		assert.NoError(err)
 
 		ddevapp.WaitForSync(app, 2)

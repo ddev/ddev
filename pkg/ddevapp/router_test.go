@@ -29,7 +29,7 @@ func TestPortOverride(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 
-		app, err := ddevapp.NewApp(testDir, ddevapp.ProviderDefault)
+		app, err := ddevapp.NewApp(testDir, true, ddevapp.ProviderDefault)
 		assert.NoError(err)
 		app.RouterHTTPPort = strconv.Itoa(80 + i)
 		// Note that we start with port 453 instead of 443 here because Windows
@@ -40,7 +40,7 @@ func TestPortOverride(t *testing.T) {
 		app.Type = ddevapp.AppTypePHP
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = app.ReadConfig()
+		_, err = app.ReadConfig(false)
 		assert.NoError(err)
 
 		stringFound, err := fileutil.FgrepStringInFile(app.ConfigPath, "router_http_port: \""+app.RouterHTTPPort+"\"")

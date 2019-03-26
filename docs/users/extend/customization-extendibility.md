@@ -93,3 +93,20 @@ To load the new configuration, run `ddev restart`.
 
 ## Overriding default container images
 The default container images provided by ddev are defined in the `config.yaml` file in the `.ddev` folder of your project. This means that _defining_ an alternative image for default services is as simple as changing the image definition in `config.yaml`. In practice, however, ddev currently has certain expectations and assumptions for what the web and database containers provide. At this time, it is recommended that the default container projects be referenced or used as a starting point for developing an alternative image. If you encounter difficulties integrating alternative images, please [file an issue and let us know](https://github.com/drud/ddev/issues/new).
+
+## Extending config.yaml with custom config.*.yaml files
+
+You may add additional config.*.yaml files to organize additional commands as you see fit for your project and team. 
+
+For example, many teams commit their config.yaml and share it throughout the team, but some team members may require overrides to the checked-in version that are custom to their environment and should not be checked in. For example, a team member may want to use a router_http_port other than the team default due to a conflict in their development environment. In this case they could add the file .ddev/config.ports.yaml with the contents:
+
+```
+# My machine can't use port 80 so override with port 8080, but don't check this in.
+router_http_port: 8080
+```
+
+config.*.yaml is by default omitted from git by the .ddev/.gitignore file.
+
+Extra config.*.yaml files are loaded in lexicographic order, so "config.a.yaml" will be overridden by "config.b.yaml". 
+
+Teams may choose to use "config.local.yaml" or "config.override.yaml" for all local non-committed config changes, for example.

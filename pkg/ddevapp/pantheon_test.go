@@ -46,7 +46,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 	}
 
 	// Create the ddevapp we'll use for testing.
-	app, err := NewApp(testDir, ProviderPantheon)
+	app, err := NewApp(testDir, true, ProviderPantheon)
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -106,7 +106,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, ProviderPantheon)
+	app, err := NewApp(testDir, true, ProviderPantheon)
 	assert.NoError(err)
 	app.Name = pantheonTestSiteName
 
@@ -150,7 +150,7 @@ func TestPantheonPull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
-	app, err := NewApp(siteDir, ProviderPantheon)
+	app, err := NewApp(siteDir, true, ProviderPantheon)
 	assert.NoError(err)
 	app.Name = pantheonTestSiteName
 	app.Type = AppTypeDrupal8
