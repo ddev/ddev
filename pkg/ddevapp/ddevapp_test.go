@@ -2416,17 +2416,19 @@ func TestPortSpecifications(t *testing.T) {
 	//nolint: errcheck
 	defer nospecApp.Down(true, false)
 
-	app1DBPort, err := nospecApp.GetPublishedPort("db")
-	assert.NoError(err)
-	app1WebPort, err := nospecApp.GetPublishedPort("web")
-	assert.NoError(err)
-
 	// Now that we have a working nospecApp with unspecified ephemeral ports, test that we
 	// can't use those ports while nospecApp is running
 
 	_ = os.Chdir(testDir)
-	root, _ := filepath.Abs("./testdata/TestPortSpecifications")
-	specAPP, err := ddevapp.NewApp(root, "")
+	ddevDir, _ := filepath.Abs("./testdata/TestPortSpecifications/.ddev")
+
+	specAppPath := testcommon.CreateTmpDir("specapp")
+	//nolint: errcheck
+	defer os.RemoveAll(specAppPath)
+	err = fileutil.CopyDir(ddevDir, filepath.Join(specAppPath, ".ddev"))
+	assert.NoError(err)
+
+	specAPP, err := ddevapp.NewApp(specAppPath, false, "")
 	assert.NoError(err)
 
 	// It should be able to WriteConfig and Start with the configured host ports it came up with
@@ -2435,27 +2437,36 @@ func TestPortSpecifications(t *testing.T) {
 	err = specAPP.Start()
 	assert.NoError(err)
 	//nolint: errcheck
-	err = specAPP.Down(true, false)
+	err = specAPP.Down(false, false)
 	require.NoError(t, err)
 	// Verify that DdevGlobalConfig got updated properly
+	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name])
+	assert.NotEmpty(globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name].UsedHostPorts)
+
+	// However, if we change change the name to make it appear to be a
+	// different project, we should not be able to config or start
+	conflictApp, err := ddevapp.NewApp(specAppPath, false, "")
+	assert.NoError(err)
+	conflictApp.Name = "conflictapp"
+
+	err = conflictApp.WriteConfig()
+	assert.Error(err)
+	err = conflictApp.Start()
+	assert.Error(err)
+
+	// Now delete the specAPP and we should be able to use the conflictApp
+	err = specAPP.Down(true, false)
+	assert.NoError(err)
 	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name])
 
-	// However, if we change to a used port, we should not be able to config or start
-	specAPP.HostDBPort = strconv.Itoa(app1DBPort)
-	err = specAPP.WriteConfig()
-	assert.Error(err)
-	err = specAPP.Start()
-	assert.Error(err)
-
-	specAPP.HostWebserverPort = strconv.Itoa(app1WebPort)
-	specAPP.HostDBPort = ""
-	// However, if we change to a used port, we should not be able to config or start
-	specAPP.HostDBPort = strconv.Itoa(app1DBPort)
-	err = specAPP.WriteConfig()
-	assert.Error(err)
-	err = specAPP.Start()
-	assert.Error(err)
-
+	err = conflictApp.WriteConfig()
+	assert.NoError(err)
+	err = conflictApp.Start()
+	assert.NoError(err)
+	//nolint: errcheck
+	defer conflictApp.Down(true, false)
+	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name])
+	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name].UsedHostPorts)
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app
