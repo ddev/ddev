@@ -97,9 +97,9 @@ type DdevApp struct {
 	Commands              map[string][]Command `yaml:"hooks,omitempty"`
 	UploadDir             string               `yaml:"upload_dir,omitempty"`
 	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
-	OmitContainers        []string             `yaml:"omit_containers,omitempty"`
-	HostDBPort            string               `yaml:"host_db_port"`
-	HostWebserverPort     string               `yaml:"host_webserver_port"`
+	OmitContainers        []string             `yaml:"omit_containers,omitempty,flow"`
+	HostDBPort            string               `yaml:"host_db_port,omitempty"`
+	HostWebserverPort     string               `yaml:"host_webserver_port,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string

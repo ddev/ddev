@@ -77,21 +77,6 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 	app.MariaDBVersion = version.MariaDBDefaultVersion
 
-	var err error
-	dockerIP, err := dockerutil.GetDockerIP()
-	if err != nil {
-		return app, err
-	}
-	app.HostWebserverPort, err = globalconfig.GetFreePort(dockerIP)
-	if err != nil {
-		return app, err
-	}
-
-	app.HostDBPort, err = globalconfig.GetFreePort(dockerIP)
-	if err != nil {
-		return app, err
-	}
-
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
 	app.DBImage = version.GetDBImage(app.MariaDBVersion)
@@ -217,13 +202,20 @@ func (app *DdevApp) WriteConfig() error {
 // CheckAndReserveHostPorts checks that configured host ports are not already
 // reserved by another project.
 func (app *DdevApp) CheckAndReserveHostPorts() error {
-	portsToReserve := []string{app.HostDBPort, app.HostWebserverPort}
-	err := globalconfig.CheckHostPortsAvailable(app.Name, portsToReserve)
-	if err != nil {
-		return err
+	portsToReserve := []string{}
+	if app.HostDBPort != "" {
+		portsToReserve = append(portsToReserve, app.HostDBPort)
 	}
-
-	err = globalconfig.ReservePorts(app.Name, portsToReserve)
+	if app.HostWebserverPort != "" {
+		portsToReserve = append(portsToReserve, app.HostWebserverPort)
+	}
+	if len(portsToReserve) > 0 {
+		err := globalconfig.CheckHostPortsAvailable(app.Name, portsToReserve)
+		if err != nil {
+			return err
+		}
+	}
+	err := globalconfig.ReservePorts(app.Name, portsToReserve)
 
 	return err
 }

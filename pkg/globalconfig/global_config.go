@@ -35,10 +35,10 @@ type ProjectInfo struct {
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
 	APIVersion           string                  `yaml:"APIVersion"`
-	OmitContainers       []string                `yaml:"omit_containers"`
+	OmitContainers       []string                `yaml:"omit_containers,flow"`
 	InstrumentationOptIn bool                    `yaml:"instrumentation_opt_in"`
 	LastUsedVersion      string                  `yaml:"last_used_version"`
-	ProjectList          map[string]*ProjectInfo `yaml:"project_info"`
+	ProjectList          map[string]*ProjectInfo `yaml:"project_info,flow"`
 	DeveloperMode        bool                    `yaml:"developer_mode,omitempty"`
 }
 
