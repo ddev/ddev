@@ -104,6 +104,12 @@ var (
 
 	// nfsMountEnabled sets nfs_mount_enabled
 	nfsMountEnabled bool
+
+	// hostDBPortArg sets host_db_port
+	hostDBPortArg string
+
+	// hostWebserverPortArg sets host_webserver_port
+	hostWebserverPortArg string
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -115,7 +121,7 @@ var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.
 var ConfigCommand *cobra.Command = &cobra.Command{
 	Use:     "config [provider or 'global']",
 	Short:   "Create or modify a ddev project configuration in the current directory",
-	Example: `"ddev config" or "ddev config --docroot=. --project-name=d7-kickstart --project-type=drupal7"`,
+	Example: `"ddev config" or "ddev config --docroot=web  --project-type=drupal8"`,
 	Args:    cobra.ExactArgs(0),
 	Run:     handleConfigRun,
 }
@@ -183,8 +189,8 @@ func init() {
 	ConfigCommand.Flags().StringVar(&docrootRelPathArg, "docroot", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "project-type", "", projectTypeUsage)
 	ConfigCommand.Flags().StringVar(&phpVersionArg, "php-version", "", "The version of PHP that will be enabled in the web container")
-	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The web container's exposed HTTP port")
-	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The web container's exposed HTTPS port")
+	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The router HTTP port for this project")
+	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The router HTTPS port for this project")
 	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", false, "Whether or not XDebug is enabled in the web container")
 	ConfigCommand.Flags().StringVar(&additionalHostnamesArg, "additional-hostnames", "", "A comma-delimited list of hostnames for the project")
 	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
@@ -209,6 +215,8 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
 	ConfigCommand.Flags().StringVar(&mariaDBVersionArg, "mariadb-version", "10.2", "mariadb version to use")
 	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")
+	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound port")
+	ConfigCommand.Flags().StringVar(&hostDBPortArg, "host-db-port", "", "The db container's localhost-bound port")
 
 	// projectname flag exists for backwards compatability.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
@@ -358,6 +366,14 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if httpsPortArg != "" {
 		app.RouterHTTPSPort = httpsPortArg
+	}
+
+	if hostWebserverPortArg != "" {
+		app.HostWebserverPort = hostWebserverPortArg
+	}
+
+	if hostDBPortArg != "" {
+		app.HostDBPort = hostDBPortArg
 	}
 
 	if mariaDBVersionArg != "" {
