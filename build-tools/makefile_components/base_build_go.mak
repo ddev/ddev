@@ -12,6 +12,7 @@ DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)              
           	    -e CGO_ENABLED=0                  \
           	    -e GOOS=$@						  \
           	    -e GOPATH="//workdir/$(GOTMP)" \
+          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -e GOFLAGS="$(USEMODVENDOR)" \
           	    -w //workdir              \
           	    $(BUILD_IMAGE)
@@ -19,6 +20,7 @@ DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)              
 DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
           	    -v "$(S)$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
           	    -e GOPATH="//workdir/$(GOTMP)" \
+          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -e GOFLAGS="$(USEMODVENDOR)" \
           	    -w //workdir              \
           	    $(BUILD_IMAGE)
@@ -32,7 +34,7 @@ GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
 
 BUILD_OS = $(shell go env GOHOSTOS)
 
-BUILD_IMAGE ?= drud/golang-build-container:v1.12
+BUILD_IMAGE ?= drud/golang-build-container:v1.12.1
 
 BUILD_BASE_DIR ?= $(PWD)
 
@@ -84,7 +86,7 @@ linux darwin windows: pull $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
 	@echo $(shell if [ "$(BUILD_OS)" = "windows" ]; then echo "windows build: BUILD_OS=$(BUILD_OS)  DOCKER_TOOLBOX_INSTALL_PATH=$(DOCKER_TOOLBOX_INSTALL_PATH) PWD=$(PWD) S=$(S)"; fi )
 	@mkdir -p $(GOTMP)/{.cache,pkg,src,bin}
-	$(DOCKERBUILDCMD) \
+	@$(DOCKERBUILDCMD) \
         go install -installsuffix static -ldflags ' $(LDFLAGS) ' $(SRC_AND_UNDER) && touch $@
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
