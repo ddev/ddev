@@ -29,7 +29,7 @@ func init() {
 }
 
 type ProjectInfo struct {
-	UsedHostPorts []string
+	UsedHostPorts []string `yaml:"used_host_ports,flow"`
 }
 
 // GlobalConfig is the struct defining ddev's global config
@@ -38,7 +38,7 @@ type GlobalConfig struct {
 	OmitContainers       []string                `yaml:"omit_containers,flow"`
 	InstrumentationOptIn bool                    `yaml:"instrumentation_opt_in"`
 	LastUsedVersion      string                  `yaml:"last_used_version"`
-	ProjectList          map[string]*ProjectInfo `yaml:"project_info,flow"`
+	ProjectList          map[string]*ProjectInfo `yaml:"project_info"`
 	DeveloperMode        bool                    `yaml:"developer_mode,omitempty"`
 }
 
