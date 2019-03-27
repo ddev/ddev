@@ -29,7 +29,7 @@ func init() {
 }
 
 type ProjectInfo struct {
-	UsedHostPorts []string `yaml:"used_host_ports,flow"`
+	UsedHostPorts []string `yaml:"used_host_ports,omitempty,flow"`
 }
 
 // GlobalConfig is the struct defining ddev's global config
