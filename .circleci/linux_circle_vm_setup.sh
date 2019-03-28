@@ -15,27 +15,12 @@ if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
 fi
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 /home/linuxbrew/.linuxbrew/bin/brew update
-for item in osslsigncode golang docker-compose; do
+for item in osslsigncode golang; do
     /home/linuxbrew/.linuxbrew/bin/brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
 done
 
 sudo bash -c "printf '/home 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)\n/tmp 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)' >>/etc/exports"
 sudo service nfs-kernel-server restart
-
-# Remove existing docker and install from their apt package
-sudo apt-get remove docker docker-engine docker.io
-sudo apt-get install \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-sudo apt-get update -qq
-sudo apt-get install -qq docker-ce
 
 # gotestsum
 GOTESTSUM_VERSION=0.3.2
