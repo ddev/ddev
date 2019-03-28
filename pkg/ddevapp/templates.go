@@ -21,7 +21,7 @@ services:
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     ports:
-      - "3306"
+      - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:3306"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .Plugin }}
@@ -63,7 +63,7 @@ services:
       - db:db
     # ports is list of exposed *container* ports
     ports:
-      - "80"
+      - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
       - "{{ .MailhogPort }}"
     environment:
       - DDEV_URL=$DDEV_URL
@@ -241,6 +241,16 @@ const ConfigInstructions = `
 # only those two containers can be omitted here.
 # Note that these containers can also be omitted globally in the 
 # ~/.ddev/global_config.yaml or with the "ddev config global" command.
+
+# host_webserver_port: "59001"
+# The host port binding for the ddev-webserver can be explicitly specified. It is
+# dynamic unless otherwise specified.
+# This is not used by most people, most people use the *router* instead
+# of the localhost port.
+
+# host_db_port: "59002"
+# The host port binding for the ddev-dbserver can be explicitly specified. It is dynamic
+# unless explicitly specified.
 
 
 # provider: default # Currently either "default" or "pantheon"

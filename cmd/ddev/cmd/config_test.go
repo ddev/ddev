@@ -108,6 +108,8 @@ func TestConfigSetValues(t *testing.T) {
 	phpVersion := ddevapp.PHP71
 	httpPort := "81"
 	httpsPort := "444"
+	hostDBPort := "60001"
+	hostWebserverPort := "60002"
 	xdebugEnabled := true
 	additionalHostnamesSlice := []string{"abc", "123", "xyz"}
 	additionalHostnames := strings.Join(additionalHostnamesSlice, ",")
@@ -145,6 +147,8 @@ func TestConfigSetValues(t *testing.T) {
 		"--db-working-dir", dbWorkingDir,
 		"--dba-working-dir", dbaWorkingDir,
 		"--omit-containers", omitContainers,
+		"--host-db-port", hostDBPort,
+		"--host-webserver-port", hostWebserverPort,
 	}
 
 	_, err = exec.RunCommand(DdevBin, args)
@@ -167,6 +171,8 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(phpVersion, app.PHPVersion)
 	assert.Equal(httpPort, app.RouterHTTPPort)
 	assert.Equal(httpsPort, app.RouterHTTPSPort)
+	assert.Equal(hostWebserverPort, app.HostWebserverPort)
+	assert.Equal(hostDBPort, app.HostDBPort)
 	assert.Equal(xdebugEnabled, app.XdebugEnabled)
 	assert.Equal(additionalHostnamesSlice, app.AdditionalHostnames)
 	assert.Equal(additionalFQDNsSlice, app.AdditionalFQDNs)
@@ -269,6 +275,7 @@ func TestConfigInvalidProjectname(t *testing.T) {
 		assert.NoError(err)
 		assert.NotContains(out, "is not a valid project name")
 		assert.Contains(out, "You may now run 'ddev start'")
+		_ = os.Remove(filepath.Join(tmpdir, ".ddev", "config.yaml"))
 	}
 
 	// test some invalid project names.
@@ -282,6 +289,7 @@ func TestConfigInvalidProjectname(t *testing.T) {
 		assert.Error(err)
 		assert.Contains(out, fmt.Sprintf("%s is not a valid project name", projName))
 		assert.NotContains(out, "You may now run 'ddev start'")
+		_ = os.Remove(filepath.Join(tmpdir, ".ddev", "config.yaml"))
 	}
 }
 

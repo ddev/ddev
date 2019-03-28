@@ -2,6 +2,8 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mattn/go-isatty"
 	"io/ioutil"
 	"os"
@@ -95,7 +97,9 @@ type DdevApp struct {
 	Commands              map[string][]Command `yaml:"hooks,omitempty"`
 	UploadDir             string               `yaml:"upload_dir,omitempty"`
 	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
-	OmitContainers        []string             `yaml:"omit_containers,omitempty"`
+	OmitContainers        []string             `yaml:"omit_containers,omitempty,flow"`
+	HostDBPort            string               `yaml:"host_db_port,omitempty"`
+	HostWebserverPort     string               `yaml:"host_webserver_port,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -183,7 +187,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		appDesc["dbinfo"] = dbinfo
 
 		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("mailhog")
-		if !util.ArrayContainsString(app.OmitContainers, "dba") {
+		if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
 			appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("dba")
 		}
 	}
@@ -208,14 +212,14 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 
 // GetPublishedPort returns the host-exposed public port of a container.
 func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
-	dbContainer, err := app.FindContainerByType(serviceName)
-	if err != nil {
+	container, err := app.FindContainerByType(serviceName)
+	if err != nil || container == nil {
 		return -1, fmt.Errorf("Failed to find container of type %s: %v", serviceName, err)
 	}
 
 	privatePort, _ := strconv.ParseInt(appports.GetPort(serviceName), 10, 16)
 
-	publishedPort := dockerutil.GetPublishedPort(privatePort, *dbContainer)
+	publishedPort := dockerutil.GetPublishedPort(privatePort, *container)
 	return publishedPort, nil
 }
 
@@ -665,12 +669,18 @@ func (app *DdevApp) Start() error {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
 	}
 
+	// Make sure that any ports allocated are available.
+	err = app.CheckAndReserveHostPorts()
+	if err != nil {
+		return err
+	}
+
 	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
 	}
 
-	if !util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent") {
+	if !nodeps.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent") {
 		err = app.EnsureSSHAgentContainer()
 		if err != nil {
 			return err
@@ -917,6 +927,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_BGSYNCIMAGE":              app.BgsyncImage,
 		"DDEV_APPROOT":                  app.AppRoot,
+		"DDEV_HOST_DB_PORT":             app.HostDBPort,
+		"DDEV_HOST_WEBSERVER_PORT":      app.HostWebserverPort,
 		"DDEV_DOCROOT":                  app.Docroot,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
@@ -1183,6 +1195,11 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 		if err = app.RemoveHostsEntries(); err != nil {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
+		app.RemoveGlobalProjectInfo()
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		if err != nil {
+			util.Warning("could not WriteGlobalConfig: %v", err)
+		}
 
 		for _, volName := range []string{app.Name + "-mariadb", app.GetUnisonCatalogVolName(), app.GetWebcacheVolName()} {
 			err = dockerutil.RemoveVolume(volName)
@@ -1195,6 +1212,11 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 
 	err = StopRouterIfNoContainers()
 	return err
+}
+
+// RemoveReservedHostPorts() deletes the app from the UsedHostPorts
+func (app *DdevApp) RemoveGlobalProjectInfo() {
+	delete(globalconfig.DdevGlobalConfig.ProjectList, app.Name)
 }
 
 // GetHTTPURL returns the HTTP URL for an app.

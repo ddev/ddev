@@ -126,6 +126,8 @@ func TestMain(m *testing.M) {
 
 	// Ensure the ddev directory is created before tests run.
 	_ = globalconfig.GetGlobalDdevDir()
+	globalConfigFile := globalconfig.GetGlobalConfigPath()
+	_ = os.Rename(globalConfigFile, globalConfigFile+".bak")
 
 	// Since this may be first time ddev has been used, we need the
 	// ddev_default network available.
@@ -226,6 +228,9 @@ func TestMain(m *testing.M) {
 		site.Cleanup()
 	}
 
+	_ = os.Remove(globalConfigFile)
+	_ = os.Rename(globalConfigFile+".bak", globalConfigFile)
+
 	os.Exit(testRun)
 }
 
@@ -259,6 +264,18 @@ func TestDdevStart(t *testing.T) {
 		check, err := testcommon.ContainerCheck(containerName, "running")
 		assert.NoError(err)
 		assert.True(check, "Container check on %s failed", containerType)
+	}
+
+	if util.IsCommandAvailable("mysql") {
+		dbPort, err := app.GetPublishedPort("db")
+		assert.NoError(err)
+
+		dockerIP, _ := dockerutil.GetDockerIP()
+		out, err := exec.RunCommand("mysql", []string{"--user=db", "--password=db", "--port=" + strconv.Itoa(dbPort), "--database=db", "--host=" + dockerIP, "-e", "SELECT 1;"})
+		assert.NoError(err)
+		assert.Contains(out, "1")
+	} else {
+		fmt.Print("TestDddevStart skipping check for local mysql connection because mysql command not in path")
 	}
 
 	err = app.Down(true, false)
@@ -898,6 +915,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			assert.NoError(err, "failed ImageURI response on project %s: %v", site.Name, err)
 			assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
 		}
+
+		// Make sure we can do a simple hit against the host-mount of web container.
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetWebContainerDirectURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 
 		// We don't want all the projects running at once.
 		err = app.Down(true, false)
@@ -1735,6 +1755,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	// by ensuring any associated database files get cleaned up as well.
 	err = app.Down(true, false)
 	assert.NoError(err)
+	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[app.Name])
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
 		_, err := constructContainerName(containerType, app)
@@ -2119,12 +2140,13 @@ func TestWebserverType(t *testing.T) {
 				t.Fatalf("app.StartAndWaitForSync failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
 			}
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectURL()+"/servertype.php")
-			assert.NoError(err)
+			require.NoError(t, err)
 
 			expectedServerType := "Apache/2"
 			if app.WebserverType == ddevapp.WebserverNginxFPM {
 				expectedServerType = "nginx"
 			}
+			require.NotEmpty(t, resp.Header["Server"])
 			require.NotEmpty(t, resp.Header["Server"][0])
 			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
 			assert.Contains(out, expectedServerType, "For app.WebserverType=%s phpinfo expected servertype.php to show %s", app.WebserverType, expectedServerType)
@@ -2139,7 +2161,6 @@ func TestWebserverType(t *testing.T) {
 			err = app.WriteConfig()
 			assert.NoError(err)
 		}
-
 		runTime()
 	}
 }
@@ -2368,6 +2389,84 @@ func TestWebcache(t *testing.T) {
 
 	runTime()
 	switchDir()
+}
+
+// TestPortSpecifications tests to make sure that one project can't step on the
+// ports used by another
+func TestPortSpecifications(t *testing.T) {
+	assert := asrt.New(t)
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprint("TestPortSpecifications"))
+	defer runTime()
+	testDir, _ := os.Getwd()
+
+	site0 := TestSites[0]
+	switchDir := site0.Chdir()
+	defer switchDir()
+
+	nospecApp := ddevapp.DdevApp{}
+	err := nospecApp.Init(site0.Dir)
+	assert.NoError(err)
+	err = nospecApp.WriteConfig()
+	require.NoError(t, err)
+	// Since host ports were not explicitly set in nospecApp, they shouldn't be in globalconfig.
+	require.Empty(t, globalconfig.DdevGlobalConfig.ProjectList[nospecApp.Name].UsedHostPorts)
+
+	err = nospecApp.Start()
+	assert.NoError(err)
+	//nolint: errcheck
+	defer nospecApp.Down(true, false)
+
+	// Now that we have a working nospecApp with unspecified ephemeral ports, test that we
+	// can't use those ports while nospecApp is running
+
+	_ = os.Chdir(testDir)
+	ddevDir, _ := filepath.Abs("./testdata/TestPortSpecifications/.ddev")
+
+	specAppPath := testcommon.CreateTmpDir("specapp")
+	//nolint: errcheck
+	defer os.RemoveAll(specAppPath)
+	err = fileutil.CopyDir(ddevDir, filepath.Join(specAppPath, ".ddev"))
+	assert.NoError(err)
+
+	specAPP, err := ddevapp.NewApp(specAppPath, false, "")
+	assert.NoError(err)
+
+	// It should be able to WriteConfig and Start with the configured host ports it came up with
+	err = specAPP.WriteConfig()
+	assert.NoError(err)
+	err = specAPP.Start()
+	assert.NoError(err)
+	//nolint: errcheck
+	err = specAPP.Down(false, false)
+	require.NoError(t, err)
+	// Verify that DdevGlobalConfig got updated properly
+	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name])
+	assert.NotEmpty(globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name].UsedHostPorts)
+
+	// However, if we change change the name to make it appear to be a
+	// different project, we should not be able to config or start
+	conflictApp, err := ddevapp.NewApp(specAppPath, false, "")
+	assert.NoError(err)
+	conflictApp.Name = "conflictapp"
+
+	err = conflictApp.WriteConfig()
+	assert.Error(err)
+	err = conflictApp.Start()
+	assert.Error(err)
+
+	// Now delete the specAPP and we should be able to use the conflictApp
+	err = specAPP.Down(true, false)
+	assert.NoError(err)
+	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name])
+
+	err = conflictApp.WriteConfig()
+	assert.NoError(err)
+	err = conflictApp.Start()
+	assert.NoError(err)
+	//nolint: errcheck
+	defer conflictApp.Down(true, false)
+	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name])
+	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name].UsedHostPorts)
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app

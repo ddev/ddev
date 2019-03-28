@@ -2,14 +2,17 @@ package globalconfig
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"net"
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -21,19 +24,27 @@ var (
 	DdevGlobalConfig GlobalConfig
 )
 
+func init() {
+	DdevGlobalConfig.ProjectList = make(map[string]*ProjectInfo)
+}
+
+type ProjectInfo struct {
+	UsedHostPorts []string `yaml:"used_host_ports,omitempty,flow"`
+}
+
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	APIVersion           string   `yaml:"APIVersion"`
-	OmitContainers       []string `yaml:"omit_containers"`
-	InstrumentationOptIn bool     `yaml:"instrumentation_opt_in"`
-	LastUsedVersion      string   `yaml:"last_used_version"`
-	DeveloperMode        bool     `yaml:"developer_mode,omitempty"`
+	APIVersion           string                  `yaml:"APIVersion"`
+	OmitContainers       []string                `yaml:"omit_containers,flow"`
+	InstrumentationOptIn bool                    `yaml:"instrumentation_opt_in"`
+	LastUsedVersion      string                  `yaml:"last_used_version"`
+	ProjectList          map[string]*ProjectInfo `yaml:"project_info"`
+	DeveloperMode        bool                    `yaml:"developer_mode,omitempty"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
 func GetGlobalConfigPath() string {
 	return filepath.Join(GetGlobalDdevDir(), DdevGlobalConfigName)
-
 }
 
 // ValidateGlobalConfig validates global config
@@ -154,4 +165,75 @@ func GetValidOmitContainers() []string {
 	}
 
 	return s
+}
+
+// HostPortIsAllocated returns the project name that has allocated
+// the port, or empty string.
+func HostPostIsAllocated(port string) string {
+	for project, item := range DdevGlobalConfig.ProjectList {
+		if nodeps.ArrayContainsString(item.UsedHostPorts, port) {
+			return project
+		}
+	}
+	return ""
+}
+
+// Check GlobalDdev UsedHostPorts to see if requested ports are available.
+func CheckHostPortsAvailable(projectName string, ports []string) error {
+	for _, port := range ports {
+		allocatedProject := HostPostIsAllocated(port)
+		if allocatedProject != projectName && allocatedProject != "" {
+			return fmt.Errorf("host port %s has already been allocated to project %s", port, allocatedProject)
+		}
+	}
+	return nil
+}
+
+// GetFreePort gets an ephemeral port currently available, but also not
+// listed in DdevGlobalConfig.UsedHostPorts
+func GetFreePort(localIPAddr string) (string, error) {
+	// Limit tries arbitrarily. It will normally succeed on first try.
+	for i := 1; i < 1000; i++ {
+		// From https://github.com/phayes/freeport/blob/master/freeport.go#L8
+		// Ignores that the actual listener may be on a docker toolbox interface,
+		// so this is just a heuristic.
+		addr, err := net.ResolveTCPAddr("tcp", "127.0.0.1:0")
+		if err != nil {
+			return "", err
+		}
+
+		l, err := net.ListenTCP("tcp", addr)
+		if err != nil {
+			return "", err
+		}
+		port := strconv.Itoa(l.Addr().(*net.TCPAddr).Port)
+		// nolint: errcheck
+		l.Close()
+
+		// In the case of Docker Toolbox, the actual listening IP may be something else
+		// like 192.168.99.100, so check that to make sure it's not currently occupied.
+		conn, _ := net.Dial("tcp", localIPAddr+":"+port)
+		if conn != nil {
+			continue
+		}
+
+		if HostPostIsAllocated(port) != "" {
+			continue
+		}
+		return port, nil
+	}
+	return "-1", fmt.Errorf("GetFreePort() failed to find a free port")
+
+}
+
+// ReservePorts() adds the ProjectInfo if necessary and assigns the reserved ports
+func ReservePorts(projectName string, ports []string) error {
+	// If the project doesn't exist, add it.
+	_, ok := DdevGlobalConfig.ProjectList[projectName]
+	if !ok {
+		DdevGlobalConfig.ProjectList[projectName] = &ProjectInfo{}
+	}
+	DdevGlobalConfig.ProjectList[projectName].UsedHostPorts = ports
+	err := WriteGlobalConfig(DdevGlobalConfig)
+	return err
 }

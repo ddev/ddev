@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/drud/ddev/pkg/nodeps"
 	"math/rand"
 	"os"
 	osexec "os/exec"
@@ -88,30 +89,14 @@ func AskForConfirmation() bool {
 	nokayResponses := []string{"n", "no", ""}
 	responseLower := strings.ToLower(response)
 
-	if ArrayContainsString(okayResponses, responseLower) {
+	if nodeps.ArrayContainsString(okayResponses, responseLower) {
 		return true
-	} else if ArrayContainsString(nokayResponses, responseLower) {
+	} else if nodeps.ArrayContainsString(nokayResponses, responseLower) {
 		return false
 	} else {
 		output.UserOut.Println("Please type yes or no and then press enter:")
 		return AskForConfirmation()
 	}
-}
-
-// ArrayContainsString returns true if slice contains element
-func ArrayContainsString(slice []string, element string) bool {
-	return !(posString(slice, element) == -1)
-}
-
-// posString returns the first index of element in slice.
-// If slice does not contain element, returns -1.
-func posString(slice []string, element string) int {
-	for index, elem := range slice {
-		if elem == element {
-			return index
-		}
-	}
-	return -1
 }
 
 // MapKeysToArray takes the keys of the map and turns them into a string array

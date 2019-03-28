@@ -37,13 +37,10 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]")
 
-	found, err := fileutil.FgrepStringInFile(configFile, "\ninstrumentation_opt_in: false")
+	err = globalconfig.ReadGlobalConfig()
 	assert.NoError(err)
-	assert.True(found)
-	found, err = fileutil.FgrepStringInFile(configFile, "\n- dba")
-	assert.NoError(err)
-	assert.True(found)
-	found, err = fileutil.FgrepStringInFile(configFile, "\n- ddev-ssh-agent")
-	assert.NoError(err)
-	assert.True(found)
+	assert.False(globalconfig.DdevGlobalConfig.InstrumentationOptIn)
+	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainers, "ddev-ssh-agent")
+	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainers, "dba")
+	assert.Len(globalconfig.DdevGlobalConfig.OmitContainers, 2)
 }

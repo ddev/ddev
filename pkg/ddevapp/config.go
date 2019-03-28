@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"html/template"
 	"io/ioutil"
 	"os"
@@ -142,6 +143,13 @@ func (app *DdevApp) WriteConfig() error {
 		appcopy.BgsyncImage = ""
 	}
 
+	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
+	// accidentally get used for other projects.
+	err := app.CheckAndReserveHostPorts()
+	if err != nil {
+		return err
+	}
+
 	// Don't write default working dir values to config
 	defaults := appcopy.DefaultWorkingDirMap()
 	for service, defaultWorkingDir := range defaults {
@@ -150,7 +158,7 @@ func (app *DdevApp) WriteConfig() error {
 		}
 	}
 
-	err := PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
+	err = PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
 	if err != nil {
 		return err
 	}
@@ -189,6 +197,27 @@ func (app *DdevApp) WriteConfig() error {
 	}
 
 	return nil
+}
+
+// CheckAndReserveHostPorts checks that configured host ports are not already
+// reserved by another project.
+func (app *DdevApp) CheckAndReserveHostPorts() error {
+	portsToReserve := []string{}
+	if app.HostDBPort != "" {
+		portsToReserve = append(portsToReserve, app.HostDBPort)
+	}
+	if app.HostWebserverPort != "" {
+		portsToReserve = append(portsToReserve, app.HostWebserverPort)
+	}
+	if len(portsToReserve) > 0 {
+		err := globalconfig.CheckHostPortsAvailable(app.Name, portsToReserve)
+		if err != nil {
+			return err
+		}
+	}
+	err := globalconfig.ReservePorts(app.Name, portsToReserve)
+
+	return err
 }
 
 // ReadConfig reads project configuration, falling
@@ -347,12 +376,12 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !IsValidOmitContainers(app.OmitContainers) {
-		return fmt.Errorf("Invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(InvalidOmitContainers)
+		return fmt.Errorf("invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
 	// Validate mariadb version
 	if !IsValidMariaDBVersion(app.MariaDBVersion) {
-		return fmt.Errorf("Invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
+		return fmt.Errorf("invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
 	}
 
 	if app.WebcacheEnabled && app.NFSMountEnabled {
@@ -492,6 +521,7 @@ type composeYAMLVars struct {
 	WebcacheEnabled      bool
 	NFSMountEnabled      bool
 	NFSSource            string
+	DockerIP             string
 	IsWindowsFS          bool
 }
 
@@ -523,8 +553,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DdevGenerated:        DdevFileSignature,
 		HostDockerInternalIP: hostDockerInternalIP,
 		ComposeVersion:       version.DockerComposeFileFormatVersion,
-		OmitDBA:              util.ArrayContainsString(app.OmitContainers, "dba"),
-		OmitSSHAgent:         util.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
+		OmitDBA:              nodeps.ArrayContainsString(app.OmitContainers, "dba"),
+		OmitSSHAgent:         nodeps.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
 		WebcacheEnabled:      app.WebcacheEnabled,
 		NFSMountEnabled:      app.NFSMountEnabled,
 		NFSSource:            "",
@@ -545,6 +575,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			// and completely chokes in C:\Users\rfay...
 			templateVars.NFSSource = dockerutil.MassageWIndowsNFSMount(app.AppRoot)
 		}
+	}
+	templateVars.DockerIP, err = dockerutil.GetDockerIP()
+	if err != nil {
+		return "", err
 	}
 
 	err = templ.Execute(&doc, templateVars)

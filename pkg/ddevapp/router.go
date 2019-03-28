@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/netutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"html/template"
 	"os"
 	"path"
@@ -239,7 +240,7 @@ func CheckRouterPorts() error {
 	newRouterPorts := determineRouterPorts()
 
 	for _, port := range newRouterPorts {
-		if util.ArrayContainsString(existingExposedPorts, port) {
+		if nodeps.ArrayContainsString(existingExposedPorts, port) {
 			continue
 		}
 		if netutil.IsPortActive(port) {
