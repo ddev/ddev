@@ -10,7 +10,10 @@ These are quickstart instructions for WordPress, Drupal 6, Drupal 7, Drupal 8, T
 **Prerequisites:** Before you start, follow the [installation instructions](../index.md#installation). Make sure to [check the system requirements](../index.md#system-requirements), you will need *docker* and *docker-compose* to use ddev.
 
 ### WordPress Quickstart
-To get started using ddev with a WordPress project, clone the project's repository and checkout its directory.
+
+**Git Clone Example**
+
+To get started using ddev with an existing WordPress project, clone the project's repository and checkout its directory:
 
 ```
 git clone https://github.com/example-user/example-wordpress-site
@@ -39,6 +42,24 @@ Your project can be reached at: http://example-wordpress-site.ddev.local and htt
 ```
 
 Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
+
+**Composer Setup Example**
+
+```
+mkdir my-wordpress-site
+cd my-wordpress-site
+ddev composer create wordpress/skeleton --no-interaction
+ddev config --docroot=wp --project-type=wordpress
+ddev rm
+ddev start
+```
+
+When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
+
+```
+Successfully started my-wordpress-site
+Your application can be reached at: http://my-wordpress-site.ddev.local
+```
 
 ### Drupal 6/7 Quickstart
 
@@ -89,24 +110,10 @@ ddev composer install
 ```
 mkdir my-drupal8-site
 cd my-drupal8-site
-ddev config --project-type php --php-version 7.1
+ddev config --project-type php
 ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction
-```
-
-_Find more information [on composer and how to use it](https://github.com/drupal-composer/drupal-project)._
-
-The next step is to configure ddev. In your project's working directory, enter the following command:
-
-```
-ddev config
-```
-
-_Note: ddev config will prompt you for a project name, docroot, and project type._
-
-After `ddev config`, you're ready to start running your project. Run ddev using:
-
-```
-ddev start
+ddev config --project-type drupal8
+ddev rm && ddev start
 ```
 
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
@@ -133,28 +140,10 @@ ddev composer install
 ```
 mkdir my-typo3-site
 cd my-typo3-site
-ddev config --project-type php --php-version 7.2
-ddev composer create typo3/cms-base-distribution ^9
-```
-
-_Find more information [on composer and how to use it](https://composer.typo3.org)._
-
-From here we can start setting up ddev. In your project's working directory, enter the command:
-
-```
-ddev config
-```
-
-_Note: ddev config will prompt you for a project name, docroot, and project type._
-
-* The project name will be part of the URL, so make sure to avoid whitespace, underscores and special characters to avoid problems down the road.
-* After the command runs through, prepare to edit the generated config.yaml file:
-** Review the PHP version. Available options: 5.6, 7.0, 7.1, 7.2 and 7.3.
-** Review the ports the system wants to use. If you run a local stack already, you will need to adjust here, or shut down your local stack. See [additional troubleshooting information here](https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen).
-
-After you've run `ddev config`, you're ready to start running your project. To start running ddev, simply enter:
-
-```
+ddev config --project-type php
+ddev composer create typo3/cms-base-distribution ^9 --no-interaction
+ddev config --project-type typo3
+ddev rm
 ddev start
 ```
 
