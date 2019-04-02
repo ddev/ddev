@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/version"
 	"os"
 	"strings"
 
@@ -376,8 +377,14 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.HostDBPort = hostDBPortArg
 	}
 
+	// If the mariaDBVersionArg is set, use it
+	// and set the appropriate app.DBImage... but only if there is not
+	// also a dbImageArg
 	if mariaDBVersionArg != "" {
 		app.MariaDBVersion = mariaDBVersionArg
+		if dbImageArg == "" {
+			app.DBImage = version.GetDBImage(app.MariaDBVersion)
+		}
 	}
 
 	if cmd.Flag("nfs-mount-enabled").Changed {
