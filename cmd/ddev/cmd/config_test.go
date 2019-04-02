@@ -334,10 +334,31 @@ func TestConfigSubdir(t *testing.T) {
 	assert.Contains(out, filepath.Join(tmpdir, ".ddev", "config.yaml"))
 }
 
+/**
+  	Overall expected behavior of `ddev config` and config.yaml is this:
+	* If no config.yaml exists when `ddev config` is run, a new one will be created with default
+		values except whatever is specified in the ddev config args.
+	* If an item exists in config.yaml, it will be rewritten there after a `ddev config` action
+	* If the `ddev config` action overrides explicitly the item in config.yaml, the config.yaml
+		will be rewritten with the updated value and no other changes.
+
+	In the case of mariadb_version and dbimage there's quite a lot of overlap sadly, but
+	the bottom line is that dbimage must win any battles, and if specified either via
+	`ddev config --db-image` or in the config.yaml, it wins when the dbimage is chosen for the
+	ddevapp. So:
+	* `ddev config --mariadb-version` must
+		* Never add a dbimage line to the config.yaml
+		* Add or update the mariadb_version line in config.yaml
+	* `ddev config --db-image` must
+		* Not change the mariadb_version (although people may be broken if they do it wrong)
+		* Add a line specifying the dbimage
+	* ddevapp.NewApp() must:
+		* Set the dbimage based on any dbimage found in the config.yaml if there is one
+		* Otherwise (default case) set it based on mariadb_version and the default dbimage.
+*/
 // TestConfigMariaDBVersion checks to make sure that both
 // ddev config --mariadb-version and ddev config --dbimage behave correctly,
 // either separately or together.
-// TODO: Explain correct behavior right here.
 func TestConfigMariaDBVersion(t *testing.T) {
 
 	assert := asrt.New(t)
@@ -361,15 +382,27 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	// on the default and the mariadb_version
 	for _, cmdMariaDBVersion := range versionsToTest {
 		_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
-		configArgs := append(args, cmdMariaDBVersion)
+		configArgs := append(args, cmdMariaDBVersion, "--project-name", "noconfigyet-"+cmdMariaDBVersion)
 		out, err := exec.RunCommand(DdevBin, configArgs)
 		assert.NoError(err)
 		assert.Contains(out, "You may now run 'ddev start'")
-		app, err := ddevapp.NewApp(tmpDir, false, "")
+
+		// First test the bare explicit values found in the config.yaml,
+		// without the NewApp adjustments
+		app := &ddevapp.DdevApp{}
+		assert.NoError(err)
+		err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
+		assert.NoError(err)
+		assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
+		assert.Empty(app.DBImage)
+
+		// Now use NewApp() to load, so that we get the full logic of that function.
+		app, err = ddevapp.NewApp(tmpDir, false, "")
 		//nolint: errcheck
 		defer app.Down(true, false)
 		assert.NoError(err)
 		_, err = app.ReadConfig(false)
+		assert.NoError(err)
 		assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
 		assert.Equal(version.DBImg+":"+version.BaseDBTag+"-"+cmdMariaDBVersion, app.DBImage)
 	}
@@ -382,18 +415,99 @@ func TestConfigMariaDBVersion(t *testing.T) {
 
 			err := fileutil.CopyFile(filepath.Join(testDir, "testdata/TestConfigMariaDBVersion", "config.yaml."+configMariaDBVersion), filepath.Join(tmpDir, ".ddev", "config.yaml"))
 			assert.NoError(err)
-			configArgs := append(args, cmdMariaDBVersion)
+			configArgs := append(args, cmdMariaDBVersion, "--project-name", "hasconfig-"+cmdMariaDBVersion)
 			out, err := exec.RunCommand(DdevBin, configArgs)
 			assert.NoError(err)
 			assert.Contains(out, "You may now run 'ddev start'")
-			app, err := ddevapp.NewApp(tmpDir, false, "")
+
+			// First test the bare explicit values found in the config.yaml,
+			// without the NewApp adjustments
+			app := &ddevapp.DdevApp{}
+			assert.NoError(err)
+			err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
+			assert.NoError(err)
+			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
+			assert.Empty(app.DBImage)
+
+			// Now test with the logical additions made by NewApp()
+			app, err = ddevapp.NewApp(tmpDir, false, "")
 			//nolint: errcheck
 			defer app.Down(true, false)
 			assert.NoError(err)
 			_, err = app.ReadConfig(false)
+			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
 			assert.Equal(version.DBImg+":"+version.BaseDBTag+"-"+cmdMariaDBVersion, app.DBImage)
 		}
 	}
 
+	// If we start with a config.yaml specifying a dbimage, the mariadb_version
+	// should be set but the dbimage should then override all other values
+	for _, cmdMariaDBVersion := range versionsToTest {
+		for _, configMariaDBVersion := range versionsToTest {
+			_ = os.Remove(filepath.Join(tmpDir, ".ddev", "config.yaml"))
+
+			err := fileutil.CopyFile(filepath.Join(testDir, "testdata/TestConfigMariaDBVersion", "config.yaml.imagespec."+configMariaDBVersion), filepath.Join(tmpDir, ".ddev", "config.yaml"))
+			assert.NoError(err)
+			configArgs := append(args, cmdMariaDBVersion, "--project-name", "imagespec-"+cmdMariaDBVersion)
+			out, err := exec.RunCommand(DdevBin, configArgs)
+			assert.NoError(err)
+			assert.Contains(out, "You may now run 'ddev start'")
+
+			// First test the bare explicit values found in the config.yaml,
+			// without the NewApp adjustments
+			app := &ddevapp.DdevApp{}
+			assert.NoError(err)
+			err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
+			assert.NoError(err)
+			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
+			assert.Equal(version.DBImg+":v1.6.0-"+configMariaDBVersion, app.DBImage)
+
+			// Now test with NewApp's additions, which should leave app.DBImage alone.
+			app, err = ddevapp.NewApp(tmpDir, false, "")
+			//nolint: errcheck
+			defer app.Down(true, false)
+			assert.NoError(err)
+			_, err = app.ReadConfig(false)
+			assert.NoError(err)
+			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
+			assert.Equal(version.DBImg+":v1.6.0-"+configMariaDBVersion, app.DBImage)
+		}
+	}
+
+	// If we specify both the --mariadb-version and the --dbimage flags,
+	// both should be set, but the actual NewApp() will result in
+	// both items, and an app.Start() would use the dbimage specified.
+	for _, cmdMariaDBVersion := range versionsToTest {
+		for _, cmdDBImageVersion := range versionsToTest {
+			_ = os.Remove(filepath.Join(tmpDir, ".ddev", "config.yaml"))
+
+			configArgs := append(args, cmdMariaDBVersion)
+			configArgs = append(configArgs, []string{"--db-image", "drud/ddev-dbserver:v1.6.0-" + cmdDBImageVersion}...)
+			configArgs = append(configArgs, "--project-name", "both-args-"+cmdMariaDBVersion)
+
+			out, err := exec.RunCommand(DdevBin, configArgs)
+			assert.NoError(err)
+			assert.Contains(out, "You may now run 'ddev start'")
+
+			// First test the bare explicit values found in the config.yaml,
+			// without the NewApp adjustments
+			app := &ddevapp.DdevApp{}
+			assert.NoError(err)
+			err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
+			assert.NoError(err)
+			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
+			assert.Equal("drud/ddev-dbserver:v1.6.0-"+cmdDBImageVersion, app.DBImage)
+
+			// Now test with NewApp()'s adjustments
+			app, err = ddevapp.NewApp(tmpDir, false, "")
+			//nolint: errcheck
+			defer app.Down(true, false)
+			assert.NoError(err)
+			_, err = app.ReadConfig(false)
+			assert.NoError(err)
+			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
+			assert.Equal(version.DBImg+":v1.6.0-"+cmdDBImageVersion, app.DBImage)
+		}
+	}
 }
