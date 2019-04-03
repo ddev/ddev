@@ -357,6 +357,12 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		util.Failed("failed to run ConfigFileOverrideAction: %v", err)
 	}
 
+	// We don't want to write out dbimage if it's just the one that goes with
+	// the mariadb_version.
+	if app.DBImage == version.GetDBImage(app.MariaDBVersion) {
+		app.DBImage = ""
+	}
+
 	if phpVersionArg != "" {
 		app.PHPVersion = phpVersionArg
 	}
@@ -378,13 +384,8 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	// If the mariaDBVersionArg is set, use it
-	// and set the appropriate app.DBImage... but only if there is not
-	// also a dbImageArg
 	if mariaDBVersionArg != "" {
 		app.MariaDBVersion = mariaDBVersionArg
-		if dbImageArg == "" {
-			app.DBImage = version.GetDBImage(app.MariaDBVersion)
-		}
 	}
 
 	if cmd.Flag("nfs-mount-enabled").Changed {
