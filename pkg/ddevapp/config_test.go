@@ -670,3 +670,53 @@ func TestConfigLoadingOrder(t *testing.T) {
 	assert.Equal("config.yaml", app.APIVersion)
 
 }
+
+func TestPkgConfigMariaDBVersion(t *testing.T) {
+	// NewApp from scratch
+	// NewApp with config.yaml with mariadb_version and no dbimage
+	// NewApp with config.yaml with dbimage and no mariadb_version
+	// NewApp with both dbimage and
+	assert := asrt.New(t)
+
+	testDir, _ := os.Getwd()
+
+	// Create a temporary directory and switch to it.
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpDir)
+	defer testcommon.Chdir(tmpDir)()
+
+	systemTempDir, _ := testcommon.OsTempDir()
+
+	targetBase := filepath.Join(systemTempDir, "TestPkgConfigMariaDBVersion")
+	_ = os.RemoveAll(targetBase)
+	err := fileutil.CopyDir(filepath.Join(testDir, "testdata", "TestPkgConfigMariaDBVersion"), targetBase)
+	require.NoError(t, err)
+
+	mariaDBVersions := []string{"10.1", "10.2"}
+	for _, v := range mariaDBVersions {
+		for _, configType := range []string{"dbimage", "mariadb-version"} {
+			app := &DdevApp{}
+			appRoot := filepath.Join(targetBase, configType+"-"+v)
+			err = app.LoadConfigYamlFile(filepath.Join(appRoot, ".ddev", "config.yaml"))
+			assert.NoError(err)
+			if configType == "dbimage" {
+				assert.Equal("somedbimage:"+v, app.DBImage)
+			}
+			if configType == "mariadb-version" {
+				assert.Equal(v, app.MariaDBVersion)
+			}
+
+			app, err = NewApp(appRoot, false, "")
+			assert.NoError(err)
+			if configType == "dbimage" {
+				assert.Equal("somedbimage:"+v, app.DBImage, "NewApp() failed to respect existing dbimage")
+			}
+			if configType == "mariadb-version" {
+				assert.Equal(v, app.MariaDBVersion)
+				assert.Equal(version.GetDBImage(v), app.DBImage, "dbimage derived from app.MariaDBVersion was incorrect")
+			}
+
+		}
+	}
+
+}
