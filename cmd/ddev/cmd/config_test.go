@@ -383,6 +383,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	for _, cmdMariaDBVersion := range versionsToTest {
 		_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
 		configArgs := append(args, cmdMariaDBVersion, "--project-name", "noconfigyet-"+cmdMariaDBVersion)
+		ddevCmd := "ddev " + strings.Join(configArgs, " ")
 		out, err := exec.RunCommand(DdevBin, configArgs)
 		assert.NoError(err)
 		assert.Contains(out, "You may now run 'ddev start'")
@@ -394,7 +395,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 		err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 		assert.NoError(err)
 		assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
-		assert.Empty(app.DBImage)
+		assert.Empty(app.DBImage, "generated config.yaml dbimage should have been empty for command '%s'", ddevCmd)
 
 		// Now use NewApp() to load, so that we get the full logic of that function.
 		app, err = ddevapp.NewApp(tmpDir, false, "")
@@ -461,7 +462,9 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
-			assert.Equal(version.DBImg+":v1.6.0-"+configMariaDBVersion, app.DBImage)
+			// The ddev config --mariadb-version should *not* have changed the dbimg
+			// which was in the config.yaml
+			assert.Equal("somerandomdbimg:v0.9999-"+configMariaDBVersion, app.DBImage, "ddev %s did not result in respect for existing configured dbimg", strings.Join(configArgs, " "))
 
 			// Now test with NewApp's additions, which should leave app.DBImage alone.
 			app, err = ddevapp.NewApp(tmpDir, false, "")
@@ -471,7 +474,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			_, err = app.ReadConfig(false)
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
-			assert.Equal(version.DBImg+":v1.6.0-"+configMariaDBVersion, app.DBImage)
+			assert.Equal("somerandomdbimg:v0.9999-"+configMariaDBVersion, app.DBImage)
 		}
 	}
 
