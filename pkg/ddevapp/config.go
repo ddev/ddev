@@ -67,6 +67,9 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	// Set defaults.
 	app := &DdevApp{}
 
+	if !fileutil.FileExists(AppRoot) {
+		return app, fmt.Errorf("project root %s does not exist", AppRoot)
+	}
 	app.AppRoot = AppRoot
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.APIVersion = version.DdevVersion
@@ -78,6 +81,7 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 	app.MariaDBVersion = version.MariaDBDefaultVersion
+	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
 	app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
 	app.SetApptypeSettingsPaths()
