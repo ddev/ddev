@@ -43,4 +43,10 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainers, "ddev-ssh-agent")
 	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainers, "dba")
 	assert.Len(globalconfig.DdevGlobalConfig.OmitContainers, 2)
+
+	// Even though the global config is going to be deleted, make sure it's sane before leaving
+	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=\"\""}
+	_, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err)
+
 }

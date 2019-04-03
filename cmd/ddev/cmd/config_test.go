@@ -104,6 +104,9 @@ func TestConfigSetValues(t *testing.T) {
 		t.Errorf("Could not create docroot %s in %s", docroot, tmpdir)
 	}
 
+	err = os.Chdir(tmpdir)
+	assert.NoError(err)
+
 	// Build config args
 	projectName := "my-project-name"
 	projectType := ddevapp.AppTypeTYPO3

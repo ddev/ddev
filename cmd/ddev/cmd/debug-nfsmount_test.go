@@ -30,6 +30,10 @@ func TestDebugNFSMount(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 
+	// Running config creates a line in global config
+	//nolint: errcheck
+	defer exec.RunCommand("remove", []string{"--remove-data"})
+
 	// Test basic `ddev debug nfsmount`
 	args = []string{"debug", "nfsmount"}
 	out, err := exec.RunCommand(DdevBin, args)

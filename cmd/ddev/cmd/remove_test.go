@@ -73,6 +73,9 @@ func TestCmdRemoveMissingProjectDirectory(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
 	assert.NoError(err)
 
+	//nolint: errcheck
+	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", projectName})
+
 	_, err = exec.RunCommand(DdevBin, []string{"start"})
 	assert.NoError(err)
 

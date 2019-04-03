@@ -38,6 +38,9 @@ func TestComposeConfigCmd(t *testing.T) {
 	_, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(t, err)
 
+	//nolint: errcheck
+	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", "compose-config"})
+
 	// Ensure ddev debug compose-config works as expected
 	args = []string{"debug", "compose-config"}
 	out, err := exec.RunCommand(DdevBin, args)
