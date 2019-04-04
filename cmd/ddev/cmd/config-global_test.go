@@ -23,6 +23,11 @@ func TestCmdGlobalConfig(t *testing.T) {
 		err := os.Remove(configFile)
 		require.NoError(t, err)
 	}
+	// We need to make sure that the (corrupted, bogus) global config file is removed
+	// and then read (empty)
+	// nolint: errcheck
+	defer globalconfig.ReadGlobalConfig()
+	// nolint: errcheck
 	defer os.Remove(configFile)
 
 	// Look at initial config
@@ -45,8 +50,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Len(globalconfig.DdevGlobalConfig.OmitContainers, 2)
 
 	// Even though the global config is going to be deleted, make sure it's sane before leaving
-	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=\"\""}
+	args = []string{"config", "global", "--omit-containers", ""}
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-
 }

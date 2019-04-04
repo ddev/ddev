@@ -20,8 +20,7 @@ var configGlobalCommand *cobra.Command = &cobra.Command{
 	Use:     "global [flags]",
 	Short:   "Change global configuration",
 	Example: "ddev config global --instrumentation-opt-in=false\nddev config global --omit-containers=dba,ddev-ssh-agent",
-	//Args:    cobra.NoArgs,
-	Run: handleGlobalConfig,
+	Run:     handleGlobalConfig,
 }
 
 // handleGlobalConfig handles all the flag processing for global config
