@@ -89,6 +89,7 @@ func TestCmdStartMissingProjectDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	out, err = exec.RunCommand(DdevBin, []string{"start", projectName})
+
 	assert.Error(err, "Expected an error when starting project with no project directory")
 	assert.Contains(out, "ddev can no longer find your project files")
 }

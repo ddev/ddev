@@ -67,19 +67,28 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	// Set defaults.
 	app := &DdevApp{}
 
+	if !fileutil.FileExists(AppRoot) {
+		return app, fmt.Errorf("project root %s does not exist", AppRoot)
+	}
 	app.AppRoot = AppRoot
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.APIVersion = version.DdevVersion
+	app.Type = AppTypePHP
 	app.PHPVersion = PHPDefault
 	app.WebserverType = WebserverDefault
 	app.WebcacheEnabled = WebcacheEnabledDefault
+	app.NFSMountEnabled = NFSMountEnabledDefault
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
 	app.MariaDBVersion = version.MariaDBDefaultVersion
+	// Provide a default app name based on directory name
+	app.Name = filepath.Base(app.AppRoot)
+	app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
+	app.SetApptypeSettingsPaths()
 
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
-	app.DBImage = version.GetDBImage(app.MariaDBVersion)
+	app.DBImage = version.GetDBImage(version.MariaDBDefaultVersion)
 	app.DBAImage = version.GetDBAImage()
 	app.BgsyncImage = version.GetBgsyncImage()
 
@@ -90,6 +99,13 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		if err != nil {
 			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
 		}
+	}
+
+	// If the dbimage has not been overridden (because it takes precedence
+	// and the mariadb_version *has* been changed by config,
+	// use the related dbimage.
+	if app.DBImage == version.GetDBImage(version.MariaDBDefaultVersion) && app.MariaDBVersion != version.MariaDBDefaultVersion {
+		app.DBImage = version.GetDBImage(app.MariaDBVersion)
 	}
 
 	// Turn off webcache_enabled except if macOS/darwin or global `developer_mode: true`
@@ -220,8 +236,8 @@ func (app *DdevApp) CheckAndReserveHostPorts() error {
 	return err
 }
 
-// ReadConfig reads project configuration, falling
-// back to defaults for config values not defined in the read config file.
+// ReadConfig reads project configuration from the config.yaml file
+// It does not attempt to set default values; that's NewApp's job.
 func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 
 	// Load config.yaml
@@ -229,7 +245,6 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 	if err != nil {
 		return []string{}, fmt.Errorf("unable to load config file %s: %v", app.ConfigPath, err)
 	}
-	app.DBImage = "" // DBImage will be set below
 
 	configOverrides := []string{}
 	// Load config.*.y*ml after in glob order
@@ -247,31 +262,6 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 			}
 		}
 	}
-
-	// If any of these values aren't defined in the config file, set them to defaults.
-	if app.Name == "" {
-		app.Name = filepath.Base(app.AppRoot)
-	}
-
-	// If app.DBImage has not has been overridden, use it,
-	// Otherwise just use GetDBImage to get the correct image.
-	if app.DBImage == "" {
-		app.DBImage = version.GetDBImage(app.MariaDBVersion)
-	}
-
-	if WebcacheEnabledDefault == true {
-		app.WebcacheEnabled = WebcacheEnabledDefault
-	}
-
-	if NFSMountEnabledDefault == true {
-		app.NFSMountEnabled = NFSMountEnabledDefault
-	}
-
-	if app.OmitContainers == nil {
-		app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
-	}
-
-	app.SetApptypeSettingsPaths()
 
 	return append([]string{app.ConfigPath}, configOverrides...), nil
 }

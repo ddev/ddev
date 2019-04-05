@@ -71,7 +71,7 @@ func ReadGlobalConfig() error {
 			return nil
 		}
 		if os.IsNotExist(err) {
-			err := WriteGlobalConfig(DdevGlobalConfig)
+			err := WriteGlobalConfig(GlobalConfig{})
 			if err != nil {
 				return err
 			}
