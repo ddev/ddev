@@ -5,7 +5,7 @@
 - [ ] Create a tag for the new version according to the instructions below, initiating a tag build
 - [ ] Build and push artifacts with the .circleci/trigger_release.sh tool: `.circleci/trigger_release.sh --release-tag=v1.7.1 --circleci-token=circleToken900908b3443ea58316baf928b --github-token=githubPersonalToken853ae6f72c40525cd21036f742904a   --windows-signing-password=windowscodepassword | jq -r 'del(.circle_yml)'  | jq -r 'del(.circle_yml)'`
 - [ ] Add the commit list (`git log vXXX..vYYY --oneline --decorate=no`) to the release page
-- [ ] Update the `ddev` [Homebrew formula](https://github.com/drud/homebrew-ddev) with the source .tar.gz and SHA checksum of the tarball and the bottle builds and tarballs. The bottle builds for macOS (sierra) and x86_64_linux are built automatically by the CircleCI release build process.
+- [ ] Update the `ddev` [Homebrew formula](https://github.com/drud/homebrew-ddev) with the source .tar.gz and SHA checksum of the tarball and the bottle builds and tarballs. The bottles for macOS (sierra) and x86_64_linux are built and pushed to the release page automatically by the CircleCI release build process.
 - [ ] Test `brew upgrade ddev` and make sure ddev is the right version and behaves well
 - [ ] Test the Windows installer and confirm it's signed correctly
 - [ ] Update the release page with specifics about the current release
