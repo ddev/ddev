@@ -1,6 +1,6 @@
 <h1>Using the ddev command line interface (CLI)</h1>
 
-Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands. There are commands to configure a project, start, stop, remove, describe, etc. Each command also has help. For example, `ddev describe -h`.
+Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands. There are commands to configure a project, start, remove, describe, etc. Each command also has help. For example, `ddev describe -h`.
 
 
 ## Quickstart Guides
@@ -438,10 +438,6 @@ If you want to use your personal ssh keys within the web container, that's possi
 ### Log Access
 
 The `ddev logs` command allows you to easily view error logs from the web container (both nginx/apache and php-fpm logs are concatenated). To follow the log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. Similarly, `ddev logs -s db` will show logs from a running or stopped db container. 
-
-## Stopping a project
-
-To stop the development environment for a project run `ddev stop` in its working directory. You can also stop a particular project's environment from any directory by running `ddev stop <projectname>` or stop every running project via `ddev stop --all`.
 
 ## Removing a project
 
