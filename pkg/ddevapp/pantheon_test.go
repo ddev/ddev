@@ -173,6 +173,6 @@ func TestPantheonPull(t *testing.T) {
 	assert.NoError(err)
 	err = app.Pull(&provider, &PullOptions{})
 	assert.NoError(err)
-	err = app.Down(true, false)
+	err = app.Remove(true, false)
 	assert.NoError(err)
 }

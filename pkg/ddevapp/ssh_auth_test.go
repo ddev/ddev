@@ -109,7 +109,7 @@ func TestSSHAuth(t *testing.T) {
 	assert.Equal(stdout, "/root")
 	assert.NoError(err)
 
-	err = app.Down(true, false)
+	err = app.Remove(true, false)
 	assert.NoError(err)
 
 	// Now start it up again; we shouldn't need to add the key this time
@@ -125,7 +125,7 @@ func TestSSHAuth(t *testing.T) {
 	assert.Equal(stdout, "/root")
 	assert.NoError(err)
 
-	err = app.Down(true, false)
+	err = app.Remove(true, false)
 	assert.NoError(err)
 
 	runTime()

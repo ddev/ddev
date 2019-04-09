@@ -1147,7 +1147,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
-		err := app.Down(false, false)
+		err := app.Remove(false, false)
 		if err != nil {
 			return fmt.Errorf("Failed to rm  project for RestoreSnapshot: %v", err)
 		}
@@ -1166,8 +1166,8 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	return nil
 }
 
-// Down stops the docker containers for the project in current directory.
-func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
+// Remove stops the docker containers for the project in current directory.
+func (app *DdevApp) Remove(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
 
 	var err error

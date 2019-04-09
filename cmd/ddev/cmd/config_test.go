@@ -403,7 +403,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 		// Now use NewApp() to load, so that we get the full logic of that function.
 		app, err = ddevapp.NewApp(tmpDir, false, "")
 		//nolint: errcheck
-		defer app.Down(true, false)
+		defer app.Remove(true, false)
 		assert.NoError(err)
 		_, err = app.ReadConfig(false)
 		assert.NoError(err)
@@ -436,7 +436,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			// Now test with the logical additions made by NewApp()
 			app, err = ddevapp.NewApp(tmpDir, false, "")
 			//nolint: errcheck
-			defer app.Down(true, false)
+			defer app.Remove(true, false)
 			assert.NoError(err)
 			_, err = app.ReadConfig(false)
 			assert.NoError(err)
@@ -472,7 +472,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			// Now test with NewApp's additions, which should leave app.DBImage alone.
 			app, err = ddevapp.NewApp(tmpDir, false, "")
 			//nolint: errcheck
-			defer app.Down(true, false)
+			defer app.Remove(true, false)
 			assert.NoError(err)
 			_, err = app.ReadConfig(false)
 			assert.NoError(err)
@@ -508,7 +508,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			// Now test with NewApp()'s adjustments
 			app, err = ddevapp.NewApp(tmpDir, false, "")
 			//nolint: errcheck
-			defer app.Down(true, false)
+			defer app.Remove(true, false)
 			assert.NoError(err)
 			_, err = app.ReadConfig(false)
 			assert.NoError(err)
