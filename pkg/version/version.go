@@ -95,7 +95,7 @@ func GetVersionInfo() map[string]string {
 	var err error
 	versionInfo := make(map[string]string)
 
-	versionInfo["cli"] = DdevVersion
+	versionInfo["DDEV-Local version"] = DdevVersion
 	versionInfo["web"] = GetWebImage()
 	versionInfo["db"] = GetDBImage()
 	versionInfo["dba"] = GetDBAImage()
@@ -105,6 +105,7 @@ func GetVersionInfo() map[string]string {
 	versionInfo["commit"] = COMMIT
 	versionInfo["domain"] = DDevTLD
 	versionInfo["build info"] = BUILDINFO
+	versionInfo["os"] = runtime.GOOS
 	if versionInfo["docker"], err = GetDockerVersion(); err != nil {
 		versionInfo["docker"] = fmt.Sprintf("failed to GetDockerVersion(): %v", err)
 	}
