@@ -23,8 +23,8 @@ func TestCmdStart(t *testing.T) {
 	err := addSites()
 	require.NoError(t, err)
 
-	// Stop all sites.
-	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all"})
+	// Stop-Containers all sites.
+	_, err = exec.RunCommand(DdevBin, []string{"stop-containers", "--all"})
 	assert.NoError(err)
 
 	// Ensure all sites are started after ddev start --all.
@@ -37,8 +37,8 @@ func TestCmdStart(t *testing.T) {
 		assert.True(app.SiteStatus() == ddevapp.SiteRunning, "All sites should be running, but %s status: %s", app.GetName(), app.SiteStatus())
 	}
 
-	// Stop all sites.
-	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all"})
+	// Stop-containers all sites.
+	_, err = exec.RunCommand(DdevBin, []string{"stop-containers", "--all"})
 	assert.NoError(err)
 
 	// Build start command startMultipleArgs

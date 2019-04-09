@@ -451,7 +451,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	assert.Contains(stdout, "Extension 'xdebug' not present")
 
 	// Run with xdebug_enabled: true
-	//err = app.Stop()
 	testcommon.ClearDockerEnv()
 	app.XdebugEnabled = true
 	err = app.WriteConfig()
@@ -1416,7 +1415,7 @@ func TestDdevLogs(t *testing.T) {
 	assert.Contains(out, "MySQL init process done. Ready for start up.")
 
 	// Test that we can get logs when project is stopped also
-	err = app.Stop()
+	err = app.StopContainers()
 	assert.NoError(err)
 
 	stdout = util.CaptureUserOut()
@@ -1499,7 +1498,7 @@ func TestDdevStop(t *testing.T) {
 	//nolint: errcheck
 	defer app.Down(true, false)
 	require.NoError(t, err)
-	err = app.Stop()
+	err = app.StopContainers()
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
@@ -1589,7 +1588,7 @@ func TestDdevDescribe(t *testing.T) {
 	assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
 
 	// Now stop it and test behavior.
-	err = app.Stop()
+	err = app.StopContainers()
 	assert.NoError(err)
 
 	desc, err = app.Describe()
@@ -1637,7 +1636,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	// First, stop any sites that might be running
 	app := &ddevapp.DdevApp{}
 
-	// Stop all sites, which should get the router out of there.
+	// Remove/Down all sites, which should get the router out of there.
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
 
