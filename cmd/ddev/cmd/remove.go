@@ -24,16 +24,16 @@ var stopSSHAgent bool
 // DdevRemoveCmd represents the remove command
 var DdevRemoveCmd = &cobra.Command{
 	Use:     "remove [projectname ...]",
-	Aliases: []string{"rm"},
-	Short:   "Remove the development environment for a project.",
-	Long: `Remove the development environment for a project. You can run 'ddev remove'
+	Aliases: []string{"rm", "stop"},
+	Short:   "Remove the containers of a project. Does not lose or harm anything unless you add --remove-data.",
+	Long: `Remove the containers of a project. You can run 'ddev remove'
 from a project directory to remove that project, or you can remove projects in
 any directory by running 'ddev remove projectname [projectname ...]'.
 
 By default, remove is a non-destructive operation and will leave database
 contents intact. Remove never touches your code or files directories.
 
-To remove database contents, you may use "ddev remove --remove-data".
+To remove database contents, use "ddev remove --remove-data".
 
 To snapshot the database on remove, use "ddev remove --snapshot"; A snapshot is automatically created on
 "ddev remove --remove-data" unless you use "ddev remove --remove-data --omit-snapshot".
