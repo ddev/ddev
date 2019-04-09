@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -22,7 +23,7 @@ import (
 // TestSSHAuth tests basic ssh authentication
 func TestSSHAuth(t *testing.T) {
 	assert := asrt.New(t)
-	if util.IsDockerToolbox() {
+	if nodeps.IsDockerToolbox() {
 		t.Skip("Skpping TestSSHAuth because running on Docker toolbox")
 	}
 	testDir, _ := os.Getwd()

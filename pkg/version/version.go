@@ -2,8 +2,10 @@ package version
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/fsouza/go-dockerclient"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -176,5 +178,13 @@ func GetDockerVersion() (string, error) {
 		return "", err
 	}
 	DockerVersion = v.Get("Version")
+
+	if runtime.GOOS == "windows" {
+		if !nodeps.IsDockerToolbox() {
+			DockerVersion = DockerVersion + " (Docker for Windows)"
+		} else {
+			DockerVersion = DockerVersion + " (Docker Toolbox)"
+		}
+	}
 	return DockerVersion, nil
 }

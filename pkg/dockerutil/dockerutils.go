@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	exec2 "github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/version"
 	"io"
 	"log"
@@ -694,7 +694,7 @@ func GetHostDockerInternalIP() (string, error) {
 				hostDockerInternal = components[1]
 			}
 		}
-	} else if util.IsDockerToolbox() {
+	} else if nodeps.IsDockerToolbox() {
 		dockerIP, err := GetDockerIP()
 		if err != nil {
 			return "", err

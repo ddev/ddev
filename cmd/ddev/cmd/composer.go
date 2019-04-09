@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"runtime"
 	"strings"
 
@@ -43,7 +44,7 @@ ddev composer outdated --minor-only`,
 		if err != nil {
 			util.Failed("composer command failed: %v", err)
 		}
-		if runtime.GOOS == "windows" && !util.IsDockerToolbox() {
+		if runtime.GOOS == "windows" && !nodeps.IsDockerToolbox() {
 			replaceSimulatedLinks(app.AppRoot)
 		}
 

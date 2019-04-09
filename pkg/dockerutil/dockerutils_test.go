@@ -1,6 +1,7 @@
 package dockerutil_test
 
 import (
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -152,7 +153,7 @@ func TestContainerWait(t *testing.T) {
 	healthDetail, err := ContainerWait(15, labels)
 	assert.NoError(err)
 
-	if !util.IsDockerToolbox() {
+	if !nodeps.IsDockerToolbox() {
 		assert.Contains(healthDetail, "phpstatus: OK")
 	}
 

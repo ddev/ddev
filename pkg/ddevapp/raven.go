@@ -2,8 +2,8 @@ package ddevapp
 
 import (
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/ravenutils"
-	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/getsentry/raven-go"
 	"os"
@@ -17,7 +17,7 @@ func SetRavenBaseTags() {
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		dockerVersion, _ := version.GetDockerVersion()
 		composeVersion, _ := version.GetDockerComposeVersion()
-		isToolbox := util.IsDockerToolbox()
+		isToolbox := nodeps.IsDockerToolbox()
 
 		raven.SetRelease("ddev@" + version.COMMIT)
 
