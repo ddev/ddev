@@ -14,8 +14,8 @@ import (
 // DdevRestartCmd rebuilds an apps settings
 var DdevRestartCmd = &cobra.Command{
 	Use:   "restart",
-	Short: "Restart the development environment for a project.",
-	Long:  `Restart stops the containers for project and starts them back up again.`,
+	Short: "Restart a project.",
+	Long:  `Restart removes the containers for a project and starts them back up again.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()
@@ -32,7 +32,7 @@ var DdevRestartCmd = &cobra.Command{
 		}
 
 		output.UserOut.Printf("Restarting project %s...", app.GetName())
-		err = app.StopContainers()
+		err = app.Down(false, false)
 		if err != nil {
 			util.Failed("Failed to restart %s: %v", app.GetName(), err)
 		}
