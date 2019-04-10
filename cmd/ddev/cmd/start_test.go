@@ -32,7 +32,7 @@ func TestCmdStart(t *testing.T) {
 	assert.NoError(err, "ddev start --all should succeed but failed, err: %v, output: %s", err, out)
 
 	// Confirm all sites are running.
-	apps := ddevapp.GetApps()
+	apps := ddevapp.GetDockerProjects()
 	for _, app := range apps {
 		assert.True(app.SiteStatus() == ddevapp.SiteRunning, "All sites should be running, but %s status: %s", app.GetName(), app.SiteStatus())
 	}

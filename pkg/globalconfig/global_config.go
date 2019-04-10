@@ -237,3 +237,16 @@ func ReservePorts(projectName string, ports []string) error {
 	err := WriteGlobalConfig(DdevGlobalConfig)
 	return err
 }
+
+// RemoveProjectInfo() removes the ProjectInfo line for a project
+func RemoveProjectInfo(projectName string) error {
+	_, ok := DdevGlobalConfig.ProjectList[projectName]
+	if ok {
+		delete(DdevGlobalConfig.ProjectList, projectName)
+		err := WriteGlobalConfig(DdevGlobalConfig)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

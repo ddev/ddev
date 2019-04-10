@@ -151,7 +151,7 @@ func TestMain(m *testing.M) {
 		}
 	}
 
-	count := len(ddevapp.GetApps())
+	count := len(ddevapp.GetDockerProjects())
 	if count > 0 {
 		log.Fatalf("ddevapp tests require no projects running. You have %v project(s) running.", count)
 	}
@@ -554,7 +554,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 	}
 }
 
-// TestGetApps tests the GetApps function to ensure it accurately returns a list of running applications.
+// TestGetApps tests the GetDockerProjects function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -570,7 +570,7 @@ func TestGetApps(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	apps := ddevapp.GetApps()
+	apps := ddevapp.GetDockerProjects()
 	assert.Equal(len(TestSites), len(apps))
 
 	for _, testSite := range TestSites {
@@ -1771,7 +1771,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 
 }
 
-// TestGetappsEmpty ensures that GetApps returns an empty list when no applications are running.
+// TestGetappsEmpty ensures that GetDockerProjects returns an empty list when no applications are running.
 func TestGetAppsEmpty(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -1792,7 +1792,7 @@ func TestGetAppsEmpty(t *testing.T) {
 		switchDir()
 	}
 
-	apps := ddevapp.GetApps()
+	apps := ddevapp.GetDockerProjects()
 	assert.Equal(0, len(apps), "Expected to find no apps but found %d apps=%v", len(apps), apps)
 }
 
@@ -1817,7 +1817,7 @@ func TestListWithoutDir(t *testing.T) {
 	packageDir, _ := os.Getwd()
 
 	// startCount is the count of apps at the start of this adventure
-	apps := ddevapp.GetApps()
+	apps := ddevapp.GetDockerProjects()
 	startCount := len(apps)
 
 	testDir := testcommon.CreateTmpDir("TestStartWithoutDdevConfig")
@@ -1850,7 +1850,7 @@ func TestListWithoutDir(t *testing.T) {
 
 	testcommon.CleanupDir(testDir)
 
-	apps = ddevapp.GetApps()
+	apps = ddevapp.GetDockerProjects()
 
 	assert.EqualValues(len(apps), startCount+1)
 
