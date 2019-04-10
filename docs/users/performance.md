@@ -66,6 +66,8 @@ Tools to debug and solve permission problems:
 
 ## Using webcache_enabled to Cache the Project Directory
 
+**Webcache is deprecated and you should not rely on it, see https://github.com/drud/ddev/issues/1495 for more details.**
+
 A separate webcache container is also provided as a separate experimental performance technique. It does not rely on any host configuration, but in some cases when large changes are made in the filesystem it can stop syncing and be unstable.
 
 To enable, edit .ddev/config.yaml to set `webcache_enabled:true` and `ddev start` to get a caching container going so that actual webserving happens on a much faster filesystem. This is experimental and has some risks, we want to know your experience. It takes longer to do a ddev start because your entire project has to be pushed into the container, but after that hitting a page is way, way more satisfying. Note that .git directories are not copied into the webcache, git won't work inside the web container. It just seemed too risky to combine 2-way file synchronization with your precious git repository, so do git operations on the host. Note that if you have a lot of files or big files in your repo, they have to be pushed into the container, and that can take time. For example, cleaning up the .ddev/db_snapshots directory rather than waiting for the docker cp is a good idea.
