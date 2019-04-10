@@ -55,6 +55,19 @@ tar -czf $ARTIFACTS/ddev_chocolatey.$VERSION.tar.gz chocolatey
 
 cp ddev_windows_installer*.exe $ARTIFACTS
 
+# Create macOS and Linux homebrew bottles
+for os in sierra x86_64_linux ; do
+    NO_V_VERSION=${VERSION#v}
+    rm -rf /tmp/bottle
+    BOTTLE_BASE=/tmp/bottle/ddev/$NO_V_VERSION
+    mkdir -p $BOTTLE_BASE/{bin,etc/bash_completion.d}
+    cp $BASE_DIR/.gotmp/bin/ddev_bash_completion.sh $BOTTLE_BASE/etc/bash_completion.d/ddev
+    if [ "${os}" = "sierra" ]; then cp $BASE_DIR/.gotmp/bin/darwin_amd64/ddev $BOTTLE_BASE/bin ; fi
+    if [ "${os}" = "x86_64_linux" ]; then cp $BASE_DIR/.gotmp/bin/ddev $BOTTLE_BASE/bin ; fi
+    cp $BASE_DIR/{README.md,LICENSE} $BOTTLE_BASE
+    tar -czf $ARTIFACTS/ddev-$NO_V_VERSION.$os.bottle.tar.gz -C /tmp/bottle .
+done
+
 # Create the sha256 files
 cd $ARTIFACTS
 for item in *.*; do
