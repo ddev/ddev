@@ -78,7 +78,7 @@ max_execution_time = 240;
 
 ## Providing custom mysql/MariaDB configuration (my.cnf)
 
-You can provide additional PHP configuration for a project by creating a directory called `.ddev/mysql/` and adding any number of MySQL configuration files (these must have the suffix ".cnf"). These files will be automatically included when MySQL is started. Make sure that the section header is included in the file 
+You can provide additional MySQL configuration for a project by creating a directory called `.ddev/mysql/` and adding any number of MySQL configuration files (these must have the suffix ".cnf"). These files will be automatically included when MySQL is started. Make sure that the section header is included in the file 
 
 An example file in .ddev/mysql/no_utf8mb4.cnf might be:
 
