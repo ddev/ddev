@@ -1,12 +1,12 @@
 <h1>Docker Installation</h1>
 
-## macOS Installation: Docker-ce For Mac
+## macOS Installation: Docker Desktop for Mac
 
-Most MacOS versions and computers will run Docker for Mac. Homebrew users can `brew cask install docker` or you can download from [download.docker.com](https://download.docker.com/mac/stable/Docker.dmg). 
+Most MacOS versions and computers will run Docker Desktop for Mac. Homebrew users can `brew cask install docker` or you can download from [download.docker.com](https://download.docker.com/mac/stable/Docker.dmg). 
 
-## Windows Installation: Docker-ce For Windows
+## Windows Installation: Docker Desktop for Windows
 
-Docker For Windows is the preferred docker environment for Windows 10 Pro and Windows 10 Enterprise. 
+Docker Desktop for Windows is the preferred docker environment for Windows 10 Pro and Windows 10 Enterprise. 
 
 [Download Docker-ce for Windows](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
 
@@ -17,7 +17,7 @@ __Please note that you *must* share your local drives in the "settings" after in
 
 ## Windows Installation: Docker Toolbox
 
-Docker Toolbox is only recommended for systems that absolutely won't run Docker-ce for Windows (Windows 10 Home, etc.)
+Docker Toolbox is only recommended for systems that absolutely won't run Docker Desktop for Windows (Windows 10 Home, etc.)
 
 [Download and install docker toolbox](https://download.docker.com/win/stable/DockerToolbox.exe). 
 
@@ -78,7 +78,7 @@ If that fails (if you get an error, or you don't see the contents of your projec
 * "Error response from daemon: Get https://registry-1.docker.io/v2/" - Docker may not be running (restart it) or you may not have any access to the internet.
 * "403 authentication required" when trying to `ddev start`: Try `docker logout` and do it again. Docker authentication is *not* required for any normal ddev action.
  
-If you are on Docker for Windows or Docker for Mac and you are seeing shared directories not show up in the web container (nothing there when you `ddev ssh`) then:
+If you are on Docker Desktop for Windows or Docker Desktop for Mac and you are seeing shared directories not show up in the web container (nothing there when you `ddev ssh`) then:
 
 * Unshare and then reshare the drive
 * Consider resetting Docker to factory defaults. This often helps in this situation because Docker goes through the whole authentication process again.

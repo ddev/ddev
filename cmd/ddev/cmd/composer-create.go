@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path"
 	"path/filepath"
@@ -190,7 +191,7 @@ project root will be deleted when creating a project.`,
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
-		if runtime.GOOS == "windows" && !util.IsDockerToolbox() {
+		if runtime.GOOS == "windows" && !nodeps.IsDockerToolbox() {
 			replaceSimulatedLinks(app.AppRoot)
 		}
 

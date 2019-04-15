@@ -20,8 +20,8 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
     - __on the "Log On" tab in the services widget it must be set up to log in as the primary user of the machine, so it inherits environment variables and home directory.__
 8. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Run netplwiz, provide the password for the main user, uncheck the "require a password to log in".
 9. On Docker Toolbox systems, add a link to "Docker Quickstart Terminal" in C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp (see [link](http://www.thewindowsclub.com/make-programs-run-on-startup-windows)).
-10. On Docker-for-windows systems, launch Docker. It will offer to reconfigure Hyper-V and do a restart.
-11. On Docker-for-windows, configured the C: and other drives as shared to docker.
+10. On Docker Desktop for Windows systems, launch Docker. It will offer to reconfigure Hyper-V and do a restart.
+11. On Docker Desktop for Windows, configured the C: and other drives as shared to docker.
 12. On Docker Toolbox systems, make sure that nested virtualization is enabled however you need to enable it.
 13. Edit /c/ProgramData/git/config "core" section to `autocrlf: false` and `eol: lf` verify that `git config --list` shows only autocrlf: false. 
 14. Run `winpty docker run -it -p 80 busybox ls` to trigger the Windows Defender warning, and "allow access".

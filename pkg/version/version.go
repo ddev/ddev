@@ -2,8 +2,10 @@ package version
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/fsouza/go-dockerclient"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -93,7 +95,7 @@ func GetVersionInfo() map[string]string {
 	var err error
 	versionInfo := make(map[string]string)
 
-	versionInfo["cli"] = DdevVersion
+	versionInfo["DDEV-Local version"] = DdevVersion
 	versionInfo["web"] = GetWebImage()
 	versionInfo["db"] = GetDBImage()
 	versionInfo["dba"] = GetDBAImage()
@@ -103,11 +105,19 @@ func GetVersionInfo() map[string]string {
 	versionInfo["commit"] = COMMIT
 	versionInfo["domain"] = DDevTLD
 	versionInfo["build info"] = BUILDINFO
+	versionInfo["os"] = runtime.GOOS
 	if versionInfo["docker"], err = GetDockerVersion(); err != nil {
 		versionInfo["docker"] = fmt.Sprintf("failed to GetDockerVersion(): %v", err)
 	}
 	if versionInfo["docker-compose"], err = GetDockerComposeVersion(); err != nil {
 		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
+	}
+	if runtime.GOOS == "windows" {
+		if nodeps.IsDockerToolbox() {
+			versionInfo["docker type"] = "Docker Toolbox"
+		} else {
+			versionInfo["docker type"] = "Docker Desktop For Windows"
+		}
 	}
 
 	return versionInfo
@@ -176,5 +186,6 @@ func GetDockerVersion() (string, error) {
 		return "", err
 	}
 	DockerVersion = v.Get("Version")
+
 	return DockerVersion, nil
 }
