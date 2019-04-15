@@ -12,9 +12,10 @@ var stopAllContainers bool
 var DdevStopContainersCmd = &cobra.Command{
 	Use:   "stop-containers [projectname ...]",
 	Short: "uses 'docker stop' to stop the containers belonging to a project.",
-	Long: `Use "docker stop" to stop the containers belonging to a project a project. You can run 'ddev stop-containers'
+	Long: `Uses "docker-compose stop" to stop the containers belonging to a project. This leaves the containers instantiated instead of removing them like ddev stop does. You can run 'ddev stop-containers'
 from a project directory to stop the containers of that project, or you can stop running projects
 in any directory by running 'ddev stop-containers projectname [projectname ...]'`,
+	Aliases: []string{"sc"},
 	Run: func(cmd *cobra.Command, args []string) {
 		projects, err := getRequestedProjects(args, stopAllContainers)
 		if err != nil {
