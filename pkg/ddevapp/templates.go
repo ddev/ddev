@@ -242,6 +242,14 @@ const ConfigInstructions = `
 # Note that these containers can also be omitted globally in the 
 # ~/.ddev/global_config.yaml or with the "ddev config global" command.
 
+# nfs_mount_enabled: false
+# Great performance improvement but requires host configuration first.
+# See https://ddev.readthedocs.io/en/stable/users/performance/#using-nfs-to-mount-the-project-into-the-container
+
+# webcache_enabled: false (deprecated)
+# Was only for macOS, but now deprecated. 
+# See https://ddev.readthedocs.io/en/stable/users/performance/#using-webcache_enabled-to-cache-the-project-directory
+
 # host_webserver_port: "59001"
 # The host port binding for the ddev-webserver can be explicitly specified. It is
 # dynamic unless otherwise specified.
