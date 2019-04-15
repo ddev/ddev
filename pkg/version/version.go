@@ -116,7 +116,7 @@ func GetVersionInfo() map[string]string {
 		if nodeps.IsDockerToolbox() {
 			versionInfo["docker type"] = "Docker Toolbox"
 		} else {
-			versionInfo["docker type"] = "Docker For Windows"
+			versionInfo["docker type"] = "Docker Desktop For Windows"
 		}
 	}
 

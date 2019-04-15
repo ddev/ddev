@@ -1,4 +1,4 @@
-# bg-sync
+# bg-sync (deprecated)
 
 Forked from https://github.com/cweagans/docker-bg-sync at
 https://github.com/cweagans/docker-bg-sync/commit/4e39642ab414f2ba0b55eb3933203115e6ed2c0b
@@ -8,7 +8,7 @@ Thanks!
 ====================
 
 This container continuously syncs files between two directories. This is useful
-for avoiding the filesystem slowness on Docker for Mac, for instance. It's also
+for avoiding the filesystem slowness on Docker Desktop for Mac, for instance. It's also
 generally useful for any other time where you have a slow filesystem as a source
 of files that need to be read inside of a container.
 
