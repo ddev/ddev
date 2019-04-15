@@ -32,7 +32,7 @@ var DdevRestartCmd = &cobra.Command{
 		}
 
 		output.UserOut.Printf("Restarting project %s...", app.GetName())
-		err = app.Remove(false, false)
+		err = app.Stop(false, false)
 		if err != nil {
 			util.Failed("Failed to restart %s: %v", app.GetName(), err)
 		}

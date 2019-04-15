@@ -102,7 +102,7 @@ func TestWriteDrushConfig(t *testing.T) {
 
 		startErr := app.Start()
 		//nolint: errcheck
-		defer app.Remove(true, false)
+		defer app.Stop(true, false)
 		if startErr != nil {
 			logs, _ := GetErrLogsFromApp(app, startErr)
 			t.Fatalf("app.Start failed, startErr=%v, logs=\n========\n%s\n===========\n", startErr, logs)

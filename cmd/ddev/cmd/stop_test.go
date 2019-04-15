@@ -16,8 +16,8 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestCmdRemove runs `ddev rm` on the test apps
-func TestCmdRemove(t *testing.T) {
+// TestCmdStop runs `ddev stop` on the test apps
+func TestCmdStop(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Make sure we have running sites.
@@ -26,9 +26,9 @@ func TestCmdRemove(t *testing.T) {
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
 
-		out, err := exec.RunCommand(DdevBin, []string{"remove"})
-		assert.NoError(err, "ddev remove should succeed but failed, err: %v, output: %s", err, out)
-		assert.Contains(out, "has been removed")
+		out, err := exec.RunCommand(DdevBin, []string{"stop"})
+		assert.NoError(err, "ddev stop should succeed but failed, err: %v, output: %s", err, out)
+		assert.Contains(out, "has been stopped and removed")
 
 		// Ensure the site that was just stopped does not appear in the list of sites
 		apps := ddevapp.GetApps()
@@ -44,21 +44,17 @@ func TestCmdRemove(t *testing.T) {
 	require.NoError(t, err)
 
 	// Ensure the --all option can remove all active apps
-	out, err := exec.RunCommand(DdevBin, []string{"remove", "--all"})
-	assert.NoError(err, "ddev remove --all should succeed but failed, err: %v, output: %s", err, out)
+	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
+	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
 	out, err = exec.RunCommand(DdevBin, []string{"list"})
 	assert.NoError(err)
 	assert.Contains(out, "no active ddev projects")
-	assert.Equal(0, len(ddevapp.GetApps()), "Not all apps were removed after ddev remove --all")
-
-	// Now put the sites back together so other tests can use them.
-	err = addSites()
-	require.NoError(t, err)
+	assert.Equal(0, len(ddevapp.GetApps()), "Not all apps were removed after ddev stop --all")
 }
 
-// TestCmdRemoveMissingProjectDirectory ensures the `ddev remove` command can operate on a project when the
+// TestCmdStopMissingProjectDirectory ensures the `ddev stop` command can operate on a project when the
 // project's directory has been removed.
-func TestCmdRemoveMissingProjectDirectory(t *testing.T) {
+func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
 	assert := asrt.New(t)
@@ -74,7 +70,7 @@ func TestCmdRemoveMissingProjectDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", projectName})
+	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", projectName})
 
 	_, err = exec.RunCommand(DdevBin, []string{"start"})
 	assert.NoError(err)
@@ -86,9 +82,9 @@ func TestCmdRemoveMissingProjectDirectory(t *testing.T) {
 	err = os.Rename(tmpDir, copyDir)
 	assert.NoError(err)
 
-	out, err = exec.RunCommand(DdevBin, []string{"remove", projectName})
+	out, err = exec.RunCommand(DdevBin, []string{"stop", projectName})
 	assert.NoError(err)
-	assert.Contains(out, "has been removed")
+	assert.Contains(out, "has been stopped and removed")
 
 	err = os.Rename(copyDir, tmpDir)
 	assert.NoError(err)

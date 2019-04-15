@@ -191,7 +191,7 @@ func TestDrudS3ValidDownloadObjects(t *testing.T) {
 	assert.NoError(err)
 	err = app.Pull(&provider, &ddevapp.PullOptions{})
 	assert.NoError(err)
-	err = app.Remove(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 
 	// Make sure invalid access key gets correct behavior

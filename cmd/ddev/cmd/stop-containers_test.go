@@ -60,9 +60,9 @@ func TestCmdStopContainers(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TestCmdStopMissingProjectDirectory ensures the `ddev stop` command returns the expected help text when
+// TestCmdStopContainersMissingProjectDirectory ensures the `ddev stop` command returns the expected help text when
 // a project's directory no longer exists.
-func TestCmdStopMissingProjectDirectory(t *testing.T) {
+func TestCmdStopContainersMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
 	assert := asrt.New(t)

@@ -220,9 +220,9 @@ func TestMain(m *testing.M) {
 		}
 
 		if app.SiteStatus() != ddevapp.SiteNotFound {
-			err = app.Remove(true, false)
+			err = app.Stop(true, false)
 			if err != nil {
-				log.Fatalf("TestMain shutdown: app.Remove() failed on site %s, err=%v", TestSites[i].Name, err)
+				log.Fatalf("TestMain shutdown: app.Stop() failed on site %s, err=%v", TestSites[i].Name, err)
 			}
 		}
 		site.Cleanup()
@@ -278,7 +278,7 @@ func TestDdevStart(t *testing.T) {
 		fmt.Print("TestDddevStart skipping check for local mysql connection because mysql command not in path")
 	}
 
-	err = app.Remove(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 	runTime()
 	switchDir()
@@ -350,7 +350,7 @@ func TestDdevStart(t *testing.T) {
 	switchDir()
 
 	// Clean up site 0
-	err = app.Remove(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 }
 
@@ -414,7 +414,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		err = app.Remove(true, false)
+		err = app.Stop(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -439,7 +439,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	assert.NoError(err)
 	err = app.StartAndWaitForSync(0)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	require.NoError(t, err)
 
 	opts := &ddevapp.ExecOpts{
@@ -458,7 +458,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 
 	stdout, _, err = app.Exec(opts)
 	assert.NoError(err)
@@ -497,7 +497,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err = app.StartAndWaitForSync(0)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	require.NoError(t, err)
 
 	// Test that mysql + .my.cnf works on web container
@@ -524,7 +524,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 	})
 	assert.NoError(err)
 
-	err = app.Remove(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 
 	runTime()
@@ -592,7 +592,7 @@ func TestGetApps(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		err = app.Remove(true, false)
+		err = app.Stop(true, false)
 		assert.NoError(err)
 
 	}
@@ -683,7 +683,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
 		}
 		// We don't want all the projects running at once.
-		err = app.Remove(true, false)
+		err = app.Stop(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -715,7 +715,7 @@ func TestDdevOldMariaDB(t *testing.T) {
 	app.DBImage = version.GetDBImage(app.MariaDBVersion)
 	startErr := app.StartAndWaitForSync(15)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 
 	if startErr != nil {
 		appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
@@ -804,7 +804,7 @@ func TestDdevExportDB(t *testing.T) {
 	err = app.StartAndWaitForSync(0)
 	assert.NoError(err)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	importPath := filepath.Join(testDir, "testdata", "users.sql")
 	err = app.ImportDB(importPath, "", false)
 	require.NoError(t, err)
@@ -919,7 +919,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetWebContainerDirectURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 
 		// We don't want all the projects running at once.
-		err = app.Remove(true, false)
+		err = app.Stop(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -1024,7 +1024,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "is not compatible")
 
-	err = app.Remove(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 
 	// TODO: Check behavior of ddev rm with snapshot, see if it has right stuff in it.
@@ -1147,7 +1147,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	})
 	assert.NoError(err)
 
-	err = app.Remove(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 
 	runTime()
@@ -1367,7 +1367,7 @@ func TestDdevExec(t *testing.T) {
 			assert.Regexp("/etc/php.*/php.ini", out)
 		}
 
-		err = app.Remove(true, false)
+		err = app.Stop(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -1430,7 +1430,7 @@ func TestDdevLogs(t *testing.T) {
 	out = stdout()
 	assert.Contains(out, "MySQL init process done. Ready for start up.")
 
-	err = app.Remove(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 
 	runTime()
@@ -1474,7 +1474,7 @@ func TestProcessHooks(t *testing.T) {
 	assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
 	assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
 
-	err = app.Remove(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 
 	runTime()
@@ -1496,7 +1496,7 @@ func TestDdevStop(t *testing.T) {
 	assert.NoError(err)
 	err = app.StartAndWaitForSync(0)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	require.NoError(t, err)
 	err = app.StopContainers()
 	assert.NoError(err)
@@ -1525,7 +1525,7 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 
 	startErr := app.StartAndWaitForSync(0)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	if startErr != nil {
 		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
@@ -1565,7 +1565,7 @@ func TestDdevDescribe(t *testing.T) {
 
 	startErr := app.StartAndWaitForSync(0)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	// If we have a problem starting, get the container logs and output.
 	if startErr != nil {
 		stdout := util.CaptureUserOut()
@@ -1611,7 +1611,7 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 	assert.NoError(err)
 	startErr := app.StartAndWaitForSync(0)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	if startErr != nil {
 		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
@@ -1636,7 +1636,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	// First, stop any sites that might be running
 	app := &ddevapp.DdevApp{}
 
-	// Remove/Remove all sites, which should get the router out of there.
+	// Stop/Remove all sites, which should get the router out of there.
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
 
@@ -1645,7 +1645,7 @@ func TestRouterPortsCheck(t *testing.T) {
 		assert.NoError(err)
 
 		if app.SiteStatus() == ddevapp.SiteRunning || app.SiteStatus() == ddevapp.SiteStopped {
-			err = app.Remove(true, false)
+			err = app.Stop(true, false)
 			assert.NoError(err)
 		}
 
@@ -1660,7 +1660,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	assert.NoError(err)
 	startErr := app.StartAndWaitForSync(5)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	if startErr != nil {
 		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(getLogsErr)
@@ -1673,7 +1673,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	}
 	startErr = app.StartAndWaitForSync(5)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	if startErr != nil {
 		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(getLogsErr)
@@ -1726,7 +1726,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 
 	startErr := app.StartAndWaitForSync(5)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	if startErr != nil {
 		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(getLogsErr)
@@ -1748,11 +1748,11 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
-	// Call the Remove command()
+	// Call the Stop command()
 	// Notice that we set the removeData parameter to true.
 	// This gives us added test coverage over sites with missing directories
 	// by ensuring any associated database files get cleaned up as well.
-	err = app.Remove(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[app.Name])
 
@@ -1786,7 +1786,7 @@ func TestGetAppsEmpty(t *testing.T) {
 		assert.NoError(err)
 
 		if app.SiteStatus() != ddevapp.SiteNotFound {
-			err = app.Remove(true, false)
+			err = app.Stop(true, false)
 			assert.NoError(err)
 		}
 		switchDir()
@@ -1872,7 +1872,7 @@ func TestListWithoutDir(t *testing.T) {
 	testDirSafe := strings.Replace(testDir, "\\", ".", -1)
 	assert.Regexp(regexp.MustCompile("(?s)"+ddevapp.SiteDirMissing+".*"+testDirSafe), table.String())
 
-	err = app.Remove(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 
 	// Change back to package dir. Lots of things will have to be cleaned up
@@ -1926,7 +1926,7 @@ func TestHttpsRedirection(t *testing.T) {
 		app, err = ddevapp.GetActiveApp("")
 		assert.NoError(err)
 		//nolint: errcheck
-		defer app.Remove(true, false)
+		defer app.Stop(true, false)
 		startErr := app.StartAndWaitForSync(30)
 		if startErr != nil {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
@@ -1961,7 +1961,7 @@ func TestHttpsRedirection(t *testing.T) {
 				assert.EqualValues(locHeader, expectedRedirect, "For webserver_type %s url %s expected redirect %s != actual %s", webserverType, reqURL, expectedRedirect, locHeader)
 			}
 		}
-		err = app.Remove(true, false)
+		err = app.Stop(true, false)
 		assert.NoError(err)
 	}
 
@@ -2098,7 +2098,7 @@ func TestGetAllURLs(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		err = app.Remove(true, false)
+		err = app.Stop(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -2132,7 +2132,7 @@ func TestWebserverType(t *testing.T) {
 
 			startErr := app.StartAndWaitForSync(30)
 			//nolint: errcheck
-			defer app.Remove(true, false)
+			defer app.Stop(true, false)
 			if startErr != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(getLogsErr)
@@ -2149,7 +2149,7 @@ func TestWebserverType(t *testing.T) {
 			require.NotEmpty(t, resp.Header["Server"][0])
 			assert.Contains(resp.Header["Server"][0], expectedServerType, "Server header for project=%s, app.WebserverType=%s should be %s", app.Name, app.WebserverType, expectedServerType)
 			assert.Contains(out, expectedServerType, "For app.WebserverType=%s phpinfo expected servertype.php to show %s", app.WebserverType, expectedServerType)
-			err = app.Remove(true, false)
+			err = app.Stop(true, false)
 			assert.NoError(err)
 		}
 
@@ -2184,7 +2184,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			assert.NoError(err)
 
 			if app.SiteStatus() == ddevapp.SiteStopped || app.SiteStatus() == ddevapp.SiteRunning {
-				err = app.Remove(true, false)
+				err = app.Stop(true, false)
 				assert.NoError(err)
 			}
 			err = app.Start()
@@ -2216,7 +2216,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		app.RouterHTTPPort = "80"
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = app.Remove(true, false)
+		err = app.Stop(true, false)
 		assert.NoError(err)
 
 		runTime()
@@ -2245,7 +2245,7 @@ func TestCaptureLogs(t *testing.T) {
 
 	assert.Contains(logs, "INFO spawned")
 
-	err = app.Remove(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 
 	runTime()
@@ -2272,7 +2272,7 @@ func TestNFSMount(t *testing.T) {
 
 	err = app.Start()
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	require.NoError(t, err)
 
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -2352,7 +2352,7 @@ func TestWebcache(t *testing.T) {
 
 	startErr := app.StartAndWaitForSync(1)
 	//nolint: errcheck
-	defer app.Remove(true, false)
+	defer app.Stop(true, false)
 	require.NoError(t, startErr)
 
 	// Create a host-side dir symlink; give a second for it to sync, make sure it can be used in container.
@@ -2413,7 +2413,7 @@ func TestPortSpecifications(t *testing.T) {
 	err = nospecApp.Start()
 	assert.NoError(err)
 	//nolint: errcheck
-	defer nospecApp.Remove(true, false)
+	defer nospecApp.Stop(true, false)
 
 	// Now that we have a working nospecApp with unspecified ephemeral ports, test that we
 	// can't use those ports while nospecApp is running
@@ -2436,7 +2436,7 @@ func TestPortSpecifications(t *testing.T) {
 	err = specAPP.Start()
 	assert.NoError(err)
 	//nolint: errcheck
-	err = specAPP.Remove(false, false)
+	err = specAPP.Stop(false, false)
 	require.NoError(t, err)
 	// Verify that DdevGlobalConfig got updated properly
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name])
@@ -2454,7 +2454,7 @@ func TestPortSpecifications(t *testing.T) {
 	assert.Error(err)
 
 	// Now delete the specAPP and we should be able to use the conflictApp
-	err = specAPP.Remove(true, false)
+	err = specAPP.Stop(true, false)
 	assert.NoError(err)
 	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name])
 
@@ -2463,7 +2463,7 @@ func TestPortSpecifications(t *testing.T) {
 	err = conflictApp.Start()
 	assert.NoError(err)
 	//nolint: errcheck
-	defer conflictApp.Remove(true, false)
+	defer conflictApp.Stop(true, false)
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name])
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name].UsedHostPorts)
 }
