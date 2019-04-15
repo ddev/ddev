@@ -25,8 +25,9 @@ func TestCmdAuthSSH(t *testing.T) {
 	testDir, _ := os.Getwd()
 	defer cmd.DevTestSites[0].Chdir()()
 
-	out, err := exec.RunCommand(cmd.DdevBin, []string{"start"})
+	_, err := exec.RunCommand(cmd.DdevBin, []string{"start"})
 	require.NoError(t, err)
+	// nolint: errcheck
 	defer exec.RunCommand(cmd.DdevBin, []string{"stop", "--remove-data", "--omit-snapshot"})
 
 	// Delete any existing identities from ddev-ssh-agent

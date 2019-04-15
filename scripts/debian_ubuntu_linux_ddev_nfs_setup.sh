@@ -38,7 +38,7 @@ echo "
 "
 echo "Stopping running ddev projects"
 
-ddev rm -a
+ddev stop -a || true
 
 echo "Installing nfs-kernel-server"
 sudo apt-get update -qq

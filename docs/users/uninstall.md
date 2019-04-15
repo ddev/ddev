@@ -10,7 +10,7 @@ A DDEV-Local installation consists of:
 
 To uninstall a project:
 
-`ddev remove --remove-data` and `rm -r .ddev`
+`ddev stop --remove-data` and `rm -r .ddev`
 
 To uninstall the global .ddev: `rm -r ~/.ddev`
 
