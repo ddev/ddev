@@ -63,7 +63,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	err = os.Chmod(filepath.Join(testAuthSSHDir, ".ssh", "id_rsa"), 0600)
 	assert.NoError(err)
 	sshDir := filepath.Join(testAuthSSHDir, ".ssh")
-	out, err = exec.RunCommand("expect", []string{filepath.Join(testAuthSSHDir, "ddevauthssh.expect"), cmd.DdevBin, sshDir, "testkey"})
+	out, err := exec.RunCommand("expect", []string{filepath.Join(testAuthSSHDir, "ddevauthssh.expect"), cmd.DdevBin, sshDir, "testkey"})
 	assert.NoError(err)
 	assert.Contains(string(out), "Identity added:")
 
