@@ -50,8 +50,7 @@ mkdir my-wordpress-site
 cd my-wordpress-site
 ddev composer create wordpress/skeleton --no-interaction
 ddev config --docroot=wp --project-type=wordpress
-ddev rm
-ddev start
+ddev restart
 ```
 
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
@@ -113,7 +112,7 @@ cd my-drupal8-site
 ddev config --project-type php
 ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction
 ddev config --project-type drupal8
-ddev rm && ddev start
+ddev restart
 ```
 
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
@@ -143,8 +142,7 @@ cd my-typo3-site
 ddev config --project-type php
 ddev composer create typo3/cms-base-distribution ^9 --no-interaction
 ddev config --project-type typo3
-ddev rm
-ddev start
+ddev restart
 ```
 
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
@@ -399,7 +397,7 @@ If you want to use import-files without answering prompts, you can use the `--sr
 
 ## Snapshotting and restoring a database
 
-The project database is stored in a docker volume, but can be snapshotted (and later restored) with the `ddev snapshot` command. A snapshot is automatically taken when you do a `ddev remove --remove-data`. For example:
+The project database is stored in a docker volume, but can be snapshotted (and later restored) with the `ddev snapshot` command. A snapshot is automatically taken when you do a `ddev stop --remove-data`. For example:
 
 ```
 $ ddev snapshot
@@ -439,13 +437,13 @@ If you want to use your personal ssh keys within the web container, that's possi
 
 The `ddev logs` command allows you to easily view error logs from the web container (both nginx/apache and php-fpm logs are concatenated). To follow the log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. Similarly, `ddev logs -s db` will show logs from a running or stopped db container. 
 
-## Removing a project
+## Stopping a project
 
-To remove a project's containers run `ddev remove` in the working directory of the project. To remove any running project's containers, providing the project name as an argument, e.g. `ddev remove <projectname>`.
+To remove a project's containers run `ddev stop` in the working directory of the project. To remove any running project's containers, providing the project name as an argument, e.g. `ddev stop <projectname>`.
 
-`ddev remove` is *not* destructive. It removes the docker containers but does not remove the database for the project. This allows you to have many configured projects with databases loaded without wasting docker containers on unused projects. `ddev remove` does not affect the project code base and files.
+`ddev stop` is *not* destructive. It removes the docker containers but does not remove the database for the project, and does nothing to your codebase. This allows you to have many configured projects with databases loaded without wasting docker containers on unused projects. **`ddev stop` does not affect the project code base and files.**
 
-To remove the imported database for a project, use the flag `--remove-data`, as in `ddev remove --remove-data`. This command will destroy both the containers and the imported database contents.
+To remove the imported database for a project, use the flag `--remove-data`, as in `ddev stop --remove-data`. This command will destroy both the containers and the imported database contents.
 
 ## ddev Command Auto-Completion
 
