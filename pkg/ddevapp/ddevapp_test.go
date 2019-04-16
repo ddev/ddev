@@ -1415,7 +1415,7 @@ func TestDdevLogs(t *testing.T) {
 	assert.Contains(out, "MySQL init process done. Ready for start up.")
 
 	// Test that we can get logs when project is stopped also
-	err = app.StopContainers()
+	err = app.Pause()
 	assert.NoError(err)
 
 	stdout = util.CaptureUserOut()
@@ -1498,7 +1498,7 @@ func TestDdevStop(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	require.NoError(t, err)
-	err = app.StopContainers()
+	err = app.Pause()
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
@@ -1588,7 +1588,7 @@ func TestDdevDescribe(t *testing.T) {
 	assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
 
 	// Now stop it and test behavior.
-	err = app.StopContainers()
+	err = app.Pause()
 	assert.NoError(err)
 
 	desc, err = app.Describe()

@@ -970,8 +970,8 @@ func (app *DdevApp) DockerEnv() {
 	}
 }
 
-// StopContainers initiates docker-compose stop
-func (app *DdevApp) StopContainers() error {
+// Pause initiates docker-compose stop
+func (app *DdevApp) Pause() error {
 	app.DockerEnv()
 
 	if app.SiteStatus() == SiteNotFound {
@@ -1180,7 +1180,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	err = app.StopContainers()
+	err = app.Pause()
 	if err != nil {
 		util.Warning("Failed to stop containers for %s: %v", app.GetName(), err)
 	}

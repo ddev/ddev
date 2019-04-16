@@ -27,7 +27,7 @@ in any directory by running 'ddev pause projectname [projectname ...]' or pause 
 				util.Failed("Failed to pause/stop-containers %s: %v", project.GetName(), err)
 			}
 
-			if err := project.StopContainers(); err != nil {
+			if err := project.Pause(); err != nil {
 				util.Failed("Failed to pause/stop-containers %s: %v", project.GetName(), err)
 			}
 
