@@ -58,8 +58,8 @@ const SiteDirMissing = "app directory missing"
 // SiteConfigMissing defines the string used to denote when a site is missing its .ddev/config.yml file.
 const SiteConfigMissing = ".ddev/config.yaml missing"
 
-// SiteStopped defines the string used to denote when a site is in the stopped state.
-const SiteStopped = "stopped"
+// SitePaused defines the string used to denote when a site is in the paused (docker stopped) state.
+const SitePaused = "paused"
 
 // DdevFileSignature is the text we use to detect whether a settings file is managed by us.
 // If this string is found, we assume we can replace/update the file.
@@ -441,7 +441,7 @@ func (app *DdevApp) SiteStatus() string {
 
 			switch status {
 			case "exited":
-				statuses[service] = SiteStopped
+				statuses[service] = SitePaused
 			case "healthy":
 				statuses[service] = SiteRunning
 			case "starting":
@@ -1146,7 +1146,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("snapshot %s is a MariaDB %s snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).", snapshotDir, snapshotMariaDBVersion, app.MariaDBVersion)
 	}
 
-	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
+	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
 		err := app.Stop(false, false)
 		if err != nil {
 			return fmt.Errorf("Failed to rm  project for RestoreSnapshot: %v", err)

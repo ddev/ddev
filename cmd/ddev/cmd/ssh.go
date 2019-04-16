@@ -26,7 +26,7 @@ var DdevSSHCmd = &cobra.Command{
 			util.Failed("Project is not currently running. Try 'ddev start'.")
 		}
 
-		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
+		if strings.Contains(app.SiteStatus(), ddevapp.SitePaused) {
 			util.Failed("Project is stopped. Run 'ddev start' to start the environment.")
 		}
 

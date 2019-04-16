@@ -16,8 +16,8 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestCmdStopContainers runs `ddev stop-containers` on the test apps
-func TestCmdStopContainers(t *testing.T) {
+// TestCmdPauseContainers runs `ddev pause` on the test apps
+func TestCmdPauseContainers(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Make sure we have running sites.
@@ -27,8 +27,8 @@ func TestCmdStopContainers(t *testing.T) {
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
 
-		out, err := exec.RunCommand(DdevBin, []string{"stop-containers"})
-		assert.NoError(err, "ddev stop-containers should succeed but failed, err: %v, output: %s", err, out)
+		out, err := exec.RunCommand(DdevBin, []string{"pause"})
+		assert.NoError(err, "ddev pause should succeed but failed, err: %v, output: %s", err, out)
 		assert.Contains(out, "have been stopped")
 
 		apps := ddevapp.GetApps()
@@ -37,7 +37,7 @@ func TestCmdStopContainers(t *testing.T) {
 				continue
 			}
 
-			assert.True(app.SiteStatus() == ddevapp.SiteStopped)
+			assert.True(app.SiteStatus() == ddevapp.SitePaused)
 		}
 
 		cleanup()
@@ -46,13 +46,13 @@ func TestCmdStopContainers(t *testing.T) {
 	// Re-create running sites.
 	err = addSites()
 	require.NoError(t, err)
-	out, err := exec.RunCommand(DdevBin, []string{"stop-containers", "--all"})
-	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
+	out, err := exec.RunCommand(DdevBin, []string{"pause", "--all"})
+	assert.NoError(err, "ddev pause --all should succeed but failed, err: %v, output: %s", err, out)
 
 	// Confirm all sites are stopped.
 	apps := ddevapp.GetApps()
 	for _, app := range apps {
-		assert.True(app.SiteStatus() == ddevapp.SiteStopped, "All sites should be stopped, but %s status: %s", app.GetName(), app.SiteStatus())
+		assert.True(app.SiteStatus() == ddevapp.SitePaused, "All sites should be stopped, but %s status: %s", app.GetName(), app.SiteStatus())
 	}
 
 	// Now put the sites back together so other tests can use them.
@@ -91,7 +91,7 @@ func TestCmdStopContainersMissingProjectDirectory(t *testing.T) {
 	err = os.Rename(tmpDir, copyDir)
 	assert.NoError(err)
 
-	out, err = exec.RunCommand(DdevBin, []string{"stop-containers", projectName})
-	assert.Error(err, "Expected an error when stopping project with no project directory")
+	out, err = exec.RunCommand(DdevBin, []string{"pause", projectName})
+	assert.Error(err, "Expected an error when pausing project with no project directory")
 	assert.Contains(out, "ddev can no longer find your project files")
 }
