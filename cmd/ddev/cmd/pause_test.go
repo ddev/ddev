@@ -29,7 +29,7 @@ func TestCmdPauseContainers(t *testing.T) {
 
 		out, err := exec.RunCommand(DdevBin, []string{"pause"})
 		assert.NoError(err, "ddev pause should succeed but failed, err: %v, output: %s", err, out)
-		assert.Contains(out, "have been stopped")
+		assert.Contains(out, "has been paused")
 
 		apps := ddevapp.GetApps()
 		for _, app := range apps {
