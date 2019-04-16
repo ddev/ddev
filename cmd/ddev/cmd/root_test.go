@@ -167,10 +167,10 @@ func removeSites() {
 	for _, site := range DevTestSites {
 		_ = site.Chdir()
 
-		args := []string{"remove", "-RO"}
+		args := []string{"stop", "-RO"}
 		out, err := exec.RunCommand(DdevBin, args)
 		if err != nil {
-			log.Errorf("Failed to run ddev remove -RO command, err: %v, output: %s\n", err, out)
+			log.Errorf("Failed to run ddev stop -RO command, err: %v, output: %s\n", err, out)
 		}
 	}
 }

@@ -74,7 +74,7 @@ We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on 
 
 The most common cause of the database container not coming up is a damaged database, so the mariadb server daemon is unable to start. This is typically caused by an unexpected docker event like system shutdown or docker exit which doesn't give the db container time to clean up and close connections. See [issue](https://github.com/drud/ddev/issues/748). In general, the easiest fix is to destroy and reload the database from either a database dump or a ddev snapshot. Otherwise, that issue has more ambitious approaches that may be taken if you have neither. But the easiest approach is this, which *will destroy and then reload your project database*:
 
-1. `ddev remove --remove-data --omit-snapshot`
+1. `ddev stop --remove-data --omit-snapshot`
 2. mv .ddev .ddev.bak (renames the directory with config.yaml and docker-compose.yml and any custom nginx/php/mariadb config you may have added. Renaming it means .)
 3. `ddev config`
 4. `ddev start` 
@@ -86,7 +86,7 @@ Another approach to destroying the database is to destroy the docker volume wher
 
 The most common cause of the web container being unhealthy is a user-defined .ddev/nginx-site.conf or .ddev/apache/apache-site.conf - Please rename these to <xxx_site.conf> during testing. To figure out what's wrong with it after you've identified that as the problem, use `ddev logs` and review the error.
 
-Changes to .ddev/nginx-site.conf and .ddev/apache/apache-site.conf take effect only when you do a `ddev rm && ddev start` or the equivalent.
+Changes to .ddev/nginx-site.conf and .ddev/apache/apache-site.conf take effect only when you do a `ddev restart` or the equivalent.
 
 ## No input file specified (404) or Forbidden (403)
 
@@ -108,8 +108,7 @@ Database snapshots from MariaDB 10.1 (normally from before ddev v1.3) cannot be 
 5. Use `ddev restore-snapshot` to restore the snapshot by name
 6. If you want to go upgrade your restored database to MariaDB 10.2, you can 
   * `ddev config --mariadb-version=10.2`
-  * `ddev rm`
-  * `ddev start`
+  * `ddev restart`
  
 
 ## More Support

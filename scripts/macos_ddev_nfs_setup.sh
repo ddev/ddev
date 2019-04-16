@@ -32,7 +32,7 @@ echo "
 echo "Stopping running ddev projects"
 echo ""
 
-ddev rm -a
+ddev stop -a || true
 
 echo "== Setting up nfs..."
 # Share /Users folder. If the projects are elsewhere the /etc/exports will need

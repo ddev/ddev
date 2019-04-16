@@ -585,7 +585,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	startErr := app.StartAndWaitForSync(2)
 	out := restoreOutput()
 	//nolint: errcheck
-	defer app.Down(true, false)
+	defer app.Stop(true, false)
 
 	var logs string
 	if startErr != nil {

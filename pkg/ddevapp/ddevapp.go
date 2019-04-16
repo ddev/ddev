@@ -970,8 +970,8 @@ func (app *DdevApp) DockerEnv() {
 	}
 }
 
-// Stop initiates docker-compose stop
-func (app *DdevApp) Stop() error {
+// StopContainers initiates docker-compose stop
+func (app *DdevApp) StopContainers() error {
 	app.DockerEnv()
 
 	if app.SiteStatus() == SiteNotFound {
@@ -1096,7 +1096,7 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 	labels := map[string]string{"com.ddev.site-name": app.Name, "com.docker.compose.service": "db"}
 	_, err = dockerutil.ContainerWait(containerWaitTimeout, labels)
 	if err != nil {
-		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf removing, you can remove without a snapshot using \n'ddev remove --remove-data --omit-snapshot', \nwhich will destroy your database", app.Name)
+		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf removing, you can remove without a snapshot using \n'ddev stop --remove-data --omit-snapshot', \nwhich will destroy your database", app.Name)
 	}
 
 	util.Warning("Creating database snapshot %s", snapshotName)
@@ -1147,7 +1147,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SiteStopped {
-		err := app.Down(false, false)
+		err := app.Stop(false, false)
 		if err != nil {
 			return fmt.Errorf("Failed to rm  project for RestoreSnapshot: %v", err)
 		}
@@ -1166,8 +1166,8 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	return nil
 }
 
-// Down stops the docker containers for the project in current directory.
-func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
+// Stops and Removes the docker containers for the project in current directory.
+func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
 
 	var err error
@@ -1180,7 +1180,7 @@ func (app *DdevApp) Down(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	err = app.Stop()
+	err = app.StopContainers()
 	if err != nil {
 		util.Warning("Failed to stop containers for %s: %v", app.GetName(), err)
 	}

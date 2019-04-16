@@ -6,36 +6,78 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// For single remove only: remove db and related data
+var removeData bool
+
+// Stop all projects (but not available with -a
 var stopAll bool
 
-// DdevStopCmd represents the stop command
+// create a snapshot during remove (default to false with regular remove, default to true with rm --remove-data
+var createSnapshot bool
+
+// force omission of snapshot during remove-data
+var omitSnapshot bool
+
+// Stop the ddev-ssh-agent
+var stopSSHAgent bool
+
+// DdevStopCmd represents the remove command
 var DdevStopCmd = &cobra.Command{
-	Use:   "stop [projectname ...]",
-	Short: "Stop the development environment for a project.",
-	Long: `Stop the development environment for a project. You can run 'ddev stop'
-from a project directory to stop that project, or you can stop running projects
-in any directory by running 'ddev stop projectname [projectname ...]'`,
+	Use:     "stop [projectname ...]",
+	Aliases: []string{"rm", "remove"},
+	Short:   "Stop and remove the containers of a project. Does not lose or harm anything unless you add --remove-data.",
+	Long: `Stop and remove the containers of a project. You can run 'ddev stp['
+from a project directory to stop/remove that project, or you can stop/remove projects in
+any directory by running 'ddev stop projectname [projectname ...]' or 'ddev stop -a'.
+
+By default, stop is a non-destructive operation and will leave database
+contents intact. It never touches your code or files directories.
+
+To remove database contents, use "ddev stop --remove-data".
+
+To snapshot the database on stop, use "ddev stop --snapshot"; A snapshot is automatically created on
+"ddev stop --remove-data" unless you use "ddev stop --remove-data --omit-snapshot".
+`,
 	Run: func(cmd *cobra.Command, args []string) {
-		projects, err := getRequestedProjects(args, stopAll)
-		if err != nil {
-			util.Failed("Unable to get project(s): %v", err)
+		if createSnapshot && omitSnapshot {
+			util.Failed("Illegal option combination: --snapshot and --omit-snapshot:")
 		}
 
+		projects, err := getRequestedProjects(args, stopAll)
+		if err != nil {
+			util.Failed("Failed to get project(s): %v", err)
+		}
+
+		// Iterate through the list of projects built above, removing each one.
 		for _, project := range projects {
-			if err := ddevapp.CheckForMissingProjectFiles(project); err != nil {
-				util.Failed("Failed to stop %s: %v", project.GetName(), err)
+			if project.SiteStatus() == ddevapp.SiteNotFound {
+				util.Warning("Project %s is not currently running. Try 'ddev start'.", project.GetName())
 			}
 
-			if err := project.Stop(); err != nil {
-				util.Failed("Failed to stop %s: %v", project.GetName(), err)
+			// We do the snapshot if either --snapshot or --remove-data UNLESS omit-snapshot is set
+			doSnapshot := (createSnapshot || removeData) && !omitSnapshot
+			if err := project.Stop(removeData, doSnapshot); err != nil {
+				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
 			}
 
-			util.Success("Project %s has been stopped.", project.GetName())
+			util.Success("Project %s has been stopped and removed.", project.GetName())
+		}
+
+		if stopSSHAgent {
+			if err := ddevapp.RemoveSSHAgentContainer(); err != nil {
+				util.Error("Failed to remove ddev-ssh-agent: %v", err)
+			}
 		}
 	},
 }
 
 func init() {
-	DdevStopCmd.Flags().BoolVarP(&stopAll, "all", "a", false, "Stop all running projects")
+	DdevStopCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored project data (MySQL, logs, etc.)")
+	DdevStopCmd.Flags().BoolVarP(&createSnapshot, "snapshot", "S", false, "Create database snapshot")
+	DdevStopCmd.Flags().BoolVarP(&omitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")
+
+	DdevStopCmd.Flags().BoolVarP(&stopAll, "all", "a", false, "Stop and remove all running or container-stopped projects")
+	DdevStopCmd.Flags().BoolVarP(&stopSSHAgent, "stop-ssh-agent", "", false, "Stop the ddev-ssh-agent container")
+
 	RootCmd.AddCommand(DdevStopCmd)
 }

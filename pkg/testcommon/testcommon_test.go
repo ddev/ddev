@@ -178,7 +178,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	err = app.WriteConfig()
 	assert.NoError(err)
 
-	err = app.Down(true, false)
+	err = app.Stop(true, false)
 	assert.NoError(err)
 
 	cleanup()

@@ -1,6 +1,6 @@
 <h1>Using the ddev command line interface (CLI)</h1>
 
-Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands. There are commands to configure a project, start, stop, remove, describe, etc. Each command also has help. For example, `ddev describe -h`.
+Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands. There are commands to configure a project, start, remove, describe, etc. Each command also has help. For example, `ddev describe -h`.
 
 
 ## Quickstart Guides
@@ -50,8 +50,7 @@ mkdir my-wordpress-site
 cd my-wordpress-site
 ddev composer create wordpress/skeleton --no-interaction
 ddev config --docroot=wp --project-type=wordpress
-ddev rm
-ddev start
+ddev restart
 ```
 
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
@@ -113,7 +112,7 @@ cd my-drupal8-site
 ddev config --project-type php
 ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction
 ddev config --project-type drupal8
-ddev rm && ddev start
+ddev restart
 ```
 
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
@@ -143,8 +142,7 @@ cd my-typo3-site
 ddev config --project-type php
 ddev composer create typo3/cms-base-distribution ^9 --no-interaction
 ddev config --project-type typo3
-ddev rm
-ddev start
+ddev restart
 ```
 
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
@@ -399,7 +397,7 @@ If you want to use import-files without answering prompts, you can use the `--sr
 
 ## Snapshotting and restoring a database
 
-The project database is stored in a docker volume, but can be snapshotted (and later restored) with the `ddev snapshot` command. A snapshot is automatically taken when you do a `ddev remove --remove-data`. For example:
+The project database is stored in a docker volume, but can be snapshotted (and later restored) with the `ddev snapshot` command. A snapshot is automatically taken when you do a `ddev stop --remove-data`. For example:
 
 ```
 $ ddev snapshot
@@ -441,15 +439,11 @@ The `ddev logs` command allows you to easily view error logs from the web contai
 
 ## Stopping a project
 
-To stop the development environment for a project run `ddev stop` in its working directory. You can also stop a particular project's environment from any directory by running `ddev stop <projectname>` or stop every running project via `ddev stop --all`.
+To remove a project's containers run `ddev stop` in the working directory of the project. To remove any running project's containers, providing the project name as an argument, e.g. `ddev stop <projectname>`.
 
-## Removing a project
+`ddev stop` is *not* destructive. It removes the docker containers but does not remove the database for the project, and does nothing to your codebase. This allows you to have many configured projects with databases loaded without wasting docker containers on unused projects. **`ddev stop` does not affect the project code base and files.**
 
-To remove a project's containers run `ddev remove` in the working directory of the project. To remove any running project's containers, providing the project name as an argument, e.g. `ddev remove <projectname>`.
-
-`ddev remove` is *not* destructive. It removes the docker containers but does not remove the database for the project. This allows you to have many configured projects with databases loaded without wasting docker containers on unused projects. `ddev remove` does not affect the project code base and files.
-
-To remove the imported database for a project, use the flag `--remove-data`, as in `ddev remove --remove-data`. This command will destroy both the containers and the imported database contents.
+To remove the imported database for a project, use the flag `--remove-data`, as in `ddev stop --remove-data`. This command will destroy both the containers and the imported database contents.
 
 ## ddev Command Auto-Completion
 

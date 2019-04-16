@@ -97,7 +97,7 @@ func TestServices(t *testing.T) {
 			checkSolrService(t, app)
 			checkMemcachedService(t, app)
 
-			err = app.Down(true, false)
+			err = app.Stop(true, false)
 			assert.NoError(err)
 			site.Cleanup()
 		}

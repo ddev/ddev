@@ -23,21 +23,17 @@ func TestCmdStop(t *testing.T) {
 	// Make sure we have running sites.
 	err := addSites()
 	require.NoError(t, err)
-
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
 
 		out, err := exec.RunCommand(DdevBin, []string{"stop"})
 		assert.NoError(err, "ddev stop should succeed but failed, err: %v, output: %s", err, out)
-		assert.Contains(out, "has been stopped")
+		assert.Contains(out, "has been stopped and removed")
 
+		// Ensure the site that was just stopped does not appear in the list of sites
 		apps := ddevapp.GetApps()
 		for _, app := range apps {
-			if app.GetName() != site.Name {
-				continue
-			}
-
-			assert.True(app.SiteStatus() == ddevapp.SiteStopped)
+			assert.True(app.GetName() != site.Name)
 		}
 
 		cleanup()
@@ -46,27 +42,22 @@ func TestCmdStop(t *testing.T) {
 	// Re-create running sites.
 	err = addSites()
 	require.NoError(t, err)
+
+	// Ensure the --all option can remove all active apps
 	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
 	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
-
-	// Confirm all sites are stopped.
-	apps := ddevapp.GetApps()
-	for _, app := range apps {
-		assert.True(app.SiteStatus() == ddevapp.SiteStopped, "All sites should be stopped, but %s status: %s", app.GetName(), app.SiteStatus())
-	}
-
-	// Now put the sites back together so other tests can use them.
-	err = addSites()
-	require.NoError(t, err)
+	out, err = exec.RunCommand(DdevBin, []string{"list"})
+	assert.NoError(err)
+	assert.Contains(out, "no active ddev projects")
+	assert.Equal(0, len(ddevapp.GetApps()), "Not all apps were removed after ddev stop --all")
 }
 
-// TestCmdStopMissingProjectDirectory ensures the `ddev stop` command returns the expected help text when
-// a project's directory no longer exists.
+// TestCmdStopMissingProjectDirectory ensures the `ddev stop` command can operate on a project when the
+// project's directory has been removed.
 func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
 	assert := asrt.New(t)
-
 	projDir, _ := os.Getwd()
 
 	projectName := util.RandString(6)
@@ -78,11 +69,11 @@ func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
 	assert.NoError(err)
 
+	//nolint: errcheck
+	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", projectName})
+
 	_, err = exec.RunCommand(DdevBin, []string{"start"})
 	assert.NoError(err)
-
-	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", projectName})
 
 	err = os.Chdir(projDir)
 	assert.NoError(err)
@@ -92,6 +83,9 @@ func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	out, err = exec.RunCommand(DdevBin, []string{"stop", projectName})
-	assert.Error(err, "Expected an error when stopping project with no project directory")
-	assert.Contains(out, "ddev can no longer find your project files")
+	assert.NoError(err)
+	assert.Contains(out, "has been stopped and removed")
+
+	err = os.Rename(copyDir, tmpDir)
+	assert.NoError(err)
 }

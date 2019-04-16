@@ -58,11 +58,11 @@ func TestPortOverride(t *testing.T) {
 		}
 
 		startErr := app.StartAndWaitForSync(5)
-		// defer the app.Down so we have a more diverse set of tests. If we brought
+		// defer the app.Stop so we have a more diverse set of tests. If we brought
 		// each down before testing the next that would be a more trivial test.
 		// Don't worry about the possible error case as this is just a test cleanup
 		// nolint: errcheck
-		defer app.Down(true, false)
+		defer app.Stop(true, false)
 
 		var logs string
 		if startErr != nil {

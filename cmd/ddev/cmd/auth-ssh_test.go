@@ -21,11 +21,17 @@ func TestCmdAuthSSH(t *testing.T) {
 	if !util.IsCommandAvailable("expect") {
 		t.Skip("Skipping TestCmdAuthSSH because expect scripting tool is not available")
 	}
+
 	testDir, _ := os.Getwd()
 	defer cmd.DevTestSites[0].Chdir()()
 
+	_, err := exec.RunCommand(cmd.DdevBin, []string{"start"})
+	require.NoError(t, err)
+	// nolint: errcheck
+	defer exec.RunCommand(cmd.DdevBin, []string{"stop", "--remove-data", "--omit-snapshot"})
+
 	// Delete any existing identities from ddev-ssh-agent
-	_, err := exec.RunCommand("docker", []string{"exec", "ddev-ssh-agent", "ssh-add", "-D"})
+	_, err = exec.RunCommand("docker", []string{"exec", "ddev-ssh-agent", "ssh-add", "-D"})
 	assert.NoError(err)
 
 	// Run a simple ssh server to act on and get its internal IP address
@@ -58,7 +64,6 @@ func TestCmdAuthSSH(t *testing.T) {
 	assert.NoError(err)
 	sshDir := filepath.Join(testAuthSSHDir, ".ssh")
 	out, err := exec.RunCommand("expect", []string{filepath.Join(testAuthSSHDir, "ddevauthssh.expect"), cmd.DdevBin, sshDir, "testkey"})
-	_ = out
 	assert.NoError(err)
 	assert.Contains(string(out), "Identity added:")
 
