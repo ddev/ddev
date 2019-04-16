@@ -35,5 +35,5 @@ services:
   web:
     links:
       - solr:$DDEV_HOSTNAME
-  volumes:
-    data: # This creates a Docker volume that sticks around even if you remove or rebuild the container
+volumes:
+  data: # This creates a Docker volume that sticks around even if you remove or rebuild the container
