@@ -344,11 +344,6 @@ services:
       {{ end }}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - type: "volume"
-        source: ddev-router-cert-cache
-        target: "/etc/nginx/certs"
-        volume:
-          nocopy: true
     restart: "no"
     healthcheck:
       interval: 5s
@@ -359,9 +354,6 @@ networks:
    default:
      external:
        name: ddev_default
-volumes:
-  ddev-router-cert-cache:
-    name: "ddev-router-cert-cache"
 `
 
 const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'
