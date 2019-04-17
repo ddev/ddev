@@ -1,4 +1,6 @@
-FROM nginx:1.15.3
+FROM nginx:1.15.12
+
+ENV MKCERT_VERSION=v1.3.0
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DOCKER_GEN_VERSION 0.7.4
@@ -18,6 +20,8 @@ RUN wget -q https://github.com/jwilder/docker-gen/releases/download/$DOCKER_GEN_
     rm /docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz && \
     chmod ugo+x /usr/local/bin/forego && \
     mkdir -p /etc/nginx/certs
+
+RUN curl -sSL https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-$MKCERT_VERSION-linux-amd64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkcert -install
 
 # Configure Nginx and apply fix for very long server names
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf \

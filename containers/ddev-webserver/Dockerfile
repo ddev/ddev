@@ -8,6 +8,7 @@ ENV DRUSH_VERSION=8.1.18
 ENV WP_CLI_VERSION=2.1.0
 ENV MAILHOG_VERSION=1.0.0
 ENV BACKDROP_DRUSH_VERSION=0.0.6
+ENV MKCERT_VERSION=v1.3.0
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
@@ -92,6 +93,7 @@ RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 
 ADD files /
 
+RUN curl -sSL https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-$MKCERT_VERSION-linux-amd64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkcert -install
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 RUN composer global require consolidation/cgr
 RUN /home/.composer/vendor/bin/cgr drush/drush:$DRUSH_VERSION && ln -s /home/.composer/vendor/bin/drush /usr/local/bin/drush

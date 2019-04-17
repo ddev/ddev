@@ -21,10 +21,11 @@ fi
 
 if [ "$GEN_CERT" = true ]; then
     echo "Generating wildcard cert for {{ $cert }}"
-    openssl req -new -x509 -days 3285 -nodes \
-                -out /etc/nginx/certs/{{ $cert }}.crt \
-                -keyout /etc/nginx/certs/{{ $cert }}.key \
-                -subj "/C=US/ST=Colorado/L=Denver/O=DRUD Technology, LLC/OU=ddev/CN=*.{{ $cert }}"
+    mkcert -cert-file /etc/nginx/certs/{{ $cert }}.crt -key-file /etc/nginx/certs/{{ $cert }}.key "*.{{ $cert }}"
+#    openssl req -new -x509 -days 3285 -nodes \
+#                -out /etc/nginx/certs/{{ $cert }}.crt \
+#                -keyout /etc/nginx/certs/{{ $cert }}.key \
+#                -subj "/C=US/ST=Colorado/L=Denver/O=DRUD Technology, LLC/OU=ddev/CN=*.{{ $cert }}"
 fi
 
 {{ end }}
