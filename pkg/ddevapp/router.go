@@ -58,14 +58,6 @@ func StartDdevRouter() error {
 		return fmt.Errorf("unable to create directory for ddev router: %v", err)
 	}
 
-	certDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "certs")
-	if _, err = os.Stat(certDir); os.IsNotExist(err) {
-		err = os.MkdirAll(certDir, 0755)
-		if err != nil {
-			return fmt.Errorf("unable to create directory for ddev certs: %v", err)
-		}
-	}
-
 	var doc bytes.Buffer
 	f, ferr := os.Create(routerComposePath)
 	if ferr != nil {
