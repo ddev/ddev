@@ -8,6 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"html/template"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"sort"
@@ -86,6 +87,23 @@ func StartDdevRouter() error {
 	err = CheckRouterPorts()
 	if err != nil {
 		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen", err)
+	}
+
+	// run docker-compose create -d against the ddev-router compose file
+	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "create")
+	if err != nil {
+		return fmt.Errorf("failed to create ddev-router: %v", err)
+	}
+
+	out, err := exec.Command("mkcert", "-CAROOT").Output()
+	caroot := strings.Trim(string(out), "\n")
+	if err == nil {
+		_, err = exec.Command("docker", "cp", caroot, RouterContainer+":/root/.local/share").Output()
+		if err != nil {
+			return fmt.Errorf("unable to docker cp %s %s:%s: %v", caroot, RouterContainer, ":/root/.local/share", err)
+		}
+	} else {
+		util.Warning("mkcert is not available in $PATH, https certificates will not show as valid: %v", err)
 	}
 
 	// run docker-compose up -d against the ddev-router compose file
