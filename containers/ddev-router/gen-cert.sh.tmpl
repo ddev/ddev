@@ -9,23 +9,8 @@ set -euo pipefail
 {{ $hostNoTLDParts := split (trimSuffix (printf ".%s" $tld) $host) "." }}
 {{ $cert := printf "%s.%s" (last $hostNoTLDParts) $tld }}
 
-GEN_CERT=false
 
-if [ -f /etc/nginx/certs/{{ $cert }}.crt ]; then
-    if ! openssl x509 -checkend 86400 -noout -in /etc/nginx/certs/{{ $cert }}.crt; then
-        GEN_CERT=true
-    fi
-else
-    GEN_CERT=true
-fi
-
-if [ "$GEN_CERT" = true ]; then
-    echo "Generating wildcard cert for {{ $cert }}"
-    mkcert -cert-file /etc/nginx/certs/{{ $cert }}.crt -key-file /etc/nginx/certs/{{ $cert }}.key "*.{{ $cert }}"
-#    openssl req -new -x509 -days 3285 -nodes \
-#                -out /etc/nginx/certs/{{ $cert }}.crt \
-#                -keyout /etc/nginx/certs/{{ $cert }}.key \
-#                -subj "/C=US/ST=Colorado/L=Denver/O=DRUD Technology, LLC/OU=ddev/CN=*.{{ $cert }}"
-fi
+echo "Generating wildcard cert for {{ $cert }}"
+mkcert -cert-file /etc/nginx/certs/{{ $cert }}.crt -key-file /etc/nginx/certs/{{ $cert }}.key "*.{{ $cert }}"
 
 {{ end }}
