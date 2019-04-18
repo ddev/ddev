@@ -42,9 +42,7 @@ hooks:
     - exec: "drush cc all"
     - exec: "drush uli"
   post-start:
-    - exec: "sudo apt-get update"
-    - exec: "sudo apt-get install -y ghostscript sqlite3 php7.2-sqlite3"
-```
+    - exec: bash -c "sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ghostscript sqlite3 php7.2-sqlite3 && sudo killall -HUP php-fpm"```
 
 Example:
 
@@ -136,5 +134,5 @@ hooks:
 hooks:
     post-start:
       # Install php modules and then tell php-fpm to reload
-      - exec: bash -c "sudo apt-get update && sudo apt-get install -y php7.1-ldap php7.1-tidy && killall -HUP php-fpm"
+      - exec: bash -c "sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y php7.1-ldap php7.1-tidy && killall -HUP php-fpm"
 ```
