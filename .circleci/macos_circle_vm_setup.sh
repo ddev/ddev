@@ -14,11 +14,13 @@ nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
 brew tap drud/ddev
 
-for item in mysql-client zip nsis jq expect coreutils golang ddev; do
+for item in mysql-client zip nsis jq expect coreutils golang ddev mkcert; do
     brew install $item || brew upgrade $item
 done
 
 brew link --force mysql-client
+
+mkcert -install
 
 curl -fsSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/releases/download/v0.3.2/gotestsum_0.3.2_darwin_amd64.tar.gz && tar -C /usr/local/bin -zxf /tmp/gotestsum.tgz gotestsum
 
