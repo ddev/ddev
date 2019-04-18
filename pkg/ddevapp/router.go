@@ -98,9 +98,9 @@ func StartDdevRouter() error {
 	out, err := exec.Command("mkcert", "-CAROOT").Output()
 	caroot := strings.Trim(string(out), "\n")
 	if err == nil {
-		_, err = exec.Command("docker", "cp", caroot, RouterContainer+":/root/.local/share").Output()
+		out, err = exec.Command("docker", "cp", caroot, RouterContainer+":/root/.local/share").CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("unable to docker cp %s %s:%s: %v", caroot, RouterContainer, ":/root/.local/share", err)
+			return fmt.Errorf("unable to docker cp %s %s:%s: %v output='%v'", caroot, RouterContainer, ":/root/.local/share", err, out)
 		}
 	} else {
 		util.Warning("mkcert is not available in $PATH, https certificates will not show as valid: %v", err)
