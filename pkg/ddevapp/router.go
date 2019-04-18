@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
 	"sort"
 
 	"strings"
@@ -53,11 +52,6 @@ func StartDdevRouter() error {
 	newExposedPorts := determineRouterPorts()
 
 	routerComposePath := RouterComposeYAMLPath()
-	routerdir := filepath.Dir(routerComposePath)
-	err := os.MkdirAll(routerdir, 0755)
-	if err != nil {
-		return fmt.Errorf("unable to create directory for ddev router: %v", err)
-	}
 
 	var doc bytes.Buffer
 	f, ferr := os.Create(routerComposePath)
@@ -67,7 +61,7 @@ func StartDdevRouter() error {
 	defer util.CheckClose(f)
 
 	templ := template.New("compose template")
-	templ, err = templ.Parse(DdevRouterTemplate)
+	templ, err := templ.Parse(DdevRouterTemplate)
 	if err != nil {
 		return err
 	}
@@ -89,21 +83,21 @@ func StartDdevRouter() error {
 		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen", err)
 	}
 
-	// run docker-compose create -d against the ddev-router compose file
+	// run docker-compose up --no-start against the ddev-router compose file
+	// We want to get the root CA into the ddev-router before it starts up.
 	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "up", "--no-start")
 	if err != nil {
 		return fmt.Errorf("failed to create ddev-router: %v", err)
 	}
 
-	out, err := exec.Command("mkcert", "-CAROOT").Output()
-	caroot := strings.Trim(string(out), "\n")
-	if err == nil {
-		out, err = exec.Command("docker", "cp", caroot, RouterContainer+":/root/.local/share").CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("unable to docker cp %s %s:%s: %v output='%v'", caroot, RouterContainer, ":/root/.local/share", err, out)
-		}
+	caroot, err := getCAPATH()
+	if err != nil {
+		util.Warning("mkcert is not installed or mkcert -install has not been run, https certificates will not show as valid: %v", err)
 	} else {
-		util.Warning("mkcert is not available in $PATH, https certificates will not show as valid: %v", err)
+		out, err := exec.Command("docker", "cp", caroot, RouterContainer+":/root/.local/share").CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("unable to docker cp %s %s:%s: %v output='%v'", caroot, RouterContainer, ":/root/.local/share", err, string(out))
+		}
 	}
 
 	// run docker-compose up -d against the ddev-router compose file
