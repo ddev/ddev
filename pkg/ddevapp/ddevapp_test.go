@@ -897,7 +897,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Test static content.
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
 		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 60)

@@ -326,9 +326,10 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 	}
 	localAddress := u.String()
 
-	// Ignore https cert failure, since we are in testing environment.
-	insecureTransport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	// use ServerName: fakeHost to verify basic usage of certificate.
+	// This technique is from https://stackoverflow.com/a/47169975/215713
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{ServerName: fakeHost},
 	}
 
 	// Do not follow redirects, https://stackoverflow.com/a/38150816/215713
@@ -336,7 +337,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
-		Transport: insecureTransport,
+		Transport: transport,
 		Timeout:   timeoutTime,
 	}
 
