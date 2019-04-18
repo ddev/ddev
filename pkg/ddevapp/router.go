@@ -78,25 +78,33 @@ func StartDdevRouter() error {
 	_, err = f.WriteString(doc.String())
 	util.CheckErr(err)
 
+	routerRunning := false
+	routerContainer, err := findDdevRouter()
+	if routerContainer != nil && err == nil {
+		routerRunning = true
+	}
+
 	err = CheckRouterPorts()
 	if err != nil {
 		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen", err)
 	}
 
-	// run docker-compose up --no-start against the ddev-router compose file
-	// We want to get the root CA into the ddev-router before it starts up.
-	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "up", "--no-start")
-	if err != nil {
-		return fmt.Errorf("failed to create ddev-router: %v", err)
-	}
-
-	caroot, err := getCAPATH()
-	if err != nil {
-		util.Warning("mkcert is not installed or mkcert -install has not been run, https certificates will not show as valid: %v", err)
-	} else {
-		out, err := exec.Command("docker", "cp", caroot, RouterContainer+":/root/.local/share").CombinedOutput()
+	if !routerRunning {
+		// run docker-compose up --no-start against the ddev-router compose file
+		// We have to get the root CA into the ddev-router before it starts up.
+		_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "up", "--no-start")
 		if err != nil {
-			return fmt.Errorf("unable to docker cp %s %s:%s: %v output='%v'", caroot, RouterContainer, ":/root/.local/share", err, string(out))
+			return fmt.Errorf("failed to create ddev-router: %v", err)
+		}
+
+		caroot, err := getCAPATH()
+		if err != nil {
+			util.Warning("mkcert is not installed or mkcert -install has not been run, https certificates will not show as valid: %v", err)
+		} else {
+			out, err := exec.Command("docker", "cp", caroot, RouterContainer+":/root/.local/share").CombinedOutput()
+			if err != nil {
+				return fmt.Errorf("unable to docker cp %s %s:%s: %v output='%v'", caroot, RouterContainer, ":/root/.local/share", err, string(out))
+			}
 		}
 	}
 
@@ -117,8 +125,7 @@ func StartDdevRouter() error {
 }
 
 // findDdevRouter usees FindContainerByLabels to get our router container and
-// return it. This is currently unused but may be useful in the future.
-// nolint: deadcode
+// return it.
 func findDdevRouter() (*docker.APIContainers, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.service": RouterProjectName,
