@@ -20,11 +20,11 @@ func getCAPATH() (string, error) {
 
 	out, err := exec.Command("mkcert", "-CAROOT").Output()
 	if err != nil {
-		return "", fmt.Errorf("mkcert -CAROOT failed: %v")
+		return "", fmt.Errorf("mkcert -CAROOT failed: %v", err)
 	}
 	caroot := strings.Trim(string(out), "\n")
 	if !fileutil.FileIsReadable(filepath.Join(caroot, "rootCA-key.pem")) || !fileutil.FileExists(filepath.Join(caroot, "rootCA.pem")) {
-		return caroot, fmt.Errorf("`mkcert -install` has not yet been run. Please run it.")
+		return caroot, fmt.Errorf("`mkcert -install` has not yet been run, please run it")
 	}
 	return caroot, nil
 }
