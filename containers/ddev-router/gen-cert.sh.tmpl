@@ -1,16 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
-{{/* Set the cert name to <domain.tld>, stripping any subdomain for use of wildcard cert */}}
-{{ $host := trim $host }}
-{{ $hostParts := split $host "." }}
-{{ $tld := last $hostParts }}
-{{ $hostNoTLDParts := split (trimSuffix (printf ".%s" $tld) $host) "." }}
-{{ $cert := printf "%s.%s" (last $hostNoTLDParts) $tld }}
+# mkcert is fully capable of generating all needed names in a single container.
+mkcert -cert-file /etc/nginx/certs/master.crt -key-file /etc/nginx/certs/master.key {{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }} {{ trim $host }} {{ end }} "127.0.0.1"
 
-
-echo "Generating wildcard cert for {{ $cert }}"
-mkcert -cert-file /etc/nginx/certs/{{ $cert }}.crt -key-file /etc/nginx/certs/{{ $cert }}.key "*.{{ $cert }}"
-
-{{ end }}

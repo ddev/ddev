@@ -206,19 +206,8 @@ server {
 {{/* Get the VIRTUAL_ROOT By containers w/ use fastcgi root */}}
 {{ $vhost_root := or (first (groupByKeys $containers "Env.VIRTUAL_ROOT")) "/var/www/public" }}
 
-{{/* Set the cert name to <domain.tld>, stripping any subdomain for use of wildcard cert */}}
-{{ $hostParts := split $host "." }}
-{{ $tld := last $hostParts }}
-{{ $hostNoTLDParts := split (trimSuffix (printf ".%s" $tld) $host) "." }}
-{{ $certDomain := printf "%s.%s" (last $hostNoTLDParts) $tld }}
-
-{{/* Get the best matching cert  by name for the vhost. */}}
-{{ $vhostCert := (closest (dir "/etc/nginx/certs") (printf "%s.crt" $host))}}
-{{/* vhostCert is actually a filename so remove any suffixes since they are added later */}}
-{{ $vhostCert := trimSuffix ".crt" $vhostCert }}
-{{ $vhostCert := trimSuffix ".key" $vhostCert }}
-{{/* Use the cert with best vhost match or fallback to certDomain */}}
-{{ $cert := (coalesce $vhostCert $certDomain) }}
+# Use a single master.crt/master.key
+{{ $cert := "master" }}
 
 {{ range $container := whereExist $containers "Env.HTTP_EXPOSE" }}
     {{/* Get the HTTP_EXPOSE defined by containers w/ the same vhost, falling back to port 80 */}}
