@@ -318,11 +318,10 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 	assert.NoError(err)
 
 	fakeHost := u.Hostname()
-	u.Host = dockerIP
 	// Add the port if there is one.
+	u.Host = dockerIP
 	if port != "" {
-		fakeHost = u.Hostname() + ":" + port
-		u.Host = dockerIP + ":" + port
+		u.Host = u.Host + ":" + port
 	}
 	localAddress := u.String()
 
