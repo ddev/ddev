@@ -64,7 +64,7 @@ services:
     # ports is list of exposed *container* ports
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
-	  #- "{{ .DockerIP }}::443"
+      - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
       - "{{ .MailhogPort }}"
     environment:
       - DDEV_URL=$DDEV_URL
