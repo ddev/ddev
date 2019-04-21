@@ -93,6 +93,8 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.ssh* ~/.drush ~/.gitconfig ~/.my.cnf
 
+mkcert -install
+
 echo 'Server started'
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
