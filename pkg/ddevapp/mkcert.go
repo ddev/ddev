@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-// getCAPATH() verifies that the mkcert command is available and its root keys readable.
+// getCAROOT() verifies that the mkcert command is available and its root keys readable.
 // 1. Find out CAROOT
 // 2. Look there to see if key/crt are readable
 // 3. If not, see if mkcert is even available, return informative message if not
-func getCAPATH() (string, error) {
+func getCAROOT() (string, error) {
 	_, err := exec.LookPath("mkcert")
 	if err != nil {
 		return "", fmt.Errorf("mkcert not found, TLS certs on localhost will not be trustable")

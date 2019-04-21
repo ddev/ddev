@@ -22,7 +22,7 @@ ENV PATH "$PATH:/home/.composer/vendor/bin"
 
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
-ENV COMPOSER_CACHE_DIR /mnt/composer_cache
+ENV COMPOSER_CACHE_DIR /mnt/ddev-global-cache/composer
 # Windows, especially Win10 Home/Docker toolbox, can take forever on composer build.
 ENV COMPOSER_PROCESS_TIMEOUT 2000
 
@@ -93,7 +93,6 @@ RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 
 ADD files /
 
-RUN curl -sSL https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-$MKCERT_VERSION-linux-amd64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkcert -install
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 RUN composer global require consolidation/cgr
 RUN /home/.composer/vendor/bin/cgr drush/drush:$DRUSH_VERSION && ln -s /home/.composer/vendor/bin/drush /usr/local/bin/drush
@@ -118,10 +117,12 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
 
 RUN chmod -R 777 /var/log
 
-RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/composer_cache
-
 # All users will have their home directory in /home, make it fully writeable
-RUN mkdir -p /home/.composer /home/.drush/commands /home/.drush/aliases && chmod -R ugo+rw /home /mnt/composer_cache
+RUN mkdir -p /home/.composer /home/.drush/commands /home/.drush/aliases /mnt/ddev-global-cache/mkcert && chmod -R ugo+rw /home /mnt/ddev-global-cache/
+
+RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
+
+RUN curl -sSL https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-$MKCERT_VERSION-linux-amd64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkdir -p /home/.local/share && ln -s /mnt/ddev-global-cache/mkcert /home/.local/share/mkcert && mkcert -install
 
 # Except that .my.cnf can't be writeable or mysql won't use it.
 RUN chmod 444 /home/.my.cnf

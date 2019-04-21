@@ -52,7 +52,7 @@ services:
         consistency: cached
         {{ end }}
       - ".:/mnt/ddev_config:ro"
-      - ddev-composer-cache:/mnt/composer_cache
+      - ddev-global-cache:/mnt/ddev-global-cache
       {{ if not .OmitSSHAgent }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       {{ end }}
@@ -169,8 +169,8 @@ volumes:
   ddev-ssh-agent_socket_dir:
     external: true
   {{ end }}
-  ddev-composer-cache:
-    name: ddev-composer-cache
+  ddev-global-cache:
+    name: ddev-global-cache
   {{ if .WebcacheEnabled }}
   webcachevol:
   unisoncatalogvol:
@@ -344,6 +344,7 @@ services:
       {{ end }}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ddev-global-cache:/mnt/ddev-global-cache:rw
     restart: "no"
     healthcheck:
       interval: 5s
@@ -354,6 +355,9 @@ networks:
    default:
      external:
        name: ddev_default
+volumes: 
+   ddev-global-cache:
+     name: ddev-global-cache
 `
 
 const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'
