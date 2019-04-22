@@ -39,4 +39,4 @@ include ../../build-tools/makefile_components/base_push.mak
 include ../../build-tools/makefile_components/base_test_python.mak
 
 test: container
-	test/containertest.sh
+	bash -c test/containertest.sh
