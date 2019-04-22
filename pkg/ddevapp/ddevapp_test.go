@@ -1685,7 +1685,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	// StopRouterIfNoContainers can't be used here because it checks to see if containers are running
 	// and doesn't do its job as a result.
 	dest := ddevapp.RouterComposeYAMLPath()
-	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down", "-v")
+	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
 	assert.NoError(err, "Failed to stop router using docker-compose, err=%v", err)
 
 	// Occupy port 80 using docker busybox trick, then see if we can start router.
