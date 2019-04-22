@@ -102,7 +102,7 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 Database snapshots from MariaDB 10.1 (normally from before ddev v1.3) cannot be restored into a MariaDB 10.2 environment. If you need to restore a 10.1 snapshot, here's how to do it. 
 
 1. Back up any existing database you have running with `ddev export-db` or something like `ddev snapshot --name=before_reverting_to_10.1`
-2. `ddev rm --remove-data` will completely remove the existing (10.2) database.
+2. `ddev stop --remove-data` will completely remove the existing (10.2) database.
 3. `ddev config --mariadb-version=10.1`
 4. `ddev start` to start with MariaDB 10.1
 5. Use `ddev restore-snapshot` to restore the snapshot by name

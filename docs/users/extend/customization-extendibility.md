@@ -60,7 +60,7 @@ If you're using `webserver_type: apache-fpm` or `webserver_type: apache-cgi` in 
 - The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the healthcheck script to work.
 `
 - Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose.
-- **IMPORTANT**: Changes to .ddev/apache/apache-site.conf take place on a `ddev rm && ddev start` (or when the container is rebuilt for another reason).
+- **IMPORTANT**: Changes to .ddev/apache/apache-site.conf take place on a `ddev restart` (or when the container is rebuilt for another reason).
 
 ## Providing custom PHP configuration (php.ini)
 
