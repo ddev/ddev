@@ -11,12 +11,12 @@ sudo apt-get install -qq mysql-client realpath zip nsis jq expect nfs-kernel-ser
 if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
     export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
-    echo "export PATH=/home/linuxbrew/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bash_profile
+    echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
 fi
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
-/home/linuxbrew/.linuxbrew/bin/brew update
+brew update
 for item in osslsigncode golang mkcert; do
-    /home/linuxbrew/.linuxbrew/bin/brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
+    brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
 done
 
 mkcert -install
