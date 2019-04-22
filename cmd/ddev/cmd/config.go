@@ -112,8 +112,8 @@ var (
 	// hostWebserverPortArg sets host_webserver_port
 	hostWebserverPortArg string
 
-	// hostHttpsPortArg sets host_https_port
-	hostHttpsPortArg string
+	// hostHTTPSPortArg sets host_https_port
+	hostHTTPSPortArg string
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -220,7 +220,7 @@ func init() {
 	ConfigCommand.Flags().StringVar(&mariaDBVersionArg, "mariadb-version", "10.2", "mariadb version to use")
 	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")
 	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound port")
-	ConfigCommand.Flags().StringVar(&hostHttpsPortArg, "host-https-port", "", "The web container's localhost-bound https port")
+	ConfigCommand.Flags().StringVar(&hostHTTPSPortArg, "host-https-port", "", "The web container's localhost-bound https port")
 
 	ConfigCommand.Flags().StringVar(&hostDBPortArg, "host-db-port", "", "The db container's localhost-bound port")
 
@@ -383,8 +383,8 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	if hostWebserverPortArg != "" {
 		app.HostWebserverPort = hostWebserverPortArg
 	}
-	if hostHttpsPortArg != "" {
-		app.HostHttpsPort = hostHttpsPortArg
+	if hostHTTPSPortArg != "" {
+		app.HostHTTPSPort = hostHTTPSPortArg
 	}
 
 	if hostDBPortArg != "" {

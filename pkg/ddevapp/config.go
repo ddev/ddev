@@ -226,8 +226,8 @@ func (app *DdevApp) CheckAndReserveHostPorts() error {
 	if app.HostWebserverPort != "" {
 		portsToReserve = append(portsToReserve, app.HostWebserverPort)
 	}
-	if app.HostHttpsPort != "" {
-		portsToReserve = append(portsToReserve, app.HostHttpsPort)
+	if app.HostHTTPSPort != "" {
+		portsToReserve = append(portsToReserve, app.HostHTTPSPort)
 	}
 
 	if len(portsToReserve) > 0 {
