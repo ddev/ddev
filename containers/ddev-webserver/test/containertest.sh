@@ -57,7 +57,7 @@ for v in 5.6 7.0 7.1 7.2 7.3; do
     for webserver_type in nginx-fpm apache-fpm apache-cgi; do
         echo "================ starting container for tests on webserver=${webserver_type} php${v} ============="
 
-        docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -e "DDEV_WEBSERVER_TYPE=${webserver_type}" -d --name $CONTAINER_NAME -v ddev-composer-cache:/mnt/composer-cache -d $DOCKER_IMAGE
+        docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -e "DDEV_WEBSERVER_TYPE=${webserver_type}" -d --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE
         if ! containercheck; then
             echo "=============== Failed containercheck after docker run with  DDEV_WEBSERVER_TYPE=${webserver_type} DDEV_PHP_VERSION=$v ==================="
             exit 101
@@ -104,7 +104,7 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 	if [ "$project_type" == "drupal6" ]; then
 	  PHP_VERSION="5.6"
 	fi
-	docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" -d --name $CONTAINER_NAME -v ddev-composer-cache:/mnt/composer-cache -d $DOCKER_IMAGE
+	docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" -d --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE
 	if ! containercheck; then
         exit 102
     fi
@@ -135,7 +135,7 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 done
 
 echo "--- testing use of custom nginx and php configs"
-docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v "/$PWD/test/testdata:/mnt/ddev_config:ro" -v ddev-composer-cache:/mnt/composer-cache -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
+docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v "/$PWD/test/testdata:/mnt/ddev_config:ro" -v ddev-global-cache:/mnt/ddev-global-cache -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
 if ! containercheck; then
     exit 108
 fi
