@@ -318,6 +318,7 @@ jobs:
         - /home/linuxbrew
     - run:
         command: |
+          . ~/.bashrc
           for dir in containers/*
               do pushd $dir
               echo "--- Build container $dir"
