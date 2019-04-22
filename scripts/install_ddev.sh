@@ -77,3 +77,6 @@ fi
 rm /tmp/$TARBALL /tmp/$SHAFILE
 
 printf "${GREEN}ddev is now installed. Run \"ddev\" to verify your installation and see usage.${RESET}\n"
+if ! command -v mkcert ; then
+    printf "${YELLOW}Please install mkcert from https://github.com/FiloSottile/mkcert/releases and then run 'mkcert -install'.${RESET}\n"
+fi
