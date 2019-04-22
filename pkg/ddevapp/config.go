@@ -474,6 +474,16 @@ func (app *DdevApp) CheckCustomConfig() {
 		customConfig = true
 	}
 
+	nginxPath := filepath.Join(ddevDir, "nginx")
+	if _, err := os.Stat(nginxPath); err == nil {
+		nginxFiles, err := filepath.Glob(nginxPath + "/*.conf")
+		util.CheckErr(err)
+		if len(nginxFiles) > 0 {
+			util.Warning("Using custom nginx partial configuration: %v", nginxFiles)
+			customConfig = true
+		}
+	}
+
 	mysqlPath := filepath.Join(ddevDir, "mysql")
 	if _, err := os.Stat(mysqlPath); err == nil {
 		mysqlFiles, err := filepath.Glob(mysqlPath + "/*.cnf")
