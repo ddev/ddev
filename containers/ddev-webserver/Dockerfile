@@ -132,6 +132,7 @@ RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.lo
 
 RUN for v in $PHP_VERSIONS; do a2dismod $v; done
 RUN a2dismod mpm_event
+RUN a2enmod ssl
 
 # ssh is very particular about permissions in ~/.ssh
 RUN chmod -R go-w /home/.ssh
