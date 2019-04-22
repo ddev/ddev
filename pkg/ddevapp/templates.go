@@ -252,6 +252,12 @@ const ConfigInstructions = `
 # Was only for macOS, but now deprecated. 
 # See https://ddev.readthedocs.io/en/stable/users/performance/#using-webcache_enabled-to-cache-the-project-directory
 
+# host_https_port: "59002"
+# The host port binding for https can be explicitly specified. It is
+# dynamic unless otherwise specified.
+# This is not used by most people, most people use the *router* instead
+# of the localhost port.
+
 # host_webserver_port: "59001"
 # The host port binding for the ddev-webserver can be explicitly specified. It is
 # dynamic unless otherwise specified.
