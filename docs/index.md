@@ -69,7 +69,10 @@ You can also easily perform the installation or upgrade manually if preferred. d
 
 ### Installation via package managers - Linux
 
-The preferred Linux package manager is [Linuxbrew](http://linuxbrew.sh/) but we also currently maintain packages on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
+The preferred Linux package manager is [Linuxbrew](http://linuxbrew.sh/) : `brew tap drud/ddev && brew install ddev`
+
+We also currently maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
+
 As a one-time initialization, run `mkcert -install`, which may require your sudo password. 
 
 
