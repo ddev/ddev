@@ -3,6 +3,7 @@
 set -o errexit
 set -o pipefail
 set -o nounset
+set -x
 
 DOCKER_IMAGE=$(awk '{print $1}' .docker_image)
 CONTAINER_NAME=ddev-router-test
@@ -34,7 +35,7 @@ cleanup
 
 # Make sure rootCA is created and installed on the ddev-global-cache/mkcert
 mkcert -install
-docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache  -v //var/run/docker.sock:/tmp/docker.sock:ro $DOCKER_IMAGE bash -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
+docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache busybox sh -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
 
 # Run the router alone
 docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 -v //var/run/docker.sock:/tmp/docker.sock:ro -v ddev-global-cache:/mnt/ddev-global-cache --name ddev-router-test -d $DOCKER_IMAGE
@@ -42,8 +43,8 @@ docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 -v //var/run/docke
 CONTAINER_NAME=ddev-router-test
 
 if ! containercheck; then
-    echo "FAIL: ddev-router failed to become ready"
-    echo "--- ddev-router FAIL: information"
+    printf "=============== FAIL: $CONTAINER_NAME failed to become ready ====================\n"
+    printf "=============== FAIL: $CONTAINER_NAME FAIL: information =================\n"
     docker logs $CONTAINER_NAME
     docker ps -a
     docker inspect $CONTAINER_NAME
