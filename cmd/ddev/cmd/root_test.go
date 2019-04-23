@@ -56,10 +56,10 @@ func TestMain(m *testing.M) {
 	// We don't want the tests reporting to Sentry.
 	_ = os.Setenv("DDEV_NO_SENTRY", "true")
 
-	// Attempt to remove all running containers before starting a test.
+	// Attempt to stop/remove all running containers before starting a test.
 	// If no projects are running, this will exit silently and without error.
-	if _, err = exec.RunCommand(DdevBin, []string{"remove", "--all"}); err != nil {
-		log.Warnf("Failed to remove all running projects: %v", err)
+	if _, err = exec.RunCommand(DdevBin, []string{"stop", "--all", "--stop-ssh-agent"}); err != nil {
+		log.Warnf("Failed to stop/remove all running projects: %v", err)
 	}
 
 	for i := range DevTestSites {

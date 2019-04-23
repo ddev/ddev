@@ -38,7 +38,7 @@ func TestCmdStart(t *testing.T) {
 	}
 
 	// Stop-containers all sites.
-	_, err = exec.RunCommand(DdevBin, []string{"stop-containers", "--all"})
+	_, err = exec.RunCommand(DdevBin, []string{"stop-containers", "--all", "-RO"})
 	assert.NoError(err)
 
 	// Build start command startMultipleArgs
