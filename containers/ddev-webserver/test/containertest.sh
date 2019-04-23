@@ -172,5 +172,5 @@ echo "--- Check that assert.active override is working"
 docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 0 => 0" >/dev/null
 
 # Make sure that our nginx override providing /junker99 works correctly
-curl --fail http://localhost:$HOST_HTTP_PORT/junker99 | grep 'junker99!'
-curl --fail https://localhost:$HOST_HTTPS_PORT/junker99 | grep 'junker99!'
+curl -s http://localhost:$HOST_HTTP_PORT/junker99 | grep 'junker99!'
+curl -s https://localhost:$HOST_HTTPS_PORT/junker99 | grep 'junker99!'
