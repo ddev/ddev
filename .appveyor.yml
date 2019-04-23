@@ -13,8 +13,8 @@ install:
 
 build_script:
   - docker version && docker-compose version
-  - docker network create junk
   - docker volume create --driver local --opt type=nfs junker99
+  - docker network create junk || true
   - bash -c "mkdir junk && cd junk && ddev config --php-version=7.3 && ddev start"
 #  - cmd: .autotests/test.cmd
 
