@@ -601,7 +601,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	case WebserverNginxFPM:
 		assert.Contains(out, "nginx-site.conf")
 		assert.NotContains(out, "apache-site.conf")
-		assert.Contains(out, "nginx/junker99.conf")
+		assert.Contains(out, "junker99.conf")
 	default:
 		assert.Contains(out, "apache-site.conf")
 		assert.NotContains(out, "nginx-site.conf")

@@ -71,8 +71,8 @@ for v in 5.6 7.0 7.1 7.2 7.3; do
         fi
 
         # Make sure http and https phpstatus access work both inside and outside container
-        curl --fail http://localhost:$HOST_HTTP_PORT/test/phptest.php
-        curl --fail https://localhost:$HOST_HTTPS_PORT/test/phptest.php
+        curl -ssL --fail http://localhost:$HOST_HTTP_PORT/test/phptest.php
+        curl -ssL --fail https://localhost:$HOST_HTTPS_PORT/test/phptest.php
         docker exec -t $CONTAINER_NAME curl --fail http://localhost/test/phptest.php
         docker exec -t $CONTAINER_NAME curl --fail https://localhost/test/phptest.php
 
@@ -95,11 +95,11 @@ for v in 5.6 7.0 7.1 7.2 7.3; do
         # this case because the container is *NOT* intercepting 50x errors.
         curl -w "%{http_code}" localhost:$HOST_HTTP_PORT/test/500.php | grep 500
         # 400 and 401 errors are intercepted by the same page.
-        curl -I localhost:$HOST_HTTP_PORT/test/400.php | grep "HTTP/1.1 400"
-        curl -I localhost:$HOST_HTTP_PORT/test/401.php | grep "HTTP/1.1 401"
+        curl -s -I localhost:$HOST_HTTP_PORT/test/400.php | grep "HTTP/1.1 400"
+        curl -s -I localhost:$HOST_HTTP_PORT/test/401.php | grep "HTTP/1.1 401"
 
         echo "testing php and email for php$v"
-        curl --fail localhost:$HOST_HTTP_PORT/test/phptest.php
+        curl -s --fail localhost:$HOST_HTTP_PORT/test/phptest.php
         curl -s localhost:$HOST_HTTP_PORT/test/test-email.php | grep "Test email sent"
 
         # Make sure the phpstatus url is working for testing php-fpm.
