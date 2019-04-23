@@ -95,7 +95,8 @@ services:
     extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
 {{ end }}
     external_links:
-      - ddev-router:$DDEV_HOSTNAME
+    {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}" 
+    {{ end }}
     healthcheck:
       interval: 4s
       retries: 6
