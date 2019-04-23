@@ -142,7 +142,7 @@ func TestMain(m *testing.M) {
 	// If no projects are running, this will exit silently and without error.
 	// If a system doesn't have `ddev` in its $PATH, this will emit a warning but will not fail the test.
 	if _, err := exec.RunCommand("ddev", []string{"stop", "--all", "--stop-ssh-agent"}); err != nil {
-		log.Warnf("Failed to remove all running projects: %v", err)
+		log.Warnf("Failed to stop/remove all running projects: %v", err)
 	}
 
 	for _, volume := range []string{"ddev-router-cert-cache", "ddev-ssh-agent_dot_ssh", "ddev-ssh-agent_socket_dir"} {
@@ -2223,8 +2223,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			if _, err := strconv.ParseInt(hostParts[0], 10, 64); err != nil {
 				out, _, err := app.Exec(&ddevapp.ExecOpts{
 					Service: "web",
-					// TODO: Remove the 'k' from curl when trusted SSL goes in.
-					Cmd: []string{"bash", "-c", "curl -sSk --fail " + item + site.Safe200URIWithExpectation.URI},
+					Cmd: []string{"bash", "-c", "curl -sS --fail " + item + site.Safe200URIWithExpectation.URI},
 				})
 				assert.NoError(err, "failed curl to %s: %v", item+site.Safe200URIWithExpectation.URI, err)
 				assert.Contains(out, site.Safe200URIWithExpectation.Expect)
