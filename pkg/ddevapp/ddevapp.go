@@ -699,7 +699,7 @@ func (app *DdevApp) Start() error {
 		// Copy ca certs into ddev-global-cache/mkcert
 		caRoot, err := getCAROOT()
 		if err != nil {
-			util.Warning("mkcert may not be properly installed, please install it, `brew install mkcert`, `choco install -y mkcert`, etc. and `mkcert -install`")
+			util.Warning("mkcert may not be properly installed, please install it, `brew install mkcert nss`, `choco install -y mkcert nss`, etc. and `mkcert -install`")
 		} else {
 			output.UserOut.Info("Pushing mkcert rootca certs to ddev-global-cache")
 			_, out, err := dockerutil.RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "mkdir -p /mnt/ddev-global-cache/composer && mkdir -p /mnt/ddev-global-cache/mkcert && chmod 777 /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache", caRoot + ":/mnt/mkcert"}, "", true)
