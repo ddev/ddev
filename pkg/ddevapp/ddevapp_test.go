@@ -860,6 +860,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
+		defer switchDir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevFullSiteSetup", site.Name))
 
 		testcommon.ClearDockerEnv()
@@ -950,6 +951,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	}
 
 	switchDir := site.Chdir()
+	defer switchDir()
+
 	testcommon.ClearDockerEnv()
 
 	err = app.Init(site.Dir)
@@ -1031,7 +1034,6 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// TODO: Check behavior of ddev rm with snapshot, see if it has right stuff in it.
 
 	runTime()
-	switchDir()
 }
 
 // TestWriteableFilesDirectory tests to make sure that files created on host are writable on container
