@@ -1415,7 +1415,7 @@ func TestDdevLogs(t *testing.T) {
 	assert.Contains(out, "MySQL init process done. Ready for start up.")
 
 	// Test that we can get logs when project is stopped also
-	err = app.StopContainers()
+	err = app.Pause()
 	assert.NoError(err)
 
 	stdout = util.CaptureUserOut()
@@ -1498,7 +1498,7 @@ func TestDdevStop(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	require.NoError(t, err)
-	err = app.StopContainers()
+	err = app.Pause()
 	assert.NoError(err)
 
 	for _, containerType := range [3]string{"web", "db", "dba"} {
@@ -1588,12 +1588,12 @@ func TestDdevDescribe(t *testing.T) {
 	assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
 
 	// Now stop it and test behavior.
-	err = app.StopContainers()
+	err = app.Pause()
 	assert.NoError(err)
 
 	desc, err = app.Describe()
 	assert.NoError(err)
-	assert.EqualValues(ddevapp.SiteStopped, desc["status"])
+	assert.EqualValues(ddevapp.SitePaused, desc["status"])
 
 	switchDir()
 }
@@ -1644,7 +1644,7 @@ func TestRouterPortsCheck(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		if app.SiteStatus() == ddevapp.SiteRunning || app.SiteStatus() == ddevapp.SiteStopped {
+		if app.SiteStatus() == ddevapp.SiteRunning || app.SiteStatus() == ddevapp.SitePaused {
 			err = app.Stop(true, false)
 			assert.NoError(err)
 		}
@@ -2183,7 +2183,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			err = app.WriteConfig()
 			assert.NoError(err)
 
-			if app.SiteStatus() == ddevapp.SiteStopped || app.SiteStatus() == ddevapp.SiteRunning {
+			if app.SiteStatus() == ddevapp.SitePaused || app.SiteStatus() == ddevapp.SiteRunning {
 				err = app.Stop(true, false)
 				assert.NoError(err)
 			}

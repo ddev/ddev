@@ -80,7 +80,7 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 	status := fmt.Sprint(row["status"])
 
 	switch {
-	case strings.Contains(status, SiteStopped):
+	case strings.Contains(status, SitePaused):
 		status = color.YellowString(status)
 	case strings.Contains(status, SiteNotFound):
 		status = color.RedString(status)
