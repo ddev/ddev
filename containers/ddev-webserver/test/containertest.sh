@@ -6,6 +6,9 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+OS=$(uname)
+if [[ ${OS} == "MINGW*" ]]; then OS="windows"; fi
+
 HOST_HTTP_PORT="8080"
 HOST_HTTPS_PORT="8443"
 
@@ -72,7 +75,9 @@ for v in 5.6 7.0 7.1 7.2 7.3; do
 
         # Make sure http and https phpstatus access work both inside and outside container
         curl -ssL --fail http://localhost:$HOST_HTTP_PORT/test/phptest.php
-        curl -ssL --fail https://localhost:$HOST_HTTPS_PORT/test/phptest.php
+        if [ ${OS} != "windows" ] ; then
+            curl -ssL --fail https://localhost:$HOST_HTTPS_PORT/test/phptest.php
+        fi
         docker exec -t $CONTAINER_NAME curl --fail http://localhost/test/phptest.php
         docker exec -t $CONTAINER_NAME curl --fail https://localhost/test/phptest.php
 
@@ -173,4 +178,6 @@ docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 0 => 0" >/dev/nu
 
 # Make sure that our nginx override providing /junker99 works correctly
 curl -s http://localhost:$HOST_HTTP_PORT/junker99 | grep 'junker99!'
-curl -s https://localhost:$HOST_HTTPS_PORT/junker99 | grep 'junker99!'
+if [ ${OS} != "windows" ] ; then
+    curl -s https://localhost:$HOST_HTTPS_PORT/junker99 | grep 'junker99!'
+fi
