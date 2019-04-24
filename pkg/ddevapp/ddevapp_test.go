@@ -247,6 +247,8 @@ func TestDdevStart(t *testing.T) {
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
+	defer switchDir()
+
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
 
 	err := app.Init(site.Dir)
@@ -254,6 +256,8 @@ func TestDdevStart(t *testing.T) {
 
 	err = app.Start()
 	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
 
 	// ensure docker-compose.yaml exists inside .ddev site folder
 	composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
@@ -295,6 +299,8 @@ func TestDdevStart(t *testing.T) {
 	stdout := util.CaptureUserOut()
 	err = app.Start()
 	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
 	out := stdout()
 	assert.Contains(out, "Running exec command")
 	assert.Contains(out, "hello\n")
@@ -319,6 +325,8 @@ func TestDdevStart(t *testing.T) {
 	badapp := &ddevapp.DdevApp{}
 
 	err = badapp.Init(another.Dir)
+	//nolint: errcheck
+	defer badapp.Stop(true, false)
 	if err == nil {
 		logs, logErr := app.CaptureLogs("web", false, "")
 		require.Error(t, err, "did not receive err from badapp.Init, logErr=%v, logs:\n======================= logs from app webserver =================\n%s\n============ end logs =========\n", logErr, logs)
@@ -339,20 +347,18 @@ func TestDdevStart(t *testing.T) {
 
 	err = symlinkApp.Init(symlink)
 	assert.NoError(err)
-
+	//nolint: errcheck
+	defer symlinkApp.Stop(true, false)
 	// Make sure that GetActiveApp() also fails when trying to start app of duplicate name in current directory.
 	switchDir = another.Chdir()
+	defer switchDir()
+
 	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
 	}
 	testcommon.CleanupDir(another.Dir)
-	switchDir()
-
-	// Clean up site 0
-	err = app.Stop(true, false)
-	assert.NoError(err)
 }
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
