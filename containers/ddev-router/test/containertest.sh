@@ -52,7 +52,7 @@ if ! containercheck; then
 fi
 
 # Make sure we can access http and https ports successfully (and with valid cert)
-(curl -s -I http://localhost:8080 | grep 503) || (echo "Failed to get 503 from nginx-router by default" && exit 102)
-(curl -s -I https://localhost:8443 | grep 503) || (echo "Failed to get 503 from nginx-router via https by default" && exit 103)
+(curl -s -I http://127.0.0.1:8080 | grep 503) || (echo "Failed to get 503 from nginx-router by default" && exit 102)
+(curl -s -I https://127.0.0.1:8443 | grep 503) || (echo "Failed to get 503 from nginx-router via https by default" && exit 103)
 # Make sure internal access to https is working
 docker exec -t $CONTAINER_NAME curl --fail https://localhost/healthcheck || (echo "Failed to run https healthcheck inside container" && exit 104)
