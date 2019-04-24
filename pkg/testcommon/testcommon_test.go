@@ -3,6 +3,8 @@ package testcommon
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/exec"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -15,7 +17,7 @@ import (
 
 var TestSites = []TestSite{
 	{
-		Name:                          "TestValidTestSiteWordpress",
+		Name:                          "",
 		SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
 		ArchiveInternalExtractionPath: "wordpress-0.4.0/",
 		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
@@ -87,6 +89,7 @@ func TestValidTestSite(t *testing.T) {
 	site := TestSites[0]
 
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+	site.Name = "TestValidTestSite"
 	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
 		err = site.Prepare()
 		if err != nil {
@@ -103,17 +106,18 @@ func TestValidTestSite(t *testing.T) {
 	assert.True(dirStat.IsDir(), "Docroot is a directory")
 
 	cleanup := site.Chdir()
+	defer cleanup()
 	currentDir, err := os.Getwd()
-	assert.NoError(err, "We can determine the current directory after changing to our TestSite directory")
+	assert.NoError(err)
 
 	// On OSX this are created under /var, but /var is a symlink to /var/private, so we cannot ensure complete equality of these strings.
-	assert.Contains(currentDir, site.Dir, "Current directory matches expectations")
+	assert.Contains(currentDir, site.Dir)
 
 	cleanup()
 
 	currentDir, err = os.Getwd()
 	assert.NoError(err)
-	assert.Equal(startingDir, currentDir, "Able to return to our original starting directory")
+	assert.Equal(startingDir, currentDir)
 
 	site.Cleanup()
 	_, err = os.Stat(site.Dir)
@@ -126,11 +130,17 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 
 	dockerutil.EnsureDdevNetwork()
 
+	out, err := exec.RunCommand("ddev", []string{"stop", "--all"})
+	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
+
+	router, _ := ddevapp.FindDdevRouter()
+	require.Empty(t, router)
+
 	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
 	//not need to be updated over time.
 	site := TestSites[0]
-
+	site.Name = "TestGetLocalHTTPResponse"
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
 	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
 		err := site.Prepare()
@@ -140,10 +150,14 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	}
 
 	cleanup := site.Chdir()
+	defer cleanup()
 
 	app := &ddevapp.DdevApp{}
-	err := app.Init(site.Dir)
+	err = app.Init(site.Dir)
+	app.Name = "TestGetLocalHTTPResponse"
 	assert.NoError(err)
+	// nolint: errcheck
+	defer app.Stop(true, false)
 
 	for _, pair := range []PortPair{{"80", "443"}, {"8080", "8443"}} {
 		ClearDockerEnv()

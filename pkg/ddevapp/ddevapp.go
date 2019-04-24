@@ -692,7 +692,7 @@ func (app *DdevApp) Start() error {
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 
-	router, _ := findDdevRouter()
+	router, _ := FindDdevRouter()
 	// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
 	// This will often be redundant
 	if router == nil {

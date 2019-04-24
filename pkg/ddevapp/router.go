@@ -98,9 +98,9 @@ func StartDdevRouter() error {
 	return nil
 }
 
-// findDdevRouter usees FindContainerByLabels to get our router container and
+// FindDdevRouter usees FindContainerByLabels to get our router container and
 // return it.
-func findDdevRouter() (*docker.APIContainers, error) {
+func FindDdevRouter() (*docker.APIContainers, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.service": RouterProjectName,
 	}
@@ -213,7 +213,7 @@ func determineRouterPorts() []string {
 // in a successful connection.
 func CheckRouterPorts() error {
 
-	routerContainer, _ := findDdevRouter()
+	routerContainer, _ := FindDdevRouter()
 	var existingExposedPorts []string
 	var err error
 	if routerContainer != nil {
