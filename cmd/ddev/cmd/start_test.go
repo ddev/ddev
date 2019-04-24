@@ -23,7 +23,7 @@ func TestCmdStart(t *testing.T) {
 	err := addSites()
 	require.NoError(t, err)
 
-	// Stop-Containers all sites.
+	// Pause all sites.
 	_, err = exec.RunCommand(DdevBin, []string{"pause", "--all"})
 	assert.NoError(err)
 
@@ -37,6 +37,7 @@ func TestCmdStart(t *testing.T) {
 		assert.True(app.SiteStatus() == ddevapp.SiteRunning, "All sites should be running, but %s status: %s", app.GetName(), app.SiteStatus())
 	}
 
+	// Pause all sites.
 	_, err = exec.RunCommand(DdevBin, []string{"pause", "--all"})
 	assert.NoError(err)
 
