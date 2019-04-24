@@ -31,7 +31,8 @@ func TestCmdPauseContainers(t *testing.T) {
 		assert.NoError(err, "ddev pause should succeed but failed, err: %v, output: %s", err, out)
 		assert.Contains(out, "has been paused")
 
-		apps := ddevapp.GetApps()
+		apps := ddevapp.GetDockerProjects()
+
 		for _, app := range apps {
 			if app.GetName() != site.Name {
 				continue
@@ -50,7 +51,7 @@ func TestCmdPauseContainers(t *testing.T) {
 	assert.NoError(err, "ddev pause --all should succeed but failed, err: %v, output: %s", err, out)
 
 	// Confirm all sites are stopped.
-	apps := ddevapp.GetApps()
+	apps := ddevapp.GetDockerProjects()
 	for _, app := range apps {
 		assert.True(app.SiteStatus() == ddevapp.SitePaused, "All sites should be stopped, but %s status: %s", app.GetName(), app.SiteStatus())
 	}
@@ -60,9 +61,9 @@ func TestCmdPauseContainers(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TestCmdStopContainersMissingProjectDirectory ensures the `ddev stop` command returns the expected help text when
+// TestCmdPauseContainersMissingProjectDirectory ensures the `ddev pause` command returns the expected help text when
 // a project's directory no longer exists.
-func TestCmdStopContainersMissingProjectDirectory(t *testing.T) {
+func TestCmdPauseContainersMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
 	assert := asrt.New(t)
@@ -82,7 +83,7 @@ func TestCmdStopContainersMissingProjectDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", projectName})
+	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", projectName})
 
 	err = os.Chdir(projDir)
 	assert.NoError(err)

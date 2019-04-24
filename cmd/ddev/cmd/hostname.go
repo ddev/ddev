@@ -164,7 +164,7 @@ func removeInactiveHostnames(hosts goodhosts.Hosts) {
 
 	// Get the list active hosts names to preserve
 	activeHostNames := make(map[string]bool)
-	for _, app := range ddevapp.GetApps() {
+	for _, app := range ddevapp.GetDockerProjects() {
 		for _, h := range app.GetHostnames() {
 			activeHostNames[h] = true
 		}

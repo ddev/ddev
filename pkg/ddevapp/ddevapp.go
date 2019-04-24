@@ -1190,8 +1190,13 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		return err
 	}
 
-	// Remove data/database/hostname if we need to.
+	// Remove data/database/projectInfo/hostname if we need to.
 	if removeData {
+		err := globalconfig.RemoveProjectInfo(app.Name)
+		if err != nil {
+			util.Warning("failed to RemoveProjectInfo(%s): %v", app.Name, err)
+		}
+
 		if err = app.RemoveHostsEntries(); err != nil {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
@@ -1214,9 +1219,9 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	return err
 }
 
-// RemoveReservedHostPorts() deletes the app from the UsedHostPorts
+// RemoveGlobalProjectInfo() deletes the project from ProjectList
 func (app *DdevApp) RemoveGlobalProjectInfo() {
-	delete(globalconfig.DdevGlobalConfig.ProjectList, app.Name)
+	_ = globalconfig.RemoveProjectInfo(app.Name)
 }
 
 // GetHTTPURL returns the HTTP URL for an app.
