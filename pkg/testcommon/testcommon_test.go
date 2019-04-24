@@ -15,6 +15,7 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
+var DdevBin = "ddev"
 var TestSites = []TestSite{
 	{
 		Name:                          "",
@@ -26,6 +27,13 @@ var TestSites = []TestSite{
 		Type:                          ddevapp.AppTypeWordPress,
 		Safe200URIWithExpectation:     URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 	},
+}
+
+func init() {
+	// Make sets DDEV_BINARY_FULLPATH when building the executable
+	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
+		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	}
 }
 
 // TestTmpDir tests the ability to create a temporary directory.
@@ -130,7 +138,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 
 	dockerutil.EnsureDdevNetwork()
 
-	out, err := exec.RunCommand("ddev", []string{"stop", "--all"})
+	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
 	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
 
 	router, _ := ddevapp.FindDdevRouter()
