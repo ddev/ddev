@@ -54,7 +54,7 @@ fi
 # Make sure we can access http and https ports successfully (and with valid cert)
 (curl -s -I http://127.0.0.1:8080 | grep 503) || (echo "Failed to get 503 from nginx-router by default" && exit 102)
 # mkcert is not respected by git-bash curl, so don't try the test on windows.
-if [ "${OS}" != "Windows_NT" ]; then
+if [ "${OS:-$(uname)}" != "Windows_NT" ]; then
     (curl -s -I https://127.0.0.1:8443 | grep 503) || (echo "Failed to get 503 from nginx-router via https by default" && exit 103)
 fi
 # Make sure internal access to https is working
