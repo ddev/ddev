@@ -402,10 +402,9 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
-		for _, hostname := range app.GetHostnames() {
-			_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+hostname+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-			_, _ = testcommon.EnsureLocalHTTPContent(t, "https://"+hostname+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-
+		for _, url := range app.GetAllURLs() {
+			_, err = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			_ = err
 		}
 
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean

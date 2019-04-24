@@ -95,7 +95,7 @@ sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.ssh* ~/.drush ~/.gi
 
 mkcert -install
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
-sudo mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 web && sudo chown $UID /etc/ssl/certs/master.*
+sudo mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web && sudo chown $UID /etc/ssl/certs/master.*
 
 echo 'Server started'
 
