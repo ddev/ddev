@@ -388,7 +388,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 		// sub1.<sitename>.ddev.local and sitename.ddev.local are deliberately included to prove they don't
 		// cause ddev-router failures"
-		app.AdditionalFQDNs = []string{"one.example.com", "two.example.com", "a.one.example.com", site.Name + "." + version.DDevTLD, "sub1." + site.Name + version.DDevTLD}
+		app.AdditionalFQDNs = []string{"one.example.com", "two.example.com", "a.one.example.com", site.Name + "." + version.DDevTLD, "sub1." + site.Name + "." + version.DDevTLD}
 
 		err = app.WriteConfig()
 		assert.NoError(err)
@@ -416,10 +416,15 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
+		t.Logf("Testing these URLs: %v", app.GetAllURLs())
 		for _, url := range app.GetAllURLs() {
 			_, err = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 			_ = err
 		}
+
+		routerLogs, err := app.CaptureLogs("ddev-router", false, "")
+		assert.NoError(err)
+		t.Logf("============== ddev-router logs ===================\n%s\n==============================\n", routerLogs)
 
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean
 		// up these for tests that run later.
