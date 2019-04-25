@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -2031,78 +2032,137 @@ func TestMultipleComposeFiles(t *testing.T) {
 }
 
 // TestGetAllURLs ensures the GetAllURLs function returns the expected number of URLs,
-// and that one of them is the direct web container address.
+// and include the direct web container URLs.
 func TestGetAllURLs(t *testing.T) {
 	assert := asrt.New(t)
 
-	for _, site := range TestSites {
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s GetAllURLs", site.Name))
+	site := TestSites[0]
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s GetAllURLs", site.Name))
 
-		testcommon.ClearDockerEnv()
-		app := new(ddevapp.DdevApp)
+	testcommon.ClearDockerEnv()
+	app := new(ddevapp.DdevApp)
 
-		err := app.Init(site.Dir)
-		assert.NoError(err)
+	err := app.Init(site.Dir)
+	assert.NoError(err)
 
-		// Add some additional hostnames
-		app.AdditionalHostnames = []string{
-			fmt.Sprintf("sub1.%s", site.Name),
-			fmt.Sprintf("sub2.%s", site.Name),
-			fmt.Sprintf("sub3.%s", site.Name),
-		}
+	// Add some additional hostnames
+	app.AdditionalHostnames = []string{"sub1", "sub2", "sub3"}
 
-		err = app.WriteConfig()
-		assert.NoError(err)
+	err = app.WriteConfig()
+	assert.NoError(err)
 
-		err = app.StartAndWaitForSync(0)
-		require.NoError(t, err)
+	err = app.StartAndWaitForSync(0)
+	require.NoError(t, err)
 
-		urls := app.GetAllURLs()
+	urls := app.GetAllURLs()
 
-		// Convert URLs to map[string]bool
-		urlMap := make(map[string]bool)
-		for _, u := range urls {
-			urlMap[u] = true
-		}
-
-		// We expect two URLs for each hostname (http/https) and one direct web container address.
-		expectedNumUrls := (2 * len(app.GetHostnames())) + 1
-		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
-
-		// Ensure urlMap contains direct address of the web container
-		webContainer, err := app.FindContainerByType("web")
-		assert.NoError(err)
-		require.NotEmpty(t, webContainer)
-
-		dockerIP, err := dockerutil.GetDockerIP()
-		require.NoError(t, err)
-
-		// Find HTTP port of web container
-		var port docker.APIPort
-		for _, p := range webContainer.Ports {
-			if p.PrivatePort == 80 {
-				port = p
-				break
-			}
-		}
-
-		expectedDirectAddress := fmt.Sprintf("http://%s:%d", dockerIP, port.PublicPort)
-		exists := urlMap[expectedDirectAddress]
-
-		assert.True(exists, "URL list for app: %s does not contain direct web container address: %s", app.Name, expectedDirectAddress)
-
-		// Multiple projects can't run at the same time with the fqdns, so we need to clean
-		// up these for tests that run later.
-		app.AdditionalFQDNs = []string{}
-		app.AdditionalHostnames = []string{}
-		err = app.WriteConfig()
-		assert.NoError(err)
-
-		err = app.Stop(true, false)
-		assert.NoError(err)
-
-		runTime()
+	// Convert URLs to map[string]bool
+	urlMap := make(map[string]bool)
+	for _, u := range urls {
+		urlMap[u] = true
 	}
+
+	// We expect two URLs for each hostname (http/https) and one direct web container address.
+	expectedNumUrls := (2 * len(app.GetHostnames())) + 1
+	assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
+
+	// Ensure urlMap contains direct address of the web container
+	webContainer, err := app.FindContainerByType("web")
+	assert.NoError(err)
+	require.NotEmpty(t, webContainer)
+
+	dockerIP, err := dockerutil.GetDockerIP()
+	require.NoError(t, err)
+
+	// Find HTTP port of web container
+	var port docker.APIPort
+	for _, p := range webContainer.Ports {
+		if p.PrivatePort == 80 {
+			port = p
+			break
+		}
+	}
+
+	expectedDirectAddress := fmt.Sprintf("http://%s:%d", dockerIP, port.PublicPort)
+	exists := urlMap[expectedDirectAddress]
+
+	assert.True(exists, "URL list for app: %s does not contain direct web container address: %s", app.Name, expectedDirectAddress)
+
+	// Multiple projects can't run at the same time with the fqdns, so we need to clean
+	// up these for tests that run later.
+	app.AdditionalFQDNs = []string{}
+	app.AdditionalHostnames = []string{}
+	err = app.WriteConfig()
+	assert.NoError(err)
+
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	runTime()
+}
+
+// TestAllURLsInsideContainer makes sure that we can use URLs
+// with proper name resolution inside the container.
+func TestAllURLsInsideContainer(t *testing.T) {
+	assert := asrt.New(t)
+
+	site := TestSites[0]
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s AllURLsInsideContainer", site.Name))
+
+	testcommon.ClearDockerEnv()
+	app := new(ddevapp.DdevApp)
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	// Add some additional hostnames
+	app.AdditionalHostnames = []string{"sub1", "sub2", "sub3"}
+	app.AdditionalFQDNs = []string{"junker99.example.com"}
+
+	err = app.WriteConfig()
+	assert.NoError(err)
+
+	err = app.StartAndWaitForSync(0)
+	require.NoError(t, err)
+
+	urls := app.GetAllURLs()
+
+	// Convert URLs to map[string]bool
+	urlMap := make(map[string]bool)
+	for _, u := range urls {
+		urlMap[u] = true
+	}
+
+	// We expect two URLs for each hostname (http/https) and one direct web container address.
+	expectedNumUrls := (2 * len(app.GetHostnames())) + 1
+	assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
+
+	URLList := append(app.GetAllURLs(), "http://localhost/"+site.Safe200URIWithExpectation.URI, "https://localhost/"+site.Safe200URIWithExpectation.URI)
+	for _, item := range URLList {
+		parts, err := url.Parse(item)
+		assert.NoError(err)
+		// Only try it if not an IP address URL; those won't be right
+		hostParts := strings.Split(parts.Host, ".")
+		if _, err := strconv.ParseInt(hostParts[0], 10, 64); err != nil {
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service:   "web",
+				Cmd:       []string{"bash", "-c", "curl -sS --fail " + item + "/" + site.Safe200URIWithExpectation.URI + ">/dev/null"},
+				NoCapture: true,
+			})
+		}
+	}
+
+	// Multiple projects can't run at the same time with the fqdns, so we need to clean
+	// up these for tests that run later.
+	app.AdditionalFQDNs = []string{}
+	app.AdditionalHostnames = []string{}
+	err = app.WriteConfig()
+	assert.NoError(err)
+
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	runTime()
 }
 
 // TestWebserverType checks that webserver_type:apache-cgi or apache-fpm does the right thing
