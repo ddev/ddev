@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -921,6 +922,7 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 
 // CaptureLogs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
+// TODO: Reimplement this so it doesn't use the util.CaptureUserOut()
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
 	client := dockerutil.GetDockerClient()
 

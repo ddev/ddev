@@ -422,9 +422,8 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			_ = err
 		}
 
-		routerLogs, err := app.CaptureLogs("ddev-router", false, "")
+		err = app.Logs("ddev-router", false, false, "")
 		assert.NoError(err)
-		t.Logf("============== ddev-router logs ===================\n%s\n==============================\n", routerLogs)
 
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean
 		// up these for tests that run later.
