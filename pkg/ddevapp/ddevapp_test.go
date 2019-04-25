@@ -2248,11 +2248,19 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		}
 	}
 
+		out, err := exec.RunCommand(DdevBin, []string{"list"})
+		assert.NoError(err)
+		t.Logf("=========== output of ddev list ==========\n%s\n============", out)
+		out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
+		assert.NoError(err)
+		t.Logf("=========== output of docker logs ddev-router ==========\n%s\n============", out)
+
 	// Set the ports back to the default was so we don't break any following tests.
 	app.RouterHTTPSPort = "443"
 	app.RouterHTTPPort = "80"
 	app.AdditionalFQDNs = []string{}
 	app.AdditionalHostnames = []string{}
+
 
 	err = app.WriteConfig()
 	assert.NoError(err)
