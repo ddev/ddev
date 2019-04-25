@@ -418,12 +418,15 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 		t.Logf("Testing these URLs: %v", app.GetAllURLs())
 		for _, url := range app.GetAllURLs() {
-			_, err = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-			_ = err
+			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
 
-		err = app.Logs("ddev-router", false, false, "")
+		out, err := exec.RunCommand(DdevBin, []string{"list"})
 		assert.NoError(err)
+		t.Logf("=========== output of ddev list ==========\n%s\n============", out)
+		out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
+		assert.NoError(err)
+		t.Logf("=========== output of docker logs ddev-router ==========\n%s\n============", out)
 
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean
 		// up these for tests that run later.
