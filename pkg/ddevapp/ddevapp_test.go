@@ -2187,6 +2187,8 @@ func TestWebserverType(t *testing.T) {
 func TestInternalAndExternalAccessToURL(t *testing.T) {
 	assert := asrt.New(t)
 
+	_, err := exec.RunCommand(DdevBin, []string{"stop", "-a", "--stop-ssh-agent"})
+
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestInternalAndExternalAccessToURL"))
 
 	site := TestSites[0]
@@ -2194,6 +2196,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
+
 
 	// Add some additional hostnames
 	app.AdditionalHostnames = []string{"sub1", "sub2", "sub3"}
