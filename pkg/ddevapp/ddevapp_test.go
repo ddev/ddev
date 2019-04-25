@@ -2137,7 +2137,8 @@ func TestAllURLsInsideContainer(t *testing.T) {
 	expectedNumUrls := (2 * len(app.GetHostnames())) + 1
 	assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
-	URLList := append(app.GetAllURLs(), "http://localhost/"+site.Safe200URIWithExpectation.URI, "https://localhost/"+site.Safe200URIWithExpectation.URI)
+	// TODO: Add https://localhost to this list when trusted SSL goes in.
+	URLList := append(app.GetAllURLs(), "http://localhost")
 	for _, item := range URLList {
 		parts, err := url.Parse(item)
 		assert.NoError(err)
@@ -2145,10 +2146,12 @@ func TestAllURLsInsideContainer(t *testing.T) {
 		hostParts := strings.Split(parts.Host, ".")
 		if _, err := strconv.ParseInt(hostParts[0], 10, 64); err != nil {
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service:   "web",
-				Cmd:       []string{"bash", "-c", "curl -sS --fail " + item + "/" + site.Safe200URIWithExpectation.URI + ">/dev/null"},
+				Service: "web",
+				// TODO: Remove the 'k' from curl when trusted SSL goes in.
+				Cmd:       []string{"bash", "-c", "curl -sSk --fail " + item + site.Safe200URIWithExpectation.URI + ">/dev/null"},
 				NoCapture: true,
 			})
+			assert.NoError(err, "failed curl to %s: %v", item+site.Safe200URIWithExpectation.URI, err)
 		}
 	}
 
