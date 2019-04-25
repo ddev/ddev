@@ -16,8 +16,8 @@ echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
 
 . ~/.bashrc
 
-brew update
-for item in osslsigncode golang mkcert; do
+brew update && brew tap drud/ddev
+for item in osslsigncode golang mkcert ddev; do
     brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
 done
 

@@ -29,13 +29,6 @@ var TestSites = []TestSite{
 	},
 }
 
-func init() {
-	// Make sets DDEV_BINARY_FULLPATH when building the executable
-	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
-		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
-	}
-}
-
 // TestTmpDir tests the ability to create a temporary directory.
 func TestTmpDir(t *testing.T) {
 	assert := asrt.New(t)
@@ -137,6 +130,10 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	assert := asrt.New(t)
 
 	dockerutil.EnsureDdevNetwork()
+
+	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
+		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	}
 
 	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
 	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
