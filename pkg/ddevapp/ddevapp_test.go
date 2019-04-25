@@ -2101,73 +2101,6 @@ func TestGetAllURLs(t *testing.T) {
 	runTime()
 }
 
-// TestAllURLsInsideContainer makes sure that we can use URLs
-// with proper name resolution inside the container.
-func TestAllURLsInsideContainer(t *testing.T) {
-	assert := asrt.New(t)
-
-	site := TestSites[0]
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s AllURLsInsideContainer", site.Name))
-
-	testcommon.ClearDockerEnv()
-	app := new(ddevapp.DdevApp)
-
-	err := app.Init(site.Dir)
-	assert.NoError(err)
-
-	// Add some additional hostnames
-	app.AdditionalHostnames = []string{"sub1", "sub2", "sub3"}
-	app.AdditionalFQDNs = []string{"junker99.example.com"}
-
-	err = app.WriteConfig()
-	assert.NoError(err)
-
-	err = app.StartAndWaitForSync(0)
-	require.NoError(t, err)
-
-	urls := app.GetAllURLs()
-
-	// Convert URLs to map[string]bool
-	urlMap := make(map[string]bool)
-	for _, u := range urls {
-		urlMap[u] = true
-	}
-
-	// We expect two URLs for each hostname (http/https) and one direct web container address.
-	expectedNumUrls := (2 * len(app.GetHostnames())) + 1
-	assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
-
-	// TODO: Add https://localhost to this list when trusted SSL goes in.
-	URLList := append(app.GetAllURLs(), "http://localhost")
-	for _, item := range URLList {
-		parts, err := url.Parse(item)
-		assert.NoError(err)
-		// Only try it if not an IP address URL; those won't be right
-		hostParts := strings.Split(parts.Host, ".")
-		if _, err := strconv.ParseInt(hostParts[0], 10, 64); err != nil {
-			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				// TODO: Remove the 'k' from curl when trusted SSL goes in.
-				Cmd:       []string{"bash", "-c", "curl -sSk --fail " + item + site.Safe200URIWithExpectation.URI + ">/dev/null"},
-				NoCapture: true,
-			})
-			assert.NoError(err, "failed curl to %s: %v", item+site.Safe200URIWithExpectation.URI, err)
-		}
-	}
-
-	// Multiple projects can't run at the same time with the fqdns, so we need to clean
-	// up these for tests that run later.
-	app.AdditionalFQDNs = []string{}
-	app.AdditionalHostnames = []string{}
-	err = app.WriteConfig()
-	assert.NoError(err)
-
-	err = app.Stop(true, false)
-	assert.NoError(err)
-
-	runTime()
-}
-
 // TestWebserverType checks that webserver_type:apache-cgi or apache-fpm does the right thing
 func TestWebserverType(t *testing.T) {
 	assert := asrt.New(t)
@@ -2227,63 +2160,88 @@ func TestWebserverType(t *testing.T) {
 	}
 }
 
-// TestInternalAndExternalAccessToURL checks we can access content from host and from inside container by URL (with port)
+// TestInternalAndExternalAccessToURL checks we can access content
+// from host and from inside container by URL (with port)
 func TestInternalAndExternalAccessToURL(t *testing.T) {
 	assert := asrt.New(t)
 
-	for _, site := range TestSites {
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestInternalAndExternalAccessToURL", site.Name))
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestInternalAndExternalAccessToURL"))
 
-		app := new(ddevapp.DdevApp)
+	site := TestSites[0]
+	app := new(ddevapp.DdevApp)
 
-		err := app.Init(site.Dir)
-		assert.NoError(err)
+	err := app.Init(site.Dir)
+	assert.NoError(err)
 
-		for _, pair := range []testcommon.PortPair{{"80", "443"}, {"8080", "8443"}} {
-			testcommon.ClearDockerEnv()
-			app.RouterHTTPPort = pair.HTTPPort
-			app.RouterHTTPSPort = pair.HTTPSPort
-			err = app.WriteConfig()
-			assert.NoError(err)
+	// Add some additional hostnames
+	app.AdditionalHostnames = []string{"sub1", "sub2", "sub3"}
+	app.AdditionalFQDNs = []string{"junker99.example.com"}
 
-			if app.SiteStatus() == ddevapp.SitePaused || app.SiteStatus() == ddevapp.SiteRunning {
-				err = app.Stop(true, false)
-				assert.NoError(err)
-			}
-			err = app.Start()
-			assert.NoError(err)
-
-			// Ensure that we can access from the host even with extra port specifications.
-			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-
-			// Ensure that we can access the same URL from within the web container (via router)
-			var out string
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     []string{"curl", "-sk", app.GetHTTPURL() + site.Safe200URIWithExpectation.URI},
-			})
-			assert.NoError(err)
-			assert.Contains(out, site.Safe200URIWithExpectation.Expect)
-
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     []string{"curl", "-sk", app.GetHTTPSURL() + site.Safe200URIWithExpectation.URI},
-			})
-			assert.NoError(err)
-			assert.Contains(out, site.Safe200URIWithExpectation.Expect)
-		}
-
-		// Set the ports back to the default was so we don't break any following tests.
-		app.RouterHTTPSPort = "443"
-		app.RouterHTTPPort = "80"
+	for _, pair := range []testcommon.PortPair{{"80", "443"}, {"8080", "8443"}} {
+		testcommon.ClearDockerEnv()
+		app.RouterHTTPPort = pair.HTTPPort
+		app.RouterHTTPSPort = pair.HTTPSPort
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = app.Stop(true, false)
+
+		if app.SiteStatus() == ddevapp.SitePaused || app.SiteStatus() == ddevapp.SiteRunning {
+			err = app.Stop(true, false)
+			assert.NoError(err)
+		}
+		err = app.StartAndWaitForSync(0)
 		assert.NoError(err)
 
-		runTime()
+		urls := app.GetAllURLs()
+
+		// Convert URLs to map[string]bool
+		urlMap := make(map[string]bool)
+		for _, u := range urls {
+			urlMap[u] = true
+		}
+
+		// We expect two URLs for each hostname (http/https) and one direct web container address.
+		expectedNumUrls := (2 * len(app.GetHostnames())) + 1
+		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
+
+		// TODO: Add https://localhost to this list when trusted SSL goes in.
+		URLList := append(app.GetAllURLs(), "http://localhost")
+		for _, item := range URLList {
+			// Make sure internal (web container) access is successful
+			parts, err := url.Parse(item)
+			assert.NoError(err)
+			// Only try it if not an IP address URL; those won't be right
+			hostParts := strings.Split(parts.Host, ".")
+
+			// Make sure access from host is successful
+			// But "localhost" is only for inside container.
+			if parts.Host != "localhost" {
+				_, _ = testcommon.EnsureLocalHTTPContent(t, item+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			}
+
+			if _, err := strconv.ParseInt(hostParts[0], 10, 64); err != nil {
+				out, _, err := app.Exec(&ddevapp.ExecOpts{
+					Service: "web",
+					// TODO: Remove the 'k' from curl when trusted SSL goes in.
+					Cmd: []string{"bash", "-c", "curl -sSk --fail " + item + site.Safe200URIWithExpectation.URI},
+				})
+				assert.NoError(err, "failed curl to %s: %v", item+site.Safe200URIWithExpectation.URI, err)
+				assert.Contains(out, site.Safe200URIWithExpectation.Expect)
+			}
+		}
 	}
+
+	// Set the ports back to the default was so we don't break any following tests.
+	app.RouterHTTPSPort = "443"
+	app.RouterHTTPPort = "80"
+	app.AdditionalFQDNs = []string{}
+	app.AdditionalHostnames = []string{}
+
+	err = app.WriteConfig()
+	assert.NoError(err)
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	runTime()
 }
 
 // TestCaptureLogs checks that app.CaptureLogs() works
