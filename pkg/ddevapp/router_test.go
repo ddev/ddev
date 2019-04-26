@@ -68,6 +68,8 @@ func TestPortOverride(t *testing.T) {
 		if startErr != nil {
 			logs, err = ddevapp.GetErrLogsFromApp(app, err)
 			assert.NoError(err)
+			routerLogs := app.Logs("ddev-router", false, false, "")
+			t.Logf("\n================== ddev-router logs ====================\n%s\n", routerLogs)
 			t.Fatalf("failed to app.StartAndWaitForSync(), err=%v logs=\n=========\n%s\n===========\n", startErr, logs)
 		}
 		err = app.Wait([]string{"web"})
