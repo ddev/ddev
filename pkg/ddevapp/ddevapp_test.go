@@ -2187,7 +2187,8 @@ func TestWebserverType(t *testing.T) {
 func TestInternalAndExternalAccessToURL(t *testing.T) {
 	assert := asrt.New(t)
 
-	_, err := exec.RunCommand(DdevBin, []string{"stop", "-a", "--stop-ssh-agent"})
+	// Use remove for a while until newer ddevs are out there.
+	_, _ = exec.RunCommand(DdevBin, []string{"remove", "-a", "--stop-ssh-agent"})
 
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestInternalAndExternalAccessToURL"))
 
@@ -2196,7 +2197,6 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-
 
 	// Add some additional hostnames
 	app.AdditionalHostnames = []string{"sub1", "sub2", "sub3"}
@@ -2224,12 +2224,11 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			urlMap[u] = true
 		}
 
-		// We expect two URLs for each hostname (http/https) and one direct web container address.
-		expectedNumUrls := (2 * len(app.GetHostnames())) + 1
+		// We expect two URLs for each hostname (http/https) and two direct web container addresses.
+		expectedNumUrls := (2 * len(app.GetHostnames())) + 2
 		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
-		// TODO: Add https://localhost to this list when trusted SSL goes in.
-		URLList := append(app.GetAllURLs(), "http://localhost")
+		URLList := append(app.GetAllURLs(), "http://localhost", "http://localhost")
 		for _, item := range URLList {
 			// Make sure internal (web container) access is successful
 			parts, err := url.Parse(item)
@@ -2246,7 +2245,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			if _, err := strconv.ParseInt(hostParts[0], 10, 64); err != nil {
 				out, _, err := app.Exec(&ddevapp.ExecOpts{
 					Service: "web",
-					Cmd: []string{"bash", "-c", "curl -sS --fail " + item + site.Safe200URIWithExpectation.URI},
+					Cmd:     []string{"bash", "-c", "curl -sS --fail " + item + site.Safe200URIWithExpectation.URI},
 				})
 				assert.NoError(err, "failed curl to %s: %v", item+site.Safe200URIWithExpectation.URI, err)
 				assert.Contains(out, site.Safe200URIWithExpectation.Expect)
@@ -2254,19 +2253,18 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		}
 	}
 
-		out, err := exec.RunCommand(DdevBin, []string{"list"})
-		assert.NoError(err)
-		t.Logf("=========== output of ddev list ==========\n%s\n============", out)
-		out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
-		assert.NoError(err)
-		t.Logf("=========== output of docker logs ddev-router ==========\n%s\n============", out)
+	out, err := exec.RunCommand(DdevBin, []string{"list"})
+	assert.NoError(err)
+	t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
+	out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
+	assert.NoError(err)
+	t.Logf("\n=========== output of docker logs ddev-router ==========\n%s\n============\n", out)
 
 	// Set the ports back to the default was so we don't break any following tests.
 	app.RouterHTTPSPort = "443"
 	app.RouterHTTPPort = "80"
 	app.AdditionalFQDNs = []string{}
 	app.AdditionalHostnames = []string{}
-
 
 	err = app.WriteConfig()
 	assert.NoError(err)
