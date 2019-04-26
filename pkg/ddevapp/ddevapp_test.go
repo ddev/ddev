@@ -149,7 +149,7 @@ func TestMain(m *testing.M) {
 	// Attempt to remove all running containers before starting a test.
 	// If no projects are running, this will exit silently and without error.
 	// If a system doesn't have `ddev` in its $PATH, this will emit a warning but will not fail the test.
-	if _, err := exec.RunCommand(DdevBin, []string{"stop", "--all", "--stop-ssh-agent"}); err != nil {
+	if _, err := exec.RunCommand(DdevBin, []string{"remove", "--all", "--stop-ssh-agent"}); err != nil {
 		log.Warnf("Failed to stop/remove all running projects: %v", err)
 	}
 
