@@ -286,8 +286,8 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 	proc.Stdin = stdin
 	proc.Stderr = stderr
 
-	_ = proc.Run()
-	return nil
+	err := proc.Run()
+	return err
 }
 
 // ComposeCmd executes docker-compose commands via shell.

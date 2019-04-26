@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"html/template"
@@ -513,13 +514,17 @@ type composeYAMLVars struct {
 	NFSSource            string
 	DockerIP             string
 	IsWindowsFS          bool
+	Hostnames            []string
 }
 
 // RenderComposeYAML renders the contents of docker-compose.yaml.
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
-	templ := template.New("compose template")
+	templ, err := template.New("compose template").Funcs(sprig.HtmlFuncMap()).Parse(DDevComposeTemplate)
+	if err != nil {
+		return "", err
+	}
 	templ, err = templ.Parse(DDevComposeTemplate)
 	if err != nil {
 		return "", err
@@ -551,6 +556,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		IsWindowsFS:          runtime.GOOS == "windows",
 		MountType:            "bind",
 		WebMount:             "../",
+		Hostnames:            app.GetHostnames(),
 	}
 	if app.WebcacheEnabled {
 		templateVars.MountType = "volume"

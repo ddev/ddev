@@ -226,16 +226,16 @@ func TestComposeWithStreams(t *testing.T) {
 	// Reverse stdout and stderr and create an error and normal stdout. We should see only the error captured in stdout
 	stdout = util.CaptureStdOut()
 	err = ComposeWithStreams(composeFiles, os.Stdin, os.Stderr, os.Stdout, "exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2")
-	assert.NoError(err)
+	assert.Error(err)
 	output = stdout()
-	assert.Equal(output, "ls: cannot access 'xx': No such file or directory\n")
+	assert.Equal("ls: cannot access 'xx': No such file or directory\n", output)
 
 	// Flip stdout and stderr and create an error and normal stdout. We should see only the success captured in stdout
 	stdout = util.CaptureStdOut()
 	err = ComposeWithStreams(composeFiles, os.Stdin, os.Stdout, os.Stderr, "exec", "-T", "web", "ls", "-d", "xx", "/var/run/apache2")
-	assert.NoError(err)
+	assert.Error(err)
 	output = stdout()
-	assert.Equal(output, "/var/run/apache2\n")
+	assert.Equal("/var/run/apache2\n", output)
 }
 
 // TestCheckCompose tests detection of docker-compose.
