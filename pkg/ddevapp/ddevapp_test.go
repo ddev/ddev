@@ -1918,6 +1918,9 @@ func TestHttpsRedirection(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	packageDir, _ := os.Getwd()
 
+	// Use remove for a while until newer ddevs are out there.
+	_, _ = exec.RunCommand(DdevBin, []string{"remove", "-a", "--stop-ssh-agent"})
+
 	testDir := testcommon.CreateTmpDir("TestHttpsRedirection")
 	defer testcommon.CleanupDir(testDir)
 	appDir := filepath.Join(testDir, "proj")
@@ -1965,9 +1968,9 @@ func TestHttpsRedirection(t *testing.T) {
 		for _, parts := range expectations {
 
 			reqURL := parts.scheme + "://" + app.GetHostname() + parts.uri
-			_, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
-			assert.Error(err)
-			assert.NotNil(resp, "resp was nil for webserver_type=%s url=%s", webserverType, reqURL)
+			t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
+			out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
+			assert.NotNil(resp, "resp was nil for webserver_type=%s url=%s, err=%v, out='%s'", webserverType, reqURL, err, out)
 			if resp != nil {
 				locHeader := resp.Header.Get("Location")
 
