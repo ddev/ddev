@@ -1251,11 +1251,6 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 
 	// Remove data/database/projectInfo/hostname if we need to.
 	if removeData {
-		err := globalconfig.RemoveProjectInfo(app.Name)
-		if err != nil {
-			util.Warning("failed to RemoveProjectInfo(%s): %v", app.Name, err)
-		}
-
 		if err = app.RemoveHostsEntries(); err != nil {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
