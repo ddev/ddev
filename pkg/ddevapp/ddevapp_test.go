@@ -397,10 +397,10 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 		assert.NoError(err)
 		if err != nil && strings.Contains(err.Error(), "db container failed") {
-			stdout := util.CaptureUserOut()
-			err = app.Logs("db", false, false, "")
+			container, err := app.FindContainerByType("db")
 			assert.NoError(err)
-			out := stdout()
+			out, err := exec.RunCommand("docker", []string{"logs", container.Names[0]})
+			assert.NoError(err)
 			t.Logf("DB Logs after app.Start: \n%s\n=== END DB LOGS ===", out)
 		}
 
@@ -1031,10 +1031,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.Contains(body, "d7 tester test 2 has 2 nodes")
 	if err != nil {
 		t.Logf("resp after timeout: %v", resp)
-		stdout := util.CaptureUserOut()
-		err = app.Logs("web", false, false, "")
+		out, err := app.CaptureLogs("web", false, "")
 		assert.NoError(err)
-		out := stdout()
 		t.Logf("web container logs after timeout: %s", out)
 	}
 
@@ -1418,6 +1416,9 @@ func TestDdevLogs(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	//nolint: errcheck
+	defer app.Stop(true, false)
+
 	startErr := app.StartAndWaitForSync(0)
 	if startErr != nil {
 		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
@@ -1425,36 +1426,25 @@ func TestDdevLogs(t *testing.T) {
 		t.Fatalf("app.Start failed, err=%v, logs=\n========\n%s\n===========\n", startErr, logs)
 	}
 
-	stdout := util.CaptureUserOut()
-	err = app.Logs("web", false, false, "")
+	out, err := app.CaptureLogs("web", false, "")
 	assert.NoError(err)
-	out := stdout()
 	assert.Contains(out, "Server started")
 
-	stdout = util.CaptureUserOut()
-	err = app.Logs("db", false, false, "")
+	out, err = app.CaptureLogs("db", false, "")
 	assert.NoError(err)
-	out = stdout()
 	assert.Contains(out, "MySQL init process done. Ready for start up.")
 
 	// Test that we can get logs when project is stopped also
 	err = app.Pause()
 	assert.NoError(err)
 
-	stdout = util.CaptureUserOut()
-	err = app.Logs("web", false, false, "")
+	out, err = app.CaptureLogs("web", false, "")
 	assert.NoError(err)
-	out = stdout()
 	assert.Contains(out, "Server started")
 
-	stdout = util.CaptureUserOut()
-	err = app.Logs("db", false, false, "")
+	out, err = app.CaptureLogs("db", false, "")
 	assert.NoError(err)
-	out = stdout()
 	assert.Contains(out, "MySQL init process done. Ready for start up.")
-
-	err = app.Stop(true, false)
-	assert.NoError(err)
 
 	runTime()
 	switchDir()
@@ -1591,10 +1581,8 @@ func TestDdevDescribe(t *testing.T) {
 	defer app.Stop(true, false)
 	// If we have a problem starting, get the container logs and output.
 	if startErr != nil {
-		stdout := util.CaptureUserOut()
-		logsErr := app.Logs("web", false, false, "")
+		out, logsErr := app.CaptureLogs("web", false, "")
 		assert.NoError(logsErr)
-		out := stdout()
 
 		healthcheck, inspectErr := exec.RunCommandPipe("bash", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
 		assert.NoError(inspectErr)
