@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/netutil"
 	"strconv"
 	"testing"
@@ -64,13 +65,20 @@ func TestPortOverride(t *testing.T) {
 		// nolint: errcheck
 		defer app.Stop(true, false)
 
-		var logs string
 		if startErr != nil {
-			logs, err = ddevapp.GetErrLogsFromApp(app, err)
+			t.Logf("Failed app.StartAndWaitForSync: %v", startErr)
+			out, err := exec.RunCommand(DdevBin, []string{"list"})
 			assert.NoError(err)
-			routerLogs := app.Logs("ddev-router", false, false, "")
-			t.Logf("\n================== ddev-router logs ====================\n%s\n", routerLogs)
-			t.Fatalf("failed to app.StartAndWaitForSync(), err=%v logs=\n=========\n%s\n===========\n", startErr, logs)
+			t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
+			out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
+			assert.NoError(err)
+			t.Logf("\n=========== output of docker logs ddev-router ==========\n%s\n============\n", out)
+
+			logsFromApp, err := ddevapp.GetErrLogsFromApp(app, startErr)
+			assert.NoError(err)
+			t.Logf("\n================== logsFromApp ====================\n%s\n", logsFromApp)
+
+			t.Fatalf("failed to app.StartAndWaitForSync(), err=%v", startErr)
 		}
 		err = app.Wait([]string{"web"})
 		assert.NoError(err)
