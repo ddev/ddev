@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
@@ -902,10 +903,46 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 // CaptureLogs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
-	stdout := util.CaptureUserOut()
-	err := app.Logs(service, false, timestamps, tailLines)
-	out := stdout()
-	return out, err
+	client := dockerutil.GetDockerClient()
+
+	var container *docker.APIContainers
+	var err error
+	// Let people access ddev-router and ddev-ssh-agent logs as well.
+	if service == "ddev-router" || service == "ddev-ssh-agent" {
+		container, err = dockerutil.FindContainerByLabels(map[string]string{"com.docker.compose.service": service})
+	} else {
+		container, err = app.FindContainerByType(service)
+	}
+	if err != nil {
+		return "", err
+	}
+	if container == nil {
+		util.Warning("No running service container %s was found", service)
+		return "", nil
+	}
+
+	var out bytes.Buffer
+
+	logOpts := docker.LogsOptions{
+		Container:    container.ID,
+		Stdout:       true,
+		Stderr:       true,
+		OutputStream: &out,
+		ErrorStream:  &out,
+		Follow:       false,
+		Timestamps:   timestamps,
+	}
+
+	if tailLines != "" {
+		logOpts.Tail = tailLines
+	}
+
+	err = client.Logs(logOpts)
+	if err != nil {
+		return "", err
+	}
+
+	return out.String(), nil
 }
 
 // DockerEnv sets environment variables for a docker-compose run.

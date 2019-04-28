@@ -2246,15 +2246,12 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 
 // TestCaptureLogs checks that app.CaptureLogs() works
 func TestCaptureLogs(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipping TestCaptureLogs on windows, it sometimes hangs")
-	}
 	assert := asrt.New(t)
 
 	site := TestSites[0]
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s CaptureLogs", site.Name))
 
-	app := new(ddevapp.DdevApp)
+	app := ddevapp.DdevApp{}
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
