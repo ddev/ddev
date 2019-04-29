@@ -356,8 +356,8 @@ services:
       - ddev-global-cache:/mnt/ddev-global-cache:rw
     restart: "no"
     healthcheck:
-      interval: 5s
-      retries: 3
+      interval: 6s
+      retries: 6
       start_period: 10s
 
 networks:
