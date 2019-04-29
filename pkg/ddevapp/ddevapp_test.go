@@ -902,6 +902,12 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		err = app.Start()
 		assert.NoError(err)
+		settingsLocation, err := app.DetermineSettingsPathLocation()
+		assert.NoError(err)
+		assert.Equal(settingsLocation, app.SiteSettingsPath)
+		if app.Type == "drupal6" || app.Type == "drupal7" || app.Type == "drupal8" || app.Type == "backdrop" {
+			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+		}
 
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
