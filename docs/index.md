@@ -32,15 +32,21 @@ For macOS and Linux users, we recommend installing and upgrading via [homebrew](
 ```
 brew tap drud/ddev && brew install ddev
 ```
+
+As a one-time initialization, run `mkcert -install`, which may require your sudo password. 
+
 Later, to upgrade to a newer version of ddev, run:
 ```
 brew upgrade ddev
 ```
 
+
 ### Installation or Upgrade - Windows
 
 - A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new terminal or cmd window and start using ddev.
 - If you use [chocolatey](https://chocolatey.org/) (highly recommended), then you can just `choco install ddev` from an administrative-privileged shell. Upgrades are just `choco upgrade ddev`.
+- As a one-time initialization, run `mkcert -install`
+
 
 ### Installation/Upgrade Script - Linux and macOS
 
@@ -59,10 +65,16 @@ You can also easily perform the installation or upgrade manually if preferred. d
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 - Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
 - Run `ddev` to test your installation. You should see ddev's command usage output.
+- As a one-time initialization, run `mkcert -install`, which may require your sudo password. 
 
 ### Installation via package managers - Linux
 
-The preferred Linux package manager is [Linuxbrew](http://linuxbrew.sh/) but we also currently maintain packages on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
+The preferred Linux package manager is [Linuxbrew](http://linuxbrew.sh/) : `brew tap drud/ddev && brew install ddev`
+
+We also currently maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
+
+As a one-time initialization, run `mkcert -install`, which may require your sudo password. 
+
 
 ### Uninstallation
 

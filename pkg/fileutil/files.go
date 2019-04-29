@@ -128,6 +128,16 @@ func FileExists(name string) bool {
 	return true
 }
 
+// FileIsReadable checks to make sure a file exists and is readable
+func FileIsReadable(name string) bool {
+	file, err := os.OpenFile(name, os.O_RDONLY, 0666)
+	if err != nil {
+		return false
+	}
+	file.Close()
+	return true
+}
+
 // PurgeDirectory removes all of the contents of a given
 // directory, leaving the directory itself intact.
 func PurgeDirectory(path string) error {

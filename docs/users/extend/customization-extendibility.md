@@ -39,14 +39,13 @@ services:
 The default configuration for ddev uses nginx as the web server (`webserver_type: nginx-fpm` in .ddev/config.yaml). Default configurations are provided for most project types. Some projects may require custom configuration, for example to support a module or plugin requiring special rules. To accommodate these needs, ddev provides a way to replace the default configuration with a custom version.
 
 - Run `ddev config` for the project if it has not been used with ddev before.
-- Create a file named "nginx-site.conf" in the ".ddev" directory for your project. In the ddev web container, these are separate per project type, and you can see and copy the default configurations in the [web container code](https://github.com/drud/ddev/tree/master/containers/ddev-webserver/files/etc/nginx). You can also use `ddev ssh` to review existing configurations in the container at /etc/nginx.
-- Add your configuration changes to the "nginx-site.conf" file. You can optionally use the [ddev nginx configs](https://github.com/drud/ddev/tree/master/containers/ddev-webserver/files/etc/nginx) as a starting point. [Additional configuration examples](https://www.nginx.com/resources/wiki/start/#other-examples) and documentation are available at the [nginx wiki](https://www.nginx.com/resources/wiki/)
-- **NOTE:** The "root" statement in the server block must be `root $WEBSERVER_DOCROOT;` in order to ensure the path for NGINX to serve the project from is correct.
-- Save your configuration file and run `ddev restart` to start the project. If you encounter issues with your configuration or the project fails to start, use `ddev logs` to inspect the logs for possible NGINX configuration errors.
+- To add an nginx snippet to the default config (preferred), add an nginx config file as `.ddev/nginx/<something>.conf`
+- To replace the entire nginx-site.conf (legacy), create a file named "nginx-site.conf" in `.ddev/nginx-site.conf` for your project. In the ddev web container, these are separate per project type, and you can see and copy the default configurations in the [web container code](https://github.com/drud/ddev/tree/master/containers/ddev-webserver/files/etc/nginx). You can also use `ddev ssh` to review existing configurations in the container at /etc/nginx. [Additional configuration examples](https://www.nginx.com/resources/wiki/start/#other-examples) and documentation are available at the [nginx wiki](https://www.nginx.com/resources/wiki/) Note that the "root" statement in the server block must be `root $WEBSERVER_DOCROOT;` in order to ensure the path for NGINX to serve the project from is correct.
+- Save your configuration file and run `ddev restart` to restart the project with the new configuration. If you encounter issues with your configuration or the project fails to start, use `ddev logs` to inspect the logs for possible NGINX configuration errors.
 - The `location ~ ^/(phpstatus|ping)$ {` block is required for the webserver container healthcheck to work.
 `
 - Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose.
-- **IMPORTANT**: Changes to .ddev/nginx-site.conf take place on a `ddev restart` or when the container is rebuilt for another reason.
+- **IMPORTANT**: Changes to configuration take place on a `ddev restart` or when the container is rebuilt for another reason.
 
 ## Providing custom apache configuration
 
@@ -60,7 +59,7 @@ If you're using `webserver_type: apache-fpm` or `webserver_type: apache-cgi` in 
 - The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the healthcheck script to work.
 `
 - Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose.
-- **IMPORTANT**: Changes to .ddev/apache/apache-site.conf take place on a `ddev rm && ddev start` (or when the container is rebuilt for another reason).
+- **IMPORTANT**: Changes to .ddev/apache/apache-site.conf take place on a `ddev restart` (or when the container is rebuilt for another reason).
 
 ## Providing custom PHP configuration (php.ini)
 

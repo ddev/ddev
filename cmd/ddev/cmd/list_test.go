@@ -90,14 +90,18 @@ func TestCmdListContinuous(t *testing.T) {
 
 	reader := bufio.NewReader(stdout)
 
-	blob := make([]byte, 4096)
+	blob := make([]byte, 8192)
 	byteCount, err := reader.Read(blob)
 	assert.NoError(err)
 	blob = blob[:byteCount-1]
 	require.True(t, byteCount > 1000)
 
 	f, err := unmarshalJSONLogs(string(blob))
-	require.NoError(t, err)
+	if err != nil {
+		assert.NoError(err, "could not unmarshal ddev output: %v", err)
+		t.Logf("============== ddev list -j --continuous failed logs =================\n%s\n", string(blob))
+		t.FailNow()
+	}
 	assert.NotEmpty(f[0]["raw"])
 	time1 := f[0]["time"]
 	if len(f) > 1 {
@@ -107,7 +111,7 @@ func TestCmdListContinuous(t *testing.T) {
 	time.Sleep(time.Millisecond * 1500)
 
 	// Now read more from the pipe after resetting blob
-	blob = make([]byte, 4096)
+	blob = make([]byte, 8192)
 	byteCount, err = reader.Read(blob)
 	assert.NoError(err)
 	blob = blob[:byteCount-1]

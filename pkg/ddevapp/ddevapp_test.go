@@ -37,6 +37,7 @@ import (
 )
 
 var (
+	DdevBin   = "ddev"
 	TestSites = []testcommon.TestSite{
 		{
 			Name:                          "TestPkgWordpress",
@@ -122,6 +123,13 @@ var (
 	FullTestSites = TestSites
 )
 
+func init() {
+	// Make sets DDEV_BINARY_FULLPATH when building the executable
+	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
+		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	}
+}
+
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
@@ -141,8 +149,8 @@ func TestMain(m *testing.M) {
 	// Attempt to remove all running containers before starting a test.
 	// If no projects are running, this will exit silently and without error.
 	// If a system doesn't have `ddev` in its $PATH, this will emit a warning but will not fail the test.
-	if _, err := exec.RunCommand("ddev", []string{"stop", "--all", "--stop-ssh-agent"}); err != nil {
-		log.Warnf("Failed to remove all running projects: %v", err)
+	if _, err := exec.RunCommand(DdevBin, []string{"remove", "--all", "--stop-ssh-agent"}); err != nil {
+		log.Warnf("Failed to stop/remove all running projects: %v", err)
 	}
 
 	for _, volume := range []string{"ddev-router-cert-cache", "ddev-ssh-agent_dot_ssh", "ddev-ssh-agent_socket_dir"} {
@@ -247,6 +255,8 @@ func TestDdevStart(t *testing.T) {
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
+	defer switchDir()
+
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
 
 	err := app.Init(site.Dir)
@@ -254,6 +264,8 @@ func TestDdevStart(t *testing.T) {
 
 	err = app.Start()
 	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
 
 	// ensure docker-compose.yaml exists inside .ddev site folder
 	composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
@@ -295,6 +307,8 @@ func TestDdevStart(t *testing.T) {
 	stdout := util.CaptureUserOut()
 	err = app.Start()
 	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
 	out := stdout()
 	assert.Contains(out, "Running exec command")
 	assert.Contains(out, "hello\n")
@@ -319,6 +333,8 @@ func TestDdevStart(t *testing.T) {
 	badapp := &ddevapp.DdevApp{}
 
 	err = badapp.Init(another.Dir)
+	//nolint: errcheck
+	defer badapp.Stop(true, false)
 	if err == nil {
 		logs, logErr := app.CaptureLogs("web", false, "")
 		require.Error(t, err, "did not receive err from badapp.Init, logErr=%v, logs:\n======================= logs from app webserver =================\n%s\n============ end logs =========\n", logErr, logs)
@@ -339,20 +355,18 @@ func TestDdevStart(t *testing.T) {
 
 	err = symlinkApp.Init(symlink)
 	assert.NoError(err)
-
+	//nolint: errcheck
+	defer symlinkApp.Stop(true, false)
 	// Make sure that GetActiveApp() also fails when trying to start app of duplicate name in current directory.
 	switchDir = another.Chdir()
+	defer switchDir()
+
 	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), fmt.Sprintf("a project (web container) in running state already exists for %s that was created at %s", TestSites[0].Name, TestSites[0].Dir))
 	}
 	testcommon.CleanupDir(another.Dir)
-	switchDir()
-
-	// Clean up site 0
-	err = app.Stop(true, false)
-	assert.NoError(err)
 }
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
@@ -374,7 +388,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 		// sub1.<sitename>.ddev.local and sitename.ddev.local are deliberately included to prove they don't
 		// cause ddev-router failures"
-		app.AdditionalFQDNs = []string{"one.example.com", "two.example.com", "a.one.example.com", site.Name + "." + version.DDevTLD, "sub1." + site.Name + version.DDevTLD}
+		app.AdditionalFQDNs = []string{"one.example.com", "two.example.com", "a.one.example.com", site.Name + "." + version.DDevTLD, "sub1." + site.Name + "." + version.DDevTLD}
 
 		err = app.WriteConfig()
 		assert.NoError(err)
@@ -383,10 +397,10 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 		assert.NoError(err)
 		if err != nil && strings.Contains(err.Error(), "db container failed") {
-			stdout := util.CaptureUserOut()
-			err = app.Logs("db", false, false, "")
+			container, err := app.FindContainerByType("db")
 			assert.NoError(err)
-			out := stdout()
+			out, err := exec.RunCommand("docker", []string{"logs", container.Names[0]})
+			assert.NoError(err)
 			t.Logf("DB Logs after app.Start: \n%s\n=== END DB LOGS ===", out)
 		}
 
@@ -402,11 +416,17 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
-		for _, hostname := range app.GetHostnames() {
-			_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+hostname+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-			_, _ = testcommon.EnsureLocalHTTPContent(t, "https://"+hostname+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-
+		t.Logf("Testing these URLs: %v", app.GetAllURLs())
+		for _, url := range app.GetAllURLs() {
+			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
+
+		out, err := exec.RunCommand(DdevBin, []string{"list"})
+		assert.NoError(err)
+		t.Logf("=========== output of ddev list ==========\n%s\n============", out)
+		out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
+		assert.NoError(err)
+		t.Logf("=========== output of docker logs ddev-router ==========\n%s\n============", out)
 
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean
 		// up these for tests that run later.
@@ -860,6 +880,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
+		defer switchDir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevFullSiteSetup", site.Name))
 
 		testcommon.ClearDockerEnv()
@@ -897,7 +918,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Test static content.
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
 		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 60)
@@ -950,6 +971,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	}
 
 	switchDir := site.Chdir()
+	defer switchDir()
+
 	testcommon.ClearDockerEnv()
 
 	err = app.Init(site.Dir)
@@ -1008,10 +1031,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.Contains(body, "d7 tester test 2 has 2 nodes")
 	if err != nil {
 		t.Logf("resp after timeout: %v", resp)
-		stdout := util.CaptureUserOut()
-		err = app.Logs("web", false, false, "")
+		out, err := app.CaptureLogs("web", false, "")
 		assert.NoError(err)
-		out := stdout()
 		t.Logf("web container logs after timeout: %s", out)
 	}
 
@@ -1031,7 +1052,6 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// TODO: Check behavior of ddev rm with snapshot, see if it has right stuff in it.
 
 	runTime()
-	switchDir()
 }
 
 // TestWriteableFilesDirectory tests to make sure that files created on host are writable on container
@@ -1396,6 +1416,9 @@ func TestDdevLogs(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	//nolint: errcheck
+	defer app.Stop(true, false)
+
 	startErr := app.StartAndWaitForSync(0)
 	if startErr != nil {
 		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
@@ -1403,36 +1426,25 @@ func TestDdevLogs(t *testing.T) {
 		t.Fatalf("app.Start failed, err=%v, logs=\n========\n%s\n===========\n", startErr, logs)
 	}
 
-	stdout := util.CaptureUserOut()
-	err = app.Logs("web", false, false, "")
+	out, err := app.CaptureLogs("web", false, "")
 	assert.NoError(err)
-	out := stdout()
 	assert.Contains(out, "Server started")
 
-	stdout = util.CaptureUserOut()
-	err = app.Logs("db", false, false, "")
+	out, err = app.CaptureLogs("db", false, "")
 	assert.NoError(err)
-	out = stdout()
 	assert.Contains(out, "MySQL init process done. Ready for start up.")
 
 	// Test that we can get logs when project is stopped also
 	err = app.Pause()
 	assert.NoError(err)
 
-	stdout = util.CaptureUserOut()
-	err = app.Logs("web", false, false, "")
+	out, err = app.CaptureLogs("web", false, "")
 	assert.NoError(err)
-	out = stdout()
 	assert.Contains(out, "Server started")
 
-	stdout = util.CaptureUserOut()
-	err = app.Logs("db", false, false, "")
+	out, err = app.CaptureLogs("db", false, "")
 	assert.NoError(err)
-	out = stdout()
 	assert.Contains(out, "MySQL init process done. Ready for start up.")
-
-	err = app.Stop(true, false)
-	assert.NoError(err)
 
 	runTime()
 	switchDir()
@@ -1569,10 +1581,8 @@ func TestDdevDescribe(t *testing.T) {
 	defer app.Stop(true, false)
 	// If we have a problem starting, get the container logs and output.
 	if startErr != nil {
-		stdout := util.CaptureUserOut()
-		logsErr := app.Logs("web", false, false, "")
+		out, logsErr := app.CaptureLogs("web", false, "")
 		assert.NoError(logsErr)
-		out := stdout()
 
 		healthcheck, inspectErr := exec.RunCommandPipe("bash", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
 		assert.NoError(inspectErr)
@@ -1685,7 +1695,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	// StopRouterIfNoContainers can't be used here because it checks to see if containers are running
 	// and doesn't do its job as a result.
 	dest := ddevapp.RouterComposeYAMLPath()
-	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down", "-v")
+	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
 	assert.NoError(err, "Failed to stop router using docker-compose, err=%v", err)
 
 	// Occupy port 80 using docker busybox trick, then see if we can start router.
@@ -1896,6 +1906,9 @@ func TestHttpsRedirection(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	packageDir, _ := os.Getwd()
 
+	// Use remove for a while until newer ddevs are out there.
+	_, _ = exec.RunCommand(DdevBin, []string{"remove", "-a", "--stop-ssh-agent"})
+
 	testDir := testcommon.CreateTmpDir("TestHttpsRedirection")
 	defer testcommon.CleanupDir(testDir)
 	appDir := filepath.Join(testDir, "proj")
@@ -1943,9 +1956,9 @@ func TestHttpsRedirection(t *testing.T) {
 		for _, parts := range expectations {
 
 			reqURL := parts.scheme + "://" + app.GetHostname() + parts.uri
-			_, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
-			assert.Error(err)
-			assert.NotNil(resp, "resp was nil for webserver_type=%s url=%s", webserverType, reqURL)
+			t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
+			out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
+			assert.NotNil(resp, "resp was nil for webserver_type=%s url=%s, err=%v, out='%s'", webserverType, reqURL, err, out)
 			if resp != nil {
 				locHeader := resp.Header.Get("Location")
 
@@ -2063,7 +2076,7 @@ func TestGetAllURLs(t *testing.T) {
 	}
 
 	// We expect two URLs for each hostname (http/https) and one direct web container address.
-	expectedNumUrls := (2 * len(app.GetHostnames())) + 1
+	expectedNumUrls := (2 * len(app.GetHostnames())) + 2
 	assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
 	// Ensure urlMap contains direct address of the web container
@@ -2165,6 +2178,9 @@ func TestWebserverType(t *testing.T) {
 func TestInternalAndExternalAccessToURL(t *testing.T) {
 	assert := asrt.New(t)
 
+	// Use remove for a while until newer ddevs are out there.
+	_, _ = exec.RunCommand(DdevBin, []string{"remove", "-a", "--stop-ssh-agent"})
+
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestInternalAndExternalAccessToURL"))
 
 	site := TestSites[0]
@@ -2199,12 +2215,11 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			urlMap[u] = true
 		}
 
-		// We expect two URLs for each hostname (http/https) and one direct web container address.
-		expectedNumUrls := (2 * len(app.GetHostnames())) + 1
+		// We expect two URLs for each hostname (http/https) and two direct web container addresses.
+		expectedNumUrls := (2 * len(app.GetHostnames())) + 2
 		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
-		// TODO: Add https://localhost to this list when trusted SSL goes in.
-		URLList := append(app.GetAllURLs(), "http://localhost")
+		URLList := append(app.GetAllURLs(), "http://localhost", "http://localhost")
 		for _, item := range URLList {
 			// Make sure internal (web container) access is successful
 			parts, err := url.Parse(item)
@@ -2221,14 +2236,20 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			if _, err := strconv.ParseInt(hostParts[0], 10, 64); err != nil {
 				out, _, err := app.Exec(&ddevapp.ExecOpts{
 					Service: "web",
-					// TODO: Remove the 'k' from curl when trusted SSL goes in.
-					Cmd: []string{"bash", "-c", "curl -sSk --fail " + item + site.Safe200URIWithExpectation.URI},
+					Cmd:     []string{"bash", "-c", "curl -sS --fail " + item + site.Safe200URIWithExpectation.URI},
 				})
 				assert.NoError(err, "failed curl to %s: %v", item+site.Safe200URIWithExpectation.URI, err)
 				assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 			}
 		}
 	}
+
+	out, err := exec.RunCommand(DdevBin, []string{"list"})
+	assert.NoError(err)
+	t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
+	out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
+	assert.NoError(err)
+	t.Logf("\n=========== output of docker logs ddev-router ==========\n%s\n============\n", out)
 
 	// Set the ports back to the default was so we don't break any following tests.
 	app.RouterHTTPSPort = "443"

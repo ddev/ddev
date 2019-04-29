@@ -8,6 +8,7 @@ ENV DRUSH_VERSION=8.1.18
 ENV WP_CLI_VERSION=2.1.0
 ENV MAILHOG_VERSION=1.0.0
 ENV BACKDROP_DRUSH_VERSION=0.0.6
+ENV MKCERT_VERSION=v1.3.0
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
@@ -21,7 +22,7 @@ ENV PATH "$PATH:/home/.composer/vendor/bin"
 
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
-ENV COMPOSER_CACHE_DIR /mnt/composer_cache
+ENV COMPOSER_CACHE_DIR /mnt/ddev-global-cache/composer
 # Windows, especially Win10 Home/Docker toolbox, can take forever on composer build.
 ENV COMPOSER_PROCESS_TIMEOUT 2000
 
@@ -116,10 +117,12 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
 
 RUN chmod -R 777 /var/log
 
-RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/composer_cache
-
 # All users will have their home directory in /home, make it fully writeable
-RUN mkdir -p /home/.composer /home/.drush/commands /home/.drush/aliases && chmod -R ugo+rw /home /mnt/composer_cache
+RUN mkdir -p /home/.composer /home/.drush/commands /home/.drush/aliases /mnt/ddev-global-cache/mkcert && chmod -R ugo+rw /home /mnt/ddev-global-cache/
+
+RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
+
+RUN curl -sSL https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-$MKCERT_VERSION-linux-amd64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkdir -p /home/.local/share && ln -s /mnt/ddev-global-cache/mkcert /home/.local/share/mkcert && mkcert -install
 
 # Except that .my.cnf can't be writeable or mysql won't use it.
 RUN chmod 444 /home/.my.cnf
@@ -129,6 +132,7 @@ RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.lo
 
 RUN for v in $PHP_VERSIONS; do a2dismod $v; done
 RUN a2dismod mpm_event
+RUN a2enmod ssl
 
 # ssh is very particular about permissions in ~/.ssh
 RUN chmod -R go-w /home/.ssh

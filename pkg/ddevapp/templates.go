@@ -52,7 +52,7 @@ services:
         consistency: cached
         {{ end }}
       - ".:/mnt/ddev_config:ro"
-      - ddev-composer-cache:/mnt/composer_cache
+      - ddev-global-cache:/mnt/ddev-global-cache
       {{ if not .OmitSSHAgent }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       {{ end }}
@@ -64,6 +64,7 @@ services:
     # ports is list of exposed *container* ports
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
+      - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
       - "{{ .MailhogPort }}"
     environment:
       - DDEV_URL=$DDEV_URL
@@ -74,6 +75,8 @@ services:
       - DDEV_ROUTER_HTTP_PORT=$DDEV_ROUTER_HTTP_PORT
       - DDEV_ROUTER_HTTPS_PORT=$DDEV_ROUTER_HTTPS_PORT
       - DDEV_XDEBUG_ENABLED=$DDEV_XDEBUG_ENABLED
+      - DOCKER_IP={{ .DockerIP }}
+      - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
       - DEPLOY_NAME=local
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       - COLUMNS=$COLUMNS
@@ -169,8 +172,8 @@ volumes:
   ddev-ssh-agent_socket_dir:
     external: true
   {{ end }}
-  ddev-composer-cache:
-    name: ddev-composer-cache
+  ddev-global-cache:
+    name: ddev-global-cache
   {{ if .WebcacheEnabled }}
   webcachevol:
   unisoncatalogvol:
@@ -250,6 +253,12 @@ const ConfigInstructions = `
 # webcache_enabled: false (deprecated)
 # Was only for macOS, but now deprecated. 
 # See https://ddev.readthedocs.io/en/stable/users/performance/#using-webcache_enabled-to-cache-the-project-directory
+
+# host_https_port: "59002"
+# The host port binding for https can be explicitly specified. It is
+# dynamic unless otherwise specified.
+# This is not used by most people, most people use the *router* instead
+# of the localhost port.
 
 # host_webserver_port: "59001"
 # The host port binding for the ddev-webserver can be explicitly specified. It is
@@ -344,24 +353,20 @@ services:
       {{ end }}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - type: "volume"
-        source: ddev-router-cert-cache
-        target: "/etc/nginx/certs"
-        volume:
-          nocopy: true
+      - ddev-global-cache:/mnt/ddev-global-cache:rw
     restart: "no"
     healthcheck:
-      interval: 5s
-      retries: 3
+      interval: 6s
+      retries: 6
       start_period: 10s
 
 networks:
    default:
      external:
        name: ddev_default
-volumes:
-  ddev-router-cert-cache:
-    name: "ddev-router-cert-cache"
+volumes: 
+   ddev-global-cache:
+     name: ddev-global-cache
 `
 
 const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'

@@ -564,7 +564,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ConfigOverrideDetection", site.Name))
 
 	// Copy test overrides into the project .ddev directory
-	for _, item := range []string{"apache", "php", "mysql"} {
+	for _, item := range []string{"nginx", "apache", "php", "mysql"} {
 		err := fileutil.CopyDir(filepath.Join(testDir, "testdata/TestConfigOverrideDetection/.ddev", item), filepath.Join(site.Dir, ".ddev", item))
 		assert.NoError(err)
 		err = fileutil.CopyFile(filepath.Join(testDir, "testdata/TestConfigOverrideDetection/.ddev", "nginx-site.conf"), filepath.Join(site.Dir, ".ddev", "nginx-site.conf"))
@@ -573,7 +573,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	// And when we're done, we have to clean those out again.
 	defer func() {
-		for _, item := range []string{"apache", "php", "mysql", "nginx-site.conf"} {
+		for _, item := range []string{"apache", "php", "mysql", "nginx", "nginx-site.conf"} {
 			_ = os.RemoveAll(filepath.Join(".ddev", item))
 		}
 	}()
@@ -601,6 +601,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	case WebserverNginxFPM:
 		assert.Contains(out, "nginx-site.conf")
 		assert.NotContains(out, "apache-site.conf")
+		assert.Contains(out, "junker99.conf")
 	default:
 		assert.Contains(out, "apache-site.conf")
 		assert.NotContains(out, "nginx-site.conf")

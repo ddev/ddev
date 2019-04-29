@@ -26,4 +26,11 @@ if [ "$socketMissing" = 1 -a "$1" = forego -a "$2" = start -a "$3" = '-r' ]; the
 	exit 1
 fi
 
+mkcert -install
+
+# It's unknown what docker event causes an attempt to use these files, but they might as well exist
+# to prevent it.
+mkcert -cert-file /etc/nginx/certs/.crt -key-file /etc/nginx/certs/.key "*.ddev.local" 127.0.0.1 localhost
+mkcert -cert-file /etc/nginx/certs/master.crt -key-file /etc/nginx/certs/master.key "*.ddev.local" 127.0.0.1 localhost
+
 exec "$@"

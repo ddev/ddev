@@ -57,6 +57,10 @@ RequestExecutionLevel admin
 !define MUI_LICENSEPAGE_BUTTON "I agree"
 !insertmacro MUI_PAGE_LICENSE "../.gotmp/bin/windows_amd64/winnfsd_license.txt"
 
+!define MUI_LICENSEPAGE_TEXT_TOP "BSD3 License for github.com/FiloSottile/mkcert"
+!define MUI_LICENSEPAGE_BUTTON "I agree"
+!insertmacro MUI_PAGE_LICENSE "../.gotmp/bin/windows_amd64/mkcert_license.txt"
+
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
@@ -66,7 +70,7 @@ RequestExecutionLevel admin
 
 
 !define MUI_FINISHPAGE_TITLE_3LINES "Welcome to DDEV-Local"
-!define MUI_FINISHPAGE_TEXT "Please review the release notes."
+!define MUI_FINISHPAGE_TEXT "PLEASE RUN `mkcert -install` and please review the release notes."
 !define MUI_FINISHPAGE_SHOWREADME https://github.com/drud/ddev/releases
 !define MUI_FINISHPAGE_SHOWREADME_TEXT "Continue to review the release notes."
 !define MUI_FINISHPAGE_LINK "github.com/drud/ddev"
@@ -113,6 +117,13 @@ Section "WinNFSd (github.com/winnfsd/winnfsd)" SecWinNFSd
   SetOutPath $INSTDIR
   SetOverwrite off
   File "../.gotmp/bin/windows_amd64/winnfsd.exe"
+SectionEnd
+
+Section "mkcert (https://github.com/FiloSottile/mkcert)" SecMkcert
+  SectionIn 1
+  SetOutPath $INSTDIR
+  SetOverwrite off
+  File "../.gotmp/bin/windows_amd64/mkcert.exe"
 SectionEnd
 
 Section "windows_ddev_nfs_setup.sh" SecNFSInstall

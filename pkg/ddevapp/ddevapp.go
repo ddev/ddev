@@ -101,6 +101,7 @@ type DdevApp struct {
 	OmitContainers        []string             `yaml:"omit_containers,omitempty,flow"`
 	HostDBPort            string               `yaml:"host_db_port,omitempty"`
 	HostWebserverPort     string               `yaml:"host_webserver_port,omitempty"`
+	HostHTTPSPort         string               `yaml:"host_https_port,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -691,6 +692,24 @@ func (app *DdevApp) Start() error {
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 
+	router, _ := FindDdevRouter()
+	// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
+	// This will often be redundant
+	if router == nil {
+		// Copy ca certs into ddev-global-cache/mkcert
+		caRoot, err := getCAROOT()
+		if err != nil {
+			util.Warning("mkcert may not be properly installed, please install it, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
+		} else {
+			output.UserOut.Info("Pushing mkcert rootca certs to ddev-global-cache")
+			_, out, err := dockerutil.RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "mkdir -p /mnt/ddev-global-cache/composer && mkdir -p /mnt/ddev-global-cache/mkcert && chmod 777 /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache", caRoot + ":/mnt/mkcert"}, "", true)
+			if err != nil {
+				util.Warning("failed to copy root CA into docker volume: %v, output='%s'", err, out)
+			}
+			util.Success("Pushed mkcert rootca certs to ddev-global-cache")
+		}
+	}
+
 	// WriteConfig docker-compose.yaml
 	err = app.WriteDockerComposeConfig()
 	if err != nil {
@@ -902,6 +921,7 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 
 // CaptureLogs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
+// TODO: Reimplement this so it doesn't use the util.CaptureUserOut()
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
 	client := dockerutil.GetDockerClient()
 
@@ -966,6 +986,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_APPROOT":                  app.AppRoot,
 		"DDEV_HOST_DB_PORT":             app.HostDBPort,
 		"DDEV_HOST_WEBSERVER_PORT":      app.HostWebserverPort,
+		"DDEV_HOST_HTTPS_PORT":          app.HostHTTPSPort,
 		"DDEV_DOCROOT":                  app.Docroot,
 		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
@@ -1229,11 +1250,6 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 
 	// Remove data/database/projectInfo/hostname if we need to.
 	if removeData {
-		err := globalconfig.RemoveProjectInfo(app.Name)
-		if err != nil {
-			util.Warning("failed to RemoveProjectInfo(%s): %v", app.Name, err)
-		}
-
 		if err = app.RemoveHostsEntries(); err != nil {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
@@ -1293,10 +1309,10 @@ func (app *DdevApp) GetAllURLs() []string {
 		if app.RouterHTTPSPort != "443" {
 			httpsPort = ":" + app.RouterHTTPSPort
 		}
-		URLs = append(URLs, "http://"+name+httpPort, "https://"+name+httpsPort)
+		URLs = append(URLs, "https://"+name+httpsPort, "http://"+name+httpPort)
 	}
 
-	URLs = append(URLs, app.GetWebContainerDirectURL())
+	URLs = append(URLs, app.GetWebContainerDirectHTTPSURL(), app.GetWebContainerDirectURL())
 
 	return URLs
 }
@@ -1310,6 +1326,17 @@ func (app *DdevApp) GetWebContainerDirectURL() string {
 	}
 	port, _ := app.GetWebContainerPublicPort()
 	return fmt.Sprintf("http://%s:%d", dockerIP, port)
+}
+
+// GetWebContainerDirectURL returns the URL that can be used without the router to get to web container.
+func (app *DdevApp) GetWebContainerDirectHTTPSURL() string {
+	// Get direct address of web container
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		util.Warning("Unable to get Docker IP: %v", err)
+	}
+	port, _ := app.GetWebContainerHTTPSPublicPort()
+	return fmt.Sprintf("https://%s:%d", dockerIP, port)
 }
 
 // GetWebContainerPublicPort returns the direct-access public tcp port for http
@@ -1326,6 +1353,22 @@ func (app *DdevApp) GetWebContainerPublicPort() (int, error) {
 		}
 	}
 	return -1, fmt.Errorf("No public port found for private port 80")
+}
+
+// GetWebContainerHTTPSPublicPort returns the direct-access public tcp port for https
+func (app *DdevApp) GetWebContainerHTTPSPublicPort() (int, error) {
+
+	webContainer, err := app.FindContainerByType("web")
+	if err != nil || webContainer == nil {
+		return -1, fmt.Errorf("Unable to find https web container for app: %s, err %v", app.Name, err)
+	}
+
+	for _, p := range webContainer.Ports {
+		if p.PrivatePort == 443 {
+			return int(p.PublicPort), nil
+		}
+	}
+	return -1, fmt.Errorf("No public https port found for private port 443")
 }
 
 // HostName returns the hostname of a given application.

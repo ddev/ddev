@@ -9,7 +9,6 @@ import (
 	"html/template"
 	"os"
 	"path"
-	"path/filepath"
 	"sort"
 
 	"strings"
@@ -52,19 +51,6 @@ func StartDdevRouter() error {
 	newExposedPorts := determineRouterPorts()
 
 	routerComposePath := RouterComposeYAMLPath()
-	routerdir := filepath.Dir(routerComposePath)
-	err := os.MkdirAll(routerdir, 0755)
-	if err != nil {
-		return fmt.Errorf("unable to create directory for ddev router: %v", err)
-	}
-
-	certDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "certs")
-	if _, err = os.Stat(certDir); os.IsNotExist(err) {
-		err = os.MkdirAll(certDir, 0755)
-		if err != nil {
-			return fmt.Errorf("unable to create directory for ddev certs: %v", err)
-		}
-	}
 
 	var doc bytes.Buffer
 	f, ferr := os.Create(routerComposePath)
@@ -74,7 +60,7 @@ func StartDdevRouter() error {
 	defer util.CheckClose(f)
 
 	templ := template.New("compose template")
-	templ, err = templ.Parse(DdevRouterTemplate)
+	templ, err := templ.Parse(DdevRouterTemplate)
 	if err != nil {
 		return err
 	}
@@ -112,10 +98,9 @@ func StartDdevRouter() error {
 	return nil
 }
 
-// findDdevRouter usees FindContainerByLabels to get our router container and
-// return it. This is currently unused but may be useful in the future.
-// nolint: deadcode
-func findDdevRouter() (*docker.APIContainers, error) {
+// FindDdevRouter usees FindContainerByLabels to get our router container and
+// return it.
+func FindDdevRouter() (*docker.APIContainers, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.service": RouterProjectName,
 	}
@@ -228,7 +213,7 @@ func determineRouterPorts() []string {
 // in a successful connection.
 func CheckRouterPorts() error {
 
-	routerContainer, _ := findDdevRouter()
+	routerContainer, _ := FindDdevRouter()
 	var existingExposedPorts []string
 	var err error
 	if routerContainer != nil {

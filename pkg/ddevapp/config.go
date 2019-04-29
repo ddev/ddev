@@ -226,6 +226,10 @@ func (app *DdevApp) CheckAndReserveHostPorts() error {
 	if app.HostWebserverPort != "" {
 		portsToReserve = append(portsToReserve, app.HostWebserverPort)
 	}
+	if app.HostHTTPSPort != "" {
+		portsToReserve = append(portsToReserve, app.HostHTTPSPort)
+	}
+
 	if len(portsToReserve) > 0 {
 		err := globalconfig.CheckHostPortsAvailable(app.Name, portsToReserve)
 		if err != nil {
@@ -468,6 +472,16 @@ func (app *DdevApp) CheckCustomConfig() {
 	if _, err := os.Stat(filepath.Join(ddevDir, "apache", "apache-site.conf")); err == nil && app.WebserverType != WebserverNginxFPM {
 		util.Warning("Using custom apache configuration in apache/apache-site.conf")
 		customConfig = true
+	}
+
+	nginxPath := filepath.Join(ddevDir, "nginx")
+	if _, err := os.Stat(nginxPath); err == nil {
+		nginxFiles, err := filepath.Glob(nginxPath + "/*.conf")
+		util.CheckErr(err)
+		if len(nginxFiles) > 0 {
+			util.Warning("Using custom nginx partial configuration: %v", nginxFiles)
+			customConfig = true
+		}
 	}
 
 	mysqlPath := filepath.Join(ddevDir, "mysql")

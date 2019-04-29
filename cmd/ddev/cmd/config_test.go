@@ -115,6 +115,7 @@ func TestConfigSetValues(t *testing.T) {
 	httpsPort := "444"
 	hostDBPort := "60001"
 	hostWebserverPort := "60002"
+	hostHTTPSPort := "60003"
 	xdebugEnabled := true
 	additionalHostnamesSlice := []string{"abc", "123", "xyz"}
 	additionalHostnames := strings.Join(additionalHostnamesSlice, ",")
@@ -154,6 +155,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--omit-containers", omitContainers,
 		"--host-db-port", hostDBPort,
 		"--host-webserver-port", hostWebserverPort,
+		"--host-https-port", hostHTTPSPort,
 	}
 
 	_, err = exec.RunCommand(DdevBin, args)

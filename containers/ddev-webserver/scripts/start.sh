@@ -91,7 +91,11 @@ fi
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-sudo chown -R "$(id -u):$(id -g)" /mnt/composer_cache/ ~/.ssh* ~/.drush ~/.gitconfig ~/.my.cnf
+sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.ssh* ~/.drush ~/.gitconfig ~/.my.cnf
+
+mkcert -install
+# VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
+sudo mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web && sudo chown $UID /etc/ssl/certs/master.*
 
 echo 'Server started'
 

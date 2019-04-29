@@ -198,10 +198,13 @@ func ClearDockerEnv() {
 		"DDEV_WEBIMAGE",
 		"DDEV_BGSYNCIMAGE",
 		"DDEV_APPROOT",
+		"DDEV_HOST_WEBSERVER_PORT",
+		"DDEV_HOST_HTTPS_PORT",
 		"DDEV_DOCROOT",
 		"DDEV_URL",
 		"DDEV_HOSTNAME",
 		"DDEV_PHP_VERSION",
+		"DDEV_WEBSERVER_TYPE",
 		"DDEV_PROJECT_TYPE",
 		"DDEV_ROUTER_HTTP_PORT",
 		"DDEV_ROUTER_HTTPS_PORT",
@@ -318,17 +321,17 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 	assert.NoError(err)
 
 	fakeHost := u.Hostname()
-	u.Host = dockerIP
 	// Add the port if there is one.
+	u.Host = dockerIP
 	if port != "" {
-		fakeHost = u.Hostname() + ":" + port
-		u.Host = dockerIP + ":" + port
+		u.Host = u.Host + ":" + port
 	}
 	localAddress := u.String()
 
-	// Ignore https cert failure, since we are in testing environment.
-	insecureTransport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	// use ServerName: fakeHost to verify basic usage of certificate.
+	// This technique is from https://stackoverflow.com/a/47169975/215713
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{ServerName: fakeHost},
 	}
 
 	// Do not follow redirects, https://stackoverflow.com/a/38150816/215713
@@ -336,7 +339,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
-		Transport: insecureTransport,
+		Transport: transport,
 		Timeout:   timeoutTime,
 	}
 

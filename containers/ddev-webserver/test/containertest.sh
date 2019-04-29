@@ -6,8 +6,12 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-HOST_PORT="1081"
-CONTAINER_PORT="80"
+HOST_HTTP_PORT="8080"
+HOST_HTTPS_PORT="8443"
+
+CONTAINER_HTTP_PORT="80"
+CONTAINER_HTTPS_PORT="443"
+
 CONTAINER_NAME=web-local-test
 DOCKER_IMAGE=$(awk '{print $1}' .docker_image)
 
@@ -53,18 +57,28 @@ if [ "$UNAME" = "MINGW64_NT-10.0" -o "$MOUNTUID" -ge 60000 ] ; then
 	MOUNTGID=1000
 fi
 
+mkcert -install
+docker run -t --rm -u "$MOUNTUID:$MOUNTGID" -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache $DOCKER_IMAGE bash -c "sudo mkdir -p /mnt/ddev-global-cache/mkcert && sudo chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
+
 for v in 5.6 7.0 7.1 7.2 7.3; do
     for webserver_type in nginx-fpm apache-fpm apache-cgi; do
         echo "================ starting container for tests on webserver=${webserver_type} php${v} ============="
 
-        docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -e "DDEV_WEBSERVER_TYPE=${webserver_type}" -d --name $CONTAINER_NAME -v ddev-composer-cache:/mnt/composer-cache -d $DOCKER_IMAGE
+        docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$v" -e "DDEV_WEBSERVER_TYPE=${webserver_type}" -d --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE
         if ! containercheck; then
             echo "=============== Failed containercheck after docker run with  DDEV_WEBSERVER_TYPE=${webserver_type} DDEV_PHP_VERSION=$v ==================="
             exit 101
         fi
 
-        curl --fail localhost:$HOST_PORT/test/phptest.php
-        curl -s localhost:$HOST_PORT/test/test-email.php | grep "Test email sent"
+        # Make sure http and https phpstatus access work both inside and outside container
+        curl -ssL --fail http://localhost:$HOST_HTTP_PORT/test/phptest.php
+        if [ "${OS:-$(uname)}" != "Windows_NT" ] ; then
+            curl -ssL --fail https://localhost:$HOST_HTTPS_PORT/test/phptest.php
+        fi
+        docker exec -t $CONTAINER_NAME curl --fail http://localhost/test/phptest.php
+        docker exec -t $CONTAINER_NAME curl --fail https://localhost/test/phptest.php
+
+        curl -s localhost:$HOST_HTTP_PORT/test/test-email.php | grep "Test email sent"
         docker exec -t $CONTAINER_NAME php --version | grep "PHP $v"
         docker exec -t $CONTAINER_NAME drush --version
         docker exec -t $CONTAINER_NAME wp --version
@@ -77,21 +91,21 @@ for v in 5.6 7.0 7.1 7.2 7.3; do
 
         echo "testing error states for php$v"
         # These are just the standard nginx 403 and 404 pages
-        curl localhost:$HOST_PORT/ | grep "403 Forbidden"
-        curl localhost:$HOST_PORT/asdf | grep "404 Not Found"
+        curl localhost:$HOST_HTTP_PORT/ | grep "403 Forbidden"
+        curl localhost:$HOST_HTTP_PORT/asdf | grep "404 Not Found"
         # We're just checking the error code here - there's not much more we can do in
         # this case because the container is *NOT* intercepting 50x errors.
-        curl -w "%{http_code}" localhost:$HOST_PORT/test/500.php | grep 500
+        curl -w "%{http_code}" localhost:$HOST_HTTP_PORT/test/500.php | grep 500
         # 400 and 401 errors are intercepted by the same page.
-        curl -I localhost:$HOST_PORT/test/400.php | grep "HTTP/1.1 400"
-        curl -I localhost:$HOST_PORT/test/401.php | grep "HTTP/1.1 401"
+        curl -s -I localhost:$HOST_HTTP_PORT/test/400.php | grep "HTTP/1.1 400"
+        curl -s -I localhost:$HOST_HTTP_PORT/test/401.php | grep "HTTP/1.1 401"
 
         echo "testing php and email for php$v"
-        curl --fail localhost:$HOST_PORT/test/phptest.php
-        curl -s localhost:$HOST_PORT/test/test-email.php | grep "Test email sent"
+        curl -s --fail localhost:$HOST_HTTP_PORT/test/phptest.php
+        curl -s localhost:$HOST_HTTP_PORT/test/test-email.php | grep "Test email sent"
 
         # Make sure the phpstatus url is working for testing php-fpm.
-        curl -s localhost:$HOST_PORT/phpstatus | egrep "idle processes|php is working"
+        curl -s localhost:$HOST_HTTP_PORT/phpstatus | egrep "idle processes|php is working"
 
         docker rm -f $CONTAINER_NAME
 	done
@@ -104,11 +118,11 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 	if [ "$project_type" == "drupal6" ]; then
 	  PHP_VERSION="5.6"
 	fi
-	docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" -d --name $CONTAINER_NAME -v ddev-composer-cache:/mnt/composer-cache -d $DOCKER_IMAGE
+	docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=$PHP_VERSION" -e "DDEV_PROJECT_TYPE=$project_type" -d --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE
 	if ! containercheck; then
         exit 102
     fi
-	curl --fail localhost:$HOST_PORT/test/phptest.php
+	curl --fail localhost:$HOST_HTTP_PORT/test/phptest.php
 	# Make sure that the project-specific config has been linked in.
 	docker exec -t $CONTAINER_NAME grep "# ddev $project_type config" //etc/nginx/nginx-site.conf
 	# Make sure that the right PHP version was selected for the project_type
@@ -120,7 +134,7 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 	# Make sure we don't have lots of "closed keepalive connection" complaints
 	(docker logs $CONTAINER_NAME 2>&1 | grep -v "closed keepalive connection")  || (echo "Found unwanted closed keepalive connection messages" && exit 103)
 	# Make sure both nginx logs and fpm logs are being tailed
-    curl --fail localhost:$HOST_PORT/test/fatal.php
+    curl --fail localhost:$HOST_HTTP_PORT/test/fatal.php
 	(docker logs $CONTAINER_NAME 2>&1 | grep "WARNING:.* said into stderr:.*fatal.php on line " >/dev/null) || (echo "Failed to find WARNING: .pool www" && exit 104)
 	(docker logs $CONTAINER_NAME 2>&1 | grep "FastCGI sent in stderr: .PHP message: PHP Fatal error:" >/dev/null) || (echo "failed to find FastCGI sent in stderr" && exit 105)
 
@@ -135,7 +149,7 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 done
 
 echo "--- testing use of custom nginx and php configs"
-docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_PORT:$CONTAINER_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v "/$PWD/test/testdata:/mnt/ddev_config:ro" -v ddev-composer-cache:/mnt/composer-cache -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
+docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v "/$PWD/test/testdata:/mnt/ddev_config:ro" -v ddev-global-cache:/mnt/ddev-global-cache -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
 if ! containercheck; then
     exit 108
 fi
@@ -151,9 +165,16 @@ docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
 # Verify that the custom php configuration in ddev_config/php is activated.
 echo "--- Verify that /mnt/ddev_config is mounted and we have php overrides there.
 
-# First see if /mnt/ddev_config "works"
+# First see if /mnt/ddev_config "works" for php
 docker exec -t $CONTAINER_NAME bash -c "ls -l //mnt/ddev_config/php/my-php.ini || (echo 'Failed to ls /mnt/ddev_config' && exit 201)"
+
 
 # With overridden value we should have assert.active=0, not the default
 echo "--- Check that assert.active override is working"
 docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 0 => 0" >/dev/null
+
+# Make sure that our nginx override providing /junker99 works correctly
+curl -s http://localhost:$HOST_HTTP_PORT/junker99 | grep 'junker99!'
+if [ "${OS:-$(uname)}" != "Windows_NT" ]; then
+    curl -s https://localhost:$HOST_HTTPS_PORT/junker99 | grep 'junker99!'
+fi
