@@ -85,7 +85,6 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
 	app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
-	app.SetApptypeSettingsPaths()
 
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
@@ -101,6 +100,7 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
 		}
 	}
+	app.SetApptypeSettingsPaths()
 
 	// If the dbimage has not been overridden (because it takes precedence
 	// and the mariadb_version *has* been changed by config,
