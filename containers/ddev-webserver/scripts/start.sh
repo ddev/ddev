@@ -37,6 +37,7 @@ if [ -d /mnt/ddev_config/php ] ; then
     if [ -n "$(ls -A /mnt/ddev_config/php/*.ini 2>/dev/null)" ]; then
         cp /mnt/ddev_config/php/*.ini /etc/php/${DDEV_PHP_VERSION}/cli/conf.d/
         cp /mnt/ddev_config/php/*.ini /etc/php/${DDEV_PHP_VERSION}/fpm/conf.d/
+        cp /mnt/ddev_config/php/*.ini /etc/php/${DDEV_PHP_VERSION}/apache2/conf.d/
     fi
 fi
 
