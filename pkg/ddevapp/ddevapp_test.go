@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"io/ioutil"
 	"net"
 	"net/url"
@@ -902,6 +903,12 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		err = app.Start()
 		assert.NoError(err)
+		settingsLocation, err := app.DetermineSettingsPathLocation()
+		assert.NoError(err)
+		assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
+		if nodeps.ArrayContainsString([]string{"drupal6", "drupal7", "drupal8", "backdrop"}, app.Type) {
+			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+		}
 
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
