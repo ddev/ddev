@@ -731,7 +731,7 @@ func (app *DdevApp) Start() error {
 	_ = dockerutil.RemoveVolume(app.GetWebcacheVolName())
 	_ = dockerutil.RemoveVolume(app.GetNFSMountVolName())
 
-	_, _, err = dockerutil.ComposeCmd(files, "up", "-d")
+	_, _, err = dockerutil.ComposeCmd(files, "up", "--build", "-d")
 	if err != nil {
 		return err
 	}

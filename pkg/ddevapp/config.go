@@ -521,6 +521,7 @@ type composeYAMLVars struct {
 	ComposeVersion       string
 	MountType            string
 	WebMount             string
+	WebBuildContext      string
 	OmitDBA              bool
 	OmitSSHAgent         bool
 	WebcacheEnabled      bool
@@ -585,6 +586,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			// and completely chokes in C:\Users\rfay...
 			templateVars.NFSSource = dockerutil.MassageWIndowsNFSMount(app.AppRoot)
 		}
+	}
+	webBuildContext := app.GetConfigPath("web-build/Dockerfile")
+	if fileutil.FileExists(webBuildContext) {
+		templateVars.WebBuildContext = app.GetConfigPath("web-build")
 	}
 	templateVars.DockerIP, err = dockerutil.GetDockerIP()
 	if err != nil {

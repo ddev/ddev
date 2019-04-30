@@ -38,7 +38,14 @@ services:
       start_period: 60s
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
+    {{ if .WebBuildContext }}
+    build: 
+      context: "{{ .WebBuildContext }}"
+      args: 
+        BASE_IMAGE: $DDEV_WEBIMAGE
+    {{ else }}
     image: $DDEV_WEBIMAGE
+    {{ end }}
     cap_add:
       - SYS_PTRACE
     volumes:
