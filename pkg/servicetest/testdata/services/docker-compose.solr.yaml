@@ -25,6 +25,7 @@ services:
       - HTTP_EXPOSE=8983 # This defines the port the service should be accessible from at sitename.ddev.local
     volumes:
       - "./solr:/solr-conf" # This exposes a mount to the host system `.ddev/solr-conf` directory.
+      - solrdata:/opt/solr/server/solr/mycores # This uses the 'data' volume defined below
     entrypoint:
       - docker-entrypoint.sh
       - solr-precreate
@@ -34,3 +35,5 @@ services:
   web:
     links:
       - solr:$DDEV_HOSTNAME
+volumes:
+  solrdata: # This creates a Docker volume that sticks around even if you remove or rebuild the container
