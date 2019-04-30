@@ -522,6 +522,7 @@ type composeYAMLVars struct {
 	MountType            string
 	WebMount             string
 	WebBuildContext      string
+	DBBuildContext       string
 	OmitDBA              bool
 	OmitSSHAgent         bool
 	WebcacheEnabled      bool
@@ -591,6 +592,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if fileutil.FileExists(webBuildContext) {
 		templateVars.WebBuildContext = app.GetConfigPath("web-build")
 	}
+	dbBuildContext := app.GetConfigPath("db-build/Dockerfile")
+	if fileutil.FileExists(dbBuildContext) {
+		templateVars.DBBuildContext = app.GetConfigPath("db-build")
+	}
+
 	templateVars.DockerIP, err = dockerutil.GetDockerIP()
 	if err != nil {
 		return "", err

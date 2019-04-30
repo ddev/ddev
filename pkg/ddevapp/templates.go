@@ -7,7 +7,14 @@ const DDevComposeTemplate = `version: '{{ .ComposeVersion }}'
 services:
   db:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
-    image: $DDEV_DBIMAGE
+    {{ if .DBBuildContext }}
+    build: 
+      context: "{{ .DBBuildContext }}"
+      args: 
+        BASE_IMAGE: $DDEV_DBIMAGE
+    {{ else }}
+    image: "$DDEV_DBIMAGE"
+    {{ end }}
     stop_grace_period: 60s
     volumes:
       - type: "volume"
