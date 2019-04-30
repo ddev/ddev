@@ -144,6 +144,12 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
 		docker exec -t $CONTAINER_NAME bash -c 'if [ ! -d  ~/.drush/commands/backdrop ] ; then echo "Failed to find expected backdrop drush commands"; exit 106; fi'
 	else
 		docker exec -t $CONTAINER_NAME bash -c 'if [ -d  ~/.drush/commands/backdrop ] ; then echo "Found unexpected backdrop drush commands"; exit 107; fi'
+  fi
+
+  # Test if we have access to upstream error messages.
+	ERRMSG="$(curl localhost:$HOST_PORT/test/upstream-error.php)"
+	if [ "$ERRMSG" != "Upstream error message" ] ; then
+	  exit 108
 	fi
 	docker rm -f $CONTAINER_NAME
 done
@@ -151,7 +157,7 @@ done
 echo "--- testing use of custom nginx and php configs"
 docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.2" -v "/$PWD/test/testdata:/mnt/ddev_config:ro" -v ddev-global-cache:/mnt/ddev-global-cache -d --name $CONTAINER_NAME -d $DOCKER_IMAGE
 if ! containercheck; then
-    exit 108
+    exit 109
 fi
 docker exec -t $CONTAINER_NAME grep "docroot is /var/www/html/potato in custom conf" //etc/nginx/sites-enabled/nginx-site.conf
 
