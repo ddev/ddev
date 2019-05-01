@@ -636,8 +636,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			util.Warning(".ddev/db-build/Dockerfile is provided, ignoring dbimage_extra_packages")
 		}
 	} else if len(app.DBImageExtraPackages) > 0 {
-		err = writeImagePackagesDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), app.WebImageExtraPackages)
-		templateVars.WebBuildContext = app.GetConfigPath(".dbimageExtra")
+		err = writeImagePackagesDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), app.DBImageExtraPackages)
+		templateVars.DBBuildContext = app.GetConfigPath(".dbimageExtra")
 	}
 
 	templateVars.DockerIP, err = dockerutil.GetDockerIP()
