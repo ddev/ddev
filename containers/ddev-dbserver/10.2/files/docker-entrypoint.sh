@@ -41,8 +41,8 @@ sudo chown -R "$UID:$(id -g)" /var/lib/mysql
 
 # If we have extra mariadb cnf files,, copy them to where they go.
 if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
-  cp /mnt/ddev_config/mysql/*.cnf /etc/mysql/conf.d
-  chmod ugo-w /etc/mysql/conf.d/*
+  sudo cp /mnt/ddev_config/mysql/*.cnf /etc/mysql/conf.d
+  sudo chmod -R ugo-w /etc/mysql/conf.d
 fi
 
 # If mariadb has not been initialized, copy in the base image from either the default starter image (/var/tmp/mysqlbase)
