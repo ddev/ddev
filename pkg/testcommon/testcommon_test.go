@@ -179,8 +179,9 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 			assert.NoError(err)
 			t.Fatalf("logs from broken container:\n=======\n%s\n========\n", logs)
 		}
-		// On Docker Toolbox, it appearas that the notification gets to the router
+		// On Docker Toolbox, it appearas that the change notification gets to the router
 		// slower than on other platforms. Give it time to come through.
+		// Otherwise the SSL cert may not yet have been created
 		if nodeps.IsDockerToolbox() {
 			time.Sleep(time.Duration(5) * time.Second)
 		}

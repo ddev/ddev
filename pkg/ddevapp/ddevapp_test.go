@@ -1946,6 +1946,9 @@ func TestHttpsRedirection(t *testing.T) {
 		// Do a start on the configured site.
 		app, err = ddevapp.GetActiveApp("")
 		assert.NoError(err)
+		// Make absolutely sure the project is stopped
+		err = app.Stop(true, false)
+		assert.NoError(err)
 		//nolint: errcheck
 		defer app.Stop(true, false)
 		startErr := app.StartAndWaitForSync(30)
@@ -1958,7 +1961,12 @@ func TestHttpsRedirection(t *testing.T) {
 
 			t.Fatalf("app.StartAndWaitForSync failure; err=%v \n===== container logs ===\n%s\n===== bgsync health info ===\n%s\n========\n", startErr, appLogs, healthcheck)
 		}
-
+		// On Docker Toolbox, it appearas that the change notification gets to the router
+		// slower than on other platforms. Give it time to come through.
+		// Otherwise the SSL cert may not yet have been created
+		if nodeps.IsDockerToolbox() {
+			time.Sleep(time.Duration(5) * time.Second)
+		}
 		// Test for directory redirects under https and http
 		for _, parts := range expectations {
 
