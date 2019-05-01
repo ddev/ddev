@@ -626,6 +626,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	} else if len(app.WebImageExtraPackages) > 0 {
 		err = writeImagePackagesDockerfile(app.GetConfigPath(".webimageExtra/Dockerfile"), app.WebImageExtraPackages)
+		if err != nil {
+			return "", err
+		}
 		templateVars.WebBuildContext = app.GetConfigPath(".webimageExtra")
 	}
 
@@ -637,6 +640,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	} else if len(app.DBImageExtraPackages) > 0 {
 		err = writeImagePackagesDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), app.DBImageExtraPackages)
+		if err != nil {
+			return "", err
+		}
 		templateVars.DBBuildContext = app.GetConfigPath(".dbimageExtra")
 	}
 
