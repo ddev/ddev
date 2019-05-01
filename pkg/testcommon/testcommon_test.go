@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -176,6 +178,12 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 			logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 			assert.NoError(err)
 			t.Fatalf("logs from broken container:\n=======\n%s\n========\n", logs)
+		}
+		// On Docker Toolbox, it appearas that the change notification gets to the router
+		// slower than on other platforms. Give it time to come through.
+		// Otherwise the SSL cert may not yet have been created
+		if nodeps.IsDockerToolbox() {
+			time.Sleep(time.Duration(5) * time.Second)
 		}
 
 		safeURL := app.GetHTTPURL() + site.Safe200URIWithExpectation.URI
