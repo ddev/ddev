@@ -213,6 +213,35 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
+	// Write example Dockerfiles into build directories
+	contents := []byte(`
+# You can copy this Dockerfile.example to Dockerfile to add configuration
+# or packages or anything else to your webimage
+ARG BASE_IMAGE=` + app.WebImage + `
+FROM $BASE_IMAGE
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y php-yaml
+RUN npm install --global gulp-cli
+RUN ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
+`)
+
+	err = writeImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
+	if err != nil {
+		return err
+	}
+	contents = []byte(`
+# You can copy this Dockerfile.example to Dockerfile to add configuration
+# or packages or anything else to your dbimage
+ARG BASE_IMAGE=` + app.DBImage + `
+FROM $BASE_IMAGE
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y telnet netcat
+RUN echo "Built from ` + app.DBImage + `" >/var/tmp/built-from.txt
+`)
+
+	err = writeImageDockerfile(app.GetConfigPath("db-build")+"/Dockerfile.example", contents)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -588,13 +617,27 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			templateVars.NFSSource = dockerutil.MassageWIndowsNFSMount(app.AppRoot)
 		}
 	}
+
 	webBuildContext := app.GetConfigPath("web-build/Dockerfile")
 	if fileutil.FileExists(webBuildContext) {
 		templateVars.WebBuildContext = app.GetConfigPath("web-build")
+		if len(app.WebImageExtraPackages) != 0 {
+			util.Warning(".ddev/web-build/Dockerfile is provided, ignoring webimage_extra_packages")
+		}
+	} else if len(app.WebImageExtraPackages) > 0 {
+		err = writeImagePackagesDockerfile(app.GetConfigPath(".webimageExtra/Dockerfile"), app.WebImageExtraPackages)
+		templateVars.WebBuildContext = app.GetConfigPath(".webimageExtra")
 	}
+
 	dbBuildContext := app.GetConfigPath("db-build/Dockerfile")
 	if fileutil.FileExists(dbBuildContext) {
 		templateVars.DBBuildContext = app.GetConfigPath("db-build")
+		if len(app.DBImageExtraPackages) != 0 {
+			util.Warning(".ddev/db-build/Dockerfile is provided, ignoring dbimage_extra_packages")
+		}
+	} else if len(app.DBImageExtraPackages) > 0 {
+		err = writeImagePackagesDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), app.WebImageExtraPackages)
+		templateVars.WebBuildContext = app.GetConfigPath(".dbimageExtra")
 	}
 
 	templateVars.DockerIP, err = dockerutil.GetDockerIP()
@@ -604,6 +647,33 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	err = templ.Execute(&doc, templateVars)
 	return doc.String(), err
+}
+
+// WriteImagePackagesDockerfile writes a simple Dockerfile with extraPackages at given location
+// fullpath is the path to the Dockerfile including the filename
+func writeImagePackagesDockerfile(fullpath string, extraPackages []string) error {
+	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
+	if err != nil {
+		return err
+	}
+	contents := []byte(`ARG BASE_IMAGE
+FROM $BASE_IMAGE
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y ` + strings.Join(extraPackages, " ") + "\n")
+
+	return writeImageDockerfile(fullpath, contents)
+}
+
+// WriteImageDockerfile writes a dockerfile at the fullpath (including the filename)
+func writeImageDockerfile(fullpath string, contents []byte) error {
+	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(fullpath, contents, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // prompt for a project name.
@@ -756,7 +826,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", ".bgsync*", "config.*.y*ml")
+	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", ".bgsync*", "config.*.y*ml", ".webImageExtra", ".dbImageExtra")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

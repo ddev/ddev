@@ -102,6 +102,8 @@ type DdevApp struct {
 	HostDBPort            string               `yaml:"host_db_port,omitempty"`
 	HostWebserverPort     string               `yaml:"host_webserver_port,omitempty"`
 	HostHTTPSPort         string               `yaml:"host_https_port,omitempty"`
+	WebImageExtraPackages []string             `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages  []string             `yaml:"dbimage_extra_packages,omitempty,flow"`
 }
 
 // GetType returns the application type as a (lowercase) string
