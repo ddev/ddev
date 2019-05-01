@@ -51,7 +51,7 @@ var WebTag = "nginx-dont-hide-upstream-errors" // Note that this can be overridd
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20190501_fix_mariadb_override_restart_problem"
+var BaseDBTag = "20190430_use_build_for_dynamic_containers"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
