@@ -2207,10 +2207,10 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		if app.SiteStatus() == ddevapp.SitePaused || app.SiteStatus() == ddevapp.SiteRunning {
-			err = app.Stop(true, false)
-			assert.NoError(err)
-		}
+		// Make sure that project is absolutely not running
+		err = app.Stop(true, false)
+		assert.NoError(err)
+
 		err = app.StartAndWaitForSync(0)
 		assert.NoError(err)
 

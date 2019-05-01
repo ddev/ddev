@@ -45,6 +45,8 @@ RUN apt-get -qq update && \
         locales-all && \
     wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     echo "deb https://packages.sury.org/php/ stretch main" > /etc/apt/sources.list.d/php.list && \
+    wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add - && \
+    echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list && \
     wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
     apt-key add /tmp/nginx_signing.key && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
@@ -83,6 +85,7 @@ RUN apt-get -qq update && \
         php-uploadprogress && \
     for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-apcu $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-pgsql $v-mbstring $v-memcached $v-opcache $v-redis $v-soap $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
     for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
+    apt-get install blackfire-php -y --allow-unauthenticated && \
     apt-get -qq autoremove -y && \
     apt-get -qq clean -y && \
     rm -rf /var/lib/apt/lists/*
