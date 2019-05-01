@@ -284,6 +284,13 @@ const ConfigInstructions = `
 # The host port binding for the ddev-dbserver can be explicitly specified. It is dynamic
 # unless explicitly specified.
 
+# webimage_extra_packages: [php-yaml, php7.3-ldap]
+# Extra Debian packages that are needed in the webimage can be added here
+# This is ignored if a free-form .ddev/web-build/Dockerfile is provided
+
+# dbimage_extra_packages: [telnet,netcat]
+# Extra Debian packages that are needed in the dbimage can be added here
+# This is ignored if a free-form .ddev/db-build/Dockerfile is provided
 
 # provider: default # Currently either "default" or "pantheon"
 #
