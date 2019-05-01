@@ -610,6 +610,52 @@ func TestConfigOverrideDetection(t *testing.T) {
 	runTime()
 }
 
+// TestPHPOverrides tests to make sure that PHP overrides work in all webservers.
+func TestPHPOverrides(t *testing.T) {
+	assert := asrt.New(t)
+	app := &DdevApp{}
+	testDir, _ := os.Getwd()
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s PHPOverrides", site.Name))
+
+	// Copy test overrides into the project .ddev directory
+	err := fileutil.CopyDir(filepath.Join(testDir, "testdata/TestPHPOverrides/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
+	assert.NoError(err)
+	err = fileutil.CopyFile(filepath.Join(testDir, "testdata/TestPHPOverrides/phpinfo.php"), filepath.Join(site.Dir, site.Docroot, "phpinfo.php"))
+	assert.NoError(err)
+
+	// And when we're done, we have to clean those out again.
+	defer func() {
+		_ = os.RemoveAll(filepath.Join(site.Dir, ".ddev/php"))
+		_ = os.RemoveAll(filepath.Join(site.Dir, "phpinfo.php"))
+	}()
+
+	for _, webserverType := range []string{WebserverNginxFPM, WebserverApacheFPM, WebserverApacheCGI} {
+		testcommon.ClearDockerEnv()
+		app.WebserverType = webserverType
+		err = app.Init(site.Dir)
+		assert.NoError(err)
+		_ = app.Stop(true, false)
+		// nolint: errcheck
+		defer app.Stop(true, false)
+		startErr := app.StartAndWaitForSync(2)
+		if startErr != nil {
+			logs, _ := GetErrLogsFromApp(app, startErr)
+			t.Logf("failed app.StartAndWait(): %v", startErr)
+			t.Fatalf("============== logs from app.StartAndWait() ==============\n%s\n", logs)
+		}
+		_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+app.GetHostname()+"/phpinfo.php", `max_input_time</td><td class="v">999`)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	}
+
+	runTime()
+}
+
 // TestConfigLoadingOrder verifies that configs load in lexicographical order
 // AFTER config.yaml
 func TestConfigLoadingOrder(t *testing.T) {
