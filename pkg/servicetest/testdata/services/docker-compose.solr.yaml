@@ -21,7 +21,7 @@ services:
     container_name: ddev-${DDEV_SITENAME}-solr
     # Controls the version of Solr which is installed.
     image: solr:6.6
-    restart: always
+    restart: "no"
     # Solr is served from this port inside the container.
     ports:
       - 8983

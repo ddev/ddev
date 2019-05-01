@@ -10,7 +10,7 @@ services:
   memcached: # This is the service name used when running ddev commands accepting the --service flag
     container_name: ddev-${DDEV_SITENAME}-memcached # This is the name of the container. It is recommended to follow the same name convention used in the main docker-compose.yml file.
     image: memcached:1.5
-    restart: always
+    restart: "no"
     ports:
       - 11211 # memcached is available at this port inside the container
     labels:
