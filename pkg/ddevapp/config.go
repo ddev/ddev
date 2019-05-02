@@ -625,7 +625,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			util.Warning(".ddev/web-build/Dockerfile is provided, ignoring webimage_extra_packages")
 		}
 	} else if len(app.WebImageExtraPackages) > 0 {
-		err = writeImagePackagesDockerfile(app.GetConfigPath(".webimageExtra/Dockerfile"), app.WebImageExtraPackages)
+		err = WriteImagePackagesDockerfile(app.GetConfigPath(".webimageExtra/Dockerfile"), app.WebImageExtraPackages)
 		if err != nil {
 			return "", err
 		}
@@ -639,7 +639,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			util.Warning(".ddev/db-build/Dockerfile is provided, ignoring dbimage_extra_packages")
 		}
 	} else if len(app.DBImageExtraPackages) > 0 {
-		err = writeImagePackagesDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), app.DBImageExtraPackages)
+		err = WriteImagePackagesDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), app.DBImageExtraPackages)
 		if err != nil {
 			return "", err
 		}
@@ -657,7 +657,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 // WriteImagePackagesDockerfile writes a simple Dockerfile with extraPackages at given location
 // fullpath is the path to the Dockerfile including the filename
-func writeImagePackagesDockerfile(fullpath string, extraPackages []string) error {
+func WriteImagePackagesDockerfile(fullpath string, extraPackages []string) error {
 	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
 		return err

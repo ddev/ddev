@@ -665,6 +665,92 @@ func TestPHPOverrides(t *testing.T) {
 	runTime()
 }
 
+// TestExtraPackages tests to make sure that *extra_packages config.yaml directives
+// work (and are overridden by *-build/Dockerfile).
+func TestExtraPackages(t *testing.T) {
+	assert := asrt.New(t)
+	app := &DdevApp{}
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestExtraPackages", site.Name))
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	defer func() {
+		app.WebImageExtraPackages = nil
+		app.DBImageExtraPackages = nil
+		_ = app.WriteConfig()
+		_ = os.RemoveAll(app.GetConfigPath("web-build"))
+		_ = os.RemoveAll(app.GetConfigPath("db-build"))
+		_ = app.Stop(true, false)
+	}()
+
+	// Start and make sure that the packages don't exist already
+	err = app.Start()
+	assert.NoError(err)
+
+	_, _, err = app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     []string{"bash", "-c", "command -v zsh"},
+	})
+	assert.Error(err)
+	assert.Contains(err.Error(), "exit status 1")
+
+	_, _, err = app.Exec(&ExecOpts{
+		Service: "db",
+		Cmd:     []string{"bash", "-c", "command -v ncdu"},
+	})
+	assert.Error(err)
+	assert.Contains(err.Error(), "exit status 1")
+
+	// Now add the packages and start again, they should be in there
+	app.WebImageExtraPackages = []string{"zsh"}
+	app.DBImageExtraPackages = []string{"ncdu"}
+	err = app.Start()
+	assert.NoError(err)
+
+	stdout, stderr, err := app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     []string{"bash", "-c", "command -v zsh"},
+	})
+	assert.NoError(err)
+	assert.Equal("/usr/bin/zsh", strings.Trim(stdout, "\n"))
+
+	stdout, stderr, err = app.Exec(&ExecOpts{
+		Service: "db",
+		Cmd:     []string{"bash", "-c", "command -v ncdu"},
+	})
+	assert.NoError(err)
+	assert.Equal("/usr/bin/ncdu", strings.Trim(stdout, "\n"))
+
+	assert.NoError(err, "err was %v: %s %s", err, stdout, stderr)
+
+	// Now write a web-build Dockerfile and make sure the packages don't get in there any more.
+	err = WriteImagePackagesDockerfile(app.GetConfigPath("web-build/Dockerfile"), []string{"netcat"})
+	assert.NoError(err)
+
+	err = app.Start()
+	assert.NoError(err)
+
+	_, _, err = app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     []string{"bash", "-c", "command -v zsh"},
+	})
+	assert.Error(err)
+	assert.Contains(err.Error(), "exit status 1")
+
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	runTime()
+}
+
 // TestConfigLoadingOrder verifies that configs load in lexicographical order
 // AFTER config.yaml
 func TestConfigLoadingOrder(t *testing.T) {
