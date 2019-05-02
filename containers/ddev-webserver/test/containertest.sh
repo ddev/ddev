@@ -147,7 +147,7 @@ for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
   fi
 
   # Test if we have access to upstream error messages.
-	ERRMSG="$(curl localhost:$HOST_PORT/test/upstream-error.php)"
+	ERRMSG="$(curl localhost:$HOST_HTTP_PORT/test/upstream-error.php)"
 	if [ "$ERRMSG" != "Upstream error message" ] ; then
 	  exit 108
 	fi
