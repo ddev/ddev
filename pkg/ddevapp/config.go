@@ -832,7 +832,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", ".bgsync*", "config.*.y*ml", ".webImageExtra", ".dbImageExtra")
+	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", ".bgsync*", "config.*.y*ml", ".webImageExtra", ".dbImageExtra", "*-build/Dockerfile.example")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
