@@ -51,7 +51,7 @@ var WebTag = "20190420_fix_apache_cgi" // Note that this can be overridden by ma
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20190329_maria_logs_config"
+var BaseDBTag = "20190501_fix_mariadb_override_restart_problem"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
