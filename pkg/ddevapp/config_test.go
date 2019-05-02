@@ -715,21 +715,19 @@ func TestExtraPackages(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	stdout, stderr, err := app.Exec(&ExecOpts{
+	stdout, _, err := app.Exec(&ExecOpts{
 		Service: "web",
 		Cmd:     []string{"bash", "-c", "command -v zsh"},
 	})
 	assert.NoError(err)
 	assert.Equal("/usr/bin/zsh", strings.Trim(stdout, "\n"))
 
-	stdout, stderr, err = app.Exec(&ExecOpts{
+	stdout, _, err = app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     []string{"bash", "-c", "command -v ncdu"},
 	})
 	assert.NoError(err)
 	assert.Equal("/usr/bin/ncdu", strings.Trim(stdout, "\n"))
-
-	assert.NoError(err, "err was %v: %s %s", err, stdout, stderr)
 
 	// Now write a web-build Dockerfile and make sure the packages don't get in there any more.
 	err = WriteImagePackagesDockerfile(app.GetConfigPath("web-build/Dockerfile"), []string{"netcat"})
