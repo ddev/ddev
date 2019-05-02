@@ -43,6 +43,7 @@ hooks:
     - exec: "drush uli"
   post-start:
     - exec: bash -c "sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ghostscript sqlite3 php7.2-sqlite3 && sudo killall -HUP php-fpm"```
+```
 
 Example:
 
