@@ -224,7 +224,7 @@ RUN npm install --global gulp-cli
 RUN ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
 `)
 
-	err = writeImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
+	err = WriteImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
 	if err != nil {
 		return err
 	}
@@ -237,7 +237,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y telnet n
 RUN echo "Built from ` + app.DBImage + `" >/var/tmp/built-from.txt
 `)
 
-	err = writeImageDockerfile(app.GetConfigPath("db-build")+"/Dockerfile.example", contents)
+	err = WriteImageDockerfile(app.GetConfigPath("db-build")+"/Dockerfile.example", contents)
 	if err != nil {
 		return err
 	}
@@ -666,11 +666,11 @@ func WriteImagePackagesDockerfile(fullpath string, extraPackages []string) error
 FROM $BASE_IMAGE
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y ` + strings.Join(extraPackages, " ") + "\n")
 
-	return writeImageDockerfile(fullpath, contents)
+	return WriteImageDockerfile(fullpath, contents)
 }
 
 // WriteImageDockerfile writes a dockerfile at the fullpath (including the filename)
-func writeImageDockerfile(fullpath string, contents []byte) error {
+func WriteImageDockerfile(fullpath string, contents []byte) error {
 	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
 		return err

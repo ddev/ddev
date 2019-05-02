@@ -751,6 +751,56 @@ func TestExtraPackages(t *testing.T) {
 	runTime()
 }
 
+// TestCustomBuildDockerfiles tests to make sure that custom web-build and db-build
+// Dockerfiles work properly
+func TestCustomBuildDockerfiles(t *testing.T) {
+	assert := asrt.New(t)
+	app := &DdevApp{}
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestCustomBuildDockerfiles", site.Name))
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	defer func() {
+		_ = os.RemoveAll(app.GetConfigPath("web-build"))
+		_ = os.RemoveAll(app.GetConfigPath("db-build"))
+		_ = app.Stop(true, false)
+	}()
+
+	// Create simple dockerfiles that just touch /var/tmp/added-by-<container>txt
+	for _, item := range []string{"web", "db"} {
+		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile"), []byte(`
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+RUN touch /var/tmp/`+"added-by-"+item+".txt"))
+		assert.NoError(err)
+	}
+	// Start and make sure that the packages don't exist already
+	err = app.Start()
+	assert.NoError(err)
+
+	// Make sure that the expected in-container file has been created
+	for _, item := range []string{"web", "db"} {
+		_, _, err = app.Exec(&ExecOpts{
+			Service: item,
+			Cmd:     []string{"ls", "/var/tmp/added-by-" + item + ".txt"},
+		})
+		assert.NoError(err)
+	}
+
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	runTime()
+}
+
 // TestConfigLoadingOrder verifies that configs load in lexicographical order
 // AFTER config.yaml
 func TestConfigLoadingOrder(t *testing.T) {
