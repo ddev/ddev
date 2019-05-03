@@ -9,7 +9,7 @@ services:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
     {{ if .DBBuildContext }}
     build: 
-      context: "{{ .DBBuildContext }}"
+      context: '{{ .DBBuildContext }}'
       args: 
         BASE_IMAGE: $DDEV_DBIMAGE
     {{ else }}
@@ -47,7 +47,7 @@ services:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     {{ if .WebBuildContext }}
     build: 
-      context: "{{ .WebBuildContext }}"
+      context: '{{ .WebBuildContext }}'
       args: 
         BASE_IMAGE: $DDEV_WEBIMAGE
     {{ else }}
