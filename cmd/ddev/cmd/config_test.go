@@ -123,6 +123,10 @@ func TestConfigSetValues(t *testing.T) {
 	additionalFQDNs := strings.Join(additionalFQDNsSlice, ",")
 	omitContainersSlice := []string{"dba", "ddev-ssh-agent"}
 	omitContainers := strings.Join(omitContainersSlice, ",")
+	webimageExtraPackagesSlice := []string{"php-ldap", "php7.3-tidy"}
+	webimageExtraPackages := strings.Join(webimageExtraPackagesSlice, ",")
+	dbimageExtraPackagesSlice := []string{"netcat", "ncdu"}
+	dbimageExtraPackages := strings.Join(dbimageExtraPackagesSlice, ",")
 
 	uploadDir := filepath.Join("custom", "config", "path")
 	webserverType := ddevapp.WebserverApacheFPM
@@ -156,6 +160,8 @@ func TestConfigSetValues(t *testing.T) {
 		"--host-db-port", hostDBPort,
 		"--host-webserver-port", hostWebserverPort,
 		"--host-https-port", hostHTTPSPort,
+		"--webimage-extra-packages", webimageExtraPackages,
+		"--dbimage-extra-packages", dbimageExtraPackages,
 	}
 
 	_, err = exec.RunCommand(DdevBin, args)
@@ -191,6 +197,8 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(webWorkingDir, app.WorkingDir["web"])
 	assert.Equal(dbWorkingDir, app.WorkingDir["db"])
 	assert.Equal(dbaWorkingDir, app.WorkingDir["dba"])
+	assert.Equal(webimageExtraPackagesSlice, app.WebImageExtraPackages)
+	assert.Equal(dbimageExtraPackagesSlice, app.DBImageExtraPackages)
 
 	// Test that container images and working dirs can be unset with default flags
 	args = []string{

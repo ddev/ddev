@@ -114,6 +114,11 @@ var (
 
 	// hostHTTPSPortArg sets host_https_port
 	hostHTTPSPortArg string
+
+	// webImageExtraPackages and dbImageExtraPackages are comma-delimited
+	// lists of Debian packages to be added to related containers on build
+	webimageExtraPackages string
+	dbimageExtraPackages  string
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -243,6 +248,10 @@ func init() {
 	ConfigCommand.Flags().StringVar(&projectNameArg, "sitename", "", projectNameUsage+" This is the same as project-name and is included only for backwards compatibility")
 	err = ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --project-name")
 	util.CheckErr(err)
+
+	ConfigCommand.Flags().StringVar(&webimageExtraPackages, "webimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to web container when the project is started")
+
+	ConfigCommand.Flags().StringVar(&dbimageExtraPackages, "dbimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to db container when the project is started")
 
 	RootCmd.AddCommand(ConfigCommand)
 }
@@ -415,6 +424,26 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if omitContainersArg != "" {
 		app.OmitContainers = strings.Split(omitContainersArg, ",")
+	}
+
+	if cmd.Flag("webimage-extra-packages").Changed {
+		if webimageExtraPackages == "" {
+			app.WebImageExtraPackages = nil
+		} else {
+			app.WebImageExtraPackages = strings.Split(webimageExtraPackages, ",")
+		}
+	}
+
+	if cmd.Flag("dbimage-extra-packages").Changed {
+		if dbimageExtraPackages == "" {
+			app.DBImageExtraPackages = nil
+		} else {
+			app.DBImageExtraPackages = strings.Split(dbimageExtraPackages, ",")
+		}
+	}
+
+	if cmd.Flag("dbimage-extra-packages").Changed {
+		app.WebImageExtraPackages = strings.Split(webimageExtraPackages, ",")
 	}
 
 	if uploadDirArg != "" {
