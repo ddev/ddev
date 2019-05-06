@@ -7,7 +7,14 @@ const DDevComposeTemplate = `version: '{{ .ComposeVersion }}'
 services:
   db:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
-    image: $DDEV_DBIMAGE
+    {{ if .DBBuildContext }}
+    build: 
+      context: '{{ .DBBuildContext }}'
+      args: 
+        BASE_IMAGE: $DDEV_DBIMAGE
+    {{ else }}
+    image: "$DDEV_DBIMAGE"
+    {{ end }}
     stop_grace_period: 60s
     volumes:
       - type: "volume"
@@ -38,7 +45,14 @@ services:
       start_period: 60s
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
+    {{ if .WebBuildContext }}
+    build: 
+      context: '{{ .WebBuildContext }}'
+      args: 
+        BASE_IMAGE: $DDEV_WEBIMAGE
+    {{ else }}
     image: $DDEV_WEBIMAGE
+    {{ end }}
     cap_add:
       - SYS_PTRACE
     volumes:
@@ -270,6 +284,13 @@ const ConfigInstructions = `
 # The host port binding for the ddev-dbserver can be explicitly specified. It is dynamic
 # unless explicitly specified.
 
+# webimage_extra_packages: [php-yaml, php7.3-ldap]
+# Extra Debian packages that are needed in the webimage can be added here
+# This is ignored if a free-form .ddev/web-build/Dockerfile is provided
+
+# dbimage_extra_packages: [telnet,netcat]
+# Extra Debian packages that are needed in the dbimage can be added here
+# This is ignored if a free-form .ddev/db-build/Dockerfile is provided
 
 # provider: default # Currently either "default" or "pantheon"
 #

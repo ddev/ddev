@@ -20,6 +20,7 @@ pages:
       - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'
       - 'Additional Services': 'users/extend/additional-services.md'
       - 'Defining Custom Services': 'users/extend/custom-compose-files.md'
+      - 'Customizing Docker Images': users/extend/customizing-images.md
     - 'Integration with Hosting Providers':
       - 'Pantheon': 'users/providers/pantheon.md'
       - 'DDEV-Live': 'users/providers/drud-s3.md'

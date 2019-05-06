@@ -102,6 +102,8 @@ type DdevApp struct {
 	HostDBPort            string               `yaml:"host_db_port,omitempty"`
 	HostWebserverPort     string               `yaml:"host_webserver_port,omitempty"`
 	HostHTTPSPort         string               `yaml:"host_https_port,omitempty"`
+	WebImageExtraPackages []string             `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages  []string             `yaml:"dbimage_extra_packages,omitempty,flow"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -731,7 +733,7 @@ func (app *DdevApp) Start() error {
 	_ = dockerutil.RemoveVolume(app.GetWebcacheVolName())
 	_ = dockerutil.RemoveVolume(app.GetNFSMountVolName())
 
-	_, _, err = dockerutil.ComposeCmd(files, "up", "-d")
+	_, _, err = dockerutil.ComposeCmd(files, "up", "--build", "-d")
 	if err != nil {
 		return err
 	}
