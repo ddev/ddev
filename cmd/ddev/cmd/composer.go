@@ -8,8 +8,6 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/output"
-
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -35,11 +33,10 @@ ddev composer outdated --minor-only`,
 			}
 		}
 
-		output.UserOut.Printf("Executing [composer %s] at the project root (/var/www/html in the container, %s on the host)", strings.Join(args, " "), app.AppRoot)
 		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Dir:     "/var/www/html",
-			Cmd:     append([]string{"composer"}, args...),
+			Cmd:     fmt.Sprintf("composer %s", strings.Join(args, " ")),
 		})
 		if err != nil {
 			util.Failed("composer command failed: %v", err)

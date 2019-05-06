@@ -54,7 +54,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	// identity
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     []string{"ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=false", "root@" + internalIPAddr, "pwd"},
+		Cmd:     "ssh -o BatchMode=yes -o StrictHostKeyChecking=false root@" + internalIPAddr + " pwd",
 	})
 	assert.Error(err)
 
@@ -70,7 +70,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	// And at this point we should be able to ssh into the test-cmd-ssh-server
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     []string{"ssh", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=false", "root@" + internalIPAddr, "pwd"},
+		Cmd:     "ssh -o BatchMode=yes -o StrictHostKeyChecking=false root@" + internalIPAddr + " pwd",
 	})
 	assert.NoError(err)
 	assert.Contains(out, "/root")

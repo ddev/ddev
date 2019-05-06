@@ -34,7 +34,7 @@ var DdevSSHCmd = &cobra.Command{
 
 		err = app.ExecWithTty(&ddevapp.ExecOpts{
 			Service: serviceType,
-			Cmd:     []string{"bash"},
+			Cmd:     "bash",
 			Dir:     sshDirArg,
 		})
 

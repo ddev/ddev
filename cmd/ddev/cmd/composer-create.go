@@ -137,7 +137,7 @@ project root will be deleted when creating a project.`,
 		output.UserOut.Printf("Executing composer command: %s\n", composerCmdString)
 		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     composerCmd,
+			Cmd:     composerCmdString,
 		})
 		if err != nil {
 			util.Failed("Failed to create project")
@@ -184,7 +184,7 @@ project root will be deleted when creating a project.`,
 			// If webcacheEnabled, we can move the contents easily and quickly inside the container.
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				Cmd:     []string{"bash", "-c", fmt.Sprintf("shopt -s dotglob && mv %s/* /var/www/html && rmdir %s", containerInstallPath, containerInstallPath)},
+				Cmd:     fmt.Sprintf("shopt -s dotglob && mv %s/* /var/www/html && rmdir %s", containerInstallPath, containerInstallPath),
 			})
 		}
 		// This err check picks up either of the above: The filepath.Walk and the mv
