@@ -812,7 +812,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		exec = append(exec, "-w", workingDir)
 	}
 
-	if !opts.Tty {
+	if !isatty.IsTerminal(os.Stdout.Fd()) || !opts.Tty {
 		exec = append(exec, "-T")
 	}
 
