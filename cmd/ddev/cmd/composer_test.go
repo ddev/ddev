@@ -38,6 +38,8 @@ func TestComposerCmd(t *testing.T) {
 	// Get an app just so we can do waits and check webcacheenabled etc.
 	app, err := ddevapp.NewApp(tmpDir, true, "")
 	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
 
 	// Test create-project
 	// ddev composer create --prefer-dist --no-interaction --no-dev psr/log 1.1.0
@@ -59,7 +61,7 @@ func TestComposerCmd(t *testing.T) {
 	// Test a composer remove
 	if nodeps.IsDockerToolbox() {
 		// On docker toolbox, git objects are read-only, causing the composer remove to fail.
-		_, err = exec.RunCommand(DdevBin, []string{"exec", "chmod -R u+w /var/www/html/"})
+		_, err = exec.RunCommand(DdevBin, []string{"exec", "chmod", "-R", "u+w", "//var/www/html/"})
 		assert.NoError(err)
 	}
 	args = []string{"composer", "remove", "sebastian/version"}
