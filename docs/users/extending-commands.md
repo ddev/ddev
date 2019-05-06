@@ -39,10 +39,10 @@ _Use drush to clear the Drupal cache and get a user login link after database im
 ```
 hooks:
   post-import-db:
-    - exec: "drush cc all"
-    - exec: "drush uli"
+    - exec: drush cr
+    - exec: drush uli
   post-start:
-    - exec: bash -c "sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ghostscript sqlite3 php7.2-sqlite3 && sudo killall -HUP php-fpm"```
+    - exec: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ghostscript sqlite3 php7.2-sqlite3 && sudo killall -HUP php-fpm
 ```
 
 Example:
@@ -52,7 +52,7 @@ _Use wp-cli to replace the production URL with development URL in the database o
 ```
 hooks:
   post-import-db:
-    - exec: "wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.local"
+    - exec: wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.local
 ```
 
 ### `exec-host`: Execute a shell command on the host system.
@@ -126,7 +126,7 @@ hooks:
 ```
 hooks:
     post-start:
-      - exec: "composer install -d /var/www/html/"
+      - exec: composer install -d /var/www/html/
 ```
 
 ## Adding Additional PHP Modules Example
@@ -135,5 +135,5 @@ hooks:
 hooks:
     post-start:
       # Install php modules and then tell php-fpm to reload
-      - exec: bash -c "sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y php7.1-ldap php7.1-tidy && killall -HUP php-fpm"
+      - exec: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y php7.1-ldap php7.1-tidy && killall -HUP php-fpm
 ```

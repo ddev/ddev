@@ -43,7 +43,7 @@ func TestComposerCmd(t *testing.T) {
 	// ddev composer create --prefer-dist --no-interaction --no-dev psr/log 1.1.0
 	args = []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "psr/log", "1.1.0"}
 	out, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, out)
+	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 	assert.Contains(out, "Created project in ")
 	ddevapp.WaitForSync(app, 2)
 	assert.FileExists(filepath.Join(tmpDir, "Psr/Log/LogLevel.php"))
@@ -51,7 +51,7 @@ func TestComposerCmd(t *testing.T) {
 	// Test a composer require, with passthrough args
 	args = []string{"composer", "require", "sebastian/version", "--no-plugins", "--ansi"}
 	out, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, out)
+	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 	assert.Contains(out, "Generating autoload files")
 	ddevapp.WaitForSync(app, 2)
 	assert.FileExists(filepath.Join(tmpDir, "vendor/sebastian/version/composer.json"))
@@ -59,12 +59,12 @@ func TestComposerCmd(t *testing.T) {
 	// Test a composer remove
 	if nodeps.IsDockerToolbox() {
 		// On docker toolbox, git objects are read-only, causing the composer remove to fail.
-		_, err = exec.RunCommand(DdevBin, []string{"exec", "bash", "-c", "chmod -R u+w /var/www/html/"})
+		_, err = exec.RunCommand(DdevBin, []string{"exec", "chmod -R u+w /var/www/html/"})
 		assert.NoError(err)
 	}
 	args = []string{"composer", "remove", "sebastian/version"}
 	out, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, out)
+	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 	assert.Contains(out, "Generating autoload files")
 	ddevapp.WaitForSync(app, 2)
 	assert.False(fileutil.FileExists(filepath.Join(tmpDir, "vendor/sebastian")))

@@ -302,7 +302,7 @@ func TestDdevStart(t *testing.T) {
 	err = os.Chdir(site.Dir)
 	assert.NoError(err)
 	err = app.Init(site.Dir)
-	app.Commands = map[string][]ddevapp.Command{"post-start": {{Exec: "bash -c 'echo hello'"}}}
+	app.Commands = map[string][]ddevapp.Command{"post-start": {{Exec: "echo hello"}}}
 
 	assert.NoError(err)
 	stdout := util.CaptureUserOut()
