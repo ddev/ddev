@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
@@ -643,18 +642,11 @@ func TestPHPOverrides(t *testing.T) {
 		_ = app.Stop(true, false)
 		// nolint: errcheck
 		defer app.Stop(true, false)
-		startErr := app.StartAndWaitForSync(2)
+		startErr := app.StartAndWaitForSync(5)
 		if startErr != nil {
 			logs, _ := GetErrLogsFromApp(app, startErr)
 			t.Logf("failed app.StartAndWait(): %v", startErr)
 			t.Fatalf("============== logs from app.StartAndWait() ==============\n%s\n", logs)
-		}
-
-		// On Docker Toolbox, it appearas that the change notification gets to the router
-		// slower than on other platforms. Give it time to come through.
-		// Otherwise the SSL cert may not yet have been created
-		if nodeps.IsDockerToolbox() {
-			time.Sleep(time.Duration(5) * time.Second)
 		}
 
 		_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+app.GetHostname()+"/phpinfo.php", `max_input_time</td><td class="v">999`)
