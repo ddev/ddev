@@ -669,7 +669,7 @@ func TestDdevImportDB(t *testing.T) {
 
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     "mysql -e SHOW TABLES;",
+				Cmd:     "mysql -e 'SHOW TABLES;'",
 			})
 			assert.NoError(err)
 
@@ -688,7 +688,7 @@ func TestDdevImportDB(t *testing.T) {
 
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     "mysql -e SHOW TABLES;",
+				Cmd:     "mysql -e 'SHOW TABLES;'",
 			})
 			assert.NoError(err)
 
@@ -1364,12 +1364,12 @@ func TestDdevExec(t *testing.T) {
 
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     "mysql -e DROP DATABASE db;",
+			Cmd:     "mysql -e 'DROP DATABASE db;'",
 		})
 		assert.NoError(err)
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     "mysql information_schema -e \"CREATE DATABASE db;\"",
+			Cmd:     "mysql information_schema -e 'CREATE DATABASE db;'",
 		})
 		assert.NoError(err)
 
