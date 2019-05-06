@@ -394,7 +394,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		err = app.Start()
+		err = app.StartAndWaitForSync(5)
 		assert.NoError(err)
 		if err != nil && strings.Contains(err.Error(), "db container failed") {
 			container, err := app.FindContainerByType("db")
@@ -402,12 +402,6 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			out, err := exec.RunCommand("docker", []string{"logs", container.Names[0]})
 			assert.NoError(err)
 			t.Logf("DB Logs after app.Start: \n%s\n=== END DB LOGS ===", out)
-		}
-		// On Docker Toolbox, it appearas that the change notification gets to the router
-		// slower than on other platforms. Give it time to come through.
-		// Otherwise the SSL cert may not yet have been created
-		if nodeps.IsDockerToolbox() {
-			time.Sleep(time.Duration(5) * time.Second)
 		}
 
 		// ensure docker-compose.yaml exists inside .ddev site folder
@@ -1966,12 +1960,6 @@ func TestHttpsRedirection(t *testing.T) {
 
 			t.Fatalf("app.StartAndWaitForSync failure; err=%v \n===== container logs ===\n%s\n===== bgsync health info ===\n%s\n========\n", startErr, appLogs, healthcheck)
 		}
-		// On Docker Toolbox, it appearas that the change notification gets to the router
-		// slower than on other platforms. Give it time to come through.
-		// Otherwise the SSL cert may not yet have been created
-		if nodeps.IsDockerToolbox() {
-			time.Sleep(time.Duration(5) * time.Second)
-		}
 		// Test for directory redirects under https and http
 		for _, parts := range expectations {
 
@@ -2224,15 +2212,8 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
-		err = app.StartAndWaitForSync(0)
+		err = app.StartAndWaitForSync(5)
 		assert.NoError(err)
-
-		// On Docker Toolbox, it appearas that the change notification gets to the router
-		// slower than on other platforms. Give it time to come through.
-		// Otherwise the SSL cert may not yet have been created
-		if nodeps.IsDockerToolbox() {
-			time.Sleep(time.Duration(5) * time.Second)
-		}
 
 		urls := app.GetAllURLs()
 
