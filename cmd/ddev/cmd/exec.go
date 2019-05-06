@@ -46,6 +46,7 @@ var DdevExecCmd = &cobra.Command{
 			Service: serviceType,
 			Dir:     execDirArg,
 			Cmd:     args,
+			Tty:     true,
 		})
 
 		if err != nil {
