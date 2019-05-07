@@ -262,7 +262,6 @@ func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not determine current working directory: %v", err)
 	}
-	// TODO: Handle case where config may be in parent directories.
 
 	app, err := ddevapp.NewApp(appRoot, false, providerName)
 	if err != nil {
