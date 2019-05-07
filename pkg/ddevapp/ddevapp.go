@@ -1401,9 +1401,9 @@ func (app *DdevApp) AddHostsEntries() error {
 	if ipPosition != -1 && runtime.GOOS == "windows" {
 		hostsLine := hosts.Lines[ipPosition]
 		if len(hostsLine.Hosts) >= 10 {
-			util.Warning("You have more than 9 entries in your (windows) hostsfile entry for %s", dockerIP)
-			util.Warning("Please use `ddev hostname --remove-inactive` or edit the hosts file manually")
-			util.Warning("Please see %s for more information", "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#windows-hosts-file-limited")
+			util.Error("You have more than 9 entries in your (windows) hostsfile entry for %s", dockerIP)
+			util.Error("Please use `ddev hostname --remove-inactive` or edit the hosts file manually")
+			util.Error("Please see %s for more information", "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#windows-hosts-file-limited")
 		}
 	}
 
