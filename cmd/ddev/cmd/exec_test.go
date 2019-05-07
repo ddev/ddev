@@ -7,8 +7,8 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDevExecBadArgs run `ddev exec` without the proper args
-func TestDevExecBadArgs(t *testing.T) {
+// TestCmdExecBadArgs run `ddev exec` without the proper args
+func TestCmdExecBadArgs(t *testing.T) {
 	// Change to the first DevTestSite for the duration of this test.
 	defer DevTestSites[0].Chdir()()
 	assert := asrt.New(t)
@@ -19,8 +19,8 @@ func TestDevExecBadArgs(t *testing.T) {
 	assert.Contains(string(out), "Usage:")
 }
 
-// TestDevExec run `ddev exec pwd` with proper args
-func TestDevExec(t *testing.T) {
+// TestCmdExec runs `ddev exec pwd` with proper args
+func TestCmdExec(t *testing.T) {
 
 	assert := asrt.New(t)
 	for _, v := range DevTestSites {
