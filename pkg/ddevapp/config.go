@@ -720,11 +720,10 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 	var defaultDocroot = app.Docroot
 	if defaultDocroot == "" {
 		for _, docroot := range AvailableDocrootLocations() {
-			if _, err := os.Stat(filepath.Join(app.AppRoot, docroot)); err != nil {
+			if _, err := os.Stat(docroot); err != nil {
 				continue
 			}
-
-			if fileutil.FileExists(filepath.Join(app.AppRoot, docroot, "index.php")) {
+			if fileutil.FileExists(filepath.Join(docroot, "index.php")) {
 				defaultDocroot = docroot
 				break
 			}
@@ -741,19 +740,15 @@ func (app *DdevApp) docrootPrompt() error {
 	}
 
 	// Determine the document root.
-	util.Warning("\nThe docroot is the directory from which your site is served.\nThis is a relative path from your project root at %s", app.AppRoot)
+	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your project root (%s)", app.AppRoot)
 	output.UserOut.Println("You may leave this value blank if your site files are in the project root")
 	var docrootPrompt = "Docroot Location"
 	var defaultDocroot = DiscoverDefaultDocroot(app)
 	// If there is a default docroot, display it in the prompt.
 	if defaultDocroot != "" {
 		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
-	} else if cd, _ := os.Getwd(); cd == filepath.Join(app.AppRoot, defaultDocroot) {
-		// Preserve the case where the docroot is the current directory
-		docrootPrompt = fmt.Sprintf("%s (current directory)", docrootPrompt)
 	} else {
-		// Explicitly state 'project root' when in a subdirectory
-		docrootPrompt = fmt.Sprintf("%s (project root)", docrootPrompt)
+		docrootPrompt = fmt.Sprintf("%s (current directory)", docrootPrompt)
 	}
 
 	fmt.Print(docrootPrompt + ": ")

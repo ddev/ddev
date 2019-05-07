@@ -306,45 +306,7 @@ func TestConfigInvalidProjectname(t *testing.T) {
 		assert.NotContains(out, "You may now run 'ddev start'")
 		_ = os.Remove(filepath.Join(tmpdir, ".ddev", "config.yaml"))
 	}
-}
 
-// TestConfigSubdir ensures an existing config can be found from subdirectories
-func TestConfigSubdir(t *testing.T) {
-	var err error
-	assert := asrt.New(t)
-
-	// Create a temporary directory and switch to it.
-	tmpdir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpdir)
-	defer testcommon.Chdir(tmpdir)()
-
-	// Create a simple config.
-	args := []string{
-		"config",
-		"--project-type",
-		"php",
-	}
-
-	out, err := exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
-	assert.Contains(out, "You may now run 'ddev start'")
-
-	// Create a subdirectory and switch to it.
-	subdir := filepath.Join(tmpdir, "some", "sub", "dir")
-	err = os.MkdirAll(subdir, 0755)
-	assert.NoError(err)
-	defer testcommon.Chdir(subdir)()
-
-	// Confirm that the detected config location is in the original dir.
-	args = []string{
-		"config",
-		"--show-config-location",
-	}
-
-	// Ensure the existing config can be found
-	out, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
-	assert.Contains(out, filepath.Join(tmpdir, ".ddev", "config.yaml"))
 }
 
 /**
