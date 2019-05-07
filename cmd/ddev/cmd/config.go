@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/mitchellh/go-homedir"
 	"os"
 	"strings"
 
@@ -140,6 +142,11 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	app, err := getConfigApp(providerName)
 	if err != nil {
 		util.Failed(err.Error())
+	}
+
+	homeDir, _ := homedir.Dir()
+	if app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
+		util.Failed("Please do not use `ddev config` in your home directory")
 	}
 
 	if cmd.Flags().NFlag() == 0 {
