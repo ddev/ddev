@@ -46,7 +46,7 @@ var DdevExecCmd = &cobra.Command{
 			Service: serviceType,
 			Dir:     execDirArg,
 			Cmd:     strings.Join(args, " "),
-			Tty:	true,
+			Tty:     true,
 		})
 
 		if err != nil {
