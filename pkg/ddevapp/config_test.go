@@ -60,19 +60,23 @@ func TestNewConfig(t *testing.T) {
 func TestDisasterConfig(t *testing.T) {
 	assert := asrt.New(t)
 
+	testDir, _ := os.Getwd()
+
 	// Make sure we're not allowed to config in home directory.
-	testDir, _ := homedir.Dir()
-	app, err := NewApp(testDir, false, ProviderDefault)
+	tmpDir, _ := homedir.Dir()
+	_, err := NewApp(tmpDir, false, ProviderDefault)
 	assert.Error(err)
+	assert.Contains(err.Error(), "ddev config is not useful in home directory")
+	_ = os.Chdir(testDir)
 
 	// Create a temporary directory and change to it for the duration of this test.
-	testDir = testcommon.CreateTmpDir("TestDisasterConfig")
+	tmpDir = testcommon.CreateTmpDir("TestDisasterConfig")
 
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
+	defer testcommon.CleanupDir(tmpDir)
+	defer testcommon.Chdir(tmpDir)()
 
 	// Load a new Config
-	app, err = NewApp(testDir, false, ProviderDefault)
+	app, err := NewApp(tmpDir, false, ProviderDefault)
 	assert.NoError(err)
 
 	// WriteConfig the app.
