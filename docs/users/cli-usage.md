@@ -5,13 +5,13 @@ Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands
 
 ## Quickstart Guides
 
-These are quickstart instructions for plain PHP, WordPress, Drupal 6, Drupal 7, Drupal 8, TYPO3, and Backdrop.
+These are quickstart instructions for generic PHP, WordPress, Drupal 6, Drupal 7, Drupal 8, TYPO3, and Backdrop.
 
 **Prerequisites:** Before you start, follow the [installation instructions](../index.md#installation). Make sure to [check the system requirements](../index.md#system-requirements), you will need *docker* and *docker-compose* to use ddev.
 
 ### PHP Project Quickstart
 
-DDEV is happy to work with most any PHP or HTML project, although it has special additional support for several CMSs. But you don't need special support if you already know how to configure your project.
+DDEV works happily with most any PHP or static HTML project, although it has special additional support for several CMSs. But you don't need special support if you already know how to configure your project.
 
 1. Create a directory (`mkdir my-new-project`)
 2. cd into the directory
