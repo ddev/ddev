@@ -6,6 +6,7 @@ import (
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/mitchellh/go-homedir"
 	"html/template"
 	"io/ioutil"
 	"os"
@@ -67,6 +68,11 @@ func init() {
 func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, error) {
 	// Set defaults.
 	app := &DdevApp{}
+
+	homeDir, _ := homedir.Dir()
+	if AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
+		return nil, fmt.Errorf("ddev config is not useful in home directory (%s)", homeDir)
+	}
 
 	if !fileutil.FileExists(AppRoot) {
 		return app, fmt.Errorf("project root %s does not exist", AppRoot)
