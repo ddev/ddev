@@ -64,17 +64,17 @@ func TestCmdExec(t *testing.T) {
 		assert.Contains(out, "no such file or directory")
 
 		args = []string{"exec", "ls >/var/www/html/TestCmdExec-${OSTYPE}.txt"}
-		out, err = exec.RunCommand(DdevBin, args)
+		_, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.FileExists(filepath.Join(v.Dir, "TestCmdExec-linux-gnu.txt"))
 
 		args = []string{"exec", "ls >/dev/null && touch /var/www/html/TestCmdExec-touch-all-in-one.txt"}
-		out, err = exec.RunCommand(DdevBin, args)
+		_, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.FileExists(filepath.Join(v.Dir, "TestCmdExec-touch-all-in-one.txt"))
 
 		args = []string{"exec", "true", "&&", "touch", "/var/www/html/TestCmdExec-touch-separate-args.txt"}
-		out, err = exec.RunCommand(DdevBin, args)
+		_, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
 		assert.FileExists(filepath.Join(v.Dir, "TestCmdExec-touch-separate-args.txt"))
 
