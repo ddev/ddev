@@ -8,7 +8,9 @@
 #    copy the files from its "solr-conf/6.x" directory into ".ddev/solr/conf"
 #    so that a file exists with the path ".ddev/solr/conf/solrconfig.xml".
 #
-# Note: The configuration files must be present before running `ddev start`.
+# Notes:
+# - The configuration files must be present before running "ddev start".
+# - Changes to the configuration files will not be automatically applied.
 #
 # To access Solr after it is installed:
 # - The Solr admin interface will be accessible at:
