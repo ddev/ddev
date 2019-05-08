@@ -333,7 +333,7 @@ func TestCmdDisasterConfig(t *testing.T) {
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 
-	out, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
+	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
 	assert.NoError(err)
 	subdir := filepath.Join(tmpdir, "junk")
 	err = os.Mkdir(subdir, 0777)
