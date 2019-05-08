@@ -1474,12 +1474,10 @@ func TestProcessHooks(t *testing.T) {
 	// echo and pwd are things that work pretty much the same in both places.
 	app.Commands = map[string][]ddevapp.Command{
 		"hook-test": {
-			{
-				Exec: "ls /usr/local/bin/composer",
-			},
-			{
-				ExecHost: "echo something",
-			},
+			{Exec: "ls /usr/local/bin/composer"},
+			{ExecHost: "echo something"},
+			{Exec: "echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt"},
+			{Exec: "touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt"},
 		},
 	}
 
@@ -1492,6 +1490,8 @@ func TestProcessHooks(t *testing.T) {
 
 	assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
 	assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
+	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
+	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
 	err = app.Stop(true, false)
 	assert.NoError(err)
