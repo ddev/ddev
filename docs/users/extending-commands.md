@@ -4,17 +4,16 @@ Certain ddev commands provide hooks to run tasks before or after the main comman
 
 To define command tasks in your configuration, specify the desired command hook as a subfield to `hooks`, then provide a list of tasks to run.
 
-_Note: Only simple commands are currently supported, so if you need to handle multiple commands, put them in as separate tasks. Shell pipes, &&, ||, and related bash/shell expressions are not yet supported._
-
 Example:
 
 ```
 hooks:
   post-start:
     - exec: "simple command expression"
+    - exec: "ls >/dev/null && touch /var/www/html/somefile.txt"
     - exec-host: "simple command expression"
   post-import-db:
-    - exec-host: "drush uli"
+    - exec: "drush uli"
 ```
 
 ## Supported Command Hooks
