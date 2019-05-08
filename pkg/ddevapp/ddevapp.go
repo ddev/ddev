@@ -830,10 +830,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	// Cases to handle
 	// - Free form, all unquoted. Like `ls -l -a`
 	// - Quoted to delay pipes and other features to container, like `"ls -l -a | grep junk"`
-	// - Already with bash -c, like `bash -c "ls -la | grep junk"`
 	// Note that a set quoted on the host in ddev exec will come through as a single arg
-
-	//cmdString := strings.ReplaceAll(opts.Cmd, `"`, `\"`)
 
 	exec = append(exec, "bash", "-c", opts.Cmd)
 
