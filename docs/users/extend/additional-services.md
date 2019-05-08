@@ -16,7 +16,7 @@ This recipe adds an Apache Solr 5.4 container to a project. It will setup a solr
 **Interacting with Apache Solr**
 - The Solr admin interface will be accessible at: `http://<projectname>.ddev.local:8983/solr/` For example, if the project is named "myproject" the hostname will be: `http://myproject.ddev.local:8983/solr/`
 - To access the Solr container from the web container use: `http://solr:8983/solr/`
-- A Solr core is automatically created with the name "dev", i.e. it can be accessed at the URL: http://solr:8983/solr/dev
+- A Solr core is automatically created with the name "dev"; it can be accessed at the URL: http://solr:8983/solr/dev
 
 ## Memcached
 This recipe adds a Memcached 1.5 container to a project. The default configuration allocates 128 MB of RAM for the Memcached instance; to change that or other command line arguments, edit the `command` array within the docker-compose file.
