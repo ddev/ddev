@@ -8,7 +8,20 @@
 #    copy the files from its "solr-conf/6.x" directory into ".ddev/solr/conf"
 #    so that a file exists with the path ".ddev/solr/conf/solrconfig.xml".
 #
-# Note: The configuration files must be present before running `ddev start`.
+# Notes:
+# - The configuration files must be present before running "ddev start".
+# - Changes to the configuration files will not be automatically applied.
+#
+# To access Solr after it is installed:
+# - The Solr admin interface will be accessible at:
+#   http://<projectname>.ddev.local:8983/solr/
+#   For example, if the project is named "myproject" the hostname will be:
+#   http://myproject.ddev.local:8983/solr/
+# - To access the Solr container from the web container use:
+#   http://solr:8983/solr/
+# - A Solr core is automatically created with the name "dev", i.e. it can be
+#   accessed at the URL: http://solr:8983/solr/dev
+
 
 version: '3.6'
 
@@ -47,12 +60,13 @@ services:
       - solr-precreate
       - dev
       - /solr-conf
-# This links the Solr service to the web service defined in the main
-# docker-compose.yml, allowing applications running in the web service to
-# access the Solr service at sitename.ddev.local:8983.
+  # This links the Solr service to the web service defined in the main
+  # docker-compose.yml, allowing applications running in the web service to
+  # access the Solr service at sitename.ddev.local:8983.
   web:
     links:
       - solr:$DDEV_HOSTNAME
 volumes:
-  # This creates a Docker volume that sticks around even if you remove or rebuild the container
+  # This creates a Docker volume that sticks around even if you remove or
+  # rebuild the container
   solrdata: 
