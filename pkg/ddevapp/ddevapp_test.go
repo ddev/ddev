@@ -302,7 +302,7 @@ func TestDdevStart(t *testing.T) {
 	err = os.Chdir(site.Dir)
 	assert.NoError(err)
 	err = app.Init(site.Dir)
-	app.Commands = map[string][]ddevapp.Command{"post-start": {{Exec: "bash -c 'echo hello'"}}}
+	app.Commands = map[string][]ddevapp.Command{"post-start": {{Exec: "echo hello"}}}
 
 	assert.NoError(err)
 	stdout := util.CaptureUserOut()
@@ -465,7 +465,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	opts := &ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     []string{"php", "--ri", "xdebug"},
+		Cmd:     "php --ri xdebug",
 	}
 	stdout, _, err := app.Exec(opts)
 	assert.Error(err)
@@ -524,24 +524,24 @@ func TestDdevMysqlWorks(t *testing.T) {
 	// Test that mysql + .my.cnf works on web container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     []string{"bash", "-c", "mysql -e 'SELECT USER();' | grep 'db@'"},
+		Cmd:     "mysql -e 'SELECT USER();' | grep 'db@'",
 	})
 	assert.NoError(err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     []string{"bash", "-c", "mysql -e 'SELECT DATABASE();' | grep 'db'"},
+		Cmd:     "mysql -e 'SELECT DATABASE();' | grep 'db'",
 	})
 	assert.NoError(err)
 
 	// Test that mysql + .my.cnf works on db container
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     []string{"bash", "-c", "mysql -e 'SELECT USER();' | grep 'root@localhost'"},
+		Cmd:     "mysql -e 'SELECT USER();' | grep 'root@localhost'",
 	})
 	assert.NoError(err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
-		Cmd:     []string{"bash", "-c", "mysql -e 'SELECT DATABASE();' | grep 'db'"},
+		Cmd:     "mysql -e 'SELECT DATABASE();' | grep 'db'",
 	})
 	assert.NoError(err)
 
@@ -669,7 +669,7 @@ func TestDdevImportDB(t *testing.T) {
 
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     []string{"mysql", "-e", "SHOW TABLES;"},
+				Cmd:     "mysql -e 'SHOW TABLES;'",
 			})
 			assert.NoError(err)
 
@@ -688,7 +688,7 @@ func TestDdevImportDB(t *testing.T) {
 
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     []string{"mysql", "-e", "SHOW TABLES;"},
+				Cmd:     "mysql -e 'SHOW TABLES;'",
 			})
 			assert.NoError(err)
 
@@ -1106,7 +1106,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 	_, _, createFileErr := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     []string{"sh", "-c", "echo 'content created inside container\n' >" + inContainerRelativePath},
+		Cmd:     "echo 'content created inside container\n' >" + inContainerRelativePath,
 	})
 	assert.NoError(createFileErr)
 	if app.WebcacheEnabled && createFileErr != nil {
@@ -1120,7 +1120,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 		// ls -lR in container
 		inContainerList, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     []string{"ls", "-lR", filepath.Dir(uploadDir)},
+			Cmd:     "ls -lR " + filepath.Dir(uploadDir),
 		})
 		assert.NoError(err)
 		t.Fatalf("Unable to create file %s inside container; onHost ls=\n====\n%s\n====\ninContainer ls=\n======\n%s\n=====\nContainer Sync logs=\n=======\n%s\n===========\n", inContainerRelativePath, onHostList, inContainerList, syncLogs)
@@ -1164,13 +1164,13 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	// if the file exists, add to it. We don't want to add if it's not already there.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     []string{"sh", "-c", "if [ -f " + inContainerRelativePath + " ]; then echo 'content added inside container\n' >>" + inContainerRelativePath + "; fi"},
+		Cmd:     "if [ -f " + inContainerRelativePath + " ]; then echo 'content added inside container\n' >>" + inContainerRelativePath + "; fi",
 	})
 	assert.NoError(err)
 	// grep the file for both the content added on host and that added in container.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     []string{"sh", "-c", "grep 'base content was inserted on the host' " + inContainerRelativePath + "&& grep 'content added inside container' " + inContainerRelativePath},
+		Cmd:     "grep 'base content was inserted on the host' " + inContainerRelativePath + "&& grep 'content added inside container' " + inContainerRelativePath,
 	})
 	assert.NoError(err)
 
@@ -1349,7 +1349,7 @@ func TestDdevExec(t *testing.T) {
 
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     []string{"pwd"},
+			Cmd:     "pwd",
 		})
 		assert.NoError(err)
 		assert.Contains(out, "/var/www/html")
@@ -1357,19 +1357,19 @@ func TestDdevExec(t *testing.T) {
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Dir:     "/usr/local",
-			Cmd:     []string{"pwd"},
+			Cmd:     "pwd",
 		})
 		assert.NoError(err)
 		assert.Contains(out, "/usr/local")
 
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     []string{"mysql", "-e", "DROP DATABASE db;"},
+			Cmd:     "mysql -e 'DROP DATABASE db;'",
 		})
 		assert.NoError(err)
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     []string{"mysql", "information_schema", "-e", "CREATE DATABASE db;"},
+			Cmd:     "mysql information_schema -e 'CREATE DATABASE db;'",
 		})
 		assert.NoError(err)
 
@@ -1381,14 +1381,14 @@ func TestDdevExec(t *testing.T) {
 		case ddevapp.AppTypeDrupal8:
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				Cmd:     []string{"drush", "status"},
+				Cmd:     "drush status",
 			})
 			assert.NoError(err)
 			assert.Regexp("PHP configuration[ :]*/etc/php/[0-9].[0-9]/fpm/php.ini", out)
 		case ddevapp.AppTypeWordPress:
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				Cmd:     []string{"wp", "--info"},
+				Cmd:     "wp --info",
 			})
 			assert.NoError(err)
 			assert.Regexp("/etc/php.*/php.ini", out)
@@ -1474,12 +1474,10 @@ func TestProcessHooks(t *testing.T) {
 	// echo and pwd are things that work pretty much the same in both places.
 	app.Commands = map[string][]ddevapp.Command{
 		"hook-test": {
-			{
-				Exec: "ls /usr/local/bin/composer",
-			},
-			{
-				ExecHost: "echo something",
-			},
+			{Exec: "ls /usr/local/bin/composer"},
+			{ExecHost: "echo something"},
+			{Exec: "echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt"},
+			{Exec: "touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt"},
 		},
 	}
 
@@ -1492,6 +1490,8 @@ func TestProcessHooks(t *testing.T) {
 
 	assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
 	assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
+	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
+	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
 	err = app.Stop(true, false)
 	assert.NoError(err)
@@ -2244,7 +2244,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			if _, err := strconv.ParseInt(hostParts[0], 10, 64); err != nil {
 				out, _, err := app.Exec(&ddevapp.ExecOpts{
 					Service: "web",
-					Cmd:     []string{"bash", "-c", "curl -sS --fail " + item + site.Safe200URIWithExpectation.URI},
+					Cmd:     "curl -sS --fail " + item + site.Safe200URIWithExpectation.URI,
 				})
 				assert.NoError(err, "failed curl to %s: %v", item+site.Safe200URIWithExpectation.URI, err)
 				assert.Contains(out, site.Safe200URIWithExpectation.Expect)
@@ -2325,7 +2325,7 @@ func TestNFSMount(t *testing.T) {
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "findmnt -T ."},
+		Cmd:     "findmnt -T .",
 	})
 	assert.NoError(err)
 	assert.Contains(stdout, ":"+dockerutil.MassageWIndowsNFSMount(app.AppRoot))
@@ -2337,7 +2337,7 @@ func TestNFSMount(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ls nfslinked_.ddev/config.yaml"},
+		Cmd:     "ls nfslinked_.ddev/config.yaml",
 	})
 	assert.NoError(err)
 
@@ -2348,7 +2348,7 @@ func TestNFSMount(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ls nfslinked_config.yaml"},
+		Cmd:     "ls nfslinked_config.yaml",
 	})
 	assert.NoError(err)
 
@@ -2356,7 +2356,7 @@ func TestNFSMount(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ln -s  .ddev nfscontainerlinked_ddev"},
+		Cmd:     "ln -s  .ddev nfscontainerlinked_ddev",
 	})
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)
@@ -2366,7 +2366,7 @@ func TestNFSMount(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ln -s  .ddev/config.yaml nfscontainerlinked_config.yaml"},
+		Cmd:     "ln -s  .ddev/config.yaml nfscontainerlinked_config.yaml",
 	})
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)
@@ -2409,7 +2409,7 @@ func TestWebcache(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ls webcachelinked_.ddev/config.yaml"},
+		Cmd:     "ls webcachelinked_.ddev/config.yaml",
 	})
 	assert.NoError(err)
 
@@ -2417,7 +2417,7 @@ func TestWebcache(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ln -s  .ddev webcachecontainerlinked_ddev"},
+		Cmd:     "ln -s  .ddev webcachecontainerlinked_ddev",
 	})
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)
@@ -2427,7 +2427,7 @@ func TestWebcache(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     []string{"bash", "-c", "ln -s  .ddev/config.yaml webcachecontainerlinked_config.yaml"},
+		Cmd:     "ln -s  .ddev/config.yaml webcachecontainerlinked_config.yaml",
 	})
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)

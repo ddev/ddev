@@ -689,14 +689,14 @@ func TestExtraPackages(t *testing.T) {
 
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "web",
-		Cmd:     []string{"bash", "-c", "command -v zsh"},
+		Cmd:     "command -v zsh",
 	})
 	assert.Error(err)
 	assert.Contains(err.Error(), "exit status 1")
 
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     []string{"bash", "-c", "command -v ncdu"},
+		Cmd:     "command -v ncdu",
 	})
 	assert.Error(err)
 	assert.Contains(err.Error(), "exit status 1")
@@ -709,14 +709,14 @@ func TestExtraPackages(t *testing.T) {
 
 	stdout, _, err := app.Exec(&ExecOpts{
 		Service: "web",
-		Cmd:     []string{"bash", "-c", "command -v zsh"},
+		Cmd:     "command -v zsh",
 	})
 	assert.NoError(err)
 	assert.Equal("/usr/bin/zsh", strings.Trim(stdout, "\n"))
 
 	stdout, _, err = app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     []string{"bash", "-c", "command -v ncdu"},
+		Cmd:     "command -v ncdu",
 	})
 	assert.NoError(err)
 	assert.Equal("/usr/bin/ncdu", strings.Trim(stdout, "\n"))
@@ -730,7 +730,7 @@ func TestExtraPackages(t *testing.T) {
 
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "web",
-		Cmd:     []string{"bash", "-c", "command -v zsh"},
+		Cmd:     "command -v zsh",
 	})
 	assert.Error(err)
 	assert.Contains(err.Error(), "exit status 1")
@@ -780,7 +780,7 @@ RUN touch /var/tmp/`+"added-by-"+item+".txt"))
 	for _, item := range []string{"web", "db"} {
 		_, _, err = app.Exec(&ExecOpts{
 			Service: item,
-			Cmd:     []string{"ls", "/var/tmp/added-by-" + item + ".txt"},
+			Cmd:     "ls /var/tmp/added-by-" + item + ".txt",
 		})
 		assert.NoError(err)
 	}

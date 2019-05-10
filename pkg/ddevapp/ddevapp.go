@@ -7,6 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
+	"github.com/mattn/go-shellwords"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -33,7 +34,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/mattn/go-shellwords"
 )
 
 // containerWaitTimeout is the max time we wait for all containers to become ready.
@@ -352,7 +352,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 	insideContainerImportPath := path.Join("/mnt/ddev_config", filepath.Base(dbPath))
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     []string{"bash", "-c", "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && pv " + insideContainerImportPath + "/*.*sql | mysql db"},
+		Cmd:     "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && pv " + insideContainerImportPath + "/*.*sql | mysql db",
 		Tty:     progress && isatty.IsTerminal(os.Stderr.Fd()),
 	})
 
@@ -390,11 +390,11 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 
 	opts := &ExecOpts{
 		Service:   "db",
-		Cmd:       []string{"bash", "-c", "mysqldump db"},
+		Cmd:       "mysqldump db",
 		NoCapture: true,
 	}
 	if gzip {
-		opts.Cmd = []string{"bash", "-c", "mysqldump db | gzip"}
+		opts.Cmd = "mysqldump db | gzip"
 	}
 	if outFile != "" {
 		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE, 0644)
@@ -623,14 +623,17 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 		if c.Exec != "" {
 			output.UserOut.Printf("--- Running exec command: %s ---", c.Exec)
 
-			args, err := shellwords.Parse(c.Exec)
+			testargs, err := shellwords.Parse(c.Exec)
 			if err != nil {
 				return fmt.Errorf("%s exec failed: %v", hookName, err)
 			}
+			_ = testargs
+			args := strings.Split(c.Exec, " ")
+			_ = args
 
 			stdout, stderr, err := app.Exec(&ExecOpts{
 				Service: "web",
-				Cmd:     args,
+				Cmd:     c.Exec,
 			})
 
 			if err != nil {
@@ -768,7 +771,7 @@ func (app *DdevApp) Start() error {
 	if postStartCmds := app.Commands["post-start"]; len(postStartCmds) > 0 {
 		stdout, _, _ := app.Exec(&ExecOpts{
 			Service: "web",
-			Cmd:     []string{"bash", "-c", "if [ -f /var/tmp/ddev_started.txt ]; then echo -n 'already started'; else touch /var/tmp/ddev_started.txt && echo -n 'starting'; fi"},
+			Cmd:     "if [ -f /var/tmp/ddev_started.txt ]; then echo -n 'already started'; else touch /var/tmp/ddev_started.txt && echo -n 'starting'; fi",
 		})
 		if stdout != "already started" {
 			err = app.ProcessHooks("post-start")
@@ -787,8 +790,8 @@ type ExecOpts struct {
 	Service string
 	// Dir is the working directory inside the container
 	Dir string
-	// Cmd is the array of string to execute
-	Cmd []string
+	// Cmd is the string to execute
+	Cmd string
 	// Nocapture if true causes use of ComposeNoCapture, so the stdout and stderr go right to stdout/stderr
 	NoCapture bool
 	// Tty if true causes a tty to be allocated
@@ -820,11 +823,16 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	exec = append(exec, opts.Service)
 
-	if opts.Cmd == nil {
+	if opts.Cmd == "" {
 		return "", "", fmt.Errorf("no command provided")
 	}
 
-	exec = append(exec, opts.Cmd...)
+	// Cases to handle
+	// - Free form, all unquoted. Like `ls -l -a`
+	// - Quoted to delay pipes and other features to container, like `"ls -l -a | grep junk"`
+	// Note that a set quoted on the host in ddev exec will come through as a single arg
+
+	exec = append(exec, "bash", "-c", opts.Cmd)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
@@ -866,11 +874,11 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 
 	exec = append(exec, opts.Service)
 
-	if opts.Cmd == nil {
+	if opts.Cmd == "" {
 		return fmt.Errorf("no command provided")
 	}
 
-	exec = append(exec, opts.Cmd...)
+	exec = append(exec, opts.Cmd)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
@@ -1170,7 +1178,7 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 	util.Warning("Creating database snapshot %s", snapshotName)
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     []string{"bash", "-c", fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir)},
+		Cmd:     fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir),
 	})
 
 	if err != nil {
@@ -1622,7 +1630,7 @@ func (app *DdevApp) precacheWebdir() error {
 	// Set the flag to tell unison it can start syncing
 	_, _, err = app.Exec(&ExecOpts{
 		Service: BGSYNCContainer,
-		Cmd:     []string{"touch", "/var/tmp/unison_start_authorized"},
+		Cmd:     "touch /var/tmp/unison_start_authorized",
 	})
 	if err != nil {
 		return fmt.Errorf("could not start bgsync container syncing: %v", err)

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/drud/ddev/pkg/exec"
@@ -19,7 +20,7 @@ func TestCmdExecBadArgs(t *testing.T) {
 	assert.Contains(string(out), "Usage:")
 }
 
-// TestCmdExec runs `ddev exec pwd` with proper args
+// TestCmdExec runs a number of exec commands to verify behavior
 func TestCmdExec(t *testing.T) {
 
 	assert := asrt.New(t)
@@ -61,6 +62,21 @@ func TestCmdExec(t *testing.T) {
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.Error(err)
 		assert.Contains(out, "no such file or directory")
+
+		args = []string{"exec", "ls >/var/www/html/TestCmdExec-${OSTYPE}.txt"}
+		_, err = exec.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		assert.FileExists(filepath.Join(v.Dir, "TestCmdExec-linux-gnu.txt"))
+
+		args = []string{"exec", "ls >/dev/null && touch /var/www/html/TestCmdExec-touch-all-in-one.txt"}
+		_, err = exec.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		assert.FileExists(filepath.Join(v.Dir, "TestCmdExec-touch-all-in-one.txt"))
+
+		args = []string{"exec", "true", "&&", "touch", "/var/www/html/TestCmdExec-touch-separate-args.txt"}
+		_, err = exec.RunCommand(DdevBin, args)
+		assert.NoError(err)
+		assert.FileExists(filepath.Join(v.Dir, "TestCmdExec-touch-separate-args.txt"))
 
 		cleanup()
 	}

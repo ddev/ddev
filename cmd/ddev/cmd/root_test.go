@@ -58,7 +58,7 @@ func TestMain(m *testing.M) {
 
 	// Attempt to stop/remove all running containers before starting a test.
 	// If no projects are running, this will exit silently and without error.
-	if _, err = exec.RunCommand(DdevBin, []string{"stop", "--all", "--stop-ssh-agent"}); err != nil {
+	if _, err = exec.RunCommand(DdevBin, []string{"remove", "--all", "--stop-ssh-agent"}); err != nil {
 		log.Warnf("Failed to stop/remove all running projects: %v", err)
 	}
 
@@ -167,10 +167,10 @@ func removeSites() {
 	for _, site := range DevTestSites {
 		_ = site.Chdir()
 
-		args := []string{"stop", "-RO"}
+		args := []string{"remove", "-RO"}
 		out, err := exec.RunCommand(DdevBin, args)
 		if err != nil {
-			log.Errorf("Failed to run ddev stop -RO command, err: %v, output: %s\n", err, out)
+			log.Errorf("Failed to run ddev remove -RO command, err: %v, output: %s\n", err, out)
 		}
 	}
 }

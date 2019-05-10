@@ -37,7 +37,7 @@ var DdevExecCmd = &cobra.Command{
 		}
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SitePaused) {
-			util.Failed("Project is stopped. Run 'ddev start' to start the environment.")
+			util.Failed("Project is paused. Run 'ddev start' to start it.")
 		}
 
 		app.DockerEnv()
@@ -45,12 +45,12 @@ var DdevExecCmd = &cobra.Command{
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: serviceType,
 			Dir:     execDirArg,
-			Cmd:     args,
+			Cmd:     strings.Join(args, " "),
 			Tty:     true,
 		})
 
 		if err != nil {
-			util.Failed("Failed to execute command %s: %v", args, err)
+			util.Failed("Failed to execute command %s: %v", strings.Join(args, " "), err)
 		}
 		output.UserOut.Print(out)
 	},

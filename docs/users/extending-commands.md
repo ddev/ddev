@@ -4,17 +4,16 @@ Certain ddev commands provide hooks to run tasks before or after the main comman
 
 To define command tasks in your configuration, specify the desired command hook as a subfield to `hooks`, then provide a list of tasks to run.
 
-_Note: Only simple commands are currently supported, so if you need to handle multiple commands, put them in as separate tasks. Shell pipes, &&, ||, and related bash/shell expressions are not yet supported._
-
 Example:
 
 ```
 hooks:
   post-start:
     - exec: "simple command expression"
+    - exec: "ls >/dev/null && touch /var/www/html/somefile.txt"
     - exec-host: "simple command expression"
   post-import-db:
-    - exec-host: "drush uli"
+    - exec: "drush uli"
 ```
 
 ## Supported Command Hooks
@@ -39,10 +38,10 @@ _Use drush to clear the Drupal cache and get a user login link after database im
 ```
 hooks:
   post-import-db:
-    - exec: "drush cc all"
-    - exec: "drush uli"
+    - exec: drush cr
+    - exec: drush uli
   post-start:
-    - exec: bash -c "sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ghostscript sqlite3 php7.2-sqlite3 && sudo killall -HUP php-fpm"```
+    - exec: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ghostscript sqlite3 php7.2-sqlite3 && sudo killall -HUP php-fpm
 ```
 
 Example:
@@ -52,7 +51,7 @@ _Use wp-cli to replace the production URL with development URL in the database o
 ```
 hooks:
   post-import-db:
-    - exec: "wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.local"
+    - exec: wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.local
 ```
 
 ### `exec-host`: Execute a shell command on the host system.
@@ -126,7 +125,7 @@ hooks:
 ```
 hooks:
     post-start:
-      - exec: "composer install -d /var/www/html/"
+      - exec: composer install -d /var/www/html/
 ```
 
 ## Adding Additional PHP Modules Example
@@ -135,5 +134,5 @@ hooks:
 hooks:
     post-start:
       # Install php modules and then tell php-fpm to reload
-      - exec: bash -c "sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y php7.1-ldap php7.1-tidy && killall -HUP php-fpm"
+      - exec: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y php7.1-ldap php7.1-tidy && killall -HUP php-fpm
 ```
