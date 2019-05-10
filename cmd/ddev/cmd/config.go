@@ -272,7 +272,7 @@ func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
 
 	// Check for an existing config in a parent dir
 	otherRoot, _ := ddevapp.CheckForConf(appRoot)
-	if otherRoot != appRoot {
+	if otherRoot != "" && otherRoot != appRoot {
 		util.Error("Is it possible you wanted to `ddev config` in parent directory %s?", otherRoot)
 	}
 	app, err := ddevapp.NewApp(appRoot, false, providerName)
