@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
@@ -52,6 +53,46 @@ func TestNewConfig(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(app.Name, loadedConfig.Name)
 	assert.Equal(app.Type, loadedConfig.Type)
+
+}
+
+// TestDisasterConfig tests for disaster opportunities (configing wrong directory, home dir, etc).
+func TestDisasterConfig(t *testing.T) {
+	assert := asrt.New(t)
+
+	testDir, _ := os.Getwd()
+
+	// Make sure we're not allowed to config in home directory.
+	tmpDir, _ := homedir.Dir()
+	_, err := NewApp(tmpDir, false, ProviderDefault)
+	assert.Error(err)
+	assert.Contains(err.Error(), "ddev config is not useful in home directory")
+	_ = os.Chdir(testDir)
+
+	// Create a temporary directory and change to it for the duration of this test.
+	tmpDir = testcommon.CreateTmpDir("TestDisasterConfig")
+
+	defer testcommon.CleanupDir(tmpDir)
+	defer testcommon.Chdir(tmpDir)()
+
+	// Load a new Config
+	app, err := NewApp(tmpDir, false, ProviderDefault)
+	assert.NoError(err)
+
+	// WriteConfig the app.
+	err = app.WriteConfig()
+	assert.NoError(err)
+	_, err = os.Stat(app.ConfigPath)
+	assert.NoError(err)
+
+	subdir := filepath.Join(app.AppRoot, "subdir")
+	err = os.Mkdir(subdir, 0777)
+	assert.NoError(err)
+	err = os.Chdir(subdir)
+	assert.NoError(err)
+	subdirApp, err := NewApp(subdir, false, ProviderDefault)
+	assert.NoError(err)
+	_ = subdirApp
 
 }
 

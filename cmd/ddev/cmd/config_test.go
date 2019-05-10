@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/mitchellh/go-homedir"
 	"testing"
 
 	"os"
@@ -306,45 +307,47 @@ func TestConfigInvalidProjectname(t *testing.T) {
 		assert.NotContains(out, "You may now run 'ddev start'")
 		_ = os.Remove(filepath.Join(tmpdir, ".ddev", "config.yaml"))
 	}
+
 }
 
-// TestConfigSubdir ensures an existing config can be found from subdirectories
-func TestConfigSubdir(t *testing.T) {
+// TestCmdDisasterConfig tests to make sure we can't accidentally
+// config in homedir, and that config in a subdir is handled correctly
+func TestCmdDisasterConfig(t *testing.T) {
 	var err error
 	assert := asrt.New(t)
+
+	testDir, _ := os.Getwd()
+	// Make sure we're not allowed to config in home directory.
+	home, _ := homedir.Dir()
+	err = os.Chdir(home)
+	assert.NoError(err)
+	out, err := exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
+	assert.Error(err)
+	_ = out
+
+	err = os.Chdir(testDir)
+	assert.NoError(err)
 
 	// Create a temporary directory and switch to it.
 	tmpdir := testcommon.CreateTmpDir(t.Name())
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 
-	// Create a simple config.
-	args := []string{
-		"config",
-		"--project-type",
-		"php",
-	}
-
-	out, err := exec.RunCommand(DdevBin, args)
+	out, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
 	assert.NoError(err)
-	assert.Contains(out, "You may now run 'ddev start'")
-
-	// Create a subdirectory and switch to it.
-	subdir := filepath.Join(tmpdir, "some", "sub", "dir")
-	err = os.MkdirAll(subdir, 0755)
+	subdir := filepath.Join(tmpdir, "junk")
+	err = os.Mkdir(subdir, 0777)
 	assert.NoError(err)
-	defer testcommon.Chdir(subdir)()
-
-	// Confirm that the detected config location is in the original dir.
-	args = []string{
-		"config",
-		"--show-config-location",
-	}
-
-	// Ensure the existing config can be found
-	out, err = exec.RunCommand(DdevBin, args)
+	err = os.Chdir(subdir)
 	assert.NoError(err)
-	assert.Contains(out, filepath.Join(tmpdir, ".ddev", "config.yaml"))
+	assert.NotContains(out, "possible you wanted to")
+
+	// Make sure that ddev config in subdir gives a warning
+	out, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
+	assert.NoError(err)
+	assert.Contains(out, "possible you wanted to")
+	assert.Contains(out, fmt.Sprintf("parent directory %s?", tmpdir))
+	assert.FileExists(filepath.Join(subdir, ".ddev/config.yaml"))
 }
 
 /**

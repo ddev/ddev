@@ -71,11 +71,9 @@ project root will be deleted when creating a project.`,
 		}
 
 		// Make the user confirm that existing contents will be deleted
-		util.Warning("Warning: Any existing contents of the project root (%s) will be removed", app.AppRoot)
-		if !noInteractionArg {
-			if !util.Confirm("Would you like to continue?") {
-				util.Failed("create-project cancelled")
-			}
+		util.Warning("Warning: ALL EXISTING CONTENT of the project root (%s) will be deleted", app.AppRoot)
+		if !util.Confirm("Would you like to continue?") {
+			util.Failed("create-project cancelled")
 		}
 
 		// Remove any contents of project root

@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/mitchellh/go-homedir"
 	"os"
 	"strings"
 
@@ -142,6 +144,11 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Failed(err.Error())
 	}
 
+	homeDir, _ := homedir.Dir()
+	if app.AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
+		util.Failed("Please do not use `ddev config` in your home directory")
+	}
+
 	if cmd.Flags().NFlag() == 0 {
 		err = app.PromptForConfig()
 		if err != nil {
@@ -258,24 +265,20 @@ func init() {
 
 // getConfigApp() does the basic setup of the app (with provider) and returns it.
 func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
-	// Find app root
-	cd, err := os.Getwd()
+	appRoot, err := os.Getwd()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not determine current working directory: %v", err)
 	}
 
-	// Check for an existing config in this or a parent dir
-	appRoot, err := ddevapp.CheckForConf(cd)
-	if err != nil {
-		// An error indicates no config file was found, use current directory
-		appRoot = cd
+	// Check for an existing config in a parent dir
+	otherRoot, _ := ddevapp.CheckForConf(appRoot)
+	if otherRoot != "" && otherRoot != appRoot {
+		util.Error("Is it possible you wanted to `ddev config` in parent directory %s?", otherRoot)
 	}
-
 	app, err := ddevapp.NewApp(appRoot, false, providerName)
 	if err != nil {
 		return nil, fmt.Errorf("could not create new config: %v", err)
 	}
-
 	return app, nil
 }
 
