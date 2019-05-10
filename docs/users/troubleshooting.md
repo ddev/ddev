@@ -111,6 +111,18 @@ Database snapshots from MariaDB 10.1 (normally from before ddev v1.3) cannot be 
   * `ddev restart`
  
 
+## Windows-Specific Issues
+<a name="windows-hosts-file-limited">
+### Windows Hosts File limited to 10 hosts per IP address line
+
+On Windows only, there is a limit to the number of hosts that can be placed in one line. But since all ddev hosts are typically on the same IP address (typically 127.0.0.1, localhost), they can really add up. As soon as you have more than 10 entries there, your browser won't be able to resolve the addresses beyond the 10th entry.
+
+There are two workarounds for this problem:
+
+1. Use `ddev stop --all` and `sudo ddev hostname --remove-inactive` to prune the number of hosts on that hosts-file line. When you start a project, the hostname(s) associated with that project will be added back again.
+2. Manually edit the hosts file (typically `C:\Windows\System32\drivers\etc\hosts`) and put some of your hosts on a separate line in the file. 
+
+
 ## More Support
 
 [Support options](https://ddev.readthedocs.io/en/stable/#support) has a variety of options.

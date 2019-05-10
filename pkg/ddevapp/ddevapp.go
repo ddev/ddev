@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -23,6 +25,7 @@ import (
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/archive"
+	"github.com/drud/ddev/pkg/ddevhosts"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -30,7 +33,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-shellwords"
 )
 
@@ -1391,9 +1393,18 @@ func (app *DdevApp) AddHostsEntries() error {
 		return fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
-	hosts, err := goodhosts.NewHosts()
+	hosts, err := ddevhosts.New()
 	if err != nil {
 		util.Failed("could not open hostfile: %v", err)
+	}
+	ipPosition := hosts.GetIPPosition(dockerIP)
+	if ipPosition != -1 && runtime.GOOS == "windows" {
+		hostsLine := hosts.Lines[ipPosition]
+		if len(hostsLine.Hosts) >= 10 {
+			util.Error("You have more than 9 entries in your (windows) hostsfile entry for %s", dockerIP)
+			util.Error("Please use `ddev hostname --remove-inactive` or edit the hosts file manually")
+			util.Error("Please see %s for more information", "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#windows-hosts-file-limited")
+		}
 	}
 
 	for _, name := range app.GetHostnames() {
