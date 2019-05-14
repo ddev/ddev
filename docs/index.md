@@ -33,7 +33,17 @@ For macOS and Linux users, we recommend installing and upgrading via [homebrew](
 brew tap drud/ddev && brew install ddev
 ```
 
-As a one-time initialization, run `mkcert -install`, which may require your sudo password. 
+As a one-time initialization, **make sure that /usr/sbin is in your path* and run `mkcert -install`, which may require your sudo password. On variants of Linux you may be prompted for additional package installation to get certutil installed, but you can follow the instructions given by mkcert:
+
+  > $ mkcert -install
+  > Created a new local CA at "/home/username/.local/share/mkcert" 
+  > Installing to the system store is not yet supported on this Linux  but Firefox and/or Chrome/Chromium will still work.
+  > You can also manually install the root certificate at "/home/username/.local/share/mkcert/rootCA.pem".
+  > Warning: "certutil" is not available, so the CA can't be automatically installed in Firefox and/or Chrome/Chromium! ⚠️
+  > Install "certutil" with "apt install libnss3-tools" or "yum install nss-tools" and re-run "mkcert -install" 
+  
+  (Note the prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having /usr/sbin in the path so that `/usr/sbin/update-ca-certificates` can be found.)
+
 
 Later, to upgrade to a newer version of ddev, run:
 ```
