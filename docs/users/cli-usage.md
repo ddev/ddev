@@ -63,7 +63,8 @@ Quickstart instructions regarding database imports can be found under [Database 
 ```
 mkdir my-wordpress-site
 cd my-wordpress-site
-ddev composer create wordpress/skeleton --no-interaction
+ddev config --project-type=php
+ddev composer create wordpress/skeleton --no-interaction --prefer-dist
 ddev config --docroot=wp --project-type=wordpress
 ddev restart
 ```
@@ -125,7 +126,7 @@ ddev composer install
 mkdir my-drupal8-site
 cd my-drupal8-site
 ddev config --project-type php
-ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction
+ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction --prefer-dist
 ddev config --project-type drupal8
 ddev restart
 ```
@@ -155,7 +156,7 @@ ddev composer install
 mkdir my-typo3-site
 cd my-typo3-site
 ddev config --project-type php
-ddev composer create typo3/cms-base-distribution ^9 --no-interaction
+ddev composer create typo3/cms-base-distribution ^9 --no-interaction --prefer-dist
 ddev config --project-type typo3
 ddev restart
 ```
