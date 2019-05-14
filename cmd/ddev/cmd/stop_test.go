@@ -29,7 +29,7 @@ func TestCmdStop(t *testing.T) {
 
 		out, err := exec.RunCommand(DdevBin, []string{"stop"})
 		assert.NoError(err, "ddev stop should succeed but failed, err: %v, output: %s", err, out)
-		assert.Contains(out, "has been stopped and removed")
+		assert.Contains(out, "has been stopped")
 
 		// Ensure the site that was just stopped does not appear in the list of sites
 		apps := ddevapp.GetDockerProjects()
@@ -94,7 +94,7 @@ func TestCmdStopMissingProjectDirectory(t *testing.T) {
 
 	out, err = exec.RunCommand(DdevBin, []string{"stop", projectName})
 	assert.NoError(err)
-	assert.Contains(out, "has been stopped and removed")
+	assert.Contains(out, "has been stopped")
 
 	err = os.Rename(copyDir, tmpDir)
 	assert.NoError(err)

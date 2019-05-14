@@ -26,7 +26,7 @@ var DdevStopCmd = &cobra.Command{
 	Use:     "stop [projectname ...]",
 	Aliases: []string{"rm", "remove"},
 	Short:   "Stop and remove the containers of a project. Does not lose or harm anything unless you add --remove-data.",
-	Long: `Stop and remove the containers of a project. You can run 'ddev stp['
+	Long: `Stop and remove the containers of a project. You can run 'ddev stop'
 from a project directory to stop/remove that project, or you can stop/remove projects in
 any directory by running 'ddev stop projectname [projectname ...]' or 'ddev stop -a'.
 
@@ -60,7 +60,7 @@ To snapshot the database on stop, use "ddev stop --snapshot"; A snapshot is auto
 				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
 			}
 
-			util.Success("Project %s has been stopped and removed.", project.GetName())
+			util.Success("Project %s has been stopped.", project.GetName())
 		}
 
 		if stopSSHAgent {
