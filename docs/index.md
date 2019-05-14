@@ -33,7 +33,7 @@ For macOS and Linux users, we recommend installing and upgrading via [homebrew](
 brew tap drud/ddev && brew install ddev
 ```
 
-As a one-time initialization, run `mkcert -install`, which may require your sudo password. 
+(Optional) As a one-time initialization, run `mkcert -install`. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
 
 Later, to upgrade to a newer version of ddev, run:
 ```
@@ -45,7 +45,7 @@ brew upgrade ddev
 
 - A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new terminal or cmd window and start using ddev.
 - If you use [chocolatey](https://chocolatey.org/) (highly recommended), then you can just `choco install ddev` from an administrative-privileged shell. Upgrades are just `choco upgrade ddev`.
-- As a one-time initialization, run `mkcert -install`
+- (Optional) As a one-time initialization, run `mkcert -install`
 
 
 ### Installation/Upgrade Script - Linux and macOS
@@ -56,6 +56,9 @@ Linux and macOS end-users can use this line of code to your terminal to download
 curl -L https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
 ```
 
+- (Optional) As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions". 
+
+
 Later, to upgrade ddev to the latest version, just run this again.
 
 ### Manual Installation or Upgrade - Linux and macOS
@@ -65,7 +68,7 @@ You can also easily perform the installation or upgrade manually if preferred. d
 - Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 - Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
 - Run `ddev` to test your installation. You should see ddev's command usage output.
-- As a one-time initialization, run `mkcert -install`, which may require your sudo password. 
+- (Optional) As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions
 
 ### Installation via package managers - Linux
 
@@ -73,8 +76,27 @@ The preferred Linux package manager is [Linuxbrew](http://linuxbrew.sh/) : `brew
 
 We also currently maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
 
-As a one-time initialization, run `mkcert -install`, which may require your sudo password. 
+(Optional) As a one-time initialization, run `mkcert -install`, which may require your sudo password. See below for additional information.
 
+### Linux `mkcert -install` additional instructions
+
+The `mkcert -install` step on Linux may provide you with additional instructions. 
+
+On variants of Linux you may be prompted for additional package installation to get certutil installed, but you can follow the instructions given by mkcert:
+
+
+  > $ mkcert -install
+  
+  > Created a new local CA at "/home/username/.local/share/mkcert" 
+  > Installing to the system store is not yet supported on this Linux  but Firefox and/or Chrome/Chromium will still work.
+  
+  > You can also manually install the root certificate at "/home/username/.local/share/mkcert/rootCA.pem".
+  
+  > Warning: "certutil" is not available, so the CA can't be automatically installed in Firefox and/or Chrome/Chromium! ⚠️
+  
+  > Install "certutil" with "apt install libnss3-tools" or "yum install nss-tools" and re-run "mkcert -install" 
+  
+  (Note the prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having /usr/sbin in the path so that `/usr/sbin/update-ca-certificates` can be found.)
 
 ### Uninstallation
 
