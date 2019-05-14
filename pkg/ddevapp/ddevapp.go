@@ -812,7 +812,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		return "", "", fmt.Errorf("no service provided")
 	}
 
-	exec := []string{"exec", "-e", "DDEV_EXEC=true"}
+	exec := []string{"exec"}
 	if workingDir := app.getWorkingDir(opts.Service, opts.Dir); workingDir != "" {
 		exec = append(exec, "-w", workingDir)
 	}
