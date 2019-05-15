@@ -194,9 +194,9 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		dbinfo["mariadb_version"] = app.MariaDBVersion
 		appDesc["dbinfo"] = dbinfo
 
-		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("mailhog")
+		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + app.MailhogPort
 		if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
-			appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + appports.GetPort("dba")
+			appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + app.PHPMyAdminPort
 		}
 	}
 
