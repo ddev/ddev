@@ -137,6 +137,8 @@ func TestConfigSetValues(t *testing.T) {
 	webWorkingDir := "/custom/web/dir"
 	dbWorkingDir := "/custom/db/dir"
 	dbaWorkingDir := "/custom/dba/dir"
+	phpMyAdminPort := "5000"
+	mailhogPort := "5001"
 
 	args := []string{
 		"config",
@@ -163,6 +165,8 @@ func TestConfigSetValues(t *testing.T) {
 		"--host-https-port", hostHTTPSPort,
 		"--webimage-extra-packages", webimageExtraPackages,
 		"--dbimage-extra-packages", dbimageExtraPackages,
+		"--phpmyadmin-port", phpMyAdminPort,
+		"--mailhog-port", mailhogPort,
 	}
 
 	_, err = exec.RunCommand(DdevBin, args)
@@ -200,7 +204,8 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(dbaWorkingDir, app.WorkingDir["dba"])
 	assert.Equal(webimageExtraPackagesSlice, app.WebImageExtraPackages)
 	assert.Equal(dbimageExtraPackagesSlice, app.DBImageExtraPackages)
-
+	assert.Equal(phpMyAdminPort, app.PHPMyAdminPort)
+	assert.Equal(mailhogPort, app.MailhogPort)
 	// Test that container images and working dirs can be unset with default flags
 	args = []string{
 		"config",
