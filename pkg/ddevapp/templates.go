@@ -97,7 +97,7 @@ services:
       - LINES=$LINES
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
       # To expose a container port to a different host port, define the port as hostPort:containerPort
-      - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,{{ .MailhogPort }}
+      - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILHOG_PORT}:{{ .MailhogPort }}
       # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
       # To expose an HTTPS port, define the port as securePort:containerPort.
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80
@@ -168,7 +168,7 @@ services:
       - PMA_PASSWORD=db
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
-      - HTTP_EXPOSE={{ .DBAPort }}
+      - HTTP_EXPOSE=${DDEV_PHPMYADMIN_PORT}:{{ .DBAPort }}
     healthcheck:
       interval: 90s
       timeout: 2s
