@@ -284,6 +284,12 @@ const ConfigInstructions = `
 # The host port binding for the ddev-dbserver can be explicitly specified. It is dynamic
 # unless explicitly specified.
 
+# phpmyadmin_port: "1000"
+# The PHPMyAdmin port can be changed from the default 8036
+
+# mailhog_port: "1001"
+# The MailHog port can be changed from the default 8025
+
 # webimage_extra_packages: [php-yaml, php7.3-ldap]
 # Extra Debian packages that are needed in the webimage can be added here
 # This is ignored if a free-form .ddev/web-build/Dockerfile is provided
