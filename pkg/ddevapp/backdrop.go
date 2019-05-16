@@ -17,33 +17,33 @@ import (
 
 // BackdropSettings holds database connection details for Backdrop.
 type BackdropSettings struct {
-	DatabaseName      string
-	DatabaseUsername  string
-	DatabasePassword  string
-	DatabaseHost      string
-	DatabaseDriver    string
-	DatabasePort      string
-	DatabasePrefix    string
-	HashSalt          string
-	Signature         string
-	SiteSettings      string
-	SiteSettingsLocal string
+	DatabaseName     string
+	DatabaseUsername string
+	DatabasePassword string
+	DatabaseHost     string
+	DatabaseDriver   string
+	DatabasePort     string
+	DatabasePrefix   string
+	HashSalt         string
+	Signature        string
+	SiteSettings     string
+	SiteSettingsDdev string
 }
 
 // NewBackdropSettings produces a BackdropSettings object with default values.
 func NewBackdropSettings() *BackdropSettings {
 	return &BackdropSettings{
-		DatabaseName:      "db",
-		DatabaseUsername:  "db",
-		DatabasePassword:  "db",
-		DatabaseHost:      "db",
-		DatabaseDriver:    "mysql",
-		DatabasePort:      appports.GetPort("db"),
-		DatabasePrefix:    "",
-		HashSalt:          util.RandString(64),
-		Signature:         DdevFileSignature,
-		SiteSettings:      "settings.php",
-		SiteSettingsLocal: "settings.ddev.php",
+		DatabaseName:     "db",
+		DatabaseUsername: "db",
+		DatabasePassword: "db",
+		DatabaseHost:     "db",
+		DatabaseDriver:   "mysql",
+		DatabasePort:     appports.GetPort("db"),
+		DatabasePrefix:   "",
+		HashSalt:         util.RandString(64),
+		Signature:        DdevFileSignature,
+		SiteSettings:     "settings.php",
+		SiteSettingsDdev: "settings.ddev.php",
 	}
 }
 
@@ -57,8 +57,8 @@ const backdropMainSettingsTemplate = `<?php
 $database = 'mysql://user:pass@localhost/database_name';
 $config_directories['active'] = 'files/config_' . md5($database) . '/active';
 $config_directories['staging'] = 'files/config_' . md5($database) . '/staging';
-if (file_exists(__DIR__ . '/{{ $config.SiteSettingsLocal }}')) {
-  include __DIR__ . '/{{ $config.SiteSettingsLocal }}';
+if (file_exists(__DIR__ . '/{{ $config.SiteSettingsDdev }}')) {
+  include __DIR__ . '/{{ $config.SiteSettingsDdev }}';
 }
 `
 
@@ -66,16 +66,16 @@ if (file_exists(__DIR__ . '/{{ $config.SiteSettingsLocal }}')) {
 // settings.php in the event that one exists.
 const backdropSettingsAppendTemplate = `{{ $config := . }}
 // Automatically generated include for settings managed by ddev.
-if (file_exists(__DIR__ . '/{{ $config.SiteSettingsLocal }}')) {
-  include __DIR__ . '/{{ $config.SiteSettingsLocal }}';
+if (file_exists(__DIR__ . '/{{ $config.SiteSettingsDdev }}')) {
+  include __DIR__ . '/{{ $config.SiteSettingsDdev }}';
 }
 `
 
-// backdropLocalSettingsTemplate defines the template that will become settings.ddev.php.
-const backdropLocalSettingsTemplate = `<?php
+// BackdropDdevSettingsTemplate defines the template that will become settings.ddev.php.
+const BackdropDdevSettingsTemplate = `<?php
 {{ $config := . }}
 /**
- {{ $config.Signature }}: Automatically generated Backdrop settings file.
+ {{ $config.Signature }}: Automatically generated Backdrop settings.ddev.php file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
@@ -113,18 +113,18 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
-	included, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, settings.SiteSettingsLocal)
+	included, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, settings.SiteSettingsDdev)
 	if err != nil {
 		return "", err
 	}
 
 	if included {
-		output.UserOut.Printf("Existing %s includes %s", settings.SiteSettings, settings.SiteSettingsLocal)
+		output.UserOut.Printf("Existing %s includes %s", settings.SiteSettings, settings.SiteSettingsDdev)
 	} else {
-		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", settings.SiteSettings, settings.SiteSettingsLocal)
+		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", settings.SiteSettings, settings.SiteSettingsDdev)
 
 		if err = appendIncludeToBackdropSettingsFile(settings, app.SiteSettingsPath); err != nil {
-			return "", fmt.Errorf("failed to include %s in %s: %v", settings.SiteSettingsLocal, settings.SiteSettings, err)
+			return "", fmt.Errorf("failed to include %s in %s: %v", settings.SiteSettingsDdev, settings.SiteSettings, err)
 		}
 	}
 
@@ -182,7 +182,7 @@ func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) 
 			return nil
 		}
 	}
-	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(backdropLocalSettingsTemplate)
+	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(BackdropDdevSettingsTemplate)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func setBackdropSiteSettingsPaths(app *DdevApp) {
 	settings := NewBackdropSettings()
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettings)
-	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettingsLocal)
+	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettingsDdev)
 }
 
 // isBackdropApp returns true if the app is of type "backdrop".
@@ -339,5 +339,8 @@ func backdropPostStartAction(app *DdevApp) error {
 		util.Warning("Failed to WriteDrushConfig: %v", err)
 	}
 
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteLocalSettingsPath, err)
+	}
 	return nil
 }

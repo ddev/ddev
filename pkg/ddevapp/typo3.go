@@ -192,3 +192,18 @@ func typo3ImportFilesAction(app *DdevApp, importPath, extPath string) error {
 
 	return nil
 }
+
+// typo3PostStartAction handles default post-start actions
+func typo3PostStartAction(app *DdevApp) error {
+	// Drush config has to be written after start because we don't know the ports until it's started
+	drushConfig := NewDrushConfig(app)
+	err := WriteDrushConfig(drushConfig, filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+	if err != nil {
+		util.Warning("Failed to WriteDrushConfig: %v", err)
+	}
+
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteLocalSettingsPath, err)
+	}
+	return nil
+}

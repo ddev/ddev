@@ -78,8 +78,8 @@ func NewDrushConfig(app *DdevApp) *DrushConfig {
 const drupal8SettingsTemplate = `<?php
 {{ $config := . }}
 // {{ $config.Signature }}: Automatically generated Drupal settings file.
-if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}')) {
-  include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}';
+if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}')) {
+  include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}';
 }
 `
 
@@ -87,8 +87,8 @@ if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}
 // a Drupal 8 app's settings.php in the event that one exists.
 const drupal8SettingsAppendTemplate = `{{ $config := . }}
 // Automatically generated include for settings managed by ddev.
-if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}')) {
-  include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}';
+if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}')) {
+  include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}';
 }
 `
 
@@ -97,7 +97,7 @@ if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}
 const drupal7SettingsTemplate = `<?php
 {{ $config := . }}
 // {{ $config.Signature }}: Automatically generated Drupal settings file.
-$ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsLocal }}';
+$ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsDdev }}';
 if (is_readable($ddev_settings)) {
   require $ddev_settings;
 }
@@ -107,7 +107,7 @@ if (is_readable($ddev_settings)) {
 // a Drupal 7 app's settings.php in the event that one exists.
 const drupal7SettingsAppendTemplate = `{{ $config := . }}
 // Automatically generated include for settings managed by ddev.
-$ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsLocal }}';
+$ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsDdev }}';
 if (is_readable($ddev_settings)) {
   require $ddev_settings;
 }
@@ -650,6 +650,9 @@ func drupal8PostStartAction(app *DdevApp) error {
 		util.Warning("Failed to WriteDrushConfig: %v", err)
 	}
 
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteLocalSettingsPath, err)
+	}
 	return nil
 }
 
@@ -667,6 +670,9 @@ func drupal7PostStartAction(app *DdevApp) error {
 		util.Warning("Failed to WriteDrushConfig: %v", err)
 	}
 
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteLocalSettingsPath, err)
+	}
 	return nil
 }
 
@@ -683,7 +689,9 @@ func drupal6PostStartAction(app *DdevApp) error {
 	if err != nil {
 		util.Warning("Failed to WriteDrushConfig: %v", err)
 	}
-
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteLocalSettingsPath, err)
+	}
 	return nil
 }
 
