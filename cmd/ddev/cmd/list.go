@@ -9,7 +9,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// continuous, if set, makes list continuously output
 var continuous bool
+
+// all, if set, shows non-running projects in addition to running/paused
+var all bool
 
 // DdevListCmd represents the list command
 var DdevListCmd = &cobra.Command{
@@ -18,17 +22,20 @@ var DdevListCmd = &cobra.Command{
 	Long:  `List projects.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for {
-			apps := ddevapp.GetActiveProjects()
+			apps, err := ddevapp.GetProjects()
+			if err != nil {
+				util.Failed("failed getting GetProjects: %v", err)
+			}
 			appDescs := make([]map[string]interface{}, 0)
 
 			if len(apps) < 1 {
-				output.UserOut.WithField("raw", appDescs).Println("There are no active ddev projects.")
+				output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
 			} else {
 				table := ddevapp.CreateAppTable()
 				for _, app := range apps {
 					desc, err := app.Describe()
 					if err != nil {
-						util.Failed("Failed to describe project %s: %v", app.GetName(), err)
+						util.Error("Failed to describe project %s: %v", app.GetName(), err)
 					}
 					appDescs = append(appDescs, desc)
 					ddevapp.RenderAppRow(table, desc)
@@ -46,6 +53,7 @@ var DdevListCmd = &cobra.Command{
 }
 
 func init() {
+	DdevListCmd.Flags().BoolVarP(&all, "all", "a", false, "If set, all projects will be displayed, even if not running.")
 	DdevListCmd.Flags().BoolVarP(&continuous, "continuous", "", false, "If set, project information will be emitted once per second")
 	RootCmd.AddCommand(DdevListCmd)
 }

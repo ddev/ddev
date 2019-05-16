@@ -178,7 +178,7 @@ func (app *DdevApp) WriteConfig() error {
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
 	// accidentally get used for other projects.
-	err := app.CheckAndReserveHostPorts()
+	err := app.UpdateGlobalProjectList()
 	if err != nil {
 		return err
 	}
@@ -261,9 +261,9 @@ RUN echo "Built from ` + app.DBImage + `" >/var/tmp/built-from.txt
 	return nil
 }
 
-// CheckAndReserveHostPorts checks that configured host ports are not already
+// UpdateGlobalProjectList checks that configured host ports are not already
 // reserved by another project.
-func (app *DdevApp) CheckAndReserveHostPorts() error {
+func (app *DdevApp) UpdateGlobalProjectList() error {
 	portsToReserve := []string{}
 	if app.HostDBPort != "" {
 		portsToReserve = append(portsToReserve, app.HostDBPort)
@@ -281,7 +281,12 @@ func (app *DdevApp) CheckAndReserveHostPorts() error {
 			return err
 		}
 	}
-	err := globalconfig.ReservePorts(app.Name, portsToReserve)
+	// TODO: Make sure there isn't already a conflicting project
+	err := globalconfig.SetProjectAppRoot(app.Name, app.AppRoot)
+	if err != nil {
+		return err
+	}
+	err = globalconfig.ReservePorts(app.Name, portsToReserve)
 
 	return err
 }

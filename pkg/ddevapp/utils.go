@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"path"
 	"path/filepath"
@@ -82,7 +83,7 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 	switch {
 	case strings.Contains(status, SitePaused):
 		status = color.YellowString(status)
-	case strings.Contains(status, SiteNotFound):
+	case strings.Contains(status, SiteStopped):
 		status = color.RedString(status)
 	case strings.Contains(status, SiteDirMissing):
 		status = color.RedString(status)
@@ -315,4 +316,22 @@ func CheckForMissingProjectFiles(project *DdevApp) error {
 	}
 
 	return nil
+}
+
+// GetProjects returns projects that are listed
+// in globalconfig projectlist but don't show up from docker.
+func GetProjects() ([]*DdevApp, error) {
+	apps := []*DdevApp{}
+	// TODO: This should use a get method instead of directly accessing
+	for _, info := range globalconfig.DdevGlobalConfig.ProjectList {
+		// Skip if AppRoot hasn't been placed in globalconfig
+		if info.AppRoot != "" {
+			activeApp, err := NewApp(info.AppRoot, true, ProviderDefault)
+			if err != nil {
+				return nil, err
+			}
+			apps = append(apps, activeApp)
+		}
+	}
+	return apps, nil
 }

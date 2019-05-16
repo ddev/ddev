@@ -25,7 +25,7 @@ var DdevLogsCmd = &cobra.Command{
 			util.Failed("Failed to retrieve logs: %v", err)
 		}
 
-		if strings.Contains(app.SiteStatus(), ddevapp.SiteNotFound) {
+		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
 			util.Failed("Project is not currently running. Try 'ddev start'.")
 		}
 

@@ -23,7 +23,7 @@ var DdevSSHCmd = &cobra.Command{
 			util.Failed("Failed to ssh: %v", err)
 		}
 
-		if strings.Contains(app.SiteStatus(), ddevapp.SiteNotFound) {
+		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
 			util.Failed("Project is not currently running. Try 'ddev start'.")
 		}
 

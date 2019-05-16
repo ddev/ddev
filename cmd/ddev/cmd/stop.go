@@ -50,7 +50,7 @@ To snapshot the database on stop, use "ddev stop --snapshot"; A snapshot is auto
 
 		// Iterate through the list of projects built above, removing each one.
 		for _, project := range projects {
-			if project.SiteStatus() == ddevapp.SiteNotFound {
+			if project.SiteStatus() == ddevapp.SiteStopped {
 				util.Warning("Project %s is not currently running. Try 'ddev start'.", project.GetName())
 			}
 

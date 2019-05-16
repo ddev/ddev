@@ -29,6 +29,7 @@ func init() {
 }
 
 type ProjectInfo struct {
+	AppRoot       string   `yaml:"approot"`
 	UsedHostPorts []string `yaml:"used_host_ports,omitempty,flow"`
 }
 
@@ -239,6 +240,19 @@ func ReservePorts(projectName string, ports []string) error {
 		DdevGlobalConfig.ProjectList[projectName] = &ProjectInfo{}
 	}
 	DdevGlobalConfig.ProjectList[projectName].UsedHostPorts = ports
+	err := WriteGlobalConfig(DdevGlobalConfig)
+	return err
+}
+
+// SetProjectAppRoot() sets the approot in the ProjectInfo of global config
+func SetProjectAppRoot(projectName string, appRoot string) error {
+	// If the project doesn't exist, add it.
+	_, ok := DdevGlobalConfig.ProjectList[projectName]
+	if !ok {
+		DdevGlobalConfig.ProjectList[projectName] = &ProjectInfo{}
+	}
+	DdevGlobalConfig.ProjectList[projectName].AppRoot = appRoot
+	// TODO: Aren't we going to end up doing this more than we need to?
 	err := WriteGlobalConfig(DdevGlobalConfig)
 	return err
 }
