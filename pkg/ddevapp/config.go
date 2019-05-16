@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -454,7 +455,7 @@ func (app *DdevApp) GetHostnames() []string {
 	for k := range nameListMap {
 		nameListArray = append(nameListArray, k)
 	}
-
+	sort.Strings(nameListArray)
 	return nameListArray
 }
 
