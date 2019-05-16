@@ -32,7 +32,7 @@ func TestCmdStop(t *testing.T) {
 		assert.Contains(out, "has been stopped")
 
 		// Ensure the site that was just stopped does not appear in the list of sites
-		apps := ddevapp.GetDockerProjects()
+		apps := ddevapp.GetActiveProjects()
 		for _, app := range apps {
 			assert.True(app.GetName() != site.Name)
 		}

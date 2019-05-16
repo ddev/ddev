@@ -31,7 +31,7 @@ func TestCmdPauseContainers(t *testing.T) {
 		assert.NoError(err, "ddev pause should succeed but failed, err: %v, output: %s", err, out)
 		assert.Contains(out, "has been paused")
 
-		apps := ddevapp.GetDockerProjects()
+		apps := ddevapp.GetActiveProjects()
 
 		for _, app := range apps {
 			if app.GetName() != site.Name {
@@ -51,7 +51,7 @@ func TestCmdPauseContainers(t *testing.T) {
 	assert.NoError(err, "ddev pause --all should succeed but failed, err: %v, output: %s", err, out)
 
 	// Confirm all sites are stopped.
-	apps := ddevapp.GetDockerProjects()
+	apps := ddevapp.GetActiveProjects()
 	for _, app := range apps {
 		assert.True(app.SiteStatus() == ddevapp.SitePaused, "All sites should be stopped, but %s status: %s", app.GetName(), app.SiteStatus())
 	}

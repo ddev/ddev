@@ -23,8 +23,8 @@ import (
 	gohomedir "github.com/mitchellh/go-homedir"
 )
 
-// GetDockerProjects returns an array of ddev applications.
-func GetDockerProjects() []*DdevApp {
+// GetActiveProjects returns an array of ddev applications.
+func GetActiveProjects() []*DdevApp {
 	apps := make([]*DdevApp, 0)
 	labels := map[string]string{
 		"com.ddev.platform":          "ddev",

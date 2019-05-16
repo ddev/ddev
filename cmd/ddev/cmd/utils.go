@@ -20,16 +20,16 @@ func getRequestedProjects(names []string, all bool) ([]*ddevapp.DdevApp, error) 
 		return append(requestedProjects, project), nil
 	}
 
-	allDockerProjects := ddevapp.GetDockerProjects()
+	activeProjects := ddevapp.GetActiveProjects()
 
 	// If all projects are requested, return here
 	if all {
-		return allDockerProjects, nil
+		return activeProjects, nil
 	}
 
 	// Convert all projects slice into map indexed by project name to prevent duplication
 	allDockerProjectMap := map[string]*ddevapp.DdevApp{}
-	for _, project := range allDockerProjects {
+	for _, project := range activeProjects {
 		allDockerProjectMap[project.Name] = project
 	}
 

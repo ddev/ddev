@@ -18,7 +18,7 @@ var DdevListCmd = &cobra.Command{
 	Long:  `List projects.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for {
-			apps := ddevapp.GetDockerProjects()
+			apps := ddevapp.GetActiveProjects()
 			appDescs := make([]map[string]interface{}, 0)
 
 			if len(apps) < 1 {
