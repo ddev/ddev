@@ -92,8 +92,8 @@ if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}
 }
 `
 
-// drupal7SettingsTemplate defines the template that will become a Drupal 7 app's settings.php
-// in the event that one does not already exist.
+// drupal7SettingsTemplate defines the template that will become a Drupal 7
+// app's settings.php in the event that one does not already exist.
 const drupal7SettingsTemplate = `<?php
 {{ $config := . }}
 // {{ $config.Signature }}: Automatically generated Drupal settings file.
@@ -113,8 +113,8 @@ if (is_readable($ddev_settings)) {
 }
 `
 
-// drupal6SettingsTemplate defines the template that will become a Drupal 6 app's settings.php
-// in the event that one does not already exist.
+// drupal6SettingsTemplate defines the template that will become a Drupal 6
+// app's settings.php in the event that one does not already exist.
 const drupal6SettingsTemplate = drupal7SettingsTemplate
 
 // drupal7SettingsAppendTemplate defines the template that will be appended to
@@ -125,8 +125,10 @@ const (
 	drupal8DdevSettingsTemplate = `<?php
 {{ $config := . }}
 /**
- {{ $config.Signature }}: Automatically generated Drupal settings file.
- ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ * @file
+ * {{ $config.Signature }}: Automatically generated Drupal settings file.
+ * ddev manages this file and may delete or overwrite the file unless this
+ * comment is removed.
  */
 
 $databases['default']['default'] = array(
@@ -154,11 +156,12 @@ $settings['file_scan_ignore_directories'] = [
 // This will prevent Drupal from setting read-only permissions on sites/default.
 $settings['skip_permissions_hardening'] = TRUE;
 
-// This will ensure the site can only be accessed through the intended host names.
-// Additional host patterns can be added for custom configurations.
+// This will ensure the site can only be accessed through the intended host
+// names. Additional host patterns can be added for custom configurations.
 $settings['trusted_host_patterns'] = ['.*'];
 
-// Don't use Symfony's APCLoader. ddev includes APCu; Composer's APCu loader has better performance.
+// Don't use Symfony's APCLoader. ddev includes APCu; Composer's APCu loader has
+// better performance.
 $settings['class_loader_auto_detect'] = FALSE;
 
 // This specifies the default configuration sync directory.
@@ -166,8 +169,9 @@ if (empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
   $config_directories[CONFIG_SYNC_DIRECTORY] = '{{ joinPath $config.SitePath $config.SyncDir }}';
 }
 
-// This determines whether or not drush should include a custom settings file which allows
-// it to work both within a docker container and natively on the host system.
+// This determines whether or not drush should include a custom settings file
+// which allows it to work both within a docker container and natively on the
+// host system.
 $drush_settings = __DIR__ . '/ddev_drush_settings.php';
 if (empty(getenv('DDEV_PHP_VERSION')) && file_exists($drush_settings)) {
   include $drush_settings;
@@ -179,8 +183,10 @@ const (
 	drupal7DdevSettingsTemplate = `<?php
 {{ $config := . }}
 /**
- {{ $config.Signature }}: Automatically generated Drupal settings file.
- ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ * @file
+ * {{ $config.Signature }}: Automatically generated Drupal settings file.
+ * ddev manages this file and may delete or overwrite the file unless this
+ * comment is removed.
  */
 
 $databases['default']['default'] = array(
@@ -200,8 +206,9 @@ ini_set('session.cookie_lifetime', 2000000);
 
 $drupal_hash_salt = '{{ $config.HashSalt }}';
 
-// This determines whether or not drush should include a custom settings file which allows
-// it to work both within a docker container and natively on the host system.
+// This determines whether or not drush should include a custom settings file
+// which allows it to work both within a docker container and natively on the
+// host system.
 $drush_settings = __DIR__ . '/ddev_drush_settings.php';
 if (empty(getenv('DDEV_PHP_VERSION')) && file_exists($drush_settings)) {
   include $drush_settings;
@@ -213,8 +220,10 @@ const (
 	drupal6DdevSettingsTemplate = `<?php
 {{ $config := . }}
 /**
- {{ $config.Signature }}: Automatically generated Drupal settings file.
- ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ * @file
+ * {{ $config.Signature }}: Automatically generated Drupal settings file.
+ * ddev manages this file and may delete or overwrite the file unless this
+ * comment is removed.
  */
 
 $db_url = '{{ $config.DatabaseDriver }}://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@{{ $config.DatabaseHost }}:{{ $config.DatabasePort }}/{{ $config.DatabaseName }}';
@@ -224,8 +233,9 @@ ini_set('session.gc_divisor', 100);
 ini_set('session.gc_maxlifetime', 200000);
 ini_set('session.cookie_lifetime', 2000000);
 
-// This determines whether or not drush should include a custom settings file which allows
-// it to work both within a docker container and natively on the host system.
+// This determines whether or not drush should include a custom settings file
+// which allows it to work both within a docker container and natively on the
+// host system.
 $drush_settings = __DIR__ . '/ddev_drush_settings.php';
 if (empty(getenv('DDEV_PHP_VERSION')) && file_exists($drush_settings)) {
   include $drush_settings;
