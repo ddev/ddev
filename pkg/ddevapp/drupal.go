@@ -21,39 +21,39 @@ import (
 
 // DrupalSettings encapsulates all the configurations for a Drupal site.
 type DrupalSettings struct {
-	DeployName        string
-	DeployURL         string
-	DatabaseName      string
-	DatabaseUsername  string
-	DatabasePassword  string
-	DatabaseHost      string
-	DatabaseDriver    string
-	DatabasePort      string
-	DatabasePrefix    string
-	HashSalt          string
-	Signature         string
-	SitePath          string
-	SiteSettings      string
-	SiteSettingsLocal string
-	SyncDir           string
+	DeployName       string
+	DeployURL        string
+	DatabaseName     string
+	DatabaseUsername string
+	DatabasePassword string
+	DatabaseHost     string
+	DatabaseDriver   string
+	DatabasePort     string
+	DatabasePrefix   string
+	HashSalt         string
+	Signature        string
+	SitePath         string
+	SiteSettings     string
+	SiteSettingsDdev string
+	SyncDir          string
 }
 
 // NewDrupalSettings produces a DrupalSettings object with default.
 func NewDrupalSettings() *DrupalSettings {
 	return &DrupalSettings{
-		DatabaseName:      "db",
-		DatabaseUsername:  "db",
-		DatabasePassword:  "db",
-		DatabaseHost:      "db",
-		DatabaseDriver:    "mysql",
-		DatabasePort:      appports.GetPort("db"),
-		DatabasePrefix:    "",
-		HashSalt:          util.RandString(64),
-		Signature:         DdevFileSignature,
-		SitePath:          path.Join("sites", "default"),
-		SiteSettings:      "settings.php",
-		SiteSettingsLocal: "settings.ddev.php",
-		SyncDir:           path.Join("files", "sync"),
+		DatabaseName:     "db",
+		DatabaseUsername: "db",
+		DatabasePassword: "db",
+		DatabaseHost:     "db",
+		DatabaseDriver:   "mysql",
+		DatabasePort:     appports.GetPort("db"),
+		DatabasePrefix:   "",
+		HashSalt:         util.RandString(64),
+		Signature:        DdevFileSignature,
+		SitePath:         path.Join("sites", "default"),
+		SiteSettings:     "settings.php",
+		SiteSettingsDdev: "settings.ddev.php",
+		SyncDir:          path.Join("files", "sync"),
 	}
 }
 
@@ -290,12 +290,12 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, settin
 	}
 
 	if included {
-		output.UserOut.Printf("Existing %s file includes %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal)
+		output.UserOut.Printf("Existing %s file includes %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 	} else {
-		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal)
+		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 
 		if err := appendIncludeToDrupalSettingsFile(drupalConfig, app.SiteSettingsPath, appendTemplate); err != nil {
-			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsLocal, drupalConfig.SiteSettings, err)
+			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsDdev, drupalConfig.SiteSettings, err)
 		}
 	}
 
@@ -598,7 +598,7 @@ func setDrupalSiteSettingsPaths(app *DdevApp) {
 	drupalConfig := NewDrupalSettings()
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettings)
-	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettingsLocal)
+	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettingsDdev)
 }
 
 // isDrupal7App returns true if the app is of type drupal7
@@ -749,7 +749,7 @@ func createDrupal8SyncDir(app *DdevApp) error {
 // settingsHasInclude determines if the settings.php or equivalent includes settings.ddev.php or equivalent.
 // This is done by looking for the ddev settings file (settings.ddev.php) in settings.php.
 func settingsHasInclude(drupalConfig *DrupalSettings, siteSettingsPath string) (bool, error) {
-	included, err := fileutil.FgrepStringInFile(siteSettingsPath, drupalConfig.SiteSettingsLocal)
+	included, err := fileutil.FgrepStringInFile(siteSettingsPath, drupalConfig.SiteSettingsDdev)
 	if err != nil {
 		return false, err
 	}
