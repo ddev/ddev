@@ -86,23 +86,23 @@ type DdevApp struct {
 	XdebugEnabled         bool                 `yaml:"xdebug_enabled"`
 	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string             `yaml:"additional_fqdns"`
-	MariaDBVersion        string               `yaml:"mariadb_version"`
-	WebcacheEnabled       bool                 `yaml:"webcache_enabled,omitempty"`
-	NFSMountEnabled       bool                 `yaml:"nfs_mount_enabled"`
-	ConfigPath            string               `yaml:"-"`
-	AppRoot               string               `yaml:"-"`
-	Platform              string               `yaml:"-"`
-	Provider              string               `yaml:"provider,omitempty"`
-	DataDir               string               `yaml:"-"`
-	SiteSettingsPath      string               `yaml:"-"`
-	SiteLocalSettingsPath string               `yaml:"-"`
-	providerInstance      Provider             `yaml:"-"`
-	Commands              map[string][]Command `yaml:"hooks,omitempty"`
-	UploadDir             string               `yaml:"upload_dir,omitempty"`
-	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
-	OmitContainers        []string             `yaml:"omit_containers,omitempty,flow"`
-	HostDBPort            string               `yaml:"host_db_port,omitempty"`
-	HostWebserverPort     string               `yaml:"host_webserver_port,omitempty"`
+	MariaDBVersion       string               `yaml:"mariadb_version"`
+	WebcacheEnabled      bool                 `yaml:"webcache_enabled,omitempty"`
+	NFSMountEnabled      bool                 `yaml:"nfs_mount_enabled"`
+	ConfigPath           string               `yaml:"-"`
+	AppRoot              string               `yaml:"-"`
+	Platform             string               `yaml:"-"`
+	Provider             string               `yaml:"provider,omitempty"`
+	DataDir              string               `yaml:"-"`
+	SiteSettingsPath     string               `yaml:"-"`
+	SiteDdevSettingsFile string               `yaml:"-"`
+	providerInstance     Provider             `yaml:"-"`
+	Commands             map[string][]Command `yaml:"hooks,omitempty"`
+	UploadDir            string               `yaml:"upload_dir,omitempty"`
+	WorkingDir           map[string]string    `yaml:"working_dir,omitempty"`
+	OmitContainers       []string             `yaml:"omit_containers,omitempty,flow"`
+	HostDBPort           string               `yaml:"host_db_port,omitempty"`
+	HostWebserverPort    string               `yaml:"host_webserver_port,omitempty"`
 	HostHTTPSPort         string               `yaml:"host_https_port,omitempty"`
 	WebImageExtraPackages []string             `yaml:"webimage_extra_packages,omitempty,flow"`
 	DBImageExtraPackages  []string             `yaml:"dbimage_extra_packages,omitempty,flow"`
@@ -1129,9 +1129,9 @@ func (app *DdevApp) StartAndWaitForSync(extraSleep int) error {
 
 // DetermineSettingsPathLocation figures out the path to the settings file for
 // an app based on the contents/existence of app.SiteSettingsPath and
-// app.SiteLocalSettingsPath.
+// app.SiteDdevSettingsFile.
 func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
-	possibleLocations := []string{app.SiteSettingsPath, app.SiteLocalSettingsPath}
+	possibleLocations := []string{app.SiteSettingsPath, app.SiteDdevSettingsFile}
 	for _, loc := range possibleLocations {
 		// If the file doesn't exist, it's safe to use
 		if !fileutil.FileExists(loc) {

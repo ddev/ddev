@@ -346,11 +346,11 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 		return "", err
 	}
 
-	if err := writeDrupal7DdevSettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("`failed to write` Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
+	if err := writeDrupal7DdevSettingsFile(drupalConfig, app.SiteDdevSettingsFile); err != nil {
+		return "", fmt.Errorf("`failed to write` Drupal settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
-	return app.SiteLocalSettingsPath, nil
+	return app.SiteDdevSettingsFile, nil
 }
 
 // createDrupal8SettingsFile manages creation and modification of settings.php and settings.ddev.php.
@@ -365,11 +365,11 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 		return "", err
 	}
 
-	if err := writeDrupal8DdevSettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
+	if err := writeDrupal8DdevSettingsFile(drupalConfig, app.SiteDdevSettingsFile); err != nil {
+		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
-	return app.SiteLocalSettingsPath, nil
+	return app.SiteDdevSettingsFile, nil
 }
 
 // createDrupal6SettingsFile manages creation and modification of settings.php and settings.ddev.php.
@@ -386,11 +386,11 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 		return "", err
 	}
 
-	if err := writeDrupal6DdevSettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
+	if err := writeDrupal6DdevSettingsFile(drupalConfig, app.SiteDdevSettingsFile); err != nil {
+		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
-	return app.SiteLocalSettingsPath, nil
+	return app.SiteDdevSettingsFile, nil
 }
 
 // writeDrupal8DdevSettingsFile dynamically produces valid settings.ddev.php file by combining a configuration
@@ -598,7 +598,7 @@ func setDrupalSiteSettingsPaths(app *DdevApp) {
 	drupalConfig := NewDrupalSettings()
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettings)
-	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettingsDdev)
+	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettingsDdev)
 }
 
 // isDrupal7App returns true if the app is of type drupal7
@@ -651,7 +651,7 @@ func drupal8PostStartAction(app *DdevApp) error {
 	}
 
 	if _, err = app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteLocalSettingsPath, err)
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 	return nil
 }
@@ -671,7 +671,7 @@ func drupal7PostStartAction(app *DdevApp) error {
 	}
 
 	if _, err = app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteLocalSettingsPath, err)
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 	return nil
 }
@@ -690,7 +690,7 @@ func drupal6PostStartAction(app *DdevApp) error {
 		util.Warning("Failed to WriteDrushConfig: %v", err)
 	}
 	if _, err = app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteLocalSettingsPath, err)
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 	return nil
 }
@@ -705,7 +705,7 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 	makeWritable := []string{
 		settingsDir,
 		app.SiteSettingsPath,
-		app.SiteLocalSettingsPath,
+		app.SiteDdevSettingsFile,
 		path.Join(settingsDir, "services.yml"),
 	}
 

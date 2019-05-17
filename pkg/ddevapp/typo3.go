@@ -44,28 +44,28 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 		util.Warning("TYPO3 does not seem to have been set up yet, missing %s (%s)", filepath.Base(app.SiteSettingsPath), app.SiteSettingsPath)
 	}
 
-	// TYPO3 ddev settings file will be AdditionalConfiguration.php (app.SiteLocalSettingsPath).
+	// TYPO3 ddev settings file will be AdditionalConfiguration.php (app.SiteDdevSettingsFile).
 	// Check if the file already exists.
-	if fileutil.FileExists(app.SiteLocalSettingsPath) {
+	if fileutil.FileExists(app.SiteDdevSettingsFile) {
 		// Check if the file is managed by ddev.
-		signatureFound, err := fileutil.FgrepStringInFile(app.SiteLocalSettingsPath, DdevFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, DdevFileSignature)
 		if err != nil {
 			return "", err
 		}
 
 		// If the signature wasn't found, warn the user and return.
 		if !signatureFound {
-			util.Warning("%s already exists and is managed by the user.", filepath.Base(app.SiteLocalSettingsPath))
-			return app.SiteLocalSettingsPath, nil
+			util.Warning("%s already exists and is managed by the user.", filepath.Base(app.SiteDdevSettingsFile))
+			return app.SiteDdevSettingsFile, nil
 		}
 	}
 
-	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(app.SiteLocalSettingsPath))
+	output.UserOut.Printf("Generating %s file for database connection.", filepath.Base(app.SiteDdevSettingsFile))
 	if err := writeTypo3SettingsFile(app); err != nil {
 		return "", fmt.Errorf("failed to write TYPO3 AdditionalConfiguration.php file: %v", err.Error())
 	}
 
-	return app.SiteLocalSettingsPath, nil
+	return app.SiteDdevSettingsFile, nil
 }
 
 // writeTypo3SettingsFile produces AdditionalConfiguration.php file
@@ -73,7 +73,7 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 // overriding the db config values in it. The typo3conf/ directory will
 // be created if it does not yet exist.
 func writeTypo3SettingsFile(app *DdevApp) error {
-	filePath := app.SiteLocalSettingsPath
+	filePath := app.SiteDdevSettingsFile
 
 	// Ensure target directory is writable.
 	dir := filepath.Dir(filePath)
@@ -131,7 +131,7 @@ func setTypo3SiteSettingsPaths(app *DdevApp) {
 	settingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "LocalConfiguration.php")
 	localSettingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "AdditionalConfiguration.php")
 	app.SiteSettingsPath = settingsFilePath
-	app.SiteLocalSettingsPath = localSettingsFilePath
+	app.SiteDdevSettingsFile = localSettingsFilePath
 }
 
 // isTypoApp returns true if the app is of type typo3
@@ -195,15 +195,8 @@ func typo3ImportFilesAction(app *DdevApp, importPath, extPath string) error {
 
 // typo3PostStartAction handles default post-start actions
 func typo3PostStartAction(app *DdevApp) error {
-	// Drush config has to be written after start because we don't know the ports until it's started
-	drushConfig := NewDrushConfig(app)
-	err := WriteDrushConfig(drushConfig, filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
-	if err != nil {
-		util.Warning("Failed to WriteDrushConfig: %v", err)
-	}
-
-	if _, err = app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteLocalSettingsPath, err)
+	if _, err := app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 	return nil
 }

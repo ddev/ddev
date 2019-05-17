@@ -128,11 +128,11 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
-	if err = writeBackdropDdevSettingsFile(settings, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
+	if err = writeBackdropDdevSettingsFile(settings, app.SiteDdevSettingsFile); err != nil {
+		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
-	return app.SiteLocalSettingsPath, nil
+	return app.SiteDdevSettingsFile, nil
 }
 
 // writeBackdropMainSettingsFile dynamically produces a valid settings.php file by
@@ -232,7 +232,7 @@ func setBackdropSiteSettingsPaths(app *DdevApp) {
 	settings := NewBackdropSettings()
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettings)
-	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettingsDdev)
+	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, settings.SiteSettingsDdev)
 }
 
 // isBackdropApp returns true if the app is of type "backdrop".
@@ -340,7 +340,7 @@ func backdropPostStartAction(app *DdevApp) error {
 	}
 
 	if _, err = app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteLocalSettingsPath, err)
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 	return nil
 }

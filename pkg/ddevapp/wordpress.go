@@ -178,7 +178,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 	config := NewWordpressConfig(app, absPath)
 
 	//  write ddev settings file
-	if err := writeWordpressDdevSettingsFile(config, app.SiteLocalSettingsPath); err != nil {
+	if err := writeWordpressDdevSettingsFile(config, app.SiteDdevSettingsFile); err != nil {
 		return "", err
 	}
 
@@ -198,7 +198,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 		} else {
 			// Settings file exists and is not ddev-managed, alert the user to the location
 			// of the generated ddev settings file
-			util.Failed(wordpressConfigInstructions, app.SiteLocalSettingsPath)
+			util.Failed(wordpressConfigInstructions, app.SiteDdevSettingsFile)
 		}
 	} else {
 		// If settings file does not exist, write basic settings file including it
@@ -207,7 +207,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
-	return app.SiteLocalSettingsPath, nil
+	return app.SiteDdevSettingsFile, nil
 }
 
 // writeWordpressSettingsFile dynamically produces valid wp-config.php file by combining a configuration
@@ -292,7 +292,7 @@ func setWordpressSiteSettingsPaths(app *DdevApp) {
 
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettings)
-	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettingsDdev)
+	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, config.SiteSettingsDdev)
 }
 
 // isWordpressApp returns true if the app of of type wordpress
@@ -393,7 +393,7 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 
 func wordpressPostStartAction(app *DdevApp) error {
 	if _, err := app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteLocalSettingsPath, err)
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 	return nil
 }
