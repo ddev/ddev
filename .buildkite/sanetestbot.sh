@@ -3,7 +3,7 @@
 # Check a testbot or test environment to make sure it's likely to be sane.
 # We should add to this script whenever a testbot fails and we can figure out why.
 
-MIN_DDEV_VERSION=v1.5
+MIN_DDEV_VERSION=v1.8
 
 set -o errexit
 set -o pipefail
@@ -41,8 +41,8 @@ if [ "$(go env GOOS)" = "windows"  -a "$(git config core.autocrlf)" != "false" ]
  exit 3
 fi
 
-if command -v ddev >/dev/null && [ "$(ddev version -j | jq -r .raw.cli)" \< "${MIN_DDEV_VERSION}" ] ; then
-  echo "ddev version in $(command -v ddev) is inadequate: $(ddev version -j | jq -r .raw.cli)"
+if command -v ddev >/dev/null && [ "$(ddev version -j | jq -r .raw.commit)" \< "${MIN_DDEV_VERSION}" ] ; then
+  echo "ddev version in $(command -v ddev) is inadequate: $(ddev version -j | jq -r .raw.commit)"
   exit 4
 fi
 
