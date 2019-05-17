@@ -14,8 +14,8 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDevList runs the binary with "ddev list" and checks the results
-func TestDevList(t *testing.T) {
+// TestCmdList runs the binary with "ddev list" and checks the results
+func TestCmdList(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Execute "ddev list" and harvest plain text output.
