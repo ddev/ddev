@@ -107,6 +107,10 @@ const (
 
 	// DdevDefaultRouterHTTPSPort is the default router HTTPS port
 	DdevDefaultRouterHTTPSPort = "443"
+	// DdevDefaultPHPMyAdminPort is the default router port for dba/PHPMyadmin
+	DdevDefaultPHPMyAdminPort = "8036"
+	// DdevDefaultMailhogPort is the default router port for Mailhog
+	DdevDefaultMailhogPort = "8025"
 )
 
 // IsValidProvider is a helper function to determine if a provider value is valid, returning

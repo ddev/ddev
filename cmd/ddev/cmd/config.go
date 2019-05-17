@@ -117,6 +117,12 @@ var (
 	// hostHTTPSPortArg sets host_https_port
 	hostHTTPSPortArg string
 
+	// mailhogPortArg is arg for mailhog port
+	mailhogPortArg string
+
+	// phpMyAdminPortArg is arg for phpmyadmin container port access
+	phpMyAdminPortArg string
+
 	// webImageExtraPackages and dbImageExtraPackages are comma-delimited
 	// lists of Debian packages to be added to related containers on build
 	webimageExtraPackages string
@@ -235,6 +241,8 @@ func init() {
 	ConfigCommand.Flags().StringVar(&hostHTTPSPortArg, "host-https-port", "", "The web container's localhost-bound https port")
 
 	ConfigCommand.Flags().StringVar(&hostDBPortArg, "host-db-port", "", "The db container's localhost-bound port")
+	ConfigCommand.Flags().StringVar(&phpMyAdminPortArg, "phpmyadmin-port", "", "Router port to be used for PHPMyAdmin (dba) container access")
+	ConfigCommand.Flags().StringVar(&mailhogPortArg, "mailhog-port", "", "Router port to be used for mailhog access")
 
 	// projectname flag exists for backwards compatability.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
@@ -415,6 +423,13 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	// This bool flag is false by default, so only use the value if the flag was explicity set.
 	if cmd.Flag("xdebug-enabled").Changed {
 		app.XdebugEnabled = xdebugEnabledArg
+	}
+
+	if cmd.Flag("phpmyadmin-port").Changed {
+		app.PHPMyAdminPort = phpMyAdminPortArg
+	}
+	if cmd.Flag("mailhog-port").Changed {
+		app.MailhogPort = mailhogPortArg
 	}
 
 	if additionalHostnamesArg != "" {

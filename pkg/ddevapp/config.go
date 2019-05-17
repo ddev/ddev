@@ -87,6 +87,8 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.NFSMountEnabled = NFSMountEnabledDefault
 	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
+	app.PHPMyAdminPort = DdevDefaultPHPMyAdminPort
+	app.MailhogPort = DdevDefaultMailhogPort
 	app.MariaDBVersion = version.MariaDBDefaultVersion
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
