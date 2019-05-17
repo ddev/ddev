@@ -106,6 +106,8 @@ Successfully started my-drupal7-site
 Your project can be reached at: http://my-drupal7-site.ddev.local
 ```
 
+Next step is to run the install script. This can be done by either going to your local site `/install.php` or running drush site-install, `drush si`. 
+
 Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
 
 ### Drupal 8 Quickstart
