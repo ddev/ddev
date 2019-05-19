@@ -169,6 +169,16 @@ func (app *DdevApp) WriteConfig() error {
 		appcopy.BgsyncImage = ""
 	}
 
+	if appcopy.MailhogPort == DdevDefaultMailhogPort {
+		appcopy.MailhogPort = ""
+	}
+	if appcopy.PHPMyAdminPort == DdevDefaultPHPMyAdminPort {
+		appcopy.PHPMyAdminPort = ""
+	}
+	if appcopy.Provider == ProviderDefault || appcopy.Provider == "" {
+		appcopy.Provider = ""
+	}
+
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
 	// accidentally get used for other projects.
 	err := app.CheckAndReserveHostPorts()
