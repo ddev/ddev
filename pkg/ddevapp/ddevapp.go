@@ -86,23 +86,23 @@ type DdevApp struct {
 	XdebugEnabled         bool                 `yaml:"xdebug_enabled"`
 	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string             `yaml:"additional_fqdns"`
-	MariaDBVersion       string               `yaml:"mariadb_version"`
-	WebcacheEnabled      bool                 `yaml:"webcache_enabled,omitempty"`
-	NFSMountEnabled      bool                 `yaml:"nfs_mount_enabled"`
-	ConfigPath           string               `yaml:"-"`
-	AppRoot              string               `yaml:"-"`
-	Platform             string               `yaml:"-"`
-	Provider             string               `yaml:"provider,omitempty"`
-	DataDir              string               `yaml:"-"`
-	SiteSettingsPath     string               `yaml:"-"`
-	SiteDdevSettingsFile string               `yaml:"-"`
-	providerInstance     Provider             `yaml:"-"`
-	Commands             map[string][]Command `yaml:"hooks,omitempty"`
-	UploadDir            string               `yaml:"upload_dir,omitempty"`
-	WorkingDir           map[string]string    `yaml:"working_dir,omitempty"`
-	OmitContainers       []string             `yaml:"omit_containers,omitempty,flow"`
-	HostDBPort           string               `yaml:"host_db_port,omitempty"`
-	HostWebserverPort    string               `yaml:"host_webserver_port,omitempty"`
+	MariaDBVersion        string               `yaml:"mariadb_version"`
+	WebcacheEnabled       bool                 `yaml:"webcache_enabled,omitempty"`
+	NFSMountEnabled       bool                 `yaml:"nfs_mount_enabled"`
+	ConfigPath            string               `yaml:"-"`
+	AppRoot               string               `yaml:"-"`
+	Platform              string               `yaml:"-"`
+	Provider              string               `yaml:"provider,omitempty"`
+	DataDir               string               `yaml:"-"`
+	SiteSettingsPath      string               `yaml:"-"`
+	SiteDdevSettingsFile  string               `yaml:"-"`
+	providerInstance      Provider             `yaml:"-"`
+	Commands              map[string][]Command `yaml:"hooks,omitempty"`
+	UploadDir             string               `yaml:"upload_dir,omitempty"`
+	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
+	OmitContainers        []string             `yaml:"omit_containers,omitempty,flow"`
+	HostDBPort            string               `yaml:"host_db_port,omitempty"`
+	HostWebserverPort     string               `yaml:"host_webserver_port,omitempty"`
 	HostHTTPSPort         string               `yaml:"host_https_port,omitempty"`
 	WebImageExtraPackages []string             `yaml:"webimage_extra_packages,omitempty,flow"`
 	DBImageExtraPackages  []string             `yaml:"dbimage_extra_packages,omitempty,flow"`
