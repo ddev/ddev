@@ -1,6 +1,9 @@
 package nodeps
 
-import "os"
+import (
+	"net"
+	"os"
+)
 
 // ArrayContainsString returns true if slice contains element
 func ArrayContainsString(slice []string, element string) bool {
@@ -28,4 +31,11 @@ func IsDockerToolbox() bool {
 		return true
 	}
 	return false
+}
+
+//IsInternetActive() checks to see if we have a viable
+// internet connection. It just tries a quick DNS query.
+func IsInternetActive() bool {
+	_, err := net.LookupCNAME("trythis.ddev.site")
+	return err == nil
 }

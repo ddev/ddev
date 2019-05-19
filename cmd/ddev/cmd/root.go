@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
@@ -70,7 +71,7 @@ var RootCmd = &cobra.Command{
 			util.Warning("Could not perform update check: %v", err)
 		}
 
-		if timeToCheckForUpdates {
+		if timeToCheckForUpdates && nodeps.IsInternetActive() {
 			// Recreate the updatefile with current time so we won't do this again soon.
 			err = updatecheck.ResetUpdateTime(updateFile)
 			if err != nil {
@@ -115,7 +116,7 @@ var RootCmd = &cobra.Command{
 			uString = uString + " " + fullCommand[i]
 		}
 
-		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" {
+		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" && nodeps.IsInternetActive() {
 			_ = raven.CaptureMessageAndWait(uString, map[string]string{"severity-level": "info", "report-type": "usage"})
 		}
 	},
