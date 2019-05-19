@@ -9,6 +9,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-shellwords"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -1404,7 +1405,7 @@ func (app *DdevApp) HostName() string {
 	return app.GetHostname()
 }
 
-// AddHostsEntries will add the site URL to the host's /etc/hosts.
+// AddHostsEntries will (optionally) add the site URL to the host's /etc/hosts.
 func (app *DdevApp) AddHostsEntries() error {
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
@@ -1415,6 +1416,21 @@ func (app *DdevApp) AddHostsEntries() error {
 	if err != nil {
 		util.Failed("could not open hostfile: %v", err)
 	}
+
+	// As a one-time operation we'll add ddev.hostsfile, which allows
+	// a wildcard to refer to it if we're using DNS name resolution.
+	if !hosts.Has(dockerIP, "ddev.dockerip.hostsfile") {
+		_, err = osexec.LookPath("sudo")
+		if os.Getenv("DRUD_NONINTERACTIVE") != "" || err != nil {
+			util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", dockerIP, "ddev.dockerip.hostsfile", "ddev.dockerip.hostsfile", dockerIP)
+			return nil
+		}
+		err = addHostEntry("ddev.dockerip.hostsfile", dockerIP)
+		if err != nil {
+			return err
+		}
+	}
+
 	ipPosition := hosts.GetIPPosition(dockerIP)
 	if ipPosition != -1 && runtime.GOOS == "windows" {
 		hostsLine := hosts.Lines[ipPosition]
@@ -1427,29 +1443,42 @@ func (app *DdevApp) AddHostsEntries() error {
 
 	for _, name := range app.GetHostnames() {
 
-		if hosts.Has(dockerIP, name) {
+		hostIPs, err := net.LookupHost(name)
+		if err != nil && len(hostIPs) > 0 && hostIPs[0] == dockerIP {
 			continue
 		}
 
-		_, err = osexec.LookPath("sudo")
-		if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
-			util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", dockerIP, name, name, dockerIP)
-			return nil
+		if hosts.Has(dockerIP, name) {
+			continue
 		}
-
-		ddevFullpath, err := os.Executable()
-		util.CheckErr(err)
-
-		output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt will require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
-
-		hostnameArgs := []string{ddevFullpath, "hostname", name, dockerIP}
-		command := strings.Join(hostnameArgs, " ")
-		util.Warning(fmt.Sprintf("    sudo %s", command))
-		output.UserOut.Println("Please enter your password if prompted.")
-		_, err = exec.RunCommandPipe("sudo", hostnameArgs)
+		err = addHostEntry(name, dockerIP)
 		if err != nil {
-			util.Warning("Failed to execute sudo command, you will need to manually execute '%s' with administrative privileges", command)
+			return err
 		}
+	}
+
+	return nil
+}
+
+func addHostEntry(name string, ip string) error {
+	_, err := osexec.LookPath("sudo")
+	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
+		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
+		return nil
+	}
+
+	ddevFullpath, err := os.Executable()
+	util.CheckErr(err)
+
+	output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt will require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
+
+	hostnameArgs := []string{ddevFullpath, "hostname", name, ip}
+	command := strings.Join(hostnameArgs, " ")
+	util.Warning(fmt.Sprintf("    sudo %s", command))
+	output.UserOut.Println("Please enter your password if prompted.")
+	_, err = exec.RunCommandPipe("sudo", hostnameArgs)
+	if err != nil {
+		util.Warning("Failed to execute sudo command, you will need to manually execute '%s' with administrative privileges", command)
 	}
 	return nil
 }

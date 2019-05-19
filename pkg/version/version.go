@@ -87,8 +87,10 @@ var DockerVersion = ""
 // DockerComposeVersion is filled with the version we find for docker-compose
 var DockerComposeVersion = ""
 
-// DDevTLD defines the tld to use for DDev site URLs.
-const DDevTLD = "ddev.local"
+// DDevTLD defines the top-level domain to use for DDev site URLs.
+var DDevTLD = "ddev.site"
+
+// TODO: Add configuration instead of just assigning
 
 // GetVersionInfo returns a map containing the version info defined above.
 func GetVersionInfo() map[string]string {
