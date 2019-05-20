@@ -106,7 +106,7 @@ Successfully started my-drupal7-site
 Your project can be reached at: http://my-drupal7-site.ddev.local
 ```
 
-If you want to run the Drupal install script, the next step is to hit "/install.php" on your project (like `http://my-drupal7-site.ddev.local/install.php`) or running drush site-install, `ddev exec drush site-install --yes`. 
+If you want to run the Drupal install script, the next step is to hit "/install.php" on your project (like `http://my-drupal7-site.ddev.local/install.php`) or run drush site-install, `ddev exec drush site-install --yes`. 
 
 Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
 
