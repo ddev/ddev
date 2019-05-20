@@ -100,6 +100,7 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.DBImage = version.GetDBImage(version.MariaDBDefaultVersion)
 	app.DBAImage = version.GetDBAImage()
 	app.BgsyncImage = version.GetBgsyncImage()
+	app.Provider = ProviderDefault
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
@@ -126,12 +127,10 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 
 	// Allow override with provider.
 	// Otherwise we accept whatever might have been in config file if there was anything.
-	if provider == "" && app.Provider != "" {
+	if provider == "" && app.Provider != ProviderDefault {
 		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
-	} else if provider == ProviderPantheon || provider == ProviderDrudS3 || provider == ProviderDefault {
+	} else if provider == ProviderPantheon || provider == ProviderDrudS3 {
 		app.Provider = provider // Use the provider passed-in. Function argument wins.
-	} else if provider == "" && app.Provider == "" {
-		app.Provider = ProviderDefault // Nothing passed in, nothing configured. Set c.Provider to default
 	} else {
 		return app, fmt.Errorf("provider '%s' is not implemented", provider)
 	}
