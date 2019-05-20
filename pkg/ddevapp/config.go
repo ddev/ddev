@@ -100,7 +100,6 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.DBImage = version.GetDBImage(version.MariaDBDefaultVersion)
 	app.DBAImage = version.GetDBAImage()
 	app.BgsyncImage = version.GetBgsyncImage()
-	app.Provider = ProviderDefault
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
@@ -127,10 +126,12 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 
 	// Allow override with provider.
 	// Otherwise we accept whatever might have been in config file if there was anything.
-	if provider == "" && app.Provider != ProviderDefault {
+	if provider == "" && app.Provider != "" {
 		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
-	} else if provider == ProviderPantheon || provider == ProviderDrudS3 {
+	} else if provider == ProviderPantheon || provider == ProviderDrudS3 || provider == ProviderDefault {
 		app.Provider = provider // Use the provider passed-in. Function argument wins.
+	} else if provider == "" && app.Provider == "" {
+		app.Provider = ProviderDefault // Nothing passed in, nothing configured. Set c.Provider to default
 	} else {
 		return app, fmt.Errorf("provider '%s' is not implemented", provider)
 	}
@@ -173,9 +174,6 @@ func (app *DdevApp) WriteConfig() error {
 	}
 	if appcopy.PHPMyAdminPort == DdevDefaultPHPMyAdminPort {
 		appcopy.PHPMyAdminPort = ""
-	}
-	if appcopy.Provider == ProviderDefault || appcopy.Provider == "" {
-		appcopy.Provider = ""
 	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
