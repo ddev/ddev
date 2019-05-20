@@ -74,10 +74,10 @@ func init() {
 			settingsCreator: createDrupal8SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal8Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal8App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: drupal8PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
 		AppTypeWordPress: {
-			settingsCreator: createWordpressSettingsFile, uploadDir: getWordpressUploadDir, hookDefaultComments: getWordpressHooks, apptypeSettingsPaths: setWordpressSiteSettingsPaths, appTypeDetect: isWordpressApp, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil, importFilesAction: wordpressImportFilesAction,
+			settingsCreator: createWordpressSettingsFile, uploadDir: getWordpressUploadDir, hookDefaultComments: getWordpressHooks, apptypeSettingsPaths: setWordpressSiteSettingsPaths, appTypeDetect: isWordpressApp, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: wordpressPostStartAction, importFilesAction: wordpressImportFilesAction,
 		},
 		AppTypeTYPO3: {
-			settingsCreator: createTypo3SettingsFile, uploadDir: getTypo3UploadDir, hookDefaultComments: getTypo3Hooks, apptypeSettingsPaths: setTypo3SiteSettingsPaths, appTypeDetect: isTypo3App, postImportDBAction: nil, configOverrideAction: typo3ConfigOverrideAction, postConfigAction: nil, postStartAction: nil, importFilesAction: typo3ImportFilesAction,
+			settingsCreator: createTypo3SettingsFile, uploadDir: getTypo3UploadDir, hookDefaultComments: getTypo3Hooks, apptypeSettingsPaths: setTypo3SiteSettingsPaths, appTypeDetect: isTypo3App, postImportDBAction: nil, configOverrideAction: typo3ConfigOverrideAction, postConfigAction: nil, postStartAction: typo3PostStartAction, importFilesAction: typo3ImportFilesAction,
 		},
 		AppTypeBackdrop: {
 			settingsCreator: createBackdropSettingsFile, uploadDir: getBackdropUploadDir, hookDefaultComments: getBackdropHooks, apptypeSettingsPaths: setBackdropSiteSettingsPaths, appTypeDetect: isBackdropApp, postImportDBAction: backdropPostImportDBAction, configOverrideAction: nil, postConfigAction: nil, postStartAction: backdropPostStartAction, importFilesAction: backdropImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
@@ -93,7 +93,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	// If neither settings file options are set, then don't continue. Return
 	// a nil error because this should not halt execution if the apptype
 	// does not have a settings definition.
-	if app.SiteLocalSettingsPath == "" && app.SiteSettingsPath == "" {
+	if app.SiteDdevSettingsFile == "" && app.SiteSettingsPath == "" {
 		util.Warning("Project type has no settings paths configured, so not creating settings file.")
 		return "", nil
 	}
@@ -101,7 +101,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	// Drupal and WordPress love to change settings files to be unwriteable.
 	// Chmod them to something we can work with in the event that they already
 	// exist.
-	chmodTargets := []string{filepath.Dir(app.SiteSettingsPath), app.SiteLocalSettingsPath}
+	chmodTargets := []string{filepath.Dir(app.SiteSettingsPath), app.SiteDdevSettingsFile}
 	for _, fp := range chmodTargets {
 		fileInfo, err := os.Stat(fp)
 		if err != nil {
@@ -132,8 +132,8 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		if err != nil {
 			util.Warning("Unable to create settings file: %v", err)
 		}
-		if err := CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteLocalSettingsPath), "ddev_drush_settings.php"); err != nil {
-			util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteLocalSettingsPath), err)
+		if err := CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "ddev_drush_settings.php"); err != nil {
+			util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
 		}
 
 		return settingsPath, nil

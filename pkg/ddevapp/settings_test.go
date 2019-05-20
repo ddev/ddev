@@ -129,7 +129,7 @@ func TestWriteDrushConfig(t *testing.T) {
 			assert.NoError(err)
 			assert.True(d6StringFound)
 		default:
-			assert.False(fileutil.FileExists(drushFilePath))
+			assert.False(fileutil.FileExists(drushFilePath), "Drush settings file (%s) should not exist but it does (app.Type=%s)", drushFilePath, app.Type)
 		}
 
 		runTime()

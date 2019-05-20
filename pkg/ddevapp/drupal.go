@@ -21,39 +21,39 @@ import (
 
 // DrupalSettings encapsulates all the configurations for a Drupal site.
 type DrupalSettings struct {
-	DeployName        string
-	DeployURL         string
-	DatabaseName      string
-	DatabaseUsername  string
-	DatabasePassword  string
-	DatabaseHost      string
-	DatabaseDriver    string
-	DatabasePort      string
-	DatabasePrefix    string
-	HashSalt          string
-	Signature         string
-	SitePath          string
-	SiteSettings      string
-	SiteSettingsLocal string
-	SyncDir           string
+	DeployName       string
+	DeployURL        string
+	DatabaseName     string
+	DatabaseUsername string
+	DatabasePassword string
+	DatabaseHost     string
+	DatabaseDriver   string
+	DatabasePort     string
+	DatabasePrefix   string
+	HashSalt         string
+	Signature        string
+	SitePath         string
+	SiteSettings     string
+	SiteSettingsDdev string
+	SyncDir          string
 }
 
 // NewDrupalSettings produces a DrupalSettings object with default.
 func NewDrupalSettings() *DrupalSettings {
 	return &DrupalSettings{
-		DatabaseName:      "db",
-		DatabaseUsername:  "db",
-		DatabasePassword:  "db",
-		DatabaseHost:      "db",
-		DatabaseDriver:    "mysql",
-		DatabasePort:      appports.GetPort("db"),
-		DatabasePrefix:    "",
-		HashSalt:          util.RandString(64),
-		Signature:         DdevFileSignature,
-		SitePath:          path.Join("sites", "default"),
-		SiteSettings:      "settings.php",
-		SiteSettingsLocal: "settings.ddev.php",
-		SyncDir:           path.Join("files", "sync"),
+		DatabaseName:     "db",
+		DatabaseUsername: "db",
+		DatabasePassword: "db",
+		DatabaseHost:     "db",
+		DatabaseDriver:   "mysql",
+		DatabasePort:     appports.GetPort("db"),
+		DatabasePrefix:   "",
+		HashSalt:         util.RandString(64),
+		Signature:        DdevFileSignature,
+		SitePath:         path.Join("sites", "default"),
+		SiteSettings:     "settings.php",
+		SiteSettingsDdev: "settings.ddev.php",
+		SyncDir:          path.Join("files", "sync"),
 	}
 }
 
@@ -78,8 +78,8 @@ func NewDrushConfig(app *DdevApp) *DrushConfig {
 const drupal8SettingsTemplate = `<?php
 {{ $config := . }}
 // {{ $config.Signature }}: Automatically generated Drupal settings file.
-if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}')) {
-  include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}';
+if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}')) {
+  include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}';
 }
 `
 
@@ -87,8 +87,8 @@ if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}
 // a Drupal 8 app's settings.php in the event that one exists.
 const drupal8SettingsAppendTemplate = `{{ $config := . }}
 // Automatically generated include for settings managed by ddev.
-if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}')) {
-  include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}';
+if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}')) {
+  include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}';
 }
 `
 
@@ -97,7 +97,7 @@ if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsLocal }}
 const drupal7SettingsTemplate = `<?php
 {{ $config := . }}
 // {{ $config.Signature }}: Automatically generated Drupal settings file.
-$ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsLocal }}';
+$ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsDdev }}';
 if (is_readable($ddev_settings)) {
   require $ddev_settings;
 }
@@ -107,7 +107,7 @@ if (is_readable($ddev_settings)) {
 // a Drupal 7 app's settings.php in the event that one exists.
 const drupal7SettingsAppendTemplate = `{{ $config := . }}
 // Automatically generated include for settings managed by ddev.
-$ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsLocal }}';
+$ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsDdev }}';
 if (is_readable($ddev_settings)) {
   require $ddev_settings;
 }
@@ -290,12 +290,12 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, settin
 	}
 
 	if included {
-		output.UserOut.Printf("Existing %s file includes %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal)
+		output.UserOut.Printf("Existing %s file includes %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 	} else {
-		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsLocal)
+		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 
 		if err := appendIncludeToDrupalSettingsFile(drupalConfig, app.SiteSettingsPath, appendTemplate); err != nil {
-			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsLocal, drupalConfig.SiteSettings, err)
+			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsDdev, drupalConfig.SiteSettings, err)
 		}
 	}
 
@@ -346,11 +346,11 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 		return "", err
 	}
 
-	if err := writeDrupal7DdevSettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("`failed to write` Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
+	if err := writeDrupal7DdevSettingsFile(drupalConfig, app.SiteDdevSettingsFile); err != nil {
+		return "", fmt.Errorf("`failed to write` Drupal settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
-	return app.SiteLocalSettingsPath, nil
+	return app.SiteDdevSettingsFile, nil
 }
 
 // createDrupal8SettingsFile manages creation and modification of settings.php and settings.ddev.php.
@@ -365,11 +365,11 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 		return "", err
 	}
 
-	if err := writeDrupal8DdevSettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
+	if err := writeDrupal8DdevSettingsFile(drupalConfig, app.SiteDdevSettingsFile); err != nil {
+		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
-	return app.SiteLocalSettingsPath, nil
+	return app.SiteDdevSettingsFile, nil
 }
 
 // createDrupal6SettingsFile manages creation and modification of settings.php and settings.ddev.php.
@@ -386,11 +386,11 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 		return "", err
 	}
 
-	if err := writeDrupal6DdevSettingsFile(drupalConfig, app.SiteLocalSettingsPath); err != nil {
-		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteLocalSettingsPath, err)
+	if err := writeDrupal6DdevSettingsFile(drupalConfig, app.SiteDdevSettingsFile); err != nil {
+		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
-	return app.SiteLocalSettingsPath, nil
+	return app.SiteDdevSettingsFile, nil
 }
 
 // writeDrupal8DdevSettingsFile dynamically produces valid settings.ddev.php file by combining a configuration
@@ -598,7 +598,7 @@ func setDrupalSiteSettingsPaths(app *DdevApp) {
 	drupalConfig := NewDrupalSettings()
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettings)
-	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettingsLocal)
+	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettingsDdev)
 }
 
 // isDrupal7App returns true if the app is of type drupal7
@@ -650,6 +650,9 @@ func drupal8PostStartAction(app *DdevApp) error {
 		util.Warning("Failed to WriteDrushConfig: %v", err)
 	}
 
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
+	}
 	return nil
 }
 
@@ -667,6 +670,9 @@ func drupal7PostStartAction(app *DdevApp) error {
 		util.Warning("Failed to WriteDrushConfig: %v", err)
 	}
 
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
+	}
 	return nil
 }
 
@@ -683,7 +689,9 @@ func drupal6PostStartAction(app *DdevApp) error {
 	if err != nil {
 		util.Warning("Failed to WriteDrushConfig: %v", err)
 	}
-
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
+	}
 	return nil
 }
 
@@ -697,7 +705,7 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 	makeWritable := []string{
 		settingsDir,
 		app.SiteSettingsPath,
-		app.SiteLocalSettingsPath,
+		app.SiteDdevSettingsFile,
 		path.Join(settingsDir, "services.yml"),
 	}
 
@@ -741,7 +749,7 @@ func createDrupal8SyncDir(app *DdevApp) error {
 // settingsHasInclude determines if the settings.php or equivalent includes settings.ddev.php or equivalent.
 // This is done by looking for the ddev settings file (settings.ddev.php) in settings.php.
 func settingsHasInclude(drupalConfig *DrupalSettings, siteSettingsPath string) (bool, error) {
-	included, err := fileutil.FgrepStringInFile(siteSettingsPath, drupalConfig.SiteSettingsLocal)
+	included, err := fileutil.FgrepStringInFile(siteSettingsPath, drupalConfig.SiteSettingsDdev)
 	if err != nil {
 		return false, err
 	}

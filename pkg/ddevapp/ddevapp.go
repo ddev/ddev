@@ -95,7 +95,7 @@ type DdevApp struct {
 	Provider              string               `yaml:"provider,omitempty"`
 	DataDir               string               `yaml:"-"`
 	SiteSettingsPath      string               `yaml:"-"`
-	SiteLocalSettingsPath string               `yaml:"-"`
+	SiteDdevSettingsFile  string               `yaml:"-"`
 	providerInstance      Provider             `yaml:"-"`
 	Commands              map[string][]Command `yaml:"hooks,omitempty"`
 	UploadDir             string               `yaml:"upload_dir,omitempty"`
@@ -1133,9 +1133,9 @@ func (app *DdevApp) StartAndWaitForSync(extraSleep int) error {
 
 // DetermineSettingsPathLocation figures out the path to the settings file for
 // an app based on the contents/existence of app.SiteSettingsPath and
-// app.SiteLocalSettingsPath.
+// app.SiteDdevSettingsFile.
 func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
-	possibleLocations := []string{app.SiteSettingsPath, app.SiteLocalSettingsPath}
+	possibleLocations := []string{app.SiteSettingsPath, app.SiteDdevSettingsFile}
 	for _, loc := range possibleLocations {
 		// If the file doesn't exist, it's safe to use
 		if !fileutil.FileExists(loc) {

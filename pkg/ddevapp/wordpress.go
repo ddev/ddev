@@ -15,52 +15,52 @@ import (
 
 // WordpressConfig encapsulates all the configurations for a WordPress site.
 type WordpressConfig struct {
-	WPGeneric         bool
-	DeployName        string
-	DeployURL         string
-	DatabaseName      string
-	DatabaseUsername  string
-	DatabasePassword  string
-	DatabaseHost      string
-	AuthKey           string
-	SecureAuthKey     string
-	LoggedInKey       string
-	NonceKey          string
-	AuthSalt          string
-	SecureAuthSalt    string
-	LoggedInSalt      string
-	NonceSalt         string
-	Docroot           string
-	TablePrefix       string
-	Signature         string
-	SiteSettings      string
-	SiteSettingsLocal string
-	AbsPath           string
+	WPGeneric        bool
+	DeployName       string
+	DeployURL        string
+	DatabaseName     string
+	DatabaseUsername string
+	DatabasePassword string
+	DatabaseHost     string
+	AuthKey          string
+	SecureAuthKey    string
+	LoggedInKey      string
+	NonceKey         string
+	AuthSalt         string
+	SecureAuthSalt   string
+	LoggedInSalt     string
+	NonceSalt        string
+	Docroot          string
+	TablePrefix      string
+	Signature        string
+	SiteSettings     string
+	SiteSettingsDdev string
+	AbsPath          string
 }
 
 // NewWordpressConfig produces a WordpressConfig object with defaults.
 func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 	return &WordpressConfig{
-		WPGeneric:         false,
-		DatabaseName:      "db",
-		DatabaseUsername:  "db",
-		DatabasePassword:  "db",
-		DatabaseHost:      "db",
-		DeployURL:         app.GetHTTPURL(),
-		Docroot:           "/var/www/html/docroot",
-		TablePrefix:       "wp_",
-		AuthKey:           util.RandString(64),
-		AuthSalt:          util.RandString(64),
-		LoggedInKey:       util.RandString(64),
-		LoggedInSalt:      util.RandString(64),
-		NonceKey:          util.RandString(64),
-		NonceSalt:         util.RandString(64),
-		SecureAuthKey:     util.RandString(64),
-		SecureAuthSalt:    util.RandString(64),
-		Signature:         DdevFileSignature,
-		SiteSettings:      "wp-config.php",
-		SiteSettingsLocal: "wp-config-ddev.php",
-		AbsPath:           absPath,
+		WPGeneric:        false,
+		DatabaseName:     "db",
+		DatabaseUsername: "db",
+		DatabasePassword: "db",
+		DatabaseHost:     "db",
+		DeployURL:        app.GetHTTPURL(),
+		Docroot:          "/var/www/html/docroot",
+		TablePrefix:      "wp_",
+		AuthKey:          util.RandString(64),
+		AuthSalt:         util.RandString(64),
+		LoggedInKey:      util.RandString(64),
+		LoggedInSalt:     util.RandString(64),
+		NonceKey:         util.RandString(64),
+		NonceSalt:        util.RandString(64),
+		SecureAuthKey:    util.RandString(64),
+		SecureAuthSalt:   util.RandString(64),
+		Signature:        DdevFileSignature,
+		SiteSettings:     "wp-config.php",
+		SiteSettingsDdev: "wp-config-ddev.php",
+		AbsPath:          absPath,
 	}
 }
 
@@ -178,7 +178,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 	config := NewWordpressConfig(app, absPath)
 
 	//  write ddev settings file
-	if err := writeWordpressDdevSettingsFile(config, app.SiteLocalSettingsPath); err != nil {
+	if err := writeWordpressDdevSettingsFile(config, app.SiteDdevSettingsFile); err != nil {
 		return "", err
 	}
 
@@ -198,7 +198,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 		} else {
 			// Settings file exists and is not ddev-managed, alert the user to the location
 			// of the generated ddev settings file
-			util.Failed(wordpressConfigInstructions, app.SiteLocalSettingsPath)
+			util.Failed(wordpressConfigInstructions, app.SiteDdevSettingsFile)
 		}
 	} else {
 		// If settings file does not exist, write basic settings file including it
@@ -207,7 +207,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
-	return app.SiteLocalSettingsPath, nil
+	return app.SiteDdevSettingsFile, nil
 }
 
 // writeWordpressSettingsFile dynamically produces valid wp-config.php file by combining a configuration
@@ -292,7 +292,7 @@ func setWordpressSiteSettingsPaths(app *DdevApp) {
 
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettings)
-	app.SiteLocalSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettingsLocal)
+	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, config.SiteSettingsDdev)
 }
 
 // isWordpressApp returns true if the app of of type wordpress
@@ -387,4 +387,13 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 	absPath := filepath.Base(filepath.Dir(subDirMatches[0]))
 
 	return absPath, nil
+}
+
+// wordpressPostStartAction handles post-start actions
+
+func wordpressPostStartAction(app *DdevApp) error {
+	if _, err := app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
+	}
+	return nil
 }
