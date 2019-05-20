@@ -21,12 +21,12 @@ func TestCmdList(t *testing.T) {
 	// Execute "ddev list" and harvest plain text output.
 	args := []string{"list"}
 	out, err := exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
+	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
 
 	// Execute "ddev list -j" and harvest the json output
 	args = []string{"list", "-j"}
 	jsonOut, err := exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
+	assert.NoError(err, "error running ddev list -j: %v, output=%s", jsonOut)
 
 	logItems, err := unmarshalJSONLogs(jsonOut)
 	assert.NoError(err)

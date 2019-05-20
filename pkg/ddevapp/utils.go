@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -24,7 +25,8 @@ import (
 	gohomedir "github.com/mitchellh/go-homedir"
 )
 
-// GetActiveProjects returns an array of ddev applications.
+// GetActiveProjects returns an array of ddev projects
+// that are currently live in docker.
 func GetActiveProjects() []*DdevApp {
 	apps := make([]*DdevApp, 0)
 	labels := map[string]string{
@@ -97,7 +99,10 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 		status = status + "\n" + syncStatus
 	}
 
-	urls := row["httpsurl"].(string) + "\n" + row["httpurl"].(string)
+	urls := ""
+	if row["status"] == SiteRunning {
+		urls = row["httpsurl"].(string) + "\n" + row["httpurl"].(string)
+	}
 
 	table.AddRow(
 		row["name"],
@@ -312,26 +317,28 @@ func WaitForSync(app *DdevApp, seconds int) {
 // CheckForMissingProjectFiles returns an error if the project's configuration or project root cannot be found
 func CheckForMissingProjectFiles(project *DdevApp) error {
 	if strings.Contains(project.SiteStatus(), SiteConfigMissing) || strings.Contains(project.SiteStatus(), SiteDirMissing) {
-		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev stop %s'", project.GetAppRoot(), project.GetName())
+		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev stop --remove-data --omit-snaphot %s'", project.GetAppRoot(), project.GetName())
 	}
 
 	return nil
 }
 
 // GetProjects returns projects that are listed
-// in globalconfig projectlist but don't show up from docker.
+// in globalconfig projectlist.
 func GetProjects() ([]*DdevApp, error) {
 	apps := []*DdevApp{}
 	// TODO: This should use a get method instead of directly accessing
-	for _, info := range globalconfig.DdevGlobalConfig.ProjectList {
+	for name, info := range globalconfig.DdevGlobalConfig.ProjectList {
 		// Skip if AppRoot hasn't been placed in globalconfig
 		if info.AppRoot != "" {
 			activeApp, err := NewApp(info.AppRoot, true, ProviderDefault)
 			if err != nil {
-				return nil, err
+				activeApp.Name = name
 			}
 			apps = append(apps, activeApp)
 		}
 	}
+	sort.Slice(apps, func(i, j int) bool { return apps[i].Name < apps[j].Name })
+
 	return apps, nil
 }

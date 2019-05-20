@@ -49,7 +49,7 @@ func TestCmdStop(t *testing.T) {
 	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
 	out, err = exec.RunCommand(DdevBin, []string{"list"})
 	assert.NoError(err)
-	assert.Contains(out, "No ddev projects were found")
+	assert.Contains(out, "There are no active ddev projects")
 	containers, err := dockerutil.GetDockerContainers(true)
 	assert.NoError(err)
 	// Just the ddev-ssh-agent should remain running (1 container)

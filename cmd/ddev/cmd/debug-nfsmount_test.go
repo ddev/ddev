@@ -32,7 +32,7 @@ func TestDebugNFSMount(t *testing.T) {
 
 	// Running config creates a line in global config
 	//nolint: errcheck
-	defer exec.RunCommand("remove", []string{"--remove-data"})
+	defer exec.RunCommand(DdevBin, []string{"stop", "-RO"})
 
 	// Test basic `ddev debug nfsmount`
 	args = []string{"debug", "nfsmount"}

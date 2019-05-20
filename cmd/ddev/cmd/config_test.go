@@ -169,8 +169,8 @@ func TestConfigSetValues(t *testing.T) {
 		"--mailhog-port", mailhogPort,
 	}
 
-	_, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
+	out, err := exec.RunCommand(DdevBin, args)
+	assert.NoError(err, "error running ddev %v: %v, output=%s", args, err, out)
 
 	configFile := filepath.Join(tmpdir, ".ddev", "config.yaml")
 	configContents, err := ioutil.ReadFile(configFile)

@@ -56,7 +56,7 @@ const SiteStarting = "starting"
 const SiteStopped = "stopped"
 
 // SiteDirMissing defines the string used to denote when a site is missing its application directory.
-const SiteDirMissing = "app directory missing"
+const SiteDirMissing = "project directory missing"
 
 // SiteConfigMissing defines the string used to denote when a site is missing its .ddev/config.yml file.
 const SiteConfigMissing = ".ddev/config.yaml missing"
