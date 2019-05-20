@@ -35,7 +35,8 @@ func IsDockerToolbox() bool {
 
 //IsInternetActive() checks to see if we have a viable
 // internet connection. It just tries a quick DNS query.
+// This requires that the named record be query-able.
 func IsInternetActive() bool {
-	_, err := net.LookupCNAME("trythis.ddev.site")
+	_, err := net.LookupHost("i-exist.ddev.site")
 	return err == nil
 }
