@@ -11,6 +11,10 @@ set -o nounset
 DDEV_WINDOWS_UID=1000
 DDEV_WINDOWS_GID=1000
 
+mkdir -p ~/.ddev
+docker run --rm -t -v /$HOME/.ddev:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 101)
+
+
 status=uninstalled
 if nssm status nfsd 2>/dev/null ; then
     status=$(nssm status nfsd)
@@ -28,7 +32,7 @@ fi
 
 if ! command -v winnfsd.exe >/dev/null; then
     echo "winnfsd.exe does not seem to be installed or is not in the PATH"
-    exit 101
+    exit 102
 fi
 winnfsd=$(where winnfsd.exe)
 

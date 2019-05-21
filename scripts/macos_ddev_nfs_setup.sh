@@ -18,7 +18,8 @@ if [[ $EUID -eq 0 ]]; then
   exit 102
 fi
 
-docker run --rm -t -v /$HOME:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 103)
+mkdir -p ~/.ddev
+docker run --rm -t -v /$HOME/.ddev:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 103)
 
 echo "
 +--------------------------------------+
