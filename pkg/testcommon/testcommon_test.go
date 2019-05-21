@@ -107,6 +107,9 @@ func TestValidTestSite(t *testing.T) {
 
 	cleanup := site.Chdir()
 	defer cleanup()
+	//nolint: errcheck
+	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", site.Name})
+
 	currentDir, err := os.Getwd()
 	assert.NoError(err)
 
