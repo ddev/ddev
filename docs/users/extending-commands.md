@@ -128,11 +128,12 @@ hooks:
       - exec: composer install -d /var/www/html/
 ```
 
-## Adding Additional PHP Modules Example
+## Adding Additional Debian Packages (PHP Modules) Example
 
 ```
-hooks:
-    post-start:
-      # Install php modules and then tell php-fpm to reload
-      - exec: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y php7.1-ldap php7.1-tidy && killall -HUP php-fpm
+webimage_extra_packages: ["php7.2-ldap", "php7.2-tidy"]
+dbimage_extra_packages: ["vim"]
 ```
+
+```
+dbimage_extra_packages```
