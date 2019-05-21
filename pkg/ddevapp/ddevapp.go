@@ -727,7 +727,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.AddHostsEntries()
+	err = app.AddHostsEntriesIfNeeded()
 	if err != nil {
 		return err
 	}
@@ -1405,8 +1405,8 @@ func (app *DdevApp) HostName() string {
 	return app.GetHostname()
 }
 
-// AddHostsEntries will (optionally) add the site URL to the host's /etc/hosts.
-func (app *DdevApp) AddHostsEntries() error {
+// AddHostsEntriesIfNeeded will (optionally) add the site URL to the host's /etc/hosts.
+func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
 		return fmt.Errorf("could not get Docker IP: %v", err)
@@ -1415,20 +1415,6 @@ func (app *DdevApp) AddHostsEntries() error {
 	hosts, err := ddevhosts.New()
 	if err != nil {
 		util.Failed("could not open hostfile: %v", err)
-	}
-
-	// As a one-time operation we'll add ddev.hostsfile, which allows
-	// a wildcard to refer to it if we're using DNS name resolution.
-	if !hosts.Has(dockerIP, "ddev.dockerip.hostsfile") {
-		_, err = osexec.LookPath("sudo")
-		if os.Getenv("DRUD_NONINTERACTIVE") != "" || err != nil {
-			util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", dockerIP, "ddev.dockerip.hostsfile", "ddev.dockerip.hostsfile", dockerIP)
-			return nil
-		}
-		err = addHostEntry("ddev.dockerip.hostsfile", dockerIP)
-		if err != nil {
-			return err
-		}
 	}
 
 	ipPosition := hosts.GetIPPosition(dockerIP)
@@ -1442,12 +1428,16 @@ func (app *DdevApp) AddHostsEntries() error {
 	}
 
 	for _, name := range app.GetHostnames() {
-
 		hostIPs, err := net.LookupHost(name)
-		if err != nil && len(hostIPs) > 0 && hostIPs[0] == dockerIP {
+		// If we had successful lookup and dockerIP matches
+		// (which won't happen on Docker Toolbox) then don't bother
+		// with adding to hosts file.
+		if err == nil && len(hostIPs) > 0 && hostIPs[0] == dockerIP {
 			continue
 		}
 
+		// We likely won't hit the hosts.Has() as true because
+		// we already did a lookup. But check anyway.
 		if hosts.Has(dockerIP, name) {
 			continue
 		}
