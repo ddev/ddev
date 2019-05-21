@@ -21,6 +21,8 @@ var omitSnapshot bool
 // Stop the ddev-ssh-agent
 var stopSSHAgent bool
 
+var unlist bool
+
 // DdevStopCmd represents the remove command
 var DdevStopCmd = &cobra.Command{
 	Use:     "stop [projectname ...]",
@@ -59,6 +61,9 @@ To snapshot the database on stop, use "ddev stop --snapshot"; A snapshot is auto
 			if err := project.Stop(removeData, doSnapshot); err != nil {
 				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
 			}
+			if unlist {
+				project.Unlist()
+			}
 
 			util.Success("Project %s has been stopped.", project.GetName())
 		}
@@ -78,6 +83,7 @@ func init() {
 
 	DdevStopCmd.Flags().BoolVarP(&stopAll, "all", "a", false, "Stop and remove all running or container-stopped projects")
 	DdevStopCmd.Flags().BoolVarP(&stopSSHAgent, "stop-ssh-agent", "", false, "Stop the ddev-ssh-agent container")
+	DdevStopCmd.Flags().BoolVarP(&unlist, "unlist", "U", false, "Remove the project from global project list, it won't show in ddev list until started again")
 
 	RootCmd.AddCommand(DdevStopCmd)
 }

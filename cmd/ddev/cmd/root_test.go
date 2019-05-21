@@ -58,7 +58,7 @@ func TestMain(m *testing.M) {
 
 	// Attempt to stop/remove all running containers before starting a test.
 	// If no projects are running, this will exit silently and without error.
-	if _, err = exec.RunCommand(DdevBin, []string{"stop", "--all", "--stop-ssh-agent", "--remove-data", "--omit-snapshot"}); err != nil {
+	if _, err = exec.RunCommand(DdevBin, []string{"stop", "--all", "--stop-ssh-agent", "--unlist"}); err != nil {
 		log.Warnf("Failed to stop/remove all running projects: %v", err)
 	}
 

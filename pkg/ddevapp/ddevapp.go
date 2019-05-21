@@ -1301,6 +1301,12 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	return err
 }
 
+// Unlist just removes from global projectinfo so it won't
+// show in ddev list and related until restarted.
+func (app *DdevApp) Unlist() {
+	_ = globalconfig.RemoveProjectInfo(app.Name)
+}
+
 // RemoveGlobalProjectInfo() deletes the project from ProjectList
 func (app *DdevApp) RemoveGlobalProjectInfo() {
 	_ = globalconfig.RemoveProjectInfo(app.Name)
