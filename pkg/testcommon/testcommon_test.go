@@ -83,6 +83,10 @@ func TestValidTestSite(t *testing.T) {
 	startingDir, err := os.Getwd()
 	assert.NoError(err, "Could not get current directory.")
 
+	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
+		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	}
+
 	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
 	//not need to be updated over time.
