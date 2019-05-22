@@ -130,6 +130,7 @@ func (site *TestSite) Cleanup() {
 	// CleanupDir checks its own errors.
 	CleanupDir(site.Dir)
 
+	_ = globalconfig.RemoveProjectInfo(site.Name)
 	siteData := filepath.Join(globalconfig.GetGlobalDdevDir(), site.Name)
 	if fileutil.FileExists(siteData) {
 		CleanupDir(siteData)

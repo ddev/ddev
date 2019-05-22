@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -97,6 +98,8 @@ func TestValidTestSite(t *testing.T) {
 
 	//nolint: errcheck
 	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
+	//nolint: errcheck
+	defer globalconfig.RemoveProjectInfo(site.Name)
 	err = site.Prepare()
 	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 
@@ -151,8 +154,11 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	site := TestSites[0]
 	site.Name = "TestGetLocalHTTPResponse"
 
+	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
 	//nolint: errcheck
 	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
+	//nolint: errcheck
+	defer globalconfig.RemoveProjectInfo(site.Name)
 
 	err = site.Prepare()
 	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)

@@ -62,7 +62,7 @@ To snapshot the database on stop, use "ddev stop --snapshot"; A snapshot is auto
 				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
 			}
 			if unlist {
-				project.Unlist()
+				project.RemoveGlobalProjectInfo()
 			}
 
 			util.Success("Project %s has been stopped.", project.GetName())
