@@ -14,7 +14,7 @@ import (
 // execDirArg allows a configurable container execution directory
 var execDirArg string
 
-// DdevExecCmd allows users to execute arbitrary bash commands within a container.
+// DdevExecCmd allows users to execute arbitrary sh commands within a container.
 var DdevExecCmd = &cobra.Command{
 	Use:     "exec <command>",
 	Aliases: []string{"."},
