@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/nodeps"
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -32,9 +33,15 @@ var DdevSSHCmd = &cobra.Command{
 
 		app.DockerEnv()
 
+		// Use bash for our containers, sh for 3rd-party containers
+		// that may not have bash.
+		shell := "bash"
+		if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, serviceType) {
+			shell = "sh"
+		}
 		err = app.ExecWithTty(&ddevapp.ExecOpts{
 			Service: serviceType,
-			Cmd:     "sh",
+			Cmd:     shell,
 			Dir:     sshDirArg,
 		})
 
