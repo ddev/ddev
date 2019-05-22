@@ -325,17 +325,21 @@ func CheckForMissingProjectFiles(project *DdevApp) error {
 
 // GetProjects returns projects that are listed
 // in globalconfig projectlist.
-func GetProjects() ([]*DdevApp, error) {
+// if activeOnly is true, only show projects that aren't stopped
+// (or broken, missing config, missing files)
+func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 	apps := []*DdevApp{}
 	// TODO: This should use a get method instead of directly accessing
 	for name, info := range globalconfig.DdevGlobalConfig.ProjectList {
 		// Skip if AppRoot hasn't been placed in globalconfig
 		if info.AppRoot != "" {
-			activeApp, err := NewApp(info.AppRoot, true, ProviderDefault)
+			app, err := NewApp(info.AppRoot, true, ProviderDefault)
 			if err != nil {
-				activeApp.Name = name
+				app.Name = name
 			}
-			apps = append(apps, activeApp)
+			if !activeOnly || (app.SiteStatus() != SiteStopped && app.SiteStatus() != SiteConfigMissing && app.SiteStatus() != SiteDirMissing) {
+				apps = append(apps, app)
+			}
 		}
 	}
 	sort.Slice(apps, func(i, j int) bool { return apps[i].Name < apps[j].Name })

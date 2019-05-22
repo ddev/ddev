@@ -20,7 +20,7 @@ func getRequestedProjects(names []string, all bool) ([]*ddevapp.DdevApp, error) 
 		return append(requestedProjects, project), nil
 	}
 
-	allProjects, err := ddevapp.GetProjects()
+	allProjects, err := ddevapp.GetProjects(false)
 	if err != nil {
 		return nil, err
 	}

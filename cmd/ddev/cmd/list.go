@@ -12,17 +12,17 @@ import (
 // continuous, if set, makes list continuously output
 var continuous bool
 
-// all, if set, shows non-running projects in addition to running/paused
-var all bool
+// showAll, if set, shows non-running projects in addition to running/paused
+var showAll bool
 
 // DdevListCmd represents the list command
 var DdevListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List projects",
-	Long:  `List projects.`,
+	Long:  `List projects. Shows active projects by default, includes stopped projects with --all`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for {
-			apps, err := ddevapp.GetProjects()
+			apps, err := ddevapp.GetProjects(!showAll)
 			if err != nil {
 				util.Failed("failed getting GetProjects: %v", err)
 			}
@@ -53,7 +53,7 @@ var DdevListCmd = &cobra.Command{
 }
 
 func init() {
-	DdevListCmd.Flags().BoolVarP(&all, "all", "a", false, "If set, all projects will be displayed, even if not running.")
+	DdevListCmd.Flags().BoolVarP(&showAll, "all", "a", false, "If set, all projects will be displayed, even stopped projects.")
 	DdevListCmd.Flags().BoolVarP(&continuous, "continuous", "", false, "If set, project information will be emitted once per second")
 	RootCmd.AddCommand(DdevListCmd)
 }
