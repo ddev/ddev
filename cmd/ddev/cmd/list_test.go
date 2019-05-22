@@ -70,6 +70,35 @@ func TestCmdList(t *testing.T) {
 
 	}
 
+	// Now check behavior of --all
+	// Stop the first app
+	firstApp, err := ddevapp.GetActiveApp(DevTestSites[0].Name)
+	assert.NoError(err)
+	err = firstApp.Stop(false, false)
+	assert.NoError(err)
+
+	// Execute "ddev list" and harvest plain text output.
+	// Now there should be one less project in list
+	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j"})
+	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
+
+	logItems, err = unmarshalJSONLogs(jsonOut)
+	assert.NoError(err)
+
+	assert.Equal(len(DevTestSites), len(logItems)-1)
+
+	// Now list with -a, make sure we show all projects
+	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j", "-a"})
+	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
+
+	logItems, err = unmarshalJSONLogs(jsonOut)
+	assert.NoError(err)
+
+	assert.Equal(len(DevTestSites), len(logItems))
+
+	// Leave firstApp running for other tests
+	err = firstApp.Start()
+	assert.NoError(err)
 }
 
 // TestCmdListContinuous tests the --continuous flag for ddev list.

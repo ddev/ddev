@@ -138,9 +138,7 @@ func RenderRouterStatus() string {
 // return status and most recent log
 func GetRouterStatus() (string, string) {
 	var status, logOutput string
-
-	label := map[string]string{"com.docker.compose.service": "ddev-router"}
-	container, err := dockerutil.FindContainerByLabels(label)
+	container, err := FindDdevRouter()
 
 	if err != nil || container == nil {
 		status = SiteStopped
