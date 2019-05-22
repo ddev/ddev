@@ -1590,7 +1590,7 @@ func TestDdevDescribe(t *testing.T) {
 		out, logsErr := app.CaptureLogs("web", false, "")
 		assert.NoError(logsErr)
 
-		healthcheck, inspectErr := exec.RunCommandPipe("bash", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
+		healthcheck, inspectErr := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
 		assert.NoError(inspectErr)
 
 		t.Fatalf("app.StartAndWaitForSync(%s) failed: %v, \nweb container healthcheck='%s', \n=== web container logs=\n%s\n=== END web container logs ===", site.Name, err, healthcheck, out)
@@ -1955,7 +1955,7 @@ func TestHttpsRedirection(t *testing.T) {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 			assert.NoError(getLogsErr)
 			// Get healthcheck status on bgsync container
-			healthcheck, inspectErr := exec.RunCommandPipe("bash", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-bgsync|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
+			healthcheck, inspectErr := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-bgsync|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
 			assert.NoError(inspectErr)
 
 			t.Fatalf("app.StartAndWaitForSync failure; err=%v \n===== container logs ===\n%s\n===== bgsync health info ===\n%s\n========\n", startErr, appLogs, healthcheck)

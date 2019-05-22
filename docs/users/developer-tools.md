@@ -8,7 +8,7 @@ We have included several useful developer tools in our containers. Run `ddev des
 - [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 - [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations.
 
-These tools can be accessed for single commands using [`ddev exec <command>`](cli-usage.md#executing-commands-in-containers) or [`ddev ssh`](cli-usage.md#ssh-into-containers) for an interactive bash session.
+These tools can be accessed for single commands using [`ddev exec <command>`](cli-usage.md#executing-commands-in-containers) or [`ddev ssh`](cli-usage.md#ssh-into-containers) for an interactive bash or sh session.
 
 ### DDEV and Composer 
 We have included a built-in command to simplify use of [Composer](https://getcomposer.org/), the dependency manager for PHP, that allows a user to create and manage projects without having Composer installed on the host machine. Generally, executing any Composer command through DDEV is as simple as prepending the command with `ddev`. DDEV will execute the command at the project root in the web container, passing all arguments and flags to Composer. To execute Composer in other directories within the container, use `ddev ssh` or `ddev exec -d <dir>`. For example:
