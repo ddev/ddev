@@ -16,38 +16,37 @@ import (
 func TestImportTilde(t *testing.T) {
 	assert := asrt.New(t)
 
-	for _, site := range DevTestSites {
+	site := DevTestSites[0]
 
-		homedir, err := gohomedir.Dir()
-		assert.NoError(err)
-		cwd, _ := os.Getwd()
-		testFile := filepath.Join(homedir, "testfile.tar.gz")
-		err = fileutil.CopyFile(filepath.Join(cwd, "testdata", "testfile.tar.gz"), testFile)
-		assert.NoError(err)
+	homedir, err := gohomedir.Dir()
+	assert.NoError(err)
+	cwd, _ := os.Getwd()
+	testFile := filepath.Join(homedir, "testfile.tar.gz")
+	err = fileutil.CopyFile(filepath.Join(cwd, "testdata", "testfile.tar.gz"), testFile)
+	assert.NoError(err)
 
-		cleanup := site.Chdir()
-		defer rmFile(testFile)
+	cleanup := site.Chdir()
+	defer rmFile(testFile)
 
-		// this ~ should be expanded by shell
-		args := []string{"import-files", "--src", "~/testfile.tar.gz"}
-		out, err := exec.RunCommand(DdevBin, args)
-		if err != nil {
-			t.Log("Error Output from ddev import-files:", out, site)
-		}
-		assert.NoError(err)
-		assert.Contains(string(out), "Successfully imported files")
-
-		// this ~ is not expanded by shell, ddev should convert it to a valid path
-		args = []string{"import-files", "--src=~/testfile.tar.gz"}
-		out, err = exec.RunCommand(DdevBin, args)
-		if err != nil {
-			t.Log("Error Output from ddev import-files:", out, site)
-		}
-		assert.NoError(err)
-		assert.Contains(string(out), "Successfully imported files")
-
-		cleanup()
+	// this ~ should be expanded by shell
+	args := []string{"import-files", "--src", "~/testfile.tar.gz"}
+	out, err := exec.RunCommand(DdevBin, args)
+	if err != nil {
+		t.Log("Error Output from ddev import-files:", out, site)
 	}
+	assert.NoError(err)
+	assert.Contains(string(out), "Successfully imported files")
+
+	// this ~ is not expanded by shell, ddev should convert it to a valid path
+	args = []string{"import-files", "--src=~/testfile.tar.gz"}
+	out, err = exec.RunCommand(DdevBin, args)
+	if err != nil {
+		t.Log("Error Output from ddev import-files:", out, site)
+	}
+	assert.NoError(err)
+	assert.Contains(string(out), "Successfully imported files")
+
+	cleanup()
 
 	assert.NoError(nil)
 }

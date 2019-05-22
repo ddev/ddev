@@ -31,29 +31,28 @@ func TestLogsNoConfig(t *testing.T) {
 func TestLogs(t *testing.T) {
 	assert := asrt.New(t)
 
-	for _, v := range DevTestSites {
-		// Copy our fatal error php into the docroot of testsite.
-		pwd, err := os.Getwd()
-		assert.NoError(err)
-		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "logtest.php"), filepath.Join(v.Dir, v.Docroot, "logtest.php"))
-		assert.NoError(err)
-		cleanup := v.Chdir()
+	v := DevTestSites[0]
+	// Copy our fatal error php into the docroot of testsite.
+	pwd, err := os.Getwd()
+	assert.NoError(err)
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "logtest.php"), filepath.Join(v.Dir, v.Docroot, "logtest.php"))
+	assert.NoError(err)
+	cleanup := v.Chdir()
 
-		app, err := ddevapp.NewApp(v.Dir, true, "")
-		assert.NoError(err)
+	app, err := ddevapp.NewApp(v.Dir, true, "")
+	assert.NoError(err)
 
-		ddevapp.WaitForSync(app, 2)
+	ddevapp.WaitForSync(app, 2)
 
-		url := "http://" + v.Name + "." + version.DDevTLD + "/logtest.php"
-		_, err = testcommon.EnsureLocalHTTPContent(t, url, "Notice to demonstrate logging", 5)
-		assert.NoError(err)
+	url := "http://" + v.Name + "." + version.DDevTLD + "/logtest.php"
+	_, err = testcommon.EnsureLocalHTTPContent(t, url, "Notice to demonstrate logging", 5)
+	assert.NoError(err)
 
-		args := []string{"logs"}
-		out, err := exec.RunCommand(DdevBin, args)
+	args := []string{"logs"}
+	out, err := exec.RunCommand(DdevBin, args)
 
-		assert.NoError(err)
-		assert.Contains(string(out), "Server started")
-		assert.Contains(string(out), "Notice to demonstrate logging", "PHP notice not found for project %s output='%s", v.Name, string(out))
-		cleanup()
-	}
+	assert.NoError(err)
+	assert.Contains(string(out), "Server started")
+	assert.Contains(string(out), "Notice to demonstrate logging", "PHP notice not found for project %s output='%s", v.Name, string(out))
+	cleanup()
 }

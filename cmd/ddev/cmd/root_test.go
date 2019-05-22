@@ -20,17 +20,33 @@ import (
 var (
 	// DdevBin is the full path to the drud binary
 	DdevBin      = "ddev"
-	DevTestSites = []testcommon.TestSite{{
-		Name:                          "TestMainCmdWordpress",
-		SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
-		ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
-		HTTPProbeURI:                  "wp-admin/setup-config.php",
-		Docroot:                       "htdocs",
-		Type:                          ddevapp.AppTypeWordPress,
-		Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
-	},
+	DevTestSites = []testcommon.TestSite{
+		{
+			Name:                          "TestCmdWordpress",
+			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
+			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
+			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+			HTTPProbeURI:                  "wp-admin/setup-config.php",
+			Docroot:                       "htdocs",
+			Type:                          ddevapp.AppTypeWordPress,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
+		},
+		{
+			Name:                          "TestCmdDrupal8",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.6.1.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-8.6.1/",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal8_6_1_files.tar.gz",
+			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_files.zip",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal8_6_1_db.tar.gz",
+			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.zip",
+			FullSiteTarballURL:            "",
+			Type:                          ddevapp.AppTypeDrupal8,
+			Docroot:                       "",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "this is a post with an image"},
+			FilesImageURI:                 "/sites/default/files//2017-04/pexels-photo-265186.jpeg",
+		},
 	}
 )
 
@@ -59,7 +75,7 @@ func TestMain(m *testing.M) {
 	// Attempt to stop/remove all running containers before starting a test.
 	// If no projects are running, this will exit silently and without error.
 	if _, err = exec.RunCommand(DdevBin, []string{"stop", "--all", "--stop-ssh-agent"}); err != nil {
-		log.Warnf("Failed to stop/remove all running projects: %v", err)
+		log.Warnf("Failed to stop all running projects: %v", err)
 	}
 
 	for i := range DevTestSites {
@@ -167,7 +183,7 @@ func removeSites() {
 	for _, site := range DevTestSites {
 		_ = site.Chdir()
 
-		args := []string{"remove", "-RO"}
+		args := []string{"stop", "-RO"}
 		out, err := exec.RunCommand(DdevBin, args)
 		if err != nil {
 			log.Errorf("Failed to run ddev remove -RO command, err: %v, output: %s\n", err, out)
