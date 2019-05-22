@@ -134,11 +134,6 @@ func init() {
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
-	// Ensure the ddev directory is created before tests run.
-	_ = globalconfig.GetGlobalDdevDir()
-	globalConfigFile := globalconfig.GetGlobalConfigPath()
-	_ = os.Rename(globalConfigFile, globalConfigFile+".bak")
-
 	// Since this may be first time ddev has been used, we need the
 	// ddev_default network available.
 	dockerutil.EnsureDdevNetwork()
@@ -237,9 +232,6 @@ func TestMain(m *testing.M) {
 		}
 		site.Cleanup()
 	}
-
-	_ = os.Remove(globalConfigFile)
-	_ = os.Rename(globalConfigFile+".bak", globalConfigFile)
 
 	os.Exit(testRun)
 }
