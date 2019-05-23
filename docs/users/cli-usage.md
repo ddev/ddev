@@ -274,7 +274,7 @@ How do you know if DDEV manages a settings file? You will see the following comm
 
 ## Listing project information
 
-To see a list of your running projects you can use `ddev list`; `ddev list --all` will show all projects including stopped projects
+To see a list of your running projects you can use `ddev list`; `ddev list --all` will show all projects including stopped projects.
 
 ```
 ➜  ddev list
@@ -321,6 +321,17 @@ phpMyAdmin:	http://drupal8.ddev.local:8036
 
 DDEV ROUTER STATUS: healthy
 ```
+
+## Removing projects from your collection known to ddev
+
+To remove a project from ddev's listing you can use the destructive option (deletes database, removes item from ddev's list, removes hostname entry in hosts file):
+
+`ddev stop --remove-data <projectname>` or to skip the snapshot, `ddev stop --remove-data --omit-snapshot <projectname>`
+
+Or if you just want it not to show up in `ddev list --all` any more, this command will unlist it until the next time you `ddev start` or `ddev config` the project.
+
+`ddev stop --unlist <projectname>`
+
 
 ## Importing assets for an existing project
 
