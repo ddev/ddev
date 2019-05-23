@@ -53,7 +53,7 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started example-wordpress-site
-Your project can be reached at: http://example-wordpress-site.ddev.local and https://example-wordpress-site.ddev.local
+Your project can be reached at: http://example-wordpress-site.ddev.site and https://example-wordpress-site.ddev.site
 ```
 
 Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
@@ -73,7 +73,7 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started my-wordpress-site
-Your application can be reached at: http://my-wordpress-site.ddev.local
+Your application can be reached at: http://my-wordpress-site.ddev.site
 ```
 
 ### Drupal 6/7 Quickstart
@@ -103,10 +103,10 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started my-drupal7-site
-Your project can be reached at: http://my-drupal7-site.ddev.local
+Your project can be reached at: http://my-drupal7-site.ddev.site
 ```
 
-If you want to run the Drupal install script, the next step is to hit "/install.php" on your project (like `http://my-drupal7-site.ddev.local/install.php`) or run drush site-install, `ddev exec drush site-install --yes`. 
+If you want to run the Drupal install script, the next step is to hit "/install.php" on your project (like `http://my-drupal7-site.ddev.site/install.php`) or run drush site-install, `ddev exec drush site-install --yes`. 
 
 Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
 
@@ -137,7 +137,7 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started my-drupal8-site
-Your project can be reached at: http://my-drupal8-site.ddev.local
+Your project can be reached at: http://my-drupal8-site.ddev.site
 ```
 
 ### TYPO3 Quickstart
@@ -167,7 +167,7 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started example-typo3-site
-Your application can be reached at: http://example-typo3-site.ddev.local
+Your application can be reached at: http://example-typo3-site.ddev.site
 ```
 
 For those wanting/needing to connect to the database within the database container directly, please see the [developer tools page](https://ddev.readthedocs.io/en/stable/users/developer-tools/#using-development-tools-on-the-host-machine).
@@ -199,7 +199,7 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started example-backdrop-site
-Your application can be reached at: http://example-backdrop-site.ddev.local
+Your application can be reached at: http://example-backdrop-site.ddev.site
 ```
 
 ### Database Imports
@@ -238,7 +238,7 @@ Creating local-drupal8-db
 Creating local-drupal8-web
 Waiting for the environment to become ready. This may take a couple of minutes...
 Successfully started drupal8
-Your project can be reached at: http://drupal8.ddev.local
+Your project can be reached at: http://drupal8.ddev.site
 ```
 
 And you can now visit your working project. Enjoy!
@@ -279,8 +279,8 @@ To see a list of your running projects you can use `ddev list`; `ddev list --all
 ```
 ➜  ddev list
 NAME     TYPE     LOCATION             URL(s)                      STATUS
-drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.local   running
-                                       https://drupal8.ddev.local
+drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
+                                       https://drupal8.ddev.site
 ```
 
 ```
@@ -297,8 +297,8 @@ You can also see more detailed information about a project by running `ddev desc
 
 ```
 NAME     TYPE     LOCATION             URL(s)                      STATUS
-drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.local   running
-                                       https://drupal8.ddev.local
+drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
+                                       https://drupal8.ddev.site
 
 Project Information
 -----------------
@@ -316,8 +316,8 @@ For example: mysql --host=127.0.0.1 --port=32768 --user=db --password=db --datab
 
 Other Services
 --------------
-MailHog:   	http://drupal8.ddev.local:8025
-phpMyAdmin:	http://drupal8.ddev.local:8036
+MailHog:   	http://drupal8.ddev.site:8025
+phpMyAdmin:	http://drupal8.ddev.site:8036
 
 DDEV ROUTER STATUS: healthy
 ```

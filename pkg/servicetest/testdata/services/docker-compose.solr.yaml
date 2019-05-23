@@ -14,9 +14,9 @@
 #
 # To access Solr after it is installed:
 # - The Solr admin interface will be accessible at:
-#   http://<projectname>.ddev.local:8983/solr/
+#   http://<projectname>.ddev.site:8983/solr/
 #   For example, if the project is named "myproject" the hostname will be:
-#   http://myproject.ddev.local:8983/solr/
+#   http://myproject.ddev.site:8983/solr/
 # - To access the Solr container from the web container use:
 #   http://solr:8983/solr/
 # - A Solr core is automatically created with the name "dev", i.e. it can be
@@ -45,10 +45,10 @@ services:
       com.ddev.app-url: $DDEV_URL
     environment:
       # This defines the host name the service should be accessible from. This
-      # will be sitename.ddev.local.
+      # will be sitename.ddev.site.
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       # This defines the port the service should be accessible from at
-      # sitename.ddev.local.
+      # sitename.ddev.site.
       - HTTP_EXPOSE=8983
     volumes:
       # This exposes a mount to the host system `.ddev/solr-conf` directory.
@@ -62,7 +62,7 @@ services:
       - /solr-conf
   # This links the Solr service to the web service defined in the main
   # docker-compose.yml, allowing applications running in the web service to
-  # access the Solr service at sitename.ddev.local:8983.
+  # access the Solr service at sitename.ddev.site:8983.
   web:
     links:
       - solr:$DDEV_HOSTNAME

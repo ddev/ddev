@@ -14,7 +14,7 @@ This recipe adds an Apache Solr 5.4 container to a project. It will setup a solr
 - Ensure the configuration files must be present before running `ddev start`.
 
 **Interacting with Apache Solr**
-- The Solr admin interface will be accessible at: `http://<projectname>.ddev.local:8983/solr/` For example, if the project is named "myproject" the hostname will be: `http://myproject.ddev.local:8983/solr/`
+- The Solr admin interface will be accessible at: `http://<projectname>.ddev.site:8983/solr/` For example, if the project is named "myproject" the hostname will be: `http://myproject.ddev.site:8983/solr/`
 - To access the Solr container from the web container use: `http://solr:8983/solr/`
 - A Solr core is automatically created with the name "dev"; it can be accessed at the URL: http://solr:8983/solr/dev
 

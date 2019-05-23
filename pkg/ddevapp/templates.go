@@ -95,7 +95,7 @@ services:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       - COLUMNS=$COLUMNS
       - LINES=$LINES
-      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
+      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       # To expose a container port to a different host port, define the port as hostPort:containerPort
       - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILHOG_PORT}:{{ .MailhogPort }}
       # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
@@ -167,7 +167,7 @@ services:
       - PMA_USER=db
       - PMA_PASSWORD=db
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.local:<port>
+      # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       - HTTP_EXPOSE=${DDEV_PHPMYADMIN_PORT}:{{ .DBAPort }}
     healthcheck:
       interval: 90s
@@ -208,7 +208,7 @@ const ConfigInstructions = `
 # Key features of ddev's config.yaml:
 
 # name: <projectname> # Name of the project, automatically provides
-#   http://projectname.ddev.local and https://projectname.ddev.local
+#   http://projectname.ddev.site and https://projectname.ddev.site
 
 # type: <projecttype>  # drupal6/7/8, backdrop, typo3, wordpress, php
 
@@ -235,8 +235,8 @@ const ConfigInstructions = `
 # additional_hostnames:
 #  - somename
 #  - someothername
-# would provide http and https URLs for "somename.ddev.local"
-# and "someothername.ddev.local".
+# would provide http and https URLs for "somename.ddev.site"
+# and "someothername.ddev.site".
 
 # additional_fqdns:
 #  - example.com

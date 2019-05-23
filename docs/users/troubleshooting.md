@@ -30,7 +30,7 @@ For example, if there was a port conflict with a local apache http on port 80 ad
 router_http_port: 8000
 ```
 
-Then run `ddev start`. This changes the project's http URL to http://yoursite.ddev.local:8000.
+Then run `ddev start`. This changes the project's http URL to http://yoursite.ddev.site:8000.
 
 
 If the conflict is over port 8025, it's normally a conflict over the default port for mailhog. You can add to your .ddev/config.yaml

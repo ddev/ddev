@@ -51,7 +51,7 @@ You generally don't have to worry about any of this, but it does keep things cle
 After your project is started, access the MailHog web interface at its default port:
 
 ```
-http://mysite.ddev.local:8025
+http://mysite.ddev.site:8025
 ```
 
 Please note this will not intercept emails if your application is configured to use SMTP or a 3rd-party ESP integration. If you are using SMTP for outgoing mail handling ([Swiftmailer](https://www.drupal.org/project/swiftmailer) or [SMTP](https://www.drupal.org/project/smtp) modules for example), update your application configuration to use `localhost` on port `1025` as the SMTP server locally in order to use MailHog.
@@ -63,7 +63,7 @@ Please note this will not intercept emails if your application is configured to 
 After your project is started, access the phpMyAdmin web interface at its default port:
 
 ```
-http://mysite.ddev.local:8036
+http://mysite.ddev.site:8036
 ```
 
 If you use the free [Sequel Pro](https://www.sequelpro.com/) database browser for macOS, run `ddev sequelpro` within a project folder, and Sequel Pro will launch and access the database for that project. 
