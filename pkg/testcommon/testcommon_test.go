@@ -142,12 +142,6 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
 
-	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
-	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
-
-	router, _ := ddevapp.FindDdevRouter()
-	require.Empty(t, router)
-
 	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
 	//not need to be updated over time.
@@ -160,7 +154,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	//nolint: errcheck
 	defer globalconfig.RemoveProjectInfo(site.Name)
 
-	err = site.Prepare()
+	err := site.Prepare()
 	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 
 	cleanup := site.Chdir()

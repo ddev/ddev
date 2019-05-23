@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	osexec "os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -142,25 +143,6 @@ func TestMain(m *testing.M) {
 	// This is normally done by Testsite.Prepare()
 	_ = os.Setenv("DRUD_NONINTERACTIVE", "true")
 
-	// Attempt to remove all running containers before starting a test.
-	// If no projects are running, this will exit silently and without error.
-	// If a system doesn't have `ddev` in its $PATH, this will emit a warning but will not fail the test.
-	if _, err := exec.RunCommand(DdevBin, []string{"remove", "--all", "--stop-ssh-agent"}); err != nil {
-		log.Warnf("Failed to stop/remove all running projects: %v", err)
-	}
-
-	for _, volume := range []string{"ddev-router-cert-cache", "ddev-ssh-agent_dot_ssh", "ddev-ssh-agent_socket_dir"} {
-		err := dockerutil.RemoveVolume(volume)
-		if err != nil && err.Error() != "no such volume" {
-			log.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
-		}
-	}
-
-	count := len(ddevapp.GetActiveProjects())
-	if count > 0 {
-		log.Fatalf("ddevapp tests require no projects running. You have %v project(s) running.", count)
-	}
-
 	// If GOTEST_SHORT is an integer, then use it as index for a single usage
 	// in the array. Any value can be used, it will default to just using the
 	// first site in the array.
@@ -177,6 +159,12 @@ func TestMain(m *testing.M) {
 	// Start with a clean exit result, it will be changed if we have trouble.
 	testRun := 0
 	for i := range TestSites {
+
+		oldProject := globalconfig.GetProject(TestSites[i].Name)
+		if oldProject != nil {
+			_, _ = osexec.Command(DdevBin, "stop", "-RO", TestSites[i].Name).CombinedOutput()
+		}
+
 		err := TestSites[i].Prepare()
 		if err != nil {
 			log.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", TestSites[i].Name, err)
@@ -586,7 +574,6 @@ func TestGetApps(t *testing.T) {
 	}
 
 	apps := ddevapp.GetActiveProjects()
-	assert.Equal(len(TestSites), len(apps))
 
 	for _, testSite := range TestSites {
 		var found bool
@@ -609,7 +596,6 @@ func TestGetApps(t *testing.T) {
 
 		err = app.Stop(true, false)
 		assert.NoError(err)
-
 	}
 }
 
