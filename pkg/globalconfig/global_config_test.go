@@ -68,6 +68,7 @@ func TestSetProjectAppRoot(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 	err = globalconfig.SetProjectAppRoot(t.Name(), tmpDir)
 	assert.NoError(err)
+	//nolint: errcheck
 	defer globalconfig.RemoveProjectInfo(t.Name())
 
 	// nolint: errcheck
