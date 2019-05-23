@@ -29,7 +29,7 @@ running 'ddev stop <projectname>.`,
 
 		projects, err := getRequestedProjects(args, false)
 		if err != nil {
-			util.Failed("Failed to find requested project '%v' to describe it: %v", args[0], err)
+			util.Failed("Failed to describe project(s): %v", err)
 		}
 		project := projects[0]
 
