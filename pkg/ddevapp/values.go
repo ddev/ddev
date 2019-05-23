@@ -100,7 +100,7 @@ const (
 	AppTypeWordPress = "wordpress"
 )
 
-// Ports
+// Ports and other defaults
 const (
 	// DdevDefaultRouterHTTPPort is the default router HTTP port
 	DdevDefaultRouterHTTPPort = "80"
@@ -111,6 +111,8 @@ const (
 	DdevDefaultPHPMyAdminPort = "8036"
 	// DdevDefaultMailhogPort is the default router port for Mailhog
 	DdevDefaultMailhogPort = "8025"
+	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
+	DdevDefaultTLD = "ddev.site"
 )
 
 // IsValidProvider is a helper function to determine if a provider value is valid, returning

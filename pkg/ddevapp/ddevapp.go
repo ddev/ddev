@@ -109,6 +109,8 @@ type DdevApp struct {
 	PHPMyAdminPort        string               `yaml:"phpmyadmin_port,omitempty"`
 	WebImageExtraPackages []string             `yaml:"webimage_extra_packages,omitempty,flow"`
 	DBImageExtraPackages  []string             `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD            string               `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible    bool                 `yaml:"use_dns_when_possible"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -1428,12 +1430,14 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	}
 
 	for _, name := range app.GetHostnames() {
-		hostIPs, err := net.LookupHost(name)
-		// If we had successful lookup and dockerIP matches
-		// (which won't happen on Docker Toolbox) then don't bother
-		// with adding to hosts file.
-		if err == nil && len(hostIPs) > 0 && hostIPs[0] == dockerIP {
-			continue
+		if app.UseDNSWhenPossible {
+			hostIPs, err := net.LookupHost(name)
+			// If we had successful lookup and dockerIP matches
+			// (which won't happen on Docker Toolbox) then don't bother
+			// with adding to hosts file.
+			if err == nil && len(hostIPs) > 0 && hostIPs[0] == dockerIP {
+				continue
+			}
 		}
 
 		// We likely won't hit the hosts.Has() as true because

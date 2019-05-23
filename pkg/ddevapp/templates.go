@@ -298,6 +298,18 @@ const ConfigInstructions = `
 # Extra Debian packages that are needed in the dbimage can be added here
 # This is ignored if a free-form .ddev/db-build/Dockerfile is provided
 
+# use_dns_when_possible: true
+# If the host has internet access and the domain configured can successfully be looked up,
+# DNS will be used for hostname resolution instead of editing /etc/hosts
+# Defaults to true
+
+# project_tld: ddev.site
+# The top-level domain used for project URLs
+# The default "ddev.site" allows DNS lookup via a wildcard
+# For backward compatibility this can be changed to "ddev.local"
+
+
+
 # provider: default # Currently either "default" or "pantheon"
 #
 # Many ddev commands can be extended to run tasks after the ddev command is

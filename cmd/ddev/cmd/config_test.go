@@ -139,6 +139,8 @@ func TestConfigSetValues(t *testing.T) {
 	dbaWorkingDir := "/custom/dba/dir"
 	phpMyAdminPort := "5000"
 	mailhogPort := "5001"
+	projectTLD := "nowhere.example.com"
+	useDNSWhenPossible := false
 
 	args := []string{
 		"config",
@@ -167,6 +169,8 @@ func TestConfigSetValues(t *testing.T) {
 		"--dbimage-extra-packages", dbimageExtraPackages,
 		"--phpmyadmin-port", phpMyAdminPort,
 		"--mailhog-port", mailhogPort,
+		"--project-tld", projectTLD,
+		fmt.Sprintf("--use-dns-when-possible=%t", useDNSWhenPossible),
 	}
 
 	out, err := exec.RunCommand(DdevBin, args)
@@ -206,6 +210,9 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(dbimageExtraPackagesSlice, app.DBImageExtraPackages)
 	assert.Equal(phpMyAdminPort, app.PHPMyAdminPort)
 	assert.Equal(mailhogPort, app.MailhogPort)
+	assert.Equal(useDNSWhenPossible, app.UseDNSWhenPossible)
+	assert.Equal(projectTLD, app.ProjectTLD)
+
 	// Test that container images and working dirs can be unset with default flags
 	args = []string{
 		"config",
