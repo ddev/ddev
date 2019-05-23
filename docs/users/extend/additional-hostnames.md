@@ -16,6 +16,8 @@ This configuration would result in working hostnames of mysite.ddev.site, extran
 
 **Although we recommend extreme care with this feature**, you can also provide additional_fqdn entries, which don't use the ".ddev.site" top-level domain.  **This feature populates your hosts file with entries which may hide the real DNS entries on the internet, causing way too much head-scratching.**
 
+**If you use a FQDN which is resolvable on the internet, you must use `use_dns_when_possible: false` or configure that with `ddev config --use-dns-when-possible=false`.
+
 ```
 name: somename
 
