@@ -251,12 +251,26 @@ func SetProjectAppRoot(projectName string, appRoot string) error {
 	if !ok {
 		DdevGlobalConfig.ProjectList[projectName] = &ProjectInfo{}
 	}
+	// Can't use fileutil.FileExists because of import cycle.
+	if _, err := os.Stat(appRoot); err != nil {
+		return fmt.Errorf("project %s project root %s does not exist", projectName, appRoot)
+	}
 	if DdevGlobalConfig.ProjectList[projectName].AppRoot != "" && DdevGlobalConfig.ProjectList[projectName].AppRoot != appRoot {
-		return fmt.Errorf("project %s appRoot is already set to %s, refusing to change it to %s", projectName, DdevGlobalConfig.ProjectList[projectName].AppRoot, appRoot)
+		return fmt.Errorf("project %s project root is already set to %s, refusing to change it to %s; you can `ddev rm --unlist` and start again if the listed project root is in error.", projectName, DdevGlobalConfig.ProjectList[projectName].AppRoot, appRoot)
 	}
 	DdevGlobalConfig.ProjectList[projectName].AppRoot = appRoot
 	err := WriteGlobalConfig(DdevGlobalConfig)
 	return err
+}
+
+// GetProject returns a project given name provided,
+// or nil if not found.
+func GetProject(projectName string) *ProjectInfo {
+	project, ok := DdevGlobalConfig.ProjectList[projectName]
+	if !ok {
+		return nil
+	}
+	return project
 }
 
 // RemoveProjectInfo() removes the ProjectInfo line for a project
