@@ -3,7 +3,7 @@
 It's common to have a requirement for the web or db images which is not bundled in them by default. Thre are two easy ways to extend these docker images:
 
 * `webimage_extra_packages` and `dbimage_extra_packages` in .ddev/config.yaml
-* An add-on Dockerfile in `.ddev/web-build` or `.ddev/db-build`
+* An add-on Dockerfile in your project's `.ddev/web-build` or `.ddev/db-build`
 
 ## Adding extra Debian packages with webimage_extra_packages and dbimage_extra_packages
 
@@ -21,7 +21,7 @@ Then the additional packages will be built into the containers during `ddev star
 
 For more complex requirements, you can add .ddev/web-build/Dockerfile or .ddev/db-build/Dockerfile. 
 
-Examples of possible Dockerfiles are given in `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example`
+Examples of possible Dockerfiles are given in `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example` (These examples are created in your project when you `ddev config` the project.)
 
 An example web image `.ddev/web-build/Dockerfile` might be:
 
