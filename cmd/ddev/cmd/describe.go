@@ -29,22 +29,12 @@ running 'ddev stop <projectname>.`,
 
 		projects, err := getRequestedProjects(args, false)
 		if err != nil {
-			util.Failed("Failed to describe project(s): %v", err)
+			util.Failed("Failed to find requested project '%v' to describe it: %v", args[0], err)
 		}
 		project := projects[0]
 
 		if err := ddevapp.CheckForMissingProjectFiles(project); err != nil {
 			util.Failed("Failed to describe %s: %v", project.Name, err)
-		}
-
-		project, err = ddevapp.GetActiveApp(project.Name)
-		if err != nil {
-			util.Failed("Unable to find any active project named %s: %v", project.Name, err)
-		}
-
-		// Do not show any describe output if we can't find the project.
-		if project.SiteStatus() == ddevapp.SiteStopped {
-			util.Failed("no project found. have you run 'ddev start'?")
 		}
 
 		desc, err := project.Describe()
@@ -64,22 +54,25 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 	maxWidth := uint(200)
 	var output string
 
+	status := desc["status"]
+
 	appTable := ddevapp.CreateAppTable()
 	ddevapp.RenderAppRow(appTable, desc)
 	output = fmt.Sprint(appTable)
 
-	output = output + "\n\nProject Information\n-----------------\n"
-	siteInfo := uitable.New()
-	siteInfo.AddRow("PHP version:", desc["php_version"])
-	siteInfo.AddRow("URLs:", strings.Join(desc["urls"].([]string), ", "))
-	output = output + fmt.Sprint(siteInfo)
-	dockerIP, err := dockerutil.GetDockerIP()
-	if err != nil {
-		return "", err
-	}
-
 	// Only show extended status for running sites.
-	if desc["status"] == ddevapp.SiteRunning {
+	if status == ddevapp.SiteRunning {
+		output = output + "\n\nProject Information\n-----------------\n"
+		siteInfo := uitable.New()
+		siteInfo.AddRow("PHP version:", desc["php_version"])
+
+		siteInfo.AddRow("URLs:", strings.Join(desc["urls"].([]string), ", "))
+		output = output + fmt.Sprint(siteInfo)
+		dockerIP, err := dockerutil.GetDockerIP()
+		if err != nil {
+			return "", err
+		}
+
 		output = output + "\n\nMySQL Credentials\n-----------------\n"
 		dbTable := uitable.New()
 
@@ -103,9 +96,9 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 			other.AddRow("phpMyAdmin:", desc["phpmyadmin_url"])
 		}
 		output = output + fmt.Sprint(other)
-	}
 
-	output = output + "\n" + ddevapp.RenderRouterStatus() + "\t" + ddevapp.RenderSSHAuthStatus()
+		output = output + "\n" + ddevapp.RenderRouterStatus() + "\t" + ddevapp.RenderSSHAuthStatus()
+	}
 
 	return output, nil
 }
