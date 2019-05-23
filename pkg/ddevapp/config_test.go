@@ -507,6 +507,7 @@ func TestConfigValidate(t *testing.T) {
 		PHPVersion:     PHPDefault,
 		MariaDBVersion: version.MariaDBDefaultVersion,
 		WebserverType:  WebserverDefault,
+		ProjectTLD:     DdevDefaultTLD,
 		Provider:       ProviderDefault,
 	}
 
