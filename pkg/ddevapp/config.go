@@ -261,8 +261,12 @@ RUN echo "Built from ` + app.DBImage + `" >/var/tmp/built-from.txt
 	return nil
 }
 
-// UpdateGlobalProjectList checks that configured host ports are not already
-// reserved by another project.
+// UpdateGlobalProjectList updates any information about project that
+// is tracked in global project list:
+// - approot
+// - configured host ports
+// checks that configured host ports are not already
+// reserved by another project
 func (app *DdevApp) UpdateGlobalProjectList() error {
 	portsToReserve := []string{}
 	if app.HostDBPort != "" {
@@ -281,14 +285,16 @@ func (app *DdevApp) UpdateGlobalProjectList() error {
 			return err
 		}
 	}
-	// TODO: Make sure there isn't already a conflicting project
-	err := globalconfig.SetProjectAppRoot(app.Name, app.AppRoot)
+	err := globalconfig.ReservePorts(app.Name, portsToReserve)
 	if err != nil {
 		return err
 	}
-	err = globalconfig.ReservePorts(app.Name, portsToReserve)
+	err = globalconfig.SetProjectAppRoot(app.Name, app.AppRoot)
+	if err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
 
 // ReadConfig reads project configuration from the config.yaml file

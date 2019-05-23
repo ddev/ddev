@@ -251,8 +251,10 @@ func SetProjectAppRoot(projectName string, appRoot string) error {
 	if !ok {
 		DdevGlobalConfig.ProjectList[projectName] = &ProjectInfo{}
 	}
+	if DdevGlobalConfig.ProjectList[projectName].AppRoot != "" && DdevGlobalConfig.ProjectList[projectName].AppRoot != appRoot {
+		return fmt.Errorf("project %s appRoot is already set to %s, refusing to change it to %s", projectName, DdevGlobalConfig.ProjectList[projectName].AppRoot, appRoot)
+	}
 	DdevGlobalConfig.ProjectList[projectName].AppRoot = appRoot
-	// TODO: Aren't we going to end up doing this more than we need to?
 	err := WriteGlobalConfig(DdevGlobalConfig)
 	return err
 }
@@ -268,4 +270,9 @@ func RemoveProjectInfo(projectName string) error {
 		}
 	}
 	return nil
+}
+
+// GetGlobalProjectList() returns the global project list map
+func GetGlobalProjectList() map[string]*ProjectInfo {
+	return DdevGlobalConfig.ProjectList
 }

@@ -324,25 +324,48 @@ func CheckForMissingProjectFiles(project *DdevApp) error {
 }
 
 // GetProjects returns projects that are listed
-// in globalconfig projectlist.
+// in globalconfig projectlist (or in docker container labels, or both)
 // if activeOnly is true, only show projects that aren't stopped
 // (or broken, missing config, missing files)
 func GetProjects(activeOnly bool) ([]*DdevApp, error) {
-	apps := []*DdevApp{}
-	// TODO: This should use a get method instead of directly accessing
-	for name, info := range globalconfig.DdevGlobalConfig.ProjectList {
-		// Skip if AppRoot hasn't been placed in globalconfig
-		if info.AppRoot != "" {
-			app, err := NewApp(info.AppRoot, true, ProviderDefault)
-			if err != nil {
-				app.Name = name
-			}
-			if !activeOnly || (app.SiteStatus() != SiteStopped && app.SiteStatus() != SiteConfigMissing && app.SiteStatus() != SiteDirMissing) {
-				apps = append(apps, app)
-			}
+	apps := make(map[string]*DdevApp)
+	projectList := globalconfig.GetGlobalProjectList()
+
+	// First grab the GetActiveApps (docker labels) version of the projects and make sure it's
+	// included. Hopefully docker label information and global config information will not
+	// be out of sync very often.
+	dockerActiveApps := GetActiveProjects()
+	for _, app := range dockerActiveApps {
+		apps[app.Name] = app
+	}
+
+	// Now get everything we can find in global project list
+	for name, info := range projectList {
+		// Skip apps already found running in docker
+		if _, ok := apps[name]; ok {
+			continue
+		}
+		// Skip if AppRoot hasn't been set in globalconfig
+		// This situation is transitional as globalconfig
+		// gets fully populated
+		if info.AppRoot == "" {
+			continue
+		}
+
+		app, err := NewApp(info.AppRoot, true, ProviderDefault)
+		if err != nil {
+			app.Name = name
+		}
+		if !activeOnly || (app.SiteStatus() != SiteStopped && app.SiteStatus() != SiteConfigMissing && app.SiteStatus() != SiteDirMissing) {
+			apps[name] = app
 		}
 	}
-	sort.Slice(apps, func(i, j int) bool { return apps[i].Name < apps[j].Name })
 
-	return apps, nil
+	appSlice := []*DdevApp{}
+	for _, v := range apps {
+		appSlice = append(appSlice, v)
+	}
+	sort.Slice(appSlice, func(i, j int) bool { return appSlice[i].Name < appSlice[j].Name })
+
+	return appSlice, nil
 }
