@@ -498,3 +498,23 @@ If you do choose to send the diagnostics it helps us tremendously in our effort 
 ![usage_stats](images/usage_stats.png)
 
 Of course if you have any reservations about this, please just opt-out (`ddev config global --instrumentation-opt-in=false`). If you have any problems or concerns with it, we'd like to know. One person did report slow ddev command completion on a network that was apparently not friendly to sentry.io.
+
+## Using ddev offline, and top-level-domain options
+
+DDEV-Local attempts to make offline use work as well as possible, and you really shouldn't have to do anything to make it work:
+
+* It doesn't attempt instrumentation or update reporting if offline
+* It uses /etc/hosts entries instead of DNS resolution if DNS resolution fails
+
+However, it does not (yet) attempt to prevent docker pulls if a new docker image is required, so you'll want to make sure that you try a `ddev start` before going offline to make sure everything has been pulled.
+
+If youy have a project running when you're online (using DNS for name resolution) and you then go offline, you'll want to do a `ddev restart` to get the hostname added into /etc/hosts for name resolution.
+
+*Note that DNS name resolution never works with Docker Toolbox on Windows unless you run your own DNS server.*
+
+You have general options as well:
+
+In `.ddev/config.yaml` `use_dns_when_possible: false` will make ddev never try to use DNS for resolution, instead adding hostnames to /etc/hosts. You can also use `ddev config --use-dns-when-possible=false` to set this configuration option.
+In `.ddev/config.yaml` `project_tld: example.com` (or any other domain) can set ddev to use a project that could never be looked up in DNS. You can also use `ddev config --project-tld=example.com`
+
+You can slso set up a local DNS server like dnsmasq (Linux and macOS, `brew install dnsmasq`) or ([unbound](https://github.com/NLnetLabs/unbound) or many others on Windows) in your own host environment that serves the project_tld that you choose, and DNS resolution will work just fine. You'll likely want a wildcard A record pointing to 127.0.0.1 (on most ddev installations) or the Docker Toolbox IP address (often 192.168.99.100)
