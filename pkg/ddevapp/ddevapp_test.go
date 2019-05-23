@@ -317,15 +317,17 @@ func TestDdevStart(t *testing.T) {
 
 	// try to start a site of same name at different path
 	another := site
-	err = another.Prepare()
-	if err != nil {
-		assert.FailNow("TestDdevStart: Prepare() failed on another.Prepare(), err=%v", err)
-		return
-	}
+	tmpDir := testcommon.CreateTmpDir("another")
+	copyDir := filepath.Join(tmpDir, "copy")
+	err = fileutil.CopyDir(site.Dir, copyDir)
+	assert.NoError(err)
+	another.Dir = copyDir
+	//nolint: errcheck
+	defer os.RemoveAll(copyDir)
 
 	badapp := &ddevapp.DdevApp{}
 
-	err = badapp.Init(another.Dir)
+	err = badapp.Init(copyDir)
 	//nolint: errcheck
 	defer badapp.Stop(true, false)
 	if err == nil {
@@ -337,7 +339,7 @@ func TestDdevStart(t *testing.T) {
 	}
 
 	// Try to start a site of same name at an equivalent but different path. It should work.
-	tmpDir, err := testcommon.OsTempDir()
+	tmpDir, err = testcommon.OsTempDir()
 	assert.NoError(err)
 	symlink := filepath.Join(tmpDir, fileutil.RandomFilenameBase())
 	err = os.Symlink(app.AppRoot, symlink)
