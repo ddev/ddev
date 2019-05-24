@@ -984,6 +984,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 		assert.NoError(err)
 		t.Fatalf("container failed: logs:\n=======\n%s\n========\n", logs)
 	}
+	require.NotNil(t, resp)
 	if ensureErr != nil && resp.StatusCode != 200 {
 		logs, err := app.CaptureLogs("web", false, "")
 		assert.NoError(err)
