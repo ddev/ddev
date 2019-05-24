@@ -1013,7 +1013,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PHPMYADMIN_PORT":          app.PHPMyAdminPort,
 		"DDEV_MAILHOG_PORT":             app.MailhogPort,
 		"DDEV_DOCROOT":                  app.Docroot,
-		"DDEV_URL":                      app.GetHTTPURL(),
+		"DDEV_URL":                      app.GetHTTPSURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
 		"DDEV_UID":                      uidStr,
 		"DDEV_GID":                      gidStr,
