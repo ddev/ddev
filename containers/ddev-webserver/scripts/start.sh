@@ -128,6 +128,16 @@ case $DDEV_PROJECT_TYPE in
         ;;
 esac
 
+case $DDEV_PROJECT_TYPE in
+    magento)
+        sudo ln -s /usr/local/bin/n98-magerun /usr/local/bin/magerun
+        ;;
+    magento2)
+        export PATH=$PATH:/var/www/html/bin
+        sudo ln -s /usr/local/bin/n98-magerun2 /usr/local/bin/magerun2
+        ;;
+esac
+
 echo 'Server started'
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
