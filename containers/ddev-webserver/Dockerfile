@@ -112,7 +112,13 @@ RUN curl -sSL "https://github.com/drush-ops/drush/releases/download/${DRUSH_VERS
 RUN curl -sSL "https://github.com/drush-ops/drush-launcher/releases/download/${DRUSH_LAUNCHER_VERSION}/drush.phar" -o /usr/local/bin/drush && chmod +x /usr/local/bin/drush
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
 RUN curl -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp-cli && ln -s /usr/local/bin/wp-cli /usr/local/bin/wp
+
 RUN curl -O https://raw.githubusercontent.com/pantheon-systems/terminus-installer/master/builds/installer.phar && php installer.phar install
+
+RUN curl -sSL https://files.magerun.net/n98-magerun-${MAGERUN_VERSION}.phar -o /usr/local/bin/n98-magerun
+RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun/${MAGERUN_VERSION}/res/autocompletion/bash/n98-magerun.phar.bash -o /etc/bash_completion.d/n98-magerun.phar
+RUN curl -sSL https://files.magerun.net/n98-magerun2-${MAGERUN2_VERSION}.phar -o /usr/local/bin/n98-magerun2
+RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/${MAGERUN2_VERSION}/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar
 
 RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal && chmod +x /usr/local/bin/drupal
 
