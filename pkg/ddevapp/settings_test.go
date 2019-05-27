@@ -90,7 +90,7 @@ func TestWriteDrushConfig(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s WriteDrushConfig", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s WriteDrushrc", site.Name))
 
 		testcommon.ClearDockerEnv()
 
@@ -114,7 +114,8 @@ func TestWriteDrushConfig(t *testing.T) {
 		assert.NoError(err)
 		assert.NotEqual(-1, dbPort)
 
-		drushFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php")
+		//TODO: Change to use drush.yml for d8
+		drushFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php")
 
 		switch app.Type {
 		case AppTypeDrupal6, AppTypeDrupal7, AppTypeDrupal8, AppTypeBackdrop:

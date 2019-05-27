@@ -34,7 +34,6 @@ services:
       com.ddev.platform: {{ .Plugin }}
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
-      com.ddev.app-url: $DDEV_URL
     environment:
       - COLUMNS=$COLUMNS
       - LINES=$LINES
@@ -81,7 +80,6 @@ services:
       - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
       - "{{ .MailhogPort }}"
     environment:
-      - DDEV_URL=$DDEV_URL
       - DOCROOT=$DDEV_DOCROOT
       - DDEV_PHP_VERSION=$DDEV_PHP_VERSION
       - DDEV_WEBSERVER_TYPE=$DDEV_WEBSERVER_TYPE
@@ -107,7 +105,6 @@ services:
       com.ddev.platform: {{ .Plugin }}
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
-      com.ddev.app-url: $DDEV_URL
 {{ if .HostDockerInternalIP }}
     extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
 {{ end }}
@@ -140,7 +137,6 @@ services:
       com.ddev.platform: ddev
       com.ddev.app-type: drupal8
       com.ddev.approot: $DDEV_APPROOT
-      com.ddev.app-url: $DDEV_URL
     healthcheck:
       interval: 10s
       retries: 24
@@ -158,7 +154,6 @@ services:
       com.ddev.platform: {{ .Plugin }}
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
-      com.ddev.app-url: $DDEV_URL
     links:
       - db:db
     ports:

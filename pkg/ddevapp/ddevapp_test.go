@@ -885,9 +885,10 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
 		assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
-		if nodeps.ArrayContainsString([]string{"drupal6", "drupal7", "drupal8", "backdrop"}, app.Type) {
-			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+		if nodeps.ArrayContainsString([]string{"drupal6", "drupal7", "backdrop"}, app.Type) {
+			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 		}
+		//TODO: Add assertion for sites/default/drush/drush.yml if drupal8
 
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)

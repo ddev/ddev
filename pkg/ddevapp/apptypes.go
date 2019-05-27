@@ -132,8 +132,14 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		if err != nil {
 			util.Warning("Unable to create settings file: %v", err)
 		}
-		if err := CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "ddev_drush_settings.php"); err != nil {
+		if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
 			util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
+		}
+		if app.Type == AppTypeDrupal8 {
+			drushDir := filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush")
+			if err = CreateGitIgnore(drushDir, "drush.yml"); err != nil {
+				util.Warning("Failed to write .gitignore in %s: %v", drushDir, err)
+			}
 		}
 
 		return settingsPath, nil

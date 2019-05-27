@@ -91,12 +91,6 @@ ini_set('session.gc_divisor', 100);
 ini_set('session.gc_maxlifetime', 200000);
 ini_set('session.cookie_lifetime', 2000000);
 
-// This determines whether or not drush should include a custom settings file which allows
-// it to work both within a docker container and natively on the host system.
-$drush_settings = __DIR__ . '/ddev_drush_settings.php';
-if (empty(getenv('DDEV_PHP_VERSION')) && file_exists($drush_settings)) {
-  include $drush_settings;
-}
 
 `
 
@@ -333,10 +327,10 @@ func backdropImportFilesAction(app *DdevApp, importPath, extPath string) error {
 // useful permissions settings on sites/default.
 func backdropPostStartAction(app *DdevApp) error {
 	// Drush config has to be written after start because we don't know the ports until it's started
-	drushConfig := NewDrushConfig(app)
-	err := WriteDrushConfig(drushConfig, filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+	//TODO: Change to write drushrc.php
+	err := WriteDrushrc(nil, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 	if err != nil {
-		util.Warning("Failed to WriteDrushConfig: %v", err)
+		util.Warning("Failed to WriteDrushrc: %v", err)
 	}
 
 	if _, err = app.CreateSettingsFile(); err != nil {
