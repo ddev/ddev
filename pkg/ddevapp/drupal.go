@@ -689,7 +689,7 @@ func drupal8PostStartAction(app *DdevApp) error {
 		util.Warning("Failed to WriteDrushYML: %v", err)
 	}
 
-	err = WriteDrushrc(nil, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
+	err = WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 	if err != nil {
 		util.Warning("Failed to WriteDrushrc: %v", err)
 	}
@@ -707,7 +707,7 @@ func drupal7PostStartAction(app *DdevApp) error {
 		return err
 	}
 
-	err := WriteDrushrc(nil, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
+	err := WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 	if err != nil {
 		util.Warning("Failed to WriteDrushrc: %v", err)
 	}
@@ -725,7 +725,7 @@ func drupal6PostStartAction(app *DdevApp) error {
 		return err
 	}
 
-	err := WriteDrushrc(nil, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
+	err := WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 	if err != nil {
 		util.Warning("Failed to WriteDrushrc: %v", err)
 	}

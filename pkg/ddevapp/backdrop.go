@@ -327,8 +327,7 @@ func backdropImportFilesAction(app *DdevApp, importPath, extPath string) error {
 // useful permissions settings on sites/default.
 func backdropPostStartAction(app *DdevApp) error {
 	// Drush config has to be written after start because we don't know the ports until it's started
-	//TODO: Change to write drushrc.php
-	err := WriteDrushrc(nil, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
+	err := WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 	if err != nil {
 		util.Warning("Failed to WriteDrushrc: %v", err)
 	}
