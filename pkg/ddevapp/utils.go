@@ -229,6 +229,10 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 			return err
 		}
 	}
+	err := os.MkdirAll(targetDir, 0777)
+	if err != nil {
+		return err
+	}
 
 	tmpl, err := template.New("gitignore").Funcs(getTemplateFuncMap()).Parse(gitIgnoreTemplate)
 	if err != nil {

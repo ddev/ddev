@@ -13,7 +13,6 @@ import (
 	"time"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
@@ -107,12 +106,6 @@ func TestWriteDrushConfig(t *testing.T) {
 			logs, _ := GetErrLogsFromApp(app, startErr)
 			t.Fatalf("app.Start failed, startErr=%v, logs=\n========\n%s\n===========\n", startErr, logs)
 		}
-
-		dockerIP, err := dockerutil.GetDockerIP()
-		assert.NoError(err)
-		dbPort, err := app.GetPublishedPort("db")
-		assert.NoError(err)
-		assert.NotEqual(-1, dbPort)
 
 		drushFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php")
 
