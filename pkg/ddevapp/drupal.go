@@ -234,7 +234,7 @@ if (empty(getenv('DDEV_PHP_VERSION'))) {
   $port = {{ $config.DBPublishedPort }};
 } 
 
-$db_url = '{{ $config.DatabaseDriver }}://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@$host:$port/{{ $config.DatabaseName }}';
+$db_url = "{{ $config.DatabaseDriver }}://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@$host:$port/{{ $config.DatabaseName }}";
 
 ini_set('session.gc_probability', 1);
 ini_set('session.gc_divisor', 100);
