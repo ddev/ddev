@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -28,10 +29,15 @@ type BackdropSettings struct {
 	Signature        string
 	SiteSettings     string
 	SiteSettingsDdev string
+	DockerIP         string
+	DBPublishedPort  int
 }
 
 // NewBackdropSettings produces a BackdropSettings object with default values.
-func NewBackdropSettings() *BackdropSettings {
+func NewBackdropSettings(app *DdevApp) *BackdropSettings {
+	dockerIP, _ := dockerutil.GetDockerIP()
+	dbPublishedPort, _ := app.GetPublishedPort("db")
+
 	return &BackdropSettings{
 		DatabaseName:     "db",
 		DatabaseUsername: "db",
@@ -44,6 +50,8 @@ func NewBackdropSettings() *BackdropSettings {
 		Signature:        DdevFileSignature,
 		SiteSettings:     "settings.php",
 		SiteSettingsDdev: "settings.ddev.php",
+		DockerIP:         dockerIP,
+		DBPublishedPort:  dbPublishedPort,
 	}
 }
 
@@ -79,7 +87,17 @@ const BackdropDdevSettingsTemplate = `<?php
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
-$database = 'mysql://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@{{ $config.DatabaseHost }}/{{ $config.DatabaseName }}';
+$host = "{{ $config.DatabaseHost }}";
+$port = {{ $config.DatabasePort }};
+
+// If DDEV_PHP_VERSION is not set, it means we're running on the host,
+// so use the host-side bind port on docker IP
+if (empty(getenv('DDEV_PHP_VERSION'))) {
+  $host = "{{ $config.DockerIP }}";
+  $port = {{ $config.DBPublishedPort }};
+} 
+
+$database = "{{ $config.DatabaseDriver }}://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@$host:$port/{{ $config.DatabaseName }}";
 $database_prefix = '{{ $config.DatabasePrefix }}';
 
 $settings['update_free_access'] = FALSE;
@@ -98,7 +116,7 @@ ini_set('session.cookie_lifetime', 2000000);
 // If a settings.php file already exists, it will be modified to ensure that it includes
 // settings.ddev.php, which contains ddev-specific configuration.
 func createBackdropSettingsFile(app *DdevApp) (string, error) {
-	settings := NewBackdropSettings()
+	settings := NewBackdropSettings(app)
 
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		output.UserOut.Printf("No %s file exists, creating one", settings.SiteSettings)
@@ -223,7 +241,7 @@ func getBackdropHooks() []byte {
 
 // setBackdropSiteSettingsPaths sets the paths to settings.php for templating.
 func setBackdropSiteSettingsPaths(app *DdevApp) {
-	settings := NewBackdropSettings()
+	settings := NewBackdropSettings(app)
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, settings.SiteSettings)
 	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, settings.SiteSettingsDdev)
