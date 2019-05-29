@@ -45,13 +45,14 @@ echo "Installing nfs-kernel-server"
 sudo apt-get update -qq
 sudo apt-get install -qq nfs-kernel-server
 
+primary_ip=$(ip route get 1 | awk '{gsub("^.*src ",""); print $1; exit}')
 echo "== Setting up nfs..."
 # Share /home folder. If the projects are elsewhere the /etc/exports will need
 # to be adapted. This grants access to all unrouteable ("public") IP addresses
 # (10.*, 172.16-172.28..., 192.168.*)
 # You are welcome to edit and limit it to the addresses you prefer.
 FILE=/etc/exports
-LINE="/home 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)"
+LINE="${HOME} ${primary_ip}(rw,sync,no_subtree_check)"
 grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
 
 echo "== Restarting nfs-kernel-server..."

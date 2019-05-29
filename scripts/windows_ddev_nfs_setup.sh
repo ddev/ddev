@@ -51,7 +51,7 @@ else
 # You can edit these yourself to match your workflow
 # But nfs must share your project directory
 # Additional lines can be added for additional directories or drives.
-C:\ > /C" >"$HOME/.ddev/nfs_exports.txt"
+${HOMEDRIVE}${HOMEPATH} > ${HOME}" >"$HOME/.ddev/nfs_exports.txt"
 fi
 sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -addr $nfs_addr -log off -pathFile "\"$HOMEDRIVE$HOMEPATH\.ddev\nfs_exports.txt\""
 sudo nssm start nfsd || true
