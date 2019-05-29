@@ -356,7 +356,7 @@ func TestRemoveVolume(t *testing.T) {
 		testVolume,
 		"local",
 		map[string]string{"type": "nfs", "o": "addr=host.docker.internal,hard,nolock,rw",
-			"device": ":" + MassageWIndowsNFSMount(pwd)},
+			"device": ":" + MassageWindowsNFSMount(pwd)},
 	)
 	assert.NoError(err)
 

@@ -42,5 +42,5 @@ func TestDebugNFSMount(t *testing.T) {
 	assert.Contains(out, "/nfsmount")
 	pwd, err := os.Getwd()
 	assert.NoError(err)
-	assert.Contains(out, ":"+dockerutil.MassageWIndowsNFSMount(pwd))
+	assert.Contains(out, ":"+dockerutil.MassageWindowsNFSMount(pwd))
 }

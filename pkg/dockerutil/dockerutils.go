@@ -647,12 +647,14 @@ func MassageWindowsHostMountpoint(mountPoint string) string {
 	return mountPoint
 }
 
-// MassageWIndowsNFSMount changes C:\Path\to\something to /C/Path/to/something
-func MassageWIndowsNFSMount(mountPoint string) string {
+// MassageWindowsNFSMount changes C:\Path\to\something to /c/Path/to/something
+func MassageWindowsNFSMount(mountPoint string) string {
 	if string(mountPoint[1]) == ":" {
 		pathPortion := strings.Replace(mountPoint[2:], `\`, "/", -1)
 		drive := string(mountPoint[0])
-		mountPoint = "/" + drive + pathPortion
+		// Because we use $HOME to get home in exports, and $HOME has /c/Users/xxx
+		// change the drive to lower case.
+		mountPoint = "/" + strings.ToLower(drive) + pathPortion
 	}
 	return mountPoint
 }
