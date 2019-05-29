@@ -29,13 +29,12 @@ mkdir -p ~/.ddev
 docker run --rm -t -v /$HOME/.ddev:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 103)
 
 echo "
-+--------------------------------------+
++-----------------------------------------------------+
 | Setup native NFS on Linux for Docker
-| Allowing NFS access to /home has
-| security implications you should
-| consider. You'll want your firewall
-| turned on.
-+--------------------------------------+
+| Only primary IP of machine is allowed client access;
+| Your home directory is shared by default.
+| But, of course, pay attention to security.
++-----------------------------------------------------+
 "
 echo "Stopping running ddev projects"
 
