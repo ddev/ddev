@@ -274,13 +274,23 @@ How do you know if DDEV manages a settings file? You will see the following comm
 
 ## Listing project information
 
-To see a list of your current projects you can use `ddev list`.
+To see a list of your running projects you can use `ddev list`; `ddev list --all` will show all projects including stopped projects.
 
 ```
 ➜  ddev list
 NAME     TYPE     LOCATION             URL(s)                      STATUS
 drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.local   running
                                        https://drupal8.ddev.local
+```
+
+```
+➜  ddev list --all
+NAME          TYPE     LOCATION                   URL(s)                                STATUS
+d8git         drupal8  ~/workspace/d8git          https://d8git.ddev.local              running
+                                                  http://d8git.ddev.local
+hobobiker     drupal6  ~/workspace/hobobiker.com                                        stopped
+t3v9composer  typo3    ~/workspace/t3v9composer   https://t3v9composer.ddev.local:8443  running
+                                                  http://t3v9composer.ddev.local:8080
 ```
 
 You can also see more detailed information about a project by running `ddev describe` from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
@@ -311,6 +321,17 @@ phpMyAdmin:	http://drupal8.ddev.local:8036
 
 DDEV ROUTER STATUS: healthy
 ```
+
+## Removing projects from your collection known to ddev
+
+To remove a project from ddev's listing you can use the destructive option (deletes database, removes item from ddev's list, removes hostname entry in hosts file):
+
+`ddev stop --remove-data <projectname>` or to skip the snapshot, `ddev stop --remove-data --omit-snapshot <projectname>`
+
+Or if you just want it not to show up in `ddev list --all` any more, this command will unlist it until the next time you `ddev start` or `ddev config` the project.
+
+`ddev stop --unlist <projectname>`
+
 
 ## Importing assets for an existing project
 

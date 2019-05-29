@@ -14,7 +14,7 @@ set -o pipefail
 set -o nounset
 set -x
 
-rm -rf ~/.ddev/Test*
+rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml
 
 # There are discrepancies in golang hash checking in 1.11+, so kill off modcache to solve.
 # See https://github.com/golang/go/issues/27925

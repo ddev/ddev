@@ -20,17 +20,33 @@ import (
 var (
 	// DdevBin is the full path to the drud binary
 	DdevBin      = "ddev"
-	DevTestSites = []testcommon.TestSite{{
-		Name:                          "TestMainCmdWordpress",
-		SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
-		ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
-		HTTPProbeURI:                  "wp-admin/setup-config.php",
-		Docroot:                       "htdocs",
-		Type:                          ddevapp.AppTypeWordPress,
-		Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
-	},
+	DevTestSites = []testcommon.TestSite{
+		{
+			Name:                          "TestCmdWordpress",
+			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
+			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
+			FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
+			HTTPProbeURI:                  "wp-admin/setup-config.php",
+			Docroot:                       "htdocs",
+			Type:                          ddevapp.AppTypeWordPress,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
+		},
+		// Drupal6 is used here just because it's smaller and we don't actually
+		// care much about CMS functionality.
+		{
+			Name:                          "TestCmdDrupal6",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-6.38/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
+			FullSiteTarballURL:            "",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
+			Docroot:                       "",
+			Type:                          ddevapp.AppTypeDrupal6,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
+			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
+		},
 	}
 )
 
@@ -56,18 +72,15 @@ func TestMain(m *testing.M) {
 	// We don't want the tests reporting to Sentry.
 	_ = os.Setenv("DDEV_NO_SENTRY", "true")
 
-	// Attempt to stop/remove all running containers before starting a test.
-	// If no projects are running, this will exit silently and without error.
-	if _, err = exec.RunCommand(DdevBin, []string{"remove", "--all", "--stop-ssh-agent"}); err != nil {
-		log.Warnf("Failed to stop/remove all running projects: %v", err)
-	}
-
+	log.Debugln("Preparing DevTestSites")
 	for i := range DevTestSites {
+		log.Debugf("Preparing %s", DevTestSites[i].Name)
 		err = DevTestSites[i].Prepare()
 		if err != nil {
 			log.Fatalf("Prepare() failed in TestMain site=%s, err=%v\n", DevTestSites[i].Name, err)
 		}
 	}
+	log.Debugln("Adding DevTestSites")
 	err = addSites()
 	if err != nil {
 		removeSites()
@@ -148,13 +161,17 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 
 // addSites runs `ddev start` on the test apps
 func addSites() error {
+	log.Debugln("Removing any existing DevTestSites")
+	for _, site := range DevTestSites {
+		// Make sure the site is gone in case it was hanging around
+		_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
+	}
+	log.Debugln("Starting DevTestSites")
 	for _, site := range DevTestSites {
 		cleanup := site.Chdir()
 		defer cleanup()
 
-		// test that you get an error when you run with no args
-		args := []string{"start"}
-		out, err := exec.RunCommand(DdevBin, args)
+		out, err := exec.RunCommand(DdevBin, []string{"start"})
 		if err != nil {
 			log.Fatalln("Error Output from ddev start:", out, "err:", err)
 		}
@@ -167,7 +184,7 @@ func removeSites() {
 	for _, site := range DevTestSites {
 		_ = site.Chdir()
 
-		args := []string{"remove", "-RO"}
+		args := []string{"stop", "-RO"}
 		out, err := exec.RunCommand(DdevBin, args)
 		if err != nil {
 			log.Errorf("Failed to run ddev remove -RO command, err: %v, output: %s\n", err, out)

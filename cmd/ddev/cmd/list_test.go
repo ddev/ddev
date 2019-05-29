@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"github.com/stretchr/testify/require"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,30 +15,20 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDevList runs the binary with "ddev list" and checks the results
-func TestDevList(t *testing.T) {
+// TestCmdList runs the binary with "ddev list" and checks the results
+func TestCmdList(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Execute "ddev list" and harvest plain text output.
-	args := []string{"list"}
-	out, err := exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
+	out, err := exec.RunCommand(DdevBin, []string{"list"})
+	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
 
 	// Execute "ddev list -j" and harvest the json output
-	args = []string{"list", "-j"}
-	jsonOut, err := exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
+	jsonOut, err := exec.RunCommand(DdevBin, []string{"list", "-j"})
+	assert.NoError(err, "error running ddev list -j: %v, output=%s", jsonOut)
 
-	logItems, err := unmarshalJSONLogs(jsonOut)
-	assert.NoError(err)
-
-	// The list should be the last item; there may be a warning
-	// or other info before that.
-	data := logItems[len(logItems)-1]
-	assert.EqualValues(data["level"], "info")
-
-	raw, ok := data["raw"].([]interface{})
-	assert.True(ok)
+	siteList := getSitesFromList(t, jsonOut)
+	assert.Equal(len(DevTestSites), len(siteList))
 
 	for _, v := range DevTestSites {
 		app, err := ddevapp.GetActiveApp(v.Name)
@@ -51,16 +42,16 @@ func TestDevList(t *testing.T) {
 
 		// Look through list results in json for this site.
 		found := false
-		for _, listitem := range raw {
-			_ = listitem
+		for _, listitem := range siteList {
 			item, ok := listitem.(map[string]interface{})
 			assert.True(ok)
 			// Check to see that we can find our item
 			if item["name"] == v.Name {
 				found = true
-				assert.Contains(item["httpurl"], app.HostName())
-				assert.Contains(item["httpsurl"], app.HostName())
-				assert.EqualValues(app.GetType(), item["type"])
+				assert.Equal(app.GetHTTPURL(), item["httpurl"])
+				assert.Equal(app.GetHTTPSURL(), item["httpsurl"])
+				assert.Equal(app.Name, item["name"])
+				assert.Equal(app.GetType(), item["type"])
 				assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), item["shortroot"])
 				assert.EqualValues(app.GetAppRoot(), item["approot"])
 				break
@@ -70,6 +61,65 @@ func TestDevList(t *testing.T) {
 
 	}
 
+	// Now check behavior of --all
+	// Stop the first app
+	firstApp, err := ddevapp.GetActiveApp(DevTestSites[0].Name)
+	assert.NoError(err)
+	err = firstApp.Stop(false, false)
+	assert.NoError(err)
+
+	// Execute "ddev list" and harvest plain text output.
+	// Now there should be one less project in list
+	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j"})
+	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
+
+	siteList = getSitesFromList(t, jsonOut)
+	assert.Equal(len(DevTestSites)-1, len(siteList))
+
+	// Now list with -a, make sure we show all projects
+	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j", "-a"})
+	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
+
+	siteList = getTestingSitesFromList(t, jsonOut)
+	assert.Equal(len(DevTestSites), len(siteList))
+
+	// Leave firstApp running for other tests
+	err = firstApp.Start()
+	assert.NoError(err)
+}
+
+// getSitesFromList takes the json output of ddev list -j
+// and returns the list of sites ddev list returns as an array
+// of interface{}
+func getSitesFromList(t *testing.T, jsonOut string) []interface{} {
+	assert := asrt.New(t)
+
+	logItems, err := unmarshalJSONLogs(jsonOut)
+	assert.NoError(err)
+	data := logItems[len(logItems)-1]
+	assert.EqualValues(data["level"], "info")
+
+	raw, ok := data["raw"].([]interface{})
+	assert.True(ok)
+	return raw
+}
+
+// getTestingSitesFromList() finds only the ddev list items that
+// have names starting with "Test"
+func getTestingSitesFromList(t *testing.T, jsonOut string) []interface{} {
+	assert := asrt.New(t)
+
+	baseRaw := getSitesFromList(t, jsonOut)
+	testSites := make([]interface{}, 0)
+	for _, listItem := range baseRaw {
+		item, ok := listItem.(map[string]interface{})
+		assert.True(ok)
+
+		if strings.HasPrefix(item["name"].(string), "Test") {
+			testSites = append(testSites, listItem)
+		}
+	}
+	return testSites
 }
 
 // TestCmdListContinuous tests the --continuous flag for ddev list.

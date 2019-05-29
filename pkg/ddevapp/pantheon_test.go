@@ -144,8 +144,8 @@ func TestPantheonPull(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	// Move into the properly named pantheon site (must match pantheon sitename)
-	siteDir := testDir + "/" + pantheonTestSiteName
-	err := os.MkdirAll(siteDir+"/sites/default", 0777)
+	siteDir := filepath.Join(testDir, pantheonTestSiteName)
+	err := os.MkdirAll(filepath.Join(siteDir, "sites/default"), 0777)
 	assert.NoError(err)
 	err = os.Chdir(siteDir)
 	assert.NoError(err)

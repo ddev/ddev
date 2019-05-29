@@ -75,10 +75,10 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		return nil, fmt.Errorf("ddev config is not useful in home directory (%s)", homeDir)
 	}
 
+	app.AppRoot = AppRoot
 	if !fileutil.FileExists(AppRoot) {
 		return app, fmt.Errorf("project root %s does not exist", AppRoot)
 	}
-	app.AppRoot = AppRoot
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.APIVersion = version.DdevVersion
 	app.Type = AppTypePHP
@@ -178,7 +178,7 @@ func (app *DdevApp) WriteConfig() error {
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
 	// accidentally get used for other projects.
-	err := app.CheckAndReserveHostPorts()
+	err := app.UpdateGlobalProjectList()
 	if err != nil {
 		return err
 	}
@@ -261,9 +261,13 @@ RUN echo "Built from ` + app.DBImage + `" >/var/tmp/built-from.txt
 	return nil
 }
 
-// CheckAndReserveHostPorts checks that configured host ports are not already
-// reserved by another project.
-func (app *DdevApp) CheckAndReserveHostPorts() error {
+// UpdateGlobalProjectList updates any information about project that
+// is tracked in global project list:
+// - approot
+// - configured host ports
+// checks that configured host ports are not already
+// reserved by another project
+func (app *DdevApp) UpdateGlobalProjectList() error {
 	portsToReserve := []string{}
 	if app.HostDBPort != "" {
 		portsToReserve = append(portsToReserve, app.HostDBPort)
@@ -282,8 +286,15 @@ func (app *DdevApp) CheckAndReserveHostPorts() error {
 		}
 	}
 	err := globalconfig.ReservePorts(app.Name, portsToReserve)
+	if err != nil {
+		return err
+	}
+	err = globalconfig.SetProjectAppRoot(app.Name, app.AppRoot)
+	if err != nil {
+		return err
+	}
 
-	return err
+	return nil
 }
 
 // ReadConfig reads project configuration from the config.yaml file

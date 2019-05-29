@@ -5,7 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -83,6 +83,10 @@ func TestValidTestSite(t *testing.T) {
 	startingDir, err := os.Getwd()
 	assert.NoError(err, "Could not get current directory.")
 
+	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
+		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	}
+
 	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
 	//not need to be updated over time.
@@ -90,12 +94,15 @@ func TestValidTestSite(t *testing.T) {
 
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
 	site.Name = "TestValidTestSite"
-	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
-		err = site.Prepare()
-		if err != nil {
-			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
-		}
-	}
+	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
+
+	//nolint: errcheck
+	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
+	//nolint: errcheck
+	defer globalconfig.RemoveProjectInfo(site.Name)
+	err = site.Prepare()
+	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+
 	assert.NotNil(site.Dir, "Directory is set.")
 	docroot := filepath.Join(site.Dir, site.Docroot)
 	dirStat, err := os.Stat(docroot)
@@ -107,6 +114,7 @@ func TestValidTestSite(t *testing.T) {
 
 	cleanup := site.Chdir()
 	defer cleanup()
+
 	currentDir, err := os.Getwd()
 	assert.NoError(err)
 
@@ -134,31 +142,26 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
 
-	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
-	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
-
-	router, _ := ddevapp.FindDdevRouter()
-	require.Empty(t, router)
-
 	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
 	//not need to be updated over time.
 	site := TestSites[0]
 	site.Name = "TestGetLocalHTTPResponse"
-	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
-		err := site.Prepare()
-		if err != nil {
-			t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
-		}
-	}
+
+	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
+	//nolint: errcheck
+	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
+	//nolint: errcheck
+	defer globalconfig.RemoveProjectInfo(site.Name)
+
+	err := site.Prepare()
+	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 
 	cleanup := site.Chdir()
 	defer cleanup()
 
 	app := &ddevapp.DdevApp{}
 	err = app.Init(site.Dir)
-	app.Name = "TestGetLocalHTTPResponse"
 	assert.NoError(err)
 	// nolint: errcheck
 	defer app.Stop(true, false)

@@ -29,6 +29,7 @@ func init() {
 }
 
 type ProjectInfo struct {
+	AppRoot       string   `yaml:"approot"`
 	UsedHostPorts []string `yaml:"used_host_ports,omitempty,flow"`
 }
 
@@ -243,6 +244,35 @@ func ReservePorts(projectName string, ports []string) error {
 	return err
 }
 
+// SetProjectAppRoot() sets the approot in the ProjectInfo of global config
+func SetProjectAppRoot(projectName string, appRoot string) error {
+	// If the project doesn't exist, add it.
+	_, ok := DdevGlobalConfig.ProjectList[projectName]
+	if !ok {
+		DdevGlobalConfig.ProjectList[projectName] = &ProjectInfo{}
+	}
+	// Can't use fileutil.FileExists because of import cycle.
+	if _, err := os.Stat(appRoot); err != nil {
+		return fmt.Errorf("project %s project root %s does not exist", projectName, appRoot)
+	}
+	if DdevGlobalConfig.ProjectList[projectName].AppRoot != "" && DdevGlobalConfig.ProjectList[projectName].AppRoot != appRoot {
+		return fmt.Errorf("project %s project root is already set to %s, refusing to change it to %s; you can `ddev rm --unlist` and start again if the listed project root is in error", projectName, DdevGlobalConfig.ProjectList[projectName].AppRoot, appRoot)
+	}
+	DdevGlobalConfig.ProjectList[projectName].AppRoot = appRoot
+	err := WriteGlobalConfig(DdevGlobalConfig)
+	return err
+}
+
+// GetProject returns a project given name provided,
+// or nil if not found.
+func GetProject(projectName string) *ProjectInfo {
+	project, ok := DdevGlobalConfig.ProjectList[projectName]
+	if !ok {
+		return nil
+	}
+	return project
+}
+
 // RemoveProjectInfo() removes the ProjectInfo line for a project
 func RemoveProjectInfo(projectName string) error {
 	_, ok := DdevGlobalConfig.ProjectList[projectName]
@@ -254,4 +284,9 @@ func RemoveProjectInfo(projectName string) error {
 		}
 	}
 	return nil
+}
+
+// GetGlobalProjectList() returns the global project list map
+func GetGlobalProjectList() map[string]*ProjectInfo {
+	return DdevGlobalConfig.ProjectList
 }

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/dockerutil"
 	"strings"
 	"testing"
 
@@ -112,7 +113,7 @@ func TestCmdDescribe(t *testing.T) {
 // TestCmdDescribeAppFunction performs unit tests on the describeApp function from the working directory.
 func TestCmdDescribeAppFunction(t *testing.T) {
 	assert := asrt.New(t)
-	for _, v := range DevTestSites {
+	for i, v := range DevTestSites {
 		cleanup := v.Chdir()
 
 		app, err := ddevapp.GetActiveApp("")
@@ -120,26 +121,25 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 
 		desc, err := app.Describe()
 		assert.NoError(err)
-		assert.EqualValues(desc["status"], ddevapp.SiteRunning)
+		assert.EqualValues(ddevapp.SiteRunning, desc["status"])
 		assert.EqualValues(app.GetName(), desc["name"])
 		assert.EqualValues(ddevapp.RenderHomeRootedDir(v.Dir), desc["shortroot"].(string))
 		assert.EqualValues(v.Dir, desc["approot"].(string))
-
-		out, _ := json.Marshal(desc)
-		assert.Contains(string(out), app.GetHTTPURL())
-		assert.Contains(string(out), app.GetName())
-		assert.Contains(string(out), "\"router_status\":\"healthy\"")
-		assert.Contains(string(out), ddevapp.RenderHomeRootedDir(v.Dir))
+		assert.Equal(app.GetHTTPURL(), desc["httpurl"])
+		assert.Equal(app.GetName(), desc["name"])
+		assert.Equal("healthy", desc["router_status"], "project #%d %s desc does not have healthy router status", i, app.Name)
+		assert.Equal(v.Dir, desc["approot"])
 
 		// Stop the router using docker and then check the describe
 		_, err = exec.RunCommand("docker", []string{"stop", "ddev-router"})
 		assert.NoError(err)
 		desc, err = app.Describe()
 		assert.NoError(err)
-		out, _ = json.Marshal(desc)
-		assert.NoError(err)
-		assert.Contains(string(out), "router_status\":\"exited")
+		assert.Equal("exited", desc["router_status"])
 		_, err = exec.RunCommand("docker", []string{"start", "ddev-router"})
+		assert.NoError(err)
+
+		_, err = dockerutil.ContainerWait(10, map[string]string{"com.docker.compose.service": "ddev-router"})
 		assert.NoError(err)
 
 		cleanup()

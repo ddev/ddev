@@ -2,9 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"path"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -23,8 +25,9 @@ import (
 	gohomedir "github.com/mitchellh/go-homedir"
 )
 
-// GetDockerProjects returns an array of ddev applications.
-func GetDockerProjects() []*DdevApp {
+// GetActiveProjects returns an array of ddev projects
+// that are currently live in docker.
+func GetActiveProjects() []*DdevApp {
 	apps := make([]*DdevApp, 0)
 	labels := map[string]string{
 		"com.ddev.platform":          "ddev",
@@ -82,7 +85,7 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 	switch {
 	case strings.Contains(status, SitePaused):
 		status = color.YellowString(status)
-	case strings.Contains(status, SiteNotFound):
+	case strings.Contains(status, SiteStopped):
 		status = color.RedString(status)
 	case strings.Contains(status, SiteDirMissing):
 		status = color.RedString(status)
@@ -96,7 +99,10 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 		status = status + "\n" + syncStatus
 	}
 
-	urls := row["httpsurl"].(string) + "\n" + row["httpurl"].(string)
+	urls := ""
+	if row["status"] == SiteRunning {
+		urls = row["httpsurl"].(string) + "\n" + row["httpurl"].(string)
+	}
 
 	table.AddRow(
 		row["name"],
@@ -311,8 +317,55 @@ func WaitForSync(app *DdevApp, seconds int) {
 // CheckForMissingProjectFiles returns an error if the project's configuration or project root cannot be found
 func CheckForMissingProjectFiles(project *DdevApp) error {
 	if strings.Contains(project.SiteStatus(), SiteConfigMissing) || strings.Contains(project.SiteStatus(), SiteDirMissing) {
-		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev stop %s'", project.GetAppRoot(), project.GetName())
+		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev stop --remove-data --omit-snaphot %s'", project.GetAppRoot(), project.GetName())
 	}
 
 	return nil
+}
+
+// GetProjects returns projects that are listed
+// in globalconfig projectlist (or in docker container labels, or both)
+// if activeOnly is true, only show projects that aren't stopped
+// (or broken, missing config, missing files)
+func GetProjects(activeOnly bool) ([]*DdevApp, error) {
+	apps := make(map[string]*DdevApp)
+	projectList := globalconfig.GetGlobalProjectList()
+
+	// First grab the GetActiveApps (docker labels) version of the projects and make sure it's
+	// included. Hopefully docker label information and global config information will not
+	// be out of sync very often.
+	dockerActiveApps := GetActiveProjects()
+	for _, app := range dockerActiveApps {
+		apps[app.Name] = app
+	}
+
+	// Now get everything we can find in global project list
+	for name, info := range projectList {
+		// Skip apps already found running in docker
+		if _, ok := apps[name]; ok {
+			continue
+		}
+		// Skip if AppRoot hasn't been set in globalconfig
+		// This situation is transitional as globalconfig
+		// gets fully populated
+		if info.AppRoot == "" {
+			continue
+		}
+
+		app, err := NewApp(info.AppRoot, true, ProviderDefault)
+		if err != nil {
+			app.Name = name
+		}
+		if !activeOnly || (app.SiteStatus() != SiteStopped && app.SiteStatus() != SiteConfigMissing && app.SiteStatus() != SiteDirMissing) {
+			apps[name] = app
+		}
+	}
+
+	appSlice := []*DdevApp{}
+	for _, v := range apps {
+		appSlice = append(appSlice, v)
+	}
+	sort.Slice(appSlice, func(i, j int) bool { return appSlice[i].Name < appSlice[j].Name })
+
+	return appSlice, nil
 }

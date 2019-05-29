@@ -24,34 +24,33 @@ func TestCmdPauseContainers(t *testing.T) {
 	err := addSites()
 	require.NoError(t, err)
 
-	for _, site := range DevTestSites {
-		cleanup := site.Chdir()
+	site := DevTestSites[0]
+	cleanup := site.Chdir()
 
-		out, err := exec.RunCommand(DdevBin, []string{"pause"})
-		assert.NoError(err, "ddev pause should succeed but failed, err: %v, output: %s", err, out)
-		assert.Contains(out, "has been paused")
+	out, err := exec.RunCommand(DdevBin, []string{"pause"})
+	assert.NoError(err, "ddev pause should succeed but failed, err: %v, output: %s", err, out)
+	assert.Contains(out, "has been paused")
 
-		apps := ddevapp.GetDockerProjects()
+	apps := ddevapp.GetActiveProjects()
 
-		for _, app := range apps {
-			if app.GetName() != site.Name {
-				continue
-			}
-
-			assert.True(app.SiteStatus() == ddevapp.SitePaused)
+	for _, app := range apps {
+		if app.GetName() != site.Name {
+			continue
 		}
 
-		cleanup()
+		assert.True(app.SiteStatus() == ddevapp.SitePaused)
 	}
+
+	cleanup()
 
 	// Re-create running sites.
 	err = addSites()
 	require.NoError(t, err)
-	out, err := exec.RunCommand(DdevBin, []string{"pause", "--all"})
+	out, err = exec.RunCommand(DdevBin, []string{"pause", "--all"})
 	assert.NoError(err, "ddev pause --all should succeed but failed, err: %v, output: %s", err, out)
 
 	// Confirm all sites are stopped.
-	apps := ddevapp.GetDockerProjects()
+	apps = ddevapp.GetActiveProjects()
 	for _, app := range apps {
 		assert.True(app.SiteStatus() == ddevapp.SitePaused, "All sites should be stopped, but %s status: %s", app.GetName(), app.SiteStatus())
 	}

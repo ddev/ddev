@@ -20,17 +20,20 @@ func getRequestedProjects(names []string, all bool) ([]*ddevapp.DdevApp, error) 
 		return append(requestedProjects, project), nil
 	}
 
-	allDockerProjects := ddevapp.GetDockerProjects()
+	allProjects, err := ddevapp.GetProjects(false)
+	if err != nil {
+		return nil, err
+	}
 
 	// If all projects are requested, return here
 	if all {
-		return allDockerProjects, nil
+		return allProjects, nil
 	}
 
 	// Convert all projects slice into map indexed by project name to prevent duplication
-	allDockerProjectMap := map[string]*ddevapp.DdevApp{}
-	for _, project := range allDockerProjects {
-		allDockerProjectMap[project.Name] = project
+	allProjectMap := map[string]*ddevapp.DdevApp{}
+	for _, project := range allProjects {
+		allProjectMap[project.Name] = project
 	}
 
 	// Select requested projects
@@ -40,14 +43,13 @@ func getRequestedProjects(names []string, all bool) ([]*ddevapp.DdevApp, error) 
 		// If the requested project name is found in the docker map, OK
 		// If not, if we find it in the globl project list, OK
 		// Otherwise, error.
-		if requestedProjectsMap[name], exists = allDockerProjectMap[name]; !exists {
+		if requestedProjectsMap[name], exists = allProjectMap[name]; !exists {
 			if _, exists = globalconfig.DdevGlobalConfig.ProjectList[name]; exists {
 				requestedProjectsMap[name] = &ddevapp.DdevApp{Name: name}
 			} else {
 				return nil, fmt.Errorf("could not find requested project %s", name)
 			}
 		}
-
 	}
 
 	// Convert map back to slice

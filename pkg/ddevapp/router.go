@@ -121,7 +121,7 @@ func RenderRouterStatus() string {
 	badRouter := "\nThe router is not yet healthy. Your projects may not be accessible.\nIf it doesn't become healthy try running 'ddev start' on a project to recreate it."
 
 	switch status {
-	case SiteNotFound:
+	case SiteStopped:
 		renderedStatus = color.RedString(status) + badRouter
 	case "healthy":
 		renderedStatus = color.CyanString(status)
@@ -138,12 +138,10 @@ func RenderRouterStatus() string {
 // return status and most recent log
 func GetRouterStatus() (string, string) {
 	var status, logOutput string
-
-	label := map[string]string{"com.docker.compose.service": "ddev-router"}
-	container, err := dockerutil.FindContainerByLabels(label)
+	container, err := FindDdevRouter()
 
 	if err != nil || container == nil {
-		status = SiteNotFound
+		status = SiteStopped
 	} else {
 		status, logOutput = dockerutil.GetContainerHealth(container)
 	}

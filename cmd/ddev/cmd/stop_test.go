@@ -32,7 +32,7 @@ func TestCmdStop(t *testing.T) {
 		assert.Contains(out, "has been stopped")
 
 		// Ensure the site that was just stopped does not appear in the list of sites
-		apps := ddevapp.GetDockerProjects()
+		apps := ddevapp.GetActiveProjects()
 		for _, app := range apps {
 			assert.True(app.GetName() != site.Name)
 		}
@@ -49,7 +49,7 @@ func TestCmdStop(t *testing.T) {
 	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
 	out, err = exec.RunCommand(DdevBin, []string{"list"})
 	assert.NoError(err)
-	assert.Contains(out, "no active ddev projects")
+	assert.Contains(out, "No ddev projects were found")
 	containers, err := dockerutil.GetDockerContainers(true)
 	assert.NoError(err)
 	// Just the ddev-ssh-agent should remain running (1 container)

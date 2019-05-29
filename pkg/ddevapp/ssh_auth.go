@@ -139,7 +139,7 @@ func RenderSSHAuthStatus() string {
 	var renderedStatus string
 
 	switch status {
-	case SiteNotFound:
+	case SiteStopped:
 		renderedStatus = color.RedString(status)
 	case "healthy":
 		renderedStatus = color.CyanString(status)
@@ -159,10 +159,10 @@ func GetSSHAuthStatus() string {
 
 	if err != nil {
 		util.Error("Failed to execute FindContainerByLabels(%v): %v", label, err)
-		return SiteNotFound
+		return SiteStopped
 	}
 	if container == nil {
-		return SiteNotFound
+		return SiteStopped
 	}
 	health, _ := dockerutil.GetContainerHealth(container)
 	return health

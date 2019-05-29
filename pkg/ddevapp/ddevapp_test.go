@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/url"
 	"os"
+	osexec "os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -134,11 +135,6 @@ func init() {
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
-	// Ensure the ddev directory is created before tests run.
-	_ = globalconfig.GetGlobalDdevDir()
-	globalConfigFile := globalconfig.GetGlobalConfigPath()
-	_ = os.Rename(globalConfigFile, globalConfigFile+".bak")
-
 	// Since this may be first time ddev has been used, we need the
 	// ddev_default network available.
 	dockerutil.EnsureDdevNetwork()
@@ -146,25 +142,6 @@ func TestMain(m *testing.M) {
 	// Avoid having sudo try to add to /etc/hosts.
 	// This is normally done by Testsite.Prepare()
 	_ = os.Setenv("DRUD_NONINTERACTIVE", "true")
-
-	// Attempt to remove all running containers before starting a test.
-	// If no projects are running, this will exit silently and without error.
-	// If a system doesn't have `ddev` in its $PATH, this will emit a warning but will not fail the test.
-	if _, err := exec.RunCommand(DdevBin, []string{"remove", "--all", "--stop-ssh-agent"}); err != nil {
-		log.Warnf("Failed to stop/remove all running projects: %v", err)
-	}
-
-	for _, volume := range []string{"ddev-router-cert-cache", "ddev-ssh-agent_dot_ssh", "ddev-ssh-agent_socket_dir"} {
-		err := dockerutil.RemoveVolume(volume)
-		if err != nil && err.Error() != "no such volume" {
-			log.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
-		}
-	}
-
-	count := len(ddevapp.GetDockerProjects())
-	if count > 0 {
-		log.Fatalf("ddevapp tests require no projects running. You have %v project(s) running.", count)
-	}
 
 	// If GOTEST_SHORT is an integer, then use it as index for a single usage
 	// in the array. Any value can be used, it will default to just using the
@@ -182,6 +159,12 @@ func TestMain(m *testing.M) {
 	// Start with a clean exit result, it will be changed if we have trouble.
 	testRun := 0
 	for i := range TestSites {
+
+		oldProject := globalconfig.GetProject(TestSites[i].Name)
+		if oldProject != nil {
+			_, _ = osexec.Command(DdevBin, "stop", "-RO", TestSites[i].Name).CombinedOutput()
+		}
+
 		err := TestSites[i].Prepare()
 		if err != nil {
 			log.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", TestSites[i].Name, err)
@@ -229,7 +212,7 @@ func TestMain(m *testing.M) {
 			log.Fatalf("TestMain shutdown: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
-		if app.SiteStatus() != ddevapp.SiteNotFound {
+		if app.SiteStatus() != ddevapp.SiteStopped {
 			err = app.Stop(true, false)
 			if err != nil {
 				log.Fatalf("TestMain shutdown: app.Stop() failed on site %s, err=%v", TestSites[i].Name, err)
@@ -237,9 +220,6 @@ func TestMain(m *testing.M) {
 		}
 		site.Cleanup()
 	}
-
-	_ = os.Remove(globalConfigFile)
-	_ = os.Rename(globalConfigFile+".bak", globalConfigFile)
 
 	os.Exit(testRun)
 }
@@ -325,15 +305,17 @@ func TestDdevStart(t *testing.T) {
 
 	// try to start a site of same name at different path
 	another := site
-	err = another.Prepare()
-	if err != nil {
-		assert.FailNow("TestDdevStart: Prepare() failed on another.Prepare(), err=%v", err)
-		return
-	}
+	tmpDir := testcommon.CreateTmpDir("another")
+	copyDir := filepath.Join(tmpDir, "copy")
+	err = fileutil.CopyDir(site.Dir, copyDir)
+	assert.NoError(err)
+	another.Dir = copyDir
+	//nolint: errcheck
+	defer os.RemoveAll(copyDir)
 
 	badapp := &ddevapp.DdevApp{}
 
-	err = badapp.Init(another.Dir)
+	err = badapp.Init(copyDir)
 	//nolint: errcheck
 	defer badapp.Stop(true, false)
 	if err == nil {
@@ -345,7 +327,7 @@ func TestDdevStart(t *testing.T) {
 	}
 
 	// Try to start a site of same name at an equivalent but different path. It should work.
-	tmpDir, err := testcommon.OsTempDir()
+	tmpDir, err = testcommon.OsTempDir()
 	assert.NoError(err)
 	symlink := filepath.Join(tmpDir, fileutil.RandomFilenameBase())
 	err = os.Symlink(app.AppRoot, symlink)
@@ -575,7 +557,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 	}
 }
 
-// TestGetApps tests the GetDockerProjects function to ensure it accurately returns a list of running applications.
+// TestGetApps tests the GetActiveProjects function to ensure it accurately returns a list of running applications.
 func TestGetApps(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -591,8 +573,7 @@ func TestGetApps(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	apps := ddevapp.GetDockerProjects()
-	assert.Equal(len(TestSites), len(apps))
+	apps := ddevapp.GetActiveProjects()
 
 	for _, testSite := range TestSites {
 		var found bool
@@ -615,7 +596,6 @@ func TestGetApps(t *testing.T) {
 
 		err = app.Stop(true, false)
 		assert.NoError(err)
-
 	}
 }
 
@@ -1788,7 +1768,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 
 }
 
-// TestGetappsEmpty ensures that GetDockerProjects returns an empty list when no applications are running.
+// TestGetappsEmpty ensures that GetActiveProjects returns an empty list when no applications are running.
 func TestGetAppsEmpty(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -1802,14 +1782,14 @@ func TestGetAppsEmpty(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		if app.SiteStatus() != ddevapp.SiteNotFound {
+		if app.SiteStatus() != ddevapp.SiteStopped {
 			err = app.Stop(true, false)
 			assert.NoError(err)
 		}
 		switchDir()
 	}
 
-	apps := ddevapp.GetDockerProjects()
+	apps := ddevapp.GetActiveProjects()
 	assert.Equal(0, len(apps), "Expected to find no apps but found %d apps=%v", len(apps), apps)
 }
 
@@ -1834,7 +1814,7 @@ func TestListWithoutDir(t *testing.T) {
 	packageDir, _ := os.Getwd()
 
 	// startCount is the count of apps at the start of this adventure
-	apps := ddevapp.GetDockerProjects()
+	apps := ddevapp.GetActiveProjects()
 	startCount := len(apps)
 
 	testDir := testcommon.CreateTmpDir("TestStartWithoutDdevConfig")
@@ -1867,7 +1847,7 @@ func TestListWithoutDir(t *testing.T) {
 
 	testcommon.CleanupDir(testDir)
 
-	apps = ddevapp.GetDockerProjects()
+	apps = ddevapp.GetActiveProjects()
 
 	assert.EqualValues(len(apps), startCount+1)
 

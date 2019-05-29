@@ -52,11 +52,11 @@ const SiteRunning = "running"
 // SiteStarting
 const SiteStarting = "starting"
 
-// SiteNotFound defines the string used to denote a site where the containers were not found/do not exist.
-const SiteNotFound = "not found"
+// SiteStopped defines the string used to denote a site where the containers were not found/do not exist, but the project is there.
+const SiteStopped = "stopped"
 
 // SiteDirMissing defines the string used to denote when a site is missing its application directory.
-const SiteDirMissing = "app directory missing"
+const SiteDirMissing = "project directory missing"
 
 // SiteConfigMissing defines the string used to denote when a site is missing its .ddev/config.yml file.
 const SiteConfigMissing = ".ddev/config.yaml missing"
@@ -443,7 +443,7 @@ func (app *DdevApp) SiteStatus() string {
 			return ""
 		}
 		if container == nil {
-			statuses[service] = SiteNotFound
+			statuses[service] = SiteStopped
 		} else {
 			status, _ := dockerutil.GetContainerHealth(container)
 
@@ -681,7 +681,8 @@ func (app *DdevApp) Start() error {
 	}
 
 	// Make sure that any ports allocated are available.
-	err = app.CheckAndReserveHostPorts()
+	// and of course add to global project list as well
+	err = app.UpdateGlobalProjectList()
 	if err != nil {
 		return err
 	}
@@ -941,7 +942,6 @@ func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines
 
 // CaptureLogs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
-// TODO: Reimplement this so it doesn't use the util.CaptureUserOut()
 func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines string) (string, error) {
 	client := dockerutil.GetDockerClient()
 
@@ -1054,7 +1054,7 @@ func (app *DdevApp) DockerEnv() {
 func (app *DdevApp) Pause() error {
 	app.DockerEnv()
 
-	if app.SiteStatus() == SiteNotFound {
+	if app.SiteStatus() == SiteStopped {
 		return fmt.Errorf("no project to stop")
 	}
 
