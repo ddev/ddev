@@ -139,7 +139,7 @@ func TestHostName(t *testing.T) {
 	assert.NoError(err)
 	app.Name = util.RandString(32)
 
-	assert.Equal(app.GetHostname(), app.Name+"."+version.DDevTLD)
+	assert.Equal(app.GetHostname(), app.Name+"."+app.ProjectTLD)
 }
 
 // TestWriteDockerComposeYaml tests the writing of a docker-compose.yaml file.
@@ -507,6 +507,7 @@ func TestConfigValidate(t *testing.T) {
 		PHPVersion:     PHPDefault,
 		MariaDBVersion: version.MariaDBDefaultVersion,
 		WebserverType:  WebserverDefault,
+		ProjectTLD:     DdevDefaultTLD,
 		Provider:       ProviderDefault,
 	}
 

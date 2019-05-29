@@ -53,7 +53,7 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started example-wordpress-site
-Your project can be reached at: http://example-wordpress-site.ddev.local and https://example-wordpress-site.ddev.local
+Your project can be reached at: http://example-wordpress-site.ddev.site and https://example-wordpress-site.ddev.site
 ```
 
 Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
@@ -73,7 +73,7 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started my-wordpress-site
-Your application can be reached at: http://my-wordpress-site.ddev.local
+Your application can be reached at: http://my-wordpress-site.ddev.site
 ```
 
 ### Drupal 6/7 Quickstart
@@ -103,10 +103,10 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started my-drupal7-site
-Your project can be reached at: http://my-drupal7-site.ddev.local
+Your project can be reached at: http://my-drupal7-site.ddev.site
 ```
 
-If you want to run the Drupal install script, the next step is to hit "/install.php" on your project (like `http://my-drupal7-site.ddev.local/install.php`) or run drush site-install, `ddev exec drush site-install --yes`. 
+If you want to run the Drupal install script, the next step is to hit "/install.php" on your project (like `http://my-drupal7-site.ddev.site/install.php`) or run drush site-install, `ddev exec drush site-install --yes`. 
 
 Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
 
@@ -137,7 +137,7 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started my-drupal8-site
-Your project can be reached at: http://my-drupal8-site.ddev.local
+Your project can be reached at: http://my-drupal8-site.ddev.site
 ```
 
 ### TYPO3 Quickstart
@@ -167,7 +167,7 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started example-typo3-site
-Your application can be reached at: http://example-typo3-site.ddev.local
+Your application can be reached at: http://example-typo3-site.ddev.site
 ```
 
 For those wanting/needing to connect to the database within the database container directly, please see the [developer tools page](https://ddev.readthedocs.io/en/stable/users/developer-tools/#using-development-tools-on-the-host-machine).
@@ -199,7 +199,7 @@ When `ddev start` runs, it outputs status messages to indicate the project envir
 
 ```
 Successfully started example-backdrop-site
-Your application can be reached at: http://example-backdrop-site.ddev.local
+Your application can be reached at: http://example-backdrop-site.ddev.site
 ```
 
 ### Database Imports
@@ -238,7 +238,7 @@ Creating local-drupal8-db
 Creating local-drupal8-web
 Waiting for the environment to become ready. This may take a couple of minutes...
 Successfully started drupal8
-Your project can be reached at: http://drupal8.ddev.local
+Your project can be reached at: http://drupal8.ddev.site
 ```
 
 And you can now visit your working project. Enjoy!
@@ -279,8 +279,8 @@ To see a list of your running projects you can use `ddev list`; `ddev list --all
 ```
 ➜  ddev list
 NAME     TYPE     LOCATION             URL(s)                      STATUS
-drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.local   running
-                                       https://drupal8.ddev.local
+drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
+                                       https://drupal8.ddev.site
 ```
 
 ```
@@ -297,8 +297,8 @@ You can also see more detailed information about a project by running `ddev desc
 
 ```
 NAME     TYPE     LOCATION             URL(s)                      STATUS
-drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.local   running
-                                       https://drupal8.ddev.local
+drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
+                                       https://drupal8.ddev.site
 
 Project Information
 -----------------
@@ -316,8 +316,8 @@ For example: mysql --host=127.0.0.1 --port=32768 --user=db --password=db --datab
 
 Other Services
 --------------
-MailHog:   	http://drupal8.ddev.local:8025
-phpMyAdmin:	http://drupal8.ddev.local:8036
+MailHog:   	http://drupal8.ddev.site:8025
+phpMyAdmin:	http://drupal8.ddev.site:8036
 
 DDEV ROUTER STATUS: healthy
 ```
@@ -498,3 +498,23 @@ If you do choose to send the diagnostics it helps us tremendously in our effort 
 ![usage_stats](images/usage_stats.png)
 
 Of course if you have any reservations about this, please just opt-out (`ddev config global --instrumentation-opt-in=false`). If you have any problems or concerns with it, we'd like to know. One person did report slow ddev command completion on a network that was apparently not friendly to sentry.io.
+
+## Using ddev offline, and top-level-domain options
+
+DDEV-Local attempts to make offline use work as well as possible, and you really shouldn't have to do anything to make it work:
+
+* It doesn't attempt instrumentation or update reporting if offline
+* It uses /etc/hosts entries instead of DNS resolution if DNS resolution fails
+
+However, it does not (yet) attempt to prevent docker pulls if a new docker image is required, so you'll want to make sure that you try a `ddev start` before going offline to make sure everything has been pulled.
+
+If youy have a project running when you're online (using DNS for name resolution) and you then go offline, you'll want to do a `ddev restart` to get the hostname added into /etc/hosts for name resolution.
+
+*Note that DNS name resolution never works with Docker Toolbox on Windows unless you run your own DNS server.*
+
+You have general options as well:
+
+In `.ddev/config.yaml` `use_dns_when_possible: false` will make ddev never try to use DNS for resolution, instead adding hostnames to /etc/hosts. You can also use `ddev config --use-dns-when-possible=false` to set this configuration option.
+In `.ddev/config.yaml` `project_tld: example.com` (or any other domain) can set ddev to use a project that could never be looked up in DNS. You can also use `ddev config --project-tld=example.com`
+
+You can slso set up a local DNS server like dnsmasq (Linux and macOS, `brew install dnsmasq`) or ([unbound](https://github.com/NLnetLabs/unbound) or many others on Windows) in your own host environment that serves the project_tld that you choose, and DNS resolution will work just fine. You'll likely want a wildcard A record pointing to 127.0.0.1 (on most ddev installations) or the Docker Toolbox IP address (often 192.168.99.100)

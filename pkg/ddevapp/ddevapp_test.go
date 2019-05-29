@@ -369,9 +369,9 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		// should uniqueify them.
 		app.AdditionalHostnames = []string{"sub1." + site.Name, "sub2." + site.Name, "subname.sub3." + site.Name, site.Name, site.Name, site.Name}
 
-		// sub1.<sitename>.ddev.local and sitename.ddev.local are deliberately included to prove they don't
+		// sub1.<sitename>.ddev.site and sitename.ddev.site are deliberately included to prove they don't
 		// cause ddev-router failures"
-		app.AdditionalFQDNs = []string{"one.example.com", "two.example.com", "a.one.example.com", site.Name + "." + version.DDevTLD, "sub1." + site.Name + "." + version.DDevTLD}
+		app.AdditionalFQDNs = []string{"one.example.com", "two.example.com", "a.one.example.com", site.Name + "." + app.ProjectTLD, "sub1." + site.Name + "." + app.ProjectTLD}
 
 		err = app.WriteConfig()
 		assert.NoError(err)

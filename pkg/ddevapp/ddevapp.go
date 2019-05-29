@@ -9,6 +9,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-shellwords"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -108,6 +109,8 @@ type DdevApp struct {
 	PHPMyAdminPort        string               `yaml:"phpmyadmin_port,omitempty"`
 	WebImageExtraPackages []string             `yaml:"webimage_extra_packages,omitempty,flow"`
 	DBImageExtraPackages  []string             `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD            string               `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible    bool                 `yaml:"use_dns_when_possible"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -726,7 +729,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.AddHostsEntries()
+	err = app.AddHostsEntriesIfNeeded()
 	if err != nil {
 		return err
 	}
@@ -1404,8 +1407,8 @@ func (app *DdevApp) HostName() string {
 	return app.GetHostname()
 }
 
-// AddHostsEntries will add the site URL to the host's /etc/hosts.
-func (app *DdevApp) AddHostsEntries() error {
+// AddHostsEntriesIfNeeded will (optionally) add the site URL to the host's /etc/hosts.
+func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
 		return fmt.Errorf("could not get Docker IP: %v", err)
@@ -1415,6 +1418,7 @@ func (app *DdevApp) AddHostsEntries() error {
 	if err != nil {
 		util.Failed("could not open hostfile: %v", err)
 	}
+
 	ipPosition := hosts.GetIPPosition(dockerIP)
 	if ipPosition != -1 && runtime.GOOS == "windows" {
 		hostsLine := hosts.Lines[ipPosition]
@@ -1426,30 +1430,49 @@ func (app *DdevApp) AddHostsEntries() error {
 	}
 
 	for _, name := range app.GetHostnames() {
+		if app.UseDNSWhenPossible {
+			hostIPs, err := net.LookupHost(name)
+			// If we had successful lookup and dockerIP matches
+			// (which won't happen on Docker Toolbox) then don't bother
+			// with adding to hosts file.
+			if err == nil && len(hostIPs) > 0 && hostIPs[0] == dockerIP {
+				continue
+			}
+		}
 
+		// We likely won't hit the hosts.Has() as true because
+		// we already did a lookup. But check anyway.
 		if hosts.Has(dockerIP, name) {
 			continue
 		}
-
-		_, err = osexec.LookPath("sudo")
-		if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
-			util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", dockerIP, name, name, dockerIP)
-			return nil
-		}
-
-		ddevFullpath, err := os.Executable()
-		util.CheckErr(err)
-
-		output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt will require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
-
-		hostnameArgs := []string{ddevFullpath, "hostname", name, dockerIP}
-		command := strings.Join(hostnameArgs, " ")
-		util.Warning(fmt.Sprintf("    sudo %s", command))
-		output.UserOut.Println("Please enter your password if prompted.")
-		_, err = exec.RunCommandPipe("sudo", hostnameArgs)
+		err = addHostEntry(name, dockerIP)
 		if err != nil {
-			util.Warning("Failed to execute sudo command, you will need to manually execute '%s' with administrative privileges", command)
+			return err
 		}
+	}
+
+	return nil
+}
+
+func addHostEntry(name string, ip string) error {
+	_, err := osexec.LookPath("sudo")
+	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
+		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
+		return nil
+	}
+
+	ddevFullpath, err := os.Executable()
+	util.CheckErr(err)
+
+	output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt will require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
+
+	hostnameArgs := []string{ddevFullpath, "hostname", name, ip}
+	command := strings.Join(hostnameArgs, " ")
+	util.Warning(fmt.Sprintf("    sudo %s", command))
+	output.UserOut.Println("Please enter your password if prompted.")
+	_, err = exec.RunCommandPipe("sudo", hostnameArgs)
+	if err != nil {
+		util.Warning("Failed to execute sudo command, you will need to manually execute '%s' with administrative privileges", command)
 	}
 	return nil
 }

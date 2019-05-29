@@ -40,7 +40,6 @@ func TestCmdVersion(t *testing.T) {
 	assert.Contains(versionData["msg"], version.GetDBImage())
 	assert.Contains(versionData["msg"], version.DBAImg)
 	assert.Contains(versionData["msg"], version.DBATag)
-	assert.Contains(versionData["msg"], version.DDevTLD)
 	assert.NotEmpty(version.DockerVersion)
 	assert.NotEmpty(version.DockerComposeVersion)
 	assert.Contains(versionData["msg"], version.DockerVersion)

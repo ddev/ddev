@@ -87,9 +87,6 @@ var DockerVersion = ""
 // DockerComposeVersion is filled with the version we find for docker-compose
 var DockerComposeVersion = ""
 
-// DDevTLD defines the tld to use for DDev site URLs.
-const DDevTLD = "ddev.local"
-
 // GetVersionInfo returns a map containing the version info defined above.
 func GetVersionInfo() map[string]string {
 	var err error
@@ -103,7 +100,6 @@ func GetVersionInfo() map[string]string {
 	versionInfo["router"] = RouterImage + ":" + RouterTag
 	versionInfo["ddev-ssh-agent"] = SSHAuthImage + ":" + SSHAuthTag
 	versionInfo["commit"] = COMMIT
-	versionInfo["domain"] = DDevTLD
 	versionInfo["build info"] = BUILDINFO
 	versionInfo["os"] = runtime.GOOS
 	if versionInfo["docker"], err = GetDockerVersion(); err != nil {

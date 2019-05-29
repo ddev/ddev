@@ -127,6 +127,12 @@ var (
 	// lists of Debian packages to be added to related containers on build
 	webimageExtraPackages string
 	dbimageExtraPackages  string
+
+	// projectTLDArg specifies a project top-level-domain; defaults to ddevapp.DdevDefaultTLD
+	projectTLDArg string
+
+	// useDNSWhenPossibleArg specifies
+	useDNSWhenPossibleArg bool
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -267,6 +273,10 @@ func init() {
 	ConfigCommand.Flags().StringVar(&webimageExtraPackages, "webimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to web container when the project is started")
 
 	ConfigCommand.Flags().StringVar(&dbimageExtraPackages, "dbimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to db container when the project is started")
+
+	ConfigCommand.Flags().StringVar(&projectTLDArg, "project-tld", ddevapp.DdevDefaultTLD, "set the top-level domain to be used for projects, defaults to "+ddevapp.DdevDefaultTLD)
+
+	ConfigCommand.Flags().BoolVarP(&useDNSWhenPossibleArg, "use-dns-when-possible", "", true, "Use DNS for hostname resolution instead of /etc/hosts when possible")
 
 	RootCmd.AddCommand(ConfigCommand)
 }
@@ -462,6 +472,14 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if cmd.Flag("dbimage-extra-packages").Changed {
 		app.WebImageExtraPackages = strings.Split(webimageExtraPackages, ",")
+	}
+
+	if cmd.Flag("use-dns-when-possible").Changed {
+		app.UseDNSWhenPossible = useDNSWhenPossibleArg
+	}
+
+	if cmd.Flag("project-tld").Changed {
+		app.ProjectTLD = projectTLDArg
 	}
 
 	if uploadDirArg != "" {

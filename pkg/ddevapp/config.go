@@ -94,6 +94,8 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
 	app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
+	app.ProjectTLD = DdevDefaultTLD
+	app.UseDNSWhenPossible = true
 
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
@@ -450,7 +452,7 @@ func (app *DdevApp) DockerComposeYAMLPath() string {
 
 // GetHostname returns the primary hostname of the app.
 func (app *DdevApp) GetHostname() string {
-	return app.Name + "." + version.DDevTLD
+	return app.Name + "." + app.ProjectTLD
 }
 
 // GetHostnames returns an array of all the configured hostnames.
@@ -463,7 +465,7 @@ func (app *DdevApp) GetHostnames() []string {
 	nameListMap[app.GetHostname()] = 1
 
 	for _, name := range app.AdditionalHostnames {
-		nameListMap[name+"."+version.DDevTLD] = 1
+		nameListMap[name+"."+app.ProjectTLD] = 1
 	}
 
 	for _, name := range app.AdditionalFQDNs {

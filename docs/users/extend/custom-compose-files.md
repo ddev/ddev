@@ -32,7 +32,7 @@ When defining additional services for your project, we recommended you follow th
 
   - `com.ddev.app-url: $DDEV_URL`
 
-- Exposing ports for service: you can expose the port for a service to be accessible as `projectname.ddev.local:portNum` while your project is running. This is achieved by the following configurations for the container(s) being added:
+- Exposing ports for service: you can expose the port for a service to be accessible as `projectname.ddev.site:portNum` while your project is running. This is achieved by the following configurations for the container(s) being added:
 
   - Define only the internal port in the `ports` section for docker-compose. The `hostPort:containerPort` convention normally used to expose ports in docker should not be used here, since we are leveraging the ddev router to expose the ports.
 
