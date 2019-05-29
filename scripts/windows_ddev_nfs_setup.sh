@@ -13,12 +13,9 @@ DDEV_WINDOWS_GID=1000
 
 nfs_addr=127.0.0.1
 # Get IP address for docker toolbox docker host
-if [ "${DOCKER_TOOLBOX_INSTALL_PATH}" != "" ] ; then
+if [ "${DOCKER_TOOLBOX_INSTALL_PATH:-}" != "" ] ; then
     hostDockerInternalIP=$(echo $DOCKER_HOST | awk -F '.' ' { sub(/tcp:\/\//,"",$1); printf ("%d.%d.%d.1", $1, $2, $3) }')
     nfs_addr=${hostDockerInternalIP}
-fi
-
-  nfs_addr=192.168.99.100
 fi
 
 mkdir -p ~/.ddev
