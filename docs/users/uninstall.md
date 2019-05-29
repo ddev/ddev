@@ -21,7 +21,7 @@ If you installed docker just for ddev and want to uninstall it with all containe
 Otherwise:
 * To remove all ddev docker containers that might still exist: `docker rm $(docker ps -a | awk '/ddev/ { print $1 }')`
 * To remove all ddev docker images that might exist: `docker rmi $(docker images | awk '/ddev/ {print $3}')`
-* To remove any docker volumes: `docker volume rm $(docker volume ls | awk /ddev|-mariadb/ { print $2 }') `
+* To remove any docker volumes: `docker volume rm $(docker volume ls | awk '/ddev|-mariadb/ { print $2 }') `
 
 To remove the ddev binary:
 * On macOS with homebrew or Linux with Linuxbrew, `brew uninstall ddev`
