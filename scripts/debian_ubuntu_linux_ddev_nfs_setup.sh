@@ -52,7 +52,7 @@ echo "== Setting up nfs..."
 # You are welcome to edit and limit it to the addresses you prefer.
 FILE=/etc/exports
 LINE="${HOME} ${primary_ip}(rw,sync,no_subtree_check)"
-grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
+grep -qF -- "$LINE" "$FILE" 2>/dev/null || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
 
 echo "== Restarting nfs-kernel-server..."
 sudo systemctl restart nfs-kernel-server
