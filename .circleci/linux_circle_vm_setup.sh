@@ -23,7 +23,14 @@ done
 
 mkcert -install
 
-sudo bash -c "printf '/home 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)\n/tmp 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)' >>/etc/exports"
+primary_ip=$(ip route get 1 | awk '{gsub("^.*src ",""); print $1; exit}')
+
+exports_line="${HOME} ${primary_ip}/255.255.255.255(rw,sync,no_subtree_check)"
+sudo bash -c "cat <<EOF >/etc/exports
+${HOME} ${primary_ip}/255.255.255.255(rw,sync,no_subtree_check)
+EOF"
+
+sudo bash -c "echo $exports_line  >/etc/exports"
 sudo service nfs-kernel-server restart
 
 # gotestsum
