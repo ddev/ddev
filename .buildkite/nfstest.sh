@@ -9,19 +9,8 @@ function cleanup {
 }
 trap cleanup EXIT
 
-OS=$(go env GOOS)
-
-case $OS in
-linux)
-  share=/home
-  ;;
-darwin)
-  share=/Users
-  ;;
-windows)
-  share=/C/Users
-  ;;
-esac
+mkdir -p ~/.ddev
+share="${HOME}/.ddev"
 
 # Find host.docker.internal name using host-docker-internal.sh script
 hostDockerInternal=$($(dirname $0)/../scripts/host-docker-internal.sh)
