@@ -41,7 +41,7 @@ if ! command -v winnfsd.exe >/dev/null; then
     echo "winnfsd.exe does not seem to be installed or is not in the PATH"
     exit 102
 fi
-winnfsd=$(where winnfsd.exe)
+winnfsd=$(command -v winnfsd.exe)
 
 if [ -f "$HOME/.ddev/nfs_exports.txt" ]; then
     printf "$HOME/.ddev/nfs_exports.txt already exists, not overwriting it, you will be responsible for its exports.\n"
