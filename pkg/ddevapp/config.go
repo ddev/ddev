@@ -33,7 +33,7 @@ import (
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
-// Command defines commands to be run as pre/post hooks
+// Command defines tasks like Exec to be run in hooks
 type Command struct {
 	Exec     string `yaml:"exec,omitempty"`
 	ExecHost string `yaml:"exec-host,omitempty"`

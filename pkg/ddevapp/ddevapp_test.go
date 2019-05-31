@@ -282,7 +282,7 @@ func TestDdevStart(t *testing.T) {
 	err = os.Chdir(site.Dir)
 	assert.NoError(err)
 	err = app.Init(site.Dir)
-	app.Commands = map[string][]ddevapp.Command{"post-start": {{Exec: "echo hello"}}}
+	app.Hooks = map[string][]ddevapp.Command{"post-start": {{Exec: "echo hello"}}}
 
 	assert.NoError(err)
 	stdout := util.CaptureUserOut()
@@ -1456,7 +1456,7 @@ func TestProcessHooks(t *testing.T) {
 
 	// Note that any ExecHost commands must be able to run on Windows.
 	// echo and pwd are things that work pretty much the same in both places.
-	app.Commands = map[string][]ddevapp.Command{
+	app.Hooks = map[string][]ddevapp.Command{
 		"hook-test": {
 			{Exec: "ls /usr/local/bin/composer"},
 			{ExecHost: "echo something"},
@@ -1473,7 +1473,7 @@ func TestProcessHooks(t *testing.T) {
 	out := vtclean.Clean(stdout(), false)
 
 	assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
-	assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
+	assert.Contains(out, "--- Running host command: echo something ---\nRunning Task Task=echo something\nsomething")
 	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 

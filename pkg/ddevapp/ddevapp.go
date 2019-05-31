@@ -97,7 +97,7 @@ type DdevApp struct {
 	SiteSettingsPath      string               `yaml:"-"`
 	SiteDdevSettingsFile  string               `yaml:"-"`
 	providerInstance      Provider             `yaml:"-"`
-	Commands              map[string][]Command `yaml:"hooks,omitempty"`
+	Hooks                 map[string][]Command `yaml:"hooks,omitempty"`
 	UploadDir             string               `yaml:"upload_dir,omitempty"`
 	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
 	OmitContainers        []string             `yaml:"omit_containers,omitempty,flow"`
@@ -620,13 +620,13 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 	return orderedFiles, nil
 }
 
-// ProcessHooks executes commands defined in a Command
+// ProcessHooks executes Tasks defined in Hooks
 func (app *DdevApp) ProcessHooks(hookName string) error {
-	if cmds := app.Commands[hookName]; len(cmds) > 0 {
+	if cmds := app.Hooks[hookName]; len(cmds) > 0 {
 		output.UserOut.Printf("Executing %s commands...", hookName)
 	}
 
-	for _, c := range app.Commands[hookName] {
+	for _, c := range app.Hooks[hookName] {
 		if c.Exec != "" {
 			output.UserOut.Printf("--- Running exec command: %s ---", c.Exec)
 
@@ -650,7 +650,7 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 			output.UserOut.Println(stdout + "\n" + stderr)
 		}
 		if c.ExecHost != "" {
-			output.UserOut.Printf("--- Running host command: %s ---", c.ExecHost)
+			output.UserOut.Printf("--- Running ExecHost command: %s ---", c.ExecHost)
 			args := strings.Split(c.ExecHost, " ")
 			cmd := args[0]
 			args = append(args[:0], args[1:]...)
@@ -777,7 +777,7 @@ func (app *DdevApp) Start() error {
 	}
 
 	// Only check for start if there are post-start commands for performance reasons
-	if postStartCmds := app.Commands["post-start"]; len(postStartCmds) > 0 {
+	if postStartCmds := app.Hooks["post-start"]; len(postStartCmds) > 0 {
 		stdout, _, _ := app.Exec(&ExecOpts{
 			Service: "web",
 			Cmd:     "if [ -f /var/tmp/ddev_started.txt ]; then echo -n 'already started'; else touch /var/tmp/ddev_started.txt && echo -n 'starting'; fi",
