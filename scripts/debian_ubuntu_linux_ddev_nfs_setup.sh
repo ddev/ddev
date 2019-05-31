@@ -25,16 +25,16 @@ if [[ $EUID -eq 0 ]]; then
   exit 103
 fi
 
-docker run --rm -t -v /$HOME:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 103)
+mkdir -p ~/.ddev
+docker run --rm -t -v /$HOME/.ddev:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 103)
 
 echo "
-+--------------------------------------+
++-----------------------------------------------------+
 | Setup native NFS on Linux for Docker
-| Allowing NFS access to /home has
-| security implications you should
-| consider. You'll want your firewall
-| turned on.
-+--------------------------------------+
+| Only primary IP of machine is allowed client access;
+| Your home directory is shared by default.
+| But, of course, pay attention to security.
++-----------------------------------------------------+
 "
 echo "Stopping running ddev projects"
 
@@ -44,14 +44,15 @@ echo "Installing nfs-kernel-server"
 sudo apt-get update -qq
 sudo apt-get install -qq nfs-kernel-server
 
+primary_ip=$(ip route get 1 | awk '{gsub("^.*src ",""); print $1; exit}')
 echo "== Setting up nfs..."
 # Share /home folder. If the projects are elsewhere the /etc/exports will need
 # to be adapted. This grants access to all unrouteable ("public") IP addresses
 # (10.*, 172.16-172.28..., 192.168.*)
 # You are welcome to edit and limit it to the addresses you prefer.
 FILE=/etc/exports
-LINE="/home 10.0.0.0/255.0.0.0(rw,sync,no_subtree_check) 172.16.0.0/255.240.0.0(rw,sync,no_subtree_check) 192.168.0.0/255.255.0.0(rw,sync,no_subtree_check)"
-grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
+LINE="${HOME} ${primary_ip}(rw,sync,no_subtree_check)"
+grep -qF -- "$LINE" "$FILE" 2>/dev/null || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
 
 echo "== Restarting nfs-kernel-server..."
 sudo systemctl restart nfs-kernel-server

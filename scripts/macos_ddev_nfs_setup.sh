@@ -18,16 +18,16 @@ if [[ $EUID -eq 0 ]]; then
   exit 102
 fi
 
-docker run --rm -t -v /$HOME:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 103)
+mkdir -p ~/.ddev
+docker run --rm -t -v /$HOME/.ddev:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 103)
 
 echo "
-+--------------------------------------+
++-------------------------------------------+
 | Setup native NFS on macOS for Docker
-| Allowing NFS access to /Users has
-| security implications you should
-| consider. You'll want your firewall
-| turned on.
-+--------------------------------------+
+| Only localhost is allowed access;
+| Your home directory is shared by default.
+| But, of course, pay attention to security.
++-------------------------------------------+
 "
 echo "Stopping running ddev projects"
 echo ""
@@ -37,7 +37,7 @@ ddev stop -a || true
 echo "== Setting up nfs..."
 # Share /Users folder. If the projects are elsewhere the /etc/exports will need
 # to be adapted.
-LINE="/Users -alldirs -mapall=$(id -u):$(id -g) localhost"
+LINE="${HOME} -alldirs -mapall=$(id -u):$(id -g) localhost"
 FILE=/etc/exports
 sudo bash -c "echo >> $FILE" || ( echo "Unable to edit /etc/exports, need Full Disk Access on Mojave and later" && exit 103 )
 grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )

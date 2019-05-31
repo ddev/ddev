@@ -11,6 +11,17 @@ set -o nounset
 DDEV_WINDOWS_UID=1000
 DDEV_WINDOWS_GID=1000
 
+nfs_addr=127.0.0.1
+# Get IP address for docker toolbox docker host
+if [ "${DOCKER_TOOLBOX_INSTALL_PATH:-}" != "" ] ; then
+    hostDockerInternalIP=$(echo $DOCKER_HOST | awk -F '.' ' { sub(/tcp:\/\//,"",$1); printf ("%d.%d.%d.1", $1, $2, $3) }')
+    nfs_addr=${hostDockerInternalIP}
+fi
+
+mkdir -p ~/.ddev
+docker run --rm -t -v /$HOME/.ddev:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 101)
+
+
 status=uninstalled
 if nssm status nfsd 2>/dev/null ; then
     status=$(nssm status nfsd)
@@ -28,9 +39,9 @@ fi
 
 if ! command -v winnfsd.exe >/dev/null; then
     echo "winnfsd.exe does not seem to be installed or is not in the PATH"
-    exit 101
+    exit 102
 fi
-winnfsd=$(where winnfsd.exe)
+winnfsd=$(command -v winnfsd.exe)
 
 if [ -f "$HOME/.ddev/nfs_exports.txt" ]; then
     printf "$HOME/.ddev/nfs_exports.txt already exists, not overwriting it, you will be responsible for its exports.\n"
@@ -40,9 +51,9 @@ else
 # You can edit these yourself to match your workflow
 # But nfs must share your project directory
 # Additional lines can be added for additional directories or drives.
-C:\ > /C" >"$HOME/.ddev/nfs_exports.txt"
+${HOMEDRIVE}${HOMEPATH} > ${HOME}" >"$HOME/.ddev/nfs_exports.txt"
 fi
-sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -log off -pathFile "\"$HOMEDRIVE$HOMEPATH\.ddev\nfs_exports.txt\""
+sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -addr $nfs_addr -log off -pathFile "\"$HOMEDRIVE$HOMEPATH\.ddev\nfs_exports.txt\""
 sudo nssm start nfsd || true
 sleep 2
 nssm status nfsd
