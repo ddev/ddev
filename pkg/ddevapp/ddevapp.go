@@ -7,7 +7,6 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
-	"github.com/mattn/go-shellwords"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
@@ -627,48 +626,47 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 	}
 
 	for _, c := range app.Hooks[hookName] {
-		if c.Exec != "" {
-			output.UserOut.Printf("--- Running exec command: %s ---", c.Exec)
+		if cmd, ok := c.(map[string]interface{}); ok {
+			if command, ok := cmd["exec"].(string); ok {
+				var service string
+				if service, ok = cmd["service"].(string); !ok {
+					// If no configuration for service is found, web is the default
+					service = "web"
+				}
+				output.UserOut.Printf("--- Running exec command on %s: %s ---", service, command)
 
-			testargs, err := shellwords.Parse(c.Exec)
-			if err != nil {
-				return fmt.Errorf("%s exec failed: %v", hookName, err)
+				stdout, stderr, err := app.Exec(&ExecOpts{
+					Service: service,
+					Cmd:     command,
+				})
+
+				if err != nil {
+					return fmt.Errorf("%s exec failed: %v, stderr='%s'", hookName, err, stderr)
+				}
+				util.Success("--- %s exec command succeeded, output below ---", hookName)
+				output.UserOut.Println(stdout + "\n" + stderr)
+
+			} else if command, ok = cmd["exec-host"].(string); ok {
+				output.UserOut.Printf("--- Running exec-host command: %s ---", command)
+				args := strings.Split(command, " ")
+				cmd := args[0]
+				args = append(args[:0], args[1:]...)
+
+				// ensure exec-host runs from consistent location
+				cwd, err := os.Getwd()
+				util.CheckErr(err)
+				err = os.Chdir(app.GetAppRoot())
+				util.CheckErr(err)
+
+				out, err := exec.RunCommandPipe(cmd, args)
+				dirErr := os.Chdir(cwd)
+				util.CheckErr(dirErr)
+				output.UserOut.Println(out)
+				if err != nil {
+					return fmt.Errorf("%s host command failed: %v %s", hookName, err, out)
+				}
+				util.Success("--- %s host command succeeded ---\n", hookName)
 			}
-			_ = testargs
-			args := strings.Split(c.Exec, " ")
-			_ = args
-
-			stdout, stderr, err := app.Exec(&ExecOpts{
-				Service: "web",
-				Cmd:     c.Exec,
-			})
-
-			if err != nil {
-				return fmt.Errorf("%s exec failed: %v, stderr='%s'", hookName, err, stderr)
-			}
-			util.Success("--- %s exec command succeeded, output below ---", hookName)
-			output.UserOut.Println(stdout + "\n" + stderr)
-		}
-		if c.ExecHost != "" {
-			output.UserOut.Printf("--- Running ExecHost command: %s ---", c.ExecHost)
-			args := strings.Split(c.ExecHost, " ")
-			cmd := args[0]
-			args = append(args[:0], args[1:]...)
-
-			// ensure exec-host runs from consistent location
-			cwd, err := os.Getwd()
-			util.CheckErr(err)
-			err = os.Chdir(app.GetAppRoot())
-			util.CheckErr(err)
-
-			out, err := exec.RunCommandPipe(cmd, args)
-			dirErr := os.Chdir(cwd)
-			util.CheckErr(dirErr)
-			output.UserOut.Println(out)
-			if err != nil {
-				return fmt.Errorf("%s host command failed: %v %s", hookName, err, out)
-			}
-			util.Success("--- %s host command succeeded ---\n", hookName)
 		}
 	}
 
@@ -776,18 +774,9 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	// Only check for start if there are post-start commands for performance reasons
-	if postStartCmds := app.Hooks["post-start"]; len(postStartCmds) > 0 {
-		stdout, _, _ := app.Exec(&ExecOpts{
-			Service: "web",
-			Cmd:     "if [ -f /var/tmp/ddev_started.txt ]; then echo -n 'already started'; else touch /var/tmp/ddev_started.txt && echo -n 'starting'; fi",
-		})
-		if stdout != "already started" {
-			err = app.ProcessHooks("post-start")
-			if err != nil {
-				return err
-			}
-		}
+	err = app.ProcessHooks("post-start")
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -34,10 +34,7 @@ import (
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
 // Command defines tasks like Exec to be run in hooks
-type Command struct {
-	Exec     string `yaml:"exec,omitempty"`
-	ExecHost string `yaml:"exec-host,omitempty"`
-}
+type Command interface{}
 
 // Provider is the interface which all provider plugins must implement.
 type Provider interface {
@@ -905,29 +902,28 @@ func validateCommandYaml(source []byte) error {
 		return err
 	}
 
-	for command, tasks := range val.Commands {
+	for foundHook, tasks := range val.Commands {
 		var match bool
-		for _, hook := range validHooks {
-			if command == hook {
+		for _, h := range validHooks {
+			if foundHook == h {
 				match = true
 			}
 		}
 		if !match {
-			return fmt.Errorf("invalid command hook %s defined in config.yaml", command)
+			return fmt.Errorf("invalid hook %s defined in config.yaml", foundHook)
 		}
 
-		for _, taskSet := range tasks {
-			for taskName := range taskSet {
-				var match bool
-				for _, validTask := range validTasks {
-					if taskName == validTask {
-						match = true
-					}
-				}
-				if !match {
-					return fmt.Errorf("invalid task '%s' defined for %s hook in config.yaml", taskName, command)
+		for _, foundTask := range tasks {
+			var match bool
+			for _, validTask := range validTasks {
+				if _, ok := foundTask[validTask]; ok {
+					match = true
 				}
 			}
+			if !match {
+				return fmt.Errorf("invalid task '%s' defined for hook %s in config.yaml", foundTask, foundHook)
+			}
+
 		}
 
 	}
