@@ -347,7 +347,7 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	}
 
 	// ReadConfig config values from file.
-	err = yaml.Unmarshal(source, app)
+	err = yaml.UnmarshalStrict(source, app)
 	if err != nil {
 		return err
 	}
