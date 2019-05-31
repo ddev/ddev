@@ -27,6 +27,7 @@ primary_ip=$(ip route get 1 | awk '{gsub("^.*src ",""); print $1; exit}')
 
 sudo bash -c "cat <<EOF >/etc/exports
 ${HOME} ${primary_ip}/255.255.255.255(rw,sync,no_subtree_check)
+/tmp ${primary_ip}/255.255.255.255(rw,sync,no_subtree_check)
 EOF"
 
 sudo service nfs-kernel-server restart
