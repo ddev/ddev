@@ -14,7 +14,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 
 	"github.com/drud/go-pantheon/pkg/pantheon"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // PantheonProvider provides pantheon-specific import functionality.

@@ -191,3 +191,5 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 # gopkg.in/yaml.v2 v2.2.1
 gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20190502103701-55513cacd4ae
+gopkg.in/yaml.v3

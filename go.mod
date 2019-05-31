@@ -50,6 +50,6 @@ require (
 	golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac
 	gopkg.in/cheggaaa/pb.v1 v1.0.26 // indirect
 	gopkg.in/ini.v1 v1.39.0 // indirect
-	gopkg.in/yaml.v2 v2.2.1
+	gopkg.in/yaml.v3 v3.0.0-20190502103701-55513cacd4ae
 	gotest.tools v2.2.0+incompatible // indirect
 )
