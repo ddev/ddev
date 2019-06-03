@@ -299,8 +299,9 @@ const ConfigInstructions = `
 # This is ignored if a free-form .ddev/db-build/Dockerfile is provided
 
 # use_dns_when_possible: true
-# If the host has internet access and the domain configured can successfully be looked up,
-# DNS will be used for hostname resolution instead of editing /etc/hosts
+# If the host has internet access and the domain configured can 
+# successfully be looked up, DNS will be used for hostname resolution 
+# instead of editing /etc/hosts
 # Defaults to true
 
 # project_tld: ddev.site

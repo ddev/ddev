@@ -177,6 +177,9 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.PHPMyAdminPort == DdevDefaultPHPMyAdminPort {
 		appcopy.PHPMyAdminPort = ""
 	}
+	if appcopy.ProjectTLD == DdevDefaultTLD {
+		appcopy.ProjectTLD = ""
+	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
 	// accidentally get used for other projects.
