@@ -11,7 +11,12 @@ import (
 // 1. Find out CAROOT
 // 2. Look there to see if key/crt are readable
 // 3. If not, see if mkcert is even available, return informative message if not
+var caROOT = ""
+
 func getCAROOT() string {
+	if caROOT != "" {
+		return caROOT
+	}
 	_, err := exec.LookPath("mkcert")
 	if err != nil {
 		return ""
@@ -21,9 +26,10 @@ func getCAROOT() string {
 	if err != nil {
 		return ""
 	}
-	caroot := strings.Trim(string(out), "\n")
-	if !fileutil.FileIsReadable(filepath.Join(caroot, "rootCA-key.pem")) || !fileutil.FileExists(filepath.Join(caroot, "rootCA.pem")) {
+	root := strings.Trim(string(out), "\n")
+	if !fileutil.FileIsReadable(filepath.Join(root, "rootCA-key.pem")) || !fileutil.FileExists(filepath.Join(root, "rootCA.pem")) {
 		return ""
 	}
-	return caroot
+	caROOT = root
+	return caROOT
 }

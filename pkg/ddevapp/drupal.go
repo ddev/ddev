@@ -518,7 +518,7 @@ func WriteDrushrc(app *DdevApp, filePath string) error {
 	}
 
 	uri := app.GetHTTPSURL()
-	if !app.MkcertEnabled {
+	if getCAROOT() == "" {
 		uri = app.GetHTTPURL()
 	}
 	drushContents := []byte(`<?php
@@ -564,7 +564,7 @@ func WriteDrushYML(app *DdevApp, filePath string) error {
 	}
 
 	uri := app.GetHTTPSURL()
-	if !app.MkcertEnabled {
+	if getCAROOT() == "" {
 		uri = app.GetHTTPURL()
 	}
 	drushContents := []byte(`

@@ -707,9 +707,7 @@ func (app *DdevApp) Start() error {
 	app.CheckCustomConfig()
 
 	caRoot := getCAROOT()
-	if caRoot != "" {
-		app.MkcertEnabled = true
-	} else {
+	if caRoot == "" {
 		util.Warning("mkcert may not be properly installed, please install it, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`: %v", err)
 	}
 	router, _ := FindDdevRouter()

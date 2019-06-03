@@ -65,7 +65,7 @@ func CreateAppTable() *uitable.Table {
 	table.MaxColWidth = 140
 	table.Separator = "  "
 	table.Wrap = true
-	table.AddRow("NAME", "TYPE", "LOCATION", "URL(s)", "STATUS")
+	table.AddRow("NAME", "TYPE", "LOCATION", "URL", "STATUS")
 	return table
 }
 
@@ -101,7 +101,11 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 
 	urls := ""
 	if row["status"] == SiteRunning {
-		urls = row["httpsurl"].(string) + "\n" + row["httpurl"].(string)
+		if getCAROOT() != "" {
+			urls = row["httpsurl"].(string)
+		} else {
+			urls = row["httpurl"].(string)
+		}
 	}
 
 	table.AddRow(
