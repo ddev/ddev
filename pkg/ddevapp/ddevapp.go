@@ -706,7 +706,7 @@ func (app *DdevApp) Start() error {
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 
-	caRoot := getCAROOT()
+	caRoot := GetCAROOT()
 	if caRoot == "" {
 		util.Warning("mkcert may not be properly installed, please install it, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`: %v", err)
 	}
@@ -1343,13 +1343,13 @@ func (app *DdevApp) GetAllURLs() []string {
 		}
 
 		var url = "https://" + name + httpsPort
-		if getCAROOT() == "" {
+		if GetCAROOT() == "" {
 			url = "http://" + name + httpPort
 		}
 		URLs = append(URLs, url)
 	}
 
-	if getCAROOT() != "" {
+	if GetCAROOT() != "" {
 		URLs = append(URLs, app.GetWebContainerDirectHTTPSURL())
 	} else {
 		URLs = append(URLs, app.GetWebContainerDirectURL())

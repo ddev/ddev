@@ -7,13 +7,13 @@ import (
 	"strings"
 )
 
-// getCAROOT() verifies that the mkcert command is available and its root keys readable.
+// GetCAROOT() verifies that the mkcert command is available and its root keys readable.
 // 1. Find out CAROOT
 // 2. Look there to see if key/crt are readable
 // 3. If not, see if mkcert is even available, return informative message if not
 var caROOT = ""
 
-func getCAROOT() string {
+func GetCAROOT() string {
 	if caROOT != "" {
 		return caROOT
 	}
