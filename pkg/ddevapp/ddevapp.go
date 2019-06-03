@@ -1341,10 +1341,19 @@ func (app *DdevApp) GetAllURLs() []string {
 		if app.RouterHTTPSPort != "443" {
 			httpsPort = ":" + app.RouterHTTPSPort
 		}
-		URLs = append(URLs, "https://"+name+httpsPort, "http://"+name+httpPort)
+
+		var url = "https://" + name + httpsPort
+		if getCAROOT() == "" {
+			url = "http://" + name + httpPort
+		}
+		URLs = append(URLs, url)
 	}
 
-	URLs = append(URLs, app.GetWebContainerDirectHTTPSURL(), app.GetWebContainerDirectURL())
+	if getCAROOT() != "" {
+		URLs = append(URLs, app.GetWebContainerDirectHTTPSURL())
+	} else {
+		URLs = append(URLs, app.GetWebContainerDirectURL())
+	}
 
 	return URLs
 }
