@@ -274,24 +274,24 @@ How do you know if DDEV manages a settings file? You will see the following comm
 
 ## Listing project information
 
-To see a list of your running projects you can use `ddev list`; `ddev list --all` will show all projects including stopped projects.
+To see a list of your projects you can use `ddev list`; `ddev list --active-only` will show only projects currently running or paused.
+
+➜  ddev list 
+NAME          TYPE     LOCATION                   URL(s)                                STATUS
+d8git         drupal8  ~/workspace/d8git          https://d8git.ddev.local              running
+                                                  http://d8git.ddev.local
+hobobiker     drupal6  ~/workspace/hobobiker.com                                        stopped
+```
 
 ```
-➜  ddev list
+➜  ddev list --active-only
 NAME     TYPE     LOCATION             URL(s)                      STATUS
 drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
                                        https://drupal8.ddev.site
 ```
 
 ```
-➜  ddev list --all
-NAME          TYPE     LOCATION                   URL(s)                                STATUS
-d8git         drupal8  ~/workspace/d8git          https://d8git.ddev.local              running
-                                                  http://d8git.ddev.local
-hobobiker     drupal6  ~/workspace/hobobiker.com                                        stopped
-t3v9composer  typo3    ~/workspace/t3v9composer   https://t3v9composer.ddev.local:8443  running
-                                                  http://t3v9composer.ddev.local:8080
-```
+
 
 You can also see more detailed information about a project by running `ddev describe` from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
 
