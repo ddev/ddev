@@ -27,7 +27,7 @@ func TestCmdList(t *testing.T) {
 	jsonOut, err := exec.RunCommand(DdevBin, []string{"list", "-j"})
 	assert.NoError(err, "error running ddev list -j: %v, output=%s", jsonOut)
 
-	siteList := getSitesFromList(t, jsonOut)
+	siteList := getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(DevTestSites), len(siteList))
 
 	for _, v := range DevTestSites {
@@ -61,7 +61,6 @@ func TestCmdList(t *testing.T) {
 
 	}
 
-	// Now check behavior of --all
 	// Stop the first app
 	firstApp, err := ddevapp.GetActiveApp(DevTestSites[0].Name)
 	assert.NoError(err)
@@ -70,14 +69,14 @@ func TestCmdList(t *testing.T) {
 
 	// Execute "ddev list" and harvest plain text output.
 	// Now there should be one less project in list
-	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j"})
+	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-jA"})
 	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
 
-	siteList = getSitesFromList(t, jsonOut)
+	siteList = getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(DevTestSites)-1, len(siteList))
 
-	// Now list with -a, make sure we show all projects
-	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j", "-a"})
+	// Now list without -A, make sure we show all projects
+	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j"})
 	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
 
 	siteList = getTestingSitesFromList(t, jsonOut)
@@ -89,7 +88,7 @@ func TestCmdList(t *testing.T) {
 }
 
 // getSitesFromList takes the json output of ddev list -j
-// and returns the list of sites ddev list returns as an array
+// and returns the list of *test* sites ddev list returns as an array
 // of interface{}
 func getSitesFromList(t *testing.T, jsonOut string) []interface{} {
 	assert := asrt.New(t)

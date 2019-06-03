@@ -12,8 +12,8 @@ import (
 // continuous, if set, makes list continuously output
 var continuous bool
 
-// showAll, if set, shows non-running projects in addition to running/paused
-var showAll bool
+// activeOnly, if set, shows only running projects
+var activeOnly bool
 
 // continuousSleepTime is time to sleep between reads with --continuous
 var continuousSleepTime = 1
@@ -25,7 +25,7 @@ var DdevListCmd = &cobra.Command{
 	Long:  `List projects. Shows active projects by default, includes stopped projects with --all`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for {
-			apps, err := ddevapp.GetProjects(!showAll)
+			apps, err := ddevapp.GetProjects(activeOnly)
 			if err != nil {
 				util.Failed("failed getting GetProjects: %v", err)
 			}
@@ -56,7 +56,7 @@ var DdevListCmd = &cobra.Command{
 }
 
 func init() {
-	DdevListCmd.Flags().BoolVarP(&showAll, "all", "a", false, "If set, all projects will be displayed, even stopped projects.")
+	DdevListCmd.Flags().BoolVarP(&activeOnly, "active-only", "A", false, "If set, only currently active projects will be displayed.")
 	DdevListCmd.Flags().BoolVarP(&continuous, "continuous", "", false, "If set, project information will be emitted until the command is stopped.")
 	DdevListCmd.Flags().IntVarP(&continuousSleepTime, "continuous-sleep-interval", "I", 1, "Time in seconds between ddev list --continous output lists.")
 
