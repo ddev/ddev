@@ -912,8 +912,8 @@ func validateCommandYaml(source []byte) error {
 
 		for _, foundTask := range tasks {
 			var match bool
-			for _, validTask := range validTasks {
-				if _, ok := foundTask[validTask]; ok {
+			for _, validTaskName := range validTasks {
+				if _, ok := foundTask[validTaskName]; ok {
 					match = true
 				}
 			}
