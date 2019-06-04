@@ -70,48 +70,117 @@ const DdevFileSignature = "#ddev-generated"
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	APIVersion            string               `yaml:"APIVersion"`
-	Name                  string               `yaml:"name"`
-	Type                  string               `yaml:"type"`
-	Docroot               string               `yaml:"docroot"`
-	PHPVersion            string               `yaml:"php_version"`
-	WebserverType         string               `yaml:"webserver_type"`
-	WebImage              string               `yaml:"webimage,omitempty"`
-	BgsyncImage           string               `yaml:"bgsyncimage,omitempty"`
-	DBImage               string               `yaml:"dbimage,omitempty"`
-	DBAImage              string               `yaml:"dbaimage,omitempty"`
-	RouterHTTPPort        string               `yaml:"router_http_port"`
-	RouterHTTPSPort       string               `yaml:"router_https_port"`
-	XdebugEnabled         bool                 `yaml:"xdebug_enabled"`
-	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
-	AdditionalFQDNs       []string             `yaml:"additional_fqdns"`
-	MariaDBVersion        string               `yaml:"mariadb_version"`
-	WebcacheEnabled       bool                 `yaml:"webcache_enabled,omitempty"`
-	NFSMountEnabled       bool                 `yaml:"nfs_mount_enabled"`
-	ConfigPath            string               `yaml:"-"`
-	AppRoot               string               `yaml:"-"`
-	Platform              string               `yaml:"-"`
-	Provider              string               `yaml:"provider,omitempty"`
-	DataDir               string               `yaml:"-"`
-	SiteSettingsPath      string               `yaml:"-"`
-	SiteDdevSettingsFile  string               `yaml:"-"`
-	providerInstance      Provider             `yaml:"-"`
-	Hooks                 map[string][]Command `yaml:"hooks,omitempty"`
-	UploadDir             string               `yaml:"upload_dir,omitempty"`
-	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
-	OmitContainers        []string             `yaml:"omit_containers,omitempty,flow"`
-	HostDBPort            string               `yaml:"host_db_port,omitempty"`
-	HostWebserverPort     string               `yaml:"host_webserver_port,omitempty"`
-	HostHTTPSPort         string               `yaml:"host_https_port,omitempty"`
-	MailhogPort           string               `yaml:"mailhog_port,omitempty"`
-	PHPMyAdminPort        string               `yaml:"phpmyadmin_port,omitempty"`
-	WebImageExtraPackages []string             `yaml:"webimage_extra_packages,omitempty,flow"`
-	DBImageExtraPackages  []string             `yaml:"dbimage_extra_packages,omitempty,flow"`
-	ProjectTLD            string               `yaml:"project_tld,omitempty"`
-	UseDNSWhenPossible    bool                 `yaml:"use_dns_when_possible"`
+	APIVersion            string                  `yaml:"APIVersion"`
+	Name                  string                  `yaml:"name"`
+	Type                  string                  `yaml:"type"`
+	Docroot               string                  `yaml:"docroot"`
+	PHPVersion            string                  `yaml:"php_version"`
+	WebserverType         string                  `yaml:"webserver_type"`
+	WebImage              string                  `yaml:"webimage,omitempty"`
+	BgsyncImage           string                  `yaml:"bgsyncimage,omitempty"`
+	DBImage               string                  `yaml:"dbimage,omitempty"`
+	DBAImage              string                  `yaml:"dbaimage,omitempty"`
+	RouterHTTPPort        string                  `yaml:"router_http_port"`
+	RouterHTTPSPort       string                  `yaml:"router_https_port"`
+	XdebugEnabled         bool                    `yaml:"xdebug_enabled"`
+	AdditionalHostnames   []string                `yaml:"additional_hostnames"`
+	AdditionalFQDNs       []string                `yaml:"additional_fqdns"`
+	MariaDBVersion        string                  `yaml:"mariadb_version"`
+	WebcacheEnabled       bool                    `yaml:"webcache_enabled,omitempty"`
+	NFSMountEnabled       bool                    `yaml:"nfs_mount_enabled"`
+	ConfigPath            string                  `yaml:"-"`
+	AppRoot               string                  `yaml:"-"`
+	Platform              string                  `yaml:"-"`
+	Provider              string                  `yaml:"provider,omitempty"`
+	DataDir               string                  `yaml:"-"`
+	SiteSettingsPath      string                  `yaml:"-"`
+	SiteDdevSettingsFile  string                  `yaml:"-"`
+	providerInstance      Provider                `yaml:"-"`
+	Hooks                 map[string][]YAMLAction `yaml:"hooks,omitempty"`
+	UploadDir             string                  `yaml:"upload_dir,omitempty"`
+	WorkingDir            map[string]string       `yaml:"working_dir,omitempty"`
+	OmitContainers        []string                `yaml:"omit_containers,omitempty,flow"`
+	HostDBPort            string                  `yaml:"host_db_port,omitempty"`
+	HostWebserverPort     string                  `yaml:"host_webserver_port,omitempty"`
+	HostHTTPSPort         string                  `yaml:"host_https_port,omitempty"`
+	MailhogPort           string                  `yaml:"mailhog_port,omitempty"`
+	PHPMyAdminPort        string                  `yaml:"phpmyadmin_port,omitempty"`
+	WebImageExtraPackages []string                `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages  []string                `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD            string                  `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible    bool                    `yaml:"use_dns_when_possible"`
+	MkcertEnabled         bool                    `yaml:"-"`
+	NgrokArgs             string                  `yaml:"ngrok_args,omitempty"`
 	Timezone              string               `yaml:"timezone"`
-	MkcertEnabled         bool                 `yaml:"-"`
-	NgrokArgs             string               `yaml:"ngrok_args,omitempty"`
+}
+
+// Action defines tasks like Exec to be run in hooks
+type YAMLAction map[string]interface{}
+type Action interface {
+	Execute() (string, string, error)
+}
+type ExecAction struct {
+	service string
+	exec    string
+	app     *DdevApp
+}
+type ExecHostAction struct {
+	Action
+	exec string
+	app  *DdevApp
+}
+
+func (c ExecAction) Execute() (string, string, error) {
+	fmt.Printf("Executing exec %s", c.exec)
+
+	output.UserOut.Printf("--- Running exec command on %s: %s ---", c.service, c.exec)
+
+	stdout, stderr, err := c.app.Exec(&ExecOpts{
+		Service: c.service,
+		Cmd:     c.exec,
+	})
+
+	return stdout, stderr, err
+}
+func (c ExecHostAction) Execute() (string, string, error) {
+	fmt.Printf("Executing exec-host %s", c.exec)
+
+	output.UserOut.Printf("--- Running exec-host command: %s ---", c.exec)
+
+	cwd, _ := os.Getwd()
+	err := os.Chdir(c.app.GetAppRoot())
+	if err != nil {
+		return "", "", err
+	}
+
+	execAry := strings.Split(c.exec, " ")
+	stdout, err := exec.RunCommandPipe(execAry[0], execAry)
+	_ = os.Chdir(cwd)
+	return stdout, "", err
+}
+
+func NewExecAction(app *DdevApp, yamlmap YAMLAction) (ExecAction, error) {
+	execAction := ExecAction{}
+	if exec, ok := yamlmap["exec"]; ok {
+		execAction.app = app
+		execAction.exec = exec.(string)
+		execAction.service = "web"
+		if s, ok := yamlmap["service"].(string); ok {
+			execAction.service = s
+		}
+		return execAction, nil
+	}
+	return execAction, fmt.Errorf("nope")
+}
+
+func NewExecHostAction(app *DdevApp, yamlmap YAMLAction) (ExecHostAction, error) {
+	execAction := ExecHostAction{}
+	if _, ok := yamlmap["exec-host"]; ok {
+		execAction.app = app
+		execAction.exec = "exec" // probably unnecessary
+		return execAction, nil
+	}
+	return execAction, fmt.Errorf("nope")
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -625,48 +694,32 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 		output.UserOut.Printf("Executing %s commands...", hookName)
 	}
 
+	var a Action
 	for _, c := range app.Hooks[hookName] {
-		if cmd, ok := c.(map[string]interface{}); ok {
-			if command, ok := cmd["exec"].(string); ok {
-				var service string
-				if service, ok = cmd["service"].(string); !ok {
-					// If no configuration for service is found, web is the default
-					service = "web"
-				}
-				output.UserOut.Printf("--- Running exec command on %s: %s ---", service, command)
+		if _, ok := c["exec"]; ok {
 
-				stdout, stderr, err := app.Exec(&ExecOpts{
-					Service: service,
-					Cmd:     command,
-				})
-
+			a, _ = NewExecAction(app, c)
+			if a != nil {
+				stdout, stderr, err := a.Execute()
 				if err != nil {
-					return fmt.Errorf("%s exec failed: %v, stderr='%s'", hookName, err, stderr)
+					return fmt.Errorf("exec failed: %v", err)
 				}
 				util.Success("--- %s exec command succeeded, output below ---", hookName)
 				output.UserOut.Println(stdout + "\n" + stderr)
-
-			} else if command, ok = cmd["exec-host"].(string); ok {
-				output.UserOut.Printf("--- Running exec-host command: %s ---", command)
-				args := strings.Split(command, " ")
-				cmd := args[0]
-				args = append(args[:0], args[1:]...)
-
-				// ensure exec-host runs from consistent location
-				cwd, err := os.Getwd()
-				util.CheckErr(err)
-				err = os.Chdir(app.GetAppRoot())
-				util.CheckErr(err)
-
-				out, err := exec.RunCommandPipe(cmd, args)
-				dirErr := os.Chdir(cwd)
-				util.CheckErr(dirErr)
-				output.UserOut.Println(out)
-				if err != nil {
-					return fmt.Errorf("%s host command failed: %v %s", hookName, err, out)
-				}
-				util.Success("--- %s host command succeeded ---\n", hookName)
 			}
+
+		} else if _, ok := c["exec-host"]; ok {
+			a, err := NewExecHostAction(app, c)
+			if err != nil {
+				output.UserOut.Printf("--- Running exec-host command: %s ---", a.exec)
+				stdout, _, err := a.Execute()
+				if err != nil {
+					return fmt.Errorf("%s host command failed: %v %s", hookName, err, stdout)
+				}
+
+			}
+
+			util.Success("--- %s exec-host command succeeded ---\n", hookName)
 		}
 	}
 

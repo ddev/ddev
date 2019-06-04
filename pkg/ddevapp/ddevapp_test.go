@@ -282,7 +282,7 @@ func TestDdevStart(t *testing.T) {
 	err = os.Chdir(site.Dir)
 	assert.NoError(err)
 	err = app.Init(site.Dir)
-	app.Hooks = map[string][]ddevapp.Command{"post-start": {{Exec: "echo hello"}}}
+	app.Hooks = map[string][]ddevapp.Action{"post-start": {{Exec: "echo hello"}}}
 
 	assert.NoError(err)
 	stdout := util.CaptureUserOut()
@@ -1456,7 +1456,7 @@ func TestProcessHooks(t *testing.T) {
 
 	// Note that any ExecHost commands must be able to run on Windows.
 	// echo and pwd are things that work pretty much the same in both places.
-	app.Hooks = map[string][]ddevapp.Command{
+	app.Hooks = map[string][]ddevapp.Action{
 		"hook-test": {
 			{Exec: "ls /usr/local/bin/composer"},
 			{ExecHost: "echo something"},
