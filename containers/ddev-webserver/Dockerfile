@@ -4,7 +4,9 @@ ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3"
 ENV PHP_DEFAULT_VERSION="7.2"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 
-ENV DRUSH_VERSION=8.1.18
+ENV DRUSH_VERSION=8.2.3
+ENV DRUSH_LAUNCHER_VERSION=0.6.0
+ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
 ENV WP_CLI_VERSION=2.1.0
 ENV MAILHOG_VERSION=1.0.0
 ENV BACKDROP_DRUSH_VERSION=0.1.0
@@ -97,8 +99,8 @@ RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 ADD files /
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN composer global require consolidation/cgr
-RUN /home/.composer/vendor/bin/cgr drush/drush:$DRUSH_VERSION && ln -s /home/.composer/vendor/bin/drush /usr/local/bin/drush
+RUN curl -sSL "https://github.com/drush-ops/drush/releases/download/${DRUSH_VERSION}/drush.phar" -o /usr/local/bin/drush8 && chmod +x /usr/local/bin/drush8
+RUN curl -sSL "https://github.com/drush-ops/drush-launcher/releases/download/${DRUSH_LAUNCHER_VERSION}/drush.phar" -o /usr/local/bin/drush && chmod +x /usr/local/bin/drush
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
 RUN curl -sSL "https://github.com/wp-cli/wp-cli/releases/download/v${WP_CLI_VERSION}/wp-cli-${WP_CLI_VERSION}.phar" -o /usr/local/bin/wp-cli
 

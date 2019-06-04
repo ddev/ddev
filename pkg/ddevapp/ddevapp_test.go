@@ -1368,7 +1368,7 @@ func TestDdevExec(t *testing.T) {
 				Cmd:     "drush status",
 			})
 			assert.NoError(err)
-			assert.Regexp("PHP configuration[ :]*/etc/php/[0-9].[0-9]/fpm/php.ini", out)
+			assert.Regexp("PHP configuration[ :]*/etc/php/[0-9].[0-9]/cli/php.ini", out)
 		case ddevapp.AppTypeWordPress:
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
