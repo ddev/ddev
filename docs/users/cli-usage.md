@@ -26,13 +26,31 @@ DDEV works happily with most any PHP or static HTML project, although it has spe
 
 ### WordPress Quickstart
 
-**Git Clone Example**
-
-To get started using ddev with an existing WordPress project, clone the project's repository and checkout its directory:
+**Composer Setup Example**
 
 ```
-git clone https://github.com/example-user/example-wordpress-site
-cd example-wordpress-site
+mkdir my-wordpress-site
+cd my-wordpress-site
+ddev config --project-type=php
+ddev composer create wordpress/skeleton --no-interaction --prefer-dist
+ddev config --docroot=wp --project-type=wordpress
+ddev restart
+```
+
+When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
+
+```
+Successfully started my-wordpress-site
+Your application can be reached at: http://my-wordpress-site.ddev.site
+```
+
+**Git Clone Example**
+
+To get started using ddev with an existing WordPress project, clone the project's repository. Note that the git URL shown here is just an example.
+
+```
+git clone https://github.com/example/example-site.git
+cd example-site
 ```
 
 From here we can start setting up ddev. Inside your project's working directory, enter the command:
@@ -52,29 +70,12 @@ ddev start
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
 
 ```
-Successfully started example-wordpress-site
-Your project can be reached at: http://example-wordpress-site.ddev.site and https://example-wordpress-site.ddev.site
+Successfully started example-site
+Your project can be reached at: http://example-site.ddev.site and https://example-site.ddev.site
 ```
 
 Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
 
-**Composer Setup Example**
-
-```
-mkdir my-wordpress-site
-cd my-wordpress-site
-ddev config --project-type=php
-ddev composer create wordpress/skeleton --no-interaction --prefer-dist
-ddev config --docroot=wp --project-type=wordpress
-ddev restart
-```
-
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
-
-```
-Successfully started my-wordpress-site
-Your application can be reached at: http://my-wordpress-site.ddev.site
-```
 
 ### Drupal 6/7 Quickstart
 
@@ -112,15 +113,7 @@ Quickstart instructions for database imports can be found under [Database Import
 
 ### Drupal 8 Quickstart
 
-Get started with Drupal 8 projects on ddev either by cloning a git repository or using a new or existing composer project.
-
-**Git Clone Example**
-
-```
-git clone https://github.com/example-user/my-drupal8-site
-cd my-drupal8-site
-ddev composer install
-```
+Get started with Drupal 8 projects on ddev either using a new or existing composer project or by cloning a git repository.
 
 **Composer Setup Example**
 
@@ -140,17 +133,18 @@ Successfully started my-drupal8-site
 Your project can be reached at: http://my-drupal8-site.ddev.site
 ```
 
-### TYPO3 Quickstart
-
-To get started using ddev with a TYPO3 project, clone the project's repository and checkout its directory.
-
 **Git Clone Example**
 
+Note that the git URL shown below is an example only, you'll need to use your own project.
+
 ```
-git clone https://github.com/example-user/example-typo3-site
-cd example-typo3-site
+git clone https://github.com/example/example-site
+cd example-site
 ddev composer install
 ```
+
+### TYPO3 Quickstart
+
 
 **Composer Setup Example**
 
@@ -172,13 +166,23 @@ Your application can be reached at: http://example-typo3-site.ddev.site
 
 For those wanting/needing to connect to the database within the database container directly, please see the [developer tools page](https://ddev.readthedocs.io/en/stable/users/developer-tools/#using-development-tools-on-the-host-machine).
 
+To get started using ddev with a TYPO3 project, clone the project's repository and checkout its directory.
+
+**Git Clone Example**
+
+```
+git clone https://github.com/example/example-site
+cd example-site
+ddev composer install
+```
+
 ### Backdrop Quickstart
 
 To get started with Backdrop, clone the project repository and navigate to the project directory.
 
 ```
-git clone https://github.com/example-user/example-backdrop-site
-cd example-backdrop-site
+git clone https://github.com/example/example-site
+cd example-site
 ```
 
 To set up ddev for your project, enter the command:
@@ -198,7 +202,7 @@ ddev start
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
 
 ```
-Successfully started example-backdrop-site
+Successfully started example-site
 Your application can be reached at: http://example-backdrop-site.ddev.site
 ```
 
