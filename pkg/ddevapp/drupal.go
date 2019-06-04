@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/dockerutil"
 
 	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/output"
@@ -13,7 +14,6 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 
 	"github.com/drud/ddev/pkg/archive"
@@ -36,10 +36,15 @@ type DrupalSettings struct {
 	SiteSettings     string
 	SiteSettingsDdev string
 	SyncDir          string
+	DockerIP         string
+	DBPublishedPort  int
 }
 
 // NewDrupalSettings produces a DrupalSettings object with default.
-func NewDrupalSettings() *DrupalSettings {
+func NewDrupalSettings(app *DdevApp) *DrupalSettings {
+	dockerIP, _ := dockerutil.GetDockerIP()
+	dbPublishedPort, _ := app.GetPublishedPort("db")
+
 	return &DrupalSettings{
 		DatabaseName:     "db",
 		DatabaseUsername: "db",
@@ -54,22 +59,8 @@ func NewDrupalSettings() *DrupalSettings {
 		SiteSettings:     "settings.php",
 		SiteSettingsDdev: "settings.ddev.php",
 		SyncDir:          path.Join("files", "sync"),
-	}
-}
-
-// DrushConfig encapsulates configuration for a drush settings file.
-type DrushConfig struct {
-	DatabasePort int
-	DatabaseHost string
-}
-
-// NewDrushConfig produces a DrushConfig object with default.
-func NewDrushConfig(app *DdevApp) *DrushConfig {
-	dockerIP, _ := dockerutil.GetDockerIP()
-	dbPublishedPort, _ := app.GetPublishedPort("db")
-	return &DrushConfig{
-		DatabaseHost: dockerIP,
-		DatabasePort: dbPublishedPort,
+		DockerIP:         dockerIP,
+		DBPublishedPort:  dbPublishedPort,
 	}
 }
 
@@ -131,13 +122,23 @@ const (
  * comment is removed.
  */
 
+$host = "{{ $config.DatabaseHost }}";
+$port = {{ $config.DatabasePort }};
+
+// If DDEV_PHP_VERSION is not set, it means we're running on the host,
+// so use the host-side bind port on docker IP
+if (empty(getenv('DDEV_PHP_VERSION'))) {
+  $host = "{{ $config.DockerIP }}";
+  $port = {{ $config.DBPublishedPort }};
+} 
+
 $databases['default']['default'] = array(
   'database' => "{{ $config.DatabaseName }}",
   'username' => "{{ $config.DatabaseUsername }}",
   'password' => "{{ $config.DatabasePassword }}",
-  'host' => "{{ $config.DatabaseHost }}",
+  'host' => $host,
   'driver' => "{{ $config.DatabaseDriver }}",
-  'port' => {{ $config.DatabasePort }},
+  'port' => $port,
   'prefix' => "{{ $config.DatabasePrefix }}",
 );
 
@@ -169,13 +170,7 @@ if (empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
   $config_directories[CONFIG_SYNC_DIRECTORY] = '{{ joinPath $config.SitePath $config.SyncDir }}';
 }
 
-// This determines whether or not drush should include a custom settings file
-// which allows it to work both within a docker container and natively on the
-// host system.
-$drush_settings = __DIR__ . '/ddev_drush_settings.php';
-if (empty(getenv('DDEV_PHP_VERSION')) && file_exists($drush_settings)) {
-  include $drush_settings;
-}
+
 `
 )
 
@@ -189,13 +184,23 @@ const (
  * comment is removed.
  */
 
+$host = "{{ $config.DatabaseHost }}";
+$port = {{ $config.DatabasePort }};
+
+// If DDEV_PHP_VERSION is not set, it means we're running on the host,
+// so use the host-side bind port on docker IP
+if (empty(getenv('DDEV_PHP_VERSION'))) {
+  $host = "{{ $config.DockerIP }}";
+  $port = {{ $config.DBPublishedPort }};
+} 
+
 $databases['default']['default'] = array(
   'database' => "{{ $config.DatabaseName }}",
   'username' => "{{ $config.DatabaseUsername }}",
   'password' => "{{ $config.DatabasePassword }}",
-  'host' => "{{ $config.DatabaseHost }}",
+  'host' => $host,
   'driver' => "{{ $config.DatabaseDriver }}",
-  'port' => {{ $config.DatabasePort }},
+  'port' => $port,
   'prefix' => "{{ $config.DatabasePrefix }}",
 );
 
@@ -206,13 +211,7 @@ ini_set('session.cookie_lifetime', 2000000);
 
 $drupal_hash_salt = '{{ $config.HashSalt }}';
 
-// This determines whether or not drush should include a custom settings file
-// which allows it to work both within a docker container and natively on the
-// host system.
-$drush_settings = __DIR__ . '/ddev_drush_settings.php';
-if (empty(getenv('DDEV_PHP_VERSION')) && file_exists($drush_settings)) {
-  include $drush_settings;
-}
+
 `
 )
 
@@ -225,49 +224,24 @@ const (
  * ddev manages this file and may delete or overwrite the file unless this
  * comment is removed.
  */
+$host = "{{ $config.DatabaseHost }}";
+$port = {{ $config.DatabasePort }};
 
-$db_url = '{{ $config.DatabaseDriver }}://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@{{ $config.DatabaseHost }}:{{ $config.DatabasePort }}/{{ $config.DatabaseName }}';
+// If DDEV_PHP_VERSION is not set, it means we're running on the host,
+// so use the host-side bind port on docker IP
+if (empty(getenv('DDEV_PHP_VERSION'))) {
+  $host = "{{ $config.DockerIP }}";
+  $port = {{ $config.DBPublishedPort }};
+} 
+
+$db_url = "{{ $config.DatabaseDriver }}://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@$host:$port/{{ $config.DatabaseName }}";
 
 ini_set('session.gc_probability', 1);
 ini_set('session.gc_divisor', 100);
 ini_set('session.gc_maxlifetime', 200000);
 ini_set('session.cookie_lifetime', 2000000);
-
-// This determines whether or not drush should include a custom settings file
-// which allows it to work both within a docker container and natively on the
-// host system.
-$drush_settings = __DIR__ . '/ddev_drush_settings.php';
-if (empty(getenv('DDEV_PHP_VERSION')) && file_exists($drush_settings)) {
-  include $drush_settings;
-}
 `
 )
-
-const drushTemplate = `<?php
-{{ $config := . }}
-$version = "";
-if (defined("\Drupal::VERSION")) {
-    $version = \Drupal::VERSION;
-} else if (defined("VERSION")) {
-    $version = VERSION;
-}
-
-// Use the array format for D7+
-if (version_compare($version, "7.0") > 0) {
-  $databases['default']['default'] = array(
-    'database' => "db",
-    'username' => "db",
-    'password' => "db",
-    'host' => "{{ $config.DatabaseHost }}",
-    'driver' => "mysql",
-    'port' => {{ $config.DatabasePort }},
-    'prefix' => "",
-  );
-} else {
-  // or the old db_url format for d6
-  $db_url = 'mysqli://db:db@{{ $config.DatabaseHost }}:{{ $config.DatabasePort }}/db';
-}
-`
 
 // manageDrupalSettingsFile will direct inspecting and writing of settings.php.
 func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, settingsTemplate, appendTemplate string) error {
@@ -340,7 +314,7 @@ func writeDrupalSettingsFile(drupalConfig *DrupalSettings, filePath string, vers
 func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
-	drupalConfig := NewDrupalSettings()
+	drupalConfig := NewDrupalSettings(app)
 
 	if err := manageDrupalSettingsFile(app, drupalConfig, drupal7SettingsTemplate, drupal7SettingsAppendTemplate); err != nil {
 		return "", err
@@ -359,7 +333,7 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
-	drupalConfig := NewDrupalSettings()
+	drupalConfig := NewDrupalSettings(app)
 
 	if err := manageDrupalSettingsFile(app, drupalConfig, drupal8SettingsTemplate, drupal8SettingsAppendTemplate); err != nil {
 		return "", err
@@ -378,7 +352,7 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
-	drupalConfig := NewDrupalSettings()
+	drupalConfig := NewDrupalSettings(app)
 	// mysqli is required in latest D6LTS and works fine in ddev in old D6
 	drupalConfig.DatabaseDriver = "mysqli"
 
@@ -526,16 +500,37 @@ func writeDrupal6DdevSettingsFile(settings *DrupalSettings, filePath string) err
 	return nil
 }
 
-// WriteDrushConfig writes out a drush config based on passed-in values.
-func WriteDrushConfig(drushConfig *DrushConfig, filePath string) error {
-	tmpl, err := template.New("drushConfig").Funcs(getTemplateFuncMap()).Parse(drushTemplate)
-	if err != nil {
-		return err
+// WriteDrushrc writes out drushrc.php based on passed-in values.
+// This works on Drupal 6 and Drupal 7 or with drush8 and older
+func WriteDrushrc(app *DdevApp, filePath string) error {
+	if fileutil.FileExists(filePath) {
+		// Check if the file is managed by ddev.
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		if err != nil {
+			return err
+		}
+
+		// If the signature wasn't found, warn the user and return.
+		if !signatureFound {
+			util.Warning("%s already exists and is managed by the user.", filepath.Base(filePath))
+			return nil
+		}
 	}
+
+	uri := app.GetHTTPSURL()
+	if GetCAROOT() == "" {
+		uri = app.GetHTTPURL()
+	}
+	drushContents := []byte(`<?php
+/** ` + DdevFileSignature + `: Automatically generated drushrc.php file.
+ ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ */
+$options['l'] = "` + uri + `";
+`)
 
 	// Ensure target directory exists and is writable
 	dir := filepath.Dir(filePath)
-	if err = os.Chmod(dir, 0755); os.IsNotExist(err) {
+	if err := os.Chmod(dir, 0755); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0755); err != nil {
 			return err
 		}
@@ -543,15 +538,58 @@ func WriteDrushConfig(drushConfig *DrushConfig, filePath string) error {
 		return err
 	}
 
-	file, err := os.Create(filePath)
+	err := ioutil.WriteFile(filePath, drushContents, 0666)
 	if err != nil {
 		return err
 	}
-	err = tmpl.Execute(file, drushConfig)
+
+	return nil
+}
+
+// WriteDrushYML writes a drush.yaml to set the default uri
+func WriteDrushYML(app *DdevApp, filePath string) error {
+	if fileutil.FileExists(filePath) {
+
+		// Check if the file is managed by ddev.
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		if err != nil {
+			return err
+		}
+
+		// If the signature wasn't found, warn the user and return.
+		if !signatureFound {
+			util.Warning("%s already exists and is managed by the user.", filepath.Base(filePath))
+			return nil
+		}
+	}
+
+	uri := app.GetHTTPSURL()
+	if GetCAROOT() == "" {
+		uri = app.GetHTTPURL()
+	}
+	drushContents := []byte(`
+#` + DdevFileSignature + `: Automatically generated TYPO3 AdditionalConfiguration.php file.
+# ddev manages this file and may delete or overwrite the file unless this comment is removed.
+
+options:
+  uri: "` + uri + `"
+`)
+
+	// Ensure target directory exists and is writable
+	dir := filepath.Dir(filePath)
+	if err := os.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	err := ioutil.WriteFile(filePath, drushContents, 0666)
 	if err != nil {
 		return err
 	}
-	util.CheckClose(file)
+
 	return nil
 }
 
@@ -595,7 +633,7 @@ func getDrupal8Hooks() []byte {
 // setDrupalSiteSettingsPaths sets the paths to settings.php/settings.ddev.php
 // for templating.
 func setDrupalSiteSettingsPaths(app *DdevApp) {
-	drupalConfig := NewDrupalSettings()
+	drupalConfig := NewDrupalSettings(app)
 	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettings)
 	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, drupalConfig.SitePath, drupalConfig.SiteSettingsDdev)
@@ -643,11 +681,17 @@ func drupal8PostStartAction(app *DdevApp) error {
 		return err
 	}
 
-	// Drush config has to be written after start because we don't know the ports until it's started
-	drushConfig := NewDrushConfig(app)
-	err := WriteDrushConfig(drushConfig, filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+	// Write both drush.yml and drushrc.php for Drupal 8, because we can't know
+	// what version of drush may be in use. drush8 is happy with drushrc.php
+	// drush9 wants drush.yml
+	err := WriteDrushYML(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush", "drush.yml"))
 	if err != nil {
-		util.Warning("Failed to WriteDrushConfig: %v", err)
+		util.Warning("Failed to WriteDrushYML: %v", err)
+	}
+
+	err = WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
+	if err != nil {
+		util.Warning("Failed to WriteDrushrc: %v", err)
 	}
 
 	if _, err = app.CreateSettingsFile(); err != nil {
@@ -663,11 +707,9 @@ func drupal7PostStartAction(app *DdevApp) error {
 		return err
 	}
 
-	// Drush config has to be written after start because we don't know the ports until it's started
-	drushConfig := NewDrushConfig(app)
-	err := WriteDrushConfig(drushConfig, filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+	err := WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 	if err != nil {
-		util.Warning("Failed to WriteDrushConfig: %v", err)
+		util.Warning("Failed to WriteDrushrc: %v", err)
 	}
 
 	if _, err = app.CreateSettingsFile(); err != nil {
@@ -683,11 +725,9 @@ func drupal6PostStartAction(app *DdevApp) error {
 		return err
 	}
 
-	// Drush config has to be written after start because we don't know the ports until it's started
-	drushConfig := NewDrushConfig(app)
-	err := WriteDrushConfig(drushConfig, filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+	err := WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 	if err != nil {
-		util.Warning("Failed to WriteDrushConfig: %v", err)
+		util.Warning("Failed to WriteDrushrc: %v", err)
 	}
 	if _, err = app.CreateSettingsFile(); err != nil {
 		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
@@ -732,7 +772,7 @@ func drupalEnsureWritePerms(app *DdevApp) error {
 func createDrupal8SyncDir(app *DdevApp) error {
 	// Currently there isn't any customization done for the drupal config, but
 	// we may want to do some kind of customization in the future.
-	drupalConfig := NewDrupalSettings()
+	drupalConfig := NewDrupalSettings(app)
 
 	syncDirPath := path.Join(app.GetAppRoot(), app.GetDocroot(), drupalConfig.SyncDir)
 	if fileutil.FileExists(syncDirPath) {

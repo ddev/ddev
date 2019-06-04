@@ -886,7 +886,10 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NoError(err)
 		assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
 		if nodeps.ArrayContainsString([]string{"drupal6", "drupal7", "drupal8", "backdrop"}, app.Type) {
-			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php"))
+			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
+		}
+		if app.Type == "drupal8" {
+			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush", "drush.yml"))
 		}
 
 		if site.DBTarURL != "" {
@@ -984,6 +987,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 		assert.NoError(err)
 		t.Fatalf("container failed: logs:\n=======\n%s\n========\n", logs)
 	}
+	require.NotNil(t, resp)
 	if ensureErr != nil && resp.StatusCode != 200 {
 		logs, err := app.CaptureLogs("web", false, "")
 		assert.NoError(err)
@@ -1892,9 +1896,6 @@ func TestHttpsRedirection(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	packageDir, _ := os.Getwd()
 
-	// Use remove for a while until newer ddevs are out there.
-	_, _ = exec.RunCommand(DdevBin, []string{"remove", "-a", "--stop-ssh-agent"})
-
 	testDir := testcommon.CreateTmpDir("TestHttpsRedirection")
 	defer testcommon.CleanupDir(testDir)
 	appDir := filepath.Join(testDir, "proj")
@@ -2064,7 +2065,7 @@ func TestGetAllURLs(t *testing.T) {
 	}
 
 	// We expect two URLs for each hostname (http/https) and one direct web container address.
-	expectedNumUrls := (2 * len(app.GetHostnames())) + 2
+	expectedNumUrls := len(app.GetHostnames()) + 1
 	assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
 	// Ensure urlMap contains direct address of the web container
@@ -2072,19 +2073,11 @@ func TestGetAllURLs(t *testing.T) {
 	assert.NoError(err)
 	require.NotEmpty(t, webContainer)
 
-	dockerIP, err := dockerutil.GetDockerIP()
-	require.NoError(t, err)
-
-	// Find HTTP port of web container
-	var port docker.APIPort
-	for _, p := range webContainer.Ports {
-		if p.PrivatePort == 80 {
-			port = p
-			break
-		}
+	expectedDirectAddress := app.GetWebContainerDirectHTTPSURL()
+	if ddevapp.GetCAROOT() == "" {
+		expectedDirectAddress = app.GetWebContainerDirectURL()
 	}
 
-	expectedDirectAddress := fmt.Sprintf("http://%s:%d", dockerIP, port.PublicPort)
 	exists := urlMap[expectedDirectAddress]
 
 	assert.True(exists, "URL list for app: %s does not contain direct web container address: %s", app.Name, expectedDirectAddress)
@@ -2166,9 +2159,6 @@ func TestWebserverType(t *testing.T) {
 func TestInternalAndExternalAccessToURL(t *testing.T) {
 	assert := asrt.New(t)
 
-	// Use remove for a while until newer ddevs are out there.
-	_, _ = exec.RunCommand(DdevBin, []string{"remove", "-a", "--stop-ssh-agent"})
-
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestInternalAndExternalAccessToURL"))
 
 	site := TestSites[0]
@@ -2204,7 +2194,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		}
 
 		// We expect two URLs for each hostname (http/https) and two direct web container addresses.
-		expectedNumUrls := (2 * len(app.GetHostnames())) + 2
+		expectedNumUrls := len(app.GetHostnames()) + 1
 		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
 		URLList := append(app.GetAllURLs(), "http://localhost", "http://localhost")

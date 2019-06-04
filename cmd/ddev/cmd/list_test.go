@@ -36,7 +36,11 @@ func TestCmdList(t *testing.T) {
 
 		// Look for standard items in the regular ddev list output
 		assert.Contains(string(out), v.Name)
-		assert.Contains(string(out), app.GetHTTPURL())
+		testURL := app.GetHTTPSURL()
+		if ddevapp.GetCAROOT() == "" {
+			testURL = app.GetHTTPURL()
+		}
+		assert.Contains(string(out), testURL)
 		assert.Contains(string(out), app.GetType())
 		assert.Contains(string(out), ddevapp.RenderHomeRootedDir(app.GetAppRoot()))
 

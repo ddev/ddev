@@ -111,6 +111,7 @@ type DdevApp struct {
 	DBImageExtraPackages  []string             `yaml:"dbimage_extra_packages,omitempty,flow"`
 	ProjectTLD            string               `yaml:"project_tld,omitempty"`
 	UseDNSWhenPossible    bool                 `yaml:"use_dns_when_possible"`
+	MkcertEnabled         bool                 `yaml:"-"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -705,15 +706,16 @@ func (app *DdevApp) Start() error {
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 
+	caRoot := GetCAROOT()
+	if caRoot == "" {
+		util.Warning("mkcert may not be properly installed, please install it, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`: %v", err)
+	}
 	router, _ := FindDdevRouter()
 	// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
 	// This will often be redundant
 	if router == nil {
 		// Copy ca certs into ddev-global-cache/mkcert
-		caRoot, err := getCAROOT()
-		if err != nil {
-			util.Warning("mkcert may not be properly installed, please install it, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`: %v", err)
-		} else {
+		if caRoot != "" {
 			output.UserOut.Info("Pushing mkcert rootca certs to ddev-global-cache")
 			_, out, err := dockerutil.RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "mkdir -p /mnt/ddev-global-cache/composer && mkdir -p /mnt/ddev-global-cache/mkcert && chmod 777 /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache", caRoot + ":/mnt/mkcert"}, "", true)
 			if err != nil {
@@ -1013,7 +1015,6 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PHPMYADMIN_PORT":          app.PHPMyAdminPort,
 		"DDEV_MAILHOG_PORT":             app.MailhogPort,
 		"DDEV_DOCROOT":                  app.Docroot,
-		"DDEV_URL":                      app.GetHTTPURL(),
 		"DDEV_HOSTNAME":                 app.HostName(),
 		"DDEV_UID":                      uidStr,
 		"DDEV_GID":                      gidStr,
@@ -1340,10 +1341,19 @@ func (app *DdevApp) GetAllURLs() []string {
 		if app.RouterHTTPSPort != "443" {
 			httpsPort = ":" + app.RouterHTTPSPort
 		}
-		URLs = append(URLs, "https://"+name+httpsPort, "http://"+name+httpPort)
+
+		var url = "https://" + name + httpsPort
+		if GetCAROOT() == "" {
+			url = "http://" + name + httpPort
+		}
+		URLs = append(URLs, url)
 	}
 
-	URLs = append(URLs, app.GetWebContainerDirectHTTPSURL(), app.GetWebContainerDirectURL())
+	if GetCAROOT() != "" {
+		URLs = append(URLs, app.GetWebContainerDirectHTTPSURL())
+	} else {
+		URLs = append(URLs, app.GetWebContainerDirectURL())
+	}
 
 	return URLs
 }

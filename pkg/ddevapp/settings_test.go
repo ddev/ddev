@@ -13,7 +13,6 @@ import (
 	"time"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
@@ -90,7 +89,7 @@ func TestWriteDrushConfig(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s WriteDrushConfig", site.Name))
+		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s WriteDrushrc", site.Name))
 
 		testcommon.ClearDockerEnv()
 
@@ -108,26 +107,23 @@ func TestWriteDrushConfig(t *testing.T) {
 			t.Fatalf("app.Start failed, startErr=%v, logs=\n========\n%s\n===========\n", startErr, logs)
 		}
 
-		dockerIP, err := dockerutil.GetDockerIP()
-		assert.NoError(err)
-		dbPort, err := app.GetPublishedPort("db")
-		assert.NoError(err)
-		assert.NotEqual(-1, dbPort)
-
-		drushFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "ddev_drush_settings.php")
+		drushFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php")
 
 		switch app.Type {
 		case AppTypeDrupal6, AppTypeDrupal7, AppTypeDrupal8, AppTypeBackdrop:
 			require.True(t, fileutil.FileExists(drushFilePath))
-			hostFound, err := fileutil.FgrepStringInFile(drushFilePath, fmt.Sprintf("'host' => \"%s\"", dockerIP))
+			optionFound, err := fileutil.FgrepStringInFile(drushFilePath, "options")
 			assert.NoError(err)
-			assert.True(hostFound)
-			portFound, err := fileutil.FgrepStringInFile(drushFilePath, fmt.Sprintf("'port' => %d", dbPort))
-			assert.NoError(err)
-			assert.True(portFound)
-			d6StringFound, err := fileutil.FgrepStringInFile(drushFilePath, fmt.Sprintf("db:db@%s:%d/db", dockerIP, dbPort))
-			assert.NoError(err)
-			assert.True(d6StringFound)
+			assert.True(optionFound)
+
+			if app.Type == AppTypeDrupal8 {
+				drushYMLFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush", "drush.yml")
+				require.True(t, fileutil.FileExists(drushYMLFilePath))
+				optionFound, err := fileutil.FgrepStringInFile(drushYMLFilePath, "options")
+				assert.NoError(err)
+				assert.True(optionFound)
+			}
+
 		default:
 			assert.False(fileutil.FileExists(drushFilePath), "Drush settings file (%s) should not exist but it does (app.Type=%s)", drushFilePath, app.Type)
 		}

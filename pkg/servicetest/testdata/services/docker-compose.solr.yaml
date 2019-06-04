@@ -42,7 +42,6 @@ services:
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.approot: $DDEV_APPROOT
-      com.ddev.app-url: $DDEV_URL
     environment:
       # This defines the host name the service should be accessible from. This
       # will be sitename.ddev.site.
