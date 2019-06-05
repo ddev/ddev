@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/url"
 	"os"
-	osexec "os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -158,11 +157,20 @@ func TestMain(m *testing.M) {
 	// testRun is the exit result we'll provide.
 	// Start with a clean exit result, it will be changed if we have trouble.
 	testRun := 0
-	for i := range TestSites {
+	err := globalconfig.ReadGlobalConfig()
+	if err != nil {
+		log.Fatalf("could not read globalconfig: %v", err)
+	}
+	for i, site := range TestSites {
 
-		oldProject := globalconfig.GetProject(TestSites[i].Name)
+		oldProject := globalconfig.GetProject(site.Name)
 		if oldProject != nil {
-			_, _ = osexec.Command(DdevBin, "stop", "-RO", TestSites[i].Name).CombinedOutput()
+			app, err := ddevapp.NewApp(site.Dir, false, "")
+			if app != nil && err == nil {
+				_ = app.Stop(true, false)
+			}
+			_ = globalconfig.RemoveProjectInfo(site.Name)
+
 		}
 
 		err := TestSites[i].Prepare()
@@ -282,7 +290,7 @@ func TestDdevStart(t *testing.T) {
 	err = os.Chdir(site.Dir)
 	assert.NoError(err)
 	err = app.Init(site.Dir)
-	app.Hooks = map[string][]ddevapp.Action{"post-start": {{Exec: "echo hello"}}}
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-start": {{"exec": "echo hello"}}}
 
 	assert.NoError(err)
 	stdout := util.CaptureUserOut()
@@ -1456,12 +1464,13 @@ func TestProcessHooks(t *testing.T) {
 
 	// Note that any ExecHost commands must be able to run on Windows.
 	// echo and pwd are things that work pretty much the same in both places.
-	app.Hooks = map[string][]ddevapp.Action{
+	app.Hooks = map[string][]ddevapp.YAMLTask{
 		"hook-test": {
-			{Exec: "ls /usr/local/bin/composer"},
-			{ExecHost: "echo something"},
-			{Exec: "echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt"},
-			{Exec: "touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt"},
+			{"exec": "ls /usr/local/bin/composer"},
+			{"exec-host": "echo something"},
+			{"exec": "echo MYSQL_USER=${MYSQL_USER}", "service": "db"},
+			{"exec": "echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt"},
+			{"exec": "touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt"},
 		},
 	}
 
@@ -1469,11 +1478,16 @@ func TestProcessHooks(t *testing.T) {
 	err = app.ProcessHooks("hook-test")
 	assert.NoError(err)
 
-	// Ignore color in putput, can be different in different OS's
+	// Ignore color in output, can be different in different OS's
 	out := vtclean.Clean(stdout(), false)
 
-	assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
-	assert.Contains(out, "--- Running host command: echo something ---\nRunning Task Task=echo something\nsomething")
+	assert.Contains(out, "Executing hook-test hook")
+	assert.Contains(out, "Exec command 'ls /usr/local/bin/composer' in container/service 'web'")
+	assert.Contains(out, "Exec command 'echo something' on the host")
+	assert.Contains(out, "Exec command 'echo MYSQL_USER=${MYSQL_USER}' in container/service 'db'")
+	assert.Contains(out, "MYSQL_USER=db")
+	assert.Contains(out, "Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt' in container/service 'web'")
+	assert.Contains(out, "Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt' in container/service 'web',")
 	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
