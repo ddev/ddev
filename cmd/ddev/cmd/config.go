@@ -164,6 +164,11 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Failed("Please do not use `ddev config` in your home directory")
 	}
 
+	err = app.ProcessHooks("pre-config")
+	if err != nil {
+		util.Failed("Failed to process hook 'pre-config'")
+	}
+
 	if cmd.Flags().NFlag() == 0 {
 		err = app.PromptForConfig()
 		if err != nil {
@@ -204,6 +209,10 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	err = provider.Write(app.GetConfigPath("import.yaml"))
 	if err != nil {
 		util.Failed("Failed to write provider config: %v", err)
+	}
+	err = app.ProcessHooks("post-config")
+	if err != nil {
+		util.Failed("Failed to process hook 'post-config'")
 	}
 
 	util.Success("Configuration complete. You may now run 'ddev start'.")

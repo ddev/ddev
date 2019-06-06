@@ -1022,12 +1022,21 @@ func (app *DdevApp) Pause() error {
 		return fmt.Errorf("no project to stop")
 	}
 
+	err := app.ProcessHooks("pre-stop")
+	if err != nil {
+		return err
+	}
+
 	files, err := app.ComposeFiles()
 	if err != nil {
 		return err
 	}
 
 	if _, _, err := dockerutil.ComposeCmd(files, "stop"); err != nil {
+		return err
+	}
+	err = app.ProcessHooks("post-stop")
+	if err != nil {
 		return err
 	}
 

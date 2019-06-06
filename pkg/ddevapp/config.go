@@ -884,6 +884,10 @@ func validateHookYAML(source []byte) error {
 		"post-import-files",
 		"pre-composer",
 		"post-composer",
+		"pre-stop",
+		"post-stop",
+		"pre-config",
+		"post-config",
 	}
 
 	validTasks := []string{
