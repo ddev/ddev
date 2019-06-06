@@ -987,7 +987,7 @@ func (app *DdevApp) DockerEnv() {
 	}
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
-	// It's used for special startup on restoring to a snapshot.
+	// It's used for special startup on restoring to a snapshfot.
 	if len(os.Getenv("DDEV_MARIADB_LOCAL_COMMAND")) == 0 {
 		err := os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
 		util.CheckErr(err)

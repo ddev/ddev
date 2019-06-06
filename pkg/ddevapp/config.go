@@ -335,7 +335,7 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	}
 
 	// validate extend command keys
-	err = validateCommandYaml(source)
+	err = validateHookYAML(source)
 	if err != nil {
 		return fmt.Errorf("invalid configuration in %s: %v", app.ConfigPath, err)
 	}
@@ -873,8 +873,8 @@ func PrepDdevDirectory(dir string) error {
 	return nil
 }
 
-// validateCommandYaml validates command hooks and tasks defined in hooks for config.yaml
-func validateCommandYaml(source []byte) error {
+// validateHookYAML validates command hooks and tasks defined in hooks for config.yaml
+func validateHookYAML(source []byte) error {
 	validHooks := []string{
 		"pre-start",
 		"post-start",
@@ -882,11 +882,14 @@ func validateCommandYaml(source []byte) error {
 		"post-import-db",
 		"pre-import-files",
 		"post-import-files",
+		"pre-composer",
+		"post-composer",
 	}
 
 	validTasks := []string{
 		"exec",
 		"exec-host",
+		"composer",
 	}
 
 	type Validate struct {
