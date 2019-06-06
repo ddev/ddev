@@ -888,6 +888,18 @@ func validateHookYAML(source []byte) error {
 		"post-stop",
 		"pre-config",
 		"post-config",
+		"pre-describe",
+		"post-describe",
+		"pre-exec",
+		"post-exec",
+		"pre-pause",
+		"post-pause",
+		"pre-pull",
+		"post-pull",
+		"pre-snapshot",
+		"post-snapshot",
+		"pre-restore-snapshot",
+		"post-restore-snapshot",
 	}
 
 	validTasks := []string{

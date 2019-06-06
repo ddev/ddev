@@ -168,6 +168,10 @@ func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContai
 
 // Describe returns a map which provides detailed information on services associated with the running site.
 func (app *DdevApp) Describe() (map[string]interface{}, error) {
+	err := app.ProcessHooks("pre-describe")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to process pre-describe hooks: %v", err)
+	}
 
 	shortRoot := RenderHomeRootedDir(app.GetAppRoot())
 	appDesc := make(map[string]interface{})
@@ -218,6 +222,11 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["dbimg"] = app.WebImage
 	appDesc["bgsyncimg"] = app.BgsyncImage
 	appDesc["dbaimg"] = app.DBAImage
+
+	err = app.ProcessHooks("post-describe")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to process post-describe hooks: %v", err)
+	}
 
 	return appDesc, nil
 }
@@ -494,6 +503,10 @@ type PullOptions struct {
 // Pull performs an import from the a configured provider plugin, if one exists.
 func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 	var err error
+	err = app.ProcessHooks("pre-pull")
+	if err != nil {
+		return fmt.Errorf("Failed to process pre-pull hooks: %v", err)
+	}
 
 	err = provider.Validate()
 	if err != nil {
@@ -550,6 +563,10 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 				return err
 			}
 		}
+	}
+	err = app.ProcessHooks("post-pull")
+	if err != nil {
+		return fmt.Errorf("Failed to process post-pull hooks: %v", err)
 	}
 
 	return nil
@@ -779,6 +796,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if opts.Service == "" {
 		return "", "", fmt.Errorf("no service provided")
 	}
+	err := app.ProcessHooks("pre-exec")
+	if err != nil {
+		return "", "", fmt.Errorf("Failed to process pre-exec hooks: %v", err)
+	}
 
 	exec := []string{"exec"}
 	if workingDir := app.getWorkingDir(opts.Service, opts.Dir); workingDir != "" {
@@ -827,6 +848,11 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, exec...)
 	} else {
 		stdoutResult, stderrResult, err = dockerutil.ComposeCmd(files, exec...)
+	}
+
+	hookErr := app.ProcessHooks("post-exec")
+	if err != nil {
+		return stdoutResult, stderrResult, fmt.Errorf("Failed to process post-exec hooks: %v", hookErr)
 	}
 
 	return stdoutResult, stderrResult, err
@@ -1022,7 +1048,7 @@ func (app *DdevApp) Pause() error {
 		return fmt.Errorf("no project to stop")
 	}
 
-	err := app.ProcessHooks("pre-stop")
+	err := app.ProcessHooks("pre-pause")
 	if err != nil {
 		return err
 	}
@@ -1035,7 +1061,7 @@ func (app *DdevApp) Pause() error {
 	if _, _, err := dockerutil.ComposeCmd(files, "stop"); err != nil {
 		return err
 	}
-	err = app.ProcessHooks("post-stop")
+	err = app.ProcessHooks("post-pause")
 	if err != nil {
 		return err
 	}
@@ -1134,9 +1160,14 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	return "", fmt.Errorf("settings files already exist and are being managed by the user")
 }
 
-// SnapshotDatabase forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
+// Snapshot forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
 // Returns the dirname of the snapshot and err
-func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
+func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
+	err := app.ProcessHooks("pre-snapshot")
+	if err != nil {
+		return "", fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+	}
+
 	if snapshotName == "" {
 		t := time.Now()
 		snapshotName = app.Name + "_" + t.Format("20060102150405")
@@ -1146,7 +1177,7 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 	snapshotDir := path.Join("db_snapshots", snapshotName)
 	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
 	containerSnapshotDir := path.Join("/mnt/ddev_config", snapshotDir)
-	err := os.MkdirAll(hostSnapshotDir, 0777)
+	err = os.MkdirAll(hostSnapshotDir, 0777)
 	if err != nil {
 		return snapshotName, err
 	}
@@ -1168,13 +1199,24 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 		util.Warning("Failed to create snapshot: %v, stdout=%s, stderr=%s", err, stdout, stderr)
 		return "", err
 	}
+
 	util.Success("Created database snapshot %s in %s", snapshotName, hostSnapshotDir)
+	err = app.ProcessHooks("post-snapshot")
+	if err != nil {
+		return snapshotName, fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+	}
 	return snapshotName, nil
 }
 
 // RestoreSnapshot restores a mariadb snapshot of the db to be loaded
 // The project must be stopped and docker volume removed and recreated for this to work.
 func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
+	var err error
+	err = app.ProcessHooks("pre-restore-snapshot")
+	if err != nil {
+		return fmt.Errorf("Failed to process pre-restore-snapshot hooks: %v", err)
+	}
+
 	snapshotDir := filepath.Join("db_snapshots", snapshotName)
 
 	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
@@ -1185,7 +1227,6 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// Find out the mariadb version that correlates to the snapshot.
 	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
 	var snapshotMariaDBVersion string
-	var err error
 	if fileutil.FileExists(versionFile) {
 		snapshotMariaDBVersion, err = fileutil.ReadFileIntoString(versionFile)
 		if err != nil {
@@ -1222,18 +1263,26 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	util.CheckErr(err)
 
 	util.Success("Restored database snapshot: %s", hostSnapshotDir)
+	err = app.ProcessHooks("post-restore-snapshot")
+	if err != nil {
+		return fmt.Errorf("Failed to process post-restore-snapshot hooks: %v", err)
+	}
 	return nil
 }
 
 // Stops and Removes the docker containers for the project in current directory.
 func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
-
 	var err error
+
+	err = app.ProcessHooks("pre-stop")
+	if err != nil {
+		return fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+	}
 
 	if createSnapshot == true {
 		t := time.Now()
-		_, err = app.SnapshotDatabase(app.Name + "_remove_data_snapshot_" + t.Format("20060102150405"))
+		_, err = app.Snapshot(app.Name + "_remove_data_snapshot_" + t.Format("20060102150405"))
 		if err != nil {
 			return err
 		}
@@ -1269,7 +1318,13 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		util.Success("Project data/database removed from docker volume for project %s", app.Name)
 	}
 
+	err = app.ProcessHooks("post-stop")
+	if err != nil {
+		return fmt.Errorf("Failed to process post-stop hooks: %v", err)
+	}
+
 	err = StopRouterIfNoContainers()
+
 	return err
 }
 

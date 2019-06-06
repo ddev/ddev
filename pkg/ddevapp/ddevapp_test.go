@@ -767,7 +767,7 @@ func TestDdevOldMariaDB(t *testing.T) {
 	assert.Contains(out, "Table structure for table `users`")
 
 	snapshotName := fileutil.RandomFilenameBase()
-	_, err = app.SnapshotDatabase(snapshotName)
+	_, err = app.Snapshot(snapshotName)
 	assert.NoError(err)
 	err = app.RestoreSnapshot(snapshotName)
 	assert.NoError(err)
@@ -995,7 +995,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	// Make a snapshot of d7 tester test 1
 	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
-	snapshotName, err := app.SnapshotDatabase("d7testerTest1")
+	snapshotName, err := app.Snapshot("d7testerTest1")
 	assert.NoError(err)
 	assert.EqualValues(snapshotName, "d7testerTest1")
 	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
@@ -1004,7 +1004,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes", 45)
 
-	snapshotName, err = app.SnapshotDatabase("d7testerTest2")
+	snapshotName, err = app.Snapshot("d7testerTest2")
 	assert.NoError(err)
 	assert.EqualValues(snapshotName, "d7testerTest2")
 	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))

@@ -20,7 +20,7 @@ var DdevSnapshotCommand = &cobra.Command{
 		}
 
 		for _, app := range apps {
-			if snapshotNameOutput, err := app.SnapshotDatabase(snapshotName); err != nil {
+			if snapshotNameOutput, err := app.Snapshot(snapshotName); err != nil {
 				util.Failed("Failed to snapshot %s: %v", app.GetName(), err)
 			} else {
 				util.Success("Created snapshot %s", snapshotNameOutput)
