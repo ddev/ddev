@@ -32,6 +32,11 @@ type ExecHostTask struct {
 	app  *DdevApp
 }
 
+type ComposerTask struct {
+	exec string
+	app  *DdevApp
+}
+
 // Execute() executes an ExecTask
 func (c ExecTask) Execute() (string, string, error) {
 	stdout, stderr, err := c.app.Exec(&ExecOpts{
@@ -74,6 +79,20 @@ func (c ExecHostTask) Execute() (string, string, error) {
 	return stdout.String(), stderr.String(), err
 }
 
+// Execute (ComposerTask) runs a composer command in the web container
+// and returns stdout, stderr, err
+func (c ComposerTask) Execute() (string, string, error) {
+	components := strings.Split(c.exec, " ")
+	stdout, stderr, err := c.app.Composer(components[0:])
+
+	return stdout, stderr, err
+}
+
+// GetDescription returns a human-readable description of the task
+func (c ComposerTask) GetDescription() string {
+	return fmt.Sprintf("Composer command '%s' in web container", c.exec)
+}
+
 // NewTask() is the factory method to create whatever kind of task
 // we need using the yaml description of the task.
 // Returns a task (of various types) or nil
@@ -86,6 +105,9 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 		if t.service, ok = ytask["service"].(string); !ok {
 			t.service = WebContainer
 		}
+		return t
+	} else if e, ok = ytask["composer"]; ok {
+		t := ComposerTask{app: app, exec: e.(string)}
 		return t
 	}
 	return nil
