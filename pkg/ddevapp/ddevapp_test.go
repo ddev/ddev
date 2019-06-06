@@ -299,17 +299,8 @@ func TestDdevStart(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	out := stdout()
-	assert.Contains(out, "Running exec command")
+	assert.Contains(out, "Running task: Exec command 'echo hello' in container/service 'web'")
 	assert.Contains(out, "hello\n")
-
-	// When we run it again, it should not execute the post-start hook because the
-	// container has already been created and does not need to be recreated.
-	stdout = util.CaptureUserOut()
-	err = app.Start()
-	assert.NoError(err)
-	out = stdout()
-	assert.NotContains(out, "Running exec command")
-	assert.NotContains(out, "hello\n")
 
 	// try to start a site of same name at different path
 	another := site
