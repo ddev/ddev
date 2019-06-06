@@ -163,15 +163,9 @@ func TestMain(m *testing.M) {
 	}
 	for i, site := range TestSites {
 
-		oldProject := globalconfig.GetProject(site.Name)
-		if oldProject != nil {
-			app, err := ddevapp.NewApp(site.Dir, false, "")
-			if app != nil && err == nil {
-				_ = app.Stop(true, false)
-			}
-			_ = globalconfig.RemoveProjectInfo(site.Name)
-
-		}
+		app := &ddevapp.DdevApp{Name: site.Name}
+		_ = app.Stop(true, false)
+		_ = globalconfig.RemoveProjectInfo(site.Name)
 
 		err := TestSites[i].Prepare()
 		if err != nil {
@@ -182,7 +176,7 @@ func TestMain(m *testing.M) {
 
 		testcommon.ClearDockerEnv()
 
-		app := &ddevapp.DdevApp{}
+		app = &ddevapp.DdevApp{}
 		err = app.Init(TestSites[i].Dir)
 		if err != nil {
 			testRun = -1

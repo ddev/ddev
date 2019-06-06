@@ -851,7 +851,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 
 	hookErr := app.ProcessHooks("post-exec")
-	if err != nil {
+	if hookErr != nil {
 		return stdoutResult, stderrResult, fmt.Errorf("Failed to process post-exec hooks: %v", hookErr)
 	}
 
