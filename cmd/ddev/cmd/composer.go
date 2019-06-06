@@ -34,7 +34,7 @@ ddev composer outdated --minor-only`,
 			util.Failed("composer %v failed, %v. stderr=%v", args, err, stderr)
 		}
 		_, _ = fmt.Fprint(os.Stderr, stderr)
-		_, _ = fmt.Print(os.Stdout, stdout)
+		_, _ = fmt.Fprint(os.Stdout, stdout)
 	},
 }
 
