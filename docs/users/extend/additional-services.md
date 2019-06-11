@@ -15,6 +15,12 @@ This recipe adds an Apache Solr container to a project. It will setup a solr cor
 - Copy the solr configuration files for your project to .ddev/solr/conf. _e.g., using Drupal Search API Solr, you would copy the solr-conf/5.x/ contents from the module code base into .ddev/solr/conf._
 - Ensure that the configuration files are present before running `ddev start`.
 
+**Updating Apache Solr configuration**
+- Run `ddev stop` to stop your application.
+- Run `ddev remove` to remove your application's containers (note: if you do not use the [destructive option](cli-usage#removing-projects-from-your-collection-known-to-ddev), the index will be untouched).
+- copy the new solr configuration files for your project to .ddev/solr/conf as described in **Installation**, above.
+- Run `ddev start` to rebuild and restart the containers.
+
 **Interacting with Apache Solr**
 
 - The Solr admin interface will be accessible at: `http://<projectname>.ddev.site:8983/solr/` For example, if the project is named "myproject" the hostname will be: `http://myproject.ddev.site:8983/solr/`
