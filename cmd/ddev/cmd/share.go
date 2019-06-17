@@ -2,24 +2,21 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 )
 
 var (
-	subdomain    string
-	proxyService string
+	subdomain string
 )
 
-// DdevShareCommand contains the "ddev logs" command
+// DdevShareCommand contains the "ddev share" command
 var DdevShareCommand = &cobra.Command{
 	Use:   "share",
-	Short: "Share the project on the internet via localtunnel.",
+	Short: "Share the project on the internet via ngrok.",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
 			util.Failed("Too many arguments provided. Please use 'ddev share' or 'ddev share [projectname]'")
@@ -34,57 +31,35 @@ var DdevShareCommand = &cobra.Command{
 		if app.SiteStatus() != ddevapp.SiteRunning {
 			util.Failed("Project is not yet running. Use 'ddev start' first.")
 		}
-		if subdomain == "" {
-			subdomain = app.Name
-		}
 
-		port, _ := app.GetWebContainerPublicPort()
-		p := strconv.Itoa(port)
-		localhost, _ := dockerutil.GetDockerIP()
-		lt, err := exec.LookPath("lt")
-
-		if err == nil && lt != "" && (proxyService == "localtunnel" || proxyService == "") {
-			args = []string{"--port", p, "--local-host", localhost, "--subdomain", subdomain, "--open"}
-			util.Success("Running %s %s", lt, strings.Join(args, " "))
-			cmd := exec.Command(lt, args...)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			err = cmd.Start()
-			if err != nil {
-				util.Failed("failed to run %s: %v", lt, err)
-			}
-			err = cmd.Wait()
-			if err != nil {
-				util.Failed("failed to run %s (localtunnel): %v", lt, err)
-			}
-			os.Exit(0)
+		ngrokLoc, err := exec.LookPath("ngrok")
+		if ngrokLoc == "" || err != nil {
+			util.Failed("ngrok not found in path, please install it, see https://ngrok.com/download")
 		}
-
-		ng, err := exec.LookPath("ngrok")
-		if err == nil && ng != "" && proxyService == "ngrok" {
-			url := app.GetWebContainerDirectHTTPSURL()
-			args = []string{"http", url}
-			util.Success("Running %s %s", ng, strings.Join(args, " "))
-			cmd := exec.Command(ng, args...)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			err = cmd.Start()
-			if err != nil {
-				util.Failed("failed to run %s: %v", ng, err)
-			}
-			err = cmd.Wait()
-			if err != nil {
-				util.Failed("failed to run %s: %v", ng, err)
-			}
-			os.Exit(0)
+		url := app.GetWebContainerDirectHTTPSURL()
+		args = []string{"http", url}
+		if cmd.Flags().Changed("subdomain") {
+			args = append(args, "--subdomain", subdomain)
 		}
+		util.Success("Running %s %s", ngrokLoc, strings.Join(args, " "))
+		ngrokCmd := exec.Command(ngrokLoc, args...)
+		ngrokCmd.Stdout = os.Stdout
+		ngrokCmd.Stderr = os.Stderr
+		err = ngrokCmd.Start()
+		if err != nil {
+			util.Failed("failed to run %s: %v", ngrokLoc, err)
+		}
+		err = ngrokCmd.Wait()
+		if err != nil {
+			util.Failed("failed to run %s: %v", ngrokLoc, err)
+		}
+		os.Exit(0)
 
 	},
 }
 
 func init() {
 	DdevShareCommand.Flags().StringVarP(&subdomain, "subdomain", "S", "", "request an alternate subdomain")
-	DdevShareCommand.Flags().StringVarP(&proxyService, "proxy-service", "P", "", "choose a proxy service (localtunnel or ngrok)")
 	RootCmd.AddCommand(DdevShareCommand)
 
 }
