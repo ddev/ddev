@@ -304,7 +304,9 @@ const ConfigInstructions = `
 # The default "ddev.site" allows DNS lookup via a wildcard
 # For backward compatibility this can be changed to "ddev.local"
 
-
+# ngrok_args: --subdomain mysite --auth "user:pass"
+# Provide extra arguments to the "ngrok http" command, see 
+# https://ngrok.com/docs#http
 
 # provider: default # Currently either "default" or "pantheon"
 #

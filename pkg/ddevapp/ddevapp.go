@@ -112,6 +112,7 @@ type DdevApp struct {
 	ProjectTLD            string               `yaml:"project_tld,omitempty"`
 	UseDNSWhenPossible    bool                 `yaml:"use_dns_when_possible"`
 	MkcertEnabled         bool                 `yaml:"-"`
+	NgrokArgs             string               `yaml:"ngrok_args,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string
