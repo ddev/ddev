@@ -9,25 +9,20 @@ import (
 	"strings"
 )
 
-var (
-	subdomain string
-)
-
 // DdevShareCommand contains the "ddev share" command
 var DdevShareCommand = &cobra.Command{
-	Use:   "share [projectname]",
+	Use:   "share",
 	Short: "Share project on the internet via ngrok.",
+	Long:  `Use "ddev share" or add on extra ngrok commands, like "ddev share --subdomain my-reserved-subdomain"`,
+	Example: `ddev share
+ddev share --subdomain some-subdomain
+ddev share --auth authkey`,
+	Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) > 1 {
-			util.Failed("Too many arguments provided. Please use 'ddev share' or 'ddev share [projectname]'")
-		}
-
-		apps, err := getRequestedProjects(args, false)
+		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
-			util.Failed("Failed to get requested project(s): %v", err)
+			util.Failed("Failed to get requested project: %v", err)
 		}
-
-		app := apps[0]
 		if app.SiteStatus() != ddevapp.SiteRunning {
 			util.Failed("Project is not yet running. Use 'ddev start' first.")
 		}
@@ -37,16 +32,14 @@ var DdevShareCommand = &cobra.Command{
 			util.Failed("ngrok not found in path, please install it, see https://ngrok.com/download")
 		}
 		url := app.GetWebContainerDirectHTTPSURL()
-		args = []string{"http"}
-		if cmd.Flags().Changed("subdomain") {
-			args = append(args, "--subdomain", subdomain)
-		}
+		ngrokArgs := []string{"http"}
 		if app.NgrokArgs != "" {
-			args = append(args, strings.Split(app.NgrokArgs, " ")...)
+			ngrokArgs = append(ngrokArgs, strings.Split(app.NgrokArgs, " ")...)
 		}
-		args = append(args, url)
-		util.Success("Running %s %s", ngrokLoc, strings.Join(args, " "))
-		ngrokCmd := exec.Command(ngrokLoc, args...)
+		ngrokArgs = append(ngrokArgs, url)
+		ngrokArgs = append(ngrokArgs, args...)
+		util.Success("Running %s %s", ngrokLoc, strings.Join(ngrokArgs, " "))
+		ngrokCmd := exec.Command(ngrokLoc, ngrokArgs...)
 		ngrokCmd.Stdout = os.Stdout
 		ngrokCmd.Stderr = os.Stderr
 		err = ngrokCmd.Start()
@@ -58,12 +51,10 @@ var DdevShareCommand = &cobra.Command{
 			util.Failed("failed to run %s: %v", ngrokLoc, err)
 		}
 		os.Exit(0)
-
 	},
 }
 
 func init() {
-	DdevShareCommand.Flags().StringVarP(&subdomain, "subdomain", "S", "", "request an alternate ngrok.io subdomain (must be reserved on ngrok site)")
 	RootCmd.AddCommand(DdevShareCommand)
-
+	DdevShareCommand.Flags().SetInterspersed(false)
 }
