@@ -32,6 +32,14 @@ ddev share --auth authkey`,
 			util.Failed("ngrok not found in path, please install it, see https://ngrok.com/download")
 		}
 		url := app.GetWebContainerDirectHTTPSURL()
+		useHTTPS, err := cmd.Flags().GetBool("https")
+		if err != nil {
+			util.Failed("failed to get https flag: %v", err)
+		}
+
+		if !useHTTPS {
+			url = app.GetWebContainerDirectHTTPURL()
+		}
 		ngrokArgs := []string{"http"}
 		if app.NgrokArgs != "" {
 			ngrokArgs = append(ngrokArgs, strings.Split(app.NgrokArgs, " ")...)
@@ -60,6 +68,8 @@ ddev share --auth authkey`,
 func init() {
 	RootCmd.AddCommand(DdevShareCommand)
 	DdevShareCommand.Flags().String("subdomain", "", `ngrok --subdomain argument, as in "ngrok --subdomain my-subdomain"`)
+	DdevShareCommand.Flags().Bool("https", true, `Set to false to use unencrypted http local tunnel (required if you have no ngrok.com account)"`)
+
 	DdevShareCommand.Flags().Bool("inspect", false, `ngrok --inspect argument, as in "ngrok --inspect=true"`)
 
 	DdevShareCommand.Flags().String("auth", "", `ngrok --auth flag, as in --auth "user:pass"`)
