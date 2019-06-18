@@ -24,6 +24,11 @@ chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
 # Kill off any running containers before sanetestbot.
 docker rm -f $(docker ps -aq) || true
+
+# Run any testbot maintenance taht may need to be done
+echo "--- running testbot_maintenance.sh"
+bash $(dirname $0)/testbot_maintenance.sh
+
 # Our testbot should be sane, run the testbot checker to make sure.
 echo "--- running sanetestbot.sh"
 ./.buildkite/sanetestbot.sh
