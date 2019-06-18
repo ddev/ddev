@@ -13,11 +13,11 @@ import (
 var DdevShareCommand = &cobra.Command{
 	Use:   "share",
 	Short: "Share project on the internet via ngrok.",
-	Long:  `Use "ddev share" or add on extra ngrok commands, like "ddev share --subdomain my-reserved-subdomain"`,
+	Long:  `Use "ddev share" or add on extra ngrok commands, like "ddev share --subdomain my-reserved-subdomain". Although a few ngrok commands are supported directly, any ngrok flag can be added in the ngrok_args section of .ddev/config.yaml. You will need to create an account on ngrok.com and use the "ngrok authtoken" command to set up ngrok.`,
 	Example: `ddev share
 ddev share --subdomain some-subdomain
 ddev share --auth authkey`,
-	Args: cobra.ArbitraryArgs,
+	//Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
@@ -37,7 +37,10 @@ ddev share --auth authkey`,
 			ngrokArgs = append(ngrokArgs, strings.Split(app.NgrokArgs, " ")...)
 		}
 		ngrokArgs = append(ngrokArgs, url)
+		x := cmd.Flags().Args()
+		_ = x
 		ngrokArgs = append(ngrokArgs, args...)
+
 		util.Success("Running %s %s", ngrokLoc, strings.Join(ngrokArgs, " "))
 		ngrokCmd := exec.Command(ngrokLoc, ngrokArgs...)
 		ngrokCmd.Stdout = os.Stdout
@@ -56,5 +59,8 @@ ddev share --auth authkey`,
 
 func init() {
 	RootCmd.AddCommand(DdevShareCommand)
-	DdevShareCommand.Flags().SetInterspersed(false)
+	DdevShareCommand.Flags().String("subdomain", "", `ngrok --subdomain argument, as in "ngrok --subdomain my-subdomain"`)
+	DdevShareCommand.Flags().Bool("inspect", false, `ngrok --inspect argument, as in "ngrok --inspect=true"`)
+
+	DdevShareCommand.Flags().String("auth", "", `ngrok --auth flag, as in --auth "user:pass"`)
 }
