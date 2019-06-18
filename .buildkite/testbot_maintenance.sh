@@ -4,6 +4,7 @@ set -eu
 
 os=$(go env GOOS)
 
+# Install ngrok if it's not there.
 if ! command -v ngrok >/dev/null; then
     case $os in
     darwin)
