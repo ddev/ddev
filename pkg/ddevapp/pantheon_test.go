@@ -154,6 +154,8 @@ func TestPantheonPull(t *testing.T) {
 	assert.NoError(err)
 	app.Name = pantheonTestSiteName
 	app.Type = AppTypeDrupal8
+	app.Hooks = map[string][]YAMLTask{"post-pull": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-pull": {{"exec-host": "touch hello-pre-pull-" + app.Name}}}
+
 	err = app.WriteConfig()
 	assert.NoError(err)
 
@@ -173,6 +175,14 @@ func TestPantheonPull(t *testing.T) {
 	assert.NoError(err)
 	err = app.Pull(&provider, &PullOptions{})
 	assert.NoError(err)
+
+	assert.FileExists("hello-pre-pull-" + app.Name)
+	assert.FileExists("hello-post-pull-" + app.Name)
+	err = os.Remove("hello-pre-pull-" + app.Name)
+	assert.NoError(err)
+	err = os.Remove("hello-post-pull-" + app.Name)
+	assert.NoError(err)
+
 	err = app.Stop(true, false)
 	assert.NoError(err)
 }
