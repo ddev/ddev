@@ -1599,6 +1599,8 @@ func TestDdevDescribe(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-describe": {{"exec-host": "touch hello-post-describe-" + app.Name}}, "pre-describe": {{"exec-host": "touch hello-pre-describe-" + app.Name}}}
+
 	startErr := app.StartAndWaitForSync(0)
 	//nolint: errcheck
 	defer app.Stop(true, false)
@@ -1620,6 +1622,13 @@ func TestDdevDescribe(t *testing.T) {
 	assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), desc["shortroot"])
 	assert.EqualValues(app.GetAppRoot(), desc["approot"])
 	assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
+
+	assert.FileExists("hello-pre-describe-" + app.Name)
+	assert.FileExists("hello-post-describe-" + app.Name)
+	err = os.Remove("hello-pre-describe-" + app.Name)
+	assert.NoError(err)
+	err = os.Remove("hello-post-describe-" + app.Name)
+	assert.NoError(err)
 
 	// Now stop it and test behavior.
 	err = app.Pause()
