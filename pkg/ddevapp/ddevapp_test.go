@@ -1341,6 +1341,9 @@ func TestDdevExec(t *testing.T) {
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
+
+		app.Hooks = map[string][]ddevapp.YAMLTask{"post-exec": {{"exec-host": "touch hello-post-exec-" + app.Name}}, "pre-exec": {{"exec-host": "touch hello-pre-exec-" + app.Name}}}
+
 		startErr := app.StartAndWaitForSync(0)
 		if startErr != nil {
 			logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
@@ -1354,6 +1357,13 @@ func TestDdevExec(t *testing.T) {
 		})
 		assert.NoError(err)
 		assert.Contains(out, "/var/www/html")
+
+		assert.FileExists("hello-pre-exec-" + app.Name)
+		assert.FileExists("hello-post-exec-" + app.Name)
+		err = os.Remove("hello-pre-exec-" + app.Name)
+		assert.NoError(err)
+		err = os.Remove("hello-post-exec-" + app.Name)
+		assert.NoError(err)
 
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
@@ -1400,7 +1410,6 @@ func TestDdevExec(t *testing.T) {
 
 		runTime()
 		switchDir()
-
 	}
 }
 
