@@ -1507,8 +1507,8 @@ func TestProcessHooks(t *testing.T) {
 	cleanup()
 }
 
-// TestDdevStop tests the functionality that is called when "ddev stop" is executed
-func TestDdevStop(t *testing.T) {
+// TestDdevPause tests the functionality that is called when "ddev pause" is executed
+func TestDdevPause(t *testing.T) {
 	assert := asrt.New(t)
 
 	app := &ddevapp.DdevApp{}
@@ -1521,6 +1521,8 @@ func TestDdevStop(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 	err = app.StartAndWaitForSync(0)
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-pause": {{"exec-host": "touch hello-post-pause-" + app.Name}}, "pre-pause": {{"exec-host": "touch hello-pre-pause-" + app.Name}}}
+
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	require.NoError(t, err)
@@ -1534,6 +1536,14 @@ func TestDdevStop(t *testing.T) {
 		assert.NoError(err)
 		assert.True(check, containerType, "container has exited")
 	}
+	pwd, _ := os.Getwd()
+	_ = pwd
+	assert.FileExists("hello-pre-pause-" + app.Name)
+	assert.FileExists("hello-post-pause-" + app.Name)
+	err = os.Remove("hello-pre-pause-" + app.Name)
+	assert.NoError(err)
+	err = os.Remove("hello-post-pause-" + app.Name)
+	assert.NoError(err)
 
 	runTime()
 	switchDir()
