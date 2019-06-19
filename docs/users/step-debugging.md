@@ -7,6 +7,7 @@ xdebug is a server-side tool: It is installed automatically on the container and
 All IDEs basically work the same: They listen on a port and react when they're contacted there. So IDEs other than those listed here should work fine, if listening on the default xdebug port 9000.
 
 **Key facts:**
+
 * You need to explicitly enable xdebug in your config.yaml with `xdebug_enabled: true` (it's disabled by default). After changing, `ddev start` again.
 * The debug server port on the IDE must be set to port 9000, which is the default and is probably already set in most IDEs. (If you need to change the xdebug port due to a port conflict on your host computer, you can do it with a PHP override, explained below.)
 
