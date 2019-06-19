@@ -977,6 +977,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.Init(site.Dir)
 	require.NoError(t, err)
 
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-snapshot": {{"exec-host": "touch hello-post-snapshot-" + app.Name}}, "pre-snapshot": {{"exec-host": "touch hello-pre-snapshot-" + app.Name}}}
+
 	// Try using php72 to avoid SIGBUS failures after restore.
 	app.PHPVersion = ddevapp.PHP72
 
@@ -1008,8 +1010,16 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
 	snapshotName, err := app.Snapshot("d7testerTest1")
 	assert.NoError(err)
+
 	assert.EqualValues(snapshotName, "d7testerTest1")
 	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
+
+	assert.FileExists("hello-pre-snapshot-" + app.Name)
+	assert.FileExists("hello-post-snapshot-" + app.Name)
+	err = os.Remove("hello-pre-snapshot-" + app.Name)
+	assert.NoError(err)
+	err = os.Remove("hello-post-snapshot-" + app.Name)
+	assert.NoError(err)
 
 	err = app.ImportDB(d7testerTest2Dump, "", false)
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
@@ -1020,8 +1030,18 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.EqualValues(snapshotName, "d7testerTest2")
 	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
 
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-restore-snapshot": {{"exec-host": "touch hello-post-restore-snapshot-" + app.Name}}, "pre-restore-snapshot": {{"exec-host": "touch hello-pre-restore-snapshot-" + app.Name}}}
+
 	err = app.RestoreSnapshot("d7testerTest1")
 	assert.NoError(err)
+
+	assert.FileExists("hello-pre-restore-snapshot-" + app.Name)
+	assert.FileExists("hello-post-restore-snapshot-" + app.Name)
+	err = os.Remove("hello-pre-restore-snapshot-" + app.Name)
+	assert.NoError(err)
+	err = os.Remove("hello-post-restore-snapshot-" + app.Name)
+	assert.NoError(err)
+
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
 	err = app.RestoreSnapshot("d7testerTest2")
 	assert.NoError(err)
