@@ -30,6 +30,7 @@ func TestCmdConfigHooks(t *testing.T) {
 	assert := asrt.New(t)
 
 	app, err := ddevapp.NewApp(site.Dir, true, "")
+	assert.NoError(err)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-config": {{"exec-host": "touch hello-post-config-" + app.Name}}, "pre-config": {{"exec-host": "touch hello-pre-config-" + app.Name}}}
 	err = app.WriteConfig()
 	assert.NoError(err)
