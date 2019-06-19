@@ -114,7 +114,7 @@ func (site *TestSite) Prepare() error {
 
 	err = app.WriteConfig()
 	if err != nil {
-		return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", site.Name, site.Dir, err)
+		return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", app.Name, app.GetAppRoot(), err)
 	}
 
 	return nil

@@ -23,7 +23,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	}
 
 	testDir, _ := os.Getwd()
-	defer cmd.DevTestSites[0].Chdir()()
+	defer cmd.TestSites[0].Chdir()()
 
 	_, err := exec.RunCommand(cmd.DdevBin, []string{"start"})
 	require.NoError(t, err)

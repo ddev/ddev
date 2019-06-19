@@ -24,7 +24,7 @@ func TestCmdStop(t *testing.T) {
 	// Make sure we have running sites.
 	err := addSites()
 	require.NoError(t, err)
-	for _, site := range DevTestSites {
+	for _, site := range TestSites {
 		cleanup := site.Chdir()
 
 		out, err := exec.RunCommand(DdevBin, []string{"stop"})

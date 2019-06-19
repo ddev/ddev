@@ -28,9 +28,9 @@ func TestCmdList(t *testing.T) {
 	assert.NoError(err, "error running ddev list -j: %v, output=%s", jsonOut)
 
 	siteList := getTestingSitesFromList(t, jsonOut)
-	assert.Equal(len(DevTestSites), len(siteList))
+	assert.Equal(len(TestSites), len(siteList))
 
-	for _, v := range DevTestSites {
+	for _, v := range TestSites {
 		app, err := ddevapp.GetActiveApp(v.Name)
 		assert.NoError(err)
 
@@ -66,7 +66,7 @@ func TestCmdList(t *testing.T) {
 	}
 
 	// Stop the first app
-	firstApp, err := ddevapp.GetActiveApp(DevTestSites[0].Name)
+	firstApp, err := ddevapp.GetActiveApp(TestSites[0].Name)
 	assert.NoError(err)
 	err = firstApp.Stop(false, false)
 	assert.NoError(err)
@@ -77,14 +77,14 @@ func TestCmdList(t *testing.T) {
 	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
 
 	siteList = getTestingSitesFromList(t, jsonOut)
-	assert.Equal(len(DevTestSites)-1, len(siteList))
+	assert.Equal(len(TestSites)-1, len(siteList))
 
 	// Now list without -A, make sure we show all projects
 	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j"})
 	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
 
 	siteList = getTestingSitesFromList(t, jsonOut)
-	assert.Equal(len(DevTestSites), len(siteList))
+	assert.Equal(len(TestSites), len(siteList))
 
 	// Leave firstApp running for other tests
 	err = firstApp.Start()

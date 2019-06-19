@@ -17,7 +17,7 @@ func TestSequelproOperation(t *testing.T) {
 		t.SkipNow()
 	}
 	assert := asrt.New(t)
-	v := DevTestSites[0]
+	v := TestSites[0]
 	cleanup := v.Chdir()
 
 	_, err := ddevapp.GetActiveApp("")

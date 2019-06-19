@@ -11,7 +11,7 @@ import (
 // TestCmdExecBadArgs run `ddev exec` without the proper args
 func TestCmdExecBadArgs(t *testing.T) {
 	// Change to the first DevTestSite for the duration of this test.
-	defer DevTestSites[0].Chdir()()
+	defer TestSites[0].Chdir()()
 	assert := asrt.New(t)
 
 	args := []string{"exec"}
@@ -24,7 +24,7 @@ func TestCmdExecBadArgs(t *testing.T) {
 func TestCmdExec(t *testing.T) {
 
 	assert := asrt.New(t)
-	v := DevTestSites[0]
+	v := TestSites[0]
 	cleanup := v.Chdir()
 
 	// Test default invocation
