@@ -22,6 +22,29 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// TestCmdConfigHooks tests that pre-config and post-config hooks run
+func TestCmdConfigHooks(t *testing.T) {
+	// Change to the first DevTestSite for the duration of this test.
+	site := DevTestSites[0]
+	defer site.Chdir()()
+	assert := asrt.New(t)
+
+	app, err := ddevapp.NewApp(site.Dir, true, "")
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-config": {{"exec-host": "touch hello-post-config-" + app.Name}}, "pre-config": {{"exec-host": "touch hello-pre-config-" + app.Name}}}
+	err = app.WriteConfig()
+	assert.NoError(err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=" + app.Type})
+	assert.NoError(err)
+
+	assert.FileExists("hello-pre-config-" + app.Name)
+	assert.FileExists("hello-post-config-" + app.Name)
+	err = os.Remove("hello-pre-config-" + app.Name)
+	assert.NoError(err)
+	err = os.Remove("hello-post-config-" + app.Name)
+	assert.NoError(err)
+}
+
 // TestConfigDescribeLocation tries out the --show-config-location flag.
 func TestConfigDescribeLocation(t *testing.T) {
 	assert := asrt.New(t)
@@ -52,7 +75,6 @@ func TestConfigDescribeLocation(t *testing.T) {
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "No project configuration currently exists")
-
 }
 
 // TestConfigWithSitenameFlagDetectsDocroot tests docroot detected when flags passed.
