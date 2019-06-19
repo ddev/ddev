@@ -54,6 +54,7 @@ func TestShareCmd(t *testing.T) {
 				assert.NoError(err)
 				defer resp.Body.Close()
 				body, err := ioutil.ReadAll(resp.Body)
+				assert.NoError(err)
 				assert.Contains(string(body), site.Safe200URIWithExpectation.Expect)
 				err = cmd.Process.Signal(syscall.SIGTERM)
 				assert.NoError(err)

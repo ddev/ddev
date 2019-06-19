@@ -7,16 +7,17 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // DdevShareCommand contains the "ddev share" command
 var DdevShareCommand = &cobra.Command{
 	Use:   "share",
 	Short: "Share project on the internet via ngrok.",
-	Long:  `Use "ddev share" or add on extra ngrok commands, like "ddev share --subdomain my-reserved-subdomain". Although a few ngrok commands are supported directly, any ngrok flag can be added in the ngrok_args section of .ddev/config.yaml. You will need to create an account on ngrok.com and use the "ngrok authtoken" command to set up ngrok.`,
+	Long:  `Use "ddev share" or add on extra ngrok commands, like "ddev share --subdomain some-subdomain". Although a few ngrok commands are supported directly, any ngrok flag can be added in the ngrok_args section of .ddev/config.yaml. You will want to create an account on ngrok.com and use the "ngrok authtoken" command to set up ngrok.`,
 	Example: `ddev share
 ddev share --subdomain some-subdomain
-ddev share --auth authkey`,
+ddev share --use-http`,
 	//Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
@@ -31,35 +32,41 @@ ddev share --auth authkey`,
 		if ngrokLoc == "" || err != nil {
 			util.Failed("ngrok not found in path, please install it, see https://ngrok.com/download")
 		}
-		url := app.GetWebContainerDirectHTTPSURL()
+		urls := []string{app.GetWebContainerDirectHTTPSURL(), app.GetWebContainerDirectHTTPURL()}
+
+		// If they provided the --use-http flag, we'll not try both https and http
 		useHTTP, err := cmd.Flags().GetBool("use-http")
 		if err != nil {
 			util.Failed("failed to get use-http flag: %v", err)
 		}
 
 		if useHTTP {
-			url = app.GetWebContainerDirectHTTPURL()
+			urls = []string{app.GetWebContainerDirectHTTPURL()}
 		}
-		ngrokArgs := []string{"http"}
-		if app.NgrokArgs != "" {
-			ngrokArgs = append(ngrokArgs, strings.Split(app.NgrokArgs, " ")...)
-		}
-		ngrokArgs = append(ngrokArgs, url)
-		x := cmd.Flags().Args()
-		_ = x
-		ngrokArgs = append(ngrokArgs, args...)
 
-		util.Success("Running %s %s", ngrokLoc, strings.Join(ngrokArgs, " "))
-		ngrokCmd := exec.Command(ngrokLoc, ngrokArgs...)
-		ngrokCmd.Stdout = os.Stdout
-		ngrokCmd.Stderr = os.Stderr
-		err = ngrokCmd.Start()
-		if err != nil {
-			util.Failed("failed to run %s: %v", ngrokLoc, err)
-		}
-		err = ngrokCmd.Wait()
-		if err != nil {
-			util.Failed("failed to run %s: %v", ngrokLoc, err)
+		for _, url := range urls {
+			ngrokArgs := []string{"http"}
+			if app.NgrokArgs != "" {
+				ngrokArgs = append(ngrokArgs, strings.Split(app.NgrokArgs, " ")...)
+			}
+			ngrokArgs = append(ngrokArgs, url)
+			x := cmd.Flags().Args()
+			_ = x
+			ngrokArgs = append(ngrokArgs, args...)
+
+			if strings.Contains(url, "http://") {
+				util.Warning("Using local http URL, your data may be exposed on the internet. Create a free ngrok account instead...")
+				time.Sleep(time.Second * 3)
+			}
+			util.Success("Running %s %s", ngrokLoc, strings.Join(ngrokArgs, " "))
+			ngrokCmd := exec.Command(ngrokLoc, ngrokArgs...)
+			ngrokCmd.Stdout = os.Stdout
+			ngrokCmd.Stderr = os.Stderr
+			err = ngrokCmd.Run()
+			if err != nil {
+				continue
+			}
+
 		}
 		os.Exit(0)
 	},
@@ -67,10 +74,6 @@ ddev share --auth authkey`,
 
 func init() {
 	RootCmd.AddCommand(DdevShareCommand)
-	DdevShareCommand.Flags().String("subdomain", "", `ngrok --subdomain argument, as in "ngrok --subdomain my-subdomain"`)
+	DdevShareCommand.Flags().String("subdomain", "", `ngrok --subdomain argument, as in "ngrok --subdomain my-subdomain:, requires paid ngrok.com account"`)
 	DdevShareCommand.Flags().Bool("use-http", false, `Set to true to use unencrypted http local tunnel (required if you do not have an ngrok.com account)"`)
-
-	DdevShareCommand.Flags().Bool("inspect", false, `ngrok --inspect argument, as in "ngrok --inspect=true"`)
-
-	DdevShareCommand.Flags().String("auth", "", `ngrok --auth flag, as in --auth "user:pass"`)
 }
