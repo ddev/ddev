@@ -16,6 +16,7 @@ This recipe adds an Apache Solr container to a project. It will setup a solr cor
 - Ensure that the configuration files are present before running `ddev start`.
 
 **Updating Apache Solr configuration**
+
 - Run `ddev stop` to stop your application.
 - Run `ddev remove` to remove your application's containers (note: if you do not use the [destructive option](cli-usage#removing-projects-from-your-collection-known-to-ddev), the index will be untouched).
 - copy the new solr configuration files for your project to .ddev/solr/conf as described in **Installation**, above.
