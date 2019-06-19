@@ -608,6 +608,8 @@ func TestDdevImportDB(t *testing.T) {
 		err = app.StartAndWaitForSync(2)
 		assert.NoError(err)
 
+		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
+
 		// Test simple db loads.
 		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip"} {
 			path := filepath.Join(testDir, "testdata", file)
@@ -639,6 +641,12 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			err = app.ImportDB(cachedArchive, "", false)
 			assert.NoError(err)
+			assert.FileExists("hello-pre-import-db-" + app.Name)
+			assert.FileExists("hello-post-import-db-" + app.Name)
+			err = os.Remove("hello-pre-import-db-" + app.Name)
+			assert.NoError(err)
+			err = os.Remove("hello-post-import-db-" + app.Name)
+			assert.NoError(err)
 
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
@@ -659,6 +667,11 @@ func TestDdevImportDB(t *testing.T) {
 			err = app.ImportDB(cachedArchive, "", false)
 			assert.NoError(err)
 
+			assert.FileExists("hello-pre-import-db-" + app.Name)
+			assert.FileExists("hello-post-import-db-" + app.Name)
+			_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
+			_ = os.RemoveAll("hello-post-import-db-" + app.Name)
+
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
 				Cmd:     "mysql -e 'SHOW TABLES;'",
@@ -675,6 +688,10 @@ func TestDdevImportDB(t *testing.T) {
 
 			err = app.ImportDB(cachedArchive, "data.sql", false)
 			assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
+			assert.FileExists("hello-pre-import-db-" + app.Name)
+			assert.FileExists("hello-post-import-db-" + app.Name)
+			_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
+			_ = os.RemoveAll("hello-post-import-db-" + app.Name)
 		}
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
@@ -1219,6 +1236,7 @@ func TestDdevImportFiles(t *testing.T) {
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
+		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-files": {{"exec-host": "touch hello-post-import-files-" + app.Name}}, "pre-import-files": {{"exec-host": "touch hello-pre-import-files-" + app.Name}}}
 
 		if site.FilesTarballURL != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
@@ -1240,6 +1258,12 @@ func TestDdevImportFiles(t *testing.T) {
 			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
 			assert.NoError(err)
 		}
+		assert.FileExists("hello-pre-import-files-" + app.Name)
+		assert.FileExists("hello-post-import-files-" + app.Name)
+		err = os.Remove("hello-pre-import-files-" + app.Name)
+		assert.NoError(err)
+		err = os.Remove("hello-post-import-files-" + app.Name)
+		assert.NoError(err)
 
 		runTime()
 		switchDir()
