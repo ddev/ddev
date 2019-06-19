@@ -1490,7 +1490,20 @@ func TestDdevLogs(t *testing.T) {
 func TestProcessHooks(t *testing.T) {
 	assert := asrt.New(t)
 
-	site := TestSites[0]
+	// Use Drupal8 only, mostly for the composer example
+	site := FullTestSites[1]
+	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
+		app := &ddevapp.DdevApp{Name: site.Name}
+		_ = app.Stop(true, false)
+		_ = globalconfig.RemoveProjectInfo(site.Name)
+
+		err := site.Prepare()
+		require.NoError(t, err)
+		// nolint: errcheck
+		defer os.RemoveAll(site.Dir)
+	}
+
 	cleanup := site.Chdir()
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
@@ -1509,6 +1522,7 @@ func TestProcessHooks(t *testing.T) {
 			{"exec": "echo MYSQL_USER=${MYSQL_USER}", "service": "db"},
 			{"exec": "echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt"},
 			{"exec": "touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt"},
+			{"composer": "show twig/twig"},
 		},
 	}
 
@@ -1526,6 +1540,7 @@ func TestProcessHooks(t *testing.T) {
 	assert.Contains(out, "MYSQL_USER=db")
 	assert.Contains(out, "Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt' in container/service 'web'")
 	assert.Contains(out, "Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt' in container/service 'web',")
+	assert.Contains(out, "Twig, the flexible, fast, and secure template")
 	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
