@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os/exec"
+	"runtime"
 	"testing"
 )
 
@@ -43,14 +44,14 @@ func TestShareCmd(t *testing.T) {
 				case *json.SyntaxError:
 					continue
 				default:
-					t.Logf("failed unmarshalling %v: %v", logLine, err)
-					require.NoError(t, err)
+					t.Fatalf("failed unmarshalling %v: %v", logLine, err)
 				}
 			}
 			// If URL is provided, try to hit it and look for expected response
 			if url, ok := logData["url"]; ok {
 				resp, err := http.Get(url + site.Safe200URIWithExpectation.URI)
 				assert.NoError(err)
+				//nolint: errcheck
 				defer resp.Body.Close()
 				body, err := ioutil.ReadAll(resp.Body)
 				assert.NoError(err)
@@ -66,4 +67,6 @@ func TestShareCmd(t *testing.T) {
 	require.NoError(t, err)
 	_ = cmd.Wait()
 	assert.True(urlRead)
+	t.Logf("goprocs: %v", runtime.NumGoroutine())
+
 }

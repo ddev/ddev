@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -60,6 +61,8 @@ func TestCmdStop(t *testing.T) {
 	assert.NoError(err)
 	// All containers should now be gone
 	assert.Equal(0, len(containers))
+	t.Logf("goprocs: %v", runtime.NumGoroutine())
+
 }
 
 // TestCmdStopMissingProjectDirectory ensures the `ddev stop` command can operate on a project when the
