@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os/exec"
-	"syscall"
 	"testing"
 )
 
@@ -56,7 +55,7 @@ func TestShareCmd(t *testing.T) {
 				body, err := ioutil.ReadAll(resp.Body)
 				assert.NoError(err)
 				assert.Contains(string(body), site.Safe200URIWithExpectation.Expect)
-				err = cmd.Process.Signal(syscall.SIGTERM)
+				err = cmd.Process.Kill()
 				assert.NoError(err)
 				urlRead = true
 				break
