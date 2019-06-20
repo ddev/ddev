@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -44,14 +45,13 @@ ddev share --use-http`,
 			urls = []string{app.GetWebContainerDirectHTTPURL()}
 		}
 
+		var ngrokErr error
 		for _, url := range urls {
 			ngrokArgs := []string{"http"}
 			if app.NgrokArgs != "" {
 				ngrokArgs = append(ngrokArgs, strings.Split(app.NgrokArgs, " ")...)
 			}
 			ngrokArgs = append(ngrokArgs, url)
-			x := cmd.Flags().Args()
-			_ = x
 			ngrokArgs = append(ngrokArgs, args...)
 
 			if strings.Contains(url, "http://") {
@@ -62,12 +62,31 @@ ddev share --use-http`,
 			ngrokCmd := exec.Command(ngrokLoc, ngrokArgs...)
 			ngrokCmd.Stdout = os.Stdout
 			ngrokCmd.Stderr = os.Stderr
-			err = ngrokCmd.Run()
-			if err != nil {
-				continue
+			ngrokErr = ngrokCmd.Run()
+			// nil result means ngrok ran and exited normally.
+			// It seems to do this fine when hit by SIGTERM or SIGINT
+			if ngrokErr == nil {
+				break
 			}
 
+			exitErr, ok := ngrokErr.(*exec.ExitError)
+			if !ok {
+				// Normally we'd have an ExitError, but if not, notify
+				util.Error("ngrok exited: %v", ngrokErr)
+				break
+			}
+
+			exitCode := exitErr.ExitCode()
+			// In the case of exitCode==1, ngrok seems to have died due to an error,
+			// most likely inadequate user permissions.
+			if exitCode != 1 {
+				util.Warning("ngrok exited: %v", exitErr)
+				break
+			}
+			// Otherwise we'll continue and do the next url or exit
+			util.Warning("ngrok exited: %v", exitErr)
 		}
+		util.Warning("ngrokErr: %v, goprocs: %v", ngrokErr, runtime.NumGoroutine())
 		os.Exit(0)
 	},
 }
