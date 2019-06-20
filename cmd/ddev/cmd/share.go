@@ -63,6 +63,7 @@ ddev share --use-http`,
 			ngrokCmd.Stdout = os.Stdout
 			ngrokCmd.Stderr = os.Stderr
 			ngrokErr = ngrokCmd.Run()
+
 			// nil result means ngrok ran and exited normally.
 			// It seems to do this fine when hit by SIGTERM or SIGINT
 			if ngrokErr == nil {

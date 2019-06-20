@@ -44,7 +44,8 @@ func TestShareCmd(t *testing.T) {
 				case *json.SyntaxError:
 					continue
 				default:
-					t.Fatalf("failed unmarshalling %v: %v", logLine, err)
+					t.Errorf("failed unmarshalling %v: %v", logLine, err)
+					break
 				}
 			}
 			// If URL is provided, try to hit it and look for expected response
@@ -62,11 +63,14 @@ func TestShareCmd(t *testing.T) {
 				break
 			}
 		}
+		return
 	}()
 	err = cmd.Start()
 	require.NoError(t, err)
-	_ = cmd.Wait()
+	err = cmd.Wait()
+	t.Logf("cmd.Wait() err: %v", err)
 	assert.True(urlRead)
+	_ = cmdReader.Close()
 	t.Logf("goprocs: %v", runtime.NumGoroutine())
 
 }
