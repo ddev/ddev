@@ -60,7 +60,7 @@ func TestShareCmd(t *testing.T) {
 				err = cmd.Process.Kill()
 				assert.NoError(err)
 				urlRead = true
-				break
+				return
 			}
 		}
 		return
