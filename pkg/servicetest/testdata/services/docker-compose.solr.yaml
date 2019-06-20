@@ -59,6 +59,10 @@ services:
       - solr-precreate
       - dev
       - /solr-conf
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
   # This links the Solr service to the web service defined in the main
   # docker-compose.yml, allowing applications running in the web service to
   # access the Solr service at sitename.ddev.site:8983.
