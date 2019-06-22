@@ -592,6 +592,7 @@ type composeYAMLVars struct {
 	DockerIP             string
 	IsWindowsFS          bool
 	Hostnames            []string
+	Timezone             string
 }
 
 // RenderComposeYAML renders the contents of docker-compose.yaml.
@@ -634,6 +635,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		MountType:            "bind",
 		WebMount:             "../",
 		Hostnames:            app.GetHostnames(),
+		Timezone:             app.Timezone,
 	}
 	if app.WebcacheEnabled {
 		templateVars.MountType = "volume"

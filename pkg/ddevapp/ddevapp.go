@@ -8,14 +8,13 @@ import (
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-shellwords"
+	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
-
-	"golang.org/x/crypto/ssh/terminal"
 
 	"strings"
 
@@ -111,6 +110,7 @@ type DdevApp struct {
 	DBImageExtraPackages  []string             `yaml:"dbimage_extra_packages,omitempty,flow"`
 	ProjectTLD            string               `yaml:"project_tld,omitempty"`
 	UseDNSWhenPossible    bool                 `yaml:"use_dns_when_possible"`
+	Timezone              string               `yaml:"timezone"`
 	MkcertEnabled         bool                 `yaml:"-"`
 	NgrokArgs             string               `yaml:"ngrok_args,omitempty"`
 }
