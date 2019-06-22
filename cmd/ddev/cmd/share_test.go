@@ -3,12 +3,15 @@ package cmd
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"testing"
 )
 
@@ -57,13 +60,12 @@ func TestShareCmd(t *testing.T) {
 				body, err := ioutil.ReadAll(resp.Body)
 				assert.NoError(err)
 				assert.Contains(string(body), site.Safe200URIWithExpectation.Expect)
-				err = cmd.Process.Kill()
-				assert.NoError(err)
 				urlRead = true
+				err = pKill(cmd)
+				assert.NoError(err)
 				return
 			}
 		}
-		return
 	}()
 	err = cmd.Start()
 	require.NoError(t, err)
@@ -71,6 +73,25 @@ func TestShareCmd(t *testing.T) {
 	t.Logf("cmd.Wait() err: %v", err)
 	assert.True(urlRead)
 	_ = cmdReader.Close()
-	t.Logf("goprocs: %v", runtime.NumGoroutine())
+}
 
+// pKill kills a started cmd; If windows, it shells out to the
+// taskkill command.
+func pKill(cmd *exec.Cmd) error {
+	var err error
+	if cmd == nil {
+		return fmt.Errorf("pKill: cmd is nill")
+	}
+	if runtime.GOOS == "windows" {
+		// Windows has a completely different process model, no SIGCHLD,
+		// no killing of subprocesses. I wasn't successful in finding a way
+		// to properly kill a process set using golang; rfay 20190622
+		kill := exec.Command("TASKKILL", "/T", "/F", "/PID", strconv.Itoa(cmd.Process.Pid))
+		kill.Stderr = os.Stderr
+		kill.Stdout = os.Stdout
+		err = kill.Run()
+	} else {
+		err = cmd.Process.Kill()
+	}
+	return err
 }
