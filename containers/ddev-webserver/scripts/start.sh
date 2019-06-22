@@ -30,6 +30,11 @@ if [ -n "$DDEV_PHP_VERSION" ] ; then
 	export PHP_INI=/etc/php/${DDEV_PHP_VERSION}/fpm/php.ini
 fi
 
+# Set PHP timezone to configured $TZ if there is one
+if [ ! -z ${TZ} ]; then
+    perl -pi -e "s%date.timezone *=.*$%date.timezone = $TZ%g" $(find /etc/php -name php.ini)
+fi
+
 # If the user has provided custom PHP configuration, copy it into a directory
 # where PHP will automatically include it.
 if [ -d /mnt/ddev_config/php ] ; then
