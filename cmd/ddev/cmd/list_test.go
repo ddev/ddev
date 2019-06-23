@@ -66,29 +66,27 @@ func TestCmdList(t *testing.T) {
 	}
 
 	// Stop the first app
-	firstApp, err := ddevapp.GetActiveApp(TestSites[0].Name)
-	assert.NoError(err)
-	err = firstApp.Stop(false, false)
-	assert.NoError(err)
+	out, err = exec.RunCommand(DdevBin, []string{"stop", TestSites[0].Name})
+	assert.NoError(err, "error runnning ddev stop: %v output=%s", err, out)
 
-	// Execute "ddev list" and harvest plain text output.
+	// Execute "ddev list" and harvest json output.
 	// Now there should be one less project in list
 	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-jA"})
-	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
+	assert.NoError(err, "error runnning ddev list: %v output=%s", err, out)
 
 	siteList = getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(TestSites)-1, len(siteList))
 
 	// Now list without -A, make sure we show all projects
 	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j"})
-	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
+	assert.NoError(err, "error runnning ddev list: %v output=%s", err, out)
 
 	siteList = getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(TestSites), len(siteList))
 
 	// Leave firstApp running for other tests
-	err = firstApp.Start()
-	assert.NoError(err)
+	out, err = exec.RunCommand(DdevBin, []string{"start", TestSites[0].Name})
+	assert.NoError(err, "error runnning ddev start: %v output=%s", err, out)
 }
 
 // getSitesFromList takes the json output of ddev list -j
