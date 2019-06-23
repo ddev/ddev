@@ -551,6 +551,14 @@ func TestConfigValidate(t *testing.T) {
 	err = app.ValidateConfig()
 	assert.Error(err)
 	assert.Contains(err.Error(), "invalid hostname")
+
+	app.Timezone = "xxx"
+	err = app.ValidateConfig()
+	assert.Error(err)
+	app.Timezone = "America/Chicago"
+	err = app.ValidateConfig()
+	assert.NoError(err)
+
 }
 
 // TestWriteConfig tests writing config values to file
