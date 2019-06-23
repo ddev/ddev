@@ -283,6 +283,9 @@ func init() {
 
 	ConfigCommand.Flags().StringVarP(&ngrokArgs, "ngrok-args", "", "", "Provide extra args to ngrok in ddev share")
 
+	ConfigCommand.Flags().String("timezone", "", "Specify timezone for containers and php, like Europe/London or America/Denver or GMT or UTC")
+
+
 	RootCmd.AddCommand(ConfigCommand)
 }
 
@@ -489,6 +492,13 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if cmd.Flag("project-tld").Changed {
 		app.ProjectTLD = projectTLDArg
+	}
+
+	if cmd.Flag("timezone").Changed {
+		app.Timezone, err = cmd.Flags().GetString("timezone")
+		if err != nil {
+			util.Failed("Incorrect timezone: %v", err)
+		}
 	}
 
 	if uploadDirArg != "" {
