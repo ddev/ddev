@@ -791,6 +791,66 @@ func TestExtraPackages(t *testing.T) {
 	runTime()
 }
 
+// TestTimezoneConfig tests to make sure setting timezone config takes effect in the container.
+func TestTimezoneConfig(t *testing.T) {
+	assert := asrt.New(t)
+	app := &DdevApp{}
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", t.Name(), site.Name))
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	// nolint: errcheck
+	defer app.Stop(true, false)
+
+	err = app.Start()
+	assert.NoError(err)
+
+	// Without timezone set, we should find Etc/UTC
+	stdout, _, err := app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     "echo -n timezone=$(date +%Z) && php -r 'print \"phptz=\" . date_default_timezone_get();'",
+	})
+	assert.NoError(err)
+	assert.Equal("timezone=UTCphptz=UTC", stdout)
+
+	// Make sure db container is also working
+	stdout, _, err = app.Exec(&ExecOpts{
+		Service: "db",
+		Cmd:     "echo -n timezone=$(date +%Z)",
+	})
+	assert.NoError(err)
+	assert.Equal("timezone=UTC", stdout)
+
+	// With timezone set, we the correct timezone operational
+	app.Timezone = "Europe/Dublin"
+	err = app.Start()
+	assert.NoError(err)
+	stdout, _, err = app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     "echo -n timezone=$(date +%Z) && php -r 'print \"phptz=\" . date_default_timezone_get();'",
+	})
+	assert.NoError(err)
+	assert.Equal("timezone=ISTphptz=Europe/Dublin", stdout)
+
+	// Make sure db container is also working with Dublin time/IST
+	stdout, _, err = app.Exec(&ExecOpts{
+		Service: "db",
+		Cmd:     "echo -n timezone=$(date +%Z)",
+	})
+	assert.NoError(err)
+	assert.Equal("timezone=IST", stdout)
+
+	runTime()
+}
+
 // TestCustomBuildDockerfiles tests to make sure that custom web-build and db-build
 // Dockerfiles work properly
 func TestCustomBuildDockerfiles(t *testing.T) {
