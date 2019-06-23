@@ -67,19 +67,22 @@ func TestCmdList(t *testing.T) {
 
 	// Stop the first app
 	out, err = exec.RunCommand(DdevBin, []string{"stop", TestSites[0].Name})
-	assert.NoError(err, "error runnning ddev stop: %v output=%s", err, out)
+	assert.NoError(err, "error runnning ddev stop %v: %v output=%s", TestSites[0].Name, err, out)
+	t.Logf("Stopping first project with ddev stop %s", TestSites[0].Name)
 
 	// Execute "ddev list" and harvest json output.
 	// Now there should be one less project in list
 	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-jA"})
-	assert.NoError(err, "error runnning ddev list: %v output=%s", err, out)
+	assert.NoError(err, "error runnning ddev list: %v output=%s", err, jsonOut)
 
 	siteList = getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(TestSites)-1, len(siteList))
+	t.Logf("projects running with ddev list -jA: %v", siteList)
 
 	// Now list without -A, make sure we show all projects
 	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j"})
 	assert.NoError(err, "error runnning ddev list: %v output=%s", err, out)
+	t.Logf("projects running with ddev list -j: %v", siteList)
 
 	siteList = getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(TestSites), len(siteList))
