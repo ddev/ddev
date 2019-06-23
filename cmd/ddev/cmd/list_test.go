@@ -19,6 +19,12 @@ import (
 func TestCmdList(t *testing.T) {
 	assert := asrt.New(t)
 
+	// This gratuitous ddev start -a repopulates the ~/.ddev/global_config.yaml
+	// project list, which has been damaged by other tests which use
+	// direct app techniques.
+	_, err := exec.RunCommand(DdevBin, []string{"start", "-a"})
+	assert.NoError(err)
+
 	// Execute "ddev list" and harvest plain text output.
 	out, err := exec.RunCommand(DdevBin, []string{"list"})
 	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
@@ -65,11 +71,6 @@ func TestCmdList(t *testing.T) {
 
 	}
 
-	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j"})
-	assert.NoError(err, "error runnning ddev list: %v output=%s", err, jsonOut)
-	siteList = getTestingSitesFromList(t, jsonOut)
-	t.Logf("all test projects with ddev list -j before stopping first: %v", siteList)
-
 	// Stop the first app
 	out, err = exec.RunCommand(DdevBin, []string{"stop", TestSites[0].Name})
 	t.Logf("Stopped first project with ddev stop %s", TestSites[0].Name)
@@ -89,7 +90,7 @@ func TestCmdList(t *testing.T) {
 	assert.NoError(err, "error runnning ddev list: %v output=%s", err, out)
 	siteList = getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(TestSites), len(siteList))
-	t.Logf("test projects (including inactibve) shown with ddev list -j: %v", siteList)
+	t.Logf("test projects (including inactive) shown with ddev list -j: %v", siteList)
 
 	// Leave firstApp running for other tests
 	out, err = exec.RunCommand(DdevBin, []string{"start", TestSites[0].Name})
