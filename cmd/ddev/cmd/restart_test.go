@@ -13,7 +13,7 @@ import (
 // TestDevRestart runs `ddev restart` on the test apps
 func TestDevRestart(t *testing.T) {
 	assert := asrt.New(t)
-	site := DevTestSites[0]
+	site := TestSites[0]
 	cleanup := site.Chdir()
 
 	args := []string{"restart"}
@@ -33,7 +33,7 @@ func TestDevRestart(t *testing.T) {
 // TestDevRestartJSON runs `ddev restart -j` on the test apps and harvests and checks the output
 func TestDevRestartJSON(t *testing.T) {
 	assert := asrt.New(t)
-	site := DevTestSites[0]
+	site := TestSites[0]
 	cleanup := site.Chdir()
 	defer cleanup()
 

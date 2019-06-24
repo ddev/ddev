@@ -54,7 +54,7 @@ func TestDescribeBadArgs(t *testing.T) {
 func TestCmdDescribe(t *testing.T) {
 	assert := asrt.New(t)
 
-	for _, v := range DevTestSites {
+	for _, v := range TestSites {
 		// First, try to do a describe from another directory.
 		tmpdir := testcommon.CreateTmpDir("")
 		cleanup := testcommon.Chdir(tmpdir)
@@ -113,7 +113,7 @@ func TestCmdDescribe(t *testing.T) {
 // TestCmdDescribeAppFunction performs unit tests on the describeApp function from the working directory.
 func TestCmdDescribeAppFunction(t *testing.T) {
 	assert := asrt.New(t)
-	for i, v := range DevTestSites {
+	for i, v := range TestSites {
 		cleanup := v.Chdir()
 
 		app, err := ddevapp.GetActiveApp("")
@@ -155,7 +155,7 @@ func TestCmdDescribeAppUsingSitename(t *testing.T) {
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 
-	for _, v := range DevTestSites {
+	for _, v := range TestSites {
 		app, err := ddevapp.GetActiveApp(v.Name)
 		assert.NoError(err)
 		desc, err := app.Describe()
@@ -190,7 +190,7 @@ func TestCmdDescribeAppWithInvalidParams(t *testing.T) {
 	assert.Error(err)
 
 	// Change to a site's working directory and ensure a failure still occurs with a invalid site name.
-	cleanup := DevTestSites[0].Chdir()
+	cleanup := TestSites[0].Chdir()
 	_, err = ddevapp.GetActiveApp(util.RandString(16))
 	assert.Error(err)
 	cleanup()

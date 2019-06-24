@@ -41,6 +41,10 @@ cleanup
 # go clean -modcache  (Doesn't work due to current bug in golang)
 chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
+# Run any testbot maintenance that may need to be done
+echo "--- running testbot_maintenance.sh"
+bash $(dirname $0)/testbot_maintenance.sh
+
 # Our testbot should now be sane, run the testbot checker to make sure.
 ./.buildkite/sanetestbot.sh
 

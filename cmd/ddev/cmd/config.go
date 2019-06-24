@@ -131,8 +131,11 @@ var (
 	// projectTLDArg specifies a project top-level-domain; defaults to ddevapp.DdevDefaultTLD
 	projectTLDArg string
 
-	// useDNSWhenPossibleArg specifies
+	// useDNSWhenPossibleArg specifies to use DNS for lookup (or not), defaults to true
 	useDNSWhenPossibleArg bool
+
+	// ngrokArgs provides additional args to the ngrok command in `ddev share`
+	ngrokArgs string
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -277,6 +280,8 @@ func init() {
 	ConfigCommand.Flags().StringVar(&projectTLDArg, "project-tld", ddevapp.DdevDefaultTLD, "set the top-level domain to be used for projects, defaults to "+ddevapp.DdevDefaultTLD)
 
 	ConfigCommand.Flags().BoolVarP(&useDNSWhenPossibleArg, "use-dns-when-possible", "", true, "Use DNS for hostname resolution instead of /etc/hosts when possible")
+
+	ConfigCommand.Flags().StringVarP(&ngrokArgs, "ngrok-args", "", "", "Provide extra args to ngrok in ddev share")
 
 	RootCmd.AddCommand(ConfigCommand)
 }
@@ -476,6 +481,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if cmd.Flag("use-dns-when-possible").Changed {
 		app.UseDNSWhenPossible = useDNSWhenPossibleArg
+	}
+
+	if cmd.Flag("ngrok-args").Changed {
+		app.NgrokArgs = ngrokArgs
 	}
 
 	if cmd.Flag("project-tld").Changed {

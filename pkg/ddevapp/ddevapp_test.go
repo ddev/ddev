@@ -927,7 +927,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Make sure we can do a simple hit against the host-mount of web container.
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetWebContainerDirectURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetWebContainerDirectHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
@@ -2075,7 +2075,7 @@ func TestGetAllURLs(t *testing.T) {
 
 	expectedDirectAddress := app.GetWebContainerDirectHTTPSURL()
 	if ddevapp.GetCAROOT() == "" {
-		expectedDirectAddress = app.GetWebContainerDirectURL()
+		expectedDirectAddress = app.GetWebContainerDirectHTTPURL()
 	}
 
 	exists := urlMap[expectedDirectAddress]
@@ -2128,7 +2128,7 @@ func TestWebserverType(t *testing.T) {
 				assert.NoError(getLogsErr)
 				t.Fatalf("app.StartAndWaitForSync failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
 			}
-			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectURL()+"/servertype.php")
+			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/servertype.php")
 			require.NoError(t, err)
 
 			expectedServerType := "Apache/2"

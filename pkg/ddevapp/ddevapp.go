@@ -112,6 +112,7 @@ type DdevApp struct {
 	ProjectTLD            string               `yaml:"project_tld,omitempty"`
 	UseDNSWhenPossible    bool                 `yaml:"use_dns_when_possible"`
 	MkcertEnabled         bool                 `yaml:"-"`
+	NgrokArgs             string               `yaml:"ngrok_args,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -1352,14 +1353,14 @@ func (app *DdevApp) GetAllURLs() []string {
 	if GetCAROOT() != "" {
 		URLs = append(URLs, app.GetWebContainerDirectHTTPSURL())
 	} else {
-		URLs = append(URLs, app.GetWebContainerDirectURL())
+		URLs = append(URLs, app.GetWebContainerDirectHTTPURL())
 	}
 
 	return URLs
 }
 
-// GetWebContainerDirectURL returns the URL that can be used without the router to get to web container.
-func (app *DdevApp) GetWebContainerDirectURL() string {
+// GetWebContainerDirectHTTPURL returns the URL that can be used without the router to get to web container.
+func (app *DdevApp) GetWebContainerDirectHTTPURL() string {
 	// Get direct address of web container
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
@@ -1369,7 +1370,7 @@ func (app *DdevApp) GetWebContainerDirectURL() string {
 	return fmt.Sprintf("http://%s:%d", dockerIP, port)
 }
 
-// GetWebContainerDirectURL returns the URL that can be used without the router to get to web container.
+// GetWebContainerDirectHTTPSURL returns the URL that can be used without the router to get to web container via https.
 func (app *DdevApp) GetWebContainerDirectHTTPSURL() string {
 	// Get direct address of web container
 	dockerIP, err := dockerutil.GetDockerIP()

@@ -16,7 +16,7 @@ import (
 func TestImportTilde(t *testing.T) {
 	assert := asrt.New(t)
 
-	site := DevTestSites[0]
+	site := TestSites[0]
 
 	homedir, err := gohomedir.Dir()
 	assert.NoError(err)

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -24,7 +25,7 @@ func TestCmdStop(t *testing.T) {
 	// Make sure we have running sites.
 	err := addSites()
 	require.NoError(t, err)
-	for _, site := range DevTestSites {
+	for _, site := range TestSites {
 		cleanup := site.Chdir()
 
 		out, err := exec.RunCommand(DdevBin, []string{"stop"})
@@ -45,21 +46,19 @@ func TestCmdStop(t *testing.T) {
 	require.NoError(t, err)
 
 	// Ensure the --all option can remove all active apps
-	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all", "-RO"})
+	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
 	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
-	out, err = exec.RunCommand(DdevBin, []string{"list"})
-	assert.NoError(err)
-	assert.Contains(out, "No ddev projects were found")
 	containers, err := dockerutil.GetDockerContainers(true)
 	assert.NoError(err)
 	// Just the ddev-ssh-agent should remain running (1 container)
 	assert.Equal(1, len(containers), "Not all projects were removed after ddev stop --all")
-	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all", "-RO", "--stop-ssh-agent"})
+	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all", "--stop-ssh-agent"})
 	assert.NoError(err)
 	containers, err = dockerutil.GetDockerContainers(true)
 	assert.NoError(err)
 	// All containers should now be gone
 	assert.Equal(0, len(containers))
+	t.Logf("goprocs: %v", runtime.NumGoroutine())
 }
 
 // TestCmdStopMissingProjectDirectory ensures the `ddev stop` command can operate on a project when the

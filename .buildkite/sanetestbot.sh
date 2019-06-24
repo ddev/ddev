@@ -46,6 +46,10 @@ if command -v ddev >/dev/null && [ "$(ddev version -j | jq -r .raw.commit)" \< "
   exit 4
 fi
 
+if ! command -v ngrok >/dev/null ; then
+    echo "ngrok is not installed" && exit 5
+fi
+
 $(dirname $0)/nfstest.sh
 
 echo "=== testbot $HOSTNAME seems to be set up OK ==="

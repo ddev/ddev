@@ -8,7 +8,7 @@ set -x
 brew update >/dev/null 2>/dev/null
 
 # Get docker in first so we can install it and work on other things
-brew cask install docker
+brew cask install docker ngrok
 sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
 nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 

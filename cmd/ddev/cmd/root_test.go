@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/drud/ddev/pkg/testcommon"
@@ -15,12 +15,13 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/output"
 	asrt "github.com/stretchr/testify/assert"
+	osexec "os/exec"
 )
 
 var (
 	// DdevBin is the full path to the drud binary
-	DdevBin      = "ddev"
-	DevTestSites = []testcommon.TestSite{
+	DdevBin   = "ddev"
+	TestSites = []testcommon.TestSite{
 		{
 			Name:                          "TestCmdWordpress",
 			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
@@ -53,12 +54,6 @@ var (
 func TestMain(m *testing.M) {
 	output.LogSetUp()
 
-	// Start with no global config file so we're sure to have defaults
-	configFile := globalconfig.GetGlobalConfigPath()
-	if fileutil.FileExists(configFile) {
-		_ = os.Remove(configFile)
-	}
-
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
@@ -72,15 +67,38 @@ func TestMain(m *testing.M) {
 	// We don't want the tests reporting to Sentry.
 	_ = os.Setenv("DDEV_NO_SENTRY", "true")
 
-	log.Debugln("Preparing DevTestSites")
-	for i := range DevTestSites {
-		log.Debugf("Preparing %s", DevTestSites[i].Name)
-		err = DevTestSites[i].Prepare()
+	// If GOTEST_SHORT is an integer, then use it as index for a single usage
+	// in the array. Any value can be used, it will default to just using the
+	// first site in the array.
+	gotestShort := os.Getenv("GOTEST_SHORT")
+	if gotestShort != "" {
+		useSite := 0
+		if site, err := strconv.Atoi(gotestShort); err == nil && site >= 0 && site < len(TestSites) {
+			useSite = site
+		}
+		TestSites = []testcommon.TestSite{TestSites[useSite]}
+	}
+
+	log.Debugln("Preparing TestSites")
+	for i := range TestSites {
+		oldProject := globalconfig.GetProject(TestSites[i].Name)
+		if oldProject != nil {
+			out, err := osexec.Command(DdevBin, "stop", "-RO", TestSites[i].Name).CombinedOutput()
+			if err != nil {
+				log.Fatalf("ddev stop -RO on %s failed: %v, output=%s", TestSites[i].Name, err, out)
+			}
+		}
+		if err = globalconfig.ReadGlobalConfig(); err != nil {
+			log.Fatalf("Failed to read global config: %v", err)
+		}
+
+		log.Debugf("Preparing %s", TestSites[i].Name)
+		err = TestSites[i].Prepare()
 		if err != nil {
-			log.Fatalf("Prepare() failed in TestMain site=%s, err=%v\n", DevTestSites[i].Name, err)
+			log.Fatalf("Prepare() failed in TestMain site=%s, err=%v\n", TestSites[i].Name, err)
 		}
 	}
-	log.Debugln("Adding DevTestSites")
+	log.Debugln("Adding TestSites")
 	err = addSites()
 	if err != nil {
 		removeSites()
@@ -94,8 +112,8 @@ func TestMain(m *testing.M) {
 
 	// Avoid being in any of the directories we're cleaning up.
 	_ = os.Chdir(os.TempDir())
-	for i := range DevTestSites {
-		DevTestSites[i].Cleanup()
+	for i := range TestSites {
+		TestSites[i].Cleanup()
 	}
 
 	os.Exit(testRun)
@@ -111,15 +129,15 @@ func TestGetActiveAppRoot(t *testing.T) {
 	_, err = ddevapp.GetActiveAppRoot("potato")
 	assert.Error(err)
 
-	appRoot, err := ddevapp.GetActiveAppRoot(DevTestSites[0].Name)
+	appRoot, err := ddevapp.GetActiveAppRoot(TestSites[0].Name)
 	assert.NoError(err)
-	assert.Equal(DevTestSites[0].Dir, appRoot)
+	assert.Equal(TestSites[0].Dir, appRoot)
 
-	switchDir := DevTestSites[0].Chdir()
+	switchDir := TestSites[0].Chdir()
 
 	appRoot, err = ddevapp.GetActiveAppRoot("")
 	assert.NoError(err)
-	assert.Equal(DevTestSites[0].Dir, appRoot)
+	assert.Equal(TestSites[0].Dir, appRoot)
 
 	switchDir()
 }
@@ -161,13 +179,13 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 
 // addSites runs `ddev start` on the test apps
 func addSites() error {
-	log.Debugln("Removing any existing DevTestSites")
-	for _, site := range DevTestSites {
+	log.Debugln("Removing any existing TestSites")
+	for _, site := range TestSites {
 		// Make sure the site is gone in case it was hanging around
 		_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
 	}
-	log.Debugln("Starting DevTestSites")
-	for _, site := range DevTestSites {
+	log.Debugln("Starting TestSites")
+	for _, site := range TestSites {
 		cleanup := site.Chdir()
 		defer cleanup()
 
@@ -181,7 +199,7 @@ func addSites() error {
 
 // removeSites runs `ddev remove` on the test apps
 func removeSites() {
-	for _, site := range DevTestSites {
+	for _, site := range TestSites {
 		_ = site.Chdir()
 
 		args := []string{"stop", "-RO"}

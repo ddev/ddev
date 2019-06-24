@@ -30,7 +30,7 @@ func TestLogsNoConfig(t *testing.T) {
 func TestLogs(t *testing.T) {
 	assert := asrt.New(t)
 
-	v := DevTestSites[0]
+	v := TestSites[0]
 	// Copy our fatal error php into the docroot of testsite.
 	pwd, err := os.Getwd()
 	assert.NoError(err)

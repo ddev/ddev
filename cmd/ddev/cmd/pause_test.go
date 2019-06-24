@@ -24,7 +24,7 @@ func TestCmdPauseContainers(t *testing.T) {
 	err := addSites()
 	require.NoError(t, err)
 
-	site := DevTestSites[0]
+	site := TestSites[0]
 	cleanup := site.Chdir()
 
 	out, err := exec.RunCommand(DdevBin, []string{"pause"})
