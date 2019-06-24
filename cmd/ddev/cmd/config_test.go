@@ -25,7 +25,7 @@ import (
 // TestCmdConfigHooks tests that pre-config and post-config hooks run
 func TestCmdConfigHooks(t *testing.T) {
 	// Change to the first DevTestSite for the duration of this test.
-	site := DevTestSites[0]
+	site := TestSites[0]
 	defer site.Chdir()()
 	assert := asrt.New(t)
 

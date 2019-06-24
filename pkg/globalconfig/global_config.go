@@ -88,7 +88,7 @@ func ReadGlobalConfig() error {
 
 	// ReadConfig config values from file.
 	DdevGlobalConfig = GlobalConfig{}
-	err = yaml.UnmarshalStrict(source, &DdevGlobalConfig)
+	err = yaml.Unmarshal(source, &DdevGlobalConfig)
 	if err != nil {
 		return err
 	}
