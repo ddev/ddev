@@ -620,13 +620,10 @@ func Pull(imageName string) error {
 	if exists {
 		return nil
 	}
-	client := GetDockerClient()
-
-	repoTag := strings.Split(imageName, ":")
-	if len(repoTag) != 2 {
-		return fmt.Errorf("Provided image valid: %s", imageName)
-	}
-	err = client.PullImage(docker.PullImageOptions{Repository: repoTag[0], Tag: repoTag[1], OutputStream: os.Stdout}, docker.AuthConfiguration{})
+	cmd := exec.Command("docker", "pull", imageName)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
 	return err
 }
 
