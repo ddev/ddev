@@ -12,7 +12,20 @@ To add custom configuration or additional services to your project, create docke
 
 ## Restrictions on the docker-compose.yaml file
 
-The main docker-compose.yaml file is exclusively reserved for ddev's use, and will be overwritten on ddev upgrades and when a project is started, so it should not be edited, or edits will be lost. If you need to override configuration provided by docker-compose.yaml, use an additional file to do so.
+The main docker-compose.yaml file is exclusively reserved for ddev's use, and will be overwritten every time a project is started, so it should not be edited because edits will be lost. If you need to override configuration provided by docker-compose.yaml, use an additional file "docker-compose.<whatever>.yaml" to do so.
+
+## docker-compose.*.yaml examples
+
+* Set an environment variable in the web container, in a file perhaps called `docker-compose.env.yaml`:
+
+```
+version: '3.6'
+
+services:
+  web:
+    environment:
+      - TYPO3_CONTEXT=Development
+```
 
 ## Confirming docker-compose configurations
 

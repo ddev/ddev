@@ -1,6 +1,6 @@
 <h1>Extending ddev Commands</h1>
 
-Certain ddev commands provide hooks to run tasks before or after the main command executes. To automate setup tasks specific to your project, define them in the project's config.yaml file.
+Most ddev commands provide hooks to run tasks before or after the main command executes. To automate setup tasks specific to your project, define them in the project's config.yaml file.
 
 To define command tasks in your configuration, specify the desired command hook as a subfield to `hooks`, then provide a list of tasks to run.
 
@@ -18,22 +18,27 @@ hooks:
 
 ## Supported Command Hooks
 
-- `pre-start`: Hooks into "ddev start". Execute tasks before the project environment starts. **Note:** Only `exec-host` tasks can be run successfully for pre-start. See Supported Tasks below for more info.
-- `post-start`: Hooks into "ddev start". Execute tasks after the project environment has started. This only runs when the web container is created or recreated.
-- `pre-import-db`: Hooks into "ddev import-db". Execute tasks before database import
-- `post-import-db`: Hooks into "ddev import-db". Execute tasks after database import
-- `pre-import-files`: Hooks into "ddev import-files". Execute tasks before files are imported
-- `post-import-files`: Hooks into "ddev import-files". Execute tasks after files are imported.
+- `pre-start`: Hooks into "ddev start". Execute tasks before the project environment starts. **Note:** Only `exec-host` tasks can be generally run successfully during pre-start. See Supported Tasks below for more info.
+- `post-start`: Execute tasks after the project environment has started. 
+- `pre-import-db` and `post-import-db`: Execute tasks before or after database import.
+- `pre-import-files` and `post-import-files`: Execute tasks before or after files are imported
+- `pre-composer` and `post-composer`: Execute tasks before or after the `composer` command.
+- `pre-stop`, `post-stop`, `pre-config`, `post-config`, `pre-exec`, `post-exec`, `pre-pause`, `post-pause`, `pre-pull`, `post-pull`, `pre-snapshot`, `post-snapshot`, `pre-restore-snapshot`, `post-restore-snapshot`: Execute as the name suggests.
+
 
 ## Supported Tasks
 
-### `exec`: Execute a shell command in the web service container.
+ddev currently supports these tasks:
 
-Value: string providing the command to run. Commands requiring user interaction are not supported.
+* `exec` to execute a command in any service/container
+* `exec-host` to execute a command on the host
+* `composer` to execute a composer command in the web container
 
-Example:
+### `exec`: Execute a shell command in a container (defaults to web container).
 
-_Use drush to clear the Drupal cache and get a user login link after database import_
+Value: string providing the command to run. Commands requiring user interaction are not supported. You can also add a "service" key to the command, specifying to run it on the db container or any other container you use.
+
+Example: _Use drush to clear the Drupal cache and get a user login link after database import_
 
 ```
 hooks:
@@ -44,15 +49,32 @@ hooks:
     - exec: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ghostscript sqlite3 php7.2-sqlite3 && sudo killall -HUP php-fpm
 ```
 
-Example:
-
-_Use wp-cli to replace the production URL with development URL in the database of a WordPress project_
+Example: _Use wp-cli to replace the production URL with development URL in the database of a WordPress project_
 
 ```
 hooks:
   post-import-db:
     - exec: wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.site
 ```
+
+Example: _Add an extra database before import-db, executing in db container_
+```
+hooks:
+  pre-import-db:
+    - exec: mysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS some_new_database;"
+      service: db
+
+```
+
+Example: _Add the common "ll" alias into the web container .bashrc file_
+
+```
+hooks:
+  post-start:
+  - exec: sudo echo alias ll=\"ls -lhA\" >> ~/.bashrc
+```
+
+(Note that this could probably be done more efficiently in a .ddev/web-build/Dockerfile as explained in [Customizing Images](extend/customizing-images.md).)
 
 ### `exec-host`: Execute a shell command on the host system.
 
@@ -67,6 +89,20 @@ hooks:
   pre-start:
     - exec-host: "composer install"
 ```
+
+### `composer`: Execute a composer command in the web container.
+
+Value: string providing the composer command to run. 
+
+
+Example:
+
+```
+hooks:
+  post-start:
+    - composer: config discard-changes true
+```
+
 
 ## WordPress Example
 
