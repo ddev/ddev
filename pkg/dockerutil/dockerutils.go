@@ -611,6 +611,22 @@ func ImageExistsLocally(imageName string) (bool, error) {
 	return false, nil
 }
 
+// Pull pulls image if it doesn't exist locally.
+func Pull(imageName string) error {
+	exists, err := ImageExistsLocally(imageName)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return nil
+	}
+	cmd := exec.Command("docker", "pull", imageName)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	return err
+}
+
 // GetExposedContainerPorts takes a container pointer and returns an array
 // of exposed ports (and error)
 func GetExposedContainerPorts(containerID string) ([]string, error) {

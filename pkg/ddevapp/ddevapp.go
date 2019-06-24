@@ -732,6 +732,14 @@ func (app *DdevApp) Start() error {
 	_ = dockerutil.RemoveVolume(app.GetWebcacheVolName())
 	_ = dockerutil.RemoveVolume(app.GetNFSMountVolName())
 
+	// Pull the main images with full output, since docker-compose up won't
+	// show enough output.
+	for _, imageName := range []string{app.WebImage, app.DBImage} {
+		err = dockerutil.Pull(imageName)
+		if err != nil {
+			return err
+		}
+	}
 	_, _, err = dockerutil.ComposeCmd(files, "up", "--build", "-d")
 	if err != nil {
 		return err
