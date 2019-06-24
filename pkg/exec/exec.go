@@ -32,7 +32,7 @@ func RunCommand(command string, args []string) (string, error) {
 func RunCommandPipe(command string, args []string) (string, error) {
 	output.UserOut.WithFields(log.Fields{
 		"Command": command + " " + strings.Join(args[:], " "),
-	}).Info("Running Command")
+	}).Info("Running ")
 
 	cmd := exec.Command(command, args...)
 	stdoutStderr, err := cmd.CombinedOutput()

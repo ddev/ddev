@@ -53,7 +53,6 @@ func TestNewConfig(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(app.Name, loadedConfig.Name)
 	assert.Equal(app.Type, loadedConfig.Type)
-
 }
 
 // TestDisasterConfig tests for disaster opportunities (configing wrong directory, home dir, etc).

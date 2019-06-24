@@ -27,17 +27,11 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
-
-// Command defines commands to be run as pre/post hooks
-type Command struct {
-	Exec     string `yaml:"exec,omitempty"`
-	ExecHost string `yaml:"exec-host,omitempty"`
-}
 
 // Provider is the interface which all provider plugins must implement.
 type Provider interface {
@@ -341,7 +335,7 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	}
 
 	// validate extend command keys
-	err = validateCommandYaml(source)
+	err = validateHookYAML(source)
 	if err != nil {
 		return fmt.Errorf("invalid configuration in %s: %v", app.ConfigPath, err)
 	}
@@ -879,8 +873,8 @@ func PrepDdevDirectory(dir string) error {
 	return nil
 }
 
-// validateCommandYaml validates command hooks and tasks defined in hooks for config.yaml
-func validateCommandYaml(source []byte) error {
+// validateHookYAML validates command hooks and tasks defined in hooks for config.yaml
+func validateHookYAML(source []byte) error {
 	validHooks := []string{
 		"pre-start",
 		"post-start",
@@ -888,11 +882,30 @@ func validateCommandYaml(source []byte) error {
 		"post-import-db",
 		"pre-import-files",
 		"post-import-files",
+		"pre-composer",
+		"post-composer",
+		"pre-stop",
+		"post-stop",
+		"pre-config",
+		"post-config",
+		"pre-describe",
+		"post-describe",
+		"pre-exec",
+		"post-exec",
+		"pre-pause",
+		"post-pause",
+		"pre-pull",
+		"post-pull",
+		"pre-snapshot",
+		"post-snapshot",
+		"pre-restore-snapshot",
+		"post-restore-snapshot",
 	}
 
 	validTasks := []string{
 		"exec",
 		"exec-host",
+		"composer",
 	}
 
 	type Validate struct {
@@ -905,29 +918,28 @@ func validateCommandYaml(source []byte) error {
 		return err
 	}
 
-	for command, tasks := range val.Commands {
+	for foundHook, tasks := range val.Commands {
 		var match bool
-		for _, hook := range validHooks {
-			if command == hook {
+		for _, h := range validHooks {
+			if foundHook == h {
 				match = true
 			}
 		}
 		if !match {
-			return fmt.Errorf("invalid command hook %s defined in config.yaml", command)
+			return fmt.Errorf("invalid hook %s defined in config.yaml", foundHook)
 		}
 
-		for _, taskSet := range tasks {
-			for taskName := range taskSet {
-				var match bool
-				for _, validTask := range validTasks {
-					if taskName == validTask {
-						match = true
-					}
-				}
-				if !match {
-					return fmt.Errorf("invalid task '%s' defined for %s hook in config.yaml", taskName, command)
+		for _, foundTask := range tasks {
+			var match bool
+			for _, validTaskName := range validTasks {
+				if _, ok := foundTask[validTaskName]; ok {
+					match = true
 				}
 			}
+			if !match {
+				return fmt.Errorf("invalid task '%s' defined for hook %s in config.yaml", foundTask, foundHook)
+			}
+
 		}
 
 	}

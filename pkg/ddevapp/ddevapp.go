@@ -7,7 +7,6 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
-	"github.com/mattn/go-shellwords"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
@@ -71,48 +70,48 @@ const DdevFileSignature = "#ddev-generated"
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	APIVersion            string               `yaml:"APIVersion"`
-	Name                  string               `yaml:"name"`
-	Type                  string               `yaml:"type"`
-	Docroot               string               `yaml:"docroot"`
-	PHPVersion            string               `yaml:"php_version"`
-	WebserverType         string               `yaml:"webserver_type"`
-	WebImage              string               `yaml:"webimage,omitempty"`
-	BgsyncImage           string               `yaml:"bgsyncimage,omitempty"`
-	DBImage               string               `yaml:"dbimage,omitempty"`
-	DBAImage              string               `yaml:"dbaimage,omitempty"`
-	RouterHTTPPort        string               `yaml:"router_http_port"`
-	RouterHTTPSPort       string               `yaml:"router_https_port"`
-	XdebugEnabled         bool                 `yaml:"xdebug_enabled"`
-	AdditionalHostnames   []string             `yaml:"additional_hostnames"`
-	AdditionalFQDNs       []string             `yaml:"additional_fqdns"`
-	MariaDBVersion        string               `yaml:"mariadb_version"`
-	WebcacheEnabled       bool                 `yaml:"webcache_enabled,omitempty"`
-	NFSMountEnabled       bool                 `yaml:"nfs_mount_enabled"`
-	ConfigPath            string               `yaml:"-"`
-	AppRoot               string               `yaml:"-"`
-	Platform              string               `yaml:"-"`
-	Provider              string               `yaml:"provider,omitempty"`
-	DataDir               string               `yaml:"-"`
-	SiteSettingsPath      string               `yaml:"-"`
-	SiteDdevSettingsFile  string               `yaml:"-"`
-	providerInstance      Provider             `yaml:"-"`
-	Commands              map[string][]Command `yaml:"hooks,omitempty"`
-	UploadDir             string               `yaml:"upload_dir,omitempty"`
-	WorkingDir            map[string]string    `yaml:"working_dir,omitempty"`
-	OmitContainers        []string             `yaml:"omit_containers,omitempty,flow"`
-	HostDBPort            string               `yaml:"host_db_port,omitempty"`
-	HostWebserverPort     string               `yaml:"host_webserver_port,omitempty"`
-	HostHTTPSPort         string               `yaml:"host_https_port,omitempty"`
-	MailhogPort           string               `yaml:"mailhog_port,omitempty"`
-	PHPMyAdminPort        string               `yaml:"phpmyadmin_port,omitempty"`
-	WebImageExtraPackages []string             `yaml:"webimage_extra_packages,omitempty,flow"`
-	DBImageExtraPackages  []string             `yaml:"dbimage_extra_packages,omitempty,flow"`
-	ProjectTLD            string               `yaml:"project_tld,omitempty"`
-	UseDNSWhenPossible    bool                 `yaml:"use_dns_when_possible"`
-	Timezone              string               `yaml:"timezone"`
-	MkcertEnabled         bool                 `yaml:"-"`
-	NgrokArgs             string               `yaml:"ngrok_args,omitempty"`
+	APIVersion            string                `yaml:"APIVersion"`
+	Name                  string                `yaml:"name"`
+	Type                  string                `yaml:"type"`
+	Docroot               string                `yaml:"docroot"`
+	PHPVersion            string                `yaml:"php_version"`
+	WebserverType         string                `yaml:"webserver_type"`
+	WebImage              string                `yaml:"webimage,omitempty"`
+	BgsyncImage           string                `yaml:"bgsyncimage,omitempty"`
+	DBImage               string                `yaml:"dbimage,omitempty"`
+	DBAImage              string                `yaml:"dbaimage,omitempty"`
+	RouterHTTPPort        string                `yaml:"router_http_port"`
+	RouterHTTPSPort       string                `yaml:"router_https_port"`
+	XdebugEnabled         bool                  `yaml:"xdebug_enabled"`
+	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
+	AdditionalFQDNs       []string              `yaml:"additional_fqdns"`
+	MariaDBVersion        string                `yaml:"mariadb_version"`
+	WebcacheEnabled       bool                  `yaml:"webcache_enabled,omitempty"`
+	NFSMountEnabled       bool                  `yaml:"nfs_mount_enabled"`
+	ConfigPath            string                `yaml:"-"`
+	AppRoot               string                `yaml:"-"`
+	Platform              string                `yaml:"-"`
+	Provider              string                `yaml:"provider,omitempty"`
+	DataDir               string                `yaml:"-"`
+	SiteSettingsPath      string                `yaml:"-"`
+	SiteDdevSettingsFile  string                `yaml:"-"`
+	providerInstance      Provider              `yaml:"-"`
+	Hooks                 map[string][]YAMLTask `yaml:"hooks,omitempty"`
+	UploadDir             string                `yaml:"upload_dir,omitempty"`
+	WorkingDir            map[string]string     `yaml:"working_dir,omitempty"`
+	OmitContainers        []string              `yaml:"omit_containers,omitempty,flow"`
+	HostDBPort            string                `yaml:"host_db_port,omitempty"`
+	HostWebserverPort     string                `yaml:"host_webserver_port,omitempty"`
+	HostHTTPSPort         string                `yaml:"host_https_port,omitempty"`
+	MailhogPort           string                `yaml:"mailhog_port,omitempty"`
+	PHPMyAdminPort        string                `yaml:"phpmyadmin_port,omitempty"`
+	WebImageExtraPackages []string              `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages  []string              `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD            string                `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible    bool                  `yaml:"use_dns_when_possible"`
+	MkcertEnabled         bool                  `yaml:"-"`
+	NgrokArgs             string                `yaml:"ngrok_args,omitempty"`
+	Timezone              string                `yaml:"timezone"`
 }
 
 // GetType returns the application type as a (lowercase) string
@@ -169,6 +168,10 @@ func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContai
 
 // Describe returns a map which provides detailed information on services associated with the running site.
 func (app *DdevApp) Describe() (map[string]interface{}, error) {
+	err := app.ProcessHooks("pre-describe")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to process pre-describe hooks: %v", err)
+	}
 
 	shortRoot := RenderHomeRootedDir(app.GetAppRoot())
 	appDesc := make(map[string]interface{})
@@ -219,6 +222,11 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["dbimg"] = app.WebImage
 	appDesc["bgsyncimg"] = app.BgsyncImage
 	appDesc["dbaimg"] = app.DBAImage
+
+	err = app.ProcessHooks("post-describe")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to process post-describe hooks: %v", err)
+	}
 
 	return appDesc, nil
 }
@@ -495,6 +503,10 @@ type PullOptions struct {
 // Pull performs an import from the a configured provider plugin, if one exists.
 func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 	var err error
+	err = app.ProcessHooks("pre-pull")
+	if err != nil {
+		return fmt.Errorf("Failed to process pre-pull hooks: %v", err)
+	}
 
 	err = provider.Validate()
 	if err != nil {
@@ -551,6 +563,10 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 				return err
 			}
 		}
+	}
+	err = app.ProcessHooks("post-pull")
+	if err != nil {
+		return fmt.Errorf("Failed to process post-pull hooks: %v", err)
 	}
 
 	return nil
@@ -620,56 +636,25 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 	return orderedFiles, nil
 }
 
-// ProcessHooks executes commands defined in a Command
+// ProcessHooks executes Tasks defined in Hooks
 func (app *DdevApp) ProcessHooks(hookName string) error {
-	if cmds := app.Commands[hookName]; len(cmds) > 0 {
-		output.UserOut.Printf("Executing %s commands...", hookName)
+	if cmds := app.Hooks[hookName]; len(cmds) > 0 {
+		output.UserOut.Printf("Executing %s hook...", hookName)
 	}
 
-	for _, c := range app.Commands[hookName] {
-		if c.Exec != "" {
-			output.UserOut.Printf("--- Running exec command: %s ---", c.Exec)
-
-			testargs, err := shellwords.Parse(c.Exec)
-			if err != nil {
-				return fmt.Errorf("%s exec failed: %v", hookName, err)
-			}
-			_ = testargs
-			args := strings.Split(c.Exec, " ")
-			_ = args
-
-			stdout, stderr, err := app.Exec(&ExecOpts{
-				Service: "web",
-				Cmd:     c.Exec,
-			})
-
-			if err != nil {
-				return fmt.Errorf("%s exec failed: %v, stderr='%s'", hookName, err, stderr)
-			}
-			util.Success("--- %s exec command succeeded, output below ---", hookName)
-			output.UserOut.Println(stdout + "\n" + stderr)
+	for _, c := range app.Hooks[hookName] {
+		a := NewTask(app, c)
+		if a == nil {
+			return fmt.Errorf("unable to create task from %v", c)
 		}
-		if c.ExecHost != "" {
-			output.UserOut.Printf("--- Running host command: %s ---", c.ExecHost)
-			args := strings.Split(c.ExecHost, " ")
-			cmd := args[0]
-			args = append(args[:0], args[1:]...)
 
-			// ensure exec-host runs from consistent location
-			cwd, err := os.Getwd()
-			util.CheckErr(err)
-			err = os.Chdir(app.GetAppRoot())
-			util.CheckErr(err)
+		output.UserOut.Printf("--- Running task: %s, output below", a.GetDescription())
 
-			out, err := exec.RunCommandPipe(cmd, args)
-			dirErr := os.Chdir(cwd)
-			util.CheckErr(dirErr)
-			output.UserOut.Println(out)
-			if err != nil {
-				return fmt.Errorf("%s host command failed: %v %s", hookName, err, out)
-			}
-			util.Success("--- %s host command succeeded ---\n", hookName)
+		stdout, stderr, err := a.Execute()
+		if err != nil {
+			return fmt.Errorf("task failed: %v", err)
 		}
+		output.UserOut.Println(stdout + "\n" + stderr)
 	}
 
 	return nil
@@ -776,18 +761,9 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	// Only check for start if there are post-start commands for performance reasons
-	if postStartCmds := app.Commands["post-start"]; len(postStartCmds) > 0 {
-		stdout, _, _ := app.Exec(&ExecOpts{
-			Service: "web",
-			Cmd:     "if [ -f /var/tmp/ddev_started.txt ]; then echo -n 'already started'; else touch /var/tmp/ddev_started.txt && echo -n 'starting'; fi",
-		})
-		if stdout != "already started" {
-			err = app.ProcessHooks("post-start")
-			if err != nil {
-				return err
-			}
-		}
+	err = app.ProcessHooks("post-start")
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -819,6 +795,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	if opts.Service == "" {
 		return "", "", fmt.Errorf("no service provided")
+	}
+	err := app.ProcessHooks("pre-exec")
+	if err != nil {
+		return "", "", fmt.Errorf("Failed to process pre-exec hooks: %v", err)
 	}
 
 	exec := []string{"exec"}
@@ -868,6 +848,11 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, exec...)
 	} else {
 		stdoutResult, stderrResult, err = dockerutil.ComposeCmd(files, exec...)
+	}
+
+	hookErr := app.ProcessHooks("post-exec")
+	if hookErr != nil {
+		return stdoutResult, stderrResult, fmt.Errorf("Failed to process post-exec hooks: %v", hookErr)
 	}
 
 	return stdoutResult, stderrResult, err
@@ -1028,7 +1013,7 @@ func (app *DdevApp) DockerEnv() {
 	}
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
-	// It's used for special startup on restoring to a snapshot.
+	// It's used for special startup on restoring to a snapshfot.
 	if len(os.Getenv("DDEV_MARIADB_LOCAL_COMMAND")) == 0 {
 		err := os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
 		util.CheckErr(err)
@@ -1063,12 +1048,21 @@ func (app *DdevApp) Pause() error {
 		return fmt.Errorf("no project to stop")
 	}
 
+	err := app.ProcessHooks("pre-pause")
+	if err != nil {
+		return err
+	}
+
 	files, err := app.ComposeFiles()
 	if err != nil {
 		return err
 	}
 
 	if _, _, err := dockerutil.ComposeCmd(files, "stop"); err != nil {
+		return err
+	}
+	err = app.ProcessHooks("post-pause")
+	if err != nil {
 		return err
 	}
 
@@ -1166,9 +1160,14 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	return "", fmt.Errorf("settings files already exist and are being managed by the user")
 }
 
-// SnapshotDatabase forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
+// Snapshot forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
 // Returns the dirname of the snapshot and err
-func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
+func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
+	err := app.ProcessHooks("pre-snapshot")
+	if err != nil {
+		return "", fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+	}
+
 	if snapshotName == "" {
 		t := time.Now()
 		snapshotName = app.Name + "_" + t.Format("20060102150405")
@@ -1178,7 +1177,7 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 	snapshotDir := path.Join("db_snapshots", snapshotName)
 	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
 	containerSnapshotDir := path.Join("/mnt/ddev_config", snapshotDir)
-	err := os.MkdirAll(hostSnapshotDir, 0777)
+	err = os.MkdirAll(hostSnapshotDir, 0777)
 	if err != nil {
 		return snapshotName, err
 	}
@@ -1200,13 +1199,24 @@ func (app *DdevApp) SnapshotDatabase(snapshotName string) (string, error) {
 		util.Warning("Failed to create snapshot: %v, stdout=%s, stderr=%s", err, stdout, stderr)
 		return "", err
 	}
+
 	util.Success("Created database snapshot %s in %s", snapshotName, hostSnapshotDir)
+	err = app.ProcessHooks("post-snapshot")
+	if err != nil {
+		return snapshotName, fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+	}
 	return snapshotName, nil
 }
 
 // RestoreSnapshot restores a mariadb snapshot of the db to be loaded
 // The project must be stopped and docker volume removed and recreated for this to work.
 func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
+	var err error
+	err = app.ProcessHooks("pre-restore-snapshot")
+	if err != nil {
+		return fmt.Errorf("Failed to process pre-restore-snapshot hooks: %v", err)
+	}
+
 	snapshotDir := filepath.Join("db_snapshots", snapshotName)
 
 	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
@@ -1217,7 +1227,6 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// Find out the mariadb version that correlates to the snapshot.
 	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
 	var snapshotMariaDBVersion string
-	var err error
 	if fileutil.FileExists(versionFile) {
 		snapshotMariaDBVersion, err = fileutil.ReadFileIntoString(versionFile)
 		if err != nil {
@@ -1254,18 +1263,26 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	util.CheckErr(err)
 
 	util.Success("Restored database snapshot: %s", hostSnapshotDir)
+	err = app.ProcessHooks("post-restore-snapshot")
+	if err != nil {
+		return fmt.Errorf("Failed to process post-restore-snapshot hooks: %v", err)
+	}
 	return nil
 }
 
 // Stops and Removes the docker containers for the project in current directory.
 func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
-
 	var err error
+
+	err = app.ProcessHooks("pre-stop")
+	if err != nil {
+		return fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+	}
 
 	if createSnapshot == true {
 		t := time.Now()
-		_, err = app.SnapshotDatabase(app.Name + "_remove_data_snapshot_" + t.Format("20060102150405"))
+		_, err = app.Snapshot(app.Name + "_remove_data_snapshot_" + t.Format("20060102150405"))
 		if err != nil {
 			return err
 		}
@@ -1301,7 +1318,13 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		util.Success("Project data/database removed from docker volume for project %s", app.Name)
 	}
 
+	err = app.ProcessHooks("post-stop")
+	if err != nil {
+		return fmt.Errorf("Failed to process post-stop hooks: %v", err)
+	}
+
 	err = StopRouterIfNoContainers()
+
 	return err
 }
 

@@ -313,8 +313,9 @@ const ConfigInstructions = `
 
 # provider: default # Currently either "default" or "pantheon"
 #
-# Many ddev commands can be extended to run tasks after the ddev command is
-# executed.
+# Many ddev commands can be extended to run tasks before or after the 
+# ddev command is executed, for example "post-start", "post-import-db", 
+# "pre-composer", "post-composer"
 # See https://ddev.readthedocs.io/en/stable/users/extending-commands/ for more
 # information on the commands that can be extended and the tasks you can define
 # for them. Example:

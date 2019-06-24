@@ -8,7 +8,6 @@ import (
 	"net"
 	"net/url"
 	"os"
-	osexec "os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -158,12 +157,15 @@ func TestMain(m *testing.M) {
 	// testRun is the exit result we'll provide.
 	// Start with a clean exit result, it will be changed if we have trouble.
 	testRun := 0
-	for i := range TestSites {
+	err := globalconfig.ReadGlobalConfig()
+	if err != nil {
+		log.Fatalf("could not read globalconfig: %v", err)
+	}
+	for i, site := range TestSites {
 
-		oldProject := globalconfig.GetProject(TestSites[i].Name)
-		if oldProject != nil {
-			_, _ = osexec.Command(DdevBin, "stop", "-RO", TestSites[i].Name).CombinedOutput()
-		}
+		app := &ddevapp.DdevApp{Name: site.Name}
+		_ = app.Stop(true, false)
+		_ = globalconfig.RemoveProjectInfo(site.Name)
 
 		err := TestSites[i].Prepare()
 		if err != nil {
@@ -174,7 +176,7 @@ func TestMain(m *testing.M) {
 
 		testcommon.ClearDockerEnv()
 
-		app := &ddevapp.DdevApp{}
+		app = &ddevapp.DdevApp{}
 		err = app.Init(TestSites[i].Dir)
 		if err != nil {
 			testRun = -1
@@ -282,7 +284,7 @@ func TestDdevStart(t *testing.T) {
 	err = os.Chdir(site.Dir)
 	assert.NoError(err)
 	err = app.Init(site.Dir)
-	app.Commands = map[string][]ddevapp.Command{"post-start": {{Exec: "echo hello"}}}
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-start": {{"exec": "echo hello"}}}
 
 	assert.NoError(err)
 	stdout := util.CaptureUserOut()
@@ -291,17 +293,8 @@ func TestDdevStart(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	out := stdout()
-	assert.Contains(out, "Running exec command")
+	assert.Contains(out, "Running task: Exec command 'echo hello' in container/service 'web'")
 	assert.Contains(out, "hello\n")
-
-	// When we run it again, it should not execute the post-start hook because the
-	// container has already been created and does not need to be recreated.
-	stdout = util.CaptureUserOut()
-	err = app.Start()
-	assert.NoError(err)
-	out = stdout()
-	assert.NotContains(out, "Running exec command")
-	assert.NotContains(out, "hello\n")
 
 	// try to start a site of same name at different path
 	another := site
@@ -615,6 +608,8 @@ func TestDdevImportDB(t *testing.T) {
 		err = app.StartAndWaitForSync(2)
 		assert.NoError(err)
 
+		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
+
 		// Test simple db loads.
 		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip"} {
 			path := filepath.Join(testDir, "testdata", file)
@@ -646,6 +641,12 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			err = app.ImportDB(cachedArchive, "", false)
 			assert.NoError(err)
+			assert.FileExists("hello-pre-import-db-" + app.Name)
+			assert.FileExists("hello-post-import-db-" + app.Name)
+			err = os.Remove("hello-pre-import-db-" + app.Name)
+			assert.NoError(err)
+			err = os.Remove("hello-post-import-db-" + app.Name)
+			assert.NoError(err)
 
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
@@ -666,6 +667,11 @@ func TestDdevImportDB(t *testing.T) {
 			err = app.ImportDB(cachedArchive, "", false)
 			assert.NoError(err)
 
+			assert.FileExists("hello-pre-import-db-" + app.Name)
+			assert.FileExists("hello-post-import-db-" + app.Name)
+			_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
+			_ = os.RemoveAll("hello-post-import-db-" + app.Name)
+
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
 				Cmd:     "mysql -e 'SHOW TABLES;'",
@@ -682,6 +688,10 @@ func TestDdevImportDB(t *testing.T) {
 
 			err = app.ImportDB(cachedArchive, "data.sql", false)
 			assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
+			assert.FileExists("hello-pre-import-db-" + app.Name)
+			assert.FileExists("hello-post-import-db-" + app.Name)
+			_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
+			_ = os.RemoveAll("hello-post-import-db-" + app.Name)
 		}
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
@@ -768,7 +778,7 @@ func TestDdevOldMariaDB(t *testing.T) {
 	assert.Contains(out, "Table structure for table `users`")
 
 	snapshotName := fileutil.RandomFilenameBase()
-	_, err = app.SnapshotDatabase(snapshotName)
+	_, err = app.Snapshot(snapshotName)
 	assert.NoError(err)
 	err = app.RestoreSnapshot(snapshotName)
 	assert.NoError(err)
@@ -967,6 +977,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.Init(site.Dir)
 	require.NoError(t, err)
 
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-snapshot": {{"exec-host": "touch hello-post-snapshot-" + app.Name}}, "pre-snapshot": {{"exec-host": "touch hello-pre-snapshot-" + app.Name}}}
+
 	// Try using php72 to avoid SIGBUS failures after restore.
 	app.PHPVersion = ddevapp.PHP72
 
@@ -996,22 +1008,40 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	// Make a snapshot of d7 tester test 1
 	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
-	snapshotName, err := app.SnapshotDatabase("d7testerTest1")
+	snapshotName, err := app.Snapshot("d7testerTest1")
 	assert.NoError(err)
+
 	assert.EqualValues(snapshotName, "d7testerTest1")
 	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
+
+	assert.FileExists("hello-pre-snapshot-" + app.Name)
+	assert.FileExists("hello-post-snapshot-" + app.Name)
+	err = os.Remove("hello-pre-snapshot-" + app.Name)
+	assert.NoError(err)
+	err = os.Remove("hello-post-snapshot-" + app.Name)
+	assert.NoError(err)
 
 	err = app.ImportDB(d7testerTest2Dump, "", false)
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes", 45)
 
-	snapshotName, err = app.SnapshotDatabase("d7testerTest2")
+	snapshotName, err = app.Snapshot("d7testerTest2")
 	assert.NoError(err)
 	assert.EqualValues(snapshotName, "d7testerTest2")
 	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
 
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-restore-snapshot": {{"exec-host": "touch hello-post-restore-snapshot-" + app.Name}}, "pre-restore-snapshot": {{"exec-host": "touch hello-pre-restore-snapshot-" + app.Name}}}
+
 	err = app.RestoreSnapshot("d7testerTest1")
 	assert.NoError(err)
+
+	assert.FileExists("hello-pre-restore-snapshot-" + app.Name)
+	assert.FileExists("hello-post-restore-snapshot-" + app.Name)
+	err = os.Remove("hello-pre-restore-snapshot-" + app.Name)
+	assert.NoError(err)
+	err = os.Remove("hello-post-restore-snapshot-" + app.Name)
+	assert.NoError(err)
+
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
 	err = app.RestoreSnapshot("d7testerTest2")
 	assert.NoError(err)
@@ -1226,6 +1256,7 @@ func TestDdevImportFiles(t *testing.T) {
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
+		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-files": {{"exec-host": "touch hello-post-import-files-" + app.Name}}, "pre-import-files": {{"exec-host": "touch hello-pre-import-files-" + app.Name}}}
 
 		if site.FilesTarballURL != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
@@ -1247,6 +1278,12 @@ func TestDdevImportFiles(t *testing.T) {
 			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
 			assert.NoError(err)
 		}
+		assert.FileExists("hello-pre-import-files-" + app.Name)
+		assert.FileExists("hello-post-import-files-" + app.Name)
+		err = os.Remove("hello-pre-import-files-" + app.Name)
+		assert.NoError(err)
+		err = os.Remove("hello-post-import-files-" + app.Name)
+		assert.NoError(err)
 
 		runTime()
 		switchDir()
@@ -1324,6 +1361,9 @@ func TestDdevExec(t *testing.T) {
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
+
+		app.Hooks = map[string][]ddevapp.YAMLTask{"post-exec": {{"exec-host": "touch hello-post-exec-" + app.Name}}, "pre-exec": {{"exec-host": "touch hello-pre-exec-" + app.Name}}}
+
 		startErr := app.StartAndWaitForSync(0)
 		if startErr != nil {
 			logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
@@ -1337,6 +1377,13 @@ func TestDdevExec(t *testing.T) {
 		})
 		assert.NoError(err)
 		assert.Contains(out, "/var/www/html")
+
+		assert.FileExists("hello-pre-exec-" + app.Name)
+		assert.FileExists("hello-post-exec-" + app.Name)
+		err = os.Remove("hello-pre-exec-" + app.Name)
+		assert.NoError(err)
+		err = os.Remove("hello-post-exec-" + app.Name)
+		assert.NoError(err)
 
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
@@ -1383,7 +1430,6 @@ func TestDdevExec(t *testing.T) {
 
 		runTime()
 		switchDir()
-
 	}
 }
 
@@ -1444,7 +1490,20 @@ func TestDdevLogs(t *testing.T) {
 func TestProcessHooks(t *testing.T) {
 	assert := asrt.New(t)
 
-	site := TestSites[0]
+	// Use Drupal8 only, mostly for the composer example
+	site := FullTestSites[1]
+	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
+		app := &ddevapp.DdevApp{Name: site.Name}
+		_ = app.Stop(true, false)
+		_ = globalconfig.RemoveProjectInfo(site.Name)
+
+		err := site.Prepare()
+		require.NoError(t, err)
+		// nolint: errcheck
+		defer os.RemoveAll(site.Dir)
+	}
+
 	cleanup := site.Chdir()
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
@@ -1456,12 +1515,14 @@ func TestProcessHooks(t *testing.T) {
 
 	// Note that any ExecHost commands must be able to run on Windows.
 	// echo and pwd are things that work pretty much the same in both places.
-	app.Commands = map[string][]ddevapp.Command{
+	app.Hooks = map[string][]ddevapp.YAMLTask{
 		"hook-test": {
-			{Exec: "ls /usr/local/bin/composer"},
-			{ExecHost: "echo something"},
-			{Exec: "echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt"},
-			{Exec: "touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt"},
+			{"exec": "ls /usr/local/bin/composer"},
+			{"exec-host": "echo something"},
+			{"exec": "echo MYSQL_USER=${MYSQL_USER}", "service": "db"},
+			{"exec": "echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt"},
+			{"exec": "touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt"},
+			{"composer": "show twig/twig"},
 		},
 	}
 
@@ -1469,11 +1530,17 @@ func TestProcessHooks(t *testing.T) {
 	err = app.ProcessHooks("hook-test")
 	assert.NoError(err)
 
-	// Ignore color in putput, can be different in different OS's
+	// Ignore color in output, can be different in different OS's
 	out := vtclean.Clean(stdout(), false)
 
-	assert.Contains(out, "hook-test exec command succeeded, output below ---\n/usr/local/bin/composer")
-	assert.Contains(out, "--- Running host command: echo something ---\nRunning Command Command=echo something\nsomething")
+	assert.Contains(out, "Executing hook-test hook")
+	assert.Contains(out, "Exec command 'ls /usr/local/bin/composer' in container/service 'web'")
+	assert.Contains(out, "Exec command 'echo something' on the host")
+	assert.Contains(out, "Exec command 'echo MYSQL_USER=${MYSQL_USER}' in container/service 'db'")
+	assert.Contains(out, "MYSQL_USER=db")
+	assert.Contains(out, "Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt' in container/service 'web'")
+	assert.Contains(out, "Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt' in container/service 'web',")
+	assert.Contains(out, "Twig, the flexible, fast, and secure template")
 	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
@@ -1484,8 +1551,8 @@ func TestProcessHooks(t *testing.T) {
 	cleanup()
 }
 
-// TestDdevStop tests the functionality that is called when "ddev stop" is executed
-func TestDdevStop(t *testing.T) {
+// TestDdevPause tests the functionality that is called when "ddev pause" is executed
+func TestDdevPause(t *testing.T) {
 	assert := asrt.New(t)
 
 	app := &ddevapp.DdevApp{}
@@ -1498,6 +1565,8 @@ func TestDdevStop(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 	err = app.StartAndWaitForSync(0)
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-pause": {{"exec-host": "touch hello-post-pause-" + app.Name}}, "pre-pause": {{"exec-host": "touch hello-pre-pause-" + app.Name}}}
+
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	require.NoError(t, err)
@@ -1511,6 +1580,14 @@ func TestDdevStop(t *testing.T) {
 		assert.NoError(err)
 		assert.True(check, containerType, "container has exited")
 	}
+	pwd, _ := os.Getwd()
+	_ = pwd
+	assert.FileExists("hello-pre-pause-" + app.Name)
+	assert.FileExists("hello-post-pause-" + app.Name)
+	err = os.Remove("hello-pre-pause-" + app.Name)
+	assert.NoError(err)
+	err = os.Remove("hello-post-pause-" + app.Name)
+	assert.NoError(err)
 
 	runTime()
 	switchDir()
@@ -1566,6 +1643,8 @@ func TestDdevDescribe(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-describe": {{"exec-host": "touch hello-post-describe-" + app.Name}}, "pre-describe": {{"exec-host": "touch hello-pre-describe-" + app.Name}}}
+
 	startErr := app.StartAndWaitForSync(0)
 	//nolint: errcheck
 	defer app.Stop(true, false)
@@ -1587,6 +1666,13 @@ func TestDdevDescribe(t *testing.T) {
 	assert.EqualValues(ddevapp.RenderHomeRootedDir(app.GetAppRoot()), desc["shortroot"])
 	assert.EqualValues(app.GetAppRoot(), desc["approot"])
 	assert.EqualValues(app.GetPhpVersion(), desc["php_version"])
+
+	assert.FileExists("hello-pre-describe-" + app.Name)
+	assert.FileExists("hello-post-describe-" + app.Name)
+	err = os.Remove("hello-pre-describe-" + app.Name)
+	assert.NoError(err)
+	err = os.Remove("hello-post-describe-" + app.Name)
+	assert.NoError(err)
 
 	// Now stop it and test behavior.
 	err = app.Pause()

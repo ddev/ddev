@@ -190,7 +190,7 @@ project root will be deleted when creating a project.`,
 			util.Failed("Failed to create project: %v", err)
 		}
 		if runtime.GOOS == "windows" && !nodeps.IsDockerToolbox() {
-			replaceSimulatedLinks(app.AppRoot)
+			fileutil.ReplaceSimulatedLinks(app.AppRoot)
 		}
 
 	},
