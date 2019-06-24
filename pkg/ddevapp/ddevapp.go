@@ -111,7 +111,7 @@ type DdevApp struct {
 	UseDNSWhenPossible    bool                  `yaml:"use_dns_when_possible"`
 	MkcertEnabled         bool                  `yaml:"-"`
 	NgrokArgs             string                `yaml:"ngrok_args,omitempty"`
-	Timezone              string               `yaml:"timezone"`
+	Timezone              string                `yaml:"timezone"`
 }
 
 // GetType returns the application type as a (lowercase) string
