@@ -33,6 +33,8 @@ ENV COMPOSER_PROCESS_TIMEOUT 2000
 ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
 ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
 
+RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
+
 RUN apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
         procps \

@@ -141,6 +141,7 @@ func TestConfigSetValues(t *testing.T) {
 	mailhogPort := "5001"
 	projectTLD := "nowhere.example.com"
 	useDNSWhenPossible := false
+	timezone := "America/Chicago"
 
 	args := []string{
 		"config",
@@ -171,6 +172,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--mailhog-port", mailhogPort,
 		"--project-tld", projectTLD,
 		fmt.Sprintf("--use-dns-when-possible=%t", useDNSWhenPossible),
+		"--timezone", timezone,
 	}
 
 	out, err := exec.RunCommand(DdevBin, args)
@@ -212,6 +214,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(mailhogPort, app.MailhogPort)
 	assert.Equal(useDNSWhenPossible, app.UseDNSWhenPossible)
 	assert.Equal(projectTLD, app.ProjectTLD)
+	assert.Equal(timezone, app.Timezone)
 
 	// Test that container images and working dirs can be unset with default flags
 	args = []string{

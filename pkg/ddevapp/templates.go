@@ -37,6 +37,7 @@ services:
     environment:
       - COLUMNS=$COLUMNS
       - LINES=$LINES
+      - TZ={{ .Timezone }}
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
       interval: 5s
@@ -93,6 +94,7 @@ services:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       - COLUMNS=$COLUMNS
       - LINES=$LINES
+      - TZ={{ .Timezone }}
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       # To expose a container port to a different host port, define the port as hostPort:containerPort
       - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILHOG_PORT}:{{ .MailhogPort }}
@@ -162,6 +164,7 @@ services:
       - PMA_USER=db
       - PMA_PASSWORD=db
       - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - TZ={{ .Timezone }}
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       - HTTP_EXPOSE=${DDEV_PHPMYADMIN_PORT}:{{ .DBAPort }}
     healthcheck:

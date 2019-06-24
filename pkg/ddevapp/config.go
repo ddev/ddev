@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/drud/ddev/pkg/globalconfig"
 
@@ -443,6 +444,10 @@ func (app *DdevApp) ValidateConfig() error {
 	if app.WebcacheEnabled && app.NFSMountEnabled {
 		return fmt.Errorf("webcache_enabled and nfs_mount_enabled cannot both be set to true, use one or the other")
 	}
+	_, err = time.LoadLocation(app.Timezone)
+	if err != nil {
+		return fmt.Errorf("invalid timezone %s: %v", app.Timezone, err)
+	}
 
 	return nil
 }
@@ -592,6 +597,7 @@ type composeYAMLVars struct {
 	DockerIP             string
 	IsWindowsFS          bool
 	Hostnames            []string
+	Timezone             string
 }
 
 // RenderComposeYAML renders the contents of docker-compose.yaml.
@@ -634,6 +640,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		MountType:            "bind",
 		WebMount:             "../",
 		Hostnames:            app.GetHostnames(),
+		Timezone:             app.Timezone,
 	}
 	if app.WebcacheEnabled {
 		templateVars.MountType = "volume"
