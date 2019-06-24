@@ -285,7 +285,6 @@ func init() {
 
 	ConfigCommand.Flags().String("timezone", "", "Specify timezone for containers and php, like Europe/London or America/Denver or GMT or UTC")
 
-
 	RootCmd.AddCommand(ConfigCommand)
 }
 
