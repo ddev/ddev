@@ -28,9 +28,13 @@ Also see the debugging section below, and the special WIndows debugging section.
 
 ### Debian/Ubuntu Linux NFS Setup
 
+The nfsmount_enabled feature does not really add performance on Linux systems because Docker on Linux is already quite fast. The primary reason for using it on a Linux systme would be just to keep consistent with other team members working on other host OSs.
+
 Note that for all Linux systems, you can and should install and configure the NFS daemon and configure /etc/exports as you see fit and share the directories that you choose to share. The Debian/Ubuntu Linux script is just one way of accomplishing it. 
 
-Download, inspect, and run the [debian_ubuntu_linux_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/debian_ubuntu_linux_ddev_nfs_setup.sh)). This stops running ddev projects, adds your home directory to the /etc/exports config file that nfs uses, and installs nfs-kernel-server  on your computer. This is one-time setup. Note that this shares the /home directory via NFS to all non-routeable ("public") IP addresses in your network, so it's critical to consider security issues and verify that your firewall is enabled and configured. If your DDEV-Local projects are set up outside /home, you'll need to edit /etc/exports for the correct values and restart nfs-kernel-server.
+Download, inspect, and run the [debian_ubuntu_linux_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/debian_ubuntu_linux_ddev_nfs_setup.sh)). This stops running ddev projects, adds your home directory to the /etc/exports config file that nfs uses, and installs nfs-kernel-server  on your computer. This is one-time setup. 
+
+Note that the script sets up a very restrictive /etc/exports that is based on the primary IP address of the Linux system at the time the script is run. You may want to edit it to make it less restrictive, or make it very open and use your firewall to control access.
 
 ### Debugging `ddev start` failures with `nfs_mount_enabled: true`
 
