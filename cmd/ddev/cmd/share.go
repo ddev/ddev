@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
-	"runtime"
 	"strings"
 	"time"
 )
@@ -53,6 +52,13 @@ ddev share --use-http`,
 			}
 			ngrokArgs = append(ngrokArgs, url)
 			ngrokArgs = append(ngrokArgs, args...)
+			if cmd.Flags().Changed("subdomain") {
+				sub, err := cmd.Flags().GetString("subdomain")
+				if err != nil {
+					util.Failed("unable to get --subdomain flag: %v", err)
+				}
+				ngrokArgs = append(ngrokArgs, "-subdomain="+sub)
+			}
 
 			if strings.Contains(url, "http://") {
 				util.Warning("Using local http URL, your data may be exposed on the internet. Create a free ngrok account instead...")
@@ -81,13 +87,11 @@ ddev share --use-http`,
 			// In the case of exitCode==1, ngrok seems to have died due to an error,
 			// most likely inadequate user permissions.
 			if exitCode != 1 {
-				util.Warning("ngrok exited: %v", exitErr)
+				util.Error("ngrok exited: %v", exitErr)
 				break
 			}
 			// Otherwise we'll continue and do the next url or exit
-			util.Warning("ngrok exited: %v", exitErr)
 		}
-		util.Warning("ngrokErr: %v, goprocs: %v", ngrokErr, runtime.NumGoroutine())
 		os.Exit(0)
 	},
 }
