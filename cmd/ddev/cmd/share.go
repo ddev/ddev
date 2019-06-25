@@ -12,18 +12,24 @@ import (
 
 // DdevShareCommand contains the "ddev share" command
 var DdevShareCommand = &cobra.Command{
-	Use:   "share",
+	Use:   "share [project]",
 	Short: "Share project on the internet via ngrok.",
 	Long:  `Use "ddev share" or add on extra ngrok commands, like "ddev share --subdomain some-subdomain". Although a few ngrok commands are supported directly, any ngrok flag can be added in the ngrok_args section of .ddev/config.yaml. You will want to create an account on ngrok.com and use the "ngrok authtoken" command to set up ngrok.`,
 	Example: `ddev share
 ddev share --subdomain some-subdomain
-ddev share --use-http`,
+ddev share --use-http
+ddev share myproject`,
 	//Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := ddevapp.GetActiveApp("")
-		if err != nil {
-			util.Failed("Failed to get requested project: %v", err)
+		if len(args) > 1 {
+			util.Failed("Too many arguments provided. Please use 'ddev share' or 'ddev share [projectname]'")
 		}
+		apps, err := getRequestedProjects(args, false)
+		if err != nil {
+			util.Failed("Failed to describe project(s): %v", err)
+		}
+		app := apps[0]
+
 		if app.SiteStatus() != ddevapp.SiteRunning {
 			util.Failed("Project is not yet running. Use 'ddev start' first.")
 		}
@@ -47,11 +53,10 @@ ddev share --use-http`,
 		var ngrokErr error
 		for _, url := range urls {
 			ngrokArgs := []string{"http"}
+			ngrokArgs = append(ngrokArgs, url)
 			if app.NgrokArgs != "" {
 				ngrokArgs = append(ngrokArgs, strings.Split(app.NgrokArgs, " ")...)
 			}
-			ngrokArgs = append(ngrokArgs, url)
-			ngrokArgs = append(ngrokArgs, args...)
 			if cmd.Flags().Changed("subdomain") {
 				sub, err := cmd.Flags().GetString("subdomain")
 				if err != nil {
