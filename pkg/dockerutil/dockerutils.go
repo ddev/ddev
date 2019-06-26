@@ -710,6 +710,8 @@ func GetHostDockerInternalIP() (string, error) {
 			components := strings.Split(addr, " ")
 			if len(components) == 2 {
 				hostDockerInternal = components[1]
+			} else {
+				return "", fmt.Errorf("docker0 interface IP address cannot be determined. You may need to 'ip link set docker0 up' or restart docker or reboot to get xdebug or nfsmount_enabled to work")
 			}
 		}
 	} else if nodeps.IsDockerToolbox() {
