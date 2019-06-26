@@ -29,12 +29,21 @@ mkdir -p ~/.ddev
 docker run --rm -t -v /$HOME/.ddev:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 103)
 
 echo "
-+-----------------------------------------------------+
++-------------------------------------------------------------------------+
 | Setup native NFS on Linux for Docker
-| Only primary IP of machine is allowed client access;
+| Only the primary IP of machine is allowed client access;
 | Your home directory is shared by default.
 | But, of course, pay attention to security.
-+-----------------------------------------------------+
+|
+| Please note that ddev NFS support on Linux is not a particular
+| performance gain, since docker on Linux is already very fast.
+| You may not need/want to use it.
+| If you do use it, this script sets of very restrictive /etc/exports that
+| you will probably need to modify to suit your needs, especially if you're
+| using DHCP and your IP address changes periodically.
+| Please see https://ddev.readthedocs.io/en/stable/users/performance/#debianubuntu-linux-nfs-setup
+| for more information.
++-------------------------------------------------------------------------+
 "
 echo "Stopping running ddev projects"
 
@@ -47,9 +56,13 @@ sudo apt-get install -qq nfs-kernel-server
 primary_ip=$(ip route get 1 | awk '{gsub("^.*src ",""); print $1; exit}')
 echo "== Setting up nfs..."
 # Share /home folder. If the projects are elsewhere the /etc/exports will need
-# to be adapted. This grants access to all unrouteable ("public") IP addresses
-# (10.*, 172.16-172.28..., 192.168.*)
+# to be adapted. This grants access ONLY to the host machine's primary IP address
+# (at the time the script was run)
+# You may need to adapt it to be less restrictive in your environment,
+# or of course just use the firewall to restrict access.
 # You are welcome to edit and limit it to the addresses you prefer.
+# Please see https://ddev.readthedocs.io/en/stable/users/performance/#debianubuntu-linux-nfs-setup
+# for more information.
 FILE=/etc/exports
 LINE="${HOME} ${primary_ip}(rw,sync,no_subtree_check)"
 grep -qF -- "$LINE" "$FILE" 2>/dev/null || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
