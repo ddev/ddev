@@ -399,9 +399,10 @@ services:
       - ddev-global-cache:/mnt/ddev-global-cache:rw
     restart: "no"
     healthcheck:
-      interval: 6s
-      retries: 6
+      interval: 1s
+      retries: 10
       start_period: 10s
+      timeout: 120s
 
 networks:
    default:

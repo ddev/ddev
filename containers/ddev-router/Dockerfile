@@ -1,4 +1,4 @@
-FROM nginx:1.15.12
+FROM nginx:1.17.0
 
 ENV MKCERT_VERSION=v1.3.0
 
@@ -34,4 +34,4 @@ ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["forego", "start", "-r"]
 WORKDIR /app/
 
-HEALTHCHECK --interval=5s --retries=5 CMD /app/healthcheck.sh
+HEALTHCHECK --interval=1s --retries=10 --timeout=120s CMD /app/healthcheck.sh
