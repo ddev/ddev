@@ -1,5 +1,5 @@
 ## `ddev` Release Checklist 
-- [ ] Create provisional tagged images. `git fetch upstream && git checkout upstream/master && cd containers` and `foreach item in *; do pushd $item; make push VERSION=<release_version> DOCKER_ARGS=--no-cache ; popd; done`
+- [ ] Create provisional tagged images. `git fetch upstream && git checkout upstream/master && cd containers` and `for item in *; do pushd $item; make push VERSION=<release_version> DOCKER_ARGS=--no-cache ; popd; done`
 - [ ] Update the default container versions in `pkg/version/version.go` and create a pull request
 - [ ] Ensure all updates have been merged into the master branch
 - [ ] Create a tag for the new version according to the instructions below, initiating a tag build
