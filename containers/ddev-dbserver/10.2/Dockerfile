@@ -1,4 +1,4 @@
-FROM mariadb:10.2.22
+FROM mariadb:10.2.25
 
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
@@ -26,4 +26,4 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 EXPOSE 3306
 # The following line overrides any cmd entry
 CMD []
-HEALTHCHECK --interval=2s --retries=30 CMD ["/healthcheck.sh"]
+HEALTHCHECK --interval=1s --retries=30 --timeout=120s CMD ["/healthcheck.sh"]

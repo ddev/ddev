@@ -40,9 +40,10 @@ services:
       - TZ={{ .Timezone }}
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
-      interval: 5s
-      retries: 12
-      start_period: 60s
+      interval: 1s
+      retries: 10
+      start_period: 10s
+      timeout: 120s
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     {{ if .WebBuildContext }}
@@ -169,7 +170,7 @@ services:
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       - HTTP_EXPOSE=${DDEV_PHPMYADMIN_PORT}:{{ .DBAPort }}
     healthcheck:
-      interval: 90s
+      interval: 120s
       timeout: 2s
       retries: 1
 

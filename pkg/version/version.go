@@ -51,7 +51,7 @@ var WebTag = "20190626_healthcheck" // Note that this can be overridden by make
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.9.0"
+var BaseDBTag = "20190626_healthcheck"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
