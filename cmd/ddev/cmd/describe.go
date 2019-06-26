@@ -20,8 +20,8 @@ var DescribeCommand = &cobra.Command{
 information about a ddev project, including its name, location, url, and status.
 It also provides details for MySQL connections, and connection information for
 additional services like MailHog and phpMyAdmin. You can run 'ddev describe' from
-a project directory to stop that project, or you can specify a project to describe by
-running 'ddev stop <projectname>.`,
+a project directory to describe that project, or you can specify a project to describe by
+running 'ddev describe <projectname>.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
 			util.Failed("Too many arguments provided. Please use 'ddev describe' or 'ddev describe [projectname]'")
