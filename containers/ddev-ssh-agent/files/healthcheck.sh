@@ -12,9 +12,11 @@ sleeptime=59
 # sleep at startup. This requires the timeout to be set
 # higher than the sleeptime used here.
 if [ -f /tmp/healthy ]; then
+    printf "container was previously healthy, so sleeping ${sleeptime} seconds before continuing healthcheck...  "
     sleep ${sleeptime}
 fi
 if killall -0 socat ssh-agent; then
+    printf "healthy"
     touch /tmp/healthy
     exit 0
 fi

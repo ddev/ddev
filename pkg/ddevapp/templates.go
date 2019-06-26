@@ -114,9 +114,10 @@ services:
     {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}" 
     {{ end }}
     healthcheck:
-      interval: 4s
-      retries: 6
+      interval: 1s
+      retries: 10
       start_period: 10s
+      timeout: 120s
 {{ if .WebcacheEnabled }}
   bgsync:
     container_name: ddev-${DDEV_SITENAME}-bgsync

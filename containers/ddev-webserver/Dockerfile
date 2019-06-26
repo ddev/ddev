@@ -151,6 +151,6 @@ RUN chmod ugo+x /start.sh /healthcheck.sh
 
 
 EXPOSE 80 8025
-HEALTHCHECK --interval=3s --retries=6 CMD ["/healthcheck.sh"]
+HEALTHCHECK --interval=1s --retries=10 --timeout=120s CMD ["/healthcheck.sh"]
 
 CMD ["/start.sh"]
