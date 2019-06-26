@@ -427,8 +427,10 @@ services:
     environment:
       - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
     healthcheck:
-      interval: 2s
-      retries: 5
+      interval: 1s
+      retries: 2
+      start_period: 10s
+      timeout: 62s
 networks:
   default:
     external:

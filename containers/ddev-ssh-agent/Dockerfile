@@ -22,7 +22,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-FROM alpine:3.8
+FROM alpine:3.10
 
 # Install dependencies
 RUN apk add --no-cache \
@@ -48,7 +48,7 @@ RUN ln -s $SSH_KEY_DIR /home/.ssh
 
 RUN mkdir ${SOCKET_DIR} && mkdir ${SSH_KEY_DIR} && chmod 777 ${SOCKET_DIR} ${SSH_KEY_DIR}
 
-HEALTHCHECK --interval=2s --retries=5 CMD ["/healthcheck.sh"]
+HEALTHCHECK --interval=1s --retries=5 --timeout=120s CMD ["/healthcheck.sh"]
 
 VOLUME ${SOCKET_DIR}
 
