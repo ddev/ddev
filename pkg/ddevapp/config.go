@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -440,7 +441,14 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 	_, err = time.LoadLocation(app.Timezone)
 	if err != nil {
-		return fmt.Errorf("invalid timezone %s: %v", app.Timezone, err)
+		// golang on Windows is often not able to time.LoadLocation.
+		// It often works if go is installed and $GOROOT is set, but
+		// that's not the norm for our users.
+		if _, ok := err.(syscall.Errno); ok && runtime.GOOS == "windows" {
+			util.Warning("Accepting timezone %s without validation on Windows", app.Timezone)
+		} else {
+			return fmt.Errorf("invalid timezone %s: %v", app.Timezone, err)
+		}
 	}
 
 	return nil
