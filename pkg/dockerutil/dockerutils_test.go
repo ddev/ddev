@@ -64,7 +64,6 @@ func TestMain(m *testing.M) {
 			},
 			Env: []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
 		},
-		//          "PortBindings": { "22/tcp": [{ "HostPort": "11022" }] },
 		HostConfig: &docker.HostConfig{
 			PortBindings: map[docker.Port][]docker.PortBinding{
 				"80/tcp": {

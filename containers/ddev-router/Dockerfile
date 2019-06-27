@@ -34,4 +34,4 @@ ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["forego", "start", "-r"]
 WORKDIR /app/
 
-HEALTHCHECK --interval=1s --retries=10 --timeout=120s CMD /app/healthcheck.sh
+HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD /app/healthcheck.sh
