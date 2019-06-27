@@ -2,6 +2,8 @@
 set -x
 set -o errexit nounset pipefail
 
+rm -f /tmp/healthy
+
 # If DDEV_PHP_VERSION isn't set, use a reasonable default
 DDEV_PHP_VERSION="${DDEV_PHP_VERSION:-$PHP_DEFAULT_VERSION}"
 

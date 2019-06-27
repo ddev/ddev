@@ -21,6 +21,7 @@
 
 
 set -eo pipefail
+rm -f /tmp/healthy
 
 # Print a debug message if debug mode is on ($DEBUG is not empty)
 # @param message

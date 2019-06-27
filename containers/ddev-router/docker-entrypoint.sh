@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+rm -f /tmp/healthy
+
 # Warn if the DOCKER_HOST socket does not exist
 if [[ $DOCKER_HOST = unix://* ]]; then
 	socket_file=${DOCKER_HOST#unix://}
