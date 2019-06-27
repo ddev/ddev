@@ -23,7 +23,7 @@ htmlaccess=false
 mailhog=false
 if curl --fail -s 127.0.0.1/phpstatus >/dev/null ; then
     phpstatus=true
-    printf "phpstatus: Ok "
+    printf "phpstatus: OK "
 else
     printf "phpstatus FAILED "
 fi
