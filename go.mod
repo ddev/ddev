@@ -30,7 +30,6 @@ require (
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.3
 	github.com/mattn/go-runewidth v0.0.2 // indirect
-	github.com/mattn/go-shellwords v1.0.3
 	github.com/mitchellh/go-homedir v0.0.0-20180523094522-3864e76763d9
 	github.com/mitchellh/mapstructure v0.0.0-20180715050151-f15292f7a699 // indirect
 	github.com/onsi/ginkgo v1.7.0 // indirect
@@ -50,6 +49,6 @@ require (
 	golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac
 	gopkg.in/cheggaaa/pb.v1 v1.0.26 // indirect
 	gopkg.in/ini.v1 v1.39.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20190502103701-55513cacd4ae
+	gopkg.in/yaml.v2 v2.2.1
 	gotest.tools v2.2.0+incompatible // indirect
 )
