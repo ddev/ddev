@@ -490,6 +490,33 @@ func TestReadConfig(t *testing.T) {
 	assert.Equal(app.WebImage, "test/testimage:latest")
 }
 
+// TestReadConfigCRLF tests reading config values from a file with Windows
+// CRLF line endings in it.
+func TestReadConfigCRLF(t *testing.T) {
+	assert := asrt.New(t)
+
+	// This closely resembles the values one would have from NewApp()
+	app := &DdevApp{
+		APIVersion: version.DdevVersion,
+		ConfigPath: filepath.Join("testdata", t.Name(), ".ddev", "config.yaml"),
+		AppRoot:    filepath.Join("testdata", t.Name()),
+		Name:       t.Name(),
+		Provider:   ProviderDefault,
+	}
+
+	_, err := app.ReadConfig(false)
+	if err != nil {
+		t.Fatalf("Unable to c.ReadConfig(), err: %v", err)
+	}
+
+	// Values not defined in file, we should still have default values
+	assert.Equal(app.Name, t.Name())
+	assert.Equal(app.APIVersion, version.DdevVersion)
+
+	// Values defined in file, we should have values from file
+	assert.Equal(app.Docroot, "public")
+}
+
 // TestConfigValidate tests validation of configuration values.
 func TestConfigValidate(t *testing.T) {
 	assert := asrt.New(t)
