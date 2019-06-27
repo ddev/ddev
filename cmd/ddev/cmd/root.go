@@ -164,7 +164,7 @@ func checkDdevVersionAndOptInSentry() error {
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
 		}
-		globalconfig.DdevGlobalConfig.LastUsedVersion = version.COMMIT
+		globalconfig.DdevGlobalConfig.LastUsedVersion = version.VERSION
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		if err != nil {
 			return err

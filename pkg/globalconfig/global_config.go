@@ -92,6 +92,9 @@ func ReadGlobalConfig() error {
 	if err != nil {
 		return err
 	}
+	if DdevGlobalConfig.ProjectList == nil {
+		DdevGlobalConfig.ProjectList = map[string]*ProjectInfo{}
+	}
 
 	err = ValidateGlobalConfig()
 	if err != nil {
@@ -102,7 +105,7 @@ func ReadGlobalConfig() error {
 
 // WriteGlobalConfig writes the global config into ~/.ddev.
 func WriteGlobalConfig(config GlobalConfig) error {
-
+	config.APIVersion = version.VERSION
 	err := ValidateGlobalConfig()
 	if err != nil {
 		return err
