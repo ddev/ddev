@@ -617,7 +617,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	hostDockerInternalIP, err := dockerutil.GetHostDockerInternalIP()
 	if err != nil {
-		return "", err
+		util.Warning("Could not determine host.docker.internal IP address: %v", err)
 	}
 
 	// The fallthrough default for hostDockerInternalIdentifier is the
