@@ -126,11 +126,11 @@ func TestGetContainerHealth(t *testing.T) {
 	healthDetail, err := ContainerWait(15, labels)
 	assert.NoError(err)
 
-	assert.Equal("phpstatus: Ok /var/www/html: OK mailhog: OK ", healthDetail)
+	assert.Equal("phpstatus: OK /var/www/html: OK mailhog: OK ", healthDetail)
 
 	status, healthDetail = GetContainerHealth(container)
 	assert.Equal(status, "healthy")
-	assert.Equal("phpstatus: Ok /var/www/html: OK mailhog: OK ", healthDetail)
+	assert.Equal("phpstatus: OK /var/www/html: OK mailhog: OK ", healthDetail)
 }
 
 // TestContainerWait tests the error cases for the container check wait loop.
