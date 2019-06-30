@@ -34,6 +34,11 @@ func TestCmdConfigHooks(t *testing.T) {
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-config": {{"exec-host": "touch hello-post-config-" + app.Name}}, "pre-config": {{"exec-host": "touch hello-pre-config-" + app.Name}}}
 	err = app.WriteConfig()
 	assert.NoError(err)
+	// Make sure we get rid of this for other uses
+	defer func() {
+		app.Hooks = nil
+		_ = app.WriteConfig()
+	}()
 
 	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=" + app.Type})
 	assert.NoError(err)

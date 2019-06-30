@@ -183,6 +183,8 @@ func TestPantheonPull(t *testing.T) {
 	err = os.Remove("hello-post-pull-" + app.Name)
 	assert.NoError(err)
 
+	app.Hooks = nil
+	_ = app.WriteConfig()
 	err = app.Stop(true, false)
 	assert.NoError(err)
 }
