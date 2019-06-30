@@ -1,17 +1,17 @@
 ## `ddev` Release Checklist 
-- [ ] Create provisional tagged images. `git fetch upstream && git checkout upstream/master && cd containers` and `for item in *; do pushd $item; make push VERSION=<release_version> DOCKER_ARGS=--no-cache ; popd; done`
-- [ ] Update the default container versions in `pkg/version/version.go` and create a pull request
-- [ ] Ensure all updates have been merged into the master branch
-- [ ] Create a tag for the new version according to the instructions below, initiating a tag build
-- [ ] Build and push artifacts with the .circleci/trigger_release.sh tool: `.circleci/trigger_release.sh --release-tag=v1.7.1 --circleci-token=circleToken900908b3443ea58316baf928b --github-token=githubPersonalToken853ae6f72c40525cd21036f742904a   --windows-signing-password=windowscodepassword | jq -r 'del(.circle_yml)'  | jq -r 'del(.circle_yml)'`
-- [ ] Add the commit list (`git log vXXX..vYYY --oneline --decorate=no`) to the release page
-- [ ] Update the `ddev` [Homebrew formula](https://github.com/drud/homebrew-ddev) with the source .tar.gz and SHA checksum of the tarball and the bottle builds and tarballs. The bottles for macOS (sierra) and x86_64_linux are built and pushed to the release page automatically by the CircleCI release build process.
-- [ ] Test `brew upgrade ddev` and make sure ddev is the right version and behaves well
-- [ ] Test the Windows installer and confirm it's signed correctly
-- [ ] Update the release page with specifics about the current release
-- [ ] Publish the release (unmark it as "prerelease")
-- [ ] Download the ddev_chocolatey tarball and extract it. cd into the extraction directory and push it to chocolatey with `docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key=choco-apikey-a720-7890909913f7`  (Although this ought to be done by the release build process on CircleCI it's not successful as of v1.7.1.)
-- [ ] On [ReadTheDocs](https://readthedocs.org/projects/ddev/builds) click the button to "build version" "latest".  Then on [versions](https://readthedocs.org/projects/ddev/versions/) page make sure that "stable" reflects the hash of the new version.
+1. Create provisional tagged images. `git fetch upstream && git checkout upstream/master && cd containers` and `for item in *; do pushd $item; make push VERSION=<release_version> DOCKER_ARGS=--no-cache ; popd; done`
+2. Update the default container versions in `pkg/version/version.go` and create a pull request
+3. Ensure all updates have been merged into the master branch
+4. Create a tag for the new version according to the instructions below, initiating a tag build
+5. Build and push artifacts with the .circleci/trigger_release.sh tool: `.circleci/trigger_release.sh --release-tag=v1.7.1 --circleci-token=circleToken900908b3443ea58316baf928b --github-token=githubPersonalToken853ae6f72c40525cd21036f742904a   --windows-signing-password=windowscodepassword | jq -r 'del(.circle_yml)'  | jq -r 'del(.circle_yml)'`
+6. Add the commit list (`git log vXXX..vYYY --oneline --decorate=no`) to the release page
+7. Update the `ddev` homebrew formulas (ddev-edge and ddev) as necessary, https://github.com/drud/homebrew-ddev and https://github.com/drud/homebrew-ddev-edge, with the source .tar.gz and SHA checksum of the tarball and the bottle builds and tarballs. The bottles and checksums for macOS (sierra) and x86_64_linux are built and pushed to the release page automatically by the CircleCI release build process.
+8. Test `brew upgrade ddev` both on macOS and Linux and make sure ddev is the right version and behaves well
+9. Test the Windows installer and confirm it's signed correctly
+10. Update the release page with specifics about the current release
+11. Publish the release (unmark it as "prerelease")
+12. Download the ddev_chocolatey tarball and extract it. cd into the extraction directory and push it to chocolatey with `docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key=choco-apikey-a720-7890909913f7`  (Although this ought to be done by the release build process on CircleCI it's not successful as of v1.7.1.)
+13. On [ReadTheDocs](https://readthedocs.org/projects/ddev/builds) click the button to "build version" "latest".  Then on [versions](https://readthedocs.org/projects/ddev/versions/) page make sure that "stable" reflects the hash of the new version.
 
 ### Creating a Tag
 
