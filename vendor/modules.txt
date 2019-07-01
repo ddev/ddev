@@ -53,6 +53,8 @@ github.com/cheggaaa/pb
 github.com/containerd/continuity/pathdriver
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
+# github.com/denisbrodbeck/machineid v1.0.1
+github.com/denisbrodbeck/machineid
 # github.com/docker/docker v0.7.3-0.20180827131323-0c5f8d2b9b23
 github.com/docker/docker/api/types/registry
 github.com/docker/docker/api/types/swarm
@@ -159,6 +161,8 @@ github.com/pelletier/go-toml
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
+# github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c
+github.com/segmentio/backo-go
 # github.com/sirupsen/logrus v1.0.6
 github.com/sirupsen/logrus
 # github.com/spf13/afero v1.1.1
@@ -177,15 +181,20 @@ github.com/spf13/viper
 # github.com/stretchr/testify v1.2.2
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
+# github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
+github.com/xtgo/uuid
 # golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac
 golang.org/x/crypto/ssh/terminal
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/pbkdf2
 # golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e
+golang.org/x/sys/windows/registry
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
+# gopkg.in/segmentio/analytics-go.v3 v3.0.1
+gopkg.in/segmentio/analytics-go.v3
 # gopkg.in/yaml.v2 v2.2.1
 gopkg.in/yaml.v2
