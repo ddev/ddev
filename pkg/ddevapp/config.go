@@ -10,6 +10,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -599,6 +600,9 @@ type composeYAMLVars struct {
 	IsWindowsFS          bool
 	Hostnames            []string
 	Timezone             string
+	Username             string
+	UID                  string
+	GID                  string
 }
 
 // RenderComposeYAML renders the contents of docker-compose.yaml.
@@ -621,6 +625,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	// The fallthrough default for hostDockerInternalIdentifier is the
 	// hostDockerInternalHostname == host.docker.internal
+	curUser, err := user.Current()
+	if err != nil {
+		return "", err
+	}
 
 	templateVars := composeYAMLVars{
 		Name:                 app.Name,
@@ -642,6 +650,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		WebMount:             "../",
 		Hostnames:            app.GetHostnames(),
 		Timezone:             app.Timezone,
+		Username:             curUser.Username,
+		UID:                  curUser.Uid,
+		GID:                  curUser.Gid,
 	}
 	if app.WebcacheEnabled {
 		templateVars.MountType = "volume"
@@ -658,28 +669,21 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	}
 
-	webBuildContext := app.GetConfigPath("web-build/Dockerfile")
-	if fileutil.FileExists(webBuildContext) {
-		templateVars.WebBuildContext = app.GetConfigPath("web-build")
-		if len(app.WebImageExtraPackages) != 0 {
-			util.Warning(".ddev/web-build/Dockerfile is provided, ignoring webimage_extra_packages")
-		}
-	} else if len(app.WebImageExtraPackages) > 0 {
-		err = WriteImagePackagesDockerfile(app.GetConfigPath(".webimageExtra/Dockerfile"), app.WebImageExtraPackages)
-		if err != nil {
-			return "", err
-		}
-		templateVars.WebBuildContext = app.GetConfigPath(".webimageExtra")
+	err = WriteBuildDockerfile(app.GetConfigPath(".webimageExtra/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages)
+	if err != nil {
+		return "", err
 	}
+	templateVars.WebBuildContext = app.GetConfigPath(".webimageExtra")
 
 	dbBuildContext := app.GetConfigPath("db-build/Dockerfile")
+	//TODO: Convert this one like web
 	if fileutil.FileExists(dbBuildContext) {
 		templateVars.DBBuildContext = app.GetConfigPath("db-build")
 		if len(app.DBImageExtraPackages) != 0 {
 			util.Warning(".ddev/db-build/Dockerfile is provided, ignoring dbimage_extra_packages")
 		}
 	} else if len(app.DBImageExtraPackages) > 0 {
-		err = WriteImagePackagesDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), app.DBImageExtraPackages)
+		err = WriteBuildDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), "", app.DBImageExtraPackages)
 		if err != nil {
 			return "", err
 		}
@@ -695,18 +699,39 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	return doc.String(), err
 }
 
-// WriteImagePackagesDockerfile writes a simple Dockerfile with extraPackages at given location
-// fullpath is the path to the Dockerfile including the filename
-func WriteImagePackagesDockerfile(fullpath string, extraPackages []string) error {
+// WriteBuildDockerfile writes a Dockerfile to be used in the
+// docker-compose 'build'
+// It may include the contents of .ddev/<container>-build
+func WriteBuildDockerfile(fullpath string, userDockerfile string, extraPackages []string) error {
+	// Start with user-built dockerfile if there is one.
 	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
 		return err
 	}
-	contents := []byte(`ARG BASE_IMAGE
-FROM $BASE_IMAGE
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y ` + strings.Join(extraPackages, " ") + "\n")
 
-	return WriteImageDockerfile(fullpath, contents)
+	// Normal starting content is just the arg and base image
+	contents := `
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+`
+	// If there is a user dockerfile, start with its contents
+	if userDockerfile != "" && fileutil.FileExists(userDockerfile) {
+		contents, err = fileutil.ReadFileIntoString(userDockerfile)
+		if err != nil {
+			return err
+		}
+	}
+	contents = contents + `
+ARG username
+ARG uid
+ARG gid
+RUN addgroup --gid $gid "$username" && adduser "$username" --ingroup "$username" --disabled-password --gecos "" --uid $uid 
+ `
+	if extraPackages != nil {
+		contents = contents + `
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y ` + strings.Join(extraPackages, " ") + "\n"
+	}
+	return WriteImageDockerfile(fullpath, []byte(contents))
 }
 
 // WriteImageDockerfile writes a dockerfile at the fullpath (including the filename)

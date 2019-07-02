@@ -51,6 +51,9 @@ services:
       context: '{{ .WebBuildContext }}'
       args: 
         BASE_IMAGE: $DDEV_WEBIMAGE
+        username: '{{ .Username }}'
+        uid: '{{ .UID }}'
+        gid: '{{ .GID }}'
     {{ else }}
     image: $DDEV_WEBIMAGE
     {{ end }}

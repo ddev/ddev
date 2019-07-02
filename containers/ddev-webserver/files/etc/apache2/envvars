@@ -45,6 +45,3 @@ export LANG
 ## This will produce a verbose output on package installations of web server modules and web application
 ## installations which interact with Apache
 #export APACHE2_MAINTSCRIPT_DEBUG=1
-
-export APACHE_RUN_USER=uid_501
-export APACHE_RUN_GROUP=gid_20

@@ -76,7 +76,7 @@ envsubst "$NGINX_SITE_VARS" < "$NGINX_SITE_TEMPLATE" > /etc/nginx/sites-enabled/
 envsubst "$APACHE_SITE_VARS" < "$APACHE_SITE_TEMPLATE" > /etc/apache2/sites-enabled/apache-site.conf
 
 # Change the apache run user to current user/group
-printf "\nexport APACHE_RUN_USER=uid_$(id -u)\nexport APACHE_RUN_GROUP=gid_$(id -g)\n" >>/etc/apache2/envvars
+printf "\nexport APACHE_RUN_USER=$(id -un)\nexport APACHE_RUN_GROUP=$(id -gn)\n" >>/etc/apache2/envvars
 
 a2enmod access_compat alias auth_basic authn_core authn_file authz_core authz_host authz_user autoindex deflate dir env filter mime mpm_prefork negotiation reqtimeout rewrite setenvif status
 a2enconf charset localized-error-pages other-vhosts-access-log security serve-cgi-bin
@@ -99,6 +99,7 @@ fi
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
+cp -r /home/{.ssh*,.drush,.gitconfig,.my.cnf} ~/
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.ssh* ~/.drush ~/.gitconfig ~/.my.cnf
 
 mkcert -install
