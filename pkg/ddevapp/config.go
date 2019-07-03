@@ -235,9 +235,7 @@ func (app *DdevApp) WriteConfig() error {
 # or packages or anything else to your webimage
 ARG BASE_IMAGE=` + app.WebImage + `
 FROM $BASE_IMAGE
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y php-yaml
 RUN npm install --global gulp-cli
-RUN ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
 `)
 
 	err = WriteImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
@@ -249,7 +247,6 @@ RUN ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime && dpkg-reconfigure 
 # or packages or anything else to your dbimage
 ARG BASE_IMAGE=` + app.DBImage + `
 FROM $BASE_IMAGE
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y telnet netcat
 RUN echo "Built from ` + app.DBImage + `" >/var/tmp/built-from.txt
 `)
 
