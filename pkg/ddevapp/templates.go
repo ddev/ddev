@@ -10,7 +10,7 @@ services:
     build: 
       context: '{{ .DBBuildContext }}'
       args: 
-        BASE_IMAGE: $DDEV_WEBIMAGE
+        BASE_IMAGE: $DDEV_DBIMAGE
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
