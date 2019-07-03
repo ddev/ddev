@@ -696,7 +696,7 @@ func TestPHPOverrides(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s PHPOverrides", site.Name))
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	// Copy test overrides into the project .ddev directory
 	err := fileutil.CopyDir(filepath.Join(testDir, "testdata/TestPHPOverrides/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))

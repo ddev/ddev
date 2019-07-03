@@ -43,6 +43,11 @@ func TestComposer(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-composer": {{"exec-host": "touch hello-post-composer-" + app.Name}}, "pre-composer": {{"exec-host": "touch hello-pre-composer-" + app.Name}}}
+	// Make sure we get rid of this for other uses
+	defer func() {
+		app.Hooks = nil
+		_ = app.WriteConfig()
+	}()
 	err = app.Start()
 	assert.NoError(err)
 	_, _, err = app.Composer([]string{"install"})

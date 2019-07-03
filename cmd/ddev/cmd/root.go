@@ -26,9 +26,11 @@ var (
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:     "ddev",
-	Short:   "DDEV-Local local development environment",
-	Long:    "Create and maintain a local web development environment.",
+	Use:   "ddev",
+	Short: "DDEV-Local local development environment",
+	Long: `Create and maintain a local web development environment.
+Docs: https://ddev.readthedocs.io
+Support: https://ddev.readthedocs.io/en/stable/#support`,
 	Version: version.DdevVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		ignores := []string{"version", "config", "hostname", "help", "auth-pantheon", "import-files"}

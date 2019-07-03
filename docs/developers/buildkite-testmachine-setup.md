@@ -4,8 +4,8 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 ## Windows Test Agent Setup:
 
-0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
-1. Install [chocolatey](https://chocolatey.org/)
+0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com (available in 1password)
+1. Install [chocolatey](https://chocolatey.org/docs/installation) with an administrative cmd window `@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"`
 2. Install golang/mysql-cli/make/git/docker-ce/nssm with `choco install -y git mysql-cli golang make docker-desktop nssm GoogleChrome zip jq composer cmder netcat ddev mkcert` (If docker-toolbox, use that instead; you may have to download the release separately to get correct version.)
 3. `mkcert -install`
 3. Enable gd, fileinfo, and curl extensions in /c/tools/php73/php.ini
@@ -44,11 +44,11 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 0. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 1. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
-1. Install [homebrew](https://brew.sh/) `xcode select --install` and `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-2. Install golang/git/docker with `brew cask install iterm2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew tap drud/ddev && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer ddev netcat mkcert`
+1. Install [homebrew](https://brew.sh/) `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+2. Install golang/git/docker with `brew cask install iterm2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew tap drud/ddev && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer ddev netcat mkcert && brew cask install ngrok`
 3. `mkcert -install`
 3. Run docker manually and go through its configuration routine.
-3. Run `iterm`. On Mojave it will prompt for requiring full disk access permissions, follow through with that.
+3. Run `iterm`. On Mojave it may prompt for requiring full disk access permissions, follow through with that.
 3. Set up nfsd by running `macos_ddev_nfs_setup.sh`
 4. Add the path `/private/var` to `/etc/exports` and `sudo nfsd restart`.
 5. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add 

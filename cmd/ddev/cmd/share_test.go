@@ -35,6 +35,11 @@ func TestShareCmd(t *testing.T) {
 	require.NoError(t, err)
 	scanner := bufio.NewScanner(cmdReader)
 
+	// Make absolutely sure the ngrok process gets killed off, because otherwise
+	// the testbot (windows) can remain occupied forever.
+	// nolint: errcheck
+	defer pKill(cmd)
+
 	// Read through the ngrok json output until we get the url it has opened
 	go func() {
 		for scanner.Scan() {
@@ -54,7 +59,12 @@ func TestShareCmd(t *testing.T) {
 			// If URL is provided, try to hit it and look for expected response
 			if url, ok := logData["url"]; ok {
 				resp, err := http.Get(url + site.Safe200URIWithExpectation.URI)
-				assert.NoError(err)
+				if err != nil {
+					t.Logf("http.Get on url=%s failed, err=%v", url+site.Safe200URIWithExpectation.URI, err)
+					err = pKill(cmd)
+					assert.NoError(err)
+					return
+				}
 				//nolint: errcheck
 				defer resp.Body.Close()
 				body, err := ioutil.ReadAll(resp.Body)

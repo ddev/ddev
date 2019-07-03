@@ -694,6 +694,8 @@ func TestDdevImportDB(t *testing.T) {
 			_ = os.RemoveAll("hello-post-import-db-" + app.Name)
 		}
 		// We don't want all the projects running at once.
+		app.Hooks = nil
+		_ = app.WriteConfig()
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
@@ -1066,6 +1068,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "is not compatible")
 
+	app.Hooks = nil
+	_ = app.WriteConfig()
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
@@ -1363,6 +1367,10 @@ func TestDdevExec(t *testing.T) {
 		assert.NoError(err)
 
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-exec": {{"exec-host": "touch hello-post-exec-" + app.Name}}, "pre-exec": {{"exec-host": "touch hello-pre-exec-" + app.Name}}}
+		defer func() {
+			app.Hooks = nil
+			_ = app.WriteConfig()
+		}()
 
 		startErr := app.StartAndWaitForSync(0)
 		if startErr != nil {
@@ -1567,8 +1575,11 @@ func TestDdevPause(t *testing.T) {
 	err = app.StartAndWaitForSync(0)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-pause": {{"exec-host": "touch hello-post-pause-" + app.Name}}, "pre-pause": {{"exec-host": "touch hello-pre-pause-" + app.Name}}}
 
-	//nolint: errcheck
-	defer app.Stop(true, false)
+	defer func() {
+		app.Hooks = nil
+		_ = app.WriteConfig()
+		_ = app.Stop(true, false)
+	}()
 	require.NoError(t, err)
 	err = app.Pause()
 	assert.NoError(err)
@@ -1646,8 +1657,11 @@ func TestDdevDescribe(t *testing.T) {
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-describe": {{"exec-host": "touch hello-post-describe-" + app.Name}}, "pre-describe": {{"exec-host": "touch hello-pre-describe-" + app.Name}}}
 
 	startErr := app.StartAndWaitForSync(0)
-	//nolint: errcheck
-	defer app.Stop(true, false)
+	defer func() {
+		_ = app.Stop(true, false)
+		app.Hooks = nil
+		_ = app.WriteConfig()
+	}()
 	// If we have a problem starting, get the container logs and output.
 	if startErr != nil {
 		out, logsErr := app.CaptureLogs("web", false, "")
