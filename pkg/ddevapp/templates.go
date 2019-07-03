@@ -40,9 +40,10 @@ services:
       - TZ={{ .Timezone }}
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
-      interval: 5s
-      retries: 12
-      start_period: 60s
+      interval: 1s
+      retries: 10
+      start_period: 10s
+      timeout: 120s
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     {{ if .WebBuildContext }}
@@ -114,9 +115,10 @@ services:
     {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}" 
     {{ end }}
     healthcheck:
-      interval: 4s
-      retries: 6
+      interval: 1s
+      retries: 10
       start_period: 10s
+      timeout: 120s
 {{ if .WebcacheEnabled }}
   bgsync:
     container_name: ddev-${DDEV_SITENAME}-bgsync
@@ -168,7 +170,7 @@ services:
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       - HTTP_EXPOSE=${DDEV_PHPMYADMIN_PORT}:{{ .DBAPort }}
     healthcheck:
-      interval: 90s
+      interval: 120s
       timeout: 2s
       retries: 1
 
@@ -397,9 +399,10 @@ services:
       - ddev-global-cache:/mnt/ddev-global-cache:rw
     restart: "no"
     healthcheck:
-      interval: 6s
-      retries: 6
+      interval: 1s
+      retries: 10
       start_period: 10s
+      timeout: 120s
 
 networks:
    default:
@@ -427,8 +430,10 @@ services:
     environment:
       - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
     healthcheck:
-      interval: 2s
-      retries: 5
+      interval: 1s
+      retries: 2
+      start_period: 10s
+      timeout: 62s
 networks:
   default:
     external:

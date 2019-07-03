@@ -4,6 +4,7 @@ set -eu
 set -o pipefail
 
 SOCKET=/var/tmp/mysql.sock
+rm -f /tmp/healthy
 
 # Wait for mysql server to be ready.
 function serverwait {

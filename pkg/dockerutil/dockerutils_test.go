@@ -64,7 +64,6 @@ func TestMain(m *testing.M) {
 			},
 			Env: []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
 		},
-		//          "PortBindings": { "22/tcp": [{ "HostPort": "11022" }] },
 		HostConfig: &docker.HostConfig{
 			PortBindings: map[docker.Port][]docker.PortBinding{
 				"80/tcp": {
@@ -127,11 +126,11 @@ func TestGetContainerHealth(t *testing.T) {
 	healthDetail, err := ContainerWait(15, labels)
 	assert.NoError(err)
 
-	assert.Equal("phpstatus: OK, /var/www/html: OK, mailhog: OK", healthDetail)
+	assert.Equal("phpstatus: OK /var/www/html: OK mailhog: OK ", healthDetail)
 
 	status, healthDetail = GetContainerHealth(container)
 	assert.Equal(status, "healthy")
-	assert.Equal("phpstatus: OK, /var/www/html: OK, mailhog: OK", healthDetail)
+	assert.Equal("phpstatus: OK /var/www/html: OK mailhog: OK ", healthDetail)
 }
 
 // TestContainerWait tests the error cases for the container check wait loop.
