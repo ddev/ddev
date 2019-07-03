@@ -99,7 +99,8 @@ fi
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-cp -r /home/{.ssh*,.drush,.gitconfig,.my.cnf} ~/
+cp -r /home/{.ssh*,.drush,.gitconfig,.my.cnf,.bashrc} ~/
+sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.ssh* ~/.drush ~/.gitconfig ~/.my.cnf
 
 mkcert -install
