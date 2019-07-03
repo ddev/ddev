@@ -629,6 +629,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	uid, gid := util.GetContainerUIDGid()
 
 	templateVars := composeYAMLVars{
 		Name:                 app.Name,
@@ -651,8 +652,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Hostnames:            app.GetHostnames(),
 		Timezone:             app.Timezone,
 		Username:             curUser.Username,
-		UID:                  curUser.Uid,
-		GID:                  curUser.Gid,
+		UID:                  uid,
+		GID:                  gid,
 	}
 	if app.WebcacheEnabled {
 		templateVars.MountType = "volume"
