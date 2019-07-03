@@ -27,6 +27,7 @@ services:
         target: "/mnt/ddev_config"
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
+    hostname: {{ .Name }}-db
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:3306"
     labels:
@@ -38,6 +39,7 @@ services:
       - COLUMNS=$COLUMNS
       - LINES=$LINES
       - TZ={{ .Timezone }}
+      - DDEV_PROJECT={{ .Name }}
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
       interval: 1s
@@ -77,6 +79,7 @@ services:
 
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
+    hostname: {{ .Name }}-web
     links:
       - db:db
     # ports is list of exposed *container* ports
@@ -105,6 +108,7 @@ services:
       # To expose an HTTPS port, define the port as securePort:containerPort.
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
+      - DDEV_PROJECT={{ .Name }}
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .Plugin }}
@@ -127,6 +131,7 @@ services:
     image: $DDEV_BGSYNCIMAGE
     restart: "on-failure"
     user: "$DDEV_UID:$DDEV_GID"
+    hostname: {{ .Name }}-bgsync
     volumes:
       - ..:/hostmount:cached
       - webcachevol:/fastdockermount
@@ -164,6 +169,7 @@ services:
       - db:db
     ports:
       - "80"
+    hostname: {{ .Name }}-dba
     environment:
       - PMA_USER=db
       - PMA_PASSWORD=db
