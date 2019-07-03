@@ -7,14 +7,13 @@ const DDevComposeTemplate = `version: '{{ .ComposeVersion }}'
 services:
   db:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
-    {{ if .DBBuildContext }}
     build: 
       context: '{{ .DBBuildContext }}'
       args: 
-        BASE_IMAGE: $DDEV_DBIMAGE
-    {{ else }}
-    image: "$DDEV_DBIMAGE"
-    {{ end }}
+        BASE_IMAGE: $DDEV_WEBIMAGE
+        username: '{{ .Username }}'
+        uid: '{{ .UID }}'
+        gid: '{{ .GID }}'
     stop_grace_period: 60s
     volumes:
       - type: "volume"
@@ -48,7 +47,6 @@ services:
       timeout: 120s
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
-    {{ if .WebBuildContext }}
     build: 
       context: '{{ .WebBuildContext }}'
       args: 
@@ -56,9 +54,6 @@ services:
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
-    {{ else }}
-    image: $DDEV_WEBIMAGE
-    {{ end }}
     cap_add:
       - SYS_PTRACE
     volumes:

@@ -666,26 +666,21 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	}
 
+	// Add web and db extra dockerfile info
+	// If there is a user-provided Dockerfile, use that as the base and then add
+	// our extra stuff like usernames, etc.
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageExtra/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages)
 	if err != nil {
 		return "", err
 	}
 	templateVars.WebBuildContext = app.GetConfigPath(".webimageExtra")
 
-	dbBuildContext := app.GetConfigPath("db-build/Dockerfile")
-	//TODO: Convert this one like web
-	if fileutil.FileExists(dbBuildContext) {
-		templateVars.DBBuildContext = app.GetConfigPath("db-build")
-		if len(app.DBImageExtraPackages) != 0 {
-			util.Warning(".ddev/db-build/Dockerfile is provided, ignoring dbimage_extra_packages")
-		}
-	} else if len(app.DBImageExtraPackages) > 0 {
-		err = WriteBuildDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), "", app.DBImageExtraPackages)
-		if err != nil {
-			return "", err
-		}
-		templateVars.DBBuildContext = app.GetConfigPath(".dbimageExtra")
+	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages)
+
+	if err != nil {
+		return "", err
 	}
+	templateVars.DBBuildContext = app.GetConfigPath(".dbimageExtra")
 
 	templateVars.DockerIP, err = dockerutil.GetDockerIP()
 	if err != nil {
