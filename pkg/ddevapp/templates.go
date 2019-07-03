@@ -24,6 +24,7 @@ services:
       - type: "bind"
         source: "."
         target: "/mnt/ddev_config"
+      - ddev-global-cache:/mnt/ddev-global-cache
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     hostname: {{ .Name }}-db
