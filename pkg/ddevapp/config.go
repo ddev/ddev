@@ -10,7 +10,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -625,11 +624,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	// The fallthrough default for hostDockerInternalIdentifier is the
 	// hostDockerInternalHostname == host.docker.internal
-	curUser, err := user.Current()
-	if err != nil {
-		return "", err
-	}
-	uid, gid := util.GetContainerUIDGid()
+
+	uid, gid, username := util.GetContainerUIDGid()
 
 	templateVars := composeYAMLVars{
 		Name:                 app.Name,
@@ -651,7 +647,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		WebMount:             "../",
 		Hostnames:            app.GetHostnames(),
 		Timezone:             app.Timezone,
-		Username:             curUser.Username,
+		Username:             username,
 		UID:                  uid,
 		GID:                  gid,
 	}

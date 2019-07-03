@@ -26,7 +26,7 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("This command takes no arguments.")
 		}
 
-		uidStr, _ := util.GetContainerUIDGid()
+		uidStr, _, _ := util.GetContainerUIDGid()
 
 		if sshKeyPath == "" {
 			homeDir, err := homedir.Dir()

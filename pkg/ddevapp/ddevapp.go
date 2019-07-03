@@ -986,7 +986,7 @@ func (app *DdevApp) CaptureLogs(service string, timestamps bool, tailLines strin
 // DockerEnv sets environment variables for a docker-compose run.
 func (app *DdevApp) DockerEnv() {
 
-	uidStr, gidStr := util.GetContainerUIDGid()
+	uidStr, gidStr, _ := util.GetContainerUIDGid()
 
 	// Warn about running as root if we're not on windows.
 	if uidStr == "0" || gidStr == "0" {

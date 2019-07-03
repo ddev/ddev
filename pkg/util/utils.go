@@ -108,20 +108,25 @@ func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
 }
 
 // GetContainerUIDGid() returns the uid and gid (and string forms) to be used running most containers.
-func GetContainerUIDGid() (uidStr string, gidStr string) {
+func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	curUser, err := user.Current()
 	CheckErr(err)
 
 	uidStr = curUser.Uid
 	gidStr = curUser.Gid
+	username = curUser.Username
 	//// For windows the uidStr/gidStr are usually way outside linux range (ends at 60000)
 	//// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
 	//// 1000 seems not to cause file permissions issues at least on docker-for-windows.
 	if runtime.GOOS == "windows" {
 		uidStr = "1000"
 		gidStr = "1000"
+		parts := strings.Split(curUser.Username, `\`)
+		username = parts[len(parts)-1]
+		username = strings.ReplaceAll(username, " ", "")
+		username = strings.ToLower(username)
 	}
-	return uidStr, gidStr
+	return uidStr, gidStr, username
 
 }
 
