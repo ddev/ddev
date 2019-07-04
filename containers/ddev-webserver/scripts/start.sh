@@ -104,7 +104,6 @@ sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/{.ssh*,.drush,.gitconfig,.my.cnf}
 
 # This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
-printf "doing mkcert -install with CAROOT=$(CAROOT), and mkcert -CAROOT=$(mkcert -CAROOT)\n"
 mkcert -install
 
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
