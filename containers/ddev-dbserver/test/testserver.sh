@@ -10,12 +10,8 @@ MYTMPDIR="${HOME}/tmp/testserver-sh_${RANDOM}_$$"
 outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
 VOLUME="mariadbtest-${RANDOM}_$$"
 
-export MOUNTUID=$UID
-export MOUNTGID=$(id -g)
-if [[ "$MOUNTUID" -gt "60000" || "$MOUNTGID" -gt "60000" ]] ; then
-	MOUNTUID=1000
-	MOUNTGID=1000
-fi
+export MOUNTUID=98
+export MOUNTGID=98
 
 mkdir -p /usr/local/etc/my.cnf.d || sudo mkdir -p /usr/local/etc/my.cnf.d
 

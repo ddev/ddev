@@ -21,6 +21,8 @@ RUN chmod ugo+wx /mnt /var/tmp
 RUN chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 RUN ln -s /dev/stderr /var/log/mysqld.err
 
+RUN addgroup --gid 98 testgroup && adduser testuser --ingroup testgroup --disabled-password --gecos "" --uid 98
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 3306
