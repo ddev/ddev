@@ -647,7 +647,7 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 			return fmt.Errorf("unable to create task from %v", c)
 		}
 
-		output.UserOut.Printf("--- Running task: %s, output below", a.GetDescription())
+		output.UserOut.Printf("=== Running task: %s, output below", a.GetDescription())
 
 		stdout, stderr, err := a.Execute()
 		if err != nil {
