@@ -15,6 +15,7 @@ if [ ! -d $OUTDIR ] ; then
   echo "The required output directory $OUTDIR does not seem to exist."
   exit 1
 fi
+sudo chown -R "$(id -u):$(id -g)" $OUTDIR
 
 # For this script we don't want the defaults in .my.cnf
 # However, this script is never run on a normal startup, so we can just throw it away.
