@@ -152,6 +152,7 @@ RUN chmod -R go-w /home/.ssh
 ADD scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
 
+RUN addgroup --gid 98 testgroup && adduser testuser --ingroup testgroup --disabled-password --gecos "" --uid 98
 
 EXPOSE 80 8025
 HEALTHCHECK --interval=1s --retries=10 --timeout=120s CMD ["/healthcheck.sh"]
