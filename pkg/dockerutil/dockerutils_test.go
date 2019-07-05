@@ -62,7 +62,8 @@ func TestMain(m *testing.M) {
 				"com.docker.compose.service": "web",
 				"com.ddev.site-name":         "dockerutils-test",
 			},
-			Env: []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
+			Env:  []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
+			User: "98:98", // The "testuser" pre-installed in container
 		},
 		HostConfig: &docker.HostConfig{
 			PortBindings: map[docker.Port][]docker.PortBinding{
@@ -129,7 +130,7 @@ func TestGetContainerHealth(t *testing.T) {
 	assert.Equal("phpstatus: OK /var/www/html: OK mailhog: OK ", healthDetail)
 
 	status, healthDetail = GetContainerHealth(container)
-	assert.Equal(status, "healthy")
+	assert.Equal("healthy", status)
 	assert.Equal("phpstatus: OK /var/www/html: OK mailhog: OK ", healthDetail)
 }
 
