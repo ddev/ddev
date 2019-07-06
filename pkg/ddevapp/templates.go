@@ -426,7 +426,16 @@ volumes:
 services:
   ddev-ssh-agent:
     container_name: ddev-ssh-agent
-    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}
+    hostname: ddev-ssh-agent
+    build: 
+      context: '{{ .BuildContext }}'
+      args: 
+        BASE_IMAGE: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}
+        username: '{{ .Username }}'
+        uid: '{{ .UID }}'
+        gid: '{{ .GID }}'
+    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built
+
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
       - "dot_ssh:/tmp/.ssh"

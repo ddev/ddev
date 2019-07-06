@@ -77,7 +77,7 @@ var RouterTag = "20190702_user_in_container" // Note that this can be overridden
 
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
-var SSHAuthTag = "20190626_healthcheck"
+var SSHAuthTag = "20190702_user_in_container"
 
 // COMMIT is the actual committish, supplied by make
 var COMMIT = "COMMIT should be overridden"

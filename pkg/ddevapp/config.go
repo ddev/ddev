@@ -587,6 +587,7 @@ type composeYAMLVars struct {
 	WebMount             string
 	WebBuildContext      string
 	DBBuildContext       string
+	SSHAgentBuildContext string
 	OmitDBA              bool
 	OmitSSHAgent         bool
 	WebcacheEnabled      bool
@@ -647,6 +648,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Username:             username,
 		UID:                  uid,
 		GID:                  gid,
+		WebBuildContext:      app.GetConfigPath(".webimageBuild"),
+		DBBuildContext:       app.GetConfigPath(".dbimageBuild"),
 	}
 	if app.WebcacheEnabled {
 		templateVars.MountType = "volume"
@@ -666,18 +669,22 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	// Add web and db extra dockerfile info
 	// If there is a user-provided Dockerfile, use that as the base and then add
 	// our extra stuff like usernames, etc.
-	err = WriteBuildDockerfile(app.GetConfigPath(".webimageExtra/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages)
+	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages)
 	if err != nil {
 		return "", err
 	}
-	templateVars.WebBuildContext = app.GetConfigPath(".webimageExtra")
 
-	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages)
+	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages)
 
 	if err != nil {
 		return "", err
 	}
-	templateVars.DBBuildContext = app.GetConfigPath(".dbimageExtra")
+
+	// SSH agent just needs extra to add the official related user, nothing else
+	err = WriteBuildDockerfile(app.GetConfigPath(".sshimageBuild/Dockerfile"), "", nil)
+	if err != nil {
+		return "", err
+	}
 
 	templateVars.DockerIP, err = dockerutil.GetDockerIP()
 	if err != nil {
@@ -886,7 +893,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", ".bgsync*", "config.*.y*ml", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
+	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", ".bgsync*", "config.*.y*ml", ".webimageExtra", ".dbimageExtra", ".webimageBuild", ".dbimageBuild", "*-build/Dockerfile.example")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
