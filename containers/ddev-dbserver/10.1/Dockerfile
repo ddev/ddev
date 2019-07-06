@@ -1,4 +1,4 @@
-FROM mariadb:10.1.40-bionic
+FROM mariadb:10.1.40
 
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
