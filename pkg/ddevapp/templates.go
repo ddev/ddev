@@ -14,6 +14,7 @@ services:
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
+    image: ${DDEV_DBIMAGE}-built
     stop_grace_period: 60s
     volumes:
       - type: "volume"
@@ -55,6 +56,7 @@ services:
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
+    image: ${DDEV_WEBIMAGE}-built
     cap_add:
       - SYS_PTRACE
     volumes:
