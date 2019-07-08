@@ -43,14 +43,17 @@ func TestMain(m *testing.M) {
 		}
 	}
 
-	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": "dockerutils-test"})
+	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": TestContainerName})
 
 	if foundContainer != nil {
-		_ = client.StopContainer(foundContainer.ID, 10)
+		_ = client.StopContainer(foundContainer.ID, 20)
 
-		err = client.RemoveContainer(docker.RemoveContainerOptions{ID: foundContainer.ID})
+		err = client.RemoveContainer(docker.RemoveContainerOptions{
+			ID:    foundContainer.ID,
+			Force: true,
+		})
 		if err != nil {
-			logOutput.Fatalf("Failed to remove container %s: %v", foundContainer.ID, err)
+			logOutput.Fatalf("-- FAIL: dockerutils-test TestMain failed to remove container %s: %v", foundContainer.ID, err)
 		}
 	}
 
@@ -60,7 +63,7 @@ func TestMain(m *testing.M) {
 			Image: version.WebImg + ":" + version.WebTag,
 			Labels: map[string]string{
 				"com.docker.compose.service": "web",
-				"com.ddev.site-name":         "dockerutils-test",
+				"com.ddev.site-name":         TestContainerName,
 			},
 			Env:  []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
 			User: "98:98", // The "testuser" pre-installed in container
@@ -81,25 +84,22 @@ func TestMain(m *testing.M) {
 	}
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
-		logOutput.Fatalf("failed to StartContainer: %v", err)
+		logOutput.Fatalf("-- FAIL: dockerutils_test failed to StartContainer: %v", err)
 	}
-	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": "dockerutils-test"})
+	defer func() {
+		err = client.RemoveContainer(docker.RemoveContainerOptions{
+			ID:    container.ID,
+			Force: true,
+		})
+		if err != nil {
+			logOutput.Fatalf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
+		}
+	}()
+	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": TestContainerName})
 	if err != nil {
-		logOutput.Fatalf("Failed to ContainerWait for container: %v", err)
+		logOutput.Fatalf("-- FAIL: dockerutils-test failed to ContainerWait for container: %v", err)
 	}
 	exitStatus := m.Run()
-	// teardown docker container from docker util tests
-	err = client.StopContainer(container.ID, 10)
-	if err != nil {
-		logOutput.Fatalf("Failed to stop container: %v", err)
-	}
-	err = client.RemoveContainer(docker.RemoveContainerOptions{
-		ID:    container.ID,
-		Force: true,
-	})
-	if err != nil {
-		logOutput.Fatalf("failed to remove test container: %v", err)
-	}
 
 	os.Exit(exitStatus)
 }
@@ -110,7 +110,7 @@ func TestGetContainerHealth(t *testing.T) {
 	client := GetDockerClient()
 
 	labels := map[string]string{
-		"com.ddev.site-name": "dockerutils-test",
+		"com.ddev.site-name": TestContainerName,
 	}
 	container, err := FindContainerByLabels(labels)
 	require.NoError(t, err)
@@ -124,7 +124,7 @@ func TestGetContainerHealth(t *testing.T) {
 
 	err = client.StartContainer(container.ID, nil)
 	assert.NoError(err)
-	healthDetail, err := ContainerWait(15, labels)
+	healthDetail, err := ContainerWait(30, labels)
 	assert.NoError(err)
 
 	assert.Equal("phpstatus: OK /var/www/html: OK mailhog: OK ", healthDetail)
@@ -139,7 +139,7 @@ func TestContainerWait(t *testing.T) {
 	assert := asrt.New(t)
 
 	labels := map[string]string{
-		"com.ddev.site-name": "dockerutils-test",
+		"com.ddev.site-name": TestContainerName,
 	}
 
 	// Try a zero-wait, should show timed-out
@@ -249,7 +249,7 @@ func TestCheckCompose(t *testing.T) {
 // TestGetAppContainers looks for container with sitename dockerutils-test
 func TestGetAppContainers(t *testing.T) {
 	assert := asrt.New(t)
-	containers, err := GetAppContainers("dockerutils-test")
+	containers, err := GetAppContainers(TestContainerName)
 	assert.NoError(err)
 	assert.Contains(containers[0].Image, version.WebImg)
 }
@@ -257,7 +257,7 @@ func TestGetAppContainers(t *testing.T) {
 func TestGetContainerEnv(t *testing.T) {
 	assert := asrt.New(t)
 
-	container, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": "dockerutils-test"})
+	container, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": TestContainerName})
 	assert.NoError(err)
 	require.NotEmpty(t, container)
 
@@ -318,7 +318,7 @@ func TestRunSimpleContainer(t *testing.T) {
 func TestGetExposedContainerPorts(t *testing.T) {
 	assert := asrt.New(t)
 
-	testContainer, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": "dockerutils-test"})
+	testContainer, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": TestContainerName})
 	require.NoError(t, err)
 	require.NotNil(t, testContainer)
 	ports, err := GetExposedContainerPorts(testContainer.ID)
