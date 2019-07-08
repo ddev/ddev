@@ -2450,7 +2450,7 @@ func TestWebcache(t *testing.T) {
 	}
 	uidStr, _, _ := util.GetContainerUIDGid()
 	uid, err := strconv.Atoi(uidStr)
-	if uid > 60000 {
+	if uid > 60000 || err != nil {
 		t.Skipf("Skipping deprecated TestWebcache as uid %s > 60000", uid)
 	}
 	assert := asrt.New(t)
