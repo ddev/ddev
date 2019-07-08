@@ -80,7 +80,6 @@ services:
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
       - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
-      - "{{ .MailhogPort }}"
     environment:
       - DOCROOT=$DDEV_DOCROOT
       - DDEV_PHP_VERSION=$DDEV_PHP_VERSION
@@ -392,7 +391,7 @@ services:
     image: {{ .router_image }}:{{ .router_tag }}
     container_name: ddev-router
     ports:
-      {{ range $port := .ports }}- "{{ $port }}:{{ $port }}"
+      {{ $dockerIP := .dockerIP }}{{ range $port := .ports }}- "{{ $dockerIP }}:{{ $port }}:{{ $port }}"
       {{ end }}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
