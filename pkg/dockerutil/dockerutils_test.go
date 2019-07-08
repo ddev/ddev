@@ -1,6 +1,7 @@
 package dockerutil_test
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
@@ -97,9 +98,9 @@ func testMain(m *testing.M) int {
 	}()
 	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": TestContainerName})
 	if err != nil {
-		out, _ := exec.RunCommand("docker", []string{"logs", container.Name})
-
-		logOutput.Errorf("-- FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======", err, out)
+		logout, _ := exec.RunCommand("docker", []string{"logs", container.Name})
+		inspectOut, _ := exec.RunCommand("bash", []string{"-c", `docker inspect --format {{json .State.Health}} ` + TestContainerName + ` | jq`})
+		_ = fmt.Errorf("FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
 		return 4
 	}
 	exitStatus := m.Run()
