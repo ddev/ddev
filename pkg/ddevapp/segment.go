@@ -29,11 +29,10 @@ func SegmentEvent(client analytics.Client, hashedID string, event string, projec
 
 	dockerVersion, _ := version.GetDockerVersion()
 	composeVersion, _ := version.GetDockerComposeVersion()
-	isToolbox := nodeps.IsDockerToolbox()
 	ignoredProperties := []string{"approot", "hostnames", "httpurl", "httpsurl", "mailhog_url", "name", "phpmyadmin_url", "router_status_log", "shortroot", "urls"}
 
 	describeTags, _ := project.Describe()
-	properties := analytics.NewProperties().Set("dockerVersion", dockerVersion).Set("dockerComposeVersion", composeVersion).Set("isDockerToolbox", isToolbox)
+	properties := analytics.NewProperties().Set("version", version.VERSION).Set("dockerVersion", dockerVersion).Set("dockerComposeVersion", composeVersion).Set("isDockerToolbox", nodeps.IsDockerToolbox())
 
 	for key, val := range describeTags {
 		var tagVal string
