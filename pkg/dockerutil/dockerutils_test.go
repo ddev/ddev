@@ -20,9 +20,11 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-var TestContainerName = "dockerutils-test"
+var TestContainerName = "TestDockerUtils"
 
-func TestMain(m *testing.M) {
+func TestMain(m *testing.M) { os.Exit(testMain(m)) }
+
+func testMain(m *testing.M) int {
 	output.LogSetUp()
 
 	EnsureDdevNetwork()
@@ -31,7 +33,8 @@ func TestMain(m *testing.M) {
 	client := GetDockerClient()
 	imageExists, err := ImageExistsLocally(version.WebImg + ":" + version.WebTag)
 	if err != nil {
-		logOutput.Fatalf("Failed to check for local image %s: %v", version.WebImg+":"+version.WebTag, err)
+		logOutput.Errorf("Failed to check for local image %s: %v", version.WebImg+":"+version.WebTag, err)
+		return 6
 	}
 	if !imageExists {
 		err := client.PullImage(docker.PullImageOptions{
@@ -39,22 +42,19 @@ func TestMain(m *testing.M) {
 			Tag:        version.WebTag,
 		}, docker.AuthConfiguration{})
 		if err != nil {
-			logOutput.Fatal("failed to pull test image ", err)
+			logOutput.Errorf("failed to pull test image: %v", err)
+			return 7
 		}
 	}
 
 	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": TestContainerName})
 
 	if foundContainer != nil {
-		_ = client.StopContainer(foundContainer.ID, 20)
-
-		err = client.RemoveContainer(docker.RemoveContainerOptions{
-			ID:    foundContainer.ID,
-			Force: true,
-		})
+		err = RemoveContainer(foundContainer.ID, 10)
 		if err != nil {
-			logOutput.Fatalf("-- FAIL: dockerutils-test TestMain failed to remove container %s: %v", foundContainer.ID, err)
+			logOutput.Errorf("-- FAIL: dockerutils_test TestMain failed to remove container %s: %v", foundContainer.ID, err)
 		}
+		return 5
 	}
 
 	container, err := client.CreateContainer(docker.CreateContainerOptions{
@@ -80,28 +80,28 @@ func TestMain(m *testing.M) {
 		},
 	})
 	if err != nil {
-		logOutput.Fatal("failed to create/start docker container ", err)
+		logOutput.Errorf("failed to create/start docker container: %v", err)
+		return 1
 	}
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
-		logOutput.Fatalf("-- FAIL: dockerutils_test failed to StartContainer: %v", err)
+		logOutput.Errorf("-- FAIL: dockerutils_test failed to StartContainer: %v", err)
+		return 2
 	}
 	defer func() {
-		err = client.RemoveContainer(docker.RemoveContainerOptions{
-			ID:    container.ID,
-			Force: true,
-		})
+		err = RemoveContainer(container.ID, 10)
 		if err != nil {
-			logOutput.Fatalf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
+			logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 		}
 	}()
 	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": TestContainerName})
 	if err != nil {
-		logOutput.Fatalf("-- FAIL: dockerutils-test failed to ContainerWait for container: %v", err)
+		logOutput.Errorf("-- FAIL: dockerutils_test failed to ContainerWait for container: %v", err)
+		return 4
 	}
 	exitStatus := m.Run()
 
-	os.Exit(exitStatus)
+	return exitStatus
 }
 
 // TestGetContainerHealth tests the function for processing container readiness.
