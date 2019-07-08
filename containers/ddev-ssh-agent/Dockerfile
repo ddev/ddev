@@ -25,11 +25,13 @@
 FROM alpine:3.10
 
 # Install dependencies
+# Shadow allows high userids
 RUN apk add --no-cache \
 	bash \
 	expect \
 	file \
 	openssh \
+	shadow \
 	socat \
 	sudo \
 	&& rm -rf /var/cache/apk/*
