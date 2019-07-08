@@ -39,15 +39,11 @@ var DdevSSHCmd = &cobra.Command{
 		if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, serviceType) {
 			shell = "sh"
 		}
-		err = app.ExecWithTty(&ddevapp.ExecOpts{
+		_ = app.ExecWithTty(&ddevapp.ExecOpts{
 			Service: serviceType,
 			Cmd:     shell,
 			Dir:     sshDirArg,
 		})
-
-		if err != nil {
-			util.Failed("Failed to ssh %s: %s", app.GetName(), err)
-		}
 	},
 }
 
