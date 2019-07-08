@@ -2448,6 +2448,11 @@ func TestWebcache(t *testing.T) {
 	if runtime.GOOS != "darwin" {
 		t.Skipf("Skipping TestWebcache, not supported on %s", runtime.GOOS)
 	}
+	uidStr, _, _ := util.GetContainerUIDGid()
+	uid, err := strconv.Atoi(uidStr)
+	if uid > 60000 {
+		t.Skipf("Skipping deprecated TestWebcache as uid %s > 60000", uid)
+	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
