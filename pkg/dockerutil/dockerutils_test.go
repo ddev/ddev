@@ -200,8 +200,13 @@ func TestComposeCmd(t *testing.T) {
 func TestComposeWithStreams(t *testing.T) {
 	assert := asrt.New(t)
 
+	container, _ := FindContainerByName(t.Name())
+	if container != nil {
+		_ = RemoveContainer(container.ID, 20)
+	}
+
 	// Use the current actual web container for this, so replace in base docker-compose file
-	composeBase := filepath.Join("testdata", "test-compose-with-streams.yaml")
+	composeBase := filepath.Join("testdata", "TestComposeWithStreams", "test-compose-with-streams.yaml")
 	tmp, err := ioutil.TempDir("", "")
 	assert.NoError(err)
 	realComposeFile := filepath.Join(tmp, "replaced-compose-with-streams.yaml")
@@ -217,8 +222,12 @@ func TestComposeWithStreams(t *testing.T) {
 	//nolint: errcheck
 	defer ComposeCmd(composeFiles, "down")
 
-	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": "test-compose-with-streams"})
-	require.NoError(t, err)
+	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": t.Name()})
+	if err != nil {
+		logout, _ := exec.RunCommand("docker", []string{"logs", t.Name()})
+		inspectOut, _ := exec.RunCommand("bash", []string{"-c", `docker inspect --format {{json .State.Health}} ` + t.Name() + ` | jq`})
+		t.Fatalf("FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
+	}
 
 	// Point stdout to os.Stdout and do simple ps -ef in web container
 	stdout := util.CaptureStdOut()
