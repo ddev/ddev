@@ -1,6 +1,7 @@
 package dockerutil_test
 
 import (
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
@@ -96,7 +97,9 @@ func testMain(m *testing.M) int {
 	}()
 	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": TestContainerName})
 	if err != nil {
-		logOutput.Errorf("-- FAIL: dockerutils_test failed to ContainerWait for container: %v", err)
+		out, _ := exec.RunCommand("docker", []string{"logs", container.Name})
+
+		logOutput.Errorf("-- FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======", err, out)
 		return 4
 	}
 	exitStatus := m.Run()
