@@ -721,7 +721,7 @@ FROM $BASE_IMAGE
 ARG username
 ARG uid
 ARG gid
-RUN (addgroup --gid $gid "$username" || addgroup "$username" || true) && adduser "$username" --ingroup "$username" --disabled-password --gecos "" --uid $uid 
+RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -m --gid "$username" --comment '' --uid $uid "$username" || useradd   -m --gid "$username" --comment '' "$username")
  `
 	if extraPackages != nil {
 		contents = contents + `
