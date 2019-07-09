@@ -895,7 +895,18 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 		return fmt.Errorf("no command provided")
 	}
 
-	exec = append(exec, opts.Cmd)
+	// Cases to handle
+	// - Free form, all unquoted. Like `ls -l -a`
+	// - Quoted to delay pipes and other features to container, like `"ls -l -a | grep junk"`
+	// Note that a set quoted on the host in ddev exec will come through as a single arg
+
+	// Use bash for our containers, sh for 3rd-party containers
+	// that may not have bash.
+	shell := "bash"
+	if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
+		shell = "sh"
+	}
+	exec = append(exec, shell, "-c", opts.Cmd)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
