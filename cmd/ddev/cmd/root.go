@@ -149,7 +149,11 @@ func Execute() {
 }
 
 func init() {
-	addCustomCommands(RootCmd)
+	err := addCustomCommands(RootCmd)
+	if err != nil {
+		util.Failed("Adding custom commands failed: %v", err)
+	}
+
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 
 	// Prevent running as root for most cases
@@ -158,7 +162,7 @@ func init() {
 		output.UserOut.Fatal("ddev is not designed to be run with root privileges, please run as normal user and without sudo")
 	}
 
-	err := globalconfig.ReadGlobalConfig()
+	err = globalconfig.ReadGlobalConfig()
 	if err != nil {
 		util.Failed("Failed to read global config file %s: %v", globalconfig.GetGlobalConfigPath(), err)
 	}
@@ -190,10 +194,6 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 			continue
 		}
 		description := findDirectiveInScript(fullPath, "## Description")
-		//usage := findDirectiveInScript(fullPath, "## Usage")
-		//if usage == "" {
-		//	usage = command + " [args]"
-		//}
 
 		rootCmd.AddCommand(
 			&cobra.Command{
@@ -231,14 +231,6 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				Short: description + " (custom web container command)",
 				Run: func(cmd *cobra.Command, args []string) {
 					app.DockerEnv()
-					//stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-					//	Cmd:     inContainerFullPath + " " + strings.Join(os.Args[2:], " "),
-					//	Service: "web",
-					//	Dir:     app.WorkingDir["web"],
-					//})
-					//output.UserOut.Print(stdout)
-					//_ = stdout
-					//_ = stderr
 
 					err := app.ExecWithTty(&ddevapp.ExecOpts{
 						Cmd:     inContainerFullPath + " " + strings.Join(os.Args[2:], " "),

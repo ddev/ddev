@@ -1014,6 +1014,8 @@ func (app *DdevApp) DockerEnv() {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
+	dbPort, _ := app.GetPublishedPort("db")
+
 	envVars := map[string]string{
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
@@ -1023,7 +1025,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_BGSYNCIMAGE":              app.BgsyncImage,
 		"DDEV_APPROOT":                  app.AppRoot,
-		"DDEV_HOST_DB_PORT":             app.HostDBPort,
+		"DDEV_HOST_DB_PORT":             strconv.Itoa(dbPort),
 		"DDEV_HOST_WEBSERVER_PORT":      app.HostWebserverPort,
 		"DDEV_HOST_HTTPS_PORT":          app.HostHTTPSPort,
 		"DDEV_PHPMYADMIN_PORT":          app.PHPMyAdminPort,
