@@ -96,7 +96,7 @@ func testMain(m *testing.M) int {
 			logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 		}
 	}()
-	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": TestContainerName})
+	_, err = ContainerWait(30, map[string]string{"com.ddev.site-name": TestContainerName})
 	if err != nil {
 		logout, _ := exec.RunCommand("docker", []string{"logs", container.Name})
 		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", container.Name)})
@@ -154,7 +154,7 @@ func TestContainerWait(t *testing.T) {
 	}
 
 	// Try 15-second wait for "healthy", should show OK
-	healthDetail, err := ContainerWait(15, labels)
+	healthDetail, err := ContainerWait(30, labels)
 	assert.NoError(err)
 
 	if !nodeps.IsDockerToolbox() {
@@ -222,7 +222,7 @@ func TestComposeWithStreams(t *testing.T) {
 	//nolint: errcheck
 	defer ComposeCmd(composeFiles, "down")
 
-	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": t.Name()})
+	_, err = ContainerWait(30, map[string]string{"com.ddev.site-name": t.Name()})
 	if err != nil {
 		logout, _ := exec.RunCommand("docker", []string{"logs", t.Name()})
 		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", t.Name())})
