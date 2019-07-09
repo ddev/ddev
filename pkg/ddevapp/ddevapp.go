@@ -368,7 +368,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && pv " + insideContainerImportPath + "/*.*sql | mysql db",
-		Tty:     progress && isatty.IsTerminal(os.Stderr.Fd()),
+		Tty:     progress && isatty.IsTerminal(os.Stdin.Fd()),
 	})
 
 	if err != nil {
@@ -814,7 +814,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		exec = append(exec, "-w", workingDir)
 	}
 
-	if !isatty.IsTerminal(os.Stdout.Fd()) || !opts.Tty {
+	if !isatty.IsTerminal(os.Stdin.Fd()) || !opts.Tty {
 		exec = append(exec, "-T")
 	}
 
