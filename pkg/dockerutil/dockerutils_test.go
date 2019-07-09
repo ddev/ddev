@@ -52,11 +52,11 @@ func testMain(m *testing.M) int {
 	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": TestContainerName})
 
 	if foundContainer != nil {
-		err = RemoveContainer(foundContainer.ID, 10)
+		err = RemoveContainer(foundContainer.ID, 30)
 		if err != nil {
 			logOutput.Errorf("-- FAIL: dockerutils_test TestMain failed to remove container %s: %v", foundContainer.ID, err)
+			return 5
 		}
-		return 5
 	}
 
 	container, err := client.CreateContainer(docker.CreateContainerOptions{
