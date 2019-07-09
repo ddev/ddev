@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"bufio"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
@@ -146,6 +149,7 @@ func Execute() {
 }
 
 func init() {
+	addCustomCommands(RootCmd)
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 
 	// Prevent running as root for most cases
@@ -161,6 +165,84 @@ func init() {
 }
 
 func instrumentationNotSetUpWarning() {
+	if version.SentryDSN == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+		output.UserOut.Warning("Instrumentation is opted in, but SentryDSN is not available.")
+	}
+	if version.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+		output.UserOut.Warning("Instrumentation is opted in, but SegmentKey is not available.")
+	}
+}
+
+func addCustomCommands(rootCmd *cobra.Command) error {
+	app, err := ddevapp.GetActiveApp("")
+	if err != nil {
+		return err
+	}
+
+	commands, err := fileutil.ListFilesInDir(app.GetConfigPath("commands/host"))
+	if err != nil {
+		return err
+	}
+
+	for _, command := range commands {
+		fullPath := filepath.Join(app.GetConfigPath("commands/host"), command)
+		if strings.HasSuffix(command, ".example") {
+			continue
+		}
+		description := findDirectiveInScript(fullPath, "## Description")
+		//usage := findDirectiveInScript(fullPath, "## Usage")
+		//if usage == "" {
+		//	usage = command + " [args]"
+		//}
+
+		rootCmd.AddCommand(
+			&cobra.Command{
+				Use:   command + " [args]",
+				Short: description + " (custom host command)",
+				Run: func(cmd *cobra.Command, args []string) {
+					app.DockerEnv()
+					// Add a few variables like docroot
+					output.UserOut.Println("Yup, you're executing " + fullPath)
+					err = os.Chdir(app.AppRoot)
+					err = exec.RunInteractiveCommand(fullPath, os.Args)
+					if err != nil {
+						util.Failed("Failed to run %s %v: %v", command, os.Args, err)
+					}
+				},
+			},
+		)
+
+	}
+	return nil
+}
+
+func findDirectiveInScript(script string, directive string) string {
+	f, err := os.Open(script)
+	if err != nil {
+		util.Failed("Failed to open %s: %v", script, err)
+	}
+
+	// nolint errcheck
+	defer f.Close()
+
+	// Splits on newlines by default.
+	scanner := bufio.NewScanner(f)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, directive) && strings.Contains(line, ":") {
+			parts := strings.Split(line, ":")
+			return strings.Trim(parts[1], " ")
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return ""
+	}
+
+	return ""
+}
+func sentryNotSetupWarning() {
 	if version.SentryDSN == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		output.UserOut.Warning("Instrumentation is opted in, but SentryDSN is not available.")
 	}
