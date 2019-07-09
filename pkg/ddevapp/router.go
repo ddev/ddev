@@ -59,17 +59,20 @@ func StartDdevRouter() error {
 	}
 	defer util.CheckClose(f)
 
-	templ := template.New("compose template")
+	templ := template.New("routerTemplate")
 	templ, err := templ.Parse(DdevRouterTemplate)
 	if err != nil {
 		return err
 	}
+
+	dockerIP, _ := dockerutil.GetDockerIP()
 
 	templateVars := map[string]interface{}{
 		"router_image":    version.RouterImage,
 		"router_tag":      version.RouterTag,
 		"ports":           newExposedPorts,
 		"compose_version": version.DockerComposeFileFormatVersion,
+		"dockerIP":        dockerIP,
 	}
 
 	err = templ.Execute(&doc, templateVars)
