@@ -99,7 +99,7 @@ func testMain(m *testing.M) int {
 	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": TestContainerName})
 	if err != nil {
 		logout, _ := exec.RunCommand("docker", []string{"logs", container.Name})
-		inspectOut, _ := exec.RunCommand("bash", []string{"-c", `docker inspect --format '{{.State.Health}}' ` + container.Name + ` | jq`})
+		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", container.Name)})
 		_ = fmt.Errorf("FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
 		return 4
 	}
@@ -225,7 +225,7 @@ func TestComposeWithStreams(t *testing.T) {
 	_, err = ContainerWait(20, map[string]string{"com.ddev.site-name": t.Name()})
 	if err != nil {
 		logout, _ := exec.RunCommand("docker", []string{"logs", t.Name()})
-		inspectOut, _ := exec.RunCommand("bash", []string{"-c", `docker inspect --format '{{.State.Health}}' ` + t.Name() + ` | jq -r`})
+		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", t.Name())})
 		t.Fatalf("FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
 	}
 
