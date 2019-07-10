@@ -48,7 +48,7 @@ func ValidateAsset(unexpandedAssetPath string, assetType string) (string, bool, 
 		return "", false, fmt.Errorf(invalidAssetError, errors.New("provided path is not a directory or archive"))
 	}
 
-	if assetType == "db" && !strings.HasSuffix(assetPath, "sql") {
+	if assetType == "db" && assetPath != "" && !strings.HasSuffix(assetPath, "sql") {
 		return "", false, fmt.Errorf(invalidAssetError, errors.New("provided path is not a .sql file or archive"))
 	}
 
