@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/stretchr/testify/require"
+	"io/ioutil"
 	"path/filepath"
 	"testing"
 
@@ -24,8 +27,9 @@ func TestCmdExecBadArgs(t *testing.T) {
 func TestCmdExec(t *testing.T) {
 
 	assert := asrt.New(t)
-	v := TestSites[0]
-	cleanup := v.Chdir()
+	site := TestSites[0]
+	cleanup := site.Chdir()
+	defer cleanup()
 
 	// Test default invocation
 	args := []string{"exec", "pwd"}
@@ -66,17 +70,25 @@ func TestCmdExec(t *testing.T) {
 	args = []string{"exec", "ls >/var/www/html/TestCmdExec-${OSTYPE}.txt"}
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.FileExists(filepath.Join(v.Dir, "TestCmdExec-linux-gnu.txt"))
+	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-linux-gnu.txt"))
 
 	args = []string{"exec", "ls >/dev/null && touch /var/www/html/TestCmdExec-touch-all-in-one.txt"}
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.FileExists(filepath.Join(v.Dir, "TestCmdExec-touch-all-in-one.txt"))
+	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-touch-all-in-one.txt"))
 
 	args = []string{"exec", "true", "&&", "touch", "/var/www/html/TestCmdExec-touch-separate-args.txt"}
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.FileExists(filepath.Join(v.Dir, "TestCmdExec-touch-separate-args.txt"))
+	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-touch-separate-args.txt"))
 
-	cleanup()
+	// Make sure we can pipe things into ddev exec and have them work in stdin inside container
+	filename := t.Name() + "_junk.txt"
+	_, err = exec.RunCommand("sh", []string{"-c", fmt.Sprintf("printf 'This file was piped into ddev exec' | %s exec 'cat >/var/www/html/%s'", DdevBin, filename)})
+	assert.NoError(err)
+	require.FileExists(t, filepath.Join(site.Dir, filename))
+
+	content, err := ioutil.ReadFile(filepath.Join(site.Dir, filename))
+	assert.NoError(err)
+	assert.Equal("This file was piped into ddev exec", string(content))
 }
