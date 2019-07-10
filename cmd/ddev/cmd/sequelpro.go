@@ -10,7 +10,6 @@ import (
 
 	"runtime"
 
-	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
@@ -57,7 +56,7 @@ func handleSequelProCommand(appLocation string) (string, error) {
 		return "", err
 	}
 
-	dbPrivatePort, err := strconv.ParseInt(appports.GetPort("db"), 10, 64)
+	dbPrivatePort, err := strconv.ParseInt(ddevapp.GetPort("db"), 10, 64)
 	if err != nil {
 		return "", err
 	}

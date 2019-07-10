@@ -22,7 +22,6 @@ import (
 
 	"runtime"
 
-	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -133,7 +132,7 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	} else {
 		return app, fmt.Errorf("provider '%s' is not implemented", provider)
 	}
-	app.SetRavenTags()
+	app.SetInstrumentationAppTags()
 	return app, nil
 }
 
@@ -627,9 +626,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Name:                 app.Name,
 		Plugin:               "ddev",
 		AppType:              app.Type,
-		MailhogPort:          appports.GetPort("mailhog"),
-		DBAPort:              appports.GetPort("dba"),
-		DBPort:               appports.GetPort("db"),
+		MailhogPort:          GetPort("mailhog"),
+		DBAPort:              GetPort("dba"),
+		DBPort:               GetPort("db"),
 		DdevGenerated:        DdevFileSignature,
 		HostDockerInternalIP: hostDockerInternalIP,
 		ComposeVersion:       version.DockerComposeFileFormatVersion,

@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/drud/ddev/pkg/appimport"
-	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevhosts"
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -196,7 +195,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 		dbinfo["host"] = "db"
 		dbPublicPort, err := app.GetPublishedPort("db")
 		util.CheckErr(err)
-		dbinfo["dbPort"] = appports.GetPort("db")
+		dbinfo["dbPort"] = GetPort("db")
 		util.CheckErr(err)
 		dbinfo["published_port"] = dbPublicPort
 		dbinfo["mariadb_version"] = app.MariaDBVersion
@@ -238,7 +237,7 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 		return -1, fmt.Errorf("Failed to find container of type %s: %v", serviceName, err)
 	}
 
-	privatePort, _ := strconv.ParseInt(appports.GetPort(serviceName), 10, 16)
+	privatePort, _ := strconv.ParseInt(GetPort(serviceName), 10, 16)
 
 	publishedPort := dockerutil.GetPublishedPort(privatePort, *container)
 	return publishedPort, nil

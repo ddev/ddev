@@ -15,6 +15,6 @@ func main() {
 func init() {
 	if !globalconfig.DdevNoSentry {
 		_ = raven.SetDSN(version.SentryDSN)
-		ddevapp.SetRavenBaseTags()
+		ddevapp.SetInstrumentationBaseTags()
 	}
 }

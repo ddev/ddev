@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
 
-	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 
@@ -51,7 +50,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 		DatabasePassword: "db",
 		DatabaseHost:     "db",
 		DatabaseDriver:   "mysql",
-		DatabasePort:     appports.GetPort("db"),
+		DatabasePort:     GetPort("db"),
 		DatabasePrefix:   "",
 		HashSalt:         util.RandString(64),
 		Signature:        DdevFileSignature,
