@@ -362,6 +362,7 @@ Database import supports the following file types:
 - Gzipped SQL Dump (.sql.gz)
 - (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
 - Zip Archive (.zip)
+- stdin
 
 If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. The specified path should provide a Raw SQL Dump (.sql). In the following example, the database we want to import is named data.sql and resides at the top-level of the archive:
 
@@ -381,9 +382,18 @@ Successfully imported database for drupal8
 
 <h4>Non-interactive usage</h4>
 
-If you want to use import-db without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Example:
+If you want to use import-db without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
 
-`ddev import-db --src=/tmp/mydb.sql.gz`
+```
+ddev import-db --src=/tmp/mydb.sql.gz
+gzip -dc /tmp/mydb.sql.gz | ddev import-db
+ddev import-db <mydb.sql
+```
+
+<h4>Database import notes</h4>
+
+* Importing from a dumpfile via stdin will not show progress because there's no way the import can know how far along through the import it has progressed.
+* If a database already exists and the import does not specify dropping tables, the contents of the imported dumpfile will be *added* to the database. Most full database dumps do a table drop and create before loading, but if yours does not, you can drop all tables with `ddev stop --remove-data` before importing.
 
 ### Exporting a Database
 
