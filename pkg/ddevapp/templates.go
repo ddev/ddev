@@ -126,7 +126,14 @@ services:
 {{ if .WebcacheEnabled }}
   bgsync:
     container_name: ddev-${DDEV_SITENAME}-bgsync
-    image: $DDEV_BGSYNCIMAGE
+    build: 
+      context: '{{ .BgsyncBuildContext }}'
+      args: 
+        BASE_IMAGE: $DDEV_BGSYNCIMAGE
+        username: '{{ .Username }}'
+        uid: '{{ .UID }}'
+        gid: '{{ .GID }}'
+    image: ${DDEV_BGSYNCIMAGE}-built
     restart: "on-failure"
     user: "$DDEV_UID:$DDEV_GID"
     hostname: {{ .Name }}-bgsync

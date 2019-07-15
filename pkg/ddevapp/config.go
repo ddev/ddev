@@ -587,6 +587,7 @@ type composeYAMLVars struct {
 	WebMount             string
 	WebBuildContext      string
 	DBBuildContext       string
+	BgsyncBuildContext   string
 	SSHAgentBuildContext string
 	OmitDBA              bool
 	OmitSSHAgent         bool
@@ -650,6 +651,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		GID:                  gid,
 		WebBuildContext:      app.GetConfigPath(".webimageBuild"),
 		DBBuildContext:       app.GetConfigPath(".dbimageBuild"),
+		BgsyncBuildContext:   app.GetConfigPath(".bgsyncimageBuild"),
 	}
 	if app.WebcacheEnabled {
 		templateVars.MountType = "volume"
@@ -678,6 +680,13 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	if err != nil {
 		return "", err
+	}
+
+	if app.WebcacheEnabled {
+		err = WriteBuildDockerfile(app.GetConfigPath(".bgsyncimageBuild/Dockerfile"), "", nil)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	// SSH agent just needs extra to add the official related user, nothing else

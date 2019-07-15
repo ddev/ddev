@@ -67,7 +67,7 @@ var DBATag = "v1.9.0" // Note that this can be overridden by make
 var BgsyncImg = "drud/ddev-bgsync"
 
 // BgsyncTag defines the default phpmyadmin image tag used for applications.
-var BgsyncTag = "v1.9.0" // Note that this can be overridden by make
+var BgsyncTag = "20190702_user_in_container" // Note that this can be overridden by make
 
 // RouterImage defines the image used for the router.
 var RouterImage = "drud/ddev-router"

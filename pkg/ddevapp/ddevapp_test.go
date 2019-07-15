@@ -2448,11 +2448,7 @@ func TestWebcache(t *testing.T) {
 	if runtime.GOOS != "darwin" {
 		t.Skipf("Skipping TestWebcache, not supported on %s", runtime.GOOS)
 	}
-	uidStr, _, _ := util.GetContainerUIDGid()
-	uid, err := strconv.Atoi(uidStr)
-	if uid > 60000 || err != nil {
-		t.Skipf("Skipping deprecated TestWebcache as uid %v > 60000", uid)
-	}
+
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -2465,7 +2461,7 @@ func TestWebcache(t *testing.T) {
 	switchDir := site.Chdir()
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestWebcache", site.Name))
 
-	err = app.Init(site.Dir)
+	err := app.Init(site.Dir)
 	assert.NoError(err)
 	app.WebcacheEnabled = true
 
