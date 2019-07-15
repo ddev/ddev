@@ -31,7 +31,7 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 		}
 
 		// Look for version change and opt-in Sentry if it has changed.
-		err = checkDdevVersionAndOptInSentry()
+		err = checkDdevVersionAndOptInInstrumentation()
 		if err != nil {
 			util.Failed(err.Error())
 		}

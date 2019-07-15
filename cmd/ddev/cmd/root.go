@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
@@ -101,7 +102,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 		if _, ok := ignores[cmd.CalledAs()]; ok {
 			return
 		}
-		sentryNotSetupWarning()
+		instrumentationNotSetUpWarning()
 
 		// All this nonsense is to capture the official usage we used for this command.
 		// Unfortunately cobra doesn't seem to provide this easily.
@@ -113,13 +114,21 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			fullCommand = append(fullCommand, util.GetFirstWord(cmdCopy.Parent().Use))
 			cmdCopy = cmdCopy.Parent()
 		}
-		uString := "Usage:"
-		for i := len(fullCommand) - 1; i >= 0; i = i - 1 {
-			uString = uString + " " + fullCommand[i]
+		for i := 0; i < len(fullCommand)/2; i++ {
+			j := len(fullCommand) - i - 1
+			fullCommand[i], fullCommand[j] = fullCommand[j], fullCommand[i]
 		}
 
-		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" && nodeps.IsInternetActive() {
-			_ = raven.CaptureMessageAndWait(uString, map[string]string{"severity-level": "info", "report-type": "usage"})
+		uString := strings.Join(fullCommand, " ")
+		event := ""
+		if len(fullCommand) > 1 {
+			event = fullCommand[1]
+		}
+
+		instrumentationNotSetUpWarning()
+		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" && nodeps.IsInternetActive() && len(fullCommand) > 1 {
+			_ = raven.CaptureMessageAndWait("Usage: "+uString, map[string]string{"severity-level": "info", "report-type": "usage"})
+			ddevapp.SendInstrumentationEvents(event)
 		}
 	},
 }
@@ -151,16 +160,19 @@ func init() {
 	}
 }
 
-func sentryNotSetupWarning() {
+func instrumentationNotSetUpWarning() {
 	if version.SentryDSN == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		output.UserOut.Warning("Instrumentation is opted in, but SentryDSN is not available.")
 	}
+	if version.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+		output.UserOut.Warning("Instrumentation is opted in, but SegmentKey is not available.")
+	}
 }
 
-// checkDdevVersionAndOptInSentry() reads global config and checks to see if current version is different
+// checkDdevVersionAndOptInInstrumentation() reads global config and checks to see if current version is different
 // from the last saved version. If it is, prompt to request anon ddev usage stats
 // and update the info.
-func checkDdevVersionAndOptInSentry() error {
+func checkDdevVersionAndOptInInstrumentation() error {
 	if !output.JSONOutput && version.COMMIT != globalconfig.DdevGlobalConfig.LastUsedVersion && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoSentry {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/latest/users/cli-usage/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {

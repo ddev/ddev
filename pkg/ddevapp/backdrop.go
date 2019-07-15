@@ -9,7 +9,6 @@ import (
 
 	"io/ioutil"
 
-	"github.com/drud/ddev/pkg/appports"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
@@ -44,7 +43,7 @@ func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 		DatabasePassword: "db",
 		DatabaseHost:     "db",
 		DatabaseDriver:   "mysql",
-		DatabasePort:     appports.GetPort("db"),
+		DatabasePort:     GetPort("db"),
 		DatabasePrefix:   "",
 		HashSalt:         util.RandString(64),
 		Signature:        DdevFileSignature,
