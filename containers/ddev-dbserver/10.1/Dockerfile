@@ -1,4 +1,4 @@
-FROM mariadb:10.1.40-bionic
+FROM mariadb:10.1.40
 
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
@@ -20,6 +20,8 @@ RUN chmod ugo+x /healthcheck.sh
 RUN chmod ugo+wx /mnt /var/tmp
 RUN chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 RUN ln -s /dev/stderr /var/log/mysqld.err
+
+RUN addgroup --gid 98 testgroup && adduser testuser --ingroup testgroup --disabled-password --gecos "" --uid 98
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 

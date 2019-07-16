@@ -4,7 +4,7 @@ networks:
       name: ddev_default
 services:
   web:
-    container_name: ddev-test-compose-with-streams-web
+    container_name: TestComposeWithStreams
     environment:
       COLUMNS: '99'
       DDEV_PHP_VERSION: '7.1'
@@ -26,6 +26,6 @@ services:
       com.ddev.app-url: http://test-compose-with-streams.ddev.site
       com.ddev.approot: .
       com.ddev.platform: ddev
-      com.ddev.site-name: test-compose-with-streams
+      com.ddev.site-name: TestComposeWithStreams
     restart: "no"
 version: '3.6'

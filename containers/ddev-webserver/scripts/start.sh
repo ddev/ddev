@@ -76,7 +76,7 @@ envsubst "$NGINX_SITE_VARS" < "$NGINX_SITE_TEMPLATE" > /etc/nginx/sites-enabled/
 envsubst "$APACHE_SITE_VARS" < "$APACHE_SITE_TEMPLATE" > /etc/apache2/sites-enabled/apache-site.conf
 
 # Change the apache run user to current user/group
-printf "\nexport APACHE_RUN_USER=uid_$(id -u)\nexport APACHE_RUN_GROUP=gid_$(id -g)\n" >>/etc/apache2/envvars
+printf "\nexport APACHE_RUN_USER=$(id -un)\nexport APACHE_RUN_GROUP=$(id -gn)\n" >>/etc/apache2/envvars
 
 a2enmod access_compat alias auth_basic authn_core authn_file authz_core authz_host authz_user autoindex deflate dir env filter mime mpm_prefork negotiation reqtimeout rewrite setenvif status
 a2enconf charset localized-error-pages other-vhosts-access-log security serve-cgi-bin
@@ -99,11 +99,15 @@ fi
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.ssh* ~/.drush ~/.gitconfig ~/.my.cnf
+cp -r /home/{.ssh*,.drush,.gitconfig,.my.cnf,.bashrc} ~/
+sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
+sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/{.ssh*,.drush,.gitconfig,.my.cnf}
 
+# This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
 mkcert -install
+
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
-sudo mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web && sudo chown $UID /etc/ssl/certs/master.*
+sudo CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web ddev-${DDEV_PROJECT:-}-web ddev-${DDEV_PROJECT:-}-web.ddev_default && sudo chown $UID /etc/ssl/certs/master.*
 
 echo 'Server started'
 

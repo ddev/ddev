@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	osexec "os/exec"
 	"os/user"
-	"strconv"
+	"runtime"
 	"strings"
 	"time"
 
@@ -108,26 +108,25 @@ func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
 }
 
 // GetContainerUIDGid() returns the uid and gid (and string forms) to be used running most containers.
-func GetContainerUIDGid() (uid int, gid int, uidStr string, gidStr string) {
-	var uidInt, gidInt int
+func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	curUser, err := user.Current()
 	CheckErr(err)
 
 	uidStr = curUser.Uid
 	gidStr = curUser.Gid
-	// For windows the uidStr/gidStr are usually way outside linux range (ends at 60000)
-	// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
-	// 1000 seems not to cause file permissions issues at least on docker-for-windows.
-	// TODO: For large macOS UIDs we might be better to add the UID to /etc/passwd at startup
-	if uidInt, err = strconv.Atoi(curUser.Uid); err != nil || uidInt > 60000 {
+	username = curUser.Username
+	//// Windows userids are non numeric,
+	//// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
+	//// 1000 seems not to cause file permissions issues at least on docker-for-windows.
+	if runtime.GOOS == "windows" {
 		uidStr = "1000"
-		uidInt = 1000
-	}
-	if gidInt, err = strconv.Atoi(curUser.Gid); err != nil || gidInt > 60000 {
 		gidStr = "1000"
-		gidInt = 1000
+		parts := strings.Split(curUser.Username, `\`)
+		username = parts[len(parts)-1]
+		username = strings.ReplaceAll(username, " ", "")
+		username = strings.ToLower(username)
 	}
-	return uidInt, gidInt, uidStr, gidStr
+	return uidStr, gidStr, username
 
 }
 

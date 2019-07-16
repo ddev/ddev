@@ -50,15 +50,11 @@ cleanup
 
 UNAME=$(uname)
 
-export MOUNTUID=$UID
-export MOUNTGID=$(id -g)
-if [ "$UNAME" = "MINGW64_NT-10.0" -o "$MOUNTUID" -ge 60000 ] ; then
-	MOUNTUID=1000
-	MOUNTGID=1000
-fi
+MOUNTUID=98
+MOUNTGID=98
 
 mkcert -install
-docker run -t --rm -u "$MOUNTUID:$MOUNTGID" -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache $DOCKER_IMAGE bash -c "sudo mkdir -p /mnt/ddev-global-cache/mkcert && sudo chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
+docker run -t --rm -u "$MOUNTUID:$MOUNTGID" -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache $DOCKER_IMAGE bash -c "sudo mkdir -p /mnt/ddev-global-cache/mkcert && sudo chmod -R ugo+w /mnt/ddev-global-cache/* && sudo cp -R /mnt/mkcert /mnt/ddev-global-cache"
 
 for v in 5.6 7.0 7.1 7.2 7.3; do
     for webserver_type in nginx-fpm apache-fpm apache-cgi; do

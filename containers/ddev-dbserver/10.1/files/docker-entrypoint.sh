@@ -95,6 +95,10 @@ fi
 # And use the mariadb version we have here.
 echo $my_mariadb_version >/var/lib/mysql/db_mariadb_version.txt
 
+cp -r /home/{.my.cnf,.bashrc} ~/
+sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
+sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.my.cnf
+
 echo
 echo 'MySQL init process done. Ready for start up.'
 echo

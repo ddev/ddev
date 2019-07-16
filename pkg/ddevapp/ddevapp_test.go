@@ -399,9 +399,6 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		out, err := exec.RunCommand(DdevBin, []string{"list"})
 		assert.NoError(err)
 		t.Logf("=========== output of ddev list ==========\n%s\n============", out)
-		out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
-		assert.NoError(err)
-		t.Logf("=========== output of docker logs ddev-router ==========\n%s\n============", out)
 
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean
 		// up these for tests that run later.
@@ -2451,6 +2448,7 @@ func TestWebcache(t *testing.T) {
 	if runtime.GOOS != "darwin" {
 		t.Skipf("Skipping TestWebcache, not supported on %s", runtime.GOOS)
 	}
+
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 

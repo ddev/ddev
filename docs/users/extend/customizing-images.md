@@ -28,9 +28,7 @@ An example web image `.ddev/web-build/Dockerfile` might be:
 ```
 ARG BASE_IMAGE=drud/ddev-webserver:20190422_blackfire_io
 FROM $BASE_IMAGE
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y php-yaml
 RUN npm install --global gulp-cli
-RUN ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
 ```
 
 Note that if a Dockerfile is provided, any config.yaml `webimage_extra_packages` or `dbimage_extra_packages` will be ignored.

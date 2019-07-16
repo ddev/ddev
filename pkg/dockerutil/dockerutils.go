@@ -151,7 +151,7 @@ func NetExists(client *docker.Client, name string) bool {
 }
 
 // ContainerWait provides a wait loop to check for container in "healthy" status.
-// timeout is in seconds.
+// waittime is in seconds.
 // This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 // Returns logoutput, error, returns error if not "healthy"
 func ContainerWait(waittime int, labels map[string]string) (string, error) {
@@ -578,8 +578,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 func RemoveContainer(id string, timeout uint) error {
 	client := GetDockerClient()
 
-	_ = client.StopContainer(id, timeout)
-	err := client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: false})
+	err := client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: true})
 	return err
 }
 

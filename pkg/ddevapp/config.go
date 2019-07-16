@@ -235,9 +235,7 @@ func (app *DdevApp) WriteConfig() error {
 # or packages or anything else to your webimage
 ARG BASE_IMAGE=` + app.WebImage + `
 FROM $BASE_IMAGE
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y php-yaml
 RUN npm install --global gulp-cli
-RUN ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
 `)
 
 	err = WriteImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
@@ -249,7 +247,6 @@ RUN ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime && dpkg-reconfigure 
 # or packages or anything else to your dbimage
 ARG BASE_IMAGE=` + app.DBImage + `
 FROM $BASE_IMAGE
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y telnet netcat
 RUN echo "Built from ` + app.DBImage + `" >/var/tmp/built-from.txt
 `)
 
@@ -590,6 +587,8 @@ type composeYAMLVars struct {
 	WebMount             string
 	WebBuildContext      string
 	DBBuildContext       string
+	BgsyncBuildContext   string
+	SSHAgentBuildContext string
 	OmitDBA              bool
 	OmitSSHAgent         bool
 	WebcacheEnabled      bool
@@ -599,6 +598,9 @@ type composeYAMLVars struct {
 	IsWindowsFS          bool
 	Hostnames            []string
 	Timezone             string
+	Username             string
+	UID                  string
+	GID                  string
 }
 
 // RenderComposeYAML renders the contents of docker-compose.yaml.
@@ -622,6 +624,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	// The fallthrough default for hostDockerInternalIdentifier is the
 	// hostDockerInternalHostname == host.docker.internal
 
+	uid, gid, username := util.GetContainerUIDGid()
+
 	templateVars := composeYAMLVars{
 		Name:                 app.Name,
 		Plugin:               "ddev",
@@ -642,6 +646,12 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		WebMount:             "../",
 		Hostnames:            app.GetHostnames(),
 		Timezone:             app.Timezone,
+		Username:             username,
+		UID:                  uid,
+		GID:                  gid,
+		WebBuildContext:      app.GetConfigPath(".webimageBuild"),
+		DBBuildContext:       app.GetConfigPath(".dbimageBuild"),
+		BgsyncBuildContext:   app.GetConfigPath(".bgsyncimageBuild"),
 	}
 	if app.WebcacheEnabled {
 		templateVars.MountType = "volume"
@@ -658,32 +668,31 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	}
 
-	webBuildContext := app.GetConfigPath("web-build/Dockerfile")
-	if fileutil.FileExists(webBuildContext) {
-		templateVars.WebBuildContext = app.GetConfigPath("web-build")
-		if len(app.WebImageExtraPackages) != 0 {
-			util.Warning(".ddev/web-build/Dockerfile is provided, ignoring webimage_extra_packages")
-		}
-	} else if len(app.WebImageExtraPackages) > 0 {
-		err = WriteImagePackagesDockerfile(app.GetConfigPath(".webimageExtra/Dockerfile"), app.WebImageExtraPackages)
-		if err != nil {
-			return "", err
-		}
-		templateVars.WebBuildContext = app.GetConfigPath(".webimageExtra")
+	// Add web and db extra dockerfile info
+	// If there is a user-provided Dockerfile, use that as the base and then add
+	// our extra stuff like usernames, etc.
+	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages)
+	if err != nil {
+		return "", err
 	}
 
-	dbBuildContext := app.GetConfigPath("db-build/Dockerfile")
-	if fileutil.FileExists(dbBuildContext) {
-		templateVars.DBBuildContext = app.GetConfigPath("db-build")
-		if len(app.DBImageExtraPackages) != 0 {
-			util.Warning(".ddev/db-build/Dockerfile is provided, ignoring dbimage_extra_packages")
-		}
-	} else if len(app.DBImageExtraPackages) > 0 {
-		err = WriteImagePackagesDockerfile(app.GetConfigPath(".dbimageExtra/Dockerfile"), app.DBImageExtraPackages)
+	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages)
+
+	if err != nil {
+		return "", err
+	}
+
+	if app.WebcacheEnabled {
+		err = WriteBuildDockerfile(app.GetConfigPath(".bgsyncimageBuild/Dockerfile"), "", nil)
 		if err != nil {
 			return "", err
 		}
-		templateVars.DBBuildContext = app.GetConfigPath(".dbimageExtra")
+	}
+
+	// SSH agent just needs extra to add the official related user, nothing else
+	err = WriteBuildDockerfile(app.GetConfigPath(".sshimageBuild/Dockerfile"), "", nil)
+	if err != nil {
+		return "", err
 	}
 
 	templateVars.DockerIP, err = dockerutil.GetDockerIP()
@@ -695,18 +704,39 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	return doc.String(), err
 }
 
-// WriteImagePackagesDockerfile writes a simple Dockerfile with extraPackages at given location
-// fullpath is the path to the Dockerfile including the filename
-func WriteImagePackagesDockerfile(fullpath string, extraPackages []string) error {
+// WriteBuildDockerfile writes a Dockerfile to be used in the
+// docker-compose 'build'
+// It may include the contents of .ddev/<container>-build
+func WriteBuildDockerfile(fullpath string, userDockerfile string, extraPackages []string) error {
+	// Start with user-built dockerfile if there is one.
 	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
 		return err
 	}
-	contents := []byte(`ARG BASE_IMAGE
-FROM $BASE_IMAGE
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y ` + strings.Join(extraPackages, " ") + "\n")
 
-	return WriteImageDockerfile(fullpath, contents)
+	// Normal starting content is just the arg and base image
+	contents := `
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+`
+	// If there is a user dockerfile, start with its contents
+	if userDockerfile != "" && fileutil.FileExists(userDockerfile) {
+		contents, err = fileutil.ReadFileIntoString(userDockerfile)
+		if err != nil {
+			return err
+		}
+	}
+	contents = contents + `
+ARG username
+ARG uid
+ARG gid
+RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -m --gid "$username" --comment '' --uid $uid "$username" || useradd   -m --gid "$username" --comment '' "$username")
+ `
+	if extraPackages != nil {
+		contents = contents + `
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y ` + strings.Join(extraPackages, " ") + "\n"
+	}
+	return WriteImageDockerfile(fullpath, []byte(contents))
 }
 
 // WriteImageDockerfile writes a dockerfile at the fullpath (including the filename)
@@ -872,7 +902,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", ".bgsync*", "config.*.y*ml", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
+	err := CreateGitIgnore(dir, "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", ".bgsync*", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", "bgsyncimageBuild", "sshimageBuild", ".webimageExtra", ".dbimageExtra", ".webimageBuild", ".dbimageBuild", "*-build/Dockerfile.example")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

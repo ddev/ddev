@@ -33,6 +33,9 @@ ENV COMPOSER_PROCESS_TIMEOUT 2000
 ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
 ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
 
+ENV CAROOT /mnt/ddev-global-cache/mkcert
+
+
 RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
 
 RUN apt-get -qq update && \
@@ -130,10 +133,10 @@ RUN mkdir -p /home/.composer /home/.drush/commands /home/.drush/aliases /mnt/dde
 
 RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
-RUN curl -sSL https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-$MKCERT_VERSION-linux-amd64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkdir -p /home/.local/share && ln -s /mnt/ddev-global-cache/mkcert /home/.local/share/mkcert && mkcert -install
+RUN curl -sSL https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-$MKCERT_VERSION-linux-amd64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert
 
 # Except that .my.cnf can't be writeable or mysql won't use it.
-RUN chmod 444 /home/.my.cnf
+RUN chmod 644 /home/.my.cnf
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
@@ -149,8 +152,9 @@ RUN chmod -R go-w /home/.ssh
 ADD scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
 
+RUN addgroup --gid 98 testgroup && adduser testuser --ingroup testgroup --disabled-password --gecos "" --uid 98
 
 EXPOSE 80 8025
-HEALTHCHECK --interval=1s --retries=10 --timeout=120s CMD ["/healthcheck.sh"]
+HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
 
 CMD ["/start.sh"]

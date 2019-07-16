@@ -1,4 +1,3 @@
-export PATH="$HOME/.composer/vendor/bin:$PATH"
 
 export HISTFILE=/mnt/ddev-global-cache/bashhistory/${HOSTNAME}/bash_history
 export HISTSIZE=10000

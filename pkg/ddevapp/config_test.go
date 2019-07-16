@@ -797,20 +797,6 @@ func TestExtraPackages(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal("/usr/bin/ncdu", strings.Trim(stdout, "\n"))
 
-	// Now write a web-build Dockerfile and make sure the packages don't get in there any more.
-	err = WriteImagePackagesDockerfile(app.GetConfigPath("web-build/Dockerfile"), []string{"netcat"})
-	assert.NoError(err)
-
-	err = app.Start()
-	assert.NoError(err)
-
-	_, _, err = app.Exec(&ExecOpts{
-		Service: "web",
-		Cmd:     "command -v zsh",
-	})
-	assert.Error(err)
-	assert.Contains(err.Error(), "exit status 1")
-
 	err = app.Stop(true, false)
 	assert.NoError(err)
 

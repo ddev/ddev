@@ -12,6 +12,7 @@ import (
 	"html/template"
 	"os"
 	"path"
+	"path/filepath"
 )
 
 // SSHAuthName is the "machine name" of the ddev-ssh-agent docker-compose service
@@ -46,7 +47,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 	// run docker-compose up -d
 	// This will force-recreate, discarding existing auth if there is a stopped container.
-	_, _, err = dockerutil.ComposeCmd([]string{path}, "-p", SSHAuthName, "up", "--force-recreate", "-d")
+	_, _, err = dockerutil.ComposeCmd([]string{path}, "-p", SSHAuthName, "up", "--build", "--force-recreate", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-ssh-agent: %v", err)
 	}
@@ -106,12 +107,23 @@ func CreateSSHAuthComposeFile() (string, error) {
 		return "", err
 	}
 
+	context := filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild")
+	err = WriteBuildDockerfile(filepath.Join(context, "Dockerfile"), "", nil)
+	if err != nil {
+		return "", err
+	}
+
+	uid, gid, username := util.GetContainerUIDGid()
+
 	templateVars := map[string]interface{}{
 		"ssh_auth_image":  version.SSHAuthImage,
 		"ssh_auth_tag":    version.SSHAuthTag,
 		"compose_version": version.DockerComposeFileFormatVersion,
+		"Username":        username,
+		"UID":             uid,
+		"GID":             gid,
+		"BuildContext":    context,
 	}
-
 	err = templ.Execute(&doc, templateVars)
 	util.CheckErr(err)
 	_, err = f.WriteString(doc.String())

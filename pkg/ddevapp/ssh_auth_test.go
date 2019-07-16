@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
@@ -29,11 +28,10 @@ func TestSSHAuth(t *testing.T) {
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestSSHAuth"))
+	runTime := testcommon.TimeTrack(time.Now(), t.Name())
 
 	//  Add a docker-compose service that has ssh server and mounted authorized_keys
-	// Use d7 only for this test, the key thing is the database interaction
-	site := FullTestSites[0]
+	site := TestSites[0]
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
 	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
 		err := site.Prepare()
@@ -93,11 +91,11 @@ func TestSSHAuth(t *testing.T) {
 
 	// Add password/key to auth. This is an unfortunate perversion of using docker run directly, copied from
 	// ddev auth ssh command, and with an expect script to provide the passphrase.
-	_, _, uidStr, _ := util.GetContainerUIDGid()
+	uidStr, _, username := util.GetContainerUIDGid()
 	sshKeyPath := filepath.Join(destDdev, ".ssh")
 	sshKeyPath = dockerutil.MassageWindowsHostMountpoint(sshKeyPath)
 
-	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/tmp/.ssh", "-u", uidStr, version.SSHAuthImage + ":" + version.SSHAuthTag, "//test.expect.passphrase"})
+	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr, version.SSHAuthImage + ":" + version.SSHAuthTag + "-built", "//test.expect.passphrase"})
 	require.NoError(t, err)
 
 	// Try ssh, should succeed

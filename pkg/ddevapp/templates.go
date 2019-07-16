@@ -7,14 +7,14 @@ const DDevComposeTemplate = `version: '{{ .ComposeVersion }}'
 services:
   db:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
-    {{ if .DBBuildContext }}
     build: 
       context: '{{ .DBBuildContext }}'
       args: 
         BASE_IMAGE: $DDEV_DBIMAGE
-    {{ else }}
-    image: "$DDEV_DBIMAGE"
-    {{ end }}
+        username: '{{ .Username }}'
+        uid: '{{ .UID }}'
+        gid: '{{ .GID }}'
+    image: ${DDEV_DBIMAGE}-built
     stop_grace_period: 60s
     volumes:
       - type: "volume"
@@ -25,8 +25,10 @@ services:
       - type: "bind"
         source: "."
         target: "/mnt/ddev_config"
+      - ddev-global-cache:/mnt/ddev-global-cache
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
+    hostname: {{ .Name }}-db
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:3306"
     labels:
@@ -38,6 +40,7 @@ services:
       - COLUMNS=$COLUMNS
       - LINES=$LINES
       - TZ={{ .Timezone }}
+      - DDEV_PROJECT={{ .Name }}
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
       interval: 1s
@@ -46,14 +49,14 @@ services:
       timeout: 120s
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
-    {{ if .WebBuildContext }}
     build: 
       context: '{{ .WebBuildContext }}'
       args: 
         BASE_IMAGE: $DDEV_WEBIMAGE
-    {{ else }}
-    image: $DDEV_WEBIMAGE
-    {{ end }}
+        username: '{{ .Username }}'
+        uid: '{{ .UID }}'
+        gid: '{{ .GID }}'
+    image: ${DDEV_WEBIMAGE}-built
     cap_add:
       - SYS_PTRACE
     volumes:
@@ -74,6 +77,7 @@ services:
 
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
+    hostname: {{ .Name }}-web
     links:
       - db:db
     # ports is list of exposed *container* ports
@@ -102,6 +106,7 @@ services:
       # To expose an HTTPS port, define the port as securePort:containerPort.
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
+      - DDEV_PROJECT={{ .Name }}
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .Plugin }}
@@ -121,9 +126,17 @@ services:
 {{ if .WebcacheEnabled }}
   bgsync:
     container_name: ddev-${DDEV_SITENAME}-bgsync
-    image: $DDEV_BGSYNCIMAGE
+    build: 
+      context: '{{ .BgsyncBuildContext }}'
+      args: 
+        BASE_IMAGE: $DDEV_BGSYNCIMAGE
+        username: '{{ .Username }}'
+        uid: '{{ .UID }}'
+        gid: '{{ .GID }}'
+    image: ${DDEV_BGSYNCIMAGE}-built
     restart: "on-failure"
     user: "$DDEV_UID:$DDEV_GID"
+    hostname: {{ .Name }}-bgsync
     volumes:
       - ..:/hostmount:cached
       - webcachevol:/fastdockermount
@@ -161,6 +174,7 @@ services:
       - db:db
     ports:
       - "80"
+    hostname: {{ .Name }}-dba
     environment:
       - PMA_USER=db
       - PMA_PASSWORD=db
@@ -421,7 +435,16 @@ volumes:
 services:
   ddev-ssh-agent:
     container_name: ddev-ssh-agent
-    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}
+    hostname: ddev-ssh-agent
+    build: 
+      context: '{{ .BuildContext }}'
+      args: 
+        BASE_IMAGE: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}
+        username: '{{ .Username }}'
+        uid: '{{ .UID }}'
+        gid: '{{ .GID }}'
+    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built
+
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
       - "dot_ssh:/tmp/.ssh"

@@ -1,6 +1,6 @@
-FROM alpine:3.8
+FROM alpine:3.10
 
-RUN apk add --no-cache bash sudo rsync file
+RUN apk add --no-cache bash sudo rsync file shadow
 
 # Install Unison from source with inotify support + remove compilation tools
 ARG UNISON_VERSION=2.51.2

@@ -26,7 +26,7 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("This command takes no arguments.")
 		}
 
-		_, _, uidStr, _ := util.GetContainerUIDGid()
+		uidStr, _, username := util.GetContainerUIDGid()
 
 		if sshKeyPath == "" {
 			homeDir, err := homedir.Dir()
@@ -60,7 +60,8 @@ var AuthSSHCommand = &cobra.Command{
 		}
 		sshKeyPath = dockerutil.MassageWindowsHostMountpoint(sshKeyPath)
 
-		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user=" + uidStr, "--mount=type=bind,src=" + sshKeyPath + ",dst=/tmp/.ssh", version.SSHAuthImage + ":" + version.SSHAuthTag, "ssh-add"}
+		dockerCmd := []string{"run", "-it", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "--user=" + uidStr, "--mount=type=bind,src=" + sshKeyPath + ",dst=/home/" + username + "/.ssh", version.SSHAuthImage + ":" + version.SSHAuthTag + "-built", "ssh-add"}
+
 		err = exec.RunInteractiveCommand("docker", dockerCmd)
 
 		if err != nil {
