@@ -197,61 +197,78 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 			}
 			description := findDirectiveInScript(fullPath, "## Description")
 
-			rootCmd.AddCommand(
-				&cobra.Command{
-					Use:   command + " [args]",
-					Short: description + " (custom host command)",
-					Run: func(cmd *cobra.Command, args []string) {
-						app.DockerEnv()
-						_ = os.Chdir(app.AppRoot)
-						err = exec.RunInteractiveCommand(fullPath, os.Args)
-						if err != nil {
-							util.Failed("Failed to run %s %v: %v", command, os.Args, err)
-						}
-					},
+			commandToAdd := &cobra.Command{
+				Use:   command + " [args]",
+				Short: description + " (custom host command)",
+				FParseErrWhitelist: cobra.FParseErrWhitelist{
+					UnknownFlags: true,
 				},
-			)
-
+				Run: makeHostCmd(app, fullPath, command),
+			}
+			commandToAdd.FParseErrWhitelist = cobra.FParseErrWhitelist{
+				UnknownFlags: true,
+			}
+			rootCmd.AddCommand(commandToAdd)
 		}
 	}
 
-	if fileutil.FileExists(app.GetConfigPath("commands/web")) {
-		commands, err := fileutil.ListFilesInDir(app.GetConfigPath("commands/web"))
-		if err != nil {
-			return err
-		}
-
-		for _, command := range commands {
-			fullPath := filepath.Join(app.GetConfigPath("commands/web"), command)
-			if strings.HasSuffix(command, ".example") {
-				continue
+	inContainerCommands := []string{"web", "db", "dba"}
+	for _, service := range inContainerCommands {
+		potentialDir := app.GetConfigPath("commands/" + service)
+		if fileutil.FileExists(potentialDir) {
+			commands, err := fileutil.ListFilesInDir(potentialDir)
+			if err != nil {
+				return err
 			}
-			description := findDirectiveInScript(fullPath, "## Description")
-			inContainerFullPath := filepath.Join("/var/www/html/.ddev/commands/web", command)
 
-			rootCmd.AddCommand(
-				&cobra.Command{
-					Use:   command + " [args]",
+			for _, command := range commands {
+				fullPath := filepath.Join(app.GetConfigPath("commands/web"), command)
+				if strings.HasSuffix(command, ".example") {
+					continue
+				}
+				description := findDirectiveInScript(fullPath, "## Description")
+				inContainerFullPath := filepath.Join("/var/www/html/.ddev/commands/web", command)
+
+				commandToAdd := &cobra.Command{
+					Use:   command + " [args] [flags]",
 					Short: description + " (custom web container command)",
-					Run: func(cmd *cobra.Command, args []string) {
-						app.DockerEnv()
-
-						err := app.ExecWithTty(&ddevapp.ExecOpts{
-							Cmd:     inContainerFullPath + " " + strings.Join(os.Args[2:], " "),
-							Service: "web",
-							Dir:     app.WorkingDir["web"],
-						})
-
-						if err != nil {
-							util.Failed("Failed to run %s %v: %v", command, strings.Join(os.Args[2:], " "), err)
-						}
-					},
-				},
-			)
-
+					Run:   makeContainerCmd(app, inContainerFullPath, command, service),
+				}
+				commandToAdd.FParseErrWhitelist = cobra.FParseErrWhitelist{
+					UnknownFlags: true,
+				}
+				rootCmd.AddCommand(commandToAdd)
+			}
 		}
 	}
 	return nil
+}
+
+func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
+	return func(cmd *cobra.Command, args []string) {
+		app.DockerEnv()
+		_ = os.Chdir(app.AppRoot)
+		err := exec.RunInteractiveCommand(fullPath, os.Args[2:])
+		if err != nil {
+			util.Failed("Failed to run %s %v: %v", name, os.Args[2:], err)
+		}
+	}
+}
+
+func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service string) func(*cobra.Command, []string) {
+	return func(cmd *cobra.Command, args []string) {
+		app.DockerEnv()
+
+		err := app.ExecWithTty(&ddevapp.ExecOpts{
+			Cmd:     fullPath + " " + strings.Join(os.Args[2:], " "),
+			Service: service,
+			Dir:     app.WorkingDir[service],
+		})
+
+		if err != nil {
+			util.Failed("Failed to run %s %v: %v", name, strings.Join(os.Args[2:], " "), err)
+		}
+	}
 }
 
 func findDirectiveInScript(script string, directive string) string {
