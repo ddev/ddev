@@ -75,14 +75,14 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 // makeHostCmd creates a command which will run on the host
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
 	return func(cmd *cobra.Command, args []string) {
-		args = []string{}
+		osArgs := []string{}
 		if len(os.Args) > 2 {
-			args = os.Args[2:]
+			os.Args = os.Args[2:]
 		}
 		_ = os.Chdir(app.AppRoot)
-		err := exec.RunInteractiveCommand(fullPath, args)
+		err := exec.RunInteractiveCommand(fullPath, osArgs)
 		if err != nil {
-			util.Failed("Failed to run %s %v: %v", name, strings.Join(args, " "), err)
+			util.Failed("Failed to run %s %v: %v", name, strings.Join(osArgs, " "), err)
 		}
 	}
 }
@@ -92,12 +92,12 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service strin
 	return func(cmd *cobra.Command, args []string) {
 		app.DockerEnv()
 
-		args = []string{}
+		osArgs := []string{}
 		if len(os.Args) > 2 {
-			args = os.Args[2:]
+			osArgs = os.Args[2:]
 		}
 		_, _, err := app.Exec(&ddevapp.ExecOpts{
-			Cmd:       fullPath + " " + strings.Join(args, " "),
+			Cmd:       fullPath + " " + strings.Join(osArgs, " "),
 			Service:   service,
 			Dir:       app.WorkingDir[service],
 			Tty:       isatty.IsTerminal(os.Stdin.Fd()),
@@ -105,7 +105,7 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service strin
 		})
 
 		if err != nil {
-			util.Failed("Failed to run %s %v: %v", name, strings.Join(args, " "), err)
+			util.Failed("Failed to run %s %v: %v", name, strings.Join(osArgs, " "), err)
 		}
 	}
 }
