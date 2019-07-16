@@ -13,6 +13,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/getsentry/raven-go"
+	"github.com/mattn/go-isatty"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -177,70 +178,51 @@ func instrumentationNotSetUpWarning() {
 	}
 }
 
-// TODO: Rework this to not duplicate all that code. Can it support other containers? Yup.
 func addCustomCommands(rootCmd *cobra.Command) error {
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		return nil
 	}
 
-	if fileutil.FileExists(app.GetConfigPath("commands/host")) {
-		commands, err := fileutil.ListFilesInDir(app.GetConfigPath("commands/host"))
+	topCommandPath := app.GetConfigPath("commands")
+	if !fileutil.FileExists(topCommandPath) || !fileutil.IsDirectory(topCommandPath) {
+		return nil
+	}
+	commandDirs, _ := fileutil.ListFilesInDir(topCommandPath)
+	for _, service := range commandDirs {
+		if !fileutil.IsDirectory(filepath.Join(topCommandPath, service)) {
+			continue
+		}
+		commandFiles, err := fileutil.ListFilesInDir(filepath.Join(topCommandPath, service))
 		if err != nil {
 			return err
 		}
 
-		for _, command := range commands {
-			fullPath := filepath.Join(app.GetConfigPath("commands/host"), command)
-			if strings.HasSuffix(command, ".example") {
+		for _, commandName := range commandFiles {
+			if strings.HasSuffix(commandName, ".example") {
 				continue
 			}
-			description := findDirectiveInScript(fullPath, "## Description")
+			inContainerFullPath := filepath.Join("/mnt/ddev_config/commands", service, commandName)
+			onHostFullPath := filepath.Join(topCommandPath, service, commandName)
+			description := findDirectiveInScript(onHostFullPath, "## Description")
 
 			commandToAdd := &cobra.Command{
-				Use:   command + " [args]",
-				Short: description + " (custom host command)",
+				Use:   commandName + " [args]",
+				Short: description + " (custom " + service + " command)",
 				FParseErrWhitelist: cobra.FParseErrWhitelist{
 					UnknownFlags: true,
 				},
-				Run: makeHostCmd(app, fullPath, command),
 			}
-			commandToAdd.FParseErrWhitelist = cobra.FParseErrWhitelist{
-				UnknownFlags: true,
+
+			if service == "host" {
+				commandToAdd.Run = makeHostCmd(app, filepath.Join(topCommandPath, service, commandName), commandName)
+			} else {
+				commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service)
 			}
 			rootCmd.AddCommand(commandToAdd)
 		}
 	}
 
-	inContainerCommands := []string{"web", "db", "dba"}
-	for _, service := range inContainerCommands {
-		potentialDir := app.GetConfigPath("commands/" + service)
-		if fileutil.FileExists(potentialDir) {
-			commands, err := fileutil.ListFilesInDir(potentialDir)
-			if err != nil {
-				return err
-			}
-
-			for _, command := range commands {
-				fullPath := filepath.Join(app.GetConfigPath("commands/web"), command)
-				if strings.HasSuffix(command, ".example") {
-					continue
-				}
-				description := findDirectiveInScript(fullPath, "## Description")
-				inContainerFullPath := filepath.Join("/var/www/html/.ddev/commands/web", command)
-
-				commandToAdd := &cobra.Command{
-					Use:   command + " [args] [flags]",
-					Short: description + " (custom web container command)",
-					Run:   makeContainerCmd(app, inContainerFullPath, command, service),
-				}
-				commandToAdd.FParseErrWhitelist = cobra.FParseErrWhitelist{
-					UnknownFlags: true,
-				}
-				rootCmd.AddCommand(commandToAdd)
-			}
-		}
-	}
 	return nil
 }
 
@@ -259,10 +241,12 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service strin
 	return func(cmd *cobra.Command, args []string) {
 		app.DockerEnv()
 
-		err := app.ExecWithTty(&ddevapp.ExecOpts{
-			Cmd:     fullPath + " " + strings.Join(os.Args[2:], " "),
-			Service: service,
-			Dir:     app.WorkingDir[service],
+		_, _, err := app.Exec(&ddevapp.ExecOpts{
+			Cmd:       fullPath + " " + strings.Join(os.Args[2:], " "),
+			Service:   service,
+			Dir:       app.WorkingDir[service],
+			Tty:       isatty.IsTerminal(os.Stdin.Fd()),
+			NoCapture: true,
 		})
 
 		if err != nil {

@@ -128,6 +128,15 @@ func FileExists(name string) bool {
 	return true
 }
 
+// IsDirectory returns true if path is a dir, false on error or not directory
+func IsDirectory(path string) bool {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return fileInfo.IsDir()
+}
+
 // FileIsReadable checks to make sure a file exists and is readable
 func FileIsReadable(name string) bool {
 	file, err := os.OpenFile(name, os.O_RDONLY, 0666)
