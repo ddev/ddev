@@ -9,6 +9,7 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,7 +39,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		}
 
 		for _, commandName := range commandFiles {
-			if strings.HasSuffix(commandName, ".example") {
+			if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") {
 				continue
 			}
 			inContainerFullPath := filepath.Join("/mnt/ddev_config/commands", service, commandName)
@@ -76,6 +77,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 // makeHostCmd creates a command which will run on the host
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
 	return func(cmd *cobra.Command, args []string) {
+		app.DockerEnv()
 		osArgs := []string{}
 		if len(os.Args) > 2 {
 			os.Args = os.Args[2:]
@@ -143,16 +145,32 @@ func findDirectiveInScript(script string, directive string) string {
 // When the items in the assets directory are changed, the packr2 command
 // must be run again in this directory (cmd/ddev/cmd) to update the saved
 // embedded files.
+// "make packr2" can be used to update the packr2 cache.
 func populateExamplesAndCommands() error {
+	app, err := ddevapp.GetActiveApp("")
+	if err != nil {
+		return nil
+	}
 	box := packr.New("customcommands", "./assets")
 
-	mysqlCmd, err := box.FindString("commands/db/mysql")
-	if err != nil {
-		return err
-	}
-
 	list := box.List()
-	util.Success("list: %v", list)
-	util.Success("mysqlcmd=%s", mysqlCmd)
+	for _, file := range list {
+		localPath := app.GetConfigPath(file)
+		if !fileutil.FileExists(localPath) {
+			content, err := box.Find(file)
+			if err != nil {
+				return err
+			}
+			err = os.MkdirAll(filepath.Dir(localPath), 0755)
+			if err != nil {
+				return err
+			}
+			err = ioutil.WriteFile(localPath, content, 0755)
+			if err != nil {
+				return err
+			}
+
+		}
+	}
 	return nil
 }

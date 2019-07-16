@@ -1,7 +1,0 @@
-#!/bin/bash
-
-## Description: just runs drush sql-cli for you
-
-echo "PWD=$PWD"
-echo "What do we do now?"
-drush sql-cli

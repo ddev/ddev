@@ -1,0 +1,10 @@
+#!/bin/bash
+
+## Description: Tail the main solr log
+## Usage: solrtail
+## Example: ddev solrtail
+
+# Note that this requires that /mnt/ddev_config be mounted
+# into the solr container
+
+tail -f /opt/solr/server/logs

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+## #ddev-generated
 ## Description: run mysql client in web container
 ## Usage: mysql [flags] [args]
 ## Example: "ddev mysql" or "ddev mysql -uroot -proot -hdb" or "echo 'SHOW TABLES;' | ddev mysql"

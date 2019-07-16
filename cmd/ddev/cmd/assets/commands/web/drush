@@ -1,6 +1,0 @@
-#!/bin/bash
-
-## Usage: ddev drush [args]
-## Description: Run drush inside the container
-
-drush "$@"
