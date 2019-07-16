@@ -151,7 +151,7 @@ func Execute() {
 func init() {
 	err := addCustomCommands(RootCmd)
 	if err != nil {
-		util.Failed("Adding custom commands failed: %v", err)
+		util.Warning("Adding custom commands failed: %v", err)
 	}
 
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
@@ -177,74 +177,79 @@ func instrumentationNotSetUpWarning() {
 	}
 }
 
+// TODO: Rework this to not duplicate all that code. Can it support other containers? Yup.
 func addCustomCommands(rootCmd *cobra.Command) error {
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		return err
 	}
 
-	commands, err := fileutil.ListFilesInDir(app.GetConfigPath("commands/host"))
-	if err != nil {
-		return err
-	}
-
-	for _, command := range commands {
-		fullPath := filepath.Join(app.GetConfigPath("commands/host"), command)
-		if strings.HasSuffix(command, ".example") {
-			continue
+	if fileutil.FileExists(app.GetConfigPath("commands/host")) {
+		commands, err := fileutil.ListFilesInDir(app.GetConfigPath("commands/host"))
+		if err != nil {
+			return err
 		}
-		description := findDirectiveInScript(fullPath, "## Description")
 
-		rootCmd.AddCommand(
-			&cobra.Command{
-				Use:   command + " [args]",
-				Short: description + " (custom host command)",
-				Run: func(cmd *cobra.Command, args []string) {
-					app.DockerEnv()
-					_ = os.Chdir(app.AppRoot)
-					err = exec.RunInteractiveCommand(fullPath, os.Args)
-					if err != nil {
-						util.Failed("Failed to run %s %v: %v", command, os.Args, err)
-					}
+		for _, command := range commands {
+			fullPath := filepath.Join(app.GetConfigPath("commands/host"), command)
+			if strings.HasSuffix(command, ".example") {
+				continue
+			}
+			description := findDirectiveInScript(fullPath, "## Description")
+
+			rootCmd.AddCommand(
+				&cobra.Command{
+					Use:   command + " [args]",
+					Short: description + " (custom host command)",
+					Run: func(cmd *cobra.Command, args []string) {
+						app.DockerEnv()
+						_ = os.Chdir(app.AppRoot)
+						err = exec.RunInteractiveCommand(fullPath, os.Args)
+						if err != nil {
+							util.Failed("Failed to run %s %v: %v", command, os.Args, err)
+						}
+					},
 				},
-			},
-		)
+			)
 
-	}
-
-	commands, err = fileutil.ListFilesInDir(app.GetConfigPath("commands/web"))
-	if err != nil {
-		return err
-	}
-
-	for _, command := range commands {
-		fullPath := filepath.Join(app.GetConfigPath("commands/web"), command)
-		if strings.HasSuffix(command, ".example") {
-			continue
 		}
-		description := findDirectiveInScript(fullPath, "## Description")
-		inContainerFullPath := filepath.Join("/var/www/html/.ddev/commands/web", command)
+	}
 
-		rootCmd.AddCommand(
-			&cobra.Command{
-				Use:   command + " [args]",
-				Short: description + " (custom web container command)",
-				Run: func(cmd *cobra.Command, args []string) {
-					app.DockerEnv()
+	if fileutil.FileExists(app.GetConfigPath("commands/web")) {
+		commands, err := fileutil.ListFilesInDir(app.GetConfigPath("commands/web"))
+		if err != nil {
+			return err
+		}
 
-					err := app.ExecWithTty(&ddevapp.ExecOpts{
-						Cmd:     inContainerFullPath + " " + strings.Join(os.Args[2:], " "),
-						Service: "web",
-						Dir:     app.WorkingDir["web"],
-					})
+		for _, command := range commands {
+			fullPath := filepath.Join(app.GetConfigPath("commands/web"), command)
+			if strings.HasSuffix(command, ".example") {
+				continue
+			}
+			description := findDirectiveInScript(fullPath, "## Description")
+			inContainerFullPath := filepath.Join("/var/www/html/.ddev/commands/web", command)
 
-					if err != nil {
-						util.Failed("Failed to run %s %v: %v", command, strings.Join(os.Args[2:], " "), err)
-					}
+			rootCmd.AddCommand(
+				&cobra.Command{
+					Use:   command + " [args]",
+					Short: description + " (custom web container command)",
+					Run: func(cmd *cobra.Command, args []string) {
+						app.DockerEnv()
+
+						err := app.ExecWithTty(&ddevapp.ExecOpts{
+							Cmd:     inContainerFullPath + " " + strings.Join(os.Args[2:], " "),
+							Service: "web",
+							Dir:     app.WorkingDir["web"],
+						})
+
+						if err != nil {
+							util.Failed("Failed to run %s %v: %v", command, strings.Join(os.Args[2:], " "), err)
+						}
+					},
 				},
-			},
-		)
+			)
 
+		}
 	}
 	return nil
 }
