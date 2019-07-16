@@ -280,14 +280,6 @@ func findDirectiveInScript(script string, directive string) string {
 
 	return ""
 }
-func sentryNotSetupWarning() {
-	if version.SentryDSN == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		output.UserOut.Warning("Instrumentation is opted in, but SentryDSN is not available.")
-	}
-	if version.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		output.UserOut.Warning("Instrumentation is opted in, but SegmentKey is not available.")
-	}
-}
 
 // checkDdevVersionAndOptInInstrumentation() reads global config and checks to see if current version is different
 // from the last saved version. If it is, prompt to request anon ddev usage stats
