@@ -205,10 +205,18 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 			inContainerFullPath := filepath.Join("/mnt/ddev_config/commands", service, commandName)
 			onHostFullPath := filepath.Join(topCommandPath, service, commandName)
 			description := findDirectiveInScript(onHostFullPath, "## Description")
-
+			if description == "" {
+				description = commandName
+			}
+			usage := findDirectiveInScript(onHostFullPath, "## Usage")
+			if usage == "" {
+				usage = commandName + " [flags] [args]"
+			}
+			example := findDirectiveInScript(onHostFullPath, "## Example")
 			commandToAdd := &cobra.Command{
-				Use:   commandName + " [args]",
-				Short: description + " (custom " + service + " container command)",
+				Use:     usage,
+				Short:   description + " (custom " + service + " container command)",
+				Example: example,
 				FParseErrWhitelist: cobra.FParseErrWhitelist{
 					UnknownFlags: true,
 				},
@@ -264,6 +272,7 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service strin
 	}
 }
 
+// findDirectiveInScript() looks for the named directive and returns the string following colon and spaces
 func findDirectiveInScript(script string, directive string) string {
 	f, err := os.Open(script)
 	if err != nil {
