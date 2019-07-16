@@ -30,10 +30,14 @@ func TestCmdImportDB(t *testing.T) {
 	assert.NoError(err)
 	require.Equal(t, "", out)
 
+	// Set up to read from the sql import file
 	inputFile := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
 	f, err := os.Open(inputFile)
 	require.NoError(t, err)
+	// nolint: errcheck
+	defer f.Close()
 
+	// Run the import-db command with stdin coming from users.sql
 	command := exec.Command(DdevBin, "import-db")
 	command.Stdin = f
 
