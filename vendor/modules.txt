@@ -101,6 +101,23 @@ github.com/fsouza/go-dockerclient/internal/term
 github.com/getsentry/raven-go
 # github.com/go-ini/ini v1.38.1
 github.com/go-ini/ini
+# github.com/gobuffalo/envy v1.7.0
+github.com/gobuffalo/envy
+# github.com/gobuffalo/logger v1.0.0
+github.com/gobuffalo/logger
+# github.com/gobuffalo/packd v0.3.0
+github.com/gobuffalo/packd
+github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
+# github.com/gobuffalo/packr/v2 v2.5.2
+github.com/gobuffalo/packr/v2
+github.com/gobuffalo/packr/v2/file
+github.com/gobuffalo/packr/v2/file/resolver
+github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/oncer
+github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/safe
+github.com/gobuffalo/packr/v2/jam/parser
+github.com/gobuffalo/packr/v2/plog
+github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
+github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/errx
 # github.com/gogo/protobuf v1.1.1
 github.com/gogo/protobuf/proto
 # github.com/google/go-github v0.0.0-20180716180158-c0b63e2f9bb1
@@ -113,7 +130,7 @@ github.com/google/uuid
 github.com/gosuri/uitable
 github.com/gosuri/uitable/util/strutil
 github.com/gosuri/uitable/util/wordwrap
-# github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce
+# github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/printer
 github.com/hashicorp/hcl/hcl/ast
@@ -132,6 +149,12 @@ github.com/imdario/mergo
 github.com/inconshreveable/mousetrap
 # github.com/jmespath/go-jmespath v0.0.0-20160202185014-0b12d6b521d8
 github.com/jmespath/go-jmespath
+# github.com/joho/godotenv v1.3.0
+github.com/joho/godotenv
+# github.com/karrick/godirwalk v1.10.12
+github.com/karrick/godirwalk
+# github.com/konsorten/go-windows-terminal-sequences v1.0.2
+github.com/konsorten/go-windows-terminal-sequences
 # github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 github.com/lextoumbourou/goodhosts
 # github.com/lunixbochs/vtclean v0.0.0-20180621232353-2d01aacdc34a
@@ -144,9 +167,9 @@ github.com/mattn/go-colorable
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.2
 github.com/mattn/go-runewidth
-# github.com/mitchellh/go-homedir v0.0.0-20180523094522-3864e76763d9
+# github.com/mitchellh/go-homedir v1.1.0
 github.com/mitchellh/go-homedir
-# github.com/mitchellh/mapstructure v0.0.0-20180715050151-f15292f7a699
+# github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
 # github.com/opencontainers/go-digest v1.0.0-rc1
 github.com/opencontainers/go-digest
@@ -161,40 +184,44 @@ github.com/pelletier/go-toml
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
+# github.com/rogpeppe/go-internal v1.3.0
+github.com/rogpeppe/go-internal/modfile
+github.com/rogpeppe/go-internal/module
+github.com/rogpeppe/go-internal/semver
 # github.com/segmentio/backo-go v0.0.0-20160424052352-204274ad699c
 github.com/segmentio/backo-go
-# github.com/sirupsen/logrus v1.0.6
+# github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
-# github.com/spf13/afero v1.1.1
+# github.com/spf13/afero v1.1.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
-# github.com/spf13/cast v1.2.0
+# github.com/spf13/cast v1.3.0
 github.com/spf13/cast
-# github.com/spf13/cobra v0.0.0-20180629152535-a114f312e075
+# github.com/spf13/cobra v0.0.5
 github.com/spf13/cobra
-# github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec
+# github.com/spf13/jwalterweatherman v1.0.0
 github.com/spf13/jwalterweatherman
-# github.com/spf13/pflag v1.0.1
+# github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
-# github.com/spf13/viper v1.0.2
+# github.com/spf13/viper v1.3.2
 github.com/spf13/viper
-# github.com/stretchr/testify v1.2.2
+# github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 github.com/xtgo/uuid
-# golang.org/x/crypto v0.0.0-20180820150726-614d502a4dac
+# golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4
 golang.org/x/crypto/ssh/terminal
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/pbkdf2
-# golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e
-golang.org/x/sys/windows/registry
+# golang.org/x/sys v0.0.0-20190515120540-06a5c4944438
 golang.org/x/sys/unix
+golang.org/x/sys/windows/registry
 golang.org/x/sys/windows
 # golang.org/x/text v0.3.0
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 # gopkg.in/segmentio/analytics-go.v3 v3.0.1
 gopkg.in/segmentio/analytics-go.v3
-# gopkg.in/yaml.v2 v2.2.1
+# gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2

@@ -148,7 +148,12 @@ func Execute() {
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 
-	err := addCustomCommands(RootCmd)
+	err := populateExamplesAndCommands()
+	if err != nil {
+		util.Warning("populateExamplesAndCommands() failed: %v", err)
+	}
+
+	err = addCustomCommands(RootCmd)
 	if err != nil {
 		util.Warning("Adding custom commands failed: %v", err)
 	}

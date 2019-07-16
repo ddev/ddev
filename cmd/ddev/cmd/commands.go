@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/gobuffalo/packr/v2"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 	"os"
@@ -136,4 +137,22 @@ func findDirectiveInScript(script string, directive string) string {
 	}
 
 	return ""
+}
+
+// populateExamplesAndCommands grabs packr2 assets
+// When the items in the assets directory are changed, the packr2 command
+// must be run again in this directory (cmd/ddev/cmd) to update the saved
+// embedded files.
+func populateExamplesAndCommands() error {
+	box := packr.New("customcommands", "./assets")
+
+	mysqlCmd, err := box.FindString("commands/db/mysql")
+	if err != nil {
+		return err
+	}
+
+	list := box.List()
+	util.Success("list: %v", list)
+	util.Success("mysqlcmd=%s", mysqlCmd)
+	return nil
 }

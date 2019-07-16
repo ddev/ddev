@@ -4,6 +4,10 @@
 # linux build and linuxbrew is installed.
 export PATH := $(EXTRA_PATH):$(PATH)
 
+# Not updating build-tools to get this, but this should be removed
+# when build-tools is updated.
+BUILD_IMAGE := drud/golang-build-container:v1.12.7
+
 GOMETALINTER_ARGS := --vendored-linters --disable-all --enable=gofmt --enable=vet --enable vetshadow --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode --deadline=4m
 GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode
 
@@ -102,6 +106,16 @@ setup:
 	@mkdir -p $(GOTMP)/{src,pkg/mod/cache,.cache}
 	@mkdir -p $(TESTTMP)
 
+# packr2 target currently builds packr2 caches in the cmd/ddev/cmd directory only
+# using the golang-build-container's packr2 command
+packr2:
+	docker run -t --rm -u $(shell id -u):$(shell id -g)    \
+          	    -v "$(S)$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
+          	    -v "$(S)$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
+          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
+          	    -w //workdir/cmd/ddev/cmd       \
+          	    $(BUILD_IMAGE) packr2
+
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint
 
@@ -141,3 +155,4 @@ $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.t
 	curl --fail -sSL -o /tmp/nssm.zip https://nssm.cc/ci/nssm-$(NSSM_VERSION).zip
 	unzip -oj /tmp/nssm.zip  nssm-$(NSSM_VERSION)/win64/nssm.exe -d $(GOTMP)/bin/windows_amd64
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd_license.txt https://www.gnu.org/licenses/gpl.txt
+
