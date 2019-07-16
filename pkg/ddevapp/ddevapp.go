@@ -297,7 +297,9 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 		return err
 	}
 
-	if imPath == "" {
+	// If they don't provide an import path and we're not on a tty (piped in stuff)
+	// then prompt for path to db
+	if imPath == "" && isatty.IsTerminal(os.Stdin.Fd()) {
 		// ensure we prompt for extraction path if an archive is provided, while still allowing
 		// non-interactive use of --src flag without providing a --extract-path flag.
 		if extPath == "" {
@@ -309,64 +311,72 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 		imPath = util.GetInput("")
 	}
 
-	importPath, isArchive, err := appimport.ValidateAsset(imPath, "db")
-	if err != nil {
-		if isArchive && extPathPrompt {
-			output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
-			fmt.Print("Archive extraction path:")
+	if imPath != "" {
+		importPath, isArchive, err := appimport.ValidateAsset(imPath, "db")
+		if err != nil {
+			if isArchive && extPathPrompt {
+				output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
+				fmt.Print("Archive extraction path:")
 
-			extPath = util.GetInput("")
+				extPath = util.GetInput("")
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
+		switch {
+		case strings.HasSuffix(importPath, "sql.gz") || strings.HasSuffix(importPath, "mysql.gz"):
+			err = archive.Ungzip(importPath, dbPath)
+			if err != nil {
+				return fmt.Errorf("failed to extract provided archive: %v", err)
+			}
+
+		case strings.HasSuffix(importPath, "zip"):
+			err = archive.Unzip(importPath, dbPath, extPath)
+			if err != nil {
+				return fmt.Errorf("failed to extract provided archive: %v", err)
+			}
+
+		case strings.HasSuffix(importPath, "tar"):
+			fallthrough
+		case strings.HasSuffix(importPath, "tar.gz"):
+			fallthrough
+		case strings.HasSuffix(importPath, "tgz"):
+			err := archive.Untar(importPath, dbPath, extPath)
+			if err != nil {
+				return fmt.Errorf("failed to extract provided archive: %v", err)
+			}
+
+		default:
+			err = fileutil.CopyFile(importPath, filepath.Join(dbPath, "db.sql"))
+			if err != nil {
+				return err
+			}
+		}
+
+		matches, err := filepath.Glob(filepath.Join(dbPath, "*.*sql"))
 		if err != nil {
 			return err
 		}
-	}
 
-	switch {
-	case strings.HasSuffix(importPath, "sql.gz") || strings.HasSuffix(importPath, "mysql.gz"):
-		err = archive.Ungzip(importPath, dbPath)
-		if err != nil {
-			return fmt.Errorf("failed to extract provided archive: %v", err)
+		if len(matches) < 1 {
+			return fmt.Errorf("no .sql or .mysql files found to import")
 		}
-
-	case strings.HasSuffix(importPath, "zip"):
-		err = archive.Unzip(importPath, dbPath, extPath)
-		if err != nil {
-			return fmt.Errorf("failed to extract provided archive: %v", err)
-		}
-
-	case strings.HasSuffix(importPath, "tar"):
-		fallthrough
-	case strings.HasSuffix(importPath, "tar.gz"):
-		fallthrough
-	case strings.HasSuffix(importPath, "tgz"):
-		err := archive.Untar(importPath, dbPath, extPath)
-		if err != nil {
-			return fmt.Errorf("failed to extract provided archive: %v", err)
-		}
-
-	default:
-		err = fileutil.CopyFile(importPath, filepath.Join(dbPath, "db.sql"))
-		if err != nil {
-			return err
-		}
-	}
-
-	matches, err := filepath.Glob(filepath.Join(dbPath, "*.*sql"))
-	if err != nil {
-		return err
-	}
-
-	if len(matches) < 1 {
-		return fmt.Errorf("no .sql or .mysql files found to import")
 	}
 
 	// Inside the container, the dir for imports will be at /mnt/ddev_config/<tmpdir_name>
 	insideContainerImportPath := path.Join("/mnt/ddev_config", filepath.Base(dbPath))
+
+	inContainerCommand := "pv " + insideContainerImportPath + "/*.*sql | mysql db"
+	if imPath == "" && extPath == "" {
+		inContainerCommand = "pv | mysql db"
+	}
+
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     "mysql --database=mysql -e 'DROP DATABASE IF EXISTS db; CREATE DATABASE db;' && pv " + insideContainerImportPath + "/*.*sql | mysql db",
+		Cmd:     inContainerCommand,
 		Tty:     progress && isatty.IsTerminal(os.Stdin.Fd()),
 	})
 
