@@ -1,12 +1,11 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 )
@@ -31,10 +30,17 @@ func TestCmdImportDB(t *testing.T) {
 	assert.NoError(err)
 	require.Equal(t, "", out)
 
-	importCmd := fmt.Sprintf("gzip -dc %s | %s import-db", filepath.Join(testDir, "testdata", t.Name(), "users.sql.gz"), DdevBin)
-	out, err = exec.RunCommand("sh", []string{"-c", importCmd})
-	assert.NoError(err)
-	assert.Contains(out, "Successfully imported database")
+	inputFile := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
+	f, err := os.Open(inputFile)
+	require.NoError(t, err)
+
+	command := exec.Command(DdevBin, "import-db")
+	command.Stdin = f
+
+	importDBOutput, err := command.CombinedOutput()
+	require.NoError(t, err)
+
+	assert.Contains(string(importDBOutput), "Successfully imported database")
 
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
