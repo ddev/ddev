@@ -208,7 +208,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 			commandToAdd := &cobra.Command{
 				Use:   commandName + " [args]",
-				Short: description + " (custom " + service + " command)",
+				Short: description + " (custom " + service + " container command)",
 				FParseErrWhitelist: cobra.FParseErrWhitelist{
 					UnknownFlags: true,
 				},
@@ -226,23 +226,32 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	return nil
 }
 
+// makeHostCmd creates a command which will run on the host
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
 	return func(cmd *cobra.Command, args []string) {
-		app.DockerEnv()
+		args = []string{}
+		if len(os.Args) > 2 {
+			args = os.Args[2:]
+		}
 		_ = os.Chdir(app.AppRoot)
-		err := exec.RunInteractiveCommand(fullPath, os.Args[2:])
+		err := exec.RunInteractiveCommand(fullPath, args)
 		if err != nil {
-			util.Failed("Failed to run %s %v: %v", name, os.Args[2:], err)
+			util.Failed("Failed to run %s %v: %v", name, strings.Join(args, " "), err)
 		}
 	}
 }
 
+// makeContainerCmd creates the command which will app.Exec to a container command
 func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service string) func(*cobra.Command, []string) {
 	return func(cmd *cobra.Command, args []string) {
 		app.DockerEnv()
 
+		args = []string{}
+		if len(os.Args) > 2 {
+			args = os.Args[2:]
+		}
 		_, _, err := app.Exec(&ddevapp.ExecOpts{
-			Cmd:       fullPath + " " + strings.Join(os.Args[2:], " "),
+			Cmd:       fullPath + " " + strings.Join(args, " "),
 			Service:   service,
 			Dir:       app.WorkingDir[service],
 			Tty:       isatty.IsTerminal(os.Stdin.Fd()),
@@ -250,7 +259,7 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service strin
 		})
 
 		if err != nil {
-			util.Failed("Failed to run %s %v: %v", name, strings.Join(os.Args[2:], " "), err)
+			util.Failed("Failed to run %s %v: %v", name, strings.Join(args, " "), err)
 		}
 	}
 }
