@@ -149,12 +149,12 @@ func Execute() {
 }
 
 func init() {
+	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
+
 	err := addCustomCommands(RootCmd)
 	if err != nil {
 		util.Warning("Adding custom commands failed: %v", err)
 	}
-
-	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 
 	// Prevent running as root for most cases
 	// We really don't want ~/.ddev to have root ownership, breaks things.
@@ -181,7 +181,7 @@ func instrumentationNotSetUpWarning() {
 func addCustomCommands(rootCmd *cobra.Command) error {
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
-		return err
+		return nil
 	}
 
 	if fileutil.FileExists(app.GetConfigPath("commands/host")) {
