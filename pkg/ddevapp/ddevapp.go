@@ -815,7 +815,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 
 	exec := []string{"exec"}
-	if workingDir := app.getWorkingDir(opts.Service, opts.Dir); workingDir != "" {
+	if workingDir := app.GetWorkingDir(opts.Service, opts.Dir); workingDir != "" {
 		exec = append(exec, "-w", workingDir)
 	}
 
@@ -881,7 +881,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	}
 
 	exec := []string{"exec"}
-	if workingDir := app.getWorkingDir(opts.Service, opts.Dir); workingDir != "" {
+	if workingDir := app.GetWorkingDir(opts.Service, opts.Dir); workingDir != "" {
 		exec = append(exec, "-w", workingDir)
 	}
 
@@ -1687,10 +1687,10 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	return app.providerInstance, err
 }
 
-// getWorkingDir will determine the appropriate working directory for an Exec/ExecWithTty command
+// GetWorkingDir will determine the appropriate working directory for an Exec/ExecWithTty command
 // by consulting with the project configuration. If no dir is specified for the service, an
 // empty string will be returned.
-func (app *DdevApp) getWorkingDir(service, dir string) string {
+func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 	// Highest preference is for directories passed into the command directly
 	if dir != "" {
 		return dir

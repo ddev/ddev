@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -42,7 +43,9 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 			if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") {
 				continue
 			}
-			inContainerFullPath := filepath.Join("/mnt/ddev_config/commands", service, commandName)
+			// Use path.Join() for the inContainerFullPath because it's about the path in the container, not on the
+			// host; a Windows path is not useful here.
+			inContainerFullPath := path.Join("/mnt/ddev_config/commands", service, commandName)
 			onHostFullPath := filepath.Join(topCommandPath, service, commandName)
 			description := findDirectiveInScript(onHostFullPath, "## Description")
 			if description == "" {
@@ -102,7 +105,7 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service strin
 		_, _, err := app.Exec(&ddevapp.ExecOpts{
 			Cmd:       fullPath + " " + strings.Join(osArgs, " "),
 			Service:   service,
-			Dir:       app.WorkingDir[service],
+			Dir:       app.GetWorkingDir(service, ""),
 			Tty:       isatty.IsTerminal(os.Stdin.Fd()),
 			NoCapture: true,
 		})
