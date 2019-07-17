@@ -13,6 +13,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -86,7 +87,17 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 			os.Args = os.Args[2:]
 		}
 		_ = os.Chdir(app.AppRoot)
-		err := exec.RunInteractiveCommand(fullPath, osArgs)
+		var err error
+		if runtime.GOOS == "windows" {
+			// Sadly, not sure how to have a bash interpreter without this.
+			bashPath := `C:\Program Files\Git\bin\bash.exe`
+			//args = []string{"-c", fullPath}
+			args = []string{fullPath}
+			args = append(args, osArgs...)
+			err = exec.RunInteractiveCommand(bashPath, args)
+		} else {
+			err = exec.RunInteractiveCommand(fullPath, osArgs)
+		}
 		if err != nil {
 			util.Failed("Failed to run %s %v: %v", name, strings.Join(osArgs, " "), err)
 		}

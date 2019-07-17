@@ -1,0 +1,28 @@
+#!/bin/bash
+
+## Description: Run MySQLWorkbench against current db
+## Usage: mysqlworkbench
+## Example: "ddev mysqlworkbench"
+
+# Note that this examle uses $DDEV_HOST_DB_PORT to get the port for the connection
+# Mysql Workbench can be obtained from https://dev.mysql.com/downloads/workbench/
+
+appPath="/Applications/MySQLWorkbench.app/Contents/MacOS/MySQLWorkbench"
+
+case $OSTYPE in
+  linux-gnu)
+    mysql-workbench --query  "db:db@127.0.0.1:${DDEV_HOST_DB_PORT}" &
+    echo "Attempted to launch mysql-workbench"
+
+    ;;
+  "darwin"*)
+    open MySQLWorkbench.app --query "db:db@127.0.0.1:${DDEV_HOST_DB_PORT}" &
+    echo "Attempted to launch MySQLWorkbench.app"
+    ;;
+#  "win*"* | "msys"*)
+    # 'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\mysqlworkbench.exe'
+    # You may need to add it to your system %PATH% or change the path here
+    # This doesn't actually seem to work on Windows, so waiting for community contribution
+    #'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\mysqlworkbench.exe' --query "db@127.0.0.1:${DDEV_HOST_DB_PORT}"
+    #;;
+esac
