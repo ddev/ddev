@@ -4,7 +4,9 @@
 ## Usage: solrtail
 ## Example: ddev solrtail
 
+# This example runs inside the solr container.
 # Note that this requires that /mnt/ddev_config be mounted
-# into the solr container
+# into the solr container and of course that you have a container
+# named solr.
 
 tail -f /opt/solr/server/logs
