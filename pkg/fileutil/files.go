@@ -262,7 +262,7 @@ func FindSimulatedXsymSymlinks(basePath string) ([]XSymContents, error) {
 			return err
 		}
 		//TODO: Skip a directory named .git? Skip other arbitrary dirs or files?
-		if err == nil && !info.IsDir() {
+		if !info.IsDir() {
 			if info.Size() == 1067 {
 				contents, err := ioutil.ReadFile(path)
 				if err != nil {

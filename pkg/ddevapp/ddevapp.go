@@ -320,10 +320,6 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 
 				extPath = util.GetInput("")
 			}
-
-			if err != nil {
-				return err
-			}
 		}
 
 		switch {
