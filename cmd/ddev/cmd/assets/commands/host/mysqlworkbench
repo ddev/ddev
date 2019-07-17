@@ -7,22 +7,25 @@
 # Note that this examle uses $DDEV_HOST_DB_PORT to get the port for the connection
 # Mysql Workbench can be obtained from https://dev.mysql.com/downloads/workbench/
 
-appPath="/Applications/MySQLWorkbench.app/Contents/MacOS/MySQLWorkbench"
+query="root:root@127.0.0.1:${DDEV_HOST_DB_PORT}"
 
 case $OSTYPE in
   linux-gnu)
-    mysql-workbench --query  "root@127.0.0.1:${DDEV_HOST_DB_PORT}" &
+    # You may need "apt-get install libproj-dev gnome-keyring" if it complains about those
+    mysql-workbench --query  "$query" &
     echo "Attempted to launch mysql-workbench"
-
     ;;
+
   "darwin"*)
-    open MySQLWorkbench.app --query "root:root@127.0.0.1:${DDEV_HOST_DB_PORT}" &
+    "/Applications/MySQLWorkbench.app/Contents/MacOS/MySQLWorkbench" --query "$query" &
     echo "Attempted to launch MySQLWorkbench.app"
     ;;
-#  "win*"* | "msys"*)
+
+  "win*"* | "msys"*)
     # 'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\mysqlworkbench.exe'
     # You may need to add it to your system %PATH% or change the path here
-    # This doesn't actually seem to work on Windows, so waiting for community contribution
-    #'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\mysqlworkbench.exe' --query "db@127.0.0.1:${DDEV_HOST_DB_PORT}"
+    # On docker toolbox you'll need to change the query to use the toolbox IP address,
+    # likely 192.168.99.100
+    'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\mysqlworkbench.exe' --query "$query"
     #;;
 esac
