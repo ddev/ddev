@@ -11,12 +11,12 @@ appPath="/Applications/MySQLWorkbench.app/Contents/MacOS/MySQLWorkbench"
 
 case $OSTYPE in
   linux-gnu)
-    mysql-workbench --query  "db:db@127.0.0.1:${DDEV_HOST_DB_PORT}" &
+    mysql-workbench --query  "root@127.0.0.1:${DDEV_HOST_DB_PORT}" &
     echo "Attempted to launch mysql-workbench"
 
     ;;
   "darwin"*)
-    open MySQLWorkbench.app --query "db:db@127.0.0.1:${DDEV_HOST_DB_PORT}" &
+    open MySQLWorkbench.app --query "root:root@127.0.0.1:${DDEV_HOST_DB_PORT}" &
     echo "Attempted to launch MySQLWorkbench.app"
     ;;
 #  "win*"* | "msys"*)

@@ -80,19 +80,18 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 // makeHostCmd creates a command which will run on the host
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
-	return func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, cobraArgs []string) {
 		app.DockerEnv()
 		osArgs := []string{}
 		if len(os.Args) > 2 {
-			os.Args = os.Args[2:]
+			osArgs = os.Args[2:]
 		}
-		_ = os.Chdir(app.AppRoot)
 		var err error
 		if runtime.GOOS == "windows" {
 			// Sadly, not sure how to have a bash interpreter without this.
 			bashPath := `C:\Program Files\Git\bin\bash.exe`
 			//args = []string{"-c", fullPath}
-			args = []string{fullPath}
+			args := []string{fullPath}
 			args = append(args, osArgs...)
 			err = exec.RunInteractiveCommand(bashPath, args)
 		} else {
