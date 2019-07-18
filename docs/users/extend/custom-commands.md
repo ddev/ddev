@@ -53,8 +53,34 @@ tail -f /opt/solr/server/logs/solr.log
 
 ```
 
-## Windows: paths
-
 ## Environment variables provided
 
+A number of environment variables are provided to the script. Useful variables for host scripts are:
 
+- DDEV_APPROOT: file system location of the project on the host)
+- DDEV_HOST_DB_PORT: Localhost port of the database server
+- DDEV_HOST_WEBSERVER_PORT: Localhost port of the webserver
+- DDEV_HOST_HTTPS_PORT: Localhost port for https on webserver
+- DDEV_DOCROOT: Relative path from approot to docroot
+- DDEV_HOSTNAME: Comma-separated list of FQDN hostnames
+- DDEV_PHP_VERSION
+- DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm, apache-cgi
+- DDEV_PROJECT_TYPE: drupal8, typo3, backdrop, wordpress, etc.
+- DDEV_ROUTER_HTTP_PORT: Router port for http
+- DDEV_ROUTER_HTTPS_PORT: Router port for https
+
+Useful variables for container scripts are:
+
+- DDEV_DOCROOT: Relative path from approot to docroot
+- DDEV_HOSTNAME: Comma-separated list of FQDN hostnames
+- DDEV_PHP_VERSION
+- DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm, apache-cgi
+- DDEV_PROJECT_TYPE: drupal8, typo3, backdrop, wordpress, etc.
+- DDEV_ROUTER_HTTP_PORT: Router port for http
+- DDEV_ROUTER_HTTPS_PORT: Router port for https
+
+
+## Known Windows OS issues
+
+* If ddev can't find "bash" to execute it, then the commands can't be used. If you are running inside git-bash in most any terminal, this shouldn't be an issue, and ddev should be able to find git-bash if it's in "C:\Program Files\Git\bin" as well. But if neither of those is true, add the directory of bash.exe to your PATH environment variable.
+* If you're using Docker Toolbox, the IP address for things like `ddev mysql` is not 127.0.0.1, it's likely 192.168.99.100. 

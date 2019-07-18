@@ -13,10 +13,6 @@ with a stanza like this in the docker-compose.solr.yaml:
 
 A number of environment variables are supplied to the scripts, including:
 
-DDEV_APPROOT: file system location of the project on the host)
-DDEV_HOST_DB_PORT: Localhost port of the database server
-DDEV_HOST_WEBSERVER_PORT: Localhost port of the webserver
-DDEV_HOST_HTTPS_PORT: Localhost port for https on webserver
 DDEV_DOCROOT: Relative path from approot to docroot
 DDEV_HOSTNAME: Comma-separated list of FQDN hostnames
 DDEV_PHP_VERSION
