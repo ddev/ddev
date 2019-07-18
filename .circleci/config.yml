@@ -11,12 +11,12 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v4
+        - homebrew-linux-v5
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux-v4
+        key: homebrew-linux-v5
         paths:
         - /home/linuxbrew
 
@@ -42,13 +42,13 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v4
+        - homebrew-linux-v5
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux-v4
+        key: homebrew-linux-v5
         paths:
         - /home/linuxbrew
 
@@ -73,14 +73,14 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v4
+        - homebrew-macos-v5
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - save_cache:
-        key: homebrew-macos-v4
+        key: homebrew-macos-v5
         paths:
         - /usr/local/Homebrew
     - run:
@@ -103,7 +103,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v4
+        - homebrew-macos-v5
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -116,7 +116,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: homebrew-macos-v4
+        key: homebrew-macos-v5
         paths:
         - /usr/local/Homebrew
 
@@ -134,7 +134,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v4
+        - homebrew-macos-v5
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -147,7 +147,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: homebrew-macos-v4
+        key: homebrew-macos-v5
         paths:
         - /usr/local/Homebrew
 
@@ -164,13 +164,13 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v4
+        - homebrew-macos-v5
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos-v4
+        key: homebrew-macos-v5
         paths:
         - /usr/local/Homebrew
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
@@ -194,14 +194,14 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v4
+        - homebrew-linux-v5
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux-v4
+        key: homebrew-linux-v5
         paths:
         - /home/linuxbrew
 
@@ -227,14 +227,14 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v4
+        - homebrew-linux-v5
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux-v4
+        key: homebrew-linux-v5
         paths:
         - /home/linuxbrew
     - run:
@@ -257,14 +257,14 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v4
+        - homebrew-linux-v5
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux-v4
+        key: homebrew-linux-v5
         paths:
         - /home/linuxbrew
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
@@ -287,12 +287,12 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v4
+        - homebrew-linux-v5
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux-v4
+        key: homebrew-linux-v5
         paths:
         - /home/linuxbrew
     - run:
@@ -308,12 +308,12 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v4
+        - homebrew-linux-v5
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux-v4
+        key: homebrew-linux-v5
         paths:
         - /home/linuxbrew
     - run:
@@ -337,12 +337,12 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-macos-v4
+        - homebrew-macos-v5
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos-v4
+        key: homebrew-macos-v5
         paths:
         - /usr/local/Homebrew
     - run:
@@ -367,7 +367,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v4
+        - homebrew-linux-v5
     - attach_workspace:
         at: ~/
     - run:
@@ -375,7 +375,7 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: homebrew-linux-v4
+        key: homebrew-linux-v5
         paths:
         - /home/linuxbrew
     - store_artifacts:
@@ -395,12 +395,12 @@ jobs:
       - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
       - restore_cache:
           keys:
-          - homebrew-linux-v4
+          - homebrew-linux-v5
       - run:
           command: ./.circleci/linux_circle_vm_setup.sh
           name: TAG BUILD Circle VM setup - tools, docker, golang
       - save_cache:
-          key: homebrew-linux-v4
+          key: homebrew-linux-v5
           paths:
           - /home/linuxbrew
 
@@ -437,12 +437,12 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v4
+        - homebrew-linux-v5
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: RELEASE BUILD Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-linux-v4
+        key: homebrew-linux-v5
         paths:
         - /home/linuxbrew
 
