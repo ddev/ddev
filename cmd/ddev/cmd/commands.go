@@ -113,7 +113,7 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 			err = exec.RunInteractiveCommand(fullPath, osArgs)
 		}
 		if err != nil {
-			util.Failed("Failed to run %s %v: %v", name, strings.Join(osArgs, " "), err)
+			util.Failed("Failed to run %s %v; error=%v", name, strings.Join(osArgs, " "), err)
 		}
 	}
 }

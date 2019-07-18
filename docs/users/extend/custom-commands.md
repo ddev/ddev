@@ -53,6 +53,8 @@ tail -f /opt/solr/server/logs/solr.log
 
 ```
 
+Note that your script files should be set to executable (`chmod +x <scriptfile>`).
+
 ## Environment variables provided
 
 A number of environment variables are provided to the script. Useful variables for host scripts are:
