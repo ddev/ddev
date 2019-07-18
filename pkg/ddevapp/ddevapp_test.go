@@ -2268,7 +2268,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 	app.AdditionalHostnames = []string{"sub1", "sub2", "sub3"}
 	app.AdditionalFQDNs = []string{"junker99.example.com"}
 
-	for _, pair := range []testcommon.PortPair{{"80", "443"}, {"8080", "8443"}} {
+	for _, pair := range []testcommon.PortPair{{HTTPPort: "80", HTTPSPort: "443"}, {HTTPPort: "8080", HTTPSPort: "8443"}} {
 		testcommon.ClearDockerEnv()
 		app.RouterHTTPPort = pair.HTTPPort
 		app.RouterHTTPSPort = pair.HTTPSPort

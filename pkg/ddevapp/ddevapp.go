@@ -320,10 +320,6 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 
 				extPath = util.GetInput("")
 			}
-
-			if err != nil {
-				return err
-			}
 		}
 
 		switch {
@@ -819,7 +815,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 
 	exec := []string{"exec"}
-	if workingDir := app.getWorkingDir(opts.Service, opts.Dir); workingDir != "" {
+	if workingDir := app.GetWorkingDir(opts.Service, opts.Dir); workingDir != "" {
 		exec = append(exec, "-w", workingDir)
 	}
 
@@ -885,7 +881,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	}
 
 	exec := []string{"exec"}
-	if workingDir := app.getWorkingDir(opts.Service, opts.Dir); workingDir != "" {
+	if workingDir := app.GetWorkingDir(opts.Service, opts.Dir); workingDir != "" {
 		exec = append(exec, "-w", workingDir)
 	}
 
@@ -895,7 +891,18 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 		return fmt.Errorf("no command provided")
 	}
 
-	exec = append(exec, opts.Cmd)
+	// Cases to handle
+	// - Free form, all unquoted. Like `ls -l -a`
+	// - Quoted to delay pipes and other features to container, like `"ls -l -a | grep junk"`
+	// Note that a set quoted on the host in ddev exec will come through as a single arg
+
+	// Use bash for our containers, sh for 3rd-party containers
+	// that may not have bash.
+	shell := "bash"
+	if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
+		shell = "sh"
+	}
+	exec = append(exec, shell, "-c", opts.Cmd)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
@@ -1003,6 +1010,8 @@ func (app *DdevApp) DockerEnv() {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
+	dbPort, _ := app.GetPublishedPort("db")
+
 	envVars := map[string]string{
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
@@ -1012,7 +1021,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_BGSYNCIMAGE":              app.BgsyncImage,
 		"DDEV_APPROOT":                  app.AppRoot,
-		"DDEV_HOST_DB_PORT":             app.HostDBPort,
+		"DDEV_HOST_DB_PORT":             strconv.Itoa(dbPort),
 		"DDEV_HOST_WEBSERVER_PORT":      app.HostWebserverPort,
 		"DDEV_HOST_HTTPS_PORT":          app.HostHTTPSPort,
 		"DDEV_PHPMYADMIN_PORT":          app.PHPMyAdminPort,
@@ -1678,10 +1687,10 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	return app.providerInstance, err
 }
 
-// getWorkingDir will determine the appropriate working directory for an Exec/ExecWithTty command
+// GetWorkingDir will determine the appropriate working directory for an Exec/ExecWithTty command
 // by consulting with the project configuration. If no dir is specified for the service, an
 // empty string will be returned.
-func (app *DdevApp) getWorkingDir(service, dir string) string {
+func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 	// Highest preference is for directories passed into the command directly
 	if dir != "" {
 		return dir

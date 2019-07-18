@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: Run drush inside the web container
+## Usage: drush [flags] [args]
+## Example: "ddev drush uli" or "ddev drush sql-cli" or "ddev drush --version"
+
+drush $@

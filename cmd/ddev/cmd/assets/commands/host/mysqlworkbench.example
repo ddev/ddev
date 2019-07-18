@@ -1,0 +1,31 @@
+#!/bin/bash
+
+## Description: Run MySQLWorkbench against current db
+## Usage: mysqlworkbench
+## Example: "ddev mysqlworkbench"
+
+# Note that this examle uses $DDEV_HOST_DB_PORT to get the port for the connection
+# Mysql Workbench can be obtained from https://dev.mysql.com/downloads/workbench/
+
+query="root:root@127.0.0.1:${DDEV_HOST_DB_PORT}"
+
+case $OSTYPE in
+  linux-gnu)
+    # You may need "apt-get install libproj-dev gnome-keyring" if it complains about those
+    mysql-workbench --query  "$query" &
+    echo "Attempted to launch mysql-workbench"
+    ;;
+
+  "darwin"*)
+    "/Applications/MySQLWorkbench.app/Contents/MacOS/MySQLWorkbench" --query "$query" &
+    echo "Attempted to launch MySQLWorkbench.app"
+    ;;
+
+  "win*"* | "msys"*)
+    # 'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\mysqlworkbench.exe'
+    # You may need to add it to your system %PATH% or change the path here
+    # On docker toolbox you'll need to change the query to use the toolbox IP address,
+    # likely 192.168.99.100
+    'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\mysqlworkbench.exe' --query "$query"
+    #;;
+esac

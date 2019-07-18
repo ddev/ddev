@@ -28,3 +28,6 @@ services:
 
     # Arguments passed to the memcached binary.
     command: ["-m", "128"]
+
+    volumes:
+    - ".:/mnt/ddev_config"

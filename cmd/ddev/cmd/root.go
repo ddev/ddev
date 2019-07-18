@@ -148,13 +148,23 @@ func Execute() {
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 
+	err := populateExamplesAndCommands()
+	if err != nil {
+		util.Warning("populateExamplesAndCommands() failed: %v", err)
+	}
+
+	err = addCustomCommands(RootCmd)
+	if err != nil {
+		util.Warning("Adding custom commands failed: %v", err)
+	}
+
 	// Prevent running as root for most cases
 	// We really don't want ~/.ddev to have root ownership, breaks things.
 	if os.Geteuid() == 0 && len(os.Args) > 1 && os.Args[1] != "hostname" {
 		output.UserOut.Fatal("ddev is not designed to be run with root privileges, please run as normal user and without sudo")
 	}
 
-	err := globalconfig.ReadGlobalConfig()
+	err = globalconfig.ReadGlobalConfig()
 	if err != nil {
 		util.Failed("Failed to read global config file %s: %v", globalconfig.GetGlobalConfigPath(), err)
 	}

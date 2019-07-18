@@ -14,3 +14,6 @@ services:
     labels:
       # These labels ensure this service is discoverable by ddev
       com.ddev.site-name: ${DDEV_SITENAME}
+    volumes:
+    - ".:/mnt/ddev_config"
+
