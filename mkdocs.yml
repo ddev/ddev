@@ -1,4 +1,4 @@
-site_name: ddev Documentation
+site_name: DDEV-Local Documentation
 repo_url: https://github.com/drud/ddev
 repo_name: GitHub
 edit_uri: blob/master/docs/
@@ -20,7 +20,8 @@ pages:
       - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'
       - 'Additional Services': 'users/extend/additional-services.md'
       - 'Defining Custom Services': 'users/extend/custom-compose-files.md'
-      - 'Customizing Docker Images': users/extend/customizing-images.md
+      - 'Customizing Docker Images': 'users/extend/customizing-images.md'
+      - 'Custom Commands': 'users/extend/custom-commands.md'
     - 'Integration with Hosting Providers':
       - 'Pantheon': 'users/providers/pantheon.md'
       - 'DDEV-Live': 'users/providers/drud-s3.md'

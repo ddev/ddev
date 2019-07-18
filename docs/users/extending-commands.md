@@ -170,6 +170,3 @@ hooks:
 webimage_extra_packages: ["php7.2-ldap", "php7.2-tidy"]
 dbimage_extra_packages: ["vim"]
 ```
-
-```
-dbimage_extra_packages```
