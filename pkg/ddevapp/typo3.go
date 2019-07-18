@@ -34,6 +34,11 @@ $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = 'localhost:1025';
 
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['devIPmask'] = '*';
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['displayErrors'] = 1;
+
+// This GFX configuration allows processing by installed ImageMagick 6
+$GLOBALS['TYPO3_CONF_VARS']['GFX']['processor'] = 'ImageMagick';
+$GLOBALS['TYPO3_CONF_VARS']['GFX']['processor_path'] = '/usr/bin/';
+$GLOBALS['TYPO3_CONF_VARS']['GFX']['processor_path_lzw'] = '/usr/bin/';
 `
 
 // createTypo3SettingsFile creates the app's LocalConfiguration.php and
