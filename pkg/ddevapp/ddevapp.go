@@ -712,9 +712,9 @@ func (app *DdevApp) Start() error {
 
 	if compareVer(app.APIVersion, version.DdevVersion) == 1 {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
-  } else if compareVer(app.APIVersion, version.DdevVersion) == -1 {
+	} else if compareVer(app.APIVersion, version.DdevVersion) == -1 {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease refer to https://ddev.readthedocs.io/en/stable/ to update your local installation.\nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
-  }
+	}
 
 	// Make sure that any ports allocated are available.
 	// and of course add to global project list as well
