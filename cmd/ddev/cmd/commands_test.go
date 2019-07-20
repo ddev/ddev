@@ -30,7 +30,7 @@ func TestCmdCustomCommands(t *testing.T) {
 	assert.FileExists(filepath.Join(commandsDir, "host", "mysqlworkbench.example"))
 	out, err := exec.RunCommand(DdevBin, []string{})
 	assert.NoError(err)
-	assert.Contains(out, "mysql client in web container")
+	assert.Contains(out, "mysql client in db container")
 
 	// Test the `ddev mysql` command with stdin
 	inputFile := filepath.Join(testCmdCustomCommandsDir, "..", "select99.sql")
