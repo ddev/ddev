@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
@@ -51,7 +49,6 @@ running 'ddev describe <projectname>.`,
 // renderAppDescribe takes the map describing the app and renders it for plain-text output
 func renderAppDescribe(desc map[string]interface{}) (string, error) {
 
-	maxWidth := uint(200)
 	var output string
 
 	status := desc["status"]
@@ -62,33 +59,37 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 
 	// Only show extended status for running sites.
 	if status == ddevapp.SiteRunning {
-		output = output + "\n\nProject Information\n-----------------\n"
+		dbinfo := desc["dbinfo"].(map[string]interface{})
+
+		output = output + "\n\nProject Information\n-------------------\n"
 		siteInfo := uitable.New()
 		siteInfo.AddRow("PHP version:", desc["php_version"])
+		siteInfo.AddRow("MariaDB version", dbinfo["mariadb_version"])
 
-		siteInfo.AddRow("URLs:", strings.Join(desc["urls"].([]string), ", "))
-		output = output + fmt.Sprint(siteInfo)
+		output = output + fmt.Sprintln(siteInfo)
+		urlTable := uitable.New()
+		urlTable.MaxColWidth = 80
+		for _, url := range desc["urls"].([]string) {
+			urlTable.AddRow(url)
+		}
+		output = output + "\nURLs\n----\n"
+
+		output = output + fmt.Sprintln(urlTable)
+
 		dockerIP, err := dockerutil.GetDockerIP()
 		if err != nil {
 			return "", err
 		}
 
-		output = output + "\n\nMySQL Credentials\n-----------------\n"
-		dbTable := uitable.New()
+		output = output + "\n\n" + "MySQL/MariaDB Credentials\n-------------------------\n" + `Username: "db", Password: "db", Default database: "db"` + "\n"
+		output = output + "\n" + `or use root credentials when needed: Username: "root", Password: "root"` + "\n\n"
 
-		dbinfo := desc["dbinfo"].(map[string]interface{})
+		output = output + "Database hostname and port INSIDE container: db:3306\n"
+		output = output + fmt.Sprintf("To connect to db server inside container or in project settings files: \nmysql --host=db --user=db --password=db --database=db\n")
 
-		if _, ok := dbinfo["username"].(string); ok {
-			dbTable.MaxColWidth = maxWidth
-			dbTable.AddRow("Username:", dbinfo["username"])
-			dbTable.AddRow("Password:", dbinfo["password"])
-			dbTable.AddRow("Database name:", dbinfo["dbname"])
-			dbTable.AddRow("Host:", dbinfo["host"])
-			dbTable.AddRow("Port:", dbinfo["port"])
-			dbTable.AddRow("MariaDB version", dbinfo["mariadb_version"])
-			output = output + fmt.Sprint(dbTable)
-			output = output + fmt.Sprintf("\nTo connect to mysql from your host machine, use port %d on %s.\nFor example: mysql --host=%s --port=%d --user=db --password=db --database=db", dbinfo["published_port"], dockerIP, dockerIP, dbinfo["published_port"])
-		}
+		output = output + fmt.Sprintf("Database hostname and port from HOST: %s:%d\n", dockerIP, dbinfo["published_port"])
+		output = output + fmt.Sprintf("To connect to mysql from your host machine, \nmysql --host=%s --port=%d --user=db --password=db --database=db\n", dockerIP, dbinfo["published_port"])
+
 		output = output + "\n\nOther Services\n--------------\n"
 		other := uitable.New()
 		other.AddRow("MailHog:", desc["mailhog_url"])
