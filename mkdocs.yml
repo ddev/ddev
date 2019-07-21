@@ -16,6 +16,7 @@ pages:
     - 'Using Developer Tools with ddev': 'users/developer-tools.md'
     - 'PHP Step Debugging': 'users/step-debugging.md'
     - 'Extending ddev':
+      - '.ddev/config.yaml Options': 'users/extend/config_yaml.md'
       - 'Additional Project Hostnames': 'users/extend/additional-hostnames.md'
       - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'
       - 'Additional Services': 'users/extend/additional-services.md'

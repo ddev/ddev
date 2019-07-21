@@ -314,11 +314,9 @@ const ConfigInstructions = `
 
 # webimage_extra_packages: [php-yaml, php7.3-ldap]
 # Extra Debian packages that are needed in the webimage can be added here
-# This is ignored if a free-form .ddev/web-build/Dockerfile is provided
 
 # dbimage_extra_packages: [telnet,netcat]
 # Extra Debian packages that are needed in the dbimage can be added here
-# This is ignored if a free-form .ddev/db-build/Dockerfile is provided
 
 # use_dns_when_possible: true
 # If the host has internet access and the domain configured can 
@@ -329,7 +327,8 @@ const ConfigInstructions = `
 # project_tld: ddev.site
 # The top-level domain used for project URLs
 # The default "ddev.site" allows DNS lookup via a wildcard
-# For backward compatibility this can be changed to "ddev.local"
+# If you prefer you can change this to "ddev.local" to preserve
+# pre-v1.9 behavior.
 
 # ngrok_args: --subdomain mysite --auth "user:pass"
 # Provide extra flags to the "ngrok http" command, see 
