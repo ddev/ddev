@@ -392,7 +392,8 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		}
 
 		t.Logf("Testing these URLs: %v", app.GetAllURLs())
-		for _, url := range app.GetAllURLs() {
+		_, _, allURLs := app.GetAllURLs()
+		for _, url := range allURLs {
 			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
 
@@ -2153,7 +2154,7 @@ func TestGetAllURLs(t *testing.T) {
 	err = app.StartAndWaitForSync(0)
 	require.NoError(t, err)
 
-	urls := app.GetAllURLs()
+	_, _, urls := app.GetAllURLs()
 
 	// Convert URLs to map[string]bool
 	urlMap := make(map[string]bool)
@@ -2282,7 +2283,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		err = app.StartAndWaitForSync(5)
 		assert.NoError(err)
 
-		urls := app.GetAllURLs()
+		_, _, urls := app.GetAllURLs()
 
 		// Convert URLs to map[string]bool
 		urlMap := make(map[string]bool)
@@ -2294,7 +2295,8 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		expectedNumUrls := len(app.GetHostnames()) + 1
 		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
-		URLList := append(app.GetAllURLs(), "http://localhost", "http://localhost")
+		_, _, URLList := app.GetAllURLs()
+		URLList = append(URLList, "http://localhost", "http://localhost")
 		for _, item := range URLList {
 			// Make sure internal (web container) access is successful
 			parts, err := url.Parse(item)

@@ -184,7 +184,10 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["shortroot"] = shortRoot
 	appDesc["httpurl"] = app.GetHTTPURL()
 	appDesc["httpsurl"] = app.GetHTTPSURL()
-	appDesc["urls"] = app.GetAllURLs()
+	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
+	appDesc["httpURLs"] = httpURLs
+	appDesc["httpsURLs"] = httpsURLs
+	appDesc["urls"] = allURLs
 
 	// Only show extended status for running sites.
 	if app.SiteStatus() == SiteRunning {
@@ -1378,8 +1381,7 @@ func (app *DdevApp) GetHTTPSURL() string {
 }
 
 // GetAllURLs returns an array of all the URLs for the project
-func (app *DdevApp) GetAllURLs() []string {
-	var URLs []string
+func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs []string) {
 
 	// Get configured URLs
 	for _, name := range app.GetHostnames() {
@@ -1392,20 +1394,14 @@ func (app *DdevApp) GetAllURLs() []string {
 			httpsPort = ":" + app.RouterHTTPSPort
 		}
 
-		var url = "https://" + name + httpsPort
-		if GetCAROOT() == "" {
-			url = "http://" + name + httpPort
-		}
-		URLs = append(URLs, url)
+		httpsURLs = append(httpsURLs, "https://"+name+httpsPort)
+		httpURLs = append(httpURLs, "http://"+name+httpPort)
 	}
 
-	if GetCAROOT() != "" {
-		URLs = append(URLs, app.GetWebContainerDirectHTTPSURL())
-	} else {
-		URLs = append(URLs, app.GetWebContainerDirectHTTPURL())
-	}
+	httpsURLs = append(httpsURLs, app.GetWebContainerDirectHTTPSURL())
+	httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())
 
-	return URLs
+	return httpURLs, httpsURLs, append(httpURLs, httpsURLs...)
 }
 
 // GetWebContainerDirectHTTPURL returns the URL that can be used without the router to get to web container.

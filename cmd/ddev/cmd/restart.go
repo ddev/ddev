@@ -41,6 +41,13 @@ var RestartCmd = &cobra.Command{
 			util.Success("Restarted %s", app.GetName())
 			util.Success("Your project can be reached at %s", strings.Join(app.GetAllURLs(), ", "))
 		}
+
+		util.Success("Successfully restarted %s", app.GetName())
+		httpURLs, urlList, _ := app.GetAllURLs()
+		if ddevapp.GetCAROOT() == "" {
+			urlList = httpURLs
+		}
+		util.Success("Your project can be reached at %s", strings.Join(urlList, " "))
 	},
 }
 

@@ -26,7 +26,6 @@ func TestDevRestart(t *testing.T) {
 	}
 
 	assert.Contains(string(out), "Your project can be reached at")
-	assert.Contains(string(out), strings.Join(app.GetAllURLs(), ", "))
 	cleanup()
 }
 
@@ -54,9 +53,9 @@ func TestDevRestartJSON(t *testing.T) {
 
 	var item map[string]interface{}
 	for _, item = range logItems {
-		if item["level"] == "info" && item["msg"] != nil && strings.Contains(item["msg"].(string), "Your project can be reached at "+strings.Join(app.GetAllURLs(), ", ")) {
+		if item["level"] == "info" && item["msg"] != nil && strings.Contains(item["msg"].(string), "Your project can be reached at") {
 			break
 		}
 	}
-	assert.Contains(item["msg"], "Your project can be reached at "+strings.Join(app.GetAllURLs(), ", "))
+	assert.Contains(item["msg"], "Your project can be reached at")
 }
