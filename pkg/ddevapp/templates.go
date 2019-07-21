@@ -330,7 +330,7 @@ const ConfigInstructions = `
 # If you prefer you can change this to "ddev.local" to preserve
 # pre-v1.9 behavior.
 
-# ngrok_args: --subdomain mysite --auth "user:pass"
+# ngrok_args: --subdomain mysite --auth username:pass
 # Provide extra flags to the "ngrok http" command, see 
 # https://ngrok.com/docs#http or run "ngrok http -h"
 
