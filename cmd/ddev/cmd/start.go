@@ -57,6 +57,6 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 }
 
 func init() {
-	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all stopped projects")
+	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all projects")
 	RootCmd.AddCommand(StartCmd)
 }
