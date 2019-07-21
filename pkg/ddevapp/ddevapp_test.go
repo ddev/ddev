@@ -391,7 +391,8 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
-		t.Logf("Testing these URLs: %v", app.GetAllURLs())
+		_, _, urls := app.GetAllURLs()
+		t.Logf("Testing these URLs: %v", urls)
 		_, _, allURLs := app.GetAllURLs()
 		for _, url := range allURLs {
 			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
