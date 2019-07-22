@@ -20,7 +20,7 @@ func TestDevRestart(t *testing.T) {
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 
-	app, err := ddevapp.GetActiveApp("")
+	_, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		assert.Fail("Could not find an active ddev configuration: %v", err)
 	}
@@ -36,7 +36,7 @@ func TestDevRestartJSON(t *testing.T) {
 	cleanup := site.Chdir()
 	defer cleanup()
 
-	app, err := ddevapp.GetActiveApp("")
+	_, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		assert.Fail("Could not find an active ddev configuration: %v", err)
 	}
