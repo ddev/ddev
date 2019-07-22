@@ -15,6 +15,16 @@ import (
 
 var hashedHostID string
 
+// GetInstrumentationUser normally gets just the hashed hostID but if
+// an explicit user is provided in global_config.yaml that will be prepended.
+func GetInstrumentationUser() string {
+	userID := hashedHostID
+	if globalconfig.DdevGlobalConfig.InstrumentationUser != "" {
+		userID = globalconfig.DdevGlobalConfig.InstrumentationUser + "_" + hashedHostID
+	}
+	return userID
+}
+
 // SetInstrumentationBaseTags sets the basic always-used tags for Sentry/Raven/Segment
 func SetInstrumentationBaseTags() {
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
@@ -29,7 +39,7 @@ func SetInstrumentationBaseTags() {
 		nodeps.InstrumentationTags["dockerComposeVersion"] = composeVersion
 		nodeps.InstrumentationTags["dockerToolbox"] = strconv.FormatBool(isToolbox)
 		nodeps.InstrumentationTags["version"] = version.VERSION
-		nodeps.InstrumentationTags["ServerHash"] = hashedHostID
+		nodeps.InstrumentationTags["ServerHash"] = GetInstrumentationUser()
 
 		// Add these tags to sentry/raven
 		raven.SetTagsContext(nodeps.InstrumentationTags)
@@ -95,12 +105,12 @@ func SendInstrumentationEvents(event string) {
 
 		client := analytics.New(version.SegmentKey)
 
-		err := SegmentUser(client, hashedHostID)
+		err := SegmentUser(client, GetInstrumentationUser())
 		if err != nil {
 			util.Warning("error sending hashedHostID to segment: %v", err)
 		}
 
-		err = SegmentEvent(client, hashedHostID, event)
+		err = SegmentEvent(client, GetInstrumentationUser(), event)
 		if err != nil {
 			util.Warning("error sending event to segment: %v", err)
 		}
