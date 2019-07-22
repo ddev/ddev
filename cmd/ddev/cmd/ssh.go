@@ -14,14 +14,17 @@ var sshDirArg string
 
 // DdevSSHCmd represents the ssh command.
 var DdevSSHCmd = &cobra.Command{
-	Use:   "ssh",
+	Use: "ssh [projectname]",
+
 	Short: "Starts a shell session in the container for a service. Uses web service by default.",
 	Long:  `Starts a shell session in the container for a service. Uses web service by default. To start a shell session for another service, run "ddev ssh --service <service>`,
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := ddevapp.GetActiveApp("")
+		projects, err := getRequestedProjects(args, false)
 		if err != nil {
-			util.Failed("Failed to ssh: %v", err)
+			util.Failed("Failed to ddev ssh: %v", err)
 		}
+		app := projects[0]
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
 			util.Failed("Project is not currently running. Try 'ddev start'.")
