@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"testing"
@@ -579,12 +580,15 @@ func TestConfigValidate(t *testing.T) {
 	assert.Contains(err.Error(), "invalid hostname")
 
 	app.AdditionalFQDNs = []string{}
-	app.Timezone = "xxx"
-	err = app.ValidateConfig()
-	assert.Error(err)
-	app.Timezone = "America/Chicago"
-	err = app.ValidateConfig()
-	assert.NoError(err)
+	// Timezone validation isn't possible on Windows.
+	if runtime.GOOS != "windows" {
+		app.Timezone = "xxx"
+		err = app.ValidateConfig()
+		assert.Error(err)
+		app.Timezone = "America/Chicago"
+		err = app.ValidateConfig()
+		assert.NoError(err)
+	}
 }
 
 // TestWriteConfig tests writing config values to file
