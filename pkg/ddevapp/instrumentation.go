@@ -5,7 +5,7 @@ import (
 	"github.com/denisbrodbeck/machineid"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/getsentry/raven-go"
 	"gopkg.in/segmentio/analytics-go.v3"
@@ -107,16 +107,16 @@ func SendInstrumentationEvents(event string) {
 
 		err := SegmentUser(client, GetInstrumentationUser())
 		if err != nil {
-			util.Warning("error sending hashedHostID to segment: %v", err)
+			output.UserOut.Debugf("error sending hashedHostID to segment: %v", err)
 		}
 
 		err = SegmentEvent(client, GetInstrumentationUser(), event)
 		if err != nil {
-			util.Warning("error sending event to segment: %v", err)
+			output.UserOut.Debugf("error sending event to segment: %v", err)
 		}
 		err = client.Close()
 		if err != nil {
-			util.Warning("segment analytics client.close() failed: %v", err)
+			output.UserOut.Debugf("segment analytics client.close() failed: %v", err)
 		}
 	}
 }
