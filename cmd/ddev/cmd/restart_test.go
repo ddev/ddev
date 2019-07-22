@@ -20,7 +20,7 @@ func TestDevRestart(t *testing.T) {
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 
-	_, err := ddevapp.GetActiveApp("")
+	_, err = ddevapp.GetActiveApp("")
 	if err != nil {
 		assert.Fail("Could not find an active ddev configuration: %v", err)
 	}
