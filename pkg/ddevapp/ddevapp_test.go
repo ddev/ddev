@@ -2163,8 +2163,8 @@ func TestGetAllURLs(t *testing.T) {
 		urlMap[u] = true
 	}
 
-	// We expect two URLs for each hostname (http/https) and one direct web container address.
-	expectedNumUrls := len(app.GetHostnames()) + 1
+	// We expect two URLs for each hostname (http/https) and two direct web container address.
+	expectedNumUrls := len(app.GetHostnames())*2 + 2
 	assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
 	// Ensure urlMap contains direct address of the web container
@@ -2258,7 +2258,7 @@ func TestWebserverType(t *testing.T) {
 func TestInternalAndExternalAccessToURL(t *testing.T) {
 	assert := asrt.New(t)
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestInternalAndExternalAccessToURL"))
+	runTime := testcommon.TimeTrack(time.Now(), t.Name())
 
 	site := TestSites[0]
 	app := new(ddevapp.DdevApp)
@@ -2293,7 +2293,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		}
 
 		// We expect two URLs for each hostname (http/https) and two direct web container addresses.
-		expectedNumUrls := len(app.GetHostnames()) + 1
+		expectedNumUrls := len(app.GetHostnames())*2 + 2
 		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
 		_, _, URLList := app.GetAllURLs()
