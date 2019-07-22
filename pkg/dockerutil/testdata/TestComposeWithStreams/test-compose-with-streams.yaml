@@ -28,4 +28,10 @@ services:
       com.ddev.platform: ddev
       com.ddev.site-name: TestComposeWithStreams
     restart: "no"
+    healthcheck:
+      interval: 1s
+      retries: 25
+      start_period: 20s
+      timeout: 120s
+
 version: '3.6'

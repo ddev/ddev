@@ -37,6 +37,11 @@ services:
       com.ddev.site-name: test
       com.ddev.platform: local
       com.ddev.app-type: wordpress
+    healthcheck:
+      interval: 1s
+      retries: 25
+      start_period: 20s
+      timeout: 120s
 networks:
   default:
     external:
