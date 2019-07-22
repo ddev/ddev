@@ -2,7 +2,7 @@
 
 It's quite easy to add custom commands to ddev; they can execute either on the host or in the various containers. The basic idea is to add a bash script to `.ddev/commands/host` or `.ddev/commands/<containername>`
 
-There are example commands provided in `ddev/commands/*/*.example` that can just be copied or moved and used as commands. For example, [.ddev/commands/host/mysqlworkshop.example](https://github.com/drud/ddev/tree/master/cmd/ddev/cmd/asssets/commands/host/mysqlworkshop.example) can be used to add a "ddev mysqlworkshop" command, just change it from "mysqlworkshop.example" to "mysqlworkshop". Also, a new `ddev mysql` command has been added using this technique (as a db container command). See [mysql command](https://github.com/drud/ddev/tree/master/cmd/ddev/cmd/asssets/commands/db/mysql).
+There are example commands provided in `ddev/commands/*/*.example` that can just be copied or moved (or symlinked) and used as commands. For example, [.ddev/commands/host/mysqlworkshop.example](https://github.com/drud/ddev/tree/master/cmd/ddev/cmd/asssets/commands/host/mysqlworkshop.example) can be used to add a "ddev mysqlworkshop" command, just change it from "mysqlworkshop.example" to "mysqlworkshop". Also, a new `ddev mysql` command has been added using this technique (as a db container command). See [mysql command](https://github.com/drud/ddev/tree/master/cmd/ddev/cmd/asssets/commands/db/mysql). If you're on macOS or Linux (or some configurations of Windows) you can just `cd .ddev/commands/host && ln -s mysqldumpworkshop.example mysqlworkshop`.
 
 ## Host commands
 
