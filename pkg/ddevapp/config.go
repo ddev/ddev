@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -435,14 +434,15 @@ func (app *DdevApp) ValidateConfig() error {
 	if app.WebcacheEnabled && app.NFSMountEnabled {
 		return fmt.Errorf("webcache_enabled and nfs_mount_enabled cannot both be set to true, use one or the other")
 	}
-	_, err = time.LoadLocation(app.Timezone)
-	if err != nil {
-		// golang on Windows is often not able to time.LoadLocation.
-		// It often works if go is installed and $GOROOT is set, but
-		// that's not the norm for our users.
-		if _, ok := err.(syscall.Errno); ok && runtime.GOOS == "windows" {
-			util.Warning("Accepting timezone %s without validation on Windows", app.Timezone)
-		} else {
+
+	// golang on windows is not able to time.LoadLocation unless
+	// go is installed... so skip validation on Windows
+	if runtime.GOOS != "windows" {
+		_, err = time.LoadLocation(app.Timezone)
+		if err != nil {
+			// golang on Windows is often not able to time.LoadLocation.
+			// It often works if go is installed and $GOROOT is set, but
+			// that's not the norm for our users.
 			return fmt.Errorf("invalid timezone %s: %v", app.Timezone, err)
 		}
 	}

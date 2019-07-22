@@ -227,7 +227,7 @@ const ConfigInstructions = `
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
-# php_version: "7.1"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3"
+# php_version: "7.2"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3"
 
 # You can explicitly specify the webimage, dbimage, dbaimage lines but this
 # is not recommended, as the images are often closely tied to ddev's' behavior,
@@ -242,8 +242,17 @@ const ConfigInstructions = `
 # router_https_port: <port> # Port for https (defaults to 443)
 
 # xdebug_enabled: false  # Set to true to enable xdebug and "ddev start" or "ddev restart"
+# Note that for most people the commands 
+# "ddev exec enable_xdebug" and "ddev exec disable_xdebug" work better,
+# as leaving xdebug enabled all the time is a big performance hit.
 
 # webserver_type: nginx-fpm  # Can be set to apache-fpm or apache-cgi as well
+
+# timezone: Europe/Berlin
+# This is the timezone used in the containers and by PHP;
+# it can be set to any valid timezone, 
+# see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+# For example Europe/Dublin or MST7MDT
 
 # additional_hostnames:
 #  - somename
@@ -305,11 +314,9 @@ const ConfigInstructions = `
 
 # webimage_extra_packages: [php-yaml, php7.3-ldap]
 # Extra Debian packages that are needed in the webimage can be added here
-# This is ignored if a free-form .ddev/web-build/Dockerfile is provided
 
 # dbimage_extra_packages: [telnet,netcat]
 # Extra Debian packages that are needed in the dbimage can be added here
-# This is ignored if a free-form .ddev/db-build/Dockerfile is provided
 
 # use_dns_when_possible: true
 # If the host has internet access and the domain configured can 
@@ -320,9 +327,10 @@ const ConfigInstructions = `
 # project_tld: ddev.site
 # The top-level domain used for project URLs
 # The default "ddev.site" allows DNS lookup via a wildcard
-# For backward compatibility this can be changed to "ddev.local"
+# If you prefer you can change this to "ddev.local" to preserve
+# pre-v1.9 behavior.
 
-# ngrok_args: --subdomain mysite --auth "user:pass"
+# ngrok_args: --subdomain mysite --auth username:pass
 # Provide extra flags to the "ngrok http" command, see 
 # https://ngrok.com/docs#http or run "ngrok http -h"
 
