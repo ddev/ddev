@@ -418,10 +418,6 @@ jobs:
         command: make -s clean linux darwin_signed windows_install chocolatey
         name: Build the ddev executables
 
-    - run:
-        command: .gotmp/bin/ddev version
-        name: ddev version information
-
     # We only build the xz version of the docker images on tag build.
     - run:
         command: ./.circleci/generate_artifacts.sh $ARTIFACTS TRUE ${BUILD_IMAGE_TARBALLS:true}
