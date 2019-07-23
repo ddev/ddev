@@ -14,7 +14,7 @@ nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
 brew tap drud/ddev
 
-brew install mysql-client zip nsis jq expect coreutils golang ddev mkcert osslsigncode
+brew install mysql-client zip nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
 
 brew link --force mysql-client
 
