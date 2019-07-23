@@ -73,14 +73,14 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v6
+        - homebrew-macos-v7
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - save_cache:
-        key: homebrew-macos-v6
+        key: homebrew-macos-v7
         paths:
         - /usr/local/Homebrew
     - run:
@@ -103,7 +103,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v6
+        - homebrew-macos-v7
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -116,7 +116,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: homebrew-macos-v6
+        key: homebrew-macos-v7
         paths:
         - /usr/local/Homebrew
 
@@ -133,13 +133,13 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v6
+        - homebrew-macos-v7
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos-v6
+        key: homebrew-macos-v7
         paths:
         - /usr/local/Homebrew
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
@@ -306,12 +306,12 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-macos-v6
+        - homebrew-macos-v7
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos-v6
+        key: homebrew-macos-v7
         paths:
         - /usr/local/Homebrew
     - run:
@@ -405,12 +405,12 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-macos-v6
+        - homebrew-macos-v7
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: RELEASE BUILD Circle VM setup
     - save_cache:
-        key: homebrew-macos-v6
+        key: homebrew-macos-v7
         paths:
         - /usr/local/Homebrew
 

@@ -32,7 +32,11 @@ if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
 fi
 
 # Generate and place extra items like autocomplete
-.gotmp/bin/ddev_gen_autocomplete
+if [ "${OSTYPE}" = "linux-gnu" ] ; then
+  .gotmp/bin/ddev_gen_autocomplete
+else
+  .gotmp/bin/darwin_amd64/ddev_gen_autocomplete
+fi
 for dir in .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64; do
   cp .gotmp/bin/ddev_bash_completion.sh $dir
 done
