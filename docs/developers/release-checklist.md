@@ -3,7 +3,7 @@
 2. Update the default container versions in `pkg/version/version.go` and create a pull request
 3. Ensure all updates have been merged into the master branch
 4. Create a tag for the new version according to the instructions below, initiating a tag build
-5. Build and push artifacts with the .circleci/trigger_release.sh tool: `.circleci/trigger_release.sh --release-tag=v1.7.1 --circleci-token=circleToken900908b3443ea58316baf928b --github-token=githubPersonalToken853ae6f72c40525cd21036f742904a   --windows-signing-password=windowscodepassword | jq -r 'del(.circle_yml)'  | jq -r 'del(.circle_yml)'`
+5. Build and push artifacts with the .circleci/trigger_release.sh tool: `.circleci/trigger_release.sh --release-tag=v1.10.0 --circleci-token=circleToken900908b3443ea58316baf928b --github-token=githubPersonalToken853ae6f72c40525cd21036f742904a   --windows-signing-password=windowscodepassword --macos-signing-password=macossigningpassword | jq -r 'del(.circle_yml)'  | jq -r 'del(.circle_yml)'`
 6. Add the commit list (`git log vXXX..vYYY --oneline --decorate=no`) to the release page
 7. Update the `ddev` homebrew formulas (ddev-edge and ddev) as necessary, https://github.com/drud/homebrew-ddev and https://github.com/drud/homebrew-ddev-edge, with the source .tar.gz and SHA checksum of the tarball and the bottle builds and tarballs. The bottles and checksums for macOS (sierra) and x86_64_linux are built and pushed to the release page automatically by the CircleCI release build process.
 8. Test `brew upgrade ddev` both on macOS and Linux and make sure ddev is the right version and behaves well

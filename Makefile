@@ -77,7 +77,7 @@ include build-tools/makefile_components/base_build_go.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
-.PHONY: test testcmd testpkg build setup staticrequired windows_install
+.PHONY: test testcmd testpkg build setup staticrequired windows_install darwin_signed
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
@@ -122,7 +122,7 @@ packr2:
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint
 
-$(GOTMP)/bin/darwin_amd64/ddev: darwin
+darwin_signed: $(GOTMP)/bin/darwin_amd64/ddev darwin
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
 		security create-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
 		security list-keychains -s buildagent; \
@@ -130,9 +130,9 @@ $(GOTMP)/bin/darwin_amd64/ddev: darwin
 		security default-keychain -s buildagent; \
 		security import certfiles/macos_ddev_cert.p12 -k buildagent -P "$(DDEV_MACOS_SIGNING_PASSWORD)" -T /usr/bin/codesign ; \
 		security set-key-partition-list -S apple-tool:,apple: -s -k "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent ; \
-		codesign --keychain buildagent -s "Apple Distribution: DRUD Technology, LLC (3BAN66AG5M)" $@ ; \
+		codesign --keychain buildagent -s "Apple Distribution: DRUD Technology, LLC (3BAN66AG5M)" $< ; \
 		security delete-keychain buildagent ; \
-		codesign -v $@ ; \
+		codesign -v $< ; \
 	fi
 
 

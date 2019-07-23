@@ -64,8 +64,12 @@ while true; do
         DDEV_WINDOWS_SIGNING_PASSWORD=$2
         shift 2
         ;;
-    -h|--chocolatey-api-key)
-        CHOCOLATEY_API_KEY=$2
+    -s|--windows-signing-password)
+        DDEV_WINDOWS_SIGNING_PASSWORD=$2
+        shift 2
+        ;;
+    -m|--macos-signing-password)
+        DDEV_MACOS_SIGNING_PASSWORD=$2
         shift 2
         ;;
     # For debugging we can set BUILD_IMAGE_TARBALLS=false to avoid waiting for that.
@@ -86,7 +90,7 @@ done
 trigger_build_url=https://circleci.com/api/v1.1/project/github/$GITHUB_PROJECT?circle-token=${CIRCLE_TOKEN}
 
 set -x
-BUILD_PARAMS="\"CIRCLE_JOB\": \"release_build\", \"job_name\": \"release_build\", \"GITHUB_TOKEN\":\"${GITHUB_TOKEN:-}\", \"RELEASE_TAG\": \"${RELEASE_TAG}\",\"DDEV_WINDOWS_SIGNING_PASSWORD\":\"${DDEV_WINDOWS_SIGNING_PASSWORD:-}\",\"CHOCOLATEY_API_KEY\":\"${CHOCOLATEY_API_KEY:-}\",\"BUILD_IMAGE_TARBALLS\":\"${BUILD_IMAGE_TARBALLS:-true}\",\"GITHUB_ORG\":\"${GITHUB_ORG}\""
+BUILD_PARAMS="\"CIRCLE_JOB\": \"release_build\", \"job_name\": \"release_build\", \"GITHUB_TOKEN\":\"${GITHUB_TOKEN:-}\", \"RELEASE_TAG\": \"${RELEASE_TAG}\",\"DDEV_WINDOWS_SIGNING_PASSWORD\":\"${DDEV_WINDOWS_SIGNING_PASSWORD:-}\",\"DDEV_MACOS_SIGNING_PASSWORD\":\"${DDEV_MACOS_SIGNING_PASSWORD:-}\",\"CHOCOLATEY_API_KEY\":\"${CHOCOLATEY_API_KEY:-}\",\"BUILD_IMAGE_TARBALLS\":\"${BUILD_IMAGE_TARBALLS:-true}\",\"GITHUB_ORG\":\"${GITHUB_ORG}\""
 if [ "${RELEASE_TAG:-}" != "" ]; then
     DATA="\"tag\": \"$RELEASE_TAG\","
 fi

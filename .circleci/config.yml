@@ -62,7 +62,7 @@ jobs:
 
   mac_nginx_fpm_test:
     macos:
-      xcode: "10.1.0"
+      xcode: "10.2.1"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
@@ -73,14 +73,14 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v5
+        - homebrew-macos-v6
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - save_cache:
-        key: homebrew-macos-v5
+        key: homebrew-macos-v6
         paths:
         - /usr/local/Homebrew
     - run:
@@ -92,7 +92,7 @@ jobs:
 
   mac_apache_fpm_test:
     macos:
-      xcode: "10.1.0"
+      xcode: "10.2.1"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
@@ -103,7 +103,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v5
+        - homebrew-macos-v6
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -116,44 +116,13 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: homebrew-macos-v5
-        paths:
-        - /usr/local/Homebrew
-
-
-  mac_webcache_test:
-    macos:
-      xcode: "10.1.0"
-    working_directory: ~/ddev
-    environment:
-      DDEV_TEST_USE_WEBCACHE: "true"
-      DRUD_NONINTERACTIVE: "true"
-      GOTEST_SHORT: "true"
-    steps:
-    - attach_workspace:
-        at: ~/
-    - restore_cache:
-        keys:
-        - homebrew-macos-v5
-    # Run the built-in ddev tests with the executables just built.
-    - run:
-        command: ./.circleci/macos_circle_vm_setup.sh
-        name: macOS Circle VM setup - tools, docker, golang
-        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
-    - run:
-        command: make -s test
-        name: ddev tests
-        no_output_timeout: "40m"
-    - store_test_results:
-        path: /tmp/testresults
-    - save_cache:
-        key: homebrew-macos-v5
+        key: homebrew-macos-v6
         paths:
         - /usr/local/Homebrew
 
   mac_nfsmount_test:
     macos:
-      xcode: "10.1.0"
+      xcode: "10.2.1"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: "true"
@@ -164,13 +133,13 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v5
+        - homebrew-macos-v6
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos-v5
+        key: homebrew-macos-v6
         paths:
         - /usr/local/Homebrew
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
@@ -331,18 +300,18 @@ jobs:
 
   mac_container_test:
     macos:
-      xcode: "10.1.0"
+      xcode: "10.2.1"
     working_directory: ~/ddev
     steps:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-macos-v5
+        - homebrew-macos-v6
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos-v5
+        key: homebrew-macos-v6
         paths:
         - /usr/local/Homebrew
     - run:
@@ -424,31 +393,29 @@ jobs:
           path: /artifacts
           name: Artifact storage
 
-  # 'release_build' is used to push a full release.
+  # 'release_build' is used to push a full release; it's triggered by api call
   release_build:
-    machine:
-      image: ubuntu-1604:201903-01
+    macos:
+      xcode: "10.2.1"
     working_directory: ~/ddev
     environment:
       DRUD_DEBUG: "true"
       ARTIFACTS: /artifacts
     steps:
     - checkout
-    - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v5
+        - homebrew-macos-v6
     - run:
-        command: ./.circleci/linux_circle_vm_setup.sh
-        name: RELEASE BUILD Circle VM setup - tools, docker, golang
+        command: ./.circleci/macos_circle_vm_setup.sh
+        name: RELEASE BUILD Circle VM setup
     - save_cache:
-        key: homebrew-linux-v5
+        key: homebrew-macos-v6
         paths:
-        - /home/linuxbrew
+        - /usr/local/Homebrew
 
-    # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
-        command: make -s clean linux darwin windows_install chocolatey EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+        command: make -s clean linux darwin_signed windows_install chocolatey
         name: Build the ddev executables
 
     - run:
