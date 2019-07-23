@@ -31,6 +31,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/Masterminds/semver"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -674,45 +675,15 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 	return nil
 }
 
-// Compares two version strings.
-func compareVer(a, b string) (ret int) {
-	as := strings.Split(a, ".")
-	bs := strings.Split(b, ".")
-	loopMax := len(bs)
-	if len(as) > len(bs) {
-		loopMax = len(as)
-	}
-	for i := 0; i < loopMax; i++ {
-		var x, y string
-		if len(as) > i {
-			x = as[i]
-		}
-		if len(bs) > i {
-			y = bs[i]
-		}
-		xi, _ := strconv.Atoi(x)
-		yi, _ := strconv.Atoi(y)
-		if xi > yi {
-			ret = -1
-		} else if xi < yi {
-			ret = 1
-		}
-		if ret != 0 {
-			break
-		}
-	}
-	return
-}
-
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
 
 	app.DockerEnv()
 
-	if compareVer(app.APIVersion, version.DdevVersion) == 1 {
+	if semver.compare(app.APIVersion, version.DdevVersion) == 1 {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
-	} else if compareVer(app.APIVersion, version.DdevVersion) == -1 {
+	} else if semver.compare(app.APIVersion, version.DdevVersion) == -1 {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease refer to https://ddev.readthedocs.io/en/stable/ to update your local installation.\nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
 	}
 
