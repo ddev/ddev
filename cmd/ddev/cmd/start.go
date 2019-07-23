@@ -48,7 +48,12 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 			}
 
 			util.Success("Successfully started %s", project.GetName())
-			util.Success("Project can be reached at %s", strings.Join(project.GetAllURLs(), ", "))
+			httpURLs, urlList, _ := project.GetAllURLs()
+			if ddevapp.GetCAROOT() == "" {
+				urlList = httpURLs
+			}
+
+			util.Success("Project can be reached at %s", strings.Join(urlList, " "))
 			if project.WebcacheEnabled {
 				util.Warning("All contents were copied to fast docker filesystem,\nbut bidirectional sync operation may not be fully functional for a few minutes.")
 			}

@@ -391,8 +391,10 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
-		t.Logf("Testing these URLs: %v", app.GetAllURLs())
-		for _, url := range app.GetAllURLs() {
+		_, _, urls := app.GetAllURLs()
+		t.Logf("Testing these URLs: %v", urls)
+		_, _, allURLs := app.GetAllURLs()
+		for _, url := range allURLs {
 			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
 
@@ -2153,7 +2155,7 @@ func TestGetAllURLs(t *testing.T) {
 	err = app.StartAndWaitForSync(0)
 	require.NoError(t, err)
 
-	urls := app.GetAllURLs()
+	_, _, urls := app.GetAllURLs()
 
 	// Convert URLs to map[string]bool
 	urlMap := make(map[string]bool)
@@ -2161,8 +2163,8 @@ func TestGetAllURLs(t *testing.T) {
 		urlMap[u] = true
 	}
 
-	// We expect two URLs for each hostname (http/https) and one direct web container address.
-	expectedNumUrls := len(app.GetHostnames()) + 1
+	// We expect two URLs for each hostname (http/https) and two direct web container address.
+	expectedNumUrls := len(app.GetHostnames())*2 + 2
 	assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
 	// Ensure urlMap contains direct address of the web container
@@ -2256,7 +2258,7 @@ func TestWebserverType(t *testing.T) {
 func TestInternalAndExternalAccessToURL(t *testing.T) {
 	assert := asrt.New(t)
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestInternalAndExternalAccessToURL"))
+	runTime := testcommon.TimeTrack(time.Now(), t.Name())
 
 	site := TestSites[0]
 	app := new(ddevapp.DdevApp)
@@ -2282,7 +2284,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		err = app.StartAndWaitForSync(5)
 		assert.NoError(err)
 
-		urls := app.GetAllURLs()
+		_, _, urls := app.GetAllURLs()
 
 		// Convert URLs to map[string]bool
 		urlMap := make(map[string]bool)
@@ -2291,10 +2293,11 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		}
 
 		// We expect two URLs for each hostname (http/https) and two direct web container addresses.
-		expectedNumUrls := len(app.GetHostnames()) + 1
+		expectedNumUrls := len(app.GetHostnames())*2 + 2
 		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
-		URLList := append(app.GetAllURLs(), "http://localhost", "http://localhost")
+		_, _, URLList := app.GetAllURLs()
+		URLList = append(URLList, "http://localhost", "http://localhost")
 		for _, item := range URLList {
 			// Make sure internal (web container) access is successful
 			parts, err := url.Parse(item)
