@@ -122,17 +122,17 @@ packr2:
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint
 
-darwin_signed: $(GOTMP)/bin/darwin_amd64/ddev darwin
+darwin_signed: darwin
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
 		security create-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
 		security list-keychains -s buildagent; \
 		security unlock-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
 		security default-keychain -s buildagent; \
-		security import certfiles/macos_ddev_cert.p12 -k buildagent -P "$(DDEV_MACOS_SIGNING_PASSWORD)" -T /usr/bin/codesign ; \
-		security set-key-partition-list -S apple-tool:,apple: -s -k "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent ; \
-		codesign --keychain buildagent -s "Apple Distribution: DRUD Technology, LLC (3BAN66AG5M)" $< ; \
+		security import certfiles/macos_ddev_cert.p12 -k buildagent -P "$(DDEV_MACOS_SIGNING_PASSWORD)" -T /usr/bin/codesign >/dev/null ; \
+		security set-key-partition-list -S apple-tool:,apple: -s -k "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent >/dev/null ; \
+		codesign --keychain buildagent -s "Apple Distribution: DRUD Technology, LLC (3BAN66AG5M)" $(GOTMP)/bin/darwin_amd64/ddev ; \
 		security delete-keychain buildagent ; \
-		codesign -v $< ; \
+		codesign -v $(GOTMP)/bin/darwin_amd64/ddev ; \
 	fi
 
 
