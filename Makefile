@@ -58,8 +58,8 @@ DdevVersion ?= $(VERSION)
 VERSION := $(shell git describe --tags --always --dirty)
 # Some things insist on having the version without the leading 'v', so provide a
 # $(NO_V_VERSION) without it.
-# no_v_version removes the front v, keeps the special to 20 chars, uses -alpha before the rest.
-NO_V_VERSION=$(shell echo $(VERSION) | awk -F"-" '{sub(/^./, "", $$1); printf $$1; if (NF >2) { printf("-alpha-%s-%s", $$2, $$3); } }')
+# no_v_version removes the front v, keeps the special to 20 chars, simplifies complex version strings
+NO_V_VERSION=$(shell echo $(VERSION) | awk -F- '{ sub(/^./, "", $$1); base=$$1; second=$$2$$3$$4$$5; gsub(/\./,"",second); $$1=""; printf("%s-%.20s",base, second) } ')
 GITHUB_ORG := drud
 
 #

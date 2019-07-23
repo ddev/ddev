@@ -23,7 +23,7 @@ jobs:
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
         command: |
-          make -s clean linux darwin windows_install chocolatey EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+          make -s clean linux darwin windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: Build the ddev executables
     - persist_to_workspace:
         root: ~/
@@ -382,12 +382,8 @@ jobs:
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
-          command: make -s clean linux darwin windows_install chocolatey EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+          command: make -s clean linux darwin windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
           name: Build the ddev executables
-
-      - run:
-          command: .gotmp/bin/ddev version
-          name: ddev version information
 
       # We only build the xz version of the docker images on tag build.
       - run:
