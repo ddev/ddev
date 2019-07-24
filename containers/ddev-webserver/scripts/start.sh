@@ -50,8 +50,7 @@ fi
 
 if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
     # Start can be executed when the container is already running.
-    rm -f /home/.drush/commands/backdrop
-    mkdir -p /home/.drush/commands && ln -s /var/tmp/backdrop_drush_commands /home/.drush/commands/backdrop
+    mkdir -p ~/.drush/commands && ln -s /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
 fi
 
 
@@ -99,7 +98,8 @@ fi
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-cp -r /home/{.ssh*,.drush,.gitconfig,.my.cnf,.bashrc} ~/
+# /home/.* is a prototype for the created user's homedir; copy it in.
+cp -r /home/{.ssh*,.drush,.gitconfig,.my.cnf} ~/
 sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/{.ssh*,.drush,.gitconfig,.my.cnf}
 

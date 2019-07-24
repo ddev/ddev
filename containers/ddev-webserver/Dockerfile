@@ -20,7 +20,6 @@ ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV WEBSERVER_DOCROOT /var/www/html
 # For backward compatibility only
 ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
-ENV PATH "$PATH:/home/.composer/vendor/bin"
 
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
@@ -128,7 +127,7 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
 
 RUN chmod -R 777 /var/log
 
-# All users will have their home directory in /home, make it fully writeable
+# /home is a prototype for the actual user dir, but leave it writable
 RUN mkdir -p /home/.composer /home/.drush/commands /home/.drush/aliases /mnt/ddev-global-cache/mkcert && chmod -R ugo+rw /home /mnt/ddev-global-cache/
 
 RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*

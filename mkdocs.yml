@@ -23,6 +23,7 @@ pages:
       - 'Defining Custom Services': 'users/extend/custom-compose-files.md'
       - 'Customizing Docker Images': 'users/extend/customizing-images.md'
       - 'Custom Commands': 'users/extend/custom-commands.md'
+      - 'In-container Configuration': 'users/extend/in-container-configuraton.md'
     - 'Integration with Hosting Providers':
       - 'Pantheon': 'users/providers/pantheon.md'
       - 'DDEV-Live': 'users/providers/drud-s3.md'
