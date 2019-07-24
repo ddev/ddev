@@ -32,7 +32,11 @@ if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
 fi
 
 # Generate and place extra items like autocomplete
-.gotmp/bin/ddev_gen_autocomplete
+if [ "${OSTYPE}" = "linux-gnu" ] ; then
+  .gotmp/bin/ddev_gen_autocomplete
+else
+  .gotmp/bin/darwin_amd64/ddev_gen_autocomplete
+fi
 for dir in .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64; do
   cp .gotmp/bin/ddev_bash_completion.sh $dir
 done
@@ -51,7 +55,9 @@ zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev ddev_bash_completion.sh
 cd $BASE_DIR/.gotmp/bin/windows_amd64
 tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe ddev_bash_completion.sh
 zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe ddev_bash_completion.sh
-tar -czf $ARTIFACTS/ddev_chocolatey.$VERSION.tar.gz chocolatey
+if [ -f chocolatey ]; then
+    tar -czf $ARTIFACTS/ddev_chocolatey.$VERSION.tar.gz chocolatey
+fi
 
 cp ddev_windows_installer*.exe $ARTIFACTS
 

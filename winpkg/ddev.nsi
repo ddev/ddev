@@ -17,7 +17,7 @@ CRCCheck On
 ; The name of the installer
 Name "ddev ${MUI_VERSION}"
 
-OutFile "../.gotmp/bin/windows_amd64/ddev_windows_installer_unsigned.${MUI_VERSION}.exe"
+OutFile "..\.gotmp\bin\windows_amd64\ddev_windows_installer.${MUI_VERSION}.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES64\ddev
@@ -86,7 +86,7 @@ Section "ddev (github.com/drud/ddev)" SecDDEV
   SectionIn RO
   SetOutPath $INSTDIR
   
-  File "../.gotmp/bin/windows_amd64/ddev.exe"
+  File "..\.gotmp\bin\windows_amd64\ddev.exe"
 
   ; Write the installation path into the registry
   WriteRegStr HKLM SOFTWARE\NSIS_ddev "Install_Dir" "$INSTDIR"
@@ -102,34 +102,34 @@ SectionEnd
 Section "sudo (github.com/mattn/sudo)" SecSudo
   SectionIn 1
   SetOutPath $INSTDIR
-  File "../.gotmp/bin/windows_amd64/sudo.exe"
+  File "..\.gotmp\bin\windows_amd64\sudo.exe"
 SectionEnd
 
 Section "nssm (https://nssm.cc/download)" SecNSSM
   SectionIn 1
   SetOutPath $INSTDIR
   SetOverwrite off
-  File "../.gotmp/bin/windows_amd64/nssm.exe"
+  File "..\.gotmp\bin\windows_amd64\nssm.exe"
 SectionEnd
 
 Section "WinNFSd (github.com/winnfsd/winnfsd)" SecWinNFSd
   SectionIn 1
   SetOutPath $INSTDIR
   SetOverwrite off
-  File "../.gotmp/bin/windows_amd64/winnfsd.exe"
+  File "..\.gotmp\bin\windows_amd64\winnfsd.exe"
 SectionEnd
 
 Section "mkcert (https://github.com/FiloSottile/mkcert)" SecMkcert
   SectionIn 1
   SetOutPath $INSTDIR
   SetOverwrite off
-  File "../.gotmp/bin/windows_amd64/mkcert.exe"
+  File "..\.gotmp\bin\windows_amd64\mkcert.exe"
 SectionEnd
 
 Section "windows_ddev_nfs_setup.sh" SecNFSInstall
   SectionIn 1
   SetOutPath $INSTDIR
-  File "../scripts/windows_ddev_nfs_setup.sh"
+  File "..\scripts\windows_ddev_nfs_setup.sh"
 SectionEnd
 
 Section "Add to PATH" SecAddToPath

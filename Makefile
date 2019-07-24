@@ -58,8 +58,8 @@ DdevVersion ?= $(VERSION)
 VERSION := $(shell git describe --tags --always --dirty)
 # Some things insist on having the version without the leading 'v', so provide a
 # $(NO_V_VERSION) without it.
-# no_v_version removes the front v, keeps the special to 20 chars, uses -alpha before the rest.
-NO_V_VERSION=$(shell echo $(VERSION) | awk -F"-" '{sub(/^./, "", $$1); printf $$1; if (NF >2) { printf("-alpha-%s-%s", $$2, $$3); } }')
+# no_v_version removes the front v, keeps the special to 20 chars, simplifies complex version strings
+NO_V_VERSION=$(shell echo $(VERSION) | awk -F- '{ sub(/^./, "", $$1); base=$$1; second=$$2$$3$$4$$5; gsub(/\./,"",second); $$1=""; printf("%s-%.20s",base, second) } ')
 GITHUB_ORG := drud
 
 #
@@ -77,7 +77,7 @@ include build-tools/makefile_components/base_build_go.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
-.PHONY: test testcmd testpkg build setup staticrequired windows_install
+.PHONY: test testcmd testpkg build setup staticrequired windows_install darwin_signed
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
@@ -122,14 +122,30 @@ packr2:
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint
 
+darwin_signed: darwin
+	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
+		security create-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
+		security list-keychains -s buildagent; \
+		security unlock-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
+		security default-keychain -s buildagent; \
+		security import certfiles/macos_ddev_cert.p12 -k buildagent -P "$(DDEV_MACOS_SIGNING_PASSWORD)" -T /usr/bin/codesign >/dev/null ; \
+		security set-key-partition-list -S apple-tool:,apple: -s -k "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent >/dev/null ; \
+		codesign --keychain buildagent -s "Apple Distribution: DRUD Technology, LLC (3BAN66AG5M)" $(GOTMP)/bin/darwin_amd64/ddev ; \
+		security delete-keychain buildagent ; \
+		codesign -v $(GOTMP)/bin/darwin_amd64/ddev ; \
+	fi
+
+
+$(GOTMP)/bin/windows_amd64/ddev.exe: windows
+
 windows_install: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
-windows_install_unsigned: $(GOTMP)/bin/windows_amd64/ddev_windows_installer_unsigned.$(VERSION).exe
 
-$(GOTMP)/bin/windows_amd64/ddev_windows_installer_unsigned.$(VERSION).exe: windows $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev.nsi $(GOTMP)/bin/windows_amd64/ddev.exe
+$(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe:  $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev.nsi
+	@if [ -z "$(DDEV_WINDOWS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev.exe, no DDEV_WINDOWS_SIGNING_PASSWORD provided"; else echo "Signing windows ddev.exe..."&& osslsigncode sign -pkcs12 certfiles/drud_cs.p12  -n "DDEV-Local Binary" -i https://ddev.com -in $< -out $< -t http://timestamp.digicert.com -pass $(DDEV_WINDOWS_SIGNING_PASSWORD); fi
+
 	@makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
-
-$(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe: $(GOTMP)/bin/windows_amd64/ddev_windows_installer_unsigned.$(VERSION).exe winpkg/drud_cs.p12
-	@if [ -z "$(DDEV_WINDOWS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev_windows_installer, no DDEV_WINDOWS_SIGNING_PASSWORD provided"; else echo "Signing windows installer binary..."&& osslsigncode sign -pkcs12 winpkg/drud_cs.p12  -n "DDEV-Local Installer" -i https://ddev.com -in $< -out $@ -t http://timestamp.digicert.com -pass $(DDEV_WINDOWS_SIGNING_PASSWORD) && rm $< && shasum -a 256 $@ >$@.sha256.txt; fi
+	@if [ -z "$(DDEV_WINDOWS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev_windows_installer, no DDEV_WINDOWS_SIGNING_PASSWORD provided"; else echo "Signing windows installer binary..."&& osslsigncode sign -pkcs12 certfiles/drud_cs.p12  -n "DDEV-Local Installer" -i https://ddev.com -in $@ -out $@ -t http://timestamp.digicert.com -pass $(DDEV_WINDOWS_SIGNING_PASSWORD); fi
+	shasum -a 256 $@ >$@.sha256.txt
 
 no_v_version:
 	@echo $(NO_V_VERSION)
