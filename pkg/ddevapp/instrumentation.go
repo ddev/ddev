@@ -101,8 +101,6 @@ func SegmentEvent(client analytics.Client, hashedID string, event string) error 
 func SendInstrumentationEvents(event string) {
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn && nodeps.IsInternetActive() {
-		_ = raven.CaptureMessageAndWait("Usage: ddev "+event, map[string]string{"severity-level": "info", "report-type": "usage"})
-
 		client := analytics.New(version.SegmentKey)
 
 		err := SegmentUser(client, GetInstrumentationUser())

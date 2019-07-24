@@ -9,7 +9,6 @@ import (
 	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/getsentry/raven-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -119,15 +118,12 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			fullCommand[i], fullCommand[j] = fullCommand[j], fullCommand[i]
 		}
 
-		uString := strings.Join(fullCommand, " ")
 		event := ""
 		if len(fullCommand) > 1 {
 			event = fullCommand[1]
 		}
 
-		instrumentationNotSetUpWarning()
-		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" && nodeps.IsInternetActive() && len(fullCommand) > 1 {
-			_ = raven.CaptureMessageAndWait("Usage: "+uString, map[string]string{"severity-level": "info", "report-type": "usage"})
+		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SegmentKey != "" && nodeps.IsInternetActive() && len(fullCommand) > 1 {
 			ddevapp.SendInstrumentationEvents(event)
 		}
 	},
