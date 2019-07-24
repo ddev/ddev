@@ -103,6 +103,10 @@ cp -r /home/{.ssh*,.drush,.gitconfig,.my.cnf,.bashrc} ~/
 sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/{.ssh*,.drush,.gitconfig,.my.cnf}
 
+if [ -d /mnt/ddev_config/homeadditions ]; then
+    cp -r /mnt/ddev_config/homeadditions/. ~/
+fi
+
 # This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
 mkcert -install
 
