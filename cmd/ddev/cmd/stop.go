@@ -40,6 +40,10 @@ To remove database contents, use "ddev stop --remove-data".
 To snapshot the database on stop, use "ddev stop --snapshot"; A snapshot is automatically created on
 "ddev stop --remove-data" unless you use "ddev stop --remove-data --omit-snapshot".
 `,
+	Example: `ddev stop
+ddev stop proj1 proj2 proj3
+ddev stop --all
+ddev stop --all --stop-ssh-agent`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if createSnapshot && omitSnapshot {
 			util.Failed("Illegal option combination: --snapshot and --omit-snapshot:")
