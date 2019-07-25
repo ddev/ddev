@@ -84,7 +84,7 @@ github.com/docker/go-connections/nat
 github.com/docker/go-units
 # github.com/docker/libnetwork v0.8.0-dev.2.0.20180608203834-19279f049241
 github.com/docker/libnetwork/ipamutils
-# github.com/drud/go-pantheon v0.1.0
+# github.com/drud/go-pantheon v0.1.1
 github.com/drud/go-pantheon/pkg/pantheon
 # github.com/evalphobia/logrus_sentry v0.5.0
 github.com/evalphobia/logrus_sentry
@@ -103,22 +103,22 @@ github.com/getsentry/raven-go
 github.com/go-ini/ini
 # github.com/gobuffalo/envy v1.7.0
 github.com/gobuffalo/envy
-# github.com/gobuffalo/logger v1.0.0
+# github.com/gobuffalo/logger v1.0.1
 github.com/gobuffalo/logger
 # github.com/gobuffalo/packd v0.3.0
 github.com/gobuffalo/packd
 github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
 # github.com/gobuffalo/packr/v2 v2.5.2
 github.com/gobuffalo/packr/v2
-github.com/gobuffalo/packr/v2/file
 github.com/gobuffalo/packr/v2/file/resolver
+github.com/gobuffalo/packr/v2/file
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/oncer
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/safe
 github.com/gobuffalo/packr/v2/jam/parser
 github.com/gobuffalo/packr/v2/plog
 github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/errx
-# github.com/gogo/protobuf v1.1.1
+# github.com/gogo/protobuf v1.2.1
 github.com/gogo/protobuf/proto
 # github.com/google/go-github v0.0.0-20180716180158-c0b63e2f9bb1
 github.com/google/go-github/github
@@ -159,7 +159,7 @@ github.com/konsorten/go-windows-terminal-sequences
 github.com/lextoumbourou/goodhosts
 # github.com/lunixbochs/vtclean v0.0.0-20180621232353-2d01aacdc34a
 github.com/lunixbochs/vtclean
-# github.com/magiconair/properties v1.8.0
+# github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
 # github.com/mattn/go-colorable v0.0.9
 github.com/mattn/go-colorable
@@ -178,9 +178,9 @@ github.com/opencontainers/image-spec/specs-go/v1
 github.com/opencontainers/image-spec/specs-go
 # github.com/opencontainers/runc v0.1.1
 github.com/opencontainers/runc/libcontainer/user
-# github.com/pelletier/go-toml v1.2.0
+# github.com/pelletier/go-toml v1.4.0
 github.com/pelletier/go-toml
-# github.com/pkg/errors v0.8.0
+# github.com/pkg/errors v0.8.1
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
@@ -192,33 +192,33 @@ github.com/rogpeppe/go-internal/semver
 github.com/segmentio/backo-go
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
-# github.com/spf13/afero v1.1.2
+# github.com/spf13/afero v1.2.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
 # github.com/spf13/cast v1.3.0
 github.com/spf13/cast
 # github.com/spf13/cobra v0.0.5
 github.com/spf13/cobra
-# github.com/spf13/jwalterweatherman v1.0.0
+# github.com/spf13/jwalterweatherman v1.1.0
 github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.3
 github.com/spf13/pflag
-# github.com/spf13/viper v1.3.2
+# github.com/spf13/viper v1.4.0
 github.com/spf13/viper
 # github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 github.com/xtgo/uuid
-# golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4
+# golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 golang.org/x/crypto/ssh/terminal
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/pbkdf2
-# golang.org/x/sys v0.0.0-20190515120540-06a5c4944438
+# golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7
 golang.org/x/sys/unix
 golang.org/x/sys/windows/registry
 golang.org/x/sys/windows
-# golang.org/x/text v0.3.0
+# golang.org/x/text v0.3.2
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 # gopkg.in/segmentio/analytics-go.v3 v3.0.1

@@ -16,7 +16,7 @@ var APIHost = "https://terminus.pantheon.io:443/api"
 // Default HTTP header values
 const (
 	contentType = "application/json"
-	userAgent   = "Terminus/1.3.1-dev (php_version=7.1.5&script=bin/terminus)"
+	userAgent   = "Terminus/1.9 (php_version=7.1.5&script=bin/terminus)"
 )
 
 // RequestEntity provides an interface for making requests to the Pantheon API and marshaling/unmarshaling JSON data. Any object which
