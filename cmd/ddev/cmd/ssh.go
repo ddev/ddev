@@ -44,7 +44,7 @@ var DdevSSHCmd = &cobra.Command{
 		}
 		_ = app.ExecWithTty(&ddevapp.ExecOpts{
 			Service: serviceType,
-			Cmd:     shell,
+			Cmd:     shell + " -l",
 			Dir:     sshDirArg,
 		})
 	},
