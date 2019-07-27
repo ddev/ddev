@@ -179,7 +179,7 @@ func populateExamplesAndCommands() error {
 	if err != nil {
 		return nil
 	}
-	box := packr.New("customcommands", "./assets")
+	box := packr.New("customcommands", "./dotddev_assets")
 
 	list := box.List()
 	for _, file := range list {
