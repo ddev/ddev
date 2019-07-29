@@ -44,8 +44,6 @@ func TestHomedirAdditions(t *testing.T) {
 
 	app, err := ddevapp.GetActiveApp(site.Name)
 	require.NoError(t, err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
 
 	_, err = exec.RunCommand(DdevBin, []string{"start"})
 	assert.NoError(err)
