@@ -145,7 +145,6 @@ ddev composer install
 
 ### TYPO3 Quickstart
 
-
 **Composer Setup Example**
 
 ```
@@ -157,12 +156,16 @@ ddev config --project-type typo3
 ddev restart
 ```
 
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
+When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
 
 ```
 Successfully started example-typo3-site
-Your application can be reached at: http://example-typo3-site.ddev.site
+Your application can be reached at: https://example-typo3-site.ddev.site
 ```
+
+**A TYPO3 an install may fail if you use the https URL ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
+
+If doing a basic TYPO3 install, you can then `touch public/FIRST_INSTALL` and hit the http URL top begin an installation.
 
 For those wanting/needing to connect to the database within the database container directly, please see the [developer tools page](https://ddev.readthedocs.io/en/stable/users/developer-tools/#using-development-tools-on-the-host-machine).
 
