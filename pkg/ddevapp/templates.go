@@ -342,7 +342,8 @@ const ConfigInstructions = `
 # See https://ddev.readthedocs.io/en/stable/users/extending-commands/ for more
 # information on the commands that can be extended and the tasks you can define
 # for them. Example:
-#hooks:`
+#hooks:
+`
 
 // SequelproTemplate is the template for Sequelpro config.
 var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
