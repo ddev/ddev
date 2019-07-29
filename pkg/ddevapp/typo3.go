@@ -219,4 +219,3 @@ func typo3PostStartAction(app *DdevApp) error {
 	}
 	return nil
 }
-fixes #1739 Get rid of TYPO3 trustedHostsPattern warning
