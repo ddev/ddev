@@ -602,16 +602,15 @@ func getDrupalUploadDir(app *DdevApp) string {
 }
 
 // Drupal8Hooks adds a d8-specific hooks example for post-import-db
-const Drupal8Hooks = `
-# post-import-db:
+const Drupal8Hooks = `# post-import-db:
 #   - exec: drush cr
 #   - exec: drush updb
 `
 
 // Drupal7Hooks adds a d7-specific hooks example for post-import-db
-const Drupal7Hooks = `
-#  post-import-db:
-#    - exec: drush cc all`
+const Drupal7Hooks = `#  post-import-db:
+#    - exec: drush cc all
+`
 
 // getDrupal7Hooks for appending as byte array
 func getDrupal7Hooks() []byte {

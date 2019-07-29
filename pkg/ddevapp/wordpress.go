@@ -65,10 +65,10 @@ func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 }
 
 // wordPressHooks adds a wp-specific hooks example for post-start
-const wordPressHooks = `
-# Un-comment to emit the WP CLI version after ddev start.
+const wordPressHooks = `# Un-comment to emit the WP CLI version after ddev start.
 #  post-start:
-#    - exec: wp cli version`
+#    - exec: wp cli version
+`
 
 // getWordpressHooks for appending as byte array
 func getWordpressHooks() []byte {
