@@ -20,13 +20,19 @@ const typo3AdditionalConfigTemplate = `<?php
 
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '.*';
 
-$GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge($GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'], [
-                    'dbname' => 'db',
-                    'host' => 'db',
-                    'password' => 'db',
-                    'port' => '3306',
-                    'user' => 'db',
-]);
+$GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge(
+    // on first install, this could be not set yet
+    isset($GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'])
+        ? $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']
+        : [],
+    [
+        'dbname' => 'db',
+        'host' => 'db',
+        'password' => 'db',
+        'port' => '3306',
+        'user' => 'db',
+    ]
+);
 
 // This mail configuration sends all emails to mailhog
 $GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'smtp';
