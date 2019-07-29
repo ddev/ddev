@@ -1,1 +1,0 @@
-alias ll="ls -lhA"

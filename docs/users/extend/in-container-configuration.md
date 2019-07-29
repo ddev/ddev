@@ -9,7 +9,7 @@ If your project has a .ddev/homeadditions directory, its contents will be copied
 Usage examples:
 
 * If you make git commits inside the container, you may want to copy your ~/.gitconfig into .ddev/homeadditions so that use of git inside the container will use your regular username and email, etc.
-* If you use private password-protected composer repositories with satis, for example, and use a global auth.json, you might want to `cp ~/.composer/auth.json into .ddev/homeadditions/.composer/auth.json`.
+* If you use private password-protected composer repositories with satis, for example, and use a global auth.json, you might want to `cp ~/.composer/auth.json into .ddev/homeadditions/.composer/auth.json`, but be careful that you exclude it from checking using a .gitignore or equivalent.
 * Some people have specific configuration needs for their .ssh/config. If you provide your own .ddev/homeadditions/.ssh/config though, please make sure it includes these lines:
     ```
     UserKnownHostsFile=/home/.ssh-agent/known_hosts
@@ -24,4 +24,4 @@ Usage examples:
 
 Caveats:
 
-* Symlinks inside .ddev/homeadditions won't work because they can't be resolved inside the container.
+* Absolute symlinks inside .ddev/homeadditions won't work because they can't be resolved inside the container.
