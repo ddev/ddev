@@ -9,13 +9,15 @@ import (
 	"path/filepath"
 
 	"github.com/drud/ddev/pkg/archive"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 )
 
 func typo3AdditionalConfigTemplate(app *DdevApp) string {
-	hostNames := append(app.GetHostnames(), "localhost", "127.0.0.1")
+	dockerIP, _ := dockerutil.GetDockerIP()
+	hostNames := append(app.GetHostnames(), "localhost", dockerIP)
 
 	return `<?php
 /** ` + DdevFileSignature + `: Automatically generated TYPO3 AdditionalConfiguration.php file.
@@ -23,7 +25,7 @@ func typo3AdditionalConfigTemplate(app *DdevApp) string {
  */
 
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '` +
-		strings.Join(hostNames, "(:\\d+)?|") +
+		strings.Join(hostNames, "(:\\\\d+)?|") +
 		`(:\\d+)?';
 
 $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge(
