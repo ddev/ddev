@@ -14,35 +14,39 @@ var PoweroffCommand = &cobra.Command{
 	Example: `ddev poweroff`,
 	Args:    cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		projects, err := ddevapp.GetProjects(true)
-		if err != nil {
-			util.Failed("Failed to get project(s): %v", err)
-		}
-
-		// Iterate through the list of projects built above, removing each one.
-		for _, project := range projects {
-			if project.SiteStatus() == ddevapp.SiteStopped {
-				util.Warning("Project %s is not currently running. Try 'ddev start'.", project.GetName())
-			}
-
-			// We do the snapshot if either --snapshot or --remove-data UNLESS omit-snapshot is set
-			doSnapshot := (createSnapshot || removeData) && !omitSnapshot
-			if err := project.Stop(removeData, doSnapshot); err != nil {
-				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
-			}
-			if unlist {
-				project.RemoveGlobalProjectInfo()
-			}
-
-			util.Success("Project %s has been stopped.", project.GetName())
-		}
-
-		if err := ddevapp.RemoveSSHAgentContainer(); err != nil {
-			util.Error("Failed to remove ddev-ssh-agent: %v", err)
-		}
+		powerOff()
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(PoweroffCommand)
+}
+
+func powerOff() {
+	projects, err := ddevapp.GetProjects(true)
+	if err != nil {
+		util.Failed("Failed to get project(s): %v", err)
+	}
+
+	// Iterate through the list of projects built above, removing each one.
+	for _, project := range projects {
+		if project.SiteStatus() == ddevapp.SiteStopped {
+			util.Warning("Project %s is not currently running. Try 'ddev start'.", project.GetName())
+		}
+
+		// We do the snapshot if either --snapshot or --remove-data UNLESS omit-snapshot is set
+		doSnapshot := (createSnapshot || removeData) && !omitSnapshot
+		if err := project.Stop(removeData, doSnapshot); err != nil {
+			util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
+		}
+		if unlist {
+			project.RemoveGlobalProjectInfo()
+		}
+
+		util.Success("Project %s has been stopped.", project.GetName())
+	}
+
+	if err := ddevapp.RemoveSSHAgentContainer(); err != nil {
+		util.Error("Failed to remove ddev-ssh-agent: %v", err)
+	}
 }
