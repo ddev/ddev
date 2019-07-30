@@ -1310,6 +1310,13 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	}
 
 	if createSnapshot == true {
+		if app.SiteStatus() != SiteRunning {
+			util.Warning("Must start non-running project to do database snapshot")
+			err = app.Start()
+			if err != nil {
+				return fmt.Errorf("Failed to start project to perform database snapshot")
+			}
+		}
 		t := time.Now()
 		_, err = app.Snapshot(app.Name + "_remove_data_snapshot_" + t.Format("20060102150405"))
 		if err != nil {
@@ -1317,9 +1324,11 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	err = app.Pause()
-	if err != nil {
-		util.Warning("Failed to stop containers for %s: %v", app.GetName(), err)
+	if app.SiteStatus() == SiteRunning {
+		err = app.Pause()
+		if err != nil {
+			util.Warning("Failed to pause containers for %s: %v", app.GetName(), err)
+		}
 	}
 	// Remove all the containers and volumes for app.
 	err = Cleanup(app)
