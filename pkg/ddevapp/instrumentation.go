@@ -9,8 +9,10 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	"github.com/getsentry/raven-go"
 	"gopkg.in/segmentio/analytics-go.v3"
+	"os"
 	"runtime"
 	"strconv"
+	"time"
 )
 
 var hashedHostID string
@@ -18,11 +20,7 @@ var hashedHostID string
 // GetInstrumentationUser normally gets just the hashed hostID but if
 // an explicit user is provided in global_config.yaml that will be prepended.
 func GetInstrumentationUser() string {
-	userID := hashedHostID
-	if globalconfig.DdevGlobalConfig.InstrumentationUser != "" {
-		userID = globalconfig.DdevGlobalConfig.InstrumentationUser + "_" + hashedHostID
-	}
-	return userID
+	return hashedHostID
 }
 
 // SetInstrumentationBaseTags sets the basic always-used tags for Sentry/Raven/Segment
@@ -64,11 +62,12 @@ func (app *DdevApp) SetInstrumentationAppTags() {
 // SegmentUser does the enqueue of the Identify action, identifying the user
 // Here we just use the hashed hostid as the user id
 func SegmentUser(client analytics.Client, hashedID string) error {
+	timezone, _ := time.Now().In(time.Local).Zone()
+	lang := os.Getenv("LANG")
 	err := client.Enqueue(analytics.Identify{
-		UserId: hashedID,
-		Traits: analytics.NewTraits().
-			Set("OS", runtime.GOOS).
-			Set("ddev-version", version.VERSION),
+		UserId:  hashedID,
+		Context: &analytics.Context{App: analytics.AppInfo{Name: "ddev", Version: version.VERSION}, OS: analytics.OSInfo{Name: runtime.GOOS}, Locale: lang, Timezone: timezone},
+		Traits:  analytics.Traits{"instrumentation_user": globalconfig.DdevGlobalConfig.InstrumentationUser},
 	})
 
 	if err != nil {
@@ -87,11 +86,13 @@ func SegmentEvent(client analytics.Client, hashedID string, event string) error 
 			properties = properties.Set(key, val)
 		}
 	}
-
+	timezone, _ := time.Now().In(time.Local).Zone()
+	lang := os.Getenv("LANG")
 	err := client.Enqueue(analytics.Track{
 		UserId:     hashedID,
 		Event:      event,
 		Properties: properties,
+		Context:    &analytics.Context{App: analytics.AppInfo{Name: "ddev", Version: version.VERSION}, OS: analytics.OSInfo{Name: runtime.GOOS}, Locale: lang, Timezone: timezone},
 	})
 
 	return err
