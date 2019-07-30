@@ -123,6 +123,12 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service strin
 	return func(cmd *cobra.Command, args []string) {
 		app.DockerEnv()
 
+		if app.SiteStatus() != ddevapp.SiteRunning {
+			err := app.Start()
+			if err != nil {
+				util.Failed("Failed to start project for custom command: %v", err)
+			}
+		}
 		osArgs := []string{}
 		if len(os.Args) > 2 {
 			osArgs = os.Args[2:]
