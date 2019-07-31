@@ -117,7 +117,16 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	}
 
 	// Append current image information
-	instructions := "\n# You can turn off usage of the dba (phpmyadmin) container and/or \n# ddev-ssh-agent containers with\n# omit_containers[\"dba\", \"ddev-ssh-agent\"]\n\n# and you can opt in or out of sending instrumentation the ddev developers with \n# instrumentation_opt_in: true # or false\n"
+	instructions := `
+# You can turn off usage of the dba (phpmyadmin) container and/or
+# ddev-ssh-agent containers with
+# omit_containers[\"dba\", \"ddev-ssh-agent\"]
+# and you can opt in or out of sending instrumentation the ddev developers with
+# instrumentation_opt_in: true # or false
+#
+# instrumentation_user: <your_username> # can be used to give ddev specific info about who you are
+# developer_mode: true # (defaults to false) is not used widely at this time.
+`
 	cfgbytes = append(cfgbytes, instructions...)
 
 	err = ioutil.WriteFile(GetGlobalConfigPath(), cfgbytes, 0644)
