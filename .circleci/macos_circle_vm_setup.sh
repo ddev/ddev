@@ -3,12 +3,17 @@
 set -o errexit
 set -x
 
+# Docker desktop after 31259 refuses to install using root
+DOCKER_URL=https://download.docker.com/mac/stable/31259/Docker.dmg
+curl -O -sSL $DOCKER_URL
+open -W Docker.dmg && cp -r /Volumes/Docker/Docker.app /Applications
 
 # Basic tools
 brew update >/dev/null 2>/dev/null
 
 # Get docker in first so we can install it and work on other things
-brew cask install docker ngrok
+brew cask install ngrok
+
 sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
 nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
