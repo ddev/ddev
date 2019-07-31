@@ -57,13 +57,13 @@ ddev stop --all --stop-ssh-agent`,
 		// Iterate through the list of projects built above, removing each one.
 		for _, project := range projects {
 			if project.SiteStatus() == ddevapp.SiteStopped {
-				util.Warning("Project %s is not currently running. Try 'ddev start'.", project.GetName())
+				util.Success("Project %s is already stopped.", project.GetName())
 			}
 
 			// We do the snapshot if either --snapshot or --remove-data UNLESS omit-snapshot is set
 			doSnapshot := (createSnapshot || removeData) && !omitSnapshot
 			if err := project.Stop(removeData, doSnapshot); err != nil {
-				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
+				util.Failed("Failed to stop project %s: \n%v", project.GetName(), err)
 			}
 			if unlist {
 				project.RemoveGlobalProjectInfo()

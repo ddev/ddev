@@ -95,7 +95,14 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 	}
 
 	return func(cmd *cobra.Command, cobraArgs []string) {
+		if app.SiteStatus() != ddevapp.SiteRunning {
+			err := app.Start()
+			if err != nil {
+				util.Failed("Failed to start project for custom command: %v", err)
+			}
+		}
 		app.DockerEnv()
+
 		osArgs := []string{}
 		if len(os.Args) > 2 {
 			osArgs = os.Args[2:]
@@ -104,8 +111,6 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 		if runtime.GOOS == "windows" {
 			// Sadly, not sure how to have a bash interpreter without this.
 			//bashPath := `C:\Program Files\Git\bin\bash.exe`
-
-			//args = []string{"-c", fullPath}
 			args := []string{fullPath}
 			args = append(args, osArgs...)
 			err = exec.RunInteractiveCommand(windowsBashPath, args)
@@ -121,6 +126,12 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 // makeContainerCmd creates the command which will app.Exec to a container command
 func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service string) func(*cobra.Command, []string) {
 	return func(cmd *cobra.Command, args []string) {
+		if app.SiteStatus() != ddevapp.SiteRunning {
+			err := app.Start()
+			if err != nil {
+				util.Failed("Failed to start project for custom command: %v", err)
+			}
+		}
 		app.DockerEnv()
 
 		osArgs := []string{}
