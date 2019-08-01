@@ -1,0 +1,9 @@
+#!/bin/bash
+
+## Description: show port
+## Usage: showport
+## Example: "ddev showport"
+
+# Shows the DDEV_HOST_DB_PORT
+
+echo "DDEV_HOST_DB_PORT=$DDEV_HOST_DB_PORT"

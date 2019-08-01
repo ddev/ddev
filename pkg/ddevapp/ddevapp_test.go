@@ -2508,6 +2508,64 @@ func TestWebcache(t *testing.T) {
 	switchDir()
 }
 
+// TestHostDBPort tests to make sure that the host_db_port specification has the intended effect
+func TestHostDBPort(t *testing.T) {
+	assert := asrt.New(t)
+	runTime := testcommon.TimeTrack(time.Now(), t.Name())
+	defer runTime()
+	testDir, _ := os.Getwd()
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	commandsDir := filepath.Join(site.Dir, ".ddev", "commands", "host")
+	err := os.MkdirAll(commandsDir, 0755)
+	assert.NoError(err)
+	err = fileutil.CopyFile(filepath.Join(testDir, "testdata", t.Name(), "showport"), filepath.Join(commandsDir, "showport"))
+	assert.NoError(err)
+
+	app, err := ddevapp.NewApp(site.Dir, false, "")
+	defer func() {
+		_ = app.Stop(true, false)
+	}()
+	require.NoError(t, err)
+
+	// Make sure that everything works with and without
+	// an explicitly specified hostDBPort
+	for _, hostDBPort := range []string{"", "9998"} {
+		app.HostDBPort = hostDBPort
+
+		err = app.Start()
+		require.NoError(t, err)
+
+		desc, err := app.Describe()
+		assert.NoError(err)
+
+		dockerIP, err := dockerutil.GetDockerIP()
+		assert.NoError(err)
+		dbinfo := desc["dbinfo"].(map[string]interface{})
+		dbPort := dbinfo["published_port"].(int)
+		dbPortStr := strconv.Itoa(dbPort)
+
+		if app.HostDBPort != "" {
+			assert.EqualValues(app.HostDBPort, dbPortStr)
+		}
+
+		// Running mysql against the container ensures that we can get there via the values
+		// in ddev describe
+		out, err := exec.RunCommand("mysql", []string{"--user=db", "--password=db", "--host=" + dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`})
+		assert.NoError(err, "Failed to run mysql: %v", out)
+		assert.EqualValues("1\n1\n", out)
+
+		// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
+		// is getting in there available to host custom commands.
+		out, err = exec.RunCommand(DdevBin, []string{"showport"})
+		assert.NoError(err)
+		assert.EqualValues("DDEV_HOST_DB_PORT="+dbPortStr, strings.Trim(out, "\n"))
+	}
+}
+
 // TestPortSpecifications tests to make sure that one project can't step on the
 // ports used by another
 func TestPortSpecifications(t *testing.T) {

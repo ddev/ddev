@@ -1017,8 +1017,11 @@ func (app *DdevApp) DockerEnv() {
 	// 1. To specifify via docker-compose.yaml the value of host_db_port config. And it's expected to be empty
 	//    there if the host_db_port is empty.
 	// 2. To tell custom commands the db port. And it's expected always to be populated for them.
-	dbPort, _ := app.GetPublishedPort("db")
+	dbPort, err := app.GetPublishedPort("db")
 	dbPortStr := strconv.Itoa(dbPort)
+	if dbPortStr == "-1" || err != nil {
+		dbPortStr = ""
+	}
 	if app.HostDBPort != "" {
 		dbPortStr = app.HostDBPort
 	}
