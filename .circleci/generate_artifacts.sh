@@ -16,9 +16,22 @@ BASE_DIR=$PWD
 sudo mkdir -p $ARTIFACTS && sudo chmod 777 $ARTIFACTS
 export VERSION=$(git describe --tags --always --dirty)
 
+case "${OSTYPE}" in
+darwin*)
+  BUILTPATH=.gotmp/bin/darwin_amd64
+  ;;
+linux*)
+  BUILTPATH=.gotmp/bin
+  ;;
+windows*)
+  BUILTPATH=.gotmp/bin/windows_amd64
+  ;;
+esac
+
 if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
+
     # Make sure we have all our docker images, and save them in a tarball
-    .gotmp/bin/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt
+    $BUILTPATH/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt
     for item in $(cat /tmp/images.txt); do
       docker pull $item
     done
@@ -32,11 +45,8 @@ if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
 fi
 
 # Generate and place extra items like autocomplete
-if [ "${OSTYPE}" = "linux-gnu" ] ; then
-  .gotmp/bin/ddev_gen_autocomplete
-else
-  .gotmp/bin/darwin_amd64/ddev_gen_autocomplete
-fi
+$BUILTPATH/ddev_gen_autocomplete
+
 for dir in .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64; do
   cp .gotmp/bin/ddev_bash_completion.sh $dir
 done
