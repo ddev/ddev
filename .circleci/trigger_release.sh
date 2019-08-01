@@ -28,8 +28,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 
-OPTIONS=c:g:r:p:s:b:h:o:
-LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:,windows-signing-password:,build-image-tarballs:,chocolatey-api-key:,github-org:
+OPTIONS=c:g:r:p:s:b:h:o:m:
+LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:,windows-signing-password:,macos-signing-password:,build-image-tarballs:,chocolatey-api-key:,github-org:
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -58,10 +58,6 @@ while true; do
         ;;
     -p|--github-project)
         GITHUB_PROJECT=$2
-        shift 2
-        ;;
-    -s|--windows-signing-password)
-        DDEV_WINDOWS_SIGNING_PASSWORD=$2
         shift 2
         ;;
     -s|--windows-signing-password)
