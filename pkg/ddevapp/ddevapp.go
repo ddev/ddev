@@ -1013,7 +1013,18 @@ func (app *DdevApp) DockerEnv() {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
-	dbPort, _ := app.GetPublishedPort("db")
+	// DDEV_HOST_DB_PORT is actually used for 2 things.
+	// 1. To specifify via docker-compose.yaml the value of host_db_port config. And it's expected to be empty
+	//    there if the host_db_port is empty.
+	// 2. To tell custom commands the db port. And it's expected always to be populated for them.
+	dbPort, err := app.GetPublishedPort("db")
+	dbPortStr := strconv.Itoa(dbPort)
+	if dbPortStr == "-1" || err != nil {
+		dbPortStr = ""
+	}
+	if app.HostDBPort != "" {
+		dbPortStr = app.HostDBPort
+	}
 
 	envVars := map[string]string{
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
@@ -1024,7 +1035,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_BGSYNCIMAGE":              app.BgsyncImage,
 		"DDEV_APPROOT":                  app.AppRoot,
-		"DDEV_HOST_DB_PORT":             strconv.Itoa(dbPort),
+		"DDEV_HOST_DB_PORT":             dbPortStr,
 		"DDEV_HOST_WEBSERVER_PORT":      app.HostWebserverPort,
 		"DDEV_HOST_HTTPS_PORT":          app.HostHTTPSPort,
 		"DDEV_PHPMYADMIN_PORT":          app.PHPMyAdminPort,
