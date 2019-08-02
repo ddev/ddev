@@ -2552,15 +2552,20 @@ func TestHostDBPort(t *testing.T) {
 			assert.EqualValues(app.HostDBPort, dbPortStr)
 		}
 
-		// Running mysql against the container ensures that we can get there via the values
-		// in ddev describe
-		out, err := exec.RunCommand("mysql", []string{"--user=db", "--password=db", "--host=" + dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`})
-		assert.NoError(err, "Failed to run mysql: %v", out)
-		assert.EqualValues("1\n1\n", out)
+		if !util.IsCommandAvailable("mysql") {
+			t.Log("Skipping mysql check because mysql tool not available")
+		} else {
+			// Running mysql against the container ensures that we can get there via the values
+			// in ddev describe
+			out, err := exec.RunCommand("mysql", []string{"--user=db", "--password=db", "--host=" + dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`})
+			assert.NoError(err, "Failed to run mysql: %v", out)
+			assert.EqualValues("1\n1\n", out)
+		}
 
 		// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
 		// is getting in there available to host custom commands.
-		out, err = exec.RunCommand(DdevBin, []string{"showport"})
+		_, _ = exec.RunCommand(DdevBin, []string{})
+		out, err := exec.RunCommand(DdevBin, []string{"showport"})
 		assert.NoError(err)
 		assert.EqualValues("DDEV_HOST_DB_PORT="+dbPortStr, strings.Trim(out, "\n"))
 	}
