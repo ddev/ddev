@@ -29,19 +29,15 @@ windows*)
 esac
 
 if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
-
     # Make sure we have all our docker images, and save them in a tarball
     $BUILTPATH/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt
     for item in $(cat /tmp/images.txt); do
       docker pull $item
     done
-    echo "Generating ddev_docker_images.$VERSION.tar.gz"
+    echo "Generating ddev_docker_images.$VERSION.tar"
     docker save -o $ARTIFACTS/ddev_docker_images.$VERSION.tar $(cat /tmp/images.txt)
-    gzip --keep $ARTIFACTS/ddev_docker_images.$VERSION.tar
-    if [ ! -z "$BUILD_XZ" ] ; then
-        echo "Generating ddev_docker_images.$VERSION.tar.xz"
-        xz $ARTIFACTS/ddev_docker_images.$VERSION.tar
-    fi
+    echo "Generating ddev_docker_images.$VERSION.tar.xz"
+    xz $ARTIFACTS/ddev_docker_images.$VERSION.tar
 fi
 
 # Generate and place extra items like autocomplete
