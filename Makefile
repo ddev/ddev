@@ -101,8 +101,8 @@ test: testpkg testcmd
 testcmd: $(BUILD_OS) setup
 	DDEV_NO_SENTRY=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
 
-testpkg: setup
-	DDEV_NO_SENTRY=true CGO_ENABLED=0 go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
+testpkg: $(BUILD_OS) setup
+	DDEV_NO_SENTRY=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
 
 setup:
 	@mkdir -p $(GOTMP)/{src,pkg/mod/cache,.cache}
