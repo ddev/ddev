@@ -2559,7 +2559,8 @@ func TestHostDBPort(t *testing.T) {
 			// in ddev describe
 			out, err := exec.RunCommand("mysql", []string{"--user=db", "--password=db", "--host=" + dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`})
 			assert.NoError(err, "Failed to run mysql: %v", out)
-			assert.EqualValues("1\n1\n", out)
+			out = strings.Replace(out, "\r", "", -1)
+			assert.Contains(out, "1\n1\n")
 		}
 
 		// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
