@@ -1,6 +1,6 @@
 FROM bitnami/minideb:stretch
 
-RUN apt-get update && apt-get install -y bash expect file openssh-client socat
+RUN apt-get update && apt-get install -y bash expect file openssh-client socat sudo psmisc && sudo apt autoclean
 
 # Copy container files
 COPY files /
