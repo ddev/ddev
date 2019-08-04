@@ -59,7 +59,8 @@ VERSION := $(shell git describe --tags --always --dirty)
 # Some things insist on having the version without the leading 'v', so provide a
 # $(NO_V_VERSION) without it.
 # no_v_version removes the front v, keeps the special to 20 chars, simplifies complex version strings
-NO_V_VERSION=$(shell echo $(VERSION) | awk -F- '{ sub(/^./, "", $$1); base=$$1; second=$$2$$3$$4$$5; gsub(/\./,"",second); $$1=""; printf(base); if (second != "") printf("-%.20s",second); } ')
+NO_V_VERSION=$(shell echo $(VERSION) | awk -F- '{ sub(/^./, "", $$1); base=$$1; hash=$$3; gsub(/\./,"",second);   $$1=""; printf(base); if (hash != "") printf("-%.20s",hash); } ')
+
 GITHUB_ORG := drud
 
 #

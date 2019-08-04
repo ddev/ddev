@@ -1,16 +1,14 @@
 #!/bin/bash
 # This script builds ddev artifacts and their sha256 hashes.
 # First arg is the artifact directory
-# Optional second arg is whether to build xz version of ddev_docker_images.tar
+# Optional second arg is whether to build ddev_docker_images.tar
 
 set -o errexit
 set -o pipefail
 set -o nounset
 
 ARTIFACTS=${1:-/artifacts}
-# We only build the xz artifacts if $2 ($BUILD_XZ) is not empty.
-BUILD_XZ=${2:-}
-BUILD_IMAGE_TARBALLS=${3:-true}
+BUILD_IMAGE_TARBALLS=${2:-true}
 BASE_DIR=$PWD
 
 sudo mkdir -p $ARTIFACTS && sudo chmod 777 $ARTIFACTS
@@ -29,19 +27,15 @@ windows*)
 esac
 
 if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
-
     # Make sure we have all our docker images, and save them in a tarball
     $BUILTPATH/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt
     for item in $(cat /tmp/images.txt); do
       docker pull $item
     done
-    echo "Generating ddev_docker_images.$VERSION.tar.gz"
+    echo "Generating ddev_docker_images.$VERSION.tar"
     docker save -o $ARTIFACTS/ddev_docker_images.$VERSION.tar $(cat /tmp/images.txt)
-    gzip --keep $ARTIFACTS/ddev_docker_images.$VERSION.tar
-    if [ ! -z "$BUILD_XZ" ] ; then
-        echo "Generating ddev_docker_images.$VERSION.tar.xz"
-        xz $ARTIFACTS/ddev_docker_images.$VERSION.tar
-    fi
+    echo "Generating ddev_docker_images.$VERSION.tar.xz"
+    xz $ARTIFACTS/ddev_docker_images.$VERSION.tar
 fi
 
 # Generate and place extra items like autocomplete
@@ -54,18 +48,16 @@ done
 # Generate macOS tarball/zipball
 cd $BASE_DIR/.gotmp/bin/darwin_amd64
 tar -czf $ARTIFACTS/ddev_macos.$VERSION.tar.gz ddev ddev_bash_completion.sh
-zip $ARTIFACTS/ddev_macos.$VERSION.zip ddev ddev_bash_completion.sh
 
 # Generate linux tarball/zipball
 cd $BASE_DIR/.gotmp/bin
 tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev ddev_bash_completion.sh
-zip $ARTIFACTS/ddev_linux.$VERSION.zip ddev ddev_bash_completion.sh
 
 # generate windows tarball/zipball
 cd $BASE_DIR/.gotmp/bin/windows_amd64
 tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe ddev_bash_completion.sh
 zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe ddev_bash_completion.sh
-if [ -f chocolatey ]; then
+if [ -d chocolatey ]; then
     tar -czf $ARTIFACTS/ddev_chocolatey.$VERSION.tar.gz chocolatey
 fi
 
