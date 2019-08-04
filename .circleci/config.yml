@@ -347,7 +347,7 @@ jobs:
     - attach_workspace:
         at: ~/
     - run:
-        command: ./.circleci/generate_artifacts.sh $ARTIFACTS
+        command: ./.circleci/generate_artifacts.sh $ARTIFACTS ${BUILD_IMAGE_TARBALLS:false}
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
@@ -425,7 +425,7 @@ jobs:
 
     # We only build the xz version of the docker images on tag build.
     - run:
-        command: ./.circleci/generate_artifacts.sh $ARTIFACTS TRUE ${BUILD_IMAGE_TARBALLS:true}
+        command: ./.circleci/generate_artifacts.sh $ARTIFACTS ${BUILD_IMAGE_TARBALLS:true}
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
 
