@@ -64,6 +64,10 @@ while true; do
         DDEV_WINDOWS_SIGNING_PASSWORD=$2
         shift 2
         ;;
+      -h|--chocolatey-api-key)
+        CHOCOLATEY_API_KEY=$2
+        shift 2
+        ;;
     -m|--macos-signing-password)
         DDEV_MACOS_SIGNING_PASSWORD=$2
         shift 2
