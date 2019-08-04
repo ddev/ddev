@@ -77,7 +77,7 @@ var RouterTag = "v1.10.0" // Note that this can be overridden by make
 
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
-var SSHAuthTag = "20190803_sanitize_groupname"
+var SSHAuthTag = "v1.10.1"
 
 // COMMIT is the actual committish, supplied by make
 var COMMIT = "COMMIT should be overridden"
