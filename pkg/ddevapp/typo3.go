@@ -17,7 +17,7 @@ const typo3AdditionalConfigTemplate = `<?php
 /** ` + DdevFileSignature + `: Automatically generated TYPO3 AdditionalConfiguration.php file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
-$GLOBALS['TYPO3_CONF_VARS'] = array_merge_recursive(
+$GLOBALS['TYPO3_CONF_VARS'] = array_replace_recursive(
     $GLOBALS['TYPO3_CONF_VARS'],
     [
         'DB' => [
