@@ -748,7 +748,7 @@ func (app *DdevApp) Start() error {
 			return err
 		}
 	}
-	_, _, err = dockerutil.ComposeCmd(files, "up", "--build", "-d")
+	_, _, err = dockerutil.ComposeCmd(files, "up", "--build", "-d", "--renew-anon-volumes")
 	if err != nil {
 		return err
 	}
