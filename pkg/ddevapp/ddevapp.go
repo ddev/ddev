@@ -682,7 +682,13 @@ func (app *DdevApp) Start() error {
 	app.DockerEnv()
 
 	APIVersion, err := semver.NewVersion(app.APIVersion)
+	if err != nil {
+		return err
+	}
 	DdevVersion, err := semver.NewVersion(version.DdevVersion)
+	if err != nil {
+		return err
+	}
 	if APIVersion.LessThan(DdevVersion) {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
 	} else if DdevVersion.LessThan(APIVersion) {
