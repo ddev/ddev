@@ -22,6 +22,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/Masterminds/semver"
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevhosts"
@@ -31,7 +32,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/Masterminds/semver"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -681,9 +681,11 @@ func (app *DdevApp) Start() error {
 
 	app.DockerEnv()
 
-	if semver.compare(app.APIVersion, version.DdevVersion) == 1 {
+	APIVersion, err := semver.NewVersion(app.APIVersion)
+	DdevVersion, err := semver.NewVersion(version.DdevVersion)
+	if APIVersion.LessThan(DdevVersion) {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
-	} else if semver.compare(app.APIVersion, version.DdevVersion) == -1 {
+	} else if DdevVersion.LessThan(APIVersion) {
 		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease refer to https://ddev.readthedocs.io/en/stable/ to update your local installation.\nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
 	}
 
