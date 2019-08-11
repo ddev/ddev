@@ -107,40 +107,34 @@ Section "!ddev (github.com/drud/ddev)" SecDDEV
 SectionEnd
 
 Section "sudo (github.com/mattn/sudo)" SecSudo
-  SectionIn 1
   SetOutPath $INSTDIR
   File "..\.gotmp\bin\windows_amd64\sudo.exe"
 SectionEnd
 
 Section "nssm (https://nssm.cc/download)" SecNSSM
-  SectionIn 1
   SetOutPath $INSTDIR
   SetOverwrite off
   File "..\.gotmp\bin\windows_amd64\nssm.exe"
 SectionEnd
 
 Section "WinNFSd (github.com/winnfsd/winnfsd)" SecWinNFSd
-  SectionIn 1
   SetOutPath $INSTDIR
   SetOverwrite off
   File "..\.gotmp\bin\windows_amd64\winnfsd.exe"
 SectionEnd
 
 Section "mkcert (https://github.com/FiloSottile/mkcert)" SecMkcert
-  SectionIn 1
   SetOutPath $INSTDIR
   SetOverwrite off
   File "..\.gotmp\bin\windows_amd64\mkcert.exe"
 SectionEnd
 
 Section "windows_ddev_nfs_setup.sh" SecNFSInstall
-  SectionIn 1
   SetOutPath $INSTDIR
   File "..\scripts\windows_ddev_nfs_setup.sh"
 SectionEnd
 
 Section "Add to PATH" SecAddToPath
-  SectionIn 2
   Push $INSTDIR
   Call AddToPath
 SectionEnd
