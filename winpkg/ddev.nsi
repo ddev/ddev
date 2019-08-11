@@ -85,11 +85,11 @@ RequestExecutionLevel admin
 !insertmacro MUI_LANGUAGE "English"
 
 
-Section "ddev (github.com/drud/ddev)" SecDDEV
 ; ---------------------------------------------------------------------------
 ; Installer Sections
 ; ---------------------------------------------------------------------------
 
+Section "!ddev (github.com/drud/ddev)" SecDDEV
   SectionIn RO
   SetOutPath $INSTDIR
   
