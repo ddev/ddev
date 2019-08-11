@@ -10,6 +10,9 @@
 ; Initialization
 ; ---------------------------------------------------------------------------
 
+; Maximize verbosity of compilation
+!verbose 4
+
 !define MUI_PRODUCT "DDEV-Local"
 !define MUI_VERSION "${VERSION}"
 CRCCheck On
