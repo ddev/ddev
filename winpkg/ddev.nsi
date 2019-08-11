@@ -5,7 +5,10 @@
 ;
 ; It will install ddev.exe into $PROGRAMFILES64/ddev,
 
-;--------------------------------
+
+; ---------------------------------------------------------------------------
+; Initialization
+; ---------------------------------------------------------------------------
 
 !define MUI_PRODUCT "DDEV-Local"
 !define MUI_VERSION "${VERSION}"
@@ -29,19 +32,22 @@ InstallDirRegKey HKLM "Software\ddev" ""
 ; Request admin privileges
 RequestExecutionLevel admin
 
-;--------------------------------
-;Interface Settings
 
-  !define MUI_ABORTWARNING
+; ---------------------------------------------------------------------------
+; Interface Settings
+; ---------------------------------------------------------------------------
 
-;--------------------------------
-;Pages
+!define MUI_ABORTWARNING
+
+
+; ---------------------------------------------------------------------------
+; Pages
+; ---------------------------------------------------------------------------
 
 !define MUI_HEADERIMAGE
 
 !define MUI_WELCOMEPAGE_TITLE "DDEV-Local, a local PHP development environment system"
 !define MUI_WELCOMEPAGE_TEXT "From DRUD Tech, https://ddev.com$\r$\nWe welcome your input and contributions. $\r$\nDocs: ddev.readthedocs.io"
-
 !insertmacro MUI_PAGE_WELCOME
 
 !define MUI_LICENSEPAGE_TEXT_TOP "Apache 2.0 License for DDEV-Live (ddev)"
@@ -51,7 +57,6 @@ RequestExecutionLevel admin
 !define MUI_LICENSEPAGE_TEXT_TOP "MIT License for github.com/mattn/sudo"
 !define MUI_LICENSEPAGE_BUTTON "I agree"
 !insertmacro MUI_PAGE_LICENSE "../.gotmp/bin/windows_amd64/sudo_license.txt"
-
 
 !define MUI_LICENSEPAGE_TEXT_TOP "GPL License for github.com/winnfsd/winnnsd"
 !define MUI_LICENSEPAGE_BUTTON "I agree"
@@ -79,10 +84,12 @@ RequestExecutionLevel admin
 
 !insertmacro MUI_LANGUAGE "English"
 
-;--------------------------------
-;Installer Sections
 
 Section "ddev (github.com/drud/ddev)" SecDDEV
+; ---------------------------------------------------------------------------
+; Installer Sections
+; ---------------------------------------------------------------------------
+
   SectionIn RO
   SetOutPath $INSTDIR
   
@@ -143,8 +150,10 @@ Section "Start Menu Shortcuts" SecStartMenu
   CreateShortcut "$SMPROGRAMS\ddev\Uninstall.lnk" "$INSTDIR\ddev_uninstall.exe" "" "$INSTDIR\ddev_uninstall.exe" 0
 SectionEnd
 
-;--------------------------------
-;Descriptions
+
+; ---------------------------------------------------------------------------
+; Descriptions
+; ---------------------------------------------------------------------------
 
   ;Language strings
   LangString DESC_SecDDEV ${LANG_ENGLISH} "Install DDEV-local (required)."
@@ -166,8 +175,10 @@ SectionEnd
     !insertmacro MUI_DESCRIPTION_TEXT ${SecStartMenu} $(DESC_SecStartMenu)
   !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
-;--------------------------------
-; Uninstaller
+
+; ---------------------------------------------------------------------------
+; Uninstaller Section
+; ---------------------------------------------------------------------------
 
 Section "Uninstall"
   
@@ -191,6 +202,11 @@ Section "Uninstall"
   Call un.RemoveFromPath
 
 SectionEnd
+
+
+; ---------------------------------------------------------------------------
+; Functions
+; ---------------------------------------------------------------------------
 
 ; Check on startup for docker-compose. If it doesn't exist, warn the user.
 Function .onInit
