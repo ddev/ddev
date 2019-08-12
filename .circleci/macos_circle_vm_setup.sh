@@ -20,12 +20,13 @@ nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 brew tap drud/ddev
 
 brew install mysql-client zip jq expect coreutils golang ddev mkcert osslsigncode ghr
-brew link mysql-client zip nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
+brew link mysql-client zip jq expect coreutils golang ddev mkcert osslsigncode ghr
 
 # makensis brew install was broken in a recent commit, see
 # https://github.com/Homebrew/homebrew-core/pull/39928#issuecomment-520263137
 # This uses the former recipe that worked fine.
 brew install https://raw.githubusercontent.com/drud/makensis/master/makensis.rb
+brew link makensis
 
 brew link --force mysql-client
 
