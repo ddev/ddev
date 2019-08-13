@@ -147,6 +147,16 @@ func GetBgsyncImage() string {
 	return fmt.Sprintf("%s:%s", BgsyncImg, BgsyncTag)
 }
 
+// GetSSHAuthImage returns the correctly formatted sshauth image:tag reference
+func GetSSHAuthImage() string {
+	return fmt.Sprintf("%s:%s", SSHAuthImage, SSHAuthTag)
+}
+
+// GetRouterImage returns the correctly formatted router image:tag reference
+func GetRouterImage() string {
+	return fmt.Sprintf("%s:%s", RouterImage, RouterTag)
+}
+
 // GetDockerComposeVersion runs docker-compose -v to get the current version
 func GetDockerComposeVersion() (string, error) {
 	if DockerComposeVersion != "" {

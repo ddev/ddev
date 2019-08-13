@@ -742,7 +742,7 @@ func (app *DdevApp) Start() error {
 
 	// Pull the main images with full output, since docker-compose up won't
 	// show enough output.
-	for _, imageName := range []string{app.WebImage, app.DBImage} {
+	for _, imageName := range []string{app.WebImage, app.DBImage, app.DBAImage, version.GetSSHAuthImage(), version.GetRouterImage()} {
 		err = dockerutil.Pull(imageName)
 		if err != nil {
 			return err
