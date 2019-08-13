@@ -13,6 +13,7 @@ var PoweroffCommand = &cobra.Command{
 	Long:    `ddev poweroff stops all projects and containers, equivalent to ddev stop -a --stop-ssh-agent`,
 	Example: `ddev poweroff`,
 	Args:    cobra.NoArgs,
+	Aliases: []string{"powerdown"},
 	Run: func(cmd *cobra.Command, args []string) {
 		powerOff()
 	},
