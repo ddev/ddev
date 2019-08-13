@@ -216,6 +216,9 @@ type ignoreTemplateContents struct {
 func CreateGitIgnore(targetDir string, ignores ...string) error {
 	gitIgnoreFilePath := filepath.Join(targetDir, ".gitignore")
 
+	// Remove doubled entries
+	ignores := unique(ignores)
+
 	if fileutil.FileExists(gitIgnoreFilePath) {
 		sigFound, err := fileutil.FgrepStringInFile(gitIgnoreFilePath, DdevFileSignature)
 		if err != nil {
