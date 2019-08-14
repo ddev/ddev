@@ -2,7 +2,7 @@
 
 It's quite easy to add custom commands to ddev; they can execute either on the host or in the various containers. The basic idea is to add a bash script to `.ddev/commands/host` or `.ddev/commands/<containername>`
 
-There are example commands provided in `ddev/commands/*/*.example` that can just be copied or moved (or symlinked) and used as commands. For example, [.ddev/commands/host/mysqlworkshop.example](https://github.com/drud/ddev/tree/master/cmd/ddev/cmd/asssets/commands/host/mysqlworkshop.example) can be used to add a "ddev mysqlworkshop" command, just change it from "mysqlworkshop.example" to "mysqlworkshop". Also, a new `ddev mysql` command has been added using this technique (as a db container command). See [mysql command](https://github.com/drud/ddev/tree/master/cmd/ddev/cmd/asssets/commands/db/mysql). If you're on macOS or Linux (or some configurations of Windows) you can just `cd .ddev/commands/host && ln -s mysqldumpworkshop.example mysqlworkshop`.
+There are example commands provided in `ddev/commands/*/*.example` that can just be copied or moved (or symlinked) and used as commands. For example, [.ddev/commands/host/mysqlworkbench.example](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/dotddev_assets/commands/host/mysqlworkbench.example) can be used to add a "ddev mysqlworkbench" command, just change it from "mysqlworkbench.example" to "mysqlworkbench". Also, a new `ddev mysql` command has been added using this technique (as a db container command). See [mysql command](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/dotddev_assets/commands/db/mysql). If you're on macOS or Linux (or some configurations of Windows) you can just `cd .ddev/commands/host && ln -s mysqlworkbench.example mysqlworkbench`.
 
 ## Host commands
 
@@ -21,7 +21,7 @@ open -a PHPStorm.app ${DDEV_APPROOT}
 
 ## Container commands
 
-To provide a command which will execute in a container, add a bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The bash script will be executed inside the named container. For example, the [drush.example](https://github.com/drud/ddev/tree/master/cmd/ddev/cmd/asssets/commands/web/drush.example), which executes Drupal's drush inside the container with the arguments provided, would go in `.ddev/commands/web/drush` as:
+To provide a command which will execute in a container, add a bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The bash script will be executed inside the named container. For example, the [drush.example](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/dotddev_assets/commands/web/drush.example), which executes Drupal's drush inside the container with the arguments provided, would go in `.ddev/commands/web/drush` as:
 
 ```
 #!/bin/bash
