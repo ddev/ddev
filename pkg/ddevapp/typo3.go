@@ -26,7 +26,7 @@ func typo3AdditionalConfigTemplate(app *DdevApp) string {
 
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '` +
 		strings.Join(hostNames, "(:\\\\d+)?|") +
-		`(:\\d+)?';
+		`(:\\d+)?|.*\.ngrok\.io(:\\d+)?';
 
 $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge(
     // on first install, this could be not set yet
