@@ -586,27 +586,11 @@ func RemoveContainer(id string, timeout uint) error {
 func ImageExistsLocally(imageName string) (bool, error) {
 	client := GetDockerClient()
 
-	images, err := client.ListImages(docker.ListImagesOptions{
-		Filter: imageName,
-	})
-
-	if err != nil {
-		return false, err
+	// If inspect succeeeds, we have an image.
+	_, err := client.InspectImage(imageName)
+	if err == nil {
+		return true, nil
 	}
-
-	if len(images) == 0 {
-		return false, nil
-	}
-
-	for _, i := range images {
-		// RepoTags is a slice in the format of <repo-name>:<tag>, like drud/ddev-webserver:v1.2.3
-		for _, tag := range i.RepoTags {
-			if tag == imageName {
-				return true, nil
-			}
-		}
-	}
-
 	return false, nil
 }
 
