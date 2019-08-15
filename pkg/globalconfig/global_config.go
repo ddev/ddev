@@ -38,10 +38,11 @@ type GlobalConfig struct {
 	APIVersion           string                  `yaml:"APIVersion"`
 	OmitContainers       []string                `yaml:"omit_containers,flow"`
 	InstrumentationOptIn bool                    `yaml:"instrumentation_opt_in"`
+	InstrumentationUser  string                  `yaml:"instrumentation_user,omitempty"`
 	LastUsedVersion      string                  `yaml:"last_used_version"`
 	ProjectList          map[string]*ProjectInfo `yaml:"project_info"`
 	DeveloperMode        bool                    `yaml:"developer_mode,omitempty"`
-	InstrumentationUser  string                  `yaml:"instrumentation_user,omitempty"`
+	MkcertCARoot         string                  `yaml:"mkcert_caroot"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
