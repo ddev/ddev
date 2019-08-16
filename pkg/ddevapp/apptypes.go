@@ -83,7 +83,7 @@ func init() {
 		nodeps.AppTypeBackdrop: {
 			settingsCreator: createBackdropSettingsFile, uploadDir: getBackdropUploadDir, hookDefaultComments: getBackdropHooks, apptypeSettingsPaths: setBackdropSiteSettingsPaths, appTypeDetect: isBackdropApp, postImportDBAction: backdropPostImportDBAction, configOverrideAction: nil, postConfigAction: nil, postStartAction: backdropPostStartAction, importFilesAction: backdropImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
-		AppTypeMagento:  {},
+		AppTypeMagento: {},
 		AppTypeMagento2: {},
 	}
 }
