@@ -123,7 +123,7 @@ case $DDEV_PROJECT_TYPE in
         sudo ln -s /usr/local/bin/n98-magerun /usr/local/bin/magerun
         ;;
     magento2)
-        echo -e "\n# Add Magento bin folder to path\nexport PATH=\$PATH:/var/www/html/bin\n" >> ~/.bashrc
+        echo -e "\n# Add Magento bin folder to path\nexport PATH=\$PATH:\$WEBSERVER_DOCROOT/bin\n" >> ~/.bashrc
         sudo ln -s /usr/local/bin/n98-magerun2 /usr/local/bin/magerun2
         ;;
 esac
