@@ -23,6 +23,10 @@ for item in osslsigncode golang mkcert ddev; do
     brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
 done
 
+# Temporarily overwrite the brew-loaded broken-on-Ubuntu1604 mkcert
+brew unlink mkcert
+sudo curl -sSL -o /usr/local/bin/mkcert -O https://github.com/rfay/mkcert/releases/download/v1.4.1-alpha1/mkcert-v1.4.1-alpha1-linux-amd64 && sudo chmod +x /usr/local/bin/mkcert
+
 mkcert -install
 
 primary_ip=$(ip route get 1 | awk '{gsub("^.*src ",""); print $1; exit}')
