@@ -22,7 +22,9 @@ var continuousSleepTime = 1
 var ListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List projects",
-	Long:  `List projects. Shows active projects by default, includes stopped projects with --all`,
+	Long:  `List projects. Shows all projects by default, shows active projects only with --active-only`,
+	Example: `ddev list
+ddev list -A`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for {
 			apps, err := ddevapp.GetProjects(activeOnly)

@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -15,6 +16,10 @@ var caROOT = ""
 
 func GetCAROOT() string {
 	if caROOT != "" {
+		return caROOT
+	}
+	if globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+		caROOT = globalconfig.DdevGlobalConfig.MkcertCARoot
 		return caROOT
 	}
 	_, err := exec.LookPath("mkcert")
@@ -31,5 +36,8 @@ func GetCAROOT() string {
 		return ""
 	}
 	caROOT = root
+	globalconfig.DdevGlobalConfig.MkcertCARoot = root
+	_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+
 	return caROOT
 }
