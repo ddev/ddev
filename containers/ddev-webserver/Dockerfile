@@ -4,10 +4,9 @@ ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4"
 ENV PHP_DEFAULT_VERSION="7.2"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 
-ENV DRUSH_VERSION=8.2.3
+ENV DRUSH_VERSION=8.3.0
 ENV DRUSH_LAUNCHER_VERSION=0.6.0
 ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
-ENV WP_CLI_VERSION=2.1.0
 ENV MAILHOG_VERSION=1.0.0
 ENV BACKDROP_DRUSH_VERSION=1.0.0
 ENV MKCERT_VERSION=v1.3.0
@@ -109,7 +108,7 @@ RUN composer global require hirak/prestissimo
 RUN curl -sSL "https://github.com/drush-ops/drush/releases/download/${DRUSH_VERSION}/drush.phar" -o /usr/local/bin/drush8 && chmod +x /usr/local/bin/drush8
 RUN curl -sSL "https://github.com/drush-ops/drush-launcher/releases/download/${DRUSH_LAUNCHER_VERSION}/drush.phar" -o /usr/local/bin/drush && chmod +x /usr/local/bin/drush
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
-RUN curl -sSL "https://github.com/wp-cli/wp-cli/releases/download/v${WP_CLI_VERSION}/wp-cli-${WP_CLI_VERSION}.phar" -o /usr/local/bin/wp-cli
+RUN curl -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp-cli
 
 RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal && chmod +x /usr/local/bin/drupal
 
