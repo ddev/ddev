@@ -9,6 +9,9 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+# thanks to https://stackoverflow.com/a/24067243/215713
+function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
+
 DISK_AVAIL=$(df -k . | awk '/[0-9]%/ { gsub(/%/, ""); print $5}')
 if [ ${DISK_AVAIL} -ge 95 ] ; then
     echo "Disk usage is ${DISK_AVAIL}% on $(hostname), not usable";
@@ -41,7 +44,9 @@ if [ "$(go env GOOS)" = "windows"  -a "$(git config core.autocrlf)" != "false" ]
  exit 3
 fi
 
-if command -v ddev >/dev/null && [ "$(ddev version -j | jq -r .raw.commit)" \< "${MIN_DDEV_VERSION}" ] ; then
+CURRENT_DDEV_VERSION=$(ddev --version  | awk '{ gsub(/^v/, "", $3); sub(/-.*$/, "", $3); print $3}' )
+CURRENT_DDEV_VERSION=$(ddev --version | awk '{ print $3 }')
+if command -v ddev >/dev/null && version_gt ${MIN_DDEV_VERSION} ${CURRENT_DDEV_VERSION} ; then
   echo "ddev version in $(command -v ddev) is inadequate: $(ddev version -j | jq -r .raw.commit)"
   exit 4
 fi
