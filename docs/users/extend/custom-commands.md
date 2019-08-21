@@ -9,7 +9,7 @@ There are example commands provided in `ddev/commands/*/*.example` that can just
 To provide host commands, place a bash script in .ddev/commands/host. For example, a PHPStorm launcher to make the `ddev PHPStorm` command might go in .ddev/commands/host/phpstorm` with these contents:
 
 ```
-#!/bin/bash
+#!/usr/bin/env bash
 
 ## Description: Open PHPStorm with the current project
 ## Usage: phpstorm
