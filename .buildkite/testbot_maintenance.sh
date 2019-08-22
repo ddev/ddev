@@ -18,3 +18,13 @@ if ! command -v ngrok >/dev/null; then
         ;;
     esac
 fi
+
+# Upgrade mkcert on macOS
+case $os in
+darwin)
+    brew upgrade mkcert || brew install mkcert || true
+    ;;
+windows)
+    choco upgrade -y mkcert
+    ;;
+esac
