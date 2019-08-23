@@ -711,7 +711,7 @@ func (app *DdevApp) Start() error {
 
 	caRoot := GetCAROOT()
 	if caRoot == "" {
-		util.Warning("mkcert may not be properly installed, please install it, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`: %v", err)
+		util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
 	}
 	router, _ := FindDdevRouter()
 	// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
