@@ -2,6 +2,12 @@
 ##
 # WP-cli wrapper: Append path automatically so that user doesn't have to
 ##
+
+PATH_OPTION=""
+if [ -n "$WP_CORE" ]; then
+  PATH_OPTION="--path=$WP_CORE"
+fi
+
 if [ "$(id -u)" = "0" ]; then
 
   # Gather all arguments because string interpolation doesn't work for $@
@@ -10,7 +16,7 @@ if [ "$(id -u)" = "0" ]; then
       args="$args \"$i\""
   done
 
-  /usr/local/bin/wp-cli "$@" --path=$WP_CORE --allow-root
+  /usr/local/bin/wp-cli "$@" $PATH_OPTION --allow-root
 else
-  /usr/local/bin/wp-cli "$@" --path=$WP_CORE
+  /usr/local/bin/wp-cli "$@" $PATH_OPTION
 fi
