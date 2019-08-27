@@ -23,7 +23,7 @@ jobs:
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
         command: |
-          make -s clean linux darwin windows_install chocolatey EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+          make -s clean linux darwin windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: Build the ddev executables
     - persist_to_workspace:
         root: ~/
@@ -382,13 +382,13 @@ jobs:
 
       # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
       - run:
-          command: make -s clean linux darwin windows_install chocolatey EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+          command: make -s clean linux darwin windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
           name: Build the ddev executables
 
       # We only build the xz version of the docker images on tag build.
       - run:
           # Do not build the docker tarballs at simple tag build time
-          command: ./.circleci/generate_artifacts.sh $ARTIFACTS TRUE false
+          command: ./.circleci/generate_artifacts.sh $ARTIFACTS false false
           name: tar/zip up artifacts and make hashes
           no_output_timeout: "40m"
 
