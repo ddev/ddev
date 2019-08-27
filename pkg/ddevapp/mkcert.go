@@ -15,12 +15,17 @@ import (
 var caROOT = ""
 
 func GetCAROOT() string {
-	if caROOT != "" {
+	if caROOT != "" && validCAROOT(caROOT) {
 		return caROOT
 	}
 	if globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
 		caROOT = globalconfig.DdevGlobalConfig.MkcertCARoot
-		return caROOT
+		if !validCAROOT(caROOT) {
+			globalconfig.DdevGlobalConfig.MkcertCARoot = ""
+			_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		} else {
+			return caROOT
+		}
 	}
 	_, err := exec.LookPath("mkcert")
 	if err != nil {
@@ -40,4 +45,8 @@ func GetCAROOT() string {
 	_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 
 	return caROOT
+}
+
+func validCAROOT(path string) bool {
+	return fileutil.FileExists(filepath.Join(path, "rootCA-key.pem"))
 }
