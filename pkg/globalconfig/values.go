@@ -13,4 +13,4 @@ var ValidOmitContainers = map[string]bool{
 	DBAContainer:          true,
 }
 
-var DdevNoSentry = os.Getenv("DDEV_NO_SENTRY") == "true"
+var DdevNoInstrumentation = os.Getenv("DDEV_NO_INSTRUMENTATION") == "true"

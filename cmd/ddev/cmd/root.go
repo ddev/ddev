@@ -164,6 +164,11 @@ func init() {
 	if err != nil {
 		util.Failed("Failed to read global config file %s: %v", globalconfig.GetGlobalConfigPath(), err)
 	}
+
+	if !globalconfig.DdevNoInstrumentation && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+		ddevapp.SetInstrumentationBaseTags()
+	}
+
 }
 
 func instrumentationNotSetUpWarning() {
@@ -179,7 +184,7 @@ func instrumentationNotSetUpWarning() {
 // from the last saved version. If it is, prompt to request anon ddev usage stats
 // and update the info.
 func checkDdevVersionAndOptInInstrumentation() error {
-	if !output.JSONOutput && version.COMMIT != globalconfig.DdevGlobalConfig.LastUsedVersion && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoSentry {
+	if !output.JSONOutput && version.COMMIT != globalconfig.DdevGlobalConfig.LastUsedVersion && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/latest/users/cli-usage/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true

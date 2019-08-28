@@ -128,6 +128,7 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 	}
 
 	if entry.Level == log.FatalLevel && globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" {
+		_ = raven.SetDSN(version.SentryDSN)
 		_ = raven.CaptureMessageAndWait("Failed:"+entry.Message, map[string]string{"severity-level": "fatal", "report-type": "util-fail"})
 	}
 	b.WriteByte('\n')
