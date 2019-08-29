@@ -57,7 +57,7 @@ func init() {
 	ImportDBCmd.Flags().StringVarP(&dbExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
 	ImportDBCmd.Flags().BoolVarP(&progressOption, "progress", "p", true, "Display a progress bar during import")
 	app, err := ddevapp.GetActiveApp("")
-	if err != nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+	if err == nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
 		RootCmd.AddCommand(ImportDBCmd)
 	}
 }

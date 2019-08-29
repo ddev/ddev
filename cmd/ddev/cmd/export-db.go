@@ -51,7 +51,7 @@ func init() {
 	ExportDBCmd.Flags().StringVarP(&outFileName, "file", "f", "", "Provide the path to output the dump")
 	ExportDBCmd.Flags().BoolVarP(&gzipOption, "gzip", "z", true, "If provided asset is an archive, provide the path to extract within the archive.")
 	app, err := ddevapp.GetActiveApp("")
-	if err != nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+	if err == nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
 		RootCmd.AddCommand(ExportDBCmd)
 	}
 }

@@ -35,7 +35,7 @@ func init() {
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotAll, "all", "a", false, "Snapshot all running sites")
 	DdevSnapshotCommand.Flags().StringVarP(&snapshotName, "name", "n", "", "provide a name for the snapshot")
 	app, err := ddevapp.GetActiveApp("")
-	if err != nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+	if err == nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
 		RootCmd.AddCommand(DdevSnapshotCommand)
 	}
 }

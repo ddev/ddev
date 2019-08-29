@@ -36,7 +36,7 @@ Example: "ddev restore-snapshot d8git_20180717203845"`,
 
 func init() {
 	app, err := ddevapp.GetActiveApp("")
-	if err != nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+	if err == nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
 		RootCmd.AddCommand(DdevRestoreSnapshotCommand)
 	}
 }
