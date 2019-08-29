@@ -80,8 +80,10 @@ services:
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     hostname: {{ .Name }}-web
+    {{if not .OmitDB }}
     links:
       - db:db
+    {{end}}
     # ports is list of exposed *container* ports
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
@@ -162,7 +164,7 @@ services:
 
 {{end}}
 
-{{if not .OmitDBA }}
+{{ if not .OmitDBA }}
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
@@ -194,8 +196,10 @@ networks:
     external:
       name: ddev_default
 volumes:
+  {{if not .OmitDB }}
   mariadb-database:
     name: "${DDEV_SITENAME}-mariadb"
+  {{end}}
   {{ if not .OmitSSHAgent }}
   ddev-ssh-agent_socket_dir:
     external: true

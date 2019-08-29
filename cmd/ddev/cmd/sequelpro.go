@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 
 	"os"
 	"os/exec"
@@ -106,7 +107,10 @@ var dummyDevSequelproCmd = &cobra.Command{
 func init() {
 	switch {
 	case detectSequelpro():
-		RootCmd.AddCommand(DdevSequelproCmd)
+		app, err := ddevapp.GetActiveApp("")
+		if err != nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+			RootCmd.AddCommand(DdevSequelproCmd)
+		}
 	case runtime.GOOS == "darwin":
 		RootCmd.AddCommand(dummyDevSequelproCmd)
 	}

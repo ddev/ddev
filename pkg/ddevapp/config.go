@@ -638,7 +638,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		HostDockerInternalIP: hostDockerInternalIP,
 		ComposeVersion:       version.DockerComposeFileFormatVersion,
 		OmitDB:               nodeps.ArrayContainsString(app.OmitContainers, "db"),
-		OmitDBA:              nodeps.ArrayContainsString(app.OmitContainers, "dba"),
+		OmitDBA:              nodeps.ArrayContainsString(app.OmitContainers, "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
 		OmitSSHAgent:         nodeps.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
 		WebcacheEnabled:      app.WebcacheEnabled,
 		NFSMountEnabled:      app.NFSMountEnabled,

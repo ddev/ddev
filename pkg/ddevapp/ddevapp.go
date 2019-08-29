@@ -204,12 +204,13 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["mariadb_version"] = app.MariaDBVersion
 			appDesc["dbinfo"] = dbinfo
+
+			if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
+				appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + app.PHPMyAdminPort
+			}
 		}
 
 		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + app.MailhogPort
-		if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
-			appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + app.PHPMyAdminPort
-		}
 	}
 
 	routerStatus, logOutput := GetRouterStatus()
@@ -443,9 +444,12 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 // SiteStatus returns the current status of an application determined from web and db service health.
 func (app *DdevApp) SiteStatus() string {
 	var siteStatus string
-	statuses := map[string]string{"web": "", "db": ""}
+	statuses := map[string]string{"web": ""}
 	if app.WebcacheEnabled {
 		statuses["bgsync"] = ""
+	}
+	if !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+		statuses["db"] = ""
 	}
 
 	if !fileutil.FileExists(app.GetAppRoot()) {

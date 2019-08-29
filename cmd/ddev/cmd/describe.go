@@ -59,12 +59,15 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 
 	// Only show extended status for running sites.
 	if status == ddevapp.SiteRunning {
-		dbinfo := desc["dbinfo"].(map[string]interface{})
-
 		output = output + "\n\nProject Information\n-------------------\n"
 		siteInfo := uitable.New()
 		siteInfo.AddRow("PHP version:", desc["php_version"])
-		siteInfo.AddRow("MariaDB version", dbinfo["mariadb_version"])
+
+		var dbinfo map[string]interface{}
+		if _, ok := desc["dbinfo"]; ok {
+			dbinfo = desc["dbinfo"].(map[string]interface{})
+			siteInfo.AddRow("MariaDB version", dbinfo["mariadb_version"])
+		}
 
 		output = output + fmt.Sprintln(siteInfo)
 		urlTable := uitable.New()
@@ -81,16 +84,20 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 			return "", err
 		}
 
-		output = output + "\n\n" + "MySQL/MariaDB Credentials\n-------------------------\n" + `Username: "db", Password: "db", Default database: "db"` + "\n"
-		output = output + "\n" + `or use root credentials when needed: Username: "root", Password: "root"` + "\n\n"
+		if dbinfo != nil {
+			output = output + "\n" + "MySQL/MariaDB Credentials\n-------------------------\n" + `Username: "db", Password: "db", Default database: "db"` + "\n"
+			output = output + "\n" + `or use root credentials when needed: Username: "root", Password: "root"` + "\n\n"
 
-		output = output + "Database hostname and port INSIDE container: db:3306\n"
-		output = output + fmt.Sprintf("To connect to db server inside container or in project settings files: \nmysql --host=db --user=db --password=db --database=db\n")
+			output = output + "Database hostname and port INSIDE container: db:3306\n"
+			output = output + fmt.Sprintf("To connect to db server inside container or in project settings files: \nmysql --host=db --user=db --password=db --database=db\n")
 
-		output = output + fmt.Sprintf("Database hostname and port from HOST: %s:%d\n", dockerIP, dbinfo["published_port"])
-		output = output + fmt.Sprintf("To connect to mysql from your host machine, \nmysql --host=%s --port=%d --user=db --password=db --database=db\n", dockerIP, dbinfo["published_port"])
+			output = output + fmt.Sprintf("Database hostname and port from HOST: %s:%d\n", dockerIP, dbinfo["published_port"])
+			output = output + fmt.Sprintf("To connect to mysql from your host machine, \nmysql --host=%s --port=%d --user=db --password=db --database=db\n", dockerIP, dbinfo["published_port"])
+		} else {
+			output = output + "\n" + "DB container is excluded, so no db information provided\n"
+		}
 
-		output = output + "\n\nOther Services\n--------------\n"
+		output = output + "\nOther Services\n--------------\n"
 		other := uitable.New()
 		other.AddRow("MailHog:", desc["mailhog_url"])
 		if _, ok := desc["phpmyadmin_url"]; ok {
