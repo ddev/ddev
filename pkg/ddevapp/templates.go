@@ -5,6 +5,7 @@ package ddevapp
 const DDevComposeTemplate = `version: '{{ .ComposeVersion }}'
 {{ .DdevGenerated }}
 services:
+{{if not .OmitDB }}
   db:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
     build: 
@@ -47,6 +48,7 @@ services:
       retries: 30
       start_period: 20s
       timeout: 120s
+{{end}}
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     build: 
@@ -186,7 +188,6 @@ services:
       interval: 120s
       timeout: 2s
       retries: 1
-
 {{end}}
 networks:
   default:

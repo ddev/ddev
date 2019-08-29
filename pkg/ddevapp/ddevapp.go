@@ -191,18 +191,20 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 
 	// Only show extended status for running sites.
 	if app.SiteStatus() == SiteRunning {
-		dbinfo := make(map[string]interface{})
-		dbinfo["username"] = "db"
-		dbinfo["password"] = "db"
-		dbinfo["dbname"] = "db"
-		dbinfo["host"] = "db"
-		dbPublicPort, err := app.GetPublishedPort("db")
-		util.CheckErr(err)
-		dbinfo["dbPort"] = GetPort("db")
-		util.CheckErr(err)
-		dbinfo["published_port"] = dbPublicPort
-		dbinfo["mariadb_version"] = app.MariaDBVersion
-		appDesc["dbinfo"] = dbinfo
+		if !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+			dbinfo := make(map[string]interface{})
+			dbinfo["username"] = "db"
+			dbinfo["password"] = "db"
+			dbinfo["dbname"] = "db"
+			dbinfo["host"] = "db"
+			dbPublicPort, err := app.GetPublishedPort("db")
+			util.CheckErr(err)
+			dbinfo["dbPort"] = GetPort("db")
+			util.CheckErr(err)
+			dbinfo["published_port"] = dbPublicPort
+			dbinfo["mariadb_version"] = app.MariaDBVersion
+			appDesc["dbinfo"] = dbinfo
+		}
 
 		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + app.MailhogPort
 		if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
@@ -759,7 +761,10 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	requiredContainers := []string{"db", "web"}
+	requiredContainers := []string{"web"}
+	if !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+		requiredContainers = append(requiredContainers, "db")
+	}
 	if app.WebcacheEnabled {
 		requiredContainers = append(requiredContainers, "bgsync")
 		err = app.precacheWebdir()

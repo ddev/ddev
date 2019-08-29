@@ -589,6 +589,7 @@ type composeYAMLVars struct {
 	DBBuildContext       string
 	BgsyncBuildContext   string
 	SSHAgentBuildContext string
+	OmitDB               bool
 	OmitDBA              bool
 	OmitSSHAgent         bool
 	WebcacheEnabled      bool
@@ -636,6 +637,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DdevGenerated:        DdevFileSignature,
 		HostDockerInternalIP: hostDockerInternalIP,
 		ComposeVersion:       version.DockerComposeFileFormatVersion,
+		OmitDB:               nodeps.ArrayContainsString(app.OmitContainers, "db"),
 		OmitDBA:              nodeps.ArrayContainsString(app.OmitContainers, "dba"),
 		OmitSSHAgent:         nodeps.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
 		WebcacheEnabled:      app.WebcacheEnabled,
