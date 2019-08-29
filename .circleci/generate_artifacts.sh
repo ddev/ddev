@@ -8,7 +8,7 @@ set -o pipefail
 set -o nounset
 
 ARTIFACTS=${1:-/artifacts}
-BUILD_IMAGE_TARBALLS=${2:-true}
+BUILD_IMAGE_TARBALLS=${2:-false}
 BASE_DIR=$PWD
 
 sudo mkdir -p $ARTIFACTS && sudo chmod 777 $ARTIFACTS
