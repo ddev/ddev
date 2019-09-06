@@ -151,7 +151,7 @@ ddev composer install
 mkdir my-typo3-site
 cd my-typo3-site
 ddev config --project-type php
-ddev composer create typo3/cms-base-distribution ^9 --no-interaction --prefer-dist
+ddev composer create typo3/cms-base-distribution ^9.5 --no-interaction --prefer-dist
 ddev config --project-type typo3
 ddev restart
 ```
