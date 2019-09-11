@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/mattn/go-isatty"
+	"os"
 	"runtime"
 	"strings"
 )
@@ -19,6 +21,7 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 		Service: "web",
 		Dir:     "/var/www/html",
 		Cmd:     fmt.Sprintf("composer %s", strings.Join(args, " ")),
+		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 	})
 	if err != nil {
 		return stdout, stderr, fmt.Errorf("composer command failed: %v", err)

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/mattn/go-isatty"
 	"os"
 	"path"
 	"path/filepath"
@@ -17,46 +18,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	// Allows a user to pass the --dev flag to composer create-project
-	devArg bool
-
-	// Allows a user to pass the --no-dev flag to composer create-project
-	noDevArg bool
-
-	// Allows the user to pass a --stability <arg> option to composer create-project
-	stabilityArg string
-
-	// Allows a user to specify that Composer shouldn't require user interaction
-	noInteractionArg bool
-
-	// Allows a user to pass the --prefer-dist flag to composer create-project
-	preferDistArg bool
-)
-
 var ComposerCreateCmd = &cobra.Command{
-	Use:   "create [flags] <package> [<version>]",
-	Short: "Executes 'composer create-project' within the web container",
+	Use: "create [args] [flags]",
+	FParseErrWhitelist: cobra.FParseErrWhitelist{
+		UnknownFlags: true,
+	},
+	Short: "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
 the project root directory after installation. Any existing files in the
 project root will be deleted when creating a project.`,
-	Example: "ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction\nddev composer create typo3/cms-base-distribution ^9",
+	Example: `ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction
+ddev composer create typo3/cms-base-distribution ^9
+ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction --no-install
+ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 || len(args) > 2 {
-			err := cmd.Usage()
-			util.CheckErr(err)
-			os.Exit(-1)
-		}
 
-		var pkg, ver string
-		if len(args) == 2 {
-			pkg = args[len(args)-2]
-			ver = args[len(args)-1]
-		} else if len(args) == 1 {
-			pkg = args[len(args)-1]
+		// We only want to pass all flags and args to composer
+		// cobra does not seem to allow direct access to everything predictably
+		osargs := []string{}
+		if len(os.Args) > 3 {
+			osargs = os.Args[3:]
 		}
-
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed(err.Error())
@@ -103,42 +86,20 @@ project root will be deleted when creating a project.`,
 		composerCmd := []string{
 			"composer",
 			"create-project",
-			pkg,
-			containerInstallPath,
 		}
-
-		if ver != "" {
-			composerCmd = append(composerCmd, ver)
-		}
-
-		if devArg {
-			composerCmd = append(composerCmd, "--dev")
-		}
-
-		if noDevArg {
-			composerCmd = append(composerCmd, "--no-dev")
-		}
-
-		if stabilityArg != "" {
-			composerCmd = append(composerCmd, "--stability", stabilityArg)
-		}
-
-		if noInteractionArg {
-			composerCmd = append(composerCmd, "--no-interaction")
-		}
-
-		if preferDistArg {
-			composerCmd = append(composerCmd, "--prefer-dist")
-		}
+		composerCmd = append(composerCmd, osargs...)
+		composerCmd = append(composerCmd, containerInstallPath)
 
 		composerCmdString := strings.TrimSpace(strings.Join(composerCmd, " "))
 		output.UserOut.Printf("Executing composer command: %s\n", composerCmdString)
-		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     composerCmdString,
+			Dir:     "/var/www/html",
+			Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 		})
 		if err != nil {
-			util.Failed("Failed to create project")
+			util.Failed("Failed to create project:%v, stderr=%v", err, stderr)
 		}
 
 		if len(stdout) > 0 {
@@ -183,6 +144,7 @@ project root will be deleted when creating a project.`,
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				Cmd:     fmt.Sprintf("shopt -s dotglob && mv %s/* /var/www/html && rmdir %s", containerInstallPath, containerInstallPath),
+				Dir:     "/var/www/html",
 			})
 		}
 		// This err check picks up either of the above: The filepath.Walk and the mv
@@ -208,9 +170,4 @@ for basic project creation or 'ddev ssh' into the web container and execute
 func init() {
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
-	ComposerCreateCmd.Flags().BoolVar(&devArg, "dev", false, "Pass the --dev flag to composer create-project")
-	ComposerCreateCmd.Flags().BoolVar(&noDevArg, "no-dev", false, "Pass the --no-dev flag to composer create-project")
-	ComposerCreateCmd.Flags().StringVar(&stabilityArg, "stability", "", "Pass the --stability <arg> option to composer create-project")
-	ComposerCreateCmd.Flags().BoolVar(&noInteractionArg, "no-interaction", false, "Pass the --no-interaction flag to composer create-project")
-	ComposerCreateCmd.Flags().BoolVar(&preferDistArg, "prefer-dist", false, "Pass the --prefer-dist flag to composer create-project")
 }
