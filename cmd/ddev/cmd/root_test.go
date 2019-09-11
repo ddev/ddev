@@ -65,7 +65,7 @@ func TestMain(m *testing.M) {
 	}
 
 	// We don't want the tests reporting to Sentry.
-	_ = os.Setenv("DDEV_NO_SENTRY", "true")
+	_ = os.Setenv("DDEV_NO_INSTRUMENTATION", "true")
 
 	// If GOTEST_SHORT is an integer, then use it as index for a single usage
 	// in the array. Any value can be used, it will default to just using the

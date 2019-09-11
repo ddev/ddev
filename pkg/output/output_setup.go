@@ -33,7 +33,7 @@ func LogSetUp() {
 	}
 
 	// Report errors and panics to Sentry
-	if version.SentryDSN != "" && !globalconfig.DdevNoSentry && nodeps.IsInternetActive() {
+	if version.SentryDSN != "" && !globalconfig.DdevNoInstrumentation && globalconfig.DdevGlobalConfig.InstrumentationOptIn && nodeps.IsInternetActive() {
 		hook, err := logrus_sentry.NewAsyncWithTagsSentryHook(version.SentryDSN, nodeps.InstrumentationTags, levels)
 		if err == nil {
 			UserOut.Hooks.Add(hook)
