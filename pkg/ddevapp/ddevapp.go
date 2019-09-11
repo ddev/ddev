@@ -191,23 +191,26 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 
 	// Only show extended status for running sites.
 	if app.SiteStatus() == SiteRunning {
-		dbinfo := make(map[string]interface{})
-		dbinfo["username"] = "db"
-		dbinfo["password"] = "db"
-		dbinfo["dbname"] = "db"
-		dbinfo["host"] = "db"
-		dbPublicPort, err := app.GetPublishedPort("db")
-		util.CheckErr(err)
-		dbinfo["dbPort"] = GetPort("db")
-		util.CheckErr(err)
-		dbinfo["published_port"] = dbPublicPort
-		dbinfo["mariadb_version"] = app.MariaDBVersion
-		appDesc["dbinfo"] = dbinfo
+		if !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+			dbinfo := make(map[string]interface{})
+			dbinfo["username"] = "db"
+			dbinfo["password"] = "db"
+			dbinfo["dbname"] = "db"
+			dbinfo["host"] = "db"
+			dbPublicPort, err := app.GetPublishedPort("db")
+			util.CheckErr(err)
+			dbinfo["dbPort"] = GetPort("db")
+			util.CheckErr(err)
+			dbinfo["published_port"] = dbPublicPort
+			dbinfo["mariadb_version"] = app.MariaDBVersion
+			appDesc["dbinfo"] = dbinfo
+
+			if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
+				appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + app.PHPMyAdminPort
+			}
+		}
 
 		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + app.MailhogPort
-		if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
-			appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + app.PHPMyAdminPort
-		}
 	}
 
 	routerStatus, logOutput := GetRouterStatus()
@@ -441,9 +444,12 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 // SiteStatus returns the current status of an application determined from web and db service health.
 func (app *DdevApp) SiteStatus() string {
 	var siteStatus string
-	statuses := map[string]string{"web": "", "db": ""}
+	statuses := map[string]string{"web": ""}
 	if app.WebcacheEnabled {
 		statuses["bgsync"] = ""
+	}
+	if !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+		statuses["db"] = ""
 	}
 
 	if !fileutil.FileExists(app.GetAppRoot()) {
@@ -759,7 +765,10 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	requiredContainers := []string{"db", "web"}
+	requiredContainers := []string{"web"}
+	if !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+		requiredContainers = append(requiredContainers, "db")
+	}
 	if app.WebcacheEnabled {
 		requiredContainers = append(requiredContainers, "bgsync")
 		err = app.precacheWebdir()

@@ -70,6 +70,7 @@ const (
 )
 
 var ValidOmitContainers = map[string]bool{
+	DBContainer:           true,
 	DdevSSHAgentContainer: true,
 	DBAContainer:          true,
 }

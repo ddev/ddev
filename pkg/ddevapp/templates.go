@@ -5,6 +5,7 @@ package ddevapp
 const DDevComposeTemplate = `version: '{{ .ComposeVersion }}'
 {{ .DdevGenerated }}
 services:
+{{if not .OmitDB }}
   db:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
     build: 
@@ -47,6 +48,7 @@ services:
       retries: 30
       start_period: 20s
       timeout: 120s
+{{end}}
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     build: 
@@ -78,8 +80,10 @@ services:
     restart: "no"
     user: "$DDEV_UID:$DDEV_GID"
     hostname: {{ .Name }}-web
+    {{if not .OmitDB }}
     links:
       - db:db
+    {{end}}
     # ports is list of exposed *container* ports
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
@@ -160,7 +164,7 @@ services:
 
 {{end}}
 
-{{if not .OmitDBA }}
+{{ if not .OmitDBA }}
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
@@ -186,15 +190,16 @@ services:
       interval: 120s
       timeout: 2s
       retries: 1
-
 {{end}}
 networks:
   default:
     external:
       name: ddev_default
 volumes:
+  {{if not .OmitDB }}
   mariadb-database:
     name: "${DDEV_SITENAME}-mariadb"
+  {{end}}
   {{ if not .OmitSSHAgent }}
   ddev-ssh-agent_socket_dir:
     external: true

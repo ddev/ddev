@@ -42,7 +42,7 @@ func TestCmdImportDB(t *testing.T) {
 	command.Stdin = f
 
 	importDBOutput, err := command.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, "failed import-db from stdin: %v", importDBOutput)
 
 	assert.Contains(string(importDBOutput), "Successfully imported database")
 
