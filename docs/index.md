@@ -104,6 +104,7 @@ On variants of Linux you may be prompted for additional package installation to 
 
 For instructions to uninstall DDEV-Local see [Uninstallation](users/uninstall.md).
 
+<a name="support"></a>
 ## Support and User-Contributed Documentation
 
 We love to hear from our users and help them be successful with ddev. Support options include:
