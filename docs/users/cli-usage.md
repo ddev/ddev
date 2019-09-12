@@ -1,6 +1,20 @@
 <h1>Using the ddev command line interface (CLI)</h1>
 
-Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands. There are commands to configure a project, start, remove, describe, etc. Each command also has help. For example, `ddev describe -h`.
+Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands. There are commands to configure a project, start, stop, describe, etc. Each command also has help. For example, `ddev stop -h` shows that `ddev rm` is an alias, and shows all the many flags that can be used with `ddev stop`.
+
+## Favorite Commands
+
+* `ddev config` configures a project for ddev, creating a .ddev directory according to your responses. It should be executed in the project (repository) root.
+* `ddev start` and `ddev stop` start and stop the containers that comprise a project. `ddev restart` just does a stop and a start. `ddev poweroff` stops all ddev-related containers and projects.
+* `ddev describe` or `ddev describe <projectname>` gives you full details about the project, what ports it uses, how to access them, etc.
+* `ddev list` shows running projects
+* `ddev import-db` and `ddev export-db` let you import or export a sql or compressed sql file.
+* `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer).
+* `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev restore-snapshot`.
+* `ddev ssh` opens a bash session in the web container (or other container). 
+* `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
+
+
 
 
 ## Quickstart Guides
