@@ -104,10 +104,15 @@ On variants of Linux you may be prompted for additional package installation to 
 
 For instructions to uninstall DDEV-Local see [Uninstallation](users/uninstall.md).
 
-## Support
+## Support and User-Contributed Documentation
 
 We love to hear from our users and help them be successful with ddev. Support options include:
+
 - [ddev Documentation](https://ddev.readthedocs.io)
 - [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
 - [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
-- The `#ddev` channel in [Drupal Slack](https://www.drupal.org/slack) and [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support
+- The [gitter drud/ddev channel](https://gitter.im/drud/ddev) (it's easy to log in many diffferent ways)
+- The `#ddev` channels in [Drupal Slack](https://www.drupal.org/slack), [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support.
+- [ddev-contrib](https://github.com/drud/ddev-contrib) repo provides a number of vetted user-contributed recipes for extending and using ddev. Your contributions are welcome.
+- [awesome-ddev](https://github.com/awesome-ddev) repo has loads of external resources, blog posts, recipes, screencasts, and the like. Your contributions are welcome.
+- [Twitter #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us, but it's not as good for interactive support, but we'll answer anywhere.
