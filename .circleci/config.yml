@@ -62,7 +62,7 @@ jobs:
 
   mac_nginx_fpm_test:
     macos:
-      xcode: "10.2.1"
+      xcode: "11.0.0"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
@@ -94,7 +94,7 @@ jobs:
 
   mac_apache_fpm_test:
     macos:
-      xcode: "10.2.1"
+      xcode: "11.0.0"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
@@ -126,7 +126,7 @@ jobs:
 
   mac_nfsmount_test:
     macos:
-      xcode: "10.2.1"
+      xcode: "11.0.0"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: "true"
@@ -305,7 +305,7 @@ jobs:
 
   mac_container_test:
     macos:
-      xcode: "10.2.1"
+      xcode: "11.0.0"
     working_directory: ~/ddev
     steps:
     - checkout
@@ -399,7 +399,7 @@ jobs:
   # 'release_build' is used to push a full release; it's triggered by api call
   release_build:
     macos:
-      xcode: "10.2.1"
+      xcode: "11.0.0"
     working_directory: ~/ddev
     environment:
       DRUD_DEBUG: "true"
