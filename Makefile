@@ -6,7 +6,7 @@ export PATH := $(EXTRA_PATH):$(PATH)
 
 # Not updating build-tools to get this, but this should be removed
 # when build-tools is updated.
-BUILD_IMAGE := drud/golang-build-container:v1.12.7
+# BUILD_IMAGE := drud/golang-build-container:v1.12.7
 
 GOMETALINTER_ARGS := --vendored-linters --disable-all --enable=gofmt --enable=vet --enable vetshadow --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode --deadline=4m
 GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode
