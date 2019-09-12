@@ -23,8 +23,9 @@ fi
 case $os in
 darwin)
     brew upgrade mkcert || brew install mkcert || true
+    brew upgrade golang || brew install golang || true
     ;;
 windows)
-    choco upgrade -y mkcert
+    choco upgrade -y mkcert golang
     ;;
 esac

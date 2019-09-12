@@ -79,7 +79,7 @@ On windows the building is somewhat more difficult due to the build being bash/l
 * [chocolatey](https://chocolatey.org/install) installed
 * make for Windows 3.81 (Recommended package [choco install make](https://chocolatey.org/packages/make) on chocolatey.org)
 * git for windows (Recommended package [choco install git](https://chocolatey.org/packages/git.install))
-* Docker Desktop for Windows.
+* docker for windows.
 
 (You can certainly install the base gnu make package, and the traditional git for windows package should work fine. Chocolatey installs are recommended here because there are many, many ways to get mixes of unix-style components that absolutely don't work. Microsoft's lovely bash-for-windows is a great tool, but it's an actual Ubuntu environment so isn't a good place for testing Windows builds.)
 
