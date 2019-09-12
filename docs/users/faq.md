@@ -1,6 +1,7 @@
 <h1>Frequently-Asked Questions (FAQ)</h1>
 
 * **What operating systems does DDEV-Local work on?** DDEV-Local works nearly anywhere Docker can be installed, including macOS, Windows 10 Pro/Enterprise,  Windows 10 Home, and Linux variant we've ever tried. It also runs in many Linux-like environments, for example ChromeOS (in Linux machine) and Windows 10's WSL2. In general, ddev works the same on each of these platforms, as all the important work is done inside identical Docker containers.
+* **How can I troubleshoot what's going wrong?** See the [troubleshooting](troubleshooting.md) and [Docker troubleshooting](docker_installation.md#troubleshooting) sections of the docs.
 * **Do I need to install PHP or Composer or Nginx or MySQL on my computer?** Absolutely *not*. All of these tools live inside ddev's docker containers, so you need only Docker and ddev. This is especially handy for Windows users where there's a bit more friction installing those tools.
 * **How do I get support?** See the (many) [support options](../index.md#support), including Slack, Gitter, Stack Overflow and others.
 * **How can I get the best performance?** Docker's normal mounting can be slow, especially on macOS. See the [Performance](performance.md) section for speed-up options including NFS mounting.
