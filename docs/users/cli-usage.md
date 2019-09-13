@@ -15,7 +15,14 @@ Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands
 * `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
 
 
+## Quick Extra Tools List
 
+In addition to the *commands* listed above, there are loads and loads of tools included inside the containers:
+
+* `ddev describe` tells how to access **mailhog**, which captures email in your development environment.
+* `ddev describe` tells how to use the built-in **PHPMyAdmin**.
+* Composer, git, node, npm, and dozens of other tools are installed in th web container, and you can access them after `ddev ssh`.
+* `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
 
 ## Quickstart Guides
 
