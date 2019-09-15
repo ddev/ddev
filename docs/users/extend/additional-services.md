@@ -5,7 +5,9 @@ ddev projects can be extended to provide additional services. This is achieved b
 If you need a service not provided here, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
 ## Apache Solr
-This recipe adds an Apache Solr 5.4 container to a project. It will setup a solr core with the solr configuration you define.
+This recipe adds an Apache Solr 6.6 container to a project. It will setup a solr core with the solr configuration you define.
+
+You can choose any Solr version you want simply by changing one line `image: solr:6.6`
 
 **Installation:**
 
