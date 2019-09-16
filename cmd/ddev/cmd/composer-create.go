@@ -29,7 +29,7 @@ web container. Projects will be installed to a temporary directory and moved to
 the project root directory after installation. Any existing files in the
 project root will be deleted when creating a project.`,
 	Example: `ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction
-ddev composer create typo3/cms-base-distribution ^9
+ddev composer create "typo3/cms-base-distribution:^9"
 ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction --no-install
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition`,
 	Run: func(cmd *cobra.Command, args []string) {
