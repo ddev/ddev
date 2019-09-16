@@ -64,7 +64,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 func init() {
 	configGlobalCommand.Flags().StringVarP(&omitContainers, "omit-containers", "", "", "omit-containers=dba,ddev-ssh-agent")
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", false, "instrmentation-opt-in=true")
-	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces-in=true")
+	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces=true")
 
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

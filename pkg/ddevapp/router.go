@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strconv"
 
 	"strings"
 
@@ -71,7 +72,7 @@ func StartDdevRouter() error {
 		"router_image":               version.RouterImage,
 		"router_tag":                 version.RouterTag,
 		"ports":                      newExposedPorts,
-		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
+		"router_bind_all_interfaces": strconv.FormatBool(globalconfig.DdevGlobalConfig.RouterBindAllInterfaces),
 		"compose_version":            version.DockerComposeFileFormatVersion,
 		"dockerIP":                   dockerIP,
 	}

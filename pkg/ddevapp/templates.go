@@ -418,9 +418,9 @@ services:
   ddev-router:
     image: {{ .router_image }}:{{ .router_tag }}
     container_name: ddev-router
-    ports:
-      {{ $dockerIP := .dockerIP }}{{ range $port := .ports }}- {{ if not .router_bind_all_interfaces }} "{{ $dockerIP }}:{{ $port }}:{{ $port }}" {{ else }} "{{ $port }}:{{ $port }}" {{ end }} 
-      {{ end }}
+    ports:{{ $dockerIP := .dockerIP }}{{ if not .router_bind_all_interfaces }}{{ range $port := .ports }}
+    - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}
+    - "{{ $port }}:{{ $port }}"{{ end }}{{ end }}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ddev-global-cache:/mnt/ddev-global-cache:rw
