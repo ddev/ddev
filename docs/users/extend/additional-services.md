@@ -5,16 +5,15 @@ ddev projects can be extended to provide additional services. This is achieved b
 If you need a service not provided here, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
 ## Apache Solr
-This recipe adds an Apache Solr 6.6 container to a project. It will setup a solr core with the solr configuration you define.
-
-You can choose any Solr version you want simply by changing one line `image: solr:6.6`
+This recipe adds an Apache Solr container to a project. It will setup a solr core with the solr configuration you define.
 
 **Installation:**
 
 - Copy [docker-compose.solr.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/docker-compose.solr.yaml) to the .ddev folder for your project.
+- You can change the Solr version by changing the `image` value in docker-compose.solr.yaml, for example: `image: solr:6.6`. The most obvious official solr image tags are at [hub.docker.com](https://hub.docker.com/_/solr/).
 - Create the folder path .ddev/solr/conf.
 - Copy the solr configuration files for your project to .ddev/solr/conf. _e.g., using Drupal Search API Solr, you would copy the solr-conf/5.x/ contents from the module code base into .ddev/solr/conf._
-- Ensure the configuration files must be present before running `ddev start`.
+- Ensure that the configuration files are present before running `ddev start`.
 
 **Interacting with Apache Solr**
 
