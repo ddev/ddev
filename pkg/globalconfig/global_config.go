@@ -132,7 +132,8 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #    If true, ddev-router will bind http/s, PHPMyAdmin, and MailHog ports on all
 #    network interfaces instead of just localhost, so others on your local network can
 #    access those ports. Note that this exposes the PHPMyAdmin and MailHog ports as well, which
-#    can be a major security issue, so be aware of your actions.
+#    can be a major security issue, so choose wisely. Consider omit_containers[dba] to avoid
+#    exposing PHPMyAdmin.
 `
 	cfgbytes = append(cfgbytes, instructions...)
 
