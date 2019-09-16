@@ -35,14 +35,15 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	APIVersion           string                  `yaml:"APIVersion"`
-	OmitContainers       []string                `yaml:"omit_containers,flow"`
-	InstrumentationOptIn bool                    `yaml:"instrumentation_opt_in"`
-	InstrumentationUser  string                  `yaml:"instrumentation_user,omitempty"`
-	LastUsedVersion      string                  `yaml:"last_used_version"`
-	ProjectList          map[string]*ProjectInfo `yaml:"project_info"`
-	DeveloperMode        bool                    `yaml:"developer_mode,omitempty"`
-	MkcertCARoot         string                  `yaml:"mkcert_caroot"`
+	APIVersion              string                  `yaml:"APIVersion"`
+	OmitContainers          []string                `yaml:"omit_containers,flow"`
+	InstrumentationOptIn    bool                    `yaml:"instrumentation_opt_in"`
+	InstrumentationUser     string                  `yaml:"instrumentation_user,omitempty"`
+	LastUsedVersion         string                  `yaml:"last_used_version"`
+	ProjectList             map[string]*ProjectInfo `yaml:"project_info"`
+	DeveloperMode           bool                    `yaml:"developer_mode,omitempty"`
+	MkcertCARoot            string                  `yaml:"mkcert_caroot"`
+	RouterBindAllInterfaces bool                    `yaml:"router_bind_all_interfaces"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
@@ -127,6 +128,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #
 # instrumentation_user: <your_username> # can be used to give ddev specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
+# yaml_find_all_interfaces: false  # If true, the ddev-router will bind web ports on all
+#    network interfaces instead of just localhost, so others on your network can 
+#    access it.
 `
 	cfgbytes = append(cfgbytes, instructions...)
 

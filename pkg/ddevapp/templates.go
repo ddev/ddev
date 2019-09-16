@@ -419,7 +419,7 @@ services:
     image: {{ .router_image }}:{{ .router_tag }}
     container_name: ddev-router
     ports:
-      {{ $dockerIP := .dockerIP }}{{ range $port := .ports }}- "{{ $dockerIP }}:{{ $port }}:{{ $port }}"
+      {{ $dockerIP := .dockerIP }}{{ range $port := .ports }}- {{ if not .router_bind_all_interfaces }} "{{ $dockerIP }}:{{ $port }}:{{ $port }}" {{ else }} "{{ $port }}:{{ $port }}" {{ end }} 
       {{ end }}
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro

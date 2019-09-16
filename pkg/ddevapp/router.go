@@ -68,11 +68,12 @@ func StartDdevRouter() error {
 	dockerIP, _ := dockerutil.GetDockerIP()
 
 	templateVars := map[string]interface{}{
-		"router_image":    version.RouterImage,
-		"router_tag":      version.RouterTag,
-		"ports":           newExposedPorts,
-		"compose_version": version.DockerComposeFileFormatVersion,
-		"dockerIP":        dockerIP,
+		"router_image":               version.RouterImage,
+		"router_tag":                 version.RouterTag,
+		"ports":                      newExposedPorts,
+		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
+		"compose_version":            version.DockerComposeFileFormatVersion,
+		"dockerIP":                   dockerIP,
 	}
 
 	err = templ.Execute(&doc, templateVars)
