@@ -88,6 +88,13 @@ func init() {
 // CreateSettingsFile creates the settings file (like settings.php) for the
 // provided app is the apptype has a settingsCreator function.
 func (app *DdevApp) CreateSettingsFile() (string, error) {
+	// If the user has asked us to skip settings file manipulation, then just bail
+	// out early.
+	if app.OmitSettingsPhp {
+		util.Warning("Skipping creation of settings file.")
+		return "", nil
+	}
+
 	app.SetApptypeSettingsPaths()
 
 	// If neither settings file options are set, then don't continue. Return

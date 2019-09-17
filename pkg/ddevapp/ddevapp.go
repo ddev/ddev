@@ -3,17 +3,18 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/lextoumbourou/goodhosts"
-	"github.com/mattn/go-isatty"
-	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
+
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/lextoumbourou/goodhosts"
+	"github.com/mattn/go-isatty"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"strings"
 
@@ -32,7 +33,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 // containerWaitTimeout is the max time we wait for all containers to become ready.
@@ -112,6 +113,7 @@ type DdevApp struct {
 	MkcertEnabled         bool                  `yaml:"-"`
 	NgrokArgs             string                `yaml:"ngrok_args,omitempty"`
 	Timezone              string                `yaml:"timezone"`
+	OmitSettingsPhp       bool                  `yaml:"omit_settings_php,omitempty"`
 }
 
 // GetType returns the application type as a (lowercase) string

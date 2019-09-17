@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
-	"os"
-	"strings"
 
 	"path/filepath"
 
@@ -136,6 +137,9 @@ var (
 
 	// ngrokArgs provides additional args to the ngrok command in `ddev share`
 	ngrokArgs string
+
+	// omitSettingsPhp skips generating a database settings file.
+	omitSettingsPhp bool
 )
 
 var providerName = ddevapp.ProviderDefault
@@ -293,6 +297,8 @@ func init() {
 	ConfigCommand.Flags().StringVarP(&ngrokArgs, "ngrok-args", "", "", "Provide extra args to ngrok in ddev share")
 
 	ConfigCommand.Flags().String("timezone", "", "Specify timezone for containers and php, like Europe/London or America/Denver or GMT or UTC")
+
+	ConfigCommand.Flags().BoolVar(&omitSettingsPhp, "omit-settings-php", false, "Do not write a database settings file and do not modify the existing settings file")
 
 	RootCmd.AddCommand(ConfigCommand)
 }
@@ -496,6 +502,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if cmd.Flag("ngrok-args").Changed {
 		app.NgrokArgs = ngrokArgs
+	}
+
+	if cmd.Flag("omit-settings-php").Changed {
+		app.OmitSettingsPhp = omitSettingsPhp
 	}
 
 	if cmd.Flag("project-tld").Changed {
