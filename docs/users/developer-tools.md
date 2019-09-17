@@ -18,11 +18,11 @@ We have included a built-in command to simplify use of [Composer](https://getcom
 
 Additionally, Composer can be used to initialize new projects with `ddev composer create`. This command supports limited argument and flag options, and will install a new project to the project root in `/var/www/html`. The package and version arguments are required:
 
-`ddev composer create [<flags>] <package> <version>`
+`ddev composer create [<flags>] "<package>:<version>"`
 
 For example:
 
-`ddev composer create --no-dev typo3/cms-base-distribution ^9`
+`ddev composer create --no-dev "typo3/cms-base-distribution:^9"`
 
 To execute a fully-featured `composer create-project` command, you can execute the command from within the container after executing `ddev ssh`, or pass the full command to `ddev exec`, like so:
 
