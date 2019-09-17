@@ -3,29 +3,23 @@ package ddevapp
 import (
 	"fmt"
 	"io/ioutil"
-	"strings"
 
 	"os"
 	"path/filepath"
 
 	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 )
 
-func typo3AdditionalConfigTemplate(app *DdevApp) string {
-	dockerIP, _ := dockerutil.GetDockerIP()
-	hostNames := append(app.GetHostnames(), "localhost", dockerIP)
-
-	return `<?php
+const typo3AdditionalConfigTemplate = `<?php
 /** ` + DdevFileSignature + `: Automatically generated TYPO3 AdditionalConfiguration.php file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
-/* TYPO3 v10 balks at ".*" in trustedHostsPattern, so ".*.*" is used to fool it.
-$GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '.*.*'
+/* TYPO3 v10 balks at ".*" in trustedHostsPattern, so ".*.*" is used to fool it. */
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '.*.*';
 
 $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge(
     // on first install, this could be not set yet
@@ -53,7 +47,6 @@ $GLOBALS['TYPO3_CONF_VARS']['GFX']['processor'] = 'ImageMagick';
 $GLOBALS['TYPO3_CONF_VARS']['GFX']['processor_path'] = '/usr/bin/';
 $GLOBALS['TYPO3_CONF_VARS']['GFX']['processor_path_lzw'] = '/usr/bin/';
 `
-}
 
 // createTypo3SettingsFile creates the app's LocalConfiguration.php and
 // AdditionalConfiguration.php, adding things like database host, name, and
@@ -113,8 +106,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	if err != nil {
 		return err
 	}
-	contents := []byte(typo3AdditionalConfigTemplate(app))
-
+	contents := []byte(typo3AdditionalConfigTemplate)
 	err = ioutil.WriteFile(filePath, contents, 0644)
 	if err != nil {
 		return err
