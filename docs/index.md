@@ -48,6 +48,7 @@ brew upgrade ddev
 - A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new terminal or cmd window and start using ddev.
 - If you use [chocolatey](https://chocolatey.org/) (highly recommended), then you can just `choco install ddev` from an administrative-privileged shell. Upgrades are just `choco upgrade ddev`.
 - (Optional) As a one-time initialization, run `mkcert -install`
+- Most people interact with ddev on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although ddev does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
 
 
 ### Installation/Upgrade Script - Linux and macOS
@@ -104,10 +105,16 @@ On variants of Linux you may be prompted for additional package installation to 
 
 For instructions to uninstall DDEV-Local see [Uninstallation](users/uninstall.md).
 
-## Support
+<a name="support"></a>
+## Support and User-Contributed Documentation
 
 We love to hear from our users and help them be successful with ddev. Support options include:
-- [ddev Documentation](https://ddev.readthedocs.io)
+
+- [ddev Documentation](https://ddev.readthedocs.io) and [faq](users/faq.md)
 - [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
 - [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
-- The `#ddev` channel in [Drupal Slack](https://www.drupal.org/slack) and [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support
+- The [gitter drud/ddev channel](https://gitter.im/drud/ddev) (it's easy to log in many diffferent ways)
+- The `#ddev` channels in [Drupal Slack](https://www.drupal.org/slack), [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support.
+- [ddev-contrib](https://github.com/drud/ddev-contrib) repo provides a number of vetted user-contributed recipes for extending and using ddev. Your contributions are welcome.
+- [awesome-ddev](https://github.com/awesome-ddev) repo has loads of external resources, blog posts, recipes, screencasts, and the like. Your contributions are welcome.
+- [Twitter #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us, but it's not as good for interactive support, but we'll answer anywhere.

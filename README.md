@@ -9,7 +9,9 @@ ddev is an open source tool that makes it simple to get local PHP development en
 
 1. **Check System Requirements:** We support recent versions of macOS, Windows 10, and Linux distributions that will run Docker (ddev requires Docker and docker-compose). ([more info here](https://ddev.readthedocs.io/en/stable/#system-requirements)). 
 2. **Install ddev:** [Options include](https://ddev.readthedocs.io/en/stable/#installation) macOS homebrew (recommended), an install script, or manual installation.
-3. **Choose a CMS Quick Start Guide:** 
+3. **Read the Basics and Choose a CMS Quick Start Guide:** 
+  - [Basics](https://ddev.readthedocs.io/en/stable/users/cli-usage)
+  - [PHP (Generic Project) Quickstart](https://ddev.readthedocs.io/en/latest/users/cli-usage/#php-project-quickstart)
   - [WordPress](https://ddev.readthedocs.io/en/stable/users/cli-usage#wordpress-quickstart)
   - [Drupal 6 and 7](https://ddev.readthedocs.io/en/stable/users/cli-usage#drupal-6/7-quickstart)
   - [Drupal 8](https://ddev.readthedocs.io/en/stable/users/cli-usage#drupal-8-quickstart)
@@ -32,14 +34,16 @@ Having trouble? See our [support options below](#support). You might have troubl
 Just running `ddev` will show you all the commands.
 
 ## Support
-If you're having trouble using ddev, please use these resources to get help:
+We love to hear from our users and help them be successful with ddev. Support options include:
 
-1. See the [ddev Documentation](https://ddev.readthedocs.io).
-2. Review [Stack Overflow DDEV-Local questions and answers](https://stackoverflow.com/tags/ddev) (or ask a question there! We get notified when you ask.)
-3. The [ddev issue queue](https://github.com/drud/ddev/issues) may have an issue related to your problem.
-4. For suspected bugs or feature requests, [file an issue](https://github.com/drud/ddev/issues/new).
-5. The `#ddev` channel in [Drupal Slack](https://drupal.slack.com/messages/C5TQRQZRR) and [TYPO3 Slack](https://typo3.slack.com/messages/C8TRNQ601) for interactive, immediate community support
-
+- [ddev Documentation](https://ddev.readthedocs.io) and [faq](users/faq.md)
+- [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
+- [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
+- The [gitter drud/ddev channel](https://gitter.im/drud/ddev) (it's easy to log in many diffferent ways)
+- The `#ddev` channels in [Drupal Slack](https://www.drupal.org/slack), [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support.
+- [ddev-contrib](https://github.com/drud/ddev-contrib) repo provides a number of vetted user-contributed recipes for extending and using ddev. Your contributions are welcome.
+- [awesome-ddev](https://github.com/awesome-ddev) repo has loads of external resources, blog posts, recipes, screencasts, and the like. Your contributions are welcome.
+- [Twitter #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us, but it's not as good for interactive support, but we'll answer anywhere.
 
 ## Contributing
 Interested in contributing to ddev? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!

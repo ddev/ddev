@@ -80,7 +80,7 @@ If that fails (if you get an error, or you don't see the contents of your projec
  
 If you are on Docker Desktop for Windows or Docker Desktop for Mac and you are seeing shared directories not show up in the web container (nothing there when you `ddev ssh`) then:
 
-* Unshare and then reshare the drive
+* Unshare and then reshare the drive (you may have to re-enter your credentials)
 * Consider resetting Docker to factory defaults. This often helps in this situation because Docker goes through the whole authentication process again.
 
 If you are on Linux, the most common problem is having an old docker-compose, since the docker-compose that installs by default is incompatible with ddev. You'll find out about this right away because ddev will tell you on `ddev start` or most other ddev commands.

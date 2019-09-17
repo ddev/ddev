@@ -31,5 +31,6 @@ pages:
     - 'Docker Installation': 'users/docker_installation.md'
     - 'Performance': 'users/performance.md'
     - 'Uninstalling DDEV-Local': 'users/uninstall.md'
+    - 'Frequently-Asked Questions (FAQ)': 'users/faq.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'

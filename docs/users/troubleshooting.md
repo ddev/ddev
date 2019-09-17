@@ -2,6 +2,14 @@
 
 Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](https://ddev.readthedocs.io/en/stable/#support). And see [Docker troubleshooting suggstions](./docker_installation.md#troubleshooting).
 
+## General Troubleshooting Strategies
+
+* Start with a `ddev poweroff` to make sure all containers can start fresh.
+* Temporarily turn off firewalls and virus checkers while you're troubleshooting.
+* If you have customizations (PHP overrides, nginx or Apache overrides, MySQL overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
+* Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](docker_installation.md#troubleshooting) for more.
+* Try the simplest possible ddev project to try to get i to work: `ddev poweroff && mkdir ~/tmp/testddev && cd ~/tmp/testddev && ddev config --project-type=php && ddev start`. Does that start up OK? If so, maybe something is wrong with the more complicated project you're trying to start.
+
 <a name="unable-listen"></a>
 ## Webserver ports are already occupied by another webserver
 
@@ -106,22 +114,7 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 * Missing index.php: There may not be an index.php or index.html in your project.
 * Misconfigured docroot: If the docroot isn't where the webserver thinks it is, then the webserver won't find the index.php. Look at your .ddev/config.yaml to verify it has a docroot that will lead to the index.php. It should be a relative path from the project root to the directory where the index.php is.
 * Docker not mounting your code: If you `ddev ssh` and `ls` and there's nothing there, Docker may not be mounting your code. See [docker installation](./docker_installation.md) for testing docker install. (Is Docker, the drive or directory where your project is must be shared. In Docker Toolbox it *must* be a subdirectory of your home directory unless you [make special accomodations for Docker Toolbox](http://support.divio.com/local-development/docker/how-to-use-a-directory-outside-cusers-with-docker-toolbox-on-windowsdocker-for-windows)).
-
-<a name="old-snapshot"></a>
-## Can't restore snapshot from a MariaDB 10.1 database (before ddev v1.3)
-
-Database snapshots from MariaDB 10.1 (normally from before ddev v1.3) cannot be restored into a MariaDB 10.2 environment. If you need to restore a 10.1 snapshot, here's how to do it. 
-
-1. Back up any existing database you have running with `ddev export-db` or something like `ddev snapshot --name=before_reverting_to_10.1`
-2. `ddev stop --remove-data` will completely remove the existing (10.2) database.
-3. `ddev config --mariadb-version=10.1`
-4. `ddev start` to start with MariaDB 10.1
-5. Use `ddev restore-snapshot` to restore the snapshot by name
-6. If you want to go upgrade your restored database to MariaDB 10.2, you can 
-  * `ddev config --mariadb-version=10.2`
-  * `ddev restart`
  
-
 ## Windows-Specific Issues
 <a name="windows-hosts-file-limited"></a>
 ### Windows Hosts File limited to 10 hosts per IP address line
