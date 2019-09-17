@@ -39,3 +39,15 @@ the .ddev/config.yaml is the primary configuration for the project.
 | ngrok_args | Extra flags for ngrok when using the `ddev share` command | For example, `--subdomain mysite --auth user:pass`. See [ngrok docs on http flags](https://ngrok.com/docs#http) |
 | provider| hosting provider for `ddev pull` | "pantheon" or "drud-aws" or "default" |
 | hooks | | See [Extending Commands](../../extending-commands.md) for more information. |
+
+## global_config.yaml Options
+
+The $HOME/.ddev/global_config.yaml has a few key global config options.
+
+| Item  | Description   | Notes  |
+|---|---|---|
+| omit_containers | Allows the project to not load specified containers | For example, `omit_containers: [ "dba", "ddev-ssh-agent"]`. Currently only these containers are supported. Note that you cannot omit the "db" container in the global configuration, but you can in the per-project .ddev/config.yaml |
+| instrumentation_opt_in | Opt in or out of instrumentation reporting | If true, anonymous usage information is sent to ddev via [segment](https://segment.com) or [sentry](https://sentry.io) |
+| router_bind_all_interfaces | Bind on all network interfaces | If true, ddev-router will bind on all network interfaces instead of just localhost, exposing ddev projects to your local network. If you set this to true, you may consider `omit_containers: ["dba"]` so that the PHPMyAdmin port is not available.  |
+| developer_mode | Set developer mode | If true, developer_mode is set. This is not currently used. |
+

@@ -34,13 +34,13 @@ func TestCmdGlobalConfig(t *testing.T) {
 	args := []string{"config", "global"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nrouter-bind-all-interfaces=false")
 
 	// Update a config
-	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent"}
+	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--router-bind-all-interfaces=true"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nrouter-bind-all-interfaces=true")
 
 	err = globalconfig.ReadGlobalConfig()
 	assert.NoError(err)

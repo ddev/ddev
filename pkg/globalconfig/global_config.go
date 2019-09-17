@@ -35,14 +35,15 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	APIVersion           string                  `yaml:"APIVersion"`
-	OmitContainers       []string                `yaml:"omit_containers,flow"`
-	InstrumentationOptIn bool                    `yaml:"instrumentation_opt_in"`
-	InstrumentationUser  string                  `yaml:"instrumentation_user,omitempty"`
-	LastUsedVersion      string                  `yaml:"last_used_version"`
-	ProjectList          map[string]*ProjectInfo `yaml:"project_info"`
-	DeveloperMode        bool                    `yaml:"developer_mode,omitempty"`
-	MkcertCARoot         string                  `yaml:"mkcert_caroot"`
+	APIVersion              string                  `yaml:"APIVersion"`
+	OmitContainers          []string                `yaml:"omit_containers,flow"`
+	InstrumentationOptIn    bool                    `yaml:"instrumentation_opt_in"`
+	RouterBindAllInterfaces bool                    `yaml:"router_bind_all_interfaces"`
+	DeveloperMode           bool                    `yaml:"developer_mode,omitempty"`
+	InstrumentationUser     string                  `yaml:"instrumentation_user,omitempty"`
+	LastUsedVersion         string                  `yaml:"last_used_version"`
+	MkcertCARoot            string                  `yaml:"mkcert_caroot"`
+	ProjectList             map[string]*ProjectInfo `yaml:"project_info"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
@@ -127,6 +128,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #
 # instrumentation_user: <your_username> # can be used to give ddev specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
+# router_bind_all_interfaces: false  # (defaults to false)
+#    If true, ddev-router will bind http/s, PHPMyAdmin, and MailHog ports on all
+#    network interfaces instead of just localhost, so others on your local network can
+#    access those ports. Note that this exposes the PHPMyAdmin and MailHog ports as well, which
+#    can be a major security issue, so choose wisely. Consider omit_containers[dba] to avoid
+#    exposing PHPMyAdmin.
 `
 	cfgbytes = append(cfgbytes, instructions...)
 

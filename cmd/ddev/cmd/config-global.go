@@ -43,6 +43,9 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 			globalconfig.DdevGlobalConfig.OmitContainers = strings.Split(omitContainers, ",")
 		}
 	}
+	if cmd.Flag("router-bind-all-interfaces").Changed {
+		globalconfig.DdevGlobalConfig.RouterBindAllInterfaces, _ = cmd.Flags().GetBool("router-bind-all-interfaces")
+	}
 	err = globalconfig.ValidateGlobalConfig()
 	if err != nil {
 		util.Failed("Invalid configuration in %s: %v", globalconfig.GetGlobalConfigPath(), err)
@@ -55,11 +58,13 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	util.Success("Global configuration:")
 	output.UserOut.Printf("instrumentation-opt-in=%v", globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	output.UserOut.Printf("omit-containers=[%s]", strings.Join(globalconfig.DdevGlobalConfig.OmitContainers, ","))
+	output.UserOut.Printf("router-bind-all-interfaces=%v", globalconfig.DdevGlobalConfig.RouterBindAllInterfaces)
 }
 
 func init() {
 	configGlobalCommand.Flags().StringVarP(&omitContainers, "omit-containers", "", "", "omit-containers=dba,ddev-ssh-agent")
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", false, "instrmentation-opt-in=true")
+	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces=true")
 
 	ConfigCommand.AddCommand(configGlobalCommand)
 }
