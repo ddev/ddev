@@ -24,9 +24,8 @@ func typo3AdditionalConfigTemplate(app *DdevApp) string {
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
 
-$GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '` +
-		strings.Join(hostNames, "(:\\\\d+)?|") +
-		`(:\\d+)?|.*\.ngrok\.io(:\\d+)?';
+/* TYPO3 v10 balks at ".*" in trustedHostsPattern, so ".*.*" is used to fool it.
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '.*.*'
 
 $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge(
     // on first install, this could be not set yet
