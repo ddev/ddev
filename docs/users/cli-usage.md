@@ -306,6 +306,7 @@ How do you know if DDEV manages a settings file? You will see the following comm
 
 To see a list of your projects you can use `ddev list`; `ddev list --active-only` will show only projects currently running or paused.
 
+```
 ➜  ddev list 
 NAME          TYPE     LOCATION                   URL(s)                                STATUS
 d8git         drupal8  ~/workspace/d8git          https://d8git.ddev.local              running
@@ -318,8 +319,6 @@ hobobiker     drupal6  ~/workspace/hobobiker.com                                
 NAME     TYPE     LOCATION             URL(s)                      STATUS
 drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
                                        https://drupal8.ddev.site
-```
-
 ```
 
 
