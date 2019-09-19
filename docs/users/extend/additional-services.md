@@ -12,7 +12,7 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 - Copy [docker-compose.solr.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/docker-compose.solr.yaml) to the .ddev folder for your project.
 - You can change the Solr version by changing the `image` value in docker-compose.solr.yaml, for example: `image: solr:6.6`. The most obvious official solr image tags are at [hub.docker.com](https://hub.docker.com/_/solr/).
 - Create the folder path .ddev/solr/conf.
-- Copy the Solr configuration files for your project to `.ddev/solr/conf`. e.g. if using Drupal Search API Solr, you would copy the `web/modules/contrib/search_api_solr/solr-conf-templates/6.x/ `contents from the module code base into `.ddev/solr/conf`.
+- Copy the Solr configuration files for your project to `.ddev/solr/conf`. e.g. if using [Drupal Search API Solr](https://www.drupal.org/project/search_api_solr), you would copy the `web/modules/contrib/search_api_solr/solr-conf-templates/6.x/ `contents from the module code base into `.ddev/solr/conf`.
 - Ensure that the configuration files are present before running `ddev start`.
 
 **Drupal8-specific extra steps:** 
