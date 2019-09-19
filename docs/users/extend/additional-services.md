@@ -14,19 +14,25 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 - Create the folder path .ddev/solr/conf.
 - Copy the Solr configuration files for your project to `.ddev/solr/conf`. e.g. if using [Drupal Search API Solr](https://www.drupal.org/project/search_api_solr), you would copy the `web/modules/contrib/search_api_solr/solr-conf-templates/6.x/ `contents from the module code base into `.ddev/solr/conf`.
 - Ensure that the configuration files are present before running `ddev start`.
+- Add the following post-start hook to your config.yaml; this turns on ping for the "dev" core. The curl command can also be done as a one-time configuration from within the web container.
+```
+hooks:
+  post-start:
+  - exec: curl --fail -s 'http://solr:8983/solr/dev/admin/ping?action=enable'
+```
 
 **Drupal8-specific extra steps:** 
 - Enable the Search API Solr Search Defaults module and edit the server settings at `/admin/config/search/search-api/server/default_solr_server/edit`.
-- Change the _Solr core_ setting to `dev` and under **Advanced Server Configuration** change the _solr.install.dir_ setting to `/opt/solr`.
-- Go to the view tab and download the updated config.zip file and then stop the project `ddev stop`.
-- Remove the original configuration files from `.ddev/solr/conf` and add the updated files from config.zip.
+- Change the "Solr core" field from the default "d8" to "dev" and under **Advanced Server Configuration** change the _solr.install.dir_ setting to `/opt/solr`.
+- Go to the view tab and download the updated config.zip file.
+- Stop the project with `ddev stop`.
+- Remove the original configuration files from `.ddev/solr/conf` and copy in the updated files extracted from config.zip.
 - In order for changes to take effect you must remove the Solr volume by running `docker volume rm ddev-PROJECT-NAME_solrdata` e.g. if your project is called "myproject" then you would run `docker volume rm ddev-myproject_solrdata`.
 - Now you can start the project `ddev start`.
 
 **Updating Apache Solr configuration**
 
-- Run `ddev stop` to stop your application.
-- Run `ddev remove` to remove your application's containers (note: if you do not use the [destructive option](cli-usage#removing-projects-from-your-collection-known-to-ddev), the index will be untouched).
+- Run `ddev stop` to remove your application's containers (note: if you do not use the [destructive option](cli-usage#removing-projects-from-your-collection-known-to-ddev), the index will be untouched).
 - copy the new solr configuration files for your project to .ddev/solr/conf as described in **Installation**, above.
 - Run `ddev start` to rebuild and restart the containers.
 - An excellent way to automate the updating of the solr config uses a [solr-init.sh](https://github.com/drud/ddev/pull/1645#issuecomment-503722974) script mounted into the solr container's `/docker-entrypoint-initdb.d/solr-init.sh`.
@@ -35,7 +41,7 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 
 - The Solr admin interface will be accessible at: `http://<projectname>.ddev.site:8983/solr/` For example, if the project is named "_myproject_" the hostname will be: `http://myproject.ddev.site:8983/solr/`.
 - To access the Solr container from the web container use: `http://solr:8983/solr/`
-- A Solr core is automatically created with the name "_dev_"; it can be accessed at the URL: `http://solr:8983/solr/dev`
+- A Solr core is automatically created with the name "dev"; it can be accessed (from inside the web container) at the URL: `http://solr:8983/solr/dev` or from the host at `http://<projectname>.ddev.site:8983/solr/#/~cores/dev`.
 
 ## Memcached
 This recipe adds a Memcached 1.5 container to a project. The default configuration allocates 128 MB of RAM for the Memcached instance; to change that or other command line arguments, edit the `command` array within the docker-compose file.
