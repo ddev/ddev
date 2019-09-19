@@ -4,6 +4,8 @@ Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands.
 
 ## Favorite Commands
 
+Each of these commands has full help. For example, `ddev start -h` or `ddev help start`. Just typing `ddev` will get you a list of available commands.
+
 * `ddev config` configures a project for ddev, creating a .ddev directory according to your responses. It should be executed in the project (repository) root.
 * `ddev start` and `ddev stop` start and stop the containers that comprise a project. `ddev restart` just does a stop and a start. `ddev poweroff` stops all ddev-related containers and projects.
 * `ddev describe` or `ddev describe <projectname>` gives you full details about the project, what ports it uses, how to access them, etc.
@@ -15,13 +17,13 @@ Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands.
 * `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
 
 
-## Quick Extra Tools List
+## Bundled Tools List
 
 In addition to the *commands* listed above, there are loads and loads of tools included inside the containers:
 
 * `ddev describe` tells how to access **mailhog**, which captures email in your development environment.
 * `ddev describe` tells how to use the built-in **PHPMyAdmin**.
-* Composer, git, node, npm, and dozens of other tools are installed in th web container, and you can access them after `ddev ssh`.
+* Composer, git, node, npm, and dozens of other tools are installed in th web container, and you can access them via `ddev ssh` or `ddev exec`.
 * `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
 
 ## Quickstart Guides
@@ -304,6 +306,7 @@ How do you know if DDEV manages a settings file? You will see the following comm
 
 To see a list of your projects you can use `ddev list`; `ddev list --active-only` will show only projects currently running or paused.
 
+```
 ➜  ddev list 
 NAME          TYPE     LOCATION                   URL(s)                                STATUS
 d8git         drupal8  ~/workspace/d8git          https://d8git.ddev.local              running
@@ -316,8 +319,6 @@ hobobiker     drupal6  ~/workspace/hobobiker.com                                
 NAME     TYPE     LOCATION             URL(s)                      STATUS
 drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
                                        https://drupal8.ddev.site
-```
-
 ```
 
 
