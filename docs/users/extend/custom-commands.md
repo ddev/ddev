@@ -4,6 +4,12 @@ It's quite easy to add custom commands to ddev; they can execute either on the h
 
 There are example commands provided in `ddev/commands/*/*.example` that can just be copied or moved (or symlinked) and used as commands. For example, [.ddev/commands/host/mysqlworkbench.example](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/dotddev_assets/commands/host/mysqlworkbench.example) can be used to add a "ddev mysqlworkbench" command, just change it from "mysqlworkbench.example" to "mysqlworkbench". Also, a new `ddev mysql` command has been added using this technique (as a db container command). See [mysql command](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/dotddev_assets/commands/db/mysql). If you're on macOS or Linux (or some configurations of Windows) you can just `cd .ddev/commands/host && ln -s mysqlworkbench.example mysqlworkbench`.
 
+## Notes for all command types
+
+- Script files should be set to executable (`chmod +x <scriptfile>`). ddev does _not_ need to be restarted to see new commands.
+- The command filename is not what determines the name of the command.  That comes from the Usage doc line (`## Usage: commandname`).
+- To confirm that your custom command is available, run `ddev -h`, and look for it in the list.
+
 ## Host commands
 
 To provide host commands, place a bash script in .ddev/commands/host. For example, a PHPStorm launcher to make the `ddev PHPStorm` command might go in .ddev/commands/host/phpstorm` with these contents:
@@ -52,8 +58,6 @@ For example, to add a "solrtail" command that runs in a solr service, add `.ddev
 tail -f /opt/solr/server/logs/solr.log
 
 ```
-
-Note that your script files should be set to executable (`chmod +x <scriptfile>`).
 
 ## Environment variables provided
 
