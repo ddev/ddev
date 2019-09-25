@@ -38,7 +38,7 @@ the .ddev/config.yaml is the primary configuration for the project.
 | project_tld | defaults to "ddev.site" so project urls become "someproject.ddev.site" | This can be changed to anything that works for you; to keep things the way they were before ddev v1.9, use "ddev.local" |
 | ngrok_args | Extra flags for ngrok when using the `ddev share` command | For example, `--subdomain mysite --auth user:pass`. See [ngrok docs on http flags](https://ngrok.com/docs#http) |
 | provider| hosting provider for `ddev pull` | "pantheon" or "drud-aws" or "default" |
-| hooks | | See [Extending Commands](../../extending-commands.md) for more information. |
+| hooks | | See [Extending Commands](../extending-commands.md) for more information. |
 
 ## global_config.yaml Options
 
