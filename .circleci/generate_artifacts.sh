@@ -7,6 +7,8 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
+MKCERT_VERSION=v1.4.0
+
 ARTIFACTS=${1:-/artifacts}
 BUILD_IMAGE_TARBALLS=${2:-false}
 BASE_DIR=$PWD
@@ -47,15 +49,18 @@ done
 
 # Generate macOS tarball/zipball
 cd $BASE_DIR/.gotmp/bin/darwin_amd64
-tar -czf $ARTIFACTS/ddev_macos.$VERSION.tar.gz ddev ddev_bash_completion.sh
+curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-darwin-amd64 && chmod +x mkcert
+tar -czf $ARTIFACTS/ddev_macos.$VERSION.tar.gz ddev ddev_bash_completion.sh mkcert
 
 # Generate linux tarball/zipball
 cd $BASE_DIR/.gotmp/bin
-tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev ddev_bash_completion.sh
+curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-amd64 && chmod +x mkcert
+tar -czf $ARTIFACTS/ddev_linux.$VERSION.tar.gz ddev ddev_bash_completion.sh mkcert
 
 # generate windows tarball/zipball
 cd $BASE_DIR/.gotmp/bin/windows_amd64
-tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe ddev_bash_completion.sh
+curl -sSL -o mkcert.exe https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-amd64.exe
+tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe ddev_bash_completion.sh mkcert.exe
 zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe ddev_bash_completion.sh
 if [ -d chocolatey ]; then
     tar -czf $ARTIFACTS/ddev_chocolatey.$VERSION.tar.gz chocolatey
