@@ -31,15 +31,15 @@ type PantheonProvider struct {
 
 // Init handles loading data from saved config.
 func (p *PantheonProvider) Init(app *DdevApp) error {
-	var err error
-
 	p.app = app
 	configPath := app.GetConfigPath("import.yaml")
 	if fileutil.FileExists(configPath) {
-		err = p.Read(configPath)
+		err := p.Read(configPath)
+		return err
 	}
 
 	p.ProviderType = nodeps.ProviderPantheon
+	err := p.authPantheon()
 	return err
 }
 
@@ -99,33 +99,15 @@ func (p *PantheonProvider) GetBackup(backupType, environment string) (fileLocati
 		return "", "", err
 	}
 
-	session := getPantheonSession()
-
-	// Find either a files or database backup, depending on what was asked for.
-	bl := pantheon.NewBackupList(p.site.ID, environment)
-	err = session.Request("GET", bl)
-	if err != nil {
-		return "", "", err
-	}
-
-	backup, err := p.getPantheonBackupLink(backupType, bl, session, environment)
+	link, err := p.getPantheonBackupLink(backupType, environment)
 	if err != nil {
 		return "", "", err
 	}
 
 	p.prepDownloadDir()
-	destFile := filepath.Join(p.getDownloadDir(), backup.FileName)
+	destFile := filepath.Join(p.getDownloadDir(), link)
 
-	// Check to see if this file has been downloaded previously.
-	// Attempt a new download If we can't stat the file or we get a mismatch on the filesize.
-	stat, err := os.Stat(destFile)
-	if err != nil || stat.Size() != int64(backup.Size) {
-		err = util.DownloadFile(destFile, backup.DownloadURL, true)
-		if err != nil {
-			return "", "", err
-		}
-	}
-
+	// TODO: Cache file, don't download if already in filesystem.
 	if backupType == "files" {
 		importPath = fmt.Sprintf("files_%s", environment)
 	}
@@ -147,27 +129,22 @@ func (p *PantheonProvider) getDownloadDir() string {
 	return destDir
 }
 
-// getPantheonBackupLink will return a URL for the most recent backyp of archiveType that exist with the BackupList specified.
-func (p *PantheonProvider) getPantheonBackupLink(archiveType string, bl *pantheon.BackupList, session *pantheon.AuthSession, environment string) (*pantheon.Backup, error) {
-	latestBackup := pantheon.Backup{}
-	for i, backup := range bl.Backups {
-		if backup.ArchiveType == archiveType && backup.Timestamp > latestBackup.Timestamp {
-			latestBackup = bl.Backups[i]
-		}
+// getPantheonBackupLink will return a URL for the most recent backup of archiveType.
+func (p *PantheonProvider) getPantheonBackupLink(archiveType string, environment string) (string, error) {
+
+	element := "files"
+	if archiveType == "database" {
+		element = "db" // how it's specified in terminus
 	}
 
-	if latestBackup.Timestamp != 0 {
-		// Get a time-limited backup URL from Pantheon. This requires a POST of the backup type to their API.
-		err := session.Request("POST", &latestBackup)
-		if err != nil {
-			return &pantheon.Backup{}, fmt.Errorf("could not get backup URL: %v", err)
-		}
-
-		return &latestBackup, nil
+	link, stderr, err := p.app.Exec(&ExecOpts{
+		Cmd: fmt.Sprintf("terminus backup:get --element=%s %s.%s", element, p.site.ID, environment),
+	})
+	if err != nil {
+		return "", fmt.Errorf("unable to get terminus backup: %v stderr=%v", err, stderr)
 	}
 
-	// If no matches were found, just return an empty backup along with an error.
-	return &pantheon.Backup{}, fmt.Errorf("could not find a backup of type %s. Please visit your pantheon dashboard and ensure the '%s' environment has a backup available", archiveType, environment)
+	return link, nil
 }
 
 // environmentPrompt contains the user prompts for interactive configuration of the pantheon environment.
@@ -208,7 +185,7 @@ func (p *PantheonProvider) environmentPrompt() error {
 	return nil
 }
 
-// Write the pantheon provider configuration to a spcified location on disk.
+// Write the pantheon provider configuration to a specified location on disk.
 func (p *PantheonProvider) Write(configPath string) error {
 	err := PrepDdevDirectory(filepath.Dir(configPath))
 	if err != nil {
@@ -244,31 +221,29 @@ func (p *PantheonProvider) Read(configPath string) error {
 	return nil
 }
 
-// GetEnvironments will return a list of environments for the currently configured upstream pantheon site.
-func (p *PantheonProvider) GetEnvironments() (pantheon.EnvironmentList, error) {
-	var el *pantheon.EnvironmentList
-	// If we've got an already populated environment list, then just use that.
-	if len(p.siteEnvironments.Environments) > 0 {
-		return p.siteEnvironments, nil
-	}
-
-	// Otherwise we need to find our environments.
-	session := getPantheonSession()
+// GetEnvironments will return a list of environments for the currently configured pantheon site.
+func (p *PantheonProvider) GetEnvironments() ([]string, error) {
+	// TODO: Cache the list of environments
 
 	if p.site.ID == "" {
-		site, err := findPantheonSite(p.Sitename)
+		id, err := p.findPantheonSite(p.Sitename)
 		if err != nil {
-			return p.siteEnvironments, err
+			return []string{}, err
 		}
 
-		p.site = site
+		p.site.ID = id
 	}
 
 	// Get a list of all active environments for the current site.
-	el = pantheon.NewEnvironmentList(p.site.ID)
-	err := session.Request("GET", el)
-	p.siteEnvironments = *el
-	return *el, err
+	envs, stderr, err := p.app.Exec(&ExecOpts{
+		Cmd: "terminus env:list --field=id " + p.site.ID,
+	})
+	if err != nil {
+		return []string{}, fmt.Errorf("unable to get environments: %v stderr=%v", err, stderr)
+	}
+
+	envs = strings.Trim(envs, "\n\r ")
+	return strings.Split(envs, "\n"), err
 }
 
 // Validate ensures that the current configuration is valid (i.e. the configured pantheon site/environment exists)
@@ -278,12 +253,11 @@ func (p *PantheonProvider) Validate() error {
 
 // environmentExists ensures the currently configured pantheon site & environment exists.
 func (p *PantheonProvider) environmentExists(environment string) error {
-	_, err := p.GetEnvironments()
+	el, err := p.GetEnvironments()
 	if err != nil {
 		return err
 	}
-
-	if _, ok := p.siteEnvironments.Environments[environment]; !ok {
+	if !nodeps.ArrayContainsString(el, environment) {
 		return fmt.Errorf("could not find an environment named '%s'", environment)
 	}
 
@@ -291,53 +265,30 @@ func (p *PantheonProvider) environmentExists(environment string) error {
 }
 
 // findPantheonSite ensures the pantheon site specified by name exists, and the current user has access to it.
-func findPantheonSite(name string) (pantheon.Site, error) {
-	session := getPantheonSession()
+func (p *PantheonProvider) findPantheonSite(name string) (id string, e error) {
 
-	// Get a list of all sites the current user has access to. Ensure we can find the site which was used in the CLI arguments in that list.
-	sl := &pantheon.SiteList{}
-	err := session.Request("GET", sl)
+	id, stderr, err := p.app.Exec(&ExecOpts{
+		Cmd: "terminus site:info --field=id " + name,
+	})
 	if err != nil {
-		return pantheon.Site{}, err
+		return "", fmt.Errorf("could not find a pantheon site named %s: %v", name, stderr)
 	}
+	// TODO: If more than one site, error out and somehow require the hash instead.
 
-	// Get a list of environments for a given site.
-	for i, site := range sl.Sites {
-		if site.Site.Name == name {
-			return sl.Sites[i], nil
-		}
-	}
-
-	return pantheon.Site{}, fmt.Errorf("could not find a pantheon site named %s", name)
+	id = strings.Trim(id, "\n\r ")
+	return id, nil
 }
 
-// getPantheonSession loads the pantheon API config from disk and returns a pantheon session struct.
-func getPantheonSession() *pantheon.AuthSession {
-	globalDir := globalconfig.GetGlobalDdevDir()
-	sessionLocation := filepath.Join(globalDir, "pantheonconfig.json")
-
-	// Generate a session object based on the DDEV_PANTHEON_API_TOKEN environment var.
-	session := &pantheon.AuthSession{}
-
-	// Read a previously saved session.
-	err := session.Read(sessionLocation)
-
-	if err != nil {
-		// If we can't read a previous session fall back to using the API token.
-		apiToken := os.Getenv("DDEV_PANTHEON_API_TOKEN")
-		if apiToken == "" {
-			util.Failed("No saved session could be found and the environment variable DDEV_PANTHEON_API_TOKEN is not set. Please use ddev auth-pantheon or set a DDEV_PANTHEON_API_TOKEN. https://pantheon.io/docs/machine-tokens/ provides instructions on creating a token.")
-		}
-		session = pantheon.NewAuthSession(os.Getenv("DDEV_PANTHEON_API_TOKEN"))
+// authPantheon does a terminus login; it only needs to be done once in life of container.
+func (p *PantheonProvider) authPantheon() error {
+	token := os.Getenv("DDEV_PANTHEON_API_TOKEN")
+	if token == "" {
+		return fmt.Errorf("environment variable DDEV_PANTHEON_API_TOKEN not found")
 	}
 
-	err = session.Auth()
-	if err != nil {
-		output.UserOut.Fatalf("Could not authenticate with pantheon: %v", err)
-	}
+	_, _, err := p.app.Exec(&ExecOpts{
+		Cmd: "terminus auth:login --machine-token=" + token,
+	})
 
-	err = session.Write(sessionLocation)
-	util.CheckErr(err)
-
-	return session
+	return err
 }

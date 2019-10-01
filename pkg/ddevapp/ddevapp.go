@@ -885,7 +885,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	app.DockerEnv()
 
 	if opts.Service == "" {
-		return "", "", fmt.Errorf("no service provided")
+		opts.Service = "web"
 	}
 	_, _, err := app.ProcessHooks("pre-exec")
 	if err != nil {
@@ -955,7 +955,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	app.DockerEnv()
 
 	if opts.Service == "" {
-		return fmt.Errorf("no service provided")
+		opts.Service = "web"
 	}
 
 	exec := []string{"exec"}
