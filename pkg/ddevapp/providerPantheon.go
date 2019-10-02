@@ -82,7 +82,7 @@ func (p *PantheonProvider) PromptForConfig() error {
 
 // GetBackup will download the most recent backup specified by backupType in the given environment. If no environment
 // is supplied, the configured environment will be used. Valid values for backupType are "database" or "files".
-func (p *PantheonProvider) GetBackup(backupType, environment string) (fileLocation string, importPath string, err error) {
+func (p *PantheonProvider) GetBackup(backupType, environment string) (fileURL string, importPath string, err error) {
 	if backupType != "database" && backupType != "files" {
 		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
@@ -99,15 +99,24 @@ func (p *PantheonProvider) GetBackup(backupType, environment string) (fileLocati
 		return "", "", err
 	}
 
-	link, err := p.getPantheonBackupLink(backupType, environment)
+	link, filename, err := p.getBackup(backupType, environment)
 	if err != nil {
 		return "", "", err
 	}
 
 	p.prepDownloadDir()
-	destFile := filepath.Join(p.getDownloadDir(), link)
+	destFile := filepath.Join(p.getDownloadDir(), filename)
 
-	// TODO: Cache file, don't download if already in filesystem.
+	// Check to see if this file has been downloaded previously.
+	// Attempt a new download If we can't stat the file or we get a mismatch on the filesize.
+	_, err = os.Stat(destFile)
+	if err != nil {
+		err = util.DownloadFile(destFile, link, true)
+		if err != nil {
+			return "", "", err
+		}
+	}
+
 	if backupType == "files" {
 		importPath = fmt.Sprintf("files_%s", environment)
 	}
@@ -129,22 +138,29 @@ func (p *PantheonProvider) getDownloadDir() string {
 	return destDir
 }
 
-// getPantheonBackupLink will return a URL for the most recent backup of archiveType.
-func (p *PantheonProvider) getPantheonBackupLink(archiveType string, environment string) (string, error) {
+// getBackup will return a URL for the most recent backup of archiveType.
+func (p *PantheonProvider) getBackup(archiveType string, environment string) (link string, filename string, error error) {
 
 	element := "files"
 	if archiveType == "database" {
 		element = "db" // how it's specified in terminus
 	}
 
-	link, stderr, err := p.app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf("terminus backup:get --element=%s %s.%s", element, p.site.ID, environment),
+	result, stderr, err := p.app.Exec(&ExecOpts{
+		Cmd: fmt.Sprintf("terminus backup:info --format=string --fields=Filename,URL --element=%s %s.%s", element, p.site.ID, environment),
 	})
 	if err != nil {
-		return "", fmt.Errorf("unable to get terminus backup: %v stderr=%v", err, stderr)
+		return "", "", fmt.Errorf("unable to get terminus backup: %v stderr=%v", err, stderr)
 	}
 
-	return link, nil
+	result = strings.Trim(result, "\n\r ")
+	results := strings.Split(result, "\t")
+	if len(results) != 2 {
+		return "", "", fmt.Errorf("terminus result does not provide filename and url: %v", result)
+	}
+	filename = results[0]
+	link = results[1]
+	return link, filename, nil
 }
 
 // environmentPrompt contains the user prompts for interactive configuration of the pantheon environment.
