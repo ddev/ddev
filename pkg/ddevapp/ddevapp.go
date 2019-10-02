@@ -666,10 +666,12 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 		output.UserOut.Printf("=== Running task: %s, output below", a.GetDescription())
 
 		stdout, stderr, err := a.Execute()
+		//output.UserOut.Println(stdout + "\n" + stderr)
+
 		if err != nil {
-			return fmt.Errorf("task failed: %v", err)
+			output.UserOut.Errorf("task failed: %v: %s %s", a.GetDescription(), stdout, stderr)
+			output.UserOut.Warn("A task failure does not mean that ddev failed, but your hook configuration has a command that failed.")
 		}
-		output.UserOut.Println(stdout + "\n" + stderr)
 	}
 
 	return nil

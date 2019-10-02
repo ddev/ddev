@@ -42,6 +42,7 @@ func (c ExecTask) Execute() (string, string, error) {
 	stdout, stderr, err := c.app.Exec(&ExecOpts{
 		Service: c.service,
 		Cmd:     c.exec,
+		Tty:     true,
 	})
 
 	return stdout, stderr, err
