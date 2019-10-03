@@ -1,0 +1,17 @@
+#!/bin/bash
+
+## Description: Launch a browser with the current site
+## Usage: launch
+## Example: "ddev launch"
+
+case $OSTYPE in
+  linux-gnu)
+    xdg-open ${DDEV_PRIMARY_URL}
+    ;;
+  "darwin"*)
+    open ${DDEV_PRIMARY_URL}
+    ;;
+  "win*"* | "msys"*)
+    start ${DDEV_PRIMARY_URL}
+    ;;
+esac
