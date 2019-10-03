@@ -82,7 +82,7 @@ pull:
 	@if [[ "$(docker images -q $(BUILD_IMAGE)  2> /dev/null)" == "" ]]; then docker pull $(BUILD_IMAGE) >/dev/null 2>&1; fi
 
 
-linux darwin windows: pull $(GOFILES)
+linux darwin windows: $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
 	@echo $(shell if [ "$(BUILD_OS)" = "windows" ]; then echo "windows build: BUILD_OS=$(BUILD_OS)  DOCKER_TOOLBOX_INSTALL_PATH=$(DOCKER_TOOLBOX_INSTALL_PATH) PWD=$(PWD) S=$(S)"; fi )
 	@mkdir -p $(GOTMP)/{.cache,pkg,src,bin}
