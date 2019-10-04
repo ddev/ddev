@@ -1,7 +1,6 @@
 package ddevapp
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -42,7 +41,6 @@ func (c ExecTask) Execute() (string, string, error) {
 	stdout, stderr, err := c.app.Exec(&ExecOpts{
 		Service: c.service,
 		Cmd:     c.exec,
-		Tty:     true,
 	})
 
 	return stdout, stderr, err
@@ -70,14 +68,14 @@ func (c ExecHostTask) Execute() (string, string, error) {
 
 	execAry := strings.Split(c.exec, " ")
 
-	cmd := exec.Command(execAry[0], execAry[1:]...)
-	var stdout, stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	cmd.Stdout = &stdout
-	err = cmd.Run()
+	stderr := []byte{}
+	stdout, err := exec.Command(execAry[0], execAry[1:]...).Output()
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		stderr = exitErr.Stderr
+	}
 
 	_ = os.Chdir(cwd)
-	return stdout.String(), stderr.String(), err
+	return string(stdout), string(stderr), err
 }
 
 // Execute (ComposerTask) runs a composer command in the web container
