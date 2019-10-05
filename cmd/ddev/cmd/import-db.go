@@ -17,12 +17,17 @@ var progressOption bool
 // ImportDBCmd represents the `ddev import-db` command.
 var ImportDBCmd = &cobra.Command{
 	Use:   "import-db",
-	Short: "Pull the database of an existing project to the dev environment.",
-	Long: `Pull the database of an existing project to the development environment.
+	Short: "Import a sql archive into the project.",
+	Long: `Import a sql archive into the project.
 The database can be provided as a SQL dump in a .sql, .sql.gz, .mysql, .mysql.gz, .zip, .tgz, or .tar.gz
 format. For the zip and tar formats, the path to a .sql file within the archive
-can be provided if it is not located at the top level of the archive.`,
-	Example: `"ddev import-db" or "ddev import-db --src=.tarballs/junk.sql" or "ddev import-db --src=.tarballs/junk.sql.gz"`,
+can be provided if it is not located at the top level of the archive. Note the related "ddev mysql" command`,
+	Example: `ddev import-db
+ddev import-db --src=.tarballs/junk.sql
+ddev import-db --src=.tarballs/junk.sql.gz
+ddev import-db <db.sql
+gzip -dc db.sql.gz | ddev import-db`,
+
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(args) > 0 {
 			err := cmd.Usage()
