@@ -3,9 +3,12 @@ package cmd
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -42,5 +45,10 @@ func TestDebugNFSMount(t *testing.T) {
 	assert.Contains(out, "/nfsmount")
 	pwd, err := os.Getwd()
 	assert.NoError(err)
-	assert.Contains(out, ":"+dockerutil.MassageWindowsNFSMount(pwd))
+
+	source := pwd
+	if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", source)) {
+		source = filepath.Join("/System/Volumes/Data", source)
+	}
+	assert.Contains(out, ":"+dockerutil.MassageWindowsNFSMount(source))
 }

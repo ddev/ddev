@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"testing"
 
 	logOutput "github.com/sirupsen/logrus"
@@ -365,11 +366,16 @@ func TestRemoveVolume(t *testing.T) {
 	_ = RemoveVolume(testVolume)
 	pwd, err := os.Getwd()
 	assert.NoError(err)
+
+	source := pwd
+	if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", source)) {
+		source = filepath.Join("/System/Volumes/Data", source)
+	}
 	volume, err := CreateVolume(
 		testVolume,
 		"local",
 		map[string]string{"type": "nfs", "o": "addr=host.docker.internal,hard,nolock,rw",
-			"device": ":" + MassageWindowsNFSMount(pwd)},
+			"device": ":" + MassageWindowsNFSMount(source)},
 	)
 	assert.NoError(err)
 
