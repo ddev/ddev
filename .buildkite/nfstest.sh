@@ -10,7 +10,12 @@ function cleanup {
 trap cleanup EXIT
 
 mkdir -p ~/.ddev
-share="${HOME}/.ddev"
+
+# Handle new macOS Catalina /System/Volumes/Data share path.
+share=${HOME}/.ddev
+if [ -d "/System/Volumes/Data${HOME}/.ddev" ] ; then
+    share="/System/Volumes/Data${HOME}/.ddev"
+fi
 
 # Find host.docker.internal name using host-docker-internal.sh script
 hostDockerInternal=$($(dirname $0)/../scripts/host-docker-internal.sh)
