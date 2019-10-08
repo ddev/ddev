@@ -11,15 +11,8 @@ set -o pipefail
 SOCKET=/var/tmp/mysql.sock
 OUTDIR=/mysqlbase
 
-if [ ! -d $OUTDIR ] ; then
-  echo "The required output directory $OUTDIR does not seem to exist."
-  exit 1
-fi
+mkdir -p ${OUTDIR}
 sudo chown -R "$(id -u):$(id -g)" $OUTDIR
-
-# For this script we don't want the defaults in .my.cnf
-# However, this script is never run on a normal startup, so we can just throw it away.
-sudo rm -f /home/.my.cnf
 
 sudo chmod ugo+w /var/tmp
 sudo mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && sudo rm -f /var/lib/mysql/* && sudo chmod -R ugo+w /var/lib/mysql
@@ -27,7 +20,7 @@ sudo mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && sudo rm -f /var/lib/mysql
 echo 'Initializing mysql'
 mysql_install_db --force
 echo 'Starting mysqld --skip-networking'
-mysqld --skip-networking &
+mysqld --user=root --skip-networking &
 pid="$!"
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,

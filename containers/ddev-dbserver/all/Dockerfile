@@ -15,13 +15,17 @@ RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql
 
 ADD files /
 
+# If mariabackup is available, build a starter base db
+RUN if command -v mariabackup ; then \
+    /create_base_db.sh; \
+fi
 RUN chmod ugo+x /healthcheck.sh
 
 # Security-sensitive changes: Make sure our start script can do what is needed
 # But make sure these are right
 RUN chmod ugo+wx /mnt /var/tmp
 RUN chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
-RUN ln -s /dev/stderr /var/log/mysqld.err
+RUN ln -s -f /dev/stderr /var/log/mysqld.err
 
 RUN addgroup --gid 98 testgroup && adduser testuser --ingroup testgroup --disabled-password --gecos "" --uid 98
 
