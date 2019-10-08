@@ -663,6 +663,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "nfsmount"
 		templateVars.NFSSource = app.AppRoot
+		// Workaround for Catalina sharing nfs as /System/Volumes/Data
+		if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
+			templateVars.NFSSource = filepath.Join("/System/Volumes/Data", app.AppRoot)
+		}
 		if runtime.GOOS == "windows" {
 			// WinNFSD can only handle a mountpoint like /C/Users/rfay/workspace/d8git
 			// and completely chokes in C:\Users\rfay...
