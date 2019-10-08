@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/version"
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -46,7 +49,12 @@ var DebugNFSMountCmd = &cobra.Command{
 		if hostDockerInternal == "" {
 			hostDockerInternal = "host.docker.internal"
 		}
-		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw", hostDockerInternal), "device": ":" + dockerutil.MassageWindowsNFSMount(app.AppRoot)})
+		shareDir := app.AppRoot
+		// Workaround for Catalina sharing nfs as /System/Volumes/Data
+		if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
+			shareDir = filepath.Join("/System/Volumes/Data", app.AppRoot)
+		}
+		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw", hostDockerInternal), "device": ":" + dockerutil.MassageWindowsNFSMount(shareDir)})
 		//nolint: errcheck
 		defer dockerutil.RemoveVolume(testVolume)
 		if err != nil {
