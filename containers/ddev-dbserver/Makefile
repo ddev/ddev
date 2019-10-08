@@ -47,7 +47,7 @@ DIRS = 10.1 10.2
 build: container
 
 container:
-	for item in $(DIRS); do \
+	for item in 5.5.64 10.0.38; do \
 		set -euo pipefail \
 		echo $$item && $(MAKE) -C $$item container; \
 	done
