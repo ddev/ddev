@@ -59,6 +59,21 @@ Tools to debug and solve permission problems:
 
 If you're upgrading an existing NFS/ddev setup and you've upgraded to macOS Catalina, the share path format in /etc/exports has been changed. If you previously had a line in /etc/exports like `/Users/rfay -alldirs -mapall=501:20 localhost` it will have to be changed to something like `/System/Volumes/Data/Users/rfay/workspace -alldirs -mapall=501:20 localhost` (Add "/System/Volumes/Data" to the front of the shared path.) You can also just run the NFS setup script [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) again and it will handle this, but it won't remove any obsolete or broken lines.
 
+So Catalina upgrade step-by-step:
+
+* Edit /etc/exports or run the NFS setup script [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) again. If you previously had a line in /etc/exports like `/Users/rfay -alldirs -mapall=501:20 localhost` it will have to be changed to something like `/System/Volumes/Data/Users/rfay -alldirs -mapall=501:20 localhost` (Add "/System/Volumes/Data" to the front of the shared path.)
+* `sudo nfsd restart`
+* Use `ddev debug nfsmount` in a project directory to make sure it gives successful output like
+    ```
+    $ ddev debug nfsmount
+    Successfully accessed NFS mount of /Users/rfay/workspace/d8composer
+    TARGET    SOURCE                                                FSTYPE OPTIONS
+    /nfsmount :/System/Volumes/Data/Users/rfay/workspace/d8composer nfs    rw,relatime,vers=3,rsize=65536,wsize=65536,namlen=255,hard,nolock,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.65.2,mountvers=3,mountproto=tcp,local_lock=all,addr=192.168.65.2
+    /nfsmount/.ddev
+    ```
+
+Remember to use `ddev debug nfsmount` to verify
+
 ### macOS-specific NFS debugging
 
 * Use `showmount -e` to find out what is exported via NFS. If you don't see a parent of your project directory in there, then NFS can't work.
