@@ -46,7 +46,10 @@ build: container
 
 container:
 	for item in 5.5 10.0 10.1 10.2 10.3 10.4 ; do \
-		docker build --build-arg="MARIAVERSION=$$item" -t "drud/ddev-dbserver-$(VERSION)-$${item%%%.*}" . ; \
+		docker build --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${item%%%.*}:$(VERSION)" . ; \
+	done
+	for item in 5.5 5.6 5.7 ; do \
+		docker build --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)" . ; \
 	done
 
 push:
