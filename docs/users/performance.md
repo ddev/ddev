@@ -57,7 +57,7 @@ Tools to debug and solve permission problems:
 
 ### macOS Catalina Upgrades
 
-If you're upgrading an existing NFS/ddev setup and you've upgraded to macOS Catalina, the share path format in /etc/exports has been changed. If you previously had a line in /etc/exports like `/Users/rfay -alldirs -mapall=501:20 localhost` it will have to be changed to something like `/System/Volumes/Data/Users/rfay/workspace -alldirs -mapall=501:20 localhost` (Add "/System/Volumes/Data" to the front of the shared path.) The setup script [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) will also handle this, but it won't remove any obsolete or broken lines.
+If you're upgrading an existing NFS/ddev setup and you've upgraded to macOS Catalina, the share path format in /etc/exports has been changed. If you previously had a line in /etc/exports like `/Users/rfay -alldirs -mapall=501:20 localhost` it will have to be changed to something like `/System/Volumes/Data/Users/rfay/workspace -alldirs -mapall=501:20 localhost` (Add "/System/Volumes/Data" to the front of the shared path.) You can also just run the NFS setup script [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) again and it will handle this, but it won't remove any obsolete or broken lines.
 
 ### macOS-specific NFS debugging
 
