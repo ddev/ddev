@@ -2398,7 +2398,12 @@ func TestNFSMount(t *testing.T) {
 		Cmd:     "findmnt -T .",
 	})
 	assert.NoError(err)
-	assert.Contains(stdout, ":"+dockerutil.MassageWindowsNFSMount(app.AppRoot))
+
+	source := app.AppRoot
+	if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
+		source = filepath.Join("/System/Volumes/Data", app.AppRoot)
+	}
+	assert.Contains(stdout, ":"+dockerutil.MassageWindowsNFSMount(source))
 
 	// Create a host-side dir symlink; give a second for it to sync, make sure it can be used in container.
 	err = os.Symlink(".ddev", "nfslinked_.ddev")
