@@ -62,7 +62,7 @@ if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mn
 fi
 
 backuptool=mariabackup
-if command -v xtrabackup; then backuptool="xtrabackup --defaults-file=/etc/my.cnf"; fi
+if command -v xtrabackup; then backuptool="xtrabackup"; fi
 
 # If mariadb has not been initialized, copy in the base image from either the default starter image (/var/tmp/mysqlbase)
 # or from a provided $snapshot_dir.
@@ -71,8 +71,8 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     name=$(basename $target)
     sudo rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]* && sudo chmod -R ugo+w /var/lib/mysql
     sudo chmod -R ugo+r $target
-    ${backuptool} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user root --password root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
-    ${backuptool} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user root --password root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
+    ${backuptool} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
+    ${backuptool} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
     echo 'Database initialized from $target'
 fi
 
@@ -113,4 +113,4 @@ echo
 
 echo "Starting mysqld."
 tail -f /var/log/mysqld.log &
-exec mysqld
+exec mysqld --server-id=0
