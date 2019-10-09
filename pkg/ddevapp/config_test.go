@@ -1000,7 +1000,7 @@ func TestPkgConfigMariaDBVersion(t *testing.T) {
 	err := fileutil.CopyDir(filepath.Join(testDir, "testdata", "TestPkgConfigMariaDBVersion"), targetBase)
 	require.NoError(t, err)
 
-	mariaDBVersions := []string{"10.1", "10.2"}
+	mariaDBVersions := []string{"5.5", "10.0", "10.1", "10.2", "10.3", "10.4"}
 	for _, v := range mariaDBVersions {
 		for _, configType := range []string{"dbimage", "mariadb-version"} {
 			app := &DdevApp{}
