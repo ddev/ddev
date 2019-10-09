@@ -723,7 +723,7 @@ func TestDdevAllMariaDB(t *testing.T) {
 	defer dockerutil.RemoveVolume(app.Name + "-mariadb")
 
 	for _, v := range []string{ddevapp.MariaDB55, ddevapp.MariaDB100, ddevapp.MariaDB101, ddevapp.MariaDB102, ddevapp.MariaDB103, ddevapp.MariaDB104} {
-
+		_ = app.Stop(true, false)
 		app.MariaDBVersion = v
 		//app.DBImage = version.GetDBImage(app.MariaDBVersion)
 		startErr := app.StartAndWaitForSync(15)
