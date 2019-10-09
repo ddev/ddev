@@ -45,6 +45,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 build: container
 
 MARIADB_VERSIONS=5.5 10.0 10.1 10.2 10.3 10.4
+MYSQL_VERSIONS=5.5 5.6 5.7
 
 container: mariadb_containers mysql_containers
 
@@ -55,7 +56,7 @@ mariadb_containers:
 	done
 
 mysql_containers:
-	for item in 5.5 5.6 5.7 ; do \
+	for item in $(MYSQL_VERSIONS) ; do \
 		set -euo pipefail ;\
 		docker build --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)" . ; \
 	done
@@ -65,7 +66,7 @@ push: container
 		set -euo pipefail ;\
 		docker push "drud/ddev-dbserver-mariadb-$${item%%%.*}:$(VERSION)"; \
 	done
-	for item in 5.5 5.6 5.7 ; do \
+	for item in $(MYSQL_VERSIONS) ; do \
 		set -euo pipefail ;\
 		docker push "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)"; \
 	done
@@ -76,10 +77,18 @@ test: container
 		set -euo pipefail ;\
 		echo $$item && test/testserver.sh $(DOCKER_REPO)-mariadb-$$item:$(VERSION) $$item ;\
 	done
+	for item in $(MYSQL_VERSIONS); do \
+		set -euo pipefail ;\
+		echo $$item && test/testserver.sh $(DOCKER_REPO)-mysql-$$item:$(VERSION) $$item ;\
+	done
 
 clean:
 	for item in $(MARIADB_VERSIONS); do \
 		@if docker image inspect $(DOCKER_REPO)-mariadb-4$item:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mariadb-4$item:$(VERSION); fi
-		@rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
 	done
+	for item in $(MYSQL_VERSIONS); do \
+		@if docker image inspect $(DOCKER_REPO)-myql-4$item:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mysql-4$item:$(VERSION); fi
+	done
+
+	@rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
 
