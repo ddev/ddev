@@ -102,7 +102,7 @@ var (
 	// omitContainersArg allows user to determine value of omit_containers
 	omitContainersArg string
 
-	// mariadbVersionArg is mariadb version 10.1 or 10.2
+	// mariadbVersionArg is mariadb version 5.5-10.4
 	mariaDBVersionArg string
 
 	// nfsMountEnabled sets nfs_mount_enabled

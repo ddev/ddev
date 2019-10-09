@@ -423,7 +423,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	assert := asrt.New(t)
 
 	testDir, _ := os.Getwd()
-	versionsToTest := []string{"10.1", "10.2"}
+	versionsToTest := []string{"5.5", "10.0", "10.1", "10.2", "10.3", "10.4"}
 
 	// Create a temporary directory and switch to it.
 	tmpDir := testcommon.CreateTmpDir(t.Name())

@@ -46,22 +46,6 @@ build: container
 
 MARIADB_VERSIONS=5.5 10.0 10.1 10.2 10.3 10.4
 
-#container: mariadb5.5 mariadb10.0 mariadb10.1 mariadb10.2 mariadb10.3 mariadb10.4
-
-#mariadb5.5:
-#	docker build $(DOCKER_ARGS) --build-arg="DBTYPE=mariadb" --build-arg "DBVERSION=5.5" -t "drud/ddev-dbserver-mariadb-5.5:$(VERSION)" . ;
-#mariadb10.0:
-#	docker build $(DOCKER_ARGS) --build-arg "DBVERSION=10.0" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-10.0:$(VERSION)" . ;
-#mariadb10.1:
-#	docker build $(DOCKER_ARGS) --build-arg "DBVERSION=10.1" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-10.1:$(VERSION)" . ;
-#mariadb10.2:
-#	docker build $(DOCKER_ARGS) --build-arg "DBVERSION=10.2" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-10.2:$(VERSION)" . ;
-#mariadb10.3:
-#	docker build $(DOCKER_ARGS) --build-arg "DBVERSION=10.3" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-10.3:$(VERSION)" . ;
-#mariadb10.4:
-#	docker build $(DOCKER_ARGS) --build-arg "DBVERSION=10.4" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-10.4:$(VERSION)" . ;
-
-MARIADB_VERSIONS=5.5 10.0 10.1 10.2 10.3 10.4
 container:
 	for item in $(MARIADB_VERSIONS); do \
 		docker build $(DOCKER_ARGS) --build-arg "DBVERSION=$${item}" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${item}:$(VERSION)" . ; \
