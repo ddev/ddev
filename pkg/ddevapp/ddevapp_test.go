@@ -28,8 +28,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
-
 	"github.com/fsouza/go-dockerclient"
 	"github.com/google/uuid"
 	"github.com/lunixbochs/vtclean"
@@ -611,7 +609,7 @@ func TestDdevImportDB(t *testing.T) {
 
 		// Test simple db loads.
 		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip"} {
-			path := filepath.Join(testDir, "testdata", file)
+			path := filepath.Join(testDir, "testdata", t.Name(), file)
 			err = app.ImportDB(path, "", false)
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 			if err != nil {
@@ -703,16 +701,17 @@ func TestDdevImportDB(t *testing.T) {
 	}
 }
 
-// TestDdevOldMariaDB tests db import/export/start with Mariadb 10.1
-func TestDdevOldMariaDB(t *testing.T) {
+// TestDdevAllMariaDB tests db import/export/start with all MariaDB versions
+func TestDdevAllMariaDB(t *testing.T) {
 	assert := asrt.New(t)
+
 	app := &ddevapp.DdevApp{}
 	testDir, _ := os.Getwd()
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
 	defer switchDir()
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevOldMariaDB", site.Name))
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
@@ -723,78 +722,73 @@ func TestDdevOldMariaDB(t *testing.T) {
 	//nolint: errcheck
 	defer dockerutil.RemoveVolume(app.Name + "-mariadb")
 
-	app.MariaDBVersion = ddevapp.MariaDB101
-	app.DBImage = version.GetDBImage(app.MariaDBVersion)
-	startErr := app.StartAndWaitForSync(15)
-	//nolint: errcheck
-	defer app.Stop(true, false)
+	for _, v := range []string{ddevapp.MariaDB55, ddevapp.MariaDB100, ddevapp.MariaDB101, ddevapp.MariaDB102, ddevapp.MariaDB103, ddevapp.MariaDB104} {
 
-	if startErr != nil {
-		appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+		app.MariaDBVersion = v
+		//app.DBImage = version.GetDBImage(app.MariaDBVersion)
+		startErr := app.StartAndWaitForSync(15)
+		//nolint: errcheck
+		defer app.Stop(true, false)
+
+		if startErr != nil {
+			appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+			assert.NoError(err)
+			t.Fatalf("app.StartAndWaitForSync() failure %v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
+		}
+
+		importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
+		err = app.ImportDB(importPath, "", false)
+		require.NoError(t, err)
+
+		_ = os.Mkdir("tmp", 0777)
+		err = fileutil.PurgeDirectory("tmp")
 		assert.NoError(err)
-		t.Fatalf("app.StartAndWaitForSync() failure %v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
+
+		// Test that we can export-db to a gzipped file
+		err = app.ExportDB("tmp/users1.sql.gz", true)
+		assert.NoError(err)
+
+		// Validate contents
+		err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
+		assert.NoError(err)
+		stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+		assert.NoError(err)
+		assert.True(stringFound)
+
+		err = fileutil.PurgeDirectory("tmp")
+		assert.NoError(err)
+
+		// Export to an ungzipped file and validate
+		err = app.ExportDB("tmp/users2.sql", false)
+		assert.NoError(err)
+
+		// Validate contents
+		stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
+		assert.NoError(err)
+		assert.True(stringFound)
+
+		err = fileutil.PurgeDirectory("tmp")
+		assert.NoError(err)
+
+		// Capture to stdout without gzip compression
+		stdout := util.CaptureStdOut()
+		err = app.ExportDB("", false)
+		assert.NoError(err)
+		out := stdout()
+		assert.Contains(out, "Table structure for table `users`")
+
+		snapshotName := fileutil.RandomFilenameBase()
+		_, err = app.Snapshot(snapshotName)
+		assert.NoError(err)
+		err = app.RestoreSnapshot(snapshotName)
+		assert.NoError(err)
+
+		// TODO: Restore a snapshot from same version
+		//err = app.RestoreSnapshot("d7testerTest1")
+		//assert.Error(err)
+
+		// TODO: Restore a snapshot from a different version and watch it fail.
 	}
-
-	importPath := filepath.Join(testDir, "testdata", "users.sql")
-	err = app.ImportDB(importPath, "", false)
-	require.NoError(t, err)
-
-	err = os.Mkdir("tmp", 0777)
-	require.NoError(t, err)
-
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Test that we can export-db to a gzipped file
-	err = app.ExportDB("tmp/users1.sql.gz", true)
-	assert.NoError(err)
-
-	// Validate contents
-	err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
-	assert.NoError(err)
-	stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
-	assert.NoError(err)
-	assert.True(stringFound)
-
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Export to an ungzipped file and validate
-	err = app.ExportDB("tmp/users2.sql", false)
-	assert.NoError(err)
-
-	// Validate contents
-	stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
-	assert.NoError(err)
-	assert.True(stringFound)
-
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Capture to stdout without gzip compression
-	stdout := util.CaptureStdOut()
-	err = app.ExportDB("", false)
-	assert.NoError(err)
-	out := stdout()
-	assert.Contains(out, "Table structure for table `users`")
-
-	snapshotName := fileutil.RandomFilenameBase()
-	_, err = app.Snapshot(snapshotName)
-	assert.NoError(err)
-	err = app.RestoreSnapshot(snapshotName)
-	assert.NoError(err)
-
-	// Restore of a 10.2 snapshot should fail.
-	// Attempt a restore with a pre-mariadb_10.2 snapshot. It should fail and give a link.
-	newerSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_2.tgz"))
-	assert.NoError(err)
-
-	err = archive.Untar(newerSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots"), "")
-	assert.NoError(err)
-	err = app.RestoreSnapshot("d7testerTest1")
-	assert.Error(err)
-	assert.Contains(err.Error(), "is not compatible")
-
 	runTime()
 }
 
