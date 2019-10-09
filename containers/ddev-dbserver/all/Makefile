@@ -48,11 +48,19 @@ build: container
 
 # Want to do all of these, but 5.5 and 10.0 don't have mariabackup
 # MARIADB_VERSION=5.5 10.0 10.1 10.2 10.3 10.4
-MARIADB_VERSIONS=5.5 10.0 10.1 10.2 10.3 10.4
-container:
-	for item in $(MARIADB_VERSIONS); do \
-		docker build $(DOCKER_ARGS) --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${item%%%.*}:$(VERSION)" . ; \
-	done
+
+container: mariadb5.5 mariadb10.0
+
+mariadb5.5:
+	docker build $(DOCKER_ARGS) --build-arg="DBTYPE=mariadb" --build-arg "DBVERSION=5.5" -t "drud/ddev-dbserver-mariadb-5.5:$(VERSION)" . ;
+mariadb10.0:
+	docker build $(DOCKER_ARGS) --build-arg "DBVERSION=10.0" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-10.0:$(VERSION)" . ;
+
+#MARIADB_VERSIONS=5.5 10.0 10.1 10.2 10.3 10.4
+#container:
+#	for item in $(MARIADB_VERSIONS); do \
+#		docker build $(DOCKER_ARGS) --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${item%%%.*}:$(VERSION)" . ; \
+#	done
 #	for item in 5.5 5.6 5.7 ; do \
 #		docker build --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)" . ; \
 #	done

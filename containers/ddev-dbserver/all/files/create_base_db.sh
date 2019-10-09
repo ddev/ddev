@@ -4,10 +4,6 @@ set -x
 set -eu
 set -o pipefail
 
-# This script can be used to create a bare database directory for use by
-# ddev startup. It can be run from the host with:
-# docker run -t -u $(id -u) -v "$PWD/files/var/tmp/mysqlbase:/mysqlbase" --rm --entrypoint=/create_base_db.sh drud/ddev-dbserver:<your_version>
-
 SOCKET=/var/tmp/mysql.sock
 OUTDIR=/mysqlbase
 
@@ -63,7 +59,7 @@ EOF
 sudo rm -rf $OUTDIR/*
 
 backuptool=mariabackup
-if command -v xtrabackup; then backuptool=xtrabackup; fi
+if command -v xtrabackup; then backuptool="xtrabackup --defaults-file=/etc/my.cnf"; fi
 ${backuptool} --backup --target-dir=$OUTDIR --user root --password root --socket=$SOCKET
 
 # Initialize with current mariadb_version

@@ -38,6 +38,7 @@ if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
   fi
 fi
 
+sudo chown -R "$(id -u):$(id -g)" /mysqlbase /var/lib/mysql
 
 if [ -d /var/lib/mysql/mysql ]; then
     database_mariadb_version=10.1
@@ -61,12 +62,12 @@ if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mn
 fi
 
 backuptool=mariabackup
-if command -v xtrabackup; then backuptool=xtrabackup; fi
+if command -v xtrabackup; then backuptool="xtrabackup --defaults-file=/etc/my.cnf"; fi
 
 # If mariadb has not been initialized, copy in the base image from either the default starter image (/var/tmp/mysqlbase)
 # or from a provided $snapshot_dir.
 if [ ! -d "/var/lib/mysql/mysql" ]; then
-    target=${snapshot_dir:-/var/tmp/mysqlbase/}
+    target=${snapshot_dir:-/mysqlbase/}
     name=$(basename $target)
     sudo rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]* && sudo chmod -R ugo+w /var/lib/mysql
     sudo chmod -R ugo+r $target
