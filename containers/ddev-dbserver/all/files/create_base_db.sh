@@ -47,13 +47,13 @@ mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot  mysql
 
 mysql -uroot <<EOF
 	CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;
-	CREATE USER IF NOT EXISTS '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
-	CREATE USER IF NOT EXISTS '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';
+	CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
+	CREATE USER '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';
 
 	GRANT ALL ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'%';
 	GRANT ALL ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'localhost';
 
-	CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
+	CREATE USER 'root'@'%' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
 	GRANT ALL ON *.* TO 'root'@'%' WITH GRANT OPTION;
 	GRANT ALL ON *.* to 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
 	FLUSH PRIVILEGES;
@@ -61,15 +61,18 @@ mysql -uroot <<EOF
 EOF
 
 sudo rm -rf $OUTDIR/*
-mariabackup --backup --target-dir=$OUTDIR --user root --password root --socket=$SOCKET
+
+backuptool=mariabackup
+if command -v xtrabackup; then backuptool=xtrabackup; fi
+${backuptool} --backup --target-dir=$OUTDIR --user root --password root --socket=$SOCKET
 
 # Initialize with current mariadb_version
 my_mariadb_version=$(mysql -V | awk '{sub( /\.[0-9]+-MariaDB,/, ""); print $5 }')
 echo $my_mariadb_version >$OUTDIR/db_mariadb_version.txt
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
-	echo >&2 'Mariadb initialization process failed.'
+	echo >&2 'Database initialization process failed.'
 	exit 5
 fi
 
-echo "The startup database files (in mariabackup format) are now in $OUTDIR"
+echo "The startup database files (in mariabackup/xtradb format) are now in $OUTDIR"

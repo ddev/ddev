@@ -60,6 +60,9 @@ if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mn
   sudo chmod -R ugo-w /etc/mysql/conf.d
 fi
 
+backuptool=mariabackup
+if command -v xtrabackup; then backuptool=xtrabackup; fi
+
 # If mariadb has not been initialized, copy in the base image from either the default starter image (/var/tmp/mysqlbase)
 # or from a provided $snapshot_dir.
 if [ ! -d "/var/lib/mysql/mysql" ]; then
@@ -67,8 +70,8 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     name=$(basename $target)
     sudo rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]* && sudo chmod -R ugo+w /var/lib/mysql
     sudo chmod -R ugo+r $target
-    mariabackup --prepare --skip-innodb-use-native-aio --target-dir "$target" --user root --password root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
-    mariabackup --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user root --password root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
+    ${backuptool} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user root --password root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
+    ${backuptool} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user root --password root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
     echo 'Database initialized from $target'
 fi
 
@@ -80,17 +83,21 @@ else
 fi
 
 my_mariadb_version=$(mysql -V | awk '{sub( /\.[0-9]+-MariaDB,/, ""); print $5 }')
-if [ "$my_mariadb_version" != "$db_mariadb_version" ]; then
-    mysqld --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
-    pid=$!
-    if ! serverwait ; then
-        echo "Failed to get mysqld running to run mysql_upgrade"
-        exit 103
-    fi
-    echo "Running mysql_upgrade because my_mariadb_version=$my_mariadb_version is not the same as db_mariadb_version=$db_mariadb_version"
-    mysql_upgrade --socket=$SOCKET
-    kill $pid
-fi
+# TODO: Return to find out if this upgrade path can be handled.
+# TODO: Use a smarter thing (from buildkite version check?) to determine if new version
+# is higher than old version
+
+#if [ "$my_mariadb_version" != "$db_mariadb_version" ]; then
+#    mysqld --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
+#    pid=$!
+#    if ! serverwait ; then
+#        echo "Failed to get mysqld running to run mysql_upgrade"
+#        exit 103
+#    fi
+#    echo "Running mysql_upgrade because my_mariadb_version=$my_mariadb_version is not the same as db_mariadb_version=$db_mariadb_version"
+#    mysql_upgrade --socket=$SOCKET
+#    kill $pid
+#fi
 
 # And use the mariadb version we have here.
 echo $my_mariadb_version >/var/lib/mysql/db_mariadb_version.txt
