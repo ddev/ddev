@@ -1268,7 +1268,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	util.Warning("Creating database snapshot %s", snapshotName)
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir),
+		Cmd:     fmt.Sprintf("$(/backuptool.sh) --backup --target-dir=%s --user=root --password=root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir),
 	})
 
 	if err != nil {
@@ -1309,6 +1309,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
 		}
 	} else {
+		//TODO: Make a better assumption! These days they should all have versions
 		snapshotMariaDBVersion = MariaDB101
 	}
 	snapshotMariaDBVersion = strings.Trim(snapshotMariaDBVersion, " \n\t")

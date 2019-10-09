@@ -51,7 +51,7 @@ container: mariadb_containers mysql_containers
 
 mariadb_containers:
 	for item in $(MARIADB_VERSIONS); do \
-		set -euo pipefail \
+		set -euo pipefail ; \
 		docker build $(DOCKER_ARGS) --build-arg "DBVERSION=$${item}" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${item}:$(VERSION)" . ; \
 	done
 

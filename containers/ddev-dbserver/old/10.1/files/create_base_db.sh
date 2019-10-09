@@ -68,7 +68,7 @@ mysql -uroot <<EOF
 EOF
 
 sudo rm -rf $OUTDIR/*
-mariabackup --backup --target-dir=$OUTDIR --user root --password root --socket=$SOCKET
+mariabackup --backup --target-dir=$OUTDIR --user=root --password=root --socket=$SOCKET
 
 # Initialize with current mariadb_version
 my_mariadb_version=$(mysql -V | awk '{sub( /\.[0-9]+-MariaDB,/, ""); print $5 }')

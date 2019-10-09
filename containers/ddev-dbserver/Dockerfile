@@ -18,7 +18,7 @@ RUN if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
     rm percona-release*.deb ;\
     apt-get update && apt-get install -y percona-xtrabackup-24;  \
 fi
-RUN apt autoclean
+RUN apt-get autoclean
 
 RUN rm -rf /var/lib/mysql/* /etc/mysql
 RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql
@@ -28,7 +28,7 @@ ADD files /
 # Build a starter base db
 RUN /create_base_db.sh;
 
-RUN chmod ugo+x /healthcheck.sh
+RUN chmod ugo+x /healthcheck.sh /backuptool.sh
 
 # But make sure these are right
 RUN chmod ugo+wx /mnt /var/tmp

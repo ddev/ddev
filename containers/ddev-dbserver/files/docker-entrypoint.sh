@@ -40,18 +40,22 @@ fi
 
 sudo chown -R "$(id -u):$(id -g)" /mysqlbase /var/lib/mysql
 
-if [ -d /var/lib/mysql/mysql ]; then
-    database_mariadb_version=10.1
-    if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
-       database_mariadb_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
-    fi
+# TODO: This logic needs to make sense, and basically needs to
+# 1. Check for *different version*
+# 2. If *higher* version, try an upgrade
 
-    if [  "$MARIADB_VERSION" == "10.1" ] && [ "$database_mariadb_version" != "10.1" ]; then
-       echo "Can't start MariaDB 10.1 server with a database from $database_mariadb_version."
-       echo "Please export your database, remove it completely, and retry if you need to start it with MariaDB $MARIADB_VERSION."
-       exit 102
-    fi
-fi
+#if [ -d /var/lib/mysql/mysql ]; then
+#    database_mariadb_version=10.1
+#    if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
+#       database_mariadb_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
+#    fi
+#
+#    if [  "$MARIADB_VERSION" == "10.1" ] && [ "$database_mariadb_version" != "10.1" ]; then
+#       echo "Can't start MariaDB 10.1 server with a database from $database_mariadb_version."
+#       echo "Please export your database, remove it completely, and retry if you need to start it with MariaDB $MARIADB_VERSION."
+#       exit 102
+#    fi
+#fi
 
 sudo chown -R "$UID:$(id -g)" /var/lib/mysql
 
@@ -61,8 +65,8 @@ if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mn
   sudo chmod -R ugo-w /etc/mysql/conf.d
 fi
 
-backuptool=mariabackup
-if command -v xtrabackup; then backuptool="xtrabackup"; fi
+export BACKUPTOOL=mariabackup
+if command -v xtrabackup; then BACKUPTOOL="xtrabackup"; fi
 
 # If mariadb has not been initialized, copy in the base image from either the default starter image (/var/tmp/mysqlbase)
 # or from a provided $snapshot_dir.
@@ -71,8 +75,8 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     name=$(basename $target)
     sudo rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]* && sudo chmod -R ugo+w /var/lib/mysql
     sudo chmod -R ugo+r $target
-    ${backuptool} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
-    ${backuptool} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
+    ${BACKUPTOOL} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
+    ${BACKUPTOOL} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
     echo 'Database initialized from $target'
 fi
 
