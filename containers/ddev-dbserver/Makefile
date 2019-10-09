@@ -35,37 +35,38 @@ VERSION := $(shell git describe --tags --always --dirty)
 # If you need to override one, import its contents below and comment out the
 # include. That way the base components can easily be updated as our general needs
 # change.
-#include build-tools/makefile_components/base_build_go.mak
+#include ../../../build-tools/makefile_components/base_build_go.mak
 #include ../../build-tools/makefile_components/base_build_python-docker.mak
 #include ../../build-tools/makefile_components/base_container.mak
 #include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include ../../build-tools/makefile_components/base_test_python.mak
 
-DIRS = 10.1 10.2
-
 build: container
 
+MARIADB_VERSIONS=5.5 10.0 10.1 10.2 10.3 10.4
+
 container:
-	for item in 5.5.64 10.0.38; do \
-		set -euo pipefail \
-		echo $$item && $(MAKE) -C $$item container; \
+	for item in $(MARIADB_VERSIONS); do \
+		docker build $(DOCKER_ARGS) --build-arg "DBVERSION=$${item}" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${item}:$(VERSION)" . ; \
 	done
+#	for item in 5.5 5.6 5.7 ; do \
+#		docker build --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)" . ; \
+#	done
 
-push:
-	for item in $(DIRS); do \
-		set -euo pipefail \
-		echo $$item && $(MAKE) -C $$item push; \
-	done
-
-clean:
-	for item in $(DIRS); do \
-		set -euo pipefail \
-		echo $$item && $(MAKE) -C $$item clean; \
+push: container
+	for item in $(MARIADB_VERSIONS); do \
+		docker push "drud/ddev-dbserver-mariadb-$${item%%%.*}:$(VERSION)"; \
 	done
 
 test: container
-	for item in $(DIRS); do \
-		set -euo pipefail \
-		echo $$item && $(MAKE) -C $$item test; \
+	for item in $(MARIADB_VERSIONS); do \
+		echo $$item && test/testserver.sh $(DOCKER_REPO)-mariadb-$$item:$(VERSION) $$item ;\
 	done
+
+clean:
+	for item in $(MARIADB_VERSIONS); do \
+		@if docker image inspect $(DOCKER_REPO)-mariadb-4$item:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mariadb-4$item:$(VERSION); fi
+		@rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
+	done
+

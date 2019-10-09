@@ -122,30 +122,30 @@ mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$H
 
 cleanup
 
-if [ "$MARIADB_VERSION" != "10.1" ] ; then
-    # Start up with a Mariadb 10.1 database and verify that it gets upgraded successfully to 10.2
-    docker volume rm $VOLUME && docker volume create $VOLUME
-    # Populate the volume with the contents of our 10.1 tarball. Here it doesn't matter that
-    # we're putting it in /var/lib/mysql, but it's put there just for clarity of purpose.
-    docker run -i --rm -v "$VOLUME:/var/lib/mysql" busybox tar -C /var/lib/mysql -zxf - <test/testdata/d6git_basic_mariadb_10_1.tgz
-    # Now start up the container with the populated volume
-    if ! docker run -u "$MOUNTUID:$MOUNTGID" -v "$VOLUME:/var/lib/mysql" --name=$CONTAINER_NAME -d $IMAGE; then
-        echo "MySQL server start failed with error code $?"
-        exit 109
-    fi
-    containercheck
-    # Here we should show an upgrade happening because this was a 10.1 database
-    (docker logs $CONTAINER_NAME 2>&1 | grep "Running mysql_upgrade because my_mariadb_version=10.2 is not the same as db_mariadb_version=10.1" >/dev/null 2>&1) || (echo "Failed to find mysql_upgrade clause in docker logs" && exit 4)
-
-    docker stop $CONTAINER_NAME && docker rm $CONTAINER_NAME
-    # Now run the container again with the same volume (now upgraded) and make sure we don't have the upgrade action
-    if ! docker run -u "$MOUNTUID:$MOUNTGID" -v "$VOLUME:/var/lib/mysql" --name=$CONTAINER_NAME -d $IMAGE; then
-        echo "MySQL server start failed with error code $?"
-        exit 110
-    fi
-    containercheck
-    (docker logs $CONTAINER_NAME 2>&1 | grep -v "Running mysql_upgrade" >/dev/null 2>&1) || (echo "Found  mysql_upgrade clause in docker logs when upgrade should not have happened" && exit 6)
-fi
+#if [ "$MARIADB_VERSION" != "10.1" ] ; then
+#    # Start up with a Mariadb 10.1 database and verify that it gets upgraded successfully to 10.2
+#    docker volume rm $VOLUME && docker volume create $VOLUME
+#    # Populate the volume with the contents of our 10.1 tarball. Here it doesn't matter that
+#    # we're putting it in /var/lib/mysql, but it's put there just for clarity of purpose.
+#    docker run -i --rm -v "$VOLUME:/var/lib/mysql" busybox tar -C /var/lib/mysql -zxf - <test/testdata/d6git_basic_mariadb_10_1.tgz
+#    # Now start up the container with the populated volume
+#    if ! docker run -u "$MOUNTUID:$MOUNTGID" -v "$VOLUME:/var/lib/mysql" --name=$CONTAINER_NAME -d $IMAGE; then
+#        echo "MySQL server start failed with error code $?"
+#        exit 109
+#    fi
+#    containercheck
+#    # Here we should show an upgrade happening because this was a 10.1 database
+#    (docker logs $CONTAINER_NAME 2>&1 | grep "Running mysql_upgrade because my_mariadb_version=10.2 is not the same as db_mariadb_version=10.1" >/dev/null 2>&1) || (echo "Failed to find mysql_upgrade clause in docker logs" && exit 4)
+#
+#    docker stop $CONTAINER_NAME && docker rm $CONTAINER_NAME
+#    # Now run the container again with the same volume (now upgraded) and make sure we don't have the upgrade action
+#    if ! docker run -u "$MOUNTUID:$MOUNTGID" -v "$VOLUME:/var/lib/mysql" --name=$CONTAINER_NAME -d $IMAGE; then
+#        echo "MySQL server start failed with error code $?"
+#        exit 110
+#    fi
+#    containercheck
+#    (docker logs $CONTAINER_NAME 2>&1 | grep -v "Running mysql_upgrade" >/dev/null 2>&1) || (echo "Found  mysql_upgrade clause in docker logs when upgrade should not have happened" && exit 6)
+#fi
 
 echo "Tests passed"
 exit 0
