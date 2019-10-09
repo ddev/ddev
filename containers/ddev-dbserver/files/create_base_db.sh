@@ -14,9 +14,21 @@ sudo chmod ugo+w /var/tmp
 sudo mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && sudo rm -f /var/lib/mysql/* && sudo chmod -R ugo+w /var/lib/mysql
 
 echo 'Initializing mysql'
-mysql_install_db --force
+mysqld --version
+mysqld_version=$(mysqld --version | awk '{ gsub(/-log/, ""); gsub(/\.[0-9]+$/, "", $3);  print $3}')
+echo version=$mysqld_version
+# Oracle mysql 5.7+ deprecates mysql_install_db
+if [ "${mysqld_version}" = "5.7" ] || [  "${mysqld_version%%%.*}" = "8.0" ]; then
+    mysqld --initialize-insecure --datadir=/var/lib/mysql --server-id=0
+else
+    # mysql 5.5 requires running mysql_install_db in /usr/local/mysql
+    if command -v mysqld | grep usr.local; then
+        cd /usr/local/mysql
+    fi
+    mysql_install_db --force --datadir=/var/lib/mysql
+fi
 echo 'Starting mysqld --skip-networking'
-mysqld --user=root --skip-networking &
+mysqld --user=root --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
 pid="$!"
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
@@ -59,8 +71,8 @@ EOF
 sudo rm -rf $OUTDIR/*
 
 backuptool=mariabackup
-if command -v xtrabackup; then backuptool="xtrabackup --defaults-file=/etc/my.cnf"; fi
-${backuptool} --backup --target-dir=$OUTDIR --user root --password root --socket=$SOCKET
+if command -v xtrabackup; then backuptool="xtrabackup --datadir=/var/lib/mysql"; fi
+${backuptool} --backup --target-dir=$OUTDIR --user=root --password=root --socket=$SOCKET
 
 # Initialize with current mariadb_version
 my_mariadb_version=$(mysql -V | awk '{sub( /\.[0-9]+-MariaDB,/, ""); print $5 }')

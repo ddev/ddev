@@ -46,21 +46,34 @@ build: container
 
 MARIADB_VERSIONS=5.5 10.0 10.1 10.2 10.3 10.4
 
-container:
+container: mariadb_containers mysql_containers
+
+mariadb_containers:
 	for item in $(MARIADB_VERSIONS); do \
+		set -euo pipefail \
 		docker build $(DOCKER_ARGS) --build-arg "DBVERSION=$${item}" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${item}:$(VERSION)" . ; \
 	done
-#	for item in 5.5 5.6 5.7 ; do \
-#		docker build --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)" . ; \
-#	done
+
+mysql_containers:
+	for item in 5.5 5.6 5.7 ; do \
+		set -euo pipefail ;\
+		docker build --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)" . ; \
+	done
 
 push: container
 	for item in $(MARIADB_VERSIONS); do \
+		set -euo pipefail ;\
 		docker push "drud/ddev-dbserver-mariadb-$${item%%%.*}:$(VERSION)"; \
 	done
+	for item in 5.5 5.6 5.7 ; do \
+		set -euo pipefail ;\
+		docker push "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)"; \
+	done
+
 
 test: container
 	for item in $(MARIADB_VERSIONS); do \
+		set -euo pipefail ;\
 		echo $$item && test/testserver.sh $(DOCKER_REPO)-mariadb-$$item:$(VERSION) $$item ;\
 	done
 

@@ -7,18 +7,27 @@ ENV MYSQL_USER db
 ENV MYSQL_PASSWORD db
 ENV MYSQL_ROOT_PASSWORD root
 
-# Install mariadb and other packages
-RUN apt-get update && apt-get install -y tzdata sudo pv
+
+# Install extra packages
+RUN apt-get update && apt-get install -y tzdata sudo pv less vim wget
+
+RUN if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
+    apt-get install -y lsb-release; \
+    wget https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb ;\
+    sudo dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb ;\
+    rm percona-release*.deb ;\
+    apt-get update && apt-get install -y percona-xtrabackup-24;  \
+fi
+RUN apt autoclean
 
 RUN rm -rf /var/lib/mysql/* /etc/mysql
 RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql
 
 ADD files /
 
-# If mariabackup is available, build a starter base db
-RUN if command -v mariabackup || command -v xtrabackup ; then \
-    /create_base_db.sh; \
-fi
+# Build a starter base db
+RUN /create_base_db.sh;
+
 RUN chmod ugo+x /healthcheck.sh
 
 # But make sure these are right
