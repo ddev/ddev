@@ -76,9 +76,8 @@ push: container
 	done
 
 test: container
-	for item in $(DIRS); do \
-		set -euo pipefail \
-		echo $$item && $(MAKE) -C $$item test; \
+	set -x ; for item in $(MARIADB_VERSIONS); do \
+		echo $$item && ../test/testserver.sh $(DOCKER_REPO)-mariadb-$$item:$(VERSION) $$item ;\
 	done
 
 clean:

@@ -105,7 +105,7 @@ cleanup
 
 # Run with alternate configuration my.cnf mounted
 # mysqld will ignore world-writeable config file, so we make it ro for sure
-if ! docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql -v /$PWD/test/testdata:/mnt/ddev_config:ro --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
+if ! docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql -v $PWD/test/testdata:/mnt/ddev_config:ro --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE; then
 	echo "MySQL server start failed with error code $?"
 	exit 106
 fi
@@ -115,27 +115,10 @@ if ! containercheck; then
 fi
 
 # Make sure the custom config is present in the container.
-docker exec -t $CONTAINER_NAME grep "collation-server" //mnt/ddev_config/mysql/utf.cnf
+docker exec -t $CONTAINER_NAME grep "collation-server" /mnt/ddev_config/mysql/utf.cnf
 
 # With the custom config, our collation should be utf8_general_ci, not utf8mb4
 mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW GLOBAL VARIABLES like \"collation_server\";" | grep "utf8_general_ci"
-
-cleanup
-
-# Test that the create_base_db.sh script can create a starter tarball.
-mkdir -p $outdir
-rm -rf $outdir/files/var/tmp/*
-docker run  -u "$MOUNTUID:$MOUNTGID" -t -v /$outdir://mysqlbase --rm --entrypoint=//create_base_db.sh $IMAGE
-if [ ! -f "$outdir/ibdata1" ] ; then
-  echo "Failed to build test starter database for mariadb."
-  exit 108
-fi
-command="rm -rf $outdir $MYTMPDIR"
-if [ $(uname -s) = "Linux" ] ; then
-    sudo $command
-else
-    $command
-fi
 
 cleanup
 
@@ -144,7 +127,7 @@ if [ "$MARIADB_VERSION" != "10.1" ] ; then
     docker volume rm $VOLUME && docker volume create $VOLUME
     # Populate the volume with the contents of our 10.1 tarball. Here it doesn't matter that
     # we're putting it in /var/lib/mysql, but it's put there just for clarity of purpose.
-    docker run -i --rm -v "$VOLUME:/var/lib/mysql" busybox tar -C //var/lib/mysql -zxf - <test/testdata/d6git_basic_mariadb_10_1.tgz
+    docker run -i --rm -v "$VOLUME:/var/lib/mysql" busybox tar -C /var/lib/mysql -zxf - <test/testdata/d6git_basic_mariadb_10_1.tgz
     # Now start up the container with the populated volume
     if ! docker run -u "$MOUNTUID:$MOUNTGID" -v "$VOLUME:/var/lib/mysql" --name=$CONTAINER_NAME -d $IMAGE; then
         echo "MySQL server start failed with error code $?"
