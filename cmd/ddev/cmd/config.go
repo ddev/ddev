@@ -410,7 +410,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	// We don't want to write out dbimage if it's just the one that goes with
 	// the mariadb_version.
-	if app.DBImage == version.GetDBImage(app.MariaDBVersion) {
+	if app.DBImage == version.GetDBImage(ddevapp.MariaDB, "", app.MariaDBVersion) {
 		app.DBImage = ""
 	}
 

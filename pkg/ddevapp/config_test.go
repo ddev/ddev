@@ -38,7 +38,7 @@ func TestNewConfig(t *testing.T) {
 
 	// Ensure the config uses specified defaults.
 	assert.Equal(app.APIVersion, version.DdevVersion)
-	assert.Equal(app.DBImage, version.GetDBImage())
+	assert.Equal(app.DBImage, version.GetDBImage(MariaDB))
 	assert.Equal(app.WebImage, version.GetWebImage())
 	assert.Equal(app.DBAImage, version.GetDBAImage())
 	app.Name = util.RandString(32)
@@ -1021,7 +1021,7 @@ func TestPkgConfigMariaDBVersion(t *testing.T) {
 			}
 			if configType == "mariadb-version" {
 				assert.Equal(v, app.MariaDBVersion)
-				assert.Equal(version.GetDBImage(v), app.DBImage, "dbimage derived from app.MariaDBVersion was incorrect")
+				assert.Equal(version.GetDBImage(MariaDB, v), app.DBImage, "dbimage derived from app.MariaDBVersion was incorrect")
 			}
 
 		}

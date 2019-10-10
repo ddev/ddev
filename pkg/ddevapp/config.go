@@ -93,7 +93,6 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
-	app.DBImage = version.GetDBImage(version.MariaDBDefaultVersion)
 	app.DBAImage = version.GetDBAImage()
 	app.BgsyncImage = version.GetBgsyncImage()
 
@@ -107,11 +106,18 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	}
 	app.SetApptypeSettingsPaths()
 
-	// If the dbimage has not been overridden (because it takes precedence
-	// and the mariadb_version *has* been changed by config,
-	// use the related dbimage.
-	if app.DBImage == version.GetDBImage(version.MariaDBDefaultVersion) && app.MariaDBVersion != version.MariaDBDefaultVersion {
-		app.DBImage = version.GetDBImage(app.MariaDBVersion)
+	// If the dbimage has not been overridden (because dbimage takes precedence)
+	// and the mariadb_version/mysql_version *has* been changed by config,
+	// use the dbimage derived from dbversion.
+	// IF dbimage has not been specified (it equals mariadb default)
+	// AND mariadb version is NOT the default version
+	// Then override the dbimage with related mariadb or mysql version
+	if app.DBImage == version.GetDBImage(MariaDB, version.MariaDBDefaultVersion) && app.MariaDBVersion != version.MariaDBDefaultVersion {
+		if app.MariaDBVersion != "" {
+			app.DBImage = version.GetDBImage(MariaDB, app.MariaDBVersion)
+		} else if app.MySQLVersion != "" {
+			app.DBImage = version.GetDBImage(MySQL, app.MySQLVersion)
+		}
 	}
 
 	// Turn off webcache_enabled except if macOS/darwin or global `developer_mode: true`
@@ -152,7 +158,7 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == version.GetWebImage() {
 		appcopy.WebImage = ""
 	}
-	if appcopy.DBImage == version.GetDBImage(appcopy.MariaDBVersion) {
+	if appcopy.DBImage == version.GetDBImage("", appcopy.MariaDBVersion) {
 		appcopy.DBImage = ""
 	}
 	if appcopy.DBAImage == version.GetDBAImage() {
@@ -201,7 +207,7 @@ func (app *DdevApp) WriteConfig() error {
 	}
 
 	// Append current image information
-	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s\n# webimage: %s\n# dbimage: %s\n# dbaimage: %s\n# bgsyncimage: %s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.GetWebImage(), version.GetDBImage(), version.GetDBAImage(), version.GetBgsyncImage()))...)
+	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s\n# webimage: %s\n# dbimage: %s\n# dbaimage: %s\n# bgsyncimage: %s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.GetWebImage(), version.GetDBImage(MariaDB), version.GetDBAImage(), version.GetBgsyncImage()))...)
 
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(ConfigInstructions)...)
@@ -426,9 +432,17 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
-	// Validate mariadb version
-	if !IsValidMariaDBVersion(app.MariaDBVersion) {
-		return fmt.Errorf("invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
+	if app.MariaDBVersion != "" {
+		// Validate mariadb version version
+		if !IsValidMariaDBVersion(app.MariaDBVersion) {
+			return fmt.Errorf("invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
+		}
+	}
+	if app.MySQLVersion != "" {
+		// Validate /mysql version
+		if !IsValidMySQLVersion(app.MySQLVersion) {
+			return fmt.Errorf("invalid mysql_version: %s, must be one of %s", app.MySQLVersion, GetValidMySQLVersions()).(invalidMySQLVersion)
+		}
 	}
 
 	if app.WebcacheEnabled && app.NFSMountEnabled {

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -33,11 +34,17 @@ var DeleteImagesCmd = &cobra.Command{
 			util.Failed("Failed to list images: %v", err)
 		}
 		webimg := version.GetWebImage()
-		dbimg101 := version.GetDBImage("10.1")
-		dbimg102 := version.GetDBImage("10.2")
 		dbaimage := version.GetDBAImage()
 		routerimage := version.RouterImage + ":" + version.RouterTag
 		sshimage := version.SSHAuthImage + ":" + version.SSHAuthTag
+
+		dbImages := []string{}
+		for v := range ddevapp.ValidMariaDBVersions {
+			dbImages = append(dbImages, version.GetDBImage(ddevapp.MariaDB, v))
+		}
+		for v := range ddevapp.ValidMySQLVersions {
+			dbImages = append(dbImages, version.GetDBImage(ddevapp.MySQL, v))
+		}
 
 		// Too much code inside this loop, but complicated by multiple db images
 		// and discrete names of images
@@ -50,9 +57,11 @@ var DeleteImagesCmd = &cobra.Command{
 					}
 				}
 				// If a dbimage, but doesn't match our dbimages, delete it
-				if strings.HasPrefix(tag, version.DBImg) && !strings.HasPrefix(tag, dbimg101) && !strings.HasPrefix(tag, dbimg102) {
-					if err = removeImage(client, tag); err != nil {
-						util.Failed("Failed to remove %s: %v", tag, err)
+				for _, imgName := range dbImages {
+					if strings.HasPrefix(tag, imgName) && (tag != version.GetDBImage(ddevapp.MariaDB) && tag != version.GetDBImage(ddevapp.MySQL)) {
+						if err = removeImage(client, tag); err != nil {
+							util.Warning("Unable to remove %s: %v", tag, err)
+						}
 					}
 				}
 				// If a dbaimage, but doesn't match our dbaimage, delete it

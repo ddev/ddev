@@ -37,6 +37,20 @@ const (
 	MariaDB104 = "10.4"
 )
 
+// Oracle MySQL versions
+const (
+	MySQL55 = "5.5"
+	MySQL56 = "5.6"
+	MySQL57 = "5.7"
+	MySQL80 = "8.0"
+)
+
+// Database Types
+const (
+	MariaDB = "mariadb"
+	MySQL   = "mysql"
+)
+
 // Container types used with ddev
 const (
 	DdevSSHAgentContainer = "ddev-ssh-agent"
@@ -68,6 +82,13 @@ var ValidMariaDBVersions = map[string]bool{
 	MariaDB102: true,
 	MariaDB103: true,
 	MariaDB104: true,
+}
+
+var ValidMySQLVersions = map[string]bool{
+	MySQL55: true,
+	MySQL56: true,
+	MySQL57: true,
+	// Note that MySQL 8 is not compatible with client libs in web container
 }
 
 // Webserver types
@@ -178,11 +199,32 @@ func IsValidMariaDBVersion(MariaDBVersion string) bool {
 	return true
 }
 
+// IsValidMySQLVersion is a helper function to determine if a MySQL version is valid, returning
+// true if the supplied version is valid and false otherwise.
+func IsValidMySQLVersion(v string) bool {
+	if _, ok := ValidMySQLVersions[v]; !ok {
+		return false
+	}
+
+	return true
+}
+
 // GetValidMariaDBVersions is a helper function that returns a list of valid MariaDB versions.
 func GetValidMariaDBVersions() []string {
 	s := make([]string, 0, len(ValidMariaDBVersions))
 
 	for p := range ValidMariaDBVersions {
+		s = append(s, p)
+	}
+
+	return s
+}
+
+// GetValidMySQLVersions is a helper function that returns a list of valid MySQL versions.
+func GetValidMySQLVersions() []string {
+	s := make([]string, 0, len(ValidMySQLVersions))
+
+	for p := range ValidMySQLVersions {
 		s = append(s, p)
 	}
 

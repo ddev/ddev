@@ -2,6 +2,7 @@ package version
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/fsouza/go-dockerclient"
 	"os/exec"
@@ -98,7 +99,7 @@ func GetVersionInfo() map[string]string {
 
 	versionInfo["DDEV-Local version"] = DdevVersion
 	versionInfo["web"] = GetWebImage()
-	versionInfo["db"] = GetDBImage()
+	versionInfo["db"] = GetDBImage(ddevapp.MariaDB)
 	versionInfo["dba"] = GetDBAImage()
 	versionInfo["bgsync"] = BgsyncImg + ":" + BgsyncTag
 	versionInfo["router"] = RouterImage + ":" + RouterTag
@@ -129,12 +130,12 @@ func GetWebImage() string {
 }
 
 // GetDBImage returns the correctly formatted db image:tag reference
-func GetDBImage(mariaDBVersion ...string) string {
-	dbVersion := MariaDBDefaultVersion
-	if len(mariaDBVersion) > 0 {
-		dbVersion = mariaDBVersion[0]
+func GetDBImage(dbType string, dbVersion ...string) string {
+	v := MariaDBDefaultVersion
+	if len(dbVersion) > 0 {
+		v = dbVersion[0]
 	}
-	return fmt.Sprintf("%s-mariadb-%s:%s", DBImg, dbVersion, BaseDBTag)
+	return fmt.Sprintf("%s-%s-%s:%s", DBImg, dbType, v, BaseDBTag)
 }
 
 // GetDBAImage returns the correctly formatted dba image:tag reference

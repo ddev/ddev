@@ -86,6 +86,7 @@ type DdevApp struct {
 	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string              `yaml:"additional_fqdns"`
 	MariaDBVersion        string                `yaml:"mariadb_version"`
+	MySQLVersion          string                `yaml:"mysql_version"`
 	WebcacheEnabled       bool                  `yaml:"webcache_enabled,omitempty"`
 	NFSMountEnabled       bool                  `yaml:"nfs_mount_enabled"`
 	ConfigPath            string                `yaml:"-"`
@@ -1309,18 +1310,15 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
 		}
 	} else {
-		//TODO: Make a better assumption! These days they should all have versions
-		snapshotMariaDBVersion = MariaDB101
+		snapshotMariaDBVersion = "unknown"
 	}
 	snapshotMariaDBVersion = strings.Trim(snapshotMariaDBVersion, " \n\t")
 
 	if snapshotMariaDBVersion == MariaDB101 && app.MariaDBVersion != MariaDB101 {
-		//nolint: golint
 		return fmt.Errorf("snapshot %s is a MariaDB 10.1 snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).\nPlease use the instructions at %s to change the MariaDB version so you can restore it.", snapshotDir, app.MariaDBVersion, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
 	}
-	if snapshotMariaDBVersion != MariaDB101 && app.MariaDBVersion == MariaDB101 {
-		//nolint: golint
-		return fmt.Errorf("snapshot %s is a MariaDB %s snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).", snapshotDir, snapshotMariaDBVersion, app.MariaDBVersion)
+	if snapshotMariaDBVersion != app.MariaDBVersion {
+		util.Warning("snapshot %s is a MariaDB %s snapshot\nIt may not be compatible with the configured ddev MariaDB version (%s).", snapshotDir, snapshotMariaDBVersion, app.MariaDBVersion)
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
