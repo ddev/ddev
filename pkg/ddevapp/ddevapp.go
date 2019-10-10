@@ -86,7 +86,7 @@ type DdevApp struct {
 	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string              `yaml:"additional_fqdns"`
 	MariaDBVersion        string                `yaml:"mariadb_version"`
-	MySQLVersion          string                `yaml:"mysql_version"`
+	MySQLVersion          string                `yaml:"mysql_version,omitempty"`
 	WebcacheEnabled       bool                  `yaml:"webcache_enabled,omitempty"`
 	NFSMountEnabled       bool                  `yaml:"nfs_mount_enabled"`
 	ConfigPath            string                `yaml:"-"`
@@ -691,6 +691,26 @@ func (app *DdevApp) Start() error {
 	var err error
 
 	app.DockerEnv()
+
+	// If the dbimage has not been overridden (because dbimage takes precedence)
+	// and the mariadb_version/mysql_version *has* been changed by config,
+	// use the dbimage derived from dbversion.
+	// IF dbimage has not been specified (it equals mariadb default)
+	// AND mariadb version is NOT the default version
+	// Then override the dbimage with related mariadb or mysql version
+	if (app.DBImage == "" || app.DBImage == version.GetDBImage(nodeps.MariaDB)) && (app.MariaDBVersion != "" || app.MySQLVersion != "") {
+		switch {
+		// mariadb_version is explicitly set
+		case app.MariaDBVersion != "":
+			app.DBImage = version.GetDBImage(nodeps.MariaDB, app.MariaDBVersion)
+		// mysql_version is explicitly set
+		case app.MySQLVersion != "":
+			app.DBImage = version.GetDBImage(nodeps.MySQL, app.MySQLVersion)
+		// All other cases, use default mariadb
+		default:
+			app.DBImage = version.GetDBImage(nodeps.MariaDB)
+		}
+	}
 
 	APIVersion, err := semver.NewVersion(app.APIVersion)
 	if err != nil {

@@ -254,7 +254,9 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, "Unsets a db service working directory override")
 	ConfigCommand.Flags().BoolVar(&dbaWorkingDirDefaultArg, "dba-working-dir-default", false, "Unsets a dba service working directory override")
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
-	ConfigCommand.Flags().StringVar(&mariaDBVersionArg, "mariadb-version", "10.2", "mariadb version to use")
+	ConfigCommand.Flags().StringVar(&mariaDBVersionArg, "mariadb-version", "10.2", "mariadb version to use (incompatible with --mysql-version)")
+	ConfigCommand.Flags().String("mysql-version", "", "Oracle mysql version to use (incompatible with --mariadb-version)")
+
 	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")
 	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound port")
 	ConfigCommand.Flags().StringVar(&hostHTTPSPortArg, "host-https-port", "", "The web container's localhost-bound https port")
@@ -439,8 +441,16 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	// If the mariaDBVersionArg is set, use it
-	if mariaDBVersionArg != "" {
+	if cmd.Flag("mariadb-version").Changed {
 		app.MariaDBVersion = mariaDBVersionArg
+	}
+	// If the mariaDBVersionArg is set, use it
+	if cmd.Flag("mysql-version").Changed {
+		app.MySQLVersion, err = cmd.Flags().GetString("mysql-version")
+		if err != nil {
+			util.Failed("Incorrect mysql-version: %v", err)
+		}
+
 	}
 
 	if cmd.Flag("nfs-mount-enabled").Changed {

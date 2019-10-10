@@ -84,7 +84,6 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
 	app.PHPMyAdminPort = nodeps.DdevDefaultPHPMyAdminPort
 	app.MailhogPort = nodeps.DdevDefaultMailhogPort
-	app.MariaDBVersion = version.MariaDBDefaultVersion
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
 	app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
@@ -93,7 +92,6 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
-	app.DBImage = version.GetDBImage(nodeps.MariaDB, version.MariaDBDefaultVersion)
 	app.DBAImage = version.GetDBAImage()
 	app.BgsyncImage = version.GetBgsyncImage()
 
@@ -106,20 +104,6 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		}
 	}
 	app.SetApptypeSettingsPaths()
-
-	// If the dbimage has not been overridden (because dbimage takes precedence)
-	// and the mariadb_version/mysql_version *has* been changed by config,
-	// use the dbimage derived from dbversion.
-	// IF dbimage has not been specified (it equals mariadb default)
-	// AND mariadb version is NOT the default version
-	// Then override the dbimage with related mariadb or mysql version
-	if app.DBImage == version.GetDBImage(nodeps.MariaDB, version.MariaDBDefaultVersion) && app.MariaDBVersion != version.MariaDBDefaultVersion {
-		if app.MariaDBVersion != "" {
-			app.DBImage = version.GetDBImage(nodeps.MariaDB, app.MariaDBVersion)
-		} else if app.MySQLVersion != "" {
-			app.DBImage = version.GetDBImage(nodeps.MySQL, app.MySQLVersion)
-		}
-	}
 
 	// Turn off webcache_enabled except if macOS/darwin or global `developer_mode: true`
 	if runtime.GOOS != "darwin" && app.WebcacheEnabled && !globalconfig.DdevGlobalConfig.DeveloperMode {
@@ -159,7 +143,7 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == version.GetWebImage() {
 		appcopy.WebImage = ""
 	}
-	if appcopy.DBImage == version.GetDBImage("", appcopy.MariaDBVersion) {
+	if appcopy.DBImage == version.GetDBImage(nodeps.MariaDB, appcopy.MariaDBVersion) {
 		appcopy.DBImage = ""
 	}
 	if appcopy.DBAImage == version.GetDBAImage() {
@@ -180,6 +164,9 @@ func (app *DdevApp) WriteConfig() error {
 	}
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
 		appcopy.ProjectTLD = ""
+	}
+	if appcopy.MariaDBVersion == version.GetDBImage(nodeps.MariaDB) {
+		appcopy.MariaDBVersion = ""
 	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
@@ -444,6 +431,11 @@ func (app *DdevApp) ValidateConfig() error {
 		if !nodeps.IsValidMySQLVersion(app.MySQLVersion) {
 			return fmt.Errorf("invalid mysql_version: %s, must be one of %s", app.MySQLVersion, nodeps.GetValidMySQLVersions()).(invalidMySQLVersion)
 		}
+	}
+
+	// Validate db versions
+	if app.MariaDBVersion != "" && app.MySQLVersion != "" {
+		return fmt.Errorf("both mariadb_version (%v) and mysql_version (%v) are set, but they are mutually exclusive", app.MariaDBVersion, app.MySQLVersion)
 	}
 
 	if app.WebcacheEnabled && app.NFSMountEnabled {
