@@ -723,12 +723,13 @@ func TestDdevAllMariaDB(t *testing.T) {
 	defer dockerutil.RemoveVolume(app.Name + "-mariadb")
 
 	for _, v := range []string{ddevapp.MariaDB55, ddevapp.MariaDB100, ddevapp.MariaDB101, ddevapp.MariaDB102, ddevapp.MariaDB103, ddevapp.MariaDB104} {
+		t.Logf("testing basic functionality of mariadb %v", v)
 		_ = app.Stop(true, false)
 		app.MariaDBVersion = v
 		//app.DBImage = version.GetDBImage(app.MariaDBVersion)
 		startErr := app.StartAndWaitForSync(15)
 		//nolint: errcheck
-		defer app.Stop(true, false)
+		//defer app.Stop(true, false)
 
 		if startErr != nil {
 			appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
@@ -777,11 +778,11 @@ func TestDdevAllMariaDB(t *testing.T) {
 		out := stdout()
 		assert.Contains(out, "Table structure for table `users`")
 
-		snapshotName := fileutil.RandomFilenameBase()
-		_, err = app.Snapshot(snapshotName)
-		assert.NoError(err)
+		snapshotName := v + "_" + fileutil.RandomFilenameBase()
+		output, err := app.Snapshot(snapshotName)
+		assert.NoError(err, "could not create snapshot %s for mariadb %s: %v output=%v", snapshotName, v, err, output)
 		err = app.RestoreSnapshot(snapshotName)
-		assert.NoError(err)
+		assert.NoError(err, "could not restore snapshot %s for mariadb %s: %v", snapshotName, v, err)
 
 		// TODO: Restore a snapshot from same version
 		//err = app.RestoreSnapshot("d7testerTest1")
