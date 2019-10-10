@@ -360,7 +360,7 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 			continue
 		}
 
-		app, err := NewApp(info.AppRoot, true, ProviderDefault)
+		app, err := NewApp(info.AppRoot, true, nodeps.ProviderDefault)
 		if err != nil {
 			app.Name = name
 		}

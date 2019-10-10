@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 
 	"github.com/drud/ddev/pkg/output"
@@ -53,7 +54,7 @@ to allow ddev to modify your hosts file.`,
 				output.UserOut.Fatal("Invalid arguments supplied. 'ddev hostname --remove-all' accepts no arguments.")
 			}
 
-			util.Warning("Attempting to remove inactive hostnames which use TLD %s", ddevapp.DdevDefaultTLD)
+			util.Warning("Attempting to remove inactive hostnames which use TLD %s", nodeps.DdevDefaultTLD)
 			removeInactiveHostnames(hosts)
 
 			return
@@ -198,7 +199,7 @@ func removeInactiveHostnames(hosts goodhosts.Hosts) {
 				}
 
 				// Silently ignore those that may not be ddev-managed
-				if !strings.HasSuffix(h, ddevapp.DdevDefaultTLD) {
+				if !strings.HasSuffix(h, nodeps.DdevDefaultTLD) {
 					continue
 				}
 

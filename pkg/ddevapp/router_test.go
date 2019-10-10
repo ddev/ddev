@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/netutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"strconv"
 	"testing"
 
@@ -30,7 +31,7 @@ func TestPortOverride(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 
-		app, err := ddevapp.NewApp(testDir, true, ddevapp.ProviderDefault)
+		app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
 		assert.NoError(err)
 		app.RouterHTTPPort = strconv.Itoa(80 + i)
 		// Note that we start with port 453 instead of 443 here because Windows
@@ -38,7 +39,7 @@ func TestPortOverride(t *testing.T) {
 		// So the test will fail because of that.
 		app.RouterHTTPSPort = strconv.Itoa(453 + i)
 		app.Name = "TestPortOverride-" + strconv.Itoa(i)
-		app.Type = ddevapp.AppTypePHP
+		app.Type = nodeps.AppTypePHP
 		err = app.WriteConfig()
 		assert.NoError(err)
 		_, err = app.ReadConfig(false)

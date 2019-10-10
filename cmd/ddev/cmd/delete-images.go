@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	docker "github.com/fsouza/go-dockerclient"
@@ -39,11 +39,11 @@ var DeleteImagesCmd = &cobra.Command{
 		sshimage := version.SSHAuthImage + ":" + version.SSHAuthTag
 
 		dbImages := []string{}
-		for v := range ddevapp.ValidMariaDBVersions {
-			dbImages = append(dbImages, version.GetDBImage(ddevapp.MariaDB, v))
+		for v := range nodeps.ValidMariaDBVersions {
+			dbImages = append(dbImages, version.GetDBImage(nodeps.MariaDB, v))
 		}
-		for v := range ddevapp.ValidMySQLVersions {
-			dbImages = append(dbImages, version.GetDBImage(ddevapp.MySQL, v))
+		for v := range nodeps.ValidMySQLVersions {
+			dbImages = append(dbImages, version.GetDBImage(nodeps.MySQL, v))
 		}
 
 		// Too much code inside this loop, but complicated by multiple db images
@@ -58,7 +58,7 @@ var DeleteImagesCmd = &cobra.Command{
 				}
 				// If a dbimage, but doesn't match our dbimages, delete it
 				for _, imgName := range dbImages {
-					if strings.HasPrefix(tag, imgName) && (tag != version.GetDBImage(ddevapp.MariaDB) && tag != version.GetDBImage(ddevapp.MySQL)) {
+					if strings.HasPrefix(tag, imgName) && (tag != version.GetDBImage(nodeps.MariaDB) && tag != version.GetDBImage(nodeps.MySQL)) {
 						if err = removeImage(client, tag); err != nil {
 							util.Warning("Unable to remove %s: %v", tag, err)
 						}

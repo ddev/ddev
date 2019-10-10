@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -33,16 +34,16 @@ func TestNewConfig(t *testing.T) {
 	defer testcommon.Chdir(testDir)()
 
 	// Load a new Config
-	app, err := NewApp(testDir, true, ProviderDefault)
+	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 
 	// Ensure the config uses specified defaults.
 	assert.Equal(app.APIVersion, version.DdevVersion)
-	assert.Equal(app.DBImage, version.GetDBImage(MariaDB))
+	assert.Equal(app.DBImage, version.GetDBImage(nodeps.MariaDB))
 	assert.Equal(app.WebImage, version.GetWebImage())
 	assert.Equal(app.DBAImage, version.GetDBAImage())
 	app.Name = util.RandString(32)
-	app.Type = AppTypeDrupal8
+	app.Type = nodeps.AppTypeDrupal8
 
 	// WriteConfig the app.
 	err = app.WriteConfig()
@@ -50,7 +51,7 @@ func TestNewConfig(t *testing.T) {
 	_, err = os.Stat(app.ConfigPath)
 	assert.NoError(err)
 
-	loadedConfig, err := NewApp(testDir, true, ProviderDefault)
+	loadedConfig, err := NewApp(testDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 	assert.Equal(app.Name, loadedConfig.Name)
 	assert.Equal(app.Type, loadedConfig.Type)
@@ -64,7 +65,7 @@ func TestDisasterConfig(t *testing.T) {
 
 	// Make sure we're not allowed to config in home directory.
 	tmpDir, _ := homedir.Dir()
-	_, err := NewApp(tmpDir, false, ProviderDefault)
+	_, err := NewApp(tmpDir, false, nodeps.ProviderDefault)
 	assert.Error(err)
 	assert.Contains(err.Error(), "ddev config is not useful in home directory")
 	_ = os.Chdir(testDir)
@@ -76,7 +77,7 @@ func TestDisasterConfig(t *testing.T) {
 	defer testcommon.Chdir(tmpDir)()
 
 	// Load a new Config
-	app, err := NewApp(tmpDir, false, ProviderDefault)
+	app, err := NewApp(tmpDir, false, nodeps.ProviderDefault)
 	assert.NoError(err)
 
 	// WriteConfig the app.
@@ -90,7 +91,7 @@ func TestDisasterConfig(t *testing.T) {
 	assert.NoError(err)
 	err = os.Chdir(subdir)
 	assert.NoError(err)
-	subdirApp, err := NewApp(subdir, false, ProviderDefault)
+	subdirApp, err := NewApp(subdir, false, nodeps.ProviderDefault)
 	assert.NoError(err)
 	_ = subdirApp
 
@@ -117,7 +118,7 @@ func TestPrepDirectory(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, true, ProviderDefault)
+	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 
 	// Prep the directory.
@@ -135,7 +136,7 @@ func TestHostName(t *testing.T) {
 	testDir := testcommon.CreateTmpDir("TestHostName")
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
-	app, err := NewApp(testDir, true, ProviderDefault)
+	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
 
@@ -150,7 +151,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, true, ProviderDefault)
+	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
 	app.Type = GetValidAppTypes()[0]
@@ -184,9 +185,9 @@ func TestConfigCommand(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {AppTypeDrupal6, PHP56},
-		"drupal7phpversion": {AppTypeDrupal7, PHP72},
-		"drupal8phpversion": {AppTypeDrupal8, PHP72},
+		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
+		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP72},
+		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHP72},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -205,7 +206,7 @@ func TestConfigCommand(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, true, ProviderDefault)
+		app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -265,9 +266,9 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 	assert.NoError(err)
 
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {AppTypeDrupal6, PHP56},
-		"drupal7phpversion": {AppTypeDrupal7, PHP72},
-		"drupal8phpversion": {AppTypeDrupal8, PHP72},
+		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
+		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP72},
+		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHP72},
 	}
 
 	for testName := range testMatrix {
@@ -279,7 +280,7 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, true, ProviderDefault)
+		app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -311,9 +312,9 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {AppTypeDrupal6, PHP56},
-		"drupal7phpversion": {AppTypeDrupal7, PHP72},
-		"drupal8phpversion": {AppTypeDrupal8, PHP72},
+		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
+		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP72},
+		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHP72},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -325,7 +326,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, true, ProviderDefault)
+		app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -381,7 +382,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, true, ProviderDefault)
+		app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -402,7 +403,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 		// Ensure values were properly set on the app struct.
 		assert.Equal(name, app.Name)
-		assert.Equal(AppTypeDrupal8, app.Type)
+		assert.Equal(nodeps.AppTypeDrupal8, app.Type)
 		assert.Equal(testDocrootName, app.Docroot)
 		err = PrepDdevDirectory(testDir)
 		assert.NoError(err)
@@ -436,7 +437,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 
 	// Create the ddevapp we'll use for testing.
 	// This will not return an error, since there is no existing configuration.
-	app, err := NewApp(testDir, true, ProviderDefault)
+	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -457,7 +458,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 
 	// Ensure values were properly set on the app struct.
 	assert.Equal(name, app.Name)
-	assert.Equal(AppTypeDrupal8, app.Type)
+	assert.Equal(nodeps.AppTypeDrupal8, app.Type)
 	assert.Equal("docroot", app.Docroot)
 	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
@@ -473,7 +474,7 @@ func TestReadConfig(t *testing.T) {
 		ConfigPath: filepath.Join("testdata", "config.yaml"),
 		AppRoot:    "testdata",
 		Name:       "TestRead",
-		Provider:   ProviderDefault,
+		Provider:   nodeps.ProviderDefault,
 	}
 
 	_, err := app.ReadConfig(false)
@@ -486,7 +487,7 @@ func TestReadConfig(t *testing.T) {
 	assert.Equal(app.APIVersion, version.DdevVersion)
 
 	// Values defined in file, we should have values from file
-	assert.Equal(app.Type, AppTypeDrupal8)
+	assert.Equal(app.Type, nodeps.AppTypeDrupal8)
 	assert.Equal(app.Docroot, "test")
 	assert.Equal(app.WebImage, "test/testimage:latest")
 }
@@ -502,7 +503,7 @@ func TestReadConfigCRLF(t *testing.T) {
 		ConfigPath: filepath.Join("testdata", t.Name(), ".ddev", "config.yaml"),
 		AppRoot:    filepath.Join("testdata", t.Name()),
 		Name:       t.Name(),
-		Provider:   ProviderDefault,
+		Provider:   nodeps.ProviderDefault,
 	}
 
 	_, err := app.ReadConfig(false)
@@ -530,12 +531,12 @@ func TestConfigValidate(t *testing.T) {
 		ConfigPath:     filepath.Join("testdata", "config.yaml"),
 		AppRoot:        cwd,
 		Docroot:        "testdata",
-		Type:           AppTypeWordPress,
-		PHPVersion:     PHPDefault,
+		Type:           nodeps.AppTypeWordPress,
+		PHPVersion:     nodeps.PHPDefault,
 		MariaDBVersion: version.MariaDBDefaultVersion,
-		WebserverType:  WebserverDefault,
-		ProjectTLD:     DdevDefaultTLD,
-		Provider:       ProviderDefault,
+		WebserverType:  nodeps.WebserverDefault,
+		ProjectTLD:     nodeps.DdevDefaultTLD,
+		Provider:       nodeps.ProviderDefault,
 	}
 
 	err = app.ValidateConfig()
@@ -555,19 +556,19 @@ func TestConfigValidate(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "invalid app type")
 
-	app.Type = AppTypeWordPress
+	app.Type = nodeps.AppTypeWordPress
 	app.PHPVersion = "1.1"
 	err = app.ValidateConfig()
 	assert.Error(err)
 	assert.Contains(err.Error(), "invalid PHP")
 
-	app.PHPVersion = PHPDefault
+	app.PHPVersion = nodeps.PHPDefault
 	app.WebserverType = "server"
 	err = app.ValidateConfig()
 	assert.Error(err)
 	assert.Contains(err.Error(), "invalid webserver type")
 
-	app.WebserverType = WebserverDefault
+	app.WebserverType = nodeps.WebserverDefault
 	app.AdditionalHostnames = []string{"good", "b@d"}
 	err = app.ValidateConfig()
 	assert.Error(err)
@@ -678,7 +679,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	assert.Contains(out, "my-php.ini")
 
 	switch app.WebserverType {
-	case WebserverNginxFPM:
+	case nodeps.WebserverNginxFPM:
 		assert.Contains(out, "nginx-site.conf")
 		assert.NotContains(out, "apache-site.conf")
 		assert.Contains(out, "junker99.conf")
@@ -714,7 +715,7 @@ func TestPHPOverrides(t *testing.T) {
 		_ = os.RemoveAll(filepath.Join(site.Dir, "phpinfo.php"))
 	}()
 
-	for _, webserverType := range []string{WebserverNginxFPM, WebserverApacheFPM, WebserverApacheCGI} {
+	for _, webserverType := range []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM, nodeps.WebserverApacheCGI} {
 		testcommon.ClearDockerEnv()
 		app.WebserverType = webserverType
 		err = app.Init(site.Dir)
@@ -1021,7 +1022,7 @@ func TestPkgConfigMariaDBVersion(t *testing.T) {
 			}
 			if configType == "mariadb-version" {
 				assert.Equal(v, app.MariaDBVersion)
-				assert.Equal(version.GetDBImage(MariaDB, v), app.DBImage, "dbimage derived from app.MariaDBVersion was incorrect")
+				assert.Equal(version.GetDBImage(nodeps.MariaDB, v), app.DBImage, "dbimage derived from app.MariaDBVersion was incorrect")
 			}
 
 		}

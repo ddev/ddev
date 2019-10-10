@@ -1,6 +1,7 @@
 package servicetest_test
 
 import (
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
@@ -27,7 +28,7 @@ var (
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.5.3.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-8.5.3/",
 			Docroot:                       "",
-			Type:                          ddevapp.AppTypeDrupal8,
+			Type:                          nodeps.AppTypeDrupal8,
 		},
 	}
 	ServiceFiles []string

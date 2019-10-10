@@ -2,7 +2,6 @@ package version
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/fsouza/go-dockerclient"
 	"os/exec"
@@ -99,7 +98,7 @@ func GetVersionInfo() map[string]string {
 
 	versionInfo["DDEV-Local version"] = DdevVersion
 	versionInfo["web"] = GetWebImage()
-	versionInfo["db"] = GetDBImage(ddevapp.MariaDB)
+	versionInfo["db"] = GetDBImage(nodeps.MariaDB)
 	versionInfo["dba"] = GetDBAImage()
 	versionInfo["bgsync"] = BgsyncImg + ":" + BgsyncTag
 	versionInfo["router"] = RouterImage + ":" + RouterTag

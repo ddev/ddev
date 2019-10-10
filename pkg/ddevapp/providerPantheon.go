@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -38,7 +39,7 @@ func (p *PantheonProvider) Init(app *DdevApp) error {
 		err = p.Read(configPath)
 	}
 
-	p.ProviderType = ProviderPantheon
+	p.ProviderType = nodeps.ProviderPantheon
 	return err
 }
 

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/spf13/cobra"
@@ -21,7 +22,7 @@ var drudS3ConfigCommand *cobra.Command = &cobra.Command{
 	Short:   "Create or modify a ddev project drud-s3 configuration in the current directory",
 	Example: `"ddev config drud-s3" or "ddev config drud-s3 --access-key-id=AKIAISOMETHINGMAGIC --secret-access-key=rweeMAGICSECRET --docroot=. --project-name=d7-kickstart --project-type=drupal7 --bucket-name=my_aws_s3_bucket --environment=production"`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		providerName = ddevapp.ProviderDrudS3
+		providerName = nodeps.ProviderDrudS3
 		extraFlagsHandlingFunc = handleDrudS3Flags
 	},
 	Run: handleConfigRun,

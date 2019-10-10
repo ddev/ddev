@@ -1,4 +1,4 @@
-package ddevapp
+package nodeps
 
 // Providers
 const (
@@ -250,25 +250,6 @@ func GetValidWebserverTypes() []string {
 	}
 
 	return s
-}
-
-// IsValidAppType is a helper function to determine if an app type is valid, returning
-// true if the given app type is valid and configured and false otherwise.
-func IsValidAppType(apptype string) bool {
-	if _, ok := appTypeMatrix[apptype]; !ok {
-		return false
-	}
-
-	return true
-}
-
-// GetValidAppTypes returns the valid apptype keys from the appTypeMatrix
-func GetValidAppTypes() []string {
-	keys := make([]string, 0, len(appTypeMatrix))
-	for k := range appTypeMatrix {
-		keys = append(keys, k)
-	}
-	return keys
 }
 
 // IsValidOmitContainers is a helper function to determine if a the OmitContainers array is valid

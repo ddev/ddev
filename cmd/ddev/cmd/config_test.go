@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
 	"testing"
@@ -138,8 +139,8 @@ func TestConfigSetValues(t *testing.T) {
 
 	// Build config args
 	projectName := "my-project-name"
-	projectType := ddevapp.AppTypeTYPO3
-	phpVersion := ddevapp.PHP71
+	projectType := nodeps.AppTypeTYPO3
+	phpVersion := nodeps.PHP71
 	httpPort := "81"
 	httpsPort := "444"
 	hostDBPort := "60001"
@@ -158,7 +159,7 @@ func TestConfigSetValues(t *testing.T) {
 	dbimageExtraPackages := strings.Join(dbimageExtraPackagesSlice, ",")
 
 	uploadDir := filepath.Join("custom", "config", "path")
-	webserverType := ddevapp.WebserverApacheFPM
+	webserverType := nodeps.WebserverApacheFPM
 	webImage := "custom-web-image"
 	dbImage := "custom-db-image"
 	dbaImage := "custom-dba-image"

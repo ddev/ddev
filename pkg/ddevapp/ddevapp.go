@@ -273,7 +273,7 @@ func (app *DdevApp) GetName() string {
 
 // GetPhpVersion returns the app's php version
 func (app *DdevApp) GetPhpVersion() string {
-	v := PHPDefault
+	v := nodeps.PHPDefault
 	if app.PHPVersion != "" {
 		v = app.PHPVersion
 	}
@@ -282,7 +282,7 @@ func (app *DdevApp) GetPhpVersion() string {
 
 // GetWebserverType returns the app's webserver type (nginx-fpm/apache-fpm/apache-cgi)
 func (app *DdevApp) GetWebserverType() string {
-	v := WebserverDefault
+	v := nodeps.WebserverDefault
 	if app.WebserverType != "" {
 		v = app.WebserverType
 	}
@@ -1154,7 +1154,7 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 			"com.docker.compose.service": containerType,
 		}
 		waitTime := containerWaitTimeout
-		if containerType == BGSYNCContainer {
+		if containerType == nodeps.BGSYNCContainer {
 			waitTime = bgsyncWaitTimeout
 		}
 		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
@@ -1170,7 +1170,7 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 func (app *DdevApp) WaitSync() error {
 	labels := map[string]string{
 		"com.ddev.site-name":         app.GetName(),
-		"com.docker.compose.service": BGSYNCContainer,
+		"com.docker.compose.service": nodeps.BGSYNCContainer,
 	}
 
 	if !app.WebcacheEnabled {
@@ -1314,7 +1314,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 	snapshotMariaDBVersion = strings.Trim(snapshotMariaDBVersion, " \n\t")
 
-	if snapshotMariaDBVersion == MariaDB101 && app.MariaDBVersion != MariaDB101 {
+	if snapshotMariaDBVersion == nodeps.MariaDB101 && app.MariaDBVersion != nodeps.MariaDB101 {
 		return fmt.Errorf("snapshot %s is a MariaDB 10.1 snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).\nPlease use the instructions at %s to change the MariaDB version so you can restore it.", snapshotDir, app.MariaDBVersion, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
 	}
 	if snapshotMariaDBVersion != app.MariaDBVersion {
@@ -1727,16 +1727,16 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	}
 
 	var provider Provider
-	err := fmt.Errorf("unknown provider type: %s, must be one of %v", app.Provider, GetValidProviders())
+	err := fmt.Errorf("unknown provider type: %s, must be one of %v", app.Provider, nodeps.GetValidProviders())
 
 	switch app.Provider {
-	case ProviderPantheon:
+	case nodeps.ProviderPantheon:
 		provider = &PantheonProvider{}
 		err = provider.Init(app)
-	case ProviderDrudS3:
+	case nodeps.ProviderDrudS3:
 		provider = &DrudS3Provider{}
 		err = provider.Init(app)
-	case ProviderDefault:
+	case nodeps.ProviderDefault:
 		provider = &DefaultProvider{}
 		err = nil
 	default:
@@ -1782,7 +1782,7 @@ func (app *DdevApp) precacheWebdir() error {
 
 	// Set the flag to tell unison it can start syncing
 	_, _, err = app.Exec(&ExecOpts{
-		Service: BGSYNCContainer,
+		Service: nodeps.BGSYNCContainer,
 		Cmd:     "touch /var/tmp/unison_start_authorized",
 	})
 	if err != nil {

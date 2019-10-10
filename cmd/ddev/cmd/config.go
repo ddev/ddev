@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
 	"os"
@@ -138,7 +139,7 @@ var (
 	ngrokArgs string
 )
 
-var providerName = ddevapp.ProviderDefault
+var providerName = nodeps.ProviderDefault
 
 // extraFlagsHandlingFunc does specific handling for additional flags, and is different per provider.
 var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error
@@ -286,7 +287,7 @@ func init() {
 
 	ConfigCommand.Flags().StringVar(&dbimageExtraPackages, "dbimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to db container when the project is started")
 
-	ConfigCommand.Flags().StringVar(&projectTLDArg, "project-tld", ddevapp.DdevDefaultTLD, "set the top-level domain to be used for projects, defaults to "+ddevapp.DdevDefaultTLD)
+	ConfigCommand.Flags().StringVar(&projectTLDArg, "project-tld", nodeps.DdevDefaultTLD, "set the top-level domain to be used for projects, defaults to "+nodeps.DdevDefaultTLD)
 
 	ConfigCommand.Flags().BoolVarP(&useDNSWhenPossibleArg, "use-dns-when-possible", "", true, "Use DNS for hostname resolution instead of /etc/hosts when possible")
 
@@ -410,7 +411,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	// We don't want to write out dbimage if it's just the one that goes with
 	// the mariadb_version.
-	if app.DBImage == version.GetDBImage(ddevapp.MariaDB, "", app.MariaDBVersion) {
+	if app.DBImage == version.GetDBImage(nodeps.MariaDB, "", app.MariaDBVersion) {
 		app.DBImage = ""
 	}
 
