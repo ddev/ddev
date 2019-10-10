@@ -723,10 +723,10 @@ func TestDdevAllMariaDB(t *testing.T) {
 	defer dockerutil.RemoveVolume(app.Name + "-mariadb")
 
 	for _, v := range []string{ddevapp.MariaDB55, ddevapp.MariaDB100, ddevapp.MariaDB101, ddevapp.MariaDB102, ddevapp.MariaDB103, ddevapp.MariaDB104} {
+
 		t.Logf("testing basic functionality of mariadb %v", v)
 		_ = app.Stop(true, false)
 		app.MariaDBVersion = v
-		//app.DBImage = version.GetDBImage(app.MariaDBVersion)
 		startErr := app.StartAndWaitForSync(15)
 		//nolint: errcheck
 		//defer app.Stop(true, false)
@@ -739,7 +739,7 @@ func TestDdevAllMariaDB(t *testing.T) {
 
 		importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
 		err = app.ImportDB(importPath, "", false)
-		require.NoError(t, err)
+		assert.NoError(err)
 
 		_ = os.Mkdir("tmp", 0777)
 		err = fileutil.PurgeDirectory("tmp")
@@ -784,11 +784,9 @@ func TestDdevAllMariaDB(t *testing.T) {
 		err = app.RestoreSnapshot(snapshotName)
 		assert.NoError(err, "could not restore snapshot %s for mariadb %s: %v", snapshotName, v, err)
 
-		// TODO: Restore a snapshot from same version
-		//err = app.RestoreSnapshot("d7testerTest1")
-		//assert.Error(err)
+		// TODO: Restore a snapshot from a different version note warning.
 
-		// TODO: Restore a snapshot from a different version and watch it fail.
+		_ = app.Stop(true, false)
 	}
 	runTime()
 }
