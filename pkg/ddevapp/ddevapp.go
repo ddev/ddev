@@ -695,6 +695,9 @@ func (app *DdevApp) GetDBImage() string {
 	// IF dbimage has not been specified (it equals mariadb default)
 	// AND mariadb version is NOT the default version
 	// Then override the dbimage with related mariadb or mysql version
+	if app.DBImage == "" && app.MySQLVersion == "" && app.MariaDBVersion == "" {
+		return version.GetDBImage(nodeps.MariaDB)
+	}
 	if (app.DBImage == "" || app.DBImage == version.GetDBImage(nodeps.MariaDB)) && (app.MariaDBVersion != "" || app.MySQLVersion != "") {
 		switch {
 		// mariadb_version is explicitly set
