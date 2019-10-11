@@ -722,7 +722,7 @@ func TestDdevAllMariaDB(t *testing.T) {
 	//nolint: errcheck
 	defer dockerutil.RemoveVolume(app.Name + "-mariadb")
 
-	for _, v := range []string{nodeps.MariaDB55, nodeps.MariaDB100, nodeps.MariaDB101, nodeps.MariaDB102, nodeps.MariaDB103, nodeps.MariaDB104} {
+	for v := range nodeps.ValidMariaDBVersions {
 
 		t.Logf("testing basic functionality of mariadb %v", v)
 		_ = app.Stop(true, false)
