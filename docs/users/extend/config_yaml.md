@@ -16,6 +16,8 @@ the .ddev/config.yaml is the primary configuration for the project.
 | webimage | docker image to use for webserver | It is unusual to change the default and is not recommended, but the webimage can be overridden with a correctly crafted image, probably derived from drud/ddev-webserver |
 | dbimage | docker image to use for db server | It is unusual to change the default and is not recommended, but the dbimage can be overridden with a correctly crafted image, probably derived from drud/ddev-dbserver |
 | dbaimage | docker image to use for dba server (phpMyAdmin server) | It is unusual to change the default and is not recommended, but the dbimage can be overridden with a correctly crafted image, probably derived from drud/phpmyadmin |
+| mariadb_version | Version of MariaDB to be used |  Defaults to 10.2, but 5.5, 10.0, 10.1, 10.2, 10.3, 10.4 are available. Cannot be used with mysql_version |
+| mysql_version | Version of Oracle MySQL to be used |  Defaults to empty (using MariaDB). 5.5, 5.6, 5.7, and 8.0 are available. Conflicts with mariadb_version |
 | router_http_port | Port used by the router for http |  Defaults to port 80. This can be changed if there is a conflict on the host over port 80 |
 | router_https_port | Port used by the router for https |Defaults to 443, usually only changed if there is a conflicting process using port 443 |
 | xdebug_enabled | "true" enables xdebug | Many people prefer to use `ddev exec enable_xdebug` and `ddev exec disable_xdebug` instead of configuring this, because xdebug has a significant performance impact. |
