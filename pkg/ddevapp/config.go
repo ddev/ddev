@@ -238,9 +238,9 @@ RUN npm install --global gulp-cli
 	contents = []byte(`
 # You can copy this Dockerfile.example to Dockerfile to add configuration
 # or packages or anything else to your dbimage
-ARG BASE_IMAGE=` + app.DBImage + `
+ARG BASE_IMAGE=` + app.GetDBImage() + `
 FROM $BASE_IMAGE
-RUN echo "Built from ` + app.DBImage + `" >/var/tmp/built-from.txt
+RUN echo "Built from ` + app.GetDBImage() + `" >/var/tmp/built-from.txt
 `)
 
 	err = WriteImageDockerfile(app.GetConfigPath("db-build")+"/Dockerfile.example", contents)

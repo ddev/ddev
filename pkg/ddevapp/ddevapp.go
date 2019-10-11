@@ -686,12 +686,9 @@ func (app *DdevApp) ProcessHooks(hookName string) (string, string, error) {
 	return stdout, stderr, nil
 }
 
-// Start initiates docker-compose up
-func (app *DdevApp) Start() error {
-	var err error
-
-	app.DockerEnv()
-
+// GetDBImage uses the available mariadb or mysql version or provides the default
+func (app *DdevApp) GetDBImage() string {
+	dbImage := ""
 	// If the dbimage has not been overridden (because dbimage takes precedence)
 	// and the mariadb_version/mysql_version *has* been changed by config,
 	// use the dbimage derived from dbversion.
@@ -702,15 +699,25 @@ func (app *DdevApp) Start() error {
 		switch {
 		// mariadb_version is explicitly set
 		case app.MariaDBVersion != "":
-			app.DBImage = version.GetDBImage(nodeps.MariaDB, app.MariaDBVersion)
+			dbImage = version.GetDBImage(nodeps.MariaDB, app.MariaDBVersion)
 		// mysql_version is explicitly set
 		case app.MySQLVersion != "":
-			app.DBImage = version.GetDBImage(nodeps.MySQL, app.MySQLVersion)
+			dbImage = version.GetDBImage(nodeps.MySQL, app.MySQLVersion)
 		// All other cases, use default mariadb
 		default:
-			app.DBImage = version.GetDBImage(nodeps.MariaDB)
+			dbImage = version.GetDBImage(nodeps.MariaDB)
 		}
 	}
+	return dbImage
+}
+
+// Start initiates docker-compose up
+func (app *DdevApp) Start() error {
+	var err error
+
+	app.DockerEnv()
+
+	app.DBImage = app.GetDBImage()
 
 	APIVersion, err := semver.NewVersion(app.APIVersion)
 	if err != nil {
@@ -1086,7 +1093,7 @@ func (app *DdevApp) DockerEnv() {
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
 		"DDEV_SITENAME":                 app.Name,
-		"DDEV_DBIMAGE":                  app.DBImage,
+		"DDEV_DBIMAGE":                  app.GetDBImage(),
 		"DDEV_DBAIMAGE":                 app.DBAImage,
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_BGSYNCIMAGE":              app.BgsyncImage,
