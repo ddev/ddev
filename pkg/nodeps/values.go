@@ -88,7 +88,7 @@ var ValidMySQLVersions = map[string]bool{
 	MySQL55: true,
 	MySQL56: true,
 	MySQL57: true,
-	// Note that MySQL 8 is not compatible with client libs in web container
+	MySQL80: true,
 }
 
 // Webserver types

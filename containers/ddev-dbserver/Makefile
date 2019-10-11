@@ -45,7 +45,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 build: container
 
 MARIADB_VERSIONS=5.5 10.0 10.1 10.2 10.3 10.4
-MYSQL_VERSIONS=5.5 5.6 5.7
+MYSQL_VERSIONS=5.5 5.6 5.7 8.0
 
 container: mariadb_containers mysql_containers
 
@@ -58,7 +58,7 @@ mariadb_containers:
 mysql_containers:
 	for item in $(MYSQL_VERSIONS) ; do \
 		set -euo pipefail ;\
-		docker build --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)" . ; \
+		docker build $(DOCKER_ARGS) --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)" . ; \
 	done
 
 push: container
