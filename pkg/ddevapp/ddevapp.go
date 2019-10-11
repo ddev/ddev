@@ -1335,7 +1335,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	snapshotMariaDBVersion = strings.Trim(snapshotMariaDBVersion, " \n\t")
 
 	if snapshotMariaDBVersion == nodeps.MariaDB101 && app.MariaDBVersion != nodeps.MariaDB101 {
-		return fmt.Errorf("snapshot %s is a MariaDB 10.1 snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).\nPlease use the instructions at %s to change the MariaDB version so you can restore it.", snapshotDir, app.MariaDBVersion, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
+		return fmt.Errorf("snapshot %s is a MariaDB 10.1 snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).\nPlease use the instructions at %s to change the MariaDB version so you can restore it", snapshotDir, app.MariaDBVersion, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
 	}
 	if snapshotMariaDBVersion != app.MariaDBVersion {
 		util.Warning("snapshot %s is a MariaDB %s snapshot\nIt may not be compatible with the configured ddev MariaDB version (%s).", snapshotDir, snapshotMariaDBVersion, app.MariaDBVersion)
