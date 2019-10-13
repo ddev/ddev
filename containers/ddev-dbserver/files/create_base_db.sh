@@ -85,7 +85,7 @@ if command -v xtrabackup; then backuptool="xtrabackup --datadir=/var/lib/mysql";
 ${backuptool} --backup --target-dir=$OUTDIR --user=root --password=root --socket=$SOCKET
 
 # Initialize with current mariadb_version
-my_mariadb_version=$(mysql -V | awk '{sub( /\.[0-9]+-MariaDB,/, ""); print $5 }')
+my_mariadb_version=$(PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null | awk '{sub( /\.[0-9]+(-.*)?$/, "", $3); print $3 }')
 echo $my_mariadb_version >$OUTDIR/db_mariadb_version.txt
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
