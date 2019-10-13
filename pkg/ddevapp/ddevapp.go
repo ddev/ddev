@@ -1324,6 +1324,13 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("Failed to process pre-restore-snapshot hooks: %v", err)
 	}
 
+	currentDBVersion := version.MariaDBDefaultVersion
+	if app.MariaDBVersion != "" {
+		currentDBVersion = app.MariaDBVersion
+	} else if app.MySQLVersion != "" {
+		currentDBVersion = app.MySQLVersion
+	}
+
 	snapshotDir := filepath.Join("db_snapshots", snapshotName)
 
 	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
@@ -1333,22 +1340,19 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 
 	// Find out the mariadb version that correlates to the snapshot.
 	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
-	var snapshotMariaDBVersion string
+	var snapshotDBVersion string
 	if fileutil.FileExists(versionFile) {
-		snapshotMariaDBVersion, err = fileutil.ReadFileIntoString(versionFile)
+		snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
 		if err != nil {
 			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
 		}
 	} else {
-		snapshotMariaDBVersion = "unknown"
+		snapshotDBVersion = "unknown"
 	}
-	snapshotMariaDBVersion = strings.Trim(snapshotMariaDBVersion, " \n\t")
+	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \n\t")
 
-	if snapshotMariaDBVersion == nodeps.MariaDB101 && app.MariaDBVersion != nodeps.MariaDB101 {
-		return fmt.Errorf("snapshot %s is a MariaDB 10.1 snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).\nPlease use the instructions at %s to change the MariaDB version so you can restore it", snapshotDir, app.MariaDBVersion, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
-	}
-	if snapshotMariaDBVersion != app.MariaDBVersion {
-		util.Warning("snapshot %s is a MariaDB %s snapshot\nIt may not be compatible with the configured ddev MariaDB version (%s).", snapshotDir, snapshotMariaDBVersion, app.MariaDBVersion)
+	if snapshotDBVersion != currentDBVersion {
+		util.Warning("snapshot %s is a DB server %s snapshot\nIt may not be compatible with the configured DB version (%s).", snapshotDir, snapshotDBVersion, currentDBVersion)
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
