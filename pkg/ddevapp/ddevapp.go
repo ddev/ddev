@@ -205,6 +205,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["mariadb_version"] = app.MariaDBVersion
+			dbinfo["mysql_version"] = app.MySQLVersion
 			appDesc["dbinfo"] = dbinfo
 
 			if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
