@@ -40,22 +40,13 @@ fi
 
 sudo chown -R "$(id -u):$(id -g)" /mysqlbase /var/lib/mysql
 
-# TODO: This logic needs to make sense, and basically needs to
-# 1. Check for *different version*
-# 2. If *higher* version, try an upgrade
+if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
+   database_db_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
+else
+    database_db_version="unknown"
+ fi
 
-#if [ -d /var/lib/mysql/mysql ]; then
-#    database_mariadb_version=10.1
-#    if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
-#       database_mariadb_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
-#    fi
-#
-#    if [  "$MARIADB_VERSION" == "10.1" ] && [ "$database_mariadb_version" != "10.1" ]; then
-#       echo "Can't start MariaDB 10.1 server with a database from $database_mariadb_version."
-#       echo "Please export your database, remove it completely, and retry if you need to start it with MariaDB $MARIADB_VERSION."
-#       exit 102
-#    fi
-#fi
+server_db_version=$(PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null | awk '{sub( /\.[0-9]+(-.*)?$/, "", $3); print $3 }')
 
 sudo chown -R "$UID:$(id -g)" /var/lib/mysql
 
@@ -80,32 +71,24 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo 'Database initialized from $target'
 fi
 
-if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
-  db_mariadb_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
-else
-  echo "No existing db_mariadb_version.txt was found, so assuming it was mariadb 10.1"
-  db_mariadb_version="10.1"  # Assume it was 10.1; we didn't maintain this before 10.2
+
+if [ "${server_db_version}" != "${database_db_version}" ]; then
+   echo "Starting with db server version=${server_db_version} but database was created with '${database_db_version}'."
+   echo "Attempting upgrade, but it may not work, you may need to export your database, 'ddev stop -RO', start, and reimport".
+
+    PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
+    pid=$!
+    if ! serverwait ; then
+        echo "Failed to get mysqld running to run mysql_upgrade"
+        exit 103
+    fi
+    echo "Attempting mysql_upgrade because db server version ${server_db_version} is not the same as database db version ${database_db_version}"
+    mysql_upgrade --socket=$SOCKET
+    kill $pid
 fi
 
-my_mariadb_version=$(mysql -V | awk '{sub( /\.[0-9]+-MariaDB,/, ""); print $5 }')
-# TODO: Return to find out if this upgrade path can be handled.
-# TODO: Use a smarter thing (from buildkite version check?) to determine if new version
-# is higher than old version
-
-#if [ "$my_mariadb_version" != "$db_mariadb_version" ]; then
-#    mysqld --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
-#    pid=$!
-#    if ! serverwait ; then
-#        echo "Failed to get mysqld running to run mysql_upgrade"
-#        exit 103
-#    fi
-#    echo "Running mysql_upgrade because my_mariadb_version=$my_mariadb_version is not the same as db_mariadb_version=$db_mariadb_version"
-#    mysql_upgrade --socket=$SOCKET
-#    kill $pid
-#fi
-
-# And use the mariadb version we have here.
-echo $my_mariadb_version >/var/lib/mysql/db_mariadb_version.txt
+# And update the server db version we have here.
+echo $server_db_version >/var/lib/mysql/db_mariadb_version.txt
 
 cp -r /home/{.my.cnf,.bashrc} ~/
 sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
