@@ -720,7 +720,12 @@ func TestDdevAllMariaDB(t *testing.T) {
 	// Make sure there isn't an old db laying around
 	_ = dockerutil.RemoveVolume(app.Name + "-mariadb")
 	//nolint: errcheck
-	defer dockerutil.RemoveVolume(app.Name + "-mariadb")
+	defer func() {
+		_ = app.Stop(true, false)
+		app.MariaDBVersion = ""
+		app.MySQLVersion = ""
+		_ = app.WriteConfig()
+	}()
 
 	for v := range nodeps.ValidMariaDBVersions {
 
