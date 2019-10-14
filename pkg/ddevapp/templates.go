@@ -8,9 +8,9 @@ services:
 {{if not .OmitDB }}
   db:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
-    build: 
+    build:
       context: '{{ .DBBuildContext }}'
-      args: 
+      args:
         BASE_IMAGE: $DDEV_DBIMAGE
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
@@ -51,9 +51,9 @@ services:
 {{end}}
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
-    build: 
+    build:
       context: '{{ .WebBuildContext }}'
-      args: 
+      args:
         BASE_IMAGE: $DDEV_WEBIMAGE
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
@@ -120,7 +120,7 @@ services:
     extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
 {{ end }}
     external_links:
-    {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}" 
+    {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}"
     {{ end }}
     healthcheck:
       interval: 1s
@@ -130,9 +130,9 @@ services:
 {{ if .WebcacheEnabled }}
   bgsync:
     container_name: ddev-${DDEV_SITENAME}-bgsync
-    build: 
+    build:
       context: '{{ .BgsyncBuildContext }}'
-      args: 
+      args:
         BASE_IMAGE: $DDEV_BGSYNCIMAGE
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
@@ -247,7 +247,7 @@ const ConfigInstructions = `
 # router_https_port: <port> # Port for https (defaults to 443)
 
 # xdebug_enabled: false  # Set to true to enable xdebug and "ddev start" or "ddev restart"
-# Note that for most people the commands 
+# Note that for most people the commands
 # "ddev exec enable_xdebug" and "ddev exec disable_xdebug" work better,
 # as leaving xdebug enabled all the time is a big performance hit.
 
@@ -255,7 +255,7 @@ const ConfigInstructions = `
 
 # timezone: Europe/Berlin
 # This is the timezone used in the containers and by PHP;
-# it can be set to any valid timezone, 
+# it can be set to any valid timezone,
 # see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 # For example Europe/Dublin or MST7MDT
 
@@ -277,14 +277,14 @@ const ConfigInstructions = `
 # working_dir:
 #   web: /var/www/html
 #   db: /home
-# would set the default working directory for the web and db services. 
-# These values specify the destination directory for ddev ssh and the 
-# directory in which commands passed into ddev exec are run. 
+# would set the default working directory for the web and db services.
+# These values specify the destination directory for ddev ssh and the
+# directory in which commands passed into ddev exec are run.
 
 # omit_containers: ["dba", "ddev-ssh-agent"]
 # would omit the dba (phpMyAdmin) and ddev-ssh-agent containers. Currently
 # only those two containers can be omitted here.
-# Note that these containers can also be omitted globally in the 
+# Note that these containers can also be omitted globally in the
 # ~/.ddev/global_config.yaml or with the "ddev config global" command.
 
 # nfs_mount_enabled: false
@@ -292,7 +292,7 @@ const ConfigInstructions = `
 # See https://ddev.readthedocs.io/en/stable/users/performance/#using-nfs-to-mount-the-project-into-the-container
 
 # webcache_enabled: false (deprecated)
-# Was only for macOS, but now deprecated. 
+# Was only for macOS, but now deprecated.
 # See https://ddev.readthedocs.io/en/stable/users/performance/#using-webcache_enabled-to-cache-the-project-directory
 
 # host_https_port: "59002"
@@ -324,8 +324,8 @@ const ConfigInstructions = `
 # Extra Debian packages that are needed in the dbimage can be added here
 
 # use_dns_when_possible: true
-# If the host has internet access and the domain configured can 
-# successfully be looked up, DNS will be used for hostname resolution 
+# If the host has internet access and the domain configured can
+# successfully be looked up, DNS will be used for hostname resolution
 # instead of editing /etc/hosts
 # Defaults to true
 
@@ -336,13 +336,13 @@ const ConfigInstructions = `
 # pre-v1.9 behavior.
 
 # ngrok_args: --subdomain mysite --auth username:pass
-# Provide extra flags to the "ngrok http" command, see 
+# Provide extra flags to the "ngrok http" command, see
 # https://ngrok.com/docs#http or run "ngrok http -h"
 
 # provider: default # Currently either "default" or "pantheon"
 #
-# Many ddev commands can be extended to run tasks before or after the 
-# ddev command is executed, for example "post-start", "post-import-db", 
+# Many ddev commands can be extended to run tasks before or after the
+# ddev command is executed, for example "post-start", "post-import-db",
 # "pre-composer", "post-composer"
 # See https://ddev.readthedocs.io/en/stable/users/extending-commands/ for more
 # information on the commands that can be extended and the tasks you can define
@@ -435,7 +435,7 @@ networks:
    default:
      external:
        name: ddev_default
-volumes: 
+volumes:
    ddev-global-cache:
      name: ddev-global-cache
 `
@@ -450,9 +450,9 @@ services:
   ddev-ssh-agent:
     container_name: ddev-ssh-agent
     hostname: ddev-ssh-agent
-    build: 
+    build:
       context: '{{ .BuildContext }}'
-      args: 
+      args:
         BASE_IMAGE: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
