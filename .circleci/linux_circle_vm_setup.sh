@@ -23,6 +23,9 @@ for item in osslsigncode golang mkcert ddev makensis; do
     brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
 done
 
+# Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
+wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.04/nsis-3.04.zip/download && sudo unzip -d /usr/local/share download && sudo mv /usr/local/share/nsis-3.04 /usr/local/share/nsis
+
 # Temporarily overwrite the brew-loaded broken-on-Ubuntu1604 mkcert
 brew unlink mkcert
 sudo curl -sSL -o /usr/local/bin/mkcert -O https://github.com/rfay/mkcert/releases/download/v1.4.1-alpha1/mkcert-v1.4.1-alpha1-linux-amd64 && sudo chmod +x /usr/local/bin/mkcert
