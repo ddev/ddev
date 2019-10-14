@@ -849,7 +849,7 @@ func TestTimezoneConfig(t *testing.T) {
 	// With timezone set, we the correct timezone operational
 	app.Timezone = "Europe/Paris"
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
 	stdout, _, err = app.Exec(&ExecOpts{
 		Service: "web",
 		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
@@ -1022,7 +1022,7 @@ func TestPkgConfigMariaDBVersion(t *testing.T) {
 			}
 			if configType == "mariadb-version" {
 				assert.Equal(v, app.MariaDBVersion)
-				assert.Equal(version.GetDBImage(nodeps.MariaDB, v), app.DBImage, "dbimage derived from app.MariaDBVersion was incorrect")
+				assert.Equal(version.GetDBImage(nodeps.MariaDB, v), app.GetDBImage(), "dbimage derived from app.MariaDBVersion was incorrect")
 			}
 
 		}

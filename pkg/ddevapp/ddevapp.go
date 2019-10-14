@@ -707,10 +707,11 @@ func (app *DdevApp) GetDBImage() string {
 		// mysql_version is explicitly set
 		case app.MySQLVersion != "":
 			dbImage = version.GetDBImage(nodeps.MySQL, app.MySQLVersion)
-		// All other cases, use default mariadb
-		default:
-			dbImage = version.GetDBImage(nodeps.MariaDB)
 		}
+	}
+	// Default behavior is just to use the MariaDB image.
+	if dbImage == "" {
+		dbImage = version.GetDBImage(nodeps.MariaDB)
 	}
 	return dbImage
 }
