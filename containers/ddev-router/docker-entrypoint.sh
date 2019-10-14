@@ -32,7 +32,7 @@ mkcert -install
 
 # It's unknown what docker event causes an attempt to use these certs/.crt files, but they might as well exist
 # to prevent it.
-mkcert -cert-file /etc/nginx/certs/.crt -key-file /etc/nginx/certs/.key "*.ddev.local" 127.0.0.1 localhost ddev-router ddev-router.ddev_default
+mkcert -cert-file /etc/nginx/certs/.crt -key-file /etc/nginx/certs/.key "*.ddev.local" "*.ddev.site" 127.0.0.1 localhost ddev-router ddev-router.ddev_default
 
 if [ ! -f /etc/nginx/certs/master.crt ]; then
   mkcert -cert-file /etc/nginx/certs/master.crt -key-file /etc/nginx/certs/master.key "*.ddev.local" "*.ddev.site" "ddev-router" "ddev-router.ddev_default" 127.0.0.1 localhost
