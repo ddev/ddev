@@ -988,9 +988,9 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
 
-	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_1.sql.gz"))
+	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_1.sql.gz"))
 	assert.NoError(err)
-	d7testerTest2Dump, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_2.sql.gz"))
+	d7testerTest2Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_2.sql.gz"))
 	assert.NoError(err)
 
 	// Use d7 only for this test, the key thing is the database interaction
@@ -1089,12 +1089,12 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	}
 
 	// Attempt a restore with a pre-mariadb_10.2 snapshot. It should fail and give a link.
-	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
+	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
 	assert.NoError(err)
 
-	err = archive.Untar(oldSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots", "oldsnapshot"), "")
+	err = archive.Untar(oldSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots"), "")
 	assert.NoError(err)
-	err = app.RestoreSnapshot("oldsnapshot")
+	err = app.RestoreSnapshot("d7tester_test_1.snapshot_mariadb_10.1")
 	assert.Error(err)
 	assert.Contains(err.Error(), "is not compatible")
 
