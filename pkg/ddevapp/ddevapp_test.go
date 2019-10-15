@@ -844,11 +844,11 @@ func TestDdevExportDB(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.StartAndWaitForSync(0)
+	err = app.Start()
 	assert.NoError(err)
 	//nolint: errcheck
 	defer app.Stop(true, false)
-	importPath := filepath.Join(testDir, "testdata", "users.sql")
+	importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
 	err = app.ImportDB(importPath, "", false)
 	require.NoError(t, err)
 
