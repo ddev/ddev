@@ -1017,6 +1017,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// First do regular start, which is good enough to get us to an ImportDB()
 	err = app.Start()
 	require.NoError(t, err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
 
 	err = app.ImportDB(d7testerTest1Dump, "", false)
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
@@ -1402,11 +1404,11 @@ func TestDdevExec(t *testing.T) {
 			_ = app.WriteConfig()
 		}()
 
-		startErr := app.StartAndWaitForSync(0)
+		startErr := app.Start()
 		if startErr != nil {
 			logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 			assert.NoError(err)
-			t.Fatalf("app.StartAndWaitForSync() failed err=%v, logs from broken container:\n=======\n%s\n========\n", startErr, logs)
+			t.Fatalf("app.Start() failed err=%v, logs from broken container:\n=======\n%s\n========\n", startErr, logs)
 		}
 
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
