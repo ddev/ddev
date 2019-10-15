@@ -40,12 +40,6 @@ fi
 
 sudo chown -R "$(id -u):$(id -g)" /mysqlbase /var/lib/mysql
 
-if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
-   database_db_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
-else
-    database_db_version="unknown"
- fi
-
 server_db_version=$(PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null | awk '{sub( /\.[0-9]+(-.*)?$/, "", $3); print $3 }')
 
 sudo chown -R "$UID:$(id -g)" /var/lib/mysql
@@ -71,7 +65,12 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo 'Database initialized from $target'
 fi
 
-
+if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
+   database_db_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
+else
+    database_db_version="unknown"
+ fi
+ 
 if [ "${server_db_version}" != "${database_db_version}" ]; then
    echo "Starting with db server version=${server_db_version} but database was created with '${database_db_version}'."
    echo "Attempting upgrade, but it may not work, you may need to export your database, 'ddev stop -RO', start, and reimport".
