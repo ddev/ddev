@@ -70,7 +70,7 @@ if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
 else
     database_db_version="unknown"
  fi
- 
+
 if [ "${server_db_version}" != "${database_db_version}" ]; then
    echo "Starting with db server version=${server_db_version} but database was created with '${database_db_version}'."
    echo "Attempting upgrade, but it may not work, you may need to export your database, 'ddev stop -RO', start, and reimport".

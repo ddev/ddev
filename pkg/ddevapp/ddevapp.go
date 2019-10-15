@@ -85,7 +85,7 @@ type DdevApp struct {
 	XdebugEnabled         bool                  `yaml:"xdebug_enabled"`
 	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string              `yaml:"additional_fqdns"`
-	MariaDBVersion        string                `yaml:"mariadb_version"`
+	MariaDBVersion        string                `yaml:"mariadb_version,omitempty"`
 	MySQLVersion          string                `yaml:"mysql_version,omitempty"`
 	WebcacheEnabled       bool                  `yaml:"webcache_enabled,omitempty"`
 	NFSMountEnabled       bool                  `yaml:"nfs_mount_enabled"`
@@ -689,6 +689,11 @@ func (app *DdevApp) ProcessHooks(hookName string) (string, string, error) {
 
 // GetDBImage uses the available mariadb or mysql version or provides the default
 func (app *DdevApp) GetDBImage() string {
+	// If an explicit dbimage is set, just use it.
+	if app.DBImage != "" {
+		return app.DBImage
+	}
+
 	dbImage := ""
 	// If the dbimage has not been overridden (because dbimage takes precedence)
 	// and the mariadb_version/mysql_version *has* been changed by config,
@@ -696,9 +701,8 @@ func (app *DdevApp) GetDBImage() string {
 	// IF dbimage has not been specified (it equals mariadb default)
 	// AND mariadb version is NOT the default version
 	// Then override the dbimage with related mariadb or mysql version
-	if app.DBImage == "" && app.MySQLVersion == "" && app.MariaDBVersion == "" {
-		return version.GetDBImage(nodeps.MariaDB)
-	}
+
+	// If no (dbimage set or it's the default image) and MariaDB or MySQL version set
 	if (app.DBImage == "" || app.DBImage == version.GetDBImage(nodeps.MariaDB)) && (app.MariaDBVersion != "" || app.MySQLVersion != "") {
 		switch {
 		// mariadb_version is explicitly set

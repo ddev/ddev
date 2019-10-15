@@ -701,9 +701,21 @@ func TestDdevImportDB(t *testing.T) {
 	}
 }
 
-// TestDdevAllMariaDB tests db import/export/start with all MariaDB versions
-func TestDdevAllMariaDB(t *testing.T) {
+// TestDdevAllDatabases tests db import/export/start with all MariaDB versions
+func TestDdevAllDatabases(t *testing.T) {
 	assert := asrt.New(t)
+
+	dbVersions := map[string]map[string]bool{
+		"mariadb": nodeps.ValidMariaDBVersions,
+		"mysql":   nodeps.ValidMySQLVersions,
+	}
+	// Use a smaller list if GOTEST_SHORT
+	if os.Getenv("GOTEST_SHORT") != "" {
+		dbVersions = map[string]map[string]bool{
+			"mariadb": {"10.1": true, "10.2": true, "10.3": true},
+			"mysql":   {"5.7": true},
+		}
+	}
 
 	app := &ddevapp.DdevApp{}
 	testDir, _ := os.Getwd()
@@ -727,71 +739,92 @@ func TestDdevAllMariaDB(t *testing.T) {
 		_ = app.WriteConfig()
 	}()
 
-	for v := range nodeps.ValidMariaDBVersions {
+	for dbType, versions := range dbVersions {
+		for v := range versions {
 
-		t.Logf("testing basic functionality of mariadb %v", v)
-		_ = app.Stop(true, false)
-		app.MariaDBVersion = v
-		startErr := app.StartAndWaitForSync(15)
-		//nolint: errcheck
-		//defer app.Stop(true, false)
+			t.Logf("testing db server functionality of %v:%v", dbType, v)
+			_ = app.Stop(true, false)
+			if dbType == "mariadb" {
+				app.MySQLVersion = ""
+				app.MariaDBVersion = v
+			} else if dbType == "mysql" {
+				app.MariaDBVersion = ""
+				app.MySQLVersion = v
+			}
+			app.DBImage = ""
+			_ = app.WriteConfig()
+			startErr := app.Start()
+			if startErr != nil {
+				appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+				assert.NoError(err)
+				t.Fatalf("app.Start() failure %v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
+			}
 
-		if startErr != nil {
-			appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+			// Make sure the version of db running matches expected
+			containerDBVersion, _, _ := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
+			})
+			assert.Equal(v, strings.Trim(containerDBVersion, "\n\r "))
+
+			importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
+			err = app.ImportDB(importPath, "", false)
+			assert.NoError(err, "failed to import %v", importPath)
+
+			_ = os.Mkdir("tmp", 0777)
+			err = fileutil.PurgeDirectory("tmp")
 			assert.NoError(err)
-			t.Fatalf("app.StartAndWaitForSync() failure %v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
+
+			// Test that we can export-db to a gzipped file
+			err = app.ExportDB("tmp/users1.sql.gz", true)
+			assert.NoError(err)
+
+			// Validate contents
+			err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
+			assert.NoError(err)
+			stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+			assert.NoError(err)
+			assert.True(stringFound)
+
+			err = fileutil.PurgeDirectory("tmp")
+			assert.NoError(err)
+
+			// Export to an ungzipped file and validate
+			err = app.ExportDB("tmp/users2.sql", false)
+			assert.NoError(err)
+
+			// Validate contents
+			stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
+			assert.NoError(err)
+			assert.True(stringFound)
+
+			err = fileutil.PurgeDirectory("tmp")
+			assert.NoError(err)
+
+			// Capture to stdout without gzip compression
+			stdout := util.CaptureStdOut()
+			err = app.ExportDB("", false)
+			assert.NoError(err)
+			out := stdout()
+			assert.Contains(out, "Table structure for table `users`")
+
+			snapshotName := v + "_" + fileutil.RandomFilenameBase()
+			output, err := app.Snapshot(snapshotName)
+			assert.NoError(err, "could not create snapshot %s for version %s: %v output=%v", snapshotName, v, err, output)
+			err = app.RestoreSnapshot(snapshotName)
+			assert.NoError(err, "could not restore snapshot %s for version %s: %v", snapshotName, v, err)
+
+			// Make sure the version of db running matches expected
+			containerDBVersion, _, _ = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
+			})
+			assert.Equal(v, strings.Trim(containerDBVersion, "\n\r "))
+
+			// TODO: Restore a snapshot from a different version note warning.
+
+			_ = app.Stop(true, false)
 		}
-
-		importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
-		err = app.ImportDB(importPath, "", false)
-		assert.NoError(err)
-
-		_ = os.Mkdir("tmp", 0777)
-		err = fileutil.PurgeDirectory("tmp")
-		assert.NoError(err)
-
-		// Test that we can export-db to a gzipped file
-		err = app.ExportDB("tmp/users1.sql.gz", true)
-		assert.NoError(err)
-
-		// Validate contents
-		err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
-		assert.NoError(err)
-		stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
-		assert.NoError(err)
-		assert.True(stringFound)
-
-		err = fileutil.PurgeDirectory("tmp")
-		assert.NoError(err)
-
-		// Export to an ungzipped file and validate
-		err = app.ExportDB("tmp/users2.sql", false)
-		assert.NoError(err)
-
-		// Validate contents
-		stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
-		assert.NoError(err)
-		assert.True(stringFound)
-
-		err = fileutil.PurgeDirectory("tmp")
-		assert.NoError(err)
-
-		// Capture to stdout without gzip compression
-		stdout := util.CaptureStdOut()
-		err = app.ExportDB("", false)
-		assert.NoError(err)
-		out := stdout()
-		assert.Contains(out, "Table structure for table `users`")
-
-		snapshotName := v + "_" + fileutil.RandomFilenameBase()
-		output, err := app.Snapshot(snapshotName)
-		assert.NoError(err, "could not create snapshot %s for mariadb %s: %v output=%v", snapshotName, v, err, output)
-		err = app.RestoreSnapshot(snapshotName)
-		assert.NoError(err, "could not restore snapshot %s for mariadb %s: %v", snapshotName, v, err)
-
-		// TODO: Restore a snapshot from a different version note warning.
-
-		_ = app.Stop(true, false)
 	}
 	runTime()
 }
