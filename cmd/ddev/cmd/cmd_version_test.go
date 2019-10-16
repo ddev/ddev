@@ -27,7 +27,7 @@ func TestCmdVersion(t *testing.T) {
 
 	assert.Equal(version.DdevVersion, raw["DDEV-Local version"])
 	assert.Equal(version.WebImg+":"+version.WebTag, raw["web"])
-	assert.Equal(version.GetDBImage(nodeps.MariaDB, nodeps.MariaDB55), raw["db"])
+	assert.Equal(version.GetDBImage(nodeps.MariaDB), raw["db"])
 	assert.Equal(version.GetDBAImage(), raw["dba"])
 	dockerVersion, _ := version.GetDockerVersion()
 	assert.Equal(dockerVersion, raw["docker"])
@@ -38,7 +38,7 @@ func TestCmdVersion(t *testing.T) {
 	assert.Contains(versionData["msg"], version.WebImg)
 	assert.Contains(versionData["msg"], version.WebTag)
 	assert.Contains(versionData["msg"], version.DBImg)
-	assert.Contains(versionData["msg"], version.GetDBImage(nodeps.MariaDB, ""))
+	assert.Contains(versionData["msg"], version.GetDBImage(nodeps.MariaDB, version.MariaDBDefaultVersion))
 	assert.Contains(versionData["msg"], version.DBAImg)
 	assert.Contains(versionData["msg"], version.DBATag)
 	assert.NotEmpty(version.DockerVersion)
