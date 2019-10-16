@@ -35,9 +35,9 @@ VERSION := $(shell git describe --tags --always --dirty)
 # If you need to override one, import its contents below and comment out the
 # include. That way the base components can easily be updated as our general needs
 # change.
-#include ../../../build-tools/makefile_components/base_build_go.mak
+include ../../../build-tools/makefile_components/base_build_go.mak
 #include ../../build-tools/makefile_components/base_build_python-docker.mak
-#include ../../build-tools/makefile_components/base_container.mak
+include ../../build-tools/makefile_components/base_container.mak
 #include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include ../../build-tools/makefile_components/base_test_python.mak
@@ -73,14 +73,7 @@ push: container
 
 
 test: container
-	for item in $(MARIADB_VERSIONS); do \
-		set -euo pipefail ;\
-		echo $$item && test/testserver.sh $(DOCKER_REPO)-mariadb-$$item:$(VERSION) $$item ;\
-	done
-	for item in $(MYSQL_VERSIONS); do \
-		set -euo pipefail ;\
-		echo $$item && test/testserver.sh $(DOCKER_REPO)-mysql-$$item:$(VERSION) $$item ;\
-	done
+	test/test_dbserver.sh
 
 clean:
 	for item in $(MARIADB_VERSIONS); do \
