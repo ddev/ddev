@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 set -eu
 set -o pipefail
 
@@ -34,7 +33,7 @@ pid="$!"
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
 # or if the process dies.
 for i in {60..0}; do
-	if mysqladmin ping -uroot --socket=$SOCKET; then
+	if mysqladmin ping -uroot --socket=$SOCKET 2>/dev/null; then
 		break
 	fi
 	# Test to make sure we got it started in the first place. kill -s 0 just tests to see if process exists.
@@ -42,7 +41,7 @@ for i in {60..0}; do
 		echo "MariaDB initialization startup failed"
 		exit 3
 	fi
-	echo "MariaDB initialization startup process in progress... Try# $i"
+#	echo "MariaDB initialization startup process in progress... Try# $i"
 	sleep 1
 done
 if [ "$i" -eq 0 ]; then

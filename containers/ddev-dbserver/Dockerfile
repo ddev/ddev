@@ -13,7 +13,7 @@ ENV MYSQL_ROOT_PASSWORD root
 # Install extra packages
 RUN apt-get update && apt-get install -y tzdata sudo pv less vim wget
 
-RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
+RUN if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
     apt-get install -y lsb-release; \
     wget https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb ; \
     sudo dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb ; \

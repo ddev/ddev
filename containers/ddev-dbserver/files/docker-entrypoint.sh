@@ -18,7 +18,7 @@ function serverwait {
             echo "MariaDB initialization startup failed"
             return 2
         fi
-        echo "MariaDB initialization startup process in progress... Try# $i"
+#        echo "MariaDB initialization startup process in progress... Try# $i"
         sleep 1
 	done
 	return 1
@@ -77,10 +77,12 @@ if [ "${server_db_version}" != "${database_db_version}" ]; then
 
     PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
     pid=$!
+    set +x
     if ! serverwait ; then
         echo "Failed to get mysqld running to run mysql_upgrade"
         exit 103
     fi
+    set -x
     echo "Attempting mysql_upgrade because db server version ${server_db_version} is not the same as database db version ${database_db_version}"
     mysql_upgrade --socket=$SOCKET
     kill $pid
