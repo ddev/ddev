@@ -1533,21 +1533,23 @@ func TestProcessHooks(t *testing.T) {
 		},
 	}
 
-	stdout := util.CaptureUserOut()
-	err = app.ProcessHooks("hook-test")
+	goStdout := util.CaptureUserOut()
+
+	stdout, _, err := app.ProcessHooks("hook-test")
 	assert.NoError(err)
 
 	// Ignore color in output, can be different in different OS's
-	out := vtclean.Clean(stdout(), false)
+	stdout = vtclean.Clean(stdout, false)
+	goStdoutStr := vtclean.Clean(goStdout(), false)
 
-	assert.Contains(out, "Executing hook-test hook")
-	assert.Contains(out, "Exec command 'ls /usr/local/bin/composer' in container/service 'web'")
-	assert.Contains(out, "Exec command 'echo something' on the host")
-	assert.Contains(out, "Exec command 'echo MYSQL_USER=${MYSQL_USER}' in container/service 'db'")
-	assert.Contains(out, "MYSQL_USER=db")
-	assert.Contains(out, "Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt' in container/service 'web'")
-	assert.Contains(out, "Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt' in container/service 'web',")
-	assert.Contains(out, "Twig, the flexible, fast, and secure template")
+	assert.Contains(goStdoutStr, "Executing hook-test hook")
+	assert.Contains(goStdoutStr, "Exec command 'ls /usr/local/bin/composer' in container/service 'web'")
+	assert.Contains(goStdoutStr, "Exec command 'echo something' on the host")
+	assert.Contains(goStdoutStr, "Exec command 'echo MYSQL_USER=${MYSQL_USER}' in container/service 'db'")
+	assert.Contains(stdout, "MYSQL_USER=db")
+	assert.Contains(goStdoutStr, "Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt' in container/service 'web'")
+	assert.Contains(goStdoutStr, "Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt' in container/service 'web',")
+	assert.Contains(stdout, "Twig, the flexible, fast, and secure template")
 	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 

@@ -164,7 +164,7 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Failed("Please do not use `ddev config` in your home directory")
 	}
 
-	err = app.ProcessHooks("pre-config")
+	_, _, err = app.ProcessHooks("pre-config")
 	if err != nil {
 		util.Failed("Failed to process hook 'pre-config'")
 	}
@@ -210,7 +210,7 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		util.Failed("Failed to write provider config: %v", err)
 	}
-	err = app.ProcessHooks("post-config")
+	_, _, err = app.ProcessHooks("post-config")
 	if err != nil {
 		util.Failed("Failed to process hook 'post-config'")
 	}

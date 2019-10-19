@@ -168,7 +168,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContai
 
 // Describe returns a map which provides detailed information on services associated with the running site.
 func (app *DdevApp) Describe() (map[string]interface{}, error) {
-	err := app.ProcessHooks("pre-describe")
+	_, _, err := app.ProcessHooks("pre-describe")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to process pre-describe hooks: %v", err)
 	}
@@ -229,7 +229,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["bgsyncimg"] = app.BgsyncImage
 	appDesc["dbaimg"] = app.DBAImage
 
-	err = app.ProcessHooks("post-describe")
+	_, _, err = app.ProcessHooks("post-describe")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to process post-describe hooks: %v", err)
 	}
@@ -299,7 +299,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 		return err
 	}
 
-	err = app.ProcessHooks("pre-import-db")
+	_, _, err = app.ProcessHooks("pre-import-db")
 	if err != nil {
 		return err
 	}
@@ -403,7 +403,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 		return fmt.Errorf("failed to clean up %s after import: %v", dbPath, err)
 	}
 
-	err = app.ProcessHooks("post-import-db")
+	_, _, err = app.ProcessHooks("post-import-db")
 	if err != nil {
 		return err
 	}
@@ -518,7 +518,7 @@ type PullOptions struct {
 // Pull performs an import from the a configured provider plugin, if one exists.
 func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 	var err error
-	err = app.ProcessHooks("pre-pull")
+	_, _, err = app.ProcessHooks("pre-pull")
 	if err != nil {
 		return fmt.Errorf("Failed to process pre-pull hooks: %v", err)
 	}
@@ -579,7 +579,7 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 			}
 		}
 	}
-	err = app.ProcessHooks("post-pull")
+	_, _, err = app.ProcessHooks("post-pull")
 	if err != nil {
 		return fmt.Errorf("Failed to process post-pull hooks: %v", err)
 	}
@@ -591,7 +591,7 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 	app.DockerEnv()
 
-	if err := app.ProcessHooks("pre-import-files"); err != nil {
+	if _, _, err := app.ProcessHooks("pre-import-files"); err != nil {
 		return err
 	}
 
@@ -599,7 +599,7 @@ func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 		return err
 	}
 
-	if err := app.ProcessHooks("post-import-files"); err != nil {
+	if _, _, err := app.ProcessHooks("post-import-files"); err != nil {
 		return err
 	}
 
@@ -652,7 +652,8 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 }
 
 // ProcessHooks executes Tasks defined in Hooks
-func (app *DdevApp) ProcessHooks(hookName string) error {
+func (app *DdevApp) ProcessHooks(hookName string) (string, string, error) {
+	var stdout, stderr string
 	if cmds := app.Hooks[hookName]; len(cmds) > 0 {
 		output.UserOut.Printf("Executing %s hook...", hookName)
 	}
@@ -660,19 +661,28 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 	for _, c := range app.Hooks[hookName] {
 		a := NewTask(app, c)
 		if a == nil {
-			return fmt.Errorf("unable to create task from %v", c)
+			return "", "", fmt.Errorf("unable to create task from %v", c)
 		}
 
 		output.UserOut.Printf("=== Running task: %s, output below", a.GetDescription())
 
-		stdout, stderr, err := a.Execute()
-		if err != nil {
-			return fmt.Errorf("task failed: %v", err)
+		taskout, taskerr, err := a.Execute()
+		if taskout != "" {
+			output.UserOut.Println(taskout)
 		}
-		output.UserOut.Println(stdout + "\n" + stderr)
+		if taskerr != "" {
+			output.UserOut.Errorln(taskerr)
+		}
+
+		if err != nil {
+			output.UserOut.Errorf("task failed: %v: %v", a.GetDescription(), err)
+			output.UserOut.Warn("A task failure does not mean that ddev failed, but your hook configuration has a command that failed.")
+		}
+		stdout = stdout + taskout
+		stderr = stderr + taskerr
 	}
 
-	return nil
+	return stdout, stderr, nil
 }
 
 // Start initiates docker-compose up
@@ -706,7 +716,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.ProcessHooks("pre-start")
+	_, _, err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
 	}
@@ -802,7 +812,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.ProcessHooks("post-start")
+	_, _, err = app.ProcessHooks("post-start")
 	if err != nil {
 		return err
 	}
@@ -837,7 +847,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if opts.Service == "" {
 		return "", "", fmt.Errorf("no service provided")
 	}
-	err := app.ProcessHooks("pre-exec")
+	_, _, err := app.ProcessHooks("pre-exec")
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to process pre-exec hooks: %v", err)
 	}
@@ -891,7 +901,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		stdoutResult, stderrResult, err = dockerutil.ComposeCmd(files, exec...)
 	}
 
-	hookErr := app.ProcessHooks("post-exec")
+	_, _, hookErr := app.ProcessHooks("post-exec")
 	if hookErr != nil {
 		return stdoutResult, stderrResult, fmt.Errorf("Failed to process post-exec hooks: %v", hookErr)
 	}
@@ -1113,7 +1123,7 @@ func (app *DdevApp) Pause() error {
 		return fmt.Errorf("no project to stop")
 	}
 
-	err := app.ProcessHooks("pre-pause")
+	_, _, err := app.ProcessHooks("pre-pause")
 	if err != nil {
 		return err
 	}
@@ -1126,7 +1136,7 @@ func (app *DdevApp) Pause() error {
 	if _, _, err := dockerutil.ComposeCmd(files, "stop"); err != nil {
 		return err
 	}
-	err = app.ProcessHooks("post-pause")
+	_, _, err = app.ProcessHooks("post-pause")
 	if err != nil {
 		return err
 	}
@@ -1228,7 +1238,7 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 // Snapshot forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
 // Returns the dirname of the snapshot and err
 func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
-	err := app.ProcessHooks("pre-snapshot")
+	_, _, err := app.ProcessHooks("pre-snapshot")
 	if err != nil {
 		return "", fmt.Errorf("Failed to process pre-stop hooks: %v", err)
 	}
@@ -1266,7 +1276,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	}
 
 	util.Success("Created database snapshot %s in %s", snapshotName, hostSnapshotDir)
-	err = app.ProcessHooks("post-snapshot")
+	_, _, err = app.ProcessHooks("post-snapshot")
 	if err != nil {
 		return snapshotName, fmt.Errorf("Failed to process pre-stop hooks: %v", err)
 	}
@@ -1277,7 +1287,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 // The project must be stopped and docker volume removed and recreated for this to work.
 func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	var err error
-	err = app.ProcessHooks("pre-restore-snapshot")
+	_, _, err = app.ProcessHooks("pre-restore-snapshot")
 	if err != nil {
 		return fmt.Errorf("Failed to process pre-restore-snapshot hooks: %v", err)
 	}
@@ -1328,7 +1338,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	util.CheckErr(err)
 
 	util.Success("Restored database snapshot: %s", hostSnapshotDir)
-	err = app.ProcessHooks("post-restore-snapshot")
+	_, _, err = app.ProcessHooks("post-restore-snapshot")
 	if err != nil {
 		return fmt.Errorf("Failed to process post-restore-snapshot hooks: %v", err)
 	}
@@ -1340,7 +1350,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
 	var err error
 
-	err = app.ProcessHooks("pre-stop")
+	_, _, err = app.ProcessHooks("pre-stop")
 	if err != nil {
 		return fmt.Errorf("Failed to process pre-stop hooks: %v", err)
 	}
@@ -1392,7 +1402,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		util.Success("Project data/database removed from docker volume for project %s", app.Name)
 	}
 
-	err = app.ProcessHooks("post-stop")
+	_, _, err = app.ProcessHooks("post-stop")
 	if err != nil {
 		return fmt.Errorf("Failed to process post-stop hooks: %v", err)
 	}
