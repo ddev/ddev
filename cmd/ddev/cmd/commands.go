@@ -108,9 +108,10 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 			osArgs = os.Args[2:]
 		}
 		var err error
+		// Load environment variables that may be useful for script.
+		app.DockerEnv()
 		if runtime.GOOS == "windows" {
 			// Sadly, not sure how to have a bash interpreter without this.
-			//bashPath := `C:\Program Files\Git\bin\bash.exe`
 			args := []string{fullPath}
 			args = append(args, osArgs...)
 			err = exec.RunInteractiveCommand(windowsBashPath, args)

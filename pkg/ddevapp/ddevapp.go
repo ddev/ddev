@@ -1085,6 +1085,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTP_PORT":         app.RouterHTTPPort,
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,
 		"DDEV_XDEBUG_ENABLED":           strconv.FormatBool(app.XdebugEnabled),
+		"DDEV_PRIMARY_URL":              app.GetPrimaryURL(),
 	}
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
@@ -1457,6 +1458,15 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 	httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())
 
 	return httpURLs, httpsURLs, append(httpURLs, httpsURLs...)
+}
+
+// GetPrimaryURL() returns the primary URL that can be used, https or http
+func (app *DdevApp) GetPrimaryURL() string {
+	httpURLs, urlList, _ := app.GetAllURLs()
+	if GetCAROOT() == "" {
+		urlList = httpURLs
+	}
+	return urlList[0]
 }
 
 // GetWebContainerDirectHTTPURL returns the URL that can be used without the router to get to web container.
