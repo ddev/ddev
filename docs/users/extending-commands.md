@@ -1,4 +1,4 @@
-<h1>Extending ddev Commands</h1>
+## ddev Hooks
 
 Most ddev commands provide hooks to run tasks before or after the main command executes. To automate setup tasks specific to your project, define them in the project's config.yaml file.
 
