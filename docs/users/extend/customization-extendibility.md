@@ -5,6 +5,10 @@ ddev provides several ways in which the environment for a project using ddev can
 
 The project's `.ddev/config.yaml` file defines the PHP version to use. This can be changed, and the php_version can be set there to (currently) "5.6", "7.0", "7.1", "7.2", or "7.3". The current default is php 7.1.
 
+### Older versions of PHP
+
+[Support for older versions of PHP is available on ddev-contrib](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/old_php) via [custom Docker compose files](custom-compose-files.md).
+
 ## Changing webserver type
 
 DDEV-Local supports nginx with php-fpm by default ("nginx-fpm"), apache2 with php-fpm ("apache-fpm"), and apache2 with embedded php via cgi (apache-cgi). These can be changed using the "webserver_type" value in .ddev/config.yaml, for example `webserver_type: apache-fpm`. 
