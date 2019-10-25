@@ -65,7 +65,7 @@ services:
   # access the Solr service at sitename.ddev.site:8983.
   web:
     links:
-      - solr:$DDEV_HOSTNAME
+      - solr:solr
 volumes:
   # This creates a Docker volume that sticks around even if you remove or
   # rebuild the container
