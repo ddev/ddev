@@ -70,21 +70,12 @@ This recipe adds a [Beanstalk](https://beanstalkd.github.io/) container to a pro
 - The Beanstalk instance will listen on TCP port 11300 (the beanstalkd default).
 - Configure your application to access Beanstalk on the host:port `beanstalk:11300`.
 
-## MongoDB
+## Additional services in ddev-contrib (MongoDB, Blackfire, PostgresSQL, etc)
 
-[MongoDB support is available on ddev-contrib](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/mongodb) as a [custom Docker compose file](custom-compose-files.md).
+The [ddev-contrib](https://github.com/drud/ddev-contrib) repository has a wealth of additional examples and instructions:
 
-## Blackfire.io (Performance testing and profiling)
-
-[Blackfire support is available on ddev-contrib](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/blackfire) as a [custom Docker compose file](custom-compose-files.md).
-
-## PostgreSQL
-
-[PostgreSQL support is available on ddev-contrib](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/postgres) as a [custom Docker compose file](custom-compose-files.md).
-
-## Elasticsearch
-
-[Elasticsearch support is available on ddev-contrib](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elasticsearch) as a [custom Docker compose file](custom-compose-files.md).
-
-## Oracle MySQL
-[Oracle MySQL support is available on ddev-contrib](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/mysql) as a [custom Docker compose file](custom-compose-files.md).
+* **MongoDB**: See [MongoDB](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/mongodb).
+* **Blackfire.io for performance testing and profiling**: See [Blackfire.io](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/blackfire).
+* **PostgresSQL**: See [PostgresSQL](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/postgres).
+* **Elasticsearch**: See [Elasticsearch](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elasticsearch).
+* **Oracle MySQL**: See [MySQL](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/mysql).
