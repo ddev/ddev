@@ -46,7 +46,7 @@ func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 		DatabaseUsername: "db",
 		DatabasePassword: "db",
 		DatabaseHost:     "db",
-		DeployURL:        app.GetHTTPSURL(),
+		DeployURL:        app.GetPrimaryURL(),
 		Docroot:          "/var/www/html/docroot",
 		TablePrefix:      "wp_",
 		AuthKey:          util.RandString(64),
