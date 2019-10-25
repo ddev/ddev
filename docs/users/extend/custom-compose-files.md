@@ -4,6 +4,8 @@
 
 Much of ddev's customization ability and extensibility comes from leveraging features and functionality provided by [Docker](https://docs.docker.com/) and [Docker Compose](https://docs.docker.com/compose/overview/). Some working knowledge of these tools is required in order to customize or extend the environment ddev provides.
 
+There are [many examples of custom Docker compose files](https://github.com/drud/ddev-contrib#additional-services-added-via-docker-composeserviceyaml) available on [ddev-contrib](https://github.com/drud/ddev-contrib).
+
 ## Background
 
 Under the hood, ddev uses docker-compose to define and run the multiple containers that make up the local environment for a project. docker-compose supports defining multiple compose files to facilitate [sharing Compose configurations between files and projects](https://docs.docker.com/compose/extends/), and ddev is designed to leverage this ability.
