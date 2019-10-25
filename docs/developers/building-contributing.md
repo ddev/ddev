@@ -1,8 +1,8 @@
-<h1>Building, Testing, and Contributing</h1>
+# Building, Testing, and Contributing
 
 ## Building
 
-In the past, ddev would be checked out in the $GOPATH, but as of go 1.11, this is no longer appropriate. You should check out your fork *outside* the $GOPATH. 
+If you have `make` and docker, you can build for your environment with just `make`. Since the Makefile uses docker to build, it's not generally essential to install go on your machine, although it will make things easier. 
 
 Build/test/check static analysis with:
 
