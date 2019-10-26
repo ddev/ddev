@@ -95,6 +95,7 @@ Remember to use `ddev debug nfsmount` to verify
 7. Please make sure you have excluded winnfsd from the Windows Defender Firewall, as described in the installation instructions above.
 8. On Windows 10 Pro you can "Turn Windows features on or off" and enable "Services for NFS"-> "Client for NFS". The `showmount -e` command will then show available exports on the current machine. This can help find out if a conflicting server is running or exactly what the problem with exports may be.
 
+<a name="webcache"></a>
 ## Using webcache_enabled to Cache the Project Directory (deprecated, macOS only)
 
 A separate webcache container is also provided as a separate (deprecated) performance technique; this works only on macOS. It does not rely on any host configuration, but in some cases when large changes are made in the filesystem it can stop syncing and be unstable.

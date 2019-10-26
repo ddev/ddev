@@ -293,7 +293,7 @@ const ConfigInstructions = `
 
 # webcache_enabled: false (deprecated)
 # Was only for macOS, but now deprecated.
-# See https://ddev.readthedocs.io/en/stable/users/performance/#using-webcache_enabled-to-cache-the-project-directory
+# See https://ddev.readthedocs.io/en/stable/users/performance/#webcache
 
 # host_https_port: "59002"
 # The host port binding for https can be explicitly specified. It is

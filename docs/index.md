@@ -110,7 +110,7 @@ For instructions to uninstall DDEV-Local see [Uninstallation](users/uninstall.md
 
 We love to hear from our users and help them be successful with ddev. Support options include:
 
-- [ddev Documentation](https://ddev.readthedocs.io) and [faq](users/faq.md)
+- [ddev Documentation](users/faq.md)
 - [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
 - [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
 - The [gitter drud/ddev channel](https://gitter.im/drud/ddev) (it's easy to log in many diffferent ways)
