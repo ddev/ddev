@@ -832,10 +832,10 @@ func TestTimezoneConfig(t *testing.T) {
 	// Without timezone set, we should find Etc/UTC
 	stdout, _, err := app.Exec(&ExecOpts{
 		Service: "web",
-		Cmd:     "echo -n timezone=$(date +%Z) && php -r 'print \"phptz=\" . date_default_timezone_get();'",
+		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
 	})
 	assert.NoError(err)
-	assert.Equal("timezone=UTCphptz=UTC", stdout)
+	assert.Equal("timezone=UTC\nphptz=UTC", stdout)
 
 	// Make sure db container is also working
 	stdout, _, err = app.Exec(&ExecOpts{
@@ -846,15 +846,15 @@ func TestTimezoneConfig(t *testing.T) {
 	assert.Equal("timezone=UTC", stdout)
 
 	// With timezone set, we the correct timezone operational
-	app.Timezone = "Europe/Dublin"
+	app.Timezone = "Europe/Paris"
 	err = app.Start()
 	assert.NoError(err)
 	stdout, _, err = app.Exec(&ExecOpts{
 		Service: "web",
-		Cmd:     "echo -n timezone=$(date +%Z) && php -r 'print \"phptz=\" . date_default_timezone_get();'",
+		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
 	})
 	assert.NoError(err)
-	assert.Equal("timezone=ISTphptz=Europe/Dublin", stdout)
+	assert.Equal("timezone=CET\nphptz=Europe/Paris", stdout)
 
 	// Make sure db container is also working with Dublin time/IST
 	stdout, _, err = app.Exec(&ExecOpts{
@@ -862,7 +862,7 @@ func TestTimezoneConfig(t *testing.T) {
 		Cmd:     "echo -n timezone=$(date +%Z)",
 	})
 	assert.NoError(err)
-	assert.Equal("timezone=IST", stdout)
+	assert.Equal("timezone=CET", stdout)
 
 	runTime()
 }
