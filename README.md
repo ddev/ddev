@@ -11,25 +11,27 @@ ddev is an open source tool that makes it simple to get local PHP development en
 2. **Install ddev:** [Options include](https://ddev.readthedocs.io/en/stable/#installation) macOS homebrew (recommended), an install script, or manual installation.
 3. **Read the Basics and Choose a CMS Quick Start Guide:** 
   - [Basics](https://ddev.readthedocs.io/en/stable/users/cli-usage)
-  - [PHP (Generic Project) Quickstart](https://ddev.readthedocs.io/en/latest/users/cli-usage/#php-project-quickstart)
+  - [PHP (Generic Project) Quickstart](https://ddev.readthedocs.io/en/stable/users/cli-usage/#php-project-quickstart)
   - [WordPress](https://ddev.readthedocs.io/en/stable/users/cli-usage#wordpress-quickstart)
   - [Drupal 6 and 7](https://ddev.readthedocs.io/en/stable/users/cli-usage#drupal-6/7-quickstart)
   - [Drupal 8](https://ddev.readthedocs.io/en/stable/users/cli-usage#drupal-8-quickstart)
   - [Backdrop](https://ddev.readthedocs.io/en/stable/users/cli-usage/#backdrop-quickstart) 
   - [TYPO3](https://ddev.readthedocs.io/en/stable/users/cli-usage#typo3-quickstart)
 
-Having trouble? See our [support options below](#support). You might have trouble if [another local development tool is already using port 80 or 443](https://ddev.readthedocs.io/en/stable/#using-ddev-with-other-development-environments).
+Having trouble? See our [support options below](#support). You might have trouble if [another local development tool is already using port 80 or 443](https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen).
 
-## Current Feature List
+## Partial Feature List
 
-* Quickly create multiple local web development environments based on a code repositories.
+* Quickly create multiple local web development environments based on code repositories.
 * Import database for a project you're working on.
 * Import upload files to match the project (e.g. Drupal's sites/default/files or WordPress's wp-content/uploads).
 * Pantheon integration - grab a Pantheon archive and work locally with the database and files.
 * Run commands within the docker environment using `ddev exec`.
 * View logs from the web and db containers.
 * Use `ddev ssh` to explore the linux environment inside the container.
-* List running projects.
+* List running projects with `ddev list`.
+* Snapshot databases with `ddev snapshot`.
+* Temporarily share your development website with other using `ddev share`.
 
 Just running `ddev` will show you all the commands.
 
@@ -45,6 +47,6 @@ We love to hear from our users and help them be successful with ddev. Support op
 - [awesome-ddev](https://github.com/drud/awesome-ddev) repo has loads of external resources, blog posts, recipes, screencasts, and the like. Your contributions are welcome.
 - [Twitter with tag #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us, but it's not as good for interactive support, but we'll answer anywhere.
 
-## Addititional Information
-* **Contributing** See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io/en/latest/users/faq/).
+## Additional Information
+* **Contributing** See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io/en/stable/users/faq/).
 * **Roadmap:** See the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap). We love your input! Make requests in the [ddev issue queue](https://github.com/drud/ddev/issues).

@@ -1,6 +1,6 @@
 <h1>Troubleshooting</h1>
 
-Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](https://ddev.readthedocs.io/en/stable/#support). And see [Docker troubleshooting suggstions](./docker_installation.md#troubleshooting).
+Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](../index.md#support). And see [Docker troubleshooting suggstions](docker_installation.md#troubleshooting).
 
 ## General Troubleshooting Strategies
 
@@ -25,8 +25,9 @@ This means there is another webserver listening on the named port(s) and ddev ca
 
 To resolve this conflict, choose one of two methods:
 
-1. Fix port conflicts by configuring your project to use different ports.
-2. Fix port conflicts by stopping the competing application.
+1. If you are using another local development environment (MAMP, WAMP, lando, etc.) that uses these ports, consider stopping it.
+2. Fix port conflicts by configuring your project to use different ports.
+3. Fix port conflicts by stopping the competing application.
 
 ### Method 1: Fix port conflicts by configuring your project to use different ports
 
@@ -129,4 +130,4 @@ There are two workarounds for this problem:
 
 ## More Support
 
-[Support options](https://ddev.readthedocs.io/en/stable/#support) has a variety of options.
+[Support options](../index.md#support) has a variety of options.

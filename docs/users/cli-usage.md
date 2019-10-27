@@ -185,11 +185,11 @@ Successfully started example-typo3-site
 Your application can be reached at: https://example-typo3-site.ddev.site
 ```
 
-**A TYPO3 an install may fail if you use the https URL ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
+**A Some versions of TYPO3 an install may fail if you use the https URL ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
 
 If doing a basic TYPO3 install, you can then `touch public/FIRST_INSTALL` and hit the http URL top begin an installation.
 
-For those wanting/needing to connect to the database within the database container directly, please see the [developer tools page](https://ddev.readthedocs.io/en/stable/users/developer-tools/#using-development-tools-on-the-host-machine).
+To connect to the database within the database container directly, please see the [developer tools page](developer-tools.md#using-development-tools-on-the-host-machine).
 
 To get started using ddev with a TYPO3 project, clone the project's repository and checkout its directory.
 
