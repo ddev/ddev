@@ -57,7 +57,7 @@ RUN apt-get -qq update && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
     echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
     echo "deb http://nginx.org/packages/debian/ stretch nginx" >> /etc/apt/sources.list && \
-    curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+    curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
         less \
