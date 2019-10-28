@@ -1,2 +1,0 @@
-# Make sure that all command scripts don't get CRLF in them
-* -text eol=lf
