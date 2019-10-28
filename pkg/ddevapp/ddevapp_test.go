@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/version"
 	"io/ioutil"
 	"net"
 	"net/url"
@@ -243,8 +244,16 @@ func TestDdevStart(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	// Before start, since we haven't changed MariaDBVersion, it should be ""
+	assert.EqualValues("", app.MariaDBVersion)
+
 	err = app.Start()
 	assert.NoError(err)
+
+	// After start, we haven't changed default version, the dbimage
+	// should now be set and should be the default
+	assert.EqualValues(app.DBImage, version.GetDBImage(nodeps.MariaDB))
+
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
