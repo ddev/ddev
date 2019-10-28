@@ -1,0 +1,33 @@
+# DDev Node recipe file.
+#
+# To use this in your own project:
+# 1. Copy this file to your project's ".ddev" directory.
+# 2. Launch "ddev start".
+
+version: '3.6'
+
+services:
+  # This is the service name used when running ddev commands accepting the
+  # --service flag.
+  node:
+    # This is the name of the container. It is recommended to follow the same
+    # name convention used in the main docker-compose.yml file.
+    container_name: ddev-${DDEV_SITENAME}-node
+    working_dir: /var/www/html/path/to/theme
+    image: node
+    # Node is available at this port inside the container.
+    ports:
+      - 3000
+    # These labels ensure this service is discoverable by ddev.
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+    environment:
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - HTTP_EXPOSE=3000
+    volumes:
+      - ../:/var/www/html
+    command: sh -c 'yarn install && yarn run start'
+  web:
+    links:
+      - node:node

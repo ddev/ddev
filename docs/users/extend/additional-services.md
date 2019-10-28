@@ -70,6 +70,14 @@ This recipe adds a [Beanstalk](https://beanstalkd.github.io/) container to a pro
 - The Beanstalk instance will listen on TCP port 11300 (the beanstalkd default).
 - Configure your application to access Beanstalk on the host:port `beanstalk:11300`.
 
+## Node
+This recipe adds a [Node](https://github.com/nodejs/docker-node) container to a project.
+
+**Installation:**
+
+- Copy [docker-compose.node.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/docker-compose.node.yaml) to the .ddev folder for your project.
+- Run `ddev start`.
+
 ## Additional services in ddev-contrib (MongoDB, Blackfire, PostgresSQL, etc)
 
 The [ddev-contrib](https://github.com/drud/ddev-contrib) repository has a wealth of additional examples and instructions:
