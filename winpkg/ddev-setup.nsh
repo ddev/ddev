@@ -1,5 +1,5 @@
 /**
- * ddev.nsi - DDEV Local Setup Script
+ * ddev-setup.nsi - DDEV Local Setup Script
  *
  * Important hints on extending this installer, please follow this
  * instructions.
@@ -34,6 +34,43 @@
  *   and `!insertmacro MUI_STARTMENU_WRITE_BEGIN`
  * - start menu short cuts must not be declared in the uninstaller
  */
+
+!echo "NSIS_VERSION: ${NSIS_VERSION}"
+!echo "NSIS_PACKEDVERSION: ${NSIS_PACKEDVERSION}"
+
+!if ! "${NSIS_PACKEDVERSION} >= 0x3004000"
+  !error "NSIS 3.04 or higher is required to build this installer!"
+!endif
+
+!ifndef DDEV_SETUP_PRE_NSH
+  !define DDEV_SETUP_PRE_NSH
+
+  # Define setup types
+  !define DDEV_INSTALLER_TYPE_SYSTEM "DDEV_SYSTEM"
+  !define DDEV_INSTALLER_TYPE_USER "DDEV_USER"
+
+  !ifdef DDEV_INSTALLER_TYPE
+    !undef DDEV_INSTALLER_TYPE
+  !endif
+!else
+
+!ifndef DDEV_SETUP_NSH
+  !define DDEV_SETUP_NSH
+
+/**
+ * Verify DDEV_INSTALLER_TYPE is defined before second inclusion of this file
+ */
+!ifndef DDEV_INSTALLER_TYPE
+  !error "DDEV_INSTALLER_TYPE is not defined but must be defined after the first include and before the second of ${__FILE__}"
+!else if ${DDEV_INSTALLER_TYPE} == ${DDEV_INSTALLER_TYPE_SYSTEM}
+  # Do nothing, valid installer type
+!else if ${DDEV_INSTALLER_TYPE} == ${DDEV_INSTALLER_TYPE_USER}
+  # Do nothing, valid installer type
+!else
+  !error "DDEV_INSTALLER_TYPE is not a valid installer type: ${DDEV_INSTALLER_TYPE}"
+!endif
+
+
 
 /**
  * Add local include and plugin directories
@@ -102,13 +139,29 @@
  *
  * Has to be done before including headers
  */
-OutFile "..\.gotmp\bin\windows_amd64\ddev_windows_installer.${PRODUCT_VERSION}.exe"
+!if ${DDEV_INSTALLER_TYPE} == ${DDEV_INSTALLER_TYPE_SYSTEM}
+  OutFile "..\.gotmp\bin\windows_amd64\ddev_windows_installer.${PRODUCT_VERSION}.exe"
+!else if ${DDEV_INSTALLER_TYPE} == ${DDEV_INSTALLER_TYPE_USER}
+  OutFile "..\.gotmp\bin\windows_amd64\ddev_windows_user_installer.${PRODUCT_VERSION}.exe"
+!else
+  !error "DDEV_INSTALLER_TYPE '${DDEV_INSTALLER_TYPE}' is not defined!"
+!endif
+
 Unicode true
 SetCompressor /SOLID lzma
 
-InstallDir "$PROGRAMFILES64\${PRODUCT_NAME}"
+!if ${DDEV_INSTALLER_TYPE} == ${DDEV_INSTALLER_TYPE_SYSTEM}
+  InstallDir "$PROGRAMFILES64\${PRODUCT_NAME}"
 
-RequestExecutionLevel admin
+  RequestExecutionLevel admin
+!else if ${DDEV_INSTALLER_TYPE} == ${DDEV_INSTALLER_TYPE_USER}
+  InstallDir "$LOCALAPPDATA\Programs\${PRODUCT_NAME}"
+
+  RequestExecutionLevel user
+!else
+  !error "DDEV_INSTALLER_TYPE '${DDEV_INSTALLER_TYPE}' is not defined!"
+!endif
+
 ;ManifestSupportedOS
 
 
@@ -143,8 +196,15 @@ InstType "Minimal"
  * Names
  */
 Var InstallerMode
-Name "${PRODUCT_NAME_FULL}"
-Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerMode"
+!if ${DDEV_INSTALLER_TYPE} == ${DDEV_INSTALLER_TYPE_SYSTEM}
+  Name "${PRODUCT_NAME_FULL} System Installer"
+  Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} System $InstallerMode"
+!else if ${DDEV_INSTALLER_TYPE} == ${DDEV_INSTALLER_TYPE_USER}
+  Name "${PRODUCT_NAME_FULL} User Installer"
+  Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} User $InstallerMode"
+!else
+  !error "DDEV_INSTALLER_TYPE '${DDEV_INSTALLER_TYPE}' is not defined!"
+!endif
 
 
 
@@ -386,7 +446,13 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
    */
   Section "Add to PATH" SecAddToPath
     SectionIn 1 2 3
-    EnVar::SetHKLM
+    !if ${DDEV_INSTALLER_TYPE} == ${DDEV_INSTALLER_TYPE_SYSTEM}
+      EnVar::SetHKLM
+    !else if ${DDEV_INSTALLER_TYPE} == ${DDEV_INSTALLER_TYPE_USER}
+      EnVar::SetHKCU
+    !else
+      !error "DDEV_INSTALLER_TYPE '${DDEV_INSTALLER_TYPE}' is not defined!"
+    !endif
     EnVar::AddValue "Path" "$INSTDIR"
   SectionEnd
 SectionGroupEnd
@@ -994,3 +1060,6 @@ Function un.mkcertUninstall
     Pop $0
   ${EndIf}
 FunctionEnd
+
+!endif # DDEV_SETUP_NSH
+!endif # DDEV_SETUP_PRE_NSH

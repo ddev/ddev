@@ -66,7 +66,7 @@ if [ -d chocolatey ]; then
     tar -czf $ARTIFACTS/ddev_chocolatey.$VERSION.tar.gz chocolatey
 fi
 
-cp ddev_windows_installer*.exe $ARTIFACTS
+cp ddev_windows_*installer*.exe $ARTIFACTS
 
 # Create macOS and Linux homebrew bottles
 for os in sierra x86_64_linux ; do
