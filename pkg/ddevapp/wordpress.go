@@ -59,7 +59,7 @@ func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 		SecureAuthSalt:   util.RandString(64),
 		Signature:        DdevFileSignature,
 		SiteSettings:     "wp-config.php",
-		SiteSettingsDdev: "wp-config-ddev.php",
+		SiteSettingsDdev: "local-config.php",
 		AbsPath:          absPath,
 	}
 }
@@ -198,7 +198,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 		} else {
 			// Settings file exists and is not ddev-managed, alert the user to the location
 			// of the generated ddev settings file
-			util.Failed(wordpressConfigInstructions, app.SiteDdevSettingsFile)
+			util.Warning(wordpressConfigInstructions, app.SiteDdevSettingsFile)
 		}
 	} else {
 		// If settings file does not exist, write basic settings file including it
