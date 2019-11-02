@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -61,8 +60,5 @@ func init() {
 	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
 	ImportDBCmd.Flags().StringVarP(&dbExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
 	ImportDBCmd.Flags().BoolVarP(&progressOption, "progress", "p", true, "Display a progress bar during import")
-	app, err := ddevapp.GetActiveApp("")
-	if err == nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
-		RootCmd.AddCommand(ImportDBCmd)
-	}
+	RootCmd.AddCommand(ImportDBCmd)
 }
