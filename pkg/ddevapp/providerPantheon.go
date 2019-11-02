@@ -48,14 +48,6 @@ func (p *PantheonProvider) Init(app *DdevApp) error {
 // allows provider plugins to have additional validation for top level config
 // settings.
 func (p *PantheonProvider) ValidateField(field, value string) error {
-	switch field {
-	case "Name":
-		_, err := findPantheonSite(value)
-		if err != nil {
-			p.Sitename = value
-		}
-		return err
-	}
 	return nil
 }
 
