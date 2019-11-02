@@ -562,7 +562,14 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
-			assert.Equal(version.GetDBImage(nodeps.MariaDB, cmdDBImageVersion), app.DBImage, "Incoorrect dbimage %s for cmdMariaDBVersion %s", app.DBImage, cmdDBImageVersion)
+			// Loaded app dbimage version should be the explicit value found in
+			// config.yaml. Or it should be empty if the cmdDbImage is the default
+			if app.DBImage == "" && cmdDBImageVersion == cmdMariaDBVersion {
+				// Should have blank dbimage
+				// if the specified dbimage is the default for this mariadb version
+			} else {
+				assert.Equal(version.GetDBImage(nodeps.MariaDB, cmdDBImageVersion), app.DBImage, "Incorrect dbimage '%s' for cmdMariaDBVersion '%s' and cmdDBImageVersion=%s", app.DBImage, cmdMariaDBVersion, cmdDBImageVersion)
+			}
 
 			// Now test with NewApp()'s adjustments
 			app, err = ddevapp.NewApp(tmpDir, false, "")
@@ -572,7 +579,13 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			_, err = app.ReadConfig(false)
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
-			assert.Equal(version.GetDBImage(nodeps.MariaDB, cmdMariaDBVersion), app.DBImage)
+
+			// app.DBImage should be "" if it's the default for that maria version
+			if cmdDBImageVersion == cmdMariaDBVersion {
+				assert.Equal("", app.DBImage)
+			} else {
+				assert.EqualValues(app.DBImage, version.GetDBImage(nodeps.MariaDB, cmdDBImageVersion))
+			}
 		}
 	}
 }

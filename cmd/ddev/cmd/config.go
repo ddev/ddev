@@ -124,11 +124,6 @@ var (
 	// phpMyAdminPortArg is arg for phpmyadmin container port access
 	phpMyAdminPortArg string
 
-	// webImageExtraPackages and dbImageExtraPackages are comma-delimited
-	// lists of Debian packages to be added to related containers on build
-	webimageExtraPackages string
-	dbimageExtraPackages  string
-
 	// projectTLDArg specifies a project top-level-domain; defaults to ddevapp.DdevDefaultTLD
 	projectTLDArg string
 
@@ -285,9 +280,9 @@ func init() {
 	err = ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --project-name")
 	util.CheckErr(err)
 
-	ConfigCommand.Flags().StringVar(&webimageExtraPackages, "webimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to web container when the project is started")
+	ConfigCommand.Flags().String("webimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to web container when the project is started")
 
-	ConfigCommand.Flags().StringVar(&dbimageExtraPackages, "dbimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to db container when the project is started")
+	ConfigCommand.Flags().String("dbimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to db container when the project is started")
 
 	ConfigCommand.Flags().StringVar(&projectTLDArg, "project-tld", nodeps.DdevDefaultTLD, "set the top-level domain to be used for projects, defaults to "+nodeps.DdevDefaultTLD)
 
@@ -482,23 +477,19 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	if cmd.Flag("webimage-extra-packages").Changed {
-		if webimageExtraPackages == "" {
+		if cmd.Flag("webimage-extra-packages").Value.String() == "" {
 			app.WebImageExtraPackages = nil
 		} else {
-			app.WebImageExtraPackages = strings.Split(webimageExtraPackages, ",")
+			app.WebImageExtraPackages = strings.Split(cmd.Flag("webimage-extra-packages").Value.String(), ",")
 		}
 	}
 
 	if cmd.Flag("dbimage-extra-packages").Changed {
-		if dbimageExtraPackages == "" {
+		if cmd.Flag("dbimage-extra-packages").Value.String() == "" {
 			app.DBImageExtraPackages = nil
 		} else {
-			app.DBImageExtraPackages = strings.Split(dbimageExtraPackages, ",")
+			app.DBImageExtraPackages = strings.Split(cmd.Flag("dbimage-extra-packages").Value.String(), ",")
 		}
-	}
-
-	if cmd.Flag("dbimage-extra-packages").Changed {
-		app.WebImageExtraPackages = strings.Split(webimageExtraPackages, ",")
 	}
 
 	if cmd.Flag("use-dns-when-possible").Changed {
