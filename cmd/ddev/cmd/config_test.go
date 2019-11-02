@@ -425,7 +425,6 @@ func TestConfigMariaDBVersion(t *testing.T) {
 
 	testDir, _ := os.Getwd()
 	versionsToTest := nodeps.ValidMariaDBVersions
-	versionsToTest = map[string]bool{"5.5": true, "10.2": true}
 
 	// Create a temporary directory and switch to it.
 	tmpDir := testcommon.CreateTmpDir(t.Name())
@@ -436,6 +435,24 @@ func TestConfigMariaDBVersion(t *testing.T) {
 		"config",
 		"--mariadb-version",
 	}
+
+	// Use a config file that does not specify mariadb version
+	// it should end up with default mariadb version dbimage
+	_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
+	_ = os.MkdirAll(filepath.Join(tmpDir, ".ddev"), 0777)
+	err := fileutil.CopyFile(filepath.Join(testDir, "testdata/TestConfigMariaDBVersion", "config.yaml.empty"), filepath.Join(tmpDir, ".ddev", "config.yaml"))
+	assert.NoError(err)
+	app, err := ddevapp.NewApp(tmpDir, false, "")
+	//nolint: errcheck
+	defer app.Stop(true, false)
+	assert.NoError(err)
+	_, err = app.ReadConfig(false)
+	assert.NoError(err)
+	assert.Equal("", app.MariaDBVersion)
+	err = app.Start()
+	assert.NoError(err)
+	assert.EqualValues(version.GetDBImage(nodeps.MariaDB, version.MariaDBDefaultVersion), app.DBImage)
+	_ = app.Stop(true, false)
 
 	// Verify behavior with no existing config.yaml. It should
 	// just add mariadb_version into the config and nothing else
@@ -590,8 +607,49 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	}
 }
 
-// Required extra things to test
-// * Mysql version shouldn't leak into dbimage in config
-// * Mysql and MariaDB should be incompatible
-// * dbimage should override mysql_version config
-// * empty should result in DefaultMaria
+// TestConfigMySQLVersion tests various permutations of mysql version
+// and mariadb version, etc.
+func TestConfigMySQLVersion(t *testing.T) {
+	assert := asrt.New(t)
+	versionsToTest := nodeps.ValidMySQLVersions
+
+	// Create a temporary directory and switch to it.
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpDir)
+	defer testcommon.Chdir(tmpDir)()
+
+	args := []string{
+		"config",
+		"--mysql-version=5.6",
+		"--mariadb-version=10.1",
+	}
+
+	// Try conflicting configurations
+	_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
+	configArgs := append(args, "--project-name=conflicting-db-versions")
+	out, err := exec.RunCommand(DdevBin, configArgs)
+	assert.Error(err)
+	assert.Contains(out, "failed to validate config: both mariadb_version (10.1) and mysql_version (5.6) are set")
+
+	for cmdMySQLVersion := range versionsToTest {
+		for cmdDBImageVersion := range versionsToTest {
+			args := []string{
+				"config",
+			}
+			_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
+			configArgs := append(args, []string{
+				"--project-name=mysqlversion-" + cmdMySQLVersion + "-dbimageversion-" + cmdDBImageVersion,
+				"--db-image=" + version.GetDBImage(nodeps.MySQL, cmdDBImageVersion),
+				"--mysql-version=" + cmdMySQLVersion,
+			}...)
+			ddevCmd := strings.Join(configArgs, " ")
+			out, err = exec.RunCommand(DdevBin, configArgs)
+			assert.NoError(err, "failed to run ddevcmd=%s, out=%s", ddevCmd, out)
+			assert.Contains(out, "You may now run 'ddev start'")
+
+			app, err := ddevapp.NewApp(tmpDir, false, "")
+			assert.NoError(err)
+			assert.EqualValues(version.GetDBImage(nodeps.MySQL, cmdDBImageVersion), app.DBImage)
+		}
+	}
+}
