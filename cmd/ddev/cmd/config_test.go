@@ -637,8 +637,9 @@ func TestConfigMySQLVersion(t *testing.T) {
 				"config",
 			}
 			_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
+			projectName := "mysqlversion-" + cmdMySQLVersion + "-dbimageversion-" + cmdDBImageVersion
 			configArgs := append(args, []string{
-				"--project-name=mysqlversion-" + cmdMySQLVersion + "-dbimageversion-" + cmdDBImageVersion,
+				"--project-name=" + projectName,
 				"--db-image=" + version.GetDBImage(nodeps.MySQL, cmdDBImageVersion),
 				"--mysql-version=" + cmdMySQLVersion,
 			}...)
@@ -650,6 +651,7 @@ func TestConfigMySQLVersion(t *testing.T) {
 			app, err := ddevapp.NewApp(tmpDir, false, "")
 			assert.NoError(err)
 			assert.EqualValues(version.GetDBImage(nodeps.MySQL, cmdDBImageVersion), app.DBImage)
+			_, _ = exec.RunCommand(DdevBin, []string{"remove", "-RO"})
 		}
 	}
 }
