@@ -33,10 +33,7 @@ var ExportDBCmd = &cobra.Command{
 		}
 
 		if app.SiteStatus() != ddevapp.SiteRunning {
-			err = app.Start()
-			if err != nil {
-				util.Failed("Failed to start app %s to export-db: %v", app.Name, err)
-			}
+			util.Failed("ddev can't export-db until the project is started, please start it first.")
 		}
 
 		err = app.ExportDB(outFileName, gzipOption)
