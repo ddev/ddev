@@ -4,7 +4,7 @@ ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4"
 ENV PHP_DEFAULT_VERSION="7.2"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 
-ENV DRUSH_VERSION=8.3.0
+ENV DRUSH_VERSION=8.3.1
 ENV DRUSH_LAUNCHER_VERSION=0.6.0
 ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
 ENV MAILHOG_VERSION=1.0.0
@@ -57,7 +57,7 @@ RUN apt-get -qq update && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
     echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
     echo "deb http://nginx.org/packages/debian/ stretch nginx" >> /etc/apt/sources.list && \
-    curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+    curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
         less \
