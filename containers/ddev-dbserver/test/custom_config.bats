@@ -17,7 +17,7 @@ function setup {
     docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
 
     echo "# Starting image with database image $IMAGE"
-docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql -v $PWD/test/testdata:/mnt/ddev_config:ro --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE
+docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql -v "/$PWD/test/testdata:/mnt/ddev_config:ro" --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE
     containercheck
 }
 
