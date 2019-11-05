@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,7 +47,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 	}
 
 	// Create the ddevapp we'll use for testing.
-	app, err := NewApp(testDir, true, ProviderPantheon)
+	app, err := NewApp(testDir, true, nodeps.ProviderPantheon)
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -86,7 +87,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 
 	// Ensure values were properly set on the app struct.
 	assert.Equal(pantheonTestSiteName, app.Name)
-	assert.Equal(AppTypeDrupal8, app.Type)
+	assert.Equal(nodeps.AppTypeDrupal8, app.Type)
 	assert.Equal("docroot", app.Docroot)
 	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
@@ -106,7 +107,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, true, ProviderPantheon)
+	app, err := NewApp(testDir, true, nodeps.ProviderPantheon)
 	assert.NoError(err)
 	app.Name = pantheonTestSiteName
 
@@ -150,10 +151,10 @@ func TestPantheonPull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
-	app, err := NewApp(siteDir, true, ProviderPantheon)
+	app, err := NewApp(siteDir, true, nodeps.ProviderPantheon)
 	assert.NoError(err)
 	app.Name = pantheonTestSiteName
-	app.Type = AppTypeDrupal8
+	app.Type = nodeps.AppTypeDrupal8
 	app.Hooks = map[string][]YAMLTask{"post-pull": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-pull": {{"exec-host": "touch hello-pre-pull-" + app.Name}}}
 
 	err = app.WriteConfig()

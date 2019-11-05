@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
 	"os"
@@ -102,7 +103,7 @@ var (
 	// omitContainersArg allows user to determine value of omit_containers
 	omitContainersArg string
 
-	// mariadbVersionArg is mariadb version 10.1 or 10.2
+	// mariadbVersionArg is mariadb version 5.5-10.4
 	mariaDBVersionArg string
 
 	// nfsMountEnabled sets nfs_mount_enabled
@@ -123,11 +124,6 @@ var (
 	// phpMyAdminPortArg is arg for phpmyadmin container port access
 	phpMyAdminPortArg string
 
-	// webImageExtraPackages and dbImageExtraPackages are comma-delimited
-	// lists of Debian packages to be added to related containers on build
-	webimageExtraPackages string
-	dbimageExtraPackages  string
-
 	// projectTLDArg specifies a project top-level-domain; defaults to ddevapp.DdevDefaultTLD
 	projectTLDArg string
 
@@ -138,7 +134,7 @@ var (
 	ngrokArgs string
 )
 
-var providerName = ddevapp.ProviderDefault
+var providerName = nodeps.ProviderDefault
 
 // extraFlagsHandlingFunc does specific handling for additional flags, and is different per provider.
 var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error
@@ -253,7 +249,9 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, "Unsets a db service working directory override")
 	ConfigCommand.Flags().BoolVar(&dbaWorkingDirDefaultArg, "dba-working-dir-default", false, "Unsets a dba service working directory override")
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
-	ConfigCommand.Flags().StringVar(&mariaDBVersionArg, "mariadb-version", "10.2", "mariadb version to use")
+	ConfigCommand.Flags().StringVar(&mariaDBVersionArg, "mariadb-version", "10.2", "mariadb version to use (incompatible with --mysql-version)")
+	ConfigCommand.Flags().String("mysql-version", "", "Oracle mysql version to use (incompatible with --mariadb-version)")
+
 	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")
 	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound port")
 	ConfigCommand.Flags().StringVar(&hostHTTPSPortArg, "host-https-port", "", "The web container's localhost-bound https port")
@@ -282,11 +280,11 @@ func init() {
 	err = ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --project-name")
 	util.CheckErr(err)
 
-	ConfigCommand.Flags().StringVar(&webimageExtraPackages, "webimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to web container when the project is started")
+	ConfigCommand.Flags().String("webimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to web container when the project is started")
 
-	ConfigCommand.Flags().StringVar(&dbimageExtraPackages, "dbimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to db container when the project is started")
+	ConfigCommand.Flags().String("dbimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to db container when the project is started")
 
-	ConfigCommand.Flags().StringVar(&projectTLDArg, "project-tld", ddevapp.DdevDefaultTLD, "set the top-level domain to be used for projects, defaults to "+ddevapp.DdevDefaultTLD)
+	ConfigCommand.Flags().StringVar(&projectTLDArg, "project-tld", nodeps.DdevDefaultTLD, "set the top-level domain to be used for projects, defaults to "+nodeps.DdevDefaultTLD)
 
 	ConfigCommand.Flags().BoolVarP(&useDNSWhenPossibleArg, "use-dns-when-possible", "", true, "Use DNS for hostname resolution instead of /etc/hosts when possible")
 
@@ -410,7 +408,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	// We don't want to write out dbimage if it's just the one that goes with
 	// the mariadb_version.
-	if app.DBImage == version.GetDBImage(app.MariaDBVersion) {
+	if app.DBImage == version.GetDBImage(nodeps.MariaDB, "", app.MariaDBVersion) {
 		app.DBImage = ""
 	}
 
@@ -438,8 +436,16 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	// If the mariaDBVersionArg is set, use it
-	if mariaDBVersionArg != "" {
+	if cmd.Flag("mariadb-version").Changed {
 		app.MariaDBVersion = mariaDBVersionArg
+	}
+	// If the mariaDBVersionArg is set, use it
+	if cmd.Flag("mysql-version").Changed {
+		app.MySQLVersion, err = cmd.Flags().GetString("mysql-version")
+		if err != nil {
+			util.Failed("Incorrect mysql-version: %v", err)
+		}
+
 	}
 
 	if cmd.Flag("nfs-mount-enabled").Changed {
@@ -471,23 +477,19 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	if cmd.Flag("webimage-extra-packages").Changed {
-		if webimageExtraPackages == "" {
+		if cmd.Flag("webimage-extra-packages").Value.String() == "" {
 			app.WebImageExtraPackages = nil
 		} else {
-			app.WebImageExtraPackages = strings.Split(webimageExtraPackages, ",")
+			app.WebImageExtraPackages = strings.Split(cmd.Flag("webimage-extra-packages").Value.String(), ",")
 		}
 	}
 
 	if cmd.Flag("dbimage-extra-packages").Changed {
-		if dbimageExtraPackages == "" {
+		if cmd.Flag("dbimage-extra-packages").Value.String() == "" {
 			app.DBImageExtraPackages = nil
 		} else {
-			app.DBImageExtraPackages = strings.Split(dbimageExtraPackages, ",")
+			app.DBImageExtraPackages = strings.Split(cmd.Flag("dbimage-extra-packages").Value.String(), ",")
 		}
-	}
-
-	if cmd.Flag("dbimage-extra-packages").Changed {
-		app.WebImageExtraPackages = strings.Split(webimageExtraPackages, ",")
 	}
 
 	if cmd.Flag("use-dns-when-possible").Changed {

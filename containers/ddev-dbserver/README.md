@@ -1,20 +1,11 @@
 # ddev-dbserver for ddev
 
-This docker image builds a mariadb database server container for ddev.
+This docker image builds database server images (MariaDB and MySQL) for DDEV-Local.
 
-It builds/copies a simple starter database (an empty database named "db") and starts up the mariadb server.
+```
+make container
+make push
+make push VERSION=someversion
+make clean
+```
 
-# Updating the default starter mariadb databases
-
-In the future there may be a need to add another database or rename a database, etc.
-
-The create_base_db.sh script is there for that. You can run it from the
-root of this repository like this and it will update the db starter file:
-
-
-`docker run -it -v "$PWD/files/var/tmp/mysqlbase:/mysqlbase" --rm --entrypoint=/create_base_db.sh drud/ddev-dbserver:<your_version>`
-
-Of course the assumption is that you might have to change the name of the output
-file or make other changes in the process.
-
-But then rebuild the container with whatever other changes you're working on.

@@ -85,7 +85,8 @@ type DdevApp struct {
 	XdebugEnabled         bool                  `yaml:"xdebug_enabled"`
 	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string              `yaml:"additional_fqdns"`
-	MariaDBVersion        string                `yaml:"mariadb_version"`
+	MariaDBVersion        string                `yaml:"mariadb_version,omitempty"`
+	MySQLVersion          string                `yaml:"mysql_version,omitempty"`
 	WebcacheEnabled       bool                  `yaml:"webcache_enabled,omitempty"`
 	NFSMountEnabled       bool                  `yaml:"nfs_mount_enabled"`
 	ConfigPath            string                `yaml:"-"`
@@ -204,6 +205,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["mariadb_version"] = app.MariaDBVersion
+			dbinfo["mysql_version"] = app.MySQLVersion
 			appDesc["dbinfo"] = dbinfo
 
 			if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
@@ -272,7 +274,7 @@ func (app *DdevApp) GetName() string {
 
 // GetPhpVersion returns the app's php version
 func (app *DdevApp) GetPhpVersion() string {
-	v := PHPDefault
+	v := nodeps.PHPDefault
 	if app.PHPVersion != "" {
 		v = app.PHPVersion
 	}
@@ -281,7 +283,7 @@ func (app *DdevApp) GetPhpVersion() string {
 
 // GetWebserverType returns the app's webserver type (nginx-fpm/apache-fpm/apache-cgi)
 func (app *DdevApp) GetWebserverType() string {
-	v := WebserverDefault
+	v := nodeps.WebserverDefault
 	if app.WebserverType != "" {
 		v = app.WebserverType
 	}
@@ -685,11 +687,46 @@ func (app *DdevApp) ProcessHooks(hookName string) (string, string, error) {
 	return stdout, stderr, nil
 }
 
+// GetDBImage uses the available mariadb or mysql version or provides the default
+func (app *DdevApp) GetDBImage() string {
+	// If an explicit dbimage is set, just use it.
+	if app.DBImage != "" {
+		return app.DBImage
+	}
+
+	dbImage := ""
+	// If the dbimage has not been overridden (because dbimage takes precedence)
+	// and the mariadb_version/mysql_version *has* been changed by config,
+	// use the dbimage derived from dbversion.
+	// IF dbimage has not been specified (it equals mariadb default)
+	// AND mariadb version is NOT the default version
+	// Then override the dbimage with related mariadb or mysql version
+
+	// If no (dbimage set or it's the default image) and MariaDB or MySQL version set
+	if (app.DBImage == "" || app.DBImage == version.GetDBImage(nodeps.MariaDB)) && (app.MariaDBVersion != "" || app.MySQLVersion != "") {
+		switch {
+		// mariadb_version is explicitly set
+		case app.MariaDBVersion != "":
+			dbImage = version.GetDBImage(nodeps.MariaDB, app.MariaDBVersion)
+		// mysql_version is explicitly set
+		case app.MySQLVersion != "":
+			dbImage = version.GetDBImage(nodeps.MySQL, app.MySQLVersion)
+		}
+	}
+	// Default behavior is just to use the MariaDB image.
+	if dbImage == "" {
+		dbImage = version.GetDBImage(nodeps.MariaDB)
+	}
+	return dbImage
+}
+
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
 
 	app.DockerEnv()
+
+	app.DBImage = app.GetDBImage()
 
 	APIVersion, err := semver.NewVersion(app.APIVersion)
 	if err != nil {
@@ -1065,7 +1102,7 @@ func (app *DdevApp) DockerEnv() {
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
 		"DDEV_SITENAME":                 app.Name,
-		"DDEV_DBIMAGE":                  app.DBImage,
+		"DDEV_DBIMAGE":                  app.GetDBImage(),
 		"DDEV_DBAIMAGE":                 app.DBAImage,
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_BGSYNCIMAGE":              app.BgsyncImage,
@@ -1153,7 +1190,7 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 			"com.docker.compose.service": containerType,
 		}
 		waitTime := containerWaitTimeout
-		if containerType == BGSYNCContainer {
+		if containerType == nodeps.BGSYNCContainer {
 			waitTime = bgsyncWaitTimeout
 		}
 		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
@@ -1169,7 +1206,7 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 func (app *DdevApp) WaitSync() error {
 	labels := map[string]string{
 		"com.ddev.site-name":         app.GetName(),
-		"com.docker.compose.service": BGSYNCContainer,
+		"com.docker.compose.service": nodeps.BGSYNCContainer,
 	}
 
 	if !app.WebcacheEnabled {
@@ -1268,7 +1305,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	util.Warning("Creating database snapshot %s", snapshotName)
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir),
+		Cmd:     fmt.Sprintf("$(/backuptool.sh) --backup --target-dir=%s --user=root --password=root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir),
 	})
 
 	if err != nil {
@@ -1293,6 +1330,13 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("Failed to process pre-restore-snapshot hooks: %v", err)
 	}
 
+	currentDBVersion := version.MariaDBDefaultVersion
+	if app.MariaDBVersion != "" {
+		currentDBVersion = app.MariaDBVersion
+	} else if app.MySQLVersion != "" {
+		currentDBVersion = app.MySQLVersion
+	}
+
 	snapshotDir := filepath.Join("db_snapshots", snapshotName)
 
 	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
@@ -1302,24 +1346,19 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 
 	// Find out the mariadb version that correlates to the snapshot.
 	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
-	var snapshotMariaDBVersion string
+	var snapshotDBVersion string
 	if fileutil.FileExists(versionFile) {
-		snapshotMariaDBVersion, err = fileutil.ReadFileIntoString(versionFile)
+		snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
 		if err != nil {
 			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
 		}
 	} else {
-		snapshotMariaDBVersion = MariaDB101
+		snapshotDBVersion = "unknown"
 	}
-	snapshotMariaDBVersion = strings.Trim(snapshotMariaDBVersion, " \n\t")
+	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \n\t")
 
-	if snapshotMariaDBVersion == MariaDB101 && app.MariaDBVersion != MariaDB101 {
-		//nolint: golint
-		return fmt.Errorf("snapshot %s is a MariaDB 10.1 snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).\nPlease use the instructions at %s to change the MariaDB version so you can restore it.", snapshotDir, app.MariaDBVersion, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
-	}
-	if snapshotMariaDBVersion != MariaDB101 && app.MariaDBVersion == MariaDB101 {
-		//nolint: golint
-		return fmt.Errorf("snapshot %s is a MariaDB %s snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).", snapshotDir, snapshotMariaDBVersion, app.MariaDBVersion)
+	if snapshotDBVersion != currentDBVersion {
+		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotDir, snapshotDBVersion, currentDBVersion)
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
@@ -1728,16 +1767,16 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	}
 
 	var provider Provider
-	err := fmt.Errorf("unknown provider type: %s, must be one of %v", app.Provider, GetValidProviders())
+	err := fmt.Errorf("unknown provider type: %s, must be one of %v", app.Provider, nodeps.GetValidProviders())
 
 	switch app.Provider {
-	case ProviderPantheon:
+	case nodeps.ProviderPantheon:
 		provider = &PantheonProvider{}
 		err = provider.Init(app)
-	case ProviderDrudS3:
+	case nodeps.ProviderDrudS3:
 		provider = &DrudS3Provider{}
 		err = provider.Init(app)
-	case ProviderDefault:
+	case nodeps.ProviderDefault:
 		provider = &DefaultProvider{}
 		err = nil
 	default:
@@ -1783,7 +1822,7 @@ func (app *DdevApp) precacheWebdir() error {
 
 	// Set the flag to tell unison it can start syncing
 	_, _, err = app.Exec(&ExecOpts{
-		Service: BGSYNCContainer,
+		Service: nodeps.BGSYNCContainer,
 		Cmd:     "touch /var/tmp/unison_start_authorized",
 	})
 	if err != nil {

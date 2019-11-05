@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"os/exec"
 	"strings"
@@ -102,7 +103,7 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 	} else if e, ok = ytask["exec"]; ok {
 		t := ExecTask{app: app, exec: e.(string)}
 		if t.service, ok = ytask["service"].(string); !ok {
-			t.service = WebContainer
+			t.service = nodeps.WebContainer
 		}
 		return t
 	} else if e, ok = ytask["composer"]; ok {

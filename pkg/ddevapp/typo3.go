@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"io/ioutil"
 
 	"os"
@@ -160,7 +161,7 @@ func isTypo3App(app *DdevApp) bool {
 
 // typo3ConfigOverrideAction sets a safe php_version for TYPO3
 func typo3ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = PHP72
+	app.PHPVersion = nodeps.PHP72
 	return nil
 }
 

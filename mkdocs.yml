@@ -21,6 +21,7 @@ pages:
     - 'Uninstalling DDEV-Local': 'users/uninstall.md'
     - 'Frequently-Asked Questions (FAQ)': 'users/faq.md'
     - '.ddev/config.yaml Options': 'users/extend/config_yaml.md'
+    - 'Database Server Types': 'users/extend/database_types.md'
     - 'Additional Project Hostnames': 'users/extend/additional-hostnames.md'
   - 'Extending ddev':
     - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'

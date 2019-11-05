@@ -55,7 +55,7 @@ var WebTag = "20191104_heddn_drush_node_version" // Note that this can be overri
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.11.0"
+var BaseDBTag = "20191007_many_mariadb"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
@@ -98,7 +98,7 @@ func GetVersionInfo() map[string]string {
 
 	versionInfo["DDEV-Local version"] = DdevVersion
 	versionInfo["web"] = GetWebImage()
-	versionInfo["db"] = GetDBImage()
+	versionInfo["db"] = GetDBImage(nodeps.MariaDB)
 	versionInfo["dba"] = GetDBAImage()
 	versionInfo["bgsync"] = BgsyncImg + ":" + BgsyncTag
 	versionInfo["router"] = RouterImage + ":" + RouterTag
@@ -129,12 +129,12 @@ func GetWebImage() string {
 }
 
 // GetDBImage returns the correctly formatted db image:tag reference
-func GetDBImage(mariaDBVersion ...string) string {
-	version := MariaDBDefaultVersion
-	if len(mariaDBVersion) > 0 {
-		version = mariaDBVersion[0]
+func GetDBImage(dbType string, dbVersion ...string) string {
+	v := MariaDBDefaultVersion
+	if len(dbVersion) > 0 {
+		v = dbVersion[0]
 	}
-	return fmt.Sprintf("%s:%s", DBImg, BaseDBTag+"-"+version)
+	return fmt.Sprintf("%s-%s-%s:%s", DBImg, dbType, v, BaseDBTag)
 }
 
 // GetDBAImage returns the correctly formatted dba image:tag reference

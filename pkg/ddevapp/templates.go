@@ -243,6 +243,12 @@ const ConfigInstructions = `
 # dbaimage: <docker_image>
 # bgsyncimage: <docker_image>
 
+# mariadb_version and mysql_version
+# ddev can use many versions of mariadb and mysql
+# However these directives are mutually exclusive
+# mariadb_version: 10.2
+# mysql_version: 8.0
+
 # router_http_port: <port>  # Port to be used for http (defaults to port 80)
 # router_https_port: <port> # Port for https (defaults to 443)
 

@@ -49,13 +49,13 @@ type Provider interface {
 func init() {
 	// This is for automated testing only. It allows us to override the webserver type.
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
-		WebserverDefault = testWebServerType
+		nodeps.WebserverDefault = testWebServerType
 	}
 	if testWebcache := os.Getenv("DDEV_TEST_USE_WEBCACHE"); testWebcache != "" {
-		WebcacheEnabledDefault = true
+		nodeps.WebcacheEnabledDefault = true
 	}
 	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount != "" {
-		NFSMountEnabledDefault = true
+		nodeps.NFSMountEnabledDefault = true
 	}
 }
 
@@ -75,25 +75,23 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	}
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.APIVersion = version.DdevVersion
-	app.Type = AppTypePHP
-	app.PHPVersion = PHPDefault
-	app.WebserverType = WebserverDefault
-	app.WebcacheEnabled = WebcacheEnabledDefault
-	app.NFSMountEnabled = NFSMountEnabledDefault
-	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
-	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
-	app.PHPMyAdminPort = DdevDefaultPHPMyAdminPort
-	app.MailhogPort = DdevDefaultMailhogPort
-	app.MariaDBVersion = version.MariaDBDefaultVersion
+	app.Type = nodeps.AppTypePHP
+	app.PHPVersion = nodeps.PHPDefault
+	app.WebserverType = nodeps.WebserverDefault
+	app.WebcacheEnabled = nodeps.WebcacheEnabledDefault
+	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
+	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
+	app.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
+	app.PHPMyAdminPort = nodeps.DdevDefaultPHPMyAdminPort
+	app.MailhogPort = nodeps.DdevDefaultMailhogPort
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
 	app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
-	app.ProjectTLD = DdevDefaultTLD
+	app.ProjectTLD = nodeps.DdevDefaultTLD
 	app.UseDNSWhenPossible = true
 
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
-	app.DBImage = version.GetDBImage(version.MariaDBDefaultVersion)
 	app.DBAImage = version.GetDBAImage()
 	app.BgsyncImage = version.GetBgsyncImage()
 
@@ -107,13 +105,6 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	}
 	app.SetApptypeSettingsPaths()
 
-	// If the dbimage has not been overridden (because it takes precedence
-	// and the mariadb_version *has* been changed by config,
-	// use the related dbimage.
-	if app.DBImage == version.GetDBImage(version.MariaDBDefaultVersion) && app.MariaDBVersion != version.MariaDBDefaultVersion {
-		app.DBImage = version.GetDBImage(app.MariaDBVersion)
-	}
-
 	// Turn off webcache_enabled except if macOS/darwin or global `developer_mode: true`
 	if runtime.GOOS != "darwin" && app.WebcacheEnabled && !globalconfig.DdevGlobalConfig.DeveloperMode {
 		app.WebcacheEnabled = false
@@ -124,10 +115,10 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	// Otherwise we accept whatever might have been in config file if there was anything.
 	if provider == "" && app.Provider != "" {
 		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
-	} else if provider == ProviderPantheon || provider == ProviderDrudS3 || provider == ProviderDefault {
+	} else if provider == nodeps.ProviderPantheon || provider == nodeps.ProviderDrudS3 || provider == nodeps.ProviderDefault {
 		app.Provider = provider // Use the provider passed-in. Function argument wins.
 	} else if provider == "" && app.Provider == "" {
-		app.Provider = ProviderDefault // Nothing passed in, nothing configured. Set c.Provider to default
+		app.Provider = nodeps.ProviderDefault // Nothing passed in, nothing configured. Set c.Provider to default
 	} else {
 		return app, fmt.Errorf("provider '%s' is not implemented", provider)
 	}
@@ -152,7 +143,7 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == version.GetWebImage() {
 		appcopy.WebImage = ""
 	}
-	if appcopy.DBImage == version.GetDBImage(appcopy.MariaDBVersion) {
+	if appcopy.DBImage == version.GetDBImage(nodeps.MariaDB, appcopy.MariaDBVersion) {
 		appcopy.DBImage = ""
 	}
 	if appcopy.DBAImage == version.GetDBAImage() {
@@ -165,14 +156,17 @@ func (app *DdevApp) WriteConfig() error {
 		appcopy.BgsyncImage = ""
 	}
 
-	if appcopy.MailhogPort == DdevDefaultMailhogPort {
+	if appcopy.MailhogPort == nodeps.DdevDefaultMailhogPort {
 		appcopy.MailhogPort = ""
 	}
-	if appcopy.PHPMyAdminPort == DdevDefaultPHPMyAdminPort {
+	if appcopy.PHPMyAdminPort == nodeps.DdevDefaultPHPMyAdminPort {
 		appcopy.PHPMyAdminPort = ""
 	}
-	if appcopy.ProjectTLD == DdevDefaultTLD {
+	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
 		appcopy.ProjectTLD = ""
+	}
+	if appcopy.MariaDBVersion == version.GetDBImage(nodeps.MariaDB) {
+		appcopy.MariaDBVersion = ""
 	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
@@ -201,7 +195,7 @@ func (app *DdevApp) WriteConfig() error {
 	}
 
 	// Append current image information
-	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s\n# webimage: %s\n# dbimage: %s\n# dbaimage: %s\n# bgsyncimage: %s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.GetWebImage(), version.GetDBImage(), version.GetDBAImage(), version.GetBgsyncImage()))...)
+	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s\n# webimage: %s\n# dbimage: %s\n# dbaimage: %s\n# bgsyncimage: %s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.GetWebImage(), version.GetDBImage(nodeps.MariaDB), version.GetDBAImage(), version.GetBgsyncImage()))...)
 
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(ConfigInstructions)...)
@@ -244,9 +238,9 @@ RUN npm install --global gulp-cli
 	contents = []byte(`
 # You can copy this Dockerfile.example to Dockerfile to add configuration
 # or packages or anything else to your dbimage
-ARG BASE_IMAGE=` + app.DBImage + `
+ARG BASE_IMAGE=` + app.GetDBImage() + `
 FROM $BASE_IMAGE
-RUN echo "Built from ` + app.DBImage + `" >/var/tmp/built-from.txt
+RUN echo "Built from ` + app.GetDBImage() + `" >/var/tmp/built-from.txt
 `)
 
 	err = WriteImageDockerfile(app.GetConfigPath("db-build")+"/Dockerfile.example", contents)
@@ -413,22 +407,35 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	// validate PHP version
-	if !IsValidPHPVersion(app.PHPVersion) {
-		return fmt.Errorf("invalid PHP version: %s, must be one of %v", app.PHPVersion, GetValidPHPVersions()).(invalidPHPVersion)
+	if !nodeps.IsValidPHPVersion(app.PHPVersion) {
+		return fmt.Errorf("invalid PHP version: %s, must be one of %v", app.PHPVersion, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
 	}
 
 	// validate webserver type
-	if !IsValidWebserverType(app.WebserverType) {
-		return fmt.Errorf("invalid webserver type: %s, must be one of %s", app.WebserverType, GetValidWebserverTypes()).(invalidWebserverType)
+	if !nodeps.IsValidWebserverType(app.WebserverType) {
+		return fmt.Errorf("invalid webserver type: %s, must be one of %s", app.WebserverType, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
 	}
 
-	if !IsValidOmitContainers(app.OmitContainers) {
-		return fmt.Errorf("invalid omit_containers: %s, must be one of %s", app.OmitContainers, GetValidOmitContainers()).(InvalidOmitContainers)
+	if !nodeps.IsValidOmitContainers(app.OmitContainers) {
+		return fmt.Errorf("invalid omit_containers: %s, must be one of %s", app.OmitContainers, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
-	// Validate mariadb version
-	if !IsValidMariaDBVersion(app.MariaDBVersion) {
-		return fmt.Errorf("invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, GetValidMariaDBVersions()).(invalidMariaDBVersion)
+	if app.MariaDBVersion != "" {
+		// Validate mariadb version version
+		if !nodeps.IsValidMariaDBVersion(app.MariaDBVersion) {
+			return fmt.Errorf("invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, nodeps.GetValidMariaDBVersions()).(invalidMariaDBVersion)
+		}
+	}
+	if app.MySQLVersion != "" {
+		// Validate /mysql version
+		if !nodeps.IsValidMySQLVersion(app.MySQLVersion) {
+			return fmt.Errorf("invalid mysql_version: %s, must be one of %s", app.MySQLVersion, nodeps.GetValidMySQLVersions()).(invalidMySQLVersion)
+		}
+	}
+
+	// Validate db versions
+	if app.MariaDBVersion != "" && app.MySQLVersion != "" {
+		return fmt.Errorf("both mariadb_version (%v) and mysql_version (%v) are set, but they are mutually exclusive", app.MariaDBVersion, app.MySQLVersion)
 	}
 
 	if app.WebcacheEnabled && app.NFSMountEnabled {
@@ -528,12 +535,12 @@ func (app *DdevApp) CheckCustomConfig() {
 	ddevDir := filepath.Dir(app.ConfigPath)
 
 	customConfig := false
-	if _, err := os.Stat(filepath.Join(ddevDir, "nginx-site.conf")); err == nil && app.WebserverType == WebserverNginxFPM {
+	if _, err := os.Stat(filepath.Join(ddevDir, "nginx-site.conf")); err == nil && app.WebserverType == nodeps.WebserverNginxFPM {
 		util.Warning("Using custom nginx configuration in nginx-site.conf")
 		customConfig = true
 	}
 
-	if _, err := os.Stat(filepath.Join(ddevDir, "apache", "apache-site.conf")); err == nil && app.WebserverType != WebserverNginxFPM {
+	if _, err := os.Stat(filepath.Join(ddevDir, "apache", "apache-site.conf")); err == nil && app.WebserverType != nodeps.WebserverNginxFPM {
 		util.Warning("Using custom apache configuration in apache/apache-site.conf")
 		customConfig = true
 	}

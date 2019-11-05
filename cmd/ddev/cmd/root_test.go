@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"strconv"
 	"testing"
@@ -30,7 +31,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 			HTTPProbeURI:                  "wp-admin/setup-config.php",
 			Docroot:                       "htdocs",
-			Type:                          ddevapp.AppTypeWordPress,
+			Type:                          nodeps.AppTypeWordPress,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 		},
 		// Drupal6 is used here just because it's smaller and we don't actually
@@ -43,7 +44,7 @@ var (
 			FullSiteTarballURL:            "",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
-			Type:                          ddevapp.AppTypeDrupal6,
+			Type:                          nodeps.AppTypeDrupal6,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
 			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",

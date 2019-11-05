@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/version"
 	"io/ioutil"
 	"net"
 	"net/url"
@@ -28,8 +29,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
-
 	"github.com/fsouza/go-dockerclient"
 	"github.com/google/uuid"
 	"github.com/lunixbochs/vtclean"
@@ -47,7 +46,7 @@ var (
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
 			Docroot:                       "htdocs",
-			Type:                          ddevapp.AppTypeWordPress,
+			Type:                          nodeps.AppTypeWordPress,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
 			FilesImageURI:                 "/wp-content/uploads/2017/04/pexels-photo-265186-1024x683.jpeg",
@@ -61,7 +60,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal8_6_1_db.tar.gz",
 			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_db.zip",
 			FullSiteTarballURL:            "",
-			Type:                          ddevapp.AppTypeDrupal8,
+			Type:                          nodeps.AppTypeDrupal8,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "this is a post with an image"},
@@ -75,7 +74,7 @@ var (
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59-db.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
-			Type:                          ddevapp.AppTypeDrupal7,
+			Type:                          nodeps.AppTypeDrupal7,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "D7 test project, kittens edition"},
 			FilesImageURI:                 "/sites/default/files/field/image/kittens-large.jpg",
@@ -89,7 +88,7 @@ var (
 			FullSiteTarballURL:            "",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
-			Type:                          ddevapp.AppTypeDrupal6,
+			Type:                          nodeps.AppTypeDrupal6,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
 			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
@@ -102,7 +101,7 @@ var (
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/backdrop_files.11.0.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
-			Type:                          ddevapp.AppTypeBackdrop,
+			Type:                          nodeps.AppTypeBackdrop,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Backdrop is a full-featured content management system"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/first-post-all-about-kittens", Expect: "Lots of kittens are a good thing"},
 			FilesImageURI:                 "/files/styles/large/public/field/image/kittens-large.jpg",
@@ -115,7 +114,7 @@ var (
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_files.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "public",
-			Type:                          ddevapp.AppTypeTYPO3,
+			Type:                          nodeps.AppTypeTYPO3,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
 			FilesImageURI:                 "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
@@ -245,8 +244,16 @@ func TestDdevStart(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	// Before start, since we haven't changed MariaDBVersion, it should be ""
+	assert.EqualValues("", app.MariaDBVersion)
+
 	err = app.Start()
 	assert.NoError(err)
+
+	// After start, we haven't changed default version, the dbimage
+	// should now be set and should be the default
+	assert.EqualValues(app.DBImage, version.GetDBImage(nodeps.MariaDB))
+
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
@@ -611,7 +618,7 @@ func TestDdevImportDB(t *testing.T) {
 
 		// Test simple db loads.
 		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip"} {
-			path := filepath.Join(testDir, "testdata", file)
+			path := filepath.Join(testDir, "testdata", t.Name(), file)
 			err = app.ImportDB(path, "", false)
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 			if err != nil {
@@ -620,15 +627,15 @@ func TestDdevImportDB(t *testing.T) {
 
 			// Test that a settings file has correct hash_salt format
 			switch app.Type {
-			case ddevapp.AppTypeDrupal7:
+			case nodeps.AppTypeDrupal7:
 				drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "$drupal_hash_salt")
 				assert.NoError(err)
 				assert.True(drupalHashSalt)
-			case ddevapp.AppTypeDrupal8:
+			case nodeps.AppTypeDrupal8:
 				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "settings['hash_salt']")
 				assert.NoError(err)
 				assert.True(settingsHashSalt)
-			case ddevapp.AppTypeWordPress:
+			case nodeps.AppTypeWordPress:
 				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
 				assert.NoError(err)
 				assert.True(hasAuthSalt)
@@ -703,16 +710,29 @@ func TestDdevImportDB(t *testing.T) {
 	}
 }
 
-// TestDdevOldMariaDB tests db import/export/start with Mariadb 10.1
-func TestDdevOldMariaDB(t *testing.T) {
+// TestDdevAllDatabases tests db import/export/start with all MariaDB versions
+func TestDdevAllDatabases(t *testing.T) {
 	assert := asrt.New(t)
+
+	dbVersions := map[string]map[string]bool{
+		"mariadb": nodeps.ValidMariaDBVersions,
+		"mysql":   nodeps.ValidMySQLVersions,
+	}
+	// Use a smaller list if GOTEST_SHORT
+	if os.Getenv("GOTEST_SHORT") != "" {
+		dbVersions = map[string]map[string]bool{
+			"mariadb": {"10.1": true, "10.2": true, "10.3": true},
+			"mysql":   {"5.7": true},
+		}
+	}
+
 	app := &ddevapp.DdevApp{}
 	testDir, _ := os.Getwd()
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
 	defer switchDir()
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevOldMariaDB", site.Name))
+	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
@@ -721,80 +741,100 @@ func TestDdevOldMariaDB(t *testing.T) {
 	// Make sure there isn't an old db laying around
 	_ = dockerutil.RemoveVolume(app.Name + "-mariadb")
 	//nolint: errcheck
-	defer dockerutil.RemoveVolume(app.Name + "-mariadb")
+	defer func() {
+		_ = app.Stop(true, false)
+		app.MariaDBVersion = ""
+		app.MySQLVersion = ""
+		_ = app.WriteConfig()
+	}()
 
-	app.MariaDBVersion = ddevapp.MariaDB101
-	app.DBImage = version.GetDBImage(app.MariaDBVersion)
-	startErr := app.StartAndWaitForSync(15)
-	//nolint: errcheck
-	defer app.Stop(true, false)
+	for dbType, versions := range dbVersions {
+		for v := range versions {
 
-	if startErr != nil {
-		appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
-		assert.NoError(err)
-		t.Fatalf("app.StartAndWaitForSync() failure %v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
+			t.Logf("testing db server functionality of %v:%v", dbType, v)
+			_ = app.Stop(true, false)
+			if dbType == "mariadb" {
+				app.MySQLVersion = ""
+				app.MariaDBVersion = v
+			} else if dbType == "mysql" {
+				app.MariaDBVersion = ""
+				app.MySQLVersion = v
+			}
+			app.DBImage = ""
+			_ = app.WriteConfig()
+			startErr := app.Start()
+			if startErr != nil {
+				appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+				assert.NoError(err)
+				t.Fatalf("app.Start() failure %v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
+			}
+
+			// Make sure the version of db running matches expected
+			containerDBVersion, _, _ := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
+			})
+			assert.Equal(v, strings.Trim(containerDBVersion, "\n\r "))
+
+			importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
+			err = app.ImportDB(importPath, "", false)
+			assert.NoError(err, "failed to import %v", importPath)
+
+			_ = os.Mkdir("tmp", 0777)
+			err = fileutil.PurgeDirectory("tmp")
+			assert.NoError(err)
+
+			// Test that we can export-db to a gzipped file
+			err = app.ExportDB("tmp/users1.sql.gz", true)
+			assert.NoError(err)
+
+			// Validate contents
+			err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
+			assert.NoError(err)
+			stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+			assert.NoError(err)
+			assert.True(stringFound)
+
+			err = fileutil.PurgeDirectory("tmp")
+			assert.NoError(err)
+
+			// Export to an ungzipped file and validate
+			err = app.ExportDB("tmp/users2.sql", false)
+			assert.NoError(err)
+
+			// Validate contents
+			stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
+			assert.NoError(err)
+			assert.True(stringFound)
+
+			err = fileutil.PurgeDirectory("tmp")
+			assert.NoError(err)
+
+			// Capture to stdout without gzip compression
+			stdout := util.CaptureStdOut()
+			err = app.ExportDB("", false)
+			assert.NoError(err)
+			out := stdout()
+			assert.Contains(out, "Table structure for table `users`")
+
+			snapshotName := v + "_" + fileutil.RandomFilenameBase()
+			output, err := app.Snapshot(snapshotName)
+			assert.NoError(err, "could not create snapshot %s for version %s: %v output=%v", snapshotName, v, err, output)
+			err = app.RestoreSnapshot(snapshotName)
+			assert.NoError(err, "could not restore snapshot %s for version %s: %v", snapshotName, v, err)
+
+			// Make sure the version of db running matches expected
+			containerDBVersion, _, _ = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
+			})
+			assert.Equal(v, strings.Trim(containerDBVersion, "\n\r "))
+
+			// TODO: Restore a snapshot from a different version note warning.
+
+			_ = app.Stop(true, false)
+		}
 	}
-
-	importPath := filepath.Join(testDir, "testdata", "users.sql")
-	err = app.ImportDB(importPath, "", false)
-	require.NoError(t, err)
-
-	err = os.Mkdir("tmp", 0777)
-	require.NoError(t, err)
-
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Test that we can export-db to a gzipped file
-	err = app.ExportDB("tmp/users1.sql.gz", true)
-	assert.NoError(err)
-
-	// Validate contents
-	err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
-	assert.NoError(err)
-	stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
-	assert.NoError(err)
-	assert.True(stringFound)
-
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Export to an ungzipped file and validate
-	err = app.ExportDB("tmp/users2.sql", false)
-	assert.NoError(err)
-
-	// Validate contents
-	stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
-	assert.NoError(err)
-	assert.True(stringFound)
-
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Capture to stdout without gzip compression
-	stdout := util.CaptureStdOut()
-	err = app.ExportDB("", false)
-	assert.NoError(err)
-	out := stdout()
-	assert.Contains(out, "Table structure for table `users`")
-
-	snapshotName := fileutil.RandomFilenameBase()
-	_, err = app.Snapshot(snapshotName)
-	assert.NoError(err)
-	err = app.RestoreSnapshot(snapshotName)
-	assert.NoError(err)
-
-	// Restore of a 10.2 snapshot should fail.
-	// Attempt a restore with a pre-mariadb_10.2 snapshot. It should fail and give a link.
-	newerSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_2.tgz"))
-	assert.NoError(err)
-
-	err = archive.Untar(newerSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots"), "")
-	assert.NoError(err)
-	err = app.RestoreSnapshot("d7testerTest1")
-	assert.Error(err)
-	assert.Contains(err.Error(), "is not compatible")
-
 	runTime()
 }
 
@@ -813,11 +853,11 @@ func TestDdevExportDB(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.StartAndWaitForSync(0)
+	err = app.Start()
 	assert.NoError(err)
 	//nolint: errcheck
 	defer app.Stop(true, false)
-	importPath := filepath.Join(testDir, "testdata", "users.sql")
+	importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
 	err = app.ImportDB(importPath, "", false)
 	require.NoError(t, err)
 
@@ -873,7 +913,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		switchDir := site.Chdir()
 		defer switchDir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevFullSiteSetup", site.Name))
-
+		t.Logf("Testing site %s", site.Name)
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
@@ -907,7 +947,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
 			err = app.ImportDB(cachedArchive, "", false)
-			assert.NoError(err)
+			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, mariadb_version=%s, mysql_version=%s", site.DBTarURL, app.Type, app.MariaDBVersion, app.MySQLVersion)
 		}
 
 		startErr := app.StartAndWaitForSync(2)
@@ -957,9 +997,9 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
 
-	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_1.sql.gz"))
+	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_1.sql.gz"))
 	assert.NoError(err)
-	d7testerTest2Dump, err := filepath.Abs(filepath.Join("testdata", "restore_snapshot", "d7tester_test_2.sql.gz"))
+	d7testerTest2Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_2.sql.gz"))
 	assert.NoError(err)
 
 	// Use d7 only for this test, the key thing is the database interaction
@@ -981,11 +1021,13 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-snapshot": {{"exec-host": "touch hello-post-snapshot-" + app.Name}}, "pre-snapshot": {{"exec-host": "touch hello-pre-snapshot-" + app.Name}}}
 
 	// Try using php72 to avoid SIGBUS failures after restore.
-	app.PHPVersion = ddevapp.PHP72
+	app.PHPVersion = nodeps.PHP72
 
 	// First do regular start, which is good enough to get us to an ImportDB()
 	err = app.Start()
 	require.NoError(t, err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
 
 	err = app.ImportDB(d7testerTest1Dump, "", false)
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
@@ -1058,12 +1100,12 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	}
 
 	// Attempt a restore with a pre-mariadb_10.2 snapshot. It should fail and give a link.
-	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
+	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
 	assert.NoError(err)
 
-	err = archive.Untar(oldSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots", "oldsnapshot"), "")
+	err = archive.Untar(oldSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots"), "")
 	assert.NoError(err)
-	err = app.RestoreSnapshot("oldsnapshot")
+	err = app.RestoreSnapshot("d7tester_test_1.snapshot_mariadb_10.1")
 	assert.Error(err)
 	assert.Contains(err.Error(), "is not compatible")
 
@@ -1106,7 +1148,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 
 	// The container execution directory is dependent on the app type
 	switch app.Type {
-	case ddevapp.AppTypeWordPress, ddevapp.AppTypeTYPO3, ddevapp.AppTypePHP:
+	case nodeps.AppTypeWordPress, nodeps.AppTypeTYPO3, nodeps.AppTypePHP:
 		inContainerDir = path.Join(app.Docroot, inContainerDir)
 	}
 
@@ -1160,7 +1202,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	onHostDir = filepath.Join(app.Docroot, inContainerDir)
 	// The container execution directory is dependent on the app type
 	switch app.Type {
-	case ddevapp.AppTypeWordPress, ddevapp.AppTypeTYPO3, ddevapp.AppTypePHP:
+	case nodeps.AppTypeWordPress, nodeps.AppTypeTYPO3, nodeps.AppTypePHP:
 		inContainerDir = path.Join(app.Docroot, inContainerDir)
 	}
 
@@ -1371,11 +1413,11 @@ func TestDdevExec(t *testing.T) {
 			_ = app.WriteConfig()
 		}()
 
-		startErr := app.StartAndWaitForSync(0)
+		startErr := app.Start()
 		if startErr != nil {
 			logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 			assert.NoError(err)
-			t.Fatalf("app.StartAndWaitForSync() failed err=%v, logs from broken container:\n=======\n%s\n========\n", startErr, logs)
+			t.Fatalf("app.Start() failed err=%v, logs from broken container:\n=======\n%s\n========\n", startErr, logs)
 		}
 
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -1412,18 +1454,18 @@ func TestDdevExec(t *testing.T) {
 		assert.NoError(err)
 
 		switch app.GetType() {
-		case ddevapp.AppTypeDrupal6:
+		case nodeps.AppTypeDrupal6:
 			fallthrough
-		case ddevapp.AppTypeDrupal7:
+		case nodeps.AppTypeDrupal7:
 			fallthrough
-		case ddevapp.AppTypeDrupal8:
+		case nodeps.AppTypeDrupal8:
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				Cmd:     "drush status",
 			})
 			assert.NoError(err)
 			assert.Regexp("PHP configuration[ :]*/etc/php/[0-9].[0-9]/cli/php.ini", out)
-		case ddevapp.AppTypeWordPress:
+		case nodeps.AppTypeWordPress:
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				Cmd:     "wp --info",
@@ -1515,7 +1557,7 @@ func TestProcessHooks(t *testing.T) {
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
 	testcommon.ClearDockerEnv()
-	app, err := ddevapp.NewApp(site.Dir, true, ddevapp.ProviderDefault)
+	app, err := ddevapp.NewApp(site.Dir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 	err = app.StartAndWaitForSync(0)
 	assert.NoError(err)
@@ -1930,10 +1972,10 @@ func TestListWithoutDir(t *testing.T) {
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(testDir, true, ddevapp.ProviderDefault)
+	app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 	app.Name = "junk"
-	app.Type = ddevapp.AppTypeDrupal7
+	app.Type = nodeps.AppTypeDrupal7
 	err = app.WriteConfig()
 	assert.NoError(err)
 
@@ -2005,10 +2047,10 @@ func TestHttpsRedirection(t *testing.T) {
 	err = os.Chdir(appDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(appDir, true, ddevapp.ProviderDefault)
+	app, err := ddevapp.NewApp(appDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 	app.Name = "proj"
-	app.Type = ddevapp.AppTypePHP
+	app.Type = nodeps.AppTypePHP
 
 	expectations := []URLRedirectExpectations{
 		{"https", "/subdir", "/subdir/"},
@@ -2019,7 +2061,7 @@ func TestHttpsRedirection(t *testing.T) {
 		{"http", "/redir_relative.php", "/landed.php"},
 	}
 
-	for _, webserverType := range []string{ddevapp.WebserverNginxFPM, ddevapp.WebserverApacheFPM, ddevapp.WebserverApacheCGI} {
+	for _, webserverType := range []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM, nodeps.WebserverApacheCGI} {
 		app.WebserverType = webserverType
 		err = app.WriteConfig()
 		assert.NoError(err)
@@ -2054,7 +2096,7 @@ func TestHttpsRedirection(t *testing.T) {
 
 				expectedRedirect := parts.expectedRedirectURI
 				// However, if we're hitting redir_abs.php (or apache hitting directory), the redirect will be the whole url.
-				if strings.Contains(parts.uri, "redir_abs.php") || webserverType != ddevapp.WebserverNginxFPM {
+				if strings.Contains(parts.uri, "redir_abs.php") || webserverType != nodeps.WebserverNginxFPM {
 					expectedRedirect = parts.scheme + "://" + app.GetHostname() + parts.expectedRedirectURI
 				}
 				// Except the php relative redirect is always relative.
@@ -2214,7 +2256,7 @@ func TestWebserverType(t *testing.T) {
 		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "servertype.php"), filepath.Join(app.AppRoot, app.Docroot, "servertype.php"))
 
 		assert.NoError(err)
-		for _, app.WebserverType = range []string{ddevapp.WebserverApacheFPM, ddevapp.WebserverApacheCGI, ddevapp.WebserverNginxFPM} {
+		for _, app.WebserverType = range []string{nodeps.WebserverApacheFPM, nodeps.WebserverApacheCGI, nodeps.WebserverNginxFPM} {
 
 			err = app.WriteConfig()
 			assert.NoError(err)
@@ -2233,7 +2275,7 @@ func TestWebserverType(t *testing.T) {
 			require.NoError(t, err)
 
 			expectedServerType := "Apache/2"
-			if app.WebserverType == ddevapp.WebserverNginxFPM {
+			if app.WebserverType == nodeps.WebserverNginxFPM {
 				expectedServerType = "nginx"
 			}
 			require.NotEmpty(t, resp.Header["Server"])
