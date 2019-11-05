@@ -73,7 +73,7 @@ push: container
 
 
 test: container
-	./test/test_dbserver.sh
+	bash ./test/test_dbserver.sh # bash execution just for windows make
 
 clean:
 	for item in $(MARIADB_VERSIONS); do \
