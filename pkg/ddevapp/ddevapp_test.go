@@ -913,7 +913,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		switchDir := site.Chdir()
 		defer switchDir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevFullSiteSetup", site.Name))
-
+		t.Logf("Testing site %s", site.Name)
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
@@ -947,7 +947,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
 			err = app.ImportDB(cachedArchive, "", false)
-			assert.NoError(err)
+			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, mariadb_version=%s, mysql_version=%s", site.DBTarURL, app.Type, app.MariaDBVersion, app.MySQLVersion)
 		}
 
 		startErr := app.StartAndWaitForSync(2)

@@ -73,7 +73,7 @@ push: container
 
 
 test: container
-	bash -x test/test_dbserver.sh
+	./test/test_dbserver.sh
 
 clean:
 	for item in $(MARIADB_VERSIONS); do \
