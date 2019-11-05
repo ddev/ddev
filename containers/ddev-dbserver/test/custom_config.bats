@@ -47,7 +47,7 @@ function containercheck {
 }
 
 @test "test with mysql/utf.cnf override ${DB_TYPE} ${DB_VERSION}" {
-    docker exec -t $CONTAINER_NAME grep "collation-server" /mnt/ddev_config/mysql/utf.cnf
+    docker exec -t $CONTAINER_NAME grep "collation-server" //mnt/ddev_config/mysql/utf.cnf
     mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW GLOBAL VARIABLES like \"collation_server\";" | grep "utf8_general_ci"
 }
 
