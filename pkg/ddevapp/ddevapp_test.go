@@ -743,7 +743,8 @@ func TestDdevAllDatabases(t *testing.T) {
 	//nolint: errcheck
 	defer func() {
 		_ = app.Stop(true, false)
-		app.MariaDBVersion = ""
+		// Make sure we leave the config.yaml in expected state
+		app.MariaDBVersion = version.MariaDBDefaultVersion
 		app.MySQLVersion = ""
 		_ = app.WriteConfig()
 	}()
