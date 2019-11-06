@@ -3,7 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -91,6 +91,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 	assert.Equal("docroot", app.Docroot)
 	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
+	output.UserOut.Print("")
 }
 
 // TestPantheonBackupLinks ensures we can get backups from pantheon for a configured environment.
@@ -128,6 +129,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 	assert.Equal(importPath, "")
 	assert.Contains(backupLink, "database.sql.gz")
 	assert.NoError(err)
+	output.UserOut.Print("")
 }
 
 // TestPantheonPull ensures we can pull backups from pantheon for a configured environment.
@@ -188,4 +190,5 @@ func TestPantheonPull(t *testing.T) {
 	_ = app.WriteConfig()
 	err = app.Stop(true, false)
 	assert.NoError(err)
+	output.UserOut.Print("")
 }
