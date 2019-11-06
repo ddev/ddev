@@ -131,7 +131,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.settingsCreator != nil {
 		settingsPath, err := appFuncs.settingsCreator(app)
 		if err != nil {
-			util.Warning("Unable to create settings file: %v", err)
+			util.Warning("Unable to create settings file '%s': %v", app.SiteSettingsPath, err)
 		}
 		if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
 			util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)

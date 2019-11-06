@@ -59,7 +59,7 @@ func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 		SecureAuthSalt:   util.RandString(64),
 		Signature:        DdevFileSignature,
 		SiteSettings:     "wp-config.php",
-		SiteSettingsDdev: "local-config.php",
+		SiteSettingsDdev: "wp-config-ddev.php",
 		AbsPath:          absPath,
 	}
 }
@@ -198,7 +198,16 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 		} else {
 			// Settings file exists and is not ddev-managed, alert the user to the location
 			// of the generated ddev settings file
-			util.Warning(wordpressConfigInstructions, app.SiteDdevSettingsFile)
+			includeExists, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "wp-config-ddev.php")
+			if err != nil {
+				util.Warning("Unable to check that the ddev settings file has been included: %v", err)
+			}
+
+			if includeExists {
+				util.Success("Include of wp-config-ddev.php found in %s", app.SiteDdevSettingsFile, app.SiteSettingsPath)
+			} else {
+				util.Warning(wordpressConfigInstructions, app.SiteDdevSettingsFile)
+			}
 		}
 	} else {
 		// If settings file does not exist, write basic settings file including it
@@ -290,7 +299,8 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 func setWordpressSiteSettingsPaths(app *DdevApp) {
 	config := NewWordpressConfig(app, "")
 
-	settingsFileBasePath := app.AppRoot
+	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettings)
 	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, config.SiteSettingsDdev)
 }
 
