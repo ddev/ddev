@@ -290,8 +290,7 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 func setWordpressSiteSettingsPaths(app *DdevApp) {
 	config := NewWordpressConfig(app, "")
 
-	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
-	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, config.SiteSettings)
+	settingsFileBasePath := app.AppRoot
 	app.SiteDdevSettingsFile = filepath.Join(settingsFileBasePath, config.SiteSettingsDdev)
 }
 
@@ -390,7 +389,6 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 }
 
 // wordpressPostStartAction handles post-start actions
-
 func wordpressPostStartAction(app *DdevApp) error {
 	if _, err := app.CreateSettingsFile(); err != nil {
 		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
