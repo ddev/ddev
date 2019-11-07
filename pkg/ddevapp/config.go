@@ -143,7 +143,9 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == version.GetWebImage() {
 		appcopy.WebImage = ""
 	}
-	if appcopy.DBImage == version.GetDBImage(nodeps.MariaDB, appcopy.MariaDBVersion) {
+	// If the DBImage is actually just created/equal to the maria or mysql version
+	// then remove it from the output.
+	if appcopy.DBImage == version.GetDBImage(nodeps.MariaDB, appcopy.MariaDBVersion) || appcopy.DBImage == version.GetDBImage(nodeps.MySQL, appcopy.MySQLVersion) {
 		appcopy.DBImage = ""
 	}
 	if appcopy.DBAImage == version.GetDBAImage() {
