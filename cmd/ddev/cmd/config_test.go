@@ -650,7 +650,13 @@ func TestConfigMySQLVersion(t *testing.T) {
 
 			app, err := ddevapp.NewApp(tmpDir, false, "")
 			assert.NoError(err)
-			assert.EqualValues(version.GetDBImage(nodeps.MySQL, cmdDBImageVersion), app.DBImage)
+			// If the two versions are equal, we expect the app.DBImage to be empty
+			// because it's identical to the image we'd get with just app.MySQLVersion
+			if cmdMySQLVersion == cmdDBImageVersion {
+				assert.EqualValues("", app.DBImage)
+			} else {
+				assert.EqualValues(version.GetDBImage(nodeps.MySQL, cmdDBImageVersion), app.DBImage)
+			}
 			_, _ = exec.RunCommand(DdevBin, []string{"remove", "-RO"})
 		}
 	}
