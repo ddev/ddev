@@ -718,11 +718,11 @@ func TestDdevAllDatabases(t *testing.T) {
 		"mariadb": nodeps.ValidMariaDBVersions,
 		"mysql":   nodeps.ValidMySQLVersions,
 	}
-	// Use a smaller list if GOTEST_SHORT
+	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
 		dbVersions = map[string]map[string]bool{
-			"mariadb": {"10.1": true, "10.2": true, "10.3": true},
-			"mysql":   {"5.7": true},
+			"mariadb": {"10.2": true, "10.1": true},
+			"mysql":   {"8.0": true, "5.5": true},
 		}
 	}
 
@@ -744,8 +744,9 @@ func TestDdevAllDatabases(t *testing.T) {
 	defer func() {
 		_ = app.Stop(true, false)
 		// Make sure we leave the config.yaml in expected state
-		app.MariaDBVersion = version.MariaDBDefaultVersion
+		app.MariaDBVersion = ""
 		app.MySQLVersion = ""
+		app.DBImage = ""
 		_ = app.WriteConfig()
 	}()
 
@@ -914,7 +915,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		switchDir := site.Chdir()
 		defer switchDir()
 		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevFullSiteSetup", site.Name))
-		t.Logf("Testing site %s", site.Name)
+		t.Logf("=== BEGIN TestDdevFullSiteSetup for %s\n", site.Name)
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
