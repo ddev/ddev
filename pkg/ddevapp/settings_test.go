@@ -42,7 +42,7 @@ func TestWriteSettings(t *testing.T) {
 		nodeps.AppTypeDrupal6:   "sites/default/settings.ddev.php",
 		nodeps.AppTypeDrupal7:   "sites/default/settings.ddev.php",
 		nodeps.AppTypeDrupal8:   "sites/default/settings.ddev.php",
-		nodeps.AppTypeWordPress: "local-config.php",
+		nodeps.AppTypeWordPress: "wp-config-ddev.php",
 		nodeps.AppTypeTYPO3:     "typo3conf/AdditionalConfiguration.php",
 	}
 	dir := testcommon.CreateTmpDir(t.Name())
