@@ -126,6 +126,7 @@ InstType "Minimal"
  * Include Headers
  */
 !include "MUI2.nsh"
+!include "FileFunc.nsh"
 !include "LogicLib.nsh"
 ;!include "Memento.nsh"
 !include "Sections.nsh"
@@ -136,6 +137,17 @@ InstType "Minimal"
 !ifndef DOCKER_EXCLUDE
   !include "docker.nsh"
 !endif
+
+
+
+/**
+ * Local macros
+ */
+Var ChocolateyMode
+!macro _Chocolatey _a _b _t _f
+  !insertmacro _== $ChocolateyMode `1` `${_t}` `${_f}`
+!macroend
+!define Chocolatey `"" Chocolatey ""`
 
 
 
@@ -455,8 +467,8 @@ SectionGroup /e "mkcert"
    * mkcert application install
    */
   Section "mkcert" SecMkcert
-    ; Install in non silent mode only
-    ${IfNot} ${Silent}
+    ; Install in non choco mode only
+    ${IfNot} ${Chocolatey}
       SectionIn 1 2
       SetOutPath "$INSTDIR"
       SetOverwrite try
@@ -487,8 +499,9 @@ SectionGroup /e "mkcert"
    * mkcert setup
    */
   Section "Setup mkcert" SecMkcertSetup
-    ; Install in non silent mode only
+    ; Install in non silent and choco mode only
     ${IfNot} ${Silent}
+    ${AndIfNot} ${Chocolatey}
       MessageBox MB_ICONINFORMATION|MB_OK "Now running mkcert to enable trusted https. Please accept the mkcert dialog box that may follow."
 
       ; Run setup
@@ -525,8 +538,8 @@ SectionGroup /e "WinNFSd"
    * NSSM application install
    */
   Section "NSSM" SecNSSM
-    ; Install in non silent mode only
-    ${IfNot} ${Silent}
+    ; Install in non choco mode only
+    ${IfNot} ${Chocolatey}
       SectionIn 1
       SetOutPath "$INSTDIR"
       SetOverwrite try
@@ -690,6 +703,16 @@ Function .onInit
   StrCpy $DockerSelected ""
   !endif ; DOCKER_NSH
   StrCpy $mkcertSetup ""
+
+  ; Check parameters
+  ${GetParameters} $R0
+  ClearErrors
+  ${GetOptions} $R0 "/C" $0
+  ${IfNot} ${Errors}
+    StrCpy $ChocolateyMode "1"
+  ${Else}
+    StrCpy $ChocolateyMode "0"
+  ${EndIf}
 FunctionEnd
 
 /**
