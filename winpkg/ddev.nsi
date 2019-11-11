@@ -454,29 +454,32 @@ SectionGroup /e "mkcert"
    * mkcert application install
    */
   Section "mkcert" SecMkcert
-    SectionIn 1 2
-    SetOutPath "$INSTDIR"
-    SetOverwrite try
+    ; Install in non silent mode only
+    ${IfNot} ${Silent}
+      SectionIn 1 2
+      SetOutPath "$INSTDIR"
+      SetOverwrite try
 
-    ; Copy files
-    File "..\.gotmp\bin\windows_amd64\mkcert.exe"
-    File "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
+      ; Copy files
+      File "..\.gotmp\bin\windows_amd64\mkcert.exe"
+      File "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
 
-    ; Install icons
-    SetOutPath "$INSTDIR\Icons"
-    SetOverwrite try
-    File /oname=ca-install.ico "graphics\ca-install.ico"
-    File /oname=ca-uninstall.ico "graphics\ca-uninstall.ico"
+      ; Install icons
+      SetOutPath "$INSTDIR\Icons"
+      SetOverwrite try
+      File /oname=ca-install.ico "graphics\ca-install.ico"
+      File /oname=ca-uninstall.ico "graphics\ca-uninstall.ico"
 
-    ; Shortcuts
-    CreateShortcut "$INSTDIR\mkcert install.lnk" "$INSTDIR\mkcert.exe" "-install" "$INSTDIR\Icons\ca-install.ico"
-    CreateShortcut "$INSTDIR\mkcert uninstall.lnk" "$INSTDIR\mkcert.exe" "-uninstall" "$INSTDIR\Icons\ca-uninstall.ico"
+      ; Shortcuts
+      CreateShortcut "$INSTDIR\mkcert install.lnk" "$INSTDIR\mkcert.exe" "-install" "$INSTDIR\Icons\ca-install.ico"
+      CreateShortcut "$INSTDIR\mkcert uninstall.lnk" "$INSTDIR\mkcert.exe" "-uninstall" "$INSTDIR\Icons\ca-uninstall.ico"
 
-    !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-    CreateDirectory "$SMPROGRAMS\$ICONS_GROUP\mkcert"
-    CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert install trusted https.lnk" "$INSTDIR\mkcert install.lnk"
-    CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert uninstall trusted https.lnk" "$INSTDIR\mkcert uninstall.lnk"
-    !insertmacro MUI_STARTMENU_WRITE_END
+      !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
+      CreateDirectory "$SMPROGRAMS\$ICONS_GROUP\mkcert"
+      CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert install trusted https.lnk" "$INSTDIR\mkcert install.lnk"
+      CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert uninstall trusted https.lnk" "$INSTDIR\mkcert uninstall.lnk"
+      !insertmacro MUI_STARTMENU_WRITE_END
+    ${EndIf}
   SectionEnd
 
   /**
@@ -521,12 +524,15 @@ SectionGroup /e "WinNFSd"
    * NSSM application install
    */
   Section "NSSM" SecNSSM
-    SectionIn 1
-    SetOutPath "$INSTDIR"
-    SetOverwrite try
+    ; Install in non silent mode only
+    ${IfNot} ${Silent}
+      SectionIn 1
+      SetOutPath "$INSTDIR"
+      SetOverwrite try
 
-    ; Copy files
-    File "..\.gotmp\bin\windows_amd64\nssm.exe"
+      ; Copy files
+      File "..\.gotmp\bin\windows_amd64\nssm.exe"
+    ${EndIf}
   SectionEnd
 SectionGroupEnd
 
