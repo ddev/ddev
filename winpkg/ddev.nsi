@@ -192,6 +192,13 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE ddevLicLeave
 !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
 
+; License page sudo
+!define MUI_PAGE_HEADER_TEXT "License Agreement for sudo"
+!define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing sudo."
+!define MUI_PAGE_CUSTOMFUNCTION_PRE sudoLicPre
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE sudoLicLeave
+!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\sudo_license.txt"
+
 ; Components page
 !ifdef DOCKER_NSH
   Var DockerVisible
@@ -200,13 +207,6 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 Var MkcertSetup
 !define MUI_PAGE_CUSTOMFUNCTION_PRE ComponentsPre
 !insertmacro MUI_PAGE_COMPONENTS
-
-; License page sudo
-!define MUI_PAGE_HEADER_TEXT "License Agreement for sudo"
-!define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing sudo."
-!define MUI_PAGE_CUSTOMFUNCTION_PRE sudoLicPre
-!define MUI_PAGE_CUSTOMFUNCTION_LEAVE sudoLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\sudo_license.txt"
 
 ; License page mkcert
 !define MUI_PAGE_HEADER_TEXT "License Agreement for mkcert"
@@ -437,7 +437,8 @@ SectionEnd
  * sudo application install
  */
 Section "sudo" SecSudo
-  SectionIn 1 2
+  ; Force installation
+  SectionIn 1 2 3 RO
   SetOutPath "$INSTDIR"
   SetOverwrite try
 
@@ -585,7 +586,7 @@ LangString DESC_SecAddToPath ${LANG_ENGLISH} "Add the ${PRODUCT_NAME} (and sudo)
 !ifdef DOCKER_NSH
 LangString DESC_SecDocker ${LANG_ENGLISH} "Download and install ${DOCKER_DESKTOP_NAME} (www.docker.com) which do not seem to be installed, but is required for $(^Name) to function"
 !endif ; DOCKER_NSH
-LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/ mattn/sudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file"
+LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/ mattn/sudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file (required)"
 LangString DESC_SecMkcert ${LANG_ENGLISH} "mkcert (github.com/ FiloSottile/mkcert) is a simple tool for making locally-trusted development certificates. It requires no configuration"
 LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a local CA"
 LangString DESC_SecWinNFSd ${LANG_ENGLISH} "WinNFSd (github.com/ winnfsd/winnfsd) is an optional NFS server that can be used with ${PRODUCT_NAME_FULL}"
@@ -787,7 +788,6 @@ FunctionEnd
 Function sudoLicPre
   ReadRegDWORD $R0 ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:SudoLicenseAccepted"
   ${If} $R0 = 1
-  ${OrIfNot} ${SectionIsSelected} ${SecSudo}
     Abort
   ${EndIf}
 FunctionEnd
