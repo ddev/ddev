@@ -85,6 +85,12 @@ nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 
 The resulting output displays which command is running and its pid. Choose the appropriate method to stop the other server.
 
+On Windows, you can use `netstat` and `tasklist` to determine port usage.
+
+* Run netstat by pressing WIN-key + R, type "cmd" and hit the Enter key.
+* Type `netstat -aon | findstr ":80.*LISTENING"` and you'll see the process(es) that listen to port 80 or 443 (or other). The last column contains the process ID number. Note that number.
+* Type tasklist | findstr "[processID]" (replace [processID] with the process ID number you noted. This will tell you which program uses the port.
+
 We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
 
 <a name="container-restarts"></a>
