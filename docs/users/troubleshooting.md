@@ -74,13 +74,27 @@ or `sudo launchctl stop homebrew.mxcl.nginx`
 * vpnkit (macOS): You likely have a docker container bound to port 80, do you have containers up for Kalabox or another docker-based development environment? If so, stop the other environment.
 * Kalabox: If you have previously used Kalabox try running `kbox poweroff`
 
-To dig deeper, you can use a number of tools to find out what process is listening. On macOS and Linux, try the lsof tool:
+To dig deeper, you can use a number of tools to find out what process is listening. 
+
+On macOS and Linux, try the lsof tool:
 
 ```
 $ sudo lsof -i :80 -sTCP:LISTEN
 COMMAND  PID     USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
 nginx   1608 www-data   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
+```
+
+On Windows CMD, try using netstat and tasklist to find the pid:
+
+```
+> netstat -aon | findstr ":80.*LISTENING"
+  TCP    127.0.0.1:80           0.0.0.0:0              LISTENING       5760
+  TCP    127.0.0.1:8025         0.0.0.0:0              LISTENING       5760
+  TCP    127.0.0.1:8036         0.0.0.0:0              LISTENING       5760
+  
+> tasklist | findstr "5760"
+com.docker.backend.exe        5760 Services                   0      9,536 K
 ```
 
 The resulting output displays which command is running and its pid. Choose the appropriate method to stop the other server.
