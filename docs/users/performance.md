@@ -82,7 +82,12 @@ Remember to use `ddev debug nfsmount` to verify
 * If nothing is showing, use `nfsd checkexports` and read carefully for errors
 * Use `ps -ef | grep nfsd` to make sure nfsd is running
 * Restart nfsd with `sudo nfsd restart`
-* Run Console.app and put "nfsd" in the search box at the top. `sudo nfsd restart` and read the messages carefully.
+* Add the following to your /etc/nfsd.conf:
+  ```
+  nfs.server.mount.require_resv_port = 0
+  nfs.server.verbose = 3
+  ```
+* Run Console.app and put "nfs" in the search box at the top. `sudo nfsd restart` and read the messages carefully. Attempt to `ddev debug nfsmount` the problematic project directory.
 
 ### Windows-specific NFS debugging
 
