@@ -18,6 +18,8 @@ __macOS Mojave (and later) warning:__ You'll need to give your terminal "Full di
 
 Download, inspect, and run the macos_ddev_nfs_setup.sh script  from [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh)). This stops running ddev projects, adds your home directory to the /etc/exports config file that nfsd uses, and enabled nfsd to run on your computer. This is one-time setup. Note that this shares the /Users directory via NFS to any client, so it's critical to consider security issues and verify that your firewall is enabled and configured. If your DDEV-Local projects are set up outside /Users, you'll need to edit /etc/exports for the correct values.
 
+Note: If you're on macOS Catalina and above, and your projects are in a subdirectory of the ~/Documents directory, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Control Panel. 
+
 ### Windows NFS Setup
 
 The executable components required for Windows NFS (winnfsd and nssm) are packaged with the ddev_windows_installer in each release, so if you've used the windows installer, they're available already. To enable winnfsd as a service, please download, inspect and run the script "windows_ddev_nfs_setup.sh" installed by the installer (or download from [windows_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a git-bash session on windows. If your DDEV-Local projects are set up outside your home directory, you'll need to edit the ~/.ddev/nfs_exports.sh created by the script and then restart the service with `sudo nssm restart nfsd`.
