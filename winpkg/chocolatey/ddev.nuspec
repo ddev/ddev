@@ -20,9 +20,15 @@
     <summary>ddev is a local web development tool optimized for PHP projects and CMSs.</summary>
     <description>ddev allows developers to use both nginx and apache, and many versions of PHP, with no host configurations. It works for most web apps, but has a bias toward TYPO3 and Drupal and Wordpress.</description>
     <releaseNotes>See https://github.com/drud/ddev/releases/tag/vREPLACE_DDEV_VERSION</releaseNotes>
+  <dependencies>
+      <dependency id="ngrok" />
+      <dependency id="mkcert" />
+      <dependency id="nssm" />
+  </dependencies>
+
   </metadata>
   <files>
     <file src="tools/**" target="tools" />
-
   </files>
+
 </package>
