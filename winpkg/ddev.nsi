@@ -126,6 +126,7 @@ InstType "Minimal"
  * Include Headers
  */
 !include "MUI2.nsh"
+!include "FileFunc.nsh"
 !include "LogicLib.nsh"
 ;!include "Memento.nsh"
 !include "Sections.nsh"
@@ -136,6 +137,17 @@ InstType "Minimal"
 !ifndef DOCKER_EXCLUDE
   !include "docker.nsh"
 !endif
+
+
+
+/**
+ * Local macros
+ */
+Var ChocolateyMode
+!macro _Chocolatey _a _b _t _f
+  !insertmacro _== $ChocolateyMode `1` `${_t}` `${_f}`
+!macroend
+!define Chocolatey `"" Chocolatey ""`
 
 
 
@@ -192,6 +204,13 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE ddevLicLeave
 !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
 
+; License page sudo
+!define MUI_PAGE_HEADER_TEXT "License Agreement for sudo"
+!define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing sudo."
+!define MUI_PAGE_CUSTOMFUNCTION_PRE sudoLicPre
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE sudoLicLeave
+!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\sudo_license.txt"
+
 ; Components page
 !ifdef DOCKER_NSH
   Var DockerVisible
@@ -200,13 +219,6 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 Var MkcertSetup
 !define MUI_PAGE_CUSTOMFUNCTION_PRE ComponentsPre
 !insertmacro MUI_PAGE_COMPONENTS
-
-; License page sudo
-!define MUI_PAGE_HEADER_TEXT "License Agreement for sudo"
-!define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing sudo."
-!define MUI_PAGE_CUSTOMFUNCTION_PRE sudoLicPre
-!define MUI_PAGE_CUSTOMFUNCTION_LEAVE sudoLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\sudo_license.txt"
 
 ; License page mkcert
 !define MUI_PAGE_HEADER_TEXT "License Agreement for mkcert"
@@ -437,7 +449,8 @@ SectionEnd
  * sudo application install
  */
 Section "sudo" SecSudo
-  SectionIn 1 2
+  ; Force installation
+  SectionIn 1 2 3 RO
   SetOutPath "$INSTDIR"
   SetOverwrite try
 
@@ -454,37 +467,41 @@ SectionGroup /e "mkcert"
    * mkcert application install
    */
   Section "mkcert" SecMkcert
-    SectionIn 1 2
-    SetOutPath "$INSTDIR"
-    SetOverwrite try
+    ; Install in non choco mode only
+    ${IfNot} ${Chocolatey}
+      SectionIn 1 2
+      SetOutPath "$INSTDIR"
+      SetOverwrite try
 
-    ; Copy files
-    File "..\.gotmp\bin\windows_amd64\mkcert.exe"
-    File "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
+      ; Copy files
+      File "..\.gotmp\bin\windows_amd64\mkcert.exe"
+      File "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
 
-    ; Install icons
-    SetOutPath "$INSTDIR\Icons"
-    SetOverwrite try
-    File /oname=ca-install.ico "graphics\ca-install.ico"
-    File /oname=ca-uninstall.ico "graphics\ca-uninstall.ico"
+      ; Install icons
+      SetOutPath "$INSTDIR\Icons"
+      SetOverwrite try
+      File /oname=ca-install.ico "graphics\ca-install.ico"
+      File /oname=ca-uninstall.ico "graphics\ca-uninstall.ico"
 
-    ; Shortcuts
-    CreateShortcut "$INSTDIR\mkcert install.lnk" "$INSTDIR\mkcert.exe" "-install" "$INSTDIR\Icons\ca-install.ico"
-    CreateShortcut "$INSTDIR\mkcert uninstall.lnk" "$INSTDIR\mkcert.exe" "-uninstall" "$INSTDIR\Icons\ca-uninstall.ico"
+      ; Shortcuts
+      CreateShortcut "$INSTDIR\mkcert install.lnk" "$INSTDIR\mkcert.exe" "-install" "$INSTDIR\Icons\ca-install.ico"
+      CreateShortcut "$INSTDIR\mkcert uninstall.lnk" "$INSTDIR\mkcert.exe" "-uninstall" "$INSTDIR\Icons\ca-uninstall.ico"
 
-    !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
-    CreateDirectory "$SMPROGRAMS\$ICONS_GROUP\mkcert"
-    CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert install trusted https.lnk" "$INSTDIR\mkcert install.lnk"
-    CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert uninstall trusted https.lnk" "$INSTDIR\mkcert uninstall.lnk"
-    !insertmacro MUI_STARTMENU_WRITE_END
+      !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
+      CreateDirectory "$SMPROGRAMS\$ICONS_GROUP\mkcert"
+      CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert install trusted https.lnk" "$INSTDIR\mkcert install.lnk"
+      CreateShortCut "$SMPROGRAMS\$ICONS_GROUP\mkcert\mkcert uninstall trusted https.lnk" "$INSTDIR\mkcert uninstall.lnk"
+      !insertmacro MUI_STARTMENU_WRITE_END
+    ${EndIf}
   SectionEnd
 
   /**
    * mkcert setup
    */
   Section "Setup mkcert" SecMkcertSetup
-    ; Install in non silent mode only
+    ; Install in non silent and choco mode only
     ${IfNot} ${Silent}
+    ${AndIfNot} ${Chocolatey}
       MessageBox MB_ICONINFORMATION|MB_OK "Now running mkcert to enable trusted https. Please accept the mkcert dialog box that may follow."
 
       ; Run setup
@@ -521,12 +538,15 @@ SectionGroup /e "WinNFSd"
    * NSSM application install
    */
   Section "NSSM" SecNSSM
-    SectionIn 1
-    SetOutPath "$INSTDIR"
-    SetOverwrite try
+    ; Install in non choco mode only
+    ${IfNot} ${Chocolatey}
+      SectionIn 1
+      SetOutPath "$INSTDIR"
+      SetOverwrite try
 
-    ; Copy files
-    File "..\.gotmp\bin\windows_amd64\nssm.exe"
+      ; Copy files
+      File "..\.gotmp\bin\windows_amd64\nssm.exe"
+    ${EndIf}
   SectionEnd
 SectionGroupEnd
 
@@ -579,7 +599,7 @@ LangString DESC_SecAddToPath ${LANG_ENGLISH} "Add the ${PRODUCT_NAME} (and sudo)
 !ifdef DOCKER_NSH
 LangString DESC_SecDocker ${LANG_ENGLISH} "Download and install ${DOCKER_DESKTOP_NAME} (www.docker.com) which do not seem to be installed, but is required for $(^Name) to function"
 !endif ; DOCKER_NSH
-LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/ mattn/sudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file"
+LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/ mattn/sudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file (required)"
 LangString DESC_SecMkcert ${LANG_ENGLISH} "mkcert (github.com/ FiloSottile/mkcert) is a simple tool for making locally-trusted development certificates. It requires no configuration"
 LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a local CA"
 LangString DESC_SecWinNFSd ${LANG_ENGLISH} "WinNFSd (github.com/ winnfsd/winnfsd) is an optional NFS server that can be used with ${PRODUCT_NAME_FULL}"
@@ -683,6 +703,16 @@ Function .onInit
   StrCpy $DockerSelected ""
   !endif ; DOCKER_NSH
   StrCpy $mkcertSetup ""
+
+  ; Check parameters
+  ${GetParameters} $R0
+  ClearErrors
+  ${GetOptions} $R0 "/C" $0
+  ${IfNot} ${Errors}
+    StrCpy $ChocolateyMode "1"
+  ${Else}
+    StrCpy $ChocolateyMode "0"
+  ${EndIf}
 FunctionEnd
 
 /**
@@ -781,7 +811,6 @@ FunctionEnd
 Function sudoLicPre
   ReadRegDWORD $R0 ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:SudoLicenseAccepted"
   ${If} $R0 = 1
-  ${OrIfNot} ${SectionIsSelected} ${SecSudo}
     Abort
   ${EndIf}
 FunctionEnd
