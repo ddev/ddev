@@ -163,7 +163,13 @@ and before the include of wp-settings.php:
 $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
 if (is_readable($ddev_settings) && !defined('DB_USER')) {
   require_once($ddev_settings);
-}`
+}
+
+If you don't care about those settings, or config is managed in a .env
+file, etc, then you can eliminate this message by putting a line that says
+// wp-config-ddev.php not needed
+in your wp-config.php
+`
 
 // createWordpressSettingsFile creates a Wordpress settings file from a
 // template. Returns full path to location of file + err
@@ -204,7 +210,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 			}
 
 			if includeExists {
-				util.Success("Include of wp-config-ddev.php found in %s", app.SiteDdevSettingsFile, app.SiteSettingsPath)
+				util.Success("Include of %s found in %s", app.SiteDdevSettingsFile, app.SiteSettingsPath)
 			} else {
 				util.Warning(wordpressConfigInstructions, app.SiteDdevSettingsFile)
 			}
