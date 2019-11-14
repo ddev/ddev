@@ -3,5 +3,5 @@
 # WP-cli wrapper: Append path automatically so that user doesn't have to
 ##
 
-
+if [ ! -z ${DOCROOT:-} ]; then WEBSERVER_DOCROOT=${WEBSERVER_DOCROOT}/${DOCROOT}; fi
 /usr/local/bin/wp-cli "$@" --path="${WEBSERVER_DOCROOT:-/var/www/html}"
