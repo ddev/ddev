@@ -15,7 +15,8 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 - Copy/extract the Solr configuration files for your project into `.ddev/solr/conf`. 
 - Ensure that the configuration files are present before running `ddev start`.
 
-**Drupal8-specific extra steps:** 
+**Drupal8-specific extra steps:**
+
 - `ddev start`
 - Enable the Search API Solr Search Defaults module 
 - Add a solr server at `https://<projectname>>.ddev.site/en/admin/config/search/search-api/add-server`.
