@@ -33,21 +33,9 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 
 The default [solr-precreate script](https://github.com/docker-solr/docker-solr/blob/master/scripts/solr-precreate) provided in [docker-solr](https://github.com/docker-solr/docker-solr) and used in the `entrypoint` in docker-compose.solr.yaml does not have the capability to update core configuration after the core has been created. It just copies mounted config into the core, where it would otherwise live forever. However, a simple optional script executed on startup can re-copy config into place. Here's the technique:
 
-- Provide a config update script to the container. Call it solr-configupdate.sh and put it in .ddev/solr/solr-configupdate.sh, with these contents:
-    ```
-    #!/usr/bin/env bash
-    set -e
-    
-    # Ensure "dev" core config is always up to date even after the 
-    # core has been created. This does not execute the first time,
-    # when solr-precreate has not yet run.
-    CORENAME=dev
-    if [ -d /var/solr/data/${CORENAME}/conf ]; then
-        cp /solr-conf/conf/* /var/solr/data/${CORENAME}/conf
-    fi  
-    ```
+- Copy [solr-configupdate.sh](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/solr-configupdate.sh) to .ddev/solr. This simple script is mounted into the container and updates config from .ddev/solr/conf on `ddev restart`: `cd .ddev/solr && rm -rf solr-configupdate.sh && curl -O https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/solr-configupdate.sh && chmod +x solr-configupdate.sh`
 - Make sure solr-configupdate.sh is executable: `chmod +x .ddev/solr/configupdate.sh`
-- Now you can copy/edit/update the solr configuration files for your project in .ddev/solr/conf and when you `ddev restart` the solr configuration will be live.
+- You can now copy/edit/update the solr configuration files for your project in .ddev/solr/conf and when you `ddev restart` the solr configuration will be live.
 
 **Interacting with Apache Solr**
 
