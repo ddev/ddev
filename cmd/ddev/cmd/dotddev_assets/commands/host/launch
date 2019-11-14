@@ -1,17 +1,17 @@
 #!/bin/bash
 
 ## Description: Launch a browser with the current site
-## Usage: launch
-## Example: "ddev launch"
+## Usage: launch [path]
+## Example: "ddev launch" or "ddev launch mypath"
 
 case $OSTYPE in
   linux-gnu)
-    xdg-open ${DDEV_PRIMARY_URL}
+    xdg-open ${DDEV_PRIMARY_URL}/$1
     ;;
   "darwin"*)
-    open ${DDEV_PRIMARY_URL}
+    open ${DDEV_PRIMARY_URL}/$1
     ;;
   "win*"* | "msys"*)
-    start ${DDEV_PRIMARY_URL}
+    start ${DDEV_PRIMARY_URL}/$1
     ;;
 esac
