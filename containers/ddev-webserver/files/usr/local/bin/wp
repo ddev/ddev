@@ -3,20 +3,5 @@
 # WP-cli wrapper: Append path automatically so that user doesn't have to
 ##
 
-PATH_OPTION=""
-if [ -n "$WP_CORE" ]; then
-  PATH_OPTION="--path=$WP_CORE"
-fi
 
-if [ "$(id -u)" = "0" ]; then
-
-  # Gather all arguments because string interpolation doesn't work for $@
-  args=""
-  for i in "$@"; do
-      args="$args \"$i\""
-  done
-
-  /usr/local/bin/wp-cli "$@" $PATH_OPTION --allow-root
-else
-  /usr/local/bin/wp-cli "$@" $PATH_OPTION
-fi
+/usr/local/bin/wp-cli "$@" --path="${WEBSERVER_DOCROOT:-/var/www/html}"
