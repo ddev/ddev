@@ -101,6 +101,26 @@ On variants of Linux you may be prompted for additional package installation to 
   
   (Note the prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having /usr/sbin in the path so that `/usr/sbin/update-ca-certificates` can be found.)
 
+### Windows and Firefox `mkcert -install` additional instructions
+
+The `mkcert -install` step on Windows does not work for the Firefox browser.
+You need to add the created root certficate authority to the security
+configuration by your self:
+
+- Run `mkcert -install` (you can use the shortcut from the start menu for that)
+- Run `mkcert -CAROOT` to see the local folder used for the newly created root
+  certificate authority before
+- Open the settings
+- Enter `certificates` into the search box on the top
+- Click to `Show certificates...`
+- Click to the tab `Certificate authorities`
+- Click `Import...`
+- Go to the folder where your root certificate authority was stored before
+- Select the file `rootCA-key.pem`
+- Click to `Open`
+
+You should now see your CA under `mkcert development CA`.
+
 ### Uninstallation
 
 For instructions to uninstall DDEV-Local see [Uninstallation](users/uninstall.md).
