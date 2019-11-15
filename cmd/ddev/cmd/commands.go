@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
-	osexec "os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -42,7 +41,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 			return err
 		}
 		if runtime.GOOS == "windows" {
-			windowsBashPath := findWindowsBashPath()
+			windowsBashPath := util.FindWindowsBashPath()
 			if windowsBashPath == "" {
 				fmt.Println("Unable to find bash.exe in PATH, not loading custom commands")
 				return nil
@@ -95,7 +94,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
 	var windowsBashPath = ""
 	if runtime.GOOS == "windows" {
-		windowsBashPath = findWindowsBashPath()
+		windowsBashPath = util.FindWindowsBashPath()
 	}
 
 	return func(cmd *cobra.Command, cobraArgs []string) {
@@ -217,19 +216,4 @@ func populateExamplesAndCommands() error {
 		}
 	}
 	return nil
-}
-
-// On Windows we'll need the path to bash to execute anything.
-// Returns empty string if not found, path if found
-func findWindowsBashPath() string {
-	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
-	if err != nil {
-		// This one could come back with the WSL bash, in which case we may have some trouble.
-		windowsBashPath, err = osexec.LookPath("bash.exe")
-		if err != nil {
-			fmt.Println("Not loading custom commands; bash is not in PATH")
-			return ""
-		}
-	}
-	return windowsBashPath
 }

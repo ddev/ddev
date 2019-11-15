@@ -1,10 +1,13 @@
 package ddevapp
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -67,16 +70,21 @@ func (c ExecHostTask) Execute() (string, string, error) {
 		return "", "", err
 	}
 
-	execAry := strings.Split(c.exec, " ")
-
-	stderr := []byte{}
-	stdout, err := exec.Command(execAry[0], execAry[1:]...).Output()
-	if exitErr, ok := err.(*exec.ExitError); ok {
-		stderr = exitErr.Stderr
+	bashPath := "bash"
+	if runtime.GOOS == "windows" {
+		bashPath = util.FindWindowsBashPath()
 	}
 
+	cmd := exec.Command(bashPath, "-c", c.exec)
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+
 	_ = os.Chdir(cwd)
-	return string(stdout), string(stderr), err
+
+	return stdout.String(), stderr.String(), err
 }
 
 // Execute (ComposerTask) runs a composer command in the web container
