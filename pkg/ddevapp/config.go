@@ -749,7 +749,7 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
  `
 	if extraPackages != nil {
 		contents = contents + `
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 	return WriteImageDockerfile(fullpath, []byte(contents))
 }
