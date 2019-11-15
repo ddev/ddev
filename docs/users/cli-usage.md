@@ -71,6 +71,7 @@ Now, since [bedrock](https://roots.io/bedrock/) uses a configuration technique w
   DB_USER=db
   DB_PASSWORD=db
   DB_HOST=db
+  WP_HOME=https://my-wp-bedrock-site.ddev.site
   ```
   For more details see [bedrock installation](https://roots.io/bedrock/docs/installing-bedrock/)
 
