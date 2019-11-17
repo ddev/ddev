@@ -6,7 +6,7 @@ Several useful developer tools are included inside the containers. Run `ddev des
 ### Command-line Tools in the Containers
 - MySQL Client (mysql) - Command-line interface for interacting with MySQL/MariaDB.
 - [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
-- [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations.
+- [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations, available both as "wp" and as "wp-cli".
 - npm and yarn
 - node
 - sqlite3
