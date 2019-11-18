@@ -433,8 +433,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevXdebugEnabled", site.Name))
 
 	phpVersions := nodeps.ValidPHPVersions
+	phpVersions = map[string]bool{"7.4": true}
 	err := app.Init(site.Dir)
 	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
 
 	for v := range phpVersions {
 		app.PHPVersion = v
@@ -443,10 +446,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		app.XdebugEnabled = false
 		assert.NoError(err)
 		err = app.Start()
-
-		//nolint: errcheck
-		defer app.Stop(true, false)
-		require.NoError(t, err)
+		assert.NoError(err)
 
 		opts := &ddevapp.ExecOpts{
 			Service: "web",
@@ -510,9 +510,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		case <-time.After(5 * time.Second):
 			fmt.Println("Timed out waiting for accept/listen")
 		}
-
-		err = app.Stop(true, false)
-		assert.NoError(err)
 	}
 	runTime()
 }
