@@ -1,5 +1,6 @@
 #!/bin/bash
 
+## #ddev-generated
 ## Description: Run MySQLWorkbench against current db
 ## Usage: mysqlworkbench
 ## Example: "ddev mysqlworkbench"

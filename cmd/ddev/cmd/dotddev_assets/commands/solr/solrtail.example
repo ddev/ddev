@@ -1,5 +1,6 @@
 #!/bin/bash
 
+## #ddev-generated
 ## Description: Tail the main solr log
 ## Usage: solrtail
 ## Example: ddev solrtail
