@@ -433,7 +433,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevXdebugEnabled", site.Name))
 
 	phpVersions := nodeps.ValidPHPVersions
-	phpVersions = map[string]bool{"7.4": true}
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 	//nolint: errcheck
@@ -452,7 +451,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			Service: "web",
 			Cmd:     "php --ri xdebug",
 		}
-		fmt.Printf("Attempting exec php --ri xdebug with xdebug disabled, XDebug version=%s\n", v)
 
 		stdout, _, err := app.Exec(opts)
 		assert.Error(err)
@@ -463,13 +461,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		app.XdebugEnabled = true
 		err = app.Start()
 		assert.NoError(err)
-		//nolint: errcheck
-		defer app.Stop(true, false)
 
 		stdout, _, err = app.Exec(opts)
-		fmt.Printf("Attempting exec php --ri xdebug with xdebug enabled XDebug version=%s\n", v)
-
 		assert.NoError(err)
+
 		assert.Contains(stdout, "xdebug support => enabled")
 		assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
 
@@ -490,25 +485,23 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		go func() {
 			conn, err := listener.Accept()
 			assert.NoError(err)
-			fmt.Printf("Completed accept of port 9000 with xdebug enabled, XDebug version=%s\n", v)
-
-			err = conn.SetDeadline(time.Now().Add(5 * time.Second))
-			assert.NoError(err)
+			fmt.Printf("Completed accept of port 9000 with xdebug enabled, XDebug version=%s, time=%v\n", v, time.Now())
 
 			// Grab the Xdebug connection start and look in it for "Xdebug"
-			bufReader := bufio.NewReader(conn)
+			b := make([]byte, 650)
+			_, err = bufio.NewReader(conn).Read(b)
 			assert.NoError(err)
-			lineString, err := bufReader.ReadString('\n')
-			assert.NoError(err)
+			lineString := string(b)
 			assert.Contains(lineString, "Xdebug")
+			assert.Contains(lineString, `xdebug:language_version="`+v)
 			acceptListenDone <- true
 		}()
 
 		select {
 		case <-acceptListenDone:
-			fmt.Println("Read from acceptListenDone")
-		case <-time.After(5 * time.Second):
-			fmt.Println("Timed out waiting for accept/listen")
+			fmt.Printf("Read from acceptListenDone at %v\n", time.Now())
+		case <-time.After(10 * time.Second):
+			fmt.Printf("Timed out waiting for accept/listen at %v\n", time.Now())
 		}
 	}
 	runTime()
