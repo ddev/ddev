@@ -109,13 +109,13 @@ configuration by your self:
 
 - Run `mkcert -install` (you can use the shortcut from the start menu for that)
 - Run `mkcert -CAROOT` to see the local folder used for the newly created root
-  certificate authority before
-- Open the settings
+  certificate authority
+- Open the Firefox settings
 - Enter `certificates` into the search box on the top
 - Click to `Show certificates...`
-- Click to the tab `Certificate authorities`
-- Click `Import...`
-- Go to the folder where your root certificate authority was stored before
+- Select the tab `Certificate authorities`
+- Click to `Import...`
+- Go to the folder where your root certificate authority was stored
 - Select the file `rootCA-key.pem`
 - Click to `Open`
 
