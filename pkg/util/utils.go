@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
 	"math/rand"
 	osexec "os/exec"
@@ -145,4 +146,19 @@ func IsCommandAvailable(cmdName string) bool {
 func GetFirstWord(s string) string {
 	arr := strings.Split(s, " ")
 	return arr[0]
+}
+
+// On Windows we'll need the path to bash to execute anything.
+// Returns empty string if not found, path if found
+func FindWindowsBashPath() string {
+	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
+	if err != nil {
+		// This one could come back with the WSL bash, in which case we may have some trouble.
+		windowsBashPath, err = osexec.LookPath("bash.exe")
+		if err != nil {
+			fmt.Println("Not loading custom commands; bash is not in PATH")
+			return ""
+		}
+	}
+	return windowsBashPath
 }
