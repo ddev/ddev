@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/sirupsen/logrus"
 	"math/rand"
@@ -166,9 +167,20 @@ func FindWindowsBashPath() string {
 
 // TimeTrack determines the amount of time a function takes to return. Timing starts when it is called.
 // It returns an anonymous function that, when called, will print the elapsed run time.
+// It tracks if DDEV_DEBUG is set
 func TimeTrack(start time.Time, name string) func() {
-	return func() {
-		elapsed := time.Since(start)
-		logrus.Printf("PERF: %s took %s", name, elapsed)
+	if globalconfig.DdevDebug {
+		return func() {
+
+			logrus.Printf("starting %s at %v\n", name, start.Format("15:04:05"))
+
+			if globalconfig.DdevDebug {
+				elapsed := time.Since(start)
+				logrus.Printf("PERF: %s took %.2fs", name, elapsed.Seconds())
+			}
+		}
+	} else {
+		return func() {
+		}
 	}
 }

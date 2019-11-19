@@ -50,9 +50,9 @@ func LogSetUp() {
 	// Always use log.DebugLevel for UserOut
 	UserOut.Level = log.DebugLevel // UserOut will by default always output
 
-	// But we use custom DRUD_DEBUG-settable loglevel for log
+	// But we use custom DDEV_DEBUG-settable loglevel for log
 	logLevel := log.InfoLevel
-	drudDebug := os.Getenv("DRUD_DEBUG")
+	drudDebug := os.Getenv("DDEV_DEBUG")
 	if drudDebug != "" {
 		logLevel = log.DebugLevel
 	}

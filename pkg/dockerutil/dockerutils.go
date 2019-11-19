@@ -6,6 +6,7 @@ import (
 	"fmt"
 	exec2 "github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"io"
 	"log"
@@ -367,6 +368,9 @@ func GetContainerEnv(key string, container docker.APIContainers) string {
 // constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
 func CheckDockerVersion(versionConstraint string) error {
+	runTime := util.TimeTrack(time.Now(), "CheckDockerVersion()")
+	defer runTime()
+
 	currentVersion, err := version.GetDockerVersion()
 	if err != nil {
 		return fmt.Errorf("no docker")
@@ -399,6 +403,9 @@ func CheckDockerVersion(versionConstraint string) error {
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This
 // relies on docker-compose being somewhere in the user's $PATH.
 func CheckDockerCompose(versionConstraint string) error {
+	runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
+	defer runTime()
+
 	version, err := version.GetDockerComposeVersion()
 	if err != nil {
 		return err

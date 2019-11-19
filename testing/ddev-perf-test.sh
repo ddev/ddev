@@ -10,7 +10,7 @@ command -v $TIMECMD >/dev/null 2>&1 || { echo >&2 "please install gnu time with 
 TIMEFMT='-f %e'
 TIMEIT="$TIMECMD $TIMEFMT -o time.out"
 CURLIT='curl  -o /dev/null --fail -sfL -w %{time_total}'
-unset DRUD_DEBUG
+unset DDEV_DEBUG
 
 PROFILE=standard
 

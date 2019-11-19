@@ -14,3 +14,4 @@ var ValidOmitContainers = map[string]bool{
 }
 
 var DdevNoInstrumentation = os.Getenv("DDEV_NO_INSTRUMENTATION") == "true"
+var DdevDebug = (os.Getenv("DDEV_DEBUG") == "true")
