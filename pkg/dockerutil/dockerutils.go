@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	exec2 "github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -403,8 +404,10 @@ func CheckDockerVersion(versionConstraint string) error {
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This
 // relies on docker-compose being somewhere in the user's $PATH.
 func CheckDockerCompose(versionConstraint string) error {
-	runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
-	defer runTime()
+	if globalconfig.DdevDebug {
+		runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
+		defer runTime()
+	}
 
 	version, err := version.GetDockerComposeVersion()
 	if err != nil {
