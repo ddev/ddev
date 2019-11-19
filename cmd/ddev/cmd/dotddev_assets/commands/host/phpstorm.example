@@ -1,5 +1,6 @@
 #!/bin/bash
 
+## #ddev-generated
 ## Description: Open PHPStorm with the current project
 ## Usage: phpstorm
 ## Example: "ddev phpstorm"

@@ -199,7 +199,8 @@ func populateExamplesAndCommands() error {
 	list := box.List()
 	for _, file := range list {
 		localPath := app.GetConfigPath(file)
-		if !fileutil.FileExists(localPath) {
+		sigFound, err := fileutil.FgrepStringInFile(localPath, ddevapp.DdevFileSignature)
+		if sigFound || err != nil {
 			content, err := box.Find(file)
 			if err != nil {
 				return err
