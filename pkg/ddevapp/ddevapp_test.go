@@ -427,61 +427,83 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 func TestDdevXdebugEnabled(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
+	testcommon.ClearDockerEnv()
 
 	site := TestSites[0]
 	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevXdebugEnabled", site.Name))
 
+	phpVersions := nodeps.ValidPHPVersions
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-
-	// Run with xdebug_enabled: false
-	testcommon.ClearDockerEnv()
-	app.XdebugEnabled = false
-	err = app.WriteConfig()
-	assert.NoError(err)
-	err = app.StartAndWaitForSync(0)
 	//nolint: errcheck
 	defer app.Stop(true, false)
-	require.NoError(t, err)
 
-	opts := &ddevapp.ExecOpts{
-		Service: "web",
-		Cmd:     "php --ri xdebug",
+	for v := range phpVersions {
+		app.PHPVersion = v
+		t.Logf("Attempting XDebug checks with XDebug %s\n", v)
+		fmt.Printf("Attempting XDebug checks with XDebug %s\n", v)
+		app.XdebugEnabled = false
+		assert.NoError(err)
+		err = app.Start()
+		assert.NoError(err)
+
+		opts := &ddevapp.ExecOpts{
+			Service: "web",
+			Cmd:     "php --ri xdebug",
+		}
+
+		stdout, _, err := app.Exec(opts)
+		assert.Error(err)
+		assert.Contains(stdout, "Extension 'xdebug' not present")
+
+		// Run with xdebug_enabled: true
+		testcommon.ClearDockerEnv()
+		app.XdebugEnabled = true
+		err = app.Start()
+		assert.NoError(err)
+
+		stdout, _, err = app.Exec(opts)
+		assert.NoError(err)
+
+		assert.Contains(stdout, "xdebug support => enabled")
+		assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
+
+		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
+		listener, err := net.Listen("tcp", ":9000")
+		assert.NoError(err)
+
+		// Curl to the project's index.php or anything else
+		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 1)
+
+		fmt.Printf("Attempting accept of port 9000 with xdebug enabled, XDebug version=%s\n", v)
+
+		// Accept is blocking, no way to timeout, so use
+		// goroutine instead.
+		acceptListenDone := make(chan bool, 1)
+		defer close(acceptListenDone)
+
+		go func() {
+			conn, err := listener.Accept()
+			assert.NoError(err)
+			fmt.Printf("Completed accept of port 9000 with xdebug enabled, XDebug version=%s, time=%v\n", v, time.Now())
+
+			// Grab the Xdebug connection start and look in it for "Xdebug"
+			b := make([]byte, 650)
+			_, err = bufio.NewReader(conn).Read(b)
+			assert.NoError(err)
+			lineString := string(b)
+			assert.Contains(lineString, "Xdebug")
+			assert.Contains(lineString, `xdebug:language_version="`+v)
+			acceptListenDone <- true
+		}()
+
+		select {
+		case <-acceptListenDone:
+			fmt.Printf("Read from acceptListenDone at %v\n", time.Now())
+		case <-time.After(10 * time.Second):
+			fmt.Printf("Timed out waiting for accept/listen at %v\n", time.Now())
+		}
 	}
-	stdout, _, err := app.Exec(opts)
-	assert.Error(err)
-	assert.Contains(stdout, "Extension 'xdebug' not present")
-
-	// Run with xdebug_enabled: true
-	testcommon.ClearDockerEnv()
-	app.XdebugEnabled = true
-	err = app.WriteConfig()
-	assert.NoError(err)
-	err = app.Start()
-	assert.NoError(err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
-
-	stdout, _, err = app.Exec(opts)
-	assert.NoError(err)
-	assert.Contains(stdout, "xdebug support => enabled")
-	assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
-
-	// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
-	ln, err := net.Listen("tcp", ":9000")
-	assert.NoError(err)
-	// Curl to the project's index.php or anything else
-	_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 1)
-
-	conn, err := ln.Accept()
-	assert.NoError(err)
-
-	// Grab the Xdebug connection start and look in it for "Xdebug"
-	b := make([]byte, 650)
-	_, err = bufio.NewReader(conn).Read(b)
-	require.NoError(t, err)
-	lineString := string(b)
-	assert.Contains(lineString, "Xdebug")
 	runTime()
 }
 
