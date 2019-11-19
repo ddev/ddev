@@ -91,11 +91,36 @@ An example configuration:
 ### Visual Studio Code (vscode) Debugging Setup
 
 1. Install the [php-debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
-2. Add to the launch.json the stanza defining "Listen for xdebug" (see [config snippet](snippets/vscode_listen_for_xdebug_snippet.txt))
+2. Add `.vscode/launch.json` file with following:
+```
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Listen for XDebug",
+      "type": "php",
+      "request": "launch",
+      "port": 9000,
+      "pathMappings": {
+        "/var/www/html": "${workspaceRoot}"
+      }
+    },
+    {
+      "name": "Launch currently open script",
+      "type": "php",
+      "request": "launch",
+      "program": "${file}",
+      "cwd": "${fileDirname}",
+      "port": 9000
+    }
+  ]
+}
+```
 3. Set a breakpoint in your index.php. If it isn't solid red, restart.
 4. Click the vscode debug button: ![vscode debug button](images/vscode_debug_button.png).
 5. Run the "Listen for XDebug" job: ![Listen for XDebug](images/vscode_run_listen_xdebug.png)
-6. Go to a page in your project, you should hit your breakpoint.
+6. Install ![Xdebug helper Chrome extension](https://chrome.google.com/webstore/detail/xdebug-helper/eadndfjplgieldjbigjakmdgkmoaaaoc) or ![Xdebug helper for Firefox](https://addons.mozilla.org/en-US/firefox/addon/xdebug-helper-for-firefox/). In browser extension settings set IDE key to `VSCODE`. Enable extension.
+7. Go to a page in your project, you should hit your breakpoint.
 
 ## Using xdebug on a Port Other than the Default
 
