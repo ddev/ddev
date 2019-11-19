@@ -170,17 +170,14 @@ func FindWindowsBashPath() string {
 // It tracks if DDEV_DEBUG is set
 func TimeTrack(start time.Time, name string) func() {
 	if globalconfig.DdevDebug {
+		logrus.Printf("starting %s at %v\n", name, start.Format("15:04:05"))
 		return func() {
-
-			logrus.Printf("starting %s at %v\n", name, start.Format("15:04:05"))
-
 			if globalconfig.DdevDebug {
 				elapsed := time.Since(start)
 				logrus.Printf("PERF: %s took %.2fs", name, elapsed.Seconds())
 			}
 		}
-	} else {
-		return func() {
-		}
+	}
+	return func() {
 	}
 }
