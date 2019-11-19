@@ -2,6 +2,7 @@ package ddevapp_test
 
 import (
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"path/filepath"
 	"testing"
 
@@ -90,7 +91,7 @@ func TestWriteDrushConfig(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s WriteDrushrc", site.Name))
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s WriteDrushrc", site.Name))
 
 		testcommon.ClearDockerEnv()
 

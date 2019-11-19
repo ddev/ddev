@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/sirupsen/logrus"
 	"math/rand"
 	osexec "os/exec"
 	"os/user"
@@ -161,4 +162,13 @@ func FindWindowsBashPath() string {
 		}
 	}
 	return windowsBashPath
+}
+
+// TimeTrack determines the amount of time a function takes to return. Timing starts when it is called.
+// It returns an anonymous function that, when called, will print the elapsed run time.
+func TimeTrack(start time.Time, name string) func() {
+	return func() {
+		elapsed := time.Since(start)
+		logrus.Printf("PERF: %s took %s", name, elapsed)
+	}
 }

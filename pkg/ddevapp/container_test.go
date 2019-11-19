@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"os"
@@ -27,7 +26,7 @@ func TestUserProvisioningInContainer(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 	defer runTime()
 
 	err := app.Init(site.Dir)
