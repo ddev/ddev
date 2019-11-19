@@ -29,6 +29,7 @@ const pantheonTestEnvName = "bbowman"
 
 // TestConfigCommand tests the interactive config options.
 func TestPantheonConfigCommand(t *testing.T) {
+	t.Skip("Removing TestPantheonConfigCommand for now because it requires config-time project validation, which is being removed")
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
 		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
 	}
