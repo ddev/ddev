@@ -167,12 +167,12 @@ func FindWindowsBashPath() string {
 
 // TimeTrack determines the amount of time a function takes to return. Timing starts when it is called.
 // It returns an anonymous function that, when called, will print the elapsed run time.
-// It tracks if DDEV_DEBUG is set
+// It tracks if DDEV_VERBOSE is set
 func TimeTrack(start time.Time, name string) func() {
-	if globalconfig.DdevDebug {
+	if globalconfig.DdevVerbose {
 		logrus.Printf("starting %s at %v\n", name, start.Format("15:04:05"))
 		return func() {
-			if globalconfig.DdevDebug {
+			if globalconfig.DdevVerbose {
 				elapsed := time.Since(start)
 				logrus.Printf("PERF: %s took %.2fs", name, elapsed.Seconds())
 			}
