@@ -159,6 +159,7 @@ func GetRouterImage() string {
 
 // GetDockerComposeVersion runs docker-compose -v to get the current version
 func GetDockerComposeVersion() (string, error) {
+
 	if DockerComposeVersion != "" {
 		return DockerComposeVersion, nil
 	}
@@ -168,6 +169,14 @@ func GetDockerComposeVersion() (string, error) {
 	path, err := exec.LookPath(executableName)
 	if err != nil {
 		return "", fmt.Errorf("no docker-compose")
+	}
+
+	// Temporarily fake the docker-compose check on macOS because of
+	// the slow docker-compose problem in https://github.com/docker/compose/issues/6956
+	// This can be removed when that's resolved.
+	if runtime.GOOS != "darwin" {
+		DockerComposeVersion = "1.25.0-rc4"
+		return DockerComposeVersion, nil
 	}
 
 	out, err := exec.Command(path, "version", "--short").Output()
