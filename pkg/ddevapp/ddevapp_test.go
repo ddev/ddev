@@ -239,7 +239,7 @@ func TestDdevStart(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -358,7 +358,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStartMultipleHostnames", site.Name))
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStartMultipleHostnames", site.Name))
 		testcommon.ClearDockerEnv()
 
 		err := app.Init(site.Dir)
@@ -430,7 +430,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	testcommon.ClearDockerEnv()
 
 	site := TestSites[0]
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevXdebugEnabled", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevXdebugEnabled", site.Name))
 
 	phpVersions := nodeps.ValidPHPVersions
 	err := app.Init(site.Dir)
@@ -513,7 +513,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 
 	site := TestSites[0]
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevMysqlWorks", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevMysqlWorks", site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -628,7 +628,7 @@ func TestDdevImportDB(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevImportDB", site.Name))
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevImportDB", site.Name))
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
@@ -754,7 +754,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	site := TestSites[0]
 	switchDir := site.Chdir()
 	defer switchDir()
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
@@ -872,7 +872,7 @@ func TestDdevExportDB(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevExportDB", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevExportDB", site.Name))
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
@@ -936,7 +936,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
 		defer switchDir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevFullSiteSetup", site.Name))
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevFullSiteSetup", site.Name))
 		t.Logf("=== BEGIN TestDdevFullSiteSetup for %s\n", site.Name)
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
@@ -1019,7 +1019,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
 
 	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_1.sql.gz"))
 	assert.NoError(err)
@@ -1150,7 +1150,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	site := TestSites[0]
 	switchDir := site.Chdir()
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestWritableFilesDirectory", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestWritableFilesDirectory", site.Name))
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
@@ -1284,7 +1284,7 @@ func TestDdevImportFilesDir(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		testcommon.ClearDockerEnv()
 		err = app.Init(site.Dir)
@@ -1320,7 +1320,7 @@ func TestDdevImportFiles(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
@@ -1366,7 +1366,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
@@ -1426,7 +1426,7 @@ func TestDdevExec(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevExec", site.Name))
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevExec", site.Name))
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
@@ -1520,7 +1520,7 @@ func TestDdevLogs(t *testing.T) {
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevLogs", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevLogs", site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -1578,7 +1578,7 @@ func TestProcessHooks(t *testing.T) {
 	}
 
 	cleanup := site.Chdir()
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
 
 	testcommon.ClearDockerEnv()
 	app, err := ddevapp.NewApp(site.Dir, true, nodeps.ProviderDefault)
@@ -1634,7 +1634,7 @@ func TestDdevPause(t *testing.T) {
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStop", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStop", site.Name))
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
@@ -2206,7 +2206,7 @@ func TestGetAllURLs(t *testing.T) {
 	assert := asrt.New(t)
 
 	site := TestSites[0]
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s GetAllURLs", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s GetAllURLs", site.Name))
 
 	testcommon.ClearDockerEnv()
 	app := new(ddevapp.DdevApp)
@@ -2267,7 +2267,7 @@ func TestWebserverType(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, site := range TestSites {
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestWebserverType", site.Name))
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestWebserverType", site.Name))
 
 		app := new(ddevapp.DdevApp)
 
@@ -2326,7 +2326,7 @@ func TestWebserverType(t *testing.T) {
 func TestInternalAndExternalAccessToURL(t *testing.T) {
 	assert := asrt.New(t)
 
-	runTime := testcommon.TimeTrack(time.Now(), t.Name())
+	runTime := util.TimeTrack(time.Now(), t.Name())
 
 	site := TestSites[0]
 	app := new(ddevapp.DdevApp)
@@ -2416,7 +2416,7 @@ func TestCaptureLogs(t *testing.T) {
 	assert := asrt.New(t)
 
 	site := TestSites[0]
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s CaptureLogs", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s CaptureLogs", site.Name))
 
 	app := ddevapp.DdevApp{}
 
@@ -2449,7 +2449,7 @@ func TestNFSMount(t *testing.T) {
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestNFSMount", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestNFSMount", site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -2535,7 +2535,7 @@ func TestWebcache(t *testing.T) {
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestWebcache", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestWebcache", site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -2584,7 +2584,7 @@ func TestWebcache(t *testing.T) {
 // TestHostDBPort tests to make sure that the host_db_port specification has the intended effect
 func TestHostDBPort(t *testing.T) {
 	assert := asrt.New(t)
-	runTime := testcommon.TimeTrack(time.Now(), t.Name())
+	runTime := util.TimeTrack(time.Now(), t.Name())
 	defer runTime()
 	testDir, _ := os.Getwd()
 
@@ -2649,7 +2649,7 @@ func TestHostDBPort(t *testing.T) {
 // ports used by another
 func TestPortSpecifications(t *testing.T) {
 	assert := asrt.New(t)
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprint("TestPortSpecifications"))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprint("TestPortSpecifications"))
 	defer runTime()
 	testDir, _ := os.Getwd()
 

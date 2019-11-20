@@ -11,7 +11,7 @@
             "host": "127.0.0.1",
             "program": "${workspaceRoot}/cmd/ddev",
             "cwd": "$HOME/sites/drupal8",
-            "env": {"DRUD_DEBUG": true},
+            "env": {"DDEV_DEBUG": true},
             "args": [],
             "showLog": true
         },
@@ -24,7 +24,7 @@
             "port": 2345,
             "host": "127.0.0.1",
             "program": "${workspaceRoot}/pkg/plugins/platform",
-            "env": {"DRUD_DEBUG": true},
+            "env": {"DDEV_DEBUG": true},
             "args": [],
             "showLog": true
         }
