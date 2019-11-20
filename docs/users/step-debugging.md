@@ -23,7 +23,7 @@ Enable xdebug in your config.yaml:
 
 `xdebug_enabled: true`
 
-(If you don't want it set all the time, you can `ddev exec enable_xdebug` or `ddev exec disable_xdebug` any time.)
+(If you don't want it set all the time, you can `ddev exec enable_xdebug` or `ddev exec disable_xdebug` any time. Many people use enable_xdebug and disable_xdebug because of the performance impact of XDebug being enabled.)
 
 ### Setup for Various IDEs
 
@@ -36,6 +36,8 @@ Enable xdebug in your config.yaml:
 ### PHPStorm Debugging Setup
 
 [PHPStorm](https://www.jetbrains.com/phpstorm/download) is a leading PHP development IDE with extensive built-in debugging support. It provides two different ways to do debugging. One requires very little effort in the PHPStorm IDE (they call it zero-configuration debugging) and the other requires you to set up a "run configuration", and is basically identical to the Netbeans or Eclipse setup.
+
+**Please note that PHPStorm 2018 and before are not compatible with current versions of XDebug.**
 
 #### PHPStorm Zero-Configuration Debugging
 
