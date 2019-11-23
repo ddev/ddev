@@ -87,7 +87,7 @@ void AllocStrs(void)
 {
   if (!gptVarName) gptVarName = StrAlloc(g_stringsize);
   if (!gptPathString) gptPathString = StrAlloc(g_stringsize);
-  if (!gptBuffer) gptBuffer = StrAlloc(g_stringsize);
+  if (!gptBuffer) gptBuffer = StrAlloc(16 * 1024);
 }
 
 /* Frees allocated buffers. */
