@@ -62,7 +62,7 @@ jobs:
 
   mac_nginx_fpm_test:
     macos:
-      xcode: "11.0.0"
+      xcode: "10.1"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
@@ -73,14 +73,14 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v12
+        - homebrew-macoshighsierra-v13
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - save_cache:
-        key: homebrew-macos-v12
+        key: homebrew-macoshighsierra-v13
         paths:
         - /usr/local/Homebrew
         - /usr/local/Cellar
@@ -94,7 +94,7 @@ jobs:
 
   mac_apache_fpm_test:
     macos:
-      xcode: "11.0.0"
+      xcode: "10.1"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
@@ -105,7 +105,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v12
+        - homebrew-macoshighsierra-v13
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -118,7 +118,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: homebrew-macos-v12
+        key: homebrew-macoshighsierra-v13
         paths:
         - /usr/local/Homebrew
         - /usr/local/Cellar
@@ -126,7 +126,7 @@ jobs:
 
   mac_nfsmount_test:
     macos:
-      xcode: "11.0.0"
+      xcode: "10.1"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: "true"
@@ -137,13 +137,13 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v12
+        - homebrew-macoshighsierra-v13
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos-v12
+        key: homebrew-macoshighsierra-v13
         paths:
         - /usr/local/Homebrew
         - /usr/local/Cellar
@@ -305,18 +305,18 @@ jobs:
 
   mac_container_test:
     macos:
-      xcode: "11.0.0"
+      xcode: "10.1"
     working_directory: ~/ddev
     steps:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-macos-v12
+        - homebrew-macoshighsierra-v13
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos-v12
+        key: homebrew-macoshighsierra-v13
         paths:
         - /usr/local/Homebrew
         - /usr/local/Cellar
@@ -399,7 +399,7 @@ jobs:
   # 'release_build' is used to push a full release; it's triggered by api call
   release_build:
     macos:
-      xcode: "11.0.0"
+      xcode: "10.1"
     working_directory: ~/ddev
     environment:
       DDEV_DEBUG: "true"
@@ -408,12 +408,12 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-macos-v12
+        - homebrew-macoshighsierra-v13
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: RELEASE BUILD Circle VM setup
     - save_cache:
-        key: homebrew-macos-v12
+        key: homebrew-macoshighsierra-v13
         paths:
         - /usr/local/Homebrew
         - /usr/local/Cellar
