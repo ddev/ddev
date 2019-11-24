@@ -5,37 +5,37 @@ ddev projects can be extended to provide additional services. This is achieved b
 If you need a service not provided here, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
 ## Apache Solr
-This recipe adds an Apache Solr container to a project. It will set up a solr core with the solr configuration you define.
+This recipe adds an Apache Solr container to a project. It will set up a solr core named "dev" with the solr configuration you define.
 
 **Installation:**
 
 - Copy [docker-compose.solr.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/docker-compose.solr.yaml) to the .ddev folder for your project.
-- You can change the Solr version by changing the `image` value in docker-compose.solr.yaml, for example: `image: solr:6.6`. The most obvious official solr image tags are at [hub.docker.com](https://hub.docker.com/_/solr/).
+- The recommended Solr version is: `image: solr:8`, from [hub.docker.com](https://hub.docker.com/_/solr/).
 - Create the folder path .ddev/solr/conf.
-- Copy the Solr configuration files for your project to `.ddev/solr/conf`. e.g. if using [Drupal Search API Solr](https://www.drupal.org/project/search_api_solr), you would copy the `web/modules/contrib/search_api_solr/solr-conf-templates/6.x/ `contents from the module code base into `.ddev/solr/conf`.
+- Copy/extract the Solr configuration files for your project into `.ddev/solr/conf`. 
 - Ensure that the configuration files are present before running `ddev start`.
-- Add the following post-start hook to your config.yaml; this turns on ping for the "dev" core. The curl command can also be done as a one-time configuration from within the web container.
-```
-hooks:
-  post-start:
-  - exec: curl --fail -s 'http://solr:8983/solr/dev/admin/ping?action=enable'
-```
 
-**Drupal8-specific extra steps:** 
-- Enable the Search API Solr Search Defaults module and edit the server settings at `/admin/config/search/search-api/server/default_solr_server/edit`.
-- Change the "Solr core" field from the default "d8" to "dev" and under **Advanced Server Configuration** change the _solr.install.dir_ setting to `/opt/solr`.
-- Go to the view tab and download the updated config.zip file.
-- Stop the project with `ddev stop`.
-- Remove the original configuration files from `.ddev/solr/conf` and copy in the updated files extracted from config.zip.
-- In order for changes to take effect you must remove the Solr volume by running `docker volume rm ddev-PROJECT-NAME_solrdata` e.g. if your project is called "myproject" then you would run `docker volume rm ddev-myproject_solrdata`.
-- Now you can start the project `ddev start`.
+**Drupal8-specific extra steps:**
 
-**Updating Apache Solr configuration**
+- `ddev start`
+- Enable the Search API Solr Search Defaults module 
+- Add a solr server at `https://<projectname>>.ddev.site/en/admin/config/search/search-api/add-server`.
+  - Use the "standard" Solr connector
+  - Use the "http" protocol
+  - The "solr host" should be "solr" **NOT the default "localhost"**
+  - The "solr core" should be named "dev" unless you customize the docker-compose.solr.yaml
+  - Under "Advanced server configuration" set the "solr.install.dir" to `/opt/solr`
+- Download the config.zip provided on /admin/config/search/search-api/server/dev
+- Unzip the config.zip into .ddev/solr/conf. For example, `cd .ddev/solr/conf && unzip ~/Downloads/solr_8.x-config.zip`
+- In order for changes to take effect you must stop the project, remove the Solr volume, and start it again.  So run `docker volume rm ddev-<projectname>_solrdata` if your project is called "myproject" then you would run `ddev stop && docker volume rm ddev-myproject_solrdata && ddev restart`. (If you have installed solr-configupdate.sh as described below, then you need only `ddev restart`)
 
-- Run `ddev stop` to remove your application's containers (note: if you do not use the [destructive option](cli-usage#removing-projects-from-your-collection-known-to-ddev), the index will be untouched).
-- copy the new solr configuration files for your project to .ddev/solr/conf as described in **Installation**, above.
-- Run `ddev start` to rebuild and restart the containers.
-- An excellent way to automate the updating of the solr config uses a [solr-init.sh](https://github.com/drud/ddev/pull/1645#issuecomment-503722974) script mounted into the solr container's `/docker-entrypoint-initdb.d/solr-init.sh`.
+**Updating Apache Solr configuration on an existing Solr core**
+
+The default [solr-precreate script](https://github.com/docker-solr/docker-solr/blob/master/scripts/solr-precreate) provided in [docker-solr](https://github.com/docker-solr/docker-solr) and used in the `entrypoint` in docker-compose.solr.yaml does not have the capability to update core configuration after the core has been created. It just copies mounted config into the core, where it would otherwise live forever. However, a simple optional script executed on startup can re-copy config into place. Here's the technique:
+
+- Copy [solr-configupdate.sh](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/solr-configupdate.sh) to .ddev/solr. This simple script is mounted into the container and updates config from .ddev/solr/conf on `ddev restart`: `cd .ddev/solr && rm -rf solr-configupdate.sh && curl -O https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/solr-configupdate.sh && chmod +x solr-configupdate.sh`
+- Make sure solr-configupdate.sh is executable: `chmod +x .ddev/solr/configupdate.sh`
+- You can now copy/edit/update the solr configuration files for your project in .ddev/solr/conf and when you `ddev restart` the solr configuration will be live.
 
 **Interacting with Apache Solr**
 

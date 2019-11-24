@@ -642,7 +642,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s ConfigOverrideDetection", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s ConfigOverrideDetection", site.Name))
 
 	// Copy test overrides into the project .ddev directory
 	for _, item := range []string{"nginx", "apache", "php", "mysql"} {
@@ -701,7 +701,7 @@ func TestPHPOverrides(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	// Copy test overrides into the project .ddev directory
 	err := fileutil.CopyDir(filepath.Join(testDir, "testdata/TestPHPOverrides/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
@@ -748,7 +748,7 @@ func TestExtraPackages(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestExtraPackages", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestExtraPackages", site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -817,7 +817,7 @@ func TestTimezoneConfig(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s %s", t.Name(), site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", t.Name(), site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -878,7 +878,7 @@ func TestCustomBuildDockerfiles(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s TestCustomBuildDockerfiles", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestCustomBuildDockerfiles", site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)

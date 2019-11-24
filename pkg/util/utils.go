@@ -1,7 +1,10 @@
 package util
 
 import (
+	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/sirupsen/logrus"
 	"math/rand"
 	osexec "os/exec"
 	"os/user"
@@ -145,4 +148,36 @@ func IsCommandAvailable(cmdName string) bool {
 func GetFirstWord(s string) string {
 	arr := strings.Split(s, " ")
 	return arr[0]
+}
+
+// On Windows we'll need the path to bash to execute anything.
+// Returns empty string if not found, path if found
+func FindWindowsBashPath() string {
+	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
+	if err != nil {
+		// This one could come back with the WSL bash, in which case we may have some trouble.
+		windowsBashPath, err = osexec.LookPath("bash.exe")
+		if err != nil {
+			fmt.Println("Not loading custom commands; bash is not in PATH")
+			return ""
+		}
+	}
+	return windowsBashPath
+}
+
+// TimeTrack determines the amount of time a function takes to return. Timing starts when it is called.
+// It returns an anonymous function that, when called, will print the elapsed run time.
+// It tracks if DDEV_VERBOSE is set
+func TimeTrack(start time.Time, name string) func() {
+	if globalconfig.DdevVerbose {
+		logrus.Printf("starting %s at %v\n", name, start.Format("15:04:05"))
+		return func() {
+			if globalconfig.DdevVerbose {
+				elapsed := time.Since(start)
+				logrus.Printf("PERF: %s took %.2fs", name, elapsed.Seconds())
+			}
+		}
+	}
+	return func() {
+	}
 }

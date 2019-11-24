@@ -364,7 +364,7 @@ jobs:
       image: ubuntu-1604:201903-01
     working_directory: ~/ddev
     environment:
-      DRUD_DEBUG: "true"
+      DDEV_DEBUG: "true"
       ARTIFACTS: /artifacts
     steps:
       - checkout
@@ -402,7 +402,7 @@ jobs:
       xcode: "11.0.0"
     working_directory: ~/ddev
     environment:
-      DRUD_DEBUG: "true"
+      DDEV_DEBUG: "true"
       ARTIFACTS: /artifacts
     steps:
     - checkout

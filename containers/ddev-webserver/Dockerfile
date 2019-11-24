@@ -89,9 +89,9 @@ RUN apt-get -qq update && \
         php-imagick \
         php-uploadprogress \
         sqlite3 && \
-    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y  $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-pgsql $v-mbstring $v-opcache $v-soap $v-sqlite3 $v-readline $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
+    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y  $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-pgsql $v-mbstring $v-opcache $v-soap $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
     # These are items not yet available in php7.4 \
-    for v in php5.6 php7.0 php7.1 php7.2 php7.3; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-apcu $v-memcached $v-redis $v-xdebug ; done && \
+    for v in php5.6 php7.0 php7.1 php7.2 php7.3; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-apcu $v-memcached $v-redis ; done && \
     for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
     apt-get install blackfire-php -y --allow-unauthenticated && \
     apt-get -qq autoremove -y && \
@@ -109,7 +109,7 @@ RUN composer global require hirak/prestissimo
 RUN curl -sSL "https://github.com/drush-ops/drush/releases/download/${DRUSH_VERSION}/drush.phar" -o /usr/local/bin/drush8 && chmod +x /usr/local/bin/drush8
 RUN curl -sSL "https://github.com/drush-ops/drush-launcher/releases/download/${DRUSH_LAUNCHER_VERSION}/drush.phar" -o /usr/local/bin/drush && chmod +x /usr/local/bin/drush
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
-RUN curl -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp-cli
+RUN curl -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp-cli && ln -s /usr/local/bin/wp-cli /usr/local/bin/wp
 
 RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal && chmod +x /usr/local/bin/drupal
 

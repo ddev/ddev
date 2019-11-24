@@ -21,7 +21,7 @@ The binaries are built into .gotmp/bin; although normal command-line `go build` 
 ## Testing
 Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make testpkg TESTARGS="-run TestDevAddSites"`.
 
-To see which ddev commands the tests are executing, set the environment variable DRUD_DEBUG=true.
+To see which ddev commands the tests are executing, set the environment variable DDEV_DEBUG=true.
 
 Use GOTEST_SHORT=true to run just one CMS in each test.
 

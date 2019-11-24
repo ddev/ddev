@@ -37,7 +37,10 @@ func handlePantheonFlags(cmd *cobra.Command, args []string, app *ddevapp.DdevApp
 		return fmt.Errorf("failed to GetProvider: %v", err)
 	}
 	pantheonProvider := provider.(*ddevapp.PantheonProvider)
-	pantheonProvider.SetSiteNameAndEnv(pantheonEnvironmentName)
+	err = pantheonProvider.SetSiteNameAndEnv(pantheonEnvironmentName)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

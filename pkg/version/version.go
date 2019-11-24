@@ -49,35 +49,35 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20191104_heddn_drush_node_version" // Note that this can be overridden by make
+var WebTag = "v1.12.0" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20191007_many_mariadb"
+var BaseDBTag = "v1.12.0"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "drud/phpmyadmin"
 
 // DBATag defines the default phpmyadmin image tag used for applications.
-var DBATag = "v1.11.0" // Note that this can be overridden by make
+var DBATag = "v1.12.0" // Note that this can be overridden by make
 
 // BgsyncImg defines the default bgsync image tag used for applications.
 var BgsyncImg = "drud/ddev-bgsync"
 
 // BgsyncTag defines the default phpmyadmin image tag used for applications.
-var BgsyncTag = "v1.11.0" // Note that this can be overridden by make
+var BgsyncTag = "v1.12.0" // Note that this can be overridden by make
 
 // RouterImage defines the image used for the router.
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "20191008_router_cert" // Note that this can be overridden by make
+var RouterTag = "v1.12.0" // Note that this can be overridden by make
 
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
-var SSHAuthTag = "v1.11.0"
+var SSHAuthTag = "v1.12.0"
 
 // COMMIT is the actual committish, supplied by make
 var COMMIT = "COMMIT should be overridden"
@@ -159,6 +159,7 @@ func GetRouterImage() string {
 
 // GetDockerComposeVersion runs docker-compose -v to get the current version
 func GetDockerComposeVersion() (string, error) {
+
 	if DockerComposeVersion != "" {
 		return DockerComposeVersion, nil
 	}
@@ -168,6 +169,14 @@ func GetDockerComposeVersion() (string, error) {
 	path, err := exec.LookPath(executableName)
 	if err != nil {
 		return "", fmt.Errorf("no docker-compose")
+	}
+
+	// Temporarily fake the docker-compose check on macOS because of
+	// the slow docker-compose problem in https://github.com/docker/compose/issues/6956
+	// This can be removed when that's resolved.
+	if runtime.GOOS != "darwin" {
+		DockerComposeVersion = "1.25.0-rc4"
+		return DockerComposeVersion, nil
 	}
 
 	out, err := exec.Command(path, "version", "--short").Output()

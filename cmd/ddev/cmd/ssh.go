@@ -39,7 +39,7 @@ var DdevSSHCmd = &cobra.Command{
 		// Use bash for our containers, sh for 3rd-party containers
 		// that may not have bash.
 		shell := "bash"
-		if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, serviceType) {
+		if !nodeps.ArrayContainsString([]string{"web", "db", "dba", "solr"}, serviceType) {
 			shell = "sh"
 		}
 		_ = app.ExecWithTty(&ddevapp.ExecOpts{
