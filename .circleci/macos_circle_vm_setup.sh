@@ -35,18 +35,16 @@ curl -fsSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/rel
 GOTESTSUM_VERSION=0.3.2
 curl -fsSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VERSION}/gotestsum_${GOTESTSUM_VERSION}_darwin_amd64.tar.gz && tar -C /usr/local/bin -zxf /tmp/gotestsum.tgz gotestsum
 
-# As of 2019-11-23, the macOS build on CircleCI seems to not allow writing
-# /etc/exports, probably as a result of the "full disk access" stuff.
-#sudo bash -c "cat <<EOF >/etc/exports
-#${HOME} -alldirs -mapall=$(id -u):$(id -g) localhost
-#/private/var -alldirs -mapall=$(id -u):$(id -g) localhost
-#EOF"
-#
-#LINE="nfs.server.mount.require_resv_port = 0"
-#FILE=/etc/nfs.conf
-#grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
-#
-#sudo nfsd enable && sudo nfsd restart
+sudo bash -c "cat <<EOF >/etc/exports
+${HOME} -alldirs -mapall=$(id -u):$(id -g) localhost
+/private/var -alldirs -mapall=$(id -u):$(id -g) localhost
+EOF"
+
+LINE="nfs.server.mount.require_resv_port = 0"
+FILE=/etc/nfs.conf
+grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
+
+sudo nfsd enable && sudo nfsd restart
 
 
 while ! docker ps 2>/dev/null ; do
