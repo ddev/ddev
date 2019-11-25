@@ -19,10 +19,11 @@ nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
 brew tap drud/ddev
 
-brew install mysql-client zip nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
-brew link mysql-client zip nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
-
-brew link --force mysql-client
+# Some CircleCI images seem to have root-owned /usr/local
+sudo chown -R distiller /usr/local/*
+brew install mariadb zip nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
+brew link mariadb zip nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
+brew reinstall openssl@1.1
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 mkdir -p /usr/local/etc/my.cnf.d
