@@ -149,11 +149,6 @@ ini_set('session.cookie_lifetime', 2000000);
 
 $settings['hash_salt'] = '{{ $config.HashSalt }}';
 
-$settings['file_scan_ignore_directories'] = [
-  'node_modules',
-  'bower_components',
-];
-
 // This will prevent Drupal from setting read-only permissions on sites/default.
 $settings['skip_permissions_hardening'] = TRUE;
 
