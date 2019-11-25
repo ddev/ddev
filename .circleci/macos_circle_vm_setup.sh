@@ -19,8 +19,8 @@ nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
 brew tap drud/ddev
 
-brew install mariadb zip nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
-brew link mariadb zip nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
+brew install mariadb openssl@1.1 nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
+brew link mariadb nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 mkdir -p /usr/local/etc/my.cnf.d
