@@ -4,5 +4,8 @@
     "go.testEnvVars": {
         "DDEV_DEBUG": "true",
         "GOTEST_SHORT": "true"
+    },
+    "markdownlint.config": {
+        "MD013": true
     }
 }
