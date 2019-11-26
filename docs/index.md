@@ -1,13 +1,13 @@
-# **DDEV-Local** Documentation
+# DDEV-Local Documentation
 
 ## What is DDEV Local
 
-[DDEV](https://github.com/drud/ddev/#readme) is an open source tool that makes
-it dead simple to get local PHP development environments up and running within
-minutes. It's powerful and flexible as a result of its per-project environment
-configurations, which can be extended, version controlled, and shared. In
-short, **DDEV** aims to allow development teams to use Docker in their workflow
-without the complexities of bespoke configuration.
+**[DDEV](https://github.com/drud/ddev/#readme)** is an open source tool that
+makes it dead simple to get local PHP development environments up and running
+within minutes. It's powerful and flexible as a result of its per-project
+environment configurations, which can be extended, version controlled, and
+shared. In short, **DDEV** aims to allow development teams to use Docker in
+their workflow without the complexities of bespoke configuration.
 
 ## System Requirements
 
@@ -26,7 +26,7 @@ without the complexities of bespoke configuration.
   * Windows 10 Pro or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
   * Windows 10 Home (or other Windows version) with [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/)
 
-### Using **DDEV** alongside other development environments
+### Using DDEV alongside other development environments
 
 **DDEV** by default uses ports 80 and 443 on your system when projects are running.
 If you are using another local development environment you can either stop the
