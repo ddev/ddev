@@ -1,4 +1,4 @@
-FROM bitnami/minideb:stretch
+FROM bitnami/minideb:buster
 
 RUN apt-get update && apt-get install -y bash expect file openssh-client socat sudo psmisc && sudo apt autoclean
 

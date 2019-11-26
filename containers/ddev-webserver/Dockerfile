@@ -1,4 +1,4 @@
-FROM bitnami/minideb:stretch
+FROM bitnami/minideb:buster
 
 ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4"
 ENV PHP_DEFAULT_VERSION="7.2"
@@ -47,22 +47,23 @@ RUN apt-get -qq update && \
         bzip2 \
         ghostscript \
         gnupg \
-        locales-all && \
+        locales-all \
+        lsb-release && \
     wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
-    echo "deb https://packages.sury.org/php/ stretch main" > /etc/apt/sources.list.d/php.list && \
+    echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && \
     wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add - && \
     echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list && \
     wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
     apt-key add /tmp/nginx_signing.key && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
     echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-    echo "deb http://nginx.org/packages/debian/ stretch nginx" >> /etc/apt/sources.list && \
+    echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" >> /etc/apt/sources.list && \
     curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
         less \
         git \
-        mysql-client \
+        mariadb-client \
         nginx \
         apache2 \
         nodejs \
