@@ -187,7 +187,7 @@ func TestConfigCommand(t *testing.T) {
 	testMatrix := map[string][]string{
 		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
 		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP72},
-		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHP72},
+		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHP73},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -268,7 +268,7 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 	testMatrix := map[string][]string{
 		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
 		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP72},
-		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHP72},
+		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHP73},
 	}
 
 	for testName := range testMatrix {
@@ -314,7 +314,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 	testMatrix := map[string][]string{
 		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
 		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHP72},
-		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHP72},
+		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHP73},
 	}
 
 	for testName, testValues := range testMatrix {

@@ -1,7 +1,7 @@
 FROM bitnami/minideb:buster
 
 ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4"
-ENV PHP_DEFAULT_VERSION="7.2"
+ENV PHP_DEFAULT_VERSION="7.3"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 
 ENV DRUSH_VERSION=8.3.2
