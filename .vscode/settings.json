@@ -5,6 +5,9 @@
         "DDEV_DEBUG": "true",
         "GOTEST_SHORT": "true"
     },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.markdownlint": true
+    },
     "markdownlint.config": {
         "MD013": true
     }
