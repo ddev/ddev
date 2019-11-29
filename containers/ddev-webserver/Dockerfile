@@ -89,9 +89,7 @@ RUN apt-get -qq update && \
         php-imagick \
         php-uploadprogress \
         sqlite3 && \
-    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y  $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-mysql $v-pgsql $v-mbstring $v-opcache $v-soap $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
-    # These are items not yet available in php7.4 \
-    for v in php5.6 php7.0 php7.1 php7.2 php7.3; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-apcu $v-memcached $v-redis ; done && \
+    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y  $v-apcu $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-memcached $v-mysql $v-pgsql $v-mbstring $v-opcache $v-soap $v-redis $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
     for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
     apt-get install blackfire-php -y --allow-unauthenticated && \
     apt-get -qq autoremove -y && \
