@@ -50,15 +50,19 @@ func TestComposerCmd(t *testing.T) {
 	ddevapp.WaitForSync(app, 2)
 	assert.FileExists(filepath.Join(tmpDir, "Psr/Log/LogLevel.php"))
 
-	err = app.StartAndWaitForSync(5)
-	assert.NoError(err)
-	// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0 --no-install
-	args = []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "psr/log:1.1.0", "--no-install"}
-	out, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
-	assert.Contains(out, "Created project in ")
-	ddevapp.WaitForSync(app, 2)
-	assert.FileExists(filepath.Join(tmpDir, "Psr/Log/LogLevel.php"))
+	// This particlar --no-install does not seem to work on Docker Toolbox
+	// with NFS so skip there.
+	if !(nodeps.IsDockerToolbox() && app.NFSMountEnabled) {
+		err = app.StartAndWaitForSync(5)
+		assert.NoError(err)
+		// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0 --no-install
+		args = []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "psr/log:1.1.0", "--no-install"}
+		out, err = exec.RunCommand(DdevBin, args)
+		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
+		assert.Contains(out, "Created project in ")
+		ddevapp.WaitForSync(app, 2)
+		assert.FileExists(filepath.Join(tmpDir, "Psr/Log/LogLevel.php"))
+	}
 
 	// Test a composer require, with passthrough args
 	args = []string{"composer", "require", "sebastian/version", "--no-plugins", "--ansi"}
@@ -67,7 +71,6 @@ func TestComposerCmd(t *testing.T) {
 	assert.Contains(out, "Generating autoload files")
 	ddevapp.WaitForSync(app, 2)
 	assert.FileExists(filepath.Join(tmpDir, "vendor/sebastian/version/composer.json"))
-
 	// Test a composer remove
 	if nodeps.IsDockerToolbox() {
 		// On docker toolbox, git objects are read-only, causing the composer remove to fail.
