@@ -42,7 +42,7 @@ func TestComposerCmd(t *testing.T) {
 	defer app.Stop(true, false)
 
 	// Test create-project
-	// ddev composer create --prefer-dist --no-interaction --no-dev psr/log 1.1.0
+	// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0
 	args = []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "psr/log:1.1.0"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
@@ -50,9 +50,9 @@ func TestComposerCmd(t *testing.T) {
 	ddevapp.WaitForSync(app, 2)
 	assert.FileExists(filepath.Join(tmpDir, "Psr/Log/LogLevel.php"))
 
-	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	err = app.StartAndWaitForSync(5)
 	assert.NoError(err)
-	// ddev composer create --prefer-dist --no-interaction --no-dev psr/log 1.1.0 --no-install
+	// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0 --no-install
 	args = []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "psr/log:1.1.0", "--no-install"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)

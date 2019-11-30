@@ -1242,7 +1242,7 @@ func (app *DdevApp) StartAndWaitForSync(extraSleep int) error {
 		if extraSleep > 0 {
 			time.Sleep(time.Duration(extraSleep) * time.Second)
 		}
-	} else if nodeps.IsDockerToolbox() {
+	} else if nodeps.IsDockerToolbox() || app.NFSMountEnabled {
 		// Docker Toolbox seems not to get the router properly
 		// updated with certs as fast as we expect, use the extraSleep for that.
 		if extraSleep > 0 {
