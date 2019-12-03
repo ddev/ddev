@@ -39,9 +39,6 @@
  * Add local include and plugin directories
  */
 !addincludedir include
-!addplugindir /x86-ansi plugins\x86-ansi
-!addplugindir /x86-unicode plugins\x86-unicode
-!addplugindir /amd64-unicode plugins\amd64-unicode
 
 
 

@@ -25,6 +25,8 @@ done
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
 wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.04/nsis-3.04.zip/download && sudo unzip -d /usr/local/share download && sudo mv /usr/local/share/nsis-3.04 /usr/local/share/nsis
+wget https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -d /usr/local/share/nsis EnVar-Plugin.zip
+wget https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -d /usr/local/share/nsis/Plugins INetC.zip
 
 mkcert -install
 
