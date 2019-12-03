@@ -24,9 +24,9 @@ brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert ossls
 
 brew link --force mysql-client
 
-# Get the Plugins for nsis
-wget https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -d /usr/local/share/nsis EnVar-Plugin.zip
-wget https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -d /usr/local/share/nsis/Plugins INetC.zip
+# Get the Plugins for NSIS
+curl -fsSL -o /tmp/EnVar-Plugin.zip https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -d /usr/local/share/nsis /tmp/EnVar-Plugin.zip
+curl -fsSL -o /tmp/INetC.zip https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -d /usr/local/share/nsis/Plugins /tmp/INetC.zip
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 mkdir -p /usr/local/etc/my.cnf.d
