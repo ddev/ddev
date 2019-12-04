@@ -135,10 +135,9 @@ Get started with Drupal 8 projects on ddev either using a new or existing compos
 ```
 mkdir my-drupal8-site
 cd my-drupal8-site
-ddev config --project-type php
-ddev composer create drupal-composer/drupal-project:8.x-dev --prefer-dist
-ddev config --project-type drupal8
-ddev restart
+ddev config --project-type=drupal8 --docroot=web --create-docroot=true
+ddev start
+ddev composer create drupal/recommended-project:~8.8.0
 ```
 
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
