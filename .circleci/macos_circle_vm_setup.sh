@@ -19,10 +19,14 @@ nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
 brew tap drud/ddev
 
-brew install mysql-client zip nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
-brew link mysql-client zip nsis jq expect coreutils golang ddev mkcert osslsigncode ghr
+brew install mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr
+brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr
 
 brew link --force mysql-client
+
+# Get the Plugins for NSIS
+curl -fsSL -o /tmp/EnVar-Plugin.zip https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -d /usr/local/share/nsis /tmp/EnVar-Plugin.zip
+curl -fsSL -o /tmp/INetC.zip https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -d /usr/local/share/nsis/Plugins /tmp/INetC.zip
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 mkdir -p /usr/local/etc/my.cnf.d
