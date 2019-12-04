@@ -13,9 +13,11 @@ Remaining actions:
 - [ ] Approve release (product owner and release manager)
 - [ ] Create binaries (any DRUD maintainer)
 - [ ] Draft release notes (release manager)
-- [ ] Coordinate announcements for blog, newsletter, etc with marketing (product owner)
+- [ ] Coordinate announcements for blog, newsletter, etc with marketing (product
+      owner)
 - [ ] Create release (release manager)
 - [ ] Update Roadmap (TPM/release manager)
 - [ ] Followup issues spun off if we need them.
 
-For additional background information, please see our [Product Release](https://github.com/drud/community/blob/master/development/product_release.md) instructions here.
+For additional background information, please see our [Product Release](https://github.com/drud/community/blob/master/development/product_release.md)
+instructions here.
