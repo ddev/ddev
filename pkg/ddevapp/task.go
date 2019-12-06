@@ -3,8 +3,11 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -67,15 +70,20 @@ func (c ExecHostTask) Execute() (string, string, error) {
 		return "", "", err
 	}
 
-	execAry := strings.Split(c.exec, " ")
+	bashPath := "bash"
+	if runtime.GOOS == "windows" {
+		bashPath = util.FindWindowsBashPath()
+	}
 
-	cmd := exec.Command(execAry[0], execAry[1:]...)
-	var stdout, stderr bytes.Buffer
-	cmd.Stderr = &stderr
+	cmd := exec.Command(bashPath, "-c", c.exec)
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	err = cmd.Run()
 
 	_ = os.Chdir(cwd)
+
 	return stdout.String(), stderr.String(), err
 }
 
@@ -103,7 +111,7 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 	} else if e, ok = ytask["exec"]; ok {
 		t := ExecTask{app: app, exec: e.(string)}
 		if t.service, ok = ytask["service"].(string); !ok {
-			t.service = WebContainer
+			t.service = nodeps.WebContainer
 		}
 		return t
 	} else if e, ok = ytask["composer"]; ok {

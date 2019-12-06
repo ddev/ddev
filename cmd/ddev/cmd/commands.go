@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
-	osexec "os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -42,7 +41,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 			return err
 		}
 		if runtime.GOOS == "windows" {
-			windowsBashPath := findWindowsBashPath()
+			windowsBashPath := util.FindWindowsBashPath()
 			if windowsBashPath == "" {
 				fmt.Println("Unable to find bash.exe in PATH, not loading custom commands")
 				return nil
@@ -50,13 +49,17 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		}
 
 		for _, commandName := range commandFiles {
-			if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") {
+			if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") || strings.HasPrefix(commandName, ".") {
 				continue
 			}
 			// Use path.Join() for the inContainerFullPath because it's about the path in the container, not on the
 			// host; a Windows path is not useful here.
 			inContainerFullPath := path.Join("/mnt/ddev_config/commands", service, commandName)
 			onHostFullPath := filepath.Join(topCommandPath, service, commandName)
+
+			// Any command we find will want to be executable on Linux
+			_ = os.Chmod(onHostFullPath, 0755)
+
 			description := findDirectiveInScript(onHostFullPath, "## Description")
 			if description == "" {
 				description = commandName
@@ -91,7 +94,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
 	var windowsBashPath = ""
 	if runtime.GOOS == "windows" {
-		windowsBashPath = findWindowsBashPath()
+		windowsBashPath = util.FindWindowsBashPath()
 	}
 
 	return func(cmd *cobra.Command, cobraArgs []string) {
@@ -108,9 +111,10 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 			osArgs = os.Args[2:]
 		}
 		var err error
+		// Load environment variables that may be useful for script.
+		app.DockerEnv()
 		if runtime.GOOS == "windows" {
 			// Sadly, not sure how to have a bash interpreter without this.
-			//bashPath := `C:\Program Files\Git\bin\bash.exe`
 			args := []string{fullPath}
 			args = append(args, osArgs...)
 			err = exec.RunInteractiveCommand(windowsBashPath, args)
@@ -195,7 +199,8 @@ func populateExamplesAndCommands() error {
 	list := box.List()
 	for _, file := range list {
 		localPath := app.GetConfigPath(file)
-		if !fileutil.FileExists(localPath) {
+		sigFound, err := fileutil.FgrepStringInFile(localPath, ddevapp.DdevFileSignature)
+		if sigFound || err != nil {
 			content, err := box.Find(file)
 			if err != nil {
 				return err
@@ -212,19 +217,4 @@ func populateExamplesAndCommands() error {
 		}
 	}
 	return nil
-}
-
-// On Windows we'll need the path to bash to execute anything.
-// Returns empty string if not found, path if found
-func findWindowsBashPath() string {
-	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
-	if err != nil {
-		// This one could come back with the WSL bash, in which case we may have some trouble.
-		windowsBashPath, err = osexec.LookPath("bash.exe")
-		if err != nil {
-			fmt.Println("Not loading custom commands; bash is not in PATH")
-			return ""
-		}
-	}
-	return windowsBashPath
 }

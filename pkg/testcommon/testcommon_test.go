@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -23,7 +24,7 @@ var TestSites = []TestSite{
 		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
 		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
 		Docroot:                       "htdocs",
-		Type:                          ddevapp.AppTypeWordPress,
+		Type:                          nodeps.AppTypeWordPress,
 		Safe200URIWithExpectation:     URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 	},
 }

@@ -55,7 +55,7 @@ After installing docker-ce you *must* install docker-compose separately. If usin
 
 ### Linux Post-installation steps (required)
 
-See [Docker's post-installation steps](https://ddev.readthedocs.io/en/stable/users/docker_installation/#linux-post-installation-steps-required). You need to add your linux user to the "docker" group. and normally set up docker to start on boot.  __Please do not ever use sudo to run `ddev start`, it will break things.__
+See [Docker's post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/). You need to add your linux user to the "docker" group. and normally set up docker to start on boot.  __Please do not ever use sudo to run `ddev start`, it will break things.__
 
 <a name="troubleshooting"></a>
 ## Testing and Troubleshooting Your Docker Installation
@@ -80,7 +80,7 @@ If that fails (if you get an error, or you don't see the contents of your projec
  
 If you are on Docker Desktop for Windows or Docker Desktop for Mac and you are seeing shared directories not show up in the web container (nothing there when you `ddev ssh`) then:
 
-* Unshare and then reshare the drive
+* Unshare and then reshare the drive (you may have to re-enter your credentials)
 * Consider resetting Docker to factory defaults. This often helps in this situation because Docker goes through the whole authentication process again.
 
 If you are on Linux, the most common problem is having an old docker-compose, since the docker-compose that installs by default is incompatible with ddev. You'll find out about this right away because ddev will tell you on `ddev start` or most other ddev commands.

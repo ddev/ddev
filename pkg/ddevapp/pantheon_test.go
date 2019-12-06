@@ -3,6 +3,8 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,6 +29,7 @@ const pantheonTestEnvName = "bbowman"
 
 // TestConfigCommand tests the interactive config options.
 func TestPantheonConfigCommand(t *testing.T) {
+	t.Skip("Removing TestPantheonConfigCommand for now because it requires config-time project validation, which is being removed")
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
 		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
 	}
@@ -46,7 +49,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 	}
 
 	// Create the ddevapp we'll use for testing.
-	app, err := NewApp(testDir, true, ProviderPantheon)
+	app, err := NewApp(testDir, true, nodeps.ProviderPantheon)
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -86,10 +89,11 @@ func TestPantheonConfigCommand(t *testing.T) {
 
 	// Ensure values were properly set on the app struct.
 	assert.Equal(pantheonTestSiteName, app.Name)
-	assert.Equal(AppTypeDrupal8, app.Type)
+	assert.Equal(nodeps.AppTypeDrupal8, app.Type)
 	assert.Equal("docroot", app.Docroot)
 	err = PrepDdevDirectory(testDir)
 	assert.NoError(err)
+	output.UserOut.Print("")
 }
 
 // TestPantheonBackupLinks ensures we can get backups from pantheon for a configured environment.
@@ -106,7 +110,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, true, ProviderPantheon)
+	app, err := NewApp(testDir, true, nodeps.ProviderPantheon)
 	assert.NoError(err)
 	app.Name = pantheonTestSiteName
 
@@ -127,6 +131,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 	assert.Equal(importPath, "")
 	assert.Contains(backupLink, "database.sql.gz")
 	assert.NoError(err)
+	output.UserOut.Print("")
 }
 
 // TestPantheonPull ensures we can pull backups from pantheon for a configured environment.
@@ -150,10 +155,10 @@ func TestPantheonPull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
-	app, err := NewApp(siteDir, true, ProviderPantheon)
+	app, err := NewApp(siteDir, true, nodeps.ProviderPantheon)
 	assert.NoError(err)
 	app.Name = pantheonTestSiteName
-	app.Type = AppTypeDrupal8
+	app.Type = nodeps.AppTypeDrupal8
 	app.Hooks = map[string][]YAMLTask{"post-pull": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-pull": {{"exec-host": "touch hello-pre-pull-" + app.Name}}}
 
 	err = app.WriteConfig()
@@ -187,4 +192,5 @@ func TestPantheonPull(t *testing.T) {
 	_ = app.WriteConfig()
 	err = app.Stop(true, false)
 	assert.NoError(err)
+	output.UserOut.Print("")
 }

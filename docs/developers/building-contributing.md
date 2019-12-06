@@ -1,8 +1,8 @@
-<h1>Building, Testing, and Contributing</h1>
+# Building, Testing, and Contributing
 
 ## Building
 
-In the past, ddev would be checked out in the $GOPATH, but as of go 1.11, this is no longer appropriate. You should check out your fork *outside* the $GOPATH. 
+If you have `make` and docker, you can build for your environment with just `make`. Since the Makefile uses docker to build, it's not generally essential to install go on your machine, although it will make things easier. 
 
 Build/test/check static analysis with:
 
@@ -21,7 +21,7 @@ The binaries are built into .gotmp/bin; although normal command-line `go build` 
 ## Testing
 Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make testpkg TESTARGS="-run TestDevAddSites"`.
 
-To see which ddev commands the tests are executing, set the environment variable DRUD_DEBUG=true.
+To see which ddev commands the tests are executing, set the environment variable DDEV_DEBUG=true.
 
 Use GOTEST_SHORT=true to run just one CMS in each test.
 

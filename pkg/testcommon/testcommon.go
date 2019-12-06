@@ -251,15 +251,6 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 	return false, errors.New("unable to find container " + checkName)
 }
 
-// TimeTrack determines the amount of time a function takes to return. Timing starts when it is called.
-// It returns an anonymous function that, when called, will print the elapsed run time.
-func TimeTrack(start time.Time, name string) func() {
-	return func() {
-		elapsed := time.Since(start)
-		log.Printf("PERF: %s took %s", name, elapsed)
-	}
-}
-
 // GetCachedArchive returns a directory populated with the contents of the specified archive, either from cache or
 // from downloading and creating cache.
 // siteName is the site.Name used for storage

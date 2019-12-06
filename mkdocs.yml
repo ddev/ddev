@@ -10,26 +10,27 @@ markdown_extensions:
   - markdown.extensions.toc
 pages:
   - 'Home': 'index.md'
-  - 'User Documentation':
+  - 'ddev Basics':
     - 'Using the CLI': 'users/cli-usage.md'
-    - 'Extending ddev Commands': 'users/extending-commands.md'
+    - 'ddev Hooks': 'users/extending-commands.md'
     - 'Using Developer Tools with ddev': 'users/developer-tools.md'
     - 'PHP Step Debugging': 'users/step-debugging.md'
-    - 'Extending ddev':
-      - '.ddev/config.yaml Options': 'users/extend/config_yaml.md'
-      - 'Additional Project Hostnames': 'users/extend/additional-hostnames.md'
-      - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'
-      - 'Additional Services': 'users/extend/additional-services.md'
-      - 'Defining Custom Services': 'users/extend/custom-compose-files.md'
-      - 'Customizing Docker Images': 'users/extend/customizing-images.md'
-      - 'Custom Commands': 'users/extend/custom-commands.md'
-      - 'In-container Configuration': 'users/extend/in-container-configuration.md'
-    - 'Integration with Hosting Providers':
-      - 'Pantheon': 'users/providers/pantheon.md'
-      - 'DDEV-Live': 'users/providers/drud-s3.md'
     - 'Troubleshooting': 'users/troubleshooting.md'
     - 'Docker Installation': 'users/docker_installation.md'
     - 'Performance': 'users/performance.md'
     - 'Uninstalling DDEV-Local': 'users/uninstall.md'
+    - 'Frequently-Asked Questions (FAQ)': 'users/faq.md'
+    - '.ddev/config.yaml Options': 'users/extend/config_yaml.md'
+    - 'Database Server Types': 'users/extend/database_types.md'
+    - 'Additional Project Hostnames': 'users/extend/additional-hostnames.md'
+  - 'Extending ddev':
+    - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'
+    - 'Additional Services': 'users/extend/additional-services.md'
+    - 'Defining Custom Services': 'users/extend/custom-compose-files.md'
+    - 'Customizing Docker Images': 'users/extend/customizing-images.md'
+    - 'Custom Commands': 'users/extend/custom-commands.md'
+    - 'In-container Configuration': 'users/extend/in-container-configuration.md'
+  - 'Integration with Hosting Providers':
+    - 'Pantheon': 'users/providers/pantheon.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'

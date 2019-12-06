@@ -1,6 +1,8 @@
 package ddevapp_test
 
 import (
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"path/filepath"
 	"testing"
 
@@ -25,10 +27,10 @@ type settingsLocations struct {
 }
 
 var drupalBackdropSettingsLocations = map[string]settingsLocations{
-	AppTypeDrupal6:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	AppTypeDrupal7:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	AppTypeDrupal8:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
-	AppTypeBackdrop: {main: "settings.php", local: "settings.ddev.php"},
+	nodeps.AppTypeDrupal6:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	nodeps.AppTypeDrupal7:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	nodeps.AppTypeDrupal8:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	nodeps.AppTypeBackdrop: {main: "settings.php", local: "settings.ddev.php"},
 }
 
 // TestWriteSettings tests writing app settings (like Drupal
@@ -37,16 +39,16 @@ func TestWriteSettings(t *testing.T) {
 	assert := asrt.New(t)
 
 	expectations := map[string]string{
-		AppTypeBackdrop:  "settings.ddev.php",
-		AppTypeDrupal6:   "sites/default/settings.ddev.php",
-		AppTypeDrupal7:   "sites/default/settings.ddev.php",
-		AppTypeDrupal8:   "sites/default/settings.ddev.php",
-		AppTypeWordPress: "wp-config-ddev.php",
-		AppTypeTYPO3:     "typo3conf/AdditionalConfiguration.php",
+		nodeps.AppTypeBackdrop:  "settings.ddev.php",
+		nodeps.AppTypeDrupal6:   "sites/default/settings.ddev.php",
+		nodeps.AppTypeDrupal7:   "sites/default/settings.ddev.php",
+		nodeps.AppTypeDrupal8:   "sites/default/settings.ddev.php",
+		nodeps.AppTypeWordPress: "wp-config-ddev.php",
+		nodeps.AppTypeTYPO3:     "typo3conf/AdditionalConfiguration.php",
 	}
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, ProviderDefault)
+	app, err := NewApp(dir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -89,7 +91,7 @@ func TestWriteDrushConfig(t *testing.T) {
 
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
-		runTime := testcommon.TimeTrack(time.Now(), fmt.Sprintf("%s WriteDrushrc", site.Name))
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s WriteDrushrc", site.Name))
 
 		testcommon.ClearDockerEnv()
 
@@ -110,13 +112,13 @@ func TestWriteDrushConfig(t *testing.T) {
 		drushFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php")
 
 		switch app.Type {
-		case AppTypeDrupal6, AppTypeDrupal7, AppTypeDrupal8, AppTypeBackdrop:
+		case nodeps.AppTypeDrupal6, nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal8, nodeps.AppTypeBackdrop:
 			require.True(t, fileutil.FileExists(drushFilePath))
 			optionFound, err := fileutil.FgrepStringInFile(drushFilePath, "options")
 			assert.NoError(err)
 			assert.True(optionFound)
 
-			if app.Type == AppTypeDrupal8 {
+			if app.Type == nodeps.AppTypeDrupal8 {
 				drushYMLFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush", "drush.yml")
 				require.True(t, fileutil.FileExists(drushYMLFilePath))
 				optionFound, err := fileutil.FgrepStringInFile(drushYMLFilePath, "options")
@@ -140,7 +142,7 @@ func TestDrupalBackdropIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, ProviderDefault)
+	app, err := NewApp(dir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -185,7 +187,7 @@ func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, ProviderDefault)
+	app, err := NewApp(dir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -242,7 +244,7 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, ProviderDefault)
+	app, err := NewApp(dir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -281,7 +283,7 @@ func TestDrupalBackdropGitIgnoreAlreadyExists(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, ProviderDefault)
+	app, err := NewApp(dir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -324,7 +326,7 @@ func TestDrupalBackdropOverwriteDdevSettings(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, ProviderDefault)
+	app, err := NewApp(dir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)

@@ -4,13 +4,10 @@
 # 1. Copy this file to your project's ".ddev" directory.
 # 2. Create the folder path ".ddev/solr/conf".
 # 3. Copy the Solr configuration files for the appropriate plugin/module to
-#    ".ddev/solr/conf". For example, using Drupal 7's Search API Solr module,
-#    copy the files from its "solr-conf/6.x" directory into ".ddev/solr/conf"
+#    ".ddev/solr/conf". For example, using Drupal 8's Search API Solr module,
+#    you'll get the config files as a file config.zip from
+#    /admin/config/search/search-api/server/solr and unzip it into .ddev/solr/conf
 #    so that a file exists with the path ".ddev/solr/conf/solrconfig.xml".
-#
-# Notes:
-# - The configuration files must be present before running "ddev start".
-# - Changes to the configuration files will not be automatically applied.
 #
 # To access Solr after it is installed:
 # - The Solr admin interface will be accessible at:
@@ -19,21 +16,22 @@
 #   http://myproject.ddev.site:8983/solr/
 # - To access the Solr container from the web container use:
 #   http://solr:8983/solr/
-# - A Solr core is automatically created with the name "dev", i.e. it can be
-#   accessed at the URL: http://solr:8983/solr/dev
-
+# - A Solr core is automatically created with the name "dev" unless you
+#   change that usage throughout. It can be
+#   accessed at the URL: http://solr:8983/solr/dev (inside web container)
+#   or at http://myproject.ddev.site:8983/solr/dev (on the host)
 
 version: '3.6'
 
 services:
-  # This is the service name used when running ddev commands accepting the
-  # --service flag.
   solr:
-    # This is the name of the container. It is recommended to follow the same
-    # name convention used in the main docker-compose.yml file.
+    # Name of container using standard ddev convention
     container_name: ddev-${DDEV_SITENAME}-solr
-    # Controls the version of Solr which is installed.
-    image: solr:6.6
+    # The solr docker image is at https://hub.docker.com/_/solr/
+    # and code at https://github.com/docker-solr/docker-solr
+    # README: https://github.com/docker-solr/docker-solr/blob/master/README.md
+    # It's almost impossible to work with it if you don't read the docs there
+    image: solr:8
     restart: "no"
     # Solr is served from this port inside the container.
     ports:
@@ -50,23 +48,37 @@ services:
       # sitename.ddev.site.
       - HTTP_EXPOSE=8983
     volumes:
-      # This exposes a mount to the host system `.ddev/solr-conf` directory.
-      - "./solr:/solr-conf" 
-      # solr cores are stored on the 'solrdata' volume
-      - solrdata:/opt/solr/server/solr/mycores
+      # solr core *data* is stored on the 'solrdata' docker volume
+      # This mount is optional; without it your search index disappears
+      # each time ddev project is stopped and started.
+      - solrdata:/var/solr
+
+      # This mounts the conf in .ddev/solr into the container where
+      # the solr-precreate command in the entrypoint uses it as a one-time
+      # configuration to copy config into the newly-created core. It is not
+      # used if the core has previously been created.
+      - ./solr:/solr-conf
+
       - ".:/mnt/ddev_config"
-    entrypoint:
-      - docker-entrypoint.sh
-      - solr-precreate
-      - dev
-      - /solr-conf
+
+      # solr-configupdate.sh copies fresh configuration files into the
+      # solr container on each
+      # startup, so if you change the config in .ddev/solr/conf
+      # it will be refreshed on `ddev start`. The file must be
+      # executable (`chmod +x .ddev/solr/solr-init.sh
+      - "./solr/solr-configupdate.sh:/docker-entrypoint-initdb.d/solr-configupdate.sh"
+
+    entrypoint: [ "sh", "-c", "docker-entrypoint.sh solr-precreate dev /solr-conf" ]
+
+    external_links:
+      - "ddev-router:${DDEV_SITENAME}.ddev.site"
+
   # This links the Solr service to the web service defined in the main
-  # docker-compose.yml, allowing applications running in the web service to
-  # access the Solr service at sitename.ddev.site:8983.
+  # docker-compose.yml, allowing applications running inside the web container to
+  # access the Solr service at http://solr:8983
   web:
     links:
-      - solr:$DDEV_HOSTNAME
+      - solr:solr
 volumes:
-  # This creates a Docker volume that sticks around even if you remove or
-  # rebuild the container
-  solrdata: 
+  # solrdata is a persistent Docker volume for solr data
+  solrdata:

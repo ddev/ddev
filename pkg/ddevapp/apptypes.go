@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path"
 	"path/filepath"
@@ -63,23 +64,23 @@ var appTypeMatrix map[string]AppTypeFuncs
 
 func init() {
 	appTypeMatrix = map[string]AppTypeFuncs{
-		AppTypePHP: {},
-		AppTypeDrupal6: {
+		nodeps.AppTypePHP: {},
+		nodeps.AppTypeDrupal6: {
 			settingsCreator: createDrupal6SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal6Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal6App, postImportDBAction: nil, configOverrideAction: drupal6ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal6PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
-		AppTypeDrupal7: {
+		nodeps.AppTypeDrupal7: {
 			settingsCreator: createDrupal7SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal7Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal7App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: drupal7PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
-		AppTypeDrupal8: {
+		nodeps.AppTypeDrupal8: {
 			settingsCreator: createDrupal8SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal8Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal8App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: drupal8PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
-		AppTypeWordPress: {
+		nodeps.AppTypeWordPress: {
 			settingsCreator: createWordpressSettingsFile, uploadDir: getWordpressUploadDir, hookDefaultComments: getWordpressHooks, apptypeSettingsPaths: setWordpressSiteSettingsPaths, appTypeDetect: isWordpressApp, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: wordpressPostStartAction, importFilesAction: wordpressImportFilesAction,
 		},
-		AppTypeTYPO3: {
+		nodeps.AppTypeTYPO3: {
 			settingsCreator: createTypo3SettingsFile, uploadDir: getTypo3UploadDir, hookDefaultComments: getTypo3Hooks, apptypeSettingsPaths: setTypo3SiteSettingsPaths, appTypeDetect: isTypo3App, postImportDBAction: nil, configOverrideAction: typo3ConfigOverrideAction, postConfigAction: nil, postStartAction: typo3PostStartAction, importFilesAction: typo3ImportFilesAction,
 		},
-		AppTypeBackdrop: {
+		nodeps.AppTypeBackdrop: {
 			settingsCreator: createBackdropSettingsFile, uploadDir: getBackdropUploadDir, hookDefaultComments: getBackdropHooks, apptypeSettingsPaths: setBackdropSiteSettingsPaths, appTypeDetect: isBackdropApp, postImportDBAction: backdropPostImportDBAction, configOverrideAction: nil, postConfigAction: nil, postStartAction: backdropPostStartAction, importFilesAction: backdropImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
 	}
@@ -130,12 +131,12 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	if appFuncs, ok := appTypeMatrix[app.GetType()]; ok && appFuncs.settingsCreator != nil {
 		settingsPath, err := appFuncs.settingsCreator(app)
 		if err != nil {
-			util.Warning("Unable to create settings file: %v", err)
+			util.Warning("Unable to create settings file '%s': %v", app.SiteSettingsPath, err)
 		}
 		if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
 			util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
 		}
-		if app.Type == AppTypeDrupal8 {
+		if app.Type == nodeps.AppTypeDrupal8 {
 			drushDir := filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush")
 			if err = CreateGitIgnore(drushDir, "drush.yml"); err != nil {
 				util.Warning("Failed to write .gitignore in %s: %v", drushDir, err)
@@ -182,7 +183,7 @@ func (app *DdevApp) DetectAppType() string {
 			return appName
 		}
 	}
-	return AppTypePHP
+	return nodeps.AppTypePHP
 }
 
 // PostImportDBAction calls each apptype's detector until it finds a match,
@@ -257,4 +258,23 @@ func docrootWorkingDir(app *DdevApp, defaults map[string]string) map[string]stri
 	defaults["web"] = path.Join("/var/www/html", app.Docroot)
 
 	return defaults
+}
+
+// IsValidAppType is a helper function to determine if an app type is valid, returning
+// true if the given app type is valid and configured and false otherwise.
+func IsValidAppType(apptype string) bool {
+	if _, ok := appTypeMatrix[apptype]; !ok {
+		return false
+	}
+
+	return true
+}
+
+// GetValidAppTypes returns the valid apptype keys from the appTypeMatrix
+func GetValidAppTypes() []string {
+	keys := make([]string, 0, len(appTypeMatrix))
+	for k := range appTypeMatrix {
+		keys = append(keys, k)
+	}
+	return keys
 }

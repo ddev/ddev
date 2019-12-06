@@ -22,6 +22,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/Masterminds/semver"
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevhosts"
@@ -84,7 +85,8 @@ type DdevApp struct {
 	XdebugEnabled         bool                  `yaml:"xdebug_enabled"`
 	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string              `yaml:"additional_fqdns"`
-	MariaDBVersion        string                `yaml:"mariadb_version"`
+	MariaDBVersion        string                `yaml:"mariadb_version,omitempty"`
+	MySQLVersion          string                `yaml:"mysql_version,omitempty"`
 	WebcacheEnabled       bool                  `yaml:"webcache_enabled,omitempty"`
 	NFSMountEnabled       bool                  `yaml:"nfs_mount_enabled"`
 	ConfigPath            string                `yaml:"-"`
@@ -121,6 +123,9 @@ func (app *DdevApp) GetType() string {
 // Init populates DdevApp config based on the current working directory.
 // It does not start the containers.
 func (app *DdevApp) Init(basePath string) error {
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("app.Init(%s)", basePath))
+	defer runTime()
+
 	newApp, err := NewApp(basePath, true, "")
 	if err != nil {
 		return err
@@ -167,7 +172,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContai
 
 // Describe returns a map which provides detailed information on services associated with the running site.
 func (app *DdevApp) Describe() (map[string]interface{}, error) {
-	err := app.ProcessHooks("pre-describe")
+	_, _, err := app.ProcessHooks("pre-describe")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to process pre-describe hooks: %v", err)
 	}
@@ -203,6 +208,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["mariadb_version"] = app.MariaDBVersion
+			dbinfo["mysql_version"] = app.MySQLVersion
 			appDesc["dbinfo"] = dbinfo
 
 			if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
@@ -228,7 +234,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["bgsyncimg"] = app.BgsyncImage
 	appDesc["dbaimg"] = app.DBAImage
 
-	err = app.ProcessHooks("post-describe")
+	_, _, err = app.ProcessHooks("post-describe")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to process post-describe hooks: %v", err)
 	}
@@ -271,7 +277,7 @@ func (app *DdevApp) GetName() string {
 
 // GetPhpVersion returns the app's php version
 func (app *DdevApp) GetPhpVersion() string {
-	v := PHPDefault
+	v := nodeps.PHPDefault
 	if app.PHPVersion != "" {
 		v = app.PHPVersion
 	}
@@ -280,7 +286,7 @@ func (app *DdevApp) GetPhpVersion() string {
 
 // GetWebserverType returns the app's webserver type (nginx-fpm/apache-fpm/apache-cgi)
 func (app *DdevApp) GetWebserverType() string {
-	v := WebserverDefault
+	v := nodeps.WebserverDefault
 	if app.WebserverType != "" {
 		v = app.WebserverType
 	}
@@ -298,7 +304,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 		return err
 	}
 
-	err = app.ProcessHooks("pre-import-db")
+	_, _, err = app.ProcessHooks("pre-import-db")
 	if err != nil {
 		return err
 	}
@@ -402,7 +408,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 		return fmt.Errorf("failed to clean up %s after import: %v", dbPath, err)
 	}
 
-	err = app.ProcessHooks("post-import-db")
+	_, _, err = app.ProcessHooks("post-import-db")
 	if err != nil {
 		return err
 	}
@@ -517,7 +523,7 @@ type PullOptions struct {
 // Pull performs an import from the a configured provider plugin, if one exists.
 func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 	var err error
-	err = app.ProcessHooks("pre-pull")
+	_, _, err = app.ProcessHooks("pre-pull")
 	if err != nil {
 		return fmt.Errorf("Failed to process pre-pull hooks: %v", err)
 	}
@@ -578,7 +584,7 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 			}
 		}
 	}
-	err = app.ProcessHooks("post-pull")
+	_, _, err = app.ProcessHooks("post-pull")
 	if err != nil {
 		return fmt.Errorf("Failed to process post-pull hooks: %v", err)
 	}
@@ -590,7 +596,7 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 	app.DockerEnv()
 
-	if err := app.ProcessHooks("pre-import-files"); err != nil {
+	if _, _, err := app.ProcessHooks("pre-import-files"); err != nil {
 		return err
 	}
 
@@ -598,7 +604,7 @@ func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 		return err
 	}
 
-	if err := app.ProcessHooks("post-import-files"); err != nil {
+	if _, _, err := app.ProcessHooks("post-import-files"); err != nil {
 		return err
 	}
 
@@ -651,7 +657,8 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 }
 
 // ProcessHooks executes Tasks defined in Hooks
-func (app *DdevApp) ProcessHooks(hookName string) error {
+func (app *DdevApp) ProcessHooks(hookName string) (string, string, error) {
+	var stdout, stderr string
 	if cmds := app.Hooks[hookName]; len(cmds) > 0 {
 		output.UserOut.Printf("Executing %s hook...", hookName)
 	}
@@ -659,19 +666,61 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 	for _, c := range app.Hooks[hookName] {
 		a := NewTask(app, c)
 		if a == nil {
-			return fmt.Errorf("unable to create task from %v", c)
+			return "", "", fmt.Errorf("unable to create task from %v", c)
 		}
 
 		output.UserOut.Printf("=== Running task: %s, output below", a.GetDescription())
 
-		stdout, stderr, err := a.Execute()
-		if err != nil {
-			return fmt.Errorf("task failed: %v", err)
+		taskout, taskerr, err := a.Execute()
+		if taskout != "" {
+			output.UserOut.Println(taskout)
 		}
-		output.UserOut.Println(stdout + "\n" + stderr)
+		if taskerr != "" {
+			output.UserOut.Errorln(taskerr)
+		}
+
+		if err != nil {
+			output.UserOut.Errorf("task failed: %v: %v", a.GetDescription(), err)
+			output.UserOut.Warn("A task failure does not mean that ddev failed, but your hook configuration has a command that failed.")
+		}
+		stdout = stdout + taskout
+		stderr = stderr + taskerr
 	}
 
-	return nil
+	return stdout, stderr, nil
+}
+
+// GetDBImage uses the available mariadb or mysql version or provides the default
+func (app *DdevApp) GetDBImage() string {
+	// If an explicit dbimage is set, just use it.
+	if app.DBImage != "" {
+		return app.DBImage
+	}
+
+	dbImage := ""
+	// If the dbimage has not been overridden (because dbimage takes precedence)
+	// and the mariadb_version/mysql_version *has* been changed by config,
+	// use the dbimage derived from dbversion.
+	// IF dbimage has not been specified (it equals mariadb default)
+	// AND mariadb version is NOT the default version
+	// Then override the dbimage with related mariadb or mysql version
+
+	// If no (dbimage set or it's the default image) and MariaDB or MySQL version set
+	if (app.DBImage == "" || app.DBImage == version.GetDBImage(nodeps.MariaDB)) && (app.MariaDBVersion != "" || app.MySQLVersion != "") {
+		switch {
+		// mariadb_version is explicitly set
+		case app.MariaDBVersion != "":
+			dbImage = version.GetDBImage(nodeps.MariaDB, app.MariaDBVersion)
+		// mysql_version is explicitly set
+		case app.MySQLVersion != "":
+			dbImage = version.GetDBImage(nodeps.MySQL, app.MySQLVersion)
+		}
+	}
+	// Default behavior is just to use the MariaDB image.
+	if dbImage == "" {
+		dbImage = version.GetDBImage(nodeps.MariaDB)
+	}
+	return dbImage
 }
 
 // Start initiates docker-compose up
@@ -680,8 +729,24 @@ func (app *DdevApp) Start() error {
 
 	app.DockerEnv()
 
-	if app.APIVersion != version.DdevVersion {
-		util.Warning("Your %s version is %s, but ddev is version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
+	app.DBImage = app.GetDBImage()
+
+	APIVersion, err := semver.NewVersion(app.APIVersion)
+	if err != nil {
+		return err
+	}
+	DdevVersion, err := semver.NewVersion(version.DdevVersion)
+	if err != nil {
+		return err
+	}
+
+	// It returns -1, 0, or 1 if the version smaller, equal, or larger than the other version.
+	compareResult := APIVersion.Compare(DdevVersion)
+
+	if compareResult == -1 {
+		util.Warning("Your %s version is %s, but ddev is (newer) version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
+	} else if compareResult == 1 {
+		util.Warning("Your %s version is %s, but ddev is (older) version %s. \nPlease update ddev, see https://ddev.readthedocs.io/en/stable/.\nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
 	}
 
 	// Make sure that any ports allocated are available.
@@ -691,7 +756,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.ProcessHooks("pre-start")
+	_, _, err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
 	}
@@ -787,7 +852,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.ProcessHooks("post-start")
+	_, _, err = app.ProcessHooks("post-start")
 	if err != nil {
 		return err
 	}
@@ -822,7 +887,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if opts.Service == "" {
 		return "", "", fmt.Errorf("no service provided")
 	}
-	err := app.ProcessHooks("pre-exec")
+	_, _, err := app.ProcessHooks("pre-exec")
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to process pre-exec hooks: %v", err)
 	}
@@ -876,7 +941,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		stdoutResult, stderrResult, err = dockerutil.ComposeCmd(files, exec...)
 	}
 
-	hookErr := app.ProcessHooks("post-exec")
+	_, _, hookErr := app.ProcessHooks("post-exec")
 	if hookErr != nil {
 		return stdoutResult, stderrResult, fmt.Errorf("Failed to process post-exec hooks: %v", hookErr)
 	}
@@ -1040,7 +1105,7 @@ func (app *DdevApp) DockerEnv() {
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
 		"DDEV_SITENAME":                 app.Name,
-		"DDEV_DBIMAGE":                  app.DBImage,
+		"DDEV_DBIMAGE":                  app.GetDBImage(),
 		"DDEV_DBAIMAGE":                 app.DBAImage,
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_BGSYNCIMAGE":              app.BgsyncImage,
@@ -1060,6 +1125,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTP_PORT":         app.RouterHTTPPort,
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,
 		"DDEV_XDEBUG_ENABLED":           strconv.FormatBool(app.XdebugEnabled),
+		"DDEV_PRIMARY_URL":              app.GetPrimaryURL(),
 	}
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
@@ -1098,7 +1164,7 @@ func (app *DdevApp) Pause() error {
 		return fmt.Errorf("no project to stop")
 	}
 
-	err := app.ProcessHooks("pre-pause")
+	_, _, err := app.ProcessHooks("pre-pause")
 	if err != nil {
 		return err
 	}
@@ -1111,7 +1177,7 @@ func (app *DdevApp) Pause() error {
 	if _, _, err := dockerutil.ComposeCmd(files, "stop"); err != nil {
 		return err
 	}
-	err = app.ProcessHooks("post-pause")
+	_, _, err = app.ProcessHooks("post-pause")
 	if err != nil {
 		return err
 	}
@@ -1127,7 +1193,7 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 			"com.docker.compose.service": containerType,
 		}
 		waitTime := containerWaitTimeout
-		if containerType == BGSYNCContainer {
+		if containerType == nodeps.BGSYNCContainer {
 			waitTime = bgsyncWaitTimeout
 		}
 		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
@@ -1143,7 +1209,7 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 func (app *DdevApp) WaitSync() error {
 	labels := map[string]string{
 		"com.ddev.site-name":         app.GetName(),
-		"com.docker.compose.service": BGSYNCContainer,
+		"com.docker.compose.service": nodeps.BGSYNCContainer,
 	}
 
 	if !app.WebcacheEnabled {
@@ -1213,7 +1279,7 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 // Snapshot forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
 // Returns the dirname of the snapshot and err
 func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
-	err := app.ProcessHooks("pre-snapshot")
+	_, _, err := app.ProcessHooks("pre-snapshot")
 	if err != nil {
 		return "", fmt.Errorf("Failed to process pre-stop hooks: %v", err)
 	}
@@ -1242,7 +1308,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	util.Warning("Creating database snapshot %s", snapshotName)
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf("mariabackup --backup --target-dir=%s --user root --password root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir),
+		Cmd:     fmt.Sprintf("$(/backuptool.sh) --backup --target-dir=%s --user=root --password=root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir),
 	})
 
 	if err != nil {
@@ -1251,7 +1317,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	}
 
 	util.Success("Created database snapshot %s in %s", snapshotName, hostSnapshotDir)
-	err = app.ProcessHooks("post-snapshot")
+	_, _, err = app.ProcessHooks("post-snapshot")
 	if err != nil {
 		return snapshotName, fmt.Errorf("Failed to process pre-stop hooks: %v", err)
 	}
@@ -1262,9 +1328,16 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 // The project must be stopped and docker volume removed and recreated for this to work.
 func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	var err error
-	err = app.ProcessHooks("pre-restore-snapshot")
+	_, _, err = app.ProcessHooks("pre-restore-snapshot")
 	if err != nil {
 		return fmt.Errorf("Failed to process pre-restore-snapshot hooks: %v", err)
+	}
+
+	currentDBVersion := version.MariaDBDefaultVersion
+	if app.MariaDBVersion != "" {
+		currentDBVersion = app.MariaDBVersion
+	} else if app.MySQLVersion != "" {
+		currentDBVersion = app.MySQLVersion
 	}
 
 	snapshotDir := filepath.Join("db_snapshots", snapshotName)
@@ -1276,24 +1349,19 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 
 	// Find out the mariadb version that correlates to the snapshot.
 	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
-	var snapshotMariaDBVersion string
+	var snapshotDBVersion string
 	if fileutil.FileExists(versionFile) {
-		snapshotMariaDBVersion, err = fileutil.ReadFileIntoString(versionFile)
+		snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
 		if err != nil {
 			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
 		}
 	} else {
-		snapshotMariaDBVersion = MariaDB101
+		snapshotDBVersion = "unknown"
 	}
-	snapshotMariaDBVersion = strings.Trim(snapshotMariaDBVersion, " \n\t")
+	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \n\t")
 
-	if snapshotMariaDBVersion == MariaDB101 && app.MariaDBVersion != MariaDB101 {
-		//nolint: golint
-		return fmt.Errorf("snapshot %s is a MariaDB 10.1 snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).\nPlease use the instructions at %s to change the MariaDB version so you can restore it.", snapshotDir, app.MariaDBVersion, "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#old-snapshot")
-	}
-	if snapshotMariaDBVersion != MariaDB101 && app.MariaDBVersion == MariaDB101 {
-		//nolint: golint
-		return fmt.Errorf("snapshot %s is a MariaDB %s snapshot\nIt is not compatible with the configured ddev MariaDB version (%s).", snapshotDir, snapshotMariaDBVersion, app.MariaDBVersion)
+	if snapshotDBVersion != currentDBVersion {
+		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotDir, snapshotDBVersion, currentDBVersion)
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
@@ -1313,7 +1381,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	util.CheckErr(err)
 
 	util.Success("Restored database snapshot: %s", hostSnapshotDir)
-	err = app.ProcessHooks("post-restore-snapshot")
+	_, _, err = app.ProcessHooks("post-restore-snapshot")
 	if err != nil {
 		return fmt.Errorf("Failed to process post-restore-snapshot hooks: %v", err)
 	}
@@ -1325,7 +1393,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
 	var err error
 
-	err = app.ProcessHooks("pre-stop")
+	_, _, err = app.ProcessHooks("pre-stop")
 	if err != nil {
 		return fmt.Errorf("Failed to process pre-stop hooks: %v", err)
 	}
@@ -1377,7 +1445,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		util.Success("Project data/database removed from docker volume for project %s", app.Name)
 	}
 
-	err = app.ProcessHooks("post-stop")
+	_, _, err = app.ProcessHooks("post-stop")
 	if err != nil {
 		return fmt.Errorf("Failed to process post-stop hooks: %v", err)
 	}
@@ -1432,6 +1500,15 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 	httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())
 
 	return httpURLs, httpsURLs, append(httpURLs, httpsURLs...)
+}
+
+// GetPrimaryURL() returns the primary URL that can be used, https or http
+func (app *DdevApp) GetPrimaryURL() string {
+	httpURLs, urlList, _ := app.GetAllURLs()
+	if GetCAROOT() == "" {
+		urlList = httpURLs
+	}
+	return urlList[0]
 }
 
 // GetWebContainerDirectHTTPURL returns the URL that can be used without the router to get to web container.
@@ -1693,16 +1770,16 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	}
 
 	var provider Provider
-	err := fmt.Errorf("unknown provider type: %s, must be one of %v", app.Provider, GetValidProviders())
+	err := fmt.Errorf("unknown provider type: %s, must be one of %v", app.Provider, nodeps.GetValidProviders())
 
 	switch app.Provider {
-	case ProviderPantheon:
+	case nodeps.ProviderPantheon:
 		provider = &PantheonProvider{}
 		err = provider.Init(app)
-	case ProviderDrudS3:
+	case nodeps.ProviderDrudS3:
 		provider = &DrudS3Provider{}
 		err = provider.Init(app)
-	case ProviderDefault:
+	case nodeps.ProviderDefault:
 		provider = &DefaultProvider{}
 		err = nil
 	default:
@@ -1748,7 +1825,7 @@ func (app *DdevApp) precacheWebdir() error {
 
 	// Set the flag to tell unison it can start syncing
 	_, _, err = app.Exec(&ExecOpts{
-		Service: BGSYNCContainer,
+		Service: nodeps.BGSYNCContainer,
 		Cmd:     "touch /var/tmp/unison_start_authorized",
 	})
 	if err != nil {

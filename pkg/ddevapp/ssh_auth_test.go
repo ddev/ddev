@@ -28,7 +28,7 @@ func TestSSHAuth(t *testing.T) {
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
-	runTime := testcommon.TimeTrack(time.Now(), t.Name())
+	runTime := util.TimeTrack(time.Now(), t.Name())
 
 	//  Add a docker-compose service that has ssh server and mounted authorized_keys
 	site := TestSites[0]

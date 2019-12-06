@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -38,7 +39,7 @@ func (p *PantheonProvider) Init(app *DdevApp) error {
 		err = p.Read(configPath)
 	}
 
-	p.ProviderType = ProviderPantheon
+	p.ProviderType = nodeps.ProviderPantheon
 	return err
 }
 
@@ -47,35 +48,36 @@ func (p *PantheonProvider) Init(app *DdevApp) error {
 // allows provider plugins to have additional validation for top level config
 // settings.
 func (p *PantheonProvider) ValidateField(field, value string) error {
-	switch field {
-	case "Name":
-		_, err := findPantheonSite(value)
-		if err != nil {
-			p.Sitename = value
-		}
-		return err
-	}
 	return nil
 }
 
 // SetSiteNameAndEnv sets the environment of the provider (dev/test/live)
-func (p *PantheonProvider) SetSiteNameAndEnv(environment string) {
+func (p *PantheonProvider) SetSiteNameAndEnv(environment string) error {
+	_, err := findPantheonSite(p.app.Name)
+	if err != nil {
+		return fmt.Errorf("unable to find siteName %s on Pantheon: %v", p.app.Name, err)
+	}
 	p.Sitename = p.app.Name
 	p.EnvironmentName = environment
+	return nil
 }
 
 // PromptForConfig provides interactive configuration prompts when running `ddev config pantheon`
 func (p *PantheonProvider) PromptForConfig() error {
 	for {
-		p.SetSiteNameAndEnv("dev")
-		err := p.environmentPrompt()
-
-		if err == nil {
-			return nil
+		err := p.SetSiteNameAndEnv("dev")
+		if err != nil {
+			output.UserOut.Errorf("%v\n", err)
+			continue
 		}
-
-		output.UserOut.Errorf("%v\n", err)
+		err = p.environmentPrompt()
+		if err != nil {
+			output.UserOut.Errorf("%v\n", err)
+			continue
+		}
+		break
 	}
+	return nil
 }
 
 // GetBackup will download the most recent backup specified by backupType in the given environment. If no environment
@@ -186,7 +188,7 @@ func (p *PantheonProvider) environmentPrompt() error {
 		keys = append(keys, k)
 	}
 	fmt.Println("\n\t- " + strings.Join(keys, "\n\t- ") + "\n")
-	var environmentPrompt = "Type the name to select an environment to import from"
+	var environmentPrompt = "Type the name to select an environment to pull from"
 	if p.EnvironmentName != "" {
 		environmentPrompt = fmt.Sprintf("%s (%s)", environmentPrompt, p.EnvironmentName)
 	}
@@ -199,7 +201,10 @@ func (p *PantheonProvider) environmentPrompt() error {
 	if !ok {
 		return fmt.Errorf("could not find an environment named '%s'", envName)
 	}
-	p.SetSiteNameAndEnv(envName)
+	err = p.SetSiteNameAndEnv(envName)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

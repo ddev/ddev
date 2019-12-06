@@ -46,7 +46,7 @@ func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 		DatabaseUsername: "db",
 		DatabasePassword: "db",
 		DatabaseHost:     "db",
-		DeployURL:        app.GetHTTPURL(),
+		DeployURL:        app.GetPrimaryURL(),
 		Docroot:          "/var/www/html/docroot",
 		TablePrefix:      "wp_",
 		AuthKey:          util.RandString(64),
@@ -163,7 +163,13 @@ and before the include of wp-settings.php:
 $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
 if (is_readable($ddev_settings) && !defined('DB_USER')) {
   require_once($ddev_settings);
-}`
+}
+
+If you don't care about those settings, or config is managed in a .env
+file, etc, then you can eliminate this message by putting a line that says
+// wp-config-ddev.php not needed
+in your wp-config.php
+`
 
 // createWordpressSettingsFile creates a Wordpress settings file from a
 // template. Returns full path to location of file + err
@@ -198,7 +204,16 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 		} else {
 			// Settings file exists and is not ddev-managed, alert the user to the location
 			// of the generated ddev settings file
-			util.Failed(wordpressConfigInstructions, app.SiteDdevSettingsFile)
+			includeExists, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "wp-config-ddev.php")
+			if err != nil {
+				util.Warning("Unable to check that the ddev settings file has been included: %v", err)
+			}
+
+			if includeExists {
+				util.Success("Include of %s found in %s", app.SiteDdevSettingsFile, app.SiteSettingsPath)
+			} else {
+				util.Warning(wordpressConfigInstructions, app.SiteDdevSettingsFile)
+			}
 		}
 	} else {
 		// If settings file does not exist, write basic settings file including it
@@ -390,7 +405,6 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 }
 
 // wordpressPostStartAction handles post-start actions
-
 func wordpressPostStartAction(app *DdevApp) error {
 	if _, err := app.CreateSettingsFile(); err != nil {
 		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)

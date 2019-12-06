@@ -50,7 +50,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 3. Run docker manually and go through its configuration routine.
 3. Run `iterm`. On Mojave it may prompt for requiring full disk access permissions, follow through with that.
 3. Set up nfsd by running `macos_ddev_nfs_setup.sh`
-4. Add the path `/private/var` to `/etc/exports` and `sudo nfsd restart`.
+4. Add the path `/private/var` or on Catalina `/System/Volumes/Data/private/var` to `/etc/exports` and `sudo nfsd restart`.
 5. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add 
     * the agent token 
     * Tags, like `"os=macos,osvariant=highsierra,dockertype=dockerformac"`

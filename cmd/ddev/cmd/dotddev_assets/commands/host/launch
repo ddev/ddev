@@ -1,0 +1,28 @@
+#!/bin/bash
+
+## #ddev-generated
+## Description: Launch a browser with the current site
+## Usage: launch [path]
+## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php"
+
+FULLURL=${DDEV_PRIMARY_URL}
+
+if [ -n "${1:-}" ] ; then 
+  if [[ ${1::1} != "/" ]] ; then 
+    FULLURL="${FULLURL}/"; 
+  fi
+
+  FULLURL="${FULLURL}${1}"; 
+fi
+
+case $OSTYPE in
+  linux-gnu)
+    xdg-open ${FULLURL}
+    ;;
+  "darwin"*)
+    open ${FULLURL}
+    ;;
+  "win*"* | "msys"*)
+    start ${FULLURL}
+    ;;
+esac

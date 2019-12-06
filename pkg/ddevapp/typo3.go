@@ -2,59 +2,56 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"io/ioutil"
-	"strings"
 
 	"os"
 	"path/filepath"
 
 	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 )
 
-func typo3AdditionalConfigTemplate(app *DdevApp) string {
-	dockerIP, _ := dockerutil.GetDockerIP()
-	hostNames := append(app.GetHostnames(), "localhost", dockerIP)
-
-	return `<?php
+const typo3AdditionalConfigTemplate = `<?php
 /** ` + DdevFileSignature + `: Automatically generated TYPO3 AdditionalConfiguration.php file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
-
-$GLOBALS['TYPO3_CONF_VARS']['SYS']['trustedHostsPattern'] = '` +
-		strings.Join(hostNames, "(:\\\\d+)?|") +
-		`(:\\d+)?|.*\.ngrok\.io(:\\d+)?';
-
-$GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'] = array_merge(
-    // on first install, this could be not set yet
-    isset($GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default'])
-        ? $GLOBALS['TYPO3_CONF_VARS']['DB']['Connections']['Default']
-        : [],
+$GLOBALS['TYPO3_CONF_VARS'] = array_replace_recursive(
+    $GLOBALS['TYPO3_CONF_VARS'],
     [
-        'dbname' => 'db',
-        'host' => 'db',
-        'password' => 'db',
-        'port' => '3306',
-        'user' => 'db',
+        'DB' => [
+            'Connections' => [
+                'Default' => [
+                    'dbname'   => 'db',
+                    'host'     => 'db',
+                    'password' => 'db',
+                    'port'     => '3306',
+                    'user'     => 'db',
+                ]
+            ]
+        ],
+        // This GFX configuration allows processing by installed ImageMagick 6
+        'GFX' => [
+            'processor' => 'ImageMagick',
+            'processor_path' => '/usr/bin/',
+            'processor_path_lzw' => '/usr/bin/'
+        ],
+        // This mail configuration sends all emails to mailhog
+        'MAIL' => [
+            'transport' => 'smtp',
+            'transport_smtp_server' => 'localhost:1025'
+        ],
+        'SYS' => [
+            'trustedHostsPattern' => '.*.*',
+            'devIPmask' => '*',
+            'displayErrors' => 1
+        ]
     ]
 );
 
-// This mail configuration sends all emails to mailhog
-$GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport'] = 'smtp';
-$GLOBALS['TYPO3_CONF_VARS']['MAIL']['transport_smtp_server'] = 'localhost:1025';
-
-$GLOBALS['TYPO3_CONF_VARS']['SYS']['devIPmask'] = '*';
-$GLOBALS['TYPO3_CONF_VARS']['SYS']['displayErrors'] = 1;
-
-// This GFX configuration allows processing by installed ImageMagick 6
-$GLOBALS['TYPO3_CONF_VARS']['GFX']['processor'] = 'ImageMagick';
-$GLOBALS['TYPO3_CONF_VARS']['GFX']['processor_path'] = '/usr/bin/';
-$GLOBALS['TYPO3_CONF_VARS']['GFX']['processor_path_lzw'] = '/usr/bin/';
 `
-}
 
 // createTypo3SettingsFile creates the app's LocalConfiguration.php and
 // AdditionalConfiguration.php, adding things like database host, name, and
@@ -114,8 +111,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	if err != nil {
 		return err
 	}
-	contents := []byte(typo3AdditionalConfigTemplate(app))
-
+	contents := []byte(typo3AdditionalConfigTemplate)
 	err = ioutil.WriteFile(filePath, contents, 0644)
 	if err != nil {
 		return err
@@ -165,7 +161,7 @@ func isTypo3App(app *DdevApp) bool {
 
 // typo3ConfigOverrideAction sets a safe php_version for TYPO3
 func typo3ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = PHP72
+	app.PHPVersion = nodeps.PHP72
 	return nil
 }
 

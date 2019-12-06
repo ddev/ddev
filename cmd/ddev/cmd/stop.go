@@ -35,7 +35,8 @@ any directory by running 'ddev stop projectname [projectname ...]' or 'ddev stop
 By default, stop is a non-destructive operation and will leave database
 contents intact. It never touches your code or files directories.
 
-To remove database contents, use "ddev stop --remove-data".
+To remove database contents and global listing, 
+use "ddev delete" or "ddev stop --remove-data".
 
 To snapshot the database on stop, use "ddev stop --snapshot"; A snapshot is automatically created on
 "ddev stop --remove-data" unless you use "ddev stop --remove-data --omit-snapshot".
@@ -43,7 +44,8 @@ To snapshot the database on stop, use "ddev stop --snapshot"; A snapshot is auto
 	Example: `ddev stop
 ddev stop proj1 proj2 proj3
 ddev stop --all
-ddev stop --all --stop-ssh-agent`,
+ddev stop --all --stop-ssh-agent
+ddev stop --remove-data`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if createSnapshot && omitSnapshot {
 			util.Failed("Illegal option combination: --snapshot and --omit-snapshot:")
@@ -85,7 +87,7 @@ func init() {
 	DdevStopCmd.Flags().BoolVarP(&createSnapshot, "snapshot", "S", false, "Create database snapshot")
 	DdevStopCmd.Flags().BoolVarP(&omitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")
 
-	DdevStopCmd.Flags().BoolVarP(&stopAll, "all", "a", false, "Stop and remove all running or container-stopped projects")
+	DdevStopCmd.Flags().BoolVarP(&stopAll, "all", "a", false, "Stop and remove all running or container-stopped projects and remove from global projects list")
 	DdevStopCmd.Flags().BoolVarP(&stopSSHAgent, "stop-ssh-agent", "", false, "Stop the ddev-ssh-agent container")
 	DdevStopCmd.Flags().BoolVarP(&unlist, "unlist", "U", false, "Remove the project from global project list, it won't show in ddev list until started again")
 

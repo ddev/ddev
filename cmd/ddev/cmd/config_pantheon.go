@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/spf13/cobra"
@@ -16,7 +17,7 @@ var pantheonConfigCommand *cobra.Command = &cobra.Command{
 	Short:   "Create or modify a ddev project pantheon configuration in the current directory",
 	Example: `"ddev config pantheon" or "ddev config pantheon --docroot=. --project-name=myproject --pantheon-environment=dev"`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		providerName = ddevapp.ProviderPantheon
+		providerName = nodeps.ProviderPantheon
 		extraFlagsHandlingFunc = handlePantheonFlags
 	},
 	Run: handleConfigRun,
@@ -36,7 +37,10 @@ func handlePantheonFlags(cmd *cobra.Command, args []string, app *ddevapp.DdevApp
 		return fmt.Errorf("failed to GetProvider: %v", err)
 	}
 	pantheonProvider := provider.(*ddevapp.PantheonProvider)
-	pantheonProvider.SetSiteNameAndEnv(pantheonEnvironmentName)
+	err = pantheonProvider.SetSiteNameAndEnv(pantheonEnvironmentName)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

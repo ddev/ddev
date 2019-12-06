@@ -1,4 +1,4 @@
-<h1>ddev Documentation</h1>
+## What is DDEV Local?
 
 [ddev](https://github.com/drud/ddev) is an open source tool that makes it dead simple to get local PHP development environments up and running within minutes. It's powerful and flexible as a result of its per-project environment configurations, which can be extended, version controlled, and shared. In short, ddev aims to allow development teams to use Docker in their workflow without the complexities of bespoke configuration.
 
@@ -10,13 +10,13 @@
 - docker-compose 1.21.0 and higher (bundled with Docker in Docker Desktop for Mac and Docker Desktop for Windows)
 - OS Support
   - macOS Sierra and higher (macOS 10.12 and higher; it should run anywhere Docker Desktop for Mac runs.
-  - Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 14.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
+  - Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 16.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
   - Windows 10 Pro or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
   - Windows 10 Home (or other Windows version) with [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/)
 
 
-### Using ddev with other development environments
-ddev by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure ddev to use different ports. See [troubleshooting](https://ddev.readthedocs.io/en/stable/users/troubleshooting/#webserver-ports-are-already-occupied-by-another-webserver) for more detailed problemsolving.
+### Using ddev alongside other development environments
+ddev by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure ddev to use different ports. See [troubleshooting](users/troubleshooting.md#unable-listen) for more detailed problemsolving.
 
 ## Installation
 
@@ -24,7 +24,7 @@ _When upgrading, please check the [release notes](https://github.com/drud/ddev/r
 
 ### Docker Installation
 
-Docker and docker-compose are required before anything will work with ddev. This is pretty easy on most environments, but we have a [docker_installation](users/docker_installation.md) page to help sort out the nuances, especially on Windows and Linux.
+Docker and docker-compose are required before anything will work with ddev. This is pretty easy on most environments, but see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux.
 
 ### Homebrew/Linuxbrew - macOS/Linux
 
@@ -48,6 +48,7 @@ brew upgrade ddev
 - A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new terminal or cmd window and start using ddev.
 - If you use [chocolatey](https://chocolatey.org/) (highly recommended), then you can just `choco install ddev` from an administrative-privileged shell. Upgrades are just `choco upgrade ddev`.
 - (Optional) As a one-time initialization, run `mkcert -install`
+- Most people interact with ddev on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although ddev does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
 
 
 ### Installation/Upgrade Script - Linux and macOS
@@ -100,14 +101,40 @@ On variants of Linux you may be prompted for additional package installation to 
   
   (Note the prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having /usr/sbin in the path so that `/usr/sbin/update-ca-certificates` can be found.)
 
+### Windows and Firefox `mkcert -install` additional instructions
+
+The `mkcert -install` step on Windows does not work for the Firefox browser.
+You need to add the created root certficate authority to the security
+configuration by your self:
+
+- Run `mkcert -install` (you can use the shortcut from the start menu for that)
+- Run `mkcert -CAROOT` to see the local folder used for the newly created root
+  certificate authority
+- Open the Firefox settings
+- Enter `certificates` into the search box on the top
+- Click to `Show certificates...`
+- Select the tab `Certificate authorities`
+- Click to `Import...`
+- Go to the folder where your root certificate authority was stored
+- Select the file `rootCA-key.pem`
+- Click to `Open`
+
+You should now see your CA under `mkcert development CA`.
+
 ### Uninstallation
 
 For instructions to uninstall DDEV-Local see [Uninstallation](users/uninstall.md).
 
-## Support
+<a name="support"></a>
+## Support and User-Contributed Documentation
 
 We love to hear from our users and help them be successful with ddev. Support options include:
-- [ddev Documentation](https://ddev.readthedocs.io)
+
+- [ddev Documentation](users/faq.md)
 - [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
 - [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
-- The `#ddev` channel in [Drupal Slack](https://www.drupal.org/slack) and [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support
+- The [gitter drud/ddev channel](https://gitter.im/drud/ddev) (it's easy to log in many diffferent ways)
+- The `#ddev` channels in [Drupal Slack](https://www.drupal.org/slack), [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support.
+- [ddev-contrib](https://github.com/drud/ddev-contrib) repo provides a number of vetted user-contributed recipes for extending and using ddev. Your contributions are welcome.
+- [awesome-ddev](https://github.com/drud/awesome-ddev) repo has loads of external resources, blog posts, recipes, screencasts, and the like. Your contributions are welcome.
+- [Twitter with tag #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us, but it's not as good for interactive support, but we'll answer anywhere.

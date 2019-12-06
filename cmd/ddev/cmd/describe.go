@@ -67,6 +67,7 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		if _, ok := desc["dbinfo"]; ok {
 			dbinfo = desc["dbinfo"].(map[string]interface{})
 			siteInfo.AddRow("MariaDB version", dbinfo["mariadb_version"])
+			siteInfo.AddRow("MySQL version", dbinfo["mysql_version"])
 		}
 
 		output = output + fmt.Sprintln(siteInfo)

@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/nodeps"
 
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -664,7 +665,7 @@ func isDrupal6App(app *DdevApp) bool {
 // drupal6ConfigOverrideAction overrides php_version for D6, since it is incompatible
 // with php7+
 func drupal6ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = PHP56
+	app.PHPVersion = nodeps.PHP56
 	return nil
 }
 

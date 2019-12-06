@@ -1,11 +1,34 @@
-<h1>Using the ddev command line interface (CLI)</h1>
 
-Type `ddev` or `ddev -h`in a terminal windows to see the available ddev commands. There are commands to configure a project, start, remove, describe, etc. Each command also has help. For example, `ddev describe -h`.
+Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands. There are commands to configure a project, start, stop, describe, etc. Each command also has help. For example, `ddev stop -h` shows that `ddev rm` is an alias, and shows all the many flags that can be used with `ddev stop`.
 
+## Favorite Commands
+
+Each of these commands has full help. For example, `ddev start -h` or `ddev help start`. Just typing `ddev` will get you a list of available commands.
+
+* `ddev config` configures a project for ddev, creating a .ddev directory according to your responses. It should be executed in the project (repository) root.
+* `ddev start` and `ddev stop` start and stop the containers that comprise a project. `ddev restart` just does a stop and a start. `ddev poweroff` stops all ddev-related containers and projects.
+* `ddev describe` or `ddev describe <projectname>` gives you full details about the project, what ports it uses, how to access them, etc.
+* `ddev list` shows running projects
+* `ddev import-db` and `ddev export-db` let you import or export a sql or compressed sql file.
+* `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer).
+* `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev restore-snapshot`.
+* `ddev ssh` opens a bash session in the web container (or other container). 
+* `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
+* `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`)
+* `ddev delete` is the same as `ddev stop --remove-data` and will delete a project's database and ddev's record of the project's existence. It doesn't touch your project or code. `ddev delete -O` will omit the snapshot creation step that would otherwise take place, and `ddev delete images` gets rid of spare Docker images you may have on your machine.
+
+## Bundled Tools List
+
+In addition to the *commands* listed above, there are loads and loads of tools included inside the containers:
+
+* `ddev describe` tells how to access **mailhog**, which captures email in your development environment.
+* `ddev describe` tells how to use the built-in **PHPMyAdmin**.
+* Composer, git, node, npm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`.
+* `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
 
 ## Quickstart Guides
 
-These are quickstart instructions for generic PHP, WordPress, Drupal 6, Drupal 7, Drupal 8, TYPO3, and Backdrop.
+Here are quickstart instructions for generic PHP, WordPress, Drupal 6, Drupal 7, Drupal 8, TYPO3, and Backdrop.
 
 **Prerequisites:** Before you start, follow the [installation instructions](../index.md#installation). Make sure to [check the system requirements](../index.md#system-requirements), you will need *docker* and *docker-compose* to use ddev.
 
@@ -26,23 +49,32 @@ DDEV works happily with most any PHP or static HTML project, although it has spe
 
 ### WordPress Quickstart
 
-**Composer Setup Example**
+**Composer Setup Example Using roots/bedrock**
 
 ```
-mkdir my-wordpress-site
-cd my-wordpress-site
+mkdir my-wp-bedrock-site
+cd my-wp-bedrock-site
 ddev config --project-type=php
-ddev composer create wordpress/skeleton --no-interaction --prefer-dist
-ddev config --docroot=wp --project-type=wordpress
+ddev composer create roots/bedrock
+ddev config
 ddev restart
 ```
-
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
-
 ```
 Successfully started my-wordpress-site
 Your application can be reached at: http://my-wordpress-site.ddev.site
 ```
+
+Now, since [bedrock](https://roots.io/bedrock/) uses a configuration technique which is unusual for WordPress:
+
+* Edit the .env file which has been created in the project root, and set 
+    ```
+  DB_NAME=db
+  DB_USER=db
+  DB_PASSWORD=db
+  DB_HOST=db
+  WP_HOME=https://my-wp-bedrock-site.ddev.site
+  ```
+  For more details see [bedrock installation](https://roots.io/bedrock/docs/installing-bedrock/)
 
 **Git Clone Example**
 
@@ -59,23 +91,66 @@ From here we can start setting up ddev. Inside your project's working directory,
 ddev config
 ```
 
-_Note: ddev config will prompt you for a project name, docroot, and project type._
+You'll see a message like:
+```
+An existing user-managed wp-config.php file has been detected!
+Project ddev settings have been written to:
 
-After `ddev config`, you're ready to start running your project. Run ddev using:
+/Users/rfay/workspace/bedrock/web/wp-config-ddev.php
+
+Please comment out any database connection settings in your wp-config.php and
+add the following snippet to your wp-config.php, near the bottom of the file
+and before the include of wp-settings.php:
+
+// Include for ddev-managed settings in wp-config-ddev.php.
+$ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
+if (is_readable($ddev_settings) && !defined('DB_USER')) {
+  require_once($ddev_settings);
+}
+
+If you don't care about those settings, or config is managed in a .env
+file, etc, then you can eliminate this message by putting a line that says
+// wp-config-ddev.php not needed
+in your wp-config.php
+```
+
+So just add the suggested include into your wp-config.php, or take the workaround shown.
+
+Now start your project with `ddev start`
+
+Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
+
+### Drupal 8 Quickstart
+
+Get started with Drupal 8 projects on ddev either using a new or existing composer project or by cloning a git repository.
+
+**Composer Setup Example**
 
 ```
-ddev start
+mkdir my-drupal8-site
+cd my-drupal8-site
+ddev config --project-type php
+ddev composer create drupal-composer/drupal-project:8.x-dev --prefer-dist
+ddev config --project-type drupal8
+ddev restart
 ```
 
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
 
 ```
-Successfully started example-site
-Your project can be reached at: http://example-site.ddev.site and https://example-site.ddev.site
+Successfully started my-drupal8-site
+Your project can be reached at: http://my-drupal8-site.ddev.site
 ```
 
-Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
+**Git Clone Example**
 
+Note that the git URL shown below is an example only, you'll need to use your own project.
+
+```
+git clone https://github.com/example/example-site
+cd example-site
+ddev composer install
+```
 
 ### Drupal 6/7 Quickstart
 
@@ -111,38 +186,6 @@ If you want to run the Drupal install script, the next step is to hit "/install.
 
 Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
 
-### Drupal 8 Quickstart
-
-Get started with Drupal 8 projects on ddev either using a new or existing composer project or by cloning a git repository.
-
-**Composer Setup Example**
-
-```
-mkdir my-drupal8-site
-cd my-drupal8-site
-ddev config --project-type php
-ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction --prefer-dist
-ddev config --project-type drupal8
-ddev restart
-```
-
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
-
-```
-Successfully started my-drupal8-site
-Your project can be reached at: http://my-drupal8-site.ddev.site
-```
-
-**Git Clone Example**
-
-Note that the git URL shown below is an example only, you'll need to use your own project.
-
-```
-git clone https://github.com/example/example-site
-cd example-site
-ddev composer install
-```
-
 ### TYPO3 Quickstart
 
 **Composer Setup Example**
@@ -151,7 +194,7 @@ ddev composer install
 mkdir my-typo3-site
 cd my-typo3-site
 ddev config --project-type php
-ddev composer create typo3/cms-base-distribution ^9 --no-interaction --prefer-dist
+ddev composer create "typo3/cms-base-distribution:^9" --prefer-dist
 ddev config --project-type typo3
 ddev restart
 ```
@@ -163,11 +206,11 @@ Successfully started example-typo3-site
 Your application can be reached at: https://example-typo3-site.ddev.site
 ```
 
-**A TYPO3 an install may fail if you use the https URL ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
+**A Some versions of TYPO3 an install may fail if you use the https URL ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
 
 If doing a basic TYPO3 install, you can then `touch public/FIRST_INSTALL` and hit the http URL top begin an installation.
 
-For those wanting/needing to connect to the database within the database container directly, please see the [developer tools page](https://ddev.readthedocs.io/en/stable/users/developer-tools/#using-development-tools-on-the-host-machine).
+To connect to the database within the database container directly, please see the [developer tools page](developer-tools.md#using-development-tools-on-the-host-machine).
 
 To get started using ddev with a TYPO3 project, clone the project's repository and checkout its directory.
 
@@ -229,7 +272,7 @@ Check out the git repository for the project you want to work on. `cd` into the 
 $ mkdir drupal8
 $ cd drupal8
 $ ddev config --project-type php
-$ ddev composer create drupal-composer/drupal-project:8.x-dev --stability dev --no-interaction
+$ ddev composer create drupal-composer/drupal-project:8.x-dev  
 $ ddev config --project-type drupal8
 ```
 
@@ -283,6 +326,7 @@ How do you know if DDEV manages a settings file? You will see the following comm
 
 To see a list of your projects you can use `ddev list`; `ddev list --active-only` will show only projects currently running or paused.
 
+```
 ➜  ddev list 
 NAME          TYPE     LOCATION                   URL(s)                                STATUS
 d8git         drupal8  ~/workspace/d8git          https://d8git.ddev.local              running
@@ -295,8 +339,6 @@ hobobiker     drupal6  ~/workspace/hobobiker.com                                
 NAME     TYPE     LOCATION             URL(s)                      STATUS
 drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
                                        https://drupal8.ddev.site
-```
-
 ```
 
 
