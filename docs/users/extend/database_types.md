@@ -1,9 +1,8 @@
 ## Database Server Types
 
-ddev can currently support most versions of MariaDB and MySQL database servers. You can configure the type that you want using the .ddev/config.yaml file:
+ddev can currently support most versions of MariaDB and MySQL database servers. You can configure the type that you want using the `.ddev/config.yaml` file:
 
-`mariadb_version: 10.4`
-`mysql_version: 8.0`
+`mariadb_version: 10.4` or `mysql_version: 8.0`
 
 The default version is MariaDB 10.2 and it works for most purposes.
 
