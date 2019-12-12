@@ -123,8 +123,8 @@ hooks:
 ```
 hooks:
   post-start:
-    # Install Drupal after start
-    - exec: "drush site-install -y --db-url=db:db@db/db"
+    # Install Drupal after start if not installed already
+    - exec: "(drush status bootstrap | grep -q Successful) || drush site-install -y --db-url=db:db@db/db"
     # Generate a one-time login link for the admin account.
     - exec: "drush uli 1"
   post-import-db:
@@ -144,8 +144,8 @@ hooks:
     # Install composer dependencies using composer on host system
     - exec-host: "composer install"
   post-start:
-    # Install Drupal after start
-    - exec: "drush site-install -y --db-url=mysql://db:db@db/db"
+    # Install Drupal after start if not installed already
+    - exec: "(drush status bootstrap | grep -q Successful) || drush site-install -y --db-url=mysql://db:db@db/db"
     # Generate a one-time login link for the admin account.
     - exec: "drush uli 1"
   post-import-db:
