@@ -568,7 +568,7 @@ func WriteDrushYML(app *DdevApp, filePath string) error {
 		uri = app.GetHTTPURL()
 	}
 	drushContents := []byte(`
-#` + DdevFileSignature + `: Automatically generated TYPO3 AdditionalConfiguration.php file.
+#` + DdevFileSignature + `: Automatically generated drush.yml file.
 # ddev manages this file and may delete or overwrite the file unless this comment is removed.
 
 options:
