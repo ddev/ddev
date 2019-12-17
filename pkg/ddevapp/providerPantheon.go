@@ -53,7 +53,7 @@ func (p *PantheonProvider) ValidateField(field, value string) error {
 
 // SetSiteNameAndEnv sets the environment of the provider (dev/test/live)
 func (p *PantheonProvider) SetSiteNameAndEnv(environment string) error {
-	_, err := findPantheonSite(p.app.Name)
+	_, err := p.findPantheonSite(p.app.Name)
 	if err != nil {
 		return fmt.Errorf("unable to find siteName %s on Pantheon: %v", p.app.Name, err)
 	}
