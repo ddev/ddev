@@ -35,12 +35,13 @@ func (p *PantheonProvider) Init(app *DdevApp) error {
 	configPath := app.GetConfigPath("import.yaml")
 	if fileutil.FileExists(configPath) {
 		err := p.Read(configPath)
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	p.ProviderType = nodeps.ProviderPantheon
-	err := p.authPantheon()
-	return err
+	return nil
 }
 
 // ValidateField provides field level validation for config settings. This is
@@ -165,7 +166,8 @@ func (p *PantheonProvider) getBackup(archiveType string, environment string) (li
 
 // environmentPrompt contains the user prompts for interactive configuration of the pantheon environment.
 func (p *PantheonProvider) environmentPrompt() error {
-	_, err := p.GetEnvironments()
+	envs, err := p.GetEnvironments()
+	util.Success("Environments=%v", envs)
 	if err != nil {
 		return err
 	}
@@ -174,13 +176,9 @@ func (p *PantheonProvider) environmentPrompt() error {
 		p.EnvironmentName = "dev"
 	}
 
-	fmt.Println("\nConfigure import environment:")
+	fmt.Println("\nConfigure Pantheon environment:")
 
-	keys := make([]string, 0, len(p.siteEnvironments.Environments))
-	for k := range p.siteEnvironments.Environments {
-		keys = append(keys, k)
-	}
-	fmt.Println("\n\t- " + strings.Join(keys, "\n\t- ") + "\n")
+	fmt.Println("\n\t- " + strings.Join(envs, "\n\t- ") + "\n")
 	var environmentPrompt = "Type the name to select an environment to pull from"
 	if p.EnvironmentName != "" {
 		environmentPrompt = fmt.Sprintf("%s (%s)", environmentPrompt, p.EnvironmentName)
@@ -189,7 +187,7 @@ func (p *PantheonProvider) environmentPrompt() error {
 	fmt.Print(environmentPrompt + ": ")
 	envName := util.GetInput(p.EnvironmentName)
 
-	_, ok := p.siteEnvironments.Environments[envName]
+	ok := nodeps.ArrayContainsString(envs, envName)
 
 	if !ok {
 		return fmt.Errorf("could not find an environment named '%s'", envName)

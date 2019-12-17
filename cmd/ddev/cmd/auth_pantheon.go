@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/globalconfig"
-	"path/filepath"
-
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/go-pantheon/pkg/pantheon"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/spf13/cobra"
 )
 
@@ -23,20 +21,13 @@ var PantheonAuthCommand = &cobra.Command{
 			util.Failed("Too many arguments detected. Please provide only your Pantheon Machine token., e.g. 'ddev auth-pantheon [token]'. See https://pantheon.io/docs/machine-tokens/ for instructions on creating a token.")
 		}
 
-		globalDir := globalconfig.GetGlobalDdevDir()
-		sessionLocation := filepath.Join(globalDir, "pantheonconfig.json")
-
-		session := pantheon.NewAuthSession(args[0])
-		err := session.Auth()
-		if err != nil {
-			util.Failed("Could not authenticate with pantheon: %v", err)
+		uid, _, _ := util.GetContainerUIDGid()
+		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "web-pantheon", []string{"terminus", "auth:login", "--machine-token=" + args[0]}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+		if err == nil {
+			util.Success("Authentication successful!\nYou may now use the 'ddev config pantheon' command when configuring sites!")
+		} else {
+			util.Failed("Failed to authenticate: %v (%v)", err, out)
 		}
-
-		err = session.Write(sessionLocation)
-		if err != nil {
-			util.Failed("Failed session.Write(), err=%v", err)
-		}
-		util.Success("Authentication successful!\nYou may now use the 'ddev config pantheon' command when configuring sites!")
 	},
 }
 

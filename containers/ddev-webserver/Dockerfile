@@ -26,6 +26,8 @@ ENV COMPOSER_CACHE_DIR /mnt/ddev-global-cache/composer
 # Windows, especially Win10 Home/Docker toolbox, can take forever on composer build.
 ENV COMPOSER_PROCESS_TIMEOUT 2000
 
+ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+
 # Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
 # NGINX_DOCROOT is for backward compatibility only, to break less people.
 ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
