@@ -16,19 +16,44 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 
-	"github.com/drud/go-pantheon/pkg/pantheon"
 	"gopkg.in/yaml.v2"
 )
 
+// pantheonEnvironment contains meta-data about a specific environment
+type pantheonEnvironment struct {
+	Name string `json:"-"`
+}
+
+// pantheonEnvironmentList provides a list of environments for a given site.
+type pantheonEnvironmentList struct {
+	SiteID       string
+	Environments map[string]pantheonEnvironment
+}
+
+// pantheonSite is a representation of a deployed pantheon site.
+type pantheonSite struct {
+	ID   string `json:"id"`
+	Site struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	} `json:"site"`
+	SiteID string `json:"site_id"`
+}
+
+// pantheonSiteList represents a grouping of deployed Pantheon sites.
+type pantheonSiteList struct {
+	Sites []pantheonSite
+}
+
 // PantheonProvider provides pantheon-specific import functionality.
 type PantheonProvider struct {
-	ProviderType     string                   `yaml:"provider"`
-	app              *DdevApp                 `yaml:"-"`
-	Sitename         string                   `yaml:"site"`
-	site             pantheon.Site            `yaml:"-"`
-	siteEnvironments pantheon.EnvironmentList `yaml:"-"`
-	EnvironmentName  string                   `yaml:"environment"`
-	environment      pantheon.Environment     `yaml:"-"`
+	ProviderType     string                  `yaml:"provider"`
+	app              *DdevApp                `yaml:"-"`
+	Sitename         string                  `yaml:"site"`
+	site             pantheonSite            `yaml:"-"`
+	siteEnvironments pantheonEnvironmentList `yaml:"-"`
+	EnvironmentName  string                  `yaml:"environment"`
+	environment      pantheonEnvironment     `yaml:"-"`
 }
 
 // Init handles loading data from saved config.

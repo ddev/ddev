@@ -113,7 +113,7 @@ func (p *DrudS3Provider) PromptForConfig() error {
 	}
 
 	envNames := strings.Join(envAry, ", ")
-	fullPrompt := fmt.Sprintf("Environment Name [%s]", envNames)
+	fullPrompt := fmt.Sprintf("pantheonEnvironment Name [%s]", envNames)
 	p.EnvironmentName = util.Prompt(fullPrompt, p.EnvironmentName)
 
 	return nil
