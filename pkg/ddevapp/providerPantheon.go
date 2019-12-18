@@ -21,7 +21,7 @@ import (
 
 // pantheonEnvironment contains meta-data about a specific environment
 type pantheonEnvironment struct {
-	Name string `json:"-"`
+	Name string
 }
 
 // pantheonEnvironmentList provides a list of environments for a given site.
@@ -32,17 +32,12 @@ type pantheonEnvironmentList struct {
 
 // pantheonSite is a representation of a deployed pantheon site.
 type pantheonSite struct {
-	ID   string `json:"id"`
+	ID   string
 	Site struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
-	} `json:"site"`
-	SiteID string `json:"site_id"`
-}
-
-// pantheonSiteList represents a grouping of deployed Pantheon sites.
-type pantheonSiteList struct {
-	Sites []pantheonSite
+		ID   string
+		Name string
+	}
+	SiteID string
 }
 
 // PantheonProvider provides pantheon-specific import functionality.
