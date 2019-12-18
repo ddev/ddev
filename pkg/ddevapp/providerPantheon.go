@@ -83,18 +83,26 @@ func (p *PantheonProvider) PromptForConfig() error {
 
 // GetBackup will download the most recent backup specified by backupType in the given environment. If no environment
 // is supplied, the configured environment will be used. Valid values for backupType are "database" or "files".
-func (p *PantheonProvider) GetBackup(backupType, environment string) (fileURL string, importPath string, err error) {
+// returns fileURL, importPath, error
+func (p *PantheonProvider) GetBackup(backupType, environment string) (string, string, error) {
+	var err error
 	if backupType != "database" && backupType != "files" {
 		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
 
+	if p.app.SiteStatus() != SiteRunning {
+		err = p.app.Start()
+		if err != nil {
+			return "", "", err
+		}
+	}
 	// If the user hasn't defined an environment override, use the configured value.
 	if environment == "" {
 		environment = p.EnvironmentName
 	}
 
 	// Set the import path blank to use the root of the archive by default.
-	importPath = ""
+	importPath := ""
 	err = p.environmentExists(environment)
 	if err != nil {
 		return "", "", err

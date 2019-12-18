@@ -112,6 +112,16 @@ func TestPantheonBackupLinks(t *testing.T) {
 
 	app, err := NewApp(testDir, true, nodeps.ProviderPantheon)
 	assert.NoError(err)
+
+	err = app.WriteConfig()
+	assert.NoError(err)
+
+	err = app.Start()
+	assert.NoError(err)
+
+	//nolint: errcheck
+	defer app.Stop(true, false)
+
 	app.Name = pantheonTestSiteName
 
 	provider := PantheonProvider{}
@@ -125,12 +135,12 @@ func TestPantheonBackupLinks(t *testing.T) {
 	_, _, err = provider.GetBackup(util.RandString(8), "")
 	assert.Error(err)
 
-	// Ensure we can get a
+	// Ensure we can get a backupLink
 	backupLink, importPath, err := provider.GetBackup("database", "")
+	assert.NoError(err)
 
 	assert.Equal(importPath, "")
 	assert.Contains(backupLink, "database.sql.gz")
-	assert.NoError(err)
 	output.UserOut.Print("")
 }
 
