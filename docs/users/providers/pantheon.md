@@ -12,7 +12,7 @@ If you have ddev installed, and have an active Pantheon account with an active W
 
     a. Login to your Pantheon Dashboard, and [Generate a Machine Token](https://pantheon.io/docs/machine-tokens/) for ddev to use.
 
-    b. Run `ddev auth-pantheon <YOUR TOKEN>` (This is a one-time operation, and configures ddev to work with all the sites on your account.)
+    b. Run `ddev auth pantheon <YOUR TOKEN>` (This is a one-time operation, and configures ddev to work with all the sites on your account.)
 
 2. Choose a Pantheon site and environment you want to use with ddev.
 
@@ -40,7 +40,7 @@ In order to use ddev with Pantheon.io, you need the following:
 
 ## Authentication
 
-This step only needs to be completed once for your system. We recommend that you create a token specific to ddev by going to https://pantheon.io/docs/machine-tokens/. Once you’ve completed that, run `ddev auth-pantheon <YOUR TOKEN>` and provide the token you just generated. This will store the token in ~/.ddev/pantheonconfig.json. If you ever delete the token, you will need to generate a new token from Pantheon and re-run the `ddev auth-pantheon` command to re-establish your connection to Pantheon.io.
+This step only needs to be completed once for your system. We recommend that you create a token specific to ddev by going to https://pantheon.io/docs/machine-tokens/. Once you’ve completed that, run `ddev auth pantheon <YOUR TOKEN>` and provide the token you just generated. This will store the token in DDEV-Local's global cache volume. If you change tokens (or teams, or user accounts on Pantheon) you may need to generate a new token from Pantheon and re-run the `ddev auth pantheon` command to re-establish your connection to Pantheon.io.
 
 ## Usage
 

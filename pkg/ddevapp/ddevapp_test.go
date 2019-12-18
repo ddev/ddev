@@ -163,9 +163,9 @@ func TestMain(m *testing.M) {
 
 	token := os.Getenv("DDEV_PANTHEON_API_TOKEN")
 	if token != "" {
-		out, err := exec.RunCommand(DdevBin, []string{"auth-pantheon", token})
+		out, err := exec.RunCommand(DdevBin, []string{"auth", "pantheon", token})
 		if err != nil {
-			log.Fatalf("Unable to ddev auth-pantheon: %v (%v)", err, out)
+			log.Fatalf("Unable to ddev auth pantheon: %v (%v)", err, out)
 		}
 	} else {
 		log.Info("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific tests.")
