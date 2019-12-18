@@ -27,9 +27,8 @@ import (
 const pantheonTestSiteName = "ddev-test-site-do-not-delete"
 const pantheonTestEnvName = "bbowman"
 
-// TestConfigCommand tests the interactive config options.
+// TestPantheonConfigCommand tests the interactive config options.
 func TestPantheonConfigCommand(t *testing.T) {
-	t.Skip("Removing TestPantheonConfigCommand for now because it requires config-time project validation, which is being removed")
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
 		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
@@ -52,22 +51,17 @@ func TestPantheonConfigCommand(t *testing.T) {
 	app, err := NewApp(testDir, true, nodeps.ProviderPantheon)
 	assert.NoError(err)
 
-	// Randomize some values to use for Stdin during testing.
-	invalidName := strings.ToLower(util.RandString(16))
 	docroot := "docroot"
-	invalidEnvironment := strings.ToLower(util.RandString(8))
 
 	/**
 	 * Do a full interactive configuration for a pantheon environment.
 	 *
-	 * 1. Provide an invalid site name, ensure there is an error.
-	 * 2. Provide a valid site name. Ensure there is no error.
-	 * 3. Provide a valid docroot (already tested elsewhere)
-	 * 4. Provide a valid app type (drupal8)
-	 * 5. Provide an invalid pantheon environment name, ensure an error is triggered.
-	 * 6. Provide a valid environment name.
+	 * 1. Provide a valid site name. Ensure there is no error.
+	 * 2. Provide a valid docroot (already tested elsewhere)
+	 * 3. Provide a valid app type (drupal8)
+	 * 4. Provide a valid environment name.
 	 **/
-	input := fmt.Sprintf("%s\n%s\n%s\ndocroot\ndrupal8\n%s\n%s", invalidName, pantheonTestSiteName, docroot, invalidEnvironment, pantheonTestEnvName)
+	input := fmt.Sprintf("%s\n%s\ndocroot\ndrupal8\n%s", pantheonTestSiteName, docroot, pantheonTestEnvName)
 	scanner := bufio.NewScanner(strings.NewReader(input))
 	util.SetInputScanner(scanner)
 
@@ -84,8 +78,6 @@ func TestPantheonConfigCommand(t *testing.T) {
 
 	// Ensure we have expected string values in output.
 	assert.Contains(out, testDir)
-	assert.Contains(out, fmt.Sprintf("could not find a pantheon site named %s", invalidName))
-	assert.Contains(out, fmt.Sprintf("could not find an environment named '%s'", invalidEnvironment))
 
 	// Ensure values were properly set on the app struct.
 	assert.Equal(pantheonTestSiteName, app.Name)

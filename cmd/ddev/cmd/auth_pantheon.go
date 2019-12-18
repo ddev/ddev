@@ -22,7 +22,7 @@ var PantheonAuthCommand = &cobra.Command{
 		}
 
 		uid, _, _ := util.GetContainerUIDGid()
-		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "web-pantheon", []string{"terminus", "auth:login", "--machine-token=" + args[0]}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"terminus", "auth:login", "--machine-token=" + args[0]}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 		if err == nil {
 			util.Success("Authentication successful!\nYou may now use the 'ddev config pantheon' command when configuring sites!")
 		} else {

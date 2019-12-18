@@ -189,8 +189,9 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	}
 	err = provider.Validate()
 	if err != nil {
-		util.Failed("Failed to validate project name %v: %v", app.Name, err)
+		util.Failed("Failed to validate project %v: %v", app.Name, err)
 	}
+	util.Warning("provider.Validate() returned %v", err)
 
 	err = app.WriteConfig()
 	if err != nil {
