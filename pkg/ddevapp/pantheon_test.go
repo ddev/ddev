@@ -122,15 +122,6 @@ func TestPantheonBackupLinks(t *testing.T) {
 	provider.Sitename = pantheonTestSiteName
 	provider.EnvironmentName = pantheonTestEnvName
 
-	err = app.WriteConfig()
-	assert.NoError(err)
-
-	err = app.Start()
-	assert.NoError(err)
-
-	//nolint: errcheck
-	defer app.Stop(true, false)
-
 	// Ensure GetBackup triggers an error for unknown backup types.
 	_, _, err = provider.GetBackup(util.RandString(8), "")
 	assert.Error(err)
