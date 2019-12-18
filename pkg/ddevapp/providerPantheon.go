@@ -237,8 +237,6 @@ func (p *PantheonProvider) Read(configPath string) error {
 
 // GetEnvironments will return a list of environments for the currently configured pantheon site.
 func (p *PantheonProvider) GetEnvironments() ([]string, error) {
-	// TODO: Cache the list of environments
-
 	if p.site.ID == "" {
 		id, err := p.findPantheonSite(p.Sitename)
 		if err != nil {
@@ -291,18 +289,4 @@ func (p *PantheonProvider) findPantheonSite(name string) (id string, e error) {
 
 	id = strings.Trim(id, "\n\r ")
 	return id, nil
-}
-
-// authPantheon does a terminus login; it only needs to be done once in life of container.
-func (p *PantheonProvider) authPantheon() error {
-	token := os.Getenv("DDEV_PANTHEON_API_TOKEN")
-	if token == "" {
-		return fmt.Errorf("environment variable DDEV_PANTHEON_API_TOKEN not found")
-	}
-
-	_, _, err := p.app.Exec(&ExecOpts{
-		Cmd: "terminus auth:login --machine-token=" + token,
-	})
-
-	return err
 }

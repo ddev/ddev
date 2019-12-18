@@ -31,7 +31,7 @@ const pantheonTestEnvName = "bbowman"
 func TestPantheonConfigCommand(t *testing.T) {
 	t.Skip("Removing TestPantheonConfigCommand for now because it requires config-time project validation, which is being removed")
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
-		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
+		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
 
 	// Set up tests and give ourselves a working directory.
@@ -99,7 +99,7 @@ func TestPantheonConfigCommand(t *testing.T) {
 // TestPantheonBackupLinks ensures we can get backups from pantheon for a configured environment.
 func TestPantheonBackupLinks(t *testing.T) {
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
-		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
+		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
 
 	// Set up tests and give ourselves a working directory.
@@ -137,7 +137,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 // TestPantheonPull ensures we can pull backups from pantheon for a configured environment.
 func TestPantheonPull(t *testing.T) {
 	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
-		t.Skip("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific test.")
+		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
 
 	// Set up tests and give ourselves a working directory.
@@ -147,7 +147,6 @@ func TestPantheonPull(t *testing.T) {
 	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
-
 	// Move into the properly named pantheon site (must match pantheon sitename)
 	siteDir := filepath.Join(testDir, pantheonTestSiteName)
 	err := os.MkdirAll(filepath.Join(siteDir, "sites/default"), 0777)
@@ -157,6 +156,10 @@ func TestPantheonPull(t *testing.T) {
 
 	app, err := NewApp(siteDir, true, nodeps.ProviderPantheon)
 	assert.NoError(err)
+
+	// nolint: errcheck
+	defer app.Stop(true, false)
+
 	app.Name = pantheonTestSiteName
 	app.Type = nodeps.AppTypeDrupal8
 	app.Hooks = map[string][]YAMLTask{"post-pull": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-pull": {{"exec-host": "touch hello-pre-pull-" + app.Name}}}

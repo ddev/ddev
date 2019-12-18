@@ -528,17 +528,17 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 		return fmt.Errorf("Failed to process pre-pull hooks: %v", err)
 	}
 
-	err = provider.Validate()
-	if err != nil {
-		return err
-	}
-
 	if app.SiteStatus() != SiteRunning {
 		util.Warning("Project is not currently running. Starting project before performing pull.")
 		err = app.Start()
 		if err != nil {
 			return err
 		}
+	}
+
+	err = provider.Validate()
+	if err != nil {
+		return err
 	}
 
 	if opts.SkipDb {
