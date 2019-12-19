@@ -1,6 +1,5 @@
 <?php
 
-
 echo "You landed at ${_SERVER['REQUEST_URI']}<br/>";
 echo "HTTPS is {$_SERVER['HTTPS']}<br/>";
 
