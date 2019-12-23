@@ -214,7 +214,7 @@ func ClearDockerEnv() {
 		"COLUMNS",
 		"LINES",
 		"DDEV_XDEBUG_ENABLED",
-		"IS_DDEV_PROJECT"
+		"IS_DDEV_PROJECT",
 	}
 	for _, env := range envVars {
 		err := os.Unsetenv(env)
