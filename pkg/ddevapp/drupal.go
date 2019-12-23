@@ -164,8 +164,6 @@ $settings['class_loader_auto_detect'] = FALSE;
 if (empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
   $config_directories[CONFIG_SYNC_DIRECTORY] = '{{ joinPath $config.SitePath $config.SyncDir }}';
 }
-
-
 `
 )
 
@@ -205,8 +203,6 @@ ini_set('session.gc_maxlifetime', 200000);
 ini_set('session.cookie_lifetime', 2000000);
 
 $drupal_hash_salt = '{{ $config.HashSalt }}';
-
-
 `
 )
 
