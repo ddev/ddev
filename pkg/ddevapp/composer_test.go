@@ -48,7 +48,7 @@ func TestComposer(t *testing.T) {
 		_ = app.Stop(true, false)
 	}()
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
 	_, _, err = app.Composer([]string{"install"})
 	assert.NoError(err)
 	assert.FileExists("hello-pre-composer-" + app.Name)
