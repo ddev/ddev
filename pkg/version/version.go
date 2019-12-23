@@ -58,10 +58,10 @@ var DBImg = "drud/ddev-dbserver"
 var BaseDBTag = "v1.12.0"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
-var DBAImg = "drud/phpmyadmin"
+var DBAImg = "phpmyadmin/phpmyadmin"
 
 // DBATag defines the default phpmyadmin image tag used for applications.
-var DBATag = "v1.12.0" // Note that this can be overridden by make
+var DBATag = "4.9" // Note that this can be overridden by make
 
 // BgsyncImg defines the default bgsync image tag used for applications.
 var BgsyncImg = "drud/ddev-bgsync"
