@@ -88,7 +88,13 @@ func init() {
 
 // CreateSettingsFile creates the settings file (like settings.php) for the
 // provided app is the apptype has a settingsCreator function.
+// It also preps the ddev directory, including setting up the .ddev gitignore
 func (app *DdevApp) CreateSettingsFile() (string, error) {
+	err := PrepDdevDirectory(filepath.Dir(app.ConfigPath))
+	if err != nil {
+		util.Warning("Unable to PrepDdevDiredtory: %v", err)
+	}
+
 	app.SetApptypeSettingsPaths()
 
 	// If neither settings file options are set, then don't continue. Return
