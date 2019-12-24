@@ -1,8 +1,10 @@
 package ddevapp
 
 import (
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/version"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,33 +16,54 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 
-	"github.com/drud/go-pantheon/pkg/pantheon"
 	"gopkg.in/yaml.v2"
 )
 
+// pantheonEnvironment contains meta-data about a specific environment
+type pantheonEnvironment struct {
+	Name string
+}
+
+// pantheonEnvironmentList provides a list of environments for a given site.
+type pantheonEnvironmentList struct {
+	SiteID       string
+	Environments map[string]pantheonEnvironment
+}
+
+// pantheonSite is a representation of a deployed pantheon site.
+type pantheonSite struct {
+	ID   string
+	Site struct {
+		ID   string
+		Name string
+	}
+	SiteID string
+}
+
 // PantheonProvider provides pantheon-specific import functionality.
 type PantheonProvider struct {
-	ProviderType     string                   `yaml:"provider"`
-	app              *DdevApp                 `yaml:"-"`
-	Sitename         string                   `yaml:"site"`
-	site             pantheon.Site            `yaml:"-"`
-	siteEnvironments pantheon.EnvironmentList `yaml:"-"`
-	EnvironmentName  string                   `yaml:"environment"`
-	environment      pantheon.Environment     `yaml:"-"`
+	ProviderType     string                  `yaml:"provider"`
+	app              *DdevApp                `yaml:"-"`
+	Sitename         string                  `yaml:"site"`
+	site             pantheonSite            `yaml:"-"`
+	siteEnvironments pantheonEnvironmentList `yaml:"-"`
+	EnvironmentName  string                  `yaml:"environment"`
+	environment      pantheonEnvironment     `yaml:"-"`
 }
 
 // Init handles loading data from saved config.
 func (p *PantheonProvider) Init(app *DdevApp) error {
-	var err error
-
 	p.app = app
 	configPath := app.GetConfigPath("import.yaml")
 	if fileutil.FileExists(configPath) {
-		err = p.Read(configPath)
+		err := p.Read(configPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	p.ProviderType = nodeps.ProviderPantheon
-	return err
+	return nil
 }
 
 // ValidateField provides field level validation for config settings. This is
@@ -53,7 +76,7 @@ func (p *PantheonProvider) ValidateField(field, value string) error {
 
 // SetSiteNameAndEnv sets the environment of the provider (dev/test/live)
 func (p *PantheonProvider) SetSiteNameAndEnv(environment string) error {
-	_, err := findPantheonSite(p.app.Name)
+	_, err := p.findPantheonSite(p.app.Name)
 	if err != nil {
 		return fmt.Errorf("unable to find siteName %s on Pantheon: %v", p.app.Name, err)
 	}
@@ -73,7 +96,7 @@ func (p *PantheonProvider) PromptForConfig() error {
 		err = p.environmentPrompt()
 		if err != nil {
 			output.UserOut.Errorf("%v\n", err)
-			continue
+			return err
 		}
 		break
 	}
@@ -82,7 +105,9 @@ func (p *PantheonProvider) PromptForConfig() error {
 
 // GetBackup will download the most recent backup specified by backupType in the given environment. If no environment
 // is supplied, the configured environment will be used. Valid values for backupType are "database" or "files".
-func (p *PantheonProvider) GetBackup(backupType, environment string) (fileLocation string, importPath string, err error) {
+// returns fileURL, importPath, error
+func (p *PantheonProvider) GetBackup(backupType, environment string) (string, string, error) {
+	var err error
 	if backupType != "database" && backupType != "files" {
 		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
@@ -93,34 +118,25 @@ func (p *PantheonProvider) GetBackup(backupType, environment string) (fileLocati
 	}
 
 	// Set the import path blank to use the root of the archive by default.
-	importPath = ""
+	importPath := ""
 	err = p.environmentExists(environment)
 	if err != nil {
 		return "", "", err
 	}
 
-	session := getPantheonSession()
-
-	// Find either a files or database backup, depending on what was asked for.
-	bl := pantheon.NewBackupList(p.site.ID, environment)
-	err = session.Request("GET", bl)
-	if err != nil {
-		return "", "", err
-	}
-
-	backup, err := p.getPantheonBackupLink(backupType, bl, session, environment)
+	link, filename, err := p.getBackup(backupType, environment)
 	if err != nil {
 		return "", "", err
 	}
 
 	p.prepDownloadDir()
-	destFile := filepath.Join(p.getDownloadDir(), backup.FileName)
+	destFile := filepath.Join(p.getDownloadDir(), filename)
 
 	// Check to see if this file has been downloaded previously.
 	// Attempt a new download If we can't stat the file or we get a mismatch on the filesize.
-	stat, err := os.Stat(destFile)
-	if err != nil || stat.Size() != int64(backup.Size) {
-		err = util.DownloadFile(destFile, backup.DownloadURL, true)
+	_, err = os.Stat(destFile)
+	if err != nil {
+		err = util.DownloadFile(destFile, link, true)
 		if err != nil {
 			return "", "", err
 		}
@@ -147,32 +163,35 @@ func (p *PantheonProvider) getDownloadDir() string {
 	return destDir
 }
 
-// getPantheonBackupLink will return a URL for the most recent backyp of archiveType that exist with the BackupList specified.
-func (p *PantheonProvider) getPantheonBackupLink(archiveType string, bl *pantheon.BackupList, session *pantheon.AuthSession, environment string) (*pantheon.Backup, error) {
-	latestBackup := pantheon.Backup{}
-	for i, backup := range bl.Backups {
-		if backup.ArchiveType == archiveType && backup.Timestamp > latestBackup.Timestamp {
-			latestBackup = bl.Backups[i]
-		}
+// getBackup will return a URL for the most recent backup of archiveType.
+func (p *PantheonProvider) getBackup(archiveType string, environment string) (link string, filename string, error error) {
+
+	element := "files"
+	if archiveType == "database" {
+		element = "db" // how it's specified in terminus
 	}
 
-	if latestBackup.Timestamp != 0 {
-		// Get a time-limited backup URL from Pantheon. This requires a POST of the backup type to their API.
-		err := session.Request("POST", &latestBackup)
-		if err != nil {
-			return &pantheon.Backup{}, fmt.Errorf("could not get backup URL: %v", err)
-		}
+	uid, _, _ := util.GetContainerUIDGid()
+	cmd := fmt.Sprintf("terminus backup:info --format=string --fields=Filename,URL --element=%s %s.%s", element, p.site.ID, environment)
+	_, result, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
-		return &latestBackup, nil
+	if err != nil {
+		return "", "", fmt.Errorf("unable to get terminus backup: %v (%v)", err, result)
 	}
 
-	// If no matches were found, just return an empty backup along with an error.
-	return &pantheon.Backup{}, fmt.Errorf("could not find a backup of type %s. Please visit your pantheon dashboard and ensure the '%s' environment has a backup available", archiveType, environment)
+	result = strings.Trim(result, "\n\r ")
+	results := strings.Split(result, "\t")
+	if len(results) != 2 {
+		return "", "", fmt.Errorf("terminus result does not provide filename and url: %v", result)
+	}
+	filename = results[0]
+	link = results[1]
+	return link, filename, nil
 }
 
 // environmentPrompt contains the user prompts for interactive configuration of the pantheon environment.
 func (p *PantheonProvider) environmentPrompt() error {
-	_, err := p.GetEnvironments()
+	envs, err := p.GetEnvironments()
 	if err != nil {
 		return err
 	}
@@ -181,13 +200,9 @@ func (p *PantheonProvider) environmentPrompt() error {
 		p.EnvironmentName = "dev"
 	}
 
-	fmt.Println("\nConfigure import environment:")
+	fmt.Println("\nConfigure Pantheon environment:")
 
-	keys := make([]string, 0, len(p.siteEnvironments.Environments))
-	for k := range p.siteEnvironments.Environments {
-		keys = append(keys, k)
-	}
-	fmt.Println("\n\t- " + strings.Join(keys, "\n\t- ") + "\n")
+	fmt.Println("\n\t- " + strings.Join(envs, "\n\t- ") + "\n")
 	var environmentPrompt = "Type the name to select an environment to pull from"
 	if p.EnvironmentName != "" {
 		environmentPrompt = fmt.Sprintf("%s (%s)", environmentPrompt, p.EnvironmentName)
@@ -196,7 +211,7 @@ func (p *PantheonProvider) environmentPrompt() error {
 	fmt.Print(environmentPrompt + ": ")
 	envName := util.GetInput(p.EnvironmentName)
 
-	_, ok := p.siteEnvironments.Environments[envName]
+	ok := nodeps.ArrayContainsString(envs, envName)
 
 	if !ok {
 		return fmt.Errorf("could not find an environment named '%s'", envName)
@@ -208,7 +223,7 @@ func (p *PantheonProvider) environmentPrompt() error {
 	return nil
 }
 
-// Write the pantheon provider configuration to a spcified location on disk.
+// Write the pantheon provider configuration to a specified location on disk.
 func (p *PantheonProvider) Write(configPath string) error {
 	err := PrepDdevDirectory(filepath.Dir(configPath))
 	if err != nil {
@@ -244,31 +259,28 @@ func (p *PantheonProvider) Read(configPath string) error {
 	return nil
 }
 
-// GetEnvironments will return a list of environments for the currently configured upstream pantheon site.
-func (p *PantheonProvider) GetEnvironments() (pantheon.EnvironmentList, error) {
-	var el *pantheon.EnvironmentList
-	// If we've got an already populated environment list, then just use that.
-	if len(p.siteEnvironments.Environments) > 0 {
-		return p.siteEnvironments, nil
-	}
-
-	// Otherwise we need to find our environments.
-	session := getPantheonSession()
-
+// GetEnvironments will return a list of environments for the currently configured pantheon site.
+func (p *PantheonProvider) GetEnvironments() ([]string, error) {
 	if p.site.ID == "" {
-		site, err := findPantheonSite(p.Sitename)
+		id, err := p.findPantheonSite(p.Sitename)
 		if err != nil {
-			return p.siteEnvironments, err
+			return []string{}, err
 		}
 
-		p.site = site
+		p.site.ID = id
 	}
 
 	// Get a list of all active environments for the current site.
-	el = pantheon.NewEnvironmentList(p.site.ID)
-	err := session.Request("GET", el)
-	p.siteEnvironments = *el
-	return *el, err
+	cmd := "terminus env:list --field=id " + p.site.ID
+	uid, _, _ := util.GetContainerUIDGid()
+	_, envs, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+
+	if err != nil {
+		return []string{}, fmt.Errorf("unable to get Pantheon environments for project %s - does the ddev project name match the pantheon project name? ('%v' failed)", p.Sitename, cmd)
+	}
+
+	envs = strings.Trim(envs, "\n\r ")
+	return strings.Split(envs, "\n"), err
 }
 
 // Validate ensures that the current configuration is valid (i.e. the configured pantheon site/environment exists)
@@ -278,12 +290,11 @@ func (p *PantheonProvider) Validate() error {
 
 // environmentExists ensures the currently configured pantheon site & environment exists.
 func (p *PantheonProvider) environmentExists(environment string) error {
-	_, err := p.GetEnvironments()
+	el, err := p.GetEnvironments()
 	if err != nil {
 		return err
 	}
-
-	if _, ok := p.siteEnvironments.Environments[environment]; !ok {
+	if !nodeps.ArrayContainsString(el, environment) {
 		return fmt.Errorf("could not find an environment named '%s'", environment)
 	}
 
@@ -291,53 +302,15 @@ func (p *PantheonProvider) environmentExists(environment string) error {
 }
 
 // findPantheonSite ensures the pantheon site specified by name exists, and the current user has access to it.
-func findPantheonSite(name string) (pantheon.Site, error) {
-	session := getPantheonSession()
+func (p *PantheonProvider) findPantheonSite(name string) (id string, e error) {
 
-	// Get a list of all sites the current user has access to. Ensure we can find the site which was used in the CLI arguments in that list.
-	sl := &pantheon.SiteList{}
-	err := session.Request("GET", sl)
-	if err != nil {
-		return pantheon.Site{}, err
-	}
-
-	// Get a list of environments for a given site.
-	for i, site := range sl.Sites {
-		if site.Site.Name == name {
-			return sl.Sites[i], nil
-		}
-	}
-
-	return pantheon.Site{}, fmt.Errorf("could not find a pantheon site named %s", name)
-}
-
-// getPantheonSession loads the pantheon API config from disk and returns a pantheon session struct.
-func getPantheonSession() *pantheon.AuthSession {
-	globalDir := globalconfig.GetGlobalDdevDir()
-	sessionLocation := filepath.Join(globalDir, "pantheonconfig.json")
-
-	// Generate a session object based on the DDEV_PANTHEON_API_TOKEN environment var.
-	session := &pantheon.AuthSession{}
-
-	// Read a previously saved session.
-	err := session.Read(sessionLocation)
+	uid, _, _ := util.GetContainerUIDGid()
+	_, id, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", "terminus site:info --fields=id --format=json " + name + " | jq -r .id"}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
 	if err != nil {
-		// If we can't read a previous session fall back to using the API token.
-		apiToken := os.Getenv("DDEV_PANTHEON_API_TOKEN")
-		if apiToken == "" {
-			util.Failed("No saved session could be found and the environment variable DDEV_PANTHEON_API_TOKEN is not set. Please use ddev auth-pantheon or set a DDEV_PANTHEON_API_TOKEN. https://pantheon.io/docs/machine-tokens/ provides instructions on creating a token.")
-		}
-		session = pantheon.NewAuthSession(os.Getenv("DDEV_PANTHEON_API_TOKEN"))
+		return "", fmt.Errorf("could not find a pantheon site named %s: %v (%v)", name, err, id)
 	}
 
-	err = session.Auth()
-	if err != nil {
-		output.UserOut.Fatalf("Could not authenticate with pantheon: %v", err)
-	}
-
-	err = session.Write(sessionLocation)
-	util.CheckErr(err)
-
-	return session
+	id = strings.Trim(id, "\n\r ")
+	return id, nil
 }

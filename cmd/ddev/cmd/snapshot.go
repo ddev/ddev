@@ -30,7 +30,7 @@ var DdevSnapshotCommand = &cobra.Command{
 }
 
 func init() {
-	DdevSnapshotCommand.Flags().BoolVarP(&snapshotAll, "all", "a", false, "Snapshot all running sites")
+	DdevSnapshotCommand.Flags().BoolVarP(&snapshotAll, "all", "a", false, "Snapshot all running projects")
 	DdevSnapshotCommand.Flags().StringVarP(&snapshotName, "name", "n", "", "provide a name for the snapshot")
 	RootCmd.AddCommand(DdevSnapshotCommand)
 }

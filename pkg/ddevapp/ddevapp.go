@@ -528,17 +528,17 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 		return fmt.Errorf("Failed to process pre-pull hooks: %v", err)
 	}
 
-	err = provider.Validate()
-	if err != nil {
-		return err
-	}
-
 	if app.SiteStatus() != SiteRunning {
 		util.Warning("Project is not currently running. Starting project before performing pull.")
 		err = app.Start()
 		if err != nil {
 			return err
 		}
+	}
+
+	err = provider.Validate()
+	if err != nil {
+		return err
 	}
 
 	if opts.SkipDb {
@@ -885,7 +885,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	app.DockerEnv()
 
 	if opts.Service == "" {
-		return "", "", fmt.Errorf("no service provided")
+		opts.Service = "web"
 	}
 	_, _, err := app.ProcessHooks("pre-exec")
 	if err != nil {
@@ -955,7 +955,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	app.DockerEnv()
 
 	if opts.Service == "" {
-		return fmt.Errorf("no service provided")
+		opts.Service = "web"
 	}
 
 	exec := []string{"exec"}

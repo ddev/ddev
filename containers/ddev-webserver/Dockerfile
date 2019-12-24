@@ -26,6 +26,8 @@ ENV COMPOSER_CACHE_DIR /mnt/ddev-global-cache/composer
 # Windows, especially Win10 Home/Docker toolbox, can take forever on composer build.
 ENV COMPOSER_PROCESS_TIMEOUT 2000
 
+ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+
 # Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
 # NGINX_DOCROOT is for backward compatibility only, to break less people.
 ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
@@ -47,8 +49,9 @@ RUN apt-get -qq update && \
         bzip2 \
         ghostscript \
         gnupg \
+        jq \
         locales-all \
-        lsb-release && \
+		lsb-release && \
     wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && \
     wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add - && \
@@ -109,6 +112,7 @@ RUN curl -sSL "https://github.com/drush-ops/drush/releases/download/${DRUSH_VERS
 RUN curl -sSL "https://github.com/drush-ops/drush-launcher/releases/download/${DRUSH_LAUNCHER_VERSION}/drush.phar" -o /usr/local/bin/drush && chmod +x /usr/local/bin/drush
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
 RUN curl -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp-cli && ln -s /usr/local/bin/wp-cli /usr/local/bin/wp
+RUN curl -O https://raw.githubusercontent.com/pantheon-systems/terminus-installer/master/builds/installer.phar && php installer.phar install
 
 RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal && chmod +x /usr/local/bin/drupal
 

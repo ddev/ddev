@@ -33,7 +33,7 @@ Docs: https://ddev.readthedocs.io
 Support: https://ddev.readthedocs.io/en/stable/#support`,
 	Version: version.DdevVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		ignores := []string{"version", "config", "hostname", "help", "auth-pantheon", "import-files"}
+		ignores := []string{"version", "config", "hostname", "help", "auth", "import-files"}
 		command := strings.Join(os.Args[1:], " ")
 
 		output.LogSetUp()
@@ -97,7 +97,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		// Do not report these comamnds
-		ignores := map[string]bool{"list": true, "version": true, "help": true, "auth-pantheon": true, "hostname": true}
+		ignores := map[string]bool{"list": true, "version": true, "help": true, "auth": true, "hostname": true}
 		if _, ok := ignores[cmd.CalledAs()]; ok {
 			return
 		}

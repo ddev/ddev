@@ -300,8 +300,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	var stderr string
 
 	for _, file := range composeFiles {
-		arg = append(arg, "-f")
-		arg = append(arg, file)
+		arg = append(arg, "-f", file)
 	}
 
 	arg = append(arg, action...)
