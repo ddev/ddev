@@ -51,7 +51,7 @@ RUN apt-get -qq update && \
         gnupg \
         jq \
         locales-all \
-		lsb_release && \
+		lsb-release && \
     wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && \
     wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add - && \
