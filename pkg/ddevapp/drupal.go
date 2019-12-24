@@ -660,6 +660,13 @@ func drupal6ConfigOverrideAction(app *DdevApp) error {
 	return nil
 }
 
+// drupal7ConfigOverrideAction overrides php_version for D7,
+// since it is not yet compatible with php7.3
+func drupal7ConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP72
+	return nil
+}
+
 // drupal8PostStartAction handles default post-start actions for D8 apps, like ensuring
 // useful permissions settings on sites/default.
 func drupal8PostStartAction(app *DdevApp) error {
