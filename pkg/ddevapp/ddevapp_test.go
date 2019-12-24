@@ -957,6 +957,12 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		err = app.Start()
 		assert.NoError(err)
+
+		// Validate PHPMyAdmin is working and database named db is present
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/tbl_create.php?server=1&db=db", "Table name:")
+		// Validate MailHog is working and "connected"
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
+
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
 		assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
@@ -1011,6 +1017,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		runTime()
 		switchDir()
 	}
+	fmt.Print()
 }
 
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it. This runs with Mariadb 10.2
