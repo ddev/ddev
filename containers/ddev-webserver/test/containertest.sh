@@ -74,6 +74,17 @@ for v in 5.6 7.0 7.1 7.2 7.3 7.4; do
         docker exec -t $CONTAINER_NAME curl --fail http://localhost/test/phptest.php
         docker exec -t $CONTAINER_NAME curl --fail https://localhost/test/phptest.php
 
+        # Enable xdebug (and then disable again) and make sure it does the right thing.
+        # Checks both CLI and webserver
+        echo "testing enable_xdebug"
+        docker exec -t $CONTAINER_NAME enable_xdebug
+        docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
+        curl -s localhost:$HOST_HTTP_PORT/test/xdebug.php | grep "Xdebug is enabled"
+        echo "testing disable_xdebug"
+        docker exec -t $CONTAINER_NAME disable_xdebug
+        docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
+        curl -s localhost:$HOST_HTTP_PORT/test/xdebug.php | grep "Xdebug is disabled"
+
         curl -s localhost:$HOST_HTTP_PORT/test/test-email.php | grep "Test email sent"
         docker exec -t $CONTAINER_NAME php --version | grep "PHP $v"
         docker exec -t $CONTAINER_NAME drush --version
@@ -157,15 +168,8 @@ if ! containercheck; then
 fi
 docker exec -t $CONTAINER_NAME grep "docroot is /var/www/html/potato in custom conf" //etc/nginx/sites-enabled/nginx-site.conf
 
-# Enable xdebug (and then disable again) and make sure it does the right thing.
-echo "--- Turn on and off xdebug and check the results
-docker exec -t $CONTAINER_NAME enable_xdebug
-docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
-docker exec -t $CONTAINER_NAME disable_xdebug
-docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
-
 # Verify that the custom php configuration in ddev_config/php is activated.
-echo "--- Verify that /mnt/ddev_config is mounted and we have php overrides there.
+echo "--- Verify that /mnt/ddev_config is mounted and we have php overrides there."
 
 # First see if /mnt/ddev_config "works" for php
 docker exec -t $CONTAINER_NAME bash -c "ls -l //mnt/ddev_config/php/my-php.ini || (echo 'Failed to ls /mnt/ddev_config' && exit 201)"

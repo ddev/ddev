@@ -2,4 +2,7 @@
 export PATH=$PATH:/usr/sbin:/sbin
 phpdismod xdebug
 killall -HUP php-fpm 2>/dev/null || true
+if [[ $DDEV_WEBSERVER_TYPE == "apache-cgi" ]]; then
+  /etc/init.d/apache2 reload >/dev/null || true
+fi
 echo "Disabled xdebug"
