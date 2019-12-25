@@ -9,6 +9,7 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -50,13 +51,13 @@ func TestComposerCmd(t *testing.T) {
 	ddevapp.WaitForSync(app, 2)
 	assert.FileExists(filepath.Join(tmpDir, "Psr/Log/LogLevel.php"))
 
-	// This particlar --no-install does not seem to work on Docker Toolbox
-	// with NFS so skip there.
-	if !(nodeps.IsDockerToolbox() && app.NFSMountEnabled) {
+	// This particular --no-install does not seem to work on Windows with NFS
+	// so skip there. It appears to be something about composer itself?
+	if runtime.GOOS == "windows" && app.NFSMountEnabled {
 		err = app.StartAndWaitForSync(5)
 		assert.NoError(err)
-		// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0 --no-install
-		args = []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "psr/log:1.1.0", "--no-install"}
+		// ddev composer create --prefer-dist--no-dev  --no-install psr/log:1.1.0
+		args = []string{"composer", "create", "--prefer-dist", "--no-dev", "--no-install", "psr/log:1.1.0"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 		assert.Contains(out, "Created project in ")
