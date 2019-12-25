@@ -102,7 +102,7 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
 # /home/.* is a prototype for the created user's homedir; copy it in.
-cp -r /home/{.ssh*,.drush,.gitconfig,.my.cnf} ~/
+sudo cp -r /home/{.ssh*,.drush,.gitconfig,.my.cnf} ~/
 sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/{.ssh*,.drush,.gitconfig,.my.cnf}
 
