@@ -14,7 +14,7 @@ if ! command -v ngrok >/dev/null; then
         choco install -y ngrok
         ;;
     linux)
-        curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -d /usr/local/bin /tmp/ngrok.zip
+        curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
         ;;
     esac
 fi

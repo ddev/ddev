@@ -117,7 +117,7 @@ RUN curl -O https://raw.githubusercontent.com/pantheon-systems/terminus-installe
 RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal && chmod +x /usr/local/bin/drupal
 
 
-RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/drush.zip -o /tmp/backdrop_drush.zip && unzip /tmp/backdrop_drush.zip -d /var/tmp/backdrop_drush_commands
+RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/drush.zip -o /tmp/backdrop_drush.zip && unzip -o /tmp/backdrop_drush.zip -d /var/tmp/backdrop_drush_commands
 
 RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
     touch /var/log/php-fpm.log && \

@@ -8,7 +8,7 @@ set -x
 sudo apt-get update -qq
 sudo apt-get install -qq mysql-client realpath zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
 
-curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -d /usr/local/bin /tmp/ngrok.zip
+curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
 if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
@@ -24,9 +24,9 @@ for item in osslsigncode golang mkcert ddev makensis; do
 done
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
-wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.04/nsis-3.04.zip/download && sudo unzip -d /usr/local/share download && sudo mv /usr/local/share/nsis-3.04 /usr/local/share/nsis
-wget https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -d /usr/local/share/nsis EnVar-Plugin.zip
-wget https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -d /usr/local/share/nsis/Plugins INetC.zip
+wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.04/nsis-3.04.zip/download && sudo unzip -o -d /usr/local/share download && sudo mv /usr/local/share/nsis-3.04 /usr/local/share/nsis
+wget https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d /usr/local/share/nsis EnVar-Plugin.zip
+wget https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -o -d /usr/local/share/nsis/Plugins INetC.zip
 
 mkcert -install
 
