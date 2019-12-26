@@ -1,4 +1,4 @@
-<h1>Troubleshooting</h1>
+# Troubleshooting
 
 Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](../index.md#support). And see [Docker troubleshooting suggstions](docker_installation.md#troubleshooting).
 
@@ -11,6 +11,7 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 * Try the simplest possible ddev project to try to get i to work: `ddev poweroff && mkdir ~/tmp/testddev && cd ~/tmp/testddev && ddev config --project-type=php && ddev start`. Does that start up OK? If so, maybe something is wrong with the more complicated project you're trying to start.
 
 <a name="unable-listen"></a>
+
 ## Webserver ports are already occupied by another webserver
 
 ddev notifies you about port conflicts with this message:
@@ -21,7 +22,7 @@ Failed to start yoursite: Unable to listen on required ports, localhost port 80 
 
 This means there is another webserver listening on the named port(s) and ddev cannot access the port.
 
-(In some cases the conflict may be over port 8036 (PHPMyAdmin) or port 8025 (mailhog)). 
+(In some cases the conflict may be over port 8036 (PHPMyAdmin) or port 8025 (mailhog)).
 
 To resolve this conflict, choose one of two methods:
 
@@ -39,18 +40,20 @@ For example, if there was a port conflict with a local apache http on port 80 ad
 router_http_port: 8000
 ```
 
-Then run `ddev start`. This changes the project's http URL to http://yoursite.ddev.site:8000.
-
+Then run `ddev start`. This changes the project's http URL to <http://yoursite.ddev.site:8000.>
 
 If the conflict is over port 8025, it's normally a conflict over the default port for mailhog. You can add to your .ddev/config.yaml
+
 ```
 mailhog_port: 8300
 ```
 
 If the conflict is over port 8036, it's normally about PHPMyAdmin, and you can add to your .ddev/config.yaml
+
 ```
 phpmyadmin_port: 8302
 ```
+
 ### Method 2: Fix port conflicts by stopping the competing application
 
 Alternatively, stop the other application.
@@ -74,7 +77,7 @@ or `sudo launchctl stop homebrew.mxcl.nginx`
 * vpnkit (macOS): You likely have a docker container bound to port 80, do you have containers up for Kalabox or another docker-based development environment? If so, stop the other environment.
 * Kalabox: If you have previously used Kalabox try running `kbox poweroff`
 
-To dig deeper, you can use a number of tools to find out what process is listening. 
+To dig deeper, you can use a number of tools to find out what process is listening.
 
 On macOS and Linux, try the lsof tool:
 
@@ -102,6 +105,7 @@ The resulting output displays which command is running and its pid. Choose the a
 We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
 
 <a name="container-restarts"></a>
+
 ## DDEV-Local reports container restarts and does not arrive at "ready"
 
 ## Restarts of the database container
@@ -111,12 +115,12 @@ The most common cause of the database container not coming up is a damaged datab
 1. `ddev stop --remove-data --omit-snapshot`
 2. mv .ddev .ddev.bak (renames the directory with config.yaml and docker-compose.yml and any custom nginx/php/mariadb config you may have added. Renaming it means .)
 3. `ddev config`
-4. `ddev start` 
+4. `ddev start`
 5. `ddev import-db` or `ddev restore-snapshot <snapshot-name>` if you have a db to import or a snapshot to restore.
 
 Another approach to destroying the database is to destroy the docker volume where it is =stored with `docker volume rm <projectname>-mariadb`
 
-## "web service unhealthy" or "web service starting" or exited 
+## "web service unhealthy" or "web service starting" or exited
 
 The most common cause of the web container being unhealthy is a user-defined .ddev/nginx-site.conf or .ddev/apache/apache-site.conf - Please rename these to <xxx_site.conf> during testing. To figure out what's wrong with it after you've identified that as the problem, use `ddev logs` and review the error.
 
@@ -129,9 +133,11 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 * Missing index.php: There may not be an index.php or index.html in your project.
 * Misconfigured docroot: If the docroot isn't where the webserver thinks it is, then the webserver won't find the index.php. Look at your .ddev/config.yaml to verify it has a docroot that will lead to the index.php. It should be a relative path from the project root to the directory where the index.php is.
 * Docker not mounting your code: If you `ddev ssh` and `ls` and there's nothing there, Docker may not be mounting your code. See [docker installation](./docker_installation.md) for testing docker install. (Is Docker, the drive or directory where your project is must be shared. In Docker Toolbox it *must* be a subdirectory of your home directory unless you [make special accomodations for Docker Toolbox](http://support.divio.com/local-development/docker/how-to-use-a-directory-outside-cusers-with-docker-toolbox-on-windowsdocker-for-windows)).
- 
+
 ## Windows-Specific Issues
+
 <a name="windows-hosts-file-limited"></a>
+
 ### Windows Hosts File limited to 10 hosts per IP address line
 
 On Windows only, there is a limit to the number of hosts that can be placed in one line. But since all ddev hosts are typically on the same IP address (typically 127.0.0.1, localhost), they can really add up. As soon as you have more than 10 entries there, your browser won't be able to resolve the addresses beyond the 10th entry.
@@ -139,8 +145,7 @@ On Windows only, there is a limit to the number of hosts that can be placed in o
 There are two workarounds for this problem:
 
 1. Use `ddev stop --all` and `sudo ddev hostname --remove-inactive` to prune the number of hosts on that hosts-file line. When you start a project, the hostname(s) associated with that project will be added back again.
-2. Manually edit the hosts file (typically `C:\Windows\System32\drivers\etc\hosts`) and put some of your hosts on a separate line in the file. 
-
+2. Manually edit the hosts file (typically `C:\Windows\System32\drivers\etc\hosts`) and put some of your hosts on a separate line in the file.
 
 ## More Support
 

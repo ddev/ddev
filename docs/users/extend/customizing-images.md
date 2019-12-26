@@ -1,4 +1,4 @@
-<h1> Customizing Docker Images</h1>
+# Customizing Docker Images
 
 It's common to have a requirement for the web or db images which is not bundled in them by default. Thre are two easy ways to extend these docker images:
 
@@ -19,7 +19,7 @@ Then the additional packages will be built into the containers during `ddev star
 
 ## Adding extra Dockerfiles for webimage and dbimage
 
-For more complex requirements, you can add .ddev/web-build/Dockerfile or .ddev/db-build/Dockerfile. 
+For more complex requirements, you can add .ddev/web-build/Dockerfile or .ddev/db-build/Dockerfile.
 
 Examples of possible Dockerfiles are given in `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example` (These examples are created in your project when you `ddev config` the project.)
 
