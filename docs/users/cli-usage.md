@@ -1,3 +1,4 @@
+# ddev Command-Line Usage
 
 Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands. There are commands to configure a project, start, stop, describe, etc. Each command also has help. For example, `ddev stop -h` shows that `ddev rm` is an alias, and shows all the many flags that can be used with `ddev stop`.
 
@@ -12,7 +13,7 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev import-db` and `ddev export-db` let you import or export a sql or compressed sql file.
 * `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer).
 * `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev restore-snapshot`.
-* `ddev ssh` opens a bash session in the web container (or other container). 
+* `ddev ssh` opens a bash session in the web container (or other container).
 * `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
 * `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`)
 * `ddev delete` is the same as `ddev stop --remove-data` and will delete a project's database and ddev's record of the project's existence. It doesn't touch your project or code. `ddev delete -O` will omit the snapshot creation step that would otherwise take place, and `ddev delete images` gets rid of spare Docker images you may have on your machine.
@@ -45,11 +46,11 @@ DDEV works happily with most any PHP or static HTML project, although it has spe
 5. `ddev start`
 6. Configure any database settings; host='db', user='db', password='db', database='db'
 7. If needed, import a database with `ddev import-db`
-7. Visit the project and continue on.
+8. Visit the project and continue on.
 
 ### WordPress Quickstart
 
-**Composer Setup Example Using roots/bedrock**
+#### Composer Setup Example Using roots/bedrock
 
 ```
 mkdir my-wp-bedrock-site
@@ -59,6 +60,7 @@ ddev composer create roots/bedrock
 ddev config
 ddev restart
 ```
+
 ```
 Successfully started my-wordpress-site
 Your application can be reached at: http://my-wordpress-site.ddev.site
@@ -66,7 +68,8 @@ Your application can be reached at: http://my-wordpress-site.ddev.site
 
 Now, since [bedrock](https://roots.io/bedrock/) uses a configuration technique which is unusual for WordPress:
 
-* Edit the .env file which has been created in the project root, and set 
+* Edit the .env file which has been created in the project root, and set
+
     ```
   DB_NAME=db
   DB_USER=db
@@ -74,9 +77,10 @@ Now, since [bedrock](https://roots.io/bedrock/) uses a configuration technique w
   DB_HOST=db
   WP_HOME=https://my-wp-bedrock-site.ddev.site
   ```
+
   For more details see [bedrock installation](https://roots.io/bedrock/docs/installing-bedrock/)
 
-**Git Clone Example**
+#### Git Clone Example
 
 To get started using ddev with an existing WordPress project, clone the project's repository. Note that the git URL shown here is just an example.
 
@@ -92,6 +96,7 @@ ddev config
 ```
 
 You'll see a message like:
+
 ```
 An existing user-managed wp-config.php file has been detected!
 Project ddev settings have been written to:
@@ -124,7 +129,7 @@ Quickstart instructions regarding database imports can be found under [Database 
 
 Get started with Drupal 8 projects on ddev either using a new or existing composer project or by cloning a git repository.
 
-**Composer Setup Example**
+#### Composer Setup Example
 
 ```
 mkdir my-drupal8-site
@@ -142,7 +147,7 @@ Successfully started my-drupal8-site
 Your project can be reached at: http://my-drupal8-site.ddev.site
 ```
 
-**Git Clone Example**
+#### Drupal 8 Git Clone Example
 
 Note that the git URL shown below is an example only, you'll need to use your own project.
 
@@ -182,13 +187,13 @@ Successfully started my-drupal7-site
 Your project can be reached at: http://my-drupal7-site.ddev.site
 ```
 
-If you want to run the Drupal install script, the next step is to hit "/install.php" on your project (like `http://my-drupal7-site.ddev.site/install.php`) or run drush site-install, `ddev exec drush site-install --yes`. 
+If you want to run the Drupal install script, the next step is to hit "/install.php" on your project (like `http://my-drupal7-site.ddev.site/install.php`) or run drush site-install, `ddev exec drush site-install --yes`.
 
 Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
 
 ### TYPO3 Quickstart
 
-**Composer Setup Example**
+#### TYPO3 Composer Setup Example
 
 ```
 mkdir my-typo3-site
@@ -214,7 +219,7 @@ To connect to the database within the database container directly, please see th
 
 To get started using ddev with a TYPO3 project, clone the project's repository and checkout its directory.
 
-**Git Clone Example**
+#### TYPO3 Git Clone Example
 
 ```
 git clone https://github.com/example/example-site
@@ -269,11 +274,11 @@ ddev import-db --src=dumpfile.sql.gz
 Check out the git repository for the project you want to work on. `cd` into the directory, run `ddev config`, and follow the prompts.
 
 ```
-$ mkdir drupal8
-$ cd drupal8
-$ ddev config --project-type php
-$ ddev composer create drupal-composer/drupal-project:8.x-dev  
-$ ddev config --project-type drupal8
+mkdir drupal8
+cd drupal8
+ddev config --project-type php
+ddev composer create drupal-composer/drupal-project:8.x-dev  
+ddev config --project-type drupal8
 ```
 
 Configuration files have now been created for your project. Take a look at the project's .ddev/config.yaml file.
@@ -281,7 +286,7 @@ Configuration files have now been created for your project. Take a look at the p
 Now that the configuration files have been created, you can start your project with `ddev start` (still from within the project working directory):
 
 ```
-$ ddev start
+ddev start
 
 Starting environment for drupal8...
 Creating local-drupal8-db
@@ -294,6 +299,7 @@ Your project can be reached at: http://drupal8.ddev.site
 And you can now visit your working project. Enjoy!
 
 ### Configuration files
+
 _**Note:** If you're providing the settings.php or wp-config.php and DDEV is creating the settings.ddev.php (or wp-config-local.php, AdditionalConfig.php, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file._
 
 The `ddev config` command attempts to create a CMS-specific settings file with DDEV credentials pre-populated.
@@ -327,7 +333,7 @@ How do you know if DDEV manages a settings file? You will see the following comm
 To see a list of your projects you can use `ddev list`; `ddev list --active-only` will show only projects currently running or paused.
 
 ```
-➜  ddev list 
+➜  ddev list
 NAME          TYPE     LOCATION                   URL(s)                                STATUS
 d8git         drupal8  ~/workspace/d8git          https://d8git.ddev.local              running
                                                   http://d8git.ddev.local
@@ -341,7 +347,6 @@ drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
                                        https://drupal8.ddev.site
 ```
 
-
 You can also see more detailed information about a project by running `ddev describe` from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
 
 ```
@@ -351,22 +356,22 @@ drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
 
 Project Information
 -----------------
-PHP version:	7.0
+PHP version: 7.0
 
 MySQL Credentials
 -----------------
-Username:     	db
-Password:     	db
-Database name:	db
-Host:         	db
-Port:         	3306
+Username:      db
+Password:      db
+Database name: db
+Host:          db
+Port:          3306
 To connect to mysql from your host machine, use port 32768 on 127.0.0.1.
 For example: mysql --host=127.0.0.1 --port=32768 --user=db --password=db --database=db
 
 Other Services
 --------------
-MailHog:   	http://drupal8.ddev.site:8025
-phpMyAdmin:	http://drupal8.ddev.site:8036
+MailHog:    http://drupal8.ddev.site:8025
+phpMyAdmin: http://drupal8.ddev.site:8036
 
 DDEV ROUTER STATUS: healthy
 ```
@@ -375,12 +380,15 @@ DDEV ROUTER STATUS: healthy
 
 To remove a project from ddev's listing you can use the destructive option (deletes database, removes item from ddev's list, removes hostname entry in hosts file):
 
-`ddev stop --remove-data <projectname>` or to skip the snapshot, `ddev stop --remove-data --omit-snapshot <projectname>`
+`ddev delete <projectname>`
+or
+`ddev delete --omit-snapshot`
+or
+`ddev stop --remove-data <projectname>`
 
 Or if you just want it not to show up in `ddev list --all` any more, this command will unlist it until the next time you `ddev start` or `ddev config` the project.
 
 `ddev stop --unlist <projectname>`
-
 
 ## Importing assets for an existing project
 
@@ -403,11 +411,11 @@ Successfully imported database for drupal8
 
 Database import supports the following file types:
 
-- Raw SQL Dump (.sql)
-- Gzipped SQL Dump (.sql.gz)
-- (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
-- Zip Archive (.zip)
-- stdin
+* Raw SQL Dump (.sql)
+* Gzipped SQL Dump (.sql.gz)
+* (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
+* Zip Archive (.zip)
+* stdin
 
 If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. The specified path should provide a Raw SQL Dump (.sql). In the following example, the database we want to import is named data.sql and resides at the top-level of the archive:
 
@@ -454,10 +462,10 @@ ddev export-db --gzip=false >/tmp/db.sql
 
 To import static file assets for a project, such as uploaded images and documents, use the command `ddev import-files`. This command will prompt you to specify the location of your import asset, then import the assets into the project's upload directory. To define a custom upload directory, set the `upload_dir` key in your project's `config.yaml`. If no custom upload directory is defined, the a default will be used:
 
-- For Drupal projects, this is the `sites/default/files` directory
-- For WordPress projects, this is the `wp-content/uploads` directory
-- For TYPO3 projects, this is the `fileadmin` directory
-- For Backdrop projects, this is the `files` directory
+* For Drupal projects, this is the `sites/default/files` directory
+* For WordPress projects, this is the `wp-content/uploads` directory
+* For TYPO3 projects, this is the `fileadmin` directory
+* For Backdrop projects, this is the `files` directory
 
 ```
 ➜  ddev import-files
@@ -471,9 +479,9 @@ Successfully imported files for drupal8
 
 Static asset import supports the following file types:
 
-- A directory containing static assets
-- (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
-- Zip Archive (.zip)
+* A directory containing static assets
+* (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
+* Zip Archive (.zip)
 
 If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. In the following example, the assets we want to import reside at "web/sites/default/files":
 
@@ -513,11 +521,12 @@ Restored database snapshot: /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git
 
 Snapshots are stored in the project's .ddev/db_snapshots directory, and the directory can be renamed as necessary. For example, if you rename the above d8git_20180801132403 directory to "working_before_migration", then you can use `ddev restore-snapshot working_before_migration`.
 
-
 ## Interacting with your project
+
 ddev provides several commands to facilitate interacting with your project in the development environment. These commands can be run within the working directory of your project while the project is running in ddev.
 
 ### Executing Commands in Containers
+
 The `ddev exec` command allows you to run shell commands in the container for a ddev service. By default, commands are executed on the web service container, in the docroot path of your project. This allows you to use [the developer tools included in the web container](developer-tools.md). For example, to run the Drush CLI in the web container, you would run `ddev exec drush status`.
 
 To run a shell command in the container for a different service, use the `--service` flag at the beginning of your exec command to specify the service the command should be run against. For example, to run the mysql client in the database, container, you would run `ddev exec --service db mysql`. To specify the directory in which a shell command will be run, use the `--dir` flag. For example, to see the contents of the `/usr/bin` directory, you would run `ddev exec --dir /usr/bin ls`.
@@ -527,13 +536,14 @@ To run privileged commands, sudo can be passed into `ddev exec`. For example, to
 Commands can also be executed using the shorter `ddev . <cmd>` alias.
 
 ### SSH Into Containers
+
 The `ddev ssh` command will open an interactive bash or sh shell session to the container for a ddev service. The web service is connected to by default. The session can be ended by typing `exit`. To connect to another service, use the `--service` flag to specify the service you want to connect to. For example, to connect to the database container, you would run `ddev ssh --service db`. To specify the destination directory, use the `--dir` flag. For example, to connect to the database container and be placed into the `/home` directory, you would run `ddev ssh --service db --dir /home`.
 
 If you want to use your personal ssh keys within the web container, that's possible. Use `ddev auth ssh` to add the keys from your ~/.ssh directory and provide a passphrase, and then those keys will be usable from within the web container. You generally only have to `ddev auth ssh` one time per computer reboot.
 
 ### Log Access
 
-The `ddev logs` command allows you to easily view error logs from the web container (both nginx/apache and php-fpm logs are concatenated). To follow the log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. Similarly, `ddev logs -s db` will show logs from a running or stopped db container. 
+The `ddev logs` command allows you to easily view error logs from the web container (both nginx/apache and php-fpm logs are concatenated). To follow the log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. Similarly, `ddev logs -s db` will show logs from a running or stopped db container.
 
 ## Stopping a project
 
@@ -548,6 +558,7 @@ To remove the imported database for a project, use the flag `--remove-data`, as 
 Bash auto-completion is available for ddev. Bash auto-completion is included in the homebrew install on macOS and Linux. For other platforms, download the [latest ddev release](https://github.com/drud/ddev/releases) tarball and locate `ddev_bash_completion.sh` inside it. This can be installed wherever your bash_completions.d is. For example, `cp ddev_bash_completion.sh /etc/bash_completion.d/ddev`.
 
 <a name="opt-in-usage-information"></a>
+
 ## Opt-In Usage Information
 
 When you start ddev for the first time (or install a new release) you'll be asked to decide whether to opt-in to send usage and error information to the developers. You can change this at any time by editing the ~/.ddev/global_config.yaml file.
