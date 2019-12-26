@@ -275,6 +275,9 @@ jobs:
     - run:
         command: markdownlint *.md docs
         name: markdownlint
+    - run:
+        command: mkdocs build
+        name: mkdocs
 
   lx_container_test:
     machine:
