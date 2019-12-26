@@ -10,3 +10,6 @@ test -z "$(git ls-files --exclude-standard --others)" || (echo "There are unstag
 
 # And check make staticrequired
 make -s staticrequired
+
+# markdownlint
+markdownlint .
