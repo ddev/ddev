@@ -350,30 +350,42 @@ drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
 You can also see more detailed information about a project by running `ddev describe` from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
 
 ```
-NAME     TYPE     LOCATION             URL(s)                      STATUS
-drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
-                                       https://drupal8.ddev.site
+NAME        TYPE     LOCATION                URL                           STATUS
+d8composer  drupal8  ~/workspace/d8composer  https://d8composer.ddev.site  running
 
 Project Information
------------------
-PHP version: 7.0
+-------------------
+PHP version:    7.4
+MariaDB version
+MySQL version   5.7
 
-MySQL Credentials
------------------
-Username:      db
-Password:      db
-Database name: db
-Host:          db
-Port:          3306
-To connect to mysql from your host machine, use port 32768 on 127.0.0.1.
-For example: mysql --host=127.0.0.1 --port=32768 --user=db --password=db --database=db
+URLs
+----
+http://d8composer.ddev.site
+http://127.0.0.1:32811
+https://d8composer.ddev.site
+https://127.0.0.1:32810
+
+MySQL/MariaDB Credentials
+-------------------------
+Username: "db", Password: "db", Default database: "db"
+
+or use root credentials when needed: Username: "root", Password: "root"
+
+Database hostname and port INSIDE container: db:3306
+To connect to db server inside container or in project settings files:
+mysql --host=db --user=db --password=db --database=db
+Database hostname and port from HOST: 127.0.0.1:32809
+To connect to mysql from your host machine,
+mysql --host=127.0.0.1 --port=32809 --user=db --password=db --database=db
 
 Other Services
 --------------
-MailHog:    http://drupal8.ddev.site:8025
-phpMyAdmin: http://drupal8.ddev.site:8036
+MailHog:    http://d8composer.ddev.site:8025
+phpMyAdmin: http://d8composer.ddev.site:8036
 
 DDEV ROUTER STATUS: healthy
+ssh-auth status: healthy
 ```
 
 ## Removing projects from your collection known to ddev
@@ -386,7 +398,7 @@ or
 or
 `ddev stop --remove-data <projectname>`
 
-Or if you just want it not to show up in `ddev list --all` any more, this command will unlist it until the next time you `ddev start` or `ddev config` the project.
+Or if you just don't want it to show up in `ddev list` any more, this command will unlist it until the next time you `ddev start` or `ddev config` the project:
 
 `ddev stop --unlist <projectname>`
 
