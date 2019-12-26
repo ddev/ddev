@@ -2,6 +2,9 @@
 
 set -o errexit
 
+# markdownlint
+markdownlint *.md docs
+
 # Look for uncommitted files, http://stackoverflow.com/a/2659808/215713
 git diff-index --quiet HEAD || (echo "There are uncommitted files" && exit 1)
 
@@ -10,6 +13,3 @@ test -z "$(git ls-files --exclude-standard --others)" || (echo "There are unstag
 
 # And check make staticrequired
 make -s staticrequired
-
-# markdownlint
-markdownlint .
