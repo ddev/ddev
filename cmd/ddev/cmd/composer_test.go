@@ -45,7 +45,7 @@ func TestComposerCmd(t *testing.T) {
 	// Test create-project
 	// These two often fail on Windows with NFS
 	// It appears to be something about composer itself?
-	if runtime.GOOS == "windows" && app.NFSMountEnabled {
+	if !(runtime.GOOS == "windows" && app.NFSMountEnabled) {
 		// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0
 		args = []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "psr/log:1.1.0"}
 		out, err = exec.RunCommand(DdevBin, args)
