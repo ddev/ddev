@@ -2,6 +2,9 @@
 
   // These rules mostly come from mkdocs rules
   // https://github.com/mkdocs/mkdocs/blob/master/.markdownlintrc
+  // Using markdownlint from https://github.com/DavidAnson/markdownlint
+  // and https://github.com/igorshubovych/markdownlint-cli
+  // npm install --global markdownlint-cli
 
   // Enable all markdownlint rules
   "default": true,

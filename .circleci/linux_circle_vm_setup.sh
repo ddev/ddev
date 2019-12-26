@@ -5,6 +5,8 @@ set -x
 
 # Basic tools
 
+npm install --global markdownlint-cli
+
 sudo apt-get update -qq
 sudo apt-get install -qq mysql-client realpath zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
 
