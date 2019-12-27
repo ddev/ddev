@@ -5,9 +5,6 @@ set -x
 
 # Basic tools
 
-npm install --global markdownlint-cli
-pip install mkdocs==0.17.5
-
 sudo apt-get update -qq
 sudo apt-get install -qq mysql-client realpath zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev gcc-5
 
@@ -25,6 +22,9 @@ brew update && brew tap drud/ddev
 for item in osslsigncode golang mkcert ddev makensis; do
     brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
 done
+
+npm install --global markdownlint-cli
+pip3 install mkdocs==0.17.5
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
 wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.04/nsis-3.04.zip/download && sudo unzip -o -d /usr/local/share download && sudo mv /usr/local/share/nsis-3.04 /usr/local/share/nsis
