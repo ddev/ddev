@@ -23,12 +23,11 @@ for item in osslsigncode golang mkcert ddev makensis; do
     brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
 done
 
-# nvm on CircleCI has a few things. 10.8.0 is compatible with markdownlint-cli
-nvm use 10.8.0
-# Update paths after switching nvm
-source ~/.bashrc
+# nvm on CircleCI has a few things. 10 is compatible with markdownlint-cli
+nvm use 10
 npm install --global markdownlint-cli
 markdownlint --version
+# readthedocs has ancient version of mkdocs in it.
 pip3 install mkdocs==0.17.5
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
