@@ -135,7 +135,7 @@ darwin_signed: darwin
 		security default-keychain -s buildagent; \
 		security import certfiles/macos_ddev_cert.p12 -k buildagent -P "$(DDEV_MACOS_SIGNING_PASSWORD)" -T /usr/bin/codesign >/dev/null ; \
 		security set-key-partition-list -S apple-tool:,apple: -s -k "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent >/dev/null ; \
-		codesign --keychain buildagent -s "Apple Distribution: DRUD Technology, LLC (3BAN66AG5M)" $(GOTMP)/bin/darwin_amd64/ddev ; \
+		codesign --keychain buildagent -s "Apple Distribution: DRUD Technology, LLC (3BAN66AG5M)" --timestamp --options runtime $(GOTMP)/bin/darwin_amd64/ddev ; \
 		security delete-keychain buildagent ; \
 		codesign -v $(GOTMP)/bin/darwin_amd64/ddev ; \
 	fi
