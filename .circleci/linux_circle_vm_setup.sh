@@ -25,7 +25,10 @@ done
 
 # nvm on CircleCI has a few things. 10.8.0 is compatible with markdownlint-cli
 nvm use 10.8.0
+# Update paths after switching nvm
+source ~/.bashrc
 npm install --global markdownlint-cli
+markdownlint --version
 pip3 install mkdocs==0.17.5
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
