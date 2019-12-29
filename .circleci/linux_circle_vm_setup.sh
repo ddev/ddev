@@ -5,8 +5,6 @@ set -x
 
 # Basic tools
 
-# nvm on CircleCI has a few things. 10.8.0 is compatible with markdownlint-cli
-nvm use 10.8.0
 sudo apt-get update -qq
 sudo apt-get install -qq mysql-client realpath zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
 
@@ -25,6 +23,8 @@ for item in osslsigncode golang mkcert ddev makensis; do
     brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
 done
 
+# nvm on CircleCI has a few things. 10.8.0 is compatible with markdownlint-cli
+nvm use 10.8.0
 npm install --global markdownlint-cli
 pip3 install mkdocs==0.17.5
 

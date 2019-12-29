@@ -272,12 +272,6 @@ jobs:
     - run:
         command: make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: staticrequired
-    - run:
-        command: markdownlint *.md docs
-        name: markdownlint
-    - run:
-        command: mkdocs build
-        name: mkdocs
 
   lx_container_test:
     machine:
