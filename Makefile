@@ -129,13 +129,15 @@ mkdocs:
 
 darwin_signed: darwin
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
+		set -o errexit; \
 		security create-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
-		security list-keychains -s buildagent; \
 		security unlock-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
-		security default-keychain -s buildagent; \
+		default_keychain=$$(security default-keychain | xargs)  ;\
+		security list-keychains -s buildagent && security default-keychain -s buildagent; \
 		security import certfiles/macos_ddev_cert.p12 -k buildagent -P "$(DDEV_MACOS_SIGNING_PASSWORD)" -T /usr/bin/codesign >/dev/null ; \
 		security set-key-partition-list -S apple-tool:,apple: -s -k "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent >/dev/null ; \
 		codesign --keychain buildagent -s "Apple Distribution: DRUD Technology, LLC (3BAN66AG5M)" --timestamp --options runtime $(GOTMP)/bin/darwin_amd64/ddev ; \
+		security default-keychain -s "$$default_keychain" && security list-keychains -s "$$default_keychain" ; \
 		security delete-keychain buildagent ; \
 		codesign -v $(GOTMP)/bin/darwin_amd64/ddev ; \
 	fi
