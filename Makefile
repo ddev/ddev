@@ -157,6 +157,7 @@ darwin_notarized: darwin_signed
 			sleep 2; \
 		done;  \
 		logfileurl=$$(xcrun altool --notarization-info $$REQUEST_UUID --username "accounts@drud.com" --password "$(DDEV_MACOS_APP_PASSWORD)" --output-format "xml" | xq .plist.dict.dict.string[1] | xargs) ;\
+		echo "Notarization REQUEST_UUID=$$REQUEST_UUID Notarization LogFileURL=$$logfileurl"; \
 		if [ "$$(curl -s $$logfileurl | jq -r .issues)" != "null" ]; then exit 1; fi; \
 	fi
 
