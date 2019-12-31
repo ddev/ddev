@@ -77,7 +77,7 @@ include build-tools/makefile_components/base_build_go.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
-.PHONY: test testcmd testpkg build setup staticrequired windows_install darwin_signed markdownlint mkdocs
+.PHONY: test testcmd testpkg build setup staticrequired windows_install darwin_signed darwin_notarized markdownlint mkdocs
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
@@ -134,14 +134,31 @@ darwin_signed: darwin
 		security unlock-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
 		default_keychain=$$(security default-keychain | xargs)  ;\
 		security list-keychains -s buildagent && security default-keychain -s buildagent; \
-		security import certfiles/macos_ddev_cert.p12 -k buildagent -P "$(DDEV_MACOS_SIGNING_PASSWORD)" -T /usr/bin/codesign >/dev/null ; \
+		security import certfiles/ddev_developer_id_cert.p12 -k buildagent -P "$(DDEV_MACOS_SIGNING_PASSWORD)" -T /usr/bin/codesign >/dev/null ; \
 		security set-key-partition-list -S apple-tool:,apple: -s -k "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent >/dev/null ; \
-		codesign --keychain buildagent -s "Apple Distribution: DRUD Technology, LLC (3BAN66AG5M)" --timestamp --options runtime $(GOTMP)/bin/darwin_amd64/ddev ; \
+		codesign --keychain buildagent -s "Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --timestamp --options runtime $(GOTMP)/bin/darwin_amd64/ddev ; \
 		security default-keychain -s "$$default_keychain" && security list-keychains -s "$$default_keychain" ; \
 		security delete-keychain buildagent ; \
 		codesign -v $(GOTMP)/bin/darwin_amd64/ddev ; \
 	fi
 
+darwin_notarized: darwin_signed
+	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
+		set -o errexit ; \
+		echo "Notarizing macOS ddev..." ; \
+		pushd $(GOTMP)/bin/darwin_amd64 ; \
+		/usr/bin/ditto -c -k --keepParent ddev ddev.zip ; \
+		REQUEST_UUID=$$(xcrun altool --notarize-app --primary-bundle-id=com.ddev.ddev -u "accounts@drud.com" -p "$(DDEV_MACOS_APP_PASSWORD)" --file ddev.zip | awk -F ' = ' '/RequestUUID/ {print $$2}') ; \
+		popd ; \
+		while ! xcrun altool --notarization-info $$REQUEST_UUID --username "accounts@drud.com" --password "$(DDEV_MACOS_APP_PASSWORD)" --output-format "xml" | grep "Package Approved"; do \
+			sleep 60; \
+		done;  \
+		while [ $$(xcrun altool --notarization-info $$REQUEST_UUID --username "accounts@drud.com" --password "$(DDEV_MACOS_APP_PASSWORD)" --output-format "xml" | xq ".plist.dict.dict.key | length") != "7" ]; do \
+			sleep 2; \
+		done;  \
+		logfileurl=$$(xcrun altool --notarization-info $$REQUEST_UUID --username "accounts@drud.com" --password "$(DDEV_MACOS_APP_PASSWORD)" --output-format "xml" | xq .plist.dict.dict.string[1] | xargs) ;\
+		if [ "$$(curl -s $$logfileurl | jq -r .issues)" != "null" ]; then exit 1; fi; \
+	fi
 
 $(GOTMP)/bin/windows_amd64/ddev.exe: windows
 

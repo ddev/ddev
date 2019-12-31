@@ -28,8 +28,8 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 
-OPTIONS=c:g:r:p:s:b:h:o:m:
-LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:,windows-signing-password:,macos-signing-password:,build-image-tarballs:,chocolatey-api-key:,github-org:
+OPTIONS=c:g:r:p:s:b:h:o:m:a:
+LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:,windows-signing-password:,macos-signing-password:,build-image-tarballs:,chocolatey-api-key:,github-org:,macos-app-password
 
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -70,6 +70,10 @@ while true; do
         ;;
     -m|--macos-signing-password)
         DDEV_MACOS_SIGNING_PASSWORD=$2
+        shift 2
+        ;;
+    -a|--macos-app-password)
+        DDEV_MACOS_APP_PASSWORD=$2
         shift 2
         ;;
     # For debugging we can set BUILD_IMAGE_TARBALLS=false to avoid waiting for that.
