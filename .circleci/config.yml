@@ -420,7 +420,7 @@ jobs:
         - ~/Library/Caches/Homebrew
 
     - run:
-        command: make -s clean linux darwin_signed windows_install chocolatey
+        command: make -s clean linux darwin_notarized windows_install chocolatey
         name: Build the ddev executables
 
     # We only build the xz version of the docker images on tag build.
