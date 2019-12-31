@@ -18,6 +18,7 @@ sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unatt
 nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
 brew tap drud/ddev
+brew unlink python@2 || true
 
 brew install mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr
 brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr
