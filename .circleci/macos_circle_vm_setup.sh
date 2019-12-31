@@ -34,6 +34,8 @@ mkdir -p /usr/local/etc/my.cnf.d
 
 mkcert -install
 
+pip3 install yq
+
 curl -fsSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/releases/download/v0.3.2/gotestsum_0.3.2_darwin_amd64.tar.gz && tar -C /usr/local/bin -zxf /tmp/gotestsum.tgz gotestsum
 
 # gotestsum
