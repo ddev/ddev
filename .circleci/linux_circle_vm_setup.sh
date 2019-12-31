@@ -10,7 +10,6 @@ sudo apt-get install -qq mysql-client realpath zip jq expect nfs-kernel-server b
 
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
-export HOMEBREW_AUTO_UPDATE_SECS=20160
 if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
 fi
