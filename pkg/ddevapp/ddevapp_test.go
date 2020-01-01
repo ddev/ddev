@@ -1202,7 +1202,6 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	f, err := os.OpenFile(filepath.Join(onHostDir, "junk.txt"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0755)
 	assert.NoError(err)
 	_ = f.Close()
-	ddevapp.WaitForSync(app, 5)
 
 	_, _, createFileErr := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
@@ -1240,8 +1239,6 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	_, err = f.WriteString("this base content was inserted on the host side\n")
 	assert.NoError(err)
 	_ = f.Close()
-
-	ddevapp.WaitForSync(app, 5)
 
 	// if the file exists, add to it. We don't want to add if it's not already there.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{

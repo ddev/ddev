@@ -52,7 +52,6 @@ func TestComposerCmd(t *testing.T) {
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 		assert.Contains(out, "Created project in ")
-		ddevapp.WaitForSync(app, 2)
 		assert.FileExists(filepath.Join(tmpDir, "Psr/Log/LogLevel.php"))
 
 		err = app.StartAndWait(5)
@@ -62,7 +61,6 @@ func TestComposerCmd(t *testing.T) {
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 		assert.Contains(out, "Created project in ")
-		ddevapp.WaitForSync(app, 2)
 		assert.FileExists(filepath.Join(tmpDir, "Psr/Log/LogLevel.php"))
 	}
 
@@ -71,7 +69,6 @@ func TestComposerCmd(t *testing.T) {
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 	assert.Contains(out, "Generating autoload files")
-	ddevapp.WaitForSync(app, 2)
 	assert.FileExists(filepath.Join(tmpDir, "vendor/sebastian/version/composer.json"))
 	// Test a composer remove
 	if nodeps.IsDockerToolbox() {
@@ -83,6 +80,5 @@ func TestComposerCmd(t *testing.T) {
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 	assert.Contains(out, "Generating autoload files")
-	ddevapp.WaitForSync(app, 2)
 	assert.False(fileutil.FileExists(filepath.Join(tmpDir, "vendor/sebastian")))
 }
