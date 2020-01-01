@@ -36,7 +36,7 @@ func TestComposerCmd(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "Available commands:")
 
-	// Get an app just so we can do waits and check webcacheenabled etc.
+	// Get an app just so we can do waits
 	app, err := ddevapp.NewApp(tmpDir, true, "")
 	assert.NoError(err)
 	//nolint: errcheck
@@ -45,6 +45,7 @@ func TestComposerCmd(t *testing.T) {
 	// Test create-project
 	// These two often fail on Windows with NFS
 	// It appears to be something about composer itself?
+
 	if !(runtime.GOOS == "windows" && app.NFSMountEnabled) {
 		// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0
 		args = []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "psr/log:1.1.0"}

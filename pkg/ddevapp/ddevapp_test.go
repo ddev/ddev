@@ -198,7 +198,7 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.WriteConfig() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
-		for _, volume := range []string{app.Name + "-mariadb", app.GetUnisonCatalogVolName(), app.GetWebcacheVolName()} {
+		for _, volume := range []string{app.Name + "-mariadb"} {
 			err = dockerutil.RemoveVolume(volume)
 			if err != nil {
 				log.Errorf("TestMain startup: Failed to delete volume %s: %v", volume, err)
@@ -1209,24 +1209,6 @@ func TestWriteableFilesDirectory(t *testing.T) {
 		Cmd:     "echo 'content created inside container\n' >" + inContainerRelativePath,
 	})
 	assert.NoError(createFileErr)
-	if app.WebcacheEnabled && createFileErr != nil {
-		syncLogs, err := app.CaptureLogs("bgsync", false, "")
-		assert.NoError(err)
-
-		// ls -lR on host
-		onHostList, err := exec.RunCommand("ls", []string{"-lR", filepath.Dir(uploadDir)})
-		assert.NoError(err)
-
-		// ls -lR in container
-		inContainerList, _, err := app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     "ls -lR " + filepath.Dir(uploadDir),
-		})
-		assert.NoError(err)
-		t.Fatalf("Unable to create file %s inside container; onHost ls=\n====\n%s\n====\ninContainer ls=\n======\n%s\n=====\nContainer Sync logs=\n=======\n%s\n===========\n", inContainerRelativePath, onHostList, inContainerList, syncLogs)
-	}
-
-	ddevapp.WaitForSync(app, 5)
 
 	// Now try to append to the file on the host.
 	// os.OpenFile() for append here fails if the file does not already exist.
@@ -2119,11 +2101,7 @@ func TestHttpsRedirection(t *testing.T) {
 		if startErr != nil {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 			assert.NoError(getLogsErr)
-			// Get healthcheck status on bgsync container
-			healthcheck, inspectErr := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-bgsync|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
-			assert.NoError(inspectErr)
-
-			t.Fatalf("app.StartAndWaitForSync failure; err=%v \n===== container logs ===\n%s\n===== bgsync health info ===\n%s\n========\n", startErr, appLogs, healthcheck)
+			t.Fatalf("app.StartAndWaitForSync failure; err=%v \n===== container logs ===\n%s\n", startErr, appLogs)
 		}
 		// Test for directory redirects under https and http
 		for _, parts := range expectations {
@@ -2531,68 +2509,6 @@ func TestNFSMount(t *testing.T) {
 	assert.NoError(err)
 	time.Sleep(2 * time.Second)
 	assert.FileExists("nfscontainerlinked_config.yaml")
-
-	runTime()
-	switchDir()
-}
-
-// TestWebcache tests ddev start functionality with webcache_enabled: true
-func TestWebcache(t *testing.T) {
-	if runtime.GOOS != "darwin" {
-		t.Skipf("Skipping TestWebcache, not supported on %s", runtime.GOOS)
-	}
-
-	assert := asrt.New(t)
-	app := &ddevapp.DdevApp{}
-
-	// Make sure this leaves us in the original test directory
-	testDir, _ := os.Getwd()
-	//nolint: errcheck
-	defer os.Chdir(testDir)
-
-	site := TestSites[0]
-	switchDir := site.Chdir()
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestWebcache", site.Name))
-
-	err := app.Init(site.Dir)
-	assert.NoError(err)
-	app.WebcacheEnabled = true
-
-	startErr := app.StartAndWaitForSync(1)
-	//nolint: errcheck
-	defer app.Stop(true, false)
-	require.NoError(t, startErr)
-
-	// Create a host-side dir symlink; give a second for it to sync, make sure it can be used in container.
-	err = os.Symlink(".ddev", "webcachelinked_.ddev")
-	assert.NoError(err)
-	time.Sleep(2 * time.Second)
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Dir:     "/var/www/html",
-		Cmd:     "ls webcachelinked_.ddev/config.yaml",
-	})
-	assert.NoError(err)
-
-	// Create a container-side dir symlink; give a second for it to sync, make sure it can be used on host.
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Dir:     "/var/www/html",
-		Cmd:     "ln -s  .ddev webcachecontainerlinked_ddev",
-	})
-	assert.NoError(err)
-	time.Sleep(2 * time.Second)
-	assert.FileExists("webcachecontainerlinked_ddev/config.yaml")
-
-	// Create a container-side file symlink; give a second for it to sync, make sure it can be used on host.
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "web",
-		Dir:     "/var/www/html",
-		Cmd:     "ln -s  .ddev/config.yaml webcachecontainerlinked_config.yaml",
-	})
-	assert.NoError(err)
-	time.Sleep(2 * time.Second)
-	assert.FileExists("webcachecontainerlinked_config.yaml")
 
 	runTime()
 	switchDir()

@@ -51,9 +51,6 @@ func init() {
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		nodeps.WebserverDefault = testWebServerType
 	}
-	if testWebcache := os.Getenv("DDEV_TEST_USE_WEBCACHE"); testWebcache != "" {
-		nodeps.WebcacheEnabledDefault = true
-	}
 	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount != "" {
 		nodeps.NFSMountEnabledDefault = true
 	}
@@ -78,7 +75,6 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
 	app.WebserverType = nodeps.WebserverDefault
-	app.WebcacheEnabled = nodeps.WebcacheEnabledDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
 	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
@@ -93,7 +89,6 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
 	app.DBAImage = version.GetDBAImage()
-	app.BgsyncImage = version.GetBgsyncImage()
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
@@ -104,12 +99,6 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		}
 	}
 	app.SetApptypeSettingsPaths()
-
-	// Turn off webcache_enabled except if macOS/darwin or global `developer_mode: true`
-	if runtime.GOOS != "darwin" && app.WebcacheEnabled && !globalconfig.DdevGlobalConfig.DeveloperMode {
-		app.WebcacheEnabled = false
-		util.Warning("webcache_enabled is not yet supported on %s, disabling it", runtime.GOOS)
-	}
 
 	// Allow override with provider.
 	// Otherwise we accept whatever might have been in config file if there was anything.
@@ -154,10 +143,6 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.DBAImage == version.GetDBAImage() {
 		appcopy.DBAImage = ""
 	}
-	if appcopy.BgsyncImage == version.GetBgsyncImage() {
-		appcopy.BgsyncImage = ""
-	}
-
 	if appcopy.MailhogPort == nodeps.DdevDefaultMailhogPort {
 		appcopy.MailhogPort = ""
 	}
@@ -197,7 +182,7 @@ func (app *DdevApp) WriteConfig() error {
 	}
 
 	// Append current image information
-	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s\n# webimage: %s\n# dbimage: %s\n# dbaimage: %s\n# bgsyncimage: %s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.GetWebImage(), version.GetDBImage(nodeps.MariaDB), version.GetDBAImage(), version.GetBgsyncImage()))...)
+	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s\n# webimage: %s\n# dbimage: %s\n# dbaimage: %s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.GetWebImage(), version.GetDBImage(nodeps.MariaDB), version.GetDBAImage()))...)
 
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(ConfigInstructions)...)
@@ -440,10 +425,6 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("both mariadb_version (%v) and mysql_version (%v) are set, but they are mutually exclusive", app.MariaDBVersion, app.MySQLVersion)
 	}
 
-	if app.WebcacheEnabled && app.NFSMountEnabled {
-		return fmt.Errorf("webcache_enabled and nfs_mount_enabled cannot both be set to true, use one or the other")
-	}
-
 	// golang on windows is not able to time.LoadLocation unless
 	// go is installed... so skip validation on Windows
 	if runtime.GOOS != "windows" {
@@ -596,12 +577,10 @@ type composeYAMLVars struct {
 	WebMount             string
 	WebBuildContext      string
 	DBBuildContext       string
-	BgsyncBuildContext   string
 	SSHAgentBuildContext string
 	OmitDB               bool
 	OmitDBA              bool
 	OmitSSHAgent         bool
-	WebcacheEnabled      bool
 	NFSMountEnabled      bool
 	NFSSource            string
 	DockerIP             string
@@ -649,7 +628,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitDB:               nodeps.ArrayContainsString(app.OmitContainers, "db"),
 		OmitDBA:              nodeps.ArrayContainsString(app.OmitContainers, "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
 		OmitSSHAgent:         nodeps.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
-		WebcacheEnabled:      app.WebcacheEnabled,
 		NFSMountEnabled:      app.NFSMountEnabled,
 		NFSSource:            "",
 		IsWindowsFS:          runtime.GOOS == "windows",
@@ -662,11 +640,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		GID:                  gid,
 		WebBuildContext:      app.GetConfigPath(".webimageBuild"),
 		DBBuildContext:       app.GetConfigPath(".dbimageBuild"),
-		BgsyncBuildContext:   app.GetConfigPath(".bgsyncimageBuild"),
-	}
-	if app.WebcacheEnabled {
-		templateVars.MountType = "volume"
-		templateVars.WebMount = "webcachevol"
 	}
 	if app.NFSMountEnabled {
 		templateVars.MountType = "volume"
@@ -695,13 +668,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	if err != nil {
 		return "", err
-	}
-
-	if app.WebcacheEnabled {
-		err = WriteBuildDockerfile(app.GetConfigPath(".bgsyncimageBuild/Dockerfile"), "", nil)
-		if err != nil {
-			return "", err
-		}
 	}
 
 	// SSH agent just needs extra to add the official related user, nothing else
@@ -917,7 +883,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "commands/*/*.example", "commands/*/README.txt", "commands/host/launch", "commands/db/mysql", "homeadditions/*.example", "homeadditions/README.txt", ".gitignore", "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", ".bgsync*", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", ".bgsyncimageBuild", ".sshimageBuild", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
+	err := CreateGitIgnore(dir, "commands/*/*.example", "commands/*/README.txt", "commands/host/launch", "commands/db/mysql", "homeadditions/*.example", "homeadditions/README.txt", ".gitignore", "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", ".sshimageBuild", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

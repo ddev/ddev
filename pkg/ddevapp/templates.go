@@ -127,42 +127,6 @@ services:
       retries: 10
       start_period: 10s
       timeout: 120s
-{{ if .WebcacheEnabled }}
-  bgsync:
-    container_name: ddev-${DDEV_SITENAME}-bgsync
-    build:
-      context: '{{ .BgsyncBuildContext }}'
-      args:
-        BASE_IMAGE: $DDEV_BGSYNCIMAGE
-        username: '{{ .Username }}'
-        uid: '{{ .UID }}'
-        gid: '{{ .GID }}'
-    image: ${DDEV_BGSYNCIMAGE}-built
-    restart: "on-failure"
-    user: "$DDEV_UID:$DDEV_GID"
-    hostname: {{ .Name }}-bgsync
-    volumes:
-      - ..:/hostmount:cached
-      - webcachevol:/fastdockermount
-      - unisoncatalogvol:/root/.unison
-
-    environment:
-    - SYNC_DESTINATION=/fastdockermount
-    - SYNC_SOURCE=/hostmount
-    - SYNC_MAX_INOTIFY_WATCHES=100000
-    - SYNC_VERBOSE=1
-    privileged: true
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.platform: ddev
-      com.ddev.app-type: drupal8
-      com.ddev.approot: $DDEV_APPROOT
-    healthcheck:
-      interval: 10s
-      retries: 24
-      start_period: 240s
-
-{{end}}
 
 {{ if not .OmitDBA }}
   dba:
@@ -206,10 +170,7 @@ volumes:
   {{ end }}
   ddev-global-cache:
     name: ddev-global-cache
-  {{ if .WebcacheEnabled }}
-  webcachevol:
-  unisoncatalogvol:
-  {{ end }}
+
   {{ if .NFSMountEnabled }}
   nfsmount:
     driver: local
@@ -241,7 +202,6 @@ const ConfigInstructions = `
 # webimage: <docker_image>  # nginx/php docker image.
 # dbimage: <docker_image>  # mariadb docker image.
 # dbaimage: <docker_image>
-# bgsyncimage: <docker_image>
 
 # mariadb_version and mysql_version
 # ddev can use many versions of mariadb and mysql
@@ -296,10 +256,6 @@ const ConfigInstructions = `
 # nfs_mount_enabled: false
 # Great performance improvement but requires host configuration first.
 # See https://ddev.readthedocs.io/en/stable/users/performance/#using-nfs-to-mount-the-project-into-the-container
-
-# webcache_enabled: false (deprecated)
-# Was only for macOS, but now deprecated.
-# See https://ddev.readthedocs.io/en/stable/users/performance/#webcache
 
 # host_https_port: "59002"
 # The host port binding for https can be explicitly specified. It is

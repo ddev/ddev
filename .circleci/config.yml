@@ -484,9 +484,6 @@ workflows:
 #    - mac_apache_fpm_test:
 #        requires:
 #        - build
-#    - mac_webcache_test:
-#        requires:
-#        - build
 #    - mac_nfsmount_test:
 #        requires:
 #        - build

@@ -34,7 +34,7 @@ var versionCmd = &cobra.Command{
 		sort.Strings(keys)
 
 		for _, label := range keys {
-			if label != "build info" && label != "bgsync" {
+			if label != "build info" {
 				versionOutput.AddRow(label, v[label])
 			}
 		}
