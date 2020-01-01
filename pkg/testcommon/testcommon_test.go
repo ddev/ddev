@@ -174,7 +174,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		startErr := app.StartAndWaitForSync(5)
+		startErr := app.StartAndWait(5)
 		if startErr != nil {
 			logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 			assert.NoError(err)

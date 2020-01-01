@@ -71,10 +71,10 @@ func TestSSHAuth(t *testing.T) {
 	err = ddevapp.RemoveSSHAgentContainer()
 	require.NoError(t, err)
 
-	startErr := app.StartAndWaitForSync(0)
+	startErr := app.StartAndWait(0)
 	if startErr != nil {
 		logs, _ := ddevapp.GetErrLogsFromApp(app, startErr)
-		t.Fatalf("app.StartAndWaitForSync failed, err=%v, logs=\n========\n%s\n===========\n", startErr, logs)
+		t.Fatalf("app.StartAndWait failed, err=%v, logs=\n========\n%s\n===========\n", startErr, logs)
 	}
 
 	err = app.EnsureSSHAgentContainer()

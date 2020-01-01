@@ -63,12 +63,6 @@ var DBAImg = "phpmyadmin/phpmyadmin"
 // DBATag defines the default phpmyadmin image tag used for applications.
 var DBATag = "4.9" // Note that this can be overridden by make
 
-// BgsyncImg defines the default bgsync image tag used for applications.
-var BgsyncImg = "drud/ddev-bgsync"
-
-// BgsyncTag defines the default phpmyadmin image tag used for applications.
-var BgsyncTag = "v1.12.0" // Note that this can be overridden by make
-
 // RouterImage defines the image used for the router.
 var RouterImage = "drud/ddev-router"
 
@@ -100,7 +94,6 @@ func GetVersionInfo() map[string]string {
 	versionInfo["web"] = GetWebImage()
 	versionInfo["db"] = GetDBImage(nodeps.MariaDB)
 	versionInfo["dba"] = GetDBAImage()
-	versionInfo["bgsync"] = BgsyncImg + ":" + BgsyncTag
 	versionInfo["router"] = RouterImage + ":" + RouterTag
 	versionInfo["ddev-ssh-agent"] = SSHAuthImage + ":" + SSHAuthTag
 	versionInfo["commit"] = COMMIT
@@ -140,11 +133,6 @@ func GetDBImage(dbType string, dbVersion ...string) string {
 // GetDBAImage returns the correctly formatted dba image:tag reference
 func GetDBAImage() string {
 	return fmt.Sprintf("%s:%s", DBAImg, DBATag)
-}
-
-// GetDBAImage returns the correctly formatted dba image:tag reference
-func GetBgsyncImage() string {
-	return fmt.Sprintf("%s:%s", BgsyncImg, BgsyncTag)
 }
 
 // GetSSHAuthImage returns the correctly formatted sshauth image:tag reference

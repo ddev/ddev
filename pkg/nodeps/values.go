@@ -58,7 +58,6 @@ const (
 	DBContainer           = "db"
 	WebContainer          = "web"
 	RouterContainer       = "ddev-router"
-	BGSYNCContainer       = "bgsync"
 )
 
 // PHPDefault is the default PHP version, overridden by $DDEV_PHP_VERSION
@@ -106,9 +105,6 @@ var ValidOmitContainers = map[string]bool{
 
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
 var WebserverDefault = WebserverNginxFPM
-
-// WebcacheEnabledDefault is the default value for app.WebCacheEnabled
-var WebcacheEnabledDefault = false
 
 // NFSMountEnabledDefault is default value for app.NFSMountEnabled
 var NFSMountEnabledDefault = false

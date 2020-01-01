@@ -52,11 +52,7 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 			if ddevapp.GetCAROOT() == "" {
 				urlList = httpURLs
 			}
-
 			util.Success("Project can be reached at %s", strings.Join(urlList, " "))
-			if project.WebcacheEnabled {
-				util.Warning("All contents were copied to fast docker filesystem,\nbut bidirectional sync operation may not be fully functional for a few minutes.")
-			}
 		}
 	},
 }

@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/fatih/color"
+	"github.com/fsouza/go-dockerclient"
+	"github.com/gosuri/uitable"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
-
-	"github.com/fatih/color"
-	"github.com/fsouza/go-dockerclient"
-	"github.com/gosuri/uitable"
 
 	"os"
 	"text/template"
@@ -93,10 +91,6 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 		status = color.RedString(status)
 	default:
 		status = color.CyanString(status)
-	}
-	syncStatus := row["sync_status"].(string)
-	if syncStatus != "" {
-		status = status + "\n" + syncStatus
 	}
 
 	urls := ""
@@ -300,7 +294,7 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 	errString = strings.Trim(errString, " \t\n\r")
 	if strings.Contains(errString, "container failed") || strings.Contains(errString, "container did not become ready") || strings.Contains(errString, "failed to become ready") {
 		splitError := strings.Split(errString, " ")
-		if len(splitError) > 0 && nodeps.ArrayContainsString([]string{"web", "db", "bgsync", "ddev-router", "ddev-ssh-agent"}, splitError[0]) {
+		if len(splitError) > 0 && nodeps.ArrayContainsString([]string{"web", "db", "ddev-router", "ddev-ssh-agent"}, splitError[0]) {
 			serviceName = splitError[0]
 			logs, err := app.CaptureLogs(serviceName, false, "")
 			if err != nil {
@@ -310,16 +304,6 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("no logs found for service %s (Inspected err=%v)", serviceName, errorReceived)
-}
-
-// WaitForSync is a test helper; it's hard to know exactly when the bgsync
-// container will have completed syncing an operation, so we do app.WaitSync() and
-// add the number of seconds provided.
-func WaitForSync(app *DdevApp, seconds int) {
-	if app.WebcacheEnabled {
-		_ = app.WaitSync()
-		time.Sleep(time.Duration(seconds) * time.Second)
-	}
 }
 
 // CheckForMissingProjectFiles returns an error if the project's configuration or project root cannot be found

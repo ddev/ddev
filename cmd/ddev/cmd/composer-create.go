@@ -109,11 +109,11 @@ ddev composer create --repository=https://repo.magento.com/ magento/project-comm
 		output.UserOut.Printf("Moving installation to project root")
 
 		// Windows has serious problems with performance.
-		// If not webcacheenabled and not NFSMountEnabled,
+		// If not NFSMountEnabled,
 		// we will move the contents of the temp installation
 		// using host-side manipulation, but can't do that with a cached filesystem.
-		if runtime.GOOS == "windows" && !app.WebcacheEnabled && !app.NFSMountEnabled {
-
+		if runtime.GOOS == "windows" && !app.NFSMountEnabled {
+			// If traditional windows mount
 			err = filepath.Walk(hostInstallPath, func(path string, info os.FileInfo, err error) error {
 				// Skip the initial tmp install directory
 				if path == hostInstallPath {
@@ -140,7 +140,7 @@ ddev composer create --repository=https://repo.magento.com/ magento/project-comm
 				return nil
 			})
 		} else {
-			// If webcacheEnabled, we can move the contents easily and quickly inside the container.
+			// All other cases than Windows, we can move the contents easily and quickly inside the container.
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				Cmd:     fmt.Sprintf("shopt -s dotglob && mv %s/* /var/www/html && rmdir %s", containerInstallPath, containerInstallPath),
