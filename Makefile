@@ -77,7 +77,7 @@ include build-tools/makefile_components/base_build_go.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
-.PHONY: test testcmd testpkg build setup staticrequired windows_install darwin_signed
+.PHONY: test testcmd testpkg build setup staticrequired windows_install darwin_signed markdownlint mkdocs
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
@@ -120,7 +120,12 @@ packr2:
           	    $(BUILD_IMAGE) packr2
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
-staticrequired: setup golangci-lint
+staticrequired: setup golangci-lint markdownlint mkdocs
+
+markdownlint:
+	markdownlint *.md docs
+mkdocs:
+	mkdocs build -d /tmp/mkdocsbuild
 
 darwin_signed: darwin
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \

@@ -1,4 +1,4 @@
-<h1>Pantheon Hosting Provider Integration</h1>
+# Pantheon Hosting Provider Integration
 
 ddev provides an integration with the [Pantheon Website Management Platform](https://pantheon.io/), which allows for Pantheon users to quickly download and provision a project from Pantheon in a local ddev-managed environment.
 
@@ -24,7 +24,7 @@ If you have ddev installed, and have an active Pantheon account with an active W
 
     a. Navigate in your terminal to your checkout of the project codebase.
 
-    b. Run `ddev config pantheon`. When asked for the project name you must use the exact name of the Pantheon project. The name is found in the URL of your Pantheon dev site. For example, if your site is viewed at http://dev-foo-bar.pantheonsite.io/ enter 'foo-bar' as the name (not 'Foo Bar').
+    b. Run `ddev config pantheon`. When asked for the project name you must use the exact name of the Pantheon project. The name is found in the URL of your Pantheon dev site. For example, if your site is viewed at <http://dev-foo-bar.pantheonsite.io/> enter 'foo-bar' as the name (not 'Foo Bar').
 
     c. Configuration prompts will allow you to choose a Pantheon environment, suggesting "dev" as the default.
 
@@ -40,7 +40,7 @@ In order to use ddev with Pantheon.io, you need the following:
 
 ## Authentication
 
-This step only needs to be completed once for your system. We recommend that you create a token specific to ddev by going to https://pantheon.io/docs/machine-tokens/. Once you’ve completed that, run `ddev auth pantheon <YOUR TOKEN>` and provide the token you just generated. This will store the token in DDEV-Local's global cache volume. If you change tokens (or teams, or user accounts on Pantheon) you may need to generate a new token from Pantheon and re-run the `ddev auth pantheon` command to re-establish your connection to Pantheon.io.
+This step only needs to be completed once for your system. We recommend that you create a token specific to ddev by going to <https://pantheon.io/docs/machine-tokens/.> Once you’ve completed that, run `ddev auth pantheon <YOUR TOKEN>` and provide the token you just generated. This will store the token in DDEV-Local's global cache volume. If you change tokens (or teams, or user accounts on Pantheon) you may need to generate a new token from Pantheon and re-run the `ddev auth pantheon` command to re-establish your connection to Pantheon.io.
 
 ## Usage
 

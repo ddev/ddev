@@ -1,4 +1,4 @@
-<h1>Step-debugging with ddev and xdebug</h1>
+# Step-debugging with ddev and xdebug
 
 Every ddev project is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code. It is disabled by default for performance reasons, so you'll need to enable it in your config.yaml.
 
@@ -31,8 +31,8 @@ Enable xdebug in your config.yaml:
 * [Atom](#atom)
 * [Visual Studio Code (vscode)](#vscode)
 
-
 <a name="phpstorm"></a>
+
 ### PHPStorm Debugging Setup
 
 [PHPStorm](https://www.jetbrains.com/phpstorm/download) is a leading PHP development IDE with extensive built-in debugging support. It provides two different ways to do debugging. One requires very little effort in the PHPStorm IDE (they call it zero-configuration debugging) and the other requires you to set up a "run configuration", and is basically identical to the Netbeans or Eclipse setup.
@@ -61,15 +61,15 @@ PHPStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/crea
 
 ![PHPStorm debug start](images/phpstorm_config_debug_button.png)
 
-
 Server creation:
 
 ![PHPStorm server creation](images/phpstorm_config_server_config.png)
 
 <a name="atom"></a>
+
 ### Atom Debugging Setup
 
-[Atom](https://atom.io/) is an extensible developers' editor promoted by GitHub. The available extensions include [php-debug](https://atom.io/packages/php-debug) which you can use to conduct PHP debugging with the Xdebug PHP extension. This project is currently an alpha release. 
+[Atom](https://atom.io/) is an extensible developers' editor promoted by GitHub. The available extensions include [php-debug](https://atom.io/packages/php-debug) which you can use to conduct PHP debugging with the Xdebug PHP extension. This project is currently an alpha release.
 
 1. Under Preferences->+Install install the php-debug add-on:
 ![php-debug installation](images/atom_php_debug_install.png)
@@ -81,6 +81,7 @@ Server creation:
 6. Visit a page that should trigger your breakpoint.
 
 An example configuration:
+
 ```
   "php-debug":
     PathMaps: [
@@ -90,6 +91,7 @@ An example configuration:
 ```
 
 <a name="vscode"></a>
+
 ### Visual Studio Code (vscode) Debugging Setup
 
 1. Install the [php-debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
@@ -109,4 +111,5 @@ By default, ddev is set up to contact the default port, port 9000 on your IDE. H
 [PHP]
 xdebug.remote_port=11011
 ```
+
 * Then change your IDE's configuration to listen on the new port.

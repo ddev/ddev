@@ -270,7 +270,7 @@ jobs:
         paths:
         - /home/linuxbrew
     - run:
-        command: make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+        command: source ~/.bashrc && nvm use 10 && make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: staticrequired
 
   lx_container_test:

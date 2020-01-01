@@ -1,4 +1,5 @@
-<h1>Extending and Customizing Environments</h1>
+# Extending and Customizing Environments
+
 ddev provides several ways in which the environment for a project using ddev can be customized and extended.
 
 ## Changing PHP version
@@ -11,7 +12,7 @@ The project's `.ddev/config.yaml` file defines the PHP version to use. This can 
 
 ## Changing webserver type
 
-DDEV-Local supports nginx with php-fpm by default ("nginx-fpm"), apache2 with php-fpm ("apache-fpm"), and apache2 with embedded php via cgi (apache-cgi). These can be changed using the "webserver_type" value in .ddev/config.yaml, for example `webserver_type: apache-fpm`. 
+DDEV-Local supports nginx with php-fpm by default ("nginx-fpm"), apache2 with php-fpm ("apache-fpm"), and apache2 with embedded php via cgi (apache-cgi). These can be changed using the "webserver_type" value in .ddev/config.yaml, for example `webserver_type: apache-fpm`.
 
 ## Adding services to a project
 
@@ -25,7 +26,7 @@ If you need to create a service configuration for your project, see [Defining an
 
 Each project can have an unlimited number of .ddev/docker-compose.*.yaml files as described in [Custom Compose Files](./custom-compose-files.md), so it's easy to maintain custom environment variables in a .ddev/docker-compose.environment.yaml file (the exact name doesn't matter, if it just matches docker-compose.*.yaml).
 
-For example, a `.ddev/docker-compose.environment.yaml` with these contents would add a $TYPO3_CONTEXT environment variable to the web container, and a $SOMETHING environment variable to the db container: 
+For example, a `.ddev/docker-compose.environment.yaml` with these contents would add a $TYPO3_CONTEXT environment variable to the web container, and a $SOMETHING environment variable to the db container:
 
 ```
 version: '3.6'
@@ -40,6 +41,7 @@ services:
 ```
 
 ## Providing custom nginx configuration
+
 The default configuration for ddev uses nginx as the web server (`webserver_type: nginx-fpm` in .ddev/config.yaml). Default configurations are provided for most project types. Some projects may require custom configuration, for example to support a module or plugin requiring special rules. To accommodate these needs, ddev provides a way to replace the default configuration with a custom version.
 
 - Run `ddev config` for the project if it has not been used with ddev before.
@@ -57,8 +59,8 @@ If you're using `webserver_type: apache-fpm` or `webserver_type: apache-cgi` in 
 
 - Run `ddev config` for the project if it has not been used with ddev before.
 - Create a file named "apache-site.conf" in the ".ddev/apache" directory for your project. In the ddev web container, there may be various configuratons per project type, and you can see and copy the default configurations in the [web container code](https://github.com/drud/ddev/tree/master/containers/ddev-webserver/files/etc/apache2). You can also use `ddev ssh` to review existing configurations in the container at /etc/apache2.
-- Add your configuration changes to the "apache-site.conf" file. You can optionally use the [ddev apache configs](https://github.com/drud/ddev/tree/master/containers/ddev-webserver/files/etc/apache2) as a starting point. 
-- **NOTE:** The `DocumentRoot $WEBSERVER_DOCROOT` and related `        <Directory "$WEBSERVER_DOCROOT/">` statements must be provided as variables in order to ensure the docroot is updated correctly.
+- Add your configuration changes to the "apache-site.conf" file. You can optionally use the [ddev apache configs](https://github.com/drud/ddev/tree/master/containers/ddev-webserver/files/etc/apache2) as a starting point.
+- **NOTE:** The `DocumentRoot $WEBSERVER_DOCROOT` and related `<Directory "$WEBSERVER_DOCROOT/">` statements must be provided as variables in order to ensure the docroot is updated correctly.
 - Save your configuration file and run `ddev restart` to start the project. If you encounter issues with your configuration or the project fails to start, use `ddev logs` to inspect the logs for possible apache configuration errors.
 - The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the healthcheck script to work.
 `
@@ -74,6 +76,7 @@ One interesting implication of this behavior is that it's possible to disable ex
 To load the new configuration, just run a `ddev restart`.
 
 An example file in .ddev/php/my-php.ini might look like this:
+
 ```
 [PHP]
 max_execution_time = 240;
@@ -81,7 +84,7 @@ max_execution_time = 240;
 
 ## Providing custom mysql/MariaDB configuration (my.cnf)
 
-You can provide additional MySQL configuration for a project by creating a directory called `.ddev/mysql/` and adding any number of MySQL configuration files (these must have the suffix ".cnf"). These files will be automatically included when MySQL is started. Make sure that the section header is included in the file 
+You can provide additional MySQL configuration for a project by creating a directory called `.ddev/mysql/` and adding any number of MySQL configuration files (these must have the suffix ".cnf"). These files will be automatically included when MySQL is started. Make sure that the section header is included in the file
 
 An example file in .ddev/mysql/no_utf8mb4.cnf might be:
 
@@ -96,7 +99,7 @@ To load the new configuration, run `ddev restart`.
 
 ## Extending config.yaml with custom config.*.yaml files
 
-You may add additional config.*.yaml files to organize additional commands as you see fit for your project and team. 
+You may add additional config.*.yaml files to organize additional commands as you see fit for your project and team.
 
 For example, many teams commit their config.yaml and share it throughout the team, but some team members may require overrides to the checked-in version that are custom to their environment and should not be checked in. For example, a team member may want to use a router_http_port other than the team default due to a conflict in their development environment. In this case they could add the file .ddev/config.ports.yaml with the contents:
 
@@ -107,6 +110,6 @@ router_http_port: 8080
 
 config.*.yaml is by default omitted from git by the .ddev/.gitignore file.
 
-Extra config.*.yaml files are loaded in lexicographic order, so "config.a.yaml" will be overridden by "config.b.yaml". 
+Extra config.*.yaml files are loaded in lexicographic order, so "config.a.yaml" will be overridden by "config.b.yaml".
 
 Teams may choose to use "config.local.yaml" or "config.override.yaml" for all local non-committed config changes, for example.

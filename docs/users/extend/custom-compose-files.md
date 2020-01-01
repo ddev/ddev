@@ -1,4 +1,4 @@
-<h1>Defining an additional service with Docker Compose</h1>
+# Defining an additional service with Docker Compose
 
 ## Prerequisite knowledge
 
@@ -37,23 +37,23 @@ To better understand how ddev is parsing your custom docker-compose files, you c
 
 When defining additional services for your project, we recommended you follow these conventions to ensure ddev handles your service the same way ddev handles default services.
 
-- To name containers follow this naming convention `ddev-[projectname]-[servicename]`
+* To name containers follow this naming convention `ddev-[projectname]-[servicename]`
 
-- Provide containers with the following labels
+* Provide containers with the following labels
 
-  - `com.ddev.site-name: ${DDEV_SITENAME}`
+    * `com.ddev.site-name: ${DDEV_SITENAME}`
 
-  - `com.ddev.approot: $DDEV_APPROOT`
+    * `com.ddev.approot: $DDEV_APPROOT`
 
-- Exposing ports for service: you can expose the port for a service to be accessible as `projectname.ddev.site:portNum` while your project is running. This is achieved by the following configurations for the container(s) being added:
+* Exposing ports for service: you can expose the port for a service to be accessible as `projectname.ddev.site:portNum` while your project is running. This is achieved by the following configurations for the container(s) being added:
 
-  - Define only the internal port in the `ports` section for docker-compose. The `hostPort:containerPort` convention normally used to expose ports in docker should not be used here, since we are leveraging the ddev router to expose the ports.
+    * Define only the internal port in the `ports` section for docker-compose. The `hostPort:containerPort` convention normally used to expose ports in docker should not be used here, since we are leveraging the ddev router to expose the ports.
 
-  - To expose a web interface to be accessible over HTTP, define the following environment variables in the `environment` section for docker-compose:
+    * To expose a web interface to be accessible over HTTP, define the following environment variables in the `environment` section for docker-compose:
 
-    - `VIRTUAL_HOST=$DDEV_HOSTNAME`
+        * `VIRTUAL_HOST=$DDEV_HOSTNAME`
 
-    - `HTTP_EXPOSE=portNum` The `hostPort:containerPort` convention may be used here to expose a container's port to a different external port. To expose multiple ports for a single container, define the ports as comma-separated values.
+        * `HTTP_EXPOSE=portNum` The `hostPort:containerPort` convention may be used here to expose a container's port to a different external port. To expose multiple ports for a single container, define the ports as comma-separated values.
 
 ## Interacting with additional services
 
