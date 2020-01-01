@@ -55,7 +55,7 @@ func TestComposerCmd(t *testing.T) {
 		ddevapp.WaitForSync(app, 2)
 		assert.FileExists(filepath.Join(tmpDir, "Psr/Log/LogLevel.php"))
 
-		err = app.StartAndWaitForSync(5)
+		err = app.StartAndWait(5)
 		assert.NoError(err)
 		// ddev composer create --prefer-dist--no-dev --no-install psr/log:1.1.0
 		args = []string{"composer", "create", "--prefer-dist", "--no-dev", "--no-install", "psr/log:1.1.0"}

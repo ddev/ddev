@@ -59,7 +59,7 @@ func TestPortOverride(t *testing.T) {
 			assert.False(netutil.IsPortActive(app.RouterHTTPSPort))
 		}
 
-		startErr := app.StartAndWaitForSync(5)
+		startErr := app.StartAndWait(5)
 		// defer the app.Stop so we have a more diverse set of tests. If we brought
 		// each down before testing the next that would be a more trivial test.
 		// Don't worry about the possible error case as this is just a test cleanup
@@ -67,7 +67,7 @@ func TestPortOverride(t *testing.T) {
 		defer app.Stop(true, false)
 
 		if startErr != nil {
-			t.Logf("Failed app.StartAndWaitForSync: %v", startErr)
+			t.Logf("Failed app.StartAndWait: %v", startErr)
 			out, err := exec.RunCommand(DdevBin, []string{"list"})
 			assert.NoError(err)
 			t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
@@ -79,7 +79,7 @@ func TestPortOverride(t *testing.T) {
 			assert.NoError(err)
 			t.Logf("\n================== logsFromApp ====================\n%s\n", logsFromApp)
 
-			t.Fatalf("failed to app.StartAndWaitForSync(), err=%v", startErr)
+			t.Fatalf("failed to app.StartAndWait(), err=%v", startErr)
 		}
 		err = app.Wait([]string{"web"})
 		assert.NoError(err)

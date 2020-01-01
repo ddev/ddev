@@ -663,7 +663,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	assert.NoError(err)
 
 	restoreOutput := util.CaptureUserOut()
-	startErr := app.StartAndWaitForSync(2)
+	startErr := app.StartAndWait(2)
 	out := restoreOutput()
 	//nolint: errcheck
 	defer app.Stop(true, false)
@@ -673,7 +673,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 		logs, _ = GetErrLogsFromApp(app, startErr)
 	}
 
-	require.NoError(t, startErr, "app.StartAndWaitForSync() did not succeed: output:\n=====\n%s\n===== logs:\n========= logs =======\n%s\n========\n", out, logs)
+	require.NoError(t, startErr, "app.StartAndWait() did not succeed: output:\n=====\n%s\n===== logs:\n========= logs =======\n%s\n========\n", out, logs)
 
 	assert.Contains(out, "utf.cnf")
 	assert.Contains(out, "my-php.ini")
@@ -723,7 +723,7 @@ func TestPHPOverrides(t *testing.T) {
 		_ = app.Stop(true, false)
 		// nolint: errcheck
 		defer app.Stop(true, false)
-		startErr := app.StartAndWaitForSync(5)
+		startErr := app.StartAndWait(5)
 		if startErr != nil {
 			logs, _ := GetErrLogsFromApp(app, startErr)
 			t.Logf("failed app.StartAndWait(): %v", startErr)

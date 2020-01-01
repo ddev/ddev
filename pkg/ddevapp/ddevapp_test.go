@@ -386,7 +386,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		err = app.StartAndWaitForSync(5)
+		err = app.StartAndWait(5)
 		assert.NoError(err)
 		if err != nil && strings.Contains(err.Error(), "db container failed") {
 			container, err := app.FindContainerByType("db")
@@ -529,7 +529,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 	assert.NoError(err)
 
 	testcommon.ClearDockerEnv()
-	err = app.StartAndWaitForSync(0)
+	err = app.StartAndWait(0)
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	require.NoError(t, err)
@@ -643,7 +643,7 @@ func TestDdevImportDB(t *testing.T) {
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
-		err = app.StartAndWaitForSync(2)
+		err = app.StartAndWait(2)
 		assert.NoError(err)
 
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
@@ -990,11 +990,11 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, mariadb_version=%s, mysql_version=%s", site.DBTarURL, app.Type, app.MariaDBVersion, app.MySQLVersion)
 		}
 
-		startErr := app.StartAndWaitForSync(2)
+		startErr := app.StartAndWait(2)
 		if startErr != nil {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 			assert.NoError(getLogsErr)
-			t.Fatalf("app.StartAndWaitForSync() failure err=%v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
+			t.Fatalf("app.StartAndWait() failure err=%v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
 		}
 
 		// Test static content.
@@ -1073,7 +1073,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.ImportDB(d7testerTest1Dump, "", false)
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 
-	err = app.StartAndWaitForSync(2)
+	err = app.StartAndWait(2)
 	require.NoError(t, err, "app.Start() failed on site %s, err=%v", site.Name, err)
 
 	resp, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
@@ -1173,7 +1173,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	err = app.StartAndWaitForSync(0)
+	err = app.StartAndWait(0)
 	assert.NoError(err)
 
 	uploadDir := app.GetUploadDir()
@@ -1527,7 +1527,7 @@ func TestDdevLogs(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
-	startErr := app.StartAndWaitForSync(0)
+	startErr := app.StartAndWait(0)
 	if startErr != nil {
 		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
@@ -1582,7 +1582,7 @@ func TestProcessHooks(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	app, err := ddevapp.NewApp(site.Dir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
-	err = app.StartAndWaitForSync(0)
+	err = app.StartAndWait(0)
 	assert.NoError(err)
 
 	// Note that any ExecHost commands must be able to run on Windows.
@@ -1638,7 +1638,7 @@ func TestDdevPause(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.StartAndWaitForSync(0)
+	err = app.StartAndWait(0)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-pause": {{"exec-host": "touch hello-post-pause-" + app.Name}}, "pre-pause": {{"exec-host": "touch hello-pre-pause-" + app.Name}}}
 
 	defer func() {
@@ -1680,13 +1680,13 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	startErr := app.StartAndWaitForSync(0)
+	startErr := app.StartAndWait(0)
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	if startErr != nil {
 		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
-		t.Fatalf("app.StartAndWaitForSync failed err=%v logs from broken container: \n=======\n%s\n========\n", startErr, logs)
+		t.Fatalf("app.StartAndWait failed err=%v logs from broken container: \n=======\n%s\n========\n", startErr, logs)
 	}
 
 	tempPath := testcommon.CreateTmpDir("site-copy")
@@ -1722,7 +1722,7 @@ func TestDdevDescribe(t *testing.T) {
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-describe": {{"exec-host": "touch hello-post-describe-" + app.Name}}, "pre-describe": {{"exec-host": "touch hello-pre-describe-" + app.Name}}}
 
-	startErr := app.StartAndWaitForSync(0)
+	startErr := app.StartAndWait(0)
 	defer func() {
 		_ = app.Stop(true, false)
 		app.Hooks = nil
@@ -1736,7 +1736,7 @@ func TestDdevDescribe(t *testing.T) {
 		healthcheck, inspectErr := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect ddev-%s-web|jq -r '.[0].State.Health.Log[-1]'", app.Name)})
 		assert.NoError(inspectErr)
 
-		t.Fatalf("app.StartAndWaitForSync(%s) failed: %v, \nweb container healthcheck='%s', \n=== web container logs=\n%s\n=== END web container logs ===", site.Name, err, healthcheck, out)
+		t.Fatalf("app.StartAndWait(%s) failed: %v, \nweb container healthcheck='%s', \n=== web container logs=\n%s\n=== END web container logs ===", site.Name, err, healthcheck, out)
 	}
 
 	desc, err := app.Describe()
@@ -1776,13 +1776,13 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	startErr := app.StartAndWaitForSync(0)
+	startErr := app.StartAndWait(0)
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	if startErr != nil {
 		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
-		t.Fatalf("app.StartAndWaitForSync failed err=%v logs from broken container: \n=======\n%s\n========\n", startErr, logs)
+		t.Fatalf("app.StartAndWait failed err=%v logs from broken container: \n=======\n%s\n========\n", startErr, logs)
 	}
 	// Move the site directory to a temp location to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
@@ -1825,26 +1825,26 @@ func TestRouterPortsCheck(t *testing.T) {
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	startErr := app.StartAndWaitForSync(5)
+	startErr := app.StartAndWait(5)
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	if startErr != nil {
 		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(getLogsErr)
-		t.Fatalf("app.StartAndWaitForSync() failure; err=%v logs:\n=====\n%s\n=====\n", startErr, appLogs)
+		t.Fatalf("app.StartAndWait() failure; err=%v logs:\n=====\n%s\n=====\n", startErr, appLogs)
 	}
 
 	app, err = ddevapp.GetActiveApp(site.Name)
 	if err != nil {
 		t.Fatalf("Failed to GetActiveApp(%s), err:%v", site.Name, err)
 	}
-	startErr = app.StartAndWaitForSync(5)
+	startErr = app.StartAndWait(5)
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	if startErr != nil {
 		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(getLogsErr)
-		t.Fatalf("app.StartAndWaitForSync() failure err=%v logs:\n=====\n%s\n=====\n", startErr, appLogs)
+		t.Fatalf("app.StartAndWait() failure err=%v logs:\n=====\n%s\n=====\n", startErr, appLogs)
 	}
 
 	// Stop the router using code from StopRouterIfNoContainers().
@@ -1891,13 +1891,13 @@ func TestCleanupWithoutCompose(t *testing.T) {
 
 	// Ensure we have a site started so we have something to cleanup
 
-	startErr := app.StartAndWaitForSync(5)
+	startErr := app.StartAndWait(5)
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	if startErr != nil {
 		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(getLogsErr)
-		t.Fatalf("app.StartAndWaitForSync failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
+		t.Fatalf("app.StartAndWait failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
 	}
 	// Setup by creating temp directory and nesting a folder for our site.
 	tempPath := testcommon.CreateTmpDir("site-copy")
@@ -2097,11 +2097,11 @@ func TestHttpsRedirection(t *testing.T) {
 		assert.NoError(err)
 		//nolint: errcheck
 		defer app.Stop(true, false)
-		startErr := app.StartAndWaitForSync(30)
+		startErr := app.StartAndWait(30)
 		if startErr != nil {
 			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 			assert.NoError(getLogsErr)
-			t.Fatalf("app.StartAndWaitForSync failure; err=%v \n===== container logs ===\n%s\n", startErr, appLogs)
+			t.Fatalf("app.StartAndWait failure; err=%v \n===== container logs ===\n%s\n", startErr, appLogs)
 		}
 		// Test for directory redirects under https and http
 		for _, parts := range expectations {
@@ -2215,7 +2215,7 @@ func TestGetAllURLs(t *testing.T) {
 	err = app.WriteConfig()
 	assert.NoError(err)
 
-	err = app.StartAndWaitForSync(0)
+	err = app.StartAndWait(0)
 	require.NoError(t, err)
 
 	_, _, urls := app.GetAllURLs()
@@ -2282,13 +2282,13 @@ func TestWebserverType(t *testing.T) {
 
 			testcommon.ClearDockerEnv()
 
-			startErr := app.StartAndWaitForSync(30)
+			startErr := app.StartAndWait(30)
 			//nolint: errcheck
 			defer app.Stop(true, false)
 			if startErr != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(getLogsErr)
-				t.Fatalf("app.StartAndWaitForSync failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
+				t.Fatalf("app.StartAndWait failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
 			}
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/servertype.php")
 			require.NoError(t, err)
@@ -2344,7 +2344,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
-		err = app.StartAndWaitForSync(5)
+		err = app.StartAndWait(5)
 		assert.NoError(err)
 
 		_, _, urls := app.GetAllURLs()

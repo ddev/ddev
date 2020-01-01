@@ -1171,11 +1171,11 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 	return nil
 }
 
-// StartAndWaitForSync() is primarily for use in tests.
-// It does app.Start() but then waits for syncing to be in progress
+// StartAndWait() is primarily for use in tests.
+// It does app.Start() but then waits for extra seconds
 // before returning.
 // extraSleep arg in seconds is the time to wait if > 0
-func (app *DdevApp) StartAndWaitForSync(extraSleep int) error {
+func (app *DdevApp) StartAndWait(extraSleep int) error {
 	err := app.Start()
 	if err != nil {
 		return err
