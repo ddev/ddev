@@ -24,6 +24,8 @@ brew install mysql-client zip makensis jq expect coreutils golang ddev mkcert os
 brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr
 
 brew link --force mysql-client
+# These links are required for osslsigncode to work
+brew link libgsf glib pcre
 
 # Get the Plugins for NSIS
 curl -fsSL -o /tmp/EnVar-Plugin.zip https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d /usr/local/share/nsis /tmp/EnVar-Plugin.zip
