@@ -146,10 +146,10 @@ darwin_notarized: darwin_signed
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit ; \
 		echo "Notarizing macOS ddev..." ; \
-		pushd $(GOTMP)/bin/darwin_amd64 ; \
+		pushd $(GOTMP)/bin/darwin_amd64 >/dev/null ; \
 		/usr/bin/ditto -c -k --keepParent ddev ddev.zip ; \
 		REQUEST_UUID=$$(xcrun altool --notarize-app --primary-bundle-id=com.ddev.ddev -u "accounts@drud.com" -p "$(DDEV_MACOS_APP_PASSWORD)" --file ddev.zip | awk -F ' = ' '/RequestUUID/ {print $$2}') ; \
-		popd ; \
+		popd >/dev/null; \
 		while ! xcrun altool --notarization-info $$REQUEST_UUID --username "accounts@drud.com" --password "$(DDEV_MACOS_APP_PASSWORD)" --output-format "xml" | grep "Package Approved"; do \
 			sleep 60; \
 		done;  \
