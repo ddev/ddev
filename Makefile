@@ -129,26 +129,16 @@ mkdocs:
 
 darwin_signed: darwin
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
+		set -o errexit pipefail; \
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
 	fi
 
 darwin_notarized: darwin_signed
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
-		set -o errexit ; \
+		set -o errexit pipefail; \
 		echo "Notarizing macOS ddev..." ; \
-		pushd $(GOTMP)/bin/darwin_amd64 >/dev/null ; \
-		/usr/bin/ditto -c -k --keepParent ddev ddev.zip ; \
-		REQUEST_UUID=$$(xcrun altool --notarize-app --primary-bundle-id=com.ddev.ddev -u "accounts@drud.com" -p "$(DDEV_MACOS_APP_PASSWORD)" --file ddev.zip | awk -F ' = ' '/RequestUUID/ {print $$2}') ; \
-		popd >/dev/null; \
-		while ! xcrun altool --notarization-info $$REQUEST_UUID --username "accounts@drud.com" --password "$(DDEV_MACOS_APP_PASSWORD)" --output-format "xml" | grep "Package Approved"; do \
-			sleep 60; \
-		done;  \
-		while [ $$(xcrun altool --notarization-info $$REQUEST_UUID --username "accounts@drud.com" --password "$(DDEV_MACOS_APP_PASSWORD)" --output-format "xml" | xq ".plist.dict.dict.key | length") != "7" ]; do \
-			sleep 2; \
-		done;  \
-		logfileurl=$$(xcrun altool --notarization-info $$REQUEST_UUID --username "accounts@drud.com" --password "$(DDEV_MACOS_APP_PASSWORD)" --output-format "xml" | xq .plist.dict.dict.string[1] | xargs) ;\
-		echo "Notarization REQUEST_UUID=$$REQUEST_UUID Notarization LogFileURL=$$logfileurl"; \
-		if [ "$$(curl -s $$logfileurl | jq -r .issues)" != "null" ]; then exit 1; fi; \
+		ls -l "$(GOTMP)/bin/darwin_amd64/ddev" ; \
+    	curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(PWD)/$(GOTMP)/bin/darwin_amd64/ddev" ; \
 	fi
 
 $(GOTMP)/bin/windows_amd64/ddev.exe: windows
