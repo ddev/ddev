@@ -129,17 +129,7 @@ mkdocs:
 
 darwin_signed: darwin
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
-		set -o errexit; \
-		security create-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
-		security unlock-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
-		default_keychain=$$(security default-keychain | xargs)  ;\
-		security list-keychains -s buildagent && security default-keychain -s buildagent; \
-		security import certfiles/ddev_developer_id_cert.p12 -k buildagent -P "$(DDEV_MACOS_SIGNING_PASSWORD)" -T /usr/bin/codesign >/dev/null ; \
-		security set-key-partition-list -S apple-tool:,apple: -s -k "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent >/dev/null ; \
-		codesign --keychain buildagent -s "Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --timestamp --options runtime $(GOTMP)/bin/darwin_amd64/ddev ; \
-		security default-keychain -s "$$default_keychain" && security list-keychains -s "$$default_keychain" ; \
-		security delete-keychain buildagent ; \
-		codesign -v $(GOTMP)/bin/darwin_amd64/ddev ; \
+		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
 	fi
 
 darwin_notarized: darwin_signed
