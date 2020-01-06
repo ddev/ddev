@@ -420,8 +420,11 @@ jobs:
         - ~/Library/Caches/Homebrew
 
     - run:
-        command: make -s clean linux darwin_notarized windows_install chocolatey
-        name: Build the ddev executables
+        command: make -s clean linux windows_install chocolatey
+
+    - run:
+        command: make -s darwin_notarized
+        no_output_timeout: 30m
 
     # We only build the xz version of the docker images on tag build.
     - run:
