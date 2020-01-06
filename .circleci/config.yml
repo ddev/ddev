@@ -73,14 +73,14 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v13
+        - homebrew-macos-v14
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - save_cache:
-        key: homebrew-macos-v13
+        key: homebrew-macos-v14
         paths:
         - /usr/local/Homebrew
         - /usr/local/Cellar
@@ -105,7 +105,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v13
+        - homebrew-macos-v14
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -118,7 +118,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: homebrew-macos-v13
+        key: homebrew-macos-v14
         paths:
         - /usr/local/Homebrew
         - /usr/local/Cellar
@@ -126,7 +126,7 @@ jobs:
 
   mac_nfsmount_test:
     macos:
-      xcode: "11.0.0"
+      xcode: "11.3.0"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: "true"
@@ -137,13 +137,13 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v13
+        - homebrew-macos-v14
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos-v13
+        key: homebrew-macos-v14
         paths:
         - /usr/local/Homebrew
         - /usr/local/Cellar
@@ -255,7 +255,6 @@ jobs:
       image: ubuntu-1604:201903-01
     working_directory: ~/ddev
     environment:
-      ARTIFACTS: /artifacts
     steps:
     - checkout
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
@@ -305,18 +304,18 @@ jobs:
 
   mac_container_test:
     macos:
-      xcode: "11.0.0"
+      xcode: "11.3.0"
     working_directory: ~/ddev
     steps:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-macos-v13
+        - homebrew-macos-v14
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
     - save_cache:
-        key: homebrew-macos-v13
+        key: homebrew-macos-v14
         paths:
         - /usr/local/Homebrew
         - /usr/local/Cellar
@@ -337,8 +336,6 @@ jobs:
     machine:
       image: ubuntu-1604:201903-01
     working_directory: ~/ddev
-    environment:
-      ARTIFACTS: /artifacts
     steps:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
@@ -347,7 +344,7 @@ jobs:
     - attach_workspace:
         at: ~/
     - run:
-        command: ./.circleci/generate_artifacts.sh $ARTIFACTS ${BUILD_IMAGE_TARBALLS:false}
+        command: ./.circleci/generate_artifacts.sh ~/artifacts ${BUILD_IMAGE_TARBALLS:false}
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
@@ -355,7 +352,7 @@ jobs:
         paths:
         - /home/linuxbrew
     - store_artifacts:
-        path: /artifacts
+        path: ~/artifacts
         name: Artifact storage
 
   # 'tag_build' automatically builds a tag .
@@ -365,7 +362,6 @@ jobs:
     working_directory: ~/ddev
     environment:
       DDEV_DEBUG: "true"
-      ARTIFACTS: /artifacts
     steps:
       - checkout
       - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
@@ -388,44 +384,46 @@ jobs:
       # We only build the xz version of the docker images on tag build.
       - run:
           # Do not build the docker tarballs at simple tag build time
-          command: ./.circleci/generate_artifacts.sh $ARTIFACTS false false
+          command: ./.circleci/generate_artifacts.sh ~/artifacts false false
           name: tar/zip up artifacts and make hashes
           no_output_timeout: "40m"
 
       - store_artifacts:
-          path: /artifacts
+          path: ~/artifacts
           name: Artifact storage
 
   # 'release_build' is used to push a full release; it's triggered by api call
   release_build:
     macos:
-      xcode: "11.0.0"
+      xcode: "11.3.0"
     working_directory: ~/ddev
     environment:
       DDEV_DEBUG: "true"
-      ARTIFACTS: /artifacts
     steps:
     - checkout
     - restore_cache:
         keys:
-        - homebrew-macos-v13
+        - homebrew-macos-v14
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: RELEASE BUILD Circle VM setup
+        name: RELEASE BUILD (macOS) Circle VM setup
     - save_cache:
-        key: homebrew-macos-v13
+        key: homebrew-macos-v14
         paths:
         - /usr/local/Homebrew
         - /usr/local/Cellar
         - ~/Library/Caches/Homebrew
 
     - run:
-        command: make -s clean linux darwin_signed windows_install chocolatey
-        name: Build the ddev executables
+        command: make -s clean linux windows_install chocolatey
+
+    - run:
+        command: make -s darwin_notarized
+        no_output_timeout: 30m
 
     # We only build the xz version of the docker images on tag build.
     - run:
-        command: ./.circleci/generate_artifacts.sh $ARTIFACTS ${BUILD_IMAGE_TARBALLS:true}
+        command: ./.circleci/generate_artifacts.sh ~/artifacts ${BUILD_IMAGE_TARBALLS:true}
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
 
@@ -441,13 +439,13 @@ jobs:
             -u $CIRCLE_PROJECT_USERNAME \
             -b "$(cat ./.github/RELEASE_NOTES_TEMPLATE.md)" \
             -t $GITHUB_TOKEN \
-            "${version}" $ARTIFACTS
+            "${version}" ~/artifacts
           else
             echo "GITHUB_TOKEN not provided, not pushing release $CIRCLE_TAG"
           fi
         name: Upload artifacts to GitHub release page
     - store_artifacts:
-        path: /artifacts
+        path: ~/artifacts
         name: Artifact storage
     # When fixed, this will have to be done after push to github, so it can use
     # the real github release artifact.

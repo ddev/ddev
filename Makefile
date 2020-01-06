@@ -77,7 +77,7 @@ include build-tools/makefile_components/base_build_go.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
-.PHONY: test testcmd testpkg build setup staticrequired windows_install darwin_signed markdownlint mkdocs
+.PHONY: test testcmd testpkg build setup staticrequired windows_install darwin_signed darwin_notarized markdownlint mkdocs
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
@@ -129,17 +129,16 @@ mkdocs:
 
 darwin_signed: darwin
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
-		security create-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
-		security list-keychains -s buildagent; \
-		security unlock-keychain -p "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent; \
-		security default-keychain -s buildagent; \
-		security import certfiles/macos_ddev_cert.p12 -k buildagent -P "$(DDEV_MACOS_SIGNING_PASSWORD)" -T /usr/bin/codesign >/dev/null ; \
-		security set-key-partition-list -S apple-tool:,apple: -s -k "$(DDEV_MACOS_SIGNING_PASSWORD)" buildagent >/dev/null ; \
-		codesign --keychain buildagent -s "Apple Distribution: DRUD Technology, LLC (3BAN66AG5M)" $(GOTMP)/bin/darwin_amd64/ddev ; \
-		security delete-keychain buildagent ; \
-		codesign -v $(GOTMP)/bin/darwin_amd64/ddev ; \
+		set -o errexit pipefail; \
+		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
 	fi
 
+darwin_notarized: darwin_signed
+	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
+		set -o errexit pipefail; \
+		echo "Notarizing macOS ddev..." ; \
+		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(PWD)/$(GOTMP)/bin/darwin_amd64/ddev" ; \
+	fi
 
 $(GOTMP)/bin/windows_amd64/ddev.exe: windows
 
