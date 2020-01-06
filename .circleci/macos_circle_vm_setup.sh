@@ -51,8 +51,7 @@ grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/nu
 
 sudo nfsd enable && sudo nfsd restart
 
-
-while ! docker ps 2>/dev/null ; do
+timeout -v 10m bash -c 'while ! docker ps 2>/dev/null ; do
   sleep 5
   echo "Waiting for docker to come up: $(date)"
-done
+done'
