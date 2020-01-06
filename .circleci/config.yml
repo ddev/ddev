@@ -255,7 +255,6 @@ jobs:
       image: ubuntu-1604:201903-01
     working_directory: ~/ddev
     environment:
-      ARTIFACTS: /artifacts
     steps:
     - checkout
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
@@ -337,8 +336,6 @@ jobs:
     machine:
       image: ubuntu-1604:201903-01
     working_directory: ~/ddev
-    environment:
-      ARTIFACTS: /artifacts
     steps:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
@@ -347,7 +344,7 @@ jobs:
     - attach_workspace:
         at: ~/
     - run:
-        command: ./.circleci/generate_artifacts.sh $ARTIFACTS ${BUILD_IMAGE_TARBALLS:false}
+        command: ./.circleci/generate_artifacts.sh ~/artifacts ${BUILD_IMAGE_TARBALLS:false}
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
@@ -355,7 +352,7 @@ jobs:
         paths:
         - /home/linuxbrew
     - store_artifacts:
-        path: /artifacts
+        path: ~/artifacts
         name: Artifact storage
 
   # 'tag_build' automatically builds a tag .
@@ -365,7 +362,6 @@ jobs:
     working_directory: ~/ddev
     environment:
       DDEV_DEBUG: "true"
-      ARTIFACTS: /artifacts
     steps:
       - checkout
       - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
@@ -388,12 +384,12 @@ jobs:
       # We only build the xz version of the docker images on tag build.
       - run:
           # Do not build the docker tarballs at simple tag build time
-          command: ./.circleci/generate_artifacts.sh $ARTIFACTS false false
+          command: ./.circleci/generate_artifacts.sh ~/artifacts false false
           name: tar/zip up artifacts and make hashes
           no_output_timeout: "40m"
 
       - store_artifacts:
-          path: /artifacts
+          path: ~/artifacts
           name: Artifact storage
 
   # 'release_build' is used to push a full release; it's triggered by api call
@@ -403,7 +399,6 @@ jobs:
     working_directory: ~/ddev
     environment:
       DDEV_DEBUG: "true"
-      ARTIFACTS: /artifacts
     steps:
     - checkout
     - restore_cache:
@@ -428,7 +423,7 @@ jobs:
 
     # We only build the xz version of the docker images on tag build.
     - run:
-        command: ./.circleci/generate_artifacts.sh $ARTIFACTS ${BUILD_IMAGE_TARBALLS:true}
+        command: ./.circleci/generate_artifacts.sh ~/artifacts ${BUILD_IMAGE_TARBALLS:true}
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
 
@@ -444,13 +439,13 @@ jobs:
             -u $CIRCLE_PROJECT_USERNAME \
             -b "$(cat ./.github/RELEASE_NOTES_TEMPLATE.md)" \
             -t $GITHUB_TOKEN \
-            "${version}" $ARTIFACTS
+            "${version}" ~/artifacts
           else
             echo "GITHUB_TOKEN not provided, not pushing release $CIRCLE_TAG"
           fi
         name: Upload artifacts to GitHub release page
     - store_artifacts:
-        path: /artifacts
+        path: ~/artifacts
         name: Artifact storage
     # When fixed, this will have to be done after push to github, so it can use
     # the real github release artifact.
