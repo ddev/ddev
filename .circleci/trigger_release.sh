@@ -29,7 +29,7 @@ fi
 
 LONGOPTS=circleci-token:,github-token:,release-tag:,github-project:,windows-signing-password:,macos-signing-password:,build-image-tarballs:,chocolatey-api-key:,github-org:,macos-app-password:
 
-! PARSED=$(getopt --longoptions=$LONGOPTS --name "$0" -- "$@" dummyarg)
+! PARSED=$(getopt --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
     # e.g. return value is 1
     #  then getopt has complained about wrong arguments to stdout

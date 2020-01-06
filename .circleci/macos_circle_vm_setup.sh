@@ -8,8 +8,7 @@ DOCKER_URL=https://download.docker.com/mac/stable/31259/Docker.dmg
 curl -O -sSL $DOCKER_URL
 open -W Docker.dmg && cp -r /Volumes/Docker/Docker.app /Applications
 
-# Basic tools
-brew update >/dev/null 2>/dev/null
+export HOMEBREW_NO_AUTO_UPDATE=1
 
 # Get docker in first so we can install it and work on other things
 brew cask install ngrok
@@ -20,8 +19,8 @@ nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 brew tap drud/ddev
 brew unlink python@2 || true
 
-brew install mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr
-brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr
+brew install mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt
+brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt
 
 brew link --force mysql-client
 # These links are required for osslsigncode to work
