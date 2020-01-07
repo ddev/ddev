@@ -12,7 +12,7 @@ If you have ddev installed, and have an active Pantheon account with an active W
 
     a. Login to your Pantheon Dashboard, and [Generate a Machine Token](https://pantheon.io/docs/machine-tokens/) for ddev to use.
 
-    b. Run `ddev auth pantheon <YOUR TOKEN>` (This is a one-time operation, and configures ddev to work with all the sites on your account.)
+    b. Run `ddev auth-pantheon <YOUR TOKEN>` (This is a one-time operation, and configures ddev to work with all the sites on your account.)
 
 2. Choose a Pantheon site and environment you want to use with ddev.
 
