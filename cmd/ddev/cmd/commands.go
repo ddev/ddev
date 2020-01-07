@@ -49,7 +49,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		}
 
 		for _, commandName := range commandFiles {
-			if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") || strings.HasPrefix(commandName, ".") {
+			if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") || strings.HasPrefix(commandName, ".") || fileutil.IsDirectory(commandName) {
 				continue
 			}
 			// Use path.Join() for the inContainerFullPath because it's about the path in the container, not on the
