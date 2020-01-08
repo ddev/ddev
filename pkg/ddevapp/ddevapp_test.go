@@ -980,7 +980,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 		}
 		if app.Type == "drupal8" {
-			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush", "drush.yml"))
+			assert.FileExists(filepath.Join(app.AppRoot, "drush", "drush.yml"))
 		}
 
 		if site.DBTarURL != "" {

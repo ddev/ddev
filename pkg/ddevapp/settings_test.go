@@ -119,7 +119,7 @@ func TestWriteDrushConfig(t *testing.T) {
 			assert.True(optionFound)
 
 			if app.Type == nodeps.AppTypeDrupal8 {
-				drushYMLFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush", "drush.yml")
+				drushYMLFilePath := filepath.Join(app.AppRoot, "drush", "drush.yml")
 				require.True(t, fileutil.FileExists(drushYMLFilePath))
 				optionFound, err := fileutil.FgrepStringInFile(drushYMLFilePath, "options")
 				assert.NoError(err)
