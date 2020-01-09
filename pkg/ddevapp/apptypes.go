@@ -83,8 +83,12 @@ func init() {
 		nodeps.AppTypeBackdrop: {
 			settingsCreator: createBackdropSettingsFile, uploadDir: getBackdropUploadDir, hookDefaultComments: getBackdropHooks, apptypeSettingsPaths: setBackdropSiteSettingsPaths, appTypeDetect: isBackdropApp, postImportDBAction: backdropPostImportDBAction, configOverrideAction: nil, postConfigAction: nil, postStartAction: backdropPostStartAction, importFilesAction: backdropImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
-		nodeps.AppTypeMagento:  {},
-		nodeps.AppTypeMagento2: {},
+		nodeps.AppTypeMagento: {
+			settingsCreator: nil, uploadDir: nil, hookDefaultComments: nil, apptypeSettingsPaths: nil, appTypeDetect: nil, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil, importFilesAction: nil, defaultWorkingDirMap: nil,
+		},
+		nodeps.AppTypeMagento2: {
+			settingsCreator: nil, uploadDir: nil, hookDefaultComments: nil, apptypeSettingsPaths: nil, appTypeDetect: isMagento2App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil, importFilesAction: nil, defaultWorkingDirMap: nil,
+		},
 	}
 }
 
