@@ -158,7 +158,7 @@ hooks:
 ```
 hooks:
     post-start:
-      - exec: composer install -d /var/www/html/
+      - composer: install
 ```
 
 ## Adding Additional Debian Packages (PHP Modules) Example
