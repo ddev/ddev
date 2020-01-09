@@ -64,7 +64,7 @@ const backdropMainSettingsTemplate = `<?php
 $database = 'mysql://user:pass@localhost/database_name';
 $config_directories['active'] = 'files/config_' . md5($database) . '/active';
 $config_directories['staging'] = 'files/config_' . md5($database) . '/staging';
-if (file_exists(__DIR__ . '/{{ $config.SiteSettingsDdev }}')) {
+if (file_exists(__DIR__ . '/{{ $config.SiteSettingsDdev }}') && getenv('IS_DDEV_PROJECT') == 'true')) {
   include __DIR__ . '/{{ $config.SiteSettingsDdev }}';
 }
 `
@@ -73,7 +73,7 @@ if (file_exists(__DIR__ . '/{{ $config.SiteSettingsDdev }}')) {
 // settings.php in the event that one exists.
 const backdropSettingsAppendTemplate = `{{ $config := . }}
 // Automatically generated include for settings managed by ddev.
-if (file_exists(__DIR__ . '/{{ $config.SiteSettingsDdev }}')) {
+if (file_exists(__DIR__ . '/{{ $config.SiteSettingsDdev }}') && getenv('IS_DDEV_PROJECT') == 'true') {
   include __DIR__ . '/{{ $config.SiteSettingsDdev }}';
 }
 `
@@ -89,9 +89,9 @@ const BackdropDdevSettingsTemplate = `<?php
 $host = "{{ $config.DatabaseHost }}";
 $port = {{ $config.DatabasePort }};
 
-// If DDEV_PHP_VERSION is not set, it means we're running on the host,
+// If DDEV_PHP_VERSION is not set but IS_DDEV_PROJECT *is*, it means we're running (drush) on the host,
 // so use the host-side bind port on docker IP
-if (empty(getenv('DDEV_PHP_VERSION'))) {
+if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == "true")) {
   $host = "{{ $config.DockerIP }}";
   $port = {{ $config.DBPublishedPort }};
 } 

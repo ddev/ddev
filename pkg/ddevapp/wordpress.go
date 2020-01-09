@@ -105,6 +105,7 @@ define('NONCE_SALT',       '{{ $config.NonceSalt }}');
 define('ABSPATH', dirname(__FILE__) . '/{{ $config.AbsPath }}');
 
 // Include for settings managed by ddev.
+if (getenv('IS_DDEV_PROJECT') == 'true') {
 $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
 if (is_readable($ddev_settings) && !defined('DB_USER')) {
 	require_once($ddev_settings);
@@ -124,17 +125,19 @@ const wordpressDdevSettingsTemplate = `<?php
 
 */
 
-/** The name of the database for WordPress */
-define('DB_NAME', '{{ $config.DatabaseName }}');
-
-/** MySQL database username */
-define('DB_USER', '{{ $config.DatabaseUsername }}');
-
-/** MySQL database password */
-define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
-
-/** MySQL hostname */
-define('DB_HOST', '{{ $config.DatabaseHost }}');
+if (getenv('IS_DDEV_PROJECT') == 'true') {
+	/** The name of the database for WordPress */
+	define('DB_NAME', '{{ $config.DatabaseName }}');
+	
+	/** MySQL database username */
+	define('DB_USER', '{{ $config.DatabaseUsername }}');
+	
+	/** MySQL database password */
+	define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
+	
+	/** MySQL hostname */
+	define('DB_HOST', '{{ $config.DatabaseHost }}');
+}
 
 /** Enable debug */
 define('WP_DEBUG', true);
