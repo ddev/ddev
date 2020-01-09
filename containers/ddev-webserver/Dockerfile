@@ -7,8 +7,6 @@ ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ENV DRUSH_VERSION=8.3.2
 ENV DRUSH_LAUNCHER_VERSION=0.6.0
 ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
-ENV MAGERUN_VERSION=1.103.1
-ENV MAGERUN2_VERSION=3.2.0
 ENV MAILHOG_VERSION=1.0.0
 ENV BACKDROP_DRUSH_VERSION=1.0.0
 ENV MKCERT_VERSION=v1.4.0
@@ -117,10 +115,11 @@ RUN curl -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-c
 
 RUN curl -O https://raw.githubusercontent.com/pantheon-systems/terminus-installer/master/builds/installer.phar && php installer.phar install
 
-RUN curl -sSL https://files.magerun.net/n98-magerun-${MAGERUN_VERSION}.phar -o /usr/local/bin/n98-magerun
-RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun/${MAGERUN_VERSION}/res/autocompletion/bash/n98-magerun.phar.bash -o /etc/bash_completion.d/n98-magerun.phar
-RUN curl -sSL https://files.magerun.net/n98-magerun2-${MAGERUN2_VERSION}.phar -o /usr/local/bin/n98-magerun2
-RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/${MAGERUN2_VERSION}/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar
+# magerun and magerun2 for magento
+RUN curl -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun
+RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun/${MAGERUN_VERSION}/res/autocompletion/bash/n98-magerun.phar.bash -o /etc/bash_completion.d/magerun
+RUN curl -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2
+RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/${MAGERUN2_VERSION}/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/magerun2
 
 RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal && chmod +x /usr/local/bin/drupal
 

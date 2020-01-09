@@ -118,26 +118,6 @@ mkcert -install
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
 sudo CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web ddev-${DDEV_PROJECT:-}-web ddev-${DDEV_PROJECT:-}-web.ddev_default && sudo chown $UID /etc/ssl/certs/master.*
 
-case $DDEV_PROJECT_TYPE in
-    magento)
-        sudo ln -s /usr/local/bin/n98-magerun /usr/local/bin/magerun
-        ;;
-    magento2)
-        echo -e "\n# Add Magento bin folder to path\nexport PATH=\$PATH:\$WEBSERVER_DOCROOT/bin\n" >> ~/.bashrc
-        sudo ln -s /usr/local/bin/n98-magerun2 /usr/local/bin/magerun2
-        ;;
-esac
-
-case $DDEV_PROJECT_TYPE in
-    magento)
-        sudo ln -s /usr/local/bin/n98-magerun /usr/local/bin/magerun
-        ;;
-    magento2)
-        echo -e "\n# Add Magento bin folder to path\nexport PATH=\$PATH:\$WEBSERVER_DOCROOT/bin\n" >> ~/.bashrc
-        sudo ln -s /usr/local/bin/n98-magerun2 /usr/local/bin/magerun2
-        ;;
-esac
-
 echo 'Server started'
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
