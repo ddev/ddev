@@ -143,7 +143,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 			util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
 		}
 		if app.Type == nodeps.AppTypeDrupal8 {
-			drushDir := filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush")
+			drushDir := filepath.Join(app.AppRoot, "drush")
 			if err = CreateGitIgnore(drushDir, "drush.yml"); err != nil {
 				util.Warning("Failed to write .gitignore in %s: %v", drushDir, err)
 			}

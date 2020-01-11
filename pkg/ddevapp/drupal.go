@@ -514,13 +514,11 @@ func WriteDrushrc(app *DdevApp, filePath string) error {
 		}
 	}
 
-	uri := app.GetHTTPSURL()
-	if GetCAROOT() == "" {
-		uri = app.GetHTTPURL()
-	}
+	uri := app.GetPrimaryURL()
 	drushContents := []byte(`<?php
-/** ` + DdevFileSignature + `: Automatically generated drushrc.php file.
+/** ` + DdevFileSignature + `: Automatically generated drushrc.php file (for Drush 8)
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ Remove this comment if you don't want ddev to manage this file.'
  */
 $options['l'] = "` + uri + `";
 `)
@@ -560,13 +558,11 @@ func WriteDrushYML(app *DdevApp, filePath string) error {
 		}
 	}
 
-	uri := app.GetHTTPSURL()
-	if GetCAROOT() == "" {
-		uri = app.GetHTTPURL()
-	}
+	uri := app.GetPrimaryURL()
 	drushContents := []byte(`
 #` + DdevFileSignature + `: Automatically generated drush.yml file.
 # ddev manages this file and may delete or overwrite the file unless this comment is removed.
+# Remove the comment if you don't want ddev to manage this file.'
 
 options:
   uri: "` + uri + `"
@@ -687,7 +683,7 @@ func drupal8PostStartAction(app *DdevApp) error {
 	// Write both drush.yml and drushrc.php for Drupal 8, because we can't know
 	// what version of drush may be in use. drush8 is happy with drushrc.php
 	// drush9 wants drush.yml
-	err := WriteDrushYML(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush", "drush.yml"))
+	err := WriteDrushYML(app, filepath.Join(app.AppRoot, "drush", "drush.yml"))
 	if err != nil {
 		util.Warning("Failed to WriteDrushYML: %v", err)
 	}
