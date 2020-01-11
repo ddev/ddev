@@ -119,6 +119,19 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
 			FilesImageURI:                 "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
 		},
+		{
+			Name:                          "TestPkgMagento",
+			SourceURL:                     "https://github.com/OpenMage/magento-mirror/archive/1.9.4.3.tar.gz",
+			ArchiveInternalExtractionPath: "magento-mirror-1.9.4.3/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento_1.9.4.3_test_db.tar.gz",
+			FilesTarballURL:               "",
+			FullSiteTarballURL:            "",
+			Docroot:                       "",
+			Type:                          nodeps.AppTypeMagento,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/LICENSE.txt", Expect: `Open Software License ("OSL")`},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "favorite color"},
+			FilesImageURI:                 "/skin/frontend/rwd/default/images/media/homepage_banner_2.jpg",
+		},
 	}
 	FullTestSites = TestSites
 )
