@@ -35,7 +35,7 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 The default [solr-precreate script](https://github.com/docker-solr/docker-solr/blob/master/scripts/solr-precreate) provided in [docker-solr](https://github.com/docker-solr/docker-solr) and used in the `entrypoint` in docker-compose.solr.yaml does not have the capability to update core configuration after the core has been created. It just copies mounted config into the core, where it would otherwise live forever. However, a simple optional script executed on startup can re-copy config into place. Here's the technique:
 
 * Copy [solr-configupdate.sh](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/solr-configupdate.sh) to .ddev/solr. This simple script is mounted into the container and updates config from .ddev/solr/conf on `ddev restart`: `cd .ddev/solr && rm -rf solr-configupdate.sh && curl -O https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/solr-configupdate.sh && chmod +x solr-configupdate.sh`
-* Make sure solr-configupdate.sh is executable: `chmod +x .ddev/solr/configupdate.sh`
+* Make sure solr-configupdate.sh is executable: `chmod +x .ddev/solr/solr-configupdate.sh`
 * You can now copy/edit/update the solr configuration files for your project in .ddev/solr/conf and when you `ddev restart` the solr configuration will be live.
 
 #### Interacting with Apache Solr
