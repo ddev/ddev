@@ -63,13 +63,13 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 
 // setMagentoSiteSettingsPaths sets the paths to settings.php for templating.
 func setMagentoSiteSettingsPaths(app *DdevApp) {
-	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+	settingsFileBasePath := app.AppRoot
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, "app", "etc", "local.xml")
 }
 
 // magentoImportFilesAction defines the magento workflow for importing project files.
 func magentoImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := filepath.Join(app.GetAppRoot(), app.GetDocroot(), app.GetUploadDir())
+	destPath := filepath.Join(app.GetAppRoot(), app.GetUploadDir())
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {
@@ -163,7 +163,7 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 
 // setMagento2SiteSettingsPaths sets the paths to settings.php for templating.
 func setMagento2SiteSettingsPaths(app *DdevApp) {
-	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+	settingsFileBasePath := app.AppRoot
 	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, "app", "etc", "env.php")
 }
 
