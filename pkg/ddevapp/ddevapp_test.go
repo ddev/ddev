@@ -132,18 +132,19 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is a demo store"},
 			FilesImageURI:                 "/media/wrapping/Chrysanthemum.jpg",
 		},
+		// Note that testpkgmagento2 code is enormous and makes this really, really slow.
 		{
 			Name:                          "testpkgmagento2",
-			SourceURL:                     "https://github.com/OpenMage/magento-mirror/archive/1.9.4.3.tar.gz",
-			ArchiveInternalExtractionPath: "magento-mirror-1.9.4.3/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/TestPkgMagento_db.tar.gz",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento_upload_files.tgz",
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento2_code_no_dev.tgz",
+			ArchiveInternalExtractionPath: "",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento2_db.tgz",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento2_files.tgz",
 			FullSiteTarballURL:            "",
-			Docroot:                       "",
+			Docroot:                       "pub",
 			Type:                          nodeps.AppTypeMagento2,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/LICENSE.txt", Expect: `Open Software License ("OSL")`},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Create an Account"},
-			FilesImageURI:                 "/pub/media/catalog/product/w/t/wt07-green_alt1.jpg",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/junk.txt", Expect: `This is a junk`},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php/junk-product.html", Expect: "junk product"},
+			FilesImageURI:                 "/media/catalog/product/r/a/randy_4th_of_july_unicycle.jpg",
 		},
 	}
 
@@ -1027,7 +1028,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		// Test static content.
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
-		rawurl := app.GetHTTPURL() + site.DynamicURI.URI
+		rawurl := app.GetHTTPSURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 60)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
 		if err != nil && strings.Contains(err.Error(), "container ") {
@@ -1039,7 +1040,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// Load an image from the files section
 		if site.FilesImageURI != "" {
-			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL()+site.FilesImageURI)
+			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+site.FilesImageURI)
 			assert.NoError(err, "failed ImageURI response on project %s: %v", site.Name, err)
 			assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
 		}
@@ -1103,7 +1104,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.StartAndWait(2)
 	require.NoError(t, err, "app.Start() failed on site %s, err=%v", site.Name, err)
 
-	resp, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
+	resp, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 1 has 1 node", 45)
 	assert.NoError(ensureErr)
 	if ensureErr != nil && strings.Contains(ensureErr.Error(), "container failed") {
 		logs, err := ddevapp.GetErrLogsFromApp(app, ensureErr)
@@ -1134,7 +1135,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	err = app.ImportDB(d7testerTest2Dump, "", false)
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 2 has 2 nodes", 45)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 2 has 2 nodes", 45)
 
 	snapshotName, err = app.Snapshot("d7testerTest2")
 	assert.NoError(err)
@@ -1153,12 +1154,12 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = os.Remove("hello-post-restore-snapshot-" + app.Name)
 	assert.NoError(err)
 
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL(), "d7 tester test 1 has 1 node", 45)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 1 has 1 node", 45)
 	err = app.RestoreSnapshot("d7testerTest2")
 	assert.NoError(err)
 
-	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 45)
-	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetHTTPURL(), err)
+	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL(), 45)
+	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetHTTPSURL(), err)
 	assert.Contains(body, "d7 tester test 2 has 2 nodes")
 	if err != nil {
 		t.Logf("resp after timeout: %v", resp)

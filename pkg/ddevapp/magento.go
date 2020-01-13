@@ -163,8 +163,7 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 
 // setMagento2SiteSettingsPaths sets the paths to settings.php for templating.
 func setMagento2SiteSettingsPaths(app *DdevApp) {
-	settingsFileBasePath := app.AppRoot
-	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, "app", "etc", "env.php")
+	app.SiteSettingsPath = filepath.Join(app.AppRoot, "app", "etc", "env.php")
 }
 
 // magento2ConfigOverrideAction overrides php_version for magento2, since it is incompatible
