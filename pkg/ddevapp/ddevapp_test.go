@@ -132,7 +132,21 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is a demo store"},
 			FilesImageURI:                 "/media/wrapping/Chrysanthemum.jpg",
 		},
+		{
+			Name:                          "testpkgmagento2",
+			SourceURL:                     "https://github.com/OpenMage/magento-mirror/archive/1.9.4.3.tar.gz",
+			ArchiveInternalExtractionPath: "magento-mirror-1.9.4.3/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/TestPkgMagento_db.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento_upload_files.tgz",
+			FullSiteTarballURL:            "",
+			Docroot:                       "",
+			Type:                          nodeps.AppTypeMagento2,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/LICENSE.txt", Expect: `Open Software License ("OSL")`},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Create an Account"},
+			FilesImageURI:                 "/pub/media/catalog/product/w/t/wt07-green_alt1.jpg",
+		},
 	}
+
 	FullTestSites = TestSites
 )
 

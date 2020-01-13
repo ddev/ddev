@@ -257,6 +257,10 @@ Successfully started example-site
 Your application can be reached at: http://example-backdrop-site.ddev.site
 ```
 
+### Magento 2 Quickstart
+
+ddev composer create --repository=<https://repo.magento.com/> magento/project-community-edition
+
 ### Database Imports
 
 Import a database with just one command; We offer support for several file formats, including: **.sql, sql.gz, mysql, mysql.gz, tar, tar.gz, and zip**.

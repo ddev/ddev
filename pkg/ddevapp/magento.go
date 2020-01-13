@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/gobuffalo/packr/v2"
@@ -28,9 +29,7 @@ func isMagento2App(app *DdevApp) bool {
 	return false
 }
 
-// createMagentoSettingsFile manages creation and modification of settings.php and settings.ddev.php.
-// If a settings.php file already exists, it will be modified to ensure that it includes
-// settings.ddev.php, which contains ddev-specific configuration.
+// createMagentoSettingsFile manages creation and modification of local.xml.
 func createMagentoSettingsFile(app *DdevApp) (string, error) {
 
 	if fileutil.FileExists(app.SiteSettingsPath) {
@@ -119,4 +118,65 @@ func getMagentoUploadDir(app *DdevApp) string {
 	}
 
 	return app.UploadDir
+}
+
+// getMagento2UploadDir will return a custom upload dir if defined, returning a default path if not.
+func getMagento2UploadDir(app *DdevApp) string {
+	if app.UploadDir == "" {
+		return "pub/media"
+	}
+
+	return app.UploadDir
+}
+
+// createMagento2SettingsFile manages creation and modification of app/etc/env.php.
+func createMagento2SettingsFile(app *DdevApp) (string, error) {
+
+	if fileutil.FileExists(app.SiteSettingsPath) {
+		// Check if the file is managed by ddev.
+		signatureFound, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, DdevFileSignature)
+		if err != nil {
+			return "", err
+		}
+
+		// If the signature wasn't found, warn the user and return.
+		if !signatureFound {
+			util.Warning("%s already exists and is managed by the user.", app.SiteSettingsPath)
+			return "", nil
+		}
+	} else {
+		output.UserOut.Printf("No %s file exists, creating one", app.SiteSettingsPath)
+
+		box := packr.New("magento_packr_assets", "./magento_packr_assets")
+		content, err := box.Find("env.php")
+		if err != nil {
+			return "", err
+		}
+		err = ioutil.WriteFile(app.SiteSettingsPath, content, 0644)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return app.SiteDdevSettingsFile, nil
+}
+
+// setMagento2SiteSettingsPaths sets the paths to settings.php for templating.
+func setMagento2SiteSettingsPaths(app *DdevApp) {
+	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, "app", "etc", "env.php")
+}
+
+// magento2ConfigOverrideAction overrides php_version for magento2, since it is incompatible
+// with php7.3+
+func magento2ConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP72
+	return nil
+}
+
+// magentoConfigOverrideAction overrides php_version for magento2, since it is incompatible
+// with php7.3+
+func magentoConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP56
+	return nil
 }
