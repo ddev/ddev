@@ -14,6 +14,7 @@ services:
       DDEV_URL: https://test-compose-with-streams.ddev.site
       DDEV_WEBSERVER_TYPE: nginx-fpm
       DDEV_XDEBUG_ENABLED: "false"
+      IS_DDEV_PROJECT: "true"
       DEPLOY_NAME: local
       DOCROOT: public
       HTTPS_EXPOSE: 443:80

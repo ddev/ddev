@@ -69,7 +69,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 const drupal8SettingsTemplate = `<?php
 {{ $config := . }}
 // {{ $config.Signature }}: Automatically generated Drupal settings file.
-if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}')) {
+if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}') && getenv('IS_DDEV_PROJECT') == 'true') {
   include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}';
 }
 `
@@ -78,7 +78,7 @@ if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}'
 // a Drupal 8 app's settings.php in the event that one exists.
 const drupal8SettingsAppendTemplate = `{{ $config := . }}
 // Automatically generated include for settings managed by ddev.
-if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}')) {
+if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}') && getenv('IS_DDEV_PROJECT') == 'true') {
   include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}';
 }
 `
@@ -89,7 +89,7 @@ const drupal7SettingsTemplate = `<?php
 {{ $config := . }}
 // {{ $config.Signature }}: Automatically generated Drupal settings file.
 $ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsDdev }}';
-if (is_readable($ddev_settings)) {
+if (is_readable($ddev_settings) && getenv('IS_DDEV_PROJECT') == 'true') {
   require $ddev_settings;
 }
 `
@@ -99,7 +99,7 @@ if (is_readable($ddev_settings)) {
 const drupal7SettingsAppendTemplate = `{{ $config := . }}
 // Automatically generated include for settings managed by ddev.
 $ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsDdev }}';
-if (is_readable($ddev_settings)) {
+if (is_readable($ddev_settings) && getenv('IS_DDEV_PROJECT') == 'true') {
   require $ddev_settings;
 }
 `
@@ -125,9 +125,9 @@ const (
 $host = "{{ $config.DatabaseHost }}";
 $port = {{ $config.DatabasePort }};
 
-// If DDEV_PHP_VERSION is not set, it means we're running on the host,
+// If DDEV_PHP_VERSION is not set but IS_DDEV_PROJECT *is*, it means we're running (drush) on the host,
 // so use the host-side bind port on docker IP
-if (empty(getenv('DDEV_PHP_VERSION'))) {
+if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
   $host = "{{ $config.DockerIP }}";
   $port = {{ $config.DBPublishedPort }};
 } 
@@ -186,9 +186,9 @@ const (
 $host = "{{ $config.DatabaseHost }}";
 $port = {{ $config.DatabasePort }};
 
-// If DDEV_PHP_VERSION is not set, it means we're running on the host,
+// If DDEV_PHP_VERSION is not set but IS_DDEV_PROJECT *is*, it means we're running (drush) on the host,
 // so use the host-side bind port on docker IP
-if (empty(getenv('DDEV_PHP_VERSION'))) {
+if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
   $host = "{{ $config.DockerIP }}";
   $port = {{ $config.DBPublishedPort }};
 } 
@@ -224,9 +224,9 @@ const (
 $host = "{{ $config.DatabaseHost }}";
 $port = {{ $config.DatabasePort }};
 
-// If DDEV_PHP_VERSION is not set, it means we're running on the host,
+// If DDEV_PHP_VERSION is not set but IS_DDEV_PROJECT *is*, it means we're running (drush) on the host,
 // so use the host-side bind port on docker IP
-if (empty(getenv('DDEV_PHP_VERSION'))) {
+if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
   $host = "{{ $config.DockerIP }}";
   $port = {{ $config.DBPublishedPort }};
 } 
@@ -520,7 +520,9 @@ func WriteDrushrc(app *DdevApp, filePath string) error {
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  Remove this comment if you don't want ddev to manage this file.'
  */
-$options['l'] = "` + uri + `";
+if (getenv('IS_DRUSH_PROJECT') == 'true') {
+  $options['l'] = "` + uri + `";
+}
 `)
 
 	// Ensure target directory exists and is writable

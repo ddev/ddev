@@ -1095,6 +1095,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,
 		"DDEV_XDEBUG_ENABLED":           strconv.FormatBool(app.XdebugEnabled),
 		"DDEV_PRIMARY_URL":              app.GetPrimaryURL(),
+		"IS_DDEV_PROJECT":               "true",
 	}
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.

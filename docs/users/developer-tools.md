@@ -94,4 +94,4 @@ The port referenced is unique per running project, and randomly chosen from avai
 
 ### Using Drush 8 installed Installation on the Host Computer
 
-If you have PHP and Drush installed on your host system, you can use it to interact with a ddev project. On the host system the extra include ddev_drush_settings.php is written on startup and will allow drush to access the database server. This may not work for all drush commands because of course the actual webserver environment is not available.
+If you have PHP and Drush installed on your host system and the environment variable IS_DDEV_PROJECT=true, you can use drush to interact with a ddev project. On the host system the extra include host-side configuration for the database and port are derived in the settings.ddev.php file to allow drush to access the database server. This may not work for all drush commands because of course the actual webserver environment is not available.
