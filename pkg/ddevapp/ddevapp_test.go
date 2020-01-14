@@ -123,7 +123,7 @@ var (
 			Name:                          "testpkgmagento",
 			SourceURL:                     "https://github.com/OpenMage/magento-mirror/archive/1.9.4.3.tar.gz",
 			ArchiveInternalExtractionPath: "magento-mirror-1.9.4.3/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/TestPkgMagento_db.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/TestPkgMagento_db_secure_url.tar.gz",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento_upload_files.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
@@ -1309,6 +1309,7 @@ func TestDdevImportFilesDir(t *testing.T) {
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+		t.Logf("=== BEGIN TestDdevImportFilesDir for %s\n", site.Name)
 
 		testcommon.ClearDockerEnv()
 		err = app.Init(site.Dir)
@@ -1391,6 +1392,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 	for _, site := range TestSites {
 		switchDir := site.Chdir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+		t.Logf("=== BEGIN TestDdevImportFilesCustomUploadDir for %s\n", site.Name)
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)

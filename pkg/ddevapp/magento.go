@@ -123,7 +123,7 @@ func getMagentoUploadDir(app *DdevApp) string {
 // getMagento2UploadDir will return a custom upload dir if defined, returning a default path if not.
 func getMagento2UploadDir(app *DdevApp) string {
 	if app.UploadDir == "" {
-		return "pub/media"
+		return "media"
 	}
 
 	return app.UploadDir
