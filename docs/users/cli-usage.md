@@ -257,9 +257,18 @@ Successfully started example-site
 Your application can be reached at: http://example-backdrop-site.ddev.site
 ```
 
+### Magento 1 Quickstart
+
+1. Download Magento 1 (not recommended, as it's end-of-life) from [release page](https://github.com/OpenMage/magento-mirror/releases).
+2. Make a directory for it, for example `mkdir ~/workspace/magento1` and change directory to the new directory.
+3. Extract the download, for example `tar -zxf ~/Downloads/magento-mirror-1.9.4.3.tar.gz --strip-components=1`
+4. `ddev config` and accept the defaults.
+5. `ddev start`
+6. Follow the URL to the base site.
+
 ### Magento 2 Quickstart
 
-You have to have a public and private key to install from Magento's repository; when prompted for "username" and "password" in the composer create it's asking for your public and private keys.
+Normal details of a composer build for Magento 2 are on [Magento 2 site](https://devdocs.magento.com/guides/v2.3/install-gde/composer.html) You must have a public and private key to install from Magento's repository; when prompted for "username" and "password" in the composer create it's asking for your public and private keys.
 
 ```
 ddev config --project-type=magento2 --docroot=pub --create-docroot=true
@@ -271,6 +280,8 @@ bin/magento deploy:mode:set developer
 ```
 
 Of course, change the admin name and related information is needed.
+
+Note that Magento 2 is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
 
 ### Database Imports
 
