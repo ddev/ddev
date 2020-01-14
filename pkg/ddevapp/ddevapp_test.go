@@ -135,7 +135,7 @@ var (
 		// Note that testpkgmagento2 code is enormous and makes this really, really slow.
 		{
 			Name:                          "testpkgmagento2",
-			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento2_code_no_dev.tgz",
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento2_code_no_dev_with_media.tgz",
 			ArchiveInternalExtractionPath: "",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento2_db.tgz",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento2_files.tgz",
