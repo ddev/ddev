@@ -762,6 +762,7 @@ func AvailableDocrootLocations() []string {
 		"htdocs",
 		"_www",
 		"public",
+		"pub",
 	}
 }
 

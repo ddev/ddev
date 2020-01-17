@@ -90,11 +90,13 @@ func (site *TestSite) Prepare() error {
 	err = os.Remove(site.Dir)
 	util.CheckErr(err)
 
+	output.UserOut.Printf("Copying directory %s to %s\n", cachedSrcDir, site.Dir)
 	err = fileutil.CopyDir(cachedSrcDir, site.Dir)
 	if err != nil {
 		site.Cleanup()
 		return fmt.Errorf("Failed to CopyDir from %s to %s, err=%v", cachedSrcDir, site.Dir, err)
 	}
+	output.UserOut.Println("Copying complete")
 
 	// Create an app. Err is ignored as we may not have
 	// a config file to read in from a test site.

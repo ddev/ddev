@@ -257,6 +257,32 @@ Successfully started example-site
 Your application can be reached at: http://example-backdrop-site.ddev.site
 ```
 
+### Magento 1 Quickstart
+
+1. Download Magento 1 (not recommended, as it's end-of-life) from [release page](https://github.com/OpenMage/magento-mirror/releases).
+2. Make a directory for it, for example `mkdir ~/workspace/magento1` and change directory to the new directory.
+3. Extract the download, for example `tar -zxf ~/Downloads/magento-mirror-1.9.4.3.tar.gz --strip-components=1`
+4. `ddev config` and accept the defaults.
+5. `ddev start`
+6. Follow the URL to the base site.
+
+### Magento 2 Quickstart
+
+Normal details of a composer build for Magento 2 are on [Magento 2 site](https://devdocs.magento.com/guides/v2.3/install-gde/composer.html) You must have a public and private key to install from Magento's repository; when prompted for "username" and "password" in the composer create it's asking for your public and private keys.
+
+```
+ddev config --project-type=magento2 --docroot=pub --create-docroot=true
+ddev start
+ddev composer create --repository=<https://repo.magento.com/> magento/project-community-edition
+ddev ssh
+bin/magento setup:install  --db-host=db --db-name=db --db-user=db --db-password=db  --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com  --admin-user=admin --admin-password=admin123 --language=en_US
+bin/magento deploy:mode:set developer
+```
+
+Of course, change the admin name and related information is needed.
+
+Note that Magento 2 is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
+
 ### Database Imports
 
 Import a database with just one command; We offer support for several file formats, including: **.sql, sql.gz, mysql, mysql.gz, tar, tar.gz, and zip**.
@@ -264,7 +290,9 @@ Import a database with just one command; We offer support for several file forma
 Here's an example of a database import using ddev:
 
 ```
+
 ddev import-db --src=dumpfile.sql.gz
+
 ```
 
 **Note for Backdrop users:** In addition to importing a Backdrop database, you will need to extract a copy of your Backdrop project's configuration into the local `active` directory. The location for this directory can vary depending on the contents of your Backdrop `settings.php` file, but the default location is `[docroot]/files/config_[random letters and numbers]/active`. Please refer to the Backdrop documentation for more information on [moving your Backdrop site](https://backdropcms.org/user-guide/moving-backdrop-site) into the `ddev` environment.
@@ -274,11 +302,13 @@ ddev import-db --src=dumpfile.sql.gz
 Check out the git repository for the project you want to work on. `cd` into the directory, run `ddev config`, and follow the prompts.
 
 ```
+
 mkdir drupal8
 cd drupal8
 ddev config --project-type php
 ddev composer create drupal-composer/drupal-project:8.x-dev  
 ddev config --project-type drupal8
+
 ```
 
 Configuration files have now been created for your project. Take a look at the project's .ddev/config.yaml file.
@@ -286,6 +316,7 @@ Configuration files have now been created for your project. Take a look at the p
 Now that the configuration files have been created, you can start your project with `ddev start` (still from within the project working directory):
 
 ```
+
 ddev start
 
 Starting environment for drupal8...
@@ -293,7 +324,8 @@ Creating local-drupal8-db
 Creating local-drupal8-web
 Waiting for the environment to become ready. This may take a couple of minutes...
 Successfully started drupal8
-Your project can be reached at: http://drupal8.ddev.site
+Your project can be reached at: <http://drupal8.ddev.site>
+
 ```
 
 And you can now visit your working project. Enjoy!
@@ -322,10 +354,12 @@ For **Wordpress**, DDEV settings are written to a DDEV-managed file, wp-config-d
 How do you know if DDEV manages a settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!
 
 ```
+
 /**
  #ddev-generated: Automatically generated Drupal settings.php file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
+
 ```
 
 ## Listing project information
@@ -333,41 +367,48 @@ How do you know if DDEV manages a settings file? You will see the following comm
 To see a list of your projects you can use `ddev list`; `ddev list --active-only` will show only projects currently running or paused.
 
 ```
+
 ➜  ddev list
 NAME          TYPE     LOCATION                   URL(s)                                STATUS
-d8git         drupal8  ~/workspace/d8git          https://d8git.ddev.local              running
-                                                  http://d8git.ddev.local
+d8git         drupal8  ~/workspace/d8git          <https://d8git.ddev.local>              running
+                                                  <http://d8git.ddev.local>
 hobobiker     drupal6  ~/workspace/hobobiker.com                                        stopped
+
 ```
 
 ```
+
 ➜  ddev list --active-only
 NAME     TYPE     LOCATION             URL(s)                      STATUS
-drupal8  drupal8  ~/workspace/drupal8  http://drupal8.ddev.site   running
-                                       https://drupal8.ddev.site
+drupal8  drupal8  ~/workspace/drupal8  <http://drupal8.ddev.site>   running
+                                       <https://drupal8.ddev.site>
+
 ```
 
 You can also see more detailed information about a project by running `ddev describe` from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
 
 ```
+
 NAME        TYPE     LOCATION                URL                           STATUS
-d8composer  drupal8  ~/workspace/d8composer  https://d8composer.ddev.site  running
+d8composer  drupal8  ~/workspace/d8composer  <https://d8composer.ddev.site>  running
 
 Project Information
 -------------------
+
 PHP version:    7.4
 MariaDB version
 MySQL version   5.7
 
 URLs
 ----
-http://d8composer.ddev.site
-http://127.0.0.1:32811
-https://d8composer.ddev.site
-https://127.0.0.1:32810
+<http://d8composer.ddev.site>
+<http://127.0.0.1:32811>
+<https://d8composer.ddev.site>
+<https://127.0.0.1:32810>
 
 MySQL/MariaDB Credentials
 -------------------------
+
 Username: "db", Password: "db", Default database: "db"
 
 or use root credentials when needed: Username: "root", Password: "root"
@@ -381,11 +422,13 @@ mysql --host=127.0.0.1 --port=32809 --user=db --password=db --database=db
 
 Other Services
 --------------
-MailHog:    http://d8composer.ddev.site:8025
-phpMyAdmin: http://d8composer.ddev.site:8036
+
+MailHog:    <http://d8composer.ddev.site:8025>
+phpMyAdmin: <http://d8composer.ddev.site:8036>
 
 DDEV ROUTER STATUS: healthy
 ssh-auth status: healthy
+
 ```
 
 ## Removing projects from your collection known to ddev
@@ -411,12 +454,14 @@ An important aspect of local web development is the ability to have a precise re
 The `ddev import-db` command is provided for importing the MySQL database for a project. Running this command will provide a prompt for you to specify the location of your database import.
 
 ```
+
 ➜  ddev import-db
 Provide the path to the database you wish to import.
 Import path:
 ~/Downloads/db.sql
 Importing database...
 Successfully imported database for drupal8
+
 ```
 
 <h4>Supported file types</h4>
@@ -432,6 +477,7 @@ Database import supports the following file types:
 If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. The specified path should provide a Raw SQL Dump (.sql). In the following example, the database we want to import is named data.sql and resides at the top-level of the archive:
 
 ```
+
 ➜  ddev import-db
 Provide the path to the database you wish to import.
 Import path:
@@ -443,6 +489,7 @@ Importing database...
 A settings file already exists for your application, so ddev did not generate one.
 Run 'ddev describe' to find the database credentials for this application.
 Successfully imported database for drupal8
+
 ```
 
 <h4>Non-interactive usage</h4>
@@ -450,9 +497,11 @@ Successfully imported database for drupal8
 If you want to use import-db without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
 
 ```
+
 ddev import-db --src=/tmp/mydb.sql.gz
 gzip -dc /tmp/mydb.sql.gz | ddev import-db
 ddev import-db <mydb.sql
+
 ```
 
 <h4>Database import notes</h4>
@@ -465,9 +514,11 @@ ddev import-db <mydb.sql
 You can export a database with `ddev export-db`, which outputs to stdout or with options to a file:
 
 ```
+
 ddev export-db --file /tmp/db.sql.gz
 ddev export-db >/tmp/db.sql.gz
 ddev export-db --gzip=false >/tmp/db.sql
+
 ```
 
 ### Importing static file assets
@@ -480,11 +531,13 @@ To import static file assets for a project, such as uploaded images and document
 * For Backdrop projects, this is the `files` directory
 
 ```
+
 ➜  ddev import-files
 Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.
 Import path:
 ~/Downloads/files.tar.gz
 Successfully imported files for drupal8
+
 ```
 
 <h4>Supported file types</h4>
@@ -498,6 +551,7 @@ Static asset import supports the following file types:
 If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. In the following example, the assets we want to import reside at "web/sites/default/files":
 
 ```
+
 ➜  ddev import-files
 Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.
 Import path:
@@ -506,6 +560,7 @@ You provided an archive. Do you want to extract from a specific path in your arc
 Archive extraction path:
 web/sites/default/files
 Successfully imported files for drupal8
+
 ```
 
 <h4>Non-interactive usage</h4>
@@ -518,6 +573,7 @@ If you want to use import-files without answering prompts, you can use the `--sr
 The project database is stored in a docker volume, but can be snapshotted (and later restored) with the `ddev snapshot` command. A snapshot is automatically taken when you do a `ddev stop --remove-data`. For example:
 
 ```
+
 $ ddev snapshot
 Creating database snapshot d8git_20180801132403
 Created database snapshot d8git_20180801132403 in /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git_20180801132403

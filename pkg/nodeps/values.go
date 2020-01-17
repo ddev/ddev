@@ -126,6 +126,8 @@ const (
 	AppTypePHP       = "php"
 	AppTypeTYPO3     = "typo3"
 	AppTypeWordPress = "wordpress"
+	AppTypeMagento   = "magento"
+	AppTypeMagento2  = "magento2"
 )
 
 // Ports and other defaults
