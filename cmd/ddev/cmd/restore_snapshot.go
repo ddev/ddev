@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
@@ -35,8 +34,5 @@ Example: "ddev restore-snapshot d8git_20180717203845"`,
 }
 
 func init() {
-	app, err := ddevapp.GetActiveApp("")
-	if err == nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
-		RootCmd.AddCommand(DdevRestoreSnapshotCommand)
-	}
+	RootCmd.AddCommand(DdevRestoreSnapshotCommand)
 }
