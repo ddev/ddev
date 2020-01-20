@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -433,19 +434,28 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevXdebugEnabled", site.Name))
 
 	phpVersions := nodeps.ValidPHPVersions
+	// Temporarily delete 7.0 from test because sury didn't package php7.0-xdebug in latest
+	// See https://github.com/oerdnj/deb.sury.org/issues/1316
+	delete(phpVersions, "7.0")
+	phpKeys := make([]string, 0, len(phpVersions))
+	for k := range phpVersions {
+		phpKeys = append(phpKeys, k)
+	}
+	sort.Strings(phpKeys)
+
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
-	for v := range phpVersions {
+	for _, v := range phpKeys {
 		app.PHPVersion = v
 		t.Logf("Attempting XDebug checks with XDebug %s\n", v)
 		fmt.Printf("Attempting XDebug checks with XDebug %s\n", v)
 		app.XdebugEnabled = false
 		assert.NoError(err)
 		err = app.Start()
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		opts := &ddevapp.ExecOpts{
 			Service: "web",
@@ -460,17 +470,17 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		testcommon.ClearDockerEnv()
 		app.XdebugEnabled = true
 		err = app.Start()
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		stdout, _, err = app.Exec(opts)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		assert.Contains(stdout, "xdebug support => enabled")
 		assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
 
 		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
 		listener, err := net.Listen("tcp", ":9000")
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		// Curl to the project's index.php or anything else
 		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 1)
