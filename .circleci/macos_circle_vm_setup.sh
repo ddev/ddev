@@ -9,6 +9,7 @@ curl -O -sSL $DOCKER_URL
 open -W Docker.dmg && cp -r /Volumes/Docker/Docker.app /Applications
 
 export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_INSTALL_CLEANUP=1
 
 # Get docker in first so we can install it and work on other things
 brew cask install ngrok
@@ -17,13 +18,12 @@ sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unatt
 nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
 brew tap drud/ddev
+brew unlink python@2 || true
 
-brew install mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt
-brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt
+brew install mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre || true
+brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre
 
 brew link --force mysql-client
-# These links are required for osslsigncode to work
-brew link libgsf glib pcre
 
 # Get the Plugins for NSIS
 curl -fsSL -o /tmp/EnVar-Plugin.zip https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d /usr/local/share/nsis /tmp/EnVar-Plugin.zip
@@ -53,8 +53,7 @@ grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/nu
 
 sudo nfsd enable && sudo nfsd restart
 
-
-while ! docker ps 2>/dev/null ; do
+timeout -v 10m bash -c 'while ! docker ps 2>/dev/null ; do
   sleep 5
   echo "Waiting for docker to come up: $(date)"
-done
+done'
