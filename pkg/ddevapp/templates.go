@@ -302,6 +302,11 @@ const ConfigInstructions = `
 # Provide extra flags to the "ngrok http" command, see
 # https://ngrok.com/docs#http or run "ngrok http -h"
 
+# disable_settings_management: false
+# If true, ddev will not create CMS-specific settings files like
+# Drupal's settings.php/settings.ddev.php or TYPO3's AdditionalSettings.php
+# In this case the user must provide all such settings.
+
 # provider: default # Currently either "default" or "pantheon"
 #
 # Many ddev commands can be extended to run tasks before or after the

@@ -674,29 +674,31 @@ func drupal7ConfigOverrideAction(app *DdevApp) error {
 // drupal8PostStartAction handles default post-start actions for D8 apps, like ensuring
 // useful permissions settings on sites/default.
 func drupal8PostStartAction(app *DdevApp) error {
-	if err := createDrupal8SyncDir(app); err != nil {
-		return err
-	}
+	if !app.DisableSettingsManagement {
+		if err := createDrupal8SyncDir(app); err != nil {
+			return err
+		}
 
-	if err := drupalEnsureWritePerms(app); err != nil {
-		return err
-	}
+		if err := drupalEnsureWritePerms(app); err != nil {
+			return err
+		}
 
-	// Write both drush.yml and drushrc.php for Drupal 8, because we can't know
-	// what version of drush may be in use. drush8 is happy with drushrc.php
-	// drush9 wants drush.yml
-	err := WriteDrushYML(app, filepath.Join(app.AppRoot, "drush", "drush.yml"))
-	if err != nil {
-		util.Warning("Failed to WriteDrushYML: %v", err)
-	}
+		// Write both drush.yml and drushrc.php for Drupal 8, because we can't know
+		// what version of drush may be in use. drush8 is happy with drushrc.php
+		// drush9 wants drush.yml
+		err := WriteDrushYML(app, filepath.Join(app.AppRoot, "drush", "drush.yml"))
+		if err != nil {
+			util.Warning("Failed to WriteDrushYML: %v", err)
+		}
 
-	err = WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
-	if err != nil {
-		util.Warning("Failed to WriteDrushrc: %v", err)
-	}
+		err = WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
+		if err != nil {
+			util.Warning("Failed to WriteDrushrc: %v", err)
+		}
 
-	if _, err = app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
+		if _, err = app.CreateSettingsFile(); err != nil {
+			return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
+		}
 	}
 	return nil
 }
