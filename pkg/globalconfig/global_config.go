@@ -41,7 +41,7 @@ type GlobalConfig struct {
 	RouterBindAllInterfaces bool                    `yaml:"router_bind_all_interfaces"`
 	DeveloperMode           bool                    `yaml:"developer_mode,omitempty"`
 	InstrumentationUser     string                  `yaml:"instrumentation_user,omitempty"`
-	LastUsedVersion         string                  `yaml:"last_used_version"`
+	LastStartedVersion      string                  `yaml:"last_started_version"`
 	MkcertCARoot            string                  `yaml:"mkcert_caroot"`
 	ProjectList             map[string]*ProjectInfo `yaml:"project_info"`
 }

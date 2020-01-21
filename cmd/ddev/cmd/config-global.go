@@ -30,10 +30,12 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		util.Failed("Unable to read global config file: %v", err)
 	}
 
+	dirty := false
 	if cmd.Flag("instrumentation-opt-in").Changed {
 		globalconfig.DdevGlobalConfig.InstrumentationOptIn = instrumentationOptIn
 		// Make sure that they don't get prompted again right after they opted out.
-		globalconfig.DdevGlobalConfig.LastUsedVersion = version.VERSION
+		globalconfig.DdevGlobalConfig.LastStartedVersion = version.VERSION
+		dirty = true
 	}
 	if cmd.Flag("omit-containers").Changed {
 		omitContainers = strings.Replace(omitContainers, " ", "", -1)
@@ -42,19 +44,23 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		} else {
 			globalconfig.DdevGlobalConfig.OmitContainers = strings.Split(omitContainers, ",")
 		}
+		dirty = true
 	}
 	if cmd.Flag("router-bind-all-interfaces").Changed {
 		globalconfig.DdevGlobalConfig.RouterBindAllInterfaces, _ = cmd.Flags().GetBool("router-bind-all-interfaces")
-	}
-	err = globalconfig.ValidateGlobalConfig()
-	if err != nil {
-		util.Failed("Invalid configuration in %s: %v", globalconfig.GetGlobalConfigPath(), err)
-	}
-	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-	if err != nil {
-		util.Failed("Failed to write global config: %v", err)
+		dirty = true
 	}
 
+	if dirty {
+		err = globalconfig.ValidateGlobalConfig()
+		if err != nil {
+			util.Failed("Invalid configuration in %s: %v", globalconfig.GetGlobalConfigPath(), err)
+		}
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		if err != nil {
+			util.Failed("Failed to write global config: %v", err)
+		}
+	}
 	util.Success("Global configuration:")
 	output.UserOut.Printf("instrumentation-opt-in=%v", globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	output.UserOut.Printf("omit-containers=[%s]", strings.Join(globalconfig.DdevGlobalConfig.OmitContainers, ","))

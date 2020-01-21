@@ -3,12 +3,13 @@ package ddevapp
 import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/util"
 	"os/exec"
 	"path/filepath"
 	"strings"
 )
 
-// GetCAROOT() verifies that the mkcert command is available and its root keys readable.
+// GetCAROOT() verifies that the mkcert command is available and its CA keys readable.
 // 1. Find out CAROOT
 // 2. Look there to see if key/crt are readable
 // 3. If not, see if mkcert is even available, return informative message if not
@@ -22,7 +23,12 @@ func GetCAROOT() string {
 		caROOT = globalconfig.DdevGlobalConfig.MkcertCARoot
 		if !validCAROOT(caROOT) {
 			globalconfig.DdevGlobalConfig.MkcertCARoot = ""
-			_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+			caROOT = ""
+			err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+			if err != nil {
+				util.Warning("Error writing global config: %v", err)
+			}
+			return ""
 		} else {
 			return caROOT
 		}
@@ -42,7 +48,10 @@ func GetCAROOT() string {
 	}
 	caROOT = root
 	globalconfig.DdevGlobalConfig.MkcertCARoot = root
-	_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	if err != nil {
+		util.Warning("Error writing global config: %v", err)
+	}
 
 	return caROOT
 }
