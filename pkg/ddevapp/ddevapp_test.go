@@ -494,6 +494,10 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	// Previous tests may have left settings files
+	_ = os.Remove(app.SiteSettingsPath)
+	_ = os.Remove(app.SiteDdevSettingsFile)
+
 	// On initial init, settings files should not exist
 	assert.False(fileutil.FileExists(app.SiteSettingsPath))
 	assert.False(fileutil.FileExists(app.SiteDdevSettingsFile))
