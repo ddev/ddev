@@ -1444,7 +1444,9 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 
 // GetPrimaryURL() returns the primary URL that can be used, https or http
 func (app *DdevApp) GetPrimaryURL() string {
-	httpURLs, urlList, _ := app.GetAllURLs()
+	httpURLs, httpsURLs, _ := app.GetAllURLs()
+	urlList := httpsURLs
+	// If no mkcert trusted https, use the httpURLs instead
 	if GetCAROOT() == "" {
 		urlList = httpURLs
 	}
