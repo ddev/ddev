@@ -466,6 +466,9 @@ func (app *DdevApp) GetHostnames() []string {
 		nameListMap[name] = 1
 	}
 
+	// Make sure the primary hostname didn't accidentally get added, it will be prepended
+	delete(nameListMap, app.GetHostname())
+
 	// Now walk the map and extract the keys into an array.
 	nameListArray := make([]string, 0, len(nameListMap))
 	for k := range nameListMap {
