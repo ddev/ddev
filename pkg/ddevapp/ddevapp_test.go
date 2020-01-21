@@ -755,110 +755,149 @@ func TestDdevImportDB(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	testDir, _ := os.Getwd()
 
-	for _, site := range TestSites {
-		switchDir := site.Chdir()
-		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevImportDB", site.Name))
+	site := TestSites[0]
 
-		testcommon.ClearDockerEnv()
-		err := app.Init(site.Dir)
-		assert.NoError(err)
-		err = app.StartAndWait(2)
-		assert.NoError(err)
+	switchDir := site.Chdir()
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
-		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
-
-		// Test simple db loads.
-		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip"} {
-			path := filepath.Join(testDir, "testdata", t.Name(), file)
-			err = app.ImportDB(path, "", false, false, "db")
-			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
-			if err != nil {
-				continue
-			}
-
-			// Test that a settings file has correct hash_salt format
-			switch app.Type {
-			case nodeps.AppTypeDrupal7:
-				drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "$drupal_hash_salt")
-				assert.NoError(err)
-				assert.True(drupalHashSalt)
-			case nodeps.AppTypeDrupal8:
-				settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "settings['hash_salt']")
-				assert.NoError(err)
-				assert.True(settingsHashSalt)
-			case nodeps.AppTypeWordPress:
-				hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
-				assert.NoError(err)
-				assert.True(hasAuthSalt)
-			}
-		}
-
-		if site.DBTarURL != "" {
-			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
-			assert.NoError(err)
-			err = app.ImportDB(cachedArchive, "", false, false, "db")
-			assert.NoError(err)
-			assert.FileExists("hello-pre-import-db-" + app.Name)
-			assert.FileExists("hello-post-import-db-" + app.Name)
-			err = os.Remove("hello-pre-import-db-" + app.Name)
-			assert.NoError(err)
-			err = os.Remove("hello-post-import-db-" + app.Name)
-			assert.NoError(err)
-
-			out, _, err := app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     "mysql -e 'SHOW TABLES;'",
-			})
-			assert.NoError(err)
-
-			assert.Contains(out, "Tables_in_db")
-			assert.False(strings.Contains(out, "Empty set"))
-
-			assert.NoError(err)
-		}
-
-		if site.DBZipURL != "" {
-			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteZipArchive", "", site.DBZipURL)
-
-			assert.NoError(err)
-			err = app.ImportDB(cachedArchive, "", false, false, "db")
-			assert.NoError(err)
-
-			assert.FileExists("hello-pre-import-db-" + app.Name)
-			assert.FileExists("hello-post-import-db-" + app.Name)
-			_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
-			_ = os.RemoveAll("hello-post-import-db-" + app.Name)
-
-			out, _, err := app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     "mysql -e 'SHOW TABLES;'",
-			})
-			assert.NoError(err)
-
-			assert.Contains(out, "Tables_in_db")
-			assert.False(strings.Contains(out, "Empty set"))
-		}
-
-		if site.FullSiteTarballURL != "" {
-			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_FullSiteTarballURL", "", site.FullSiteTarballURL)
-			assert.NoError(err)
-
-			err = app.ImportDB(cachedArchive, "data.sql", false, false, "db")
-			assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
-			assert.FileExists("hello-pre-import-db-" + app.Name)
-			assert.FileExists("hello-post-import-db-" + app.Name)
-			_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
-			_ = os.RemoveAll("hello-post-import-db-" + app.Name)
-		}
-		// We don't want all the projects running at once.
+	testcommon.ClearDockerEnv()
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+	defer func() {
 		app.Hooks = nil
 		_ = app.WriteConfig()
-		err = app.Stop(true, false)
+		_ = app.Stop(true, false)
+	}()
+
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
+
+	// Test simple db loads.
+	for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip"} {
+		path := filepath.Join(testDir, "testdata", t.Name(), file)
+		err = app.ImportDB(path, "", false, false, "db")
+		assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+		if err != nil {
+			continue
+		}
+
+		// Test that a settings file has correct hash_salt format
+		switch app.Type {
+		case nodeps.AppTypeDrupal7:
+			drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "$drupal_hash_salt")
+			assert.NoError(err)
+			assert.True(drupalHashSalt)
+		case nodeps.AppTypeDrupal8:
+			settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "settings['hash_salt']")
+			assert.NoError(err)
+			assert.True(settingsHashSalt)
+		case nodeps.AppTypeWordPress:
+			hasAuthSalt, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, "SECURE_AUTH_SALT")
+			assert.NoError(err)
+			assert.True(hasAuthSalt)
+		}
+	}
+
+	if site.DBTarURL != "" {
+		_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
+		assert.NoError(err)
+		err = app.ImportDB(cachedArchive, "", false, false, "db")
+		assert.NoError(err)
+		assert.FileExists("hello-pre-import-db-" + app.Name)
+		assert.FileExists("hello-post-import-db-" + app.Name)
+		err = os.Remove("hello-pre-import-db-" + app.Name)
+		assert.NoError(err)
+		err = os.Remove("hello-post-import-db-" + app.Name)
 		assert.NoError(err)
 
-		runTime()
-		switchDir()
+		out, _, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     "mysql -e 'SHOW TABLES;'",
+		})
+		assert.NoError(err)
+
+		assert.Contains(out, "Tables_in_db")
+		assert.False(strings.Contains(out, "Empty set"))
+
+		assert.NoError(err)
 	}
+
+	if site.DBZipURL != "" {
+		_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteZipArchive", "", site.DBZipURL)
+
+		assert.NoError(err)
+		err = app.ImportDB(cachedArchive, "", false, false, "db")
+		assert.NoError(err)
+
+		assert.FileExists("hello-pre-import-db-" + app.Name)
+		assert.FileExists("hello-post-import-db-" + app.Name)
+		_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
+		_ = os.RemoveAll("hello-post-import-db-" + app.Name)
+
+		out, _, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     "mysql -e 'SHOW TABLES;'",
+		})
+		assert.NoError(err)
+
+		assert.Contains(out, "Tables_in_db")
+		assert.False(strings.Contains(out, "Empty set"))
+	}
+
+	if site.FullSiteTarballURL != "" {
+		_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_FullSiteTarballURL", "", site.FullSiteTarballURL)
+		assert.NoError(err)
+
+		err = app.ImportDB(cachedArchive, "data.sql", false, false, "db")
+		assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
+		assert.FileExists("hello-pre-import-db-" + app.Name)
+		assert.FileExists("hello-post-import-db-" + app.Name)
+		_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
+		_ = os.RemoveAll("hello-post-import-db-" + app.Name)
+	}
+
+	app.Hooks = nil
+
+	for _, db := range []string{"db", "extradb"} {
+		// Import 2-user users.sql into users table
+		path := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
+		err = app.ImportDB(path, "", false, false, db)
+		assert.NoError(err)
+		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
+		})
+		assert.NoError(err, "exec failed: %v", stderr)
+		assert.Equal("1\n", out)
+
+		// Import 1-user sql and make sure only one row is left there
+		path = filepath.Join(testDir, "testdata", t.Name(), "oneuser.sql")
+		err = app.ImportDB(path, "", false, false, db)
+		assert.NoError(err)
+
+		out, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
+		})
+		assert.NoError(err)
+		assert.Equal("1\n", out)
+
+		// Import 2-user users.sql again, but with nodrop=true
+		// We should end up with 2 tables now
+		path = filepath.Join(testDir, "testdata", t.Name(), "users.sql")
+		err = app.ImportDB(path, "", false, true, db)
+		assert.NoError(err)
+		out, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
+		})
+		assert.NoError(err)
+		assert.Equal("2\n", out)
+
+	}
+	runTime()
+	switchDir()
 }
 
 // TestDdevAllDatabases tests db import/export/start with all MariaDB versions

@@ -379,11 +379,14 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		Service: "db",
 		Cmd:     inContainerCommand,
 	})
+	if err != nil {
+		return err
+	}
+
 	inContainerCommand = fmt.Sprintf(`pv %s/*.*sql | mysql %s`, insideContainerImportPath, targetDB)
 	if imPath == "" && extPath == "" {
 		inContainerCommand = "pv | mysql " + targetDB
 	}
-
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     inContainerCommand,
