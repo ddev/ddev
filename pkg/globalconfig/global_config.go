@@ -65,7 +65,10 @@ func ReadGlobalConfig() error {
 	globalConfigFile := GetGlobalConfigPath()
 	// This is added just so we can see it in global; not checked.
 	DdevGlobalConfig.APIVersion = version.DdevVersion
-
+	// Make sure that LastStartedVersion always has a valid value
+	if DdevGlobalConfig.LastStartedVersion == "" {
+		DdevGlobalConfig.LastStartedVersion = version.DdevVersion
+	}
 	// Can't use fileutil.FileExists() here because of import cycle.
 	if _, err := os.Stat(globalConfigFile); err != nil {
 		// ~/.ddev doesn't exist and running as root (only ddev hostname could do this)
@@ -75,7 +78,7 @@ func ReadGlobalConfig() error {
 			return nil
 		}
 		if os.IsNotExist(err) {
-			err := WriteGlobalConfig(GlobalConfig{})
+			err := WriteGlobalConfig(DdevGlobalConfig)
 			if err != nil {
 				return err
 			}
