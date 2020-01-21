@@ -370,17 +370,16 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	// Inside the container, the dir for imports will be at /mnt/ddev_config/<tmpdir_name>
 	insideContainerImportPath := path.Join("/mnt/ddev_config", filepath.Base(dbPath))
 
-	if targetDB != "db" {
-		precreateSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%' IDENTIFIED BY 'db';", targetDB, targetDB)
-		inContainerCommand := fmt.Sprintf(`echo "%s" | mysql -uroot -proot`, precreateSQL)
-		output.UserOut.Println("precreateSQL=" + precreateSQL)
-		output.UserOut.Println("inContainerCommand=" + inContainerCommand)
-		_, _, err = app.Exec(&ExecOpts{
-			Service: "db",
-			Cmd:     inContainerCommand,
-		})
+	preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%' IDENTIFIED BY 'db';", targetDB, targetDB)
+	if !noDrop {
+		preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 	}
-	inContainerCommand := fmt.Sprintf(`pv %s/*.*sql | mysql %s`, insideContainerImportPath, targetDB)
+	inContainerCommand := fmt.Sprintf(`echo "%s" | mysql -uroot -proot`, preImportSQL)
+	_, _, err = app.Exec(&ExecOpts{
+		Service: "db",
+		Cmd:     inContainerCommand,
+	})
+	inContainerCommand = fmt.Sprintf(`pv %s/*.*sql | mysql %s`, insideContainerImportPath, targetDB)
 	if imPath == "" && extPath == "" {
 		inContainerCommand = "pv | mysql " + targetDB
 	}
