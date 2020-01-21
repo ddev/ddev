@@ -15,7 +15,7 @@ services:
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
-    image: ${DDEV_DBIMAGE}-built
+    image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
     stop_grace_period: 60s
     volumes:
       - type: "volume"
@@ -58,7 +58,7 @@ services:
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
-    image: ${DDEV_WEBIMAGE}-built
+    image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     cap_add:
       - SYS_PTRACE
     volumes:
@@ -425,7 +425,7 @@ services:
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
-    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built
+    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-${DDEV_SITENAME}-built
 
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
