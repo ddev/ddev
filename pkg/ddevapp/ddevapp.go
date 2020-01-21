@@ -284,7 +284,7 @@ func (app *DdevApp) GetWebserverType() string {
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
-func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, targetDB string) error {
+func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDrop bool, targetDB string) error {
 	app.DockerEnv()
 	if targetDB == "" {
 		targetDB = "db"
@@ -548,7 +548,7 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 			output.UserOut.Println("Skipping database import.")
 		} else {
 			output.UserOut.Println("Importing database...")
-			err = app.ImportDB(fileLocation, importPath, true, "db")
+			err = app.ImportDB(fileLocation, importPath, true, false, "db")
 			if err != nil {
 				return err
 			}

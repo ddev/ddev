@@ -12,6 +12,7 @@ import (
 var dbSource string
 var dbExtPath string
 var targetDB string
+var noDrop bool
 var progressOption bool
 
 // ImportDBCmd represents the `ddev import-db` command.
@@ -52,11 +53,16 @@ gzip -dc db.sql.gz | ddev import-db`,
 			}
 		}
 
-		err = app.ImportDB(dbSource, dbExtPath, progressOption, targetDB)
+		err = app.ImportDB(dbSource, dbExtPath, progressOption, noDrop, targetDB)
 		if err != nil {
-			util.Failed("Failed to import database for %s: %v", app.GetName(), err)
+			util.Failed("Failed to import database %s for %s: %v", targetDB, app.GetName(), err)
 		}
-		util.Success("Successfully imported database for %v", app.GetName())
+		util.Success("Successfully imported database '%s' for %v", targetDB, app.GetName())
+		if noDrop {
+			util.Success("Existing database '%s' was NOT dropped before importing", targetDB)
+		} else {
+			util.Success("Existing database '%s' was dropped before importing", targetDB)
+		}
 	},
 }
 
@@ -64,6 +70,7 @@ func init() {
 	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
 	ImportDBCmd.Flags().StringVarP(&dbExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
 	ImportDBCmd.Flags().StringVarP(&targetDB, "target-db", "d", "db", "If provided asset is an archive, provide the path to extract within the archive.")
+	ImportDBCmd.Flags().BoolVarP(&noDrop, "no-drop", "", false, "Set if you do NOT want to drop the db before importing")
 	ImportDBCmd.Flags().BoolVarP(&progressOption, "progress", "p", true, "Display a progress bar during import")
 	RootCmd.AddCommand(ImportDBCmd)
 }

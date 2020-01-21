@@ -770,7 +770,7 @@ func TestDdevImportDB(t *testing.T) {
 		// Test simple db loads.
 		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip"} {
 			path := filepath.Join(testDir, "testdata", t.Name(), file)
-			err = app.ImportDB(path, "", false, "db")
+			err = app.ImportDB(path, "", false, false, "db")
 			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 			if err != nil {
 				continue
@@ -796,7 +796,7 @@ func TestDdevImportDB(t *testing.T) {
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
-			err = app.ImportDB(cachedArchive, "", false, "db")
+			err = app.ImportDB(cachedArchive, "", false, false, "db")
 			assert.NoError(err)
 			assert.FileExists("hello-pre-import-db-" + app.Name)
 			assert.FileExists("hello-post-import-db-" + app.Name)
@@ -821,7 +821,7 @@ func TestDdevImportDB(t *testing.T) {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteZipArchive", "", site.DBZipURL)
 
 			assert.NoError(err)
-			err = app.ImportDB(cachedArchive, "", false, "db")
+			err = app.ImportDB(cachedArchive, "", false, false, "db")
 			assert.NoError(err)
 
 			assert.FileExists("hello-pre-import-db-" + app.Name)
@@ -843,7 +843,7 @@ func TestDdevImportDB(t *testing.T) {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_FullSiteTarballURL", "", site.FullSiteTarballURL)
 			assert.NoError(err)
 
-			err = app.ImportDB(cachedArchive, "data.sql", false, "db")
+			err = app.ImportDB(cachedArchive, "data.sql", false, false, "db")
 			assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
 			assert.FileExists("hello-pre-import-db-" + app.Name)
 			assert.FileExists("hello-post-import-db-" + app.Name)
@@ -930,7 +930,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			assert.Equal(v, strings.Trim(containerDBVersion, "\n\r "))
 
 			importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
-			err = app.ImportDB(importPath, "", false, "db")
+			err = app.ImportDB(importPath, "", false, false, "db")
 			assert.NoError(err, "failed to import %v", importPath)
 
 			_ = os.Mkdir("tmp", 0777)
@@ -1011,7 +1011,7 @@ func TestDdevExportDB(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
-	err = app.ImportDB(importPath, "", false, "db")
+	err = app.ImportDB(importPath, "", false, false, "db")
 	require.NoError(t, err)
 
 	_ = os.Mkdir("tmp", 0777)
@@ -1105,7 +1105,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			assert.NoError(err)
-			err = app.ImportDB(cachedArchive, "", false, "db")
+			err = app.ImportDB(cachedArchive, "", false, false, "db")
 			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, mariadb_version=%s, mysql_version=%s", site.DBTarURL, app.Type, app.MariaDBVersion, app.MySQLVersion)
 		}
 
@@ -1189,7 +1189,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
-	err = app.ImportDB(d7testerTest1Dump, "", false, "db")
+	err = app.ImportDB(d7testerTest1Dump, "", false, false, "db")
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 
 	err = app.StartAndWait(2)
@@ -1224,7 +1224,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = os.Remove("hello-post-snapshot-" + app.Name)
 	assert.NoError(err)
 
-	err = app.ImportDB(d7testerTest2Dump, "", false, "db")
+	err = app.ImportDB(d7testerTest2Dump, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 2 has 2 nodes", 45)
 
