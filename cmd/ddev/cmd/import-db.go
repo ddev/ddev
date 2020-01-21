@@ -11,6 +11,7 @@ import (
 
 var dbSource string
 var dbExtPath string
+var targetDB string
 var progressOption bool
 
 // ImportDBCmd represents the `ddev import-db` command.
@@ -20,10 +21,13 @@ var ImportDBCmd = &cobra.Command{
 	Long: `Import a sql archive into the project.
 The database can be provided as a SQL dump in a .sql, .sql.gz, .mysql, .mysql.gz, .zip, .tgz, or .tar.gz
 format. For the zip and tar formats, the path to a .sql file within the archive
-can be provided if it is not located at the top level of the archive. Note the related "ddev mysql" command`,
+can be provided if it is not located at the top level of the archive. An optional target database
+can also be provided; the default is the default database named "db". 
+Also note the related "ddev mysql" command`,
 	Example: `ddev import-db
 ddev import-db --src=.tarballs/junk.sql
 ddev import-db --src=.tarballs/junk.sql.gz
+ddev import-db --target-db=newdb --src=.tarballs/junk.sql.gz
 ddev import-db <db.sql
 gzip -dc db.sql.gz | ddev import-db`,
 
@@ -48,7 +52,7 @@ gzip -dc db.sql.gz | ddev import-db`,
 			}
 		}
 
-		err = app.ImportDB(dbSource, dbExtPath, progressOption)
+		err = app.ImportDB(dbSource, dbExtPath, progressOption, targetDB)
 		if err != nil {
 			util.Failed("Failed to import database for %s: %v", app.GetName(), err)
 		}
@@ -59,6 +63,7 @@ gzip -dc db.sql.gz | ddev import-db`,
 func init() {
 	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
 	ImportDBCmd.Flags().StringVarP(&dbExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
+	ImportDBCmd.Flags().StringVarP(&targetDB, "target-db", "d", "db", "If provided asset is an archive, provide the path to extract within the archive.")
 	ImportDBCmd.Flags().BoolVarP(&progressOption, "progress", "p", true, "Display a progress bar during import")
 	RootCmd.AddCommand(ImportDBCmd)
 }

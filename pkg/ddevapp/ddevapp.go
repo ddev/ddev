@@ -284,8 +284,11 @@ func (app *DdevApp) GetWebserverType() string {
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
-func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error {
+func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, targetDB string) error {
 	app.DockerEnv()
+	if targetDB == "" {
+		targetDB = "db"
+	}
 	var extPathPrompt bool
 	dbPath, err := ioutil.TempDir(filepath.Dir(app.ConfigPath), "importdb")
 	//nolint: errcheck
@@ -367,9 +370,19 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 	// Inside the container, the dir for imports will be at /mnt/ddev_config/<tmpdir_name>
 	insideContainerImportPath := path.Join("/mnt/ddev_config", filepath.Base(dbPath))
 
-	inContainerCommand := "pv " + insideContainerImportPath + "/*.*sql | mysql db"
+	if targetDB != "db" {
+		precreateSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%' IDENTIFIED BY 'db';", targetDB, targetDB)
+		inContainerCommand := fmt.Sprintf(`echo "%s" | mysql -uroot -proot`, precreateSQL)
+		output.UserOut.Println("precreateSQL=" + precreateSQL)
+		output.UserOut.Println("inContainerCommand=" + inContainerCommand)
+		_, _, err = app.Exec(&ExecOpts{
+			Service: "db",
+			Cmd:     inContainerCommand,
+		})
+	}
+	inContainerCommand := fmt.Sprintf(`pv %s/*.*sql | mysql %s`, insideContainerImportPath, targetDB)
 	if imPath == "" && extPath == "" {
-		inContainerCommand = "pv | mysql db"
+		inContainerCommand = "pv | mysql " + targetDB
 	}
 
 	_, _, err = app.Exec(&ExecOpts{
@@ -535,7 +548,7 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 			output.UserOut.Println("Skipping database import.")
 		} else {
 			output.UserOut.Println("Importing database...")
-			err = app.ImportDB(fileLocation, importPath, true)
+			err = app.ImportDB(fileLocation, importPath, true, "db")
 			if err != nil {
 				return err
 			}
