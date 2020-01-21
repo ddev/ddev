@@ -122,7 +122,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	instructions := `
 # You can turn off usage of the dba (phpmyadmin) container and/or
 # ddev-ssh-agent containers with
-# omit_containers[\"dba\", \"ddev-ssh-agent\"]
+# omit_containers["dba", "ddev-ssh-agent"]
 # and you can opt in or out of sending instrumentation the ddev developers with
 # instrumentation_opt_in: true # or false
 #
