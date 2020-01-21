@@ -638,8 +638,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Username:             username,
 		UID:                  uid,
 		GID:                  gid,
-		WebBuildContext:      app.GetConfigPath(".webimageBuild"),
-		DBBuildContext:       app.GetConfigPath(".dbimageBuild"),
+		WebBuildContext:      app.GetConfigPath("web-build"),
+		DBBuildContext:       app.GetConfigPath("db-build"),
 	}
 	if app.NFSMountEnabled {
 		templateVars.MountType = "volume"
