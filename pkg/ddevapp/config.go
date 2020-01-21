@@ -577,6 +577,8 @@ type composeYAMLVars struct {
 	WebMount             string
 	WebBuildContext      string
 	DBBuildContext       string
+	WebBuildDockerfile   string
+	DBBuildDockerfile    string
 	SSHAgentBuildContext string
 	OmitDB               bool
 	OmitDBA              bool
@@ -640,6 +642,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		GID:                  gid,
 		WebBuildContext:      app.GetConfigPath("web-build"),
 		DBBuildContext:       app.GetConfigPath("db-build"),
+		WebBuildDockerfile:   app.GetConfigPath(".webimageBuild/Dockerfile"),
+		DBBuildDockerfile:    app.GetConfigPath(".dbimageBuild/Dockerfile"),
 	}
 	if app.NFSMountEnabled {
 		templateVars.MountType = "volume"

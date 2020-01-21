@@ -10,6 +10,7 @@ services:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
     build:
       context: '{{ .DBBuildContext }}'
+      dockerfile: '{{ .DBBuildDockerfile }}'
       args:
         BASE_IMAGE: $DDEV_DBIMAGE
         username: '{{ .Username }}'
@@ -53,6 +54,7 @@ services:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     build:
       context: '{{ .WebBuildContext }}'
+      dockerfile: '{{ .WebBuildDockerfile }}'
       args:
         BASE_IMAGE: $DDEV_WEBIMAGE
         username: '{{ .Username }}'
