@@ -28,10 +28,8 @@ func GetCAROOT() string {
 			if err != nil {
 				util.Warning("Error writing global config: %v", err)
 			}
-			return ""
-		} else {
-			return caROOT
 		}
+		return caROOT
 	}
 	_, err := exec.LookPath("mkcert")
 	if err != nil {
