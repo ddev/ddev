@@ -472,9 +472,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevXdebugEnabled", site.Name))
 
 	phpVersions := nodeps.ValidPHPVersions
-	// Temporarily delete 7.0 from test because sury didn't package php7.0-xdebug in latest
-	// See https://github.com/oerdnj/deb.sury.org/issues/1316
-	delete(phpVersions, "7.0")
 	phpKeys := make([]string, 0, len(phpVersions))
 	for k := range phpVersions {
 		phpKeys = append(phpKeys, k)
