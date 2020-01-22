@@ -38,7 +38,7 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 
 RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
 
-RUN apt-get -qq update && \
+RUN set -o errexit && apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
         procps \
         curl \
@@ -93,8 +93,8 @@ RUN apt-get -qq update && \
         php-imagick \
         php-uploadprogress \
         sqlite3 && \
-    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y  $v-apcu $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-memcached $v-mysql $v-pgsql $v-mbstring $v-opcache $v-soap $v-redis $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v ; done && \
-    for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt; done && \
+    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y  $v-apcu $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-memcached $v-mysql $v-pgsql $v-mbstring $v-opcache $v-soap $v-redis $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v || exit $?; done && \
+    for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt || exit $?; done && \
     apt-get install blackfire-php -y --allow-unauthenticated && \
     apt-get -qq autoremove -y && \
     apt-get -qq clean -y && \
@@ -152,7 +152,7 @@ RUN chmod 644 /home/.my.cnf
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
 
-RUN for v in $PHP_VERSIONS; do a2dismod $v; done
+RUN for v in $PHP_VERSIONS; do a2dismod $v || exit $?; done
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
 
