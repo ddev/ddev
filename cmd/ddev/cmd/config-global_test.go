@@ -17,6 +17,7 @@ import (
 func TestCmdGlobalConfig(t *testing.T) {
 	assert := asrt.New(t)
 
+	backupConfig := globalconfig.DdevGlobalConfig
 	// Start with no config file
 	configFile := globalconfig.GetGlobalConfigPath()
 	if fileutil.FileExists(configFile) {
@@ -26,9 +27,19 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// We need to make sure that the (corrupted, bogus) global config file is removed
 	// and then read (empty)
 	// nolint: errcheck
-	defer globalconfig.ReadGlobalConfig()
-	// nolint: errcheck
-	defer os.Remove(configFile)
+	defer func() {
+		globalconfig.DdevGlobalConfig = backupConfig
+		globalconfig.DdevGlobalConfig.OmitContainers = nil
+
+		err := os.Remove(configFile)
+		if err != nil {
+			t.Logf("Unable to remove %v: %v", configFile, err)
+		}
+		err = globalconfig.ReadGlobalConfig()
+		if err != nil {
+			t.Logf("Unable to ReadGlobalConfig: %v", err)
+		}
+	}()
 
 	// Look at initial config
 	args := []string{"config", "global"}
@@ -51,6 +62,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 
 	// Even though the global config is going to be deleted, make sure it's sane before leaving
 	args = []string{"config", "global", "--omit-containers", ""}
+	globalconfig.DdevGlobalConfig.OmitContainers = nil
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 }
