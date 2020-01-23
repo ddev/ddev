@@ -52,12 +52,14 @@ container: mariadb_containers mysql_containers
 mariadb_containers:
 	for item in $(MARIADB_VERSIONS); do \
 		set -euo pipefail ; \
+		printf "\n\n========== Building MariaDB $$item ==========\n"; \
 		docker build $(DOCKER_ARGS) --build-arg "DBVERSION=$${item}" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${item}:$(VERSION)" . ; \
 	done
 
 mysql_containers:
 	for item in $(MYSQL_VERSIONS) ; do \
 		set -euo pipefail ;\
+		printf "\n\n========== Building MySQL $$item ==========\n"; \
 		docker build $(DOCKER_ARGS) --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)" . ; \
 	done
 
