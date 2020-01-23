@@ -55,7 +55,7 @@ var WebTag = "20200120_bump_xdebug" // Note that this can be overridden by make
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20191217_utf8mb4_connection"
+var BaseDBTag = "20200122_fix_mysql_build"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin/phpmyadmin"

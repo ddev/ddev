@@ -11,7 +11,7 @@ ENV MYSQL_PASSWORD db
 ENV MYSQL_ROOT_PASSWORD root
 
 # Install extra packages
-RUN apt-get update && apt-get install -y tzdata sudo pv less vim wget
+RUN apt-get update && apt-get install -y tzdata sudo gnupg2 pv less vim wget
 
 RUN if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
     apt-get install -y lsb-release; \
