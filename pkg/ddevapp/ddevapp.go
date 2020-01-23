@@ -374,18 +374,10 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	if !noDrop {
 		preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 	}
-	inContainerCommand := fmt.Sprintf(`echo "%s" | mysql -uroot -proot`, preImportSQL)
-	_, _, err = app.Exec(&ExecOpts{
-		Service: "db",
-		Cmd:     inContainerCommand,
-	})
-	if err != nil {
-		return err
-	}
 
-	inContainerCommand = fmt.Sprintf(`pv %s/*.*sql | mysql %s`, insideContainerImportPath, targetDB)
+	inContainerCommand := fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | mysql %s`, preImportSQL, insideContainerImportPath, targetDB)
 	if imPath == "" && extPath == "" {
-		inContainerCommand = "pv | mysql " + targetDB
+		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && mysql %s`, preImportSQL, targetDB)
 	}
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",

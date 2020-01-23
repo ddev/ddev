@@ -860,6 +860,25 @@ func TestDdevImportDB(t *testing.T) {
 	app.Hooks = nil
 
 	for _, db := range []string{"db", "extradb"} {
+
+		// Import from stdin, make sure that works
+		inputFile := filepath.Join(testDir, "testdata", t.Name(), "stdintable.sql")
+		f, err := os.Open(inputFile)
+		require.NoError(t, err)
+		// nolint: errcheck
+		defer f.Close()
+		savedStdin := os.Stdin
+		os.Stdin = f
+		err = app.ImportDB("", "", false, false, db)
+		os.Stdin = savedStdin
+		assert.NoError(err)
+		out, _, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     fmt.Sprintf(`echo "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) FROM stdintable;" | mysql -N %s`, db, db),
+		})
+		assert.NoError(err)
+		assert.Equal(out, fmt.Sprintf("%s\n2\n", db))
+
 		// Import 2-user users.sql into users table
 		path := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
 		err = app.ImportDB(path, "", false, false, db)
