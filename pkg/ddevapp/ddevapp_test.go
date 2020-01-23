@@ -2270,7 +2270,7 @@ func TestGetAllURLs(t *testing.T) {
 	require.NotEmpty(t, webContainer)
 
 	expectedDirectAddress := app.GetWebContainerDirectHTTPSURL()
-	if ddevapp.GetCAROOT() == "" {
+	if globalconfig.GetCAROOT() == "" {
 		expectedDirectAddress = app.GetWebContainerDirectHTTPURL()
 	}
 

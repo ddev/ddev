@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 	"runtime"
 	"strings"
@@ -43,7 +44,7 @@ func TestCmdList(t *testing.T) {
 		// Look for standard items in the regular ddev list output
 		assert.Contains(string(out), v.Name)
 		testURL := app.GetHTTPSURL()
-		if ddevapp.GetCAROOT() == "" {
+		if globalconfig.GetCAROOT() == "" {
 			testURL = app.GetHTTPURL()
 		}
 		assert.Contains(string(out), testURL)

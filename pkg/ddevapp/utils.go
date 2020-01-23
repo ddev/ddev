@@ -95,7 +95,7 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 
 	urls := ""
 	if row["status"] == SiteRunning {
-		if GetCAROOT() != "" {
+		if globalconfig.GetCAROOT() != "" {
 			urls = row["httpsurl"].(string)
 		} else {
 			urls = row["httpurl"].(string)

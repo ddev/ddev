@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -69,6 +70,7 @@ func ReadGlobalConfig() error {
 	if DdevGlobalConfig.LastStartedVersion == "" {
 		DdevGlobalConfig.LastStartedVersion = version.DdevVersion
 	}
+
 	// Can't use fileutil.FileExists() here because of import cycle.
 	if _, err := os.Stat(globalConfigFile); err != nil {
 		// ~/.ddev doesn't exist and running as root (only ddev hostname could do this)
@@ -100,6 +102,9 @@ func ReadGlobalConfig() error {
 	}
 	if DdevGlobalConfig.ProjectList == nil {
 		DdevGlobalConfig.ProjectList = map[string]*ProjectInfo{}
+	}
+	if DdevGlobalConfig.MkcertCARoot == "" {
+		DdevGlobalConfig.MkcertCARoot = readCAROOT()
 	}
 
 	err = ValidateGlobalConfig()
@@ -314,4 +319,55 @@ func RemoveProjectInfo(projectName string) error {
 // GetGlobalProjectList() returns the global project list map
 func GetGlobalProjectList() map[string]*ProjectInfo {
 	return DdevGlobalConfig.ProjectList
+}
+
+// GetCAROOT() is just a wrapper on global config
+func GetCAROOT() string {
+	return DdevGlobalConfig.MkcertCARoot
+}
+
+// readCAROOT() verifies that the mkcert command is available and its CA keys readable.
+// 1. Find out CAROOT
+// 2. Look there to see if key/crt are readable
+// 3. If not, see if mkcert is even available, return empty
+
+func readCAROOT() string {
+
+	_, err := exec.LookPath("mkcert")
+	if err != nil {
+		return ""
+	}
+
+	out, err := exec.Command("mkcert", "-CAROOT").Output()
+	if err != nil {
+		return ""
+	}
+	root := strings.Trim(string(out), "\n")
+	if !fileIsReadable(filepath.Join(root, "rootCA-key.pem")) || !fileExists(filepath.Join(root, "rootCA.pem")) {
+		return ""
+	}
+
+	return root
+}
+
+// fileIsReadable checks to make sure a file exists and is readable
+// Copied from fileutil because of import cycles
+func fileIsReadable(name string) bool {
+	file, err := os.OpenFile(name, os.O_RDONLY, 0666)
+	if err != nil {
+		return false
+	}
+	file.Close()
+	return true
+}
+
+// fileExists checks a file's existence
+// Copied from fileutil because of import cycles
+func fileExists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }
