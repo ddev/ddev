@@ -663,6 +663,18 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	// Add web and db extra dockerfile info
 	// If there is a user-provided Dockerfile, use that as the base and then add
 	// our extra stuff like usernames, etc.
+	// The db-build and web-build directories are used for context
+	// so must exist. They usually do.
+	err = os.MkdirAll(app.GetConfigPath("db-build"), 0755)
+	if err != nil {
+		return "", err
+	}
+
+	err = os.MkdirAll(app.GetConfigPath("web-build"), 0755)
+	if err != nil {
+		return "", err
+	}
+
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages)
 	if err != nil {
 		return "", err

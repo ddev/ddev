@@ -798,11 +798,6 @@ func (app *DdevApp) Start() error {
 	// We don't care if the volume wasn't there
 	_ = dockerutil.RemoveVolume(app.GetNFSMountVolName())
 
-	// The db-build and web-build directories are used for context
-	// so must exist. They usually do.
-	_ = os.MkdirAll(app.GetConfigPath("db-build"), 0755)
-	_ = os.MkdirAll(app.GetConfigPath("web-build"), 0755)
-
 	_, _, err = dockerutil.ComposeCmd(files, "up", "--build", "-d")
 	if err != nil {
 		return err
