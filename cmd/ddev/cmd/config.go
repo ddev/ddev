@@ -293,6 +293,8 @@ func init() {
 
 	ConfigCommand.Flags().String("timezone", "", "Specify timezone for containers and php, like Europe/London or America/Denver or GMT or UTC")
 
+	ConfigCommand.Flags().Bool("disable-settings-management", false, "Prevent ddev from creating or updating CMS settings files")
+
 	RootCmd.AddCommand(ConfigCommand)
 }
 
@@ -510,6 +512,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		if err != nil {
 			util.Failed("Incorrect timezone: %v", err)
 		}
+	}
+
+	if cmd.Flag("disable-settings-management").Changed {
+		app.DisableSettingsManagement, _ = cmd.Flags().GetBool("disable-settings-management")
 	}
 
 	if uploadDirArg != "" {
