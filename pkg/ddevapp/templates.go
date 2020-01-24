@@ -427,7 +427,7 @@ services:
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
-    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-${DDEV_SITENAME}-built
+    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built
 
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
