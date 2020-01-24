@@ -95,7 +95,7 @@ func TestSSHAuth(t *testing.T) {
 	sshKeyPath := filepath.Join(destDdev, ".ssh")
 	sshKeyPath = dockerutil.MassageWindowsHostMountpoint(sshKeyPath)
 
-	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr, version.SSHAuthImage + ":" + version.SSHAuthTag + "-" + app.Name + "-built", "//test.expect.passphrase"})
+	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr, version.SSHAuthImage + ":" + version.SSHAuthTag + "-built", "//test.expect.passphrase"})
 	require.NoError(t, err)
 
 	// Try ssh, should succeed
