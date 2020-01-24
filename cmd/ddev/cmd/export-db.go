@@ -11,6 +11,7 @@ import (
 
 var outFileName string
 var gzipOption bool
+var exportTargetDB string
 
 // ExportDBCmd is the `ddev export-db` command.
 var ExportDBCmd = &cobra.Command{
@@ -36,7 +37,7 @@ var ExportDBCmd = &cobra.Command{
 			util.Failed("ddev can't export-db until the project is started, please start it first.")
 		}
 
-		err = app.ExportDB(outFileName, gzipOption)
+		err = app.ExportDB(outFileName, gzipOption, targetDB)
 		if err != nil {
 			util.Failed("Failed to export database for %s: %v", app.GetName(), err)
 		}
@@ -46,5 +47,6 @@ var ExportDBCmd = &cobra.Command{
 func init() {
 	ExportDBCmd.Flags().StringVarP(&outFileName, "file", "f", "", "Provide the path to output the dump")
 	ExportDBCmd.Flags().BoolVarP(&gzipOption, "gzip", "z", true, "If provided asset is an archive, provide the path to extract within the archive.")
+	ExportDBCmd.Flags().StringVarP(&exportTargetDB, "target-db", "d", "db", "If provided, target-db is alternate database to export")
 	RootCmd.AddCommand(ExportDBCmd)
 }

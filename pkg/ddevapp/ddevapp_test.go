@@ -996,7 +996,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			assert.NoError(err)
 
 			// Test that we can export-db to a gzipped file
-			err = app.ExportDB("tmp/users1.sql.gz", true)
+			err = app.ExportDB("tmp/users1.sql.gz", true, "db")
 			assert.NoError(err)
 
 			// Validate contents
@@ -1010,7 +1010,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			assert.NoError(err)
 
 			// Export to an ungzipped file and validate
-			err = app.ExportDB("tmp/users2.sql", false)
+			err = app.ExportDB("tmp/users2.sql", false, "db")
 			assert.NoError(err)
 
 			// Validate contents
@@ -1023,7 +1023,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 			// Capture to stdout without gzip compression
 			stdout := util.CaptureStdOut()
-			err = app.ExportDB("", false)
+			err = app.ExportDB("", false, "db")
 			assert.NoError(err)
 			out := stdout()
 			assert.Contains(out, "Table structure for table `users`")
@@ -1078,7 +1078,7 @@ func TestDdevExportDB(t *testing.T) {
 	assert.NoError(err)
 
 	// Test that we can export-db to a gzipped file
-	err = app.ExportDB("tmp/users1.sql.gz", true)
+	err = app.ExportDB("tmp/users1.sql.gz", true, "db")
 	assert.NoError(err)
 
 	// Validate contents
@@ -1092,7 +1092,7 @@ func TestDdevExportDB(t *testing.T) {
 	assert.NoError(err)
 
 	// Export to an ungzipped file and validate
-	err = app.ExportDB("tmp/users2.sql", false)
+	err = app.ExportDB("tmp/users2.sql", false, "db")
 	assert.NoError(err)
 
 	// Validate contents
@@ -1105,7 +1105,7 @@ func TestDdevExportDB(t *testing.T) {
 
 	// Capture to stdout without gzip compression
 	stdout := util.CaptureStdOut()
-	err = app.ExportDB("", false)
+	err = app.ExportDB("", false, "db")
 	assert.NoError(err)
 	output := stdout()
 	assert.Contains(output, "Table structure for table `users`")

@@ -414,16 +414,19 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 }
 
 // ExportDB exports the db, with optional output to a file, default gzip
-func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
+// targetDB is the db name if not default "db"
+func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 	app.DockerEnv()
-
+	if targetDB == "" {
+		targetDB = "db"
+	}
 	opts := &ExecOpts{
 		Service:   "db",
-		Cmd:       "mysqldump db",
+		Cmd:       "mysqldump " + targetDB,
 		NoCapture: true,
 	}
 	if gzip {
-		opts.Cmd = "mysqldump db | gzip"
+		opts.Cmd = fmt.Sprintf("mysqldump %s | gzip", targetDB)
 	}
 	if outFile != "" {
 		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE, 0644)
@@ -441,7 +444,19 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 		return err
 	}
 
-	return nil
+	confMsg := "Wrote database dump from " + app.Name + " " + targetDB + " "
+	if outFile != "" {
+		confMsg = confMsg + " to file " + outFile
+	}
+	if gzip {
+		confMsg = confMsg + " in gzip format"
+	} else {
+		confMsg = confMsg + " in plain text format"
+	}
+
+	_, err = fmt.Fprintf(os.Stderr, confMsg+".\n")
+
+	return err
 }
 
 // SiteStatus returns the current status of an application determined from web and db service health.
