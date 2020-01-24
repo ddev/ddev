@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
@@ -15,23 +13,24 @@ var exportTargetDB string
 
 // ExportDBCmd is the `ddev export-db` command.
 var ExportDBCmd = &cobra.Command{
-	Use:     "export-db",
-	Short:   "Dump a database to stdout or to a file",
-	Long:    `Dump a database to stdout or to a file.`,
-	Example: "ddev export-db >/tmp/db.sql.gz\nddev export-db --gzip=false >/tmp/db.sql\nddev export-db -f /tmp/db.sql.gz",
+	Use:   "export-db [project]",
+	Short: "Dump a database to stdout or to a file",
+	Long:  `Dump a database to stdout or to a file.`,
+	Example: `ddev export-db >/tmp/db.sql.gz
+ddev export-db --gzip=false >/tmp/db.sql
+ddev export-db -f /tmp/db.sql.gz
+ddev export-db --gzip=false myproject >/tmp/myproject.sql`,
+	Args: cobra.RangeArgs(0, 1),
 	PreRun: func(cmd *cobra.Command, args []string) {
-		if len(args) > 0 {
-			err := cmd.Usage()
-			util.CheckErr(err)
-			os.Exit(0)
-		}
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := ddevapp.GetActiveApp("")
+		projects, err := getRequestedProjects(args, false)
 		if err != nil {
-			util.Failed("Failed to find project from which to export database: %v", err)
+			util.Failed("Unable to get project(s): %v", err)
 		}
+
+		app := projects[0]
 
 		if app.SiteStatus() != ddevapp.SiteRunning {
 			util.Failed("ddev can't export-db until the project is started, please start it first.")

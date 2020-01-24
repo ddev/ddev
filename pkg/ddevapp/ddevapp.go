@@ -444,9 +444,11 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 		return err
 	}
 
-	confMsg := "Wrote database dump from " + app.Name + " " + targetDB + " "
+	confMsg := "Wrote database dump from " + app.Name + " database '" + targetDB + "'"
 	if outFile != "" {
 		confMsg = confMsg + " to file " + outFile
+	} else {
+		confMsg = confMsg + " to stdout"
 	}
 	if gzip {
 		confMsg = confMsg + " in gzip format"

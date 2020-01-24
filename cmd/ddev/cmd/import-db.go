@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
@@ -17,7 +15,8 @@ var progressOption bool
 
 // ImportDBCmd represents the `ddev import-db` command.
 var ImportDBCmd = &cobra.Command{
-	Use:   "import-db",
+	Use:   "import-db [project]",
+	Args:  cobra.RangeArgs(0, 1),
 	Short: "Import a sql archive into the project.",
 	Long: `Import a sql archive into the project.
 The database can be provided as a SQL dump in a .sql, .sql.gz, .mysql, .mysql.gz, .zip, .tgz, or .tar.gz
@@ -33,18 +32,15 @@ ddev import-db <db.sql
 gzip -dc db.sql.gz | ddev import-db`,
 
 	PreRun: func(cmd *cobra.Command, args []string) {
-		if len(args) > 0 {
-			err := cmd.Usage()
-			util.CheckErr(err)
-			os.Exit(0)
-		}
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := ddevapp.GetActiveApp("")
+		projects, err := getRequestedProjects(args, false)
 		if err != nil {
-			util.Failed("Failed to import database: %v", err)
+			util.Failed("Unable to get project(s): %v", err)
 		}
+
+		app := projects[0]
 
 		if app.SiteStatus() != ddevapp.SiteRunning {
 			err = app.Start()
