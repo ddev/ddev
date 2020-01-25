@@ -10,12 +10,13 @@ services:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
     build:
       context: '{{ .DBBuildContext }}'
+      dockerfile: '{{ .DBBuildDockerfile }}'
       args:
         BASE_IMAGE: $DDEV_DBIMAGE
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
-    image: ${DDEV_DBIMAGE}-built
+    image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
     stop_grace_period: 60s
     volumes:
       - type: "volume"
@@ -53,12 +54,13 @@ services:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     build:
       context: '{{ .WebBuildContext }}'
+      dockerfile: '{{ .WebBuildDockerfile }}'
       args:
         BASE_IMAGE: $DDEV_WEBIMAGE
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
-    image: ${DDEV_WEBIMAGE}-built
+    image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     cap_add:
       - SYS_PTRACE
     volumes:

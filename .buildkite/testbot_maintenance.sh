@@ -29,3 +29,7 @@ windows)
     choco upgrade -y mkcert golang
     ;;
 esac
+
+# Remove any -built images, as we want to make sure tests do the building.
+docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null || true
+docker rmi -f $(docker images | awk '/drud.*-built/ {print $3}' ) >/dev/null || true

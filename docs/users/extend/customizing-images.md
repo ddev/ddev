@@ -23,12 +23,19 @@ For more complex requirements, you can add .ddev/web-build/Dockerfile or .ddev/d
 
 Examples of possible Dockerfiles are given in `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example` (These examples are created in your project when you `ddev config` the project.)
 
+You can use the .ddev/*-build/ directory as the Docker "context" directory as well. So for example if a file named README.txt exists in .ddev/web-build, you can use `ADD README.txt /` in the Dockerfile.
+
 An example web image `.ddev/web-build/Dockerfile` might be:
 
 ```
 ARG BASE_IMAGE=drud/ddev-webserver:20190422_blackfire_io
 FROM $BASE_IMAGE
 RUN npm install --global gulp-cli
+ADD README.txt /
 ```
 
-Note that if a Dockerfile is provided, any config.yaml `webimage_extra_packages` or `dbimage_extra_packages` will be ignored.
+Note that if a Dockerfile is provided, any config.yaml `webimage_extra_packages` or `dbimage_extra_packages` will be ignored. If you need to add packages as well as other custom configuration, add them to your Dockerfile with a line like
+
+```
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests php-yaml php7.3-ldap
+```

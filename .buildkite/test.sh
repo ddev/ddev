@@ -36,10 +36,9 @@ echo "--- running sanetestbot.sh"
 echo "--- cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
 if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
-	docker rm -f $(docker ps -aq) || true
+	docker rm -f $(docker ps -aq) >/dev/null || true
 fi
-docker system prune --volumes --force || true
-docker rm -f $(docker ps -aq) || true
+docker system prune --volumes --force >/dev/null || true
 
 # Update all images that could have changed
 ( docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull ) || true

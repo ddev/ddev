@@ -759,8 +759,8 @@ func TestExtraPackages(t *testing.T) {
 		app.WebImageExtraPackages = nil
 		app.DBImageExtraPackages = nil
 		_ = app.WriteConfig()
-		_ = os.RemoveAll(app.GetConfigPath("web-build"))
-		_ = os.RemoveAll(app.GetConfigPath("db-build"))
+		_ = fileutil.RemoveContents(app.GetConfigPath("web-build"))
+		_ = fileutil.RemoveContents(app.GetConfigPath("db-build"))
 		_ = app.Stop(true, false)
 	}()
 
