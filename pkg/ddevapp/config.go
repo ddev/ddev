@@ -458,8 +458,6 @@ func (app *DdevApp) GetHostnames() []string {
 	// The value is useless, so just use the int 1 for assignment.
 	nameListMap := make(map[string]int)
 
-	nameListMap[app.GetHostname()] = 1
-
 	for _, name := range app.AdditionalHostnames {
 		nameListMap[name+"."+app.ProjectTLD] = 1
 	}
@@ -468,12 +466,18 @@ func (app *DdevApp) GetHostnames() []string {
 		nameListMap[name] = 1
 	}
 
+	// Make sure the primary hostname didn't accidentally get added, it will be prepended
+	delete(nameListMap, app.GetHostname())
+
 	// Now walk the map and extract the keys into an array.
 	nameListArray := make([]string, 0, len(nameListMap))
 	for k := range nameListMap {
 		nameListArray = append(nameListArray, k)
 	}
 	sort.Strings(nameListArray)
+	// We want the primary hostname to be first in the list.
+	nameListArray = append([]string{app.GetHostname()}, nameListArray...)
+
 	return nameListArray
 }
 

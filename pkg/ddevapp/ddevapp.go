@@ -759,7 +759,7 @@ func (app *DdevApp) Start() error {
 	// Warn the user if there is any custom configuration in use.
 	app.CheckCustomConfig()
 
-	caRoot := GetCAROOT()
+	caRoot := globalconfig.GetCAROOT()
 	if caRoot == "" {
 		util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
 	}
@@ -1445,8 +1445,10 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 
 // GetPrimaryURL() returns the primary URL that can be used, https or http
 func (app *DdevApp) GetPrimaryURL() string {
-	httpURLs, urlList, _ := app.GetAllURLs()
-	if GetCAROOT() == "" {
+	httpURLs, httpsURLs, _ := app.GetAllURLs()
+	urlList := httpsURLs
+	// If no mkcert trusted https, use the httpURLs instead
+	if globalconfig.GetCAROOT() == "" {
 		urlList = httpURLs
 	}
 	return urlList[0]

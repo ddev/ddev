@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -41,7 +41,7 @@ var RestartCmd = &cobra.Command{
 
 			util.Success("Restarted %s", app.GetName())
 			httpURLs, urlList, _ := app.GetAllURLs()
-			if ddevapp.GetCAROOT() == "" {
+			if globalconfig.GetCAROOT() == "" {
 				urlList = httpURLs
 			}
 

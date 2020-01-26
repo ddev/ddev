@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -49,7 +50,7 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 
 			util.Success("Successfully started %s", project.GetName())
 			httpURLs, urlList, _ := project.GetAllURLs()
-			if ddevapp.GetCAROOT() == "" {
+			if globalconfig.GetCAROOT() == "" {
 				urlList = httpURLs
 			}
 			util.Success("Project can be reached at %s", strings.Join(urlList, " "))

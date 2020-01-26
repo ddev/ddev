@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -41,7 +42,7 @@ type GlobalConfig struct {
 	RouterBindAllInterfaces bool                    `yaml:"router_bind_all_interfaces"`
 	DeveloperMode           bool                    `yaml:"developer_mode,omitempty"`
 	InstrumentationUser     string                  `yaml:"instrumentation_user,omitempty"`
-	LastUsedVersion         string                  `yaml:"last_used_version"`
+	LastStartedVersion      string                  `yaml:"last_started_version"`
 	MkcertCARoot            string                  `yaml:"mkcert_caroot"`
 	ProjectList             map[string]*ProjectInfo `yaml:"project_info"`
 }
@@ -65,6 +66,10 @@ func ReadGlobalConfig() error {
 	globalConfigFile := GetGlobalConfigPath()
 	// This is added just so we can see it in global; not checked.
 	DdevGlobalConfig.APIVersion = version.DdevVersion
+	// Make sure that LastStartedVersion always has a valid value
+	if DdevGlobalConfig.LastStartedVersion == "" {
+		DdevGlobalConfig.LastStartedVersion = version.DdevVersion
+	}
 
 	// Can't use fileutil.FileExists() here because of import cycle.
 	if _, err := os.Stat(globalConfigFile); err != nil {
@@ -75,7 +80,7 @@ func ReadGlobalConfig() error {
 			return nil
 		}
 		if os.IsNotExist(err) {
-			err := WriteGlobalConfig(GlobalConfig{})
+			err := WriteGlobalConfig(DdevGlobalConfig)
 			if err != nil {
 				return err
 			}
@@ -97,6 +102,9 @@ func ReadGlobalConfig() error {
 	}
 	if DdevGlobalConfig.ProjectList == nil {
 		DdevGlobalConfig.ProjectList = map[string]*ProjectInfo{}
+	}
+	if DdevGlobalConfig.MkcertCARoot == "" {
+		DdevGlobalConfig.MkcertCARoot = readCAROOT()
 	}
 
 	err = ValidateGlobalConfig()
@@ -122,7 +130,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	instructions := `
 # You can turn off usage of the dba (phpmyadmin) container and/or
 # ddev-ssh-agent containers with
-# omit_containers[\"dba\", \"ddev-ssh-agent\"]
+# omit_containers["dba", "ddev-ssh-agent"]
 # and you can opt in or out of sending instrumentation the ddev developers with
 # instrumentation_opt_in: true # or false
 #
@@ -311,4 +319,55 @@ func RemoveProjectInfo(projectName string) error {
 // GetGlobalProjectList() returns the global project list map
 func GetGlobalProjectList() map[string]*ProjectInfo {
 	return DdevGlobalConfig.ProjectList
+}
+
+// GetCAROOT() is just a wrapper on global config
+func GetCAROOT() string {
+	return DdevGlobalConfig.MkcertCARoot
+}
+
+// readCAROOT() verifies that the mkcert command is available and its CA keys readable.
+// 1. Find out CAROOT
+// 2. Look there to see if key/crt are readable
+// 3. If not, see if mkcert is even available, return empty
+
+func readCAROOT() string {
+
+	_, err := exec.LookPath("mkcert")
+	if err != nil {
+		return ""
+	}
+
+	out, err := exec.Command("mkcert", "-CAROOT").Output()
+	if err != nil {
+		return ""
+	}
+	root := strings.Trim(string(out), "\n")
+	if !fileIsReadable(filepath.Join(root, "rootCA-key.pem")) || !fileExists(filepath.Join(root, "rootCA.pem")) {
+		return ""
+	}
+
+	return root
+}
+
+// fileIsReadable checks to make sure a file exists and is readable
+// Copied from fileutil because of import cycles
+func fileIsReadable(name string) bool {
+	file, err := os.OpenFile(name, os.O_RDONLY, 0666)
+	if err != nil {
+		return false
+	}
+	file.Close()
+	return true
+}
+
+// fileExists checks a file's existence
+// Copied from fileutil because of import cycles
+func fileExists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }

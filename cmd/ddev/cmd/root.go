@@ -9,6 +9,7 @@ import (
 	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/rogpeppe/go-internal/semver"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -184,12 +185,12 @@ func instrumentationNotSetUpWarning() {
 // from the last saved version. If it is, prompt to request anon ddev usage stats
 // and update the info.
 func checkDdevVersionAndOptInInstrumentation() error {
-	if !output.JSONOutput && version.COMMIT != globalconfig.DdevGlobalConfig.LastUsedVersion && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation {
+	if !output.JSONOutput && semver.Compare(version.COMMIT, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/stable/users/cli-usage/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
 		}
-		globalconfig.DdevGlobalConfig.LastUsedVersion = version.VERSION
+		globalconfig.DdevGlobalConfig.LastStartedVersion = version.VERSION
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		if err != nil {
 			return err
