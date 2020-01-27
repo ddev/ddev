@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -59,7 +60,9 @@ func TestCmdImportDB(t *testing.T) {
 	assert.Equal("Tables_in_db\nusers\n", out)
 
 	// Test with named project (outside project directory)
-	err = os.Chdir("/tmp")
+	// Test with named project (outside project directory)
+	tmpDir := testcommon.CreateTmpDir("TestCmdExportDB")
+	err = os.Chdir(tmpDir)
 	assert.NoError(err)
 
 	// Run the import-db command with stdin coming from users.sql

@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -54,8 +55,10 @@ func TestCmdExportDB(t *testing.T) {
 	assert.True(fileutil.FgrepStringInFile(outputFileName, "13751eca-19cf-41c2-90d4-9363f3a07c45"))
 
 	// Test with named project (outside project directory)
-	err = os.Chdir("/tmp")
+	tmpDir := testcommon.CreateTmpDir("TestCmdExportDB")
+	err = os.Chdir(tmpDir)
 	assert.NoError(err)
+
 	err = os.RemoveAll(outputFileName)
 	assert.NoError(err)
 	command = exec.Command(DdevBin, "export-db", site.Name, "-f="+outputFileName, "--gzip=false")
