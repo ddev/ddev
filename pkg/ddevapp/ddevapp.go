@@ -620,7 +620,7 @@ func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 func (app *DdevApp) ComposeFiles() ([]string, error) {
 	files, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose*.y*l"))
 	if err != nil || len(files) == 0 {
-		return []string{}, fmt.Errorf("failed to load any docker-compose.*y*l files: %v", err)
+		return []string{}, fmt.Errorf("failed to load any docker-compose.*y*l files in %s: err=%v", app.AppConfDir(), err)
 	}
 
 	mainfiles, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose.y*l"))
