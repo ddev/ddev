@@ -20,10 +20,10 @@ nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 brew tap drud/ddev
 brew unlink python@2 || true
 
-brew install mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre || true
-brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre
+brew install -q mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre || true
+brew link -q mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre
 
-brew link --force mysql-client
+brew link -q --force mysql-client
 
 # Get the Plugins for NSIS
 curl -fsSL -o /tmp/EnVar-Plugin.zip https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d /usr/local/share/nsis /tmp/EnVar-Plugin.zip
@@ -34,7 +34,7 @@ mkdir -p /usr/local/etc/my.cnf.d
 
 mkcert -install
 
-pip3 install yq
+pip3 install -q yq
 
 curl -fsSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/releases/download/v0.3.2/gotestsum_0.3.2_darwin_amd64.tar.gz && tar -C /usr/local/bin -zxf /tmp/gotestsum.tgz gotestsum
 

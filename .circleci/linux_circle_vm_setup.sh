@@ -18,9 +18,12 @@ echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
 
 . ~/.bashrc
 
-brew update && brew tap drud/ddev
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_INSTALL_CLEANUP=1
+
+brew tap -q drud/ddev
 for item in osslsigncode golang mkcert ddev makensis; do
-    brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
+    brew install -q $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade -q $item
 done
 
 # nvm on CircleCI has a few things. 10 is compatible with markdownlint-cli
@@ -28,7 +31,7 @@ nvm use 10
 npm install --global markdownlint-cli
 markdownlint --version
 # readthedocs has ancient version of mkdocs in it.
-pip3 install yq mkdocs==0.17.5
+pip3 install -q yq mkdocs==0.17.5
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
 wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.04/nsis-3.04.zip/download && sudo unzip -o -d /usr/local/share download && sudo mv /usr/local/share/nsis-3.04 /usr/local/share/nsis
