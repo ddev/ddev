@@ -8,6 +8,7 @@ set -o pipefail
 set -o nounset
 
 MKCERT_VERSION=v1.4.0
+BUILD_IMAGE_TARBALLS=false
 
 ARTIFACTS=${1:-/artifacts}
 BASE_DIR=$PWD
