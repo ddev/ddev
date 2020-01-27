@@ -18,9 +18,16 @@ func TestCmdExportDB(t *testing.T) {
 	testDir, _ := os.Getwd()
 	site := TestSites[0]
 	cleanup := site.Chdir()
-	defer cleanup()
+
 	app, err := ddevapp.NewApp(site.Dir, false, "")
 	assert.NoError(err)
+
+	defer func() {
+		// Make sure all databases are back to default empty
+		_ = app.Stop(true, false)
+		_ = app.Start()
+		cleanup()
+	}()
 
 	// Read in a database
 	inputFileName := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
@@ -37,21 +44,23 @@ func TestCmdExportDB(t *testing.T) {
 	assert.NoError(err)
 
 	// Export the database and verify content of output
-	outputFileName := filepath.Join("tmp", t.Name(), "output.sql")
+	_ = os.MkdirAll(filepath.Join("tmp", t.Name()), 0755)
+	outputFileName := filepath.Join(site.Dir, "tmp", t.Name(), "output.sql")
 	_ = os.RemoveAll(outputFileName)
 	command = exec.Command(DdevBin, "export-db", "-f="+outputFileName, "--gzip=false")
-	_, err = command.CombinedOutput()
-	assert.NoError(err)
+	byteout, err := command.CombinedOutput()
+	require.NoError(t, err, "byteout=%s", string(byteout))
 	assert.FileExists(outputFileName)
 	assert.True(fileutil.FgrepStringInFile(outputFileName, "13751eca-19cf-41c2-90d4-9363f3a07c45"))
 
 	// Test with named project (outside project directory)
 	err = os.Chdir("/tmp")
 	assert.NoError(err)
-	_ = os.RemoveAll(outputFileName)
-	command = exec.Command(DdevBin, "export-db", site.Name, "-f="+outputFileName, "--gzip=false")
-	_, err = command.CombinedOutput()
+	err = os.RemoveAll(outputFileName)
 	assert.NoError(err)
+	command = exec.Command(DdevBin, "export-db", site.Name, "-f="+outputFileName, "--gzip=false")
+	byteout, err = command.CombinedOutput()
+	assert.NoError(err, "export-db failure output=%s", string(byteout))
 	assert.FileExists(outputFileName)
 	assert.True(fileutil.FgrepStringInFile(outputFileName, "13751eca-19cf-41c2-90d4-9363f3a07c45"))
 }

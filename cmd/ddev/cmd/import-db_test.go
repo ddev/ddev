@@ -18,16 +18,21 @@ func TestCmdImportDB(t *testing.T) {
 	testDir, _ := os.Getwd()
 	site := TestSites[0]
 	cleanup := site.Chdir()
-	defer cleanup()
 	app, err := ddevapp.NewApp(site.Dir, false, "")
 	assert.NoError(err)
+	defer func() {
+		// Make sure all databases are back to default empty
+		_ = app.Stop(true, false)
+		_ = app.Start()
+		cleanup()
+	}()
 
 	// Make sure we start with nothing in db
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "mysql -e 'SHOW TABLES;'",
+		Cmd:     "mysql -N -e 'SHOW TABLES;'",
 	})
-	assert.NoError(err)
+	assert.NoError(err, "mysql exec output=%s", out)
 	require.Equal(t, "", out)
 
 	// Set up to read from the sql import file
