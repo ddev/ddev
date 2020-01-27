@@ -1110,7 +1110,21 @@ func TestDdevExportDB(t *testing.T) {
 	output := stdout()
 	assert.Contains(output, "Table structure for table `users`")
 
-	// Try it with capture to stdout, validate contents.
+	// Export an alternate database
+	importPath = filepath.Join(testDir, "testdata", t.Name(), "users.sql")
+	err = app.ImportDB(importPath, "", false, false, "anotherdb")
+	require.NoError(t, err)
+	err = app.ExportDB("tmp/anotherdb.sql.gz", true, "anotherdb")
+	assert.NoError(err)
+	importPath = "tmp/anotherdb.sql.gz"
+	err = app.ImportDB(importPath, "", false, false, "thirddb")
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`),
+	})
+	assert.NoError(err)
+	assert.Equal("2\n", out)
+
 	runTime()
 }
 

@@ -29,6 +29,7 @@ ddev import-db --src=.tarballs/junk.sql
 ddev import-db --src=.tarballs/junk.sql.gz
 ddev import-db --target-db=newdb --src=.tarballs/junk.sql.gz
 ddev import-db <db.sql
+ddev import-db someproject <db.sql
 gzip -dc db.sql.gz | ddev import-db`,
 
 	PreRun: func(cmd *cobra.Command, args []string) {

@@ -52,4 +52,18 @@ func TestCmdImportDB(t *testing.T) {
 	})
 	assert.NoError(err)
 	assert.Equal("Tables_in_db\nusers\n", out)
+
+	// Test with named project (outside project directory)
+	os.Chdir("/tmp")
+
+	// Run the import-db command with stdin coming from users.sql
+	byteout, err := exec.Command(DdevBin, "import-db", app.Name, "--target-db=sparedb", "-f="+inputFile).CombinedOutput()
+	assert.NoError(err, "failed import-db: %v (%s)", err, string(byteout))
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N sparedb`,
+	})
+	assert.NoError(err)
+	assert.Equal("2\n", out)
+
 }
