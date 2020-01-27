@@ -1118,6 +1118,7 @@ func TestDdevExportDB(t *testing.T) {
 	assert.NoError(err)
 	importPath = "tmp/anotherdb.sql.gz"
 	err = app.ImportDB(importPath, "", false, false, "thirddb")
+	assert.NoError(err)
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`),

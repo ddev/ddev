@@ -54,7 +54,8 @@ func TestCmdImportDB(t *testing.T) {
 	assert.Equal("Tables_in_db\nusers\n", out)
 
 	// Test with named project (outside project directory)
-	os.Chdir("/tmp")
+	err = os.Chdir("/tmp")
+	assert.NoError(err)
 
 	// Run the import-db command with stdin coming from users.sql
 	byteout, err := exec.Command(DdevBin, "import-db", app.Name, "--target-db=sparedb", "-f="+inputFile).CombinedOutput()
