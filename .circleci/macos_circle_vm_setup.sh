@@ -12,18 +12,17 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_INSTALL_CLEANUP=1
 
 # Get docker in first so we can install it and work on other things
-brew cask install ngrok
-
 sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
 nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
-brew tap drud/ddev
-brew unlink python@2 || true
+brew cask install ngrok >/dev/null
+brew tap drud/ddev >/dev/null
+brew unlink python@2 >/dev/null || true
 
-brew install -q mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre || true
-brew link -q mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre
+brew install mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre >/dev/null || true
+brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre >/dev/null
 
-brew link -q --force mysql-client
+brew link --force mysql-client >/dev/null
 
 # Get the Plugins for NSIS
 curl -fsSL -o /tmp/EnVar-Plugin.zip https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d /usr/local/share/nsis /tmp/EnVar-Plugin.zip

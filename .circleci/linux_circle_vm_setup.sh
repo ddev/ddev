@@ -21,9 +21,9 @@ echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
 export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_INSTALL_CLEANUP=1
 
-brew tap -q drud/ddev
+brew tap drud/ddev >/dev/null
 for item in osslsigncode golang mkcert ddev makensis; do
-    brew install -q $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade -q $item
+    brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done
 
 # nvm on CircleCI has a few things. 10 is compatible with markdownlint-cli
