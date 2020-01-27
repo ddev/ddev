@@ -429,7 +429,6 @@ jobs:
     working_directory: ~/ddev
     environment:
       DDEV_DEBUG: "true"
-      BUILD_IMAGE_TARBALLS: "false"
     steps:
     - checkout
     - restore_cache:
