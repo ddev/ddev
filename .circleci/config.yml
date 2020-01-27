@@ -11,15 +11,10 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v10
+        - linux-v11
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
-    - save_cache:
-        key: homebrew-linux-v10
-        paths:
-        - /home/linuxbrew
-        - ~/.ddev/testcache
 
     - run:
         command: source ~/.bashrc && nvm use 10 && make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
@@ -38,6 +33,11 @@ jobs:
     - persist_to_workspace:
         root: ~/
         paths: ddev
+    - save_cache:
+        key: linux-v11
+        paths:
+        - /home/linuxbrew
+        - ~/.ddev/testcache
 
   lx_nginx_fpm_test:
     machine:
@@ -52,16 +52,11 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v10
+        - linux-v11
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
-    - save_cache:
-        key: homebrew-linux-v10
-        paths:
-        - /home/linuxbrew
-        - ~/.ddev/testcache
 
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
@@ -70,10 +65,15 @@ jobs:
         no_output_timeout: "40m"
     - store_test_results:
         path: /tmp/testresults
+    - save_cache:
+        key: linux-v11
+        paths:
+        - /home/linuxbrew
+        - ~/.ddev/testcache
 
   mac_nginx_fpm_test:
     macos:
-      xcode: "11.0.0"
+      xcode: "11.3.1"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
@@ -84,29 +84,26 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v15
+        - macos-v16
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
-    - save_cache:
-        key: homebrew-macos-v15
-        paths:
-        - /usr/local/Homebrew
-        - /usr/local/Cellar
-        - ~/Library/Caches/Homebrew
-        - ~/.ddev/testcache
     - run:
         command: make -s test
         name: ddev tests
         no_output_timeout: "40m"
+    - save_cache:
+        key: macos-v16
+        paths:
+        - ~/.ddev/testcache
     - store_test_results:
         path: /tmp/testresults
 
   mac_apache_fpm_test:
     macos:
-      xcode: "11.0.0"
+      xcode: "11.3.1"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
@@ -117,7 +114,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v15
+        - macos-v16
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -130,16 +127,13 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: homebrew-macos-v15
+        key: macos-v16
         paths:
-        - /usr/local/Homebrew
-        - /usr/local/Cellar
-        - ~/Library/Caches/Homebrew
         - ~/.ddev/testcache
 
   mac_nfsmount_test:
     macos:
-      xcode: "11.3.0"
+      xcode: "11.3.1"
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: "true"
@@ -150,24 +144,21 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - homebrew-macos-v15
+        - macos-v16
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
-    - save_cache:
-        key: homebrew-macos-v15
-        paths:
-        - /usr/local/Homebrew
-        - /usr/local/Cellar
-        - ~/Library/Caches/Homebrew
-        - ~/.ddev/testcache
     - run:
         command: make -s test
         name: ddev tests
         no_output_timeout: "40m"
     - store_test_results:
         path: /tmp/testresults
+    - save_cache:
+        key: macos-v16
+        paths:
+        - ~/.ddev/testcache
 
   lx_apache_fpm_test:
     machine:
@@ -182,18 +173,12 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v10
+        - linux-v11
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
-    - save_cache:
-        key: homebrew-linux-v10
-        paths:
-        - /home/linuxbrew
-        - ~/.ddev/testcache
-
     # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
@@ -202,6 +187,11 @@ jobs:
         no_output_timeout: "120m"
     - store_test_results:
         path: /tmp/testresults
+    - save_cache:
+        key: linux-v11
+        paths:
+        - /home/linuxbrew
+        - ~/.ddev/testcache
 
   lx_apache_cgi_test:
     machine:
@@ -216,24 +206,23 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v10
+        - linux-v11
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
-    - save_cache:
-        key: homebrew-linux-v10
-        paths:
-        - /home/linuxbrew
-        - ~/.ddev/testcache
-
     - run:
         command: make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
         no_output_timeout: "120m"
     - store_test_results:
         path: /tmp/testresults
+    - save_cache:
+        key: linux-v11
+        paths:
+        - /home/linuxbrew
+        - ~/.ddev/testcache
 
   lx_nfsmount_test:
     machine:
@@ -248,17 +237,12 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v10
+        - linux-v11
     - attach_workspace:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
-    - save_cache:
-        key: homebrew-linux-v10
-        paths:
-        - /home/linuxbrew
-        - ~/.ddev/testcache
 
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
@@ -268,6 +252,11 @@ jobs:
         no_output_timeout: "120m"
     - store_test_results:
         path: /tmp/testresults
+    - save_cache:
+        key: linux-v11
+        paths:
+        - /home/linuxbrew
+        - ~/.ddev/testcache
 
   staticrequired:
     machine:
@@ -279,16 +268,10 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v10
+        - linux-v11
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
-    - save_cache:
-        key: homebrew-linux-v10
-        paths:
-        - /home/linuxbrew
-        - ~/.ddev/testcache
-
     - run:
         command: source ~/.bashrc && nvm use 10 && make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: staticrequired
@@ -304,15 +287,10 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v10
+        - linux-v11
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
-    - save_cache:
-        key: homebrew-linux-v10
-        paths:
-        - /home/linuxbrew
-        - ~/.ddev/testcache
 
     - run:
         command: |
@@ -326,26 +304,21 @@ jobs:
               popd
           done
         name: linux container test
+    - save_cache:
+        key: linux-v11
+        paths:
+        - /home/linuxbrew
+        - ~/.ddev/testcache
 
   mac_container_test:
     macos:
-      xcode: "11.3.0"
+      xcode: "11.3.1"
     working_directory: ~/ddev
     steps:
     - checkout
-    - restore_cache:
-        keys:
-        - homebrew-macos-v15
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: macOS Circle VM setup - tools, docker, golang
-    - save_cache:
-        key: homebrew-macos-v15
-        paths:
-        - /usr/local/Homebrew
-        - /usr/local/Cellar
-        - ~/Library/Caches/Homebrew
-        - ~/.ddev/testcache
 
     - run:
         command: |
@@ -367,7 +340,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v10
+        - linux-v11
     - attach_workspace:
         at: ~/
     - run:
@@ -375,7 +348,7 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: homebrew-linux-v10
+        key: linux-v11
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -396,12 +369,12 @@ jobs:
 #      - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
 #      - restore_cache:
 #          keys:
-#          - homebrew-linux-v10
+#          - linux-v11
 #      - run:
 #          command: ./.circleci/linux_circle_vm_setup.sh
 #          name: TAG BUILD Circle VM setup - tools, docker, golang
 #      - save_cache:
-#          key: homebrew-linux-v10
+#          key: linux-v11
 #          paths:
 #          - /home/linuxbrew
 #          - ~/.ddev/testcache
@@ -425,25 +398,15 @@ jobs:
   # 'tag_build' is used to push a full release
   tag_build:
     macos:
-      xcode: "11.3.0"
+      xcode: "11.3.1"
     working_directory: ~/ddev
     environment:
       DDEV_DEBUG: "true"
     steps:
     - checkout
-    - restore_cache:
-        keys:
-        - homebrew-macos-v15
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: RELEASE BUILD (macOS) Circle VM setup
-    - save_cache:
-        key: homebrew-macos-v15
-        paths:
-        - /usr/local/Homebrew
-        - /usr/local/Cellar
-        - ~/Library/Caches/Homebrew
-        - ~/.ddev/testcache
+        name: TAG BUILD (macOS) Circle VM setup
 
     - run:
         command: make -s clean linux windows_install chocolatey
