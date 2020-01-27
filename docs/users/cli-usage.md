@@ -1,4 +1,4 @@
-# ddev Command-Line Usage
+## ddev Command-Line Usage
 
 Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands. There are commands to configure a project, start, stop, describe, etc. Each command also has help. For example, `ddev stop -h` shows that `ddev rm` is an alias, and shows all the many flags that can be used with `ddev stop`.
 

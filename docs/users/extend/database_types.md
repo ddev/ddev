@@ -1,4 +1,4 @@
-# Database Server Types
+## Database Server Types
 
 ddev supports most versions of MariaDB and MySQL database servers. You can configure the type that you want using the `.ddev/config.yaml` file, for example:
 
@@ -10,7 +10,7 @@ The default version is MariaDB 10.2 and it works for most purposes.
 
 You can also use `ddev config --mariadb-version=10.4` or `ddev config --mysql-version=8.0`
 
-## Caveats
+### Caveats
 
 * If you change the database type or version, the existing database may not be compatible with your change, so you'll want to use `ddev export-db` to save a dump first.
 * When you change database type, it's best to destroy the existing database using `ddev stop --remove-data` before changing, then use `ddev import-db` to import the db you already exported.

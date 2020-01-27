@@ -1,4 +1,4 @@
-# In-Container home directory configuration
+## In-Container home directory configuration
 
 There are a number of reasons that your web container home directory may need custom configuration. You may want your normal git configuration in there, or a composer auth.json, etc.
 

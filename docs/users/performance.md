@@ -1,4 +1,4 @@
-# Performance
+## Performance
 
 Every developer wants both quick starts of the environment and quick response to web page requests. DDEV-Local is always focused on improving this. However, both Docker Desktop for Windows and Docker Desktop for Mac have significant performance problems with mounted filesystems (like the mounted project where code can be edited either inside the container or on the host). There are currently two ways to work around this Docker performance issue.
 

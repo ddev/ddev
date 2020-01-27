@@ -1,20 +1,20 @@
-# Extending and Customizing Environments
+## Extending and Customizing Environments
 
 ddev provides several ways in which the environment for a project using ddev can be customized and extended.
 
-## Changing PHP version
+### Changing PHP version
 
 The project's `.ddev/config.yaml` file defines the PHP version to use. This can be changed, and the php_version can be set there to (currently) "5.6", "7.0", "7.1", "7.2",  "7.3", or "7.4". The current default is php 7.3.
 
-### Older versions of PHP
+#### Older versions of PHP
 
 [Support for older versions of PHP is available on ddev-contrib](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/old_php) via [custom Docker compose files](custom-compose-files.md).
 
-## Changing webserver type
+### Changing webserver type
 
 DDEV-Local supports nginx with php-fpm by default ("nginx-fpm"), apache2 with php-fpm ("apache-fpm"), and apache2 with embedded php via cgi (apache-cgi). These can be changed using the "webserver_type" value in .ddev/config.yaml, for example `webserver_type: apache-fpm`.
 
-## Adding services to a project
+### Adding services to a project
 
 For most standard web applications, ddev provides everything you need to successfully provision and develop a web application on your local machine out of the box. More complex and sophisticated web applications, however, often require integration with services beyond the standard requirements of a web and database server. Examples of these additional services are Apache Solr, Redis, Varnish, etc. While ddev likely won't ever provide all of these additional services out of the box, it is designed to provide simple ways for the environment to be customized and extended to meet the needs of your project.
 
@@ -40,7 +40,7 @@ services:
       - SOMETHING=something special
 ```
 
-## Providing custom nginx configuration
+### Providing custom nginx configuration
 
 The default configuration for ddev uses nginx as the web server (`webserver_type: nginx-fpm` in .ddev/config.yaml). Default configurations are provided for most project types. Some projects may require custom configuration, for example to support a module or plugin requiring special rules. To accommodate these needs, ddev provides a way to replace the default configuration with a custom version.
 
@@ -53,7 +53,7 @@ The default configuration for ddev uses nginx as the web server (`webserver_type
 - Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose.
 - **IMPORTANT**: Changes to configuration take place on a `ddev restart` or when the container is rebuilt for another reason.
 
-## Providing custom apache configuration
+### Providing custom apache configuration
 
 If you're using `webserver_type: apache-fpm` or `webserver_type: apache-cgi` in your .ddev/config.yaml you can override the default site configuration by adding a `.ddev/apache/apache-site.conf` configuration. A default configuration is provided in the web container that should work for most projects. Some projects may require custom configuration, for example to support a module or plugin requiring special rules. To accommodate these needs, ddev provides a way to replace the default configuration with a custom version.
 
@@ -67,7 +67,7 @@ If you're using `webserver_type: apache-fpm` or `webserver_type: apache-cgi` in 
 - Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose.
 - **IMPORTANT**: Changes to .ddev/apache/apache-site.conf take place on a `ddev restart` (or when the container is rebuilt for another reason).
 
-## Providing custom PHP configuration (php.ini)
+### Providing custom PHP configuration (php.ini)
 
 You can provide additional PHP configuration for a project by creating a directory called `.ddev/php/` and adding any number of php configuration ini files (they must be *.ini files). Normally, you should just override the specific option that you need to override. Note that any file that exists in `.ddev/php/` will be copied into `/etc/php/[version]/(cli|fpm)/conf.d`, so it's possible to replace files that already exist in the container. Common usage is to put custom overrides in a file called `my-php.ini`. Make sure you include the section header that goes with each item (like `[PHP]`)
 
@@ -82,7 +82,7 @@ An example file in .ddev/php/my-php.ini might look like this:
 max_execution_time = 240;
 ```
 
-## Providing custom mysql/MariaDB configuration (my.cnf)
+### Providing custom mysql/MariaDB configuration (my.cnf)
 
 You can provide additional MySQL configuration for a project by creating a directory called `.ddev/mysql/` and adding any number of MySQL configuration files (these must have the suffix ".cnf"). These files will be automatically included when MySQL is started. Make sure that the section header is included in the file
 
@@ -97,7 +97,7 @@ innodb_large_prefix=false
 
 To load the new configuration, run `ddev restart`.
 
-## Extending config.yaml with custom config.*.yaml files
+### Extending config.yaml with custom config.*.yaml files
 
 You may add additional config.*.yaml files to organize additional commands as you see fit for your project and team.
 
