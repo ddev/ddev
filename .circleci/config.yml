@@ -297,6 +297,8 @@ jobs:
     machine:
       image: ubuntu-1604:201903-01
     working_directory: ~/ddev
+    environment:
+      GOTEST_SHORT: true
     steps:
     - checkout
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
