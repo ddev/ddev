@@ -385,50 +385,51 @@ jobs:
         name: Artifact storage
 
   # 'tag_build' automatically builds a tag .
+#  tag_build:
+#    machine:
+#      image: ubuntu-1604:201903-01
+#    working_directory: ~/ddev
+#    environment:
+#      DDEV_DEBUG: "true"
+#    steps:
+#      - checkout
+#      - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
+#      - restore_cache:
+#          keys:
+#          - homebrew-linux-v10
+#      - run:
+#          command: ./.circleci/linux_circle_vm_setup.sh
+#          name: TAG BUILD Circle VM setup - tools, docker, golang
+#      - save_cache:
+#          key: homebrew-linux-v10
+#          paths:
+#          - /home/linuxbrew
+#          - ~/.ddev/testcache
+#
+#      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+#      - run:
+#          command: make -s clean linux darwin windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+#          name: Build the ddev executables
+#
+#      # We only build the xz version of the docker images on tag build.
+#      - run:
+#          # Do not build the docker tarballs at simple tag build time
+#          command: ./.circleci/generate_artifacts.sh ~/artifacts false false
+#          name: tar/zip up artifacts and make hashes
+#          no_output_timeout: "40m"
+#
+#      - store_artifacts:
+#          path: ~/artifacts
+#          name: Artifact storage
+
+  # 'tag_build' is used to push a full release
   tag_build:
-    machine:
-      image: ubuntu-1604:201903-01
-    working_directory: ~/ddev
-    environment:
-      DDEV_DEBUG: "true"
-    steps:
-      - checkout
-      - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
-      - restore_cache:
-          keys:
-          - homebrew-linux-v10
-      - run:
-          command: ./.circleci/linux_circle_vm_setup.sh
-          name: TAG BUILD Circle VM setup - tools, docker, golang
-      - save_cache:
-          key: homebrew-linux-v10
-          paths:
-          - /home/linuxbrew
-          - ~/.ddev/testcache
-
-      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
-      - run:
-          command: make -s clean linux darwin windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
-          name: Build the ddev executables
-
-      # We only build the xz version of the docker images on tag build.
-      - run:
-          # Do not build the docker tarballs at simple tag build time
-          command: ./.circleci/generate_artifacts.sh ~/artifacts false false
-          name: tar/zip up artifacts and make hashes
-          no_output_timeout: "40m"
-
-      - store_artifacts:
-          path: ~/artifacts
-          name: Artifact storage
-
-  # 'release_build' is used to push a full release; it's triggered by api call
-  release_build:
     macos:
       xcode: "11.3.0"
     working_directory: ~/ddev
     environment:
       DDEV_DEBUG: "true"
+      BUILD_IMAGE_TARBALLS: "false"
     steps:
     - checkout
     - restore_cache:
@@ -460,10 +461,10 @@ jobs:
 
     - run:
         command: |
-          if [ ! -z "${GITHUB_TOKEN}" ]; then
+          if [ ! -z "${DDEV_GITHUB_TOKEN}" ]; then
             version=$(make version)
             version="${version#*:}"  # Remove the VERSION: in front of make version
-            echo "GITHUB_TOKEN provided, pushing release $RELEASE_TAG"
+            echo "DDEV_GITHUB_TOKEN provided, pushing release $RELEASE_TAG"
             ghr \
             -prerelease \
             -r $CIRCLE_PROJECT_REPONAME \
@@ -472,7 +473,7 @@ jobs:
             -t $GITHUB_TOKEN \
             "${version}" ~/artifacts
           else
-            echo "GITHUB_TOKEN not provided, not pushing release $CIRCLE_TAG"
+            echo "DDEV_GITHUB_TOKEN not provided, not pushing release $CIRCLE_TAG"
           fi
         name: Upload artifacts to GitHub release page
     - store_artifacts:
