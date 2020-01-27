@@ -396,7 +396,7 @@ jobs:
 #          name: Artifact storage
 
   # 'tag_build' is used to push a full release
-  tag_build:
+  release_build:
     macos:
       xcode: "11.3.1"
     working_directory: ~/ddev
@@ -505,9 +505,10 @@ workflows:
         requires:
         - build
 
-  tag_build:
+  release_build:
     jobs:
-      - tag_build:
+      - release_build:
+          context: org-global
           filters:
             tags:
               only:
