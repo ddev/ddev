@@ -284,8 +284,11 @@ func (app *DdevApp) GetWebserverType() string {
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
-func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error {
+func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDrop bool, targetDB string) error {
 	app.DockerEnv()
+	if targetDB == "" {
+		targetDB = "db"
+	}
 	var extPathPrompt bool
 	dbPath, err := ioutil.TempDir(filepath.Dir(app.ConfigPath), "importdb")
 	//nolint: errcheck
@@ -367,11 +370,15 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 	// Inside the container, the dir for imports will be at /mnt/ddev_config/<tmpdir_name>
 	insideContainerImportPath := path.Join("/mnt/ddev_config", filepath.Base(dbPath))
 
-	inContainerCommand := "pv " + insideContainerImportPath + "/*.*sql | mysql db"
-	if imPath == "" && extPath == "" {
-		inContainerCommand = "pv | mysql db"
+	preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
+	if !noDrop {
+		preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 	}
 
+	inContainerCommand := fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | mysql %s`, preImportSQL, insideContainerImportPath, targetDB)
+	if imPath == "" && extPath == "" {
+		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && mysql %s`, preImportSQL, targetDB)
+	}
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     inContainerCommand,
@@ -407,16 +414,19 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool) error
 }
 
 // ExportDB exports the db, with optional output to a file, default gzip
-func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
+// targetDB is the db name if not default "db"
+func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 	app.DockerEnv()
-
+	if targetDB == "" {
+		targetDB = "db"
+	}
 	opts := &ExecOpts{
 		Service:   "db",
-		Cmd:       "mysqldump db",
+		Cmd:       "mysqldump " + targetDB,
 		NoCapture: true,
 	}
 	if gzip {
-		opts.Cmd = "mysqldump db | gzip"
+		opts.Cmd = fmt.Sprintf("mysqldump %s | gzip", targetDB)
 	}
 	if outFile != "" {
 		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE, 0644)
@@ -434,7 +444,21 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool) error {
 		return err
 	}
 
-	return nil
+	confMsg := "Wrote database dump from " + app.Name + " database '" + targetDB + "'"
+	if outFile != "" {
+		confMsg = confMsg + " to file " + outFile
+	} else {
+		confMsg = confMsg + " to stdout"
+	}
+	if gzip {
+		confMsg = confMsg + " in gzip format"
+	} else {
+		confMsg = confMsg + " in plain text format"
+	}
+
+	_, err = fmt.Fprintf(os.Stderr, confMsg+".\n")
+
+	return err
 }
 
 // SiteStatus returns the current status of an application determined from web and db service health.
@@ -535,7 +559,7 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 			output.UserOut.Println("Skipping database import.")
 		} else {
 			output.UserOut.Println("Importing database...")
-			err = app.ImportDB(fileLocation, importPath, true)
+			err = app.ImportDB(fileLocation, importPath, true, false, "db")
 			if err != nil {
 				return err
 			}

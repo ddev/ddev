@@ -451,7 +451,7 @@ An important aspect of local web development is the ability to have a precise re
 
 ### Importing a database
 
-The `ddev import-db` command is provided for importing the MySQL database for a project. Running this command will provide a prompt for you to specify the location of your database import.
+The `ddev import-db` command is provided for importing the MySQL database for a project. Running this command will provide a prompt for you to specify the location of your database import. By default `ddev import-db` empties the default "db" database and then loads the provided dumpfile.
 
 ```
 
@@ -507,6 +507,8 @@ ddev import-db <mydb.sql
 <h4>Database import notes</h4>
 
 * Importing from a dumpfile via stdin will not show progress because there's no way the import can know how far along through the import it has progressed.
+* Use `ddev import-db --target-db <some_database>` to import to a non-default database (other than the default "db" database). This will create the database if it doesn't exist already.
+* Use `ddev import-db --no-drop` to import without first emptying the database.
 * If a database already exists and the import does not specify dropping tables, the contents of the imported dumpfile will be *added* to the database. Most full database dumps do a table drop and create before loading, but if yours does not, you can drop all tables with `ddev stop --remove-data` before importing.
 
 ### Exporting a Database
