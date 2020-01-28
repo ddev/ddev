@@ -1,10 +1,12 @@
-# Using Developer Tools with ddev
+## Using Developer Tools with DDEV-Local
 
-## Developer Tools Included in the Container
+## Developer Tools Built Into DDEV-Local
 
-Several useful developer tools are included inside the containers. Run `ddev describe` to see the project information and services available for your project and how to access them.
+Run `ddev describe` to see the project information and services available for your project and how to access them.
 
 ### Command-line Tools in the Containers
+
+Hundreds of useful developer tools are included inside the containers. Any of these tools can be used via `ddev exec` or `ddev ssh`. A short listing is:
 
 * MySQL Client (mysql) - Command-line interface for interacting with MySQL/MariaDB.
 * [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
@@ -14,6 +16,8 @@ Several useful developer tools are included inside the containers. Run `ddev des
 * sqlite3
 
 These tools can be accessed for single commands using [`ddev exec <command>`](cli-usage.md#executing-commands-in-containers) or [`ddev ssh`](cli-usage.md#ssh-into-containers) for an interactive bash or sh session.
+
+You can also add tools that are not provided by default using [`webimage_extra_packages` or a custom Dockerfile](extend/customizing-images.md).
 
 ### DDEV and Composer
 

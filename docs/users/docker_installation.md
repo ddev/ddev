@@ -1,5 +1,3 @@
-# Docker Installation
-
 ## macOS Installation: Docker Desktop for Mac
 
 Most MacOS versions and computers will run Docker Desktop for Mac. Homebrew users can `brew cask install docker` or you can download from [download.docker.com](https://download.docker.com/mac/stable/Docker.dmg).

@@ -1,4 +1,4 @@
-# Step-debugging with ddev and xdebug
+## Step-debugging with ddev and xdebug
 
 Every ddev project is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code. It is disabled by default for performance reasons, so you'll need to enable it in your config.yaml.
 

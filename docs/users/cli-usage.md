@@ -1,4 +1,4 @@
-# ddev Command-Line Usage
+## ddev Command-Line Usage
 
 Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands. There are commands to configure a project, start, stop, describe, etc. Each command also has help. For example, `ddev stop -h` shows that `ddev rm` is an alias, and shows all the many flags that can be used with `ddev stop`.
 
@@ -431,19 +431,15 @@ ssh-auth status: healthy
 
 ```
 
-## Removing projects from your collection known to ddev
+## Removing projects from DDEV-Local
 
-To remove a project from ddev's listing you can use the destructive option (deletes database, removes item from ddev's list, removes hostname entry in hosts file):
+To remove a project from DDEV-Local's listing you can use the destructive option (deletes database, removes item from ddev's list, removes hostname entry in hosts file):
 
 `ddev delete <projectname>`
 or
-`ddev delete --omit-snapshot`
-or
-`ddev stop --remove-data <projectname>`
+`ddev delete --omit-snapshot <projectname>`
 
-Or if you just don't want it to show up in `ddev list` any more, this command will unlist it until the next time you `ddev start` or `ddev config` the project:
-
-`ddev stop --unlist <projectname>`
+Or if you just don't want it to show up in `ddev list` any more, use `ddev stop --unlist <projectname>` to unlist it until the next time you `ddev start` or `ddev config` the project.
 
 ## Importing assets for an existing project
 

@@ -12,6 +12,11 @@
   // Fine with long lines, editor can wrap
   "line-length": false,
 
+  // Unfortunately, mkdocs messes up nearly everything if you insist on this;
+  // the problem is that it's concatenating files, so you lose important levels
+  // of sidebar headings if every file starts with H1.
+  "first-line-h1": false,
+
   "MD004": { "style": "consistent" },
 
   // Set Ordered list item prefix to "ordered" (use 1. 2. 3. not 1. 1. 1.)

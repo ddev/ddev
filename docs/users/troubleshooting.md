@@ -1,4 +1,4 @@
-# Troubleshooting
+## Troubleshooting
 
 Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](../index.md#support). And see [Docker troubleshooting suggstions](docker_installation.md#troubleshooting).
 

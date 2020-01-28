@@ -1,4 +1,4 @@
-# Additional Project Hostnames
+## Additional Project Hostnames
 
 Add additional hostnames to a project in the project's .ddev/config.yaml:
 
