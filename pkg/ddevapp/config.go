@@ -65,6 +65,13 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	if AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
 		return nil, fmt.Errorf("ddev config is not useful in home directory (%s)", homeDir)
 	}
+	hasGlob, err := regexp.Match(`[\[\]\{\}\*\?]`, []byte(AppRoot))
+	if err != nil {
+		return nil, err
+	}
+	if hasGlob {
+		return nil, fmt.Errorf("Current directory contains a glob pattern, please use a directory that does not contain `{}[]*?`")
+	}
 
 	app.AppRoot = AppRoot
 	if !fileutil.FileExists(AppRoot) {
