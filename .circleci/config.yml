@@ -432,7 +432,7 @@ jobs:
             -r $CIRCLE_PROJECT_REPONAME \
             -u $CIRCLE_PROJECT_USERNAME \
             -b "$(cat ./.github/RELEASE_NOTES_TEMPLATE.md)" \
-            -t $GITHUB_TOKEN \
+            -t $DDEV_GITHUB_TOKEN \
             "${version}" ~/artifacts
           else
             echo "DDEV_GITHUB_TOKEN not provided, not pushing release $CIRCLE_TAG"
