@@ -8,13 +8,19 @@ set -o pipefail
 set -o nounset
 
 MKCERT_VERSION=v1.4.0
+BUILD_IMAGE_TARBALLS=false
 
 ARTIFACTS=${1:-/artifacts}
-BUILD_IMAGE_TARBALLS=${2:-false}
 BASE_DIR=$PWD
 
 sudo mkdir -p $ARTIFACTS && sudo chmod 777 $ARTIFACTS
 export VERSION=$(git describe --tags --always --dirty)
+
+# If the version does not have a dash in it, it's not prerelease,
+# so build image tarballs
+if [ -z ${VERSION##-*} ]; then
+    BUILD_IMAGE_TARBALLS=true
+fi
 
 case "${OSTYPE}" in
 darwin*)
