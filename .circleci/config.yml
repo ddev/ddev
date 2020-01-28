@@ -426,7 +426,7 @@ jobs:
           if [ ! -z "${DDEV_GITHUB_TOKEN}" ]; then
             version=$(make version)
             version="${version#*:}"  # Remove the VERSION: in front of make version
-            echo "DDEV_GITHUB_TOKEN provided, pushing release $RELEASE_TAG"
+            echo "DDEV_GITHUB_TOKEN provided, pushing release ${version}"
             ghr \
             -prerelease \
             -r $CIRCLE_PROJECT_REPONAME \
