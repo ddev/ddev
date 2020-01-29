@@ -68,7 +68,6 @@ func TestCmdExportDB(t *testing.T) {
 	assert.FileExists(outputFileName)
 	assert.True(fileutil.FgrepStringInFile(outputFileName, "13751eca-19cf-41c2-90d4-9363f3a07c45"))
 
-
 	// Work with a non-default database named "nondefault"
 	// Read in a database
 	inputFileName = filepath.Join(testDir, "testdata", t.Name(), "nondefault.sql")
@@ -83,11 +82,11 @@ func TestCmdExportDB(t *testing.T) {
 	})
 	assert.NoError(err)
 
-	outputFileName=filepath.Join(tmpDir, "nondefault_output.sql")
-	command = exec.Command(DdevBin, "export-db", site.Name, "-d=nondefault" , "-f="+outputFileName, "--gzip=false")
+	outputFileName = filepath.Join(tmpDir, "nondefault_output.sql")
+	command = exec.Command(DdevBin, "export-db", site.Name, "-d=nondefault", "-f="+outputFileName, "--gzip=false")
 	byteout, err = command.CombinedOutput()
 	assert.NoError(err, "export-db failure output=%s", string(byteout))
-	assert.Contains(string(byteout), fmt.Sprintf("Wrote database dump from %s database 'nondefault' to file %s in plain text format", site.Name,outputFileName ))
+	assert.Contains(string(byteout), fmt.Sprintf("Wrote database dump from %s database 'nondefault' to file %s in plain text format", site.Name, outputFileName))
 	assert.FileExists(outputFileName)
 	assert.True(fileutil.FgrepStringInFile(outputFileName, "INSERT INTO `nondefault_table` VALUES (0,'13751eca-19cf-41c2-90d4-9363f3a07c45','en'),"))
 
@@ -96,5 +95,4 @@ func TestCmdExportDB(t *testing.T) {
 		Cmd:     "mysql nondefault -e 'SELECT * FROM nondefault_table;'",
 	})
 	assert.NoError(err)
-
 }
