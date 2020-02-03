@@ -519,7 +519,7 @@ func WriteDrushrc(app *DdevApp, filePath string) error {
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  Remove this comment if you don't want ddev to manage this file.'
  */
-if (getenv('IS_DRUSH_PROJECT') == 'true') {
+if (getenv('IS_DDEV_PROJECT') == 'true') {
   $options['l'] = "` + uri + `";
 }
 `)
