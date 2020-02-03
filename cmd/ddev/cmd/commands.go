@@ -49,13 +49,15 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		}
 
 		for _, commandName := range commandFiles {
-			if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") || strings.HasPrefix(commandName, ".") || fileutil.IsDirectory(commandName) {
-				continue
-			}
+
 			// Use path.Join() for the inContainerFullPath because it's about the path in the container, not on the
 			// host; a Windows path is not useful here.
 			inContainerFullPath := path.Join("/mnt/ddev_config/commands", service, commandName)
 			onHostFullPath := filepath.Join(topCommandPath, service, commandName)
+
+			if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") || strings.HasPrefix(commandName, ".") || fileutil.IsDirectory(onHostFullPath) {
+				continue
+			}
 
 			// Any command we find will want to be executable on Linux
 			_ = os.Chmod(onHostFullPath, 0755)
