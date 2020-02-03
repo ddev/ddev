@@ -68,15 +68,16 @@ Your application can be reached at: http://my-wordpress-site.ddev.site
 
 Now, since [bedrock](https://roots.io/bedrock/) uses a configuration technique which is unusual for WordPress:
 
-* Edit the .env file which has been created in the project root, and set
+* Edit the .env file which has been created in the project root, and set:
 
-    ```
-  DB_NAME=db
-  DB_USER=db
-  DB_PASSWORD=db
-  DB_HOST=db
-  WP_HOME=https://my-wp-bedrock-site.ddev.site
-  ```
+```
+
+    DB_NAME=db
+    DB_USER=db
+    DB_PASSWORD=db
+    DB_HOST=db
+    WP_HOME=https://my-wp-bedrock-site.ddev.site
+```
 
   For more details see [bedrock installation](https://roots.io/bedrock/docs/installing-bedrock/)
 
@@ -266,6 +267,10 @@ Your application can be reached at: http://example-backdrop-site.ddev.site
 5. `ddev start`
 6. Follow the URL to the base site.
 
+You may want the [Magento 1 Sample Data](https://magento.com/tech-resources/download#download1759) for experimentation.
+
+Note that Magento 1 is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
+
 ### Magento 2 Quickstart
 
 Normal details of a composer build for Magento 2 are on [Magento 2 site](https://devdocs.magento.com/guides/v2.3/install-gde/composer.html) You must have a public and private key to install from Magento's repository; when prompted for "username" and "password" in the composer create it's asking for your public and private keys.
@@ -273,13 +278,17 @@ Normal details of a composer build for Magento 2 are on [Magento 2 site](https:/
 ```
 ddev config --project-type=magento2 --docroot=pub --create-docroot=true
 ddev start
-ddev composer create --repository=<https://repo.magento.com/> magento/project-community-edition
+ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
 ddev ssh
 bin/magento setup:install  --db-host=db --db-name=db --db-user=db --db-password=db  --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com  --admin-user=admin --admin-password=admin123 --language=en_US
+bin/magento setup:store-config:set --base-url="https://magento2.ddev.site/"
+bin/magento cache:clean
 bin/magento deploy:mode:set developer
 ```
 
 Of course, change the admin name and related information is needed.
+
+You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.3/install-gde/install/sample-data-after-composer.html).
 
 Note that Magento 2 is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
 
@@ -334,13 +343,19 @@ And you can now visit your working project. Enjoy!
 
 _**Note:** If you're providing the settings.php or wp-config.php and DDEV is creating the settings.ddev.php (or wp-config-local.php, AdditionalConfig.php, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file._
 
+_**Note:** If you do *not* want DDEV-Local to create or manage settings files, set `disable_settings_management: true` in your .ddev/config.yaml or `ddev config --disable-settings-management` and you will be the only one that edits or updates settings files._
+
 The `ddev config` command attempts to create a CMS-specific settings file with DDEV credentials pre-populated.
 
 For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed file, settings.ddev.php. The `ddev config` command will ensure that these settings are included in your settings.php through the following steps:
 
 * Write DDEV settings to settings.ddev.php
 * If no settings.php file exists, create one that includes settings.ddev.php
-* If a settings.php file already exists, ensure that it includes settings.ddev.php, modifying settings.php to write the include if necessary
+* If a settings.php file already exists, ensure that it includes settings.ddev.php, modifying settings.php to write the include if necessary.
+
+For **Magento 1**, DDEV settings go into `app/etc/local.xml`
+
+In **Magento 2**, DDEV settings go into `app/etc/env.php`
 
 For **TYPO3**, DDEV settings are written to AdditionalConfiguration.php.  If AdditionalConfiguration.php exists and is not managed by DDEV, it will not be modified.
 
@@ -523,10 +538,12 @@ ddev export-db --gzip=false >/tmp/db.sql
 
 To import static file assets for a project, such as uploaded images and documents, use the command `ddev import-files`. This command will prompt you to specify the location of your import asset, then import the assets into the project's upload directory. To define a custom upload directory, set the `upload_dir` key in your project's `config.yaml`. If no custom upload directory is defined, the a default will be used:
 
-* For Drupal projects, this is the `sites/default/files` directory
-* For WordPress projects, this is the `wp-content/uploads` directory
-* For TYPO3 projects, this is the `fileadmin` directory
-* For Backdrop projects, this is the `files` directory
+* For Drupal projects, this is the `sites/default/files` directory.
+* For WordPress projects, this is the `wp-content/uploads` directory.
+* For TYPO3 projects, this is the `fileadmin` directory.
+* For Backdrop projects, this is the `files` .
+* For Magento 1 projects, this is the `media` directory.
+* For Magento 2 projects, this is the `pub/media` directory.
 
 ```
 
