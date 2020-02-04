@@ -36,7 +36,7 @@ esac
 
 if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
     # Make sure we have all our docker images, and save them in a tarball
-    $BUILTPATH/ddev version | awk '/drud\// {print $2;}' >/tmp/images.txt
+    $BUILTPATH/ddev version | awk '/(drud|phpmyadmin)\// {print $2;}' >/tmp/images.txt
     for item in $(cat /tmp/images.txt); do
       docker pull $item
     done
