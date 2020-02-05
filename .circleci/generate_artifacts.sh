@@ -18,7 +18,7 @@ export VERSION=$(git describe --tags --always --dirty)
 
 # If the version does not have a dash in it, it's not prerelease,
 # so build image tarballs
-if [ -z ${VERSION##-*} ]; then
+if [ "${VERSION}" = "${VERSION%%-*}" ]; then
     BUILD_IMAGE_TARBALLS=true
 fi
 
