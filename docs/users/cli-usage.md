@@ -26,7 +26,7 @@ In addition to the *commands* listed above, there are loads and loads of tools i
 * `ddev describe` tells how to use the built-in **PHPMyAdmin**.
 * Composer, git, node, npm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`.
 * `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
-*  sqlite3 and the mysql client are inside the web container (and mysql client is also in the db container).
+* sqlite3 and the mysql client are inside the web container (and mysql client is also in the db container).
 
 ## Quickstart Guides
 
