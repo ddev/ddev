@@ -43,7 +43,6 @@ services:
       - LINES=$LINES
       - TZ={{ .Timezone }}
       - DDEV_PROJECT={{ .Name }}
-      - DDEV_VERSION=$DDEV_VERSION
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
       interval: 1s
@@ -98,7 +97,6 @@ services:
       - DDEV_PROJECT_TYPE=$DDEV_PROJECT_TYPE
       - DDEV_ROUTER_HTTP_PORT=$DDEV_ROUTER_HTTP_PORT
       - DDEV_ROUTER_HTTPS_PORT=$DDEV_ROUTER_HTTPS_PORT
-      - DDEV_VERSION=$DDEV_VERSION
       - DDEV_XDEBUG_ENABLED=$DDEV_XDEBUG_ENABLED
       - IS_DDEV_PROJECT=true
       - DOCKER_IP={{ .DockerIP }}
