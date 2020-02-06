@@ -1120,6 +1120,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTPS_PORT":        app.RouterHTTPSPort,
 		"DDEV_XDEBUG_ENABLED":           strconv.FormatBool(app.XdebugEnabled),
 		"DDEV_PRIMARY_URL":              app.GetPrimaryURL(),
+		"DDEV_VERSION":                  version.GetVersionInfo(),
 		"IS_DDEV_PROJECT":               "true",
 	}
 

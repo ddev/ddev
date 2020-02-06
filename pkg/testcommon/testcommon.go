@@ -216,6 +216,7 @@ func ClearDockerEnv() {
 		"COLUMNS",
 		"LINES",
 		"DDEV_XDEBUG_ENABLED",
+		"DDEV_VERSION",
 		"IS_DDEV_PROJECT",
 	}
 	for _, env := range envVars {
