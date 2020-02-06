@@ -139,6 +139,7 @@ cd my-drupal8-site
 ddev config --project-type=drupal8 --docroot=web --create-docroot=true
 ddev start
 ddev composer create drupal/recommended-project
+ddev composer remove drupal/core-project-message
 ddev composer require drush/drush
 ddev start
 ```
