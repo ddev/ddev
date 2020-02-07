@@ -18,7 +18,7 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`)
 * `ddev delete` is the same as `ddev stop --remove-data` and will delete a project's database and ddev's record of the project's existence. It doesn't touch your project or code. `ddev delete -O` will omit the snapshot creation step that would otherwise take place, and `ddev delete images` gets rid of spare Docker images you may have on your machine.
 
-## Bundled Tools List
+## Partial Bundled Tools List
 
 In addition to the *commands* listed above, there are loads and loads of tools included inside the containers:
 
@@ -26,6 +26,7 @@ In addition to the *commands* listed above, there are loads and loads of tools i
 * `ddev describe` tells how to use the built-in **PHPMyAdmin**.
 * Composer, git, node, npm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`.
 * `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
+* sqlite3 and the mysql client are inside the web container (and mysql client is also in the db container).
 
 ## Quickstart Guides
 
@@ -55,10 +56,10 @@ DDEV works happily with most any PHP or static HTML project, although it has spe
 ```
 mkdir my-wp-bedrock-site
 cd my-wp-bedrock-site
-ddev config --project-type=php
+ddev config --project-type=wordpress --docroot=web --create-docroot=true
+ddev start
 ddev composer create roots/bedrock
-ddev config
-ddev restart
+ddev start
 ```
 
 ```
@@ -135,10 +136,12 @@ Get started with Drupal 8 projects on ddev either using a new or existing compos
 ```
 mkdir my-drupal8-site
 cd my-drupal8-site
-ddev config --project-type php
-ddev composer create drupal-composer/drupal-project:8.x-dev --prefer-dist
-ddev config --project-type drupal8
-ddev restart
+ddev config --project-type=drupal8 --docroot=web --create-docroot=true
+ddev start
+ddev composer create drupal/recommended-project
+ddev composer remove drupal/core-project-message
+ddev composer require drush/drush
+ddev start
 ```
 
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
@@ -199,20 +202,13 @@ Quickstart instructions for database imports can be found under [Database Import
 ```
 mkdir my-typo3-site
 cd my-typo3-site
-ddev config --project-type php
+ddev config --project-type=typo3 --docroot=public --create-docroot=true
+ddev start
 ddev composer create "typo3/cms-base-distribution:^9" --prefer-dist
-ddev config --project-type typo3
-ddev restart
+ddev start
 ```
 
-When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
-
-```
-Successfully started example-typo3-site
-Your application can be reached at: https://example-typo3-site.ddev.site
-```
-
-**A Some versions of TYPO3 an install may fail if you use the https URL ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
+**A Some versions of TYPO3 an install may fail if you use the https URL to install ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
 
 If doing a basic TYPO3 install, you can then `touch public/FIRST_INSTALL` and hit the http URL top begin an installation.
 
@@ -310,16 +306,6 @@ ddev import-db --src=dumpfile.sql.gz
 
 Check out the git repository for the project you want to work on. `cd` into the directory, run `ddev config`, and follow the prompts.
 
-```
-
-mkdir drupal8
-cd drupal8
-ddev config --project-type php
-ddev composer create drupal-composer/drupal-project:8.x-dev  
-ddev config --project-type drupal8
-
-```
-
 Configuration files have now been created for your project. Take a look at the project's .ddev/config.yaml file.
 
 Now that the configuration files have been created, you can start your project with `ddev start` (still from within the project working directory):
@@ -337,7 +323,7 @@ Your project can be reached at: <http://drupal8.ddev.site>
 
 ```
 
-And you can now visit your working project. Enjoy!
+And you can now visit your working project by URL or just give the command `ddev launch`. Enjoy!
 
 ### Configuration files
 
@@ -379,7 +365,7 @@ How do you know if DDEV manages a settings file? You will see the following comm
 
 ## Listing project information
 
-To see a list of your projects you can use `ddev list`; `ddev list --active-only` will show only projects currently running or paused.
+`ddev list` or `ddev list --active-only` current projects.
 
 ```
 
