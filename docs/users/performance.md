@@ -30,7 +30,7 @@ Also see the debugging section below, and the special WIndows debugging section.
 
 ### Debian/Ubuntu Linux NFS Setup
 
-The nfsmount_enabled feature does not really add performance on Linux systems because Docker on Linux is already quite fast. The primary reason for using it on a Linux systme would be just to keep consistent with other team members working on other host OSs.
+The nfsmount_enabled feature does not really add performance on Linux systems because Docker on Linux is already quite fast. The primary reason for using it on a Linux system would be just to keep consistent with other team members working on other host OSs.
 
 Note that for all Linux systems, you can and should install and configure the NFS daemon and configure /etc/exports as you see fit and share the directories that you choose to share. The Debian/Ubuntu Linux script is just one way of accomplishing it.
 
