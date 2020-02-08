@@ -1,7 +1,6 @@
 #!/bin/bash
 # This script builds ddev artifacts and their sha256 hashes.
 # First arg is the artifact directory
-# Optional second arg is whether to build ddev_docker_images.tar
 
 set -o errexit
 set -o pipefail
@@ -18,7 +17,7 @@ export VERSION=$(git describe --tags --always --dirty)
 
 # If the version does not have a dash in it, it's not prerelease,
 # so build image tarballs
-if [ -z ${VERSION##-*} ]; then
+if [ "${VERSION}" = "${VERSION%%-*}" ]; then
     BUILD_IMAGE_TARBALLS=true
 fi
 
