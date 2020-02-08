@@ -105,8 +105,9 @@ If you have PHP and Drush installed on your host system and the environment vari
 [Terminus](https://pantheon.io/docs/terminus/) is a command line tool providing advanced interaction with [Pantheon](https://pantheon.io/) services. As of version [1.13.0](https://github.com/drud/ddev/releases/tag/v1.13.0), terminus is available inside the project's container, allowing users to get information from, or issue commands to their Pantheon-hosted sites. This is an especially helpful feature for Windows users as terminus is only officially supported on unix-based systems.
 
 To use terminus, you'll first need to:
+
 1. Authenticate ddev with a pantheon machine token ([more info here](https://ddev.readthedocs.io/en/stable/users/providers/pantheon/#pantheon-hosting-provider-integration))
-1. Use `ddev ssh` to tunnel into your container
-1. Issue a command using the keyword `terminus`. For help using terminus try `terminus list` to get a list of possible commands.
+2. Use `ddev ssh` to tunnel into your container
+3. Issue a command using the keyword `terminus`. For help using terminus try `terminus list` to get a list of possible commands.
 
 Terminus also allows you to issue [drush](https://www.drush.org/), [WP-CLI](https://wp-cli.org/), [composer](https://getcomposer.org/), and [drupal console](https://drupalconsole.com/) commands to your pantheon server. These are all usable from within the container as well, but will require authentication via either your Pantheon password or an SSH key. To use your host machine's SSH key, you can use the `ddev auth ssh` command [described here](https://ddev.readthedocs.io/en/stable/users/cli-usage/#ssh-into-containers).
