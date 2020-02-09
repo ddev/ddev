@@ -277,7 +277,7 @@ ddev start
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
 ddev ssh
 bin/magento setup:install  --db-host=db --db-name=db --db-user=db --db-password=db  --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com  --admin-user=admin --admin-password=admin123 --language=en_US
-bin/magento setup:store-config:set --base-url="https://magento2.ddev.site/"
+bin/magento setup:store-config:set --base-url="https://magento2-ddev.ddev.site/"
 bin/magento cache:clean
 bin/magento deploy:mode:set developer
 ```
