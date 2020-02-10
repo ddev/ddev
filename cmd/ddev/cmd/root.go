@@ -125,6 +125,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 		}
 
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SegmentKey != "" && nodeps.IsInternetActive() && len(fullCommand) > 1 {
+			ddevapp.SetInstrumentationBaseTags()
 			ddevapp.SendInstrumentationEvents(event)
 		}
 	},
@@ -159,15 +160,6 @@ func init() {
 	// We really don't want ~/.ddev to have root ownership, breaks things.
 	if os.Geteuid() == 0 && len(os.Args) > 1 && os.Args[1] != "hostname" {
 		output.UserOut.Fatal("ddev is not designed to be run with root privileges, please run as normal user and without sudo")
-	}
-
-	err = globalconfig.ReadGlobalConfig()
-	if err != nil {
-		util.Failed("Failed to read global config file %s: %v", globalconfig.GetGlobalConfigPath(), err)
-	}
-
-	if !globalconfig.DdevNoInstrumentation && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		ddevapp.SetInstrumentationBaseTags()
 	}
 
 }
