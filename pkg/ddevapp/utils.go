@@ -346,6 +346,7 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 
 		app, err := NewApp(info.AppRoot, true, nodeps.ProviderDefault)
 		if err != nil {
+			util.Warning("unable to create project at project root %s: %v", info.AppRoot, err)
 			app.Name = name
 		}
 		if !activeOnly || (app.SiteStatus() != SiteStopped && app.SiteStatus() != SiteConfigMissing && app.SiteStatus() != SiteDirMissing) {

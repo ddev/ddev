@@ -57,18 +57,18 @@ func init() {
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
-func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, error) {
+func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, error) {
 	// Set defaults.
 	app := &DdevApp{}
 
 	homeDir, _ := homedir.Dir()
-	if AppRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
+	if appRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
 		return nil, fmt.Errorf("ddev config is not useful in home directory (%s)", homeDir)
 	}
 
-	app.AppRoot = AppRoot
-	if !fileutil.FileExists(AppRoot) {
-		return app, fmt.Errorf("project root %s does not exist", AppRoot)
+	app.AppRoot = appRoot
+	if !fileutil.FileExists(appRoot) {
+		return app, fmt.Errorf("project root %s does not exist", appRoot)
 	}
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.APIVersion = version.DdevVersion
@@ -112,6 +112,16 @@ func NewApp(AppRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		return app, fmt.Errorf("provider '%s' is not implemented", provider)
 	}
 	app.SetInstrumentationAppTags()
+
+	// Make sure that not in a dir with glob pattern
+	hasGlob, err := regexp.Match(`[\[\]\{\}\*\?]`, []byte(appRoot))
+	if err != nil {
+		return app, err
+	}
+	if hasGlob {
+		return app, fmt.Errorf("Project directory contains a glob pattern, please use a directory that does not contain `{}[]*?`")
+	}
+
 	return app, nil
 }
 
