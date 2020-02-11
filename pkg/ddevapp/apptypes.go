@@ -104,7 +104,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	app.SetApptypeSettingsPaths()
 
 	if app.DisableSettingsManagement {
-		util.Warning("Not creating CMA settings files because disable_settings_management=true")
+		util.Warning("Not creating CMS settings files because disable_settings_management=true")
 		return "", nil
 	}
 
