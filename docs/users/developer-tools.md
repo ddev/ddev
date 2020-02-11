@@ -99,3 +99,15 @@ The port referenced is unique per running project, and randomly chosen from avai
 ### Using Drush 8 installed Installation on the Host Computer
 
 If you have PHP and Drush installed on your host system and the environment variable IS_DDEV_PROJECT=true, you can use drush to interact with a ddev project. On the host system the extra include host-side configuration for the database and port are derived in the settings.ddev.php file to allow drush to access the database server. This may not work for all drush commands because of course the actual webserver environment is not available.
+
+### DDEV and Terminus
+
+[Terminus](https://pantheon.io/docs/terminus/) is a command line tool providing advanced interaction with [Pantheon](https://pantheon.io/) services. As of version [1.13.0](https://github.com/drud/ddev/releases/tag/v1.13.0), terminus is available inside the project's container, allowing users to get information from, or issue commands to their Pantheon-hosted sites. This is an especially helpful feature for Windows users as terminus is only officially supported on unix-based systems.
+
+To use terminus, you'll first need to:
+
+1. Authenticate ddev with a pantheon machine token ([more info here](providers/pantheon/#pantheon-hosting-provider-integration))
+2. Use `ddev ssh` to tunnel into your container
+3. Issue a command using the keyword `terminus`. For help using terminus try `terminus list` to get a list of possible commands.
+
+Terminus also allows you to issue [drush](https://www.drush.org/), [WP-CLI](https://wp-cli.org/), [composer](https://getcomposer.org/), and [drupal console](https://drupalconsole.com/) commands to your pantheon server. These are all usable from within the container as well, but will require authentication via either your Pantheon password or an SSH key. To use your host machine's SSH key, you can use the `ddev auth ssh` command [described here](cli-usage/#ssh-into-containers).
