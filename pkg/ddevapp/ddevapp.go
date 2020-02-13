@@ -628,26 +628,27 @@ func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 }
 
 // ComposeFiles returns a list of compose files for a project.
-// It has to put the docker-compose.y*l first
+// It has to put the .docker-compose.yaml first
 // It has to put the docker-compose.override.y*l last
 func (app *DdevApp) ComposeFiles() ([]string, error) {
-	files, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose*.y*l"))
-	if err != nil || len(files) == 0 {
-		return []string{}, fmt.Errorf("failed to load any docker-compose.*y*l files in %s: err=%v", app.AppConfDir(), err)
+	dir, _ := os.Getwd()
+	// nolint:errcheck
+	defer os.Chdir(dir)
+	err := os.Chdir(app.AppConfDir())
+	if err != nil {
+		return nil, err
+	}
+	files, err := filepath.Glob("docker-compose*.y*l")
+	if err != nil {
+		return []string{}, fmt.Errorf("unable to glob docker-compose*.y*l in %s: err=%v", app.AppConfDir(), err)
 	}
 
-	mainfiles, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose.y*l"))
-	// Glob doesn't return many errors, so just CheckErr()
-	util.CheckErr(err)
-	if len(mainfiles) == 0 {
-		return []string{}, fmt.Errorf("failed to find a docker-compose.yml or docker-compose.yaml")
-
-	}
-	if len(mainfiles) > 1 {
-		return []string{}, fmt.Errorf("there are more than one docker-compose.y*l, unable to continue")
+	mainfile := app.DockerComposeYAMLPath()
+	if !fileutil.FileExists(mainfile) {
+		return nil, fmt.Errorf("failed to find %s", mainfile)
 	}
 
-	overrides, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose.override.y*l"))
+	overrides, err := filepath.Glob("docker-compose.override.y*l")
 	util.CheckErr(err)
 	if len(overrides) > 1 {
 		return []string{}, fmt.Errorf("there are more than one docker-compose.override.y*l, unable to continue")
@@ -655,16 +656,16 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 
 	orderedFiles := make([]string, 1)
 
-	// Make sure the docker-compose.yaml goes first
-	orderedFiles[0] = mainfiles[0]
+	// Make sure the main file goes first
+	orderedFiles[0] = mainfile
 
 	for _, file := range files {
 		// We already have the main docker-compose.yaml, so skip when we hit it.
 		// We'll add the override later, so skip it.
-		if file == mainfiles[0] || (len(overrides) == 1 && file == overrides[0]) {
+		if file == mainfile || (len(overrides) == 1 && file == overrides[0]) {
 			continue
 		}
-		orderedFiles = append(orderedFiles, file)
+		orderedFiles = append(orderedFiles, filepath.Join(app.AppConfDir(), file))
 	}
 	if len(overrides) == 1 {
 		orderedFiles = append(orderedFiles, overrides[0])
@@ -1097,7 +1098,7 @@ func (app *DdevApp) DockerEnv() {
 	}
 
 	// DDEV_HOST_DB_PORT is actually used for 2 things.
-	// 1. To specifify via docker-compose.yaml the value of host_db_port config. And it's expected to be empty
+	// 1. To specify via base docker-compose file the value of host_db_port config. And it's expected to be empty
 	//    there if the host_db_port is empty.
 	// 2. To tell custom commands the db port. And it's expected always to be populated for them.
 	dbPort, err := app.GetPublishedPort("db")

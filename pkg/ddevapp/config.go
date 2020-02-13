@@ -460,9 +460,9 @@ func (app *DdevApp) ValidateConfig() error {
 }
 
 // DockerComposeYAMLPath returns the absolute path to where the
-// docker-compose.yaml should exist for this app.
+// base generated yaml file should exist for this project.
 func (app *DdevApp) DockerComposeYAMLPath() string {
-	return app.GetConfigPath("docker-compose.yaml")
+	return app.GetConfigPath(".ddev-docker-compose-base.yaml")
 }
 
 // GetHostname returns the primary hostname of the app.
@@ -504,17 +504,21 @@ func (app *DdevApp) GetHostnames() []string {
 func (app *DdevApp) WriteDockerComposeConfig() error {
 	var err error
 
-	if fileutil.FileExists(app.DockerComposeYAMLPath()) {
-		found, err := fileutil.FgrepStringInFile(app.DockerComposeYAMLPath(), DdevFileSignature)
-		util.CheckErr(err)
-
-		// If we did *not* find the ddev file signature in docker-compose.yaml, we'll back it up and warn about it.
-		if !found {
-			util.Warning("User-managed docker-compose.yaml will be replaced with ddev-generated docker-compose.yaml. Original file will be placed in docker-compose.yaml.bak")
-			_ = os.Remove(app.DockerComposeYAMLPath() + ".bak")
-			err = os.Rename(app.DockerComposeYAMLPath(), app.DockerComposeYAMLPath()+".bak")
-			util.CheckErr(err)
+	// Because of move from docker-compose.yaml as base file to .docker-compose-base.yaml
+	// remove old ddev-managed docker-compose.yaml
+	oldDockerCompose := filepath.Join(app.AppConfDir(), "docker-compose.yaml")
+	if fileutil.FileExists(oldDockerCompose) {
+		found, err := fileutil.FgrepStringInFile(oldDockerCompose, DdevFileSignature)
+		if err == nil {
+			return err
 		}
+		if found {
+			err = os.Remove(oldDockerCompose)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 
 	f, err := os.Create(app.DockerComposeYAMLPath())
@@ -923,7 +927,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "commands/*/*.example", "commands/*/README.txt", "commands/host/launch", "commands/db/mysql", "homeadditions/*.example", "homeadditions/README.txt", ".gitignore", "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", ".sshimageBuild", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
+	err := CreateGitIgnore(dir, "commands/*/*.example", "commands/*/README.txt", "commands/host/launch", "commands/db/mysql", "homeadditions/*.example", "homeadditions/README.txt", ".gitignore", "import.yaml", ".docker-compose-base.yaml", ".docker-compose-full.yaml", "db_snapshots", "sequelpro.spf", "import-db", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", ".sshimageBuild", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
