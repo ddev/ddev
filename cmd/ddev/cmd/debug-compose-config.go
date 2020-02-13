@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/fileutil"
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -30,21 +30,15 @@ var DebugComposeConfigCmd = &cobra.Command{
 			util.Failed("Failed to get compose-config: %v", err)
 		}
 
+		app.DockerEnv()
 		if err = app.WriteDockerComposeConfig(); err != nil {
 			util.Failed("Failed to get compose-config: %v", err)
 		}
 
-		app.DockerEnv()
-		files, err := app.ComposeFiles()
+		out, err := fileutil.ReadFileIntoString(app.DockerComposeFullRenderedYAMLPath())
 		if err != nil {
-			util.Failed("Failed to get compose-config: %v", err)
+			util.Failed("unable to read rendered file %s: err", app.DockerComposeFullRenderedYAMLPath(), err)
 		}
-
-		out, _, err := dockerutil.ComposeCmd(files, "config")
-		if err != nil {
-			util.Failed("Failed to get compose-config: %v", err)
-		}
-
 		output.UserOut.Printf(strings.TrimSpace(out))
 	},
 }
