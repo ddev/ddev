@@ -827,16 +827,11 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	files, err := app.ComposeFiles()
-	if err != nil {
-		return err
-	}
-
 	// Delete the NFS volumes before we bring up docker-compose.
 	// We don't care if the volume wasn't there
 	_ = dockerutil.RemoveVolume(app.GetNFSMountVolName())
 
-	_, _, err = dockerutil.ComposeCmd(files, "up", "--build", "-d")
+	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
 	if err != nil {
 		return err
 	}
@@ -947,7 +942,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if opts.NoCapture || opts.Tty {
 		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, exec...)
 	} else {
-		stdoutResult, stderrResult, err = dockerutil.ComposeCmd(files, exec...)
+		stdoutResult, stderrResult, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, exec...)
 	}
 
 	_, _, hookErr := app.ProcessHooks("post-exec")
@@ -1180,12 +1175,7 @@ func (app *DdevApp) Pause() error {
 		return err
 	}
 
-	files, err := app.ComposeFiles()
-	if err != nil {
-		return err
-	}
-
-	if _, _, err := dockerutil.ComposeCmd(files, "stop"); err != nil {
+	if _, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "stop"); err != nil {
 		return err
 	}
 	_, _, err = app.ProcessHooks("post-pause")

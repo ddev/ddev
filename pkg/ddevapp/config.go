@@ -465,6 +465,12 @@ func (app *DdevApp) DockerComposeYAMLPath() string {
 	return app.GetConfigPath(".ddev-docker-compose-base.yaml")
 }
 
+// DockerComposeFullRenderedYAMLPath returns the absolute path to where the
+// the complete generated yaml file should exist for this project.
+func (app *DdevApp) DockerComposeFullRenderedYAMLPath() string {
+	return app.GetConfigPath(".ddev-docker-compose-full.yaml")
+}
+
 // GetHostname returns the primary hostname of the app.
 func (app *DdevApp) GetHostname() string {
 	return app.Name + "." + app.ProjectTLD
@@ -518,7 +524,6 @@ func (app *DdevApp) WriteDockerComposeConfig() error {
 				return err
 			}
 		}
-
 	}
 
 	f, err := os.Create(app.DockerComposeYAMLPath())
@@ -535,7 +540,25 @@ func (app *DdevApp) WriteDockerComposeConfig() error {
 	if err != nil {
 		return err
 	}
-	return err
+
+	files, err := app.ComposeFiles()
+	if err != nil {
+		return err
+	}
+	fullContents, _, err := dockerutil.ComposeCmd(files, "config")
+	if err != nil {
+		return err
+	}
+	fullHandle, err := os.Create(app.DockerComposeFullRenderedYAMLPath())
+	if err != nil {
+		return err
+	}
+	_, err = fullHandle.WriteString(fullContents)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // CheckCustomConfig warns the user if any custom configuration files are in use.
