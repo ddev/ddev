@@ -208,7 +208,7 @@ ddev composer create "typo3/cms-base-distribution:^9" --prefer-dist
 ddev start
 ```
 
-**A Some versions of TYPO3 an install may fail if you use the https URL to install ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
+**On TYPO3 versions < 9 an install may fail if you use the https URL to install because the allowed proxy is not configured yet ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
 
 If doing a basic TYPO3 install, you can then `touch public/FIRST_INSTALL` and hit the http URL top begin an installation.
 
