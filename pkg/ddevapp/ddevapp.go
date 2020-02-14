@@ -107,7 +107,10 @@ type DdevApp struct {
 	NgrokArgs                 string                `yaml:"ngrok_args,omitempty"`
 	Timezone                  string                `yaml:"timezone"`
 	DisableSettingsManagement bool                  `yaml:"disable_settings_management,omitempty"`
+	ComposeYaml               map[string]interface{}
 }
+
+//var ComposeYaml map[string]interface{}
 
 // GetType returns the application type as a (lowercase) string
 func (app *DdevApp) GetType() string {
@@ -816,7 +819,7 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	// WriteConfig docker-compose.yaml
+	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeConfig()
 	if err != nil {
 		return err

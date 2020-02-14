@@ -125,6 +125,22 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		return app, fmt.Errorf("Project directory contains a glob pattern, please use a directory that does not contain `{}[]*?`")
 	}
 
+	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
+		content, err := fileutil.ReadFileIntoString(app.DockerComposeFullRenderedYAMLPath())
+		if err != nil {
+			return app, err
+		}
+		err = yaml.Unmarshal([]byte(content), &app.ComposeYaml)
+		if err != nil {
+			return app, err
+		}
+
+		_, err = app.ReadConfig(includeOverrides)
+		if err != nil {
+			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
+		}
+	}
+
 	return app, nil
 }
 
