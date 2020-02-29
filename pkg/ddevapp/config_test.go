@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/require"
@@ -755,13 +756,21 @@ func TestExtraPackages(t *testing.T) {
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
+	// Make sure no "-built" items are still hanging around
+	command := fmt.Sprintf("docker rmi -f %s-%s-built %s-%s-built", app.WebImage, app.Name, app.GetDBImage(), app.Name)
+	_, err = exec.RunCommand("bash", []string{"-c", command})
+	assert.NoError(err)
+
 	defer func() {
+		_ = app.Stop(true, false)
 		app.WebImageExtraPackages = nil
 		app.DBImageExtraPackages = nil
 		_ = app.WriteConfig()
 		_ = fileutil.RemoveContents(app.GetConfigPath("web-build"))
 		_ = fileutil.RemoveContents(app.GetConfigPath("db-build"))
 		_ = app.Stop(true, false)
+		command := fmt.Sprintf("docker rmi -f %s-%s-built %s-%s-built", app.WebImage, app.Name, app.GetDBImage(), app.Name)
+		_, _ = exec.RunCommand("bash", []string{"-c", command})
 	}()
 
 	// Start and make sure that the packages don't exist already
@@ -770,7 +779,7 @@ func TestExtraPackages(t *testing.T) {
 
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "web",
-		Cmd:     "command -v zsh",
+		Cmd:     "dpkg -s php7.3-gmp",
 	})
 	assert.Error(err)
 	assert.Contains(err.Error(), "exit status 1")
@@ -783,28 +792,23 @@ func TestExtraPackages(t *testing.T) {
 	assert.Contains(err.Error(), "exit status 1")
 
 	// Now add the packages and start again, they should be in there
-	app.WebImageExtraPackages = []string{"zsh"}
+	app.WebImageExtraPackages = []string{"php7.3-gmp"}
 	app.DBImageExtraPackages = []string{"ncdu"}
 	err = app.Start()
 	assert.NoError(err)
 
-	stdout, _, err := app.Exec(&ExecOpts{
+	_, _, err = app.Exec(&ExecOpts{
 		Service: "web",
-		Cmd:     "command -v zsh",
+		Cmd:     "php -i | grep 'gmp support => enabled'",
 	})
 	assert.NoError(err)
-	assert.Equal("/usr/bin/zsh", strings.Trim(stdout, "\n"))
 
-	stdout, _, err = app.Exec(&ExecOpts{
+	stdout, _, err := app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     "command -v ncdu",
 	})
 	assert.NoError(err)
 	assert.Equal("/usr/bin/ncdu", strings.Trim(stdout, "\n"))
-
-	err = app.Stop(true, false)
-	assert.NoError(err)
-
 	runTime()
 }
 
