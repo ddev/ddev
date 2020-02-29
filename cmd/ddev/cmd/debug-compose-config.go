@@ -37,9 +37,9 @@ var DebugComposeConfigCmd = &cobra.Command{
 
 		out, err := fileutil.ReadFileIntoString(app.DockerComposeFullRenderedYAMLPath())
 		if err != nil {
-			util.Failed("unable to read rendered file %s: err", app.DockerComposeFullRenderedYAMLPath(), err)
+			util.Failed("unable to read rendered file %s: %v", app.DockerComposeFullRenderedYAMLPath(), err)
 		}
-		output.UserOut.Printf(strings.TrimSpace(out))
+		output.UserOut.Print(strings.TrimSpace(out))
 	},
 }
 
