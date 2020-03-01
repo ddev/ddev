@@ -522,7 +522,7 @@ func (app *DdevApp) GetHostnames() []string {
 	return nameListArray
 }
 
-// WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.
+// WriteDockerComposeConfig writes a .docker-compose-base.yaml and related to the .ddev directory.
 func (app *DdevApp) WriteDockerComposeConfig() error {
 	var err error
 

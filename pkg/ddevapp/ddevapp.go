@@ -641,9 +641,9 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	files, err := filepath.Glob("docker-compose*.y*l")
+	files, err := filepath.Glob("docker-compose.*.yaml")
 	if err != nil {
-		return []string{}, fmt.Errorf("unable to glob docker-compose*.y*l in %s: err=%v", app.AppConfDir(), err)
+		return []string{}, fmt.Errorf("unable to glob docker-compose.*.yaml in %s: err=%v", app.AppConfDir(), err)
 	}
 
 	mainfile := app.DockerComposeYAMLPath()
@@ -651,11 +651,8 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 		return nil, fmt.Errorf("failed to find %s", mainfile)
 	}
 
-	overrides, err := filepath.Glob("docker-compose.override.y*l")
+	overrides, err := filepath.Glob("docker-compose.override.yaml")
 	util.CheckErr(err)
-	if len(overrides) > 1 {
-		return []string{}, fmt.Errorf("there are more than one docker-compose.override.y*l, unable to continue")
-	}
 
 	orderedFiles := make([]string, 1)
 
@@ -663,15 +660,15 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 	orderedFiles[0] = mainfile
 
 	for _, file := range files {
-		// We already have the main docker-compose.yaml, so skip when we hit it.
+		// We already have the main file, and it's not in the list anyway, so skip when we hit it.
 		// We'll add the override later, so skip it.
-		if file == mainfile || (len(overrides) == 1 && file == overrides[0]) {
+		if len(overrides) == 1 && file == overrides[0] {
 			continue
 		}
-		orderedFiles = append(orderedFiles, filepath.Join(app.AppConfDir(), file))
+		orderedFiles = append(orderedFiles, app.GetConfigPath(file))
 	}
 	if len(overrides) == 1 {
-		orderedFiles = append(orderedFiles, overrides[0])
+		orderedFiles = append(orderedFiles, app.GetConfigPath(overrides[0]))
 	}
 	return orderedFiles, nil
 }
