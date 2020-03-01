@@ -761,10 +761,13 @@ func TestExtraPackages(t *testing.T) {
 	_, err = exec.RunCommand("bash", []string{"-c", command})
 	assert.NoError(err)
 
+	oldPHPVersion := app.PHPVersion
+	app.PHPVersion = "7.3"
 	defer func() {
 		_ = app.Stop(true, false)
 		app.WebImageExtraPackages = nil
 		app.DBImageExtraPackages = nil
+		app.PHPVersion = oldPHPVersion
 		_ = app.WriteConfig()
 		_ = fileutil.RemoveContents(app.GetConfigPath("web-build"))
 		_ = fileutil.RemoveContents(app.GetConfigPath("db-build"))
@@ -797,13 +800,19 @@ func TestExtraPackages(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	_, _, err = app.Exec(&ExecOpts{
+	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",
-		Cmd:     "php -i | grep 'gmp support => enabled'",
+		Cmd:     "dpkg -s php7.3-gmp",
 	})
-	assert.NoError(err)
+	assert.NoError(err, "dpkg -s php7.3-gmp failed", stdout, stderr)
 
-	stdout, _, err := app.Exec(&ExecOpts{
+	stdout, stderr, err = app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     "php -i | grep 'gmp support =. enabled'",
+	})
+	assert.NoError(err, "failed to grep for gmp support, stdout=%s, stderr=%s", stdout, stderr)
+
+	stdout, _, err = app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     "command -v ncdu",
 	})
