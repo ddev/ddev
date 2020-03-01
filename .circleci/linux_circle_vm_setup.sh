@@ -16,6 +16,9 @@ fi
 
 echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
 
+# Without this .curlrc CircleCI linux image doesn't respect mkcert certs
+echo "capath=/etc/ssl/certs/" >>~/.curlrc
+
 . ~/.bashrc
 
 export HOMEBREW_NO_AUTO_UPDATE=1

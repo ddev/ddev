@@ -24,7 +24,7 @@ jobs:
           make -s clean linux darwin windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: Build the ddev executables
     - run:
-        command: ./.circleci/generate_artifacts.sh ~/artifacts ${BUILD_IMAGE_TARBALLS:false}
+        command: ./.circleci/generate_artifacts.sh ~/artifacts
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - store_artifacts:
@@ -344,7 +344,7 @@ jobs:
     - attach_workspace:
         at: ~/
     - run:
-        command: ./.circleci/generate_artifacts.sh ~/artifacts ${BUILD_IMAGE_TARBALLS:false}
+        command: ./.circleci/generate_artifacts.sh ~/artifacts
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
@@ -417,7 +417,7 @@ jobs:
 
     # We only build the xz version of the docker images on tag build.
     - run:
-        command: ./.circleci/generate_artifacts.sh ~/artifacts ${BUILD_IMAGE_TARBALLS:true}
+        command: ./.circleci/generate_artifacts.sh ~/artifacts
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
 
