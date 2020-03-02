@@ -1888,14 +1888,16 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
+	//nolint: errcheck
+	defer os.Rename(siteCopyDest, site.Dir)
+
 	// ddev stop (in cmd) actually does the check for missing project files,
 	// so we imitate that here.
 	err = ddevapp.CheckForMissingProjectFiles(app)
 	assert.Error(err)
-	assert.Contains(err.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
-	// Move the site directory back to its original location.
-	err = os.Rename(siteCopyDest, site.Dir)
-	assert.NoError(err)
+	if err != nil {
+		assert.Contains(err.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
+	}
 }
 
 // TestDdevDescribe tests that the describe command works properly on a running
