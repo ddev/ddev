@@ -1884,6 +1884,7 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	siteCopyDest := filepath.Join(tempPath, "site")
 	defer removeAllErrCheck(tempPath, assert)
 
+	_ = app.Stop(false, false)
 	// Move the site directory to a temp location to mimic a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
@@ -1978,6 +1979,8 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 		t.Fatalf("app.StartAndWait failed err=%v logs from broken container: \n=======\n%s\n========\n", startErr, logs)
 	}
 	// Move the site directory to a temp location to mimick a missing directory.
+	err = app.Stop(false, false)
+	assert.NoError(err)
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
