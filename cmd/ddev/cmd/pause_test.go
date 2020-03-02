@@ -84,6 +84,9 @@ func TestCmdPauseContainersMissingProjectDirectory(t *testing.T) {
 	//nolint: errcheck
 	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", projectName})
 
+	_, err = exec.RunCommand(DdevBin, []string{"pause", projectName})
+	assert.NoError(err)
+
 	err = os.Chdir(projDir)
 	assert.NoError(err)
 

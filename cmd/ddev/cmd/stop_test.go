@@ -84,17 +84,20 @@ func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"start"})
 	assert.NoError(err)
 
+	_, err = exec.RunCommand(DdevBin, []string{"stop", projectName})
+	assert.NoError(err)
+
 	err = os.Chdir(projDir)
 	assert.NoError(err)
 
 	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
 	err = os.Rename(tmpDir, copyDir)
 	assert.NoError(err)
+	//nolint: errcheck
+	defer os.Rename(copyDir, tmpDir)
 
 	out, err = exec.RunCommand(DdevBin, []string{"stop", projectName})
 	assert.NoError(err)
 	assert.Contains(out, "has been stopped")
 
-	err = os.Rename(copyDir, tmpDir)
-	assert.NoError(err)
 }
