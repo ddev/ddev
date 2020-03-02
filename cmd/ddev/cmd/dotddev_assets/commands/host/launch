@@ -2,18 +2,28 @@
 
 ## #ddev-generated
 ## Description: Launch a browser with the current site
-## Usage: launch [path]
-## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php"
+## Usage: launch [path|pma|mailhog]
+## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php" or "ddev launch pma" or "ddev launch mailhog"
 
-FULLURL=${DDEV_PRIMARY_URL}
-
-if [ -n "${1:-}" ] ; then 
-  if [[ ${1::1} != "/" ]] ; then 
-    FULLURL="${FULLURL}/"; 
-  fi
-
-  FULLURL="${FULLURL}${1}"; 
-fi
+case "${1}" in
+  mailhog)
+    # build the MailHog URL
+    FULLURL="http://${DDEV_HOSTNAME}:${DDEV_MAILHOG_PORT}"
+    ;;
+  pma)
+    # build the PhpMyAdmin URL
+    FULLURL="http://${DDEV_HOSTNAME}:${DDEV_PHPMYADMIN_PORT}"
+    ;;
+  *)
+    FULLURL=${DDEV_PRIMARY_URL}
+    if [ -n "${1:-}" ]; then
+      if [[ ${1::1} != "/" ]]; then
+        FULLURL="${FULLURL}/"
+      fi
+    fi
+    FULLURL="${FULLURL}${1}"
+    ;;
+esac
 
 case $OSTYPE in
   linux-gnu)
