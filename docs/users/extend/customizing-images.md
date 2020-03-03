@@ -1,6 +1,6 @@
 ## Customizing Docker Images
 
-It's common to have a requirement for the web or db images which is not bundled in them by default. Thre are two easy ways to extend these docker images:
+It's common to have a requirement for the web or db images which is not bundled in them by default. There are two easy ways to extend these docker images:
 
 * `webimage_extra_packages` and `dbimage_extra_packages` in .ddev/config.yaml
 * An add-on Dockerfile in your project's `.ddev/web-build` or `.ddev/db-build`

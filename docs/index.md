@@ -15,7 +15,7 @@
 
 ### Using ddev alongside other development environments
 
-ddev by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure ddev to use different ports. See [troubleshooting](users/troubleshooting.md#unable-listen) for more detailed problemsolving.
+ddev by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure ddev to use different ports. See [troubleshooting](users/troubleshooting.md#unable-listen) for more detailed problem solving.
 
 ## Installation
 
@@ -97,7 +97,7 @@ On variants of Linux you may be prompted for additional package installation to 
 ### Windows and Firefox `mkcert -install` additional instructions
 
 The `mkcert -install` step on Windows does not work for the Firefox browser.
-You need to add the created root certficate authority to the security
+You need to add the created root certificate authority to the security
 configuration by your self:
 
 * Run `mkcert -install` (you can use the shortcut from the start menu for that)
@@ -127,7 +127,7 @@ We love to hear from our users and help them be successful with ddev. Support op
 * [ddev Documentation](users/faq.md)
 * [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
 * [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
-* The [gitter drud/ddev channel](https://gitter.im/drud/ddev) (it's easy to log in many diffferent ways)
+* The [gitter drud/ddev channel](https://gitter.im/drud/ddev) (it's easy to log in many different ways)
 * The `#ddev` channels in [Drupal Slack](https://www.drupal.org/slack), [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support.
 * [ddev-contrib](https://github.com/drud/ddev-contrib) repo provides a number of vetted user-contributed recipes for extending and using ddev. Your contributions are welcome.
 * [awesome-ddev](https://github.com/drud/awesome-ddev) repo has loads of external resources, blog posts, recipes, screencasts, and the like. Your contributions are welcome.

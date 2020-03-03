@@ -26,7 +26,7 @@ The executable components required for Windows NFS (winnfsd and nssm) are packag
 
 **Firewall issues**: On Windows 10 you will likely run afoul of the Windows Defender Firewall, and it will be necessary to allow winnfsd to bypass it. If you're getting a timeout with no information after `ddev start`, try going to "Windows Defender Firewall" -> "Allow an app or feature through Windows Defender Firewall", "Change Settings", "Allow another app". Then choose C:\Program Files\ddev\winnfsd.exe, assuming that's where you installed winnfsd.
 
-Also see the debugging section below, and the special WIndows debugging section.
+Also see the debugging section below, and the special Windows debugging section.
 
 ### Debian/Ubuntu Linux NFS Setup
 
@@ -53,7 +53,7 @@ Tools to debug and solve permission problems:
 * Try `ddev debug nfsmount` to see if basic NFS mounting is working. If that works, it's likely that everything else will.
 * When debugging, please do `ddev restart` in between each change. Otherwise, you can have stale mounts inside the container and you'll miss any benefit you may find in the debugging process.
 * Inspect the /etc/exports (or `~/.ddev/nfs_exports.txt` on Windows).
-* Restart the server (`sudo nfsd restart` on macOS, `sudo nssm restart nfsd` on Windows, `sudo systemctl restart nfs-kernel-server` on Debian/Ubuntu, other commaonds for other Unices).
+* Restart the server (`sudo nfsd restart` on macOS, `sudo nssm restart nfsd` on Windows, `sudo systemctl restart nfs-kernel-server` on Debian/Ubuntu, other commands for other Unices).
 * `showmount -e` on macOS or Linux will show the shared mounts.
 * On Linux, the primary IP address needs to be in /etc/exports. Temporarily set the share in /etc/exports to `/home *`, which shares /home with any client, and `sudo systemctl restart nfs-kernel-server`. Then start a ddev project doing an nfs mount, and `showmount -a` and you'll find out what the primary IP address in use is. You can add that address to /etc/exports.
 

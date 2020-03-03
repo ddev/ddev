@@ -50,7 +50,7 @@ After installing docker-ce you *must* install docker-compose separately. If usin
 
 ### Linux Post-installation steps (required)
 
-See [Docker's post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/). You need to add your linux user to the "docker" group. and normally set up docker to start on boot.  __Please do not ever use sudo to run `ddev start`, it will break things.__
+See [Docker's post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/). You need to add your linux user to the "docker" group and normally set up docker to start on boot.  __Please do not ever use sudo to run `ddev start`, it will break things.__
 
 <a name="troubleshooting"></a>
 
