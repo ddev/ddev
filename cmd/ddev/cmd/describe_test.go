@@ -235,7 +235,10 @@ func TestCmdDescribeMissingProjectDirectory(t *testing.T) {
 
 	_, err = exec.RunCommand(DdevBin, []string{"start"})
 	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", projectName})
+	defer exec.RunCommand(DdevBin, []string{"delete", "-Oy", projectName})
+	assert.NoError(err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"stop"})
 	assert.NoError(err)
 
 	err = os.Chdir(projDir)

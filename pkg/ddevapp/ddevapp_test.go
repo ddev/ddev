@@ -1884,18 +1884,21 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	siteCopyDest := filepath.Join(tempPath, "site")
 	defer removeAllErrCheck(tempPath, assert)
 
+	_ = app.Stop(false, false)
 	// Move the site directory to a temp location to mimic a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
+
+	//nolint: errcheck
+	defer os.Rename(siteCopyDest, site.Dir)
 
 	// ddev stop (in cmd) actually does the check for missing project files,
 	// so we imitate that here.
 	err = ddevapp.CheckForMissingProjectFiles(app)
 	assert.Error(err)
-	assert.Contains(err.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
-	// Move the site directory back to its original location.
-	err = os.Rename(siteCopyDest, site.Dir)
-	assert.NoError(err)
+	if err != nil {
+		assert.Contains(err.Error(), "If you would like to continue using ddev to manage this project please restore your files to that directory.")
+	}
 }
 
 // TestDdevDescribe tests that the describe command works properly on a running
@@ -1976,6 +1979,8 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 		t.Fatalf("app.StartAndWait failed err=%v logs from broken container: \n=======\n%s\n========\n", startErr, logs)
 	}
 	// Move the site directory to a temp location to mimick a missing directory.
+	err = app.Stop(false, false)
+	assert.NoError(err)
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 

@@ -21,6 +21,7 @@ DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)               
           	    -v "$(S)$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
           	    -e GOPATH="//workdir/$(GOTMP)" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
+          	    -e GOLANGCI_LINT_CACHE="//workdir/$(GOTMP)/.golanci-lint-cache" \
           	    -e GOFLAGS="$(USEMODVENDOR)" \
           	    -w //workdir              \
           	    $(BUILD_IMAGE)
@@ -34,7 +35,7 @@ GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
 
 BUILD_OS = $(shell go env GOHOSTOS)
 
-BUILD_IMAGE ?= drud/golang-build-container:v1.13.0
+BUILD_IMAGE ?= drud/golang-build-container:v1.14.0
 
 BUILD_BASE_DIR ?= $(PWD)
 
