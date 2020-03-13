@@ -1,8 +1,10 @@
 package nodeps
 
 import (
+	"context"
 	"net"
 	"os"
+	"time"
 )
 
 // ArrayContainsString returns true if slice contains element
@@ -37,6 +39,10 @@ func IsDockerToolbox() bool {
 // internet connection. It just tries a quick DNS query.
 // This requires that the named record be query-able.
 func IsInternetActive() bool {
+	const timeout = 500 * time.Millisecond
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	_, err := net.LookupHost("i-exist.ddev.site")
-	return err == nil
+	return err == nil && ctx.Err() == nil
 }
