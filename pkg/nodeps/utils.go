@@ -43,6 +43,6 @@ func IsInternetActive() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	_, err := net.LookupHost("i-exist.ddev.site")
+	_, err := net.DefaultResolver.LookupHost(ctx, "i-exist.ddev.site")
 	return err == nil && ctx.Err() == nil
 }
