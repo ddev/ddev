@@ -309,7 +309,7 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 // CheckForMissingProjectFiles returns an error if the project's configuration or project root cannot be found
 func CheckForMissingProjectFiles(project *DdevApp) error {
 	if strings.Contains(project.SiteStatus(), SiteConfigMissing) || strings.Contains(project.SiteStatus(), SiteDirMissing) {
-		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev stop --remove-data --omit-snaphot %s'", project.GetAppRoot(), project.GetName())
+		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev delete --omit-snapshot %s'", project.GetAppRoot(), project.GetName())
 	}
 
 	return nil
