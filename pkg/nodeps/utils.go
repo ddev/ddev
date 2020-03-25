@@ -39,6 +39,9 @@ func IsDockerToolbox() bool {
 
 var isInternetActiveAlreadyChecked = false
 var isInternetActiveResult = false
+var isInternetActiveNetResolver interface {
+	LookupHost(ctx context.Context, host string) (addrs []string, err error)
+} = net.DefaultResolver
 
 //IsInternetActive() checks to see if we have a viable
 // internet connection. It just tries a quick DNS query.
@@ -55,7 +58,7 @@ func IsInternetActive() bool {
 	defer cancel()
 
 	randomURL := RandomString(10) + ".ddev.site"
-	addrs, err := net.DefaultResolver.LookupHost(ctx, randomURL)
+	addrs, err := isInternetActiveNetResolver.LookupHost(ctx, randomURL)
 
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil
