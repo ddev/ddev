@@ -14,8 +14,12 @@ type netResolverStub struct {
 	err       error
 }
 
-func (t netResolverStub) LookupHost(_ context.Context, _ string) ([]string, error) {
-	time.Sleep(t.sleepTime)
+func (t netResolverStub) LookupHost(ctx context.Context, _ string) ([]string, error) {
+	select {
+	case <-time.After(t.sleepTime):
+	case <-ctx.Done():
+		return nil, errors.New("context timed out")
+	}
 	return nil, t.err
 }
 
@@ -42,7 +46,6 @@ func TestIsInternetActiveTimeout(t *testing.T) {
 
 	isInternetActiveNetResolver = netResolverStub{
 		sleepTime: 501 * time.Millisecond,
-		err:       nil,
 	}
 
 	assert.False(t, IsInternetActive())
@@ -62,7 +65,6 @@ func TestIsInternetActive(t *testing.T) {
 
 	isInternetActiveNetResolver = netResolverStub{
 		sleepTime: 0,
-		err:       nil,
 	}
 
 	// should return true
