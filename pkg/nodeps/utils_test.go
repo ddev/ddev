@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"net"
-	"os"
 	"testing"
 	"time"
 )
@@ -20,18 +19,16 @@ func (t netResolverStub) LookupHost(_ context.Context, _ string) ([]string, erro
 	return nil, t.err
 }
 
-func TestMain(m *testing.M) {
-	// reset back to defaults
+func resetVariables() {
+	// resetVariables back to defaults
 	isInternetActiveNetResolver = net.DefaultResolver
 	isInternetActiveAlreadyChecked = false
 	isInternetActiveResult = false
-
-	// run tests
-	code := m.Run()
-	os.Exit(code)
 }
 
 func TestIsInternetActiveErrorOccurred(t *testing.T) {
+	resetVariables()
+
 	isInternetActiveNetResolver = netResolverStub{
 		sleepTime: 0,
 		err:       errors.New("test error"),
@@ -41,6 +38,8 @@ func TestIsInternetActiveErrorOccurred(t *testing.T) {
 }
 
 func TestIsInternetActiveTimeout(t *testing.T) {
+	resetVariables()
+
 	isInternetActiveNetResolver = netResolverStub{
 		sleepTime: 501 * time.Millisecond,
 		err:       nil,
@@ -50,6 +49,8 @@ func TestIsInternetActiveTimeout(t *testing.T) {
 }
 
 func TestIsInternetActiveAlreadyChecked(t *testing.T) {
+	resetVariables()
+
 	isInternetActiveAlreadyChecked = true
 	isInternetActiveResult = true
 
@@ -57,6 +58,8 @@ func TestIsInternetActiveAlreadyChecked(t *testing.T) {
 }
 
 func TestIsInternetActive(t *testing.T) {
+	resetVariables()
+
 	isInternetActiveNetResolver = netResolverStub{
 		sleepTime: 0,
 		err:       nil,
