@@ -37,10 +37,19 @@ func IsDockerToolbox() bool {
 	return false
 }
 
+var isInternetActiveAlreadyChecked = false
+var isInternetActiveResult = false
+
 //IsInternetActive() checks to see if we have a viable
 // internet connection. It just tries a quick DNS query.
-// This requires that the named record be query-able
+// This requires that the named record be query-able.
+// This check will only be made once per command run.
 func IsInternetActive() bool {
+	// if this was already checked, return the result
+	if isInternetActiveAlreadyChecked {
+		return isInternetActiveResult
+	}
+
 	const timeout = 500 * time.Millisecond
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -56,6 +65,11 @@ func IsInternetActive() bool {
 	if active == false {
 		fmt.Println("Internet connection not detected")
 	}
+
+	// remember the result to not call this twice
+	isInternetActiveAlreadyChecked = true
+	isInternetActiveResult = active
+
 	return active
 }
 
