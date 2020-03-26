@@ -39,6 +39,9 @@ func IsDockerToolbox() bool {
 
 var isInternetActiveAlreadyChecked = false
 var isInternetActiveResult = false
+
+// In order to override net.DefaultResolver with a stub, we have to define an
+// interface on our own since there is none from the standard library.
 var isInternetActiveNetResolver interface {
 	LookupHost(ctx context.Context, host string) (addrs []string, err error)
 } = net.DefaultResolver
@@ -80,6 +83,7 @@ func IsInternetActive() bool {
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
+// RandomString creates a random string with a set length
 func RandomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyz"
 

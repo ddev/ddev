@@ -14,6 +14,7 @@ type netResolverStub struct {
 	err       error
 }
 
+// LookupHost is a custom version of net.LookupHost that just wastes some time and then returns
 func (t netResolverStub) LookupHost(ctx context.Context, _ string) ([]string, error) {
 	select {
 	case <-time.After(t.sleepTime):
@@ -23,13 +24,14 @@ func (t netResolverStub) LookupHost(ctx context.Context, _ string) ([]string, er
 	return nil, t.err
 }
 
+// resetVariables resets the global variables IsInternetActive() uses back to their defaults
 func resetVariables() {
-	// resetVariables back to defaults
 	isInternetActiveNetResolver = net.DefaultResolver
 	isInternetActiveAlreadyChecked = false
 	isInternetActiveResult = false
 }
 
+// TestIsInternetActiveErrorOccurred tests if IsInternetActive() returns false when LookupHost returns an error
 func TestIsInternetActiveErrorOccurred(t *testing.T) {
 	resetVariables()
 
@@ -41,6 +43,7 @@ func TestIsInternetActiveErrorOccurred(t *testing.T) {
 	assert.False(t, IsInternetActive())
 }
 
+// TestIsInternetActiveTimeout tests if IsInternetActive() returns false when it times out
 func TestIsInternetActiveTimeout(t *testing.T) {
 	resetVariables()
 
@@ -51,6 +54,8 @@ func TestIsInternetActiveTimeout(t *testing.T) {
 	assert.False(t, IsInternetActive())
 }
 
+// TestIsInternetActiveAlreadyChecked tests if IsInternetActive() returns true when it has already
+// been called and returned true on an earlier execution.
 func TestIsInternetActiveAlreadyChecked(t *testing.T) {
 	resetVariables()
 
@@ -60,6 +65,8 @@ func TestIsInternetActiveAlreadyChecked(t *testing.T) {
 	assert.True(t, IsInternetActive())
 }
 
+// TestIsInternetActive tests if IsInternetActive() returns true, when the LookupHost call goes well
+// and if it properly sets the globals so it won't execute the LookupHost again.
 func TestIsInternetActive(t *testing.T) {
 	resetVariables()
 
@@ -77,6 +84,7 @@ func TestIsInternetActive(t *testing.T) {
 	assert.True(t, IsInternetActive())
 }
 
+// TestRandomString tests if RandomString returns the correct character length
 func TestRandomString(t *testing.T) {
 	randomString := RandomString(10)
 
