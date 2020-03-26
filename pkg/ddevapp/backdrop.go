@@ -102,11 +102,6 @@ $database_prefix = '{{ $config.DatabasePrefix }}';
 $settings['update_free_access'] = FALSE;
 $settings['hash_salt'] = '{{ $config.HashSalt }}';
 $settings['backdrop_drupal_compatibility'] = TRUE;
-
-ini_set('session.gc_probability', 1);
-ini_set('session.gc_divisor', 100);
-ini_set('session.gc_maxlifetime', 200000);
-ini_set('session.cookie_lifetime', 2000000);
 `
 
 // createBackdropSettingsFile manages creation and modification of settings.php and settings.ddev.php.
