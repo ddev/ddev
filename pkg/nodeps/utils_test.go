@@ -45,7 +45,7 @@ func TestIsInternetActiveTimeout(t *testing.T) {
 	resetVariables()
 
 	isInternetActiveNetResolver = netResolverStub{
-		sleepTime: 501 * time.Millisecond,
+		sleepTime: 1000 * time.Millisecond,
 	}
 
 	assert.False(t, IsInternetActive())
