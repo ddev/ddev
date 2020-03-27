@@ -142,11 +142,6 @@ $databases['default']['default'] = array(
   'prefix' => "{{ $config.DatabasePrefix }}",
 );
 
-ini_set('session.gc_probability', 1);
-ini_set('session.gc_divisor', 100);
-ini_set('session.gc_maxlifetime', 200000);
-ini_set('session.cookie_lifetime', 2000000);
-
 $settings['hash_salt'] = '{{ $config.HashSalt }}';
 
 // This will prevent Drupal from setting read-only permissions on sites/default.
@@ -166,7 +161,8 @@ $settings['class_loader_auto_detect'] = FALSE;
 // so it should work on any Drupal 8 or 9 version.
 if (defined('CONFIG_SYNC_DIRECTORY') && empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
   $config_directories[CONFIG_SYNC_DIRECTORY] = '{{ joinPath $config.SitePath $config.SyncDir }}';
-} else if (empty($settings['config_sync_directory'])) {
+}
+elseif (empty($settings['config_sync_directory'])) {
   $settings['config_sync_directory'] = '{{ joinPath $config.SitePath $config.SyncDir }}';
 }
 `
@@ -202,11 +198,6 @@ $databases['default']['default'] = array(
   'prefix' => "{{ $config.DatabasePrefix }}",
 );
 
-ini_set('session.gc_probability', 1);
-ini_set('session.gc_divisor', 100);
-ini_set('session.gc_maxlifetime', 200000);
-ini_set('session.cookie_lifetime', 2000000);
-
 $drupal_hash_salt = '{{ $config.HashSalt }}';
 `
 )
@@ -231,11 +222,6 @@ if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
 } 
 
 $db_url = "{{ $config.DatabaseDriver }}://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@$host:$port/{{ $config.DatabaseName }}";
-
-ini_set('session.gc_probability', 1);
-ini_set('session.gc_divisor', 100);
-ini_set('session.gc_maxlifetime', 200000);
-ini_set('session.cookie_lifetime', 2000000);
 `
 )
 
