@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path/filepath"
@@ -20,33 +21,25 @@ import (
 // sure the expected apptype is returned.
 func TestApptypeDetection(t *testing.T) {
 	assert := asrt.New(t)
-
-	fileLocations := map[string]string{
-		nodeps.AppTypeDrupal6:   "misc/ahah.js",
-		nodeps.AppTypeDrupal7:   "misc/ajax.js",
-		nodeps.AppTypeDrupal8:   "core/scripts/drupal.sh",
-		nodeps.AppTypeWordPress: "wp-settings.php",
-		nodeps.AppTypeBackdrop:  "core/scripts/backdrop.sh",
+	testDir, _ := os.Getwd()
+	appTypes := ddevapp.GetValidAppTypes()
+	var nonPHPAppTypes = []string{}
+	for _, t := range appTypes {
+		if t != nodeps.AppTypePHP {
+			nonPHPAppTypes = append(nonPHPAppTypes, t)
+		}
 	}
+	tmpDir := testcommon.CreateTmpDir("TestApptype")
+	defer testcommon.CleanupDir(tmpDir)
+	defer testcommon.Chdir(tmpDir)()
 
-	for expectedType, expectedPath := range fileLocations {
-		testDir := testcommon.CreateTmpDir("TestApptype")
-
-		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-		defer testcommon.CleanupDir(testDir)
-		defer testcommon.Chdir(testDir)()
-
-		err := os.MkdirAll(filepath.Join(testDir, filepath.Dir(expectedPath)), 0777)
-		assert.NoError(err)
-
-		_, err = os.OpenFile(filepath.Join(testDir, expectedPath), os.O_RDONLY|os.O_CREATE, 0666)
-		assert.NoError(err)
-
-		app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
+	fileutil.CopyDir(filepath.Join(testDir, "testdata/TestAppTypeDetection"), filepath.Join(tmpDir, "sampleapptypes"))
+	for _, appType := range nonPHPAppTypes {
+		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true, nodeps.ProviderDefault)
 		assert.NoError(err)
 
 		foundType := app.DetectAppType()
-		assert.EqualValues(expectedType, foundType)
+		assert.EqualValues(appType, foundType)
 	}
 }
 
