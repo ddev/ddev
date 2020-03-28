@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 
 	"github.com/drud/ddev/pkg/util"
 )
@@ -296,6 +297,7 @@ func GetValidAppTypes() []string {
 	keys := make([]string, 0, len(appTypeMatrix))
 	for k := range appTypeMatrix {
 		keys = append(keys, k)
+		sort.Strings(keys)
 	}
 	return keys
 }
