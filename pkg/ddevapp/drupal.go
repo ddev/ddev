@@ -328,6 +328,11 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 	return app.SiteDdevSettingsFile, nil
 }
 
+// createDrupal9SettingsFile is just a wrapper on d8
+func createDrupal9SettingsFile(app *DdevApp) (string, error) {
+	return createDrupal8SettingsFile(app)
+}
+
 // createDrupal6SettingsFile manages creation and modification of settings.php and settings.ddev.php.
 // If a settings.php file already exists, it will be modified to ensure that it includes
 // settings.ddev.php, which contains ddev-specific configuration.
@@ -628,7 +633,17 @@ func isDrupal7App(app *DdevApp) bool {
 
 // isDrupal8App returns true if the app is of type drupal8
 func isDrupal8App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "core/scripts/drupal.sh")); err == nil {
+	isD8, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '8`)
+	if err == nil && isD8 {
+		return true
+	}
+	return false
+}
+
+// isDrupal9App returns true if the app is of type drupal9
+func isDrupal9App(app *DdevApp) bool {
+	isD9, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '9`)
+	if err == nil && isD9 {
 		return true
 	}
 	return false
@@ -653,6 +668,13 @@ func drupal6ConfigOverrideAction(app *DdevApp) error {
 // since it is not yet compatible with php7.3
 func drupal7ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = nodeps.PHP72
+	return nil
+}
+
+// drupal9ConfigOverrideAction overrides mariadb_version for D9,
+// since it requires at least 10.3
+func drupal9ConfigOverrideAction(app *DdevApp) error {
+	app.MariaDBVersion = nodeps.MariaDB103
 	return nil
 }
 
