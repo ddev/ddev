@@ -111,7 +111,7 @@ services:
       - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILHOG_PORT}:{{ .MailhogPort }}
       # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
       # To expose an HTTPS port, define the port as securePort:containerPort.
-      - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80
+      - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
       - DDEV_PROJECT={{ .Name }}
     labels:
@@ -153,6 +153,7 @@ services:
       - TZ={{ .Timezone }}
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       - HTTP_EXPOSE=${DDEV_PHPMYADMIN_PORT}:{{ .DBAPort }}
+      - HTTPS_EXPOSE=${DDEV_PHPMYADMIN_HTTPS_PORT}:{{ .DBAPort }}
     healthcheck:
       interval: 120s
       timeout: 2s
@@ -276,11 +277,13 @@ const ConfigInstructions = `
 # The host port binding for the ddev-dbserver can be explicitly specified. It is dynamic
 # unless explicitly specified.
 
-# phpmyadmin_port: "1000"
-# The PHPMyAdmin port can be changed from the default 8036
+# phpmyadmin_port: "8036"
+# phpmyadmin_https_port: "8037{"
+# The PHPMyAdmin ports can be changed from the default 8036 and 8037
 
-# mailhog_port: "1001"
-# The MailHog port can be changed from the default 8025
+# mailhog_port: "8025"
+# mailhog_https_port: "8026"
+# The MailHog ports can be changed from the default 8025 and 8026
 
 # webimage_extra_packages: [php-yaml, php7.3-ldap]
 # Extra Debian packages that are needed in the webimage can be added here

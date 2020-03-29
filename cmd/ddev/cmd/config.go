@@ -119,10 +119,12 @@ var (
 	hostHTTPSPortArg string
 
 	// mailhogPortArg is arg for mailhog port
-	mailhogPortArg string
+	mailhogPortArg      string
+	mailhogHTTPSPortArg string
 
 	// phpMyAdminPortArg is arg for phpmyadmin container port access
-	phpMyAdminPortArg string
+	phpMyAdminPortArg      string
+	phpMyAdminHTTPSPortArg string
 
 	// projectTLDArg specifies a project top-level-domain; defaults to ddevapp.DdevDefaultTLD
 	projectTLDArg string
@@ -258,7 +260,10 @@ func init() {
 
 	ConfigCommand.Flags().StringVar(&hostDBPortArg, "host-db-port", "", "The db container's localhost-bound port")
 	ConfigCommand.Flags().StringVar(&phpMyAdminPortArg, "phpmyadmin-port", "", "Router port to be used for PHPMyAdmin (dba) container access")
+	ConfigCommand.Flags().StringVar(&phpMyAdminHTTPSPortArg, "phpmyadmin-https-port", "", "Router port to be used for PHPMyAdmin (dba) container access (https)")
+
 	ConfigCommand.Flags().StringVar(&mailhogPortArg, "mailhog-port", "", "Router port to be used for mailhog access")
+	ConfigCommand.Flags().StringVar(&mailhogHTTPSPortArg, "mailhog-https-port", "", "Router port to be used for mailhog access (https)")
 
 	// projectname flag exists for backwards compatability.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
@@ -462,8 +467,15 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	if cmd.Flag("phpmyadmin-port").Changed {
 		app.PHPMyAdminPort = phpMyAdminPortArg
 	}
+	if cmd.Flag("phpmyadmin-https-port").Changed {
+		app.PHPMyAdminHTTPSPort = phpMyAdminHTTPSPortArg
+	}
+
 	if cmd.Flag("mailhog-port").Changed {
 		app.MailhogPort = mailhogPortArg
+	}
+	if cmd.Flag("mailhog-https-port").Changed {
+		app.MailhogPort = mailhogHTTPSPortArg
 	}
 
 	if additionalHostnamesArg != "" {
