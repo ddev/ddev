@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
@@ -877,15 +878,15 @@ func TestTimezoneConfig(t *testing.T) {
 		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
 	})
 	assert.NoError(err)
-	assert.Equal("timezone=CET\nphptz=Europe/Paris", stdout)
+	assert.Regexp(regexp.MustCompile("timezone=CES?T\nphptz=Europe/Paris"), stdout)
 
-	// Make sure db container is also working with Dublin time/IST
+	// Make sure db container is also working with CET
 	stdout, _, err = app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     "echo -n timezone=$(date +%Z)",
 	})
 	assert.NoError(err)
-	assert.Equal("timezone=CET", stdout)
+	assert.Regexp(regexp.MustCompile("timezone=CES?T"), stdout)
 
 	runTime()
 }
