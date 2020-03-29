@@ -84,37 +84,38 @@ func TestConfigDescribeLocation(t *testing.T) {
 	assert.Contains(string(out), "No project configuration currently exists")
 }
 
-// TestConfigWithSitenameFlagDetectsDocroot tests docroot detected when flags passed.
+// TestConfigWithSitenameFlagDetectsDocroot tests that the docroot is detected when
+// flags like --project-name are passed.
 func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it.
 	testDocrootName := "web"
-	tmpdir := testcommon.CreateTmpDir("config-with-sitename")
+	tmpdir := testcommon.CreateTmpDir(t.Name())
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 	// Create a document root folder.
-	err := os.MkdirAll(filepath.Join(tmpdir, testDocrootName), 0755)
-	if err != nil {
-		t.Errorf("Could not create %s directory under %s", testDocrootName, tmpdir)
-	}
-	err = os.MkdirAll(filepath.Join(tmpdir, testDocrootName, "sites", "default"), 0755)
+
+	expectedFile := filepath.Join(tmpdir, testDocrootName, "misc/ahah.js")
+	err := os.MkdirAll(filepath.Dir(expectedFile), 0777)
 	assert.NoError(err)
+
+	// create index.php that defines docroot
 	_, err = os.OpenFile(filepath.Join(tmpdir, testDocrootName, "index.php"), os.O_RDONLY|os.O_CREATE, 0666)
 	assert.NoError(err)
 
-	expectedPath := "web/core/scripts/drupal.sh"
-	err = os.MkdirAll(filepath.Join(tmpdir, filepath.Dir(expectedPath)), 0777)
-	assert.NoError(err)
-
-	_, err = os.OpenFile(filepath.Join(tmpdir, expectedPath), os.O_RDONLY|os.O_CREATE, 0666)
+	// create the misc/ahah.js that signals drupal6
+	_, err = os.OpenFile(expectedFile, os.O_RDONLY|os.O_CREATE, 0666)
 	assert.NoError(err)
 
 	// Create a config
-	args := []string{"config", "--sitename=config-with-sitename"}
+	args := []string{"config", "--project-name=config-with-sitename"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Found a drupal8 codebase")
+	defer func() {
+		_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy", "config-with-sitename"})
+	}()
+	assert.Contains(string(out), "Found a drupal6 codebase", nodeps.AppTypeDrupal6)
 }
 
 // TestConfigSetValues sets all available configuration values using command flags, then confirms that the
