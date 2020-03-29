@@ -158,7 +158,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
 			util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
 		}
-		if app.Type == nodeps.AppTypeDrupal8 {
+		if app.Type == nodeps.AppTypeDrupal8 || app.Type == nodeps.AppTypeDrupal9 {
 			drushDir := filepath.Join(app.AppRoot, "drush")
 			if err = CreateGitIgnore(drushDir, "drush.yml"); err != nil {
 				util.Warning("Failed to write .gitignore in %s: %v", drushDir, err)

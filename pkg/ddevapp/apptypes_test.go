@@ -39,6 +39,7 @@ func TestApptypeDetection(t *testing.T) {
 	for _, appType := range nonPHPAppTypes {
 		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true, nodeps.ProviderDefault)
 		assert.NoError(err)
+		defer app.Stop(true, false)
 
 		foundType := app.DetectAppType()
 		assert.EqualValues(appType, foundType)
@@ -54,6 +55,7 @@ func TestPostConfigAction(t *testing.T) {
 		nodeps.AppTypeDrupal6:   nodeps.PHP56,
 		nodeps.AppTypeDrupal7:   nodeps.PHP72,
 		nodeps.AppTypeDrupal8:   nodeps.PHPDefault,
+		nodeps.AppTypeDrupal9:   nodeps.PHPDefault,
 		nodeps.AppTypeWordPress: nodeps.PHPDefault,
 		nodeps.AppTypeBackdrop:  nodeps.PHPDefault,
 	}

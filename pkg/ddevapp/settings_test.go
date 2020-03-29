@@ -30,6 +30,7 @@ var drupalBackdropSettingsLocations = map[string]settingsLocations{
 	nodeps.AppTypeDrupal6:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeDrupal7:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeDrupal8:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	nodeps.AppTypeDrupal9:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeBackdrop: {main: "settings.php", local: "settings.ddev.php"},
 }
 
@@ -43,6 +44,7 @@ func TestWriteSettings(t *testing.T) {
 		nodeps.AppTypeDrupal6:   "sites/default/settings.ddev.php",
 		nodeps.AppTypeDrupal7:   "sites/default/settings.ddev.php",
 		nodeps.AppTypeDrupal8:   "sites/default/settings.ddev.php",
+		nodeps.AppTypeDrupal9:   "sites/default/settings.ddev.php",
 		nodeps.AppTypeWordPress: "wp-config-ddev.php",
 		nodeps.AppTypeTYPO3:     "typo3conf/AdditionalConfiguration.php",
 	}
@@ -112,13 +114,13 @@ func TestWriteDrushConfig(t *testing.T) {
 		drushFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php")
 
 		switch app.Type {
-		case nodeps.AppTypeDrupal6, nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal8, nodeps.AppTypeBackdrop:
+		case nodeps.AppTypeDrupal6, nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal8, nodeps.AppTypeDrupal9, nodeps.AppTypeBackdrop:
 			require.True(t, fileutil.FileExists(drushFilePath))
 			optionFound, err := fileutil.FgrepStringInFile(drushFilePath, "options")
 			assert.NoError(err)
 			assert.True(optionFound)
 
-			if app.Type == nodeps.AppTypeDrupal8 {
+			if app.Type == nodeps.AppTypeDrupal8 || app.Type == nodeps.AppTypeDrupal9 {
 				drushYMLFilePath := filepath.Join(app.AppRoot, "drush", "drush.yml")
 				require.True(t, fileutil.FileExists(drushYMLFilePath))
 				optionFound, err := fileutil.FgrepStringInFile(drushYMLFilePath, "options")
