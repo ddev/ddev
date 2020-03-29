@@ -135,6 +135,10 @@ func TestValidTestSite(t *testing.T) {
 
 // TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
 func TestGetLocalHTTPResponse(t *testing.T) {
+	// We have to get globalconfig read so CA is known and installed.
+	err := globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+
 	assert := asrt.New(t)
 
 	dockerutil.EnsureDdevNetwork()
@@ -155,7 +159,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	//nolint: errcheck
 	defer globalconfig.RemoveProjectInfo(site.Name)
 
-	err := site.Prepare()
+	err = site.Prepare()
 	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 
 	cleanup := site.Chdir()
