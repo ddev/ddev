@@ -54,8 +54,8 @@ var (
 		},
 		{
 			Name:                          "TestPkgDrupal8",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.6.1.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-8.6.1/",
+			SourceURL:                     "https://www.drupal.org/project/drupal/releases/8.8.4",
+			ArchiveInternalExtractionPath: "drupal-8.8.4/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal8_6_1_files.tar.gz",
 			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/drupal8_files.zip",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal8_6_1_db.tar.gz",
@@ -146,6 +146,21 @@ var (
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/junk.txt", Expect: `This is a junk`},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php/junk-product.html", Expect: "junk product"},
 			FilesImageURI:                 "/media/catalog/product/r/a/randy_4th_of_july_unicycle.jpg",
+		},
+		{
+			Name:                          "TestPkgDrupal9",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.0.0-beta1.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-9.0.0-beta1/",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.tgz",
+			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.zip",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
+			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami.sql.zip",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeDrupal9,
+			Docroot:                       "",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "Deep mediterranean quiche"},
+			FilesImageURI:                 "/sites/default/files/mediterranean-quiche-umami.jpg",
 		},
 	}
 
@@ -1171,7 +1186,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		if nodeps.ArrayContainsString([]string{"drupal6", "drupal7", "drupal8", "backdrop"}, app.Type) {
 			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 		}
-		if app.Type == "drupal8" {
+		if app.Type == "drupal8" || app.Type == "drupal9" {
 			assert.FileExists(filepath.Join(app.AppRoot, "drush", "drush.yml"))
 		}
 
@@ -1205,8 +1220,10 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		// Load an image from the files section
 		if site.FilesImageURI != "" {
 			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+site.FilesImageURI)
-			assert.NoError(err, "failed ImageURI response on project %s: %v", site.Name, err)
-			assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
+			assert.NoError(err, "failed ImageURI response on project %s", site.Name)
+			if err != nil && resp != nil {
+				assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
+			}
 		}
 
 		// Make sure we can do a simple hit against the host-mount of web container.

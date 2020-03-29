@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
@@ -29,11 +30,12 @@ func TestApptypeDetection(t *testing.T) {
 			nonPHPAppTypes = append(nonPHPAppTypes, t)
 		}
 	}
-	tmpDir := testcommon.CreateTmpDir("TestApptype")
+	tmpDir := testcommon.CreateTmpDir(t.Name())
 	defer testcommon.CleanupDir(tmpDir)
 	defer testcommon.Chdir(tmpDir)()
 
-	fileutil.CopyDir(filepath.Join(testDir, "testdata/TestAppTypeDetection"), filepath.Join(tmpDir, "sampleapptypes"))
+	err := fileutil.CopyDir(filepath.Join(testDir, "testdata/TestAppTypeDetection"), filepath.Join(tmpDir, "sampleapptypes"))
+	require.NoError(t, err)
 	for _, appType := range nonPHPAppTypes {
 		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true, nodeps.ProviderDefault)
 		assert.NoError(err)
