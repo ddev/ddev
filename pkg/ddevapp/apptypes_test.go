@@ -39,6 +39,7 @@ func TestApptypeDetection(t *testing.T) {
 	for _, appType := range nonPHPAppTypes {
 		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true, nodeps.ProviderDefault)
 		assert.NoError(err)
+		//nolint: errcheck
 		defer app.Stop(true, false)
 
 		foundType := app.DetectAppType()
