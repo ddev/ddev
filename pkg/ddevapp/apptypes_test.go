@@ -34,7 +34,7 @@ func TestApptypeDetection(t *testing.T) {
 	defer testcommon.CleanupDir(tmpDir)
 	defer testcommon.Chdir(tmpDir)()
 
-	err := fileutil.CopyDir(filepath.Join(testDir, "testdata/TestAppTypeDetection"), filepath.Join(tmpDir, "sampleapptypes"))
+	err := fileutil.CopyDir(filepath.Join(testDir, "testdata", t.Name()), filepath.Join(tmpDir, "sampleapptypes"))
 	require.NoError(t, err)
 	for _, appType := range nonPHPAppTypes {
 		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true, nodeps.ProviderDefault)
