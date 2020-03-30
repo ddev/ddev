@@ -1995,9 +1995,11 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 		assert.NoError(err)
 		t.Fatalf("app.StartAndWait failed err=%v logs from broken container: \n=======\n%s\n========\n", startErr, logs)
 	}
-	// Move the site directory to a temp location to mimick a missing directory.
+	// Move the site directory to a temp location to mimic a missing directory.
 	err = app.Stop(false, false)
 	assert.NoError(err)
+	// Docker seems not always to release resources already, so sleep a bit before rename
+	time.Sleep(2 * time.Second)
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
