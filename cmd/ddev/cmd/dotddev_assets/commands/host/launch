@@ -1,11 +1,38 @@
 #!/bin/bash
 
-## #ddev-generated
+## #ddev-generated: If you want to edit and own this file, remove this line.
 ## Description: Launch a browser with the current site
-## Usage: launch [path]
-## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php"
+## Usage: launch [path] [-p|--phpmyadmin] [-m|--mailhog]
+## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php", for PHPMyAdmin "ddev launch -p", MailHog "ddev launch -m"
 
 FULLURL=${DDEV_PRIMARY_URL}
+
+while :; do
+     case $1 in
+         -h|-\?|--help)
+             show_help
+             exit
+             ;;
+         -p|--phpmyadmin)
+            FULLURL="http://${DDEV_HOSTNAME}:${DDEV_PHPMYADMIN_PORT}"
+             ;;
+         -m|--mailhog)
+            FULLURL="http://${DDEV_HOSTNAME}:${DDEV_MAILHOG_PORT}"
+             ;;
+
+         --)              # End of all options.
+             shift
+             break
+             ;;
+         -?*)
+             printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+             ;;
+         *)               # Default case: No more options, so break out of the loop.
+             break
+     esac
+ 
+     shift
+ done
 
 if [ -n "${1:-}" ] ; then 
   if [[ ${1::1} != "/" ]] ; then 
