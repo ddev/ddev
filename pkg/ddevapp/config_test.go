@@ -145,7 +145,7 @@ func TestHostName(t *testing.T) {
 	assert.Equal(app.GetHostname(), app.Name+"."+app.ProjectTLD)
 }
 
-// TestWriteDockerComposeYaml tests the writing of a docker-compose.yaml file.
+// TestWriteDockerComposeYaml tests the writing of a .ddev/docker-compose-* file.
 func TestWriteDockerComposeYaml(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)

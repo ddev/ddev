@@ -631,7 +631,7 @@ func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 }
 
 // ComposeFiles returns a list of compose files for a project.
-// It has to put the .docker-compose.yaml first
+// It has to put the .ddev/docker-compose-*.yaml first
 // It has to put the docker-compose.override.y*l last
 func (app *DdevApp) ComposeFiles() ([]string, error) {
 	dir, _ := os.Getwd()

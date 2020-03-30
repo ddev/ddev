@@ -311,7 +311,7 @@ func TestDdevStart(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
-	// ensure docker-compose.yaml exists inside .ddev site folder
+	// ensure .ddev/.ddev-docker-compose* exists inside .ddev site folder
 	composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 	assert.True(composeFile)
 
@@ -440,7 +440,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			t.Logf("DB Logs after app.Start: \n%s\n=== END DB LOGS ===", out)
 		}
 
-		// ensure docker-compose.yaml exists inside .ddev site folder
+		// ensure .ddev/docker-compose*.yaml exists inside .ddev site folder
 		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 		assert.True(composeFile)
 
@@ -2355,7 +2355,7 @@ func TestHttpsRedirection(t *testing.T) {
 }
 
 // TestMultipleComposeFiles checks to see if a set of docker-compose files gets
-// properly loaded in the right order, with docker-compose.yaml first and
+// properly loaded in the right order, with .ddev/ddev-docker-compose*yaml first and
 // with docker-compose.override.yaml last.
 func TestMultipleComposeFiles(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
