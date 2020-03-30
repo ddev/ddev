@@ -31,7 +31,7 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 			util.Failed("Failed to get project(s): %v", err)
 		}
 
-		// Look for version change and opt-in Sentry if it has changed.
+		// Look for version change and opt-in to instrumentation if it has changed.
 		err = checkDdevVersionAndOptInInstrumentation()
 		if err != nil {
 			util.Failed(err.Error())

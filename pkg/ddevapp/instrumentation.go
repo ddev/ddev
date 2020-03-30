@@ -7,7 +7,6 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/getsentry/raven-go"
 	"gopkg.in/segmentio/analytics-go.v3"
 	"os"
 	"runtime"
@@ -23,14 +22,12 @@ func GetInstrumentationUser() string {
 	return hashedHostID
 }
 
-// SetInstrumentationBaseTags sets the basic always-used tags for Sentry/Raven/Segment
+// SetInstrumentationBaseTags sets the basic always-used tags for Segment
 func SetInstrumentationBaseTags() {
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		dockerVersion, _ := version.GetDockerVersion()
 		composeVersion, _ := version.GetDockerComposeVersion()
 		isToolbox := nodeps.IsDockerToolbox()
-
-		raven.SetRelease("ddev@" + version.VERSION)
 
 		nodeps.InstrumentationTags["OS"] = runtime.GOOS
 		nodeps.InstrumentationTags["dockerVersion"] = dockerVersion
@@ -38,13 +35,10 @@ func SetInstrumentationBaseTags() {
 		nodeps.InstrumentationTags["dockerToolbox"] = strconv.FormatBool(isToolbox)
 		nodeps.InstrumentationTags["version"] = version.VERSION
 		nodeps.InstrumentationTags["ServerHash"] = GetInstrumentationUser()
-
-		// Add these tags to sentry/raven
-		raven.SetTagsContext(nodeps.InstrumentationTags)
 	}
 }
 
-// SetInstrumentationAppTags creates app-specific tags for Sentry/Raven/Segment
+// SetInstrumentationAppTags creates app-specific tags for Segment
 func (app *DdevApp) SetInstrumentationAppTags() {
 	ignoredProperties := []string{"approot", "hostnames", "httpurl", "httpsurl", "mailhog_url", "name", "phpmyadmin_url", "router_status_log", "shortroot", "urls"}
 
@@ -55,7 +49,6 @@ func (app *DdevApp) SetInstrumentationAppTags() {
 				nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
 			}
 		}
-		raven.SetTagsContext(nodeps.InstrumentationTags)
 	}
 }
 
@@ -98,7 +91,7 @@ func SegmentEvent(client analytics.Client, hashedID string, event string) error 
 	return err
 }
 
-// SendInstrumentationEvents does the actual send to sentry/segment
+// SendInstrumentationEvents does the actual send to segment
 func SendInstrumentationEvents(event string) {
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn && nodeps.IsInternetActive() {

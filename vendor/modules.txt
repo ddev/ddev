@@ -45,8 +45,6 @@ github.com/aws/aws-sdk-go/service/s3
 github.com/aws/aws-sdk-go/service/s3/s3iface
 github.com/aws/aws-sdk-go/service/s3/s3manager
 github.com/aws/aws-sdk-go/service/sts
-# github.com/certifi/gocertifi v0.0.0-20180905225744-ee1a9a0726d2
-github.com/certifi/gocertifi
 # github.com/cheggaaa/pb v1.0.25
 github.com/cheggaaa/pb
 # github.com/containerd/continuity v0.0.0-20180814194400-c7c5070e6f6e
@@ -84,8 +82,6 @@ github.com/docker/go-connections/nat
 github.com/docker/go-units
 # github.com/docker/libnetwork v0.8.0-dev.2.0.20180608203834-19279f049241
 github.com/docker/libnetwork/ipamutils
-# github.com/evalphobia/logrus_sentry v0.5.0
-github.com/evalphobia/logrus_sentry
 # github.com/fatih/color v1.7.0
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.7
@@ -95,8 +91,6 @@ github.com/fsouza/go-dockerclient
 github.com/fsouza/go-dockerclient/internal/archive
 github.com/fsouza/go-dockerclient/internal/jsonmessage
 github.com/fsouza/go-dockerclient/internal/term
-# github.com/getsentry/raven-go v0.2.0
-github.com/getsentry/raven-go
 # github.com/go-ini/ini v1.38.1
 github.com/go-ini/ini
 # github.com/gobuffalo/envy v1.7.0

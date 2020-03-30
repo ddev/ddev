@@ -165,9 +165,6 @@ func init() {
 }
 
 func instrumentationNotSetUpWarning() {
-	if version.SentryDSN == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		output.UserOut.Warning("Instrumentation is opted in, but SentryDSN is not available.")
-	}
 	if version.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		output.UserOut.Warning("Instrumentation is opted in, but SegmentKey is not available.")
 	}
