@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 
 	"github.com/drud/ddev/pkg/util"
 )
@@ -74,6 +75,10 @@ func init() {
 		nodeps.AppTypeDrupal8: {
 			settingsCreator: createDrupal8SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal8Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal8App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: drupal8PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
+		nodeps.AppTypeDrupal9: {
+			settingsCreator: createDrupal9SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal8Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal9App, postImportDBAction: nil, configOverrideAction: drupal9ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal8PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
+		},
+
 		nodeps.AppTypeWordPress: {
 			settingsCreator: createWordpressSettingsFile, uploadDir: getWordpressUploadDir, hookDefaultComments: getWordpressHooks, apptypeSettingsPaths: setWordpressSiteSettingsPaths, appTypeDetect: isWordpressApp, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: wordpressPostStartAction, importFilesAction: wordpressImportFilesAction,
 		},
@@ -153,7 +158,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
 			util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
 		}
-		if app.Type == nodeps.AppTypeDrupal8 {
+		if app.Type == nodeps.AppTypeDrupal8 || app.Type == nodeps.AppTypeDrupal9 {
 			drushDir := filepath.Join(app.AppRoot, "drush")
 			if err = CreateGitIgnore(drushDir, "drush.yml"); err != nil {
 				util.Warning("Failed to write .gitignore in %s: %v", drushDir, err)
@@ -292,6 +297,7 @@ func GetValidAppTypes() []string {
 	keys := make([]string, 0, len(appTypeMatrix))
 	for k := range appTypeMatrix {
 		keys = append(keys, k)
+		sort.Strings(keys)
 	}
 	return keys
 }

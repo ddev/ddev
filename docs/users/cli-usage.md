@@ -136,12 +136,13 @@ Get started with Drupal 8 projects on ddev either using a new or existing compos
 ```
 mkdir my-drupal8-site
 cd my-drupal8-site
-ddev config --project-type=drupal8 --docroot=web --create-docroot=true
+ddev config --project-type=drupal8 --docroot=web --create-docroot
 ddev start
-ddev composer create drupal/recommended-project
+ddev composer create drupal/recommended-project:^8
 ddev composer remove drupal/core-project-message
 ddev composer require drush/drush
 ddev start
+ddev launch
 ```
 
 When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
@@ -161,6 +162,34 @@ cd example-site
 ddev composer install
 ```
 
+### Drupal 9 Quickstart
+
+Get started with Drupal 9 projects on ddev either using a new or existing composer project or by cloning a git repository.
+
+#### Drupal 9 Composer Setup Example
+
+```
+mkdir my-drupal9-site
+cd my-drupal9-site
+ddev config --project-type=drupal9 --docroot=web --create-docroot
+ddev start
+ddev composer create drupal/recommended-project:9.0.x-dev
+ddev composer remove drupal/core-project-message
+ddev composer require drush/drush
+ddev start
+ddev launch
+```
+
+#### drupal 9 Git Clone Example
+
+Note that the git URL shown below is an example only, you'll need to use your own project.
+
+```
+git clone https://github.com/example/example-site
+cd example-site
+ddev composer install
+```
+
 ### Drupal 6/7 Quickstart
 
 Beginning to use ddev with a Drupal 6 or 7 project is as simple as cloning the project's repository and checking out its directory.
@@ -168,30 +197,17 @@ Beginning to use ddev with a Drupal 6 or 7 project is as simple as cloning the p
 ```
 git clone https://github.com/user/my-drupal-site
 cd my-drupal-site
-```
-
-Now to start working with ddev. In your project's working directory, enter the following command:
-
-```
 ddev config
 ```
-
-_Note: ddev config will prompt you for a project name, docroot, and project type._
 
 After `ddev config`, you're ready to start running your project. Run ddev using:
 
 ```
 ddev start
+ddev launch /install.php
 ```
 
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
-
-```
-Successfully started my-drupal7-site
-Your project can be reached at: http://my-drupal7-site.ddev.site
-```
-
-If you want to run the Drupal install script, the next step is to hit "/install.php" on your project (like `http://my-drupal7-site.ddev.site/install.php`) or run drush site-install, `ddev exec drush site-install --yes`.
+(Drupal 7 doesn't know how to redirect from the front page to the /install.php if the database is not set up but the settings files *are* set up, so launching with /install.php gets you started with an installation. You can aso `drush site-install`, `ddev exec drush site-install --yes`)
 
 Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
 
