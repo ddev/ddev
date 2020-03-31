@@ -282,6 +282,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 					}
 				}
 				// TODO: Handle volume names so they can be deleted on ddev destroy
+				// TODO: Show host port access, preferably exposed port. Might require docker describe?
 			}
 		}
 	}
