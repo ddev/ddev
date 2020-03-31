@@ -178,11 +178,13 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc := make(map[string]interface{})
 
 	appDesc["name"] = app.GetName()
+	appDesc["hostname"] = app.GetHostname()
 	appDesc["hostnames"] = app.GetHostnames()
 	appDesc["status"] = app.SiteStatus()
 	appDesc["type"] = app.GetType()
 	appDesc["approot"] = app.GetAppRoot()
 	appDesc["shortroot"] = shortRoot
+	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["httpurl"] = app.GetHTTPURL()
 	appDesc["httpsurl"] = app.GetHTTPSURL()
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
@@ -239,6 +241,50 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.WebImage
 	appDesc["dbaimg"] = app.DBAImage
+	appDesc["extra_services"] = map[string]map[string]string{}
+
+	if app.ComposeYaml != nil && len(app.ComposeYaml) > 0 {
+		if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
+			for k, v := range services {
+				serviceName := k.(string)
+
+				// Standard services are handled in other ways; we want custom services only
+				if serviceName == "web" || serviceName == "db" || serviceName == "dba" {
+					continue
+				}
+				var svc map[interface{}]interface{}
+				if svc, ok = v.(map[interface{}]interface{}); !ok {
+					continue
+				}
+				var env map[interface{}]interface{}
+				if env, ok = svc["environment"].(map[interface{}]interface{}); !ok {
+					continue
+				}
+
+				extraServices := appDesc["extra_services"].(map[string]map[string]string)
+				extraServices[serviceName] = map[string]string{}
+				for envName, envVal := range env {
+					if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
+						portSpecs := strings.Split(envVal.(string), ",")
+						// There might be more than one exposed UI port, but this only handles the first listed,
+						// most often there's only one.
+						if len(portSpecs) > 0 {
+							// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
+							ports := strings.Split(portSpecs[0], ":")
+							extraServices[serviceName][envName.(string)] = ports[0]
+							switch envName {
+							case "HTTP_EXPOSE":
+								extraServices[serviceName]["http_url"] = "http://" + appDesc["hostname"].(string) + ":" + ports[0]
+							case "HTTPS_EXPOSE":
+								extraServices[serviceName]["https_url"] = "https://" + appDesc["hostname"].(string) + ":" + ports[0]
+							}
+						}
+					}
+				}
+				// TODO: Handle volume names so they can be deleted on ddev destroy
+			}
+		}
+	}
 
 	_, _, err = app.ProcessHooks("post-describe")
 	if err != nil {

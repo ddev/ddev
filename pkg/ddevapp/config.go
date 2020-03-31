@@ -660,7 +660,7 @@ type composeYAMLVars struct {
 	GID                  string
 }
 
-// RenderComposeYAML renders the contents of .docker-compose*.
+// RenderComposeYAML renders the contents of .ddev/.docker-compose*.
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error

@@ -113,7 +113,14 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		if _, ok := desc["phpmyadmin_url"]; ok {
 			other.AddRow("phpMyAdmin:", desc["phpmyadmin_url"])
 		}
-
+		for k, v := range desc["extra_services"].(map[string]map[string]string) {
+			if httpsURL, ok := v["https_url"]; ok {
+				other.AddRow(k+":", httpsURL)
+			}
+			if httpURL, ok := v["http_url"]; ok {
+				other.AddRow(k+":", httpURL)
+			}
+		}
 		output = output + fmt.Sprint(other)
 
 		output = output + "\n" + ddevapp.RenderRouterStatus() + "\t" + ddevapp.RenderSSHAuthStatus()
