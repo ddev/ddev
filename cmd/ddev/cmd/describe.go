@@ -62,7 +62,7 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		output = output + "\n\nProject Information\n-------------------\n"
 		siteInfo := uitable.New()
 		siteInfo.AddRow("PHP version:", desc["php_version"])
-
+		siteInfo.AddRow("NFS mount enabled:", desc["nfs_mount_enabled"])
 		var dbinfo map[string]interface{}
 		if _, ok := desc["dbinfo"]; ok {
 			dbinfo = desc["dbinfo"].(map[string]interface{})

@@ -183,6 +183,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["status"] = app.SiteStatus()
 	appDesc["type"] = app.GetType()
 	appDesc["approot"] = app.GetAppRoot()
+	appDesc["nfs_mount_enabled"] = app.NFSMountEnabled
 	appDesc["shortroot"] = shortRoot
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["httpurl"] = app.GetHTTPURL()
