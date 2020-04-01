@@ -40,7 +40,7 @@ func SetInstrumentationBaseTags() {
 
 // SetInstrumentationAppTags creates app-specific tags for Segment
 func (app *DdevApp) SetInstrumentationAppTags() {
-	ignoredProperties := []string{"approot", "hostnames", "httpurl", "httpsurl", "mailhog_url", "name", "phpmyadmin_url", "router_status_log", "shortroot", "urls"}
+	ignoredProperties := []string{"approot", "hostname", "hostnames", "httpurl", "httpsurl", "httpURLs", "httpsURLs", "primary_url", "mailhog_url", "mailhog_https_url", "name", "phpmyadmin_url", "phpmyadmin_http_url", "router_status_log", "shortroot", "urls"}
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		describeTags, _ := app.Describe()
