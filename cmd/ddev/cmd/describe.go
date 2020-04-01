@@ -66,6 +66,7 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		var dbinfo map[string]interface{}
 		if _, ok := desc["dbinfo"]; ok {
 			dbinfo = desc["dbinfo"].(map[string]interface{})
+			siteInfo.AddRow("Database type:", dbinfo["database_type"])
 			if _, ok := dbinfo["mariadb_version"]; ok {
 				siteInfo.AddRow("MariaDB version", dbinfo["mariadb_version"])
 			}

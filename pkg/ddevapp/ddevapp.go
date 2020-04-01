@@ -200,13 +200,15 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 			dbinfo["dbPort"] = GetPort("db")
 			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
+			dbinfo["database_type"] = "mariadb" // default
 			if app.MySQLVersion != "" {
+				dbinfo["database_type"] = "mysql"
 				dbinfo["mysql_version"] = app.MySQLVersion
 			} else {
-				if app.MariaDBVersion == "" {
-					dbinfo["mariadb_version"] = version.MariaDBDefaultVersion
+				if app.MariaDBVersion != "" {
+					dbinfo["mariadb_version"] = app.MariaDBVersion
 				} else {
-					dbinfo["mariadb_version"] = app.MySQLVersion
+					dbinfo["mariadb_version"] = version.MariaDBDefaultVersion
 				}
 			}
 			appDesc["dbinfo"] = dbinfo
