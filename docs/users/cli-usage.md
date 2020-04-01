@@ -15,7 +15,7 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev restore-snapshot`.
 * `ddev ssh` opens a bash session in the web container (or other container).
 * `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
-* `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`)
+* `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). And `ddev launch -p` will launch the PHPMyAdminUI, and `ddev launch -m` will launch the MailHogUI.
 * `ddev delete` is the same as `ddev stop --remove-data` and will delete a project's database and ddev's record of the project's existence. It doesn't touch your project or code. `ddev delete -O` will omit the snapshot creation step that would otherwise take place, and `ddev delete images` gets rid of spare Docker images you may have on your machine.
 
 ## Partial Bundled Tools List
