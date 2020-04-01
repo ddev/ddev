@@ -475,7 +475,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.MailhogPort = mailhogPortArg
 	}
 	if cmd.Flag("mailhog-https-port").Changed {
-		app.MailhogPort = mailhogHTTPSPortArg
+		app.MailhogHTTPSPort = mailhogHTTPSPortArg
 	}
 
 	if additionalHostnamesArg != "" {
