@@ -22,7 +22,7 @@ Failed to start yoursite: Unable to listen on required ports, localhost port 80 
 
 This means there is another webserver listening on the named port(s) and ddev cannot access the port.
 
-(In some cases the conflict may be over port 8036 (PHPMyAdmin) or port 8025 (mailhog)).
+(In some cases the conflict could be over port 8036 (PHPMyAdmin) or port 8025 (mailhog)).
 
 To resolve this conflict, choose one of two methods:
 

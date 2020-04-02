@@ -139,9 +139,11 @@ const (
 	// DdevDefaultRouterHTTPSPort is the default router HTTPS port
 	DdevDefaultRouterHTTPSPort = "443"
 	// DdevDefaultPHPMyAdminPort is the default router port for dba/PHPMyadmin
-	DdevDefaultPHPMyAdminPort = "8036"
+	DdevDefaultPHPMyAdminPort      = "8036"
+	DdevDefaultPHPMyAdminHTTPSPort = "8037"
 	// DdevDefaultMailhogPort is the default router port for Mailhog
-	DdevDefaultMailhogPort = "8025"
+	DdevDefaultMailhogPort      = "8025"
+	DdevDefaultMailhogHTTPSPort = "8026"
 	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
 	DdevDefaultTLD = "ddev.site"
 )

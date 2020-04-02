@@ -96,7 +96,9 @@ type DdevApp struct {
 	HostWebserverPort         string                `yaml:"host_webserver_port,omitempty"`
 	HostHTTPSPort             string                `yaml:"host_https_port,omitempty"`
 	MailhogPort               string                `yaml:"mailhog_port,omitempty"`
+	MailhogHTTPSPort          string                `yaml:"mailhog_https_port,omitempty"`
 	PHPMyAdminPort            string                `yaml:"phpmyadmin_port,omitempty"`
+	PHPMyAdminHTTPSPort       string                `yaml:"phpmyadmin_https_port,omitempty"`
 	WebImageExtraPackages     []string              `yaml:"webimage_extra_packages,omitempty,flow"`
 	DBImageExtraPackages      []string              `yaml:"dbimage_extra_packages,omitempty,flow"`
 	ProjectTLD                string                `yaml:"project_tld,omitempty"`
@@ -198,15 +200,26 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 			dbinfo["dbPort"] = GetPort("db")
 			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
-			dbinfo["mariadb_version"] = app.MariaDBVersion
-			dbinfo["mysql_version"] = app.MySQLVersion
+			dbinfo["database_type"] = "mariadb" // default
+			if app.MySQLVersion != "" {
+				dbinfo["database_type"] = "mysql"
+				dbinfo["mysql_version"] = app.MySQLVersion
+			} else {
+				if app.MariaDBVersion != "" {
+					dbinfo["mariadb_version"] = app.MariaDBVersion
+				} else {
+					dbinfo["mariadb_version"] = version.MariaDBDefaultVersion
+				}
+			}
 			appDesc["dbinfo"] = dbinfo
 
 			if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
+				appDesc["phpmyadmin_https_url"] = "https://" + app.GetHostname() + ":" + app.PHPMyAdminHTTPSPort
 				appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + app.PHPMyAdminPort
 			}
 		}
 
+		appDesc["mailhog_https_url"] = "https://" + app.GetHostname() + ":" + app.MailhogHTTPSPort
 		appDesc["mailhog_url"] = "http://" + app.GetHostname() + ":" + app.MailhogPort
 	}
 
@@ -1108,7 +1121,9 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_HOST_WEBSERVER_PORT":      app.HostWebserverPort,
 		"DDEV_HOST_HTTPS_PORT":          app.HostHTTPSPort,
 		"DDEV_PHPMYADMIN_PORT":          app.PHPMyAdminPort,
+		"DDEV_PHPMYADMIN_HTTPS_PORT":    app.PHPMyAdminHTTPSPort,
 		"DDEV_MAILHOG_PORT":             app.MailhogPort,
+		"DDEV_MAILHOG_HTTPS_PORT":       app.MailhogHTTPSPort,
 		"DDEV_DOCROOT":                  app.Docroot,
 		"DDEV_HOSTNAME":                 app.HostName(),
 		"DDEV_UID":                      uidStr,
@@ -1464,7 +1479,7 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 	httpsURLs = append(httpsURLs, app.GetWebContainerDirectHTTPSURL())
 	httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())
 
-	return httpURLs, httpsURLs, append(httpURLs, httpsURLs...)
+	return httpURLs, httpsURLs, append(httpsURLs, httpURLs...)
 }
 
 // GetPrimaryURL() returns the primary URL that can be used, https or http

@@ -66,8 +66,13 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		var dbinfo map[string]interface{}
 		if _, ok := desc["dbinfo"]; ok {
 			dbinfo = desc["dbinfo"].(map[string]interface{})
-			siteInfo.AddRow("MariaDB version", dbinfo["mariadb_version"])
-			siteInfo.AddRow("MySQL version", dbinfo["mysql_version"])
+			siteInfo.AddRow("Database type:", dbinfo["database_type"])
+			if _, ok := dbinfo["mariadb_version"]; ok {
+				siteInfo.AddRow("MariaDB version", dbinfo["mariadb_version"])
+			}
+			if _, ok := dbinfo["mysql_version"]; ok {
+				siteInfo.AddRow("MySQL version", dbinfo["mysql_version"])
+			}
 		}
 
 		output = output + fmt.Sprintln(siteInfo)
@@ -100,10 +105,15 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 
 		output = output + "\nOther Services\n--------------\n"
 		other := uitable.New()
+		other.AddRow("MailHog (https):", desc["mailhog_https_url"])
 		other.AddRow("MailHog:", desc["mailhog_url"])
+		if _, ok := desc["phpmyadmin_https_url"]; ok {
+			other.AddRow("phpMyAdmin (https):", desc["phpmyadmin_https_url"])
+		}
 		if _, ok := desc["phpmyadmin_url"]; ok {
 			other.AddRow("phpMyAdmin:", desc["phpmyadmin_url"])
 		}
+
 		output = output + fmt.Sprint(other)
 
 		output = output + "\n" + ddevapp.RenderRouterStatus() + "\t" + ddevapp.RenderSSHAuthStatus()

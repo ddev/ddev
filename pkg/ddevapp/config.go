@@ -79,7 +79,10 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
 	app.PHPMyAdminPort = nodeps.DdevDefaultPHPMyAdminPort
+	app.PHPMyAdminHTTPSPort = nodeps.DdevDefaultPHPMyAdminHTTPSPort
 	app.MailhogPort = nodeps.DdevDefaultMailhogPort
+	app.MailhogHTTPSPort = nodeps.DdevDefaultMailhogHTTPSPort
+
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
 	app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
@@ -156,8 +159,14 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.MailhogPort == nodeps.DdevDefaultMailhogPort {
 		appcopy.MailhogPort = ""
 	}
+	if appcopy.MailhogHTTPSPort == nodeps.DdevDefaultMailhogHTTPSPort {
+		appcopy.MailhogHTTPSPort = ""
+	}
 	if appcopy.PHPMyAdminPort == nodeps.DdevDefaultPHPMyAdminPort {
 		appcopy.PHPMyAdminPort = ""
+	}
+	if appcopy.PHPMyAdminHTTPSPort == nodeps.DdevDefaultPHPMyAdminHTTPSPort {
+		appcopy.PHPMyAdminHTTPSPort = ""
 	}
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
 		appcopy.ProjectTLD = ""

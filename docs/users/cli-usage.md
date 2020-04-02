@@ -406,27 +406,23 @@ drupal8  drupal8  ~/workspace/drupal8  <http://drupal8.ddev.site>   running
 You can also see more detailed information about a project by running `ddev describe` from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
 
 ```
-
 NAME        TYPE     LOCATION                URL                           STATUS
-d8composer  drupal8  ~/workspace/d8composer  <https://d8composer.ddev.site>  running
+d8composer  drupal8  ~/workspace/d8composer  https://d8composer.ddev.site  running
 
 Project Information
 -------------------
-
-PHP version:    7.4
-MariaDB version
-MySQL version   5.7
+PHP version:    7.3
+MariaDB version 10.2
 
 URLs
 ----
-<http://d8composer.ddev.site>
-<http://127.0.0.1:32811>
-<https://d8composer.ddev.site>
-<https://127.0.0.1:32810>
+https://d8composer.ddev.site
+https://127.0.0.1:33232
+http://d8composer.ddev.site
+http://127.0.0.1:33233
 
 MySQL/MariaDB Credentials
 -------------------------
-
 Username: "db", Password: "db", Default database: "db"
 
 or use root credentials when needed: Username: "root", Password: "root"
@@ -434,19 +430,19 @@ or use root credentials when needed: Username: "root", Password: "root"
 Database hostname and port INSIDE container: db:3306
 To connect to db server inside container or in project settings files:
 mysql --host=db --user=db --password=db --database=db
-Database hostname and port from HOST: 127.0.0.1:32809
+Database hostname and port from HOST: 127.0.0.1:33231
 To connect to mysql from your host machine,
-mysql --host=127.0.0.1 --port=32809 --user=db --password=db --database=db
+mysql --host=127.0.0.1 --port=33231 --user=db --password=db --database=db
 
 Other Services
 --------------
-
-MailHog:    <http://d8composer.ddev.site:8025>
-phpMyAdmin: <http://d8composer.ddev.site:8036>
+MailHog (https):    https://d8composer.ddev.site:8026
+MailHog:            http://d8composer.ddev.site:8025
+phpMyAdmin (https): https://d8composer.ddev.site:8037
+phpMyAdmin:         http://d8composer.ddev.site:8036
 
 DDEV ROUTER STATUS: healthy
 ssh-auth status: healthy
-
 ```
 
 ## Removing projects from DDEV-Local
