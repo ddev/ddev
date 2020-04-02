@@ -69,13 +69,7 @@ Please note this will not intercept emails if your application is configured to 
 
 ### Database Management
 
-[phpMyAdmin](https://www.phpmyadmin.net/) is a free software tool to manage MySQL and MariaDB databases from a browser. phpMyAdmin comes installed with ddev.
-
-After your project is started, access the phpMyAdmin web interface at its default port:
-
-```
-http://mysite.ddev.site:8036
-```
+[phpMyAdmin](https://www.phpmyadmin.net/) is a free software tool to manage MySQL and MariaDB databases from a browser. phpMyAdmin comes installed with ddev. After your project is started, use `ddev launch -p` or just access the phpMyAdmin web interface at its default port, `http://mysite.ddev.site:8036`.
 
 If you use the free [Sequel Pro](https://www.sequelpro.com/) database browser for macOS, run `ddev sequelpro` within a project folder, and Sequel Pro will launch and access the database for that project.
 
@@ -88,8 +82,10 @@ It is possible in many cases to use development tools installed on your host mac
 If you need to connect to the database of your project from the host machine, run `ddev describe` to retrieve the database connection information. The last line of the database credentials will provide your host connection info, similar to this:
 
 ```
+
 To connect to mysql from your host machine, use port 32838 on 127.0.0.1
 For example: mysql --host 127.0.0.1 --port 32838
+
 ```
 
 The port referenced is unique per running project, and randomly chosen from available ports on your system when you run `ddev start`.
