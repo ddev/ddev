@@ -302,7 +302,7 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 // hits the local docker for it, returns result
 // Returns error (with the body) if not 200 status code.
 func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (string, *http.Response, error) {
-	var timeoutSecs = 20
+	var timeoutSecs = 30
 	if len(timeoutSecsAry) > 0 {
 		timeoutSecs = timeoutSecsAry[0]
 	}
@@ -368,7 +368,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 
 // EnsureLocalHTTPContent will verify a URL responds with a 200 and expected content string
 func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, timeoutSeconds ...int) (*http.Response, error) {
-	var httpTimeout = 20
+	var httpTimeout = 30
 	if len(timeoutSeconds) > 0 {
 		httpTimeout = timeoutSeconds[0]
 	}

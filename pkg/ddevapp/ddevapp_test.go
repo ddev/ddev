@@ -1902,6 +1902,9 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	defer removeAllErrCheck(tempPath, assert)
 
 	_ = app.Stop(false, false)
+	// Docker seems not always to release resources already, so sleep a bit before rename
+	time.Sleep(2 * time.Second)
+
 	// Move the site directory to a temp location to mimic a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)

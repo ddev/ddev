@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -86,6 +87,9 @@ func TestCmdPauseContainersMissingProjectDirectory(t *testing.T) {
 
 	_, err = exec.RunCommand(DdevBin, []string{"pause", projectName})
 	assert.NoError(err)
+
+	// Docker seems not always to release resources already, so sleep a bit before rename
+	time.Sleep(2 * time.Second)
 
 	err = os.Chdir(projDir)
 	assert.NoError(err)
