@@ -125,6 +125,7 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		return app, fmt.Errorf("Project directory contains a glob pattern, please use a directory that does not contain `{}[]*?`")
 	}
 
+	// Rendered yaml is not there until after ddev config or ddev start
 	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
 		content, err := fileutil.ReadFileIntoString(app.DockerComposeFullRenderedYAMLPath())
 		if err != nil {
@@ -522,8 +523,8 @@ func (app *DdevApp) GetHostnames() []string {
 	return nameListArray
 }
 
-// WriteDockerComposeConfig writes a .docker-compose-base.yaml and related to the .ddev directory.
-func (app *DdevApp) WriteDockerComposeConfig() error {
+// WriteDockerComposeYAML writes a .docker-compose-base.yaml and related to the .ddev directory.
+func (app *DdevApp) WriteDockerComposeYAML() error {
 	var err error
 
 	// Because of move from docker-compose.yaml as base file to .docker-compose-base.yaml

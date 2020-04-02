@@ -155,6 +155,10 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 
 	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
+
+	// nolint: errcheck
+	defer app.Stop(true, false)
+
 	app.Name = util.RandString(32)
 	app.Type = GetValidAppTypes()[0]
 
@@ -163,7 +167,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	assert.NoError(err)
 
 	// After the config has been written and directories exist, the write should work.
-	err = app.WriteDockerComposeConfig()
+	err = app.WriteDockerComposeYAML()
 	assert.NoError(err)
 
 	// Ensure we can read from the file and that it's a regular file with the expected name.

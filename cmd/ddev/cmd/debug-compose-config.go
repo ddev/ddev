@@ -31,7 +31,7 @@ var DebugComposeConfigCmd = &cobra.Command{
 		}
 
 		app.DockerEnv()
-		if err = app.WriteDockerComposeConfig(); err != nil {
+		if err = app.WriteDockerComposeYAML(); err != nil {
 			util.Failed("Failed to get compose-config: %v", err)
 		}
 

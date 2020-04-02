@@ -865,7 +865,7 @@ func (app *DdevApp) Start() error {
 	}
 
 	// WriteConfig .ddev-docker-compose-*.yaml
-	err = app.WriteDockerComposeConfig()
+	err = app.WriteDockerComposeYAML()
 	if err != nil {
 		return err
 	}

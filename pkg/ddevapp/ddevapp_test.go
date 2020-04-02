@@ -2371,22 +2371,55 @@ func TestMultipleComposeFiles(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure that valid yaml files get properly loaded in the proper order
-	app, err := ddevapp.NewApp(testDir, false, "")
+	app, err := ddevapp.NewApp(testDir, true, "")
 	assert.NoError(err)
-	err = app.WriteDockerComposeConfig()
+	//nolint: errcheck
+	defer app.Stop(true, false)
+
+	err = app.WriteConfig()
 	assert.NoError(err)
+	_, err = app.ReadConfig(true)
+	require.NoError(t, err)
+	err = app.WriteDockerComposeYAML()
+	require.NoError(t, err)
+
+	app, err = ddevapp.NewApp(testDir, true, "")
+	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
+
+	desc, err := app.Describe()
+	assert.NoError(err)
+	_ = desc
 
 	files, err := app.ComposeFiles()
 	assert.NoError(err)
 	require.NotEmpty(t, files)
+	assert.Equal(4, len(files))
 	require.Equal(t, app.GetConfigPath(".ddev-docker-compose-base.yaml"), files[0])
 	require.Equal(t, app.GetConfigPath("docker-compose.override.yaml"), files[len(files)-1])
 
+	require.NotEmpty(t, app.ComposeYaml)
+	require.True(t, len(app.ComposeYaml) > 0)
+
+	// Verify that the env var DUMMY_BASE got set by docker-compose.override.yaml
+	if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
+		if w, ok := services["web"].(map[interface{}]interface{}); ok {
+			if env, ok := w["environment"].(map[interface{}]interface{}); ok {
+				assert.Equal("override", env["DUMMY_BASE"])
+			} else {
+				t.Error("Failed to parse environment")
+			}
+		} else {
+			t.Error("failed to parse web service")
+		}
+
+	} else {
+		t.Error("Unable to access ComposeYaml[services]")
+	}
+
 	_, err = app.ComposeFiles()
 	assert.NoError(err)
-	if err != nil {
-		assert.Contains(err.Error(), "failed to find a .ddev/.ddev-docker-compose-base.yaml")
-	}
 }
 
 // TestGetAllURLs ensures the GetAllURLs function returns the expected number of URLs,
