@@ -10,11 +10,11 @@ There are [many examples of custom Docker compose files](https://github.com/drud
 
 Under the hood, ddev uses docker-compose to define and run the multiple containers that make up the local environment for a project. docker-compose supports defining multiple compose files to facilitate [sharing Compose configurations between files and projects](https://docs.docker.com/compose/extends/), and ddev is designed to leverage this ability.
 
-To add custom configuration or additional services to your project, create docker-compose files in the `.ddev` directory for your project. ddev will process any files using the `docker-compose.[servicename].yaml` naming convention and include them in executing docker-compose functionality. Optionally you can also create a `docker-compose.override.yaml` to override any configurations from the main docker-compose.yaml or any additional compose files added to your project.
+To add custom configuration or additional services to your project, create docker-compose files in the `.ddev` directory for your project. ddev will process any files using the `docker-compose.[servicename].yaml` naming convention and include them in executing docker-compose functionality. Optionally you can also create a `docker-compose.override.yaml` to override any configurations from the main `.ddev/.ddev-docker-compose-base.yaml` or any additional docker-compose files added to your project.
 
-### Restrictions on the docker-compose.yaml file
+### Restrictions on the .ddev/.ddev-docker-compose-base.yaml file
 
-The main docker-compose.yaml file is exclusively reserved for ddev's use, and will be overwritten every time a project is started, so it should not be edited because edits will be lost. If you need to override configuration provided by docker-compose.yaml, use an additional file "docker-compose.<whatever>.yaml" to do so.
+The main docker-compose file is named `.ddev/.ddev-docker-compose-base.yaml` and exclusively reserved for ddev's use; it is overwritten every time a project is started, so it should not be edited because edits will be lost. If you need to override configuration provided by .ddev/.ddev-docker-compose-base.yaml, use an additional file "docker-compose.<whatever>.yaml" to do so.
 
 ### docker-compose.*.yaml examples
 
