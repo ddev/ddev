@@ -65,7 +65,7 @@ func TestMain(m *testing.M) {
 		log.Errorln("could not set noninteractive mode, failed to Setenv, err: ", err)
 	}
 
-	// We don't want the tests reporting to Sentry.
+	// We don't want the tests reporting to Segment.
 	_ = os.Setenv("DDEV_NO_INSTRUMENTATION", "true")
 
 	// If GOTEST_SHORT is an integer, then use it as index for a single usage

@@ -1,10 +1,6 @@
 package output
 
 import (
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version"
-	"github.com/evalphobia/logrus_sentry"
 	"os"
 
 	"github.com/fatih/color"
@@ -25,20 +21,6 @@ func LogSetUp() {
 	// Use color.Output instead of stderr for all user output
 	log.SetOutput(color.Output)
 	UserOut.Out = color.Output
-
-	levels := []log.Level{
-		log.PanicLevel,
-		log.FatalLevel,
-		log.ErrorLevel,
-	}
-
-	// Report errors and panics to Sentry
-	if version.SentryDSN != "" && !globalconfig.DdevNoInstrumentation && globalconfig.DdevGlobalConfig.InstrumentationOptIn && nodeps.IsInternetActive() {
-		hook, err := logrus_sentry.NewAsyncWithTagsSentryHook(version.SentryDSN, nodeps.InstrumentationTags, levels)
-		if err == nil {
-			UserOut.Hooks.Add(hook)
-		}
-	}
 
 	if !JSONOutput {
 		UserOut.Formatter = UserOutFormatter

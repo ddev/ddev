@@ -653,7 +653,7 @@ If you do choose to send the diagnostics it helps us tremendously in our effort 
 
 ![usage_stats](images/usage_stats.png)
 
-Of course if you have any reservations about this, please just opt-out (`ddev config global --instrumentation-opt-in=false`). If you have any problems or concerns with it, we'd like to know. One person did report slow ddev command completion on a network that was apparently not friendly to sentry.io.
+Of course if you have any reservations about this, please just opt-out (`ddev config global --instrumentation-opt-in=false`). If you have any problems or concerns with it, we'd like to know.
 
 ## Using ddev offline, and top-level-domain options
 

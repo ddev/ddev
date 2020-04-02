@@ -20,10 +20,6 @@ var VERSION = ""
 // DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
 var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by make
 
-// SentryDSN is the ddev-specific key for the Sentry service.
-// It is compiled in using link-time variables
-var SentryDSN = ""
-
 // SegmentKey is the ddev-specific key for Segment service
 // Compiled with link-time variables
 var SegmentKey = ""
