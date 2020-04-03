@@ -3,6 +3,7 @@ services:
   web:
     environment:
     - DUMMY_BASE=2
+    - DUMMY_COMPOSE_TWO=2
 
   dummy2:
     image: busybox

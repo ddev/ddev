@@ -2406,7 +2406,13 @@ func TestMultipleComposeFiles(t *testing.T) {
 	if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
 		if w, ok := services["web"].(map[interface{}]interface{}); ok {
 			if env, ok := w["environment"].(map[interface{}]interface{}); ok {
+				// The docker-compose.override should have won with the value of DUMMY_BASE
 				assert.Equal("override", env["DUMMY_BASE"])
+				// But each of the DUMMY_COMPOSE_ONE/TWO/OVERRIDE which are unique
+				// should come through fine.
+				assert.Equal("1", env["DUMMY_COMPOSE_ONE"])
+				assert.Equal("2", env["DUMMY_COMPOSE_TWO"])
+				assert.Equal("override", env["DUMMY_COMPOSE_OVERRIDE"])
 			} else {
 				t.Error("Failed to parse environment")
 			}

@@ -3,6 +3,7 @@ services:
   web:
     environment:
     - DUMMY_BASE=override
+    - DUMMY_COMPOSE_OVERRIDE=override
 
   dummy1:
     image: busybox
