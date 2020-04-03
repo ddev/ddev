@@ -1208,7 +1208,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
 		rawurl := app.GetHTTPSURL() + site.DynamicURI.URI
-		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 60)
+		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 90)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
 		if err != nil && strings.Contains(err.Error(), "container ") {
 			logs, err := ddevapp.GetErrLogsFromApp(app, err)
