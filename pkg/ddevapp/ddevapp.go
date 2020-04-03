@@ -63,51 +63,51 @@ const DdevFileSignature = "#ddev-generated"
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	APIVersion                string                `yaml:"APIVersion"`
-	Name                      string                `yaml:"name"`
-	Type                      string                `yaml:"type"`
-	Docroot                   string                `yaml:"docroot"`
-	PHPVersion                string                `yaml:"php_version"`
-	WebserverType             string                `yaml:"webserver_type"`
-	WebImage                  string                `yaml:"webimage,omitempty"`
-	DBImage                   string                `yaml:"dbimage,omitempty"`
-	DBAImage                  string                `yaml:"dbaimage,omitempty"`
-	RouterHTTPPort            string                `yaml:"router_http_port"`
-	RouterHTTPSPort           string                `yaml:"router_https_port"`
-	XdebugEnabled             bool                  `yaml:"xdebug_enabled"`
-	AdditionalHostnames       []string              `yaml:"additional_hostnames"`
-	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`
-	MariaDBVersion            string                `yaml:"mariadb_version,omitempty"`
-	MySQLVersion              string                `yaml:"mysql_version,omitempty"`
-	NFSMountEnabled           bool                  `yaml:"nfs_mount_enabled"`
-	ConfigPath                string                `yaml:"-"`
-	AppRoot                   string                `yaml:"-"`
-	Platform                  string                `yaml:"-"`
-	Provider                  string                `yaml:"provider,omitempty"`
-	DataDir                   string                `yaml:"-"`
-	SiteSettingsPath          string                `yaml:"-"`
-	SiteDdevSettingsFile      string                `yaml:"-"`
-	providerInstance          Provider              `yaml:"-"`
-	Hooks                     map[string][]YAMLTask `yaml:"hooks,omitempty"`
-	UploadDir                 string                `yaml:"upload_dir,omitempty"`
-	WorkingDir                map[string]string     `yaml:"working_dir,omitempty"`
-	OmitContainers            []string              `yaml:"omit_containers,omitempty,flow"`
-	HostDBPort                string                `yaml:"host_db_port,omitempty"`
-	HostWebserverPort         string                `yaml:"host_webserver_port,omitempty"`
-	HostHTTPSPort             string                `yaml:"host_https_port,omitempty"`
-	MailhogPort               string                `yaml:"mailhog_port,omitempty"`
-	MailhogHTTPSPort          string                `yaml:"mailhog_https_port,omitempty"`
-	PHPMyAdminPort            string                `yaml:"phpmyadmin_port,omitempty"`
-	PHPMyAdminHTTPSPort       string                `yaml:"phpmyadmin_https_port,omitempty"`
-	WebImageExtraPackages     []string              `yaml:"webimage_extra_packages,omitempty,flow"`
-	DBImageExtraPackages      []string              `yaml:"dbimage_extra_packages,omitempty,flow"`
-	ProjectTLD                string                `yaml:"project_tld,omitempty"`
-	UseDNSWhenPossible        bool                  `yaml:"use_dns_when_possible"`
-	MkcertEnabled             bool                  `yaml:"-"`
-	NgrokArgs                 string                `yaml:"ngrok_args,omitempty"`
-	Timezone                  string                `yaml:"timezone"`
-	DisableSettingsManagement bool                  `yaml:"disable_settings_management,omitempty"`
-	ComposeYaml               map[string]interface{}
+	APIVersion                string                 `yaml:"APIVersion"`
+	Name                      string                 `yaml:"name"`
+	Type                      string                 `yaml:"type"`
+	Docroot                   string                 `yaml:"docroot"`
+	PHPVersion                string                 `yaml:"php_version"`
+	WebserverType             string                 `yaml:"webserver_type"`
+	WebImage                  string                 `yaml:"webimage,omitempty"`
+	DBImage                   string                 `yaml:"dbimage,omitempty"`
+	DBAImage                  string                 `yaml:"dbaimage,omitempty"`
+	RouterHTTPPort            string                 `yaml:"router_http_port"`
+	RouterHTTPSPort           string                 `yaml:"router_https_port"`
+	XdebugEnabled             bool                   `yaml:"xdebug_enabled"`
+	AdditionalHostnames       []string               `yaml:"additional_hostnames"`
+	AdditionalFQDNs           []string               `yaml:"additional_fqdns"`
+	MariaDBVersion            string                 `yaml:"mariadb_version,omitempty"`
+	MySQLVersion              string                 `yaml:"mysql_version,omitempty"`
+	NFSMountEnabled           bool                   `yaml:"nfs_mount_enabled"`
+	ConfigPath                string                 `yaml:"-"`
+	AppRoot                   string                 `yaml:"-"`
+	Platform                  string                 `yaml:"-"`
+	Provider                  string                 `yaml:"provider,omitempty"`
+	DataDir                   string                 `yaml:"-"`
+	SiteSettingsPath          string                 `yaml:"-"`
+	SiteDdevSettingsFile      string                 `yaml:"-"`
+	providerInstance          Provider               `yaml:"-"`
+	Hooks                     map[string][]YAMLTask  `yaml:"hooks,omitempty"`
+	UploadDir                 string                 `yaml:"upload_dir,omitempty"`
+	WorkingDir                map[string]string      `yaml:"working_dir,omitempty"`
+	OmitContainers            []string               `yaml:"omit_containers,omitempty,flow"`
+	HostDBPort                string                 `yaml:"host_db_port,omitempty"`
+	HostWebserverPort         string                 `yaml:"host_webserver_port,omitempty"`
+	HostHTTPSPort             string                 `yaml:"host_https_port,omitempty"`
+	MailhogPort               string                 `yaml:"mailhog_port,omitempty"`
+	MailhogHTTPSPort          string                 `yaml:"mailhog_https_port,omitempty"`
+	PHPMyAdminPort            string                 `yaml:"phpmyadmin_port,omitempty"`
+	PHPMyAdminHTTPSPort       string                 `yaml:"phpmyadmin_https_port,omitempty"`
+	WebImageExtraPackages     []string               `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages      []string               `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD                string                 `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible        bool                   `yaml:"use_dns_when_possible"`
+	MkcertEnabled             bool                   `yaml:"-"`
+	NgrokArgs                 string                 `yaml:"ngrok_args,omitempty"`
+	Timezone                  string                 `yaml:"timezone,omitempty"`
+	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
+	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
 //var ComposeYaml map[string]interface{}
@@ -250,40 +250,40 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 				serviceName := k.(string)
 
 				// Standard services are handled in other ways; we want custom services only
-				if serviceName == "web" || serviceName == "db" || serviceName == "dba" {
+				if nodeps.ArrayContainsString([]string{"web", "db", "dba"}, serviceName) {
 					continue
 				}
+
 				var svc map[interface{}]interface{}
 				if svc, ok = v.(map[interface{}]interface{}); !ok {
 					continue
 				}
-				var env map[interface{}]interface{}
-				if env, ok = svc["environment"].(map[interface{}]interface{}); !ok {
-					continue
-				}
 
-				extraServices := appDesc["extra_services"].(map[string]map[string]string)
-				extraServices[serviceName] = map[string]string{}
-				for envName, envVal := range env {
-					if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
-						portSpecs := strings.Split(envVal.(string), ",")
-						// There might be more than one exposed UI port, but this only handles the first listed,
-						// most often there's only one.
-						if len(portSpecs) > 0 {
-							// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
-							ports := strings.Split(portSpecs[0], ":")
-							extraServices[serviceName][envName.(string)] = ports[0]
-							switch envName {
-							case "HTTP_EXPOSE":
-								extraServices[serviceName]["http_url"] = "http://" + appDesc["hostname"].(string) + ":" + ports[0]
-							case "HTTPS_EXPOSE":
-								extraServices[serviceName]["https_url"] = "https://" + appDesc["hostname"].(string) + ":" + ports[0]
+				if env, ok := svc["environment"].(map[interface{}]interface{}); ok {
+					// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
+					extraServices := appDesc["extra_services"].(map[string]map[string]string)
+					extraServices[serviceName] = map[string]string{}
+					for envName, envVal := range env {
+						if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
+							portSpecs := strings.Split(envVal.(string), ",")
+							// There might be more than one exposed UI port, but this only handles the first listed,
+							// most often there's only one.
+							if len(portSpecs) > 0 {
+								// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
+								ports := strings.Split(portSpecs[0], ":")
+								extraServices[serviceName][envName.(string)] = ports[0]
+								switch envName {
+								case "HTTP_EXPOSE":
+									extraServices[serviceName]["http_url"] = "http://" + appDesc["hostname"].(string) + ":" + ports[0]
+								case "HTTPS_EXPOSE":
+									extraServices[serviceName]["https_url"] = "https://" + appDesc["hostname"].(string) + ":" + ports[0]
+								}
 							}
 						}
 					}
 				}
 				// TODO: Handle volume names so they can be deleted on ddev destroy
-				// TODO: Show host port access, preferably exposed port. Might require docker describe?
+				// TODO: Show host port access, preferably exposed port. Might require docker inspect?
 			}
 		}
 	}
