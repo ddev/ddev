@@ -532,7 +532,7 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	oldDockerCompose := filepath.Join(app.AppConfDir(), "docker-compose.yaml")
 	if fileutil.FileExists(oldDockerCompose) {
 		found, err := fileutil.FgrepStringInFile(oldDockerCompose, DdevFileSignature)
-		if err == nil {
+		if err != nil {
 			return err
 		}
 		if found {
