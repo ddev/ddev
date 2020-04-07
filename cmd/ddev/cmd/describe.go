@@ -68,10 +68,10 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 			dbinfo = desc["dbinfo"].(map[string]interface{})
 			siteInfo.AddRow("Database type:", dbinfo["database_type"])
 			if _, ok := dbinfo["mariadb_version"]; ok {
-				siteInfo.AddRow("MariaDB version", dbinfo["mariadb_version"])
+				siteInfo.AddRow("MariaDB version:", dbinfo["mariadb_version"])
 			}
 			if _, ok := dbinfo["mysql_version"]; ok {
-				siteInfo.AddRow("MySQL version", dbinfo["mysql_version"])
+				siteInfo.AddRow("MySQL version:", dbinfo["mysql_version"])
 			}
 		}
 
@@ -115,7 +115,7 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		}
 		for k, v := range desc["extra_services"].(map[string]map[string]string) {
 			if httpsURL, ok := v["https_url"]; ok {
-				other.AddRow(k+":", httpsURL)
+				other.AddRow(k+" (https):", httpsURL)
 			}
 			if httpURL, ok := v["http_url"]; ok {
 				other.AddRow(k+":", httpURL)
