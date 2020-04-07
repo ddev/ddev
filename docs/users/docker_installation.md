@@ -8,7 +8,7 @@ Docker Desktop for Windows is the preferred docker environment for Windows 10 Pr
 
 [Download Docker-ce for Windows](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
 
-[Chocolatey](https://chocolatey.org/install) users: `choco install docker-for-windows`
+[Chocolatey](https://chocolatey.org/install) users: `choco install docker-desktop`
 
 __Please note that you *must* share your local drives in the "settings" after installation or ddev will not be able to mount your project.__
 
