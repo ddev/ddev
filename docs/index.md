@@ -109,7 +109,7 @@ configuration by your self:
 * Select the tab `Certificate authorities`
 * Click to `Import...`
 * Go to the folder where your root certificate authority was stored
-* Select the file `rootCA-key.pem`
+* Select the file `rootCA.pem`
 * Click to `Open`
 
 You should now see your CA under `mkcert development CA`.
