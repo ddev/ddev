@@ -125,6 +125,23 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		return app, fmt.Errorf("Project directory contains a glob pattern, please use a directory that does not contain `{}[]*?`")
 	}
 
+	// Rendered yaml is not there until after ddev config or ddev start
+	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
+		content, err := fileutil.ReadFileIntoString(app.DockerComposeFullRenderedYAMLPath())
+		if err != nil {
+			return app, err
+		}
+		err = yaml.Unmarshal([]byte(content), &app.ComposeYaml)
+		if err != nil {
+			return app, err
+		}
+
+		_, err = app.ReadConfig(includeOverrides)
+		if err != nil {
+			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
+		}
+	}
+
 	return app, nil
 }
 
@@ -460,9 +477,15 @@ func (app *DdevApp) ValidateConfig() error {
 }
 
 // DockerComposeYAMLPath returns the absolute path to where the
-// docker-compose.yaml should exist for this app.
+// base generated yaml file should exist for this project.
 func (app *DdevApp) DockerComposeYAMLPath() string {
-	return app.GetConfigPath("docker-compose.yaml")
+	return app.GetConfigPath(".ddev-docker-compose-base.yaml")
+}
+
+// DockerComposeFullRenderedYAMLPath returns the absolute path to where the
+// the complete generated yaml file should exist for this project.
+func (app *DdevApp) DockerComposeFullRenderedYAMLPath() string {
+	return app.GetConfigPath(".ddev-docker-compose-full.yaml")
 }
 
 // GetHostname returns the primary hostname of the app.
@@ -500,20 +523,23 @@ func (app *DdevApp) GetHostnames() []string {
 	return nameListArray
 }
 
-// WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.
-func (app *DdevApp) WriteDockerComposeConfig() error {
+// WriteDockerComposeYAML writes a .docker-compose-base.yaml and related to the .ddev directory.
+func (app *DdevApp) WriteDockerComposeYAML() error {
 	var err error
 
-	if fileutil.FileExists(app.DockerComposeYAMLPath()) {
-		found, err := fileutil.FgrepStringInFile(app.DockerComposeYAMLPath(), DdevFileSignature)
-		util.CheckErr(err)
-
-		// If we did *not* find the ddev file signature in docker-compose.yaml, we'll back it up and warn about it.
-		if !found {
-			util.Warning("User-managed docker-compose.yaml will be replaced with ddev-generated docker-compose.yaml. Original file will be placed in docker-compose.yaml.bak")
-			_ = os.Remove(app.DockerComposeYAMLPath() + ".bak")
-			err = os.Rename(app.DockerComposeYAMLPath(), app.DockerComposeYAMLPath()+".bak")
-			util.CheckErr(err)
+	// Because of move from docker-compose.yaml as base file to .docker-compose-base.yaml
+	// remove old ddev-managed docker-compose.yaml
+	oldDockerCompose := filepath.Join(app.AppConfDir(), "docker-compose.yaml")
+	if fileutil.FileExists(oldDockerCompose) {
+		found, err := fileutil.FgrepStringInFile(oldDockerCompose, DdevFileSignature)
+		if err != nil {
+			return err
+		}
+		if found {
+			err = os.Remove(oldDockerCompose)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -531,7 +557,25 @@ func (app *DdevApp) WriteDockerComposeConfig() error {
 	if err != nil {
 		return err
 	}
-	return err
+
+	files, err := app.ComposeFiles()
+	if err != nil {
+		return err
+	}
+	fullContents, _, err := dockerutil.ComposeCmd(files, "config")
+	if err != nil {
+		return err
+	}
+	fullHandle, err := os.Create(app.DockerComposeFullRenderedYAMLPath())
+	if err != nil {
+		return err
+	}
+	_, err = fullHandle.WriteString(fullContents)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // CheckCustomConfig warns the user if any custom configuration files are in use.
@@ -617,7 +661,7 @@ type composeYAMLVars struct {
 	GID                  string
 }
 
-// RenderComposeYAML renders the contents of docker-compose.yaml.
+// RenderComposeYAML renders the contents of .ddev/.docker-compose*.
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
@@ -923,7 +967,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "commands/*/*.example", "commands/*/README.txt", "commands/host/launch", "commands/db/mysql", "homeadditions/*.example", "homeadditions/README.txt", ".gitignore", "import.yaml", "docker-compose.yaml", "db_snapshots", "sequelpro.spf", "import-db", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", ".sshimageBuild", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
+	err := CreateGitIgnore(dir, "commands/*/*.example", "commands/*/README.txt", "commands/host/launch", "commands/db/mysql", "homeadditions/*.example", "homeadditions/README.txt", ".gitignore", "import.yaml", ".docker-compose-base.yaml", ".docker-compose-full.yaml", "db_snapshots", "sequelpro.spf", "import-db", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", ".sshimageBuild", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

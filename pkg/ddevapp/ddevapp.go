@@ -63,51 +63,54 @@ const DdevFileSignature = "#ddev-generated"
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	APIVersion                string                `yaml:"APIVersion"`
-	Name                      string                `yaml:"name"`
-	Type                      string                `yaml:"type"`
-	Docroot                   string                `yaml:"docroot"`
-	PHPVersion                string                `yaml:"php_version"`
-	WebserverType             string                `yaml:"webserver_type"`
-	WebImage                  string                `yaml:"webimage,omitempty"`
-	DBImage                   string                `yaml:"dbimage,omitempty"`
-	DBAImage                  string                `yaml:"dbaimage,omitempty"`
-	RouterHTTPPort            string                `yaml:"router_http_port"`
-	RouterHTTPSPort           string                `yaml:"router_https_port"`
-	XdebugEnabled             bool                  `yaml:"xdebug_enabled"`
-	AdditionalHostnames       []string              `yaml:"additional_hostnames"`
-	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`
-	MariaDBVersion            string                `yaml:"mariadb_version,omitempty"`
-	MySQLVersion              string                `yaml:"mysql_version,omitempty"`
-	NFSMountEnabled           bool                  `yaml:"nfs_mount_enabled"`
-	ConfigPath                string                `yaml:"-"`
-	AppRoot                   string                `yaml:"-"`
-	Platform                  string                `yaml:"-"`
-	Provider                  string                `yaml:"provider,omitempty"`
-	DataDir                   string                `yaml:"-"`
-	SiteSettingsPath          string                `yaml:"-"`
-	SiteDdevSettingsFile      string                `yaml:"-"`
-	providerInstance          Provider              `yaml:"-"`
-	Hooks                     map[string][]YAMLTask `yaml:"hooks,omitempty"`
-	UploadDir                 string                `yaml:"upload_dir,omitempty"`
-	WorkingDir                map[string]string     `yaml:"working_dir,omitempty"`
-	OmitContainers            []string              `yaml:"omit_containers,omitempty,flow"`
-	HostDBPort                string                `yaml:"host_db_port,omitempty"`
-	HostWebserverPort         string                `yaml:"host_webserver_port,omitempty"`
-	HostHTTPSPort             string                `yaml:"host_https_port,omitempty"`
-	MailhogPort               string                `yaml:"mailhog_port,omitempty"`
-	MailhogHTTPSPort          string                `yaml:"mailhog_https_port,omitempty"`
-	PHPMyAdminPort            string                `yaml:"phpmyadmin_port,omitempty"`
-	PHPMyAdminHTTPSPort       string                `yaml:"phpmyadmin_https_port,omitempty"`
-	WebImageExtraPackages     []string              `yaml:"webimage_extra_packages,omitempty,flow"`
-	DBImageExtraPackages      []string              `yaml:"dbimage_extra_packages,omitempty,flow"`
-	ProjectTLD                string                `yaml:"project_tld,omitempty"`
-	UseDNSWhenPossible        bool                  `yaml:"use_dns_when_possible"`
-	MkcertEnabled             bool                  `yaml:"-"`
-	NgrokArgs                 string                `yaml:"ngrok_args,omitempty"`
-	Timezone                  string                `yaml:"timezone"`
-	DisableSettingsManagement bool                  `yaml:"disable_settings_management,omitempty"`
+	APIVersion                string                 `yaml:"APIVersion"`
+	Name                      string                 `yaml:"name"`
+	Type                      string                 `yaml:"type"`
+	Docroot                   string                 `yaml:"docroot"`
+	PHPVersion                string                 `yaml:"php_version"`
+	WebserverType             string                 `yaml:"webserver_type"`
+	WebImage                  string                 `yaml:"webimage,omitempty"`
+	DBImage                   string                 `yaml:"dbimage,omitempty"`
+	DBAImage                  string                 `yaml:"dbaimage,omitempty"`
+	RouterHTTPPort            string                 `yaml:"router_http_port"`
+	RouterHTTPSPort           string                 `yaml:"router_https_port"`
+	XdebugEnabled             bool                   `yaml:"xdebug_enabled"`
+	AdditionalHostnames       []string               `yaml:"additional_hostnames"`
+	AdditionalFQDNs           []string               `yaml:"additional_fqdns"`
+	MariaDBVersion            string                 `yaml:"mariadb_version,omitempty"`
+	MySQLVersion              string                 `yaml:"mysql_version,omitempty"`
+	NFSMountEnabled           bool                   `yaml:"nfs_mount_enabled"`
+	ConfigPath                string                 `yaml:"-"`
+	AppRoot                   string                 `yaml:"-"`
+	Platform                  string                 `yaml:"-"`
+	Provider                  string                 `yaml:"provider,omitempty"`
+	DataDir                   string                 `yaml:"-"`
+	SiteSettingsPath          string                 `yaml:"-"`
+	SiteDdevSettingsFile      string                 `yaml:"-"`
+	providerInstance          Provider               `yaml:"-"`
+	Hooks                     map[string][]YAMLTask  `yaml:"hooks,omitempty"`
+	UploadDir                 string                 `yaml:"upload_dir,omitempty"`
+	WorkingDir                map[string]string      `yaml:"working_dir,omitempty"`
+	OmitContainers            []string               `yaml:"omit_containers,omitempty,flow"`
+	HostDBPort                string                 `yaml:"host_db_port,omitempty"`
+	HostWebserverPort         string                 `yaml:"host_webserver_port,omitempty"`
+	HostHTTPSPort             string                 `yaml:"host_https_port,omitempty"`
+	MailhogPort               string                 `yaml:"mailhog_port,omitempty"`
+	MailhogHTTPSPort          string                 `yaml:"mailhog_https_port,omitempty"`
+	PHPMyAdminPort            string                 `yaml:"phpmyadmin_port,omitempty"`
+	PHPMyAdminHTTPSPort       string                 `yaml:"phpmyadmin_https_port,omitempty"`
+	WebImageExtraPackages     []string               `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages      []string               `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD                string                 `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible        bool                   `yaml:"use_dns_when_possible"`
+	MkcertEnabled             bool                   `yaml:"-"`
+	NgrokArgs                 string                 `yaml:"ngrok_args,omitempty"`
+	Timezone                  string                 `yaml:"timezone,omitempty"`
+	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
+	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
+
+//var ComposeYaml map[string]interface{}
 
 // GetType returns the application type as a (lowercase) string
 func (app *DdevApp) GetType() string {
@@ -175,11 +178,14 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc := make(map[string]interface{})
 
 	appDesc["name"] = app.GetName()
+	appDesc["hostname"] = app.GetHostname()
 	appDesc["hostnames"] = app.GetHostnames()
 	appDesc["status"] = app.SiteStatus()
 	appDesc["type"] = app.GetType()
 	appDesc["approot"] = app.GetAppRoot()
+	appDesc["nfs_mount_enabled"] = app.NFSMountEnabled
 	appDesc["shortroot"] = shortRoot
+	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["httpurl"] = app.GetHTTPURL()
 	appDesc["httpsurl"] = app.GetHTTPSURL()
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
@@ -234,8 +240,53 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["router_https_port"] = app.RouterHTTPSPort
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
 	appDesc["webimg"] = app.WebImage
-	appDesc["dbimg"] = app.WebImage
+	appDesc["dbimg"] = app.GetDBImage()
 	appDesc["dbaimg"] = app.DBAImage
+	appDesc["extra_services"] = map[string]map[string]string{}
+
+	if app.ComposeYaml != nil && len(app.ComposeYaml) > 0 {
+		if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
+			for k, v := range services {
+				serviceName := k.(string)
+
+				// Standard services are handled in other ways; we want custom services only
+				if nodeps.ArrayContainsString([]string{"web", "db", "dba"}, serviceName) {
+					continue
+				}
+
+				var svc map[interface{}]interface{}
+				if svc, ok = v.(map[interface{}]interface{}); !ok {
+					continue
+				}
+
+				if env, ok := svc["environment"].(map[interface{}]interface{}); ok {
+					// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
+					extraServices := appDesc["extra_services"].(map[string]map[string]string)
+					extraServices[serviceName] = map[string]string{}
+					for envName, envVal := range env {
+						if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
+							portSpecs := strings.Split(envVal.(string), ",")
+							// There might be more than one exposed UI port, but this only handles the first listed,
+							// most often there's only one.
+							if len(portSpecs) > 0 {
+								// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
+								ports := strings.Split(portSpecs[0], ":")
+								extraServices[serviceName][envName.(string)] = ports[0]
+								switch envName {
+								case "HTTP_EXPOSE":
+									extraServices[serviceName]["http_url"] = "http://" + appDesc["hostname"].(string) + ":" + ports[0]
+								case "HTTPS_EXPOSE":
+									extraServices[serviceName]["https_url"] = "https://" + appDesc["hostname"].(string) + ":" + ports[0]
+								}
+							}
+						}
+					}
+				}
+				// TODO: Handle volume names so they can be deleted on ddev destroy
+				// TODO: Show host port access, preferably exposed port. Might require docker inspect?
+			}
+		}
+	}
 
 	_, _, err = app.ProcessHooks("post-describe")
 	if err != nil {
@@ -628,46 +679,44 @@ func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 }
 
 // ComposeFiles returns a list of compose files for a project.
-// It has to put the docker-compose.y*l first
+// It has to put the .ddev/docker-compose-*.yaml first
 // It has to put the docker-compose.override.y*l last
 func (app *DdevApp) ComposeFiles() ([]string, error) {
-	files, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose*.y*l"))
-	if err != nil || len(files) == 0 {
-		return []string{}, fmt.Errorf("failed to load any docker-compose.*y*l files in %s: err=%v", app.AppConfDir(), err)
+	dir, _ := os.Getwd()
+	// nolint:errcheck
+	defer os.Chdir(dir)
+	err := os.Chdir(app.AppConfDir())
+	if err != nil {
+		return nil, err
+	}
+	files, err := filepath.Glob("docker-compose.*.yaml")
+	if err != nil {
+		return []string{}, fmt.Errorf("unable to glob docker-compose.*.yaml in %s: err=%v", app.AppConfDir(), err)
 	}
 
-	mainfiles, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose.y*l"))
-	// Glob doesn't return many errors, so just CheckErr()
+	mainfile := app.DockerComposeYAMLPath()
+	if !fileutil.FileExists(mainfile) {
+		return nil, fmt.Errorf("failed to find %s", mainfile)
+	}
+
+	overrides, err := filepath.Glob("docker-compose.override.yaml")
 	util.CheckErr(err)
-	if len(mainfiles) == 0 {
-		return []string{}, fmt.Errorf("failed to find a docker-compose.yml or docker-compose.yaml")
-
-	}
-	if len(mainfiles) > 1 {
-		return []string{}, fmt.Errorf("there are more than one docker-compose.y*l, unable to continue")
-	}
-
-	overrides, err := filepath.Glob(filepath.Join(app.AppConfDir(), "docker-compose.override.y*l"))
-	util.CheckErr(err)
-	if len(overrides) > 1 {
-		return []string{}, fmt.Errorf("there are more than one docker-compose.override.y*l, unable to continue")
-	}
 
 	orderedFiles := make([]string, 1)
 
-	// Make sure the docker-compose.yaml goes first
-	orderedFiles[0] = mainfiles[0]
+	// Make sure the main file goes first
+	orderedFiles[0] = mainfile
 
 	for _, file := range files {
-		// We already have the main docker-compose.yaml, so skip when we hit it.
+		// We already have the main file, and it's not in the list anyway, so skip when we hit it.
 		// We'll add the override later, so skip it.
-		if file == mainfiles[0] || (len(overrides) == 1 && file == overrides[0]) {
+		if len(overrides) == 1 && file == overrides[0] {
 			continue
 		}
-		orderedFiles = append(orderedFiles, file)
+		orderedFiles = append(orderedFiles, app.GetConfigPath(file))
 	}
 	if len(overrides) == 1 {
-		orderedFiles = append(orderedFiles, overrides[0])
+		orderedFiles = append(orderedFiles, app.GetConfigPath(overrides[0]))
 	}
 	return orderedFiles, nil
 }
@@ -815,8 +864,8 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	// WriteConfig docker-compose.yaml
-	err = app.WriteDockerComposeConfig()
+	// WriteConfig .ddev-docker-compose-*.yaml
+	err = app.WriteDockerComposeYAML()
 	if err != nil {
 		return err
 	}
@@ -826,16 +875,11 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	files, err := app.ComposeFiles()
-	if err != nil {
-		return err
-	}
-
 	// Delete the NFS volumes before we bring up docker-compose.
 	// We don't care if the volume wasn't there
 	_ = dockerutil.RemoveVolume(app.GetNFSMountVolName())
 
-	_, _, err = dockerutil.ComposeCmd(files, "up", "--build", "-d")
+	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
 	if err != nil {
 		return err
 	}
@@ -946,7 +990,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if opts.NoCapture || opts.Tty {
 		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, exec...)
 	} else {
-		stdoutResult, stderrResult, err = dockerutil.ComposeCmd(files, exec...)
+		stdoutResult, stderrResult, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, exec...)
 	}
 
 	_, _, hookErr := app.ProcessHooks("post-exec")
@@ -1097,7 +1141,7 @@ func (app *DdevApp) DockerEnv() {
 	}
 
 	// DDEV_HOST_DB_PORT is actually used for 2 things.
-	// 1. To specifify via docker-compose.yaml the value of host_db_port config. And it's expected to be empty
+	// 1. To specify via base docker-compose file the value of host_db_port config. And it's expected to be empty
 	//    there if the host_db_port is empty.
 	// 2. To tell custom commands the db port. And it's expected always to be populated for them.
 	dbPort, err := app.GetPublishedPort("db")
@@ -1179,12 +1223,7 @@ func (app *DdevApp) Pause() error {
 		return err
 	}
 
-	files, err := app.ComposeFiles()
-	if err != nil {
-		return err
-	}
-
-	if _, _, err := dockerutil.ComposeCmd(files, "stop"); err != nil {
+	if _, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "stop"); err != nil {
 		return err
 	}
 	_, _, err = app.ProcessHooks("post-pause")

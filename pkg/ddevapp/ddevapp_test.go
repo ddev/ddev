@@ -311,7 +311,7 @@ func TestDdevStart(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
-	// ensure docker-compose.yaml exists inside .ddev site folder
+	// ensure .ddev/.ddev-docker-compose* exists inside .ddev site folder
 	composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 	assert.True(composeFile)
 
@@ -440,7 +440,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			t.Logf("DB Logs after app.Start: \n%s\n=== END DB LOGS ===", out)
 		}
 
-		// ensure docker-compose.yaml exists inside .ddev site folder
+		// ensure .ddev/docker-compose*.yaml exists inside .ddev site folder
 		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 		assert.True(composeFile)
 
@@ -2355,62 +2355,77 @@ func TestHttpsRedirection(t *testing.T) {
 }
 
 // TestMultipleComposeFiles checks to see if a set of docker-compose files gets
-// properly loaded in the right order, with docker-compose.yaml first and
+// properly loaded in the right order, with .ddev/ddev-docker-compose*yaml first and
 // with docker-compose.override.yaml last.
 func TestMultipleComposeFiles(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+
+	testDir := testcommon.CreateTmpDir(t.Name())
+	//_ = os.Chdir(testDir)
+	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
+
+	err := fileutil.CopyDir(filepath.Join(pwd, "testdata", t.Name(), ".ddev"), filepath.Join(testDir, ".ddev"))
+	assert.NoError(err)
 
 	// Make sure that valid yaml files get properly loaded in the proper order
-	app, err := ddevapp.NewApp("./testdata/testMultipleComposeFiles", true, "")
+	app, err := ddevapp.NewApp(testDir, true, "")
 	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
+
+	err = app.WriteConfig()
+	assert.NoError(err)
+	_, err = app.ReadConfig(true)
+	require.NoError(t, err)
+	err = app.WriteDockerComposeYAML()
+	require.NoError(t, err)
+
+	app, err = ddevapp.NewApp(testDir, true, "")
+	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
+
+	desc, err := app.Describe()
+	assert.NoError(err)
+	_ = desc
 
 	files, err := app.ComposeFiles()
 	assert.NoError(err)
 	require.NotEmpty(t, files)
-	require.Equal(t, files[0], filepath.Join(app.AppConfDir(), "docker-compose.yaml"))
-	require.Equal(t, files[len(files)-1], filepath.Join(app.AppConfDir(), "docker-compose.override.yaml"))
+	assert.Equal(4, len(files))
+	require.Equal(t, app.GetConfigPath(".ddev-docker-compose-base.yaml"), files[0])
+	require.Equal(t, app.GetConfigPath("docker-compose.override.yaml"), files[len(files)-1])
 
-	// Make sure that some docker-compose.yml and docker-compose.yaml conflict gets noted properly
-	app, err = ddevapp.NewApp("./testdata/testConflictingYamlYml", true, "")
-	assert.NoError(err)
+	require.NotEmpty(t, app.ComposeYaml)
+	require.True(t, len(app.ComposeYaml) > 0)
 
-	_, err = app.ComposeFiles()
-	assert.Error(err)
-	if err != nil {
-		assert.Contains(err.Error(), "there are more than one docker-compose.y*l")
+	// Verify that the env var DUMMY_BASE got set by docker-compose.override.yaml
+	if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
+		if w, ok := services["web"].(map[interface{}]interface{}); ok {
+			if env, ok := w["environment"].(map[interface{}]interface{}); ok {
+				// The docker-compose.override should have won with the value of DUMMY_BASE
+				assert.Equal("override", env["DUMMY_BASE"])
+				// But each of the DUMMY_COMPOSE_ONE/TWO/OVERRIDE which are unique
+				// should come through fine.
+				assert.Equal("1", env["DUMMY_COMPOSE_ONE"])
+				assert.Equal("2", env["DUMMY_COMPOSE_TWO"])
+				assert.Equal("override", env["DUMMY_COMPOSE_OVERRIDE"])
+			} else {
+				t.Error("Failed to parse environment")
+			}
+		} else {
+			t.Error("failed to parse web service")
+		}
+
+	} else {
+		t.Error("Unable to access ComposeYaml[services]")
 	}
 
-	// Make sure that some docker-compose.override.yml and docker-compose.override.yaml conflict gets noted properly
-	app, err = ddevapp.NewApp("./testdata/testConflictingOverrideYaml", true, "")
-	assert.NoError(err)
-
 	_, err = app.ComposeFiles()
-	assert.Error(err)
-	if err != nil {
-		assert.Contains(err.Error(), "there are more than one docker-compose.override.y*l")
-	}
-
-	// Make sure the error gets pointed out of there's no main docker-compose.yaml
-	app, err = ddevapp.NewApp("./testdata/testNoDockerCompose", true, "")
 	assert.NoError(err)
-
-	_, err = app.ComposeFiles()
-	assert.Error(err)
-	if err != nil {
-		assert.Contains(err.Error(), "failed to find a docker-compose.yml or docker-compose.yaml")
-	}
-
-	// Catch if we have no docker files at all.
-	// This should also fail if the docker-compose.yaml.bak gets loaded.
-	app, err = ddevapp.NewApp("./testdata/testNoDockerFilesAtAll", true, "")
-	assert.NoError(err)
-
-	_, err = app.ComposeFiles()
-	assert.Error(err)
-	if err != nil {
-		assert.Contains(err.Error(), "failed to load any docker-compose.*y*l files")
-	}
 }
 
 // TestGetAllURLs ensures the GetAllURLs function returns the expected number of URLs,

@@ -1,7 +1,7 @@
 package ddevapp
 
-// DDevComposeTemplate is used to create the main docker-compose.yaml
-// file for a ddev site.
+// DDevComposeTemplate is used to create the main docker-compose file
+// file for a ddev project.
 const DDevComposeTemplate = `version: '{{ .ComposeVersion }}'
 {{ .DdevGenerated }}
 services:

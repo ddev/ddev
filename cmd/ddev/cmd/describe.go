@@ -62,16 +62,16 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		output = output + "\n\nProject Information\n-------------------\n"
 		siteInfo := uitable.New()
 		siteInfo.AddRow("PHP version:", desc["php_version"])
-
+		siteInfo.AddRow("NFS mount enabled:", desc["nfs_mount_enabled"])
 		var dbinfo map[string]interface{}
 		if _, ok := desc["dbinfo"]; ok {
 			dbinfo = desc["dbinfo"].(map[string]interface{})
 			siteInfo.AddRow("Database type:", dbinfo["database_type"])
 			if _, ok := dbinfo["mariadb_version"]; ok {
-				siteInfo.AddRow("MariaDB version", dbinfo["mariadb_version"])
+				siteInfo.AddRow("MariaDB version:", dbinfo["mariadb_version"])
 			}
 			if _, ok := dbinfo["mysql_version"]; ok {
-				siteInfo.AddRow("MySQL version", dbinfo["mysql_version"])
+				siteInfo.AddRow("MySQL version:", dbinfo["mysql_version"])
 			}
 		}
 
@@ -113,7 +113,14 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		if _, ok := desc["phpmyadmin_url"]; ok {
 			other.AddRow("phpMyAdmin:", desc["phpmyadmin_url"])
 		}
-
+		for k, v := range desc["extra_services"].(map[string]map[string]string) {
+			if httpsURL, ok := v["https_url"]; ok {
+				other.AddRow(k+" (https):", httpsURL)
+			}
+			if httpURL, ok := v["http_url"]; ok {
+				other.AddRow(k+":", httpURL)
+			}
+		}
 		output = output + fmt.Sprint(other)
 
 		output = output + "\n" + ddevapp.RenderRouterStatus() + "\t" + ddevapp.RenderSSHAuthStatus()
