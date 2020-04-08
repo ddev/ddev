@@ -1441,6 +1441,18 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 				util.Warning("could not remove volume %s: %v", volName, err)
 			}
 		}
+		desc, err := app.Describe()
+		if err != nil {
+			util.Warning("could not run app.Describe(): %v", err)
+		}
+		for extraService := range desc["extra_services"].(map[string]map[string]string) {
+			// volName default if name: is not specified is ddev-<project>_volume
+			volName := "ddev-" + app.Name + "_" + extraService
+			err = dockerutil.RemoveVolume(volName)
+			if err != nil {
+				util.Warning("could not remove volume %s: %v", volName, err)
+			}
+		}
 		util.Success("Project data/database removed from docker volume for project %s", app.Name)
 	}
 

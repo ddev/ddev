@@ -28,7 +28,7 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
     * Under "Advanced server configuration" set the "solr.install.dir" to `/opt/solr`
 * Download the config.zip provided on /admin/config/search/search-api/server/dev
 * Unzip the config.zip into .ddev/solr/conf. For example, `cd .ddev/solr/conf && unzip ~/Downloads/solr_8.x-config.zip`
-* In order for changes to take effect you must stop the project, remove the Solr volume, and start it again.  So run `docker volume rm ddev-<projectname>_solrdata` if your project is called "myproject" then you would run `ddev stop && docker volume rm ddev-myproject_solrdata && ddev restart`. (If you have installed solr-configupdate.sh as described below, then you need only `ddev restart`)
+* In order for changes to take effect you must stop the project, remove the Solr volume, and start it again.  So run `docker volume rm ddev-<projectname>_solr` if your project is called "myproject" then you would run `ddev stop && docker volume rm ddev-myproject_solr && ddev restart`. (If you have installed solr-configupdate.sh as described below, then you need only `ddev restart`)
 
 ##### Updating Apache Solr configuration on an existing Solr core
 
@@ -77,12 +77,16 @@ This recipe adds a [Beanstalk](https://beanstalkd.github.io/) container to a pro
 
 The [ddev-contrib](https://github.com/drud/ddev-contrib) repository has a wealth of additional examples and instructions:
 
-* **MongoDB**: See [MongoDB](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/mongodb).
 * **Blackfire.io for performance testing and profiling**: See [Blackfire.io](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/blackfire).
-* **PostgresSQL**: See [PostgresSQL](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/postgres).
+* **ElasticHQ**:See [ElasticHQ](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elastichq).
 * **Elasticsearch**: See [Elasticsearch](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elasticsearch).
+* **Headless Chrome**: See [Headless Chrome for Behat Testing](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/headless-chrome)
+* **MongoDB**: See [MongoDB](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/mongodb).
 * **Old PHP Versions to Run Old Sites**: See [Old PHP Versions](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/old_php)
+* **PostgresSQL**: See [PostgresSQL](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/postgres).
 * **RabbitMQ**: See [RabbitMQ](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/rabbitmq)
+* **Redis**: See [redis](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/redis).
+* **Redis Commander**: See [redis commander](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/redis-commander)
 * **TYPO3 Solr Integration**: See [TYPO3 Solr](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/typo3-solr)
 
 Your PRs to integrate other services are welcome at [ddev-contrib](https://github.com/drud/ddev-contrib).

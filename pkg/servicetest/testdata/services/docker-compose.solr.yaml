@@ -48,10 +48,10 @@ services:
       # sitename.ddev.site.
       - HTTP_EXPOSE=8983
     volumes:
-      # solr core *data* is stored on the 'solrdata' docker volume
+      # solr core *data* is stored on the 'solr' docker volume
       # This mount is optional; without it your search index disappears
-      # each time ddev project is stopped and started.
-      - solrdata:/var/solr
+      # each time the ddev project is stopped and started.
+      - solr:/var/solr
 
       # This mounts the conf in .ddev/solr into the container where
       # the solr-precreate command in the entrypoint uses it as a one-time
@@ -80,5 +80,7 @@ services:
     links:
       - solr:solr
 volumes:
-  # solrdata is a persistent Docker volume for solr data
-  solrdata:
+  # solr is a persistent Docker volume for solr data
+  # The persistent volume should have the same name as the service so it can be deleted
+  # when the project is deleted.
+  solr:
