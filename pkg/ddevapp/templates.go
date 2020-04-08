@@ -64,6 +64,7 @@ services:
     cap_add:
       - SYS_PTRACE
     volumes:
+      {{ if not .OmitAppWebMount }}
       - type: {{ .MountType }}
         source: {{ .WebMount }}
         target: /var/www/html
@@ -73,6 +74,7 @@ services:
         {{ else }}
         consistency: cached
         {{ end }}
+      {{ end }}
       - ".:/mnt/ddev_config:ro"
       - ddev-global-cache:/mnt/ddev-global-cache
       {{ if not .OmitSSHAgent }}

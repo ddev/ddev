@@ -577,6 +577,58 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 
 }
 
+// TestDdevNoFileMount tests running without the app file mount.
+func TestDdevNoFileMount(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	// Make sure this leaves us in the original test directory
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+
+	// Use Drupal8 only, mostly for the composer example
+	site := FullTestSites[1]
+	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
+		app := &ddevapp.DdevApp{Name: site.Name}
+		_ = app.Stop(true, false)
+		_ = globalconfig.RemoveProjectInfo(site.Name)
+
+		err := site.Prepare()
+		require.NoError(t, err)
+		// nolint: errcheck
+		defer os.RemoveAll(site.Dir)
+	}
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
+	defer runTime()
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	app.OmitAppWebMount = true
+	err = app.WriteConfig()
+	assert.NoError(err)
+
+	err = app.Start()
+	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
+
+	opts := &ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     "ls",
+		Dir:     "/var/www/html",
+	}
+
+	stdout, _, err := app.Exec(opts)
+	assert.Error(err)
+	assert.Contains(stdout, "index.html")
+}
+
 // TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.
 func TestDdevXdebugEnabled(t *testing.T) {
 	assert := asrt.New(t)

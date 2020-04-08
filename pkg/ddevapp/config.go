@@ -652,6 +652,7 @@ type composeYAMLVars struct {
 	NFSSource            string
 	DockerIP             string
 	IsWindowsFS          bool
+	OmitAppWebMount      bool
 	Hostnames            []string
 	Timezone             string
 	Username             string
@@ -698,6 +699,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		NFSMountEnabled:      app.NFSMountEnabled || app.NFSMountEnabledGlobal,
 		NFSSource:            "",
 		IsWindowsFS:          runtime.GOOS == "windows",
+		OmitAppWebMount:      app.OmitAppWebMount,
 		MountType:            "bind",
 		WebMount:             "../",
 		Hostnames:            app.GetHostnames(),
