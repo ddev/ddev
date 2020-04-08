@@ -28,7 +28,7 @@ You can use the .ddev/*-build/ directory as the Docker "context" directory as we
 An example web image `.ddev/web-build/Dockerfile` might be:
 
 ```
-ARG BASE_IMAGE=drud/ddev-webserver:20190422_blackfire_io
+ARG BASE_IMAGE
 FROM $BASE_IMAGE
 RUN npm install --global gulp-cli
 ADD README.txt /
