@@ -10,7 +10,7 @@ __Before starting with NFS mounting, please make sure your project runs successf
 
 To enable NFS mounting, use `nfs_mount_enabled: true` in your .ddev/config.yaml, or `ddev config --nfs-mount-enabled=true`. This won't work until you have done the one-time configuration for your system described below.
 
-Note that you can use the NFS setup described here (and the scripts provided) or you can set up NFS any way that works for you. For example, if you're already using NFS with vagrant on macOS,and you already have a number of exports, the default export here (/Users) won't work, because you'll have mount overlaps. Or on Windows, you may want to use an NFS server other than Winnfsd, for example the [Allegrao NFS Server](https://nfsforwindows.com). The setups provided below and the scripts provided below are just intended to get you started if you don't already use NFS.
+Note that you can use the NFS setup described here (and the scripts provided) or you can set up NFS any way that works for you. For example, if you're already using NFS with vagrant on macOS,and you already have a number of exports, the default export here (/Users) won't work, because you'll have mount overlaps. Or on Windows, you may want to use an NFS server other than Winnfsd, for example the [Allegro NFS Server](https://nfsforwindows.com). The setups provided below and the scripts provided below are just intended to get you started if you don't already use NFS.
 
 ### macOS NFS Setup
 
