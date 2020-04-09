@@ -36,7 +36,6 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	APIVersion              string                  `yaml:"APIVersion"`
 	OmitContainers          []string                `yaml:"omit_containers,flow"`
 	InstrumentationOptIn    bool                    `yaml:"instrumentation_opt_in"`
 	RouterBindAllInterfaces bool                    `yaml:"router_bind_all_interfaces"`
@@ -65,7 +64,6 @@ func ValidateGlobalConfig() error {
 func ReadGlobalConfig() error {
 	globalConfigFile := GetGlobalConfigPath()
 	// This is added just so we can see it in global; not checked.
-	DdevGlobalConfig.APIVersion = version.DdevVersion
 	// Make sure that LastStartedVersion always has a valid value
 	if DdevGlobalConfig.LastStartedVersion == "" {
 		DdevGlobalConfig.LastStartedVersion = version.DdevVersion
@@ -116,7 +114,6 @@ func ReadGlobalConfig() error {
 
 // WriteGlobalConfig writes the global config into ~/.ddev.
 func WriteGlobalConfig(config GlobalConfig) error {
-	config.APIVersion = version.VERSION
 	err := ValidateGlobalConfig()
 	if err != nil {
 		return err

@@ -1,3 +1,2 @@
-APIVersion: config.yaml
 name: "TestWriteConfig"
 type: "php"

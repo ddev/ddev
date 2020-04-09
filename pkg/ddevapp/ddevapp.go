@@ -22,7 +22,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/Masterminds/semver"
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevhosts"
@@ -63,7 +62,6 @@ const DdevFileSignature = "#ddev-generated"
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	APIVersion                string                 `yaml:"APIVersion"`
 	Name                      string                 `yaml:"name"`
 	Type                      string                 `yaml:"type"`
 	Docroot                   string                 `yaml:"docroot"`
@@ -795,24 +793,6 @@ func (app *DdevApp) Start() error {
 	app.DockerEnv()
 
 	app.DBImage = app.GetDBImage()
-
-	APIVersion, err := semver.NewVersion(app.APIVersion)
-	if err != nil {
-		return err
-	}
-	DdevVersion, err := semver.NewVersion(version.DdevVersion)
-	if err != nil {
-		return err
-	}
-
-	// It returns -1, 0, or 1 if the version smaller, equal, or larger than the other version.
-	compareResult := APIVersion.Compare(DdevVersion)
-
-	if compareResult == -1 {
-		util.Warning("Your %s version is %s, but ddev is (newer) version %s. \nPlease run 'ddev config' to update your config.yaml. \nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
-	} else if compareResult == 1 {
-		util.Warning("Your %s version is %s, but ddev is (older) version %s. \nPlease update ddev, see https://ddev.readthedocs.io/en/stable/.\nddev may not operate correctly until you do.", app.ConfigPath, app.APIVersion, version.DdevVersion)
-	}
 
 	// Make sure that any ports allocated are available.
 	// and of course add to global project list as well
