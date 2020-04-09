@@ -16,6 +16,10 @@ import (
 
 var hashedHostID string
 
+// ReportableEvents is the list of events that we choose to report specifically.
+// Excludes non-ddev custom commands.
+var ReportableEvents = map[string]bool{"auth": true, "composer": true, "config": true, "debug": true, "delete": true, "describe": true, "exec": true, "export-db": true, "import-db": true, "import-files": true, "launch": true, "list": true, "logs": true, "mysql": true, "pause": true, "poweroff": true, "pull": true, "restart": true, "restore-snapshot": true, "sequelpro": true, "share": true, "snapshot": true, "ssh": true, "start": true, "stop": true}
+
 // GetInstrumentationUser normally gets just the hashed hostID but if
 // an explicit user is provided in global_config.yaml that will be prepended.
 func GetInstrumentationUser() string {
@@ -71,7 +75,9 @@ func SegmentUser(client analytics.Client, hashedID string) error {
 
 // SegmentEvent provides the event and traits that go with it.
 func SegmentEvent(client analytics.Client, hashedID string, event string) error {
-
+	if _, ok := ReportableEvents[event]; !ok {
+		event = "customcommand"
+	}
 	properties := analytics.NewProperties()
 
 	for key, val := range nodeps.InstrumentationTags {
