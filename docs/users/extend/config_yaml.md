@@ -51,6 +51,7 @@ The $HOME/.ddev/global_config.yaml has a few key global config options.
 
 | Item  | Description   | Notes  |
 |---|---|---|
+| nfs_mount_enabled | Enables NFS mounting globally for all projects | Only a "true" value has any effect. If true, NFS will be used on all projects |
 | omit_containers | Allows the project to not load specified containers | For example, `omit_containers: [ "dba", "ddev-ssh-agent"]`. Currently only these containers are supported. Note that you cannot omit the "db" container in the global configuration, but you can in the per-project .ddev/config.yaml |
 | instrumentation_opt_in | Opt in or out of instrumentation reporting | If true, anonymous usage information is sent to ddev via [segment](https://segment.com) |
 | router_bind_all_interfaces | Bind on all network interfaces | If true, ddev-router will bind on all network interfaces instead of just localhost, exposing ddev projects to your local network. If you set this to true, you may consider `omit_containers: ["dba"]` so that the PHPMyAdmin port is not available.  |

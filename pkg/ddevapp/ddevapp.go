@@ -78,6 +78,7 @@ type DdevApp struct {
 	MariaDBVersion            string                 `yaml:"mariadb_version,omitempty"`
 	MySQLVersion              string                 `yaml:"mysql_version,omitempty"`
 	NFSMountEnabled           bool                   `yaml:"nfs_mount_enabled"`
+	NFSMountEnabledGlobal     bool                   `yaml:"-"`
 	ConfigPath                string                 `yaml:"-"`
 	AppRoot                   string                 `yaml:"-"`
 	Platform                  string                 `yaml:"-"`
@@ -90,6 +91,7 @@ type DdevApp struct {
 	UploadDir                 string                 `yaml:"upload_dir,omitempty"`
 	WorkingDir                map[string]string      `yaml:"working_dir,omitempty"`
 	OmitContainers            []string               `yaml:"omit_containers,omitempty,flow"`
+	OmitContainerGlobal       []string               `yaml:"-"`
 	HostDBPort                string                 `yaml:"host_db_port,omitempty"`
 	HostWebserverPort         string                 `yaml:"host_webserver_port,omitempty"`
 	HostHTTPSPort             string                 `yaml:"host_https_port,omitempty"`
@@ -181,7 +183,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["status"] = app.SiteStatus()
 	appDesc["type"] = app.GetType()
 	appDesc["approot"] = app.GetAppRoot()
-	appDesc["nfs_mount_enabled"] = app.NFSMountEnabled
+	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal)
 	appDesc["shortroot"] = shortRoot
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["httpurl"] = app.GetHTTPURL()
@@ -193,7 +195,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 
 	// Only show extended status for running sites.
 	if app.SiteStatus() == SiteRunning {
-		if !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 			dbinfo := make(map[string]interface{})
 			dbinfo["username"] = "db"
 			dbinfo["password"] = "db"
@@ -217,7 +219,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 			}
 			appDesc["dbinfo"] = dbinfo
 
-			if !nodeps.ArrayContainsString(app.OmitContainers, "dba") {
+			if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") {
 				appDesc["phpmyadmin_https_url"] = "https://" + app.GetHostname() + ":" + app.PHPMyAdminHTTPSPort
 				appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + app.PHPMyAdminPort
 			}
@@ -306,6 +308,13 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 
 	publishedPort := dockerutil.GetPublishedPort(privatePort, *container)
 	return publishedPort, nil
+}
+
+// GetOmittedContainers returns full list of global and local omitted containers
+func (app *DdevApp) GetOmittedContainers() []string {
+	omitted := app.OmitContainerGlobal
+	omitted = append(omitted, app.OmitContainers...)
+	return omitted
 }
 
 // GetAppRoot return the full path from root to the app directory
@@ -529,7 +538,7 @@ func (app *DdevApp) SiteStatus() string {
 	var siteStatus string
 	statuses := map[string]string{"web": ""}
 
-	if !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		statuses["db"] = ""
 	}
 
@@ -816,7 +825,7 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	if !nodeps.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent") {
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
 		err = app.EnsureSSHAgentContainer()
 		if err != nil {
 			return err
@@ -871,7 +880,7 @@ func (app *DdevApp) Start() error {
 	}
 
 	requiredContainers := []string{"web"}
-	if !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		requiredContainers = append(requiredContainers, "db")
 	}
 
@@ -1242,7 +1251,7 @@ func (app *DdevApp) StartAndWait(extraSleep int) error {
 		return err
 	}
 	// Gratuitous wait for docker toolbox or NFS.
-	if nodeps.IsDockerToolbox() || app.NFSMountEnabled {
+	if nodeps.IsDockerToolbox() || (app.NFSMountEnabled || app.NFSMountEnabledGlobal) {
 		// Docker Toolbox seems not to get the router properly
 		// updated with certs as fast as we expect, use the extraSleep for that.
 		if extraSleep > 0 {

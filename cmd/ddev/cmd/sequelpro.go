@@ -108,7 +108,7 @@ func init() {
 	switch {
 	case detectSequelpro():
 		app, err := ddevapp.GetActiveApp("")
-		if err == nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+		if err == nil && app != nil && !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 			RootCmd.AddCommand(DdevSequelproCmd)
 		}
 	case runtime.GOOS == "darwin":

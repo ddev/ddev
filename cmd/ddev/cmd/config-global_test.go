@@ -29,7 +29,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// nolint: errcheck
 	defer func() {
 		globalconfig.DdevGlobalConfig = backupConfig
-		globalconfig.DdevGlobalConfig.OmitContainers = nil
+		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
 
 		err := os.Remove(configFile)
 		if err != nil {
@@ -56,13 +56,13 @@ func TestCmdGlobalConfig(t *testing.T) {
 	err = globalconfig.ReadGlobalConfig()
 	assert.NoError(err)
 	assert.False(globalconfig.DdevGlobalConfig.InstrumentationOptIn)
-	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainers, "ddev-ssh-agent")
-	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainers, "dba")
-	assert.Len(globalconfig.DdevGlobalConfig.OmitContainers, 2)
+	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "ddev-ssh-agent")
+	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "dba")
+	assert.Len(globalconfig.DdevGlobalConfig.OmitContainersGlobal, 2)
 
 	// Even though the global config is going to be deleted, make sure it's sane before leaving
 	args = []string{"config", "global", "--omit-containers", ""}
-	globalconfig.DdevGlobalConfig.OmitContainers = nil
+	globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 }

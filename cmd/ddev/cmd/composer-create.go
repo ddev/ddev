@@ -112,7 +112,7 @@ ddev composer create --repository=https://repo.magento.com/ magento/project-comm
 		// If not NFSMountEnabled,
 		// we will move the contents of the temp installation
 		// using host-side manipulation, but can't do that with a cached filesystem.
-		if runtime.GOOS == "windows" && !app.NFSMountEnabled {
+		if runtime.GOOS == "windows" && !(app.NFSMountEnabled || app.NFSMountEnabledGlobal) {
 			// If traditional windows mount
 			err = filepath.Walk(hostInstallPath, func(path string, info os.FileInfo, err error) error {
 				// Skip the initial tmp install directory

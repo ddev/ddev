@@ -40,12 +40,17 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	if cmd.Flag("omit-containers").Changed {
 		omitContainers = strings.Replace(omitContainers, " ", "", -1)
 		if omitContainers == "" {
-			globalconfig.DdevGlobalConfig.OmitContainers = []string{}
+			globalconfig.DdevGlobalConfig.OmitContainersGlobal = []string{}
 		} else {
-			globalconfig.DdevGlobalConfig.OmitContainers = strings.Split(omitContainers, ",")
+			globalconfig.DdevGlobalConfig.OmitContainersGlobal = strings.Split(omitContainers, ",")
 		}
 		dirty = true
 	}
+	if cmd.Flag("nfs-mount-enabled").Changed {
+		globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal, _ = cmd.Flags().GetBool("nfs-mount-enabled")
+		dirty = true
+	}
+
 	if cmd.Flag("router-bind-all-interfaces").Changed {
 		globalconfig.DdevGlobalConfig.RouterBindAllInterfaces, _ = cmd.Flags().GetBool("router-bind-all-interfaces")
 		dirty = true
@@ -63,12 +68,15 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	}
 	util.Success("Global configuration:")
 	output.UserOut.Printf("instrumentation-opt-in=%v", globalconfig.DdevGlobalConfig.InstrumentationOptIn)
-	output.UserOut.Printf("omit-containers=[%s]", strings.Join(globalconfig.DdevGlobalConfig.OmitContainers, ","))
+	output.UserOut.Printf("omit-containers=[%s]", strings.Join(globalconfig.DdevGlobalConfig.OmitContainersGlobal, ","))
+	output.UserOut.Printf("nfs-mount-enabled=%v", globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal)
+
 	output.UserOut.Printf("router-bind-all-interfaces=%v", globalconfig.DdevGlobalConfig.RouterBindAllInterfaces)
 }
 
 func init() {
 	configGlobalCommand.Flags().StringVarP(&omitContainers, "omit-containers", "", "", "For example, --omit-containers=dba,ddev-ssh-agent")
+	configGlobalCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting on all projects globally")
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", false, "instrmentation-opt-in=true")
 	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces=true")
 
