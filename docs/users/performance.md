@@ -18,7 +18,8 @@ __macOS Mojave (and later) warning:__ You'll need to give your terminal "Full di
 
 Download, inspect, and run the macos_ddev_nfs_setup.sh script  from [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh). This stops running ddev projects, adds your home directory to the /etc/exports config file that nfsd uses, and enables nfsd to run on your computer. This is a one-time setup. Note that this shares the /Users directory via NFS to any client, so it's critical to consider security issues and verify that your firewall is enabled and configured. 
 
-If your DDEV-Local projects are set up outside /Users, you'll need to edit /etc/exports for the correct values: find your user's uid with the `id` command. Thenn `sudo vi /etc/exports` and add the line `/System/Volumes/Path/To/Youd/Projects -alldirs -mapall=<your_uid>:20 localhost`, replacing both the path to your projects as well as the uid.
+If your DDEV-Local projects are set up outside /Users, you'll need to edit /etc/exports for to add that share as well.
+`sudo vi /etc/exports` and add copy the line the script has just created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`), editing it with the second path, e.g: `/Volumes/Mysites -alldirs -mapall=<your_uid>:20 localhost` (no need for the `/System/Volumes/Data` part here).
 
 Note: If you're on macOS Catalina and above, and your projects are in a subdirectory of the ~/Documents directory, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Control Panel.
 
