@@ -45,23 +45,24 @@ func TestCmdGlobalConfig(t *testing.T) {
 	args := []string{"config", "global"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nrouter-bind-all-interfaces=false")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false")
 
 	// Update a config
-	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--router-bind-all-interfaces=true"}
+	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nrouter-bind-all-interfaces=true")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true")
 
 	err = globalconfig.ReadGlobalConfig()
 	assert.NoError(err)
 	assert.False(globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "ddev-ssh-agent")
 	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "dba")
+	assert.True(globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal)
 	assert.Len(globalconfig.DdevGlobalConfig.OmitContainersGlobal, 2)
 
 	// Even though the global config is going to be deleted, make sure it's sane before leaving
-	args = []string{"config", "global", "--omit-containers", ""}
+	args = []string{"config", "global", "--omit-containers", "", "--nfs-mount-enabled=true"}
 	globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
