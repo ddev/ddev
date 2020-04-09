@@ -3,8 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version"
 	"io/ioutil"
 	"net"
 	"net/url"
@@ -19,6 +17,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/version"
+
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 
@@ -30,7 +31,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/google/uuid"
 	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
@@ -625,7 +626,7 @@ func TestDdevNoFileMount(t *testing.T) {
 	}
 
 	stdout, _, err := app.Exec(opts)
-	assert.Error(err)
+	assert.NoError(err)
 	assert.Contains(stdout, "index.html")
 }
 
