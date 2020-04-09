@@ -20,7 +20,7 @@ the .ddev/config.yaml is the primary configuration for the project.
 | mysql_version | Version of Oracle MySQL to be used |  Defaults to empty (using MariaDB). 5.5, 5.6, 5.7, and 8.0 are available. Conflicts with mariadb_version. See [Database Server Types](database_types.md) for details and caveats. |
 | router_http_port | Port used by the router for http |  Defaults to port 80. This can be changed if there is a conflict on the host over port 80 |
 | router_https_port | Port used by the router for https |Defaults to 443, usually only changed if there is a conflicting process using port 443 |
-| xdebug_enabled | "true" enables xdebug | Many people prefer to use `ddev exec enable_xdebug` and `ddev exec disable_xdebug` instead of configuring this, because xdebug has a significant performance impact. |
+| xdebug_enabled | "true" enables xdebug | Most people use `ddev xdebug` and `ddev xdebug off` instead of configuring this, because xdebug has a significant performance impact. |
 | webserver_type | nginx-fpm or apache-fpm or apache-cgi | The default is nginx-fpm, and it works best for many projects |
 | timezone | timezone to use in container and in PHP configuration | It can be set to any valid timezone, see [timezone list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). For example "Europe/Dublin" or "MST7MDT". The default is UTC. |
 | additional_hostnames | array of extra hostnames | `additional_hostnames: ["somename", "someothername"]` would provide http and https URLs for "somename.ddev.site" and "someothername.ddev.site". |

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+## #ddev-generated
+## Description: Enable or disable xdebug
+## Usage: xdebug on|off|true|false|status
+## Example: "xdebug" (default is "on"), "xdebug off", "xdebug on"
+
+if [ $# -eq 0 ] ; then
+  enable_xdebug
+  exit
+fi
+
+case $1 in
+    on|true|enable)
+	enable_xdebug
+	;;
+	off|false|disable)
+	disable_xdebug
+	;;
+	status)
+
+	status=$(php -r 'echo ini_get("xdebug.remote_enable");')
+	if [ "$status" = "1" ]; then
+	    echo "xdebug enabled"
+	else
+	    echo "xdebug disabled"
+	fi
+	;;
+    *)
+    echo "Invalid argument: $1"
+    ;;
+esac
