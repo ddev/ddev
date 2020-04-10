@@ -21,7 +21,7 @@ Download, inspect, and run the macos_ddev_nfs_setup.sh script  from [macos_ddev_
 If your DDEV-Local projects are set up outside /Users, you'll need to edit /etc/exports for to add that share as well.
 `sudo vi /etc/exports` and add copy the line the script has just created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`), editing it with the second path, e.g: `/Volumes/Mysites -alldirs -mapall=<your_uid>:20 localhost` (no need for the `/System/Volumes/Data` part here).
 
-Note: If you're on macOS Catalina and above, and your projects are in a subdirectory of the ~/Documents directory, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Control Panel.
+Note: If you're on macOS Catalina and above, and your projects are in a subdirectory of the ~/Documents directory or on an external drive, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Control Panel.
 
 ### Windows NFS Setup
 
