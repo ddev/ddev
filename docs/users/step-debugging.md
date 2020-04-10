@@ -8,22 +8,14 @@ All IDEs basically work the same: They listen on a port and react when they're c
 
 **Key facts:**
 
-* You need to explicitly enable xdebug in your config.yaml with `xdebug_enabled: true` (it's disabled by default). After changing, `ddev start` again.
+* Enable xdebug with `ddev xdebug` or `ddev xdebug on`. It will remain enabled until you start or restart the project.
+* Disable xdebug for better performance when not debugging with `ddev xdebug off`
+* `ddev xdebug status` will show current status.
 * The debug server port on the IDE must be set to port 9000, which is the default and is probably already set in most IDEs. (If you need to change the xdebug port due to a port conflict on your host computer, you can do it with a PHP override, explained below.)
 
 For more background on XDebug see [XDebug documentation](https://xdebug.org/docs/remote). The intention here is that one won't have to understand XDebug to do debugging.
 
 For each IDE the link to their documentation is provided, and the skeleton steps required are listed here.
-
-## Setup Instructions
-
-### Enable or disable xdebug in your config.yaml
-
-Enable xdebug in your config.yaml:
-
-`xdebug_enabled: true`
-
-(If you don't want it set all the time, you can `ddev exec enable_xdebug` or `ddev exec disable_xdebug` any time. Many people use enable_xdebug and disable_xdebug because of the performance impact of XDebug being enabled.)
 
 ### Setup for Various IDEs
 
