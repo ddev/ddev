@@ -64,7 +64,7 @@ services:
     cap_add:
       - SYS_PTRACE
     volumes:
-      {{ if not .OmitAppWebMount }}
+      {{ if not .NoProjectMount }}
       - type: {{ .MountType }}
         source: {{ .WebMount }}
         target: /var/www/html

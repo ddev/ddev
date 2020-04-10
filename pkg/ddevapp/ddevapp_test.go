@@ -578,8 +578,8 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 
 }
 
-// TestDdevNoFileMount tests running without the app file mount.
-func TestDdevNoFileMount(t *testing.T) {
+// TestDdevNoProjectMount tests running without the app file mount.
+func TestDdevNoProjectMount(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -610,7 +610,7 @@ func TestDdevNoFileMount(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	app.OmitAppWebMount = true
+	app.NoProjectMount = true
 	err = app.WriteConfig()
 	assert.NoError(err)
 

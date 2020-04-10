@@ -73,7 +73,7 @@ type DdevApp struct {
 	RouterHTTPPort            string                 `yaml:"router_http_port"`
 	RouterHTTPSPort           string                 `yaml:"router_https_port"`
 	XdebugEnabled             bool                   `yaml:"xdebug_enabled"`
-	OmitAppWebMount           bool                   `yaml:"omit_app_web_mount,omitempty"`
+	NoProjectMount            bool                   `yaml:"no_project_mount,omitempty"`
 	AdditionalHostnames       []string               `yaml:"additional_hostnames"`
 	AdditionalFQDNs           []string               `yaml:"additional_fqdns"`
 	MariaDBVersion            string                 `yaml:"mariadb_version,omitempty"`

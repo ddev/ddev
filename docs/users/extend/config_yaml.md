@@ -44,7 +44,7 @@ the .ddev/config.yaml is the primary configuration for the project.
 | disable_settings_management | defaults to false | If true, ddev will not create or update CMS-specific settings files |  |
 | provider| hosting provider for `ddev pull` | "pantheon" or "drud-aws" or "default" |
 | hooks | | See [Extending Commands](../extending-commands.md) for more information. |
-| omit_web_app_mount | Skip mounting code into the web container | If true, code will not be mounted by ddev into the web container. This is to enable experimentation with alternate file mounting strategies. Advanced users only!
+| no_project_mount | Skip mounting the project into the web container | If true, the project will not be mounted by ddev into the web container. This is to enable experimentation with alternate file mounting strategies. Advanced users only! |
 
 ## global_config.yaml Options
 
