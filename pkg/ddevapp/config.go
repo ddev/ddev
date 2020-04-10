@@ -71,7 +71,6 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		return app, fmt.Errorf("project root %s does not exist", appRoot)
 	}
 	app.ConfigPath = app.GetConfigPath("config.yaml")
-	app.APIVersion = version.DdevVersion
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
 	app.WebserverType = nodeps.WebserverDefault
@@ -155,8 +154,6 @@ func (app *DdevApp) WriteConfig() error {
 
 	// Work against a copy of the DdevApp, since we don't want to actually change it.
 	appcopy := *app
-	// Update the "APIVersion" to be the ddev version.
-	appcopy.APIVersion = version.DdevVersion
 
 	// Only set the images on write if non-default values have been specified.
 	if appcopy.WebImage == version.GetWebImage() {

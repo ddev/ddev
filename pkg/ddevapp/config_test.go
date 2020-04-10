@@ -40,7 +40,6 @@ func TestNewConfig(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure the config uses specified defaults.
-	assert.Equal(app.APIVersion, version.DdevVersion)
 	assert.Equal(app.GetDBImage(), version.GetDBImage(nodeps.MariaDB))
 	assert.Equal(app.WebImage, version.GetWebImage())
 	assert.Equal(app.DBAImage, version.GetDBAImage())
@@ -476,7 +475,6 @@ func TestReadConfig(t *testing.T) {
 
 	// This closely resembles the values one would have from NewApp()
 	app := &DdevApp{
-		APIVersion: version.DdevVersion,
 		ConfigPath: filepath.Join("testdata", "config.yaml"),
 		AppRoot:    "testdata",
 		Name:       "TestRead",
@@ -490,7 +488,6 @@ func TestReadConfig(t *testing.T) {
 
 	// Values not defined in file, we should still have default values
 	assert.Equal(app.Name, "TestRead")
-	assert.Equal(app.APIVersion, version.DdevVersion)
 
 	// Values defined in file, we should have values from file
 	assert.Equal(app.Type, nodeps.AppTypeDrupal8)
@@ -505,7 +502,6 @@ func TestReadConfigCRLF(t *testing.T) {
 
 	// This closely resembles the values one would have from NewApp()
 	app := &DdevApp{
-		APIVersion: version.DdevVersion,
 		ConfigPath: filepath.Join("testdata", t.Name(), ".ddev", "config.yaml"),
 		AppRoot:    filepath.Join("testdata", t.Name()),
 		Name:       t.Name(),
@@ -519,7 +515,6 @@ func TestReadConfigCRLF(t *testing.T) {
 
 	// Values not defined in file, we should still have default values
 	assert.Equal(app.Name, t.Name())
-	assert.Equal(app.APIVersion, version.DdevVersion)
 
 	// Values defined in file, we should have values from file
 	assert.Equal(app.Docroot, "public")
@@ -621,21 +616,21 @@ func TestWriteConfig(t *testing.T) {
 
 	// The default NewApp read should read config overrides, so we should have "config.extra.yaml"
 	// as the APIVersion
-	assert.Equal("config.extra.yaml", app.APIVersion)
+	assert.Equal("drupal9", app.Type)
 
-	// However, if we ReadConfig() without includeOverrides, we should get "config.yaml" as the APIVersion
+	// However, if we ReadConfig() without includeOverrides, we should get "php" as the type
 	_, err = app.ReadConfig(false)
 	assert.NoError(err)
-	assert.Equal("config.yaml", app.APIVersion)
+	assert.Equal("php", app.Type)
 
 	err = app.WriteConfig()
 	assert.NoError(err)
 
-	// Now read the config we just wrote; it should have config.yaml because ignored overrides.
+	// Now read the config we just wrote; it should have type php because ignored overrides.
 	_, err = app.ReadConfig(false)
 	assert.NoError(err)
 	// app.WriteConfig() writes the version.DdevVersion to the updated config.yaml
-	assert.Equal(version.DdevVersion, app.APIVersion)
+	assert.Equal("php", app.Type)
 }
 
 // TestConfigOverrideDetection tests to make sure we tell them about config overrides.
@@ -958,7 +953,7 @@ func TestConfigLoadingOrder(t *testing.T) {
 	assert.NoError(err)
 	_, err = app.ReadConfig(true)
 	assert.NoError(err)
-	assert.Equal("config.yaml", app.APIVersion)
+	assert.Equal("config.yaml", app.WebImage)
 
 	matches, err := filepath.Glob(filepath.Join(projDir, ".ddev/linkedconfigs/config.*.y*ml"))
 	assert.NoError(err)
@@ -971,7 +966,7 @@ func TestConfigLoadingOrder(t *testing.T) {
 		assert.NoError(err)
 		_, err = app.ReadConfig(true)
 		assert.NoError(err)
-		assert.Equal(filepath.Base(item), app.APIVersion)
+		assert.Equal(filepath.Base(item), app.WebImage)
 		err = os.Remove(linkedMatch)
 		assert.NoError(err)
 	}
@@ -987,14 +982,14 @@ func TestConfigLoadingOrder(t *testing.T) {
 		err = os.Symlink(item, linkedMatch)
 		assert.NoError(err)
 		_, err = app.ReadConfig(true)
-		assert.Equal(filepath.Base(item), app.APIVersion)
+		assert.Equal(filepath.Base(item), app.WebImage)
 	}
 
 	// Now we still have all those linked overrides, but do a ReadConfig() without allowing them
 	// and verify that they don't get loaded
 	_, err = app.ReadConfig(false)
 	assert.NoError(err)
-	assert.Equal("config.yaml", app.APIVersion)
+	assert.Equal("config.yaml", app.WebImage)
 
 }
 
