@@ -246,7 +246,7 @@ func (app *DdevApp) WriteConfig() error {
 	contents := []byte(`
 # You can copy this Dockerfile.example to Dockerfile to add configuration
 # or packages or anything else to your webimage
-ARG BASE_IMAGE=` + app.WebImage + `
+ARG BASE_IMAGE
 FROM $BASE_IMAGE
 RUN npm install --global gulp-cli
 `)
@@ -258,7 +258,7 @@ RUN npm install --global gulp-cli
 	contents = []byte(`
 # You can copy this Dockerfile.example to Dockerfile to add configuration
 # or packages or anything else to your dbimage
-ARG BASE_IMAGE=` + app.GetDBImage() + `
+ARG BASE_IMAGE
 FROM $BASE_IMAGE
 RUN echo "Built from ` + app.GetDBImage() + `" >/var/tmp/built-from.txt
 `)
