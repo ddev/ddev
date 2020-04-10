@@ -661,7 +661,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	defer func() {
 		for _, item := range []string{"apache", "php", "mysql", "nginx", "nginx-site.conf"} {
 			f := app.GetConfigPath(item)
-			err = os.RemoveAll(app.GetConfigPath(f))
+			err = os.RemoveAll(f)
 			if err != nil {
 				t.Logf("failed to delete %s", f)
 			}
