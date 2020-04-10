@@ -653,15 +653,20 @@ func TestConfigOverrideDetection(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// And when we're done, we have to clean those out again.
-	defer func() {
-		for _, item := range []string{"apache", "php", "mysql", "nginx", "nginx-site.conf"} {
-			_ = os.RemoveAll(filepath.Join(".ddev", item))
-		}
-	}()
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
+
+	// And when we're done, we have to clean those out again.
+	defer func() {
+		for _, item := range []string{"apache", "php", "mysql", "nginx", "nginx-site.conf"} {
+			f := app.GetConfigPath(item)
+			err = os.RemoveAll(app.GetConfigPath(f))
+			if err != nil {
+				t.Logf("failed to delete %s", f)
+			}
+		}
+	}()
 
 	restoreOutput := util.CaptureUserOut()
 	startErr := app.StartAndWait(2)
