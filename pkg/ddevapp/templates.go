@@ -255,7 +255,7 @@ const ConfigInstructions = `
 # Currently only these containers are supported. Some containers can also be
 # omitted globally in the ~/.ddev/global_config.yaml. Note that if you omit
 # the "db" container, several standard features of ddev that access the
-# database container will be unusuable.
+# database container will be unusable.
 
 # nfs_mount_enabled: false
 # Great performance improvement but requires host configuration first.
