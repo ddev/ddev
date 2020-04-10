@@ -18,7 +18,7 @@ var hashedHostID string
 
 // ReportableEvents is the list of events that we choose to report specifically.
 // Excludes non-ddev custom commands.
-var ReportableEvents = map[string]bool{"auth": true, "composer": true, "config": true, "debug": true, "delete": true, "describe": true, "exec": true, "export-db": true, "import-db": true, "import-files": true, "launch": true, "list": true, "logs": true, "mysql": true, "pause": true, "poweroff": true, "pull": true, "restart": true, "restore-snapshot": true, "sequelpro": true, "share": true, "snapshot": true, "ssh": true, "start": true, "stop": true}
+var ReportableEvents = map[string]bool{"auth": true, "composer": true, "config": true, "debug": true, "delete": true, "describe": true, "exec": true, "export-db": true, "import-db": true, "import-files": true, "launch": true, "list": true, "logs": true, "mysql": true, "pause": true, "poweroff": true, "pull": true, "restart": true, "restore-snapshot": true, "sequelpro": true, "share": true, "snapshot": true, "ssh": true, "start": true, "stop": true, "xdebug": true}
 
 // GetInstrumentationUser normally gets just the hashed hostID but if
 // an explicit user is provided in global_config.yaml that will be prepended.
