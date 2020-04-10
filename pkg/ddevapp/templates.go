@@ -251,11 +251,11 @@ const ConfigInstructions = `
 # These values specify the destination directory for ddev ssh and the
 # directory in which commands passed into ddev exec are run.
 
-# omit_containers: ["dba", "ddev-ssh-agent"]
-# would omit the dba (phpMyAdmin) and ddev-ssh-agent containers. Currently
-# only those two containers can be omitted here.
-# Note that these containers can also be omitted globally in the
-# ~/.ddev/global_config.yaml or with the "ddev config global" command.
+# omit_containers: ["db", dba", "ddev-ssh-agent"]
+# Currently only these containers are supported. Some containers can also be
+# omitted globally in the ~/.ddev/global_config.yaml. Note that if you omit
+# the "db" container, several standard features of ddev that access the
+# database container will be unusable.
 
 # nfs_mount_enabled: false
 # Great performance improvement but requires host configuration first.
