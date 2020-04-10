@@ -24,11 +24,12 @@ import (
 var (
 	TestSites = []testcommon.TestSite{
 		{
-			Name:                          "TestServicesDrupal8",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.5.3.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-8.5.3/",
+			Name:                          "TestServicesDrupal7", // Drupal D7
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.61.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-7.61/",
+			FullSiteTarballURL:            "",
 			Docroot:                       "",
-			Type:                          nodeps.AppTypeDrupal8,
+			Type:                          nodeps.AppTypeDrupal7,
 		},
 	}
 	ServiceFiles []string
@@ -86,6 +87,9 @@ func TestServices(t *testing.T) {
 			err := app.Init(site.Dir)
 			assert.NoError(err)
 
+			// nolint: errcheck
+			defer app.Stop(true, false)
+
 			for _, service := range ServiceFiles {
 				confdir := filepath.Join(app.GetAppRoot(), ".ddev")
 				err = fileutil.CopyFile(filepath.Join(ServiceDir, service), filepath.Join(confdir, service))
@@ -95,11 +99,30 @@ func TestServices(t *testing.T) {
 			err = app.Start()
 			assert.NoError(err)
 
+			// Normally a ddev start would happen, which would create the fully interpreted compose file
+			// In a test environment, we recreate app as if ddev start had happened.
+			// We need app.Describe to get us real running info.
+			app, err = ddevapp.NewApp(app.AppRoot, false, "")
+			require.NoError(t, err)
+
 			checkSolrService(t, app)
 			checkMemcachedService(t, app)
 
+			desc, err := app.Describe()
+			require.NoError(t, err)
+
+			// Make sure desc had 3 services.
+			require.Len(t, desc["extra_services"], 3)
+
+			// A volume should have been created for solr (only)
+			assert.True(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
+
 			err = app.Stop(true, false)
 			assert.NoError(err)
+
+			// Solr volume should have been deleted
+			assert.False(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
+
 			site.Cleanup()
 		}
 	}

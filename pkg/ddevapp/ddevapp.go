@@ -244,6 +244,7 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 
 	if app.ComposeYaml != nil && len(app.ComposeYaml) > 0 {
 		if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
+			extraServices := appDesc["extra_services"].(map[string]map[string]string)
 			for k, v := range services {
 				serviceName := k.(string)
 
@@ -257,10 +258,10 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 					continue
 				}
 
+				extraServices[serviceName] = map[string]string{}
+
 				if env, ok := svc["environment"].(map[interface{}]interface{}); ok {
 					// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
-					extraServices := appDesc["extra_services"].(map[string]map[string]string)
-					extraServices[serviceName] = map[string]string{}
 					for envName, envVal := range env {
 						if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
 							portSpecs := strings.Split(envVal.(string), ",")
@@ -1447,7 +1448,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 		for extraService := range desc["extra_services"].(map[string]map[string]string) {
 			// volName default if name: is not specified is ddev-<project>_volume
-			volName := "ddev-" + app.Name + "_" + extraService
+			volName := strings.ToLower("ddev-" + app.Name + "_" + extraService)
 			err = dockerutil.RemoveVolume(volName)
 			if err != nil {
 				util.Warning("could not remove volume %s: %v", volName, err)
