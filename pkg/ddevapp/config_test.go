@@ -657,13 +657,13 @@ func TestConfigOverrideDetection(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	// And when we're done, we have to clean those out again.
 	defer func() {
+		_ = app.Stop(true, false)
 		for _, item := range []string{"apache", "php", "mysql", "nginx", "nginx-site.conf"} {
 			f := app.GetConfigPath(item)
 			err = os.RemoveAll(f)
 			if err != nil {
-				t.Logf("failed to delete %s", f)
+				t.Logf("failed to delete %s: %v", f, err)
 			}
 		}
 	}()
@@ -671,8 +671,6 @@ func TestConfigOverrideDetection(t *testing.T) {
 	restoreOutput := util.CaptureUserOut()
 	startErr := app.StartAndWait(2)
 	out := restoreOutput()
-	//nolint: errcheck
-	defer app.Stop(true, false)
 
 	var logs string
 	if startErr != nil {
@@ -717,8 +715,14 @@ func TestPHPOverrides(t *testing.T) {
 
 	// And when we're done, we have to clean those out again.
 	defer func() {
-		_ = os.RemoveAll(filepath.Join(site.Dir, ".ddev/php"))
-		_ = os.RemoveAll(filepath.Join(site.Dir, "phpinfo.php"))
+		err = os.RemoveAll(filepath.Join(site.Dir, ".ddev/php"))
+		if err != nil {
+			t.Logf("failed to remove .ddev/php: %v", err)
+		}
+		err = os.RemoveAll(filepath.Join(site.Dir, "phpinfo.php"))
+		if err != nil {
+			t.Logf("failed to remove phpinfo.php: %v", err)
+		}
 	}()
 
 	for _, webserverType := range []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM, nodeps.WebserverApacheCGI} {
@@ -776,7 +780,6 @@ func TestExtraPackages(t *testing.T) {
 		_ = app.WriteConfig()
 		_ = fileutil.RemoveContents(app.GetConfigPath("web-build"))
 		_ = fileutil.RemoveContents(app.GetConfigPath("db-build"))
-		_ = app.Stop(true, false)
 		command := fmt.Sprintf("docker rmi -f %s-%s-built %s-%s-built", app.WebImage, app.Name, app.GetDBImage(), app.Name)
 		_, _ = exec.RunCommand("bash", []string{"-c", command})
 	}()
