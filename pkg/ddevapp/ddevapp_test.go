@@ -621,13 +621,13 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 	opts := &ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "ls",
-		Dir:     "/var/www/html",
+		Cmd:     "df /var/www/html | awk '$1 != \"Filesystem\" {print $6}'",
+		Dir:     "/var/www",
 	}
 
 	stdout, _, err := app.Exec(opts)
 	assert.NoError(err)
-	assert.Contains(stdout, "index.html")
+	assert.NotContains(stdout, "/var/www/html")
 
 	// Clean up so the other tests don't fail.
 	app.NoProjectMount = false
