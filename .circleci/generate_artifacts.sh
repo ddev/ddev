@@ -36,6 +36,8 @@ esac
 if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
     # Make sure we have all our docker images, and save them in a tarball
     $BUILTPATH/ddev version | awk '/(drud|phpmyadmin)\// {print $2;}' >/tmp/images.txt
+    # Quicksprint is the only known consumer of this tarball, and Drupal 9 needs non-default mariadb 10.3
+    $BUILTPATH/ddev version | awk ' $1 == "db" { sub(/mariadb-10.2/, "mariadb-10.3"); print $2 }' >>/tmp/images.txt
     for item in $(cat /tmp/images.txt); do
       docker pull $item
     done
