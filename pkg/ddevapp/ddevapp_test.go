@@ -628,6 +628,11 @@ func TestDdevNoProjectMount(t *testing.T) {
 	stdout, _, err := app.Exec(opts)
 	assert.NoError(err)
 	assert.Contains(stdout, "index.html")
+
+	// Clean up so the other tests don't fail.
+	app.NoProjectMount = false
+	err = app.WriteConfig()
+	assert.NoError(err)
 }
 
 // TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.
