@@ -52,8 +52,17 @@ When defining additional services for your project, we recommended you follow th
     * To expose a web interface to be accessible over HTTP, define the following environment variables in the `environment` section for docker-compose:
 
         * `VIRTUAL_HOST=$DDEV_HOSTNAME`
-
         * `HTTP_EXPOSE=portNum` The `hostPort:containerPort` convention may be used here to expose a container's port to a different external port. To expose multiple ports for a single container, define the ports as comma-separated values.
+        * `HTTPS_EXPOSE=portNum:<exposedPortNumber>` This will expose an http interface on `portNum` to the host (and to the web container) as `https://<project>.ddev.site:exposedPortNumber`
+
+* **Naming volumes for persistent data**: A volume with persistent data should have the same name as the service and should not have a custom name. For example, the persistent volume for the [postgres](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/postgres) service has:
+
+    ```
+    volumes:
+      postgres:
+    ```
+
+  and as a result will end up with a volume named `ddev-<projectname>_postgres`; this default volume name will be automatically deleted by ddev if you do a `ddev delete` or `ddev stop --remove-data`.
 
 ### Interacting with additional services
 

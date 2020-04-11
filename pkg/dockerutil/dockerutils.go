@@ -677,6 +677,16 @@ func RemoveVolume(volumeName string) error {
 	return nil
 }
 
+// VolumeExists checks to see if the named volume exists.
+func VolumeExists(volumeName string) bool {
+	client := GetDockerClient()
+	_, err := client.InspectVolume(volumeName)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
 // CreateVolume creates a docker volume
 func CreateVolume(volumeName string, driver string, driverOpts map[string]string) (volume *docker.Volume, err error) {
 	client := GetDockerClient()
