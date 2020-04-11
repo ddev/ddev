@@ -8,8 +8,8 @@ ENV DRUSH_VERSION=8.3.2
 ENV DRUSH_LAUNCHER_VERSION=0.6.0
 ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
 ENV MAILHOG_VERSION=1.0.0
-ENV BACKDROP_DRUSH_VERSION=1.2.0
-ENV MKCERT_VERSION=v1.4.0
+ENV BACKDROP_DRUSH_VERSION=1.3.1
+ENV MKCERT_VERSION=v1.4.1
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
@@ -106,8 +106,8 @@ RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 
 ADD files /
 
+RUN phpdismod xdebug
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN composer global require hirak/prestissimo
 RUN curl -sSL "https://github.com/drush-ops/drush/releases/download/${DRUSH_VERSION}/drush.phar" -o /usr/local/bin/drush8 && chmod +x /usr/local/bin/drush8
 RUN curl -sSL "https://github.com/drush-ops/drush-launcher/releases/download/${DRUSH_LAUNCHER_VERSION}/drush.phar" -o /usr/local/bin/drush && chmod +x /usr/local/bin/drush
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
