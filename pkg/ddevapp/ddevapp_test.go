@@ -304,6 +304,13 @@ func TestDdevStart(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
+	// Make sure the -built docker image exists before stop
+	webBuilt := version.GetWebImage() + "-" + site.Name + "-built"
+	dbBuilt := version.GetWebImage() + "-" + site.Name + "-built"
+	exists, err := dockerutil.ImageExistsLocally(webBuilt)
+	assert.NoError(err)
+	assert.True(exists)
+
 	// After start, we haven't changed default version, the dbimage
 	// should now be set and should be the default
 	assert.EqualValues(app.DBImage, version.GetDBImage(nodeps.MariaDB))
@@ -337,6 +344,15 @@ func TestDdevStart(t *testing.T) {
 
 	err = app.Stop(true, false)
 	assert.NoError(err)
+
+	// Make sure the -built docker images do not exist after stop with removeData
+	exists, err = dockerutil.ImageExistsLocally(webBuilt)
+	assert.NoError(err)
+	assert.False(exists)
+	exists, err = dockerutil.ImageExistsLocally(dbBuilt)
+	assert.NoError(err)
+	assert.False(exists)
+
 	runTime()
 	switchDir()
 
