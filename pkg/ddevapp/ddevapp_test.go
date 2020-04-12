@@ -568,7 +568,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	testcommon.ClearDockerEnv()
 
 	site := TestSites[0]
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevXdebugEnabled", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	phpVersions := nodeps.ValidPHPVersions
 	phpKeys := make([]string, 0, len(phpVersions))
@@ -584,7 +584,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
-		t.Logf("Attempting XDebug checks with XDebug %s\n", v)
+		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
 		fmt.Printf("Attempting XDebug checks with XDebug %s\n", v)
 		app.XdebugEnabled = false
 		assert.NoError(err)
@@ -595,7 +595,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			Service: "web",
 			Cmd:     "php --ri xdebug",
 		}
-
 		stdout, _, err := app.Exec(opts)
 		assert.Error(err)
 		assert.Contains(stdout, "Extension 'xdebug' not present")
@@ -607,14 +606,18 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		require.NoError(t, err)
 
 		stdout, _, err = app.Exec(opts)
-		require.NoError(t, err)
+		assert.NoError(err)
 
-		assert.Contains(stdout, "xdebug support => enabled")
+		if err != nil {
+			t.Errorf("Aborting xdebug check for php%s: %v", v, err)
+			continue
+		}
+		assert.Contains(stdout, "xdebug support => enabled", "xdebug not enabled for %s", v)
 		assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
 
 		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
 		listener, err := net.Listen("tcp", ":9000")
-		require.NoError(t, err)
+		assert.NoError(err)
 
 		// Curl to the project's index.php or anything else
 		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 1)
@@ -629,8 +632,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		go func() {
 			conn, err := listener.Accept()
 			assert.NoError(err)
-			fmt.Printf("Completed accept of port 9000 with xdebug enabled, XDebug version=%s, time=%v\n", v, time.Now())
-
+			if err != nil {
+				t.Logf("Completed accept of port 9000 with xdebug enabled, XDebug version=%s, time=%v\n", v, time.Now())
+			}
 			// Grab the Xdebug connection start and look in it for "Xdebug"
 			b := make([]byte, 650)
 			_, err = bufio.NewReader(conn).Read(b)
