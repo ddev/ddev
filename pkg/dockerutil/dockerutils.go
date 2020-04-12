@@ -731,3 +731,14 @@ func GetHostDockerInternalIP() (string, error) {
 	}
 	return hostDockerInternal, nil
 }
+
+// RemoveImage removes an image
+func RemoveImage(tag string) error {
+	client := GetDockerClient()
+	util.Warning("Removing image: %s", tag)
+	err := client.RemoveImage(tag)
+	if err != nil {
+		util.Warning("Failed to remove %s: %v", tag, err)
+	}
+	return nil
+}

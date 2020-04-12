@@ -1454,6 +1454,12 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 				util.Warning("could not remove volume %s: %v", volName, err)
 			}
 		}
+		dbBuilt := app.GetDBImage() + "-" + app.Name + "-built"
+		_ = dockerutil.RemoveImage(dbBuilt)
+
+		webBuilt := version.GetWebImage() + "-" + app.Name + "-built"
+		_ = dockerutil.RemoveImage(webBuilt)
+
 		util.Success("Project data/database removed from docker volume for project %s", app.Name)
 	}
 
