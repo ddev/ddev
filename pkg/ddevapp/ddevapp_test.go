@@ -595,7 +595,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			Service: "web",
 			Cmd:     "php --ri xdebug",
 		}
-
 		stdout, _, err := app.Exec(opts)
 		assert.Error(err)
 		assert.Contains(stdout, "Extension 'xdebug' not present")
