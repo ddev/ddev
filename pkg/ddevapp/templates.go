@@ -177,7 +177,7 @@ volumes:
   ddev-global-cache:
     name: ddev-global-cache
 
-  {{ if .NFSMountEnabled }}
+  {{ if and .NFSMountEnabled (not .NoProjectMount) }}
   nfsmount:
     driver: local
     driver_opts:
