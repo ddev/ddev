@@ -2686,6 +2686,7 @@ func TestCaptureLogs(t *testing.T) {
 
 // TestNFSMount tests ddev start functionality with nfs_mount_enabled: true
 // This requires that the test machine must have NFS shares working
+// Tests using both app-specific nfs_mount_enabled and global nfs_mount_enabled
 func TestNFSMount(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -2697,12 +2698,50 @@ func TestNFSMount(t *testing.T) {
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestNFSMount", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	app.NFSMountEnabled = true
 
+	defer func() {
+		globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal = false
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		app.NFSMountEnabled = false
+		_ = app.WriteConfig()
+		_ = app.Stop(true, false)
+	}()
+
+	t.Log("testing with global NFSMountEnabled")
+	globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal = true
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	assert.NoError(err)
+
+	// Run NewApp so that it picks up the global config, as it would in real life
+	app, err = ddevapp.NewApp(site.Dir, false, "")
+	assert.NoError(err)
+	verifyNFSMount(t, app)
+
+	t.Log("testing with app NFSMountEnabled")
+	globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal = false
+	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	assert.NoError(err)
+
+	// Run NewApp so that it picks up the global config, as it would in real life
+	app, err = ddevapp.NewApp(site.Dir, false, "")
+	assert.NoError(err)
+
+	app.NFSMountEnabled = true
+	verifyNFSMount(t, app)
+
+	runTime()
+	switchDir()
+}
+
+func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
+	assert := asrt.New(t)
+
+	err := app.Stop(true, false)
+	assert.NoError(err)
 	err = app.Start()
 	//nolint: errcheck
 	defer app.Stop(true, false)
@@ -2724,6 +2763,9 @@ func TestNFSMount(t *testing.T) {
 	// Create a host-side dir symlink; give a second for it to sync, make sure it can be used in container.
 	err = os.Symlink(".ddev", "nfslinked_.ddev")
 	assert.NoError(err)
+	// nolint: errcheck
+	defer os.Remove("nfslinked_.ddev")
+
 	time.Sleep(2 * time.Second)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
@@ -2735,6 +2777,9 @@ func TestNFSMount(t *testing.T) {
 	// Create a host-side file symlink; give a second for it to sync, make sure it can be used in container.
 	err = os.Symlink(".ddev/config.yaml", "nfslinked_config.yaml")
 	assert.NoError(err)
+	// nolint: errcheck
+	defer os.Remove("nfslinked_config.yaml")
+
 	time.Sleep(2 * time.Second)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
@@ -2750,6 +2795,10 @@ func TestNFSMount(t *testing.T) {
 		Cmd:     "ln -s  .ddev nfscontainerlinked_ddev",
 	})
 	assert.NoError(err)
+
+	// nolint: errcheck
+	defer os.Remove("nfscontainerlinked_ddev")
+
 	time.Sleep(2 * time.Second)
 	assert.FileExists("nfscontainerlinked_ddev/config.yaml")
 
@@ -2760,11 +2809,12 @@ func TestNFSMount(t *testing.T) {
 		Cmd:     "ln -s  .ddev/config.yaml nfscontainerlinked_config.yaml",
 	})
 	assert.NoError(err)
+
+	// nolint: errcheck
+	defer os.Remove("nfscontainerlinked_config.yaml")
+
 	time.Sleep(2 * time.Second)
 	assert.FileExists("nfscontainerlinked_config.yaml")
-
-	runTime()
-	switchDir()
 }
 
 // TestHostDBPort tests to make sure that the host_db_port specification has the intended effect
