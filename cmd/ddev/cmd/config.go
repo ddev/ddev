@@ -43,6 +43,9 @@ var (
 	// xdebugEnabledArg allows a user to enable XDebug from a command flag.
 	xdebugEnabledArg bool
 
+	// noProjectMountArg allows a user to skip the project mount from a command flag.
+	noProjectMountArg bool
+
 	// additionalHostnamesArg allows a user to provide a comma-delimited list of hostnames from a command flag.
 	additionalHostnamesArg string
 
@@ -230,6 +233,7 @@ func init() {
 	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The router HTTP port for this project")
 	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The router HTTPS port for this project")
 	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", false, "Whether or not XDebug is enabled in the web container")
+	ConfigCommand.Flags().BoolVar(&noProjectMountArg, "no-project-mount", false, "Whether or not to skip mounting project code into the web container")
 	ConfigCommand.Flags().StringVar(&additionalHostnamesArg, "additional-hostnames", "", "A comma-delimited list of hostnames for the project")
 	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
 	ConfigCommand.Flags().StringVar(&omitContainersArg, "omit-containers", "", "A comma-delimited list of container types that should not be started when the project is started")
@@ -462,6 +466,11 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	// This bool flag is false by default, so only use the value if the flag was explicity set.
 	if cmd.Flag("xdebug-enabled").Changed {
 		app.XdebugEnabled = xdebugEnabledArg
+	}
+
+	// This bool flag is false by default, so only use the value if the flag was explicity set.
+	if cmd.Flag("no-project-mount").Changed {
+		app.NoProjectMount = noProjectMountArg
 	}
 
 	if cmd.Flag("phpmyadmin-port").Changed {

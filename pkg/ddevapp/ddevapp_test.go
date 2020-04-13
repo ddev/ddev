@@ -3,8 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version"
 	"io/ioutil"
 	"net"
 	"net/url"
@@ -19,6 +17,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/version"
+
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 
@@ -30,7 +31,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/google/uuid"
 	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
@@ -575,6 +576,50 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 	assert.FileExists(app.SiteSettingsPath)
 	assert.FileExists(app.SiteDdevSettingsFile)
 
+}
+
+// TestDdevNoProjectMount tests running without the app file mount.
+func TestDdevNoProjectMount(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	// Make sure this leaves us in the original test directory
+	testDir, _ := os.Getwd()
+	//nolint: errcheck
+	defer os.Chdir(testDir)
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", t.Name(), site.Name))
+	defer runTime()
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	app.NoProjectMount = true
+	err = app.WriteConfig()
+	assert.NoError(err)
+
+	defer func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		app.NoProjectMount = false
+		err = app.WriteConfig()
+		assert.NoError(err)
+	}()
+
+	err = app.Start()
+	assert.NoError(err)
+
+	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/var/www/html",
+		Cmd:     `findmnt -T /var/www/html | awk '$1 != "TARGET" {printf $1}'`,
+	})
+	assert.NoError(err)
+	assert.NotEqual("/var/www/html", stdout)
 }
 
 // TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.

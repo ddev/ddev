@@ -148,6 +148,7 @@ func TestConfigSetValues(t *testing.T) {
 	hostWebserverPort := "60002"
 	hostHTTPSPort := "60003"
 	xdebugEnabled := true
+	noProjectMount := true
 	additionalHostnamesSlice := []string{"abc", "123", "xyz"}
 	additionalHostnames := strings.Join(additionalHostnamesSlice, ",")
 	additionalFQDNsSlice := []string{"abc.com", "123.pizza", "xyz.co.uk"}
@@ -182,6 +183,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--http-port", httpPort,
 		"--https-port", httpsPort,
 		fmt.Sprintf("--xdebug-enabled=%t", xdebugEnabled),
+		fmt.Sprintf("--no-project-mount=%t", noProjectMount),
 		"--additional-hostnames", additionalHostnames,
 		"--additional-fqdns", additionalFQDNs,
 		"--upload-dir", uploadDir,
@@ -228,6 +230,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(hostWebserverPort, app.HostWebserverPort)
 	assert.Equal(hostDBPort, app.HostDBPort)
 	assert.Equal(xdebugEnabled, app.XdebugEnabled)
+	assert.Equal(noProjectMount, app.NoProjectMount)
 	assert.Equal(additionalHostnamesSlice, app.AdditionalHostnames)
 	assert.Equal(additionalFQDNsSlice, app.AdditionalFQDNs)
 	assert.Equal(uploadDir, app.UploadDir)

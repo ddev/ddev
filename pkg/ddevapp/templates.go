@@ -64,6 +64,7 @@ services:
     cap_add:
       - SYS_PTRACE
     volumes:
+      {{ if not .NoProjectMount }}
       - type: {{ .MountType }}
         source: {{ .WebMount }}
         target: /var/www/html
@@ -73,6 +74,7 @@ services:
         {{ else }}
         consistency: cached
         {{ end }}
+      {{ end }}
       - ".:/mnt/ddev_config:ro"
       - ddev-global-cache:/mnt/ddev-global-cache
       {{ if not .OmitSSHAgent }}
@@ -175,7 +177,7 @@ volumes:
   ddev-global-cache:
     name: ddev-global-cache
 
-  {{ if .NFSMountEnabled }}
+  {{ if and .NFSMountEnabled (not .NoProjectMount) }}
   nfsmount:
     driver: local
     driver_opts:
@@ -311,6 +313,12 @@ const ConfigInstructions = `
 # If true, ddev will not create CMS-specific settings files like
 # Drupal's settings.php/settings.ddev.php or TYPO3's AdditionalSettings.php
 # In this case the user must provide all such settings.
+
+# no_project_mount: false
+# (Experimental) If true, ddev will not mount the project into the web container; 
+# the user is responsible for mounting it manually or via a script.
+# This is to enable experimentation with alternate file mounting strategies. 
+# For advanced users only!
 
 # provider: default # Currently either "default" or "pantheon"
 #
