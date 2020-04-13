@@ -314,6 +314,12 @@ const ConfigInstructions = `
 # Drupal's settings.php/settings.ddev.php or TYPO3's AdditionalSettings.php
 # In this case the user must provide all such settings.
 
+# no_project_mount: false
+# (Experimental) If true, ddev will not mount the project into the web container; 
+# the user is responsible for mounting it manually or via a script.
+# This is to enable experimentation with alternate file mounting strategies. 
+# For advanced users only!
+
 # provider: default # Currently either "default" or "pantheon"
 #
 # Many ddev commands can be extended to run tasks before or after the
