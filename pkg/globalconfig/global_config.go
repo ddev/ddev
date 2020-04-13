@@ -36,7 +36,8 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainers          []string                `yaml:"omit_containers,flow"`
+	OmitContainersGlobal    []string                `yaml:"omit_containers,flow"`
+	NFSMountEnabledGlobal   bool                    `yaml:"nfs_mount_enabled"`
 	InstrumentationOptIn    bool                    `yaml:"instrumentation_opt_in"`
 	RouterBindAllInterfaces bool                    `yaml:"router_bind_all_interfaces"`
 	DeveloperMode           bool                    `yaml:"developer_mode,omitempty"`
@@ -53,8 +54,8 @@ func GetGlobalConfigPath() string {
 
 // ValidateGlobalConfig validates global config
 func ValidateGlobalConfig() error {
-	if !IsValidOmitContainers(DdevGlobalConfig.OmitContainers) {
-		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainers, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
+	if !IsValidOmitContainers(DdevGlobalConfig.OmitContainersGlobal) {
+		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
 	return nil
@@ -131,6 +132,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # and you can opt in or out of sending instrumentation the ddev developers with
 # instrumentation_opt_in: true # or false
 #
+# You can enable nfs mounting for all projects with
+# nfs_mount_enabled: true
+
 # instrumentation_user: <your_username> # can be used to give ddev specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
 # router_bind_all_interfaces: false  # (defaults to false)

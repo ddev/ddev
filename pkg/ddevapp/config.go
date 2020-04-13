@@ -75,6 +75,7 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.PHPVersion = nodeps.PHPDefault
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
+	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
 	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
 	app.PHPMyAdminPort = nodeps.DdevDefaultPHPMyAdminPort
@@ -84,7 +85,7 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
-	app.OmitContainers = globalconfig.DdevGlobalConfig.OmitContainers
+	app.OmitContainerGlobal = globalconfig.DdevGlobalConfig.OmitContainersGlobal
 	app.ProjectTLD = nodeps.DdevDefaultTLD
 	app.UseDNSWhenPossible = true
 
@@ -691,10 +692,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DdevGenerated:        DdevFileSignature,
 		HostDockerInternalIP: hostDockerInternalIP,
 		ComposeVersion:       version.DockerComposeFileFormatVersion,
-		OmitDB:               nodeps.ArrayContainsString(app.OmitContainers, "db"),
-		OmitDBA:              nodeps.ArrayContainsString(app.OmitContainers, "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
-		OmitSSHAgent:         nodeps.ArrayContainsString(app.OmitContainers, "ddev-ssh-agent"),
-		NFSMountEnabled:      app.NFSMountEnabled,
+		OmitDB:               nodeps.ArrayContainsString(app.GetOmittedContainers(), "db"),
+		OmitDBA:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
+		OmitSSHAgent:         nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
+		NFSMountEnabled:      app.NFSMountEnabled || app.NFSMountEnabledGlobal,
 		NFSSource:            "",
 		IsWindowsFS:          runtime.GOOS == "windows",
 		MountType:            "bind",
@@ -709,7 +710,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		WebBuildDockerfile:   app.GetConfigPath(".webimageBuild/Dockerfile"),
 		DBBuildDockerfile:    app.GetConfigPath(".dbimageBuild/Dockerfile"),
 	}
-	if app.NFSMountEnabled {
+	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "nfsmount"
 		templateVars.NFSSource = app.AppRoot
