@@ -588,23 +588,11 @@ func TestDdevNoProjectMount(t *testing.T) {
 	//nolint: errcheck
 	defer os.Chdir(testDir)
 
-	// Use Drupal8 only, mostly for the composer example
-	site := FullTestSites[1]
-	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
-		app := &ddevapp.DdevApp{Name: site.Name}
-		_ = app.Stop(true, false)
-		_ = globalconfig.RemoveProjectInfo(site.Name)
-
-		err := site.Prepare()
-		require.NoError(t, err)
-		// nolint: errcheck
-		defer os.RemoveAll(site.Dir)
-	}
+	site := TestSites[0]
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", t.Name(), site.Name))
 	defer runTime()
 
 	err := app.Init(site.Dir)
@@ -614,25 +602,24 @@ func TestDdevNoProjectMount(t *testing.T) {
 	err = app.WriteConfig()
 	assert.NoError(err)
 
+	defer func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		app.NoProjectMount = false
+		err = app.WriteConfig()
+		assert.NoError(err)
+	}()
+
 	err = app.Start()
 	assert.NoError(err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
 
-	opts := &ddevapp.ExecOpts{
+	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
-		Cmd:     "df /var/www/html | awk '$1 != \"Filesystem\" {print $6}'",
-		Dir:     "/var/www",
-	}
-
-	stdout, _, err := app.Exec(opts)
+		Dir:     "/var/www/html",
+		Cmd:     `findmnt -T /var/www/html | awk '$1 != "TARGET" {printf $1}'`,
+	})
 	assert.NoError(err)
-	assert.NotContains(stdout, "/var/www/html")
-
-	// Clean up so the other tests don't fail.
-	app.NoProjectMount = false
-	err = app.WriteConfig()
-	assert.NoError(err)
+	assert.NotEqual("/var/www/html", stdout)
 }
 
 // TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.
