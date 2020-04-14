@@ -137,7 +137,6 @@ Get started with Drupal 8 projects on ddev either using a new or existing compos
 mkdir my-drupal8-site
 cd my-drupal8-site
 ddev config --project-type=drupal8 --docroot=web --create-docroot
-ddev start
 ddev composer create drupal/recommended-project:^8
 ddev composer remove drupal/core-project-message
 ddev composer require drush/drush
@@ -172,7 +171,6 @@ Get started with Drupal 9 projects on ddev either using a new or existing compos
 mkdir my-drupal9-site
 cd my-drupal9-site
 ddev config --project-type=drupal9 --docroot=web --create-docroot
-ddev start
 ddev composer create drupal/recommended-project:9.0.x-dev
 ddev composer remove drupal/core-project-message
 ddev composer require drush/drush
