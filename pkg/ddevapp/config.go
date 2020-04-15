@@ -116,15 +116,6 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	}
 	app.SetInstrumentationAppTags()
 
-	// Make sure that not in a dir with glob pattern
-	hasGlob, err := regexp.Match(`[\[\]\{\}\*\?]`, []byte(appRoot))
-	if err != nil {
-		return app, err
-	}
-	if hasGlob {
-		return app, fmt.Errorf("Project directory contains a glob pattern, please use a directory that does not contain `{}[]*?`")
-	}
-
 	// Rendered yaml is not there until after ddev config or ddev start
 	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
 		content, err := fileutil.ReadFileIntoString(app.DockerComposeFullRenderedYAMLPath())
