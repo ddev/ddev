@@ -78,7 +78,7 @@ type DdevApp struct {
 	AdditionalFQDNs           []string               `yaml:"additional_fqdns"`
 	MariaDBVersion            string                 `yaml:"mariadb_version,omitempty"`
 	MySQLVersion              string                 `yaml:"mysql_version,omitempty"`
-	NFSMountEnabled           bool                   `yaml:"nfs_mount_enabled"`
+	NFSMountEnabled           bool                   `yaml:"nfs_mount_enabled,omitempty"`
 	NFSMountEnabledGlobal     bool                   `yaml:"-"`
 	ConfigPath                string                 `yaml:"-"`
 	AppRoot                   string                 `yaml:"-"`
