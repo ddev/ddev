@@ -64,7 +64,8 @@ var DebugNFSMountCmd = &cobra.Command{
 
 		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), containerName, []string{"sh", "-c", "findmnt -T /nfsmount && ls -d /nfsmount/.ddev"}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, uidStr, true)
 		if err != nil {
-			util.Failed("unable to access nfs mount, NFS is probably not configured yet.\nerror=%v output=%v", err, out)
+			util.Warning("NFS does not seem to be set up yet, see debugging instructions at https://ddev.readthedocs.io/en/stable/users/performance/#debugging-ddev-start-failures-with-nfs_mount_enabled-true")
+			util.Failed("Details: error=%v\noutput=%v", err, out)
 		}
 		output.UserOut.Printf(strings.TrimSpace(out))
 		util.Success("")
@@ -75,7 +76,7 @@ var DebugNFSMountCmd = &cobra.Command{
 		case app.NFSMountEnabled:
 			util.Success("nfs_mount_enabled is true in this project (%s), but is not set globally", app.Name)
 		default:
-			util.Warning("nfs_mount_enabled is not set either globally or in this project. \nUse `ddev global config --nfs-mount-enabled` to enable it.")
+			util.Warning("nfs_mount_enabled is not set either globally or in this project. \nUse `ddev config global --nfs-mount-enabled` to enable it.")
 		}
 	},
 }
