@@ -2,7 +2,7 @@ package nodeps
 
 import (
 	"context"
-	"fmt"
+	"github.com/drud/ddev/pkg/output"
 	"math/rand"
 	"net"
 	"os"
@@ -66,10 +66,10 @@ func IsInternetActive() bool {
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil
 	if os.Getenv("DDEV_DEBUG") != "" {
-		fmt.Printf("IsInternetActive DEBUG: err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, randomURL=%v\n", err, ctx.Err(), addrs, active, randomURL)
+		output.UserOut.Printf("IsInternetActive DEBUG: err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, randomURL=%v\n", err, ctx.Err(), addrs, active, randomURL)
 	}
 	if active == false {
-		fmt.Println("Internet connection not detected")
+		output.UserOut.Println("Internet connection not detected")
 	}
 
 	// remember the result to not call this twice
