@@ -1,33 +1,37 @@
 ## Performance
 
-Every developer wants both quick starts of the environment and quick response to web page requests. DDEV-Local is always focused on improving this. However, both Docker Desktop for Windows and Docker Desktop for Mac have significant performance problems with mounted filesystems (like the mounted project where code can be edited either inside the container or on the host). There are currently two ways to work around this Docker performance issue.
+Every developer wants both quick starts of the environment and quick response to web page requests. DDEV-Local is always focused on improving this. However, both Docker Desktop for Windows and Docker Desktop for Mac have significant performance problems with mounted filesystems (like the mounted project where code can be edited either inside the container or on the host).
 
-## Using NFS to Mount the Project into the Container
+## Using NFS to Mount the Project into the Web Container
 
-NFS (Network File System) is a classic, mature Unix technique to mount a filesystem from one device to another. It's provided as an experimental technique for improving webserving performance. DDEV-Local supports this technique, but it **does requires a small amount of configuration on your host computer.**
+NFS (Network File System) is a classic, mature Unix technique to mount a filesystem from one device to another. It provides significantly improved webserver performance on macOS and Windows. DDEV-Local supports this technique, but it **does requires a small amount of pre-configuration on your host computer.** DDEV-Local doesn't make changes to your computer's configuration without your involvement and approval, so this is  done with a setup script that you run and that asks you for your `sudo` password.
 
-__Before starting with NFS mounting, please make sure your project runs successfully without NFS mounting (without `nfs_mount_enabled: true` in your project's `.ddev/config.yaml` file.)__
+The steps to set up NFS mounting on any operating system are:
 
-To enable NFS mounting, use `nfs_mount_enabled: true` in your .ddev/config.yaml, or `ddev config --nfs-mount-enabled=true`. This won't work until you have done the one-time configuration for your system described below.
+1. Make sure DDEV-Local is already working and you can use it.
+2. Configure the NFS server and exports files using the provided scripts for each operating system.
+3. Test that NFS is working correctly by using `ddev debug nfsmount` in a project directory. The first line should report something like "Successfully accessed NFS mount of /path/to/project"
+4. Enable NFS mounting globally with `ddev config global --nfs-mount-enabled`  (You can also configure NFS mounting on a per-project basis with `ddev config --nfs-mount-enabled` in the project directory, but this is unusual. If nfs mounting is turned on globally it overrides any local project settings for NFS.)
+5. `ddev start` your project and make sure it works OK. Use `ddev describe` to verify that NFS mounting is being used. The NFS status is near the top of the output of `ddev describe`.
 
-Note that you can use the NFS setup described here (and the scripts provided) or you can set up NFS any way that works for you. For example, if you're already using NFS with vagrant on macOS,and you already have a number of exports, the default export here (/Users) won't work, because you'll have mount overlaps. Or on Windows, you may want to use an NFS server other than Winnfsd, for example the [Allegro NFS Server](https://nfsforwindows.com). The setups provided below and the scripts provided below are just intended to get you started if you don't already use NFS.
+Note that you can use the NFS setup described for each operating system below (and the scripts provided) or you can set up NFS any way that works for you. For example, if you're already using NFS with vagrant on macOS,and you already have a number of exports, the default export here (your home directory) won't work, because you'll have overlaps in your /etc/exports. Or on Windows, you may want to use an NFS server other than Winnfsd, for example the [Allegro NFS Server](https://nfsforwindows.com). The setups provided below and the scripts provided below are only intended to get you started if you don't already use NFS.
 
 ### macOS NFS Setup
 
-__macOS Mojave (and later) warning:__ You'll need to give your terminal "Full disk access" before you (or the script provided) can edit /etc/exports. If you're using iterm2, here are [full instructions for iterm2](https://gitlab.com/gnachman/iterm2/wikis/fulldiskaccess). The basic idea is that in the Mac preferences -> Security and Privacy -> Privacy you need to give "Full Disk Access" permissions to your terminal app. Note that the "Full Disk Access" privilege is only needed when the /etc/exports file is being edited by you, normally a one-time event.
+__macOS Mojave (and later) warning:__ You'll need to temporarily give your terminal "Full disk access" before you (or the script provided) can edit /etc/exports. If you're using iterm2, here are [full instructions for iterm2](https://gitlab.com/gnachman/iterm2/wikis/fulldiskaccess). The basic idea is that in the Mac preferences -> Security and Privacy -> Privacy you need to give "Full Disk Access" permissions to your terminal app. Note that the "Full Disk Access" privilege is only needed when the /etc/exports file is being edited by you, usually a one-time event.
 
-Download, inspect, and run the macos_ddev_nfs_setup.sh script  from [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh). This stops running ddev projects, adds your home directory to the /etc/exports config file that nfsd uses, and enables nfsd to run on your computer. This is a one-time setup. Note that this shares the /Users directory via NFS to any client, so it's critical to consider security issues and verify that your firewall is enabled and configured.
+Download, inspect, make executable, and run the [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) script. Use `curl -O https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh`. This stops running ddev projects, adds your home directory to the /etc/exports config file that nfsd uses, and enables nfsd to run on your computer. This is a one-time setup. Note that this shares your home directory via NFS to any NFS client on your computer, so it's critical to consider security issues; It's easy to make the shares in /etc/exports more limited as well, as long as they don't overlap (NFS doesn't allow overlapping exports).
 
-If your DDEV-Local projects are set up outside /Users, you'll need to edit /etc/exports for to add that share as well.
-`sudo vi /etc/exports` and add copy the line the script has just created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`), editing it with the second path, e.g: `/Volumes/Mysites -alldirs -mapall=<your_uid>:20 localhost` (no need for the `/System/Volumes/Data` part here).
+If your DDEV-Local projects are set up outside your home directory, you'll need to edit /etc/exports for to add a line for that share as well.
+`sudo vi /etc/exports` and add copy the line the script has just created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`), editing it with the additional path, e.g: `/Volumes/SomeExternalDrive -alldirs -mapall=<your_uid>:20 localhost`.
 
 Note: If you're on macOS Catalina and above, and your projects are in a subdirectory of the ~/Documents directory or on an external drive, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Control Panel.
 
 ### Windows NFS Setup
 
-The executable components required for Windows NFS (winnfsd and nssm) are packaged with the ddev_windows_installer in each release, so if you've used the windows installer, they're available already. To enable winnfsd as a service, please download, inspect and run the script "windows_ddev_nfs_setup.sh" installed by the installer (or download from [windows_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a git-bash session on windows. If your DDEV-Local projects are set up outside your home directory, you'll need to edit the ~/.ddev/nfs_exports.sh created by the script and then restart the service with `sudo nssm restart nfsd`.
+The executable components required for Windows NFS (winnfsd and nssm) are packaged with the ddev_windows_installer in each release, so if you've used the windows installer, they're available already.  To enable winnfsd as a service, please download, inspect and run the script "windows_ddev_nfs_setup.sh" installed by the installer in \Program Files\ddev\windows_ddev_nfs_setup.sh (or download from [windows_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a git-bash session on windows. If your DDEV-Local projects are set up outside your home directory, you'll need to edit the ~/.ddev/nfs_exports.txt created by the script and then restart the service with `sudo nssm restart nfsd`.
 
-**Firewall issues**: On Windows 10 you will likely run afoul of the Windows Defender Firewall, and it will be necessary to allow winnfsd to bypass it. If you're getting a timeout with no information after `ddev start`, try going to "Windows Defender Firewall" -> "Allow an app or feature through Windows Defender Firewall", "Change Settings", "Allow another app". Then choose C:\Program Files\ddev\winnfsd.exe, assuming that's where you installed winnfsd.
+**Firewall issues**: On Windows 10 you will likely run afoul of the Windows Defender Firewall, and it will be necessary to allow `winnfsd` to bypass it. If you're getting a timeout with no information after `ddev start`, try going to "Windows Defender Firewall" -> "Allow an app or feature through Windows Defender Firewall", "Change Settings", "Allow another app". Then choose C:\Program Files\ddev\winnfsd.exe, assuming that's where  winnfsd is installed.
 
 Also see the debugging section below, and the special Windows debugging section.
 
@@ -46,17 +50,18 @@ Note that the script sets up a very restrictive /etc/exports that is based on th
 There are a number of reasons that the NFS mount can fail on `ddev start`:
 
 * NFS Server not running
-* Trying to start more than one NFS server. (This is typically only an issue on Windows)
-* NFS exports overlap. This is typically an issue if you've had another NFS setup (like vagrant). You'll need to reconfigure your exports paths so they don't overlap.
+* Trying to start more than one NFS server.
+* NFS exports overlap. This is typically an issue if you've had another NFS client setup (like vagrant). You'll need to reconfigure your exports paths so they don't overlap.
 * Path of project not shared in `/etc/exports` (or `~/.ddev/nfs_exports.txt` on Windows)
 * Primary IP address not properly listed in /etc/exports (Linux)
+* Project is in the ~/Documents directory or an external drive on macOS Catalina or higher (see macOS information below)
 
 Tools to debug and solve permission problems:
 
-* Try `ddev debug nfsmount` to see if basic NFS mounting is working. If that works, it's likely that everything else will.
+* Try `ddev debug nfsmount` in a project directory to see if basic NFS mounting is working. If that works, it's likely that everything else will.
 * When debugging, please do `ddev restart` in between each change. Otherwise, you can have stale mounts inside the container and you'll miss any benefit you may find in the debugging process.
 * Inspect the /etc/exports (or `~/.ddev/nfs_exports.txt` on Windows).
-* Restart the server (`sudo nfsd restart` on macOS, `sudo nssm restart nfsd` on Windows, `sudo systemctl restart nfs-kernel-server` on Debian/Ubuntu, other commands for other Unices).
+* Restart the server (`sudo nfsd restart` on macOS, `sudo nssm restart nfsd` on Windows, `sudo systemctl restart nfs-kernel-server` on Debian/Ubuntu, other commands for other Unixes).
 * `showmount -e` on macOS or Linux will show the shared mounts.
 * On Linux, the primary IP address needs to be in /etc/exports. Temporarily set the share in /etc/exports to `/home *`, which shares /home with any client, and `sudo systemctl restart nfs-kernel-server`. Then start a ddev project doing an nfs mount, and `showmount -a` and you'll find out what the primary IP address in use is. You can add that address to /etc/exports.
 
@@ -78,8 +83,6 @@ So Catalina upgrade step-by-step:
     /nfsmount/.ddev
     ```
 
-Remember to use `ddev debug nfsmount` to verify
-
 ### macOS-specific NFS debugging
 
 * Use `showmount -e` to find out what is exported via NFS. If you don't see a parent of your project directory in there, then NFS can't work.
@@ -93,7 +96,7 @@ Remember to use `ddev debug nfsmount` to verify
   nfs.server.verbose = 3
   ```
 
-* Run Console.app and put "nfs" in the search box at the top. `sudo nfsd restart` and read the messages carefully. Attempt to `ddev debug nfsmount` the problematic project directory.
+* Run Console.app and put "nfsd" in the search box at the top. `sudo nfsd restart` and read the messages carefully. Attempt to `ddev debug nfsmount` the problematic project directory.
 
 ### Windows-specific NFS debugging
 
