@@ -676,7 +676,7 @@ func TestConfigGitignore(t *testing.T) {
 	defer testcommon.Chdir(tmpDir)()
 
 	_, err := exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
-	assert.Error(err)
+	assert.NoError(err)
 	defer func() {
 		_, err = exec.RunCommand(DdevBin, []string{"delete", "-Oy"})
 		assert.NoError(err)
@@ -698,6 +698,6 @@ func TestConfigGitignore(t *testing.T) {
 	assert.NoError(err)
 	statusOut, err := exec.RunCommand("bash", []string{"-c", "git status"})
 	assert.NoError(err)
-	out, err = exec.RunCommand("bash", []string{"-c", "git status | grep 'Untracked files'"})
+	_, err = exec.RunCommand("bash", []string{"-c", "git status | grep 'Untracked files'"})
 	assert.Error(err, "Untracked files were found were we didn't expect them: %s", statusOut)
 }
