@@ -35,6 +35,7 @@ Having trouble? See our [support options below](#support). You might have troubl
 * List running projects with `ddev list`.
 * Snapshot databases with `ddev snapshot`.
 * Temporarily share your development website with other using `ddev share`.
+* Trusted HTTPS support
 
 Just running `ddev` will show you all the commands.
 
