@@ -219,7 +219,7 @@ cd my-typo3-site
 ddev config --project-type=typo3 --docroot=public --create-docroot=true
 ddev start
 ddev composer create "typo3/cms-base-distribution:^9" --prefer-dist
-ddev start
+ddev launch
 ```
 
 **On TYPO3 versions < 9 an install may fail if you use the https URL to install because the allowed proxy is not configured yet ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
