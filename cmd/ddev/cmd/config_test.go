@@ -665,3 +665,39 @@ func TestConfigMySQLVersion(t *testing.T) {
 		}
 	}
 }
+
+//TestConfigGitignore checks that our gitignore is ignoring the right things.
+func TestConfigGitignore(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Create a temporary directory and switch to it.
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpDir)
+	defer testcommon.Chdir(tmpDir)()
+
+	_, err := exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
+	assert.NoError(err)
+	defer func() {
+		_, err = exec.RunCommand(DdevBin, []string{"delete", "-Oy"})
+		assert.NoError(err)
+	}()
+
+	_, err = exec.RunCommand("git", []string{"init"})
+	assert.NoError(err)
+	_, err = exec.RunCommand("git", []string{"add", "."})
+	assert.NoError(err)
+	out, err := exec.RunCommand("git", []string{"status"})
+	assert.NoError(err)
+
+	// git status should have one new file, config.yaml
+	assert.Contains(out, "new file:   .ddev/config.yaml")
+	// .ddev/config.yaml should be the only new file, remove it and check
+	out = strings.ReplaceAll(out, "new file:   .ddev/config.yaml", "")
+	assert.NotContains(out, "new file:")
+	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	assert.NoError(err)
+	statusOut, err := exec.RunCommand("bash", []string{"-c", "git status"})
+	assert.NoError(err)
+	_, err = exec.RunCommand("bash", []string{"-c", "git status | grep 'Untracked files'"})
+	assert.Error(err, "Untracked files were found were we didn't expect them: %s", statusOut)
+}

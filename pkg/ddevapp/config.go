@@ -512,11 +512,11 @@ func (app *DdevApp) GetHostnames() []string {
 	return nameListArray
 }
 
-// WriteDockerComposeYAML writes a .docker-compose-base.yaml and related to the .ddev directory.
+// WriteDockerComposeYAML writes a .ddev-docker-compose-base.yaml and related to the .ddev directory.
 func (app *DdevApp) WriteDockerComposeYAML() error {
 	var err error
 
-	// Because of move from docker-compose.yaml as base file to .docker-compose-base.yaml
+	// Because of move from docker-compose.yaml as base file to .ddev-docker-compose-base.yaml
 	// remove old ddev-managed docker-compose.yaml
 	oldDockerCompose := filepath.Join(app.AppConfDir(), "docker-compose.yaml")
 	if fileutil.FileExists(oldDockerCompose) {
@@ -651,7 +651,7 @@ type composeYAMLVars struct {
 	GID                  string
 }
 
-// RenderComposeYAML renders the contents of .ddev/.docker-compose*.
+// RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
@@ -958,7 +958,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "commands/*/*.example", "commands/*/README.txt", "commands/host/launch", "commands/host/xdebug", "commands/db/mysql", "homeadditions/*.example", "homeadditions/README.txt", ".gitignore", "import.yaml", ".docker-compose-base.yaml", ".docker-compose-full.yaml", "db_snapshots", "sequelpro.spf", "import-db", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", ".sshimageBuild", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
+	err := CreateGitIgnore(dir, "commands/*/*.example", "commands/*/README.txt", "commands/host/launch", "commands/web/xdebug", "commands/db/mysql", "homeadditions/*.example", "homeadditions/README.txt", ".gitignore", "import.yaml", ".ddev-docker-compose-base.yaml", ".ddev-docker-compose-full.yaml", "db_snapshots", "sequelpro.spf", "import-db", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", ".sshimageBuild", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
