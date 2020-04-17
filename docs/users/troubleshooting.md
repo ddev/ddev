@@ -134,6 +134,14 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 * Misconfigured docroot: If the docroot isn't where the webserver thinks it is, then the webserver won't find the index.php. Look at your .ddev/config.yaml to verify it has a docroot that will lead to the index.php. It should be a relative path from the project root to the directory where the index.php is.
 * Docker not mounting your code: If you `ddev ssh` and `ls` and there's nothing there, Docker may not be mounting your code. See [docker installation](./docker_installation.md) for testing docker install. (Is Docker, the drive or directory where your project is must be shared. In Docker Toolbox it *must* be a subdirectory of your home directory unless you [make special accommodations for Docker Toolbox](http://support.divio.com/local-development/docker/how-to-use-a-directory-outside-cusers-with-docker-toolbox-on-windowsdocker-for-windows)).
 
+## `ddev start` fails and logs contain "failed (28: No space left on device)" - Docker File Space
+
+If `ddev start` fails, it's most often because the web container or db container fails to start. In this case the error message from `ddev start` says something like "Failed to start <project>: db container failed: log=, err=container exited, please use 'ddev logs -s db`to find out why it failed". You can`ddev logs -s db` to find out what happened.
+
+If you see any variant of "no space left on device" in the logs when using Docker Desktop, it means that you have to increase or clean up Docker's file space. To increase the allocated space, go to "Resources" in Docker's Preferences as shown in ![Docker disk space](images/docker_disk_space.png)
+
+If you see "no space left on device" on Linux, it most likely means your filesystem is full.
+
 ## Windows-Specific Issues
 
 <a name="windows-hosts-file-limited"></a>

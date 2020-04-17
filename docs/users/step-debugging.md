@@ -2,9 +2,9 @@
 
 Every ddev project is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code. It is disabled by default for performance reasons, so you'll need to enable it in your config.yaml.
 
-xdebug is a server-side tool: It is installed automatically on the container and you do *not* need to install it on your workstation.
+xdebug is a server-side tool: It is installed automatically on the container and you do *not* need to install or configure it on your workstation.
 
-All IDEs basically work the same: They listen on a port and react when they're contacted there. So IDEs other than those listed here should work fine, if listening on the default xdebug port 9000.
+All IDEs basically work the same: They listen on a port and react when they're contacted there. IDEs other than those listed here work fine, if they listen on the default xdebug port 9000.
 
 **Key facts:**
 
@@ -20,8 +20,8 @@ For each IDE the link to their documentation is provided, and the skeleton steps
 ### Setup for Various IDEs
 
 * [PHPStorm](#phpstorm)
-* [Atom](#atom)
 * [Visual Studio Code (vscode)](#vscode)
+* [Atom](#atom)
 
 <a name="phpstorm"></a>
 
@@ -56,6 +56,15 @@ PHPStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/crea
 Server creation:
 
 ![PHPStorm server creation](images/phpstorm_config_server_config.png)
+
+#### PHPStorm and Command-Line Debugging
+
+If you need to debug command-line PHP processes, especially code that is outside the docroot (as in /vendor) there's a little extra work to be done:
+
+* If you have used PHPStorm with xdebug you already have a PHPStorm "server" ("Languages and Frameworks" -> "PHP" -> "Servers"). The key job of the "server" is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server (in this case the ddev-webserver container). Often, PHPStorm has automatically set up a mapping that doesn't include the entire project. So map the top-level directory of your project to /var/www/html in the container, as in this image:
+![PHPStorm mapping](images/PHPStormServerMapping.png)
+* When debugging inside the container, you'll want to `export PHP_IDE_CONFIG=<phpstorm_project_name>`, for example, `export PHP_IDE_CONFIG=d8composer.ddev.site` for the server in the image above. You could also set PHP_IDE_CONFIG automatically with a `docker-composer.environment.yaml` as in [example](extend/custom-compose-files.md#docker-composeyaml-examples).
+* If debugging Drupal's drush command, you'll probably want to use direct access to the site-installed drush rather than using the built-in drush launcher, so run it as `vendor/drush/drush/drush` or whatever.
 
 <a name="atom"></a>
 

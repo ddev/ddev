@@ -19,7 +19,7 @@ ddev by default uses ports 80 and 443 on your system when projects are running. 
 
 ## Installation
 
-_When upgrading, please check the [release notes](https://github.com/drud/ddev/releases) for actions you might need to take on each project._
+_When upgrading, please run `ddev poweroff` and check the [release notes](https://github.com/drud/ddev/releases) for actions you might need to take on each project._
 
 ### Docker Installation
 
@@ -40,13 +40,13 @@ If you would like more frequent "edge" releases then use `brew tap drud/ddev-edg
 Later, to upgrade to a newer version of ddev, run:
 
 ```
-brew upgrade ddev
+ddev poweroff && brew upgrade ddev
 ```
 
 ### Installation or Upgrade - Windows
 
 * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new terminal or cmd window and start using ddev.
-* If you use [chocolatey](https://chocolatey.org/) (highly recommended), then you can just `choco install ddev` from an administrative-privileged shell. Upgrades are just `choco upgrade ddev`.
+* If you use [chocolatey](https://chocolatey.org/) (highly recommended), then you can just `choco install ddev` from an administrative-privileged shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
 * As a one-time initialization, run `mkcert -install`
 * Most people interact with ddev on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although ddev does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
 
@@ -58,14 +58,15 @@ Linux and macOS end-users can use this line of code to your terminal to download
 curl -L https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
 ```
 
-* (Optional) As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
+* As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
 
-Later, to upgrade ddev to the latest version, just run this again.
+Later, to upgrade ddev to the latest version, just run `ddev poweroff` and run the script again.
 
 ### Manual Installation or Upgrade - Linux and macOS
 
 You can also easily perform the installation or upgrade manually if preferred. ddev is just a single executable, no special installation is actually required, so for all operating systems, the installation is just copying ddev into place where it's in the system path.
 
+* `ddev poweroff` if upgrading
 * Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 * Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
 * Run `ddev` to test your installation. You should see ddev's command usage output.
