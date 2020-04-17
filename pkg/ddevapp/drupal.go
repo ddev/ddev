@@ -695,7 +695,10 @@ func drupal8PostStartAction(app *DdevApp) error {
 		// drush9 wants drush.yml
 		err := WriteDrushYML(app, filepath.Join(app.AppRoot, "drush", "drush.yml"))
 		if err != nil {
-			util.Warning("Failed to WriteDrushYML: %v", err)
+			err := WriteDrushYML(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush", "drush.yml"))
+			if err != nil {
+				util.Warning("Failed to WriteDrushYML: %v", err)
+			}
 		}
 
 		err = WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
