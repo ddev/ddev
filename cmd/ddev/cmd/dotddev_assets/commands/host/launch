@@ -6,6 +6,8 @@
 ## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php", for PHPMyAdmin "ddev launch -p", MailHog "ddev launch -m"
 
 FULLURL=${DDEV_PRIMARY_URL}
+HTTPS=""
+if [ ${DDEV_PRIMARY_URL%://*} = "https" ]; then HTTPS=true; fi
 
 while :; do
      case $1 in
@@ -14,10 +16,18 @@ while :; do
              exit
              ;;
          -p|--phpmyadmin)
-            FULLURL="http://${DDEV_HOSTNAME}:${DDEV_PHPMYADMIN_PORT}"
+            if [ "${HTTPS}" = "" ]; then
+                FULLURL="http://${DDEV_HOSTNAME}:${DDEV_PHPMYADMIN_PORT}"
+            else
+                FULLURL="https://${DDEV_HOSTNAME}:${DDEV_PHPMYADMIN_HTTPS_PORT}"
+            fi
              ;;
          -m|--mailhog)
-            FULLURL="http://${DDEV_HOSTNAME}:${DDEV_MAILHOG_PORT}"
+            if [ "${HTTPS}" = "" ]; then
+                FULLURL="http://${DDEV_HOSTNAME}:${DDEV_MAILHOG_PORT}"
+            else
+                FULLURL="https://${DDEV_HOSTNAME}:${DDEV_MAILHOG_HTTPS_PORT}"
+            fi
              ;;
 
          --)              # End of all options.
