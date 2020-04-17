@@ -60,8 +60,6 @@ ddev delete --all`,
 			if err := project.Stop(true, !omitSnapshot); err != nil {
 				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
 			}
-
-			util.Success("Project %s has been deleted.", project.GetName())
 		}
 	},
 }

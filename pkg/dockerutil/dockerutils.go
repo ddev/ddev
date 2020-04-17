@@ -735,10 +735,11 @@ func GetHostDockerInternalIP() (string, error) {
 // RemoveImage removes an image
 func RemoveImage(tag string) error {
 	client := GetDockerClient()
-	util.Warning("Removing image: %s", tag)
 	err := client.RemoveImage(tag)
-	if err != nil {
-		util.Warning("Failed to remove %s: %v", tag, err)
+	if err == nil {
+		util.Success("Deleting docker image %s", tag)
+	} else {
+		util.Warning("Failed to delete %s: %v", tag, err)
 	}
 	return nil
 }

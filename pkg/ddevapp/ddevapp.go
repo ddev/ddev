@@ -1450,6 +1450,8 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			err = dockerutil.RemoveVolume(volName)
 			if err != nil {
 				util.Warning("could not remove volume %s: %v", volName, err)
+			} else {
+				util.Success("Deleting database. Volume %s for project %s was deleted", volName, app.Name)
 			}
 		}
 		desc, err := app.Describe()
@@ -1459,9 +1461,13 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		for extraService := range desc["extra_services"].(map[string]map[string]string) {
 			// volName default if name: is not specified is ddev-<project>_volume
 			volName := strings.ToLower("ddev-" + app.Name + "_" + extraService)
-			err = dockerutil.RemoveVolume(volName)
-			if err != nil {
-				util.Warning("could not remove volume %s: %v", volName, err)
+			if dockerutil.VolumeExists(volName) {
+				err = dockerutil.RemoveVolume(volName)
+				if err != nil {
+					util.Warning("could not remove volume %s: %v", volName, err)
+				} else {
+					util.Success("Deleting third-party persistent volume %s for service %s...", volName, extraService)
+				}
 			}
 		}
 		dbBuilt := app.GetDBImage() + "-" + app.Name + "-built"
@@ -1469,8 +1475,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 
 		webBuilt := version.GetWebImage() + "-" + app.Name + "-built"
 		_ = dockerutil.RemoveImage(webBuilt)
-
-		util.Success("Project data/database removed from docker volume for project %s", app.Name)
+		util.Success("Project %s was deleted. Your code and configuration are unchanged.", app.Name)
 	}
 
 	_, _, err = app.ProcessHooks("post-stop")
