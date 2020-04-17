@@ -10,8 +10,8 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestDevRestart runs `ddev restart` on the test apps
-func TestDevRestart(t *testing.T) {
+// TestCmdRestart runs `ddev restart` on the test apps
+func TestCmdRestart(t *testing.T) {
 	assert := asrt.New(t)
 	site := TestSites[0]
 	cleanup := site.Chdir()
@@ -29,8 +29,8 @@ func TestDevRestart(t *testing.T) {
 	cleanup()
 }
 
-// TestDevRestartJSON runs `ddev restart -j` on the test apps and harvests and checks the output
-func TestDevRestartJSON(t *testing.T) {
+// TestCmdRestartJSON runs `ddev restart -j` on the test apps and harvests and checks the output
+func TestCmdRestartJSON(t *testing.T) {
 	assert := asrt.New(t)
 	site := TestSites[0]
 	cleanup := site.Chdir()
