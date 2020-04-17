@@ -15,15 +15,16 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev restore-snapshot`.
 * `ddev ssh` opens a bash session in the web container (or other container).
 * `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
-* `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). And `ddev launch -p` will launch the PHPMyAdminUI, and `ddev launch -m` will launch the MailHogUI.
+* `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). `ddev launch -p` will launch the PHPMyAdmin UI, and `ddev launch -m` will launch the MailHog UI.
 * `ddev delete` is the same as `ddev stop --remove-data` and will delete a project's database and ddev's record of the project's existence. It doesn't touch your project or code. `ddev delete -O` will omit the snapshot creation step that would otherwise take place, and `ddev delete images` gets rid of spare Docker images you may have on your machine.
+* `ddev xdebug` enables xdebug, `ddev xdebug off` disables it, `ddev xdebug status` shows status
 
 ## Partial Bundled Tools List
 
 In addition to the *commands* listed above, there are loads and loads of tools included inside the containers:
 
 * `ddev describe` tells how to access **mailhog**, which captures email in your development environment.
-* `ddev describe` tells how to use the built-in **PHPMyAdmin**.
+* `ddev describe` tells how to use the built-in **PHPMyAdmin** and `ddev launch -p` gives direct access to it.
 * Composer, git, node, npm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`.
 * `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
 * sqlite3 and the mysql client are inside the web container (and mysql client is also in the db container).
@@ -59,7 +60,6 @@ cd my-wp-bedrock-site
 ddev config --project-type=wordpress --docroot=web --create-docroot=true
 ddev start
 ddev composer create roots/bedrock
-ddev start
 ```
 
 ```
@@ -139,9 +139,7 @@ cd my-drupal8-site
 ddev config --project-type=drupal8 --docroot=web --create-docroot
 ddev start
 ddev composer create drupal/recommended-project:^8
-ddev composer remove drupal/core-project-message
 ddev composer require drush/drush
-ddev start
 ddev launch
 ```
 
@@ -174,9 +172,7 @@ cd my-drupal9-site
 ddev config --project-type=drupal9 --docroot=web --create-docroot
 ddev start
 ddev composer create drupal/recommended-project:9.0.x-dev
-ddev composer remove drupal/core-project-message
 ddev composer require drush/drush
-ddev start
 ddev launch
 ```
 
@@ -221,7 +217,7 @@ cd my-typo3-site
 ddev config --project-type=typo3 --docroot=public --create-docroot=true
 ddev start
 ddev composer create "typo3/cms-base-distribution:^9" --prefer-dist
-ddev start
+ddev launch
 ```
 
 **On TYPO3 versions < 9 an install may fail if you use the https URL to install because the allowed proxy is not configured yet ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**

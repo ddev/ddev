@@ -154,7 +154,11 @@ ddev composer create --repository=https://repo.magento.com/ magento/project-comm
 		if runtime.GOOS == "windows" && !nodeps.IsDockerToolbox() {
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)
 		}
-
+		// Do a spare start, which will create any needed settings files
+		err = app.Start()
+		if err != nil {
+			util.Failed("Failed to start project after composer create: %v", err)
+		}
 	},
 }
 
