@@ -48,8 +48,8 @@ func SetInstrumentationBaseTags() {
 // getProjectHash combines the machine ID and project name and then
 // hashes the result, so we can end up with a unique project id
 func getProjectHash(projectName string) string {
-	ph := hmac.New(sha256.New, []byte(GetInstrumentationUser() + projectName))
-	ph.Write([]byte("phash"))
+	ph := hmac.New(sha256.New, []byte(GetInstrumentationUser()+projectName))
+	_, _ = ph.Write([]byte("phash"))
 	return hex.EncodeToString(ph.Sum(nil))
 }
 
