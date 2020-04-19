@@ -1,6 +1,9 @@
 package ddevapp
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"github.com/denisbrodbeck/machineid"
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -42,6 +45,14 @@ func SetInstrumentationBaseTags() {
 	}
 }
 
+// getProjectHash combines the machine ID and project name and then
+// hashes the result, so we can end up with a unique project id
+func getProjectHash(projectName string) string {
+	ph := hmac.New(sha256.New, []byte(GetInstrumentationUser()+projectName))
+	_, _ = ph.Write([]byte("phash"))
+	return hex.EncodeToString(ph.Sum(nil))
+}
+
 // SetInstrumentationAppTags creates app-specific tags for Segment
 func (app *DdevApp) SetInstrumentationAppTags() {
 	ignoredProperties := []string{"approot", "hostname", "hostnames", "httpurl", "httpsurl", "httpURLs", "httpsURLs", "primary_url", "mailhog_url", "mailhog_https_url", "name", "phpmyadmin_url", "phpmyadmin_http_url", "router_status_log", "shortroot", "urls"}
@@ -54,6 +65,7 @@ func (app *DdevApp) SetInstrumentationAppTags() {
 			}
 		}
 	}
+	nodeps.InstrumentationTags["ProjectID"] = getProjectHash(app.Name)
 }
 
 // SegmentUser does the enqueue of the Identify action, identifying the user
