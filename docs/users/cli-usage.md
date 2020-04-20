@@ -138,7 +138,7 @@ mkdir my-drupal8-site
 cd my-drupal8-site
 ddev config --project-type=drupal8 --docroot=web --create-docroot
 ddev start
-ddev composer create drupal/recommended-project:^8
+ddev composer create "drupal/recommended-project:^8"
 ddev composer require drush/drush
 ddev launch
 ```
@@ -171,7 +171,7 @@ mkdir my-drupal9-site
 cd my-drupal9-site
 ddev config --project-type=drupal9 --docroot=web --create-docroot
 ddev start
-ddev composer create drupal/recommended-project:9.0.x-dev
+ddev composer create "drupal/recommended-project:9.0.x-dev"
 ddev composer require drush/drush
 ddev launch
 ```
