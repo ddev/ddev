@@ -34,6 +34,7 @@ nvm use 10
 npm install --global markdownlint-cli
 markdownlint --version
 # readthedocs has ancient version of mkdocs in it.
+pyenv global 3.7.0 # added to make CircleCi give us pip3
 pip3 install -q yq mkdocs==0.17.5
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
