@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
@@ -749,7 +750,7 @@ func TestExtraPackages(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestExtraPackages", site.Name))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -761,13 +762,11 @@ func TestExtraPackages(t *testing.T) {
 	_, err = exec.RunCommand("bash", []string{"-c", command})
 	assert.NoError(err)
 
-	oldPHPVersion := app.PHPVersion
-	app.PHPVersion = "7.3"
 	defer func() {
 		_ = app.Stop(true, false)
 		app.WebImageExtraPackages = nil
 		app.DBImageExtraPackages = nil
-		app.PHPVersion = oldPHPVersion
+		app.PHPVersion = nodeps.PHPDefault
 		_ = app.WriteConfig()
 		_ = fileutil.RemoveContents(app.GetConfigPath("web-build"))
 		_ = fileutil.RemoveContents(app.GetConfigPath("db-build"))
@@ -780,13 +779,7 @@ func TestExtraPackages(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	_, _, err = app.Exec(&ExecOpts{
-		Service: "web",
-		Cmd:     "dpkg -s php7.3-gmp",
-	})
-	assert.Error(err)
-	assert.Contains(err.Error(), "exit status 1")
-
+	// Test db container to make sure no ncdu in there at beginning
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     "command -v ncdu",
@@ -794,25 +787,42 @@ func TestExtraPackages(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "exit status 1")
 
-	// Now add the packages and start again, they should be in there
-	app.WebImageExtraPackages = []string{"php7.3-gmp"}
-	app.DBImageExtraPackages = []string{"ncdu"}
-	err = app.Start()
-	assert.NoError(err)
+	for _, v := range nodeps.GetValidPHPVersions() {
+		t.Log("Testing extra packages with PHP" + v)
+		app.PHPVersion = v
 
-	stdout, stderr, err := app.Exec(&ExecOpts{
-		Service: "web",
-		Cmd:     "dpkg -s php7.3-gmp",
-	})
-	assert.NoError(err, "dpkg -s php7.3-gmp failed", stdout, stderr)
+		// Start and make sure that the packages don't exist already
+		err = app.Start()
+		assert.NoError(err)
 
-	stdout, stderr, err = app.Exec(&ExecOpts{
-		Service: "web",
-		Cmd:     "php -i | grep 'gmp support =. enabled'",
-	})
-	assert.NoError(err, "failed to grep for gmp support, stdout=%s, stderr=%s", stdout, stderr)
+		_, _, err = app.Exec(&ExecOpts{
+			Service: "web",
+			Cmd:     "dpkg -s php" + v + "-ldap",
+		})
+		assert.Error(err)
+		assert.Contains(err.Error(), "exit status 1")
 
-	stdout, _, err = app.Exec(&ExecOpts{
+		// Now add the packages and start again, they should be in there
+		app.WebImageExtraPackages = []string{"php" + v + "-ldap"}
+		app.DBImageExtraPackages = []string{"ncdu"}
+		err = app.Start()
+		assert.NoError(err)
+
+		stdout, stderr, err := app.Exec(&ExecOpts{
+			Service: "web",
+			Cmd:     "dpkg -s php" + v + "-ldap",
+		})
+		assert.NoError(err, "dpkg -s php"+v+"-ldap failed", stdout, stderr)
+
+		stdout, stderr, err = app.Exec(&ExecOpts{
+			Service: "web",
+			Cmd:     "php -i | grep 'LDAP Support =. enabled'",
+		})
+		assert.NoError(err, "failed to grep for ldap support, stdout=%s, stderr=%s", stdout, stderr)
+
+	}
+
+	stdout, _, err := app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     "command -v ncdu",
 	})
@@ -868,15 +878,15 @@ func TestTimezoneConfig(t *testing.T) {
 		Cmd:     "printf \"timezone=$(date +%Z)\n\" && php -r 'print \"phptz=\" . date_default_timezone_get();'",
 	})
 	assert.NoError(err)
-	assert.Equal("timezone=CET\nphptz=Europe/Paris", stdout)
+	assert.Regexp(regexp.MustCompile("timezone=CES?T\nphptz=Europe/Paris"), stdout)
 
-	// Make sure db container is also working with Dublin time/IST
+	// Make sure db container is also working with CET
 	stdout, _, err = app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     "echo -n timezone=$(date +%Z)",
 	})
 	assert.NoError(err)
-	assert.Equal("timezone=CET", stdout)
+	assert.Regexp(regexp.MustCompile("timezone=CES?T"), stdout)
 
 	runTime()
 }

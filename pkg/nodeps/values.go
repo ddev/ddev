@@ -1,5 +1,7 @@
 package nodeps
 
+import "sort"
+
 // Providers
 const (
 	ProviderDrudS3   = "drud-s3"
@@ -183,7 +185,7 @@ func GetValidPHPVersions() []string {
 	for p := range ValidPHPVersions {
 		s = append(s, p)
 	}
-
+	sort.Strings(s)
 	return s
 }
 
