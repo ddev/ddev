@@ -211,18 +211,17 @@ Quickstart instructions for database imports can be found under [Database Import
 
 #### TYPO3 Composer Setup Example
 
-```
+```bash
 mkdir my-typo3-site
 cd my-typo3-site
 ddev config --project-type=typo3 --docroot=public --create-docroot=true
 ddev start
-ddev composer create "typo3/cms-base-distribution:^9" --prefer-dist
+ddev composer create "typo3/cms-base-distribution:^10" --prefer-dist
+ddev exec touch public/FIRST_INSTALL
 ddev launch
 ```
 
 **On TYPO3 versions < 9 an install may fail if you use the https URL to install because the allowed proxy is not configured yet ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
-
-If doing a basic TYPO3 install, you can then `touch public/FIRST_INSTALL` and hit the http URL top begin an installation.
 
 To connect to the database within the database container directly, please see the [developer tools page](developer-tools.md#using-development-tools-on-the-host-machine).
 
@@ -230,7 +229,7 @@ To get started using ddev with a TYPO3 project, clone the project's repository a
 
 #### TYPO3 Git Clone Example
 
-```
+```bash
 git clone https://github.com/example/example-site
 cd example-site
 ddev composer install
