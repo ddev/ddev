@@ -699,7 +699,7 @@ func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 }
 
 // ComposeFiles returns a list of compose files for a project.
-// It has to put the .ddev/docker-compose-*.yaml first
+// It has to put the .ddev/docker-compose.*.y*ml first
 // It has to put the docker-compose.override.y*l last
 func (app *DdevApp) ComposeFiles() ([]string, error) {
 	dir, _ := os.Getwd()
@@ -709,9 +709,9 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	files, err := filepath.Glob("docker-compose.*.yaml")
+	files, err := filepath.Glob("docker-compose.*.y*ml")
 	if err != nil {
-		return []string{}, fmt.Errorf("unable to glob docker-compose.*.yaml in %s: err=%v", app.AppConfDir(), err)
+		return []string{}, fmt.Errorf("unable to glob docker-compose.*.y*ml in %s: err=%v", app.AppConfDir(), err)
 	}
 
 	mainfile := app.DockerComposeYAMLPath()
