@@ -619,7 +619,7 @@ The `ddev ssh` command will open an interactive bash or sh shell session to the 
 If you want to use your personal ssh keys within the web container, that's possible. 
 
 * copy the required keys to .ddev/homeadditions/.ssh, and a prepared SSH-Config (.ddev/homeadditions/.ssh/config), see [In-Container home directory configuration](users/extend/in-container-configuration.md)
-* restart via `ddev restart` so that ddev can copy them into the ssh-agent service
+* restart via `ddev restart` so that ddev can copy them into the web service
 * finaly use `ddev auth ssh` to add the keys from your ~/.ssh directory and provide a passphrase
 
 And then those keys will be usable from within the web container. You generally only have to `ddev auth ssh` one time per computer reboot.
