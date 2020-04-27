@@ -679,6 +679,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
 		listener, err := net.Listen("tcp", ":9000")
 		assert.NoError(err)
+		if err != nil || listener == nil {
+			continue
+		}
 
 		// Curl to the project's index.php or anything else
 		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 1)
