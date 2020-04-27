@@ -794,38 +794,39 @@ func TestExtraPackages(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "exit status 1")
 
+	addedPackage := "tidy"
+	addedPackageTitle := "Tidy"
 	for _, v := range nodeps.GetValidPHPVersions() {
 		t.Log("Testing extra packages with PHP" + v)
 		app.PHPVersion = v
-
 		// Start and make sure that the packages don't exist already
 		err = app.Start()
 		assert.NoError(err)
 
 		_, _, err = app.Exec(&ExecOpts{
 			Service: "web",
-			Cmd:     "dpkg -s php" + v + "-ldap",
+			Cmd:     "dpkg -s php" + v + "-" + addedPackage,
 		})
 		assert.Error(err)
 		assert.Contains(err.Error(), "exit status 1")
 
 		// Now add the packages and start again, they should be in there
-		app.WebImageExtraPackages = []string{"php" + v + "-ldap"}
+		app.WebImageExtraPackages = []string{"php" + v + "-" + addedPackage}
 		app.DBImageExtraPackages = []string{"ncdu"}
 		err = app.Start()
 		assert.NoError(err)
 
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			Service: "web",
-			Cmd:     "dpkg -s php" + v + "-ldap",
+			Cmd:     "dpkg -s php" + v + "-" + addedPackage,
 		})
-		assert.NoError(err, "dpkg -s php"+v+"-ldap failed", stdout, stderr)
+		assert.NoError(err, "dpkg -s php%s-%s failed", v, addedPackage, stdout, stderr)
 
 		stdout, stderr, err = app.Exec(&ExecOpts{
 			Service: "web",
-			Cmd:     "php -i | grep 'LDAP Support =. enabled'",
+			Cmd:     fmt.Sprintf("php -i | grep  '%s support =. enabled'", addedPackageTitle),
 		})
-		assert.NoError(err, "failed to grep for ldap support, stdout=%s, stderr=%s", stdout, stderr)
+		assert.NoError(err, "failed to grep for %s support, stdout=%s, stderr=%s", addedPackage, stdout, stderr)
 
 	}
 
