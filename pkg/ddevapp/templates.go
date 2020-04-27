@@ -280,7 +280,7 @@ const ConfigInstructions = `
 # unless explicitly specified.
 
 # phpmyadmin_port: "8036"
-# phpmyadmin_https_port: "8037{"
+# phpmyadmin_https_port: "8037"
 # The PHPMyAdmin ports can be changed from the default 8036 and 8037
 
 # mailhog_port: "8025"
