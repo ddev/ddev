@@ -616,7 +616,13 @@ Commands can also be executed using the shorter `ddev . <cmd>` alias.
 
 The `ddev ssh` command will open an interactive bash or sh shell session to the container for a ddev service. The web service is connected to by default. The session can be ended by typing `exit`. To connect to another service, use the `--service` flag to specify the service you want to connect to. For example, to connect to the database container, you would run `ddev ssh --service db`. To specify the destination directory, use the `--dir` flag. For example, to connect to the database container and be placed into the `/home` directory, you would run `ddev ssh --service db --dir /home`.
 
-If you want to use your personal ssh keys within the web container, that's possible. Use `ddev auth ssh` to add the keys from your ~/.ssh directory and provide a passphrase, and then those keys will be usable from within the web container. You generally only have to `ddev auth ssh` one time per computer reboot.
+If you want to use your personal ssh keys within the web container, that's possible. 
+
+* copy the required keys to .ddev/homeadditions/.ssh, and a prepared SSH-Config (.ddev/homeadditions/.ssh/config), see [In-Container home directory configuration](users/extend/in-container-configuration.md)
+* restart via `ddev restart` so that ddev can copy them into the ssh-agent service
+* finaly use `ddev auth ssh` to add the keys from your ~/.ssh directory and provide a passphrase
+
+And then those keys will be usable from within the web container. You generally only have to `ddev auth ssh` one time per computer reboot.
 
 ### Log Access
 
