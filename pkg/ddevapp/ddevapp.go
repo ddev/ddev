@@ -1247,7 +1247,11 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 // before returning.
 // extraSleep arg in seconds is the time to wait if > 0
 func (app *DdevApp) StartAndWait(extraSleep int) error {
-	err := app.Start()
+	err := dockerutil.InvalidateDockerWindowsCache()
+	if err != nil {
+		return fmt.Errorf("unable to invalidate windows cache")
+	}
+	err = app.Start()
 	if err != nil {
 		return err
 	}
