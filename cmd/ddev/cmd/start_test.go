@@ -1,11 +1,10 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/stretchr/testify/require"
 	"path/filepath"
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/require"
 
 	"os"
 
@@ -86,7 +85,8 @@ func TestCmdStartMissingProjectDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	// Docker seems not always to release resources already, so sleep a bit before rename
-	time.Sleep(2 * time.Second)
+	err = dockerutil.InvalidateDockerWindowsCache()
+	assert.NoError(err, "unable to invalidate docker cache")
 
 	err = os.Chdir(projDir)
 	assert.NoError(err)

@@ -1971,7 +1971,8 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 
 	_ = app.Stop(false, false)
 	// Docker seems not always to release resources already, so sleep a bit before rename
-	time.Sleep(2 * time.Second)
+	err = dockerutil.InvalidateDockerWindowsCache()
+	assert.NoError(err, "unable to invalidate docker cache")
 
 	// Move the site directory to a temp location to mimic a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
@@ -2070,7 +2071,8 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 	err = app.Stop(false, false)
 	assert.NoError(err)
 	// Docker seems not always to release resources already, so sleep a bit before rename
-	time.Sleep(2 * time.Second)
+	err = dockerutil.InvalidateDockerWindowsCache()
+	assert.NoError(err, "unable to invalidate docker cache")
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 

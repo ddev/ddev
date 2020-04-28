@@ -739,7 +739,18 @@ func RemoveImage(tag string) error {
 	if err == nil {
 		util.Success("Deleting docker image %s", tag)
 	} else {
-		util.Warning("Failed to delete %s: %v", tag, err)
+		util.Warning("Unable to delete %s: %v", tag, err)
 	}
 	return nil
+}
+
+// InvalidateDockerWindowsCache On Windows, invalidate the docker cache since it's asynchronous
+// Synchronously delete docker cache so these things don't show up in the next test
+// Suggested in https://github.com/docker/for-win/issues/5530#issuecomment-620812432
+func InvalidateDockerWindowsCache() error {
+	if runtime.GOOS != "windows" || nodeps.IsDockerToolbox() {
+		return nil
+	}
+	_, _, err := RunSimpleContainer("djs55/grpcfuse-control:2.2.0.5", "", []string{"invalidate", "all"}, nil, nil, nil, "0", true)
+	return err
 }

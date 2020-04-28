@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mitchellh/go-homedir"
@@ -657,7 +658,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	defer func() {
+	t.Cleanup(func() {
 		_ = app.Stop(true, false)
 		for _, item := range []string{"apache", "php", "mysql", "nginx", "nginx-site.conf"} {
 			f := app.GetConfigPath(item)
@@ -666,7 +667,10 @@ func TestConfigOverrideDetection(t *testing.T) {
 				t.Logf("failed to delete %s: %v", f, err)
 			}
 		}
-	}()
+
+		err = dockerutil.InvalidateDockerWindowsCache()
+		assert.NoError(err, "unable to invalidate docker cache")
+	})
 
 	restoreOutput := util.CaptureUserOut()
 	startErr := app.StartAndWait(2)
