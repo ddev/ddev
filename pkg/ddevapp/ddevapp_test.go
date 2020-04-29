@@ -679,6 +679,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
 		listener, err := net.Listen("tcp", ":9000")
 		assert.NoError(err)
+		if err != nil || listener == nil {
+			continue
+		}
 
 		// Curl to the project's index.php or anything else
 		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 1)
@@ -1968,7 +1971,8 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 
 	_ = app.Stop(false, false)
 	// Docker seems not always to release resources already, so sleep a bit before rename
-	time.Sleep(2 * time.Second)
+	err = dockerutil.InvalidateDockerWindowsCache()
+	assert.NoError(err, "unable to invalidate docker cache")
 
 	// Move the site directory to a temp location to mimic a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
@@ -2067,7 +2071,8 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 	err = app.Stop(false, false)
 	assert.NoError(err)
 	// Docker seems not always to release resources already, so sleep a bit before rename
-	time.Sleep(2 * time.Second)
+	err = dockerutil.InvalidateDockerWindowsCache()
+	assert.NoError(err, "unable to invalidate docker cache")
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 

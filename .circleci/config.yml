@@ -11,7 +11,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v11
+        - linux-v12
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
@@ -34,7 +34,7 @@ jobs:
         root: ~/
         paths: ddev
     - save_cache:
-        key: linux-v11
+        key: linux-v12
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -52,7 +52,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v11
+        - linux-v12
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
@@ -66,7 +66,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v11
+        key: linux-v12
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -173,7 +173,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v11
+        - linux-v12
     - attach_workspace:
         at: ~/
     - run:
@@ -188,7 +188,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v11
+        key: linux-v12
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -206,7 +206,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v11
+        - linux-v12
     - attach_workspace:
         at: ~/
     - run:
@@ -219,7 +219,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v11
+        key: linux-v12
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -237,7 +237,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v11
+        - linux-v12
     - attach_workspace:
         at: ~/
     - run:
@@ -253,7 +253,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v11
+        key: linux-v12
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -268,7 +268,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v11
+        - linux-v12
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
@@ -287,7 +287,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v11
+        - linux-v12
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
@@ -305,7 +305,7 @@ jobs:
           done
         name: linux container test
     - save_cache:
-        key: linux-v11
+        key: linux-v12
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -340,7 +340,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v11
+        - linux-v12
     - attach_workspace:
         at: ~/
     - run:
@@ -348,7 +348,7 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-v11
+        key: linux-v12
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -369,12 +369,12 @@ jobs:
 #      - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
 #      - restore_cache:
 #          keys:
-#          - linux-v11
+#          - linux-v12
 #      - run:
 #          command: ./.circleci/linux_circle_vm_setup.sh
 #          name: TAG BUILD Circle VM setup - tools, docker, golang
 #      - save_cache:
-#          key: linux-v11
+#          key: linux-v12
 #          paths:
 #          - /home/linuxbrew
 #          - ~/.ddev/testcache
