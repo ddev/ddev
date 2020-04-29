@@ -17,16 +17,16 @@ while :; do
              ;;
          -p|--phpmyadmin)
             if [ "${HTTPS}" = "" ]; then
-                FULLURL="http://${DDEV_HOSTNAME}:${DDEV_PHPMYADMIN_PORT}"
+                FULLURL="${FULLURL}:${DDEV_PHPMYADMIN_PORT}"
             else
-                FULLURL="https://${DDEV_HOSTNAME}:${DDEV_PHPMYADMIN_HTTPS_PORT}"
+                FULLURL="${FULLURL}:${DDEV_PHPMYADMIN_HTTPS_PORT}"
             fi
              ;;
          -m|--mailhog)
             if [ "${HTTPS}" = "" ]; then
-                FULLURL="http://${DDEV_HOSTNAME}:${DDEV_MAILHOG_PORT}"
+                FULLURL="${FULLURL}:${DDEV_MAILHOG_PORT}"
             else
-                FULLURL="https://${DDEV_HOSTNAME}:${DDEV_MAILHOG_HTTPS_PORT}"
+                FULLURL="${FULLURL}:${DDEV_MAILHOG_HTTPS_PORT}"
             fi
              ;;
 
