@@ -3,9 +3,8 @@ package cmd
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/stretchr/testify/require"
-	"testing"
-
 	"os"
+	"testing"
 
 	"path/filepath"
 

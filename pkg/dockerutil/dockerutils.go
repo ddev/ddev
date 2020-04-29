@@ -751,6 +751,8 @@ func InvalidateDockerWindowsCache() error {
 	if runtime.GOOS != "windows" || nodeps.IsDockerToolbox() {
 		return nil
 	}
-	_, err := exec2.RunCommand("sh", []string{"-c", "docker run --rm djs55/grpcfuse-control:2.2.0.5 invalidate all"})
+	_, _, err := RunSimpleContainer("djs55/grpcfuse-control:2.2.0.5", "", []string{"invalidate", "all"}, nil, nil, []string{"/run:/run"}, "0", true)
+	// For extra credit, a sleep
+	time.Sleep(2 * time.Second)
 	return err
 }
