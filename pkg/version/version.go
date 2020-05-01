@@ -10,7 +10,7 @@ import (
 )
 
 // MariaDBDefaultVersion is the default version we use in the db container
-const MariaDBDefaultVersion = "10.2"
+const MariaDBDefaultVersion = "10.3"
 
 // VERSION is supplied with the git committish this is built from
 var VERSION = ""
