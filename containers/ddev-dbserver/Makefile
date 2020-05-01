@@ -87,11 +87,10 @@ test: container
 
 clean:
 	for item in $(MARIADB_VERSIONS); do \
-		@if docker image inspect $(DOCKER_REPO)-mariadb-4$item:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mariadb-4$item:$(VERSION); fi
+		if docker image inspect $(DOCKER_REPO)-mariadb-${item}:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mariadb-$${item}:$(VERSION); fi; \
 	done
 	for item in $(MYSQL_VERSIONS); do \
-		@if docker image inspect $(DOCKER_REPO)-myql-4$item:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mysql-4$item:$(VERSION); fi
+		if docker image inspect $(DOCKER_REPO)-mysql-${item}:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mysql-$${item}:$(VERSION); fi; \
 	done
-
 	@rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
 
