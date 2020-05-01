@@ -37,6 +37,7 @@ const (
 	MariaDB102 = "10.2"
 	MariaDB103 = "10.3"
 	MariaDB104 = "10.4"
+	MariaDB105 = "10.5"
 )
 
 // Oracle MySQL versions
@@ -83,6 +84,7 @@ var ValidMariaDBVersions = map[string]bool{
 	MariaDB102: true,
 	MariaDB103: true,
 	MariaDB104: true,
+	MariaDB105: true,
 }
 
 var ValidMySQLVersions = map[string]bool{

@@ -11,7 +11,7 @@ trap cleanup EXIT
 
 export tag=20191007_many_mariadb
 export DB_TYPE=mariadb
-for v in 5.5 10.0 10.0 10.1 10.2 10.3 10.4; do
+for v in 5.5 10.0 10.0 10.1 10.2 10.3 10.4 10.5; do
     export IMAGE="drud/ddev-dbserver-$DB_TYPE-$v:$tag"
     export DB_VERSION=$v
     # /usr/local/bin is added for git-bash, where it may not be in the $PATH.
