@@ -1,3 +1,4 @@
+#ddev-generated
 Scripts in this directory will be executed inside the solr
 container (if it exists, of course). This is just an example,
 but any named service can have a directory with commands.
