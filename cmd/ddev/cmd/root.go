@@ -37,6 +37,10 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 		ignores := []string{"version", "config", "hostname", "help", "auth", "import-files"}
 		command := strings.Join(os.Args[1:], " ")
 
+		// LogSetup() has already been done, but now needs to be done
+		// again *after* --json flag is parsed.
+		output.LogSetUp()
+
 		// Skip docker validation for any command listed in "ignores"
 		for _, k := range ignores {
 			if strings.Contains(command, k) {
