@@ -119,8 +119,8 @@ for v in 5.6 7.0 7.1 7.2 7.3 7.4; do
 done
 
 # Run various project_types and check behavior.
-for project_type in drupal6 drupal7 drupal8 typo3 backdrop wordpress default; do
-	PHP_VERSION="7.1"
+for project_type in drupal6 drupal7 drupal8 drupal9 typo3 backdrop wordpress default; do
+	PHP_VERSION="7.3"
 
 	if [ "$project_type" == "drupal6" ]; then
 	  PHP_VERSION="5.6"
