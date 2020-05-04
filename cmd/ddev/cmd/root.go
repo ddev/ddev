@@ -37,8 +37,6 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 		ignores := []string{"version", "config", "hostname", "help", "auth", "import-files"}
 		command := strings.Join(os.Args[1:], " ")
 
-		output.LogSetUp()
-
 		// Skip docker validation for any command listed in "ignores"
 		for _, k := range ignores {
 			if strings.Contains(command, k) {
@@ -145,6 +143,8 @@ func Execute() {
 
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
+
+	output.LogSetUp()
 
 	err := populateExamplesAndCommands()
 	if err != nil {

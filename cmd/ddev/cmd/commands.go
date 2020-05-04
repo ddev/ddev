@@ -49,7 +49,6 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		}
 
 		for _, commandName := range commandFiles {
-
 			// Use path.Join() for the inContainerFullPath because it's about the path in the container, not on the
 			// host; a Windows path is not useful here.
 			inContainerFullPath := path.Join("/mnt/ddev_config/commands", service, commandName)
@@ -61,7 +60,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 			// Any command we find will want to be executable on Linux
 			_ = os.Chmod(onHostFullPath, 0755)
-
+			if hasCR, _ := fileutil.FgrepStringInFile(onHostFullPath, "\r\n"); hasCR {
+				util.Warning("command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
+				continue
+			}
 			description := findDirectiveInScript(onHostFullPath, "## Description")
 			if description == "" {
 				description = commandName
