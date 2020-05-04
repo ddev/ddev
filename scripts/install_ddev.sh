@@ -73,6 +73,7 @@ if command -v brew >/dev/null &&  [ -f "$(brew --prefix)/etc/bash_completion" ];
 else
 	printf "${YELLOW}Bash completion for ddev was not installed. You may manually install /tmp/ddev_bash_completion.sh in your bash_completions.d directory.${RESET}\n"
 fi
+printf "${YELLOW}If you use zsh, you may manually install ddev completions with \"cp /tmp/_ddev <your_fpath>\".${RESET}\n"
 
 rm /tmp/$TARBALL /tmp/$SHAFILE
 
