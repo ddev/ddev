@@ -51,7 +51,7 @@ fi
 $BUILTPATH/ddev_gen_autocomplete
 
 for dir in .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64; do
-  cp .gotmp/bin/ddev_bash_completion.sh $dir
+  cp .gotmp/bin/ddev_*completion* $dir
 done
 
 # Generate macOS tarball/zipball
