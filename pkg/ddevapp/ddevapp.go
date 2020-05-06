@@ -719,7 +719,7 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 		return nil, fmt.Errorf("failed to find %s", mainfile)
 	}
 
-	overrides, err := filepath.Glob("docker-compose.override.yaml")
+	overrides, err := filepath.Glob("docker-compose.override.y*ml")
 	util.CheckErr(err)
 
 	orderedFiles := make([]string, 1)
