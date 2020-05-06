@@ -35,6 +35,14 @@ func TestSetInstrumentationAppTags(t *testing.T) {
 	for k := range nodeps.InstrumentationTags {
 		assert.NotContains(strings.ToLower(k), "url")
 	}
-	assert.NotEmpty(nodeps.InstrumentationTags["ProjectID"])
+
+	for _, unwanted := range []string{"approot", "hostname", "hostnames", "name", "router_status_log", "shortroot"} {
+		assert.Empty(nodeps.InstrumentationTags[unwanted])
+	}
+
+	// Make sure that expected attributes come through
+	for _, wanted := range []string{"dbimg", "dbaimg", "nfs_mount_enabled", "ProjectID", "php_version", "router_http_port", "router_https_port", "router_status", "ssh_agent_status", "status", "type", "webimg", "webserver_type"} {
+		assert.NotEmpty(nodeps.InstrumentationTags[wanted], "tag '%s' was not found and it should have been", wanted)
+	}
 	runTime()
 }

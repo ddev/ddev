@@ -60,14 +60,13 @@ func (app *DdevApp) SetInstrumentationAppTags() {
 
 		describeTags, _ := app.Describe()
 		for key, val := range describeTags {
-			// Make sure none of the "URL" attributes comes through
-			if strings.Contains(strings.ToLower(key), "url") {
+			// Make sure none of the "URL" attributes or the ignoredProperties comes through
+			if strings.Contains(strings.ToLower(key), "url") || nodeps.ArrayContainsString(ignoredProperties, key) {
 				continue
 			}
-			if !nodeps.ArrayContainsString(ignoredProperties, key) {
-				nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
-			}
+			nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
 		}
+
 	nodeps.InstrumentationTags["ProjectID"] = getProjectHash(app.Name)
 }
 
