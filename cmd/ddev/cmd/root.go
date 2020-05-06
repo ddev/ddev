@@ -168,7 +168,7 @@ func instrumentationNotSetUpWarning() {
 // from the last saved version. If it is, prompt to request anon ddev usage stats
 // and update the info.
 func checkDdevVersionAndOptInInstrumentation() error {
-	if !output.JSONOutput && semver.Compare(version.COMMIT, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation {
+	if !output.JSONOutput && semver.Compare(version.VERSION, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/stable/users/cli-usage/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true

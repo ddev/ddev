@@ -26,15 +26,16 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+
+		// Look for version change and opt-in to instrumentation if it has changed.
+		err := checkDdevVersionAndOptInInstrumentation()
+		if err != nil {
+			util.Failed(err.Error())
+		}
+
 		projects, err := getRequestedProjects(args, startAll)
 		if err != nil {
 			util.Failed("Failed to get project(s): %v", err)
-		}
-
-		// Look for version change and opt-in to instrumentation if it has changed.
-		err = checkDdevVersionAndOptInInstrumentation()
-		if err != nil {
-			util.Failed(err.Error())
 		}
 
 		for _, project := range projects {
