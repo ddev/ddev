@@ -14,6 +14,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -55,14 +56,18 @@ func getProjectHash(projectName string) string {
 
 // SetInstrumentationAppTags creates app-specific tags for Segment
 func (app *DdevApp) SetInstrumentationAppTags() {
-	ignoredProperties := []string{"approot", "hostname", "hostnames", "httpurl", "httpsurl", "httpURLs", "httpsURLs", "primary_url", "mailhog_url", "mailhog_https_url", "name", "phpmyadmin_url", "phpmyadmin_https_url", "router_status_log", "shortroot", "urls"}
+	ignoredProperties := []string{"approot", "hostname", "hostnames", "name", "router_status_log", "shortroot"}
 
-	describeTags, _ := app.Describe()
-	for key, val := range describeTags {
-		if !nodeps.ArrayContainsString(ignoredProperties, key) {
-			nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
+		describeTags, _ := app.Describe()
+		for key, val := range describeTags {
+			// Make sure none of the "URL" attributes comes through
+			if strings.Contains(strings.ToLower(key), "url") {
+				continue
+			}
+			if !nodeps.ArrayContainsString(ignoredProperties, key) {
+				nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
+			}
 		}
-	}
 	nodeps.InstrumentationTags["ProjectID"] = getProjectHash(app.Name)
 }
 
