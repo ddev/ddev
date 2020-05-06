@@ -58,7 +58,9 @@ func getProjectHash(projectName string) string {
 func (app *DdevApp) SetInstrumentationAppTags() {
 	ignoredProperties := []string{"approot", "hostname", "hostnames", "name", "router_status_log", "shortroot"}
 
-		describeTags, _ := app.Describe()
+	describeTags, _ := app.Describe()
+
+	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		for key, val := range describeTags {
 			// Make sure none of the "URL" attributes or the ignoredProperties comes through
 			if strings.Contains(strings.ToLower(key), "url") || nodeps.ArrayContainsString(ignoredProperties, key) {
@@ -66,7 +68,6 @@ func (app *DdevApp) SetInstrumentationAppTags() {
 			}
 			nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
 		}
-
 	nodeps.InstrumentationTags["ProjectID"] = getProjectHash(app.Name)
 }
 
