@@ -3,7 +3,6 @@ package globalconfig
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -64,11 +63,6 @@ func ValidateGlobalConfig() error {
 // ReadGlobalConfig() reads the global config file into DdevGlobalConfig
 func ReadGlobalConfig() error {
 	globalConfigFile := GetGlobalConfigPath()
-	// This is added just so we can see it in global; not checked.
-	// Make sure that LastStartedVersion always has a valid value
-	if DdevGlobalConfig.LastStartedVersion == "" {
-		DdevGlobalConfig.LastStartedVersion = version.DdevVersion
-	}
 
 	// Can't use fileutil.FileExists() here because of import cycle.
 	if _, err := os.Stat(globalConfigFile); err != nil {
@@ -104,6 +98,11 @@ func ReadGlobalConfig() error {
 	}
 	if DdevGlobalConfig.MkcertCARoot == "" {
 		DdevGlobalConfig.MkcertCARoot = readCAROOT()
+	}
+	// This is added just so we can see it in global; not checked.
+	// Make sure that LastStartedVersion always has a valid value
+	if DdevGlobalConfig.LastStartedVersion == "" {
+		DdevGlobalConfig.LastStartedVersion = "v0.0"
 	}
 
 	err = ValidateGlobalConfig()

@@ -57,12 +57,10 @@ func getProjectHash(projectName string) string {
 func (app *DdevApp) SetInstrumentationAppTags() {
 	ignoredProperties := []string{"approot", "hostname", "hostnames", "httpurl", "httpsurl", "httpURLs", "httpsURLs", "primary_url", "mailhog_url", "mailhog_https_url", "name", "phpmyadmin_url", "phpmyadmin_http_url", "router_status_log", "shortroot", "urls"}
 
-	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		describeTags, _ := app.Describe()
-		for key, val := range describeTags {
-			if !nodeps.ArrayContainsString(ignoredProperties, key) {
-				nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
-			}
+	describeTags, _ := app.Describe()
+	for key, val := range describeTags {
+		if !nodeps.ArrayContainsString(ignoredProperties, key) {
+			nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
 		}
 	}
 	nodeps.InstrumentationTags["ProjectID"] = getProjectHash(app.Name)
