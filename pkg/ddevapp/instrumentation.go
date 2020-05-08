@@ -38,6 +38,13 @@ func SetInstrumentationBaseTags() {
 		isToolbox := nodeps.IsDockerToolbox()
 
 		nodeps.InstrumentationTags["OS"] = runtime.GOOS
+		if runtime.GOOS == "linux" {
+			wslDistro := os.Getenv("WSL_DISTRO_NAME")
+			if wslDistro != "" {
+				nodeps.InstrumentationTags["isWSL"] = "true"
+				nodeps.InstrumentationTags["wslDistro"] = wslDistro
+			}
+		}
 		nodeps.InstrumentationTags["dockerVersion"] = dockerVersion
 		nodeps.InstrumentationTags["dockerComposeVersion"] = composeVersion
 		nodeps.InstrumentationTags["dockerToolbox"] = strconv.FormatBool(isToolbox)
