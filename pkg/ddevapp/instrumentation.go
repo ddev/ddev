@@ -14,6 +14,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -37,6 +38,13 @@ func SetInstrumentationBaseTags() {
 		isToolbox := nodeps.IsDockerToolbox()
 
 		nodeps.InstrumentationTags["OS"] = runtime.GOOS
+		if runtime.GOOS == "linux" {
+			wslDistro := os.Getenv("WSL_DISTRO_NAME")
+			if wslDistro != "" {
+				nodeps.InstrumentationTags["isWSL"] = "true"
+				nodeps.InstrumentationTags["wslDistro"] = wslDistro
+			}
+		}
 		nodeps.InstrumentationTags["dockerVersion"] = dockerVersion
 		nodeps.InstrumentationTags["dockerComposeVersion"] = composeVersion
 		nodeps.InstrumentationTags["dockerToolbox"] = strconv.FormatBool(isToolbox)
@@ -55,13 +63,15 @@ func getProjectHash(projectName string) string {
 
 // SetInstrumentationAppTags creates app-specific tags for Segment
 func (app *DdevApp) SetInstrumentationAppTags() {
-	ignoredProperties := []string{"approot", "hostname", "hostnames", "httpurl", "httpsurl", "httpURLs", "httpsURLs", "primary_url", "mailhog_url", "mailhog_https_url", "name", "phpmyadmin_url", "phpmyadmin_http_url", "router_status_log", "shortroot", "urls"}
+	ignoredProperties := []string{"approot", "hostname", "hostnames", "name", "router_status_log", "shortroot"}
 
 	describeTags, _ := app.Describe()
 	for key, val := range describeTags {
-		if !nodeps.ArrayContainsString(ignoredProperties, key) {
-			nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
+		// Make sure none of the "URL" attributes or the ignoredProperties comes through
+		if strings.Contains(strings.ToLower(key), "url") || nodeps.ArrayContainsString(ignoredProperties, key) {
+			continue
 		}
+		nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
 	}
 	nodeps.InstrumentationTags["ProjectID"] = getProjectHash(app.Name)
 }

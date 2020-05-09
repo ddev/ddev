@@ -194,6 +194,17 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc["httpsURLs"] = httpsURLs
 	appDesc["urls"] = allURLs
 
+	if app.MySQLVersion != "" {
+		appDesc["database_type"] = "mysql"
+		appDesc["mysql_version"] = app.MySQLVersion
+	} else {
+		appDesc["database_type"] = "mariadb" // default
+		appDesc["mariadb_version"] = app.MariaDBVersion
+		if app.MariaDBVersion == "" {
+			appDesc["mariadb_version"] = version.MariaDBDefaultVersion
+		}
+	}
+
 	// Only show extended status for running sites.
 	if app.SiteStatus() == SiteRunning {
 		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
