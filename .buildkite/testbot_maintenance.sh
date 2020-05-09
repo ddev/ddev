@@ -19,14 +19,18 @@ if ! command -v ngrok >/dev/null; then
     esac
 fi
 
-# Upgrade mkcert on macOS
+# Upgrade various items on various operating systems
 case $os in
 darwin)
-    brew upgrade mkcert || brew install mkcert || true
-    brew upgrade golang || brew install golang || true
+    for item in mkcert golang bats-core ddev; do
+        brew upgrade $item || brew install $item || true
+    done
     ;;
 windows)
     choco upgrade -y mkcert golang
+    if [ "$(bats --version)" != "Bats 1.2.0" ]; then
+        cd ~/workspace/bats-core/ && git fetch && git checkout v1.2.0 && ./install.sh /usr/local
+    fi
     ;;
 esac
 
