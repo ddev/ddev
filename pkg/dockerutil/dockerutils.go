@@ -650,7 +650,11 @@ func MassageWindowsHostMountpoint(mountPoint string) string {
 	if string(mountPoint[1]) == ":" {
 		pathPortion := strings.Replace(mountPoint[2:], `\`, "/", -1)
 		drive := strings.ToLower(string(mountPoint[0]))
-		mountPoint = "//" + drive + pathPortion
+		mountPoint = "/" + drive + pathPortion
+
+		if nodeps.IsDockerToolbox() {
+			mountPoint = "//" + drive + pathPortion
+		}
 	}
 	return mountPoint
 }
