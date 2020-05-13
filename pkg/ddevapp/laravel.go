@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
-	"os"
 	"path/filepath"
 )
 
@@ -14,10 +13,7 @@ const (
 
 // isLaravelApp returns true if the app is of type laravel
 func isLaravelApp(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, "artisan")); err == nil {
-		return true
-	}
-	return false
+	return fileutil.FileExists(filepath.Join(app.AppRoot, "artisan"))
 }
 
 // setLaravelSiteSettingsPaths sets the paths to .env
