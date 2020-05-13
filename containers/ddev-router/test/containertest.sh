@@ -6,7 +6,7 @@ set -o nounset
 set -x
 
 # As of Docker 2.3.0.2 May 2020, the mount of /var/run/docker.sock doesn't seem to be possible any more.
-if [ "$OS" = "Windows_NT" ]; then exit; fi
+if [ "${OS:-$(uname)}" = "Windows_NT" ]; then exit; fi
 
 DOCKER_IMAGE=$(awk '{print $1}' .docker_image)
 CONTAINER_NAME=ddev-router-test
