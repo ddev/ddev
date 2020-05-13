@@ -300,6 +300,34 @@ You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guid
 
 Note that Magento 2 is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
 
+### Laravel Quickstart
+
+Get started with Laravel projects on ddev either using a new or existing composer project or by cloning a git repository.
+
+#### Laravel Composer Setup Example
+
+```
+mkdir my-laravel-app
+cd my-laravel-app
+ddev config --project-type=laravel --docroot=public --create-docroot
+ddev start
+ddev composer create --prefer-dist laravel/laravel
+ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
+ddev exec "php artisan key:generate"
+ddev launch
+```
+
+#### Laravel Git Clone Example
+
+Note that the git URL shown below is an example only, you'll need to use your own project.
+
+```
+git clone https://github.com/example/example-site
+cd example-site
+ddev config --project-type=laravel
+ddev composer install
+```
+
 ### Database Imports
 
 Import a database with just one command; We offer support for several file formats, including: **.sql, sql.gz, mysql, mysql.gz, tar, tar.gz, and zip**.
