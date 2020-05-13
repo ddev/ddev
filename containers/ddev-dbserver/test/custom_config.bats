@@ -14,7 +14,7 @@ function setup {
     export MOUNTGID=98
 
     # Homebrew mysql client realy really wants /usr/local/etc/my.cnf.d
-    if [ "${OS}" != "Windows_NT" ] && [ ! -d /usr/local/etc/my.cnf.d ]; then
+    if [ "${OS:-$(uname)}" != "Windows_NT" ] && [ ! -d /usr/local/etc/my.cnf.d ]; then
         mkdir -p /usr/local/etc/my.cnf.d || sudo mkdir -p /usr/local/etc/my.cnf.d
     fi
     docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
