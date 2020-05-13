@@ -278,7 +278,8 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 					// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
 					for envName, envVal := range env {
 						if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
-							portSpecs := strings.Split(envVal.(string), ",")
+							envValStr := fmt.Sprintf("%s", envVal)
+							portSpecs := strings.Split(envValStr, ",")
 							// There might be more than one exposed UI port, but this only handles the first listed,
 							// most often there's only one.
 							if len(portSpecs) > 0 {
