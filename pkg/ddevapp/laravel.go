@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	WarnTypeAbsent          = iota
-	WarnTypeNotConfigured   = iota
+	WarnTypeAbsent        = iota
+	WarnTypeNotConfigured = iota
 )
 
 // isLaravelApp returns true if the app is of type laravel
@@ -29,7 +29,7 @@ func envSettingsWarning(status int) {
 		srcFile += ".example"
 		message = "Don't forget to create the .env file with proper database settings"
 	}
-	
+
 	util.Warning(message)
 	util.Warning("You can do it with this one-liner:")
 	util.Warning("ddev exec \"cat %v | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\\1=db/g' > .env\"", srcFile)
