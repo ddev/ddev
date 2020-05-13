@@ -5,6 +5,9 @@ set -o pipefail
 set -o nounset
 set -x
 
+# As of Docker 2.3.0.2 May 2020, the mount of /var/run/docker.sock doesn't seem to be possible any more.
+if [ "$OS" = "Windows_NT" ]; then exit; fi
+
 DOCKER_IMAGE=$(awk '{print $1}' .docker_image)
 CONTAINER_NAME=ddev-router-test
 
@@ -38,7 +41,7 @@ mkcert -install
 docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache busybox sh -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
 
 # Run the router alone
-docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 -v //var/run/docker.sock:/tmp/docker.sock:ro -v ddev-global-cache:/mnt/ddev-global-cache --name ddev-router-test -d $DOCKER_IMAGE
+docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 --mount "type=bind,src=/var/run/docker.sock,target=/tmp/docker.sock" -v ddev-global-cache:/mnt/ddev-global-cache --name ddev-router-test -d $DOCKER_IMAGE
 
 CONTAINER_NAME=ddev-router-test
 
