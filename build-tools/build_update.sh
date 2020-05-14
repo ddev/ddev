@@ -4,11 +4,14 @@
 
 set -e
 
-base_url=$(curl -s -I https://github.com/drud/build-tools/releases/latest | awk '/^Location/ {gsub(/[\n\r]/,"",$2);  printf "%s", $2}')
-tag=${base_url##*/}
+LATEST_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/drud/build-tools/releases/latest)
+# The releases are returned in the format {"id":3622206,"tag_name":"hello-1.0.0.11",...}, we have to extract the tag_name.
+LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
+URL="https://github.com/drud/build-tools/releases/download/$LATEST_VERSION"
+tag=${LATEST_VERSION}
 
 tarball_url="https://github.com/drud/build-tools/archive/$tag.tar.gz"
-internal_name=build-tools-$tag
+internal_name=build-tools-${tag#v}
 local_file=/tmp/$internal_name.tgz
 
 # If there is a current build-tools, get permission and remove
