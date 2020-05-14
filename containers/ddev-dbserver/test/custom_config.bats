@@ -13,11 +13,14 @@ function setup {
     export MOUNTUID=98
     export MOUNTGID=98
 
-    mkdir -p /usr/local/etc/my.cnf.d || sudo mkdir -p /usr/local/etc/my.cnf.d
+    # Homebrew mysql client realy really wants /usr/local/etc/my.cnf.d
+    if [ "${OS:-$(uname)}" != "Windows_NT" ] && [ ! -d /usr/local/etc/my.cnf.d ]; then
+        mkdir -p /usr/local/etc/my.cnf.d || sudo mkdir -p /usr/local/etc/my.cnf.d
+    fi
     docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
 
     echo "# Starting image with database image $IMAGE"
-docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql -v "/$PWD/test/testdata:/mnt/ddev_config:ro" --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE
+    docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql --mount "type=bind,src=$PWD/test/testdata,target=/mnt/ddev_config" --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE
     containercheck
 }
 
@@ -47,7 +50,7 @@ function containercheck {
 }
 
 @test "test with mysql/utf.cnf override ${DB_TYPE} ${DB_VERSION}" {
-    docker exec -t $CONTAINER_NAME grep "collation-server" //mnt/ddev_config/mysql/utf.cnf
+    docker exec $CONTAINER_NAME sh -c 'grep collation-server /mnt/ddev_config/mysql/utf.cnf'
     mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW GLOBAL VARIABLES like \"collation_server\";" | grep "utf8_general_ci"
 }
 
