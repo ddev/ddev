@@ -129,9 +129,13 @@ packr2:
 staticrequired: setup golangci-lint markdownlint mkdocs
 
 markdownlint:
-	markdownlint *.md docs >/dev/null
+	@echo "markdownlint: "
+	@$(DOCKERTESTCMD) \
+		bash -c "markdownlint *.md docs >/dev/null 2>&1"
 mkdocs:
-	mkdocs build -d /tmp/mkdocsbuild >/dev/null 2>&1
+	@echo "mkdocs: "
+	@$(DOCKERTESTCMD) \
+		bash -c "mkdocs build -d /tmp/mkdocsbuld >/dev/null 2>&1"
 
 darwin_signed: darwin
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \

@@ -1,14 +1,5 @@
 #!/bin/sh
 
-# markdownlint
-markdownlint -o /tmp/mdlint.out *.md docs
-if [ "$?" != "0" ]; then
-    echo "Markdownlint failed on these files:"
-    awk -F: '{ print $1 }' < "/tmp/mdlint.out" | sort -u
-    exit 1
-fi
-set -o errexit
-
 # Look for uncommitted files, http://stackoverflow.com/a/2659808/215713
 git diff-index --quiet HEAD || (echo "There are uncommitted files" && exit 1)
 
