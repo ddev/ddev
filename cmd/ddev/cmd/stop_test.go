@@ -65,6 +65,11 @@ func TestCmdStop(t *testing.T) {
 func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
+
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows")
+	}
+
 	assert := asrt.New(t)
 	projDir, _ := os.Getwd()
 

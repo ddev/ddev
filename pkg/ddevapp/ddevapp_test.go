@@ -1948,6 +1948,10 @@ func TestDdevPause(t *testing.T) {
 
 // TestDdevStopMissingDirectory tests that the 'ddev stop' command works properly on sites with missing directories or ddev configs.
 func TestDdevStopMissingDirectory(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows")
+	}
+
 	assert := asrt.New(t)
 
 	site := TestSites[0]
@@ -2050,6 +2054,10 @@ func TestDdevDescribe(t *testing.T) {
 
 // TestDdevDescribeMissingDirectory tests that the describe command works properly on sites with missing directories or ddev configs.
 func TestDdevDescribeMissingDirectory(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows")
+	}
+
 	assert := asrt.New(t)
 	site := TestSites[0]
 	tempPath := testcommon.CreateTmpDir("site-copy")
@@ -2266,6 +2274,9 @@ func TestRouterNotRunning(t *testing.T) {
 // TestListWithoutDir prevents regression where ddev list panics if one of the
 // sites found is missing a directory
 func TestListWithoutDir(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows")
+	}
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	testcommon.ClearDockerEnv()
