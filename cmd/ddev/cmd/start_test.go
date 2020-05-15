@@ -4,6 +4,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/stretchr/testify/require"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"os"
@@ -62,6 +63,11 @@ func TestCmdStart(t *testing.T) {
 func TestCmdStartMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
+
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows")
+	}
+
 	assert := asrt.New(t)
 
 	projDir, _ := os.Getwd()

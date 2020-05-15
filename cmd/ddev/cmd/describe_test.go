@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/stretchr/testify/require"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -219,6 +220,11 @@ func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 func TestCmdDescribeMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
+
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows")
+	}
+
 	assert := asrt.New(t)
 
 	projDir, _ := os.Getwd()
