@@ -508,7 +508,7 @@ workflows:
   release_build:
     jobs:
       - release_build:
-          context: org-global
+          context: ddev-local
           filters:
             tags:
               only:
