@@ -16,11 +16,6 @@ func isLaravelApp(app *DdevApp) bool {
 	return fileutil.FileExists(filepath.Join(app.AppRoot, "artisan"))
 }
 
-// setLaravelSiteSettingsPaths sets the paths to .env
-func setLaravelSiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.AppRoot, ".env")
-}
-
 func envSettingsWarning(status int) {
 	var srcFile = ".env"
 	var message = "Don't forget to configure the database in your .env file"
@@ -35,7 +30,7 @@ func envSettingsWarning(status int) {
 }
 
 func laravelPostStartAction(app *DdevApp) error {
-	if fileutil.FileExists(app.SiteSettingsPath) {
+	if fileutil.FileExists(filepath.Join(app.AppRoot, ".env")) {
 		isConfigured, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, `DB_HOST=db`)
 		if err == nil && !isConfigured {
 			envSettingsWarning(WarnTypeNotConfigured)

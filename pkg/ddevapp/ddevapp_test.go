@@ -163,6 +163,21 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "Deep mediterranean quiche"},
 			FilesImageURI:                 "/sites/default/files/mediterranean-quiche-umami.jpg",
 		},
+		{
+			Name:                          "TestPkgLumen",
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp.tar.gz",
+			ArchiveInternalExtractionPath: "ddev-lumen-testapp/",
+			FilesTarballURL:               "",
+			FilesZipballURL:               "",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp_sql.tar.gz",
+			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp_sql.zip",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeLaravel,
+			Docroot:                       "public",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/", Expect: "Laravel Components"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/api/status-code/200", Expect: "indicates that the request has succeeded."},
+			FilesImageURI:                 "/images/200.jpg",
+		},
 	}
 
 	FullTestSites = TestSites

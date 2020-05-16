@@ -94,7 +94,7 @@ func init() {
 		nodeps.AppTypeMagento2: {
 			settingsCreator: createMagento2SettingsFile, uploadDir: getMagento2UploadDir, hookDefaultComments: nil, apptypeSettingsPaths: setMagento2SiteSettingsPaths, appTypeDetect: isMagento2App, postImportDBAction: nil, configOverrideAction: magento2ConfigOverrideAction, postConfigAction: nil, postStartAction: nil, importFilesAction: magentoImportFilesAction, defaultWorkingDirMap: nil,
 		},
-		nodeps.AppTypeLaravel: {apptypeSettingsPaths: setLaravelSiteSettingsPaths, appTypeDetect: isLaravelApp, postStartAction: laravelPostStartAction},
+		nodeps.AppTypeLaravel: {appTypeDetect: isLaravelApp, postStartAction: laravelPostStartAction},
 	}
 }
 
