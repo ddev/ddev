@@ -1577,6 +1577,11 @@ func TestDdevImportFilesDir(t *testing.T) {
 	}
 
 	for _, site := range TestSites {
+		if site.FilesTarballURL == "" && site.FilesZipballURL == "" {
+			t.Logf("=== SKIP TestDdevImportFilesDir for %s (FilesTarballURL and FilesZipballURL are not provided)\n", site.Name)
+			continue
+		}
+
 		switchDir := site.Chdir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 		t.Logf("=== BEGIN TestDdevImportFilesDir for %s\n", site.Name)
@@ -1614,6 +1619,11 @@ func TestDdevImportFiles(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
+		if site.FilesTarballURL == "" && site.FilesZipballURL == "" && site.FullSiteTarballURL == "" {
+			t.Logf("=== SKIP TestDdevImportFiles for %s (FilesTarballURL and FilesZipballURL are not provided)\n", site.Name)
+			continue
+		}
+
 		switchDir := site.Chdir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
