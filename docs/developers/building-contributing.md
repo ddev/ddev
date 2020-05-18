@@ -4,12 +4,14 @@
 
 When preparing your pull request, please use a branch name like "2020_<your_username>_short_description" so that it's easy to track to you.
 
+If you're doing a docs-only PR that does not require full testing, please add "[skip ci][ci skip]" to your commit messages; it saves a lot of testing resources.
+
 ## Docker Image changes
 
 If you make changes to a docker image (like ddev-webserver), it won't have any effect unless you:
 
-* You can build an image with a specific tag by going to the image directory (like containers/ddev-webserver) by just doing `make container VERSION=<branchname>`
-* Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to drud/ddev-webserver repo is easy to accomplish with `make push VERSION=<branchname>` in the container directory. You might have to use other techniques to push to another repo (`docker push`)
+* You can build an image with a specific tag by going to the image directory (like containers/ddev-webserver) by just doing `make container VERSION=<branchname>` in the containers/ddev-webserver directory.
+* Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to drud/ddev-webserver repo is easy to accomplish with `make push VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo (`docker push`)
 * Update pkg/version/version.go with the WebImg and WebTag that relate to the docker image you pushed.
 
 ## Building
@@ -36,16 +38,22 @@ To see which ddev commands the tests are executing, set the environment variable
 
 Use GOTEST_SHORT=true to run just one CMS in each test, or GOTEST_SHORT=<integer> to run exactly one project type from the list of project types in the [TestSites array](https://github.com/drud/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, GOTEST_SHORT=5 will run many tests only against TYPO3.
 
-## Docker container development
+## Automated testing
 
-The docker containers that ddev uses are included in the containers/ directory:
+Anybody can view the CircleCI automated tests, and they usually show up any problems that are not OS-specific. Just click through on the testing section of the PR to see them.
+
+The Buildkite automated tests require special access, which we typically grant to any PR contributor that asks for it.
+
+## Docker image development
+
+The docker images that ddev uses are included in the containers/ directory:
 
 * containers/ddev-webserver: Provides the web servers (the "web" container).
 * containers/ddev-dbserver: Provides the "db" container.
 * containers/phpmyadmin: Provides the phpmyadmin (dba) container
 * containers/ddev-router: The router image
 
-When changes are made to a container, they have to be temporarily pushed to a tag that is preferably the same as the branch name of the PR, and the tag updated in pkg/version/version.go. Just ask if you need a container pushed to support a PR.
+When changes are made to an image, they have to be temporarily pushed to a tag that is preferably the same as the branch name of the PR, and the tag updated in pkg/version/version.go. Just ask if you need a container pushed to support a PR.
 
 ## Contributing
 
