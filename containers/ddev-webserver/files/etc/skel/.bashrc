@@ -111,3 +111,11 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+
+# set COMPOSER_BIN_DIR to $WEBSERVER_DOCROOT/vendor/bin if unset
+if [[ ! -v $COMPOSER_BIN_DIR ]]; then
+    export COMPOSER_BIN_DIR="$WEBSERVER_DOCROOT/vendor/bin"
+fi
+
+# add composer bin dir to PATH
+export PATH="$COMPOSER_BIN_DIR:$PATH"
