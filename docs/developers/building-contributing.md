@@ -6,9 +6,10 @@ When preparing your pull request, please use a branch name like "2020_<your_user
 
 ## Docker Image changes
 
-If you make changes to a docker image (like ddev-webserver), it won't have any effect unless you
+If you make changes to a docker image (like ddev-webserver), it won't have any effect unless you:
 
-* Push a container to hub.docker.com. Push with the tag that matches your branch.
+* You can build an image with a specific tag by going to the image directory (like containers/ddev-webserver) by just doing `make container VERSION=<branchname>`
+* Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to drud/ddev-webserver repo is easy to accomplish with `make push VERSION=<branchname>` in the container directory. You might have to use other techniques to push to another repo (`docker push`)
 * Update pkg/version/version.go with the WebImg and WebTag that relate to the docker image you pushed.
 
 ## Building
