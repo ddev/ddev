@@ -25,9 +25,6 @@ ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV COMPOSER_CACHE_DIR /mnt/ddev-global-cache/composer
 # Windows, especially Win10 Home/Docker toolbox, can take forever on composer build.
 ENV COMPOSER_PROCESS_TIMEOUT 2000
-# add composer bin dir to PATH
-ENV COMPOSER_BIN_DIR $WEBSERVER_DOCROOT/vendor/bin
-ENV PATH "$COMPOSER_BIN_DIR:$PATH"
 
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
 
@@ -41,6 +38,7 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux/ddev-live.zip
 ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
 ENV DDEV_LIVE_NO_VERSION_PROMPT true
+
 
 RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
 
@@ -57,7 +55,7 @@ RUN set -o errexit && apt-get -qq update && \
         gnupg \
         jq \
         locales-all \
-        lsb-release && \
+		lsb-release && \
     wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && \
     wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add - && \
