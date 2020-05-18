@@ -1,10 +1,21 @@
 # Building, Testing, and Contributing
 
+## Pull Requests and PR Preparation
+
+When preparing your pull request, please use a branch name like "2020_<your_username>_short_description" so that it's easy to track to you.
+
+## Docker Image changes
+
+If you make changes to a docker image (like ddev-webserver), it won't have any effect unless you
+
+* Push a container to hub.docker.com. Push with the tag that matches your branch.
+* Update pkg/version/version.go with the WebImg and WebTag that relate to the docker image you pushed.
+
 ## Building
 
-If you have `make` and docker, you can build for your environment with just `make`. Since the Makefile uses docker to build, it's not generally essential to install go on your machine, although it will make things easier.
+Build the project with `make` and your resulting executable will end up in .gotmp/bin/ddev (for Linux) or .gotmp/bin/windows_amd64/ddev.exe (for Windows) or .gotmp/bin/darwin/ddev (for macOS).
 
-Build/test/check static analysis with:
+Build/test/check static analysis with
 
  ```
  make
@@ -16,15 +27,13 @@ Build/test/check static analysis with:
  make staticrequired
  ```
 
-The binaries are built into .gotmp/bin; although normal command-line `go build` or `go install` will work (and everything works fine with IDEs like Goland or vscode) the official build technique is via `make` which uses a completely consistent golang-build-container so that the build is identical no matter what machine or OS it might be built on.
-
 ## Testing
 
-Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make testpkg TESTARGS="-run TestDevAddSites"`.
+Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make testpkg TESTARGS="-run TestDevAddSites"`. The easiest way to run tests is from inside the excellent golang IDE Goland. Just click the arrowhead to the left of the test name.
 
 To see which ddev commands the tests are executing, set the environment variable DDEV_DEBUG=true.
 
-Use GOTEST_SHORT=true to run just one CMS in each test.
+Use GOTEST_SHORT=true to run just one CMS in each test, or GOTEST_SHORT=<integer> to run exactly one project type from the list of project types in the [TestSites array](https://github.com/drud/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, GOTEST_SHORT=5 will run many tests only against TYPO3.
 
 ## Docker container development
 

@@ -1,6 +1,6 @@
 # Build tools for standard makefile
 
-**These build tools live at https://github.com/drud/build-tools**. If you are viewing this README in any other repository, it's important to know that modifications should **never** be made directly, and instead should be made to the base repository and pulled in via the instructions below.
+**These build tools live at <https://github.com/drud/build-tools>**. If you are viewing this README in any other repository, it's important to know that modifications should **never** be made directly, and instead should be made to the base repository and pulled in via the instructions below.
 
 These tools add standard components (sub-makefiles and build scripts) as well as example starters for the Makefile and .circleci/config.yml.
 
@@ -25,7 +25,7 @@ chmod +x build_update.sh
 * Edit the sub-Makefiles included
 * Update the variables at the top of the Makefile
 
-## Additional chores when installing:
+## Additional chores when installing
 
 * Add the items from gitignore_example to the .gitignore in each directory that has a Makefile
 * Update the project README.md to explain how to build - the target reminders in the paragraph below may be helpful.
@@ -71,11 +71,13 @@ If you're using Powershell instead of cmd, just prepend an `&` on the command, a
 ## Installed requirements
 
 You'll need:
+
 * docker-ce (will work with move versions and platforms)
 * gnu make
 * golang
 
 On windows the building is somewhat more difficult due to the build being bash/linux/make-oriented, but support is provided. You need:
+
 * [chocolatey](https://chocolatey.org/install) installed
 * make for Windows 3.81 (Recommended package [choco install make](https://chocolatey.org/packages/make) on chocolatey.org)
 * git for windows (Recommended package [choco install git](https://chocolatey.org/packages/git.install))
@@ -85,4 +87,4 @@ On windows the building is somewhat more difficult due to the build being bash/l
 
 ## Golang compiler component
 
-golang projects and static analysis functions like gofmt are built in a container from drud/golang-build-container (from https://github.com/drud/golang-build-container). The version of the container is specified in build-tools.
+golang projects and static analysis functions like gofmt are built in a container from drud/golang-build-container (from <https://github.com/drud/golang-build-container).> The version of the container is specified in build-tools.
