@@ -4,9 +4,8 @@ import "sort"
 
 // Providers
 const (
-	ProviderDrudS3   = "drud-s3"
 	ProviderPantheon = "pantheon"
-
+	ProviderDdevLive = "ddev-live"
 	// ProviderDefault contains the name of the default provider which will be used if one is not otherwise specified.
 	ProviderDefault = "default"
 )
@@ -15,8 +14,8 @@ const (
 // be used to ensure user-supplied values are valid.
 var ValidProviders = map[string]bool{
 	ProviderDefault:  true,
-	ProviderDrudS3:   true,
 	ProviderPantheon: true,
+	ProviderDdevLive: true,
 }
 
 // PHP Versions

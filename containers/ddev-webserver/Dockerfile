@@ -37,7 +37,7 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 # Real location
 ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux/ddev-live.zip
 # Temporary location
-ENV DDEV_LIVE_DOWNLOAD_URL https://github.com/rfay/junk/releases/download/v1.0/ddev-live.zip
+ENV DDEV_LIVE_DOWNLOAD_URL https://github.com/rfay/junk/releases/download/v1.1/ddev-live.zip
 ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
 
 RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata

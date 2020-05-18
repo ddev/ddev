@@ -1823,8 +1823,8 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	case nodeps.ProviderPantheon:
 		provider = &PantheonProvider{}
 		err = provider.Init(app)
-	case nodeps.ProviderDrudS3:
-		provider = &DrudS3Provider{}
+	case nodeps.ProviderDdevLive:
+		provider = &DdevLiveProvider{}
 		err = provider.Init(app)
 	case nodeps.ProviderDefault:
 		provider = &DefaultProvider{}
