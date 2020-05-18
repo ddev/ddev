@@ -99,7 +99,8 @@ fi
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
 # Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-global-cache/terminus/cache) exists
-sudo mkdir -p ${TERMINUS_CACHE_DIR}
+# Along with ddev-live equivalent
+sudo mkdir -p ${TERMINUS_CACHE_DIR} /mnt/ddev-global-cache/ddev-live
 
 # /home/.* is a prototype for the created user's homedir; copy it in.
 sudo cp -r /home/{.ssh*,.drush,.gitconfig,.my.cnf} ~/
