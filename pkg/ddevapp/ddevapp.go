@@ -977,7 +977,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
 		shell = "sh"
 	}
-	exec = append(exec, shell, "-ci", opts.Cmd)
+	exec = append(exec, shell, "-ic", opts.Cmd)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
