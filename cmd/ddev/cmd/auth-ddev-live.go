@@ -14,11 +14,8 @@ var DdevLiveAuthCommand = &cobra.Command{
 	Long:  "Configure token for ddev-live authentication. See https://dash.ddev.com/settings/integration to retrieve your token.",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) == 0 {
-			util.Failed("You must provide a DDEV API Token, e.g. 'ddev auth DDEV Live [token]'. See https://DDEV Live.io/docs/machine-tokens/ for instructions on creating a token.")
-		}
 		if len(args) != 1 {
-			util.Failed("Too many arguments detected. Please provide only your DDEV Live token., e.g. 'ddev auth ddev-live [token]'. See https://DDEV Live.io/docs/machine-tokens/ for instructions on creating a token.")
+			util.Failed("You must provide a DDEV API Token, e.g. 'ddev auth ddev-live [token]'. See https://dash.ddev.com/settings/integration to retrieve your your token.")
 		}
 
 		uid, _, _ := util.GetContainerUIDGid()
