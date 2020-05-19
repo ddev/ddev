@@ -27,12 +27,14 @@ func envSettingsWarning(status int) {
 	util.Warning(message)
 	util.Warning("You can do it with this one-liner:")
 	util.Warning("ddev exec \"cat %v | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\\1=db/g' > .env\"", srcFile)
+	util.Warning("Read more on https://ddev.readthedocs.io/en/stable/users/cli-usage/#laravel-quickstart")
 }
 
 func laravelPostStartAction(app *DdevApp) error {
 	if fileutil.FileExists(filepath.Join(app.AppRoot, ".env")) {
-		isConfigured, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, `DB_HOST=db`)
-		if err == nil && !isConfigured {
+		isConfiguredDbHost, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, `DB_HOST=db`)
+		isConfiguredDbConnection, _ := fileutil.FgrepStringInFile(app.SiteSettingsPath, `DB_CONNECTION=ddev`)
+		if err == nil && !isConfiguredDbHost && !isConfiguredDbConnection {
 			envSettingsWarning(WarnTypeNotConfigured)
 		}
 	} else {
