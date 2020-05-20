@@ -194,13 +194,15 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	}
 
 	// Retrieve db backup by using ddev-live pull
+	// TODO: Rather than just grabbing the one thing out of jq, have to also see
+	// if an error occurred, or report the entire output.
 	cmd = fmt.Sprintf(`cd /mnt/ddevlive-downloads && ddev-live pull db %s/%s -o json | jq -r .filename`, p.OrgName, backupName)
 	_, filename, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
 
 	filename = strings.Trim(filename, "\n")
 
 	if err != nil || filename == "" {
-		return "", fmt.Errorf("unable to pull ddev-live backup (filename=%s): %v ", filename, err)
+		return "", fmt.Errorf("unable to pull ddev-live database backup (filename=`%s`): err=%v", filename, err)
 	}
 	// Rename the on-host filename to a usable extension
 	newFilename := filepath.Join(p.getDownloadDir(), "ddevlivedb.sql.gz")

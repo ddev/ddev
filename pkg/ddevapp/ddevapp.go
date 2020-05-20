@@ -375,7 +375,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		targetDB = "db"
 	}
 	var extPathPrompt bool
-	dbPath, err := ioutil.TempDir(filepath.Dir(app.ConfigPath), "importdb")
+	dbPath, err := ioutil.TempDir(filepath.Dir(app.ConfigPath), ".importdb")
 	//nolint: errcheck
 	defer os.RemoveAll(dbPath)
 	if err != nil {
@@ -452,15 +452,30 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		}
 	}
 
-	// Inside the container, the dir for imports will be at /mnt/ddev_config/<tmpdir_name>
-	insideContainerImportPath := path.Join("/mnt/ddev_config", filepath.Base(dbPath))
+	// Inside the db container, the dir for imports will be at /mnt/ddev_config/<tmpdir_name>
+	inDbContainerPath := path.Join("/mnt/ddev_config", filepath.Base(dbPath))
+
+	// Inside the web container, the dir for imports will be at /var/www/html/.ddev/<tmpdir_name>
+	inWebContainerPath := path.Join("/var/www/html/.ddev/", filepath.Base(dbPath))
+
+	// If we find CREATE DATABASE in the file, we'll try to clean it out of things
+	// that will make it load to the wrong place. Use the web container for this
+	// because config/db directory is mounted writeable.
+	cmd := fmt.Sprintf(`perl -pi -e 's/^(CREATE DATABASE|USE|.*DROP DATABASE).*$//' %s/*.sql`, inWebContainerPath)
+	_, _, err = app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     cmd,
+	})
+	if err != nil {
+		return err
+	}
 
 	preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
 	if !noDrop {
 		preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 	}
 
-	inContainerCommand := fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | mysql %s`, preImportSQL, insideContainerImportPath, targetDB)
+	inContainerCommand := fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | mysql %s`, preImportSQL, inDbContainerPath, targetDB)
 	if imPath == "" && extPath == "" {
 		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && mysql %s`, preImportSQL, targetDB)
 	}
