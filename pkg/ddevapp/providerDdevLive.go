@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/version"
@@ -117,6 +116,7 @@ func (p *DdevLiveProvider) OrgNamePrompt() error {
 // returns fileURL, importPath, error
 func (p *DdevLiveProvider) GetBackup(backupType, environment string) (string, string, error) {
 	var err error
+	var filePath string
 	if backupType != "database" && backupType != "files" {
 		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
@@ -124,19 +124,25 @@ func (p *DdevLiveProvider) GetBackup(backupType, environment string) (string, st
 	// Set the import path blank to use the root of the archive by default.
 	importPath := ""
 
-	filename, err := p.getBackup(backupType)
+	p.prepDownloadDir()
+
+	switch backupType {
+	case "database":
+		filePath, err = p.getDatabaseBackup()
+	case "files":
+		filePath, err = p.getFilesBackup()
+	default:
+		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
+	}
 	if err != nil {
 		return "", "", err
 	}
-
-	p.prepDownloadDir()
-	destFile := filepath.Join(p.getDownloadDir(), filename)
 
 	if backupType == "files" {
 		importPath = fmt.Sprintf("files_%s", environment)
 	}
 
-	return destFile, importPath, nil
+	return filePath, importPath, nil
 }
 
 // prepDownloadDir ensures the download cache directories are created and writeable.
@@ -147,25 +153,8 @@ func (p *DdevLiveProvider) prepDownloadDir() {
 }
 
 func (p *DdevLiveProvider) getDownloadDir() string {
-	globalDir := globalconfig.GetGlobalDdevDir()
-	destDir := filepath.Join(globalDir, "ddevlive", p.app.Name)
-
+	destDir := p.app.GetConfigPath(".ddevlive-downloads")
 	return destDir
-}
-
-// getBackup will return a URL for the most recent backup of archiveType.
-func (p *DdevLiveProvider) getBackup(archiveType string) (filename string, err error) {
-	switch archiveType {
-	case "database":
-		filename, err = p.getDatabaseBackup()
-	case "files":
-		filename, err = p.getFilesBackup()
-	}
-	if err != nil {
-		return "", err
-	}
-
-	return filename, nil
 }
 
 func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
@@ -186,6 +175,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	}
 
 	// Run ddev-live describe while waiting for database backup to complete
+	// TODO: Don't use while, use a limited number of tries
 	cmd = fmt.Sprintf(`while [ "$(ddev-live describe backup db %s/%s -y -o json | jq -r .complete)" != "true" ]; do sleep 1; done `, p.OrgName, backupName)
 	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
@@ -194,13 +184,21 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	}
 
 	// Retrieve db backup by using ddev-live pull
-	cmd = fmt.Sprintf(`ddev-live pull db %s/%s -o json | jq -r .filename`, p.OrgName, backupName)
-	_, filename, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+	cmd = fmt.Sprintf(`cd /mnt/ddevlive-downloads && ddev-live pull db %s/%s -o json | jq -r .filename`, p.OrgName, backupName)
+	_, filename, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
 
-	if err != nil {
-		return "", fmt.Errorf("unable to pull ddev-live backup: %v ", err)
+	filename = strings.Trim(filename, "\n")
+
+	if err != nil || filename == "" {
+		return "", fmt.Errorf("unable to pull ddev-live backup (filename=%s): %v ", filename, err)
 	}
-	return filename, nil
+	// Rename the on-host filename to a usable extension
+	newFilename := filepath.Join(p.getDownloadDir(), "ddevlivedb.sql.gz")
+	err = os.Rename(filepath.Join(p.getDownloadDir(), filename), newFilename)
+	if err != nil {
+		return "", err
+	}
+	return newFilename, nil
 }
 
 // Write the ddevLive provider configuration to a specified location on disk.
