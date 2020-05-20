@@ -654,13 +654,13 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 	if opts.SkipFiles {
 		output.UserOut.Println("Skipping files pull.")
 	} else {
-		output.UserOut.Println("Downloading file archive...")
+		output.UserOut.Println("Downloading files...")
 		fileLocation, importPath, err := provider.GetBackup("files", opts.Environment)
 		if err != nil {
 			return err
 		}
 
-		output.UserOut.Printf("File archive downloaded to: %s", fileLocation)
+		output.UserOut.Printf("Files downloaded to: %s", fileLocation)
 
 		if opts.SkipImport {
 			output.UserOut.Println("Skipping files import.")

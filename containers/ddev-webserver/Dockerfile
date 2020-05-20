@@ -36,7 +36,7 @@ ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 # Real location
 ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux/ddev-live.zip
-# Temporary location
+# TODO: Temporary location, this must be updated to the real one, remove these lines.
 ENV DDEV_LIVE_DOWNLOAD_URL https://github.com/rfay/junk/releases/download/v1.1/ddev-live.zip
 ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
 

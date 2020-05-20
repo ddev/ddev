@@ -148,7 +148,9 @@ func (p *DdevLiveProvider) GetBackup(backupType, environment string) (string, st
 // prepDownloadDir ensures the download cache directories are created and writeable.
 func (p *DdevLiveProvider) prepDownloadDir() {
 	destDir := p.getDownloadDir()
-	err := os.MkdirAll(destDir, 0755)
+	filesDir := filepath.Join(destDir, "files")
+	_ = os.RemoveAll(filesDir)
+	err := os.MkdirAll(filesDir, 0755)
 	util.CheckErr(err)
 }
 
@@ -158,9 +160,17 @@ func (p *DdevLiveProvider) getDownloadDir() string {
 }
 
 func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
-	filename = ""
-	error = fmt.Errorf("unimplemented")
-	return filename, error
+
+	uid, _, _ := util.GetContainerUIDGid()
+
+	// Retrieve db backup by using ddev-live pull
+	cmd := fmt.Sprintf(`ddev-live pull files --dest /mnt/ddevlive-downloads/files %s/%s`, p.OrgName, p.SiteName)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+
+	if err != nil {
+		return "", fmt.Errorf("unable to pull ddev-live files backup: %v, output=%v ", err, out)
+	}
+	return filepath.Join(p.getDownloadDir(), "files"), nil
 }
 
 func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
