@@ -39,6 +39,11 @@ ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux
 ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
 ENV DDEV_LIVE_NO_VERSION_PROMPT true
 
+# From "man bash":
+#    When bash is started non-interactively, to run a shell script, for example,
+#    it looks for the variable BASH_ENV in the environment, expands its value
+#    if it appears there, and uses the expanded value as the name of a file to read and execute.
+ENV BASH_ENV /etc/bash.nointeractive.bashrc
 
 RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
 
