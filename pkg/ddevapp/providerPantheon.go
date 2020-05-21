@@ -276,7 +276,7 @@ func (p *PantheonProvider) GetEnvironments() ([]string, error) {
 	_, envs, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
 	if err != nil {
-		return []string{}, fmt.Errorf("unable to get Pantheon environments for project %s - does the ddev project name match the pantheon project name? ('%v' failed)", p.Sitename, cmd)
+		return []string{}, fmt.Errorf("unable to get Pantheon environments for project %s - Have you authenticated with `ddev auth pantheon`? Does the ddev project name match the pantheon project name? ('%v' failed)", p.Sitename, cmd)
 	}
 
 	envs = strings.Trim(envs, "\n\r ")
