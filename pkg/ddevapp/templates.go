@@ -152,6 +152,7 @@ services:
       - PMA_USER=db
       - PMA_PASSWORD=db
       - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - UPLOAD_LIMIT=1024M
       - TZ={{ .Timezone }}
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       - HTTP_EXPOSE=${DDEV_PHPMYADMIN_PORT}:{{ .DBAPort }}
