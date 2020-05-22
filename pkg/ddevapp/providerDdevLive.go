@@ -185,17 +185,17 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	}
 
 	// Run ddev-live describe while waiting for database backup to complete
-	// TODO: Don't use while, use a limited number of tries
-	cmd = fmt.Sprintf(`while [ "$(ddev-live describe backup db %s/%s -y -o json | jq -r .complete)" != "true" ]; do sleep 1; done `, p.OrgName, backupName)
-	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+	// ddev-live describe has a habit of failing, especially early, so we keep trying.
+	cmd = fmt.Sprintf(`count=0; until [ "$(ddev-live describe backup db %s/%s -y -o json >/tmp/ddevlivedescribe.out && jq -r .complete </tmp/ddevlivedescribe.out)" = "true" ]; do ((count++)); if [ ${count} -ge 120 ]; then cat /tmp/ddevlivedescribe.out; exit 101; fi; sleep 1; done `, p.OrgName, backupName)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
 	if err != nil {
-		return "", fmt.Errorf("unable to wait for ddev-live backup completion: %v ", err)
+		return "", fmt.Errorf("unable to wait for ddev-live backup completion: %v; output=%s", err, out)
 	}
 
 	// Retrieve db backup by using ddev-live pull
 	cmd = fmt.Sprintf(`cd /mnt/ddevlive-downloads && ddev-live pull db %s/%s`, p.OrgName, backupName)
-	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
 	w := strings.Split(out, " ")
 	if err != nil || len(w) != 2 {
 		return "", fmt.Errorf("unable to pull ddev-live database backup (output=`%s`): err=%v", out, err)
