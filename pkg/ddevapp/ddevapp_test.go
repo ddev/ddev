@@ -216,6 +216,16 @@ func TestMain(m *testing.M) {
 		log.Info("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific tests.")
 	}
 
+	token = os.Getenv("DDEV_DDEVLIVE_API_TOKEN")
+	if token != "" {
+		out, err := exec.RunCommand(DdevBin, []string{"auth", "ddev-live", token})
+		if err != nil {
+			log.Fatalf("Unable to ddev auth ddev-live: %v (%v)", err, out)
+		}
+	} else {
+		log.Info("No DDEV_DDEVLIVE_API_TOKEN env var has been set. Skipping ddev-live specific tests.")
+	}
+
 	for i, site := range TestSites {
 		app := &ddevapp.DdevApp{Name: site.Name}
 		_ = app.Stop(true, false)
