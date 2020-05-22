@@ -65,7 +65,7 @@ function containercheck {
     [ "${reported_version}" = ${DB_VERSION} ]
 }
 
-@test "look for utf8mb4 configured on ${DB_TYPE} ${DB_VERSION}" {
-    mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW GLOBAL VARIABLES like \"collation_server\";" | grep "utf8mb4_bin"
+@test "look for utf8mb4_general_ci configured on ${DB_TYPE} ${DB_VERSION}" {
+    mysql --user=root --password=root --skip-column-names --host=127.0.0.1 --port=$HOSTPORT -e "SHOW GLOBAL VARIABLES like \"collation_server\";" | grep "utf8mb4_general_ci"
 }
 
