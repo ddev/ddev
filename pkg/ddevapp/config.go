@@ -103,17 +103,6 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	}
 	app.SetApptypeSettingsPaths()
 
-	// Allow override with provider.
-	// Otherwise we accept whatever might have been in config file if there was anything.
-	if provider == "" && app.Provider != "" {
-		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
-	} else if provider == nodeps.ProviderPantheon || provider == nodeps.ProviderDrudS3 || provider == nodeps.ProviderDefault {
-		app.Provider = provider // Use the provider passed-in. Function argument wins.
-	} else if provider == "" && app.Provider == "" {
-		app.Provider = nodeps.ProviderDefault // Nothing passed in, nothing configured. Set c.Provider to default
-	} else {
-		return app, fmt.Errorf("provider '%s' is not implemented", provider)
-	}
 	app.SetInstrumentationAppTags()
 
 	// Rendered yaml is not there until after ddev config or ddev start
@@ -133,6 +122,17 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		}
 	}
 
+	// Allow override with provider.
+	// Otherwise we accept whatever might have been in config file if there was anything.
+	if provider == "" && app.Provider != "" {
+		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
+	} else if provider == nodeps.ProviderPantheon || provider == nodeps.ProviderDrudS3 || provider == nodeps.ProviderDefault {
+		app.Provider = provider // Use the provider passed-in. Function argument wins.
+	} else if provider == "" && app.Provider == "" {
+		app.Provider = nodeps.ProviderDefault // Nothing passed in, nothing configured. Set c.Provider to default
+	} else {
+		return app, fmt.Errorf("provider '%s' is not implemented", provider)
+	}
 	return app, nil
 }
 
