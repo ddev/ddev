@@ -25,8 +25,8 @@ import (
  * A valid site (with backups) must be present which matches the test site and environment name
  * defined in the constants below.
  */
-const ddevliveTestSite = "ddevlive-test-no-delete"
-const ddevLiveOrgName = "rfay"
+const ddevliveTestSite = "ddev-live-test-no-delete"
+const ddevLiveOrgName = "ddltest"
 
 // TestDdevLiveConfigCommand tests the interactive config options.
 func TestDdevLiveConfigCommand(t *testing.T) {

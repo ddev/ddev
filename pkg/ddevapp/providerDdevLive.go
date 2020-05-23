@@ -176,7 +176,7 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	// First, kick off the database backup
 	uid, _, _ := util.GetContainerUIDGid()
-	cmd := fmt.Sprintf(`(ddev-live backup database -y -o json %s/%s >/tmp/backupdb.json || (echo "ddev-live backup database failed" && cat /tmp/backupdb.json && exit 102)) && jq -r .databaseBackup </tmp/backupdb.json`, p.OrgName, p.SiteName)
+	cmd := fmt.Sprintf(`(ddev-live backup database -y -o json %s/%s >/tmp/backupdb.json 2>&1 || (echo "ddev-live backup database failed ($?) output='$(cat /tmp/backupdb.json)'"  && exit 102)) && jq -r .databaseBackup </tmp/backupdb.json`, p.OrgName, p.SiteName)
 	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
 	backupName := strings.Trim(out, "\n")
@@ -189,7 +189,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 
 	// Run ddev-live describe while waiting for database backup to complete
 	// ddev-live describe has a habit of failing, especially early, so we keep trying.
-	cmd = fmt.Sprintf(`count=0; until [ "$(ddev-live describe backup db %s/%s -y -o json >/tmp/ddevlivedescribe.out && jq -r .complete </tmp/ddevlivedescribe.out)" = "true" ]; do ((count++)); if [ ${count} -ge 120 ]; then echo "Timed out waiting for ddev-live describe backup db" && cat /tmp/ddevlivedescribe.out; exit 101; fi; sleep 1; done `, p.OrgName, backupName)
+	cmd = fmt.Sprintf(`count=0; until [ "$(ddev-live describe backup db %s/%s -y -o json >/tmp/ddevlivedescribe.out 2>&1 && jq -r .complete </tmp/ddevlivedescribe.out)" = "true" ]; do ((count++)); if [ ${count} -ge 120 ]; then echo "Timed out waiting for ddev-live describe backup db" && cat /tmp/ddevlivedescribe.out; exit 101; fi; sleep 1; done `, p.OrgName, backupName)
 	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
 	if err != nil {
