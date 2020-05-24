@@ -104,8 +104,18 @@ func (p *DdevLiveProvider) GetSites() ([]string, error) {
 
 // OrgNamePrompt prompts for the ddev-live org.
 func (p *DdevLiveProvider) OrgNamePrompt() error {
+	var out string
+	var err error
+	if p.OrgName == "" {
+		uid, _, _ := util.GetContainerUIDGid()
+		cmd := `set -eo pipefail; ddev-live config default-org get -o json | jq -r .defaultOrg`
+		_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+		if err != nil {
+			util.Failed("Failed to get default org: %v (%v) command=%s", err, out, cmd)
+		}
+	}
 	prompt := "DDEV-Live org name"
-	orgName := util.Prompt(prompt, "")
+	orgName := util.Prompt(prompt, strings.Trim(out, "\n"))
 
 	p.OrgName = orgName
 	return nil
