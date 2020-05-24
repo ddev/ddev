@@ -475,7 +475,7 @@ func GetDockerIP() (string, error) {
 	return dockerIP, nil
 }
 
-// RunSimpleContainer runs a container (non-daemonized) and captures the stdout.
+// RunSimpleContainer runs a container (non-daemonized) and captures the stdout/stderr.
 // It will block, so not to be run on a container whose entrypoint or cmd might hang or run too long.
 // This should be the equivalent of something like
 // docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
@@ -570,6 +570,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		Stderr:       true,
 		Container:    container.ID,
 		OutputStream: &stdout,
+		ErrorStream:  &stdout,
 	})
 	if err != nil {
 		return container.ID, "", fmt.Errorf("failed to get Logs(): %v", err)

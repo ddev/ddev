@@ -297,6 +297,8 @@ func TestRunSimpleContainer(t *testing.T) {
 	_, out, err := RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + "://tempmount"}, "25", true)
 	assert.NoError(err)
 	assert.Contains(out, "simplescript.sh; TEMPENV=someenv UID=25")
+	assert.Contains(out, "stdout is captured")
+	assert.Contains(out, "stderr is also captured")
 
 	// Try the case of running nonexistent script
 	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true)
