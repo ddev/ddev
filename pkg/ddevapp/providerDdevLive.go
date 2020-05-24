@@ -170,6 +170,7 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 	uid, _, _ := util.GetContainerUIDGid()
 
 	_ = os.RemoveAll(p.getDownloadDir())
+	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	// Retrieve files backup by using ddev-live pull files
 	cmd := fmt.Sprintf(`ddev-live pull files --dest /mnt/ddevlive-downloads/files %s/%s`, p.OrgName, p.SiteName)
@@ -185,6 +186,7 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 // describe until it appears, then download it.
 func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	_ = os.RemoveAll(p.getDownloadDir())
+	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	// First, kick off the database backup
 	uid, _, _ := util.GetContainerUIDGid()
@@ -209,8 +211,8 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	}
 
 	// Retrieve db backup by using ddev-live pull
-	cmd = fmt.Sprintf(`cd /mnt/writeablemount && ddev-live pull db %s/%s`, p.OrgName, backupName)
-	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/writeablemount", p.getDownloadDir())}, uid, true)
+	cmd = fmt.Sprintf(`cd /mnt/ddevlive-downloads && ddev-live pull db %s/%s`, p.OrgName, backupName)
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
 	w := strings.Split(out, " ")
 	if err != nil || len(w) != 2 {
 		return "", fmt.Errorf("unable to pull ddev-live database backup (output=`%s`): err=%v, command=%s", out, err, cmd)

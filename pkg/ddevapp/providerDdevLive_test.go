@@ -145,8 +145,8 @@ func TestDdevLivePull(t *testing.T) {
 	assert.NoError(err)
 	err = app.Pull(&provider, &PullOptions{})
 	require.NoError(t, err)
-	// Verify that we got the special file created in this site.
 
+	// Verify that we got the special file created in this site.
 	assert.FileExists(filepath.Join(app.AppRoot, "web/sites/default/files/i-exist-in-ddev-pull.txt"))
 
 	// Make sure that we have the actual database from the site
