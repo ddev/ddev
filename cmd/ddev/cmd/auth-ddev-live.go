@@ -22,7 +22,7 @@ ddev auth ddev-live --default-org=some-ddevlive-org [token]`,
 		}
 
 		uid, _, _ := util.GetContainerUIDGid()
-		c := fmt.Sprint(`ddev-live auth --token="%s"`, args[0])
+		c := fmt.Sprintf(`ddev-live auth --token="%s"`, args[0])
 		if cmd.Flag("default-org").Changed {
 			c = fmt.Sprintf(`ddev-live auth --default-org="%s" --token="%s"`, cmd.Flag("default-org").Value.String(), args[0])
 		}
@@ -30,7 +30,7 @@ ddev auth ddev-live --default-org=some-ddevlive-org [token]`,
 		if err == nil {
 			util.Success("Authentication successful!\nYou may now use the 'ddev config ddev-live' command when configuring projects.")
 		} else {
-			util.Failed("Failed to authenticate: %v (%v)", err, out)
+			util.Failed("Failed to authenticate: %v (%v) command=%v", err, out, c)
 		}
 	},
 }
