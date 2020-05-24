@@ -17,6 +17,9 @@ var RestartCmd = &cobra.Command{
 	Use:   "restart [projects]",
 	Short: "Restart a project or several projects.",
 	Long:  `Stops named projects and then starts them back up again.`,
+	Example: `ddev restart
+ddev restart <project1> <project2>
+ddev restart --all`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
 	},

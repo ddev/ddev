@@ -25,9 +25,10 @@ var SequelproLoc = "/Applications/Sequel Pro.app"
 
 // DdevSequelproCmd represents the sequelpro command
 var DdevSequelproCmd = &cobra.Command{
-	Use:   "sequelpro",
-	Short: "Connect sequelpro to a project database",
-	Long:  `A helper command for using sequelpro (macOS database browser) with a running DDEV-Local project's database'.`,
+	Use:     "sequelpro",
+	Short:   "Connect sequelpro to a project database",
+	Long:    `A helper command for using sequelpro (macOS database browser) with a running DDEV-Local project's database'.`,
+	Example: `ddev sequelpro`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {
 			output.UserOut.Fatalf("invalid arguments to sequelpro command: %v", args)

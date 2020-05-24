@@ -20,6 +20,7 @@ var DdevExecCmd = &cobra.Command{
 	Aliases: []string{"."},
 	Short:   "Execute a shell command in the container for a service. Uses the web service by default.",
 	Long:    `Execute a shell command in the container for a service. Uses the web service by default. To run your command in the container for another service, run "ddev exec --service <service> <cmd>"`,
+	Example: "ddev exec ls /var/www/html\nddev exec --service db\nddev exec -s db\nddev exec -s solr (assuming an add-on service named 'solr')",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			err := cmd.Usage()

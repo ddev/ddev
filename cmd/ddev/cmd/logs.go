@@ -19,6 +19,9 @@ var DdevLogsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Get the logs from your running services.",
 	Long:  `Uses 'docker logs' to display stdout from the running services.`,
+	Example: `ddev logs
+ddev logs -f
+ddev logs -s db`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {

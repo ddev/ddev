@@ -9,9 +9,10 @@ import (
 
 // PantheonAuthCommand is the `ddev auth pantheon` command
 var PantheonAuthCommand = &cobra.Command{
-	Use:   "pantheon [token]",
-	Short: "Provide a machine token for the global pantheon auth",
-	Long:  "Configure global machine token for pantheon authentication. See https://pantheon.io/docs/machine-tokens/ for instructions on creating a token.",
+	Use:     "pantheon [token]",
+	Short:   "Provide a machine token for the global pantheon auth",
+	Long:    "Configure global machine token for pantheon authentication. See https://pantheon.io/docs/machine-tokens/ for instructions on creating a token.",
+	Example: `ddev auth pantheon`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) == 0 {
