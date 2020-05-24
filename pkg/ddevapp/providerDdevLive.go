@@ -92,13 +92,13 @@ func (p *DdevLiveProvider) SiteNamePrompt() error {
 
 func (p *DdevLiveProvider) GetSites() ([]string, error) {
 	// Get a list of all active environments for the current site.
-	cmd := fmt.Sprintf(`ddev-live list sites --org="%s" -o json | jq -r ".sites[] | .name"`, p.OrgName)
+	cmd := fmt.Sprintf(`set -eo pipefail; ddev-live list sites --org="%s" -o json | jq -r ".sites[] | .name"`, p.OrgName)
 	uid, _, _ := util.GetContainerUIDGid()
-	_, sites, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 	if err != nil {
-		return []string{}, fmt.Errorf("unable to get DDEV-Live sites for org %s - please try `ddev exec ddev-live list sites` (error=%v)", p.OrgName, err)
+		return []string{}, fmt.Errorf(`unable to get DDEV-Live sites for org %s - please try ddev exec ddev-live list sites --org="%s -o json" (error=%v, output=%v)`, p.OrgName, p.OrgName, err, out)
 	}
-	siteAry := strings.Split(sites, "\n")
+	siteAry := strings.Split(strings.Trim(out, "\n"), "\n")
 	return siteAry, nil
 }
 
@@ -176,12 +176,12 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	// First, kick off the database backup
 	uid, _, _ := util.GetContainerUIDGid()
-	cmd := fmt.Sprintf(`(ddev-live backup database -y -o json %s/%s >/tmp/backupdb.json 2>&1 || (echo "ddev-live backup database failed ($?) output='$(cat /tmp/backupdb.json)'"  && exit 102)) && jq -r .databaseBackup </tmp/backupdb.json`, p.OrgName, p.SiteName)
+	cmd := fmt.Sprintf(`set -eo pipefail; ddev-live backup database -y -o json %s/%s | jq -r .databaseBackup`, p.OrgName, p.SiteName)
 	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
 	backupName := strings.Trim(out, "\n")
 	if err != nil {
-		return "", fmt.Errorf("unable to start ddev-live backup database: output=%v, err=%v", out, err)
+		return "", fmt.Errorf("unable to run `ddev-live backup database %s/%s -o json`: output=%v, err=%v", p.OrgName, p.SiteName, out, err)
 	}
 	if backupName == "" {
 		return "", fmt.Errorf("Received empty backupName from ddev-live backup database")
@@ -189,7 +189,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 
 	// Run ddev-live describe while waiting for database backup to complete
 	// ddev-live describe has a habit of failing, especially early, so we keep trying.
-	cmd = fmt.Sprintf(`count=0; until [ "$(ddev-live describe backup db %s/%s -y -o json >/tmp/ddevlivedescribe.out 2>&1 && jq -r .complete </tmp/ddevlivedescribe.out)" = "true" ]; do ((count++)); if [ ${count} -ge 120 ]; then echo "Timed out waiting for ddev-live describe backup db" && cat /tmp/ddevlivedescribe.out; exit 101; fi; sleep 1; done `, p.OrgName, backupName)
+	cmd = fmt.Sprintf(`count=0; until [ "$(set -eo pipefail; ddev-live describe backup db %s/%s -y -o json | tee /tmp/ddevlivedescribe.out | jq -r .complete)" = "true" ]; do ((count++)); if [ ${count} -ge 120 ]; then echo "Timed out waiting for ddev-live describe backup db" && cat /tmp/ddevlivedescribe.out; exit 101; fi; sleep 1; done `, p.OrgName, backupName)
 	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
 	if err != nil {
@@ -247,19 +247,6 @@ func (p *DdevLiveProvider) Read(configPath string) error {
 	}
 
 	return nil
-}
-
-// findddevLiveSite ensures the ddevLive site specified by name exists, and the current user has access to it.
-func (p *DdevLiveProvider) findddevLiveSite(name string) (id string, e error) {
-	uid, _, _ := util.GetContainerUIDGid()
-	_, id, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", "ddev-live list sites -o json " + name + " | jq -r .id"}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
-
-	if err != nil {
-		return "", fmt.Errorf("could not find a ddevLive site named %s: %v (%v)", name, err, id)
-	}
-
-	id = strings.Trim(id, "\n\r ")
-	return id, nil
 }
 
 // Validate ensures that the current configuration is valid (i.e. the configured pantheon site/environment exists)
