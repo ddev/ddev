@@ -120,6 +120,8 @@ func TestDdevLivePull(t *testing.T) {
 
 	app.Name = ddevliveTestSite
 	app.Type = nodeps.AppTypeDrupal8
+	app.Docroot = "web"
+	_ = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files"), 0755)
 
 	app.Hooks = map[string][]YAMLTask{"post-pull": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-pull": {{"exec-host": "touch hello-pre-pull-" + app.Name}}}
 
@@ -143,6 +145,17 @@ func TestDdevLivePull(t *testing.T) {
 	assert.NoError(err)
 	err = app.Pull(&provider, &PullOptions{})
 	require.NoError(t, err)
+	// Verify that we got the special file created in this site.
+
+	assert.FileExists(filepath.Join(app.AppRoot, "web/sites/default/files/i-exist-in-ddev-pull.txt"))
+
+	// Make sure that we have the actual database from the site
+	stdout, _, err := app.Exec(&ExecOpts{
+		Service: "db",
+		Cmd:     "mysql -N -e 'select name from users_field_data where uid=2;' | cat",
+	})
+	assert.NoError(err)
+	assert.Equal("test-account-for-ddev-tests", strings.Trim(stdout, "\n"))
 
 	assert.FileExists("hello-pre-pull-" + app.Name)
 	assert.FileExists("hello-post-pull-" + app.Name)

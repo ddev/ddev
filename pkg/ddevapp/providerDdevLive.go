@@ -138,10 +138,6 @@ func (p *DdevLiveProvider) GetBackup(backupType, environment string) (string, st
 		return "", "", err
 	}
 
-	if backupType == "files" {
-		importPath = fmt.Sprintf("files_%s", environment)
-	}
-
 	return filePath, importPath, nil
 }
 
@@ -163,7 +159,9 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 
 	uid, _, _ := util.GetContainerUIDGid()
 
-	// Retrieve db backup by using ddev-live pull
+	_ = os.RemoveAll(p.getDownloadDir())
+
+	// Retrieve files backup by using ddev-live pull files
 	cmd := fmt.Sprintf(`ddev-live pull files --dest /mnt/ddevlive-downloads/files %s/%s`, p.OrgName, p.SiteName)
 	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
 
@@ -173,10 +171,14 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 	return filepath.Join(p.getDownloadDir(), "files"), nil
 }
 
+// getDatabaseBackup retrieves database using `ddev-live backup database`, then
+// describe until it appears, then download it.
 func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
+	_ = os.RemoveAll(p.getDownloadDir())
+
 	// First, kick off the database backup
 	uid, _, _ := util.GetContainerUIDGid()
-	cmd := fmt.Sprintf(`set -eo pipefail; ddev-live backup database -y -o json %s/%s | jq -r .databaseBackup`, p.OrgName, p.SiteName)
+	cmd := fmt.Sprintf(`set -eo pipefail; ddev-live backup database -y -o json %s/%s 2>/dev/null | jq -r .databaseBackup`, p.OrgName, p.SiteName)
 	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
 	backupName := strings.Trim(out, "\n")
@@ -189,11 +191,11 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 
 	// Run ddev-live describe while waiting for database backup to complete
 	// ddev-live describe has a habit of failing, especially early, so we keep trying.
-	cmd = fmt.Sprintf(`count=0; until [ "$(set -eo pipefail; ddev-live describe backup db %s/%s -y -o json | tee /tmp/ddevlivedescribe.out | jq -r .complete)" = "true" ]; do ((count++)); if [ ${count} -ge 120 ]; then echo "Timed out waiting for ddev-live describe backup db" && cat /tmp/ddevlivedescribe.out; exit 101; fi; sleep 1; done `, p.OrgName, backupName)
+	cmd = fmt.Sprintf(`count=0; until [ "$(set -eo pipefail; ddev-live describe backup db %s/%s -y -o json | tee /tmp/ddevlivedescribe.out | jq -r .complete)" = "true" ]; do ((count++)); if [ "$count" -ge 120 ]; then echo "Timed out waiting for ddev-live describe backup db" && cat /tmp/ddevlivedescribe.out; exit 101; fi; sleep 1; done `, p.OrgName, backupName)
 	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
 	if err != nil {
-		return "", fmt.Errorf("failure waiting for ddev-live backup completion: %v; output=%s", err, out)
+		return "", fmt.Errorf("failure waiting for ddev-live backup database completion: %v; cmd=%s, output=%s", err, cmd, out)
 	}
 
 	// Retrieve db backup by using ddev-live pull
