@@ -161,6 +161,8 @@ RUN for v in $PHP_VERSIONS; do a2dismod $v || exit $?; done
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
 
+RUN mkdir -p /mnt/writeablemount && chmod 777 /mnt/writeablemount
+
 # ssh is very particular about permissions in ~/.ssh
 RUN chmod -R go-w /home/.ssh
 
