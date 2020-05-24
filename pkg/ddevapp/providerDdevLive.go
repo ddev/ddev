@@ -213,7 +213,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
 	w := strings.Split(out, " ")
 	if err != nil || len(w) != 2 {
-		return "", fmt.Errorf("unable to pull ddev-live database backup (output=`%s`): err=%v", out, err)
+		return "", fmt.Errorf("unable to pull ddev-live database backup (output=`%s`): err=%v, command=%s", out, err, cmd)
 	}
 	f := strings.Trim(w[1], "\n")
 	// Rename the on-host filename to a usable extension
