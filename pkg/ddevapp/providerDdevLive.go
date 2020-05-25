@@ -94,7 +94,7 @@ func (p *DdevLiveProvider) GetSites() ([]string, error) {
 	// Get a list of all active environments for the current site.
 	cmd := fmt.Sprintf(`set -eo pipefail; ddev-live list sites --org="%s" -o json | jq -r ".sites[] | .name"`, p.OrgName)
 	uid, _, _ := util.GetContainerUIDGid()
-	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 	if err != nil {
 		return []string{}, fmt.Errorf(`unable to get DDEV-Live sites for org %s - please try ddev exec ddev-live list sites --org="%s -o json" (error=%v, output=%v)`, p.OrgName, p.OrgName, err, out)
 	}
@@ -109,7 +109,7 @@ func (p *DdevLiveProvider) OrgNamePrompt() error {
 	if p.OrgName == "" {
 		uid, _, _ := util.GetContainerUIDGid()
 		cmd := `set -eo pipefail; ddev-live config default-org get -o json | jq -r .defaultOrg`
-		_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+		_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 		if err != nil {
 			util.Failed("Failed to get default org: %v (%v) command=%s", err, out, cmd)
 		}
@@ -174,7 +174,7 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 
 	// Retrieve files backup by using ddev-live pull files
 	cmd := fmt.Sprintf(`ddev-live pull files --dest /mnt/ddevlive-downloads/files %s/%s`, p.OrgName, p.SiteName)
-	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
 
 	if err != nil {
 		return "", fmt.Errorf("unable to pull ddev-live files backup: %v, output=%v ", err, out)
@@ -191,7 +191,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	// First, kick off the database backup
 	uid, _, _ := util.GetContainerUIDGid()
 	cmd := fmt.Sprintf(`set -eo pipefail; ddev-live backup database -y -o json %s/%s 2>/dev/null | jq -r .databaseBackup`, p.OrgName, p.SiteName)
-	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
 	backupName := strings.Trim(out, "\n")
 	if err != nil {
@@ -204,7 +204,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	// Run ddev-live describe while waiting for database backup to complete
 	// ddev-live describe has a habit of failing, especially early, so we keep trying.
 	cmd = fmt.Sprintf(`count=0; until [ "$(set -eo pipefail; ddev-live describe backup db %s/%s -y -o json | tee /tmp/ddevlivedescribe.out | jq -r .complete)" = "true" ]; do ((count++)); if [ "$count" -ge 120 ]; then echo "Timed out waiting for ddev-live describe backup db" && cat /tmp/ddevlivedescribe.out; exit 101; fi; sleep 1; done `, p.OrgName, backupName)
-	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
 
 	if err != nil {
 		return "", fmt.Errorf("failure waiting for ddev-live backup database completion: %v; cmd=%s, output=%s", err, cmd, out)
@@ -214,7 +214,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	// failed to download asset: The access key ID you provided does not exist in our records
 	// https://github.com/drud/ddev-live/issues/348, also https://github.com/drud/ddev-live-client/issues/402
 	cmd = fmt.Sprintf(`cd /mnt/ddevlive-downloads && count=0; until ddev-live pull db %s/%s 2>/tmp/pull.out; do sleep 1; ((count++)); if [ "$count" -ge 5 ]; then echo "failed waiting for ddev-live pull db: $(cat /tmp/pull.out)"; exit 103; fi; done`, p.OrgName, backupName)
-	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
 	w := strings.Split(out, " ")
 	if err != nil || len(w) != 2 {
 		return "", fmt.Errorf("unable to pull ddev-live database backup (output=`%s`): err=%v, command=%s", out, err, cmd)

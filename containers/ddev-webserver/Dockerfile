@@ -39,6 +39,7 @@ ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux
 # TODO: Temporary location, this must be updated to the real one, remove these lines.
 ENV DDEV_LIVE_DOWNLOAD_URL https://github.com/rfay/junk/releases/download/v1.1/ddev-live.zip
 ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
+ENV DDEV_LIVE_NO_VERSION_PROMPT true
 
 RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
 
