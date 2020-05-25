@@ -210,8 +210,10 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 		return "", fmt.Errorf("failure waiting for ddev-live backup database completion: %v; cmd=%s, output=%s", err, cmd, out)
 	}
 
-	// Retrieve db backup by using ddev-live pull
-	cmd = fmt.Sprintf(`cd /mnt/ddevlive-downloads && ddev-live pull db %s/%s`, p.OrgName, backupName)
+	// Retrieve db backup by using ddev-live pull. Unfortunately, we often get
+	// failed to download asset: The access key ID you provided does not exist in our records
+	// https://github.com/drud/ddev-live/issues/348, also https://github.com/drud/ddev-live-client/issues/402
+	cmd = fmt.Sprintf(`cd /mnt/ddevlive-downloads && count=0; until ddev-live pull db %s/%s 2>/tmp/pull.out; do sleep 1; ((count++)); if [ "$count" -ge 5 ]; then echo "failed waiting for ddev-live pull db: $(cat /tmp/pull.out)"; exit 103; fi; done`, p.OrgName, backupName)
 	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, nil, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
 	w := strings.Split(out, " ")
 	if err != nil || len(w) != 2 {
