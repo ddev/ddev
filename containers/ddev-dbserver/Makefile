@@ -46,7 +46,7 @@ build: container
 
 # The format here is majorversion:pinnedimageversion
 # This allows to pin the version (as currently required with 8.0.19
-MARIADB_VERSIONS=5.5:5.5 10.0:10.0 10.1:10.1 10.2:10.2 10.3:10.3 10.4:10.4
+MARIADB_VERSIONS=5.5:5.5 10.0:10.0 10.1:10.1 10.2:10.2 10.3:10.3 10.4:10.4 10.5:10.5
 MYSQL_VERSIONS=5.5:5.5 5.6:5.6 5.7:5.7 8.0:8.0.19
 
 container: mariadb_containers mysql_containers
@@ -83,15 +83,14 @@ push: container
 
 
 test: container
-	bash ./test/test_dbserver.sh # bash execution just for windows make
+	bash ./test/test_dbserver.sh $(VERSION) # bash execution just for windows make
 
 clean:
 	for item in $(MARIADB_VERSIONS); do \
-		@if docker image inspect $(DOCKER_REPO)-mariadb-4$item:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mariadb-4$item:$(VERSION); fi
+		if docker image inspect $(DOCKER_REPO)-mariadb-${item}:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mariadb-$${item}:$(VERSION); fi; \
 	done
 	for item in $(MYSQL_VERSIONS); do \
-		@if docker image inspect $(DOCKER_REPO)-myql-4$item:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mysql-4$item:$(VERSION); fi
+		if docker image inspect $(DOCKER_REPO)-mysql-${item}:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mysql-$${item}:$(VERSION); fi; \
 	done
-
 	@rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
 
