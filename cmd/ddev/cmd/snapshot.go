@@ -12,7 +12,10 @@ var snapshotName string
 var DdevSnapshotCommand = &cobra.Command{
 	Use:   "snapshot [projectname projectname...]",
 	Short: "Create a database snapshot for one or more projects.",
-	Long:  `Uses mariabackup command to create a database snapshot in the .ddev/db_snapshots folder.`,
+	Long:  `Uses mariabackup or xtrabackup command to create a database snapshot in the .ddev/db_snapshots folder. These are compatible with server backups using the same tools and can be restored with "ddev restore-snapshot".`,
+	Example: `ddev snapshot
+ddev snapshot --name some_descriptive_name
+ddev snapshot --all`,
 	Run: func(cmd *cobra.Command, args []string) {
 		apps, err := getRequestedProjects(args, snapshotAll)
 		if err != nil {

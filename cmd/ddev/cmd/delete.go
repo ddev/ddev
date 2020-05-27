@@ -22,6 +22,7 @@ var DeleteCmd = &cobra.Command{
 ddev delete proj1 proj2 proj3
 ddev delete --omit-snapshot proj1
 ddev delete --omit-snapshot --yes proj1 proj2
+ddev delete -Oy
 ddev delete --all`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if noConfirm && deleteAll {

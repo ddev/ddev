@@ -33,7 +33,8 @@ var PullCmd = &cobra.Command{
 	Long: `Pull files and database using a configured provider plugin.
 	Running pull will connect to the configured provider and download + import the
 	latest backups.`,
-	Args: cobra.ExactArgs(0),
+	Example: `ddev pull`,
+	Args:    cobra.ExactArgs(0),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
 	},

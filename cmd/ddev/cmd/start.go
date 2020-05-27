@@ -22,6 +22,9 @@ var StartCmd = &cobra.Command{
 to provide a local development environment. You can run 'ddev start' from a
 project directory to start that project, or you can start stopped projects in
 any directory by running 'ddev start projectname [projectname ...]'`,
+	Example: `ddev start
+ddev start <project1> <project2>
+ddev start --all`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
 	},

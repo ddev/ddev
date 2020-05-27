@@ -24,6 +24,7 @@ var ListCmd = &cobra.Command{
 	Short: "List projects",
 	Long:  `List projects. Shows all projects by default, shows active projects only with --active-only`,
 	Example: `ddev list
+ddev list --active-only
 ddev list -A`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for {
