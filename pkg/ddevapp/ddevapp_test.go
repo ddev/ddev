@@ -216,6 +216,16 @@ func TestMain(m *testing.M) {
 		log.Info("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific tests.")
 	}
 
+	token = os.Getenv("DDEV_DDEVLIVE_API_TOKEN")
+	if token != "" {
+		out, err := exec.RunCommand(DdevBin, []string{"auth", "ddev-live", token})
+		if err != nil {
+			log.Fatalf("Unable to ddev auth ddev-live: %v (%v)", err, out)
+		}
+	} else {
+		log.Info("No DDEV_DDEVLIVE_API_TOKEN env var has been set. Skipping ddev-live specific tests.")
+	}
+
 	for i, site := range TestSites {
 		app := &ddevapp.DdevApp{Name: site.Name}
 		_ = app.Stop(true, false)
@@ -857,13 +867,29 @@ func TestDdevImportDB(t *testing.T) {
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
 
 	// Test simple db loads.
-	for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip"} {
+	for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
 		path := filepath.Join(testDir, "testdata", t.Name(), file)
 		err = app.ImportDB(path, "", false, false, "db")
 		assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 		if err != nil {
 			continue
 		}
+
+		// There should be exactly the one users table for each of these files
+		out, _, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     "mysql -N -e 'SHOW TABLES;' | cat",
+		})
+		assert.NoError(err)
+		assert.Equal("users\n", out)
+
+		// Verify that no extra database was created
+		out, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`,
+		})
+		assert.NoError(err)
+		assert.Equal("db\n", out)
 
 		// Test that a settings file has correct hash_salt format
 		switch app.Type {
@@ -893,17 +919,6 @@ func TestDdevImportDB(t *testing.T) {
 		assert.NoError(err)
 		err = os.Remove("hello-post-import-db-" + app.Name)
 		assert.NoError(err)
-
-		out, _, err := app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     "mysql -e 'SHOW TABLES;'",
-		})
-		assert.NoError(err)
-
-		assert.Contains(out, "Tables_in_db")
-		assert.False(strings.Contains(out, "Empty set"))
-
-		assert.NoError(err)
 	}
 
 	if site.DBZipURL != "" {
@@ -917,15 +932,6 @@ func TestDdevImportDB(t *testing.T) {
 		assert.FileExists("hello-post-import-db-" + app.Name)
 		_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
 		_ = os.RemoveAll("hello-post-import-db-" + app.Name)
-
-		out, _, err := app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     "mysql -e 'SHOW TABLES;'",
-		})
-		assert.NoError(err)
-
-		assert.Contains(out, "Tables_in_db")
-		assert.False(strings.Contains(out, "Empty set"))
 	}
 
 	if site.FullSiteTarballURL != "" {

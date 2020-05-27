@@ -126,7 +126,7 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	// Otherwise we accept whatever might have been in config file if there was anything.
 	if provider == "" && app.Provider != "" {
 		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
-	} else if provider == nodeps.ProviderPantheon || provider == nodeps.ProviderDrudS3 || provider == nodeps.ProviderDefault {
+	} else if provider == nodeps.ProviderPantheon || provider == nodeps.ProviderDdevLive || provider == nodeps.ProviderDefault {
 		app.Provider = provider // Use the provider passed-in. Function argument wins.
 	} else if provider == "" && app.Provider == "" {
 		app.Provider = nodeps.ProviderDefault // Nothing passed in, nothing configured. Set c.Provider to default
@@ -958,7 +958,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "commands/*/*.example", "commands/*/README.txt", "commands/host/launch", "commands/web/xdebug", "commands/db/mysql", "homeadditions/*.example", "homeadditions/README.txt", ".gitignore", "import.yaml", ".ddev-docker-compose-base.yaml", ".ddev-docker-compose-full.yaml", "db_snapshots", "sequelpro.spf", "import-db", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", ".sshimageBuild", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
+	err := CreateGitIgnore(dir, "commands/*/*.example", "commands/*/README.txt", "commands/host/launch", "commands/web/xdebug", "commands/db/mysql", "homeadditions/*.example", "homeadditions/README.txt", ".gitignore", "import.yaml", ".ddev-docker-compose-base.yaml", ".ddev-docker-compose-full.yaml", "db_snapshots", "sequelpro.spf", "import-db", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", ".sshimageBuild", ".webimageExtra", ".dbimageExtra", ".*downloads", "*-build/Dockerfile.example")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

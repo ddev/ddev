@@ -375,7 +375,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		targetDB = "db"
 	}
 	var extPathPrompt bool
-	dbPath, err := ioutil.TempDir(filepath.Dir(app.ConfigPath), "importdb")
+	dbPath, err := ioutil.TempDir(filepath.Dir(app.ConfigPath), ".importdb")
 	//nolint: errcheck
 	defer os.RemoveAll(dbPath)
 	if err != nil {
@@ -452,7 +452,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		}
 	}
 
-	// Inside the container, the dir for imports will be at /mnt/ddev_config/<tmpdir_name>
+	// Inside the db container, the dir for imports will be at /mnt/ddev_config/<tmpdir_name>
 	insideContainerImportPath := path.Join("/mnt/ddev_config", filepath.Base(dbPath))
 
 	preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
@@ -460,9 +460,13 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 	}
 
-	inContainerCommand := fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | mysql %s`, preImportSQL, insideContainerImportPath, targetDB)
+	// The perl manipulation removes statements like CREATE DATABASE and USE, which
+	// throw off imports.
+	inContainerCommand := fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | perl -p -e 's/^(CREATE DATABASE|USE|.*DROP DATABASE).*$//' | mysql %s`, preImportSQL, insideContainerImportPath, targetDB)
+
+	// Handle the case where we are reading from stdin
 	if imPath == "" && extPath == "" {
-		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && mysql %s`, preImportSQL, targetDB)
+		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE|USE|.*DROP DATABASE).*$//' | mysql %s`, preImportSQL, targetDB)
 	}
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
@@ -654,13 +658,13 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 	if opts.SkipFiles {
 		output.UserOut.Println("Skipping files pull.")
 	} else {
-		output.UserOut.Println("Downloading file archive...")
+		output.UserOut.Println("Downloading files...")
 		fileLocation, importPath, err := provider.GetBackup("files", opts.Environment)
 		if err != nil {
 			return err
 		}
 
-		output.UserOut.Printf("File archive downloaded to: %s", fileLocation)
+		output.UserOut.Printf("Files downloaded to: %s", fileLocation)
 
 		if opts.SkipImport {
 			output.UserOut.Println("Skipping files import.")
@@ -1823,8 +1827,8 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	case nodeps.ProviderPantheon:
 		provider = &PantheonProvider{}
 		err = provider.Init(app)
-	case nodeps.ProviderDrudS3:
-		provider = &DrudS3Provider{}
+	case nodeps.ProviderDdevLive:
+		provider = &DdevLiveProvider{}
 		err = provider.Init(app)
 	case nodeps.ProviderDefault:
 		provider = &DefaultProvider{}
