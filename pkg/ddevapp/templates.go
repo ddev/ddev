@@ -254,7 +254,7 @@ const ConfigInstructions = `
 # These values specify the destination directory for ddev ssh and the
 # directory in which commands passed into ddev exec are run.
 
-# omit_containers: ["db", dba", "ddev-ssh-agent"]
+# omit_containers: [db, dba, ddev-ssh-agent]
 # Currently only these containers are supported. Some containers can also be
 # omitted globally in the ~/.ddev/global_config.yaml. Note that if you omit
 # the "db" container, several standard features of ddev that access the
