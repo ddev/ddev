@@ -10,7 +10,7 @@ If you have the DDEV-Local CLI (ddev) [installed](https://ddev.readthedocs.io/en
 
 1. Authenticate with DDEV-Live.
 
-    a. Login to your DDEV-Live Dashboard, and [obtain the DDEV API token](https://dash.ddev.com/settings/integration) for ddev to use.
+    a. Log in to your DDEV-Live Dashboard, and [obtain the DDEV-Live API token](https://dash.ddev.com/settings/integration) for ddev to use.
 
     b. Run `ddev auth ddev-live <YOUR TOKEN>` (This is a one-time operation, and configures ddev to work with all the sites on your account.) (You can also set the default DDEV-Live "org" with `ddev auth ddev-live --default-org=<yourorg> <token>`)
 
