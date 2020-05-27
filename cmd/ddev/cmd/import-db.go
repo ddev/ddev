@@ -17,9 +17,9 @@ var progressOption bool
 var ImportDBCmd = &cobra.Command{
 	Use:   "import-db [project]",
 	Args:  cobra.RangeArgs(0, 1),
-	Short: "Import a sql archive into the project.",
-	Long: `Import a sql archive into the project.
-The database can be provided as a SQL dump in a .sql, .sql.gz, .mysql, .mysql.gz, .zip, .tgz, or .tar.gz
+	Short: "Import a sql file into the project.",
+	Long: `Import a sql file into the project.
+The database dump file can be provided as a SQL dump in a .sql, .sql.gz, .mysql, .mysql.gz, .zip, .tgz, or .tar.gz
 format. For the zip and tar formats, the path to a .sql file within the archive
 can be provided if it is not located at the top level of the archive. An optional target database
 can also be provided; the default is the default database named "db".

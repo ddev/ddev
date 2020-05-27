@@ -39,3 +39,5 @@ Note that if a Dockerfile is provided, any config.yaml `webimage_extra_packages`
 ```
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests php-yaml php7.3-ldap
 ```
+
+Remember that the Dockerfile is building a docker image that will be used later with ddev. At the time the Dockerfile is executing, your code is not mounted and the container is not running, it's just being built.
