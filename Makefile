@@ -81,7 +81,7 @@ include build-tools/makefile_components/base_build_go.mak
 
 TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
-TEST_TIMEOUT=120m
+TEST_TIMEOUT=150m
 BUILD_ARCH = $(shell go env GOARCH)
 ifeq ($(BUILD_OS),linux)
     DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/ddev
