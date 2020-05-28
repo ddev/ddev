@@ -37,8 +37,9 @@ require (
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
 	github.com/smartystreets/goconvey v0.0.0-20181108003508-044398e4856c // indirect
 	github.com/spf13/afero v1.2.2 // indirect
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.3.0
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
@@ -53,4 +54,4 @@ require (
 	gotest.tools v2.2.0+incompatible // indirect
 )
 
-go 1.13
+go 1.14
