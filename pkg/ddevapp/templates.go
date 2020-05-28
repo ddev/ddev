@@ -129,8 +129,8 @@ services:
     {{ end }}
     healthcheck:
       interval: 1s
-      retries: 10
-      start_period: 10s
+      retries: 20
+      start_period: 20s
       timeout: 120s
 
 {{ if not .OmitDBA }}
@@ -409,8 +409,8 @@ services:
     restart: "no"
     healthcheck:
       interval: 1s
-      retries: 10
-      start_period: 10s
+      retries: 20
+      start_period: 20s
       timeout: 120s
 
 networks:
