@@ -1,0 +1,5 @@
+# #ddev-generated
+# Everything in the commands directory needs LF line-endings
+# Not CRLF as from Windows.
+# bash especially just can't cope if it finds CRLF in a script.
+* -text eol=lf

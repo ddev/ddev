@@ -1,3 +1,4 @@
+#ddev-generated
 Scripts in this directory will be executed inside the db
 container. A number of environment variables are supplied to the scripts, including:
 

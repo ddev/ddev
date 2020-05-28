@@ -105,7 +105,7 @@ func getSitesFromList(t *testing.T, jsonOut string) []interface{} {
 	assert := asrt.New(t)
 
 	logItems, err := unmarshalJSONLogs(jsonOut)
-	assert.NoError(err)
+	require.NoError(t, err)
 	data := logItems[len(logItems)-1]
 	assert.EqualValues(data["level"], "info")
 
