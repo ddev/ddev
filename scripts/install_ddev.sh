@@ -65,19 +65,29 @@ else
     sudo mv /tmp/ddev /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/
 fi
 
-if command -v brew >/dev/null &&  [ -f "$(brew --prefix)/etc/bash_completion" ]; then
-	bash_completion_dir=$(brew --prefix)/etc/bash_completion.d
-    cp /tmp/ddev_bash_completion.sh $bash_completion_dir/ddev
-    printf "${GREEN}Installed ddev bash completions in $bash_completion_dir${RESET}\n"
-    rm /tmp/ddev_bash_completion.sh
-else
-	printf "${YELLOW}Bash completion for ddev was not installed. You may manually install /tmp/ddev_bash_completion.sh in your bash_completions.d directory.${RESET}\n"
+if command -v brew >/dev/null ; then
+    if [ -d "$(brew --prefix)/etc/bash_completion.d" ]; then
+        bash_completion_dir=$(brew --prefix)/etc/bash_completion.d
+        cp /tmp/ddev_bash_completion.sh $bash_completion_dir/ddev
+        printf "${GREEN}Installed ddev bash completions in $bash_completion_dir${RESET}\n"
+        rm /tmp/ddev_bash_completion.sh
+    else
+        printf "${YELLOW}Bash completion for ddev was not installed. You may manually install /tmp/ddev_bash_completion.sh in your bash_completion.d directory.${RESET}\n"
+    fi
+
+    if  [ -d "$(brew --prefix)/share/zsh-completions" ] && [ -f /tmp/ddev_zsh_completion.sh ]; then
+        zsh_completion_dir=$(brew --prefix)/share/zsh-completions
+        cp /tmp/ddev_zsh_completion.sh $zsh_completion_dir/_ddev
+        printf "${GREEN}Installed ddev zsh completions in $zsh_completion_dir${RESET}\n"
+        rm /tmp/ddev_zsh_completion.sh
+    else
+        printf "${YELLOW}zsh completion for ddev was not installed. You may manually install /tmp/ddev_zsh_completion.sh in your zsh-completions directory.${RESET}\n"
+    fi
 fi
-printf "${YELLOW}If you use zsh, you may manually install ddev completions with \"cp /tmp/_ddev <your_fpath>\".${RESET}\n"
 
 rm /tmp/$TARBALL /tmp/$SHAFILE
 
 printf "${GREEN}ddev is now installed. Run \"ddev\" to verify your installation and see usage.${RESET}\n"
-if ! command -v mkcert ; then
+if ! command -v mkcert >/dev/null ; then
     printf "${YELLOW}Please install mkcert from https://github.com/FiloSottile/mkcert/releases and then run 'mkcert -install'.${RESET}\n"
 fi
