@@ -77,6 +77,9 @@ fi
 
 cp ddev_windows_installer*.exe $ARTIFACTS
 
+# Create tarball of completion scripts
+tar -czf $ARTIFACTS/ddev_shell_completion_scripts.$VERSION.tar.gz *completion*.sh
+
 # Create macOS and Linux homebrew bottles
 for os in sierra x86_64_linux ; do
     NO_V_VERSION=${VERSION#v}
