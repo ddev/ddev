@@ -31,7 +31,7 @@ In addition to the *commands* listed above, there are loads and loads of tools i
 
 ## Quickstart Guides
 
-Here are quickstart instructions for generic PHP, WordPress, Drupal 6, Drupal 7, Drupal 8, TYPO3, and Backdrop.
+Here are quickstart instructions for generic PHP, WordPress, Drupal 6, Drupal 7, Drupal 8, TYPO3, Backdrop, Magento, Magento 2, and Laravel.
 
 **Prerequisites:** Before you start, follow the [installation instructions](../index.md#installation). Make sure to [check the system requirements](../index.md#system-requirements), you will need *docker* and *docker-compose* to use ddev.
 
@@ -299,6 +299,81 @@ Of course, change the admin name and related information is needed. The project 
 You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.3/install-gde/install/sample-data-after-composer.html).
 
 Note that Magento 2 is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
+
+### Laravel Quickstart
+
+Get started with Laravel projects on ddev either using a new or existing composer project or by cloning a git repository.
+The Laravel project type can be used for Lumen same as for Laravel.
+
+#### Laravel Composer Setup Example
+
+```
+mkdir my-laravel-app
+cd my-laravel-app
+ddev config --project-type=laravel --docroot=public --create-docroot
+ddev start
+ddev composer create --prefer-dist laravel/laravel
+ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
+ddev exec "php artisan key:generate"
+ddev launch
+```
+
+#### Laravel Git Clone Example
+
+Note that the git URL shown below is an example only, you'll need to use your own project.
+
+```
+git clone https://github.com/example/example-site
+cd example-site
+ddev config --project-type=laravel
+ddev composer install
+ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
+ddev exec "php artisan key:generate"
+ddev launch
+```
+
+#### Laravel Database connection
+
+In the examples above we used a one liner to copy `.env.example` as `env`and set the `DB_HOST`, `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD` environment variables to the value of `db`.
+These values are DDEV's default settings for the Database connection.
+
+Instead of setting each connection variable we can add a ddev to the `connections` array in `config/databases.php` like this:
+
+```
+<?php
+
+return [
+
+    ...
+
+    'connections' => [
+
+        ...
+
+        'ddev' => [
+            'driver' => 'mysql',
+            'host' => 'db',
+            'port' => 3306,
+            'database' => 'db',
+            'username' => 'db',
+            'password' => 'db',
+            'unix_socket' => '',
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
+
+    ],
+
+  ...
+
+];
+```
+
+This way we only need to change the value of `DB_CONNECTION` to `ddev` in the `.env` to work with the `db` service.
+This is very handy if you have a local database installed and you want to switch between the connections faster by changing only one variable in `.env`
 
 ### Database Imports
 

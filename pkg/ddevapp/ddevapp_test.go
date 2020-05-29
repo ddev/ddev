@@ -163,6 +163,21 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "Deep mediterranean quiche"},
 			FilesImageURI:                 "/sites/default/files/mediterranean-quiche-umami.jpg",
 		},
+		{
+			Name:                          "TestPkgLumen",
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp.tar.gz",
+			ArchiveInternalExtractionPath: "ddev-lumen-testapp/",
+			FilesTarballURL:               "",
+			FilesZipballURL:               "",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp_sql.tar.gz",
+			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp_sql.zip",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeLaravel,
+			Docroot:                       "public",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/", Expect: "Laravel Components"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/api/status-code/200", Expect: "indicates that the request has succeeded."},
+			FilesImageURI:                 "/images/200.jpg",
+		},
 	}
 
 	FullTestSites = TestSites
@@ -1562,6 +1577,11 @@ func TestDdevImportFilesDir(t *testing.T) {
 	}
 
 	for _, site := range TestSites {
+		if site.FilesTarballURL == "" && site.FilesZipballURL == "" {
+			t.Logf("=== SKIP TestDdevImportFilesDir for %s (FilesTarballURL and FilesZipballURL are not provided)\n", site.Name)
+			continue
+		}
+
 		switchDir := site.Chdir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 		t.Logf("=== BEGIN TestDdevImportFilesDir for %s\n", site.Name)
@@ -1599,6 +1619,11 @@ func TestDdevImportFiles(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
+		if site.FilesTarballURL == "" && site.FilesZipballURL == "" && site.FullSiteTarballURL == "" {
+			t.Logf("=== SKIP TestDdevImportFiles for %s (FilesTarballURL and FilesZipballURL are not provided)\n", site.Name)
+			continue
+		}
+
 		switchDir := site.Chdir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
