@@ -1,0 +1,8 @@
+#!/bin/bash
+
+## #ddev-generated
+## Description: Run ddev-live inside the web container
+## Usage: live [flags] [args]
+## Example: "ddev live auth" or "ddev live list sites" or "ddev live --version"
+
+ddev-live $@
