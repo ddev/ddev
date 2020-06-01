@@ -3,15 +3,6 @@
 # Run these tests from the repo root directory, for example
 # bats tests/ddev-websever-dev/php_webserver.bats
 
-
-@test "check existence/version of various required tools for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-    docker exec -t $CONTAINER_NAME php --version | grep "PHP ${PHP_VERSION}"
-    docker exec -t $CONTAINER_NAME drush --version
-    docker exec -t $CONTAINER_NAME wp --version
-    #TODO: Make sure composer cache is used here; mount it?
-    docker exec -t $CONTAINER_NAME composer create-project -d //tmp psr/log --no-dev --no-interaction
-}
-
 @test "http and https phpstatus access work inside and outside container for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
     curl -ssL --fail http://localhost:$HOST_HTTP_PORT/test/phptest.php
     if [ "${OS:-$(uname)}" != "Windows_NT" ] ; then
