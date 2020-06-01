@@ -3,7 +3,9 @@
 ##### These variables need to be adjusted in most repositories #####
 
 # Docker repo for a push
-DOCKER_REPO ?= drud/ddev-webserver
+DOCKER_ORG ?= drud
+DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
+DEFAULT_IMAGES ?= ddev-webserver
 
 # Top-level directories to build
 #SRC_DIRS := filexs drudapi secrets utils
@@ -35,6 +37,6 @@ include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_python.mak
 
 test: container
-	# I have no idea why you have to do bash -c in this one place on Windows. But just
-	# ./test/containertest.sh fails with process_begin: CreateProcess(NULL,, ...) failed.
-	bash -c test/containertest.sh
+	for item in $(DEFAULT_IMAGES); do \
+		if [ -x tests/$$item/test.sh ]; then bash -c "tests/$$item/test.sh $(DOCKER_ORG)/$$item:$(VERSION)"; fi; \
+	done

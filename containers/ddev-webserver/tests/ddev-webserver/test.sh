@@ -55,7 +55,7 @@ if ! containerwait; then
     echo "=============== Failed containerwait after docker run with  DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE} DDEV_PHP_VERSION=$PHP_VERSION ==================="
     exit 100
 fi
-bats tests/ddev-webserver-dev/general.bats
+bats tests/ddev-webserver/general.bats
 
 cleanup
 
@@ -69,7 +69,7 @@ for PHP_VERSION in 5.6 7.0 7.1 7.2 7.3 7.4; do
             exit 101
         fi
 
-        bats tests/ddev-webserver-dev/php_webserver.bats || ( echo "bats tests failed for WEBSERVER_TYPE=$WEBSERVER_TYPE PHP_VERSION=$PHP_VERSION" && exit 102 )
+        bats tests/ddev-webserver/php_webserver.bats || ( echo "bats tests failed for WEBSERVER_TYPE=$WEBSERVER_TYPE PHP_VERSION=$PHP_VERSION" && exit 102 )
         printf "Test successful for PHP_VERSION=$PHP_VERSION WEBSERVER_TYPE=$WEBSERVER_TYPE\n\n"
         cleanup
     done
@@ -87,15 +87,15 @@ for project_type in drupal6 drupal7 drupal8 drupal9 typo3 backdrop wordpress def
         exit 103
     fi
 
-    bats tests/ddev-webserver-dev/project_type.bats || ( echo "bats tests failed for project_type=$project_type" && exit 104 )
+    bats tests/ddev-webserver/project_type.bats || ( echo "bats tests failed for project_type=$project_type" && exit 104 )
     printf "Test successful for project_type=$project_type\n\n"
     cleanup
 done
 
-docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.3" -v "/$PWD/tests/ddev-webserver-dev/testdata:/mnt/ddev_config:ro" -v ddev-global-cache:/mnt/ddev-global-cache -d --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
+docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.3" -v "/$PWD/tests/ddev-webserver/testdata:/mnt/ddev_config:ro" -v ddev-global-cache:/mnt/ddev-global-cache -d --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
 containerwait
 
-bats tests/ddev-webserver-dev/custom_config.bats
+bats tests/ddev-webserver/custom_config.bats
 
 cleanup
 
