@@ -8,7 +8,7 @@
     # Make sure the custom php configuration in ddev_config/php is activated.
     # Verify that /mnt/ddev_config is mounted and we have php overrides there.
     # First see if /mnt/ddev_config "works" for php
-    docker exec -t $CONTAINER_NAME bash -c "ls -l //mnt/ddev_config/php/my-php.ini || (echo 'Failed to ls /mnt/ddev_config' && exit 201)"
+    docker exec -t $CONTAINER_NAME bash -c "ls -l /mnt/ddev_config/php/my-php.ini || (echo 'Failed to ls /mnt/ddev_config' && exit 201)"
 
 
     # With overridden value we should have assert.active=0, not the default
