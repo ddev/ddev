@@ -4,8 +4,10 @@
 
 # Docker repo for a push
 DOCKER_ORG ?= drud
-DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
-DEFAULT_IMAGES ?= ddev-webserver
+DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver-dev
+
+DEFAULT_IMAGES = ddev-webserver-dev
+
 
 # Top-level directories to build
 #SRC_DIRS := filexs drudapi secrets utils
@@ -36,7 +38,5 @@ include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
-test: container
-	for item in $(DEFAULT_IMAGES); do \
 		if [ -x tests/$$item/test.sh ]; then bash -c "tests/$$item/test.sh $(DOCKER_ORG)/$$item:$(VERSION)"; fi; \
 	done

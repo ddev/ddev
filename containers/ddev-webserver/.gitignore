@@ -9,5 +9,5 @@
 /VERSION.txt
 /.docker_image
 # These are not artifacts that should be ignored
-!files/usr/bin/
-!files/usr/local/bin/
+!ddev-webserver-dev-files/usr/bin/
+!ddev-webserver-dev-files/usr/local/bin/
