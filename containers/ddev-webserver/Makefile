@@ -6,7 +6,7 @@
 DOCKER_ORG ?= drud
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver-dev
 
-DEFAULT_IMAGES = ddev-webserver-dev
+DEFAULT_IMAGES = ddev-webserver
 
 
 # Top-level directories to build
@@ -38,5 +38,23 @@ include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
-		if [ -x tests/$$item/test.sh ]; then bash -c "tests/$$item/test.sh $(DOCKER_ORG)/$$item:$(VERSION)"; fi; \
+
+DOCKER_BUILDKIT=1
+
+container build: images
+
+images: $(DEFAULT_IMAGES)
+
+push: images
+	for item in $(DEFAULT_IMAGES); do \
+		docker push $(DOCKER_ORG)/$$item:$(VERSION); \
+		echo "pushed $(DOCKER_ORG)/$$item"; \
+	done
+
+ddev-webserver d:
+	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+
+test: images
+	for item in $(DEFAULT_IMAGES); do \
+		if [ -x tests/$$item/test.sh ]; then tests/$$item/test.sh $(DOCKER_ORG)/$$item:$(VERSION); fi; \
 	done

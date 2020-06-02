@@ -42,7 +42,7 @@ RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 
-ADD ddev-webserver-dev-files /
+ADD ddev-webserver-base-files /
 ADD ddev-webserver-base-scripts /
 # END ddev-webserver-base
 
@@ -98,7 +98,7 @@ RUN apt-get  install --no-install-recommends --no-install-suggests -y \
     unzip \
     zip
 
-ADD ddev-webserver-dev-files /
+ADD ddev-webserver-base-files /
 RUN phpdismod xdebug
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
 
@@ -160,9 +160,11 @@ CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 #END ddev-webserver-dev-base
 
-### ---------------------------ddev-webserver-dev--------------------------------------
-### Build ddev-webserver-dev by turning ddev-webserver-dev-base into one layer
-FROM scratch as ddev-webserver-dev
+### ---------------------------ddev-webserver--------------------------------------
+### This could be known as ddev-webserver-dev as it's development-env targeted
+### But for historical reasons, it's just ddev-webserver
+### Build ddev-webserver by turning ddev-webserver-dev-base into one layer
+FROM scratch as ddev-webserver
 ENV PHP_DEFAULT_VERSION="7.3"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
