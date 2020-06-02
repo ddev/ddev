@@ -4,7 +4,7 @@
 
 # Docker repo for a push
 DOCKER_ORG ?= drud
-DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver-dev
+DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
 
 DEFAULT_IMAGES = ddev-webserver
 
