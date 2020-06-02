@@ -178,6 +178,8 @@ ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
 ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
 ENV DDEV_LIVE_NO_VERSION_PROMPT true
 
+ENV BASH_ENV /etc/bash.nointeractive.bashrc
+
 # Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
 # NGINX_DOCROOT is for backward compatibility only, to break less people.
 ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
