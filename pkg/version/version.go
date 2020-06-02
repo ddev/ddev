@@ -42,7 +42,7 @@ var DockerComposeVersionConstraint = ">= 1.21.0-alpha1"
 var DockerComposeFileFormatVersion = "3.6"
 
 // WebImg defines the default web image used for applications.
-var WebImg = "drud/ddev-webserver-dev"
+var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
 var WebTag = "20200601_inherit_php_from_ddev_images" // Note that this can be overridden by make
