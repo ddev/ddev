@@ -188,5 +188,5 @@ COPY --from=ddev-webserver-dev-base / /
 EXPOSE 80 8025
 HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
-#END ddev-webserver-dev
+#END ddev-webserver
 
