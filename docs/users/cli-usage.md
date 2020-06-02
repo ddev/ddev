@@ -265,18 +265,21 @@ Successfully started example-site
 Your application can be reached at: http://example-backdrop-site.ddev.site
 ```
 
-### Magento 1 Quickstart
+### OpenMage (formerly Magento 1) Quickstart
 
-1. Download Magento 1 (not recommended, as it's end-of-life) from [release page](https://github.com/OpenMage/magento-mirror/releases).
-2. Make a directory for it, for example `mkdir ~/workspace/magento1` and change directory to the new directory.
-3. Extract the download, for example `tar -zxf ~/Downloads/magento-mirror-1.9.4.3.tar.gz --strip-components=1`
-4. `ddev config` and accept the defaults.
+1. Download OpenMage from [release page](https://github.com/OpenMage/magento-lts/releases).
+2. Make a directory for it, for example `mkdir ~/workspace/OpenMage` and change directory to the new directory.
+3. `ddev config` and accept the defaults.
+4. (Install sample data - see below)
 5. `ddev start`
 6. Follow the URL to the base site.
 
-You may want the [Magento 1 Sample Data](https://magento.com/tech-resources/download#download1759) for experimentation.
+You may want the [Magento 1 Sample Data](https://raw.githubusercontent.com/Vinai/compressed-magento-sample-data/1.9.1.0/compressed-magento-sample-data-1.9.1.0.tgz) for experimentation:
+* Download Magento 1.9.1.x Sample Data
+* Extract the download, for example `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.1.0.tgz --strip-components=1`
+* Import Example Data to database **before** running OpenMage install
 
-Note that Magento 1 is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
+Note that OpenMage is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
 
 ### Magento 2 Quickstart
 
