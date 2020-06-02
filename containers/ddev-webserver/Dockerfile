@@ -1,13 +1,10 @@
-FROM bitnami/minideb:buster
 
+### ---------------------------ddev-webserver-base--------------------------------------
+### Build ddev-php-base from ddev-webserver-base
+### ddev-php-base is the basic of ddev-php-prod (for DDEV-Live)
+### and ddev-webserver-* (For DDEV-Local)
+FROM drud/ddev-php-base:v0.1 as ddev-webserver-base
 ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4"
-ENV PHP_DEFAULT_VERSION="7.3"
-ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
-
-ENV DRUSH_VERSION=8.3.2
-ENV DRUSH_LAUNCHER_VERSION=0.6.0
-ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
-ENV MAILHOG_VERSION=1.0.0
 ENV BACKDROP_DRUSH_VERSION=1.3.1
 ENV MKCERT_VERSION=v1.4.1
 
@@ -19,13 +16,6 @@ ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV WEBSERVER_DOCROOT /var/www/html
 # For backward compatibility only
 ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
-
-# composer normally screams about running as root, we don't need that.
-ENV COMPOSER_ALLOW_SUPERUSER 1
-ENV COMPOSER_CACHE_DIR /mnt/ddev-global-cache/composer
-# Windows, especially Win10 Home/Docker toolbox, can take forever on composer build.
-ENV COMPOSER_PROCESS_TIMEOUT 2000
-
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
 
 # Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
@@ -34,93 +24,83 @@ ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
 ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
 
 ENV CAROOT /mnt/ddev-global-cache/mkcert
-# Real location
-ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux/ddev-live.zip
-ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
-ENV DDEV_LIVE_NO_VERSION_PROMPT true
 
-# From "man bash":
-#    When bash is started non-interactively, to run a shell script, for example,
-#    it looks for the variable BASH_ENV in the environment, expands its value
-#    if it appears there, and uses the expanded value as the name of a file to read and execute.
-ENV BASH_ENV /etc/bash.nointeractive.bashrc
-
-RUN ln -fs /usr/share/zoneinfo/UTC /etc/localtime && dpkg-reconfigure --frontend noninteractive tzdata
-
-RUN set -o errexit && apt-get -qq update && \
-    apt-get -qq install --no-install-recommends --no-install-suggests -y \
-        procps \
-        curl \
-        ca-certificates \
-        apt-transport-https \
-        wget \
-        fontconfig \
-        bzip2 \
-        ghostscript \
-        gnupg \
-        jq \
-        locales-all \
-		lsb-release && \
-    wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
-    echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && \
-    wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add - && \
-    echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list && \
-    wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
+RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
     apt-key add /tmp/nginx_signing.key && \
-    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
-    echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-    echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" >> /etc/apt/sources.list && \
-    curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
-    apt-get -qq update && \
-    apt-get -qq install --no-install-recommends --no-install-suggests -y \
-        less \
-        git \
-        mariadb-client \
-        nginx \
-        apache2 \
-        nodejs \
-        libcap2-bin \
-        supervisor \
-        sudo \
-        imagemagick \
-        iputils-ping \
-        patch \
-        telnet \
-        netcat \
-        iproute2 \
-        vim \
-        nano \
-        gettext \
-        ncurses-bin \
-        yarn \
-        zip \
-        unzip \
-        rsync \
-        locales-all \
-        libpcre3 \
-        openssh-client \
-        php-imagick \
-        php-uploadprogress \
-        sqlite3 && \
-    for v in $PHP_VERSIONS; do apt-get -qq install --no-install-recommends --no-install-suggests -y  $v-apcu $v-bcmath $v-bz2 $v-curl $v-cgi $v-cli $v-common $v-fpm $v-gd $v-intl $v-json $v-memcached $v-mysql $v-pgsql $v-mbstring $v-opcache $v-soap $v-redis $v-sqlite3 $v-readline $v-xdebug $v-xml $v-xmlrpc $v-zip libapache2-mod-$v || exit $?; done && \
-    for v in php5.6 php7.0 php7.1; do apt-get -qq install --no-install-recommends --no-install-suggests -y $v-mcrypt || exit $?; done && \
-    apt-get install blackfire-php -y --allow-unauthenticated && \
-    apt-get -qq autoremove -y && \
-    apt-get -qq clean -y && \
-    rm -rf /var/lib/apt/lists/*
+    echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
+
+RUN apt-get update && apt-get -qq install --no-install-recommends --no-install-suggests -y apache2 libcap2-bin locales-all nginx supervisor
+
+# Add additional modules not used in php-base
+RUN for v in $PHP_VERSIONS; do \
+    apt-get -qq install --no-install-recommends --no-install-suggests -y libapache2-mod-$v || exit $?; \
+done
+
+RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 
 # Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 
-ADD files /
+ADD ddev-webserver-base-files /
+ADD ddev-webserver-base-scripts /
+# END ddev-webserver-base
 
+### ---------------------------ddev-webserver-prod--------------------------------------
+### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
+### (Withut dev features, single layer)
+FROM scratch as ddev-webserver-prod
+ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
+ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
+ENV WEBSERVER_DOCROOT /var/www/html
+# For backward compatibility only
+ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
+ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
+
+# Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
+# NGINX_DOCROOT is for backward compatibility only, to break less people.
+ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
+ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
+COPY --from=ddev-webserver-base / /
+# END ddev-webserver-prod
+
+### ---------------------------ddev-webserver-dev-base--------------------------------------
+### Build ddev-webserver-dev-base from ddev-webserver-base
+FROM ddev-webserver-base as ddev-webserver-dev-base
+ENV MAILHOG_VERSION=1.0.0
+ENV CAROOT /mnt/ddev-global-cache/mkcert
+ENV PHP_DEFAULT_VERSION="7.3"
+ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux/ddev-live.zip
+
+RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
+RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
+RUN apt-get update
+RUN apt-get install blackfire-php -y --allow-unauthenticated
+RUN apt-get  install --no-install-recommends --no-install-suggests -y \
+    fontconfig \
+    gettext \
+    git \
+    iproute2 \
+    iputils-ping \
+    jq \
+    libpcre3 \
+    locales-all \
+    nano \
+    ncurses-bin \
+    netcat \
+    openssh-client \
+    patch \
+    rsync \
+    sqlite3 \
+    sudo \
+    telnet \
+    unzip \
+    zip
+
+ADD ddev-webserver-base-files /
 RUN phpdismod xdebug
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-RUN curl -sSL "https://github.com/drush-ops/drush/releases/download/${DRUSH_VERSION}/drush.phar" -o /usr/local/bin/drush8 && chmod +x /usr/local/bin/drush8
-RUN curl -sSL "https://github.com/drush-ops/drush-launcher/releases/download/${DRUSH_LAUNCHER_VERSION}/drush.phar" -o /usr/local/bin/drush && chmod +x /usr/local/bin/drush
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
-RUN curl -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp-cli && ln -s /usr/local/bin/wp-cli /usr/local/bin/wp
 
 RUN curl -ssL -O https://raw.githubusercontent.com/pantheon-systems/terminus-installer/master/builds/installer.phar && php installer.phar install
 RUN curl -ssL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod +x /usr/local/bin/ddev-live && rm ddev-live.zip
@@ -133,7 +113,6 @@ RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/${MAGERUN2_V
 
 RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal && chmod +x /usr/local/bin/drupal
 
-
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/drush.zip -o /tmp/backdrop_drush.zip && unzip -o /tmp/backdrop_drush.zip -d /var/tmp/backdrop_drush_commands
 
 RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
@@ -145,7 +124,7 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
     chmod -R ugo+rw /var/log/nginx/ && \
     chmod ugo+rx /usr/local/bin/* && \
     update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION} && \
-    ln -s /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
+    ln -sf /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
 
 RUN chmod -R 777 /var/log
 
@@ -170,12 +149,44 @@ RUN a2enmod ssl headers expires
 RUN chmod -R go-w /home/.ssh
 
 # scripts added last because they're most likely place to make changes, speeds up build
-ADD scripts /
+ADD ddev-webserver-base-scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
 
 RUN addgroup --gid 98 testgroup && adduser testuser --ingroup testgroup --disabled-password --gecos "" --uid 98
 
+EXPOSE 80 443 8025
+HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
+CMD ["/start.sh"]
+RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+#END ddev-webserver-dev-base
+
+### ---------------------------ddev-webserver--------------------------------------
+### This could be known as ddev-webserver-dev as it's development-env targeted
+### But for historical reasons, it's just ddev-webserver
+### Build ddev-webserver by turning ddev-webserver-dev-base into one layer
+FROM scratch as ddev-webserver
+ENV PHP_DEFAULT_VERSION="7.3"
+ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
+ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
+ENV WEBSERVER_DOCROOT /var/www/html
+# For backward compatibility only
+ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
+ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+ENV CAROOT /mnt/ddev-global-cache/mkcert
+ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
+
+ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
+ENV DDEV_LIVE_NO_VERSION_PROMPT true
+
+ENV BASH_ENV /etc/bash.nointeractive.bashrc
+
+# Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
+# NGINX_DOCROOT is for backward compatibility only, to break less people.
+ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
+ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
+COPY --from=ddev-webserver-dev-base / /
 EXPOSE 80 8025
 HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
-
 CMD ["/start.sh"]
+#END ddev-webserver
+
