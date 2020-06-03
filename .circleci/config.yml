@@ -408,9 +408,9 @@ jobs:
         name: "Bump homebrew main release if necessary"
         command: |
           if [ ${CIRCLE_TAG%-*} = ${CIRCLE_TAG} ]; then
-            .circleci/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${v} ~/artifacts
+            .circleci/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts
           else
-            echo "Skipping homebrew main release because ${v} is an edge/prerelease"
+            echo "Skipping homebrew main release because ${CIRCLE_TAG} is an edge/prerelease"
           fi
 
     - run:
