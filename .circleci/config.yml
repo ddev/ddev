@@ -443,7 +443,7 @@ jobs:
         name: Artifact storage
     - run:
         name: "Bump homebrew edge release"
-        command: .circleci/bump_homebrew.sh rfay/homebrew-ddev-edge ddev $(make version | awk -F: '{print $2}') ~/artifacts
+        command: .circleci/bump_homebrew.sh rfay/homebrew-ddev-edge ddev "$(make version | awk -F: '{print $2}')" ~/artifacts
     - run:
         name: "Bump homebrew main release if necessary"
         command: |

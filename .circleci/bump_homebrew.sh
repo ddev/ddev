@@ -25,7 +25,7 @@ MACOS_BOTTLE_SHA=$(awk '{print $1}' <${ARTIFACTS_DIR}/${PROJECT_NAME}-${NO_V_VER
 
 
 TMPDIR=$(mktemp -d)
-cd ${TMPDIR} && git clone https://github.com/${GITHUB_REPO} && cd ${PROJECT_NAME}
+cd ${TMPDIR} && git clone https://github.com/${GITHUB_REPO} && cd $(basename ${GITHUB_REPO})
 
 cat >Formula/${PROJECT_NAME}.rb <<END
 class Ddev < Formula
