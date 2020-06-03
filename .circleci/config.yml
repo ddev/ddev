@@ -368,8 +368,8 @@ jobs:
     - checkout
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: TAG BUILD (macOS) Circle VM setup
-    - run: make version
+        name: RELEASE BUILD (macOS) Circle VM setup
+    - run: echo "version=$(make version)  CIRCLE_TAG=${CIRCLE_TAG}"
     - run:
         command: make -s clean linux windows_install chocolatey
 
@@ -386,15 +386,14 @@ jobs:
     - run:
         command: |
           if [ ! -z "${DDEV_GITHUB_TOKEN}" ]; then
-            version=$(.gotmp/bin/darwin_amd64/ddev --version)
-            echo "DDEV_GITHUB_TOKEN provided, pushing release ${version}"
+            echo "DDEV_GITHUB_TOKEN provided, pushing release ${CIRCLE_TAG}"
             ghr \
             -prerelease \
             -r $CIRCLE_PROJECT_REPONAME \
             -u $CIRCLE_PROJECT_USERNAME \
             -b "$(cat ./.github/RELEASE_NOTES_TEMPLATE.md)" \
             -t $DDEV_GITHUB_TOKEN \
-            "${version}" ~/artifacts
+            "${CIRCLE_TAG}" ~/artifacts
           else
             echo "DDEV_GITHUB_TOKEN not provided, not pushing release $CIRCLE_TAG"
           fi
@@ -404,12 +403,11 @@ jobs:
         name: Artifact storage
     - run:
         name: "Bump homebrew edge release"
-        command: "v=$(.gotmp/bin/darwin_amd64/ddev --version) .circleci/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${v}} ~/artifacts"
+        command: ".circleci/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts"
     - run:
         name: "Bump homebrew main release if necessary"
         command: |
-          v=$(.gotmp/bin/darwin_amd64/ddev --version)
-          if [[ ${v} == "*-*" ]]; then
+          if [ ${CIRCLE_TAG%-*} = ${CIRCLE_TAG} ]; then
             .circleci/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${v} ~/artifacts
           else
             echo "Skipping homebrew main release because ${v} is an edge/prerelease"
