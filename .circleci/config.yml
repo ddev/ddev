@@ -357,45 +357,7 @@ jobs:
         path: ~/artifacts
         name: Artifact storage
 
-  # 'tag_build' automatically builds a tag .
-#  tag_build:
-#    machine:
-#      image: ubuntu-1604:201903-01
-#    working_directory: ~/ddev
-#    environment:
-#      DDEV_DEBUG: "true"
-#    steps:
-#      - checkout
-#      - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
-#      - restore_cache:
-#          keys:
-#          - linux-v12
-#      - run:
-#          command: ./.circleci/linux_circle_vm_setup.sh
-#          name: TAG BUILD Circle VM setup - tools, docker, golang
-#      - save_cache:
-#          key: linux-v12
-#          paths:
-#          - /home/linuxbrew
-#          - ~/.ddev/testcache
-#
-#      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
-#      - run:
-#          command: make -s clean linux darwin windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
-#          name: Build the ddev executables
-#
-#      # We only build the xz version of the docker images on tag build.
-#      - run:
-#          # Do not build the docker tarballs at simple tag build time
-#          command: ./.circleci/generate_artifacts.sh ~/artifacts false false
-#          name: tar/zip up artifacts and make hashes
-#          no_output_timeout: "40m"
-#
-#      - store_artifacts:
-#          path: ~/artifacts
-#          name: Artifact storage
 
-  # 'tag_build' is used to push a full release
   release_build:
     macos:
       xcode: "11.3.1"
@@ -454,19 +416,17 @@ jobs:
             echo "Skipping homebrew main release because this is a prerelease"
           fi
 
-    # When fixed, this will have to be done after push to github, so it can use
-    # the real github release artifact.
-#    - run:
-#        name: Upload chocolatey windows release
-#        command: |
-#          if [ ! -z "${CHOCOLATEY_API_KEY:-}" ]; then
-#            echo "Pushing release to chocolatey..."
-#            pushd .gotmp/bin/windows_amd64/chocolatey
-#            docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
-#            popd
-#          else
-#            echo "NOT pushing release to chocolatey because no CHOCOLATEY_API_KEY was provided"
-#          fi
+    - run:
+        name: Upload chocolatey windows release
+        command: |
+          if [ ! -z "${CHOCOLATEY_API_KEY:-}" ]; then
+            echo "Pushing release to chocolatey..."
+            pushd .gotmp/bin/windows_amd64/chocolatey
+            docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
+            popd
+          else
+            echo "NOT pushing release to chocolatey because no CHOCOLATEY_API_KEY was provided"
+          fi
 
 
 workflows:
