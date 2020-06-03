@@ -369,7 +369,7 @@ jobs:
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
         name: TAG BUILD (macOS) Circle VM setup
-
+    - run: make version
     - run:
         command: make -s clean linux windows_install chocolatey
 
