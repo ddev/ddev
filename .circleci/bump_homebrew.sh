@@ -8,7 +8,7 @@ set -o pipefail
 set -o nounset
 
 if [ $# != 4 ]; then
-    echo "Arguments: GITHUB_REPO (homebrew repo like drud/homebrew-ddev) PROJECT_NAME (like ddev) VERSION_NUMBER (like v1.14.2) ARTIFACTS_DIR (like /home/circleci/artifacts)" && exit 101
+    printf "Arguments: GITHUB_REPO (homebrew repo like drud/homebrew-ddev) \nPROJECT_NAME (like ddev) \nVERSION_NUMBER (like v1.14.2) \nARTIFACTS_DIR (like /home/circleci/artifacts)\n" && exit 101
 fi
 
 GITHUB_USERNAME=rfay
@@ -25,7 +25,7 @@ MACOS_BOTTLE_SHA=$(awk '{print $1}' <${ARTIFACTS_DIR}/${PROJECT_NAME}-${NO_V_VER
 
 
 TMPDIR=$(mktemp -d)
-cd ${TMPDIR} && git clone https://github.com/${GITHUB_REPO} && cd $(basename ${GITHUB_REPO})
+cd ${TMPDIR} && git clone https://github.com/${GITHUB_REPO} && cd ${PROJECT_NAME}
 
 cat >Formula/${PROJECT_NAME}.rb <<END
 class Ddev < Formula

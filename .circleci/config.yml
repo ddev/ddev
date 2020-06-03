@@ -441,6 +441,20 @@ jobs:
     - store_artifacts:
         path: ~/artifacts
         name: Artifact storage
+    - run:
+      name: "Bump homebrew edge release"
+      command: |
+        .circleci/bump_homebrew.sh rfay/homebrew-ddev-edge ddev $(make version) ~/artifacts
+    - run:
+      name: "Bump homebrew main release if necessary"
+      command: |
+        v=$(make version)
+        if [[ ${v} == "*-*" ]]; then
+          .circleci/bump_homebrew.sh rfay/homebrew-ddev ddev $(make version) ~/artifacts
+        else
+          echo "Skipping homebrew main release because this is a prerelease"
+        fi
+
     # When fixed, this will have to be done after push to github, so it can use
     # the real github release artifact.
 #    - run:
