@@ -54,17 +54,12 @@ DDEV works happily with most any PHP or static HTML project, although it has spe
 
 #### Composer Setup Example Using roots/bedrock
 
-```
+```bash
 mkdir my-wp-bedrock-site
 cd my-wp-bedrock-site
 ddev config --project-type=wordpress --docroot=web --create-docroot=true
 ddev start
 ddev composer create roots/bedrock
-```
-
-```
-Successfully started my-wordpress-site
-Your application can be reached at: http://my-wordpress-site.ddev.site
 ```
 
 Now, since [bedrock](https://roots.io/bedrock/) uses a configuration technique which is unusual for WordPress:
@@ -80,20 +75,17 @@ Now, since [bedrock](https://roots.io/bedrock/) uses a configuration technique w
     WP_HOME=https://my-wp-bedrock-site.ddev.site
 ```
 
-  For more details see [bedrock installation](https://roots.io/bedrock/docs/installing-bedrock/)
+You can then `ddev start` and `ddev launch`.
+
+For more details see [bedrock installation](https://roots.io/bedrock/docs/installing-bedrock/)
 
 #### Git Clone Example
 
 To get started using ddev with an existing WordPress project, clone the project's repository. Note that the git URL shown here is just an example.
 
-```
+```bash
 git clone https://github.com/example/example-site.git
 cd example-site
-```
-
-From here we can start setting up ddev. Inside your project's working directory, enter the command:
-
-```
 ddev config
 ```
 
@@ -133,7 +125,7 @@ Get started with Drupal 8 projects on ddev either using a new or existing compos
 
 #### Composer Setup Example
 
-```
+```bash
 mkdir my-drupal8-site
 cd my-drupal8-site
 ddev config --project-type=drupal8 --docroot=web --create-docroot
@@ -143,21 +135,15 @@ ddev composer require drush/drush
 ddev launch
 ```
 
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
-
-```
-Successfully started my-drupal8-site
-Your project can be reached at: http://my-drupal8-site.ddev.site
-```
-
 #### Drupal 8 Git Clone Example
 
 Note that the git URL shown below is an example only, you'll need to use your own project.
 
-```
+```bash
 git clone https://github.com/example/example-site
 cd example-site
 ddev composer install
+ddev launch
 ```
 
 ### Drupal 9 Quickstart
@@ -166,12 +152,12 @@ Get started with Drupal 9 projects on ddev either using a new or existing compos
 
 #### Drupal 9 Composer Setup Example
 
-```
+```bash
 mkdir my-drupal9-site
 cd my-drupal9-site
 ddev config --project-type=drupal9 --docroot=web --create-docroot
 ddev start
-ddev composer create "drupal/recommended-project:9.0.x-dev"
+ddev composer create "drupal/recommended-project"
 ddev composer require drush/drush
 ddev launch
 ```
@@ -180,25 +166,21 @@ ddev launch
 
 Note that the git URL shown below is an example only, you'll need to use your own project.
 
-```
+```bash
 git clone https://github.com/example/example-site
 cd example-site
 ddev composer install
+ddev launch
 ```
 
 ### Drupal 6/7 Quickstart
 
 Beginning to use ddev with a Drupal 6 or 7 project is as simple as cloning the project's repository and checking out its directory.
 
-```
+```bash
 git clone https://github.com/user/my-drupal-site
 cd my-drupal-site
 ddev config
-```
-
-After `ddev config`, you're ready to start running your project. Run ddev using:
-
-```
 ddev start
 ddev launch /install.php
 ```
@@ -239,30 +221,12 @@ ddev composer install
 
 To get started with Backdrop, clone the project repository and navigate to the project directory.
 
-```
+```bash
 git clone https://github.com/example/example-site
 cd example-site
-```
-
-To set up ddev for your project, enter the command:
-
-```
 ddev config
-```
-
-_Note: ddev config will prompt you for a project name, docroot, and project type._
-
-After `ddev config`, you're ready to start running your project. Run ddev using:
-
-```
 ddev start
-```
-
-When `ddev start` runs, it outputs status messages to indicate the project environment is starting. When the startup is complete, ddev outputs a message like the one below with a link to access your project in a browser.
-
-```
-Successfully started example-site
-Your application can be reached at: http://example-backdrop-site.ddev.site
+ddev launch
 ```
 
 ### Magento 1 Quickstart
@@ -282,7 +246,7 @@ Note that Magento 1 is a huge codebase and using `nfs_mount_enabled: true` is re
 
 Normal details of a composer build for Magento 2 are on [Magento 2 site](https://devdocs.magento.com/guides/v2.3/install-gde/composer.html) You must have a public and private key to install from Magento's repository; when prompted for "username" and "password" in the composer create it's asking for your public and private keys.
 
-```
+```bash
 mkdir ddev-magento2 && cd ddev-magento2
 ddev config --project-type=magento2 --docroot=pub --create-docroot=true
 ddev start
@@ -307,7 +271,7 @@ The Laravel project type can be used for Lumen same as for Laravel.
 
 #### Laravel Composer Setup Example
 
-```
+```bash
 mkdir my-laravel-app
 cd my-laravel-app
 ddev config --project-type=laravel --docroot=public --create-docroot
@@ -322,7 +286,7 @@ ddev launch
 
 Note that the git URL shown below is an example only, you'll need to use your own project.
 
-```
+```bash
 git clone https://github.com/example/example-site
 cd example-site
 ddev config --project-type=laravel
@@ -381,10 +345,8 @@ Import a database with just one command; We offer support for several file forma
 
 Here's an example of a database import using ddev:
 
-```
-
+```bash
 ddev import-db --src=dumpfile.sql.gz
-
 ```
 
 It is also possible to use PHPMyAdmin for database imports, but that approach is much slower. Also, the web and db containers container the `mysql` client, which can be used for imports, and the `ddev mysql` command can be used in the same way you might use `mysql` on a server.
@@ -400,7 +362,6 @@ Configuration files have now been created for your project. Take a look at the p
 Now that the configuration files have been created, you can start your project with `ddev start` (still from within the project working directory):
 
 ```
-
 ddev start
 
 Starting environment for drupal8...
@@ -409,7 +370,6 @@ Creating local-drupal8-web
 Waiting for the environment to become ready. This may take a couple of minutes...
 Successfully started drupal8
 Your project can be reached at: <http://drupal8.ddev.site>
-
 ```
 
 And you can now visit your working project by URL or just give the command `ddev launch`. Enjoy!
@@ -535,15 +495,13 @@ An important aspect of local web development is the ability to have a precise re
 
 The `ddev import-db` command is provided for importing the MySQL database for a project. Running this command will provide a prompt for you to specify the location of your database import. By default `ddev import-db` empties the default "db" database and then loads the provided dumpfile.
 
-```
-
-➜  ddev import-db
+```bash
+ddev import-db
 Provide the path to the database you wish to import.
 Import path:
 ~/Downloads/db.sql
 Importing database...
 Successfully imported database for drupal8
-
 ```
 
 <h4>Supported file types</h4>
@@ -558,9 +516,8 @@ Database import supports the following file types:
 
 If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. The specified path should provide a Raw SQL Dump (.sql). In the following example, the database we want to import is named data.sql and resides at the top-level of the archive:
 
-```
-
-➜  ddev import-db
+```bash
+ddev import-db
 Provide the path to the database you wish to import.
 Import path:
 ~/Downloads/site-backup.tar.gz
@@ -578,12 +535,10 @@ Successfully imported database for drupal8
 
 If you want to use import-db without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
 
-```
-
+```bash
 ddev import-db --src=/tmp/mydb.sql.gz
 gzip -dc /tmp/mydb.sql.gz | ddev import-db
 ddev import-db <mydb.sql
-
 ```
 
 <h4>Database import notes</h4>
@@ -597,12 +552,10 @@ ddev import-db <mydb.sql
 
 You can export a database with `ddev export-db`, which outputs to stdout or with options to a file:
 
-```
-
+```bash
 ddev export-db --file /tmp/db.sql.gz
 ddev export-db >/tmp/db.sql.gz
 ddev export-db --gzip=false >/tmp/db.sql
-
 ```
 
 ### Importing static file assets
@@ -616,14 +569,12 @@ To import static file assets for a project, such as uploaded images and document
 * For Magento 1 projects, this is the `media` directory.
 * For Magento 2 projects, this is the `pub/media` directory.
 
-```
-
-➜  ddev import-files
+```bash
+ddev import-files
 Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.
 Import path:
 ~/Downloads/files.tar.gz
 Successfully imported files for drupal8
-
 ```
 
 <h4>Supported file types</h4>
@@ -636,9 +587,8 @@ Static asset import supports the following file types:
 
 If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. In the following example, the assets we want to import reside at "web/sites/default/files":
 
-```
-
-➜  ddev import-files
+```bash
+ddev import-files
 Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.
 Import path:
 ~/Downloads/site-backup.tar.gz
@@ -658,19 +608,14 @@ If you want to use import-files without answering prompts, you can use the `--sr
 
 The project database is stored in a docker volume, but can be snapshotted (and later restored) with the `ddev snapshot` command. A snapshot is automatically taken when you do a `ddev stop --remove-data`. For example:
 
-```
-
-$ ddev snapshot
+```bash
+ddev snapshot
 Creating database snapshot d8git_20180801132403
 Created database snapshot d8git_20180801132403 in /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git_20180801132403
 Created snapshot d8git_20180801132403
-rfay@rfay-mbp-2017:~/workspace/d8git$ ddev restore-snapshot d8git_20180801132403
-...
 
-$ ddev restore-snapshot d8git_20180801132403
-...
+ddev restore-snapshot d8git_20180801132403
 Restored database snapshot: /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git_20180801132403
-
 ```
 
 Snapshots are stored in the project's .ddev/db_snapshots directory, and the directory can be renamed as necessary. For example, if you rename the above d8git_20180801132403 directory to "working_before_migration", then you can use `ddev restore-snapshot working_before_migration`.
