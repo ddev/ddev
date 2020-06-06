@@ -5,35 +5,22 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 ## Windows Test Agent Setup
 
 1. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com (available in 1password)
-2. Install [chocolatey](https://chocolatey.org/docs/installation) with an administrative cmd window `@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"`
-3. Install golang/mysql-cli/make/git/docker-ce/nssm with `choco install -y git mysql-cli golang make docker-desktop nssm GoogleChrome zip jq composer cmder netcat ddev mkcert` (If docker-toolbox, use that instead; you may have to download the release separately to get correct version.)
-4. `mkcert -install`
-5. Enable gd, fileinfo, and curl extensions in /c/tools/php73/php.ini
-6. Install bats: `git clone git://github.com/bats-core/bats-core; cd bats-core; git checkout v1.1.0; ./install.sh`
-7. If a laptop, set the "lid closing" setting in settings to do nothing.
-8. Set the "Sleep after time" setting in settings to never.
-9. Install the buildkite-agent. Use the latest release from [github.com/buildkite/agent](https://github.com/buildkite/agent/releases). It should go in /c/buildkite-agent, with the buildkite-agent.exe in /c/buildkite-agent/bin and the config in /c/buildkite-agent.
-10. Update the buildkite-agent.cfg
-    * *token*
-    * *tags*: Tags will probably be like `"os=windows,osvariant=windows10pro,dockertype=dockerforwindows"` or `"os=windows,osvariant=windows10pro,dockertype=toolbox"`
-    * build-path: "C:\Users\testbot\tmp\buildkite" on Windows. (This is to get it to build in the home directory; by default docker toolbox won't mount anything outside the home directory.)
-
-11. Set up the agent to [run as a service](https://buildkite.com/docs/agent/v3/windows#running-as-a-service):
+2. Install [chocolatey](https://chocolatey.org/docs/installation) with an administrative PowerShell window `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"`
+3. Rename the computer to `testbot-win10pro-<descriptor>-<number>`. for example, testbot-win10pro-drud1-1, with `Rename-computer <name`
+4. `Set-Timezone -Id "Mountain Standard Time"`
+5. Install WSL2 and restart in the same administrative PS windows: `dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all`
+5. After restart, in administrative git-bash window, `export BUILDKITE_AGENT_TOKEN=<token>`
+6. Now run [windows_buildkite-testmachine_setup.sh](scripts/windows_buildkite_setup.sh)
+7. Enable gd, fileinfo, and curl extensions in /c/tools/php*/php.ini
+8. If a laptop, set the "lid closing" setting in settings to do nothing.
+9. Set the "Sleep after time" setting in settings to never.
+10. Set up the agent to [run as a service](https://buildkite.com/docs/agent/v3/windows#running-as-a-service):
     * on the "Log On" tab in the services widget it must be set up to log in as the primary user of the machine, so it inherits environment variables and home directory.
-12. Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Run netplwiz, provide the password for the main user, uncheck the "require a password to log in".
-13. On Docker Toolbox systems, add a link to "Docker Quickstart Terminal" in C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp (see [link](http://www.thewindowsclub.com/make-programs-run-on-startup-windows)).
-14. On Docker Desktop for Windows systems, launch Docker. It will offer to reconfigure Hyper-V and do a restart.
-15. On Docker Desktop for Windows, configured the C: and other drives as shared to docker.
-16. On Docker Toolbox systems, make sure that nested virtualization is enabled however you need to enable it.
-17. Edit /c/ProgramData/git/config "core" section to `autocrlf: false` and `eol: lf` verify that `git config --list` shows only autocrlf: false.
-18. Run `winpty docker run -it -p 80 busybox ls` to trigger the Windows Defender warning, and "allow access".
-19. Try running .buildkite/sanetestbot.sh to check your work.
-20. Install ddev using the ddev_windows_installer.exe from <https://github.com/drud/ddev/releases>
-21. Setup up winnfsd by running `windows_ddev_nfs_setup.sh`.
-22. Change the name of the machine to something in keeping with current style. Maybe `testbot-dell-toolbox-3`.
-23. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.)
-24. Set the timezone properly (US MT)
-25. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
+11. Install [winaero tweaker](https://winaero.com/request.php?1796) and "Enable user autologin checkbox". Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck the "require a password to log in".
+13. Launch Docker. It may require you to take further actions.
+14. Run .buildkite/sanetestbot.sh to check your work.
+15. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.)
+16. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
 
 ### Docker Toolbox Extra Instructions
 
