@@ -5,6 +5,9 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 # Install required items using chocolatey
 choco upgrade -y git mysql-cli golang make docker-desktop nssm GoogleChrome zip jq composer cmder netcat ddev mkcert
 
+net localgroup docker-users /add
+net localgroup docker-users testbot /add
+
 Set-Timezone -Id "Mountain Standard Time"
 
 # Enable developer mode feature
