@@ -756,8 +756,10 @@ func InvalidateDockerWindowsCache() error {
 	if runtime.GOOS != "windows" || nodeps.IsDockerToolbox() {
 		return nil
 	}
-	_, _, err := RunSimpleContainer("djs55/grpcfuse-control:2.2.0.5", "", []string{"invalidate", "all"}, nil, nil, []string{"/run:/run"}, "0", true)
+	// The grpcfuse-control seems not to be relevant with WSL2 Docker
+	var err error
+	//_, _, err = RunSimpleContainer("djs55/grpcfuse-control:2.3.0.3", "", []string{"invalidate", "all"}, nil, nil, []string{"/run:/run"}, "0", true)
 	// For extra credit, a sleep
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 	return err
 }

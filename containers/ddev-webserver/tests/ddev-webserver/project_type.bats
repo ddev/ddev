@@ -8,7 +8,7 @@
 }
 
 @test "verify that project-specific config has been linked in ($project_type)" {
-	docker exec -t $CONTAINER_NAME grep "# ddev $project_type config" //etc/nginx/nginx-site.conf
+	docker exec $CONTAINER_NAME bash -c "grep \"# ddev $project_type config\" /etc/nginx/nginx-site.conf"
 }
 
 @test "verify that the right default PHP version was selected for the project_type ($project_type)" {

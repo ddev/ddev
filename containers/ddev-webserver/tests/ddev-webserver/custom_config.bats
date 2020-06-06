@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 @test "verify customization of nginx configuration" {
-    docker exec -t $CONTAINER_NAME grep "docroot is /var/www/html/potato in custom conf" //etc/nginx/sites-enabled/nginx-site.conf
+    docker exec -t $CONTAINER_NAME bash -c "grep 'docroot is /var/www/html/potato in custom conf' /etc/nginx/sites-enabled/nginx-site.conf"
 }
 
 @test "verify customization of php configuration" {

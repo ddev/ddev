@@ -636,6 +636,10 @@ func TestWriteConfig(t *testing.T) {
 
 // TestConfigOverrideDetection tests to make sure we tell them about config overrides.
 func TestConfigOverrideDetection(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows")
+	}
+
 	assert := asrt.New(t)
 	app := &DdevApp{}
 	testDir, _ := os.Getwd()

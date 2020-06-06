@@ -71,4 +71,10 @@ columns_priv`)
 	out, err = exec.RunCommand(DdevBin, []string{"testwebcmd", "webarg1", "webarg2", "--webflag1"})
 	assert.NoError(err)
 	assert.Contains(out, "Test Web Command was executed with args=webarg1 webarg2 --webflag1 on host "+site.Name+"-web")
+
+	// Make sure that all the official custom commands are usable by just checking help
+	for _, c := range []string{"myssql", "launch", "live", "xdebug"} {
+		_, err = exec.RunCommand(DdevBin, []string{"help", c})
+		assert.NoError(err, "Failed to run ddev help %s", c)
+	}
 }
