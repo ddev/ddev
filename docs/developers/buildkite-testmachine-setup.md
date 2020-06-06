@@ -5,11 +5,11 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 ## Windows Test Agent Setup
 
 1. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com (available in 1password)
-2. Install [chocolatey](https://chocolatey.org/docs/installation) with an administrative PowerShell window `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"`
+2. Install [chocolatey](https://chocolatey.org/docs/installation) with an administrative PowerShell window `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
 3. Install git with `choco install -y git`
 4. Rename the computer to `testbot-win10(home|pro)-<descriptor>-<number>`. for example, testbot-win10home-drud1-1, with `Rename-computer <name`
 5. `Set-Timezone -Id "Mountain Standard Time"`
-6. Install WSL2 and restart in the same administrative PS windows: `dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all`
+6. Install WSL2 and restart in the same administrative PS windows:  `dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart` and `dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all`
 7. After restart, in administrative git-bash window, `export BUILDKITE_AGENT_TOKEN=<token>`
 8. Now run [windows_buildkite-testmachine_setup.sh](scripts/windows_buildkite_setup.sh)
 9. Enable gd, fileinfo, and curl extensions in /c/tools/php*/php.ini
