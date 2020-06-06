@@ -11,6 +11,9 @@ fi
 # Update kernel for WSL2
 cd /tmp && curl -O -sSL https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi && start wsl_update_x64.msi
 
+# Wait for user to install the kernel
+sleep 10
+
 wsl --set-default-version 2
 
 # Install required items using chocolatey
