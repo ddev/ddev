@@ -23,6 +23,9 @@ git config --global core.eol lf
 # Install Ubuntu from Microsoft store
 # Then wsl --set-default Ubuntu
 
+# Start docker
+"/c/Program Files/Docker/Docker/Docker Desktop.exe"
+
 # install bats
 cd /tmp && curl -L -O https://github.com/bats-core/bats-core/archive/v1.2.0.tar.gz && tar -zxf v1.2.0.tar.gz && cd bats-core-1.2.0 && ./install.sh /usr/local
 
@@ -51,4 +54,4 @@ nssm.exe status buildkite-agent || true
 # Get firewall set up with a single run
 winpty docker run -it --rm -p 80 busybox ls
 
-bash /c/Program\ Files/ddev/windows_ddev_nfs_setup.sh
+bash "/c/Program Files/ddev/windows_ddev_nfs_setup.sh"
