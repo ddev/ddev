@@ -16,9 +16,6 @@ sleep 10
 
 wsl --set-default-version 2
 
-# Install required items using chocolatey
-choco upgrade -y mysql-cli golang make docker-desktop nssm GoogleChrome zip jq composer cmder netcat ddev mkcert
-
 mkcert -install
 git config --global core.autocrlf false
 git config --global core.eol lf
