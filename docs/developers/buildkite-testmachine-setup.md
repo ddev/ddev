@@ -6,9 +6,9 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 1. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com (available in 1password)
 2. In admin PowerShell, `Set-ExecutionPolicy -Scope "CurrentUser" -ExecutionPolicy "RemoteSigned"`
-3. In admin Powershell, run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1)
+3. In admin Powershell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) (Use `curl <url> -O windows_buildkite_start.ps1`)
 4. After restart, in administrative git-bash window, `export BUILDKITE_AGENT_TOKEN=<token>`
-5. Now run [windows_buildkite-testmachine_setup.sh](scripts/windows_buildkite_setup.sh)
+5. Now download and run [windows_buildkite-testmachine_setup.sh](scripts/windows_buildkite_setup.sh)
 6. Enable gd, fileinfo, and curl extensions in /c/tools/php*/php.ini
 7. If a laptop, set the "lid closing" setting in settings to do nothing.
 8. Set the "Sleep after time" setting in settings to never.
