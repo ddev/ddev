@@ -23,9 +23,6 @@ git config --global core.eol lf
 # Install Ubuntu from Microsoft store
 # Then wsl --set-default Ubuntu
 
-# Start docker
-"/c/Program Files/Docker/Docker/Docker Desktop.exe"
-
 # install bats
 cd /tmp && curl -L -O https://github.com/bats-core/bats-core/archive/v1.2.0.tar.gz && tar -zxf v1.2.0.tar.gz && cd bats-core-1.2.0 && ./install.sh /usr/local
 
