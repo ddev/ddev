@@ -17,8 +17,9 @@ sleep 10
 wsl --set-default-version 2
 
 mkcert -install
-git config --global core.autocrlf false
-git config --global core.eol lf
+
+# Set *global* line endings (not user) because the buildkite-agent may not be running as testbot user
+perl -pi -e 's/autocrlf = true/autocrlf = false\n\teol = lf/' "/c/Program Files/Git/etc/gitconfig"
 
 # Install Ubuntu from Microsoft store
 # Then wsl --set-default Ubuntu
