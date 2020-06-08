@@ -32,7 +32,9 @@ if [ ${AUR_REPO} = "ddev-edge-bin" ] ; then EDGE_DESCRIPTION="  (edge channel)";
 echo $AUR_SSH_PRIVATE_KEY | perl -p -e 's/<SPLIT>/\n/g' >/tmp/id_rsa_aur && chmod 600 /tmp/id_rsa_aur
 TMPDIR=$(mktemp -d)
 ssh-add /tmp/id_rsa_aur
-pushd ${TMPDIR} && git clone ssh://aur@aur.archlinux.org/${AUR_REPO}.git && pushd ${AUR_REPO} && touch .BUILDINFO && chmod -R ugo+w .
+pushd ${TMPDIR}
+git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+git clone ssh://aur@aur.archlinux.org/${AUR_REPO}.git && pushd ${AUR_REPO} && touch .BUILDINFO && chmod -R ugo+w .
 
 _name="ddev"
 cat >PKGBUILD <<END
@@ -60,6 +62,7 @@ docker run --rm --mount type=bind,source=$(pwd),target=/tmp/ddev-bin --workdir=/
 
 git config user.email "randy+ddev-releaser@randyfay.com"
 git config user.name "ddev-releaser"
+
 git commit -am "AUR bump to ${VERSION_NUMBER}"
 
 git push
