@@ -14,13 +14,14 @@ if [ "$#" != "3" ]; then
     printf "Arguments: AUR_REPO (AUR repo ddev-bin or ddev-edge-bin)  \nVERSION_NUMBER (like v1.14.2) \nARTIFACTS_DIR (like /home/circleci/artifacts)\n" && exit 102
 fi
 
+GITHUB_USERNAME=rfay
 AUR_USERNAME=ddev-releaser
 AUR_REPO=$1
 VERSION_NUMBER=$2
 ARTIFACTS_DIR=$3
 NO_V_VERSION=$(echo ${VERSION_NUMBER} | awk  -F"-" '{ OFS="-"; sub(/^./, "", $1); printf $0; }')
 LINUX_HASH=$(cat $ARTIFACTS_DIR/ddev_linux.${VERSION_NUMBER}.tar.gz.sha256.txt)
-LINUX_TARBALL_URL=https://github.com/drud/ddev/releases/download/${VERSION_NUMBER}/ddev_linux.${VERSION_NUMBER}.tar.gz
+LINUX_TARBALL_URL=https://github.com/${GITHUB_USERNAME}/ddev/releases/download/${VERSION_NUMBER}/ddev_linux.${VERSION_NUMBER}.tar.gz
 if [ ! -z "${LINUX_TARBALL_OVERRIDE:-}" ]; then
     LINUX_TARBALL_URL=${LINUX_TARBALL_OVERRIDE}
     LINUX_HASH=$(curl -sSL "${LINUX_TARBALL_URL}.sha256.txt" | awk '{print $1}')
