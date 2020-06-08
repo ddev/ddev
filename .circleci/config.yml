@@ -427,7 +427,7 @@ jobs:
     - run:
         name: Push AUR ddev-bin if necessary
         command: |
-            if [ ! -z "${AUR_SSH_PRIVATE_KEY} ] && [ "${CIRCLE_TAG%-*}" = ${CIRCLE_TAG} ] ; then
+            if [ ! -z "${AUR_SSH_PRIVATE_KEY}" ] && [ "${CIRCLE_TAG%-*}" = "${CIRCLE_TAG}" ] ; then
               .circleci/bump_aur.sh ddev-bin ${CIRCLE_TAG} ~/artifacts
             else
               echo "Skipping AUR ddev-bin push"
@@ -435,7 +435,7 @@ jobs:
     - run:
         name: Push AUR ddev-edge-bin
         command: |
-          if [ ! -z "${AUR_SSH_PRIVATE_KEY} ] ; then
+          if [ ! -z "${AUR_SSH_PRIVATE_KEY}" ] ; then
             .circleci/bump_aur.sh ddev-edge-bin ${CIRCLE_TAG} ~/artifacts
           else
             echo "Skipping AUR ddev-edge-bin push"
