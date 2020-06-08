@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Requires $DDEV_GITHUB_TOKEN, a token with public repo power
-# TODO: Handle both stable and edge releases
 
 set -o errexit
 set -o pipefail
