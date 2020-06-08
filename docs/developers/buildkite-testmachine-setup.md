@@ -9,14 +9,15 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 3. In admin Powershell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) (Use `curl <url> -O windows_buildkite_start.ps1`)
 4. After restart, in administrative git-bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1` and then `export BUILDKITE_AGENT_TOKEN=<token>`
 5. Now download and run [windows_buildkite-testmachine_setup.sh](scripts/windows_buildkite_setup.sh)
-6. Enable gd, fileinfo, and curl extensions in /c/tools/php*/php.ini
-7. If a laptop, set the "lid closing" setting in settings to do nothing.
-8. Set the "Sleep after time" setting in settings to never.
-9. Install [winaero tweaker](https://winaero.com/request.php?1796) and "Enable user autologin checkbox". Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck the "require a password to log in".
-10. Launch Docker. It may require you to take further actions.
-11. Run .buildkite/sanetestbot.sh to check your work.
-12. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.)
-13. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
+6. Launch Docker. It may require you to take further actions.
+7. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
+8. Enable gd, fileinfo, and curl extensions in /c/tools/php*/php.ini
+9. If a laptop, set the "lid closing" setting in settings to do nothing.
+10. Set the "Sleep after time" setting in settings to never.
+11. Install [winaero tweaker](https://winaero.com/request.php?1796) and "Enable user autologin checkbox". Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck the "require a password to log in".
+12. Set the buildkite-agent service to run as the testbot user and use delayed start: Choose "Automatic, delayed start" and on the "Log On" tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot git config, etc).
+13. Run .buildkite/sanetestbot.sh to check your work.
+14. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.)
 
 ## macOS Test Agent Setup
 
