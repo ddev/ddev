@@ -357,45 +357,7 @@ jobs:
         path: ~/artifacts
         name: Artifact storage
 
-  # 'tag_build' automatically builds a tag .
-#  tag_build:
-#    machine:
-#      image: ubuntu-1604:201903-01
-#    working_directory: ~/ddev
-#    environment:
-#      DDEV_DEBUG: "true"
-#    steps:
-#      - checkout
-#      - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
-#      - restore_cache:
-#          keys:
-#          - linux-v12
-#      - run:
-#          command: ./.circleci/linux_circle_vm_setup.sh
-#          name: TAG BUILD Circle VM setup - tools, docker, golang
-#      - save_cache:
-#          key: linux-v12
-#          paths:
-#          - /home/linuxbrew
-#          - ~/.ddev/testcache
-#
-#      # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
-#      - run:
-#          command: make -s clean linux darwin windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
-#          name: Build the ddev executables
-#
-#      # We only build the xz version of the docker images on tag build.
-#      - run:
-#          # Do not build the docker tarballs at simple tag build time
-#          command: ./.circleci/generate_artifacts.sh ~/artifacts false false
-#          name: tar/zip up artifacts and make hashes
-#          no_output_timeout: "40m"
-#
-#      - store_artifacts:
-#          path: ~/artifacts
-#          name: Artifact storage
 
-  # 'tag_build' is used to push a full release
   release_build:
     macos:
       xcode: "11.3.1"
@@ -406,8 +368,8 @@ jobs:
     - checkout
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: TAG BUILD (macOS) Circle VM setup
-
+        name: RELEASE BUILD (macOS) Circle VM setup
+    - run: echo "version=$(make version)  CIRCLE_TAG=${CIRCLE_TAG}"
     - run:
         command: make -s clean linux windows_install chocolatey
 
@@ -424,16 +386,14 @@ jobs:
     - run:
         command: |
           if [ ! -z "${DDEV_GITHUB_TOKEN}" ]; then
-            version=$(make version)
-            version="${version#*:}"  # Remove the VERSION: in front of make version
-            echo "DDEV_GITHUB_TOKEN provided, pushing release ${version}"
+            echo "DDEV_GITHUB_TOKEN provided, pushing release ${CIRCLE_TAG}"
             ghr \
             -prerelease \
             -r $CIRCLE_PROJECT_REPONAME \
             -u $CIRCLE_PROJECT_USERNAME \
             -b "$(cat ./.github/RELEASE_NOTES_TEMPLATE.md)" \
             -t $DDEV_GITHUB_TOKEN \
-            "${version}" ~/artifacts
+            "${CIRCLE_TAG}" ~/artifacts
           else
             echo "DDEV_GITHUB_TOKEN not provided, not pushing release $CIRCLE_TAG"
           fi
@@ -441,20 +401,44 @@ jobs:
     - store_artifacts:
         path: ~/artifacts
         name: Artifact storage
-    # When fixed, this will have to be done after push to github, so it can use
-    # the real github release artifact.
-#    - run:
-#        name: Upload chocolatey windows release
-#        command: |
-#          if [ ! -z "${CHOCOLATEY_API_KEY:-}" ]; then
-#            echo "Pushing release to chocolatey..."
-#            pushd .gotmp/bin/windows_amd64/chocolatey
-#            docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
-#            popd
-#          else
-#            echo "NOT pushing release to chocolatey because no CHOCOLATEY_API_KEY was provided"
-#          fi
-
+    - run:
+        name: "Bump homebrew edge release"
+        command: ".circleci/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts"
+    - run:
+        name: "Bump homebrew main release if necessary"
+        command: |
+          if [ ${CIRCLE_TAG%-*} = ${CIRCLE_TAG} ]; then
+            .circleci/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts
+          else
+            echo "Skipping homebrew main release because ${CIRCLE_TAG} is an edge/prerelease"
+          fi
+    - run:
+        name: Push AUR ddev-bin if necessary
+        command: |
+            if [ ! -z "${AUR_SSH_PRIVATE_KEY}" ] && [ "${CIRCLE_TAG%-*}" = "${CIRCLE_TAG}" ] ; then
+              .circleci/bump_aur.sh ddev-bin ${CIRCLE_TAG} ~/artifacts
+            else
+              echo "Skipping AUR ddev-bin push"
+            fi
+    - run:
+        name: Push AUR ddev-edge-bin
+        command: |
+          if [ ! -z "${AUR_SSH_PRIVATE_KEY}" ] ; then
+            .circleci/bump_aur.sh ddev-edge-bin ${CIRCLE_TAG} ~/artifacts
+          else
+            echo "Skipping AUR ddev-edge-bin push"
+          fi
+    - run:
+        name: Upload chocolatey windows release
+        command: |
+          if [ ! -z "${CHOCOLATEY_API_KEY:-}" ]; then
+            echo "Pushing release to chocolatey..."
+            pushd .gotmp/bin/windows_amd64/chocolatey
+            docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
+            popd
+          else
+            echo "NOT pushing release to chocolatey because no CHOCOLATEY_API_KEY was provided"
+          fi
 
 workflows:
   version: 2
