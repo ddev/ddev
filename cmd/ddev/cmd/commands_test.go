@@ -94,7 +94,7 @@ func TestLaunchCommand(t *testing.T) {
 	assert.NoError(err)
 	defer func() {
 		_ = app.Stop(true, false)
-		app.RouterHTTPSPort = ""
+		app.RouterHTTPSPort = "443"
 		_ = app.WriteConfig()
 		switchDir()
 	}()
