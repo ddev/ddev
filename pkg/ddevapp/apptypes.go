@@ -156,10 +156,14 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		if err != nil {
 			util.Warning("Unable to create settings file '%s': %v", app.SiteSettingsPath, err)
 		}
-		if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
-			util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
-		}
 
+		// Don't create gitignore if it would be in top-level directory, where
+		// there is almost certainly already a gitignore (like backdrop)
+		if path.Dir(app.SiteSettingsPath) != app.AppRoot {
+			if err = CreateGitIgnore(filepath.Dir(app.SiteSettingsPath), filepath.Base(app.SiteDdevSettingsFile), "drushrc.php"); err != nil {
+				util.Warning("Failed to write .gitignore in %s: %v", filepath.Dir(app.SiteDdevSettingsFile), err)
+			}
+		}
 		return settingsPath, nil
 	}
 	return "", nil
