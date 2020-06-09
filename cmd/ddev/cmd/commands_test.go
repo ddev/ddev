@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	asrt "github.com/stretchr/testify/assert"
@@ -8,6 +9,7 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -76,5 +78,47 @@ columns_priv`)
 	for _, c := range []string{"myssql", "launch", "live", "xdebug"} {
 		_, err = exec.RunCommand(DdevBin, []string{"help", c})
 		assert.NoError(err, "Failed to run ddev help %s", c)
+	}
+}
+
+// TestLaunchCommand tests that the launch command behaves all the ways it should behave
+func TestLaunchCommand(t *testing.T) {
+	assert := asrt.New(t)
+	site := TestSites[0]
+	switchDir := site.Chdir()
+
+	_ = os.Setenv("DDEV_DEBUG", "true")
+	app, err := ddevapp.NewApp(site.Dir, false, "")
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+	defer func() {
+		_ = app.Stop(true, false)
+		app.RouterHTTPSPort = ""
+		_ = app.WriteConfig()
+		switchDir()
+	}()
+
+	// This only tests the https port changes, but that might be enough
+	for _, routerPort := range []string{"443", "8443"} {
+		app.RouterHTTPSPort = routerPort
+		_ = app.WriteConfig()
+		err = app.Start()
+		assert.NoError(err)
+
+		desc, _ := app.Describe()
+		cases := map[string]string{
+			"":   app.GetPrimaryURL(),
+			"-p": desc["phpmyadmin_https_url"].(string),
+			"-m": desc["mailhog_https_url"].(string),
+		}
+		for partialCommand, expect := range cases {
+			// Try with the base URL, simplest case
+			c := DdevBin + `  launch ` + partialCommand + ` | awk '/FULLURL/ {print $2}'`
+			out, err := exec.RunCommand("bash", []string{"-c", c})
+			out = strings.Trim(out, "\n")
+			assert.NoError(err, `couldn't run "%s"", output=%s`, c, out)
+			assert.Equal(expect, out, "ouptput of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
+		}
 	}
 }
