@@ -1275,9 +1275,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		if nodeps.ArrayContainsString([]string{"drupal6", "drupal7", "drupal8", "backdrop"}, app.Type) {
 			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 		}
-		if app.Type == "drupal8" || app.Type == "drupal9" {
-			assert.FileExists(filepath.Join(app.AppRoot, "drush", "drush.yml"))
-		}
 
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
