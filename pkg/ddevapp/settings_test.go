@@ -259,14 +259,16 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 		_, err = app.CreateSettingsFile()
 		assert.NoError(err)
 
-		// Ensure that a .gitignore exists
-		assert.True(fileutil.FileExists(expectedGitIgnoreLocation))
+		// Ensure that a .gitignore exists (except for backdrop, which has settings in project root)
+		if app.Type != nodeps.AppTypeBackdrop {
+			assert.True(fileutil.FileExists(expectedGitIgnoreLocation))
 
-		// Ensure that the new .gitignore includes settings.ddev.php
-		settingsDdev := filepath.Base(relativeSettingsDdevLocation)
-		newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, settingsDdev)
-		assert.NoError(err)
-		assert.True(newGitIgnoreIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedGitIgnoreLocation)
+			// Ensure that the new .gitignore includes settings.ddev.php
+			settingsDdev := filepath.Base(relativeSettingsDdevLocation)
+			newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, settingsDdev)
+			assert.NoError(err)
+			assert.True(newGitIgnoreIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedGitIgnoreLocation)
+		}
 	}
 }
 
