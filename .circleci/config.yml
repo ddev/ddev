@@ -412,18 +412,6 @@ jobs:
           else
             echo "Skipping homebrew main release because ${CIRCLE_TAG} is an edge/prerelease"
           fi
-
-    - run:
-        name: Upload chocolatey windows release
-        command: |
-          if [ ! -z "${CHOCOLATEY_API_KEY:-}" ]; then
-            echo "Pushing release to chocolatey..."
-            pushd .gotmp/bin/windows_amd64/chocolatey
-            docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
-            popd
-          else
-            echo "NOT pushing release to chocolatey because no CHOCOLATEY_API_KEY was provided"
-          fi
     - run:
         name: Push AUR ddev-bin if necessary
         command: |
@@ -439,6 +427,17 @@ jobs:
             .circleci/bump_aur.sh ddev-edge-bin ${CIRCLE_TAG} ~/artifacts
           else
             echo "Skipping AUR ddev-edge-bin push"
+          fi
+    - run:
+        name: Upload chocolatey windows release
+        command: |
+          if [ ! -z "${CHOCOLATEY_API_KEY:-}" ]; then
+            echo "Pushing release to chocolatey..."
+            pushd .gotmp/bin/windows_amd64/chocolatey
+            docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
+            popd
+          else
+            echo "NOT pushing release to chocolatey because no CHOCOLATEY_API_KEY was provided"
           fi
 
 workflows:

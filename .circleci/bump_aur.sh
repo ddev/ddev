@@ -14,7 +14,9 @@ if [ "$#" != "3" ]; then
     printf "Arguments: AUR_REPO (AUR repo ddev-bin or ddev-edge-bin)  \nVERSION_NUMBER (like v1.14.2) \nARTIFACTS_DIR (like /home/circleci/artifacts)\n" && exit 102
 fi
 
-GITHUB_USERNAME=rfay
+# For testing, you can change GITHUB_USERNAME to, for example, rfay so releases can be tested
+# without bothering people.
+GITHUB_USERNAME=drud
 AUR_USERNAME=ddev-releaser
 AUR_REPO=$1
 VERSION_NUMBER=$2

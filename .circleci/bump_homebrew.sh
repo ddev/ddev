@@ -10,7 +10,9 @@ if [ $# != 4 ]; then
     printf "Arguments: GITHUB_REPO (homebrew repo like drud/homebrew-ddev) \nPROJECT_NAME (like ddev) \nVERSION_NUMBER (like v1.14.2) \nARTIFACTS_DIR (like /home/circleci/artifacts)\n" && exit 101
 fi
 
-GITHUB_USERNAME=rfay
+# For testing, you can change GITHUB_USERNAME to, for example, rfay so releases can be tested
+# without bothering people.
+GITHUB_USERNAME=drud
 GITHUB_REPO=$1
 PROJECT_NAME=$2
 VERSION_NUMBER=$3
