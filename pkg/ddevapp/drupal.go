@@ -533,51 +533,6 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
 	return nil
 }
 
-// WriteDrushYML writes a drush.yaml to set the default uri
-func WriteDrushYML(app *DdevApp, filePath string) error {
-	if fileutil.FileExists(filePath) {
-
-		// Check if the file is managed by ddev.
-		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
-		if err != nil {
-			return err
-		}
-
-		// If the signature wasn't found, warn the user and return.
-		if !signatureFound {
-			util.Warning("%s already exists and is managed by the user.", filepath.Base(filePath))
-			return nil
-		}
-	}
-
-	uri := app.GetPrimaryURL()
-	drushContents := []byte(`
-#` + DdevFileSignature + `: Automatically generated drush.yml file.
-# ddev manages this file and may delete or overwrite the file unless this comment is removed.
-# Remove the comment if you don't want ddev to manage this file.'
-
-options:
-  uri: "` + uri + `"
-`)
-
-	// Ensure target directory exists and is writable
-	dir := filepath.Dir(filePath)
-	if err := os.Chmod(dir, 0755); os.IsNotExist(err) {
-		if err = os.MkdirAll(dir, 0755); err != nil {
-			return err
-		}
-	} else if err != nil {
-		return err
-	}
-
-	err := ioutil.WriteFile(filePath, drushContents, 0666)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // getDrupalUploadDir will return a custom upload dir if defined, returning a default path if not.
 func getDrupalUploadDir(app *DdevApp) string {
 	if app.UploadDir == "" {
@@ -690,20 +645,7 @@ func drupal8PostStartAction(app *DdevApp) error {
 			return err
 		}
 
-		// Write both drush.yml and drushrc.php for Drupal 8, because we can't know
-		// what version of drush may be in use. drush8 is happy with drushrc.php
-		// drush9 wants drush.yml
-		err := WriteDrushYML(app, filepath.Join(app.AppRoot, "drush", "drush.yml"))
-		if err != nil {
-			util.Warning("Failed to WriteDrushYML: %v", err)
-		}
-
-		err = WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
-		if err != nil {
-			util.Warning("Failed to WriteDrushrc: %v", err)
-		}
-
-		if _, err = app.CreateSettingsFile(); err != nil {
+		if _, err := app.CreateSettingsFile(); err != nil {
 			return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 		}
 	}

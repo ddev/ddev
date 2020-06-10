@@ -96,6 +96,8 @@ The port referenced is unique per running project, and randomly chosen from avai
 
 If you have PHP and Drush installed on your host system and the environment variable IS_DDEV_PROJECT=true, you can use drush to interact with a ddev project. On the host system the extra include host-side configuration for the database and port are derived in the settings.ddev.php file to allow drush to access the database server. This may not work for all drush commands because of course the actual webserver environment is not available.
 
+Note that on Drupal 8+ if you want to use `drush uli` on the host (or other drush commands that require a default URI), you'll need to set DRUSH_OPTIONS_URI on the host. For example, `export DRUSH_OPTIONS_URI=https://mysite.ddev.site`.
+
 ### DDEV and Terminus
 
 [Terminus](https://pantheon.io/docs/terminus/) is a command line tool providing advanced interaction with [Pantheon](https://pantheon.io/) services. As of version [1.13.0](https://github.com/drud/ddev/releases/tag/v1.13.0), terminus is available inside the project's container, allowing users to get information from, or issue commands to their Pantheon-hosted sites. This is an especially helpful feature for Windows users as terminus is only officially supported on unix-based systems.

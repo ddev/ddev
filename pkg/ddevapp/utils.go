@@ -196,6 +196,7 @@ func getTemplateFuncMap() map[string]interface{} {
 // a line in the resulting .gitignore.
 const gitIgnoreTemplate = `{{.Signature}}: Automatically generated ddev .gitignore.
 # You can remove the above line if you want to edit and maintain this file yourself.
+/.gitignore
 {{range .IgnoredItems}}
 /{{.}}{{end}}
 `

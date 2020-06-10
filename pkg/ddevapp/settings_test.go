@@ -114,19 +114,11 @@ func TestWriteDrushConfig(t *testing.T) {
 		drushFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php")
 
 		switch app.Type {
-		case nodeps.AppTypeDrupal6, nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal8, nodeps.AppTypeDrupal9, nodeps.AppTypeBackdrop:
+		case nodeps.AppTypeDrupal6, nodeps.AppTypeDrupal7, nodeps.AppTypeBackdrop:
 			require.True(t, fileutil.FileExists(drushFilePath))
 			optionFound, err := fileutil.FgrepStringInFile(drushFilePath, "options")
 			assert.NoError(err)
 			assert.True(optionFound)
-
-			if app.Type == nodeps.AppTypeDrupal8 || app.Type == nodeps.AppTypeDrupal9 {
-				drushYMLFilePath := filepath.Join(app.AppRoot, "drush", "drush.yml")
-				require.True(t, fileutil.FileExists(drushYMLFilePath))
-				optionFound, err := fileutil.FgrepStringInFile(drushYMLFilePath, "options")
-				assert.NoError(err)
-				assert.True(optionFound)
-			}
 
 		default:
 			assert.False(fileutil.FileExists(drushFilePath), "Drush settings file (%s) should not exist but it does (app.Type=%s)", drushFilePath, app.Type)
@@ -267,14 +259,16 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 		_, err = app.CreateSettingsFile()
 		assert.NoError(err)
 
-		// Ensure that a .gitignore exists
-		assert.True(fileutil.FileExists(expectedGitIgnoreLocation))
+		// Ensure that a .gitignore exists (except for backdrop, which has settings in project root)
+		if app.Type != nodeps.AppTypeBackdrop {
+			assert.True(fileutil.FileExists(expectedGitIgnoreLocation))
 
-		// Ensure that the new .gitignore includes settings.ddev.php
-		settingsDdev := filepath.Base(relativeSettingsDdevLocation)
-		newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, settingsDdev)
-		assert.NoError(err)
-		assert.True(newGitIgnoreIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedGitIgnoreLocation)
+			// Ensure that the new .gitignore includes settings.ddev.php
+			settingsDdev := filepath.Base(relativeSettingsDdevLocation)
+			newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, settingsDdev)
+			assert.NoError(err)
+			assert.True(newGitIgnoreIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedGitIgnoreLocation)
+		}
 	}
 }
 
