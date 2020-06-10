@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/gobuffalo/packr/v2"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"golang.org/x/crypto/ssh/terminal"
+	"html/template"
 	"io/ioutil"
 	"net"
 	"os"
@@ -833,6 +835,11 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	err = app.GenerateWebserverConfig()
+	if err != nil {
+		return err
+	}
+
 	// Pull the main images with full output, since docker-compose up won't
 	// show enough output.
 	for _, imageName := range []string{app.WebImage, app.DBImage, app.DBAImage, version.GetSSHAuthImage(), version.GetRouterImage()} {
@@ -915,6 +922,53 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// GenerateWebserverConfig generates the default nginx and apache config files
+func (app *DdevApp) GenerateWebserverConfig() error {
+	nginxDefaultConfigPath := app.GetConfigPath(filepath.Join("nginx_full", "default.conf"))
+	err := os.MkdirAll(filepath.Dir(nginxDefaultConfigPath), 0755)
+	if err != nil {
+		return err
+	}
+
+	if fileutil.FileExists(nginxDefaultConfigPath) {
+		sigExists, err := fileutil.FgrepStringInFile(nginxDefaultConfigPath, DdevFileSignature)
+		if err != nil {
+			return err
+		}
+		// If the signature doesn't exist, they have taken over the file, so return
+		if !sigExists {
+			return nil
+		}
+	}
+	f, err := os.Create(nginxDefaultConfigPath)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(f)
+
+	box := packr.New("webserver_config_packr_assets", "./webserver_config_packr_assets")
+	c, err := box.Find("nginx-site-" + app.Type + ".conf")
+	if err != nil {
+		return err
+	}
+	content := string(c)
+
+	templ := template.New("nginxConfigFile")
+	templ, err = templ.Parse(content)
+	if err != nil {
+		return err
+	}
+
+	var doc bytes.Buffer
+	docroot := filepath.Join("/var/www/html", app.Docroot)
+	err = templ.Execute(&doc, map[string]interface{}{"Docroot": docroot})
+	util.CheckErr(err)
+	_, err = f.WriteString(doc.String())
+	util.CheckErr(err)
 
 	return nil
 }
