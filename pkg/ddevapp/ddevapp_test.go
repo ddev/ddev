@@ -2464,7 +2464,7 @@ func TestHttpsRedirection(t *testing.T) {
 }
 
 // TestMultipleComposeFiles checks to see if a set of docker-compose files gets
-// properly loaded in the right order, with .ddev/ddev-docker-compose*yaml first and
+// properly loaded in the right order, with .ddev/.ddev-docker-compose*yaml first and
 // with docker-compose.override.yaml last.
 func TestMultipleComposeFiles(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
@@ -2630,7 +2630,7 @@ func TestWebserverType(t *testing.T) {
 			if startErr != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(getLogsErr)
-				t.Fatalf("app.StartAndWait failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
+				t.Fatalf("app.StartAndWait failure for WebserverType=%s; site.Name=%s; err=%v, logs:\n=====\n%s\n=====\n", app.WebserverType, site.Name, startErr, appLogs)
 			}
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/servertype.php")
 			require.NoError(t, err)

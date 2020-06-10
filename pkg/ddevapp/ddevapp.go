@@ -928,7 +928,7 @@ func (app *DdevApp) Start() error {
 
 // GenerateWebserverConfig generates the default nginx and apache config files
 func (app *DdevApp) GenerateWebserverConfig() error {
-	nginxDefaultConfigPath := app.GetConfigPath(filepath.Join("nginx_full", "default.conf"))
+	nginxDefaultConfigPath := app.GetConfigPath(filepath.Join("nginx_full", "nginx-site.conf"))
 	err := os.MkdirAll(filepath.Dir(nginxDefaultConfigPath), 0755)
 	if err != nil {
 		return err
@@ -953,7 +953,10 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 	box := packr.New("webserver_config_packr_assets", "./webserver_config_packr_assets")
 	c, err := box.Find("nginx-site-" + app.Type + ".conf")
 	if err != nil {
-		return err
+		c, err = box.Find("nginx-site-php.conf")
+		if err != nil {
+			return err
+		}
 	}
 	content := string(c)
 
