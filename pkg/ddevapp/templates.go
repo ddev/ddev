@@ -76,6 +76,8 @@ services:
         {{ end }}
       {{ end }}
       - ".:/mnt/ddev_config:ro"
+      - "./nginx_full:/etc/nginx/sites-enabled:ro"
+      - "./apache:/etc/apache2/sites-enabled:ro"
       - ddev-global-cache:/mnt/ddev-global-cache
       {{ if not .OmitSSHAgent }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
