@@ -4,6 +4,8 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -84,23 +86,25 @@ columns_priv`)
 // TestLaunchCommand tests that the launch command behaves all the ways it should behave
 func TestLaunchCommand(t *testing.T) {
 	assert := asrt.New(t)
-	site := TestSites[0]
-	switchDir := site.Chdir()
+
+	// Create a temporary directory and switch to it.
+	tmpdir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
 
 	_ = os.Setenv("DDEV_DEBUG", "true")
-	app, err := ddevapp.NewApp(site.Dir, false, "")
-	assert.NoError(err)
+	app, err := ddevapp.NewApp(tmpdir, false, "")
+	require.NoError(t, err)
+	err = app.WriteConfig()
+	require.NoError(t, err)
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
 	defer func() {
 		_ = app.Stop(true, false)
-		app.RouterHTTPSPort = "443"
-		_ = app.WriteConfig()
-		switchDir()
 	}()
 
 	// This only tests the https port changes, but that might be enough
-	for _, routerPort := range []string{"443", "8443"} {
+	for _, routerPort := range []string{nodeps.DdevDefaultRouterHTTPSPort, "8443"} {
 		app.RouterHTTPSPort = routerPort
 		_ = app.WriteConfig()
 		err = app.Start()
