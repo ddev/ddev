@@ -13,16 +13,7 @@ ENV TERM xterm
 ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
-ENV WEBSERVER_DOCROOT /var/www/html
-# For backward compatibility only
-ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
-
-# Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
-# NGINX_DOCROOT is for backward compatibility only, to break less people.
-ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
-ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
-
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 
 RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
@@ -52,16 +43,9 @@ ADD ddev-webserver-base-scripts /
 FROM scratch as ddev-webserver-prod
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
-ENV WEBSERVER_DOCROOT /var/www/html
-# For backward compatibility only
-ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
 ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
 
-# Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
-# NGINX_DOCROOT is for backward compatibility only, to break less people.
-ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
-ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
 COPY --from=ddev-webserver-base / /
 # END ddev-webserver-prod
 
@@ -168,9 +152,6 @@ FROM scratch as ddev-webserver
 ENV PHP_DEFAULT_VERSION="7.3"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
-ENV WEBSERVER_DOCROOT /var/www/html
-# For backward compatibility only
-ENV NGINX_DOCROOT $WEBSERVER_DOCROOT
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
@@ -180,10 +161,6 @@ ENV DDEV_LIVE_NO_VERSION_PROMPT true
 
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
 
-# Defines vars in colon-separated notation to be subsituted with values for NGINX_SITE_TEMPLATE on start
-# NGINX_DOCROOT is for backward compatibility only, to break less people.
-ENV NGINX_SITE_VARS '$WEBSERVER_DOCROOT,$NGINX_DOCROOT'
-ENV APACHE_SITE_VARS '$WEBSERVER_DOCROOT'
 COPY --from=ddev-webserver-dev-base / /
 EXPOSE 80 8025
 HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
