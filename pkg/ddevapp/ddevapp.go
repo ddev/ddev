@@ -9,13 +9,13 @@ import (
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"golang.org/x/crypto/ssh/terminal"
-	"html/template"
 	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"text/template"
 
 	"strings"
 
@@ -928,51 +928,71 @@ func (app *DdevApp) Start() error {
 
 // GenerateWebserverConfig generates the default nginx and apache config files
 func (app *DdevApp) GenerateWebserverConfig() error {
-	nginxDefaultConfigPath := app.GetConfigPath(filepath.Join("nginx_full", "nginx-site.conf"))
-	err := os.MkdirAll(filepath.Dir(nginxDefaultConfigPath), 0755)
-	if err != nil {
-		return err
+	var items = map[string]string{
+		"nginx":  app.GetConfigPath(filepath.Join("nginx_full", "nginx-site.conf")),
+		"apache": app.GetConfigPath(filepath.Join("apache", "apache-site.conf")),
 	}
-
-	if fileutil.FileExists(nginxDefaultConfigPath) {
-		sigExists, err := fileutil.FgrepStringInFile(nginxDefaultConfigPath, DdevFileSignature)
+	for t, configPath := range items {
+		err := os.MkdirAll(filepath.Dir(configPath), 0755)
 		if err != nil {
 			return err
 		}
-		// If the signature doesn't exist, they have taken over the file, so return
-		if !sigExists {
-			return nil
-		}
-	}
-	f, err := os.Create(nginxDefaultConfigPath)
-	if err != nil {
-		return err
-	}
-	defer util.CheckClose(f)
 
-	box := packr.New("webserver_config_packr_assets", "./webserver_config_packr_assets")
-	c, err := box.Find("nginx-site-" + app.Type + ".conf")
-	if err != nil {
-		c, err = box.Find("nginx-site-php.conf")
+		if fileutil.FileExists(configPath) {
+			sigExists, err := fileutil.FgrepStringInFile(configPath, DdevFileSignature)
+			if err != nil {
+				return err
+			}
+			// If the signature doesn't exist, they have taken over the file, so return
+			if !sigExists {
+				return nil
+			}
+		}
+
+		box := packr.New("webserver_config_packr_assets", "./webserver_config_packr_assets")
+		c, err := box.Find(fmt.Sprintf("%s-site-%s.conf", t, app.Type))
+		if err != nil {
+			c, err = box.Find(fmt.Sprintf("%s-site-php.conf", t))
+			if err != nil {
+				return err
+			}
+		}
+		content := string(c)
+		docroot := filepath.Join("/var/www/html", app.Docroot)
+
+		err = TemplateStringToFile(content, map[string]interface{}{"Docroot": docroot}, configPath)
 		if err != nil {
 			return err
 		}
 	}
-	content := string(c)
+	return nil
+}
 
-	templ := template.New("nginxConfigFile")
-	templ, err = templ.Parse(content)
+// TemplateStringToFile takes a template string, runs templ.Execute on it, and writes it out to file
+func TemplateStringToFile(content string, vars map[string]interface{}, targetFilePath string) error {
+
+	templ := template.New("templateStringToFile:" + targetFilePath)
+	templ, err := templ.Parse(content)
 	if err != nil {
 		return err
 	}
 
 	var doc bytes.Buffer
-	docroot := filepath.Join("/var/www/html", app.Docroot)
-	err = templ.Execute(&doc, map[string]interface{}{"Docroot": docroot})
-	util.CheckErr(err)
-	_, err = f.WriteString(doc.String())
-	util.CheckErr(err)
+	err = templ.Execute(&doc, vars)
+	if err != nil {
+		return err
+	}
 
+	f, err := os.Create(targetFilePath)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(f)
+
+	_, err = f.WriteString(doc.String())
+	if err != nil {
+		return nil
+	}
 	return nil
 }
 
