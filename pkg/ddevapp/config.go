@@ -578,9 +578,17 @@ func (app *DdevApp) CheckCustomConfig() {
 		util.Warning("Using custom nginx configuration in nginx-site.conf")
 		customConfig = true
 	}
+	nginxFullConfigPath := app.GetConfigPath("nginx_full/nginx-site.conf")
+	sigFound, _ := fileutil.FgrepStringInFile(nginxFullConfigPath, DdevFileSignature)
+	if !sigFound && app.WebserverType == nodeps.WebserverNginxFPM {
+		util.Warning("Using custom nginx configuration in %s", nginxFullConfigPath)
+		customConfig = true
+	}
 
-	if _, err := os.Stat(filepath.Join(ddevDir, "apache", "apache-site.conf")); err == nil && app.WebserverType != nodeps.WebserverNginxFPM {
-		util.Warning("Using custom apache configuration in apache/apache-site.conf")
+	apacheFullConfigPath := app.GetConfigPath("apache/apache-site.conf")
+	sigFound, _ = fileutil.FgrepStringInFile(apacheFullConfigPath, DdevFileSignature)
+	if !sigFound && app.WebserverType != nodeps.WebserverNginxFPM {
+		util.Warning("Using custom apache configuration in %s", apacheFullConfigPath)
 		customConfig = true
 	}
 
@@ -589,7 +597,7 @@ func (app *DdevApp) CheckCustomConfig() {
 		nginxFiles, err := filepath.Glob(nginxPath + "/*.conf")
 		util.CheckErr(err)
 		if len(nginxFiles) > 0 {
-			util.Warning("Using custom nginx partial configuration: %v", nginxFiles)
+			util.Warning("Using nginx snippets: %v", nginxFiles)
 			customConfig = true
 		}
 	}
