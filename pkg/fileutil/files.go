@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"runtime"
 
@@ -360,6 +361,34 @@ func RemoveContents(dir string) error {
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// TemplateStringToFile takes a template string, runs templ.Execute on it, and writes it out to file
+func TemplateStringToFile(content string, vars map[string]interface{}, targetFilePath string) error {
+
+	templ := template.New("templateStringToFile:" + targetFilePath)
+	templ, err := templ.Parse(content)
+	if err != nil {
+		return err
+	}
+
+	var doc bytes.Buffer
+	err = templ.Execute(&doc, vars)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Create(targetFilePath)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(f)
+
+	_, err = f.WriteString(doc.String())
+	if err != nil {
+		return nil
 	}
 	return nil
 }
