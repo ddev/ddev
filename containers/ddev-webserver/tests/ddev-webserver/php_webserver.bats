@@ -4,7 +4,7 @@
 # bats tests/ddev-websever-dev/php_webserver.bats
 
 @test "http and https phpstatus access work inside and outside container for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-    curl -ssL --fail http://localhost:$HOST_HTTP_PORT/test/phptest.php
+    curl -sSL --fail http://localhost:$HOST_HTTP_PORT/test/phptest.php
     if [ "${OS:-$(uname)}" != "Windows_NT" ] ; then
         # TODO: Why doesn't this work on Windows?
         curl -sSL --fail https://localhost:$HOST_HTTPS_PORT/test/phptest.php
@@ -38,12 +38,14 @@
 
 @test "verify error conditions for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
     # These are just the standard nginx 403 and 404 pages
-    curl localhost:$HOST_HTTP_PORT/ | grep "403 Forbidden"
     curl localhost:$HOST_HTTP_PORT/asdf | grep "404 Not Found"
     # We're just checking the error code here - there's not much more we can do in
     # this case because the container is *NOT* intercepting 50x errors.
-    curl -w "%{http_code}" localhost:$HOST_HTTP_PORT/test/500.php | grep 500
-    # 400 and 401 errors are intercepted by the same page.
-    curl -s -I localhost:$HOST_HTTP_PORT/test/400.php | grep "HTTP/1.1 400"
-    curl -s -I localhost:$HOST_HTTP_PORT/test/401.php | grep "HTTP/1.1 401"
+    for item in 400 401 500; do
+        curl -w "%{http_code}" localhost:$HOST_HTTP_PORT/test/${item}.php | grep $item
+    done
+}
+
+@test "verify that test/phptest.php is interpreted ($project_type)" {
+	curl --fail localhost:$HOST_HTTP_PORT/test/phptest.php
 }
