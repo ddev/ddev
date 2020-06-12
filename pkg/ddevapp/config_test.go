@@ -706,7 +706,8 @@ func TestConfigOverrideDetection(t *testing.T) {
 func TestPHPOverrides(t *testing.T) {
 	assert := asrt.New(t)
 	app := &DdevApp{}
-	testDir, _ := os.Getwd()
+	tDir, err := os.Getwd()
+	require.NoError(t, err)
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
@@ -715,9 +716,9 @@ func TestPHPOverrides(t *testing.T) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	// Copy test overrides into the project .ddev directory
-	err := fileutil.CopyDir(filepath.Join(testDir, "testdata/TestPHPOverrides/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
+	err = fileutil.CopyDir(filepath.Join(tDir, "testdata/TestPHPOverrides/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
 	assert.NoError(err)
-	err = fileutil.CopyFile(filepath.Join(testDir, "testdata/TestPHPOverrides/phpinfo.php"), filepath.Join(site.Dir, site.Docroot, "phpinfo.php"))
+	err = fileutil.CopyFile(filepath.Join(tDir, "testdata/TestPHPOverrides/phpinfo.php"), filepath.Join(site.Dir, site.Docroot, "phpinfo.php"))
 	assert.NoError(err)
 
 	// And when we're done, we have to clean those out again.
