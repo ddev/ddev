@@ -164,7 +164,7 @@ var (
 			FilesImageURI:                 "/sites/default/files/mediterranean-quiche-umami.jpg",
 		},
 		{
-			Name:                          "TestPkgLumen",
+			Name:                          "TestPkgLaravel",
 			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp.tar.gz",
 			ArchiveInternalExtractionPath: "ddev-lumen-testapp/",
 			FilesTarballURL:               "",
@@ -2927,7 +2927,7 @@ func TestHostDBPort(t *testing.T) {
 	err := os.MkdirAll(commandsDir, 0755)
 	assert.NoError(err)
 	err = fileutil.CopyFile(filepath.Join(testDir, "testdata", t.Name(), "showport"), filepath.Join(commandsDir, "showport"))
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	app, err := ddevapp.NewApp(site.Dir, false, "")
 	defer func() {
@@ -3011,7 +3011,7 @@ func TestPortSpecifications(t *testing.T) {
 	//nolint: errcheck
 	defer os.RemoveAll(specAppPath)
 	err = fileutil.CopyDir(ddevDir, filepath.Join(specAppPath, ".ddev"))
-	assert.NoError(err)
+	require.NoError(t, err, "could not copy to spectAppPath %v", specAppPath)
 
 	specAPP, err := ddevapp.NewApp(specAppPath, false, "")
 	assert.NoError(err)
@@ -3026,7 +3026,7 @@ func TestPortSpecifications(t *testing.T) {
 	require.NoError(t, err)
 	// Verify that DdevGlobalConfig got updated properly
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name])
-	assert.NotEmpty(globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name].UsedHostPorts)
+	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name].UsedHostPorts)
 
 	// However, if we change change the name to make it appear to be a
 	// different project, we should not be able to config or start
@@ -3037,7 +3037,7 @@ func TestPortSpecifications(t *testing.T) {
 	err = conflictApp.WriteConfig()
 	assert.Error(err)
 	err = conflictApp.Start()
-	assert.Error(err)
+	assert.Error(err, "Expected error starting conflictApp=%v", conflictApp)
 
 	// Now delete the specAPP and we should be able to use the conflictApp
 	err = specAPP.Stop(true, false)

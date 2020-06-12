@@ -267,7 +267,7 @@ Note that Magento 2 is a huge codebase and using `nfs_mount_enabled: true` is re
 ### Laravel Quickstart
 
 Get started with Laravel projects on ddev either using a new or existing composer project or by cloning a git repository.
-The Laravel project type can be used for Lumen same as for Laravel.
+The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel.
 
 #### Laravel Composer Setup Example
 
