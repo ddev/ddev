@@ -2399,6 +2399,8 @@ func TestHttpsRedirection(t *testing.T) {
 
 	app, err := ddevapp.NewApp(appDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
+
+	_ = app.Stop(true, false)
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
