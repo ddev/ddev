@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/mattn/go-isatty"
@@ -27,16 +28,43 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		return nil
 	}
 
-	topCommandPath := app.GetConfigPath("commands")
-	if !fileutil.FileExists(topCommandPath) || !fileutil.IsDirectory(topCommandPath) {
-		return nil
+	globalCommandPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
+	projectCommandPath := app.GetConfigPath("commands")
+	globalCommandDirs, err := fileutil.ListFilesInDir(globalCommandPath)
+	if err != nil {
+		return err
 	}
-	commandDirs, _ := fileutil.ListFilesInDir(topCommandPath)
-	for _, service := range commandDirs {
-		if !fileutil.IsDirectory(filepath.Join(topCommandPath, service)) {
+	// Copy global commands to "." directories in commands.
+	for _, s := range globalCommandDirs {
+		globalCommandDir := filepath.Join(globalCommandPath, s)
+		if !fileutil.IsDirectory(globalCommandDir) {
 			continue
 		}
-		commandFiles, err := fileutil.ListFilesInDir(filepath.Join(topCommandPath, service))
+		dstDir := filepath.Join(projectCommandPath, "."+s)
+		err = os.RemoveAll(dstDir)
+		if err != nil {
+			return err
+		}
+		err = fileutil.CopyDir(globalCommandDir, dstDir)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !fileutil.FileExists(projectCommandPath) || !fileutil.IsDirectory(projectCommandPath) {
+		return nil
+	}
+	commandDirs, _ := fileutil.ListFilesInDir(projectCommandPath)
+	for _, s := range commandDirs {
+		service := s
+		// If the service is copied from global, put it in . directory
+		if s[0:1] == "." {
+			service = s[1:]
+		}
+		if !fileutil.IsDirectory(filepath.Join(projectCommandPath, service)) {
+			continue
+		}
+		commandFiles, err := fileutil.ListFilesInDir(filepath.Join(projectCommandPath, s))
 		if err != nil {
 			return err
 		}
@@ -51,8 +79,8 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		for _, commandName := range commandFiles {
 			// Use path.Join() for the inContainerFullPath because it's about the path in the container, not on the
 			// host; a Windows path is not useful here.
-			inContainerFullPath := path.Join("/mnt/ddev_config/commands", service, commandName)
-			onHostFullPath := filepath.Join(topCommandPath, service, commandName)
+			inContainerFullPath := path.Join("/mnt/ddev_config/commands", s, commandName)
+			onHostFullPath := filepath.Join(projectCommandPath, s, commandName)
 
 			if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") || strings.HasPrefix(commandName, ".") || fileutil.IsDirectory(onHostFullPath) {
 				continue
@@ -73,19 +101,23 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				usage = commandName + " [flags] [args]"
 			}
 			example := findDirectiveInScript(onHostFullPath, "## Example")
+			descSuffix := " (shell " + service + " container command)"
+			if s[0:1] == "." {
+				descSuffix = " (global shell " + service + " container command)"
+			}
 			commandToAdd := &cobra.Command{
 				Use:     usage,
-				Short:   description + " (custom " + service + " container command)",
+				Short:   description + descSuffix,
 				Example: example,
 				FParseErrWhitelist: cobra.FParseErrWhitelist{
 					UnknownFlags: true,
 				},
 			}
 
-			if service == "host" {
-				commandToAdd.Run = makeHostCmd(app, filepath.Join(topCommandPath, service, commandName), commandName)
+			if s == "host" {
+				commandToAdd.Run = makeHostCmd(app, filepath.Join(projectCommandPath, s, commandName), commandName)
 			} else {
-				commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service)
+				commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, s)
 			}
 			rootCmd.AddCommand(commandToAdd)
 		}
@@ -133,6 +165,10 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 
 // makeContainerCmd creates the command which will app.Exec to a container command
 func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service string) func(*cobra.Command, []string) {
+	s := service
+	if s[0:1] == "." {
+		s = s[1:]
+	}
 	return func(cmd *cobra.Command, args []string) {
 		if app.SiteStatus() != ddevapp.SiteRunning {
 			err := app.Start()
@@ -148,8 +184,8 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service strin
 		}
 		_, _, err := app.Exec(&ddevapp.ExecOpts{
 			Cmd:       fullPath + " " + strings.Join(osArgs, " "),
-			Service:   service,
-			Dir:       app.GetWorkingDir(service, ""),
+			Service:   s,
+			Dir:       app.GetWorkingDir(s, ""),
 			Tty:       isatty.IsTerminal(os.Stdin.Fd()),
 			NoCapture: true,
 		})
