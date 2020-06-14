@@ -867,6 +867,22 @@ func (app *DdevApp) Start() error {
 	// Warn user if there are deprecated items used in the config
 	app.CheckDeprecations()
 
+	// Copy any global homeadditions content into its mount location
+	globalHomeadditionsPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
+	if fileutil.IsDirectory(globalHomeadditionsPath) {
+		projectGlobalHomeadditionsPath := app.GetConfigPath(".homeadditions")
+		if fileutil.IsDirectory(projectGlobalHomeadditionsPath) {
+			err = os.RemoveAll(projectGlobalHomeadditionsPath)
+			if err != nil {
+				return err
+			}
+		}
+		err = fileutil.CopyDir(globalHomeadditionsPath, projectGlobalHomeadditionsPath)
+		if err != nil {
+			return err
+		}
+	}
+
 	caRoot := globalconfig.GetCAROOT()
 	if caRoot == "" {
 		util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
