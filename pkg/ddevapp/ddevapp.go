@@ -927,8 +927,9 @@ func (app *DdevApp) Start() error {
 // GenerateWebserverConfig generates the default nginx and apache config files
 func (app *DdevApp) GenerateWebserverConfig() error {
 	var items = map[string]string{
-		"nginx":  app.GetConfigPath(filepath.Join("nginx_full", "nginx-site.conf")),
-		"apache": app.GetConfigPath(filepath.Join("apache", "apache-site.conf")),
+		"nginx":                        app.GetConfigPath(filepath.Join("nginx_full", "nginx-site.conf")),
+		"apache":                       app.GetConfigPath(filepath.Join("apache", "apache-site.conf")),
+		"nginx_second_docroot_example": app.GetConfigPath(filepath.Join("nginx_full", "seconddocroot.conf.example")),
 	}
 	for t, configPath := range items {
 		err := os.MkdirAll(filepath.Dir(configPath), 0755)
@@ -957,7 +958,6 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 		}
 		content := string(c)
 		docroot := path.Join("/var/www/html", app.Docroot)
-
 		err = fileutil.TemplateStringToFile(content, map[string]interface{}{"Docroot": docroot}, configPath)
 		if err != nil {
 			return err
