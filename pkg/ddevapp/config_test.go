@@ -639,6 +639,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping because unreliable on Windows")
 	}
+	testDataDdevDir := filepath.Join("testdata", t.Name(), ".ddev")
 
 	assert := asrt.New(t)
 	app := &DdevApp{}
@@ -651,10 +652,8 @@ func TestConfigOverrideDetection(t *testing.T) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s ConfigOverrideDetection", site.Name))
 
 	// Copy test overrides into the project .ddev directory
-	for _, item := range []string{"nginx", "apache", "php", "mysql"} {
-		err := fileutil.CopyDir(filepath.Join(testDir, "testdata/TestConfigOverrideDetection/.ddev", item), filepath.Join(site.Dir, ".ddev", item))
-		assert.NoError(err)
-		err = fileutil.CopyFile(filepath.Join(testDir, "testdata/TestConfigOverrideDetection/.ddev", "nginx-site.conf"), filepath.Join(site.Dir, ".ddev", "nginx-site.conf"))
+	for _, item := range []string{"nginx", "nginx_full", "apache", "php", "mysql"} {
+		err := fileutil.CopyDir(filepath.Join(testDir, testDataDdevDir, item), filepath.Join(site.Dir, ".ddev", item))
 		assert.NoError(err)
 	}
 
@@ -664,7 +663,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	t.Cleanup(func() {
 		_ = app.Stop(true, false)
-		for _, item := range []string{"apache", "php", "mysql", "nginx", "nginx-site.conf"} {
+		for _, item := range []string{"apache", "php", "mysql", "nginx", "nginx_full"} {
 			f := app.GetConfigPath(item)
 			err = os.RemoveAll(f)
 			if err != nil {
@@ -707,7 +706,8 @@ func TestConfigOverrideDetection(t *testing.T) {
 func TestPHPOverrides(t *testing.T) {
 	assert := asrt.New(t)
 	app := &DdevApp{}
-	testDir, _ := os.Getwd()
+	tDir, err := os.Getwd()
+	require.NoError(t, err)
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
@@ -716,9 +716,9 @@ func TestPHPOverrides(t *testing.T) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	// Copy test overrides into the project .ddev directory
-	err := fileutil.CopyDir(filepath.Join(testDir, "testdata/TestPHPOverrides/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
+	err = fileutil.CopyDir(filepath.Join(tDir, "testdata/TestPHPOverrides/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
 	assert.NoError(err)
-	err = fileutil.CopyFile(filepath.Join(testDir, "testdata/TestPHPOverrides/phpinfo.php"), filepath.Join(site.Dir, site.Docroot, "phpinfo.php"))
+	err = fileutil.CopyFile(filepath.Join(tDir, "testdata/TestPHPOverrides/phpinfo.php"), filepath.Join(site.Dir, site.Docroot, "phpinfo.php"))
 	assert.NoError(err)
 
 	// And when we're done, we have to clean those out again.

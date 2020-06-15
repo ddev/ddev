@@ -1,9 +1,5 @@
 #!/usr/bin/env bats
 
-@test "verify customization of nginx configuration" {
-    docker exec -t $CONTAINER_NAME bash -c "grep 'docroot is /var/www/html/potato in custom conf' /etc/nginx/sites-enabled/nginx-site.conf"
-}
-
 @test "verify customization of php configuration" {
     # Make sure the custom php configuration in ddev_config/php is activated.
     # Verify that /mnt/ddev_config is mounted and we have php overrides there.

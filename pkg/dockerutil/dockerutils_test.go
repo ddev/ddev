@@ -23,7 +23,7 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-var TestContainerName = "TestDockerUtils"
+var testContainerName = "TestDockerUtils"
 
 func TestMain(m *testing.M) { os.Exit(testMain(m)) }
 
@@ -50,7 +50,7 @@ func testMain(m *testing.M) int {
 		}
 	}
 
-	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": TestContainerName})
+	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
 
 	if foundContainer != nil {
 		err = RemoveContainer(foundContainer.ID, 30)
@@ -61,12 +61,12 @@ func testMain(m *testing.M) int {
 	}
 
 	container, err := client.CreateContainer(docker.CreateContainerOptions{
-		Name: TestContainerName,
+		Name: testContainerName,
 		Config: &docker.Config{
 			Image: version.WebImg + ":" + version.WebTag,
 			Labels: map[string]string{
 				"com.docker.compose.service": "web",
-				"com.ddev.site-name":         TestContainerName,
+				"com.ddev.site-name":         testContainerName,
 			},
 			Env:  []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
 			User: "98:98", // The "testuser" pre-installed in container
@@ -97,7 +97,7 @@ func testMain(m *testing.M) int {
 			logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 		}
 	}()
-	_, err = ContainerWait(30, map[string]string{"com.ddev.site-name": TestContainerName})
+	_, err = ContainerWait(30, map[string]string{"com.ddev.site-name": testContainerName})
 	if err != nil {
 		logout, _ := exec.RunCommand("docker", []string{"logs", container.Name})
 		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", container.Name)})
@@ -115,7 +115,7 @@ func TestGetContainerHealth(t *testing.T) {
 	client := GetDockerClient()
 
 	labels := map[string]string{
-		"com.ddev.site-name": TestContainerName,
+		"com.ddev.site-name": testContainerName,
 	}
 	container, err := FindContainerByLabels(labels)
 	require.NoError(t, err)
@@ -144,7 +144,7 @@ func TestContainerWait(t *testing.T) {
 	assert := asrt.New(t)
 
 	labels := map[string]string{
-		"com.ddev.site-name": TestContainerName,
+		"com.ddev.site-name": testContainerName,
 	}
 
 	// Try a zero-wait, should show timed-out
@@ -263,7 +263,7 @@ func TestCheckCompose(t *testing.T) {
 // TestGetAppContainers looks for container with sitename dockerutils-test
 func TestGetAppContainers(t *testing.T) {
 	assert := asrt.New(t)
-	containers, err := GetAppContainers(TestContainerName)
+	containers, err := GetAppContainers(testContainerName)
 	assert.NoError(err)
 	assert.Contains(containers[0].Image, version.WebImg)
 }
@@ -271,7 +271,7 @@ func TestGetAppContainers(t *testing.T) {
 func TestGetContainerEnv(t *testing.T) {
 	assert := asrt.New(t)
 
-	container, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": TestContainerName})
+	container, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
 	assert.NoError(err)
 	require.NotEmpty(t, container)
 
@@ -334,7 +334,7 @@ func TestRunSimpleContainer(t *testing.T) {
 func TestGetExposedContainerPorts(t *testing.T) {
 	assert := asrt.New(t)
 
-	testContainer, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": TestContainerName})
+	testContainer, err := FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
 	require.NoError(t, err)
 	require.NotNil(t, testContainer)
 	ports, err := GetExposedContainerPorts(testContainer.ID)

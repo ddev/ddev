@@ -179,9 +179,9 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		assert.NoError(err)
 
 		startErr := app.StartAndWait(5)
+		assert.NoError(startErr, "app.StartAndWait failed for port pair %v", pair)
 		if startErr != nil {
-			logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
-			assert.NoError(err)
+			logs, _ := ddevapp.GetErrLogsFromApp(app, startErr)
 			t.Fatalf("logs from broken container:\n=======\n%s\n========\n", logs)
 		}
 

@@ -62,8 +62,7 @@ cleanup
 for PHP_VERSION in 5.6 7.0 7.1 7.2 7.3 7.4; do
     for WEBSERVER_TYPE in nginx-fpm apache-fpm apache-cgi; do
         export PHP_VERSION WEBSERVER_TYPE
-
-        docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE >/dev/null
+        docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE >/dev/null
         if ! containerwait; then
             echo "=============== Failed containerwait after docker run with  DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE} DDEV_PHP_VERSION=$PHP_VERSION ==================="
             exit 101
@@ -75,7 +74,7 @@ for PHP_VERSION in 5.6 7.0 7.1 7.2 7.3 7.4; do
     done
 done
 
-for project_type in drupal6 drupal7 drupal8 drupal9 typo3 backdrop wordpress default; do
+for project_type in backdrop drupal6 drupal7 drupal8 drupal9 laravel magento magento2 typo3 wordpress default; do
 	export PHP_VERSION="7.3"
     export project_type
 	if [ "$project_type" == "drupal6" ]; then
@@ -92,7 +91,7 @@ for project_type in drupal6 drupal7 drupal8 drupal9 typo3 backdrop wordpress def
     cleanup
 done
 
-docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=potato" -e "DDEV_PHP_VERSION=7.3" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v ddev-global-cache:/mnt/ddev-global-cache -d --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
+docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DDEV_PHP_VERSION=7.3" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v ddev-global-cache:/mnt/ddev-global-cache -d --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
 containerwait
 
 bats tests/ddev-webserver/custom_config.bats

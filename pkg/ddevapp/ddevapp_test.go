@@ -164,7 +164,7 @@ var (
 			FilesImageURI:                 "/sites/default/files/mediterranean-quiche-umami.jpg",
 		},
 		{
-			Name:                          "TestPkgLumen",
+			Name:                          "TestPkgLaravel",
 			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp.tar.gz",
 			ArchiveInternalExtractionPath: "ddev-lumen-testapp/",
 			FilesTarballURL:               "",
@@ -2389,18 +2389,20 @@ func TestHttpsRedirection(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	packageDir, _ := os.Getwd()
 
-	testDir := testcommon.CreateTmpDir("TestHttpsRedirection")
+	testDir := testcommon.CreateTmpDir(t.Name())
 	defer testcommon.CleanupDir(testDir)
-	appDir := filepath.Join(testDir, "proj")
-	err := fileutil.CopyDir(filepath.Join(packageDir, "testdata", "TestHttpsRedirection"), appDir)
+	appDir := filepath.Join(testDir, t.Name())
+	err := fileutil.CopyDir(filepath.Join(packageDir, "testdata", t.Name()), appDir)
 	assert.NoError(err)
 	err = os.Chdir(appDir)
 	assert.NoError(err)
 
 	app, err := ddevapp.NewApp(appDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
-	app.Name = "proj"
-	app.Type = nodeps.AppTypePHP
+
+	_ = app.Stop(true, false)
+	//nolint: errcheck
+	defer app.Stop(true, false)
 
 	expectations := []URLRedirectExpectations{
 		{"https", "/subdir", "/subdir/"},
@@ -2411,52 +2413,57 @@ func TestHttpsRedirection(t *testing.T) {
 		{"http", "/redir_relative.php", "/landed.php"},
 	}
 
-	for _, webserverType := range []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM, nodeps.WebserverApacheCGI} {
-		app.WebserverType = webserverType
-		err = app.WriteConfig()
-		assert.NoError(err)
-
-		// Do a start on the configured site.
-		app, err = ddevapp.GetActiveApp("")
-		assert.NoError(err)
-		// Make absolutely sure the project is stopped
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		//nolint: errcheck
-		defer app.Stop(true, false)
-		startErr := app.StartAndWait(30)
-		if startErr != nil {
-			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
-			assert.NoError(getLogsErr)
-			t.Fatalf("app.StartAndWait failure; err=%v \n===== container logs ===\n%s\n", startErr, appLogs)
+	types := ddevapp.GetValidAppTypes()
+	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM, nodeps.WebserverApacheCGI}
+	if os.Getenv("GOTEST_SHORT") != "" {
+		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal8}
+		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
+	}
+	for _, projectType := range types {
+		// TODO: Fix the laravel config so it can do the redir_abs.php successfully on nginx-fpm
+		if projectType == nodeps.AppTypeLaravel {
+			t.Log("Skipping laravel because it can't pass absolute redirect test, fix config")
+			continue
 		}
-		// Test for directory redirects under https and http
-		for _, parts := range expectations {
+		for _, webserverType := range webserverTypes {
+			app.WebserverType = webserverType
+			app.Type = projectType
+			err = app.WriteConfig()
+			assert.NoError(err)
 
-			reqURL := parts.scheme + "://" + app.GetHostname() + parts.uri
-			t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
-			out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
-			assert.NotNil(resp, "resp was nil for webserver_type=%s url=%s, err=%v, out='%s'", webserverType, reqURL, err, out)
-			if resp != nil {
-				locHeader := resp.Header.Get("Location")
+			// Do a start on the configured site.
+			app, err = ddevapp.GetActiveApp("")
+			assert.NoError(err)
+			startErr := app.Start()
+			assert.NoError(startErr, "app.Start() failed with projectType=%s, webserverType=%s", projectType, webserverType)
+			if startErr != nil {
+				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+				assert.NoError(getLogsErr)
+				t.Fatalf("app.StartAndWait failure; err=%v \n===== container logs ===\n%s\n", startErr, appLogs)
+			}
+			// Test for directory redirects under https and http
+			for _, parts := range expectations {
+				reqURL := parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.uri
+				//t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
+				out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
+				assert.NotNil(resp, "resp was nil for projectType=%s webserver_type=%s url=%s, err=%v, out='%s'", projectType, webserverType, reqURL, err, out)
+				if resp != nil {
+					locHeader := resp.Header.Get("Location")
 
-				expectedRedirect := parts.expectedRedirectURI
-				// However, if we're hitting redir_abs.php (or apache hitting directory), the redirect will be the whole url.
-				if strings.Contains(parts.uri, "redir_abs.php") || webserverType != nodeps.WebserverNginxFPM {
-					expectedRedirect = parts.scheme + "://" + app.GetHostname() + parts.expectedRedirectURI
+					expectedRedirect := parts.expectedRedirectURI
+					// However, if we're hitting redir_abs.php (or apache hitting directory), the redirect will be the whole url.
+					if strings.Contains(parts.uri, "redir_abs.php") || webserverType != nodeps.WebserverNginxFPM {
+						expectedRedirect = parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.expectedRedirectURI
+					}
+					// Except the php relative redirect is always relative.
+					if strings.Contains(parts.uri, "redir_relative.php") {
+						expectedRedirect = parts.expectedRedirectURI
+					}
+					assert.EqualValues(locHeader, expectedRedirect, "For project type=%s webserver_type=%s url=%s expected redirect %s != actual %s", projectType, webserverType, reqURL, expectedRedirect, locHeader)
 				}
-				// Except the php relative redirect is always relative.
-				if strings.Contains(parts.uri, "redir_relative.php") {
-					expectedRedirect = parts.expectedRedirectURI
-				}
-
-				assert.EqualValues(locHeader, expectedRedirect, "For webserver_type %s url %s expected redirect %s != actual %s", webserverType, reqURL, expectedRedirect, locHeader)
 			}
 		}
-		err = app.Stop(true, false)
-		assert.NoError(err)
 	}
-
 	// Change back to package dir. Lots of things will have to be cleaned up
 	// in defers, and for windows we have to not be sitting in them.
 	err = os.Chdir(packageDir)
@@ -2464,7 +2471,7 @@ func TestHttpsRedirection(t *testing.T) {
 }
 
 // TestMultipleComposeFiles checks to see if a set of docker-compose files gets
-// properly loaded in the right order, with .ddev/ddev-docker-compose*yaml first and
+// properly loaded in the right order, with .ddev/.ddev-docker-compose*yaml first and
 // with docker-compose.override.yaml last.
 func TestMultipleComposeFiles(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
@@ -2630,7 +2637,7 @@ func TestWebserverType(t *testing.T) {
 			if startErr != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(getLogsErr)
-				t.Fatalf("app.StartAndWait failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
+				t.Fatalf("app.StartAndWait failure for WebserverType=%s; site.Name=%s; err=%v, logs:\n=====\n%s\n=====\n", app.WebserverType, site.Name, startErr, appLogs)
 			}
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/servertype.php")
 			require.NoError(t, err)
@@ -2921,7 +2928,7 @@ func TestHostDBPort(t *testing.T) {
 	err := os.MkdirAll(commandsDir, 0755)
 	assert.NoError(err)
 	err = fileutil.CopyFile(filepath.Join(testDir, "testdata", t.Name(), "showport"), filepath.Join(commandsDir, "showport"))
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	app, err := ddevapp.NewApp(site.Dir, false, "")
 	defer func() {
@@ -3005,7 +3012,7 @@ func TestPortSpecifications(t *testing.T) {
 	//nolint: errcheck
 	defer os.RemoveAll(specAppPath)
 	err = fileutil.CopyDir(ddevDir, filepath.Join(specAppPath, ".ddev"))
-	assert.NoError(err)
+	require.NoError(t, err, "could not copy to spectAppPath %v", specAppPath)
 
 	specAPP, err := ddevapp.NewApp(specAppPath, false, "")
 	assert.NoError(err)
@@ -3020,7 +3027,7 @@ func TestPortSpecifications(t *testing.T) {
 	require.NoError(t, err)
 	// Verify that DdevGlobalConfig got updated properly
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name])
-	assert.NotEmpty(globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name].UsedHostPorts)
+	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[specAPP.Name].UsedHostPorts)
 
 	// However, if we change change the name to make it appear to be a
 	// different project, we should not be able to config or start
@@ -3031,7 +3038,7 @@ func TestPortSpecifications(t *testing.T) {
 	err = conflictApp.WriteConfig()
 	assert.Error(err)
 	err = conflictApp.Start()
-	assert.Error(err)
+	assert.Error(err, "Expected error starting conflictApp=%v", conflictApp)
 
 	// Now delete the specAPP and we should be able to use the conflictApp
 	err = specAPP.Stop(true, false)

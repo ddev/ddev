@@ -578,9 +578,17 @@ func (app *DdevApp) CheckCustomConfig() {
 		util.Warning("Using custom nginx configuration in nginx-site.conf")
 		customConfig = true
 	}
+	nginxFullConfigPath := app.GetConfigPath("nginx_full/nginx-site.conf")
+	sigFound, _ := fileutil.FgrepStringInFile(nginxFullConfigPath, DdevFileSignature)
+	if !sigFound && app.WebserverType == nodeps.WebserverNginxFPM {
+		util.Warning("Using custom nginx configuration in %s", nginxFullConfigPath)
+		customConfig = true
+	}
 
-	if _, err := os.Stat(filepath.Join(ddevDir, "apache", "apache-site.conf")); err == nil && app.WebserverType != nodeps.WebserverNginxFPM {
-		util.Warning("Using custom apache configuration in apache/apache-site.conf")
+	apacheFullConfigPath := app.GetConfigPath("apache/apache-site.conf")
+	sigFound, _ = fileutil.FgrepStringInFile(apacheFullConfigPath, DdevFileSignature)
+	if !sigFound && app.WebserverType != nodeps.WebserverNginxFPM {
+		util.Warning("Using custom apache configuration in %s", apacheFullConfigPath)
 		customConfig = true
 	}
 
@@ -589,7 +597,7 @@ func (app *DdevApp) CheckCustomConfig() {
 		nginxFiles, err := filepath.Glob(nginxPath + "/*.conf")
 		util.CheckErr(err)
 		if len(nginxFiles) > 0 {
-			util.Warning("Using custom nginx partial configuration: %v", nginxFiles)
+			util.Warning("Using nginx snippets: %v", nginxFiles)
 			customConfig = true
 		}
 	}
@@ -958,7 +966,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "commands/.gitattributes", "commands/*/*.example", "commands/*/README.txt", "commands/host/launch", "commands/web/live", "commands/web/xdebug", "commands/db/mysql", "homeadditions/*.example", "homeadditions/README.txt", "import.yaml", ".ddev-docker-compose-base.yaml", ".ddev-docker-compose-full.yaml", "db_snapshots", "sequelpro.spf", "import-db", "config.*.y*ml", ".webimageBuild", ".dbimageBuild", ".sshimageBuild", ".webimageExtra", ".dbimageExtra", "*-build/Dockerfile.example")
+	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-compose-base.yaml", ".ddev-docker-compose-full.yaml", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/live", "commands/web/xdebug", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "nginx_full/nginx-site.conf", "sequelpro.spf", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

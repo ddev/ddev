@@ -130,11 +130,11 @@ staticrequired: setup golangci-lint markdownlint mkdocs
 
 markdownlint:
 	@echo "markdownlint: "
-	@$(DOCKERTESTCMD) \
+	@sleep 1 && $(DOCKERTESTCMD) \
 		bash -c "markdownlint *.md docs >/dev/null 2>&1"
 mkdocs:
 	@echo "mkdocs: "
-	@$(DOCKERTESTCMD) \
+	@sleep 1 && $(DOCKERTESTCMD) \
 		bash -c "mkdocs build -d /tmp/mkdocsbuld >/dev/null 2>&1"
 
 darwin_signed: darwin

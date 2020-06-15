@@ -42,30 +42,39 @@ services:
 
 ### Providing custom nginx configuration
 
-The default configuration for ddev uses nginx as the web server (`webserver_type: nginx-fpm` in .ddev/config.yaml). Default configurations are provided for most project types. Some projects may require custom configuration, for example to support a module or plugin requiring special rules. To accommodate these needs, ddev provides a way to replace the default configuration with a custom version.
+When you `ddev start` using the `nginx-fpm` webserver_type, ddev creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, `ddev start`.
 
-- Run `ddev config` for the project if it has not been used with ddev before.
-- To add an nginx snippet to the default config (preferred), add an nginx config file as `.ddev/nginx/<something>.conf`
-- To replace the entire nginx-site.conf (legacy), create a file named "nginx-site.conf" in `.ddev/nginx-site.conf` for your project. In the ddev web container, these are separate per project type, and you can see and copy the default configurations in the [web container code](https://github.com/drud/ddev/tree/master/containers/ddev-webserver/ddev-webserver-base-files/etc/nginx). You can also use `ddev ssh` to review existing configurations in the container at /etc/nginx. [Additional configuration examples](https://www.nginx.com/resources/wiki/start/#other-examples) and documentation are available at the [nginx wiki](https://www.nginx.com/resources/wiki/) Note that the "root" statement in the server block must be `root $WEBSERVER_DOCROOT;` in order to ensure the path for NGINX to serve the project from is correct.
-- Save your configuration file and run `ddev restart` to restart the project with the new configuration. If you encounter issues with your configuration or the project fails to start, use `ddev logs` to inspect the logs for possible NGINX configuration errors.
-- The `location ~ ^/(phpstatus|ping)$ {` block is required for the webserver container healthcheck to work.
-`
-- Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose.
-- **IMPORTANT**: Changes to configuration take place on a `ddev restart` or when the container is rebuilt for another reason.
+You can also have more than one config file in the `.ddev/nginx_full` directory, they will all get loaded when ddev starts. This can be used for serving multiple docroots (advanced, below), or for any other technique.
+
+#### Troubleshooting nginx configuration
+
+* Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose it.
+* You can `ddev exec nginx -t` to test whether your configuration is valid. (Or `ddev ssh` and run `nginx -t`)
+* You can reload the nginx configuration either with `ddev start` or `ddev exec nginx -s reload`
+* The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the healthcheck script to work.
+* **IMPORTANT**: Changes to configuration take place on a `ddev start`, when the container is rebuilt for another reason, or when the nginx server receives the reload signal.
+
+#### Multiple docroots in nginx (advanced)
+
+It's easiest to have different webservers in different ddev projects and different ddev projects can [easily communicate with each other](../faq.md), but some sites require more than one docroot for a single project codebase. Sometimes this is because there's an API built in the same codebase but using different code, or different code for different languages, etc.
+
+The generated `.ddev/nginx_full/seconddocroot.conf.example` demonstrates how to do this. You can create as many of these as you want, change the `servername` and the `root` and customize as you see fit.
+
+#### Nginx snippets (deprecated)
+
+To add an nginx snippet to the default config, add an nginx config file as `.ddev/nginx/<something>.conf`. This feature will be disabled in the future.
 
 ### Providing custom apache configuration
 
-If you're using `webserver_type: apache-fpm` or `webserver_type: apache-cgi` in your .ddev/config.yaml you can override the default site configuration by adding a `.ddev/apache/apache-site.conf` configuration. A default configuration is provided in the web container that should work for most projects. Some projects may require custom configuration, for example to support a module or plugin requiring special rules. To accommodate these needs, ddev provides a way to replace the default configuration with a custom version.
+If you're using `webserver_type: apache-fpm` or `webserver_type: apache-cgi` in your .ddev/config.yaml, you can override the default site configuration by editing or replacing the ddev-provided `.ddev/apache/apache-site.conf` configuration.
 
-- Run `ddev config` for the project if it has not been used with ddev before.
-- Create a file named "apache-site.conf" in the ".ddev/apache" directory for your project. In the ddev web container, there may be various configuratons per project type, and you can see and copy the default configurations in the [web container code](https://github.com/drud/ddev/tree/master/containers/ddev-webserver/ddev-webserver-base-files/etc/apache2). You can also use `ddev ssh` to review existing configurations in the container at /etc/apache2.
-- Add your configuration changes to the "apache-site.conf" file. You can optionally use the [ddev apache configs](https://github.com/drud/ddev/tree/master/containers/ddev-webserver/ddev-webserver-base-files/etc/apache2) as a starting point.
-- **NOTE:** The `DocumentRoot $WEBSERVER_DOCROOT` and related `<Directory "$WEBSERVER_DOCROOT/">` statements must be provided as variables in order to ensure the docroot is updated correctly.
-- Save your configuration file and run `ddev restart` to start the project. If you encounter issues with your configuration or the project fails to start, use `ddev logs` to inspect the logs for possible apache configuration errors.
-- The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the healthcheck script to work.
-`
-- Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose.
-- **IMPORTANT**: Changes to .ddev/apache/apache-site.conf take place on a `ddev restart` (or when the container is rebuilt for another reason).
+* Edit the `.ddev/apache/apache-site.conf`.
+* Add your configuration changes.
+* Save your configuration file and run `ddev start` to reload the project. If you encounter issues with your configuration or the project fails to start, use `ddev logs` to inspect the logs for possible apache configuration errors.
+* Use `ddev exec apachectl -t` to do a general apache syntax check.
+* The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the healthcheck script to work.
+* Any errors in your configuration may cause the web container to fail, so if you see that behavior, use `ddev logs` to diagnose.
+* **IMPORTANT**: Changes to .ddev/apache/apache-site.conf take place on a `ddev start`. You can also `ddev exec apachectl -k graceful` to reload the apache configuration.
 
 ### Providing custom PHP configuration (php.ini)
 

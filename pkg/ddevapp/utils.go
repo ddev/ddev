@@ -233,6 +233,14 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 		return err
 	}
 
+	generatedIgnores := []string{}
+	for _, p := range ignores {
+		sigFound, err := fileutil.FgrepStringInFile(p, DdevFileSignature)
+		if sigFound || err != nil {
+			generatedIgnores = append(generatedIgnores, p)
+		}
+	}
+
 	tmpl, err := template.New("gitignore").Funcs(getTemplateFuncMap()).Parse(gitIgnoreTemplate)
 	if err != nil {
 		return err
@@ -246,7 +254,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 
 	parms := ignoreTemplateContents{
 		Signature:    DdevFileSignature,
-		IgnoredItems: ignores,
+		IgnoredItems: generatedIgnores,
 	}
 
 	if err = tmpl.Execute(file, parms); err != nil {

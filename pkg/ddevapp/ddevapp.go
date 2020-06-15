@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/gobuffalo/packr/v2"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"golang.org/x/crypto/ssh/terminal"
@@ -14,7 +15,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-
 	"strings"
 
 	osexec "os/exec"
@@ -833,6 +833,18 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	// We used to support nginx overrides in .ddev/nginx-site.conf
+	// Warn in that case
+	oldNginxConfig := app.GetConfigPath("nginx-site.conf")
+	if fileutil.FileExists(oldNginxConfig) {
+		util.Warning("An old nginx-site.conf exists at %s. Please move it to ~/.ddev/nginx_full", oldNginxConfig)
+	}
+
+	err = app.GenerateWebserverConfig()
+	if err != nil {
+		return err
+	}
+
 	// Pull the main images with full output, since docker-compose up won't
 	// show enough output.
 	for _, imageName := range []string{app.WebImage, app.DBImage, app.DBAImage, version.GetSSHAuthImage(), version.GetRouterImage()} {
@@ -916,6 +928,50 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	return nil
+}
+
+// GenerateWebserverConfig generates the default nginx and apache config files
+func (app *DdevApp) GenerateWebserverConfig() error {
+	var items = map[string]string{
+		"nginx":                        app.GetConfigPath(filepath.Join("nginx_full", "nginx-site.conf")),
+		"apache":                       app.GetConfigPath(filepath.Join("apache", "apache-site.conf")),
+		"nginx_second_docroot_example": app.GetConfigPath(filepath.Join("nginx_full", "seconddocroot.conf.example")),
+		"README.nginx_full.txt":        app.GetConfigPath(filepath.Join("nginx_full", "README.nginx_full.txt")),
+		"README.apache.txt":            app.GetConfigPath(filepath.Join("apache", "README.apache.txt")),
+	}
+	for t, configPath := range items {
+		err := os.MkdirAll(filepath.Dir(configPath), 0755)
+		if err != nil {
+			return err
+		}
+
+		if fileutil.FileExists(configPath) {
+			sigExists, err := fileutil.FgrepStringInFile(configPath, DdevFileSignature)
+			if err != nil {
+				return err
+			}
+			// If the signature doesn't exist, they have taken over the file, so return
+			if !sigExists {
+				return nil
+			}
+		}
+
+		box := packr.New("webserver_config_packr_assets", "./webserver_config_packr_assets")
+		c, err := box.Find(fmt.Sprintf("%s-site-%s.conf", t, app.Type))
+		if err != nil {
+			c, err = box.Find(fmt.Sprintf("%s-site-php.conf", t))
+			if err != nil {
+				return err
+			}
+		}
+		content := string(c)
+		docroot := path.Join("/var/www/html", app.Docroot)
+		err = fileutil.TemplateStringToFile(content, map[string]interface{}{"Docroot": docroot}, configPath)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
