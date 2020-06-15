@@ -930,6 +930,8 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 		"nginx":                        app.GetConfigPath(filepath.Join("nginx_full", "nginx-site.conf")),
 		"apache":                       app.GetConfigPath(filepath.Join("apache", "apache-site.conf")),
 		"nginx_second_docroot_example": app.GetConfigPath(filepath.Join("nginx_full", "seconddocroot.conf.example")),
+		"README.nginx_full.txt":        app.GetConfigPath(filepath.Join("nginx_full", "README.nginx_full.txt")),
+		"README.apache.txt":            app.GetConfigPath(filepath.Join("apache", "README.apache.txt")),
 	}
 	for t, configPath := range items {
 		err := os.MkdirAll(filepath.Dir(configPath), 0755)
