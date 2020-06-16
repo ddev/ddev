@@ -705,6 +705,11 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
 
+	// Allow user to override the host.docker.internal, for example PHPStorm running on Windows host
+	xdebugHostIP := os.Getenv("XDEBUG_HOST_IP")
+	if xdebugHostIP != "" {
+		return xdebugHostIP, nil
+	}
 	// Docker 18.09 on linux and docker-toolbox don't define host.docker.internal
 	// so we need to go get the ip address of docker0
 	// We would hope to be able to remove this when
