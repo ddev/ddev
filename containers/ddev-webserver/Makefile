@@ -51,7 +51,7 @@ push: images
 		echo "pushed $(DOCKER_ORG)/$$item"; \
 	done
 
-ddev-webserver d:
+ddev-webserver:
 	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 test: images

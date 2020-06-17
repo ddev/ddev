@@ -3,9 +3,10 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod (for DDEV-Live)
 ### and ddev-webserver-* (For DDEV-Local)
-FROM drud/ddev-php-base:v0.3 as ddev-webserver-base
+FROM drud/ddev-php-base:v0.3.1 as ddev-webserver-base
+
 ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4"
-ENV BACKDROP_DRUSH_VERSION=1.3.1
+ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV MKCERT_VERSION=v1.4.1
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -40,13 +41,13 @@ ADD ddev-webserver-base-scripts /
 ### ---------------------------ddev-webserver-prod--------------------------------------
 ### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
 ### (Withut dev features, single layer)
-FROM scratch as ddev-webserver-prod
-ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
-ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
-ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
-ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
-
-COPY --from=ddev-webserver-base / /
+#FROM scratch as ddev-webserver-prod
+#ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
+#ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
+#ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+#ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
+#
+#COPY --from=ddev-webserver-base / /
 # END ddev-webserver-prod
 
 ### ---------------------------ddev-webserver-dev-base--------------------------------------
@@ -97,7 +98,7 @@ RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/${MAGERUN2_V
 
 RUN curl -sSL "https://drupalconsole.com/installer" -L -o /usr/local/bin/drupal && chmod +x /usr/local/bin/drupal
 
-RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/drush.zip -o /tmp/backdrop_drush.zip && unzip -o /tmp/backdrop_drush.zip -d /var/tmp/backdrop_drush_commands
+RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
 RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
     touch /var/log/php-fpm.log && \
