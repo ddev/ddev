@@ -627,6 +627,17 @@ func (app *DdevApp) CheckCustomConfig() {
 
 }
 
+// CheckDeprecations warns the user if anything in use is deprecated.
+func (app *DdevApp) CheckDeprecations() {
+
+	if app.WebserverType == nodeps.WebserverApacheCGI {
+		util.Warning("The apache-cgi webserver_type is deprecated and will be removed from the next ddev release. Please use apache-fpm")
+	}
+	if nodeps.IsDockerToolbox() {
+		util.Warning("Docker Toolbox is deprecated and support will be removed from the next ddev release. Please upgrade to latest Windows 10 Home (2004) and migrate to Docker Desktop, which now works great on Windows 10 Home.")
+	}
+}
+
 type composeYAMLVars struct {
 	Name                 string
 	Plugin               string

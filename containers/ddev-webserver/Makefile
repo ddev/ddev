@@ -32,9 +32,9 @@ VERSION := $(shell git describe --tags --always --dirty)
 # include. That way the base components can easily be updated as our general needs
 # change.
 #include ../build-tools/makefile_components/base_build_go.mak
-include ../../build-tools/makefile_components/base_build_python-docker.mak
+#include ../../build-tools/makefile_components/base_build_python-docker.mak
 include ../../build-tools/makefile_components/base_container.mak
-include ../../build-tools/makefile_components/base_push.mak
+#include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
