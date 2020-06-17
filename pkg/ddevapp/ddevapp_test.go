@@ -372,12 +372,11 @@ func TestDdevStart(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure the -built docker images do not exist after stop with removeData
-	exists, err = dockerutil.ImageExistsLocally(webBuilt)
-	assert.NoError(err)
-	assert.False(exists)
-	exists, err = dockerutil.ImageExistsLocally(dbBuilt)
-	assert.NoError(err)
-	assert.False(exists)
+	for _, imageName := range []string{webBuilt, dbBuilt} {
+		exists, err = dockerutil.ImageExistsLocally(imageName)
+		assert.NoError(err)
+		assert.False(exists, "image %s should not have existed but still exists (while testing %s)", app.Name)
+	}
 
 	runTime()
 	switchDir()
