@@ -12,7 +12,7 @@ The project's `.ddev/config.yaml` file defines the PHP version to use. This can 
 
 ### Changing webserver type
 
-DDEV-Local supports nginx with php-fpm by default ("nginx-fpm"), apache2 with php-fpm ("apache-fpm"), and apache2 with embedded php via cgi (apache-cgi). These can be changed using the "webserver_type" value in .ddev/config.yaml, for example `webserver_type: apache-fpm`.
+DDEV-Local supports nginx with php-fpm by default ("nginx-fpm"), apache2 with php-fpm ("apache-fpm"), and apache2 with embedded php via cgi (apache-cgi). These can be changed using the "webserver_type" value in .ddev/config.yaml, for example `webserver_type: apache-fpm`. Note that `apache-cgi` is deprecated and will be removed in the next release cycle.
 
 ### Adding services to a project
 
@@ -66,7 +66,7 @@ To add an nginx snippet to the default config, add an nginx config file as `.dde
 
 ### Providing custom apache configuration
 
-If you're using `webserver_type: apache-fpm` or `webserver_type: apache-cgi` in your .ddev/config.yaml, you can override the default site configuration by editing or replacing the ddev-provided `.ddev/apache/apache-site.conf` configuration.
+If you're using `webserver_type: apache-fpm` in your .ddev/config.yaml, you can override the default site configuration by editing or replacing the ddev-provided `.ddev/apache/apache-site.conf` configuration.
 
 * Edit the `.ddev/apache/apache-site.conf`.
 * Add your configuration changes.

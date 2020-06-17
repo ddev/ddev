@@ -14,7 +14,7 @@ __Please note that you *must* share your local drives in the "settings" after in
 
 ## Windows Installation: Docker Toolbox
 
-Docker Toolbox is only recommended for systems that absolutely won't run Docker Desktop for Windows (Windows 10 Home, etc.)
+Docker Toolbox support is deprecated and support will be removed in the next DDEV-Local support cycle. Please use Docker Desktop, which now runs fine on Windows 10 Home.
 
 [Download and install docker toolbox](https://download.docker.com/win/stable/DockerToolbox.exe).
 
