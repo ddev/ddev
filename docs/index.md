@@ -10,8 +10,9 @@
 * OS Support
     * macOS Sierra and higher (macOS 10.12 and higher; it should run anywhere Docker Desktop for Mac runs.
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 16.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
-    * Windows 10 Pro or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
-    * Windows 10 Home (or other Windows version) with [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/)
+    * Windows 10 (all editions) with WSL2 (version 2004 or later)
+    * (Non-WSL2) Windows 10 Pro or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
+    * (Legacy) Windows 10 Home (or other Windows version) with [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/)
 
 ### Using ddev alongside other development environments
 
@@ -43,7 +44,33 @@ Later, to upgrade to a newer version of ddev, run:
 ddev poweroff && brew upgrade ddev
 ```
 
-### Installation or Upgrade - Windows
+### Installation or Upgrade - Windows (WSL2)
+
+**This is the recommended installation method for all Windows users that are on Windows 10 2004 or higher.** If you don't have this version yet, or if you don't want to use WSL2, please follow the legacy instructions for Windows below.
+
+**All Windows 10 editions (including Windows 10 Home) support WSL2**. Docker Toolbox support for DDEV will be deprecated, as we'll move testing capacity towards WSL2. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box 🚀
+
+Take the steps below to install DDEV into WSL2.
+
+* Install WSL2 by [following Microsoft's docs](https://docs.microsoft.com/en-us/windows/wsl/install-win10). Make sure the WSL version is set to 2: `wsl --set-default-version 2`
+* Install a WSL2 distro, e.g. [Ubuntu 20.04](https://www.microsoft.com/store/productId/9N6SVWS3RX71). Install Ubuntu (or any other distro) _before_ installing Docker, so that Ubuntu becomes the default WSL distro.
+* Install Docker Desktop for Windows (versions 2.3.0.2 and higher automatically use the WSL2 backend): [download Docker Desktop for Windows from Docker Hub](https://hub.docker.com/editions/community/docker-ce-desktop-windows/).
+* Go to Docker Desktop settings > Resources > WSL integration > enable integration for your distro (now `docker` commands will be available from within your WSL2 distro).
+* Install [Chocolatey](https://chocolatey.org/install) on Windows.
+* Open a PowerShell terminal with administrator rights and run `choco install mkcert`
+* Run `mkcert -install`. Your certificates are installed in `%localappdata%\mkcert`, we'll need these later on.
+  * Open the Ubuntu 20.04 terminal from the Windows start menu.
+  * Run `export CAROOT=/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert`. This will make sure that `mkcert` on Linux uses your Windows certificates when issuing SSL certificates, so you don't get SSL warnings in your browser on Windows.
+  * Run `echo 'export CAROOT=/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert' >> ~/.profile` to store this in your profile for future sessions.
+* Now we'll install DDEV **for Linux** within WSL2. Open your WSL2 distro and follow the instructions for Linux below, **then come back here**.
+* After installation, run `mkcert -install` and you'll notice that mkcert will use your Windows CA certificates 🚀: 
+  > Using the local CA at "/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert"
+* That's it! You have now installed DDEV on WSL2 🎉 Remember to run all `ddev` commands in your Ubuntu/WSL2 terminal, **not** in PowerShell/Command Prompt.
+
+**Make sure you put your projects in the Linux filesystem (e.g. /home/LINUX_USERNAME), _not_ in the Windows filesystem (/mnt/c), for a much better performance.**
+
+
+### Installation or Upgrade - Windows (legacy)
 
 * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new terminal or cmd window and start using ddev.
 * If you use [chocolatey](https://chocolatey.org/) (highly recommended), then you can just `choco install ddev` from an administrative-privileged shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
