@@ -202,6 +202,20 @@ func ListFilesInDir(path string) ([]string, error) {
 	return fileList, nil
 }
 
+// ListFilesInDirFullPath returns an array of full path of files found in a directory
+func ListFilesInDirFullPath(path string) ([]string, error) {
+	var fileList []string
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return fileList, err
+	}
+
+	for _, f := range files {
+		fileList = append(fileList, filepath.Join(path, f.Name()))
+	}
+	return fileList, nil
+}
+
 // RandomFilenameBase generates a temporary filename for use in testing or whatever.
 // From https://stackoverflow.com/a/28005931/215713
 func RandomFilenameBase() string {

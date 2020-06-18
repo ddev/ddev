@@ -20,6 +20,7 @@ import (
 )
 
 // addCustomCommands looks for custom command scripts in
+// ~/.ddev/commands/<servicename> etc. and
 // .ddev/commands/<servicename> and .ddev/commands/host
 // and if it finds them adds them to Cobra's commands.
 func addCustomCommands(rootCmd *cobra.Command) error {
@@ -28,98 +29,104 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		return nil
 	}
 
-	globalCommandPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
+	sourceGlobalCommandPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
+	err = os.MkdirAll(sourceGlobalCommandPath, 0755)
+	if err != nil {
+		return nil
+	}
+
 	projectCommandPath := app.GetConfigPath("commands")
-	globalCommandDirs, err := fileutil.ListFilesInDir(globalCommandPath)
+	// Make sure our target global command directory is empty
+	targetGlobalCommandPath := app.GetConfigPath(".global_commands")
+	_ = os.RemoveAll(targetGlobalCommandPath)
+
+	err = fileutil.CopyDir(sourceGlobalCommandPath, targetGlobalCommandPath)
 	if err != nil {
 		return err
-	}
-	// Copy global commands to "." directories in commands.
-	for _, s := range globalCommandDirs {
-		globalCommandDir := filepath.Join(globalCommandPath, s)
-		if !fileutil.IsDirectory(globalCommandDir) {
-			continue
-		}
-		dstDir := filepath.Join(projectCommandPath, "."+s)
-		err = os.RemoveAll(dstDir)
-		if err != nil {
-			return err
-		}
-		err = fileutil.CopyDir(globalCommandDir, dstDir)
-		if err != nil {
-			return err
-		}
 	}
 
 	if !fileutil.FileExists(projectCommandPath) || !fileutil.IsDirectory(projectCommandPath) {
 		return nil
 	}
-	commandDirs, _ := fileutil.ListFilesInDir(projectCommandPath)
-	for _, s := range commandDirs {
-		service := s
-		// If the service is copied from global, put it in . directory
-		if s[0:1] == "." {
-			service = s[1:]
-		}
-		if !fileutil.IsDirectory(filepath.Join(projectCommandPath, service)) {
-			continue
-		}
-		commandFiles, err := fileutil.ListFilesInDir(filepath.Join(projectCommandPath, s))
+
+	commandsAdded := map[string]int{}
+	for _, commandSet := range []string{projectCommandPath, targetGlobalCommandPath} {
+		commandDirs, err := fileutil.ListFilesInDirFullPath(commandSet)
 		if err != nil {
 			return err
 		}
-		if runtime.GOOS == "windows" {
-			windowsBashPath := util.FindWindowsBashPath()
-			if windowsBashPath == "" {
-				fmt.Println("Unable to find bash.exe in PATH, not loading custom commands")
-				return nil
-			}
-		}
+		for _, s := range commandDirs {
+			service := filepath.Base(s)
 
-		for _, commandName := range commandFiles {
-			// Use path.Join() for the inContainerFullPath because it's about the path in the container, not on the
-			// host; a Windows path is not useful here.
-			inContainerFullPath := path.Join("/mnt/ddev_config/commands", s, commandName)
-			onHostFullPath := filepath.Join(projectCommandPath, s, commandName)
-
-			if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") || strings.HasPrefix(commandName, ".") || fileutil.IsDirectory(onHostFullPath) {
+			// If the item isn't actually a directory, just skip it.
+			if !fileutil.IsDirectory(s) {
 				continue
 			}
-
-			// Any command we find will want to be executable on Linux
-			_ = os.Chmod(onHostFullPath, 0755)
-			if hasCR, _ := fileutil.FgrepStringInFile(onHostFullPath, "\r\n"); hasCR {
-				util.Warning("command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
-				continue
+			commandFiles, err := fileutil.ListFilesInDir(s)
+			if err != nil {
+				return err
 			}
-			description := findDirectiveInScript(onHostFullPath, "## Description")
-			if description == "" {
-				description = commandName
-			}
-			usage := findDirectiveInScript(onHostFullPath, "## Usage")
-			if usage == "" {
-				usage = commandName + " [flags] [args]"
-			}
-			example := findDirectiveInScript(onHostFullPath, "## Example")
-			descSuffix := " (shell " + service + " container command)"
-			if s[0:1] == "." {
-				descSuffix = " (global shell " + service + " container command)"
-			}
-			commandToAdd := &cobra.Command{
-				Use:     usage,
-				Short:   description + descSuffix,
-				Example: example,
-				FParseErrWhitelist: cobra.FParseErrWhitelist{
-					UnknownFlags: true,
-				},
+			if runtime.GOOS == "windows" {
+				windowsBashPath := util.FindWindowsBashPath()
+				if windowsBashPath == "" {
+					fmt.Println("Unable to find bash.exe in PATH, not loading custom commands")
+					return nil
+				}
 			}
 
-			if s == "host" {
-				commandToAdd.Run = makeHostCmd(app, filepath.Join(projectCommandPath, s, commandName), commandName)
-			} else {
-				commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, s)
+			for _, commandName := range commandFiles {
+				// Use path.Join() for the inContainerFullPath because it's about the path in the container, not on the
+				// host; a Windows path is not useful here.
+				inContainerFullPath := path.Join("/mnt/ddev_config", filepath.Base(targetGlobalCommandPath), service, commandName)
+				onHostFullPath := filepath.Join(commandSet, service, commandName)
+
+				if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") || strings.HasPrefix(commandName, ".") || fileutil.IsDirectory(onHostFullPath) {
+					continue
+				}
+
+				// If command has already been added, we won't work with it again.
+				if _, ok := commandsAdded[commandName]; ok {
+					util.Warning("not adding custom command %s because it was already added", onHostFullPath)
+					continue
+				}
+
+				// Any command we find will want to be executable on Linux
+				_ = os.Chmod(onHostFullPath, 0755)
+				if hasCR, _ := fileutil.FgrepStringInFile(onHostFullPath, "\r\n"); hasCR {
+					util.Warning("command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
+					continue
+				}
+				description := findDirectiveInScript(onHostFullPath, "## Description")
+				if description == "" {
+					description = commandName
+				}
+				usage := findDirectiveInScript(onHostFullPath, "## Usage")
+				if usage == "" {
+					usage = commandName + " [flags] [args]"
+				}
+				example := findDirectiveInScript(onHostFullPath, "## Example")
+				descSuffix := " (shell " + service + " container command)"
+				if s[0:1] == "." {
+					descSuffix = " (global shell " + service + " container command)"
+				}
+				commandToAdd := &cobra.Command{
+					Use:     usage,
+					Short:   description + descSuffix,
+					Example: example,
+					FParseErrWhitelist: cobra.FParseErrWhitelist{
+						UnknownFlags: true,
+					},
+				}
+
+				if s == "host" {
+					commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
+				} else {
+					commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, s)
+				}
+				rootCmd.AddCommand(commandToAdd)
+
+				commandsAdded[commandName] = 1
 			}
-			rootCmd.AddCommand(commandToAdd)
 		}
 	}
 
