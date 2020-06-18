@@ -6,3 +6,8 @@
 ## Example: "ddev drush uli" or "ddev drush sql-cli" or "ddev drush --version"
 
 drush $@
+
+# To connect more easily to debug, you might want to execute a site-installed
+# drush directly, e.g.
+#
+# /var/www/html/vendor/drush/drush/drush $@

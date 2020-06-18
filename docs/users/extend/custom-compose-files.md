@@ -26,6 +26,7 @@ version: '3.6'
 services:
   web:
     environment:
+      - PHP_IDE_CONFIG=serverName=mysite.ddev.site
       - TYPO3_CONTEXT=Development
 ```
 
