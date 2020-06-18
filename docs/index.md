@@ -59,16 +59,15 @@ Take the steps below to install DDEV into WSL2.
 * Install [Chocolatey](https://chocolatey.org/install) on Windows.
 * Open a PowerShell terminal with administrator rights and run `choco install mkcert`
 * Run `mkcert -install`. Your certificates are installed in `%localappdata%\mkcert`, we'll need these later on.
-  * Open the Ubuntu 20.04 terminal from the Windows start menu.
-  * Run `export CAROOT=/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert`. This will make sure that `mkcert` on Linux uses your Windows certificates when issuing SSL certificates, so you don't get SSL warnings in your browser on Windows.
-  * Run `echo 'export CAROOT=/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert' >> ~/.profile` to store this in your profile for future sessions.
+* Open the Ubuntu 20.04 terminal from the Windows start menu.
+* Run `export CAROOT=/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert`. This will make sure that `mkcert` on Linux uses your Windows certificates when issuing SSL certificates, so you don't get SSL warnings in your browser on Windows.
+* Run `echo 'export CAROOT=/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert' >> ~/.profile` to store this in your profile for future sessions.
 * Now we'll install DDEV **for Linux** within WSL2. Open your WSL2 distro and follow the instructions for Linux below, **then come back here**.
-* After installation, run `mkcert -install` and you'll notice that mkcert will use your Windows CA certificates 🚀: 
+* After installation, run `mkcert -install` and you'll notice that mkcert will use your Windows CA certificates 🚀:
   > Using the local CA at "/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert"
 * That's it! You have now installed DDEV on WSL2 🎉 Remember to run all `ddev` commands in your Ubuntu/WSL2 terminal, **not** in PowerShell/Command Prompt.
 
 **Make sure you put your projects in the Linux filesystem (e.g. /home/LINUX_USERNAME), _not_ in the Windows filesystem (/mnt/c), for a much better performance.**
-
 
 ### Installation or Upgrade - Windows (legacy)
 
