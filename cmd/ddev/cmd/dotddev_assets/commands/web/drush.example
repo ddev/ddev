@@ -7,7 +7,7 @@
 
 drush $@
 
-# To connect more easily to debug, you might want to execute a site-installed
+# To connect more easily to xdebug, you might want to execute a site-installed
 # drush directly, e.g.
 #
 # /var/www/html/vendor/drush/drush/drush $@
