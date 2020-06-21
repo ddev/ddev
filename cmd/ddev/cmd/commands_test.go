@@ -24,6 +24,7 @@ func TestCustomCommands(t *testing.T) {
 	origHome := os.Getenv("HOME")
 	// Change the homedir temporarily
 	err := os.Setenv("HOME", tmpHome)
+	require.NoError(t, err)
 
 	pwd, _ := os.Getwd()
 	testCustomCommandsDir := filepath.Join(pwd, "testdata", t.Name())
