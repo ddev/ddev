@@ -260,7 +260,29 @@ func populateExamplesAndCommands() error {
 			if err != nil {
 				return err
 			}
+		}
+	}
 
+	box = packr.New("global_dotddev", "./global_dotddev_assets")
+
+	list = box.List()
+	globalDdevDir := globalconfig.GetGlobalDdevDir()
+	for _, file := range list {
+		localPath := filepath.Join(globalDdevDir, file)
+		sigFound, err := fileutil.FgrepStringInFile(localPath, ddevapp.DdevFileSignature)
+		if sigFound || err != nil {
+			content, err := box.Find(file)
+			if err != nil {
+				return err
+			}
+			err = os.MkdirAll(filepath.Dir(globalDdevDir), 0755)
+			if err != nil {
+				return err
+			}
+			err = ioutil.WriteFile(localPath, content, 0755)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
