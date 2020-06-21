@@ -55,14 +55,14 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		if err != nil {
 			return err
 		}
-		for _, s := range commandDirs {
-			service := filepath.Base(s)
+		for _, serviceDirOnHost := range commandDirs {
+			service := filepath.Base(serviceDirOnHost)
 
 			// If the item isn't actually a directory, just skip it.
-			if !fileutil.IsDirectory(s) {
+			if !fileutil.IsDirectory(serviceDirOnHost) {
 				continue
 			}
-			commandFiles, err := fileutil.ListFilesInDir(s)
+			commandFiles, err := fileutil.ListFilesInDir(serviceDirOnHost)
 			if err != nil {
 				return err
 			}
@@ -75,9 +75,9 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 			}
 
 			for _, commandName := range commandFiles {
-				// Use path.Join() for the inContainerFullPath because it's about the path in the container, not on the
+				// Use path.Join() for the inContainerFullPath because it'serviceDirOnHost about the path in the container, not on the
 				// host; a Windows path is not useful here.
-				inContainerFullPath := path.Join("/mnt/ddev_config", filepath.Base(targetGlobalCommandPath), service, commandName)
+				inContainerFullPath := path.Join("/mnt/ddev_config", path.Base(commandSet), service, commandName)
 				onHostFullPath := filepath.Join(commandSet, service, commandName)
 
 				if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") || strings.HasPrefix(commandName, ".") || fileutil.IsDirectory(onHostFullPath) {
@@ -106,7 +106,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 				example := findDirectiveInScript(onHostFullPath, "## Example")
 				descSuffix := " (shell " + service + " container command)"
-				if s[0:1] == "." {
+				if serviceDirOnHost[0:1] == "." {
 					descSuffix = " (global shell " + service + " container command)"
 				}
 				commandToAdd := &cobra.Command{
@@ -118,10 +118,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					},
 				}
 
-				if s == "host" {
+				if service == "host" {
 					commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
 				} else {
-					commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, s)
+					commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service)
 				}
 				rootCmd.AddCommand(commandToAdd)
 

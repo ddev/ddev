@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -15,29 +16,50 @@ import (
 	"testing"
 )
 
-// TestCmdCustomCommands does basic checks to make sure custom commands work OK.
-func TestCmdCustomCommands(t *testing.T) {
+// TestCustomCommands does basic checks to make sure custom commands work OK.
+func TestCustomCommands(t *testing.T) {
 	assert := asrt.New(t)
 
+	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
+	origHome := os.Getenv("HOME")
+	// Change the homedir temporarily
+	err := os.Setenv("HOME", tmpHome)
+
 	pwd, _ := os.Getwd()
-	testCmdCustomCommandsDir := filepath.Join(pwd, "testdata", t.Name(), "commands")
+	testCustomCommandsDir := filepath.Join(pwd, "testdata", t.Name())
 
 	site := TestSites[0]
 	switchDir := TestSites[0].Chdir()
+	app, _ := ddevapp.NewApp(TestSites[0].Dir, false, "")
 	defer func() {
+		_ = os.RemoveAll(tmpHome)
+		_ = os.Setenv("HOME", origHome)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
+		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
+
 		switchDir()
 	}()
 
-	commandsDir := filepath.Join(site.Dir, ".ddev", "commands")
-	assert.FileExists(filepath.Join(commandsDir, "db", "mysql"))
-	assert.FileExists(filepath.Join(commandsDir, "host", "mysqlworkbench.example"))
+	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
+	// It's changed via $HOME for the ddev subprocess
+	err = os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
+	assert.NoError(err)
+	tmpHomeGlobalCommandsDir := filepath.Join(tmpHome, ".ddev", "commands")
+
+	projectCommandsDir := app.GetConfigPath("commands")
+	globalCommandsDir := app.GetConfigPath(".global_commands")
+	_ = os.RemoveAll(globalCommandsDir)
+	err = fileutil.CopyDir(filepath.Join(testCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
+	require.NoError(t, err)
+
+	assert.FileExists(filepath.Join(projectCommandsDir, "db", "mysql"))
+	assert.FileExists(filepath.Join(projectCommandsDir, "host", "mysqlworkbench.example"))
 	out, err := exec.RunCommand(DdevBin, []string{})
 	assert.NoError(err)
 	assert.Contains(out, "mysql client in db container")
 
 	// Test the `ddev mysql` command with stdin
-	inputFile := filepath.Join(testCmdCustomCommandsDir, "..", "select99.sql")
+	inputFile := filepath.Join(testCustomCommandsDir, "select99.sql")
 	f, err := os.Open(inputFile)
 	require.NoError(t, err)
 	// nolint: errcheck
@@ -48,35 +70,34 @@ func TestCmdCustomCommands(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal("99\n99\n", string(byteOut))
 
-	// Test ddev mysql -uroot -proot mysql
-	command = osexec.Command("bash", "-c", "echo 'SHOW TABLES;' | "+DdevBin+" mysql --user=root --password=root --database=mysql")
-	byteOut, err = command.CombinedOutput()
-	assert.NoError(err, "byteOut=%v", string(byteOut))
-	assert.Contains(string(byteOut), `Tables_in_mysql
-column_stats
-columns_priv`)
+	_ = os.RemoveAll(projectCommandsDir)
+	_ = os.RemoveAll(globalCommandsDir)
 
-	err = os.RemoveAll(commandsDir)
+	// Now copy a project commands and global commands and make sure they show up and execute properly
+	err = fileutil.CopyDir(filepath.Join(testCustomCommandsDir, "project_commands"), projectCommandsDir)
 	assert.NoError(err)
-
-	// Now copy a web and a host command and make sure they show up and execute properly
-	err = fileutil.CopyDir(testCmdCustomCommandsDir, commandsDir)
+	err = fileutil.CopyDir(filepath.Join(testCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
 	assert.NoError(err)
 
 	out, err = exec.RunCommand(DdevBin, []string{})
 	assert.NoError(err)
-	assert.Contains(out, "Test host command (custom host container command)")
-	assert.Contains(out, "Test web command (custom web container command)")
-	out, err = exec.RunCommand(DdevBin, []string{"testhostcmd", "hostarg1", "hostarg2", "--hostflag1"})
-	assert.NoError(err)
-	hostname, _ := os.Hostname()
-	assert.Contains(out, "Test Host Command was executed with args=hostarg1 hostarg2 --hostflag1 on host "+hostname)
+	assert.Contains(out, "testhostcmd project (shell host container command)")
+	assert.Contains(out, "testwebcmd project (shell web container command)")
+	assert.NotContains(out, "testwebcmd global") //the global testwebcmd should have been overridden by the projct one
+	assert.Contains(out, "testhostglobal")
 
-	out, err = exec.RunCommand(DdevBin, []string{"testwebcmd", "webarg1", "webarg2", "--webflag1"})
-	assert.NoError(err)
-	assert.Contains(out, "Test Web Command was executed with args=webarg1 webarg2 --webflag1 on host "+site.Name+"-web")
+	for _, c := range []string{"testhostcmd", "testhostglobal", "testwebcmd", "testwebglobal"} {
+		args := []string{c, "hostarg1", "hostarg2", "--hostflag1"}
+		out, err = exec.RunCommand(DdevBin, args)
+		assert.NoError(err, "Failed to run ddev %s %v", c, args)
+		expectedHost, _ := os.Hostname()
+		if !strings.Contains(c, "host") {
+			expectedHost = site.Name + "-web"
+		}
+		assert.Contains(out, fmt.Sprintf("%s was executed with args=hostarg1 hostarg2 --hostflag1 on host %s", c, expectedHost))
+	}
 
-	// Make sure that all the official custom commands are usable by just checking help
+	// Make sure that all the official ddev-provided custom commands are usable by just checking help
 	for _, c := range []string{"myssql", "launch", "live", "xdebug"} {
 		_, err = exec.RunCommand(DdevBin, []string{"help", c})
 		assert.NoError(err, "Failed to run ddev help %s", c)
@@ -125,4 +146,33 @@ func TestLaunchCommand(t *testing.T) {
 			assert.Equal(expect, out, "ouptput of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
 		}
 	}
+}
+
+// TestMysqlCommand tests `ddev mysql``
+func TestMysqlCommand(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Create a temporary directory and switch to it.
+	tmpdir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpdir)
+	defer testcommon.Chdir(tmpdir)()
+
+	app, err := ddevapp.NewApp(tmpdir, false, "")
+	require.NoError(t, err)
+	err = app.WriteConfig()
+	require.NoError(t, err)
+	err = app.Start()
+	require.NoError(t, err)
+	defer func() {
+		_ = app.Stop(true, false)
+	}()
+
+	// Test ddev mysql -uroot -proot mysql
+	command := osexec.Command("bash", "-c", "echo 'SHOW TABLES;' | "+DdevBin+" mysql --user=root --password=root --database=mysql")
+	byteOut, err := command.CombinedOutput()
+	assert.NoError(err, "byteOut=%v", string(byteOut))
+	assert.Contains(string(byteOut), `Tables_in_mysql
+column_stats
+columns_priv`)
+
 }

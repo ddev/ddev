@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: testwebcmd global
+## Usage: testwebcmd
+## Example: "ddev testwebcmd"
+
+echo "testwebcmd was executed with args=$@ on host $(hostname)"

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: testhostglobal global
+## Usage: testhostglobal
+## Example: "ddev testhostglobal"
+
+echo "testhostglobal was executed with args=$@ on host $(hostname)"
