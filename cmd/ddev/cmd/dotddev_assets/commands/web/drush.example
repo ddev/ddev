@@ -7,7 +7,7 @@
 
 drush $@
 
-# To connect more easily to xdebug, you might want to execute a site-installed
-# drush directly, e.g.
+# To use the site-installed drush directly (rather than running /usr/local/bin/drush),
+# you might want to execute it directly:
 #
-# /var/www/html/vendor/drush/drush/drush $@
+# /var/www/html/vendor/bin/drush $@

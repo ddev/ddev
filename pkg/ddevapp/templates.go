@@ -111,6 +111,7 @@ services:
       - COLUMNS=$COLUMNS
       - LINES=$LINES
       - TZ={{ .Timezone }}
+      - PHP_IDE_CONFIG=serverName=${DDEV_SITENAME}.${DDEV_TLD}
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       # To expose a container port to a different host port, define the port as hostPort:containerPort
       - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILHOG_PORT}:{{ .MailhogPort }}
