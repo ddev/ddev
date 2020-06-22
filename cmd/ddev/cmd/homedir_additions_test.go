@@ -74,7 +74,7 @@ func TestHomedirAdditions(t *testing.T) {
 	assert.Contains(stdout, "this is project .myscript.sh")
 
 	for _, script := range []string{"global", "project"} {
-		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     fmt.Sprintf("~/.%sscript.sh", script),
 		})
