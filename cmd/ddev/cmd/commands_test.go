@@ -72,7 +72,7 @@ func TestCustomCommands(t *testing.T) {
 	command := osexec.Command(DdevBin, "mysql")
 	command.Stdin = f
 	byteOut, err := command.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, "Failed ddev mysql; output=%v", string(byteOut))
 	assert.Equal("99\n99\n", string(byteOut))
 
 	_ = os.RemoveAll(projectCommandsDir)
