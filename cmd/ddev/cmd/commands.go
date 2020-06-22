@@ -275,7 +275,7 @@ func populateExamplesAndCommands() error {
 			if err != nil {
 				return err
 			}
-			err = os.MkdirAll(filepath.Dir(globalDdevDir), 0755)
+			err = os.MkdirAll(filepath.Dir(localPath), 0755)
 			if err != nil {
 				return err
 			}
