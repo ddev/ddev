@@ -5,7 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -21,39 +21,42 @@ func TestHomedirAdditions(t *testing.T) {
 	pwd, _ := os.Getwd()
 	testdata := filepath.Join(pwd, "testdata", t.Name())
 
+	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
+	origHome := os.Getenv("HOME")
+	// Change the homedir temporarily
+	err := os.Setenv("HOME", tmpHome)
+	require.NoError(t, err)
+
 	site := TestSites[0]
 	switchDir := TestSites[0].Chdir()
 	projectHomeadditionsDir := filepath.Join(site.Dir, ".ddev", "homeadditions")
-	globalHomeadditionsDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
+
+	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
+	// It's changed via $HOME for the ddev subprocess
+	err = os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
+	assert.NoError(err)
+	tmpHomeGlobalHomeadditionsDir := filepath.Join(tmpHome, ".ddev", "homeadditions")
+	err = os.RemoveAll(tmpHomeGlobalHomeadditionsDir)
+	assert.NoError(err)
+	err = os.RemoveAll(projectHomeadditionsDir)
+	assert.NoError(err)
+	err = fileutil.CopyDir(filepath.Join(testdata, "global"), tmpHomeGlobalHomeadditionsDir)
+	assert.NoError(err)
+	err = fileutil.CopyDir(filepath.Join(testdata, "project"), projectHomeadditionsDir)
+	assert.NoError(err)
+
 	defer func() {
 		_ = fileutil.PurgeDirectory(projectHomeadditionsDir)
-		// Note that this erases the global homeadditions directory on the
-		// machine it's run on.
-		_ = fileutil.PurgeDirectory(globalHomeadditionsDir)
+		_ = os.RemoveAll(tmpHome)
+		_ = os.Setenv("HOME", origHome)
 		switchDir()
 	}()
 
 	// Simply run "ddev" to make sure homeadditions example files get populated
-	_, err := exec.RunCommand(DdevBin, []string{})
+	_, err = exec.RunCommand(DdevBin, []string{})
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(projectHomeadditionsDir, "bash_aliases.example"))
-
-	// Copy testdata scripts into project homeadditionsdir
-	for _, script := range []string{".myscript.sh", ".projectscript.sh"} {
-		err = fileutil.CopyFile(filepath.Join(testdata, "project", script), filepath.Join(projectHomeadditionsDir, script))
-		assert.NoError(err)
-		err = os.Chmod(filepath.Join(testdata, "project", script), 0777)
-		assert.NoError(err)
-	}
-
-	// Copy testdata scripts into global homeadditionsdir
-	for _, script := range []string{".myscript.sh", ".globalscript.sh"} {
-		err = fileutil.CopyFile(filepath.Join(testdata, "global", script), filepath.Join(globalHomeadditionsDir, script))
-		assert.NoError(err)
-		err = os.Chmod(filepath.Join(globalHomeadditionsDir, script), 0777)
-		assert.NoError(err)
-	}
 
 	app, err := ddevapp.GetActiveApp(site.Name)
 	require.NoError(t, err)
