@@ -21,7 +21,7 @@ the .ddev/config.yaml is the primary configuration for the project.
 | router_http_port | Port used by the router for http |  Defaults to port 80. This can be changed if there is a conflict on the host over port 80 |
 | router_https_port | Port used by the router for https |Defaults to 443, usually only changed if there is a conflicting process using port 443 |
 | xdebug_enabled | "true" enables xdebug | Most people use `ddev xdebug` and `ddev xdebug off` instead of configuring this, because xdebug has a significant performance impact. |
-| webserver_type | nginx-fpm or apache-fpm or apache-cgi | The default is nginx-fpm, and it works best for many projects |
+| webserver_type | nginx-fpm or apache-fpm or apache-cgi | The default is nginx-fpm, and it works best for many projects. apache-cgi is deprecated and will be removed in the next release cycle. |
 | timezone | timezone to use in container and in PHP configuration | It can be set to any valid timezone, see [timezone list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). For example "Europe/Dublin" or "MST7MDT". The default is UTC. |
 | additional_hostnames | array of extra hostnames | `additional_hostnames: ["somename", "someothername"]` would provide http and https URLs for "somename.ddev.site" and "someothername.ddev.site". |
 | additional_fqdns | extra fully-qualified domain names | `additional_fqdns: ["example.com", "sub1.example.com"]` would provide http and https URLs for "example.com" and "sub1.example.com". Please take care with this because it can cause great confusion and adds extraneous items to your /etc/hosts file. |

@@ -74,7 +74,7 @@ A number of environment variables are provided to the script. Useful variables f
 * DDEV_ROUTER_HTTP_PORT: Router port for http
 * DDEV_ROUTER_HTTPS_PORT: Router port for https
 * DDEV_SITENAME: Project name, like "d8composer". Same as $DDEV_PROJECT inside container
-* DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm, apache-cgi
+* DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm
 
 Useful variables for container scripts are:
 
@@ -85,7 +85,7 @@ Useful variables for container scripts are:
 * DDEV_PROJECT_TYPE: drupal8, typo3, backdrop, wordpress, etc.
 * DDEV_ROUTER_HTTP_PORT: Router port for http
 * DDEV_ROUTER_HTTPS_PORT: Router port for https
-* DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm, apache-cgi
+* DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm
 
 ### Known Windows OS issues
 

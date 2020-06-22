@@ -775,8 +775,7 @@ func TestExtraPackages(t *testing.T) {
 
 	// Make sure no "-built" items are still hanging around
 	command := fmt.Sprintf("docker rmi -f %s-%s-built %s-%s-built", app.WebImage, app.Name, app.GetDBImage(), app.Name)
-	_, err = exec.RunCommand("bash", []string{"-c", command})
-	assert.NoError(err)
+	_, _ = exec.RunCommand("bash", []string{"-c", command})
 
 	defer func() {
 		_ = app.Stop(true, false)
