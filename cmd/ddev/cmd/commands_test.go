@@ -46,6 +46,8 @@ func TestCustomCommands(t *testing.T) {
 	err = os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
 	assert.NoError(err)
 	tmpHomeGlobalCommandsDir := filepath.Join(tmpHome, ".ddev", "commands")
+	err = os.RemoveAll(tmpHomeGlobalCommandsDir)
+	assert.NoError(err)
 
 	projectCommandsDir := app.GetConfigPath("commands")
 	globalCommandsDir := app.GetConfigPath(".global_commands")
@@ -77,8 +79,6 @@ func TestCustomCommands(t *testing.T) {
 	// Now copy a project commands and global commands and make sure they show up and execute properly
 	err = fileutil.CopyDir(filepath.Join(testCustomCommandsDir, "project_commands"), projectCommandsDir)
 	assert.NoError(err)
-	err = fileutil.CopyDir(filepath.Join(testCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
-	assert.NoError(err)
 
 	out, err = exec.RunCommand(DdevBin, []string{})
 	assert.NoError(err)
@@ -99,9 +99,9 @@ func TestCustomCommands(t *testing.T) {
 	}
 
 	// Make sure that all the official ddev-provided custom commands are usable by just checking help
-	for _, c := range []string{"myssql", "launch", "live", "xdebug"} {
-		_, err = exec.RunCommand(DdevBin, []string{"help", c})
-		assert.NoError(err, "Failed to run ddev help %s", c)
+	for _, c := range []string{"mysql", "launch", "live", "xdebug"} {
+		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		assert.NoError(err, "Failed to run ddev %s -h", c)
 	}
 }
 
