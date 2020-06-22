@@ -22,9 +22,11 @@ func TestCustomCommands(t *testing.T) {
 
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
 	origHome := os.Getenv("HOME")
+	origDebug := os.Getenv("DDEV_DEBUG")
 	// Change the homedir temporarily
 	err := os.Setenv("HOME", tmpHome)
 	require.NoError(t, err)
+	_ = os.Setenv("DDEV_DEBUG", "")
 
 	pwd, _ := os.Getwd()
 	testCustomCommandsDir := filepath.Join(pwd, "testdata", t.Name())
@@ -35,9 +37,9 @@ func TestCustomCommands(t *testing.T) {
 	defer func() {
 		_ = os.RemoveAll(tmpHome)
 		_ = os.Setenv("HOME", origHome)
+		_ = os.Setenv("DDEV_DEBUG", origDebug)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
-
 		switchDir()
 	}()
 
