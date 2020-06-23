@@ -937,11 +937,12 @@ func (app *DdevApp) Start() error {
 // GenerateWebserverConfig generates the default nginx and apache config files
 func (app *DdevApp) GenerateWebserverConfig() error {
 	var items = map[string]string{
-		"nginx":                        app.GetConfigPath(filepath.Join("nginx_full", "nginx-site.conf")),
-		"apache":                       app.GetConfigPath(filepath.Join("apache", "apache-site.conf")),
-		"nginx_second_docroot_example": app.GetConfigPath(filepath.Join("nginx_full", "seconddocroot.conf.example")),
-		"README.nginx_full.txt":        app.GetConfigPath(filepath.Join("nginx_full", "README.nginx_full.txt")),
-		"README.apache.txt":            app.GetConfigPath(filepath.Join("apache", "README.apache.txt")),
+		"nginx":                         app.GetConfigPath(filepath.Join("nginx_full", "nginx-site.conf")),
+		"apache":                        app.GetConfigPath(filepath.Join("apache", "apache-site.conf")),
+		"nginx_second_docroot_example":  app.GetConfigPath(filepath.Join("nginx_full", "seconddocroot.conf.example")),
+		"README.nginx_full.txt":         app.GetConfigPath(filepath.Join("nginx_full", "README.nginx_full.txt")),
+		"README.apache.txt":             app.GetConfigPath(filepath.Join("apache", "README.apache.txt")),
+		"apache_second_docroot_example": app.GetConfigPath(filepath.Join("apache", "seconddocroot.conf.example")),
 	}
 	for t, configPath := range items {
 		err := os.MkdirAll(filepath.Dir(configPath), 0755)
