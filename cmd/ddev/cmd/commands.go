@@ -77,7 +77,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 			for _, commandName := range commandFiles {
 				// Use path.Join() for the inContainerFullPath because it'serviceDirOnHost about the path in the container, not on the
 				// host; a Windows path is not useful here.
-				inContainerFullPath := path.Join("/mnt/ddev_config", path.Base(commandSet), service, commandName)
+				inContainerFullPath := path.Join("/mnt/ddev_config", filepath.Base(commandSet), service, commandName)
 				onHostFullPath := filepath.Join(commandSet, service, commandName)
 
 				if strings.HasSuffix(commandName, ".example") || strings.HasPrefix(commandName, "README") || strings.HasPrefix(commandName, ".") || fileutil.IsDirectory(onHostFullPath) {
