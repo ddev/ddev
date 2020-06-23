@@ -60,6 +60,7 @@ class Ddev < Formula
     end
     bash_completion.install ".gotmp/bin/ddev_bash_completion.sh" => "ddev"
     zsh_completion.install ".gotmp/bin/ddev_zsh_completion.sh" => "ddev"
+    fish_completion.install ".gotmp/bin/ddev_fish_completion.sh" => "ddev"
   end
 
   test do

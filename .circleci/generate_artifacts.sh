@@ -85,9 +85,10 @@ for os in sierra x86_64_linux ; do
     NO_V_VERSION=${VERSION#v}
     rm -rf /tmp/bottle
     BOTTLE_BASE=/tmp/bottle/ddev/$NO_V_VERSION
-    mkdir -p $BOTTLE_BASE/{bin,etc/bash_completion.d,share/zsh-completions}
+    mkdir -p $BOTTLE_BASE/{bin,etc/bash_completion.d,share/zsh/site-functions,share/fish/vendor_completions.d}
     cp $BASE_DIR/.gotmp/bin/ddev_bash_completion.sh $BOTTLE_BASE/etc/bash_completion.d/ddev
-    cp $BASE_DIR/.gotmp/bin/ddev_zsh_completion.sh $BOTTLE_BASE/share/zsh-completions/_ddev
+    cp $BASE_DIR/.gotmp/bin/ddev_zsh_completion.sh $BOTTLE_BASE/share/zsh/site-functions/_ddev
+    cp $BASE_DIR/.gotmp/bin/ddev_fish_completion.sh $BOTTLE_BASE/share/fish/vendor_completions.d/ddev.fish
 
     if [ "${os}" = "sierra" ]; then cp $BASE_DIR/.gotmp/bin/darwin_amd64/ddev $BOTTLE_BASE/bin ; fi
     if [ "${os}" = "x86_64_linux" ]; then cp $BASE_DIR/.gotmp/bin/ddev $BOTTLE_BASE/bin ; fi
