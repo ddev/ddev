@@ -239,9 +239,10 @@ ddev launch
 6. Follow the URL to the base site.
 
 You may want the [Magento 1 Sample Data](https://raw.githubusercontent.com/Vinai/compressed-magento-sample-data/1.9.1.0/compressed-magento-sample-data-1.9.1.0.tgz) for experimentation:
-* Download Magento 1.9.1.x Sample Data
+
+* Download Magento 1.9.1.x Sample Data.
 * Extract the download, for example `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.1.0.tgz --strip-components=1`
-* Import Example Data to database **before** running OpenMage install
+* Import example data to database **before** running OpenMage install.
 
 Note that OpenMage is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
 
