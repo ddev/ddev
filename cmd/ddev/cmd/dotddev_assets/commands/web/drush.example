@@ -6,3 +6,8 @@
 ## Example: "ddev drush uli" or "ddev drush sql-cli" or "ddev drush --version"
 
 drush $@
+
+# To use the site-installed drush directly (rather than running /usr/local/bin/drush),
+# you might want to execute it directly:
+#
+# /var/www/html/vendor/bin/drush $@

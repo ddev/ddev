@@ -1240,6 +1240,7 @@ func (app *DdevApp) DockerEnv() {
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
 		"DDEV_SITENAME":                 app.Name,
+		"DDEV_TLD":                      app.ProjectTLD,
 		"DDEV_DBIMAGE":                  app.GetDBImage(),
 		"DDEV_DBAIMAGE":                 app.DBAImage,
 		"DDEV_WEBIMAGE":                 app.WebImage,
