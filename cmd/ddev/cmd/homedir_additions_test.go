@@ -57,6 +57,7 @@ func TestHomedirAdditions(t *testing.T) {
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(projectHomeadditionsDir, "bash_aliases.example"))
+	assert.FileExists(filepath.Join(tmpHomeGlobalHomeadditionsDir, "bash_aliases.example"))
 
 	app, err := ddevapp.GetActiveApp(site.Name)
 	require.NoError(t, err)
