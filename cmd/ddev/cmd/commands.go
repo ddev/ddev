@@ -263,6 +263,7 @@ func populateExamplesAndCommands() error {
 		}
 	}
 
+	// This brings in both the commands and the homeadditions files
 	box = packr.New("global_dotddev", "./global_dotddev_assets")
 
 	list = box.List()
