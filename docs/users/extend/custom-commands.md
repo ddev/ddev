@@ -1,6 +1,6 @@
 ## Custom Commands
 
-It's quite easy to add custom commands to ddev; they can execute either on the host or in the various containers. The basic idea is to add a bash script to `.ddev/commands/host` or `.ddev/commands/<containername>`
+It's quite easy to add custom commands to ddev; they can execute either on the host or in the various containers. The basic idea is to add a bash script to either the specific project in `.ddev/commands/host` or `.ddev/commands/<containername>` or globally for every project in `~/.ddev/commands`
 
 There are example commands provided in `ddev/commands/*/*.example` that can just be copied or moved (or symlinked) and used as commands. For example, [.ddev/commands/host/mysqlworkbench.example](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/dotddev_assets/commands/host/mysqlworkbench.example) can be used to add a "ddev mysqlworkbench" command, just change it from "mysqlworkbench.example" to "mysqlworkbench". Also, a new `ddev mysql` command has been added using this technique (as a db container command). See [mysql command](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/dotddev_assets/commands/db/mysql). If you're on macOS or Linux (or some configurations of Windows) you can just `cd .ddev/commands/host && ln -s mysqlworkbench.example mysqlworkbench`.
 
@@ -58,6 +58,10 @@ For example, to add a "solrtail" command that runs in a solr service, add `.ddev
 tail -f /opt/solr/server/logs/solr.log
 
 ```
+
+### Global commands
+
+Global commands work exactly the same as project-level commands, you just have to put them in your global .ddev directory. Your home directory has a .ddev/commands in it; there you can add host or web or db commands. You might want to copy the drush.example above to ~/.ddev/commands/web to make the "ddev drush" command available in every project.
 
 ### Environment variables provided
 

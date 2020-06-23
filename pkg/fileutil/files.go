@@ -74,7 +74,7 @@ func CopyDir(src string, dst string) error {
 		return err
 	}
 	if !si.IsDir() {
-		return fmt.Errorf("source is not a directory")
+		return fmt.Errorf("CopyDir: source directory %s is not a directory", src)
 	}
 
 	_, err = os.Stat(dst)
@@ -82,7 +82,7 @@ func CopyDir(src string, dst string) error {
 		return err
 	}
 	if err == nil {
-		return fmt.Errorf("destination already exists")
+		return fmt.Errorf("CopyDir: destination %s already exists", dst)
 	}
 
 	err = os.MkdirAll(dst, si.Mode())
@@ -198,6 +198,20 @@ func ListFilesInDir(path string) ([]string, error) {
 
 	for _, f := range files {
 		fileList = append(fileList, f.Name())
+	}
+	return fileList, nil
+}
+
+// ListFilesInDirFullPath returns an array of full path of files found in a directory
+func ListFilesInDirFullPath(path string) ([]string, error) {
+	var fileList []string
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return fileList, err
+	}
+
+	for _, f := range files {
+		fileList = append(fileList, filepath.Join(path, f.Name()))
 	}
 	return fileList, nil
 }

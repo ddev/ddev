@@ -1,7 +1,0 @@
-#!/bin/bash
-
-## Description: Test web command
-## Usage: testwebcmd
-## Example: "ddev testwebcmd"
-
-echo "Test Web Command was executed with args=$@ on host $(hostname)"
