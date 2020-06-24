@@ -2380,6 +2380,58 @@ type URLRedirectExpectations struct {
 	expectedRedirectURI string
 }
 
+// TestAppdirAlreadyInUse tests trying to start a project in an already-used
+// directory will fail
+func TestAppdirAlreadyInUse(t *testing.T) {
+	assert := asrt.New(t)
+	originalProjectName := "originalproject"
+	secondProjectName := "secondproject"
+	// Create a temporary directory and switch to it.
+	tmpdir := testcommon.CreateTmpDir(t.Name())
+
+	app, err := ddevapp.NewApp(tmpdir, false, "")
+	require.NoError(t, err)
+	defer func() {
+		app.Name = originalProjectName
+		_ = app.Stop(true, false)
+		app.Name = secondProjectName
+		_ = app.Stop(true, false)
+
+		testcommon.Chdir(tmpdir)()
+		testcommon.CleanupDir(tmpdir)
+	}()
+
+	// Write/create global with the name "originalproject"
+	app.Name = originalProjectName
+	require.NoError(t, err)
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Now change the project namename and look for the complaint
+	app.Name = secondProjectName
+	err = app.Start()
+	assert.Error(err)
+	assert.Contains(err.Error(), "already contains a project named "+originalProjectName)
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	// Change back to original name
+	app.Name = originalProjectName
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
+	// Now stop and make sure the behavior is same with everything stopped
+	err = app.Stop(false, false)
+	assert.NoError(err)
+
+	// Now change the project name again and look for the error
+	app.Name = secondProjectName
+	err = app.Start()
+	assert.Error(err)
+	assert.Contains(err.Error(), "already contains a project named "+originalProjectName)
+}
+
 // TestHttpsRedirection tests to make sure that webserver and php redirect to correct
 // scheme (http or https).
 func TestHttpsRedirection(t *testing.T) {
