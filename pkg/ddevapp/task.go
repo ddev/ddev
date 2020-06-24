@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/mattn/go-isatty"
 	"os"
 	"os/exec"
 	"runtime"
@@ -16,7 +17,7 @@ type YAMLTask map[string]interface{}
 
 // Task is the interface defining methods we'll use in various tasks
 type Task interface {
-	Execute() (string, string, error)
+	Execute() error
 	GetDescription() string
 }
 
@@ -41,13 +42,15 @@ type ComposerTask struct {
 }
 
 // Execute() executes an ExecTask
-func (c ExecTask) Execute() (string, string, error) {
-	stdout, stderr, err := c.app.Exec(&ExecOpts{
-		Service: c.service,
-		Cmd:     c.exec,
+func (c ExecTask) Execute() error {
+	_, _, err := c.app.Exec(&ExecOpts{
+		Service:   c.service,
+		Cmd:       c.exec,
+		Tty:       isatty.IsTerminal(os.Stdin.Fd()),
+		NoCapture: true,
 	})
 
-	return stdout, stderr, err
+	return err
 }
 
 // GetDescription returns a human-readable description of the task
@@ -63,11 +66,11 @@ func (c ExecHostTask) GetDescription() string {
 
 // Execute (HostTask) executes a command in a container, by default the web container,
 // and returns stdout, stderr, err
-func (c ExecHostTask) Execute() (string, string, error) {
+func (c ExecHostTask) Execute() error {
 	cwd, _ := os.Getwd()
 	err := os.Chdir(c.app.GetAppRoot())
 	if err != nil {
-		return "", "", err
+		return err
 	}
 
 	bashPath := "bash"
@@ -84,16 +87,16 @@ func (c ExecHostTask) Execute() (string, string, error) {
 
 	_ = os.Chdir(cwd)
 
-	return stdout.String(), stderr.String(), err
+	return err
 }
 
 // Execute (ComposerTask) runs a composer command in the web container
 // and returns stdout, stderr, err
-func (c ComposerTask) Execute() (string, string, error) {
+func (c ComposerTask) Execute() error {
 	components := strings.Split(c.exec, " ")
-	stdout, stderr, err := c.app.Composer(components[0:])
+	_, _, err := c.app.Composer(components[0:])
 
-	return stdout, stderr, err
+	return err
 }
 
 // GetDescription returns a human-readable description of the task
