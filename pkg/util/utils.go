@@ -23,27 +23,30 @@ func init() {
 // Failed will print a red error message and exit with failure.
 func Failed(format string, a ...interface{}) {
 	if a != nil {
-		output.UserOut.Fatalf(format, a...)
+		//output.UserOut.Fatalf(format, a...)
+		output.UserErr.Fatalf(format, a...)
+		//output.UserOut.WithField("level", "fatal").Fatalf(format, a...)
 	} else {
-		output.UserOut.Fatal(format)
+		output.UserErr.Fatal(format)
+		//output.UserOut.WithField("level", "fatal").Fatal(format)
 	}
 }
 
 // Error will print an red error message but will not exit.
 func Error(format string, a ...interface{}) {
 	if a != nil {
-		output.UserOut.Errorf(format, a...)
+		output.UserErr.Errorf(format, a...)
 	} else {
-		output.UserOut.Error(format)
+		output.UserErr.Error(format)
 	}
 }
 
 // Warning will present the user with warning text.
 func Warning(format string, a ...interface{}) {
 	if a != nil {
-		output.UserOut.Warnf(format, a...)
+		output.UserErr.Warnf(format, a...)
 	} else {
-		output.UserOut.Warn(format)
+		output.UserErr.Warn(format)
 	}
 }
 
