@@ -8,10 +8,8 @@ FROM drud/ddev-php-base:v0.3.1 as ddev-webserver-base
 ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4"
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV MKCERT_VERSION=v1.4.1
+ENV DEBIAN_FRONTEND=noninteractive
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV TERM xterm
-ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
@@ -21,11 +19,12 @@ RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key &&
     apt-key add /tmp/nginx_signing.key && \
     echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
 
-RUN apt-get update && apt-get -qq install --no-install-recommends --no-install-suggests -y apache2 libcap2-bin locales-all nginx supervisor
+RUN apt-get -qq update
+RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y apache2 libcap2-bin locales-all nginx supervisor
 
 # Add additional modules not used in php-base
 RUN for v in $PHP_VERSIONS; do \
-    apt-get -qq install --no-install-recommends --no-install-suggests -y libapache2-mod-$v || exit $?; \
+    DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y libapache2-mod-$v || exit $?; \
 done
 
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
@@ -61,8 +60,8 @@ ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux
 RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
 RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get update
-RUN apt-get install blackfire-php -y --allow-unauthenticated
-RUN apt-get  install --no-install-recommends --no-install-suggests -y \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confold" blackfire-php -y --allow-unauthenticated
+RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     fontconfig \
     gettext \
     git \
@@ -159,6 +158,13 @@ ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
 
 ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
 ENV DDEV_LIVE_NO_VERSION_PROMPT true
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
+ENV COMPOSER_PROCESS_TIMEOUT=2000
+ENV DEBIAN_FRONTEND noninteractive
+ENV TERM xterm
+ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
 
