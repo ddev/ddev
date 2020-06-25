@@ -339,6 +339,12 @@ func TestConfigInvalidProjectname(t *testing.T) {
 		assert.NoError(err)
 		assert.NotContains(out, "is not a valid project name")
 		assert.Contains(out, "You may now run 'ddev start'")
+		args = []string{
+			"stop",
+			"--unlist", projName,
+		}
+		_, _ = exec.RunCommand(DdevBin, args)
+
 		_ = os.Remove(filepath.Join(tmpdir, ".ddev", "config.yaml"))
 	}
 
@@ -444,7 +450,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	// it should end up with default mariadb version dbimage
 	_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
 	_ = os.MkdirAll(filepath.Join(tmpDir, ".ddev"), 0777)
-	err := fileutil.CopyFile(filepath.Join(testDir, "testdata/TestConfigMariaDBVersion", "config.yaml.empty"), filepath.Join(tmpDir, ".ddev", "config.yaml"))
+	err := fileutil.CopyFile(filepath.Join(testDir, "testdata", t.Name(), "config.yaml.empty"), filepath.Join(tmpDir, ".ddev", "config.yaml"))
 	assert.NoError(err)
 	app, err := ddevapp.NewApp(tmpDir, false, "")
 	//nolint: errcheck
@@ -487,6 +493,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 		_, err = app.ReadConfig(false)
 		assert.NoError(err)
 		assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
+		_ = app.Stop(true, false)
 	}
 
 	// If we start with a config.yaml specifying basically anything for mariadb_version
@@ -519,6 +526,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			_, err = app.ReadConfig(false)
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
+			_ = app.Stop(true, false)
 		}
 	}
 
@@ -579,7 +587,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			// First test the bare explicit values found in the config.yaml,
 			// without the NewApp adjustments
 			app := &ddevapp.DdevApp{}
-			assert.NoError(err)
+			//assert.NoError(err)
 			err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
@@ -607,6 +615,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			} else {
 				assert.EqualValues(app.DBImage, version.GetDBImage(nodeps.MariaDB, cmdDBImageVersion))
 			}
+			_ = app.Stop(true, false)
 		}
 	}
 }

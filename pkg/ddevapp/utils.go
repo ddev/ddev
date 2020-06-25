@@ -318,7 +318,7 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 // CheckForMissingProjectFiles returns an error if the project's configuration or project root cannot be found
 func CheckForMissingProjectFiles(project *DdevApp) error {
 	if strings.Contains(project.SiteStatus(), SiteConfigMissing) || strings.Contains(project.SiteStatus(), SiteDirMissing) {
-		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev delete --omit-snapshot %s'", project.GetAppRoot(), project.GetName())
+		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to make ddev forget this project, you may run 'ddev stop --unlist %s'", project.GetAppRoot(), project.GetName())
 	}
 
 	return nil
@@ -346,20 +346,20 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 		if _, ok := apps[name]; ok {
 			continue
 		}
-		// Skip if AppRoot hasn't been set in globalconfig
-		// This situation is transitional as globalconfig
-		// gets fully populated
-		if info.AppRoot == "" {
-			continue
-		}
 
 		app, err := NewApp(info.AppRoot, true, nodeps.ProviderDefault)
 		if err != nil {
 			util.Warning("unable to create project at project root %s: %v", info.AppRoot, err)
 			app.Name = name
 		}
+
+		// If the app we just loaded was already found with a different name, complain
+		if _, ok := apps[app.Name]; ok {
+			util.Warning(`Project '%s' was found in configured directory %s and it is already used by project '%s'. If you have changed the name of the project, please "ddev stop --unlist %s" `, app.Name, app.AppRoot, name, name)
+		}
+
 		if !activeOnly || (app.SiteStatus() != SiteStopped && app.SiteStatus() != SiteConfigMissing && app.SiteStatus() != SiteDirMissing) {
-			apps[name] = app
+			apps[app.Name] = app
 		}
 	}
 

@@ -560,7 +560,7 @@ func (app *DdevApp) SiteStatus() string {
 	}
 
 	if !fileutil.FileExists(app.GetAppRoot()) {
-		siteStatus = fmt.Sprintf("%s: %v", SiteDirMissing, app.GetAppRoot())
+		siteStatus = fmt.Sprintf(`%s: %v; Please "ddev stop --unlist %s"`, SiteDirMissing, app.GetAppRoot(), app.Name)
 		return siteStatus
 	}
 
@@ -821,6 +821,10 @@ func (app *DdevApp) Start() error {
 
 	app.DBImage = app.GetDBImage()
 
+	err = app.CheckExistingAppInApproot()
+	if err != nil {
+		return err
+	}
 	// Make sure that any ports allocated are available.
 	// and of course add to global project list as well
 	err = app.UpdateGlobalProjectList()
@@ -893,7 +897,6 @@ func (app *DdevApp) Start() error {
 	if router == nil {
 		// Copy ca certs into ddev-global-cache/mkcert
 		if caRoot != "" {
-			output.UserOut.Info("Pushing mkcert rootca certs to ddev-global-cache")
 			_, out, err := dockerutil.RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "mkdir -p /mnt/ddev-global-cache/composer && mkdir -p /mnt/ddev-global-cache/mkcert && chmod 777 /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache", caRoot + ":/mnt/mkcert"}, "", true)
 			if err != nil {
 				util.Warning("failed to copy root CA into docker volume: %v, output='%s'", err, out)
@@ -947,6 +950,17 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	return nil
+}
+
+// CheckExistingAppInApproot looks to see if we already have a project in this approot with different name
+func (app *DdevApp) CheckExistingAppInApproot() error {
+	pList := globalconfig.GetGlobalProjectList()
+	for name, v := range pList {
+		if app.AppRoot == v.AppRoot && name != app.Name {
+			return fmt.Errorf(`This project root %s already contains a project named %s. You may want to remove the existing project with "ddev stop --unlist %s"`, v.AppRoot, name, name)
+		}
+	}
 	return nil
 }
 
