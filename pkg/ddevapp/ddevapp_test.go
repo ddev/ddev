@@ -389,13 +389,16 @@ func TestDdevStart(t *testing.T) {
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-start": {{"exec": "echo hello"}}}
 
 	assert.NoError(err)
-	stdout := util.CaptureUserOut()
+	stdoutFunc, err := util.CaptureOutputToFile()
+	assert.NoError(err)
+	promptOutFunc := util.CaptureUserOut()
 	err = app.Start()
 	assert.NoError(err)
 	//nolint: errcheck
 	defer app.Stop(true, false)
-	out := stdout()
-	assert.Contains(out, "Running task: Exec command 'echo hello' in container/service 'web'")
+	out := stdoutFunc()
+	UOut := promptOutFunc()
+	assert.Contains(UOut, "Running task: Exec command 'echo hello' in container/service 'web'")
 	assert.Contains(out, "hello\n")
 
 	// try to start a site of same name at different path
