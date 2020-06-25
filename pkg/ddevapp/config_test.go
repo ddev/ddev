@@ -675,30 +675,31 @@ func TestConfigOverrideDetection(t *testing.T) {
 		assert.NoError(err, "unable to invalidate docker cache")
 	})
 
-	restoreOutput := util.CaptureUserOut()
+	stdoutFunc, err := util.CaptureOutputToFile()
+	assert.NoError(err)
 	startErr := app.StartAndWait(2)
-	out := restoreOutput()
+	stdout := stdoutFunc()
 
 	var logs string
 	if startErr != nil {
 		logs, _ = GetErrLogsFromApp(app, startErr)
 	}
 
-	require.NoError(t, startErr, "app.StartAndWait() did not succeed: output:\n=====\n%s\n===== logs:\n========= logs =======\n%s\n========\n", out, logs)
+	require.NoError(t, startErr, "app.StartAndWait() did not succeed: output:\n=====\n%s\n===== logs:\n========= logs =======\n%s\n========\n", stdout, logs)
 
-	assert.Contains(out, "utf.cnf")
-	assert.Contains(out, "my-php.ini")
+	assert.Contains(stdout, "utf.cnf")
+	assert.Contains(stdout, "my-php.ini")
 
 	switch app.WebserverType {
 	case nodeps.WebserverNginxFPM:
-		assert.Contains(out, "nginx-site.conf")
-		assert.NotContains(out, "apache-site.conf")
-		assert.Contains(out, "junker99.conf")
+		assert.Contains(stdout, "nginx-site.conf")
+		assert.NotContains(stdout, "apache-site.conf")
+		assert.Contains(stdout, "junker99.conf")
 	default:
-		assert.Contains(out, "apache-site.conf")
-		assert.NotContains(out, "nginx-site.conf")
+		assert.Contains(stdout, "apache-site.conf")
+		assert.NotContains(stdout, "nginx-site.conf")
 	}
-	assert.Contains(out, "Custom configuration takes effect")
+	assert.Contains(stdout, "Custom configuration takes effect")
 	runTime()
 }
 
