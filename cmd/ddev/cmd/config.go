@@ -170,7 +170,11 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Failed(err.Error())
 	}
 
-	_, _, err = app.ProcessHooks("pre-config")
+	err = app.ProcessHooks("pre-config")
+	if err != nil {
+		util.Failed(err.Error())
+	}
+
 	if err != nil {
 		util.Failed("Failed to process hook 'pre-config'")
 	}
@@ -216,7 +220,7 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	if err != nil {
 		util.Failed("Failed to write provider config: %v", err)
 	}
-	_, _, err = app.ProcessHooks("post-config")
+	err = app.ProcessHooks("post-config")
 	if err != nil {
 		util.Failed("Failed to process hook 'post-config'")
 	}

@@ -389,13 +389,16 @@ func TestDdevStart(t *testing.T) {
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-start": {{"exec": "echo hello"}}}
 
 	assert.NoError(err)
-	stdout := util.CaptureUserOut()
+	stdoutFunc, err := util.CaptureOutputToFile()
+	assert.NoError(err)
+	promptOutFunc := util.CaptureUserOut()
 	err = app.Start()
 	assert.NoError(err)
 	//nolint: errcheck
 	defer app.Stop(true, false)
-	out := stdout()
-	assert.Contains(out, "Running task: Exec command 'echo hello' in container/service 'web'")
+	out := stdoutFunc()
+	UOut := promptOutFunc()
+	assert.Contains(UOut, "Running task: Exec command 'echo hello' in container/service 'web'")
 	assert.Contains(out, "hello\n")
 
 	// try to start a site of same name at different path
@@ -1865,27 +1868,21 @@ func TestDdevLogs(t *testing.T) {
 func TestProcessHooks(t *testing.T) {
 	assert := asrt.New(t)
 
-	// Use Drupal8 only, mostly for the composer example
-	site := FullTestSites[1]
-	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
-		app := &ddevapp.DdevApp{Name: site.Name}
-		_ = app.Stop(true, false)
-		_ = globalconfig.RemoveProjectInfo(site.Name)
+	site := TestSites[0]
+	switchDir := site.Chdir()
 
-		err := site.Prepare()
-		require.NoError(t, err)
-		// nolint: errcheck
-		defer os.RemoveAll(site.Dir)
-	}
-
-	cleanup := site.Chdir()
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s ProcessHooks", site.Name))
+	runTime := util.TimeTrack(time.Now(), t.Name())
 
 	testcommon.ClearDockerEnv()
 	app, err := ddevapp.NewApp(site.Dir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
-	err = app.StartAndWait(0)
+	defer func() {
+		_ = app.Stop(true, false)
+		app.Hooks = nil
+		_ = app.WriteConfig()
+		switchDir()
+	}()
+	err = app.Start()
 	assert.NoError(err)
 
 	// Note that any ExecHost commands must be able to run on Windows.
@@ -1897,27 +1894,27 @@ func TestProcessHooks(t *testing.T) {
 			{"exec": "echo MYSQL_USER=${MYSQL_USER}", "service": "db"},
 			{"exec": "echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt"},
 			{"exec": "touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt"},
-			{"composer": "show twig/twig"},
 		},
 	}
 
-	goStdout := util.CaptureUserOut()
-
-	stdout, _, err := app.ProcessHooks("hook-test")
+	captureOutputFunc, err := util.CaptureOutputToFile()
 	assert.NoError(err)
+	userOutFunc := util.CaptureUserOut()
 
+	err = app.ProcessHooks("hook-test")
+	assert.NoError(err)
+	out := captureOutputFunc()
+	userOut := userOutFunc()
 	// Ignore color in output, can be different in different OS's
-	stdout = vtclean.Clean(stdout, false)
-	goStdoutStr := vtclean.Clean(goStdout(), false)
+	out = vtclean.Clean(out, false)
 
-	assert.Contains(goStdoutStr, "Executing hook-test hook")
-	assert.Contains(goStdoutStr, "Exec command 'ls /usr/local/bin/composer' in container/service 'web'")
-	assert.Contains(goStdoutStr, "Exec command 'echo something' on the host")
-	assert.Contains(goStdoutStr, "Exec command 'echo MYSQL_USER=${MYSQL_USER}' in container/service 'db'")
-	assert.Contains(stdout, "MYSQL_USER=db")
-	assert.Contains(goStdoutStr, "Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt' in container/service 'web'")
-	assert.Contains(goStdoutStr, "Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt' in container/service 'web',")
-	assert.Contains(stdout, "Twig, the flexible, fast, and secure template")
+	assert.Contains(userOut, "Executing hook-test hook")
+	assert.Contains(userOut, "Exec command 'ls /usr/local/bin/composer' in container/service 'web'")
+	assert.Contains(userOut, "Exec command 'echo something' on the host")
+	assert.Contains(userOut, "Exec command 'echo MYSQL_USER=${MYSQL_USER}' in container/service 'db'")
+	assert.Contains(out, "MYSQL_USER=db")
+	assert.Contains(userOut, "Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt' in container/service 'web'")
+	assert.Contains(userOut, "Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt' in container/service 'web',")
 	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
@@ -1925,7 +1922,6 @@ func TestProcessHooks(t *testing.T) {
 	assert.NoError(err)
 
 	runTime()
-	cleanup()
 }
 
 // TestDdevPause tests the functionality that is called when "ddev pause" is executed
