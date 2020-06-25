@@ -120,7 +120,7 @@ func SegmentEvent(client analytics.Client, hashedID string, event string) error 
 // SendInstrumentationEvents does the actual send to segment
 func SendInstrumentationEvents(event string) {
 
-	if globalconfig.DdevGlobalConfig.InstrumentationOptIn && nodeps.IsInternetActive() {
+	if globalconfig.DdevGlobalConfig.InstrumentationOptIn && globalconfig.IsInternetActive() {
 		client := analytics.New(version.SegmentKey)
 
 		err := SegmentUser(client, GetInstrumentationUser())

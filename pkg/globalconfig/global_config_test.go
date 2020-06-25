@@ -1,15 +1,19 @@
 package globalconfig_test
 
 import (
+	"context"
+	"errors"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"net"
 	"os"
 	"strconv"
 	"testing"
+	"time"
 )
 
 // TestGetFreePort checks GetFreePort() to make sure it respects
@@ -106,4 +110,81 @@ func TestSetProjectAppRoot(t *testing.T) {
 
 	project = globalconfig.GetProject(t.Name())
 	assert.Equal(tmpDir, project.AppRoot)
+}
+
+type netResolverStub struct {
+	sleepTime time.Duration
+	err       error
+}
+
+// LookupHost is a custom version of net.LookupHost that just wastes some time and then returns
+func (t netResolverStub) LookupHost(ctx context.Context, _ string) ([]string, error) {
+	select {
+	case <-time.After(t.sleepTime):
+	case <-ctx.Done():
+		return nil, errors.New("context timed out")
+	}
+	return nil, t.err
+}
+
+// resetVariables resets the global variables IsInternetActive() uses back to their defaults
+func resetVariables() {
+	globalconfig.IsInternetActiveNetResolver = net.DefaultResolver
+	globalconfig.IsInternetActiveAlreadyChecked = false
+	globalconfig.IsInternetActiveResult = false
+}
+
+// TestIsInternetActiveErrorOccurred tests if IsInternetActive() returns false when LookupHost returns an error
+func TestIsInternetActiveErrorOccurred(t *testing.T) {
+	resetVariables()
+
+	globalconfig.IsInternetActiveNetResolver = netResolverStub{
+		sleepTime: 0,
+		err:       errors.New("test error"),
+	}
+
+	asrt.False(t, globalconfig.IsInternetActive())
+}
+
+// TestIsInternetActiveTimeout tests if IsInternetActive() returns false when it times out
+func TestIsInternetActiveTimeout(t *testing.T) {
+	resetVariables()
+
+	globalconfig.IsInternetActiveNetResolver = netResolverStub{
+		sleepTime: 1000 * time.Millisecond,
+	}
+
+	asrt.False(t, globalconfig.IsInternetActive())
+}
+
+// TestIsInternetActiveAlreadyChecked tests if IsInternetActive() returns true when it has already
+// been called and returned true on an earlier execution.
+func TestIsInternetActiveAlreadyChecked(t *testing.T) {
+	resetVariables()
+
+	globalconfig.IsInternetActiveAlreadyChecked = true
+	globalconfig.IsInternetActiveResult = true
+
+	asrt.True(t, globalconfig.IsInternetActive())
+}
+
+// TestIsInternetActive tests if IsInternetActive() returns true, when the LookupHost call goes well
+// and if it properly sets the globals so it won't execute the LookupHost again.
+func TestIsInternetActive(t *testing.T) {
+	resetVariables()
+	err := globalconfig.ReadGlobalConfig()
+	asrt.NoError(t, err)
+
+	globalconfig.IsInternetActiveNetResolver = netResolverStub{
+		sleepTime: 0,
+	}
+
+	// should return true
+	asrt.True(t, globalconfig.IsInternetActive())
+	// should have set the IsInternetActiveAlreadyChecked to true
+	asrt.True(t, globalconfig.IsInternetActiveAlreadyChecked)
+	// result should still be true
+	asrt.True(t, globalconfig.IsInternetActiveResult)
+	// and calling it again, should also still be true
+	asrt.True(t, globalconfig.IsInternetActive())
 }
