@@ -51,7 +51,7 @@ var WebTag = "20200613_global_homeadditions" // Note that this can be overridden
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20200501_mariadb_10.5"
+var BaseDBTag = "20200624_longer_mysql_timeout"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin/phpmyadmin"
