@@ -108,6 +108,11 @@ func ReadGlobalConfig() error {
 	if DdevGlobalConfig.LastStartedVersion == "" {
 		DdevGlobalConfig.LastStartedVersion = "v0.0"
 	}
+	// If they set the internetdetectiontimeout below default, just reset to default
+	// and ignore the setting.
+	if DdevGlobalConfig.InternetDetectionTimeout < nodeps.InternetDetectionTimeoutDefault {
+		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
+	}
 
 	err = ValidateGlobalConfig()
 	if err != nil {
@@ -140,7 +145,8 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #
 # In unusual cases the default value to wait to detect internet availability is too short.
 # You can adjust this value higher to make it less likely that ddev will declare internet
-# unavailable, but ddev may wait longer on some commands.
+# unavailable, but ddev may wait longer on some commands. This should not be set below the default 750
+# ddev will ignore low values, as they're not useful
 # internet_detection_timeout_ms: 750
 
 # instrumentation_user: <your_username> # can be used to give ddev specific info about who you are
