@@ -149,7 +149,8 @@ const (
 	DdevDefaultMailhogPort      = "8025"
 	DdevDefaultMailhogHTTPSPort = "8026"
 	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
-	DdevDefaultTLD = "ddev.site"
+	DdevDefaultTLD                  = "ddev.site"
+	InternetDetectionTimeoutDefault = 750
 )
 
 // IsValidProvider is a helper function to determine if a provider value is valid, returning

@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,8 +39,11 @@ func TestGetFreePort(t *testing.T) {
 	for ; i < max; i++ {
 		ports = append(ports, strconv.Itoa(i))
 	}
-	err = globalconfig.ReservePorts("TestGetFreePort", ports)
+	err = globalconfig.ReservePorts(t.Name(), ports)
 	assert.NoError(err)
+	t.Cleanup(func() {
+		_ = globalconfig.RemoveProjectInfo(t.Name())
+	})
 
 	for try := 0; try < 5; try++ {
 		port, err := globalconfig.GetFreePort(dockerIP)
@@ -64,18 +68,20 @@ func TestSetProjectAppRoot(t *testing.T) {
 	// Make sure existing project with no approot works
 
 	// Non-existing approot should cause a fail
-	err := globalconfig.SetProjectAppRoot("junk", "/nowhere/junk-approot-1")
+	err := globalconfig.SetProjectAppRoot(t.Name(), "/nowhere/junk-approot-1")
 	assert.Error(err)
+	_ = globalconfig.RemoveProjectInfo(t.Name())
 
 	// Create a project in a valid directory
 	tmpDir := testcommon.CreateTmpDir(t.Name())
-	defer os.RemoveAll(tmpDir)
 	err = globalconfig.SetProjectAppRoot(t.Name(), tmpDir)
 	assert.NoError(err)
-	//nolint: errcheck
-	defer globalconfig.RemoveProjectInfo(t.Name())
 
-	// nolint: errcheck
+	t.Cleanup(func() {
+		_ = globalconfig.RemoveProjectInfo(t.Name())
+		_ = os.RemoveAll(tmpDir)
+	})
+
 	project := globalconfig.GetProject(t.Name())
 	require.NotNil(t, project)
 
@@ -112,13 +118,13 @@ func TestSetProjectAppRoot(t *testing.T) {
 	assert.Equal(tmpDir, project.AppRoot)
 }
 
-type netResolverStub struct {
+type internetActiveNetResolverStub struct {
 	sleepTime time.Duration
 	err       error
 }
 
 // LookupHost is a custom version of net.LookupHost that just wastes some time and then returns
-func (t netResolverStub) LookupHost(ctx context.Context, _ string) ([]string, error) {
+func (t internetActiveNetResolverStub) LookupHost(ctx context.Context, _ string) ([]string, error) {
 	select {
 	case <-time.After(t.sleepTime):
 	case <-ctx.Done():
@@ -127,18 +133,19 @@ func (t netResolverStub) LookupHost(ctx context.Context, _ string) ([]string, er
 	return nil, t.err
 }
 
-// resetVariables resets the global variables IsInternetActive() uses back to their defaults
-func resetVariables() {
+// internetActiveResetVariables resets the global variables IsInternetActive() uses back to their defaults
+func internetActiveResetVariables() {
 	globalconfig.IsInternetActiveNetResolver = net.DefaultResolver
 	globalconfig.IsInternetActiveAlreadyChecked = false
 	globalconfig.IsInternetActiveResult = false
+	globalconfig.DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
 }
 
 // TestIsInternetActiveErrorOccurred tests if IsInternetActive() returns false when LookupHost returns an error
 func TestIsInternetActiveErrorOccurred(t *testing.T) {
-	resetVariables()
+	internetActiveResetVariables()
 
-	globalconfig.IsInternetActiveNetResolver = netResolverStub{
+	globalconfig.IsInternetActiveNetResolver = internetActiveNetResolverStub{
 		sleepTime: 0,
 		err:       errors.New("test error"),
 	}
@@ -148,9 +155,9 @@ func TestIsInternetActiveErrorOccurred(t *testing.T) {
 
 // TestIsInternetActiveTimeout tests if IsInternetActive() returns false when it times out
 func TestIsInternetActiveTimeout(t *testing.T) {
-	resetVariables()
+	internetActiveResetVariables()
 
-	globalconfig.IsInternetActiveNetResolver = netResolverStub{
+	globalconfig.IsInternetActiveNetResolver = internetActiveNetResolverStub{
 		sleepTime: 1000 * time.Millisecond,
 	}
 
@@ -160,7 +167,7 @@ func TestIsInternetActiveTimeout(t *testing.T) {
 // TestIsInternetActiveAlreadyChecked tests if IsInternetActive() returns true when it has already
 // been called and returned true on an earlier execution.
 func TestIsInternetActiveAlreadyChecked(t *testing.T) {
-	resetVariables()
+	internetActiveResetVariables()
 
 	globalconfig.IsInternetActiveAlreadyChecked = true
 	globalconfig.IsInternetActiveResult = true
@@ -171,11 +178,9 @@ func TestIsInternetActiveAlreadyChecked(t *testing.T) {
 // TestIsInternetActive tests if IsInternetActive() returns true, when the LookupHost call goes well
 // and if it properly sets the globals so it won't execute the LookupHost again.
 func TestIsInternetActive(t *testing.T) {
-	resetVariables()
-	err := globalconfig.ReadGlobalConfig()
-	asrt.NoError(t, err)
+	internetActiveResetVariables()
 
-	globalconfig.IsInternetActiveNetResolver = netResolverStub{
+	globalconfig.IsInternetActiveNetResolver = internetActiveNetResolverStub{
 		sleepTime: 0,
 	}
 

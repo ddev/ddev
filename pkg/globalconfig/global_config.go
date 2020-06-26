@@ -92,7 +92,7 @@ func ReadGlobalConfig() error {
 	}
 
 	// ReadConfig config values from file.
-	DdevGlobalConfig = GlobalConfig{InternetDetectionTimeout: 750}
+	DdevGlobalConfig = GlobalConfig{InternetDetectionTimeout: nodeps.InternetDetectionTimeoutDefault}
 	err = yaml.Unmarshal(source, &DdevGlobalConfig)
 	if err != nil {
 		return err
