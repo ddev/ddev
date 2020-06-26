@@ -34,7 +34,9 @@ ddev export-db someproject > ~/tmp/someproject.sql`,
 		app := projects[0]
 
 		if app.SiteStatus() != ddevapp.SiteRunning {
-			util.Failed("ddev can't export-db until the project is started, please start it first.")
+			if err = app.Start(); err != nil {
+				util.Failed("Failed to start %s: %v", app.Name, err)
+			}
 		}
 
 		err = app.ExportDB(outFileName, gzipOption, exportTargetDB)
