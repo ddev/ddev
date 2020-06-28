@@ -12,7 +12,6 @@
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 16.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
     * Windows 10 (all editions) with WSL2 (version 2004 or later)
     * (Non-WSL2) Windows 10 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
-    * (Legacy) Windows 10 Home (or other Windows version) with [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/)
 
 ### Using ddev alongside other development environments
 
@@ -48,7 +47,7 @@ ddev poweroff && brew upgrade ddev
 
 **This is the recommended installation method for all Windows users that are on Windows 10 2004 or higher.** If you don't have this version yet, or if you don't want to use WSL2, please follow the legacy instructions for Windows below.
 
-**All Windows 10 editions (including Windows 10 Home) support WSL2**. Docker Toolbox support for DDEV will be deprecated, as we'll move testing capacity towards WSL2. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box 🚀
+**All Windows 10 editions (including Windows 10 Home) support WSL2**. Docker Toolbox support for DDEV is deprecated and will be removed, as we'll move testing capacity towards WSL2. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box 🚀
 
 Take the steps below to install DDEV into WSL2.
 
@@ -57,7 +56,7 @@ Take the steps below to install DDEV into WSL2.
 * Install Docker Desktop for Windows (versions 2.3.0.2 and higher automatically use the WSL2 backend): [download Docker Desktop for Windows from Docker Hub](https://hub.docker.com/editions/community/docker-ce-desktop-windows/).
 * Go to Docker Desktop settings > Resources > WSL integration > enable integration for your distro (now `docker` commands will be available from within your WSL2 distro).
 * Install [Chocolatey](https://chocolatey.org/install) on Windows.
-* Open a PowerShell terminal with administrator rights and run `choco install mkcert`
+* Open a git-bash or PowerShell terminal with administrator rights and install mkcert by running `choco install mkcert`
 * Run `mkcert -install`. Your certificates are installed in `%localappdata%\mkcert`, we'll need these later on.
 * Open the Ubuntu 20.04 terminal from the Windows start menu.
 * Run `export CAROOT=/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert`. This will make sure that `mkcert` on Linux uses your Windows certificates when issuing SSL certificates, so you don't get SSL warnings in your browser on Windows.
@@ -67,7 +66,7 @@ Take the steps below to install DDEV into WSL2.
   > Using the local CA at "/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert"
 * That's it! You have now installed DDEV on WSL2 🎉 Remember to run all `ddev` commands in your Ubuntu/WSL2 terminal, **not** in PowerShell/Command Prompt.
 
-**Make sure you put your projects in the Linux filesystem (e.g. /home/LINUX_USERNAME), _not_ in the Windows filesystem (/mnt/c), for a much better performance.**
+**Make sure you put your projects in the Linux filesystem (e.g. /home/LINUX_USERNAME), _not_ in the Windows filesystem (/mnt/c), because you'll get vastly better performance on the Linux filesystem.**
 
 ### Installation or Upgrade - Windows (legacy)
 
