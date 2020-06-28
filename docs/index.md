@@ -59,10 +59,9 @@ Take the steps below to install DDEV into WSL2.
 * Open a git-bash terminal with administrator rights and install mkcert by running `choco install mkcert`
 * In git-bash, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
 * In git-bash, run the command `setx CAROOT "$(mkcert -CAROOT)" && setx WSLENV "CAROOT/p;$WSLENV"`. This will set WSL2 to use the Certificate Authority installed on the Windows side.
-* Open the Ubuntu 20.04 terminal from the Windows start menu.
-* Run `export CAROOT=/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert`. This will make sure that `mkcert` on Linux uses your Windows certificates when issuing SSL certificates, so you don't get SSL warnings in your browser on Windows.
+* Open the WSL2 terminal from the Windows start menu.
 * Now we'll install DDEV **for Linux** within WSL2. Open your WSL2 distro and follow the instructions for Linux below, **then come back here**.
-* In your WSL2 distro, run `mkcert -install` and when it asks, provide your sudo password. you'll notice that mkcert will use your Windows CA certificates 🚀:
+* In your WSL2 distro, run `mkcert -install` and when it asks, provide your sudo password. you'll notice that mkcert will use your Windows CA certificates 🚀:q
   > Using the local CA at "/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert"
 * That's it! You have now installed DDEV on WSL2 🎉 Remember to run all `ddev` commands in your Ubuntu/WSL2 terminal, **not** in git-bash/PowerShell/Command Prompt.
 
