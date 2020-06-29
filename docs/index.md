@@ -10,8 +10,8 @@
 * OS Support
     * macOS Sierra and higher (macOS 10.12 and higher; it should run anywhere Docker Desktop for Mac runs.
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 16.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
-    * Windows 10 Pro or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
-    * Windows 10 Home (or other Windows version) with [Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/)
+    * Windows 10 (all editions) with WSL2 (version 2004 or later)
+    * (Non-WSL2) Windows 10 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
 
 ### Using ddev alongside other development environments
 
@@ -35,7 +35,7 @@ brew tap drud/ddev && brew install ddev
 
 If you would like more frequent "edge" releases then use `brew tap drud/ddev-edge` instead.
 
-(Optional) As a one-time initialization, run `mkcert -install`. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
+As a one-time initialization, run `mkcert -install`. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
 
 Later, to upgrade to a newer version of ddev, run:
 
@@ -43,11 +43,34 @@ Later, to upgrade to a newer version of ddev, run:
 ddev poweroff && brew upgrade ddev
 ```
 
-### Installation or Upgrade - Windows
+### Installation or Upgrade - Windows (WSL2)
+
+**This is the recommended installation method for all Windows users that are on Windows 10 2004 or higher.** If you don't have this version yet, or if you don't want to use WSL2, please follow the legacy instructions for Windows below.
+
+**All Windows 10 editions (including Windows 10 Home) support WSL2**. Docker Toolbox support for DDEV is deprecated and will be removed, as we'll move testing capacity towards WSL2. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box 🚀
+
+Take the steps below to install DDEV into WSL2.
+
+* Install WSL2 by [following Microsoft's docs](https://docs.microsoft.com/en-us/windows/wsl/install-win10). Make sure the WSL version is set to 2: `wsl --set-default-version 2`
+* Install a WSL2 distro, e.g. [Ubuntu 20.04](https://www.microsoft.com/store/productId/9N6SVWS3RX71). Install Ubuntu (or any other distro) _before_ installing Docker, so that Ubuntu becomes the default WSL distro.
+* Install Docker Desktop for Windows (versions 2.3.0.2 and higher automatically use the WSL2 backend): [download Docker Desktop for Windows from Docker Hub](https://hub.docker.com/editions/community/docker-ce-desktop-windows/).
+* Go to Docker Desktop settings > Resources > WSL integration > enable integration for your distro (now `docker` commands will be available from within your WSL2 distro).
+* Install [Chocolatey](https://chocolatey.org/install) on Windows.
+* Open a git-bash terminal with administrator rights and install mkcert by running `choco install mkcert`
+* In git-bash, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
+* In git-bash, run the command `setx CAROOT "$(mkcert -CAROOT)" && setx WSLENV "CAROOT/p;$WSLENV"`. This will set WSL2 to use the Certificate Authority installed on the Windows side.
+* Open the WSL2 terminal from the Windows start menu.
+* Now we'll install DDEV **for Linux** within WSL2. Open your WSL2 distro and follow the instructions for Linux below, **then come back here**.
+* In your WSL2 distro, run `mkcert -install` and when it asks, provide your sudo password. you'll notice that mkcert will use your Windows CA certificates 🚀:q
+  > Using the local CA at "/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert"
+* That's it! You have now installed DDEV on WSL2 🎉 Remember to run all `ddev` commands in your Ubuntu/WSL2 terminal, **not** in git-bash/PowerShell/Command Prompt.
+
+**Make sure you put your projects in the Linux filesystem (e.g. /home/LINUX_USERNAME), _not_ in the Windows filesystem (/mnt/c), because you'll get vastly better performance on the Linux filesystem.**
+
+### Installation or Upgrade - Windows (legacy)
 
 * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new terminal or cmd window and start using ddev.
 * If you use [chocolatey](https://chocolatey.org/) (highly recommended), then you can just `choco install ddev` from an administrative-privileged shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
-* As a one-time initialization, run `mkcert -install`
 * Most people interact with ddev on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although ddev does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
 
 ### Installation/Upgrade Script - Linux and macOS
@@ -70,7 +93,7 @@ You can also easily perform the installation or upgrade manually if preferred. d
 * Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 * Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
 * Run `ddev` to test your installation. You should see ddev's command usage output.
-* (Optional) As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions
+* As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions
 
 ### Installation via package managers - Linux
 
@@ -78,7 +101,7 @@ The preferred Linux package manager is [Linuxbrew](http://linuxbrew.sh/) : `brew
 
 We also currently maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
 
-(Optional) As a one-time initialization, run `mkcert -install`, which may require your sudo password. See below for additional information.
+As a one-time initialization, run `mkcert -install`, which may require your sudo password. See below for additional information.
 
 ### Linux `mkcert -install` additional instructions
 
