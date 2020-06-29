@@ -4,7 +4,6 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
@@ -76,7 +75,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			util.Warning("Could not perform update check: %v", err)
 		}
 
-		if timeToCheckForUpdates && nodeps.IsInternetActive() {
+		if timeToCheckForUpdates && globalconfig.IsInternetActive() {
 			// Recreate the updatefile with current time so we won't do this again soon.
 			err = updatecheck.ResetUpdateTime(updateFile)
 			if err != nil {
@@ -126,7 +125,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			event = fullCommand[1]
 		}
 
-		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SegmentKey != "" && nodeps.IsInternetActive() && len(fullCommand) > 1 {
+		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
 			ddevapp.SetInstrumentationBaseTags()
 			ddevapp.SendInstrumentationEvents(event)
 		}

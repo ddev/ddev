@@ -1726,7 +1726,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	}
 
 	for _, name := range app.GetHostnames() {
-		if app.UseDNSWhenPossible && nodeps.IsInternetActive() {
+		if app.UseDNSWhenPossible && globalconfig.IsInternetActive() {
 			hostIPs, err := net.LookupHost(name)
 			// If we had successful lookup and dockerIP matches
 			// (which won't happen on Docker Toolbox) then don't bother

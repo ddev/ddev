@@ -72,6 +72,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("nfs-mount-enabled=%v", globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal)
 
 	output.UserOut.Printf("router-bind-all-interfaces=%v", globalconfig.DdevGlobalConfig.RouterBindAllInterfaces)
+	output.UserOut.Printf("internet-detection-timeout-ms=%v", globalconfig.DdevGlobalConfig.InternetDetectionTimeout)
 }
 
 func init() {

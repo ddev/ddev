@@ -1,8 +1,10 @@
 package globalconfig
 
 import (
+	"context"
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -14,6 +16,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // DdevGlobalConfigName is the name of the global config file.
@@ -35,15 +38,16 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainersGlobal    []string                `yaml:"omit_containers,flow"`
-	NFSMountEnabledGlobal   bool                    `yaml:"nfs_mount_enabled"`
-	InstrumentationOptIn    bool                    `yaml:"instrumentation_opt_in"`
-	RouterBindAllInterfaces bool                    `yaml:"router_bind_all_interfaces"`
-	DeveloperMode           bool                    `yaml:"developer_mode,omitempty"`
-	InstrumentationUser     string                  `yaml:"instrumentation_user,omitempty"`
-	LastStartedVersion      string                  `yaml:"last_started_version"`
-	MkcertCARoot            string                  `yaml:"mkcert_caroot"`
-	ProjectList             map[string]*ProjectInfo `yaml:"project_info"`
+	OmitContainersGlobal     []string                `yaml:"omit_containers,flow"`
+	NFSMountEnabledGlobal    bool                    `yaml:"nfs_mount_enabled"`
+	InstrumentationOptIn     bool                    `yaml:"instrumentation_opt_in"`
+	RouterBindAllInterfaces  bool                    `yaml:"router_bind_all_interfaces"`
+	InternetDetectionTimeout int64                   `yaml:"internet_detection_timeout_ms"`
+	DeveloperMode            bool                    `yaml:"developer_mode,omitempty"`
+	InstrumentationUser      string                  `yaml:"instrumentation_user,omitempty"`
+	LastStartedVersion       string                  `yaml:"last_started_version"`
+	MkcertCARoot             string                  `yaml:"mkcert_caroot"`
+	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
@@ -88,7 +92,7 @@ func ReadGlobalConfig() error {
 	}
 
 	// ReadConfig config values from file.
-	DdevGlobalConfig = GlobalConfig{}
+	DdevGlobalConfig = GlobalConfig{InternetDetectionTimeout: nodeps.InternetDetectionTimeoutDefault}
 	err = yaml.Unmarshal(source, &DdevGlobalConfig)
 	if err != nil {
 		return err
@@ -103,6 +107,11 @@ func ReadGlobalConfig() error {
 	// Make sure that LastStartedVersion always has a valid value
 	if DdevGlobalConfig.LastStartedVersion == "" {
 		DdevGlobalConfig.LastStartedVersion = "v0.0"
+	}
+	// If they set the internetdetectiontimeout below default, just reset to default
+	// and ignore the setting.
+	if DdevGlobalConfig.InternetDetectionTimeout < nodeps.InternetDetectionTimeoutDefault {
+		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
 	}
 
 	err = ValidateGlobalConfig()
@@ -133,6 +142,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #
 # You can enable nfs mounting for all projects with
 # nfs_mount_enabled: true
+#
+# In unusual cases the default value to wait to detect internet availability is too short.
+# You can adjust this value higher to make it less likely that ddev will declare internet
+# unavailable, but ddev may wait longer on some commands. This should not be set below the default 750
+# ddev will ignore low values, as they're not useful
+# internet_detection_timeout_ms: 750
 
 # instrumentation_user: <your_username> # can be used to give ddev specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
@@ -370,4 +385,47 @@ func fileExists(name string) bool {
 		}
 	}
 	return true
+}
+
+var IsInternetActiveAlreadyChecked = false
+var IsInternetActiveResult = false
+
+// IsInternetActiveNetResolver wraps the standard DNS resolver.
+// In order to override net.DefaultResolver with a stub, we have to define an
+// interface on our own since there is none from the standard library.
+var IsInternetActiveNetResolver interface {
+	LookupHost(ctx context.Context, host string) (addrs []string, err error)
+} = net.DefaultResolver
+
+//IsInternetActive() checks to see if we have a viable
+// internet connection. It just tries a quick DNS query.
+// This requires that the named record be query-able.
+// This check will only be made once per command run.
+func IsInternetActive() bool {
+	// if this was already checked, return the result
+	if IsInternetActiveAlreadyChecked {
+		return IsInternetActiveResult
+	}
+
+	timeout := time.Duration(DdevGlobalConfig.InternetDetectionTimeout) * time.Millisecond
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	randomURL := nodeps.RandomString(10) + ".ddev.site"
+	addrs, err := IsInternetActiveNetResolver.LookupHost(ctx, randomURL)
+
+	// Internet is active (active == true) if both err and ctx.Err() were nil
+	active := err == nil && ctx.Err() == nil
+	if os.Getenv("DDEV_DEBUG") != "" {
+		output.UserOut.Printf("IsInternetActive DEBUG: err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, randomURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, randomURL, DdevGlobalConfig.InternetDetectionTimeout)
+	}
+	if active == false {
+		output.UserOut.Println("Internet connection not detected")
+	}
+
+	// remember the result to not call this twice
+	IsInternetActiveAlreadyChecked = true
+	IsInternetActiveResult = active
+
+	return active
 }
