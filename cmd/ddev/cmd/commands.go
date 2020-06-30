@@ -231,12 +231,12 @@ func findDirectiveInScript(script string, directive string) string {
 	return ""
 }
 
-// populateExamplesAndCommands grabs packr2 assets
+// populateExamplesCommandsHomeadditions grabs packr2 assets
 // When the items in the assets directory are changed, the packr2 command
 // must be run again in this directory (cmd/ddev/cmd) to update the saved
 // embedded files.
 // "make packr2" can be used to update the packr2 cache.
-func populateExamplesAndCommands() error {
+func populateExamplesCommandsHomeadditions() error {
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		return nil
