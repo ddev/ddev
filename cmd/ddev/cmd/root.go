@@ -149,16 +149,20 @@ func init() {
 
 	output.LogSetUp()
 
-	err := populateExamplesAndCommands()
-	if err != nil {
-		util.Warning("populateExamplesAndCommands() failed: %v", err)
-	}
+	// We really don't want ~/.ddev or .ddev/homeadditions or .ddev/.globalcommands to have root ownership, breaks things.
+	if os.Geteuid() == 0 {
+		output.UserOut.Warning("Not populating custom commands or hostadditions because running with root privileges")
+	} else {
+		err := populateExamplesCommandsHomeadditions()
+		if err != nil {
+			util.Warning("populateExamplesAndCommands() failed: %v", err)
+		}
 
-	err = addCustomCommands(RootCmd)
-	if err != nil {
-		util.Warning("Adding custom commands failed: %v", err)
+		err = addCustomCommands(RootCmd)
+		if err != nil {
+			util.Warning("Adding custom commands failed: %v", err)
+		}
 	}
-
 }
 
 func instrumentationNotSetUpWarning() {

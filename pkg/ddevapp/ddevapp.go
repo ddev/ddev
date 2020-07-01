@@ -957,6 +957,13 @@ func (app *DdevApp) CheckExistingAppInApproot() error {
 
 // GenerateWebserverConfig generates the default nginx and apache config files
 func (app *DdevApp) GenerateWebserverConfig() error {
+	// Prevent running as root for most cases
+	// We really don't want ~/.ddev to have root ownership, breaks things.
+	if os.Geteuid() == 0 {
+		output.UserOut.Warning("not generating webserver config files because running with root privileges")
+		return nil
+	}
+
 	var items = map[string]string{
 		"nginx":                         app.GetConfigPath(filepath.Join("nginx_full", "nginx-site.conf")),
 		"apache":                        app.GetConfigPath(filepath.Join("apache", "apache-site.conf")),
