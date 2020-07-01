@@ -2971,17 +2971,19 @@ func TestHostDBPort(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	commandsDir := filepath.Join(site.Dir, ".ddev", "commands", "host")
-	err := os.MkdirAll(commandsDir, 0755)
-	assert.NoError(err)
-	err = fileutil.CopyFile(filepath.Join(testDir, "testdata", t.Name(), "showport"), filepath.Join(commandsDir, "showport"))
-	require.NoError(t, err)
-
 	app, err := ddevapp.NewApp(site.Dir, false, "")
+	assert.NoError(err)
+
+	showportPath := app.GetConfigPath("commands/host/showport")
+	err = os.MkdirAll(filepath.Dir(showportPath), 0755)
+	assert.NoError(err)
+	err = fileutil.CopyFile(filepath.Join(testDir, "testdata", t.Name(), "showport"), showportPath)
+	assert.NoError(err)
+
 	defer func() {
+		_ = os.RemoveAll(showportPath)
 		_ = app.Stop(true, false)
 	}()
-	require.NoError(t, err)
 
 	// Make sure that everything works with and without
 	// an explicitly specified hostDBPort
