@@ -1,0 +1,11 @@
+#ddev-generated
+/.gitignore
+/**/*.example
+/**/README.*
+/CMS
+/global_config.yaml
+/pantheon*
+/*compose.yaml
+/.sshimageBuild
+/.update
+/testcache
