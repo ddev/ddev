@@ -105,6 +105,13 @@ func TestCustomCommands(t *testing.T) {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
 		assert.NoError(err, "Failed to run ddev %s -h", c)
 	}
+
+	// Make sure that all the non-command stuff we installed is there
+	for _, f := range []string{"db/mysqldump.example", "db/README.txt", "web/drush.example", "web/README.txt", "host/README.txt", "host/phpstorm.example"} {
+		assert.FileExists(filepath.Join(projectCommandsDir, f))
+		assert.FileExists(filepath.Join(globalCommandsDir, f))
+	}
+
 }
 
 // TestLaunchCommand tests that the launch command behaves all the ways it should behave

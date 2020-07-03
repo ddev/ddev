@@ -13,9 +13,9 @@ import (
 	"testing"
 )
 
-// TestHomedirAdditions makes sure that extra files added to
+// TestHomeadditions makes sure that extra files added to
 // .ddev/homeadditions and ~/.ddev/homeadditions get added into the container's ~/
-func TestHomedirAdditions(t *testing.T) {
+func TestHomeadditions(t *testing.T) {
 	assert := asrt.New(t)
 
 	pwd, _ := os.Getwd()
@@ -56,8 +56,10 @@ func TestHomedirAdditions(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{})
 	assert.NoError(err)
 
-	assert.FileExists(filepath.Join(projectHomeadditionsDir, "bash_aliases.example"))
-	assert.FileExists(filepath.Join(tmpHomeGlobalHomeadditionsDir, "bash_aliases.example"))
+	for _, f := range []string{"bash_aliases.example", "README.txt"} {
+		assert.FileExists(filepath.Join(projectHomeadditionsDir, f))
+		assert.FileExists(filepath.Join(tmpHomeGlobalHomeadditionsDir, f))
+	}
 
 	app, err := ddevapp.GetActiveApp(site.Name)
 	require.NoError(t, err)
