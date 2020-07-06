@@ -28,9 +28,9 @@ Special considerations for Docker Toolbox:
 
 * __Please don't forget that Linux installation absolutely requires post-install steps (below).__
 
-* __docker-compose must be installed or upgraded separately, as it is not bundled with docker-ce on Linux, see below.__
+* __docker-compose must be installed or upgraded separately except on very recent distros, as it is not bundled with in the Docker repositories, see below.__
 
-* __Don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with ddev, except the rare case where you need the `ddev hostname` command.__
+* __Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with ddev, except the rare case where you need the `ddev hostname` command.__
 
 docker-ce installation on Linux depends on what flavor you're using. In all cases using the Ubuntu/Deb/yum repository is the preferred technique.
 

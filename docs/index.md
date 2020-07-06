@@ -80,6 +80,8 @@ That's it! You have now installed DDEV on WSL2. If you're using WSL2 for ddev (r
 
 **Make sure you put your projects in the Linux filesystem (e.g. /home/<your_username>), _not_ in the Windows filesystem (/mnt/c), because you'll get vastly better performance on the Linux filesystem.**
 
+Note that nfs-mount-enabled (and running NFS) are not required on WSL2 because it's perhaps faster without NFS.
+
 ### Installation or Upgrade - Windows (legacy)
 
 * If you use [chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.

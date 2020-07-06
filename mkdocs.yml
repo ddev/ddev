@@ -24,6 +24,7 @@ pages:
     - 'Database Server Types': 'users/extend/database_types.md'
     - 'Bash and Zsh Completion': 'users/shell-completion.md'
     - 'Additional Project Hostnames': 'users/extend/additional-hostnames.md'
+    - 'Shell Completion (bash, zsh, etc.)': 'users/shell-completion.md'
   - 'Extending ddev':
     - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'
     - 'Additional Services': 'users/extend/additional-services.md'
