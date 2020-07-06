@@ -557,9 +557,9 @@ ddev import-db <mydb.sql
 You can export a database with `ddev export-db`, which outputs to stdout or with options to a file:
 
 ```bash
-ddev export-db --file /tmp/db.sql.gz
+ddev export-db --file=/tmp/db.sql.gz
+ddev export-db --gzip=false --file=/tmp/db.sql
 ddev export-db >/tmp/db.sql.gz
-ddev export-db --gzip=false >/tmp/db.sql
 ```
 
 ### Importing static file assets
