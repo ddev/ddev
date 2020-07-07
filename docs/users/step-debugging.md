@@ -95,11 +95,13 @@ An example configuration:
 ### Visual Studio Code (vscode) Debugging Setup
 
 1. Install the [php-debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
-2. Add to the launch.json the stanza defining "Listen for xdebug" (see [config snippet](snippets/vscode_listen_for_xdebug_snippet.txt))
+2. Update the project's launch.json (.vscode/launch.json) to add "Listen for xdebug" (see [config snippet](snippets/launch.json))
 3. Set a breakpoint in your index.php. If it isn't solid red, restart.
-4. Click the vscode debug button: ![vscode debug button](images/vscode_debug_button.png).
-5. Run the "Listen for XDebug" job: ![Listen for XDebug](images/vscode_run_listen_xdebug.png)
-6. Go to a page in your project, you should hit your breakpoint.
+4. In the menu, choose Run->Start Debugging.You may have to select "Listen for XDebug" by the green arrowhead at the top left. The bottom pane of vscode should now be orange (live) and should say "Listen for XDebug".
+5. Enable XDebug with `ddev xdebug on`
+6. In a browser, visit your project, you should hit the breakpoint.
+
+Note that if you're using vscode on Windows with WSL2, you'll want the "PHP Debug" extension enabled in your distro (for example, Ubuntu). You'll also need the "Remote - WSL" extension enabled. vscode will suggest both of these to you if you have WSL2 enabled and a PHP project.
 
 ### Using Xdebug on a Port Other than the Default
 
