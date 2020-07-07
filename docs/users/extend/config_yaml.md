@@ -36,7 +36,7 @@ the .ddev/config.yaml is the primary configuration for the project.
 | phpmyadmin_https_port | port used for PHPMyAdmin URL (https) | This is sometimes changed from the default 8037 when a port conflict is discovered |
 | mailhog_port | port used in Mailhog URL | this can be changed from the default 8025 in case of port conflicts |
 | mailhog_https_port | port used in Mailhog URL | this can be changed from the default 8026 in case of port conflicts |
-| webimage_extra_packages| Add extra Debian packages to the ddev-webserver. | For example, `webimage_extra_packages: [php-yaml, php7.3-ldap]` will add those two packages |
+| webimage_extra_packages| Add extra Debian packages to the ddev-webserver. | For example, `webimage_extra_packages: [php-yaml, php-bcmath]` will add those two packages |
 | dbimage_extra_packages| Add extra Debian packages to the ddev-dbserver. | For example, `dbimage_extra_packages: ["less"]` will add those that package. |
 | use_dns_when_possible | defaults to true (using DNS instead of editing /etc/hosts) | If set to false, ddev will always update the /etc/hosts file with the project hostname instead of using DNS for name resolution |
 | project_tld | defaults to "ddev.site" so project urls become "someproject.ddev.site" | This can be changed to anything that works for you; to keep things the way they were before ddev v1.9, use "ddev.local" |

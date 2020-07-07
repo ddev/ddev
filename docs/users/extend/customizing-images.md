@@ -10,7 +10,7 @@ It's common to have a requirement for the web or db images which is not bundled 
 You can add extra Debian packages if that's all that is needed with lines like this in `.ddev/config.yaml`:
 
 ```
-webimage_extra_packages: [php-yaml, php7.3-ldap]
+webimage_extra_packages: [php-yaml, php7.3-tidy]
 dbimage_extra_packages: [telnet, netcat]
 
 ```
@@ -21,7 +21,9 @@ Then the additional packages will be built into the containers during `ddev star
 
 The web container is a Debian 10 Buster image, and its PHP distributions are packaged (thank you!) by [deb.sury.org](https://deb.sury.org/).
 
-If you need a PHP extension, most PHP extensions are built in the deb.sury.org distribution,
+If you need a PHP extension, most PHP extensions are built in the deb.sury.org distribution. You can google the extension you want, or download and search the [Packages](https://packages.sury.org/php/dists/buster/main/binary-amd64/Packages) list from the sury distribution. For example, the "bcmath" PHP extension is provided by "php-bcmath". Many packages have version-specific names, for example `php7.3-tidy`.
+
+If you need a package that is *not* a PHP package, you can view and search standard Debian packages at [packages.debian.org/stable](https://packages.debian.org/stable/), or just use google.
 
 ### Adding extra Dockerfiles for webimage and dbimage
 
@@ -43,7 +45,7 @@ ADD README.txt /
 Note that if a Dockerfile is provided, any config.yaml `webimage_extra_packages` or `dbimage_extra_packages` will be ignored. If you need to add packages as well as other custom configuration, add them to your Dockerfile with a line like
 
 ```
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests php-yaml php7.3-ldap
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests php7.3-tidy
 ```
 
 Remember that the Dockerfile is building a docker image that will be used later with ddev. At the time the Dockerfile is executing, your code is not mounted and the container is not running, it's just being built.
