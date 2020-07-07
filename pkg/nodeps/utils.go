@@ -3,6 +3,7 @@ package nodeps
 import (
 	"math/rand"
 	"os"
+	"runtime"
 	"time"
 )
 
@@ -47,4 +48,13 @@ func RandomString(length int) string {
 		b[i] = charset[seededRand.Intn(len(charset))]
 	}
 	return string(b)
+}
+
+// GetWSLDistro returns the WSL2 distro name if on Linux
+func GetWSLDistro() string {
+	wslDistro := ""
+	if runtime.GOOS == "linux" {
+		wslDistro = os.Getenv("WSL_DISTRO_NAME")
+	}
+	return wslDistro
 }
