@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"fmt"
 
@@ -247,6 +248,14 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	if os.Getenv("DDEV_DEBUG") != "" {
 		output.UserOut.Printf("ddev-live pull db %s/%s", p.OrgName, backupName)
 	}
+
+	// In WSL2 there is a docker bug where the /mnt/ddevlive-downloads gets mounted as root:root if
+	// you don't wait here.
+	wslDistro := nodeps.GetWSLDistro()
+	if wslDistro != "" {
+		time.Sleep(10 * time.Second)
+	}
+
 	cmd = fmt.Sprintf(`cd /mnt/ddevlive-downloads && count=0; until ddev-live pull db %s/%s 2>/tmp/pull.out; do sleep 1; ((count++)); if [ "$count" -ge 5 ]; then echo "failed waiting for ddev-live pull db: $(cat /tmp/pull.out)"; exit 103; fi; done`, p.OrgName, backupName)
 	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
 	w := strings.Split(out, " ")
