@@ -17,6 +17,12 @@ dbimage_extra_packages: [telnet, netcat]
 
 Then the additional packages will be built into the containers during `ddev start`
 
+### How to figure out what packages you need
+
+The web container is a Debian 10 Buster image, and its PHP distributions are packaged (thank you!) by [deb.sury.org](https://deb.sury.org/).
+
+If you need a PHP extension, most PHP extensions are built in the deb.sury.org distribution,
+
 ### Adding extra Dockerfiles for webimage and dbimage
 
 For more complex requirements, you can add .ddev/web-build/Dockerfile or .ddev/db-build/Dockerfile.
