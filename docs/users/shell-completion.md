@@ -6,7 +6,7 @@ Shells like bash and zsh need help to do this though, they have to know what the
 
 ### tar Archive of Completion Scripts for Manual Deployment
 
-Although most people will use techniques like homebrew for installation, a tar archive of the shell completion scripts is available in each release, called "ddev_shell_completion_scripts.<version>.tar.gz". If you need to manually install, you can download and untar the scripts, then copy them as needed to where they have to go. For example, `sudo cp ddev_bash_completion.sh /etc/bash_completion.d/ddev`.
+Although most people will use techniques like homebrew for installation, a tar archive of the shell completion scripts is available in each release, called "ddev_shell_completion_scripts.\<version\>.tar.gz". If you need to manually install, you can download and untar the scripts, then copy them as needed to where they have to go. For example, `sudo cp ddev_bash_completion.sh /etc/bash_completion.d/ddev`.
 
 Note that scripts for the fish shell and Windows Powershell are also provided, but no instructions are given here for deploying them.
 
@@ -53,7 +53,7 @@ So follow those instructions and your zsh should be set up.
 
 If you installed zsh with homebrew, ddev's completions will be automatically installed when you `brew install ddev`.
 
-Otherwise, Oh-My-Zsh may be set up very differently in different places, so as a power zsh user you'll need to put ddev_bash_completion.sh where it belongs. `echo $fpath` will show you the places that it's most likely to belong. An obvious choice is ~/.oh-my-zsh/completions if that exists, so you can `mkdir -p ~/.oh-my-zsh/completions && cp ddev_zsh_completions.sh ~/.oh-my-zsh/completions/_ddev` and then `autoload -Uz compinit && compinit`.
+Otherwise, Oh-My-Zsh may be set up very differently in different places, so as a power zsh user you'll need to put ddev_bash_completion.sh (see tar archive download above) where it belongs. `echo $fpath` will show you the places that it's most likely to belong. An obvious choice is ~/.oh-my-zsh/completions if that exists, so you can `mkdir -p ~/.oh-my-zsh/completions && cp ddev_zsh_completion.sh ~/.oh-my-zsh/completions/_ddev` and then `autoload -Uz compinit && compinit`.
 
 ### Fish Completion
 
