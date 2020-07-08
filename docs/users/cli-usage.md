@@ -57,7 +57,7 @@ DDEV works happily with most any PHP or static HTML project, although it has spe
 ```bash
 mkdir my-wp-bedrock-site
 cd my-wp-bedrock-site
-ddev config --project-type=wordpress --docroot=web --create-docroot=true
+ddev config --project-type=wordpress --docroot=web --create-docroot
 ddev start
 ddev composer create roots/bedrock
 ```
@@ -196,7 +196,7 @@ Quickstart instructions for database imports can be found under [Database Import
 ```bash
 mkdir my-typo3-site
 cd my-typo3-site
-ddev config --project-type=typo3 --docroot=public --create-docroot=true
+ddev config --project-type=typo3 --docroot=public --create-docroot
 ddev start
 ddev composer create "typo3/cms-base-distribution:^10" --prefer-dist
 ddev exec touch public/FIRST_INSTALL
@@ -252,7 +252,7 @@ Normal details of a composer build for Magento 2 are on [Magento 2 site](https:/
 
 ```bash
 mkdir ddev-magento2 && cd ddev-magento2
-ddev config --project-type=magento2 --docroot=pub --create-docroot=true
+ddev config --project-type=magento2 --docroot=pub --create-docroot
 ddev start
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
 ddev ssh
@@ -557,9 +557,9 @@ ddev import-db <mydb.sql
 You can export a database with `ddev export-db`, which outputs to stdout or with options to a file:
 
 ```bash
-ddev export-db --file /tmp/db.sql.gz
+ddev export-db --file=/tmp/db.sql.gz
+ddev export-db --gzip=false --file=/tmp/db.sql
 ddev export-db >/tmp/db.sql.gz
-ddev export-db --gzip=false >/tmp/db.sql
 ```
 
 ### Importing static file assets

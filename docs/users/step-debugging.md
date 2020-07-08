@@ -95,13 +95,15 @@ An example configuration:
 ### Visual Studio Code (vscode) Debugging Setup
 
 1. Install the [php-debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
-2. Add to the launch.json the stanza defining "Listen for xdebug" (see [config snippet](snippets/vscode_listen_for_xdebug_snippet.txt))
+2. Update the project's launch.json (.vscode/launch.json) to add "Listen for xdebug" (see [config snippet](snippets/launch.json))
 3. Set a breakpoint in your index.php. If it isn't solid red, restart.
-4. Click the vscode debug button: ![vscode debug button](images/vscode_debug_button.png).
-5. Run the "Listen for XDebug" job: ![Listen for XDebug](images/vscode_run_listen_xdebug.png)
-6. Go to a page in your project, you should hit your breakpoint.
+4. In the menu, choose Run->Start Debugging.You may have to select "Listen for XDebug" by the green arrowhead at the top left. The bottom pane of vscode should now be orange (live) and should say "Listen for XDebug".
+5. Enable XDebug with `ddev xdebug on`
+6. In a browser, visit your project, you should hit the breakpoint.
 
-## Using xdebug on a Port Other than the Default
+Note that if you're using vscode on Windows with WSL2, you'll want the "PHP Debug" extension enabled in your distro (for example, Ubuntu). You'll also need the "Remote - WSL" extension enabled. vscode will suggest both of these to you if you have WSL2 enabled and a PHP project.
+
+### Using Xdebug on a Port Other than the Default
 
 By default, ddev is set up to contact the default port, port 9000 on your IDE. However, if you have something else listening on that port, you'll need to change the port. (The most likely conflict is php-fpm, which also has 9000 as a default port.)
 
@@ -113,3 +115,18 @@ xdebug.remote_port=11011
 ```
 
 * Then change your IDE's configuration to listen on the new port.
+
+### Troubleshooting Xdebug
+
+Debugging Xdebug in any setup can be a little trouble, but here are the steps to take. The steps here assume that you're using PHPStorm, but they can be adapted to any IDE.
+
+* Make sure you have a 2019+ version of PHPStorm. Many PHPStorm versions up to and (including?) 2018.3 were incompatible with current XDebug versions.
+* Make sure xdebug has been enabled in ddev; it's disabled by default for performance reasons. Most people use `ddev xdebug on` to enable it when they want it, and `ddev xdebug off` when they're done with it, but it can also be enabled in `.ddev/config.yaml`.
+* Don't assume that some obscure piece of code is being executed and put a breakpoint there. Start by putting a breakpoint at the first executable line in your index.php. Oh-so-many times people think it should be stopping, but their code is not being executed.
+* `ddev ssh` into the web container. Can you `ping host.docker.internal` (and get responses)? If you can't, you might have an over-aggressive firewall.
+* In PHPStorm, disable the "listen for connections" button so it won't listen. Or just exit PHPStorm.
+* `ddev ssh`: Can `telnet host.docker.internal 9000` connect? If it does, you have something else running on port 9000, probably php-fpm. On the host, use `sudo lsof -i :9000 -sTCP:LISTEN` to find out what is there and stop it, or [change the xdebug port and configure PHPStorm to use the new one](#using-xdebug-on-a-port-other-than-the-default) . Don't continue debugging until your telnet command does not connect.
+* Now click the listen button on PHPStorm to start it listening for connections.
+* `ddev ssh` and try the `telnet host.docker.internal 9000` again. It should connect. If not, maybe PHPStorm is not listening, or not configured to listen on port 9000?
+* Check to make sure that Xdebug is enabled. You can use `php -i | grep grep Xdebug` inside the container, or use any other technique you want that gives the output of `phpinfo()`, including Drupal's admin/reports/status/php. You should see `with Xdebug v2.9.6, Copyright (c) 2002-2020` and `php -i | grep "xdebug.remote_enable"` should give you `xdebug.remote_enable: On`.
+* Set a breakpoint in the first relevant line of the index.php of your project and then visit the site in a browser. It should stop at that first line.

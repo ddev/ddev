@@ -36,7 +36,7 @@ the .ddev/config.yaml is the primary configuration for the project.
 | phpmyadmin_https_port | port used for PHPMyAdmin URL (https) | This is sometimes changed from the default 8037 when a port conflict is discovered |
 | mailhog_port | port used in Mailhog URL | this can be changed from the default 8025 in case of port conflicts |
 | mailhog_https_port | port used in Mailhog URL | this can be changed from the default 8026 in case of port conflicts |
-| webimage_extra_packages| Add extra Debian packages to the ddev-webserver. | For example, `webimage_extra_packages: [php-yaml, php7.3-ldap]` will add those two packages |
+| webimage_extra_packages| Add extra Debian packages to the ddev-webserver. | For example, `webimage_extra_packages: [php-yaml, php-bcmath]` will add those two packages |
 | dbimage_extra_packages| Add extra Debian packages to the ddev-dbserver. | For example, `dbimage_extra_packages: ["less"]` will add those that package. |
 | use_dns_when_possible | defaults to true (using DNS instead of editing /etc/hosts) | If set to false, ddev will always update the /etc/hosts file with the project hostname instead of using DNS for name resolution |
 | project_tld | defaults to "ddev.site" so project urls become "someproject.ddev.site" | This can be changed to anything that works for you; to keep things the way they were before ddev v1.9, use "ddev.local" |
@@ -56,4 +56,5 @@ The $HOME/.ddev/global_config.yaml has a few key global config options.
 | omit_containers | Allows the project to not load specified containers | For example, `omit_containers: [ "dba", "ddev-ssh-agent"]`. Currently only these containers are supported. Note that you cannot omit the "db" container in the global configuration, but you can in the per-project .ddev/config.yaml. |
 | instrumentation_opt_in | Opt in or out of instrumentation reporting | If true, anonymous usage information is sent to ddev via [segment](https://segment.com) |
 | router_bind_all_interfaces | Bind on all network interfaces | If true, ddev-router will bind on all network interfaces instead of just localhost, exposing ddev projects to your local network. If you set this to true, you may consider `omit_containers: ["dba"]` so that the PHPMyAdmin port is not available.  |
+| internet_detection_timeout_ms | Internet detection timeout | ddev must detect whether the internet is working to determine whether to add hostnames to /etc/hosts. It uses a DNS query and times it out by default at 750ms. In rare cases you may need to increase this value if you have slow but working internet. |
 | developer_mode | Set developer mode | If true, developer_mode is set. This is not currently used. |

@@ -155,7 +155,7 @@ func TestConfigSetValues(t *testing.T) {
 	additionalFQDNs := strings.Join(additionalFQDNsSlice, ",")
 	omitContainersSlice := []string{"dba", "ddev-ssh-agent"}
 	omitContainers := strings.Join(omitContainersSlice, ",")
-	webimageExtraPackagesSlice := []string{"php-ldap", "php7.3-tidy"}
+	webimageExtraPackagesSlice := []string{"php-bcmath", "php7.3-tidy"}
 	webimageExtraPackages := strings.Join(webimageExtraPackagesSlice, ",")
 	dbimageExtraPackagesSlice := []string{"netcat", "ncdu"}
 	dbimageExtraPackages := strings.Join(dbimageExtraPackagesSlice, ",")

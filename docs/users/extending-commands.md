@@ -163,6 +163,6 @@ hooks:
 ## Adding Additional Debian Packages (PHP Modules) Example
 
 ```yaml
-webimage_extra_packages: ["php7.2-ldap", "php7.2-tidy"]
+webimage_extra_packages: ["php-bcmath", "php7.3-tidy"]
 dbimage_extra_packages: ["vim"]
 ```

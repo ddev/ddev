@@ -27,8 +27,8 @@ func main() {
 	if err != nil {
 		util.Failed("could not generate ddev_fish_completion.sh: %v", err)
 	}
-	err = cmd.RootCmd.GenPowerShellCompletionFile(filepath.Join(targetDir, "ddev_powershell_completion.sh"))
+	err = cmd.RootCmd.GenPowerShellCompletionFile(filepath.Join(targetDir, "ddev_powershell_completion.ps1"))
 	if err != nil {
-		util.Failed("could not generate ddev_powershell_completion.sh: %v", err)
+		util.Failed("could not generate ddev_powershell_completion.ps1: %v", err)
 	}
 }

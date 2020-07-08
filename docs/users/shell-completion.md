@@ -10,7 +10,7 @@ Although most people will use techniques like homebrew for installation, a tar a
 
 Note that scripts for the fish shell and Windows Powershell are also provided, but no instructions are given here for deploying them.
 
-## Bash Completion
+## Bash Completion with Homebrew
 
 **Bash Completion with Homebrew**: The easiest way to use bash completion on either macOS or Linux is to install with homebrew. `brew install bash-completion`. When you install it though, it will warn you with something like this, which may vary on your system.
 
@@ -27,7 +27,7 @@ Then, if you're installing ddev from homebrew, each new release will automatical
 
 ### Zsh Completion
 
-**Zsh Completion with Homebrew**: This works exactly the same as bash completion. `brew install zsh-completion`. You'll get instructions something like this:
+**Zsh Completion with Homebrew**: This works exactly the same as bash completion. `brew install zsh-completions`. You'll get instructions something like this:
 
 ```bash
   if type brew &>/dev/null; then
@@ -54,3 +54,15 @@ So follow those instructions and your zsh should be set up.
 If you installed zsh with homebrew, ddev's completions will be automatically installed when you `brew install ddev`.
 
 Otherwise, Oh-My-Zsh may be set up very differently in different places, so as a power zsh user you'll need to put ddev_bash_completion.sh where it belongs. `echo $fpath` will show you the places that it's most likely to belong. An obvious choice is ~/.oh-my-zsh/completions if that exists, so you can `mkdir -p ~/.oh-my-zsh/completions && cp ddev_zsh_completions.sh ~/.oh-my-zsh/completions/_ddev` and then `autoload -Uz compinit && compinit`.
+
+### Fish Completion
+
+The fish shell's completions are also supported and are automatically installed into /usr/local/share/fish/vendor_completions.d when you install ddev via Homebrew.  If you have installed fish without homebrew, you can extract the fish completions from the ddev_shell_completion_scripts tarball that is included with each release.
+
+### Git-bash Completion
+
+Completions in git-bash are sourced from at least ~/bash_completion.d so you can use `mkdir -p ~/bash_completion.d && tar -C ~/.bash_completion.d -zxf /z/Downloads/ddev_shell_completion_scripts.v1.15.0-rc3.tar.gz ddev_bash_completion.sh && mv ~/bash_completion.d/ddev_bash_completion.sh ~/bash_completion.d/ddev.bash` to extract the bash completions and put them where they belong.
+
+### PowerShell Completion
+
+PowerShell completions are also provided in the ddev_shell_completions tarball included with each release. You can run the ddev_powershell_completion.ps1 script manually or install it so it will be run whenever PS is opened using the technique at [Run PowerShell Script When You Open PowerShell](https://superuser.com/questions/886951/run-powershell-script-when-you-open-powershell)

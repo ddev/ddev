@@ -7,6 +7,7 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 * Start with a `ddev poweroff` to make sure all containers can start fresh.
 * Temporarily turn off firewalls and virus checkers while you're troubleshooting.
 * If you have customizations (PHP overrides, nginx or Apache overrides, MySQL overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
+* Check your Docker disk space and memory allocation if you're using Docker Desktop on Windows or macOS.
 * Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](docker_installation.md#troubleshooting) for more.
 * Try the simplest possible ddev project to try to get i to work: `ddev poweroff && mkdir ~/tmp/testddev && cd ~/tmp/testddev && ddev config --project-type=php && ddev start`. Does that start up OK? If so, maybe something is wrong with the more complicated project you're trying to start.
 
@@ -136,11 +137,43 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 
 ## `ddev start` fails and logs contain "failed (28: No space left on device)" - Docker File Space
 
-If `ddev start` fails, it's most often because the web container or db container fails to start. In this case the error message from `ddev start` says something like "Failed to start <project>: db container failed: log=, err=container exited, please use 'ddev logs -s db`to find out why it failed". You can`ddev logs -s db` to find out what happened.
+If `ddev start` fails, it's most often because the web container or db container fails to start. In this case the error message from `ddev start` says something like "Failed to start <project>: db container failed: log=, err=container exited, please use 'ddev logs -s db' to find out why it failed". You can`ddev logs -s db` to find out what happened.
 
 If you see any variant of "no space left on device" in the logs when using Docker Desktop, it means that you have to increase or clean up Docker's file space. To increase the allocated space, go to "Resources" in Docker's Preferences as shown in ![Docker disk space](images/docker_disk_space.png)
 
 If you see "no space left on device" on Linux, it most likely means your filesystem is full.
+
+## `ddev start` fails with "container failed to become ready"
+
+If a container fails to become ready, it means it's failing the healthcheck.  This can happen to any of the containers, but you can usually find out quickly what the issue is with a `docker inspect` command.
+
+You may need to install `jq` for these, `brew install jq`, or just remove the "| jq" from the command and read the raw json output.
+
+For the web container, `docker inspect --format "{{json .State.Health }}" ddev-<projectname>-web | jq`
+For ddev-router, `docker inspect --format "{{json .State.Health }}" ddev-router`
+For ddev-ssh-agent, `docker inspect --format "{{json .State.Health }}" ddev-ssh-agent`
+
+Don't forget that `ddev logs` (for the web container) or `ddev logs -s db` (for the db container) are your friend.
+
+For ddev-router and ddev-ssh-agent, `docker logs ddev-router` and `docker logs ddev-ssh-agent`.
+
+## Trouble Building Dockerfiles
+
+The additional .ddev/web-build/Dockerfile capability in ddev is wonderful, but it can be hard to figure out what to put in there.
+
+The best approach for any significant Dockerfile is to `ddev ssh` and `sudo -s` and then one at a time, do the things that you plan to do with a `RUN` command in the Dockerfile.
+
+For example, if your Dockerfile were
+
+```dockerfile
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+RUN npm install --global gulp-cli
+```
+
+You could test it with `ddev ssh`, `sudo -s` and then `npm install --global gulp-cli`
+
+The error messages you get will be more informative than messages that come when the Dockerfile is processed.
 
 ## Windows-Specific Issues
 

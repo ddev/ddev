@@ -14,13 +14,15 @@ var exportTargetDB string
 // ExportDBCmd is the `ddev export-db` command.
 var ExportDBCmd = &cobra.Command{
 	Use:   "export-db [project]",
-	Short: "Dump a database to stdout or to a file",
-	Long:  `Dump a database to stdout or to a file.`,
-	Example: `ddev export-db > ~/tmp/db.sql.gz
-ddev export-db --gzip=false > ~/tmp/db.sql
-ddev export-db -f ~/tmp/db.sql.gz
-ddev export-db --gzip=false myproject > ~/tmp/myproject.sql
-ddev export-db someproject > ~/tmp/someproject.sql`,
+	Short: "Dump a database to a file or to stdout",
+	Long:  `Dump a database to a file or to stdout`,
+	Example: `ddev export-db --file=/tmp/db.sql.gz'
+ddev export-db -f /tmp/db.sql.gz
+ddev export-db --gzip=false --file /tmp/db.sql
+ddev export-db > /tmp/db.sql.gz
+ddev export-db --gzip=false > /tmp/db.sql
+ddev export-db myproject --gzip=false --file=/tmp/myproject.sql
+ddev export-db someproject --gzip=false --file=/tmp/someproject.sql `,
 	Args: cobra.RangeArgs(0, 1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()

@@ -23,7 +23,7 @@ _When upgrading, please run `ddev poweroff` and check the [release notes](https:
 
 ### Docker Installation
 
-Docker and docker-compose are required before anything will work with ddev. This is pretty easy on most environments, but see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux.
+Docker and docker-compose are required before anything will work with ddev. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux.
 
 ### Homebrew/Linuxbrew - macOS/Linux
 
@@ -33,7 +33,7 @@ For macOS and Linux users, we recommend installing and upgrading via [homebrew](
 brew tap drud/ddev && brew install ddev
 ```
 
-If you would like more frequent "edge" releases then use `brew tap drud/ddev-edge` instead.
+If you would like more frequent "edge" releases then use `brew tap drud/ddev-edge` instead.)
 
 As a one-time initialization, run `mkcert -install`. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
 
@@ -47,30 +47,45 @@ ddev poweroff && brew upgrade ddev
 
 **This is the recommended installation method for all Windows users that are on Windows 10 2004 or higher.** If you don't have this version yet, or if you don't want to use WSL2, please follow the legacy instructions for Windows below.
 
-**All Windows 10 editions (including Windows 10 Home) support WSL2**. Docker Toolbox support for DDEV is deprecated and will be removed, as we'll move testing capacity towards WSL2. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box 🚀
+**All Windows 10 editions (including Windows 10 Home) support WSL2**. Docker Toolbox support for DDEV is deprecated and will be removed, as we'll move testing capacity towards WSL2. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
 
-Take the steps below to install DDEV into WSL2.
+The WSL2 install process involves:
 
-* Install WSL2 by [following Microsoft's docs](https://docs.microsoft.com/en-us/windows/wsl/install-win10). Make sure the WSL version is set to 2: `wsl --set-default-version 2`
-* Install a WSL2 distro, e.g. [Ubuntu 20.04](https://www.microsoft.com/store/productId/9N6SVWS3RX71). Install Ubuntu (or any other distro) _before_ installing Docker, so that Ubuntu becomes the default WSL distro.
-* Install Docker Desktop for Windows (versions 2.3.0.2 and higher automatically use the WSL2 backend): [download Docker Desktop for Windows from Docker Hub](https://hub.docker.com/editions/community/docker-ce-desktop-windows/).
-* Go to Docker Desktop settings > Resources > WSL integration > enable integration for your distro (now `docker` commands will be available from within your WSL2 distro).
-* Install [Chocolatey](https://chocolatey.org/install) on Windows.
-* Open a git-bash terminal with administrator rights and install mkcert by running `choco install mkcert`
-* In git-bash, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
-* In git-bash, run the command `setx CAROOT "$(mkcert -CAROOT)" && setx WSLENV "CAROOT/p;$WSLENV"`. This will set WSL2 to use the Certificate Authority installed on the Windows side.
-* Open the WSL2 terminal from the Windows start menu.
-* Now we'll install DDEV **for Linux** within WSL2. Open your WSL2 distro and follow the instructions for Linux below, **then come back here**.
-* In your WSL2 distro, run `mkcert -install` and when it asks, provide your sudo password. you'll notice that mkcert will use your Windows CA certificates 🚀:q
-  > Using the local CA at "/mnt/c/Users/YOUR_WINDOWS_USERNAME/AppData/Local/mkcert"
-* That's it! You have now installed DDEV on WSL2 🎉 Remember to run all `ddev` commands in your Ubuntu/WSL2 terminal, **not** in git-bash/PowerShell/Command Prompt.
+* Installing Chocolatey package manager (optional).
+* One time initialization of mkcert.
+* Installing WSL2, setting version 2 as the default version, and installing a distro like Ubuntu.
+* Installing or upgrading to the latest Docker Desktop for Windows with WSL2 enabled.
+* Installing ddev inside your distro.
 
-**Make sure you put your projects in the Linux filesystem (e.g. /home/LINUX_USERNAME), _not_ in the Windows filesystem (/mnt/c), because you'll get vastly better performance on the Linux filesystem.**
+We'll walk through these in more detail. You may prefer other techniques of installation or may not need some steps, but this is the full recipe:
+
+1. If you have previously installed Docker Toolbox, please completely [uninstall Docker Toolbox](https://docs.docker.com/toolbox/toolbox_install_windows/#how-to-uninstall-toolbox).
+2. **Chocolatey:** We recommend using Chocolatey for [Chocolatey](https://chocolatey.org/install) installing required Windows apps like mkcert and git-bash. In an administrative PowerShell, `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
+3. In an administrative PowerShell: `choco install -y git mkcert`
+4. In administrative PowerShell, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
+5. Install WSL2. In an administrative PowerShell `Enable-WindowsOptionalFeature -Online -FeatureName $("VirtualMachinePlatform", "Microsoft-Windows-Subsystem-Linux")` (You will be prompted to reboot your computer.) (See [detailed documentation](https://docs.microsoft.com/en-us/windows/wsl/install-win10).)
+6. Set the default WSL version to 2: `wsl --set-default-version 2` You may be prompted to upgrade the WSL2 kernel.
+7. Download and install the WSL2 kernel from [WSL2 kernel upgrade page](https://docs.microsoft.com/en-us/windows/wsl/wsl2-kernel).
+8. Install a WSL2 distro from the Microsoft Store. We recommend [Ubuntu](https://www.microsoft.com/store/productId/9NBLGGH4MSV6).
+9. **Docker Desktop for Windows:** If you already have the latest Docker Desktop, configure it in the General Settings to use the WSL2-based engine. Otherwise install the latest Docker Desktop for Windows and select the WSL2-based engine (not legacy Hyper-V) when installing. Install via Chocolatey with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe).  Start Docker. It may prompt you to log out and log in again, or reboot.
+10. Go to Docker Desktop settings > Resources > WSL integration > enable integration for your distro (now `docker` commands will be available from within your WSL2 distro).
+11. In git-bash, run the command `setx CAROOT "$(mkcert -CAROOT)" && setx WSLENV "CAROOT/up;$WSLENV"`. This will set WSL2 to use the Certificate Authority installed on the Windows side.
+12. Optional: If you prefer to use the *Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine.
+13. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
+14. Install Linuxbrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"` (See [brew.sh](brew.sh).)
+15. `brew tap drud/ddev && brew install ddev`
+16. `sudo apt-get update && sudo apt-get install -y xdg-utils` to install the xdg-utils package that allows `ddev launch` to work.
+
+That's it! You have now installed DDEV on WSL2. If you're using WSL2 for ddev (recommended), remember to run all `ddev` commands inside the WSL2 distro.
+
+**Make sure you put your projects in the Linux filesystem (e.g. /home/<your_username>), _not_ in the Windows filesystem (/mnt/c), because you'll get vastly better performance on the Linux filesystem.**
+
+Note that nfs-mount-enabled (and running NFS) are not required on WSL2 because it's perhaps faster without NFS.
 
 ### Installation or Upgrade - Windows (legacy)
 
-* A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new terminal or cmd window and start using ddev.
-* If you use [chocolatey](https://chocolatey.org/) (highly recommended), then you can just `choco install ddev` from an administrative-privileged shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
+* If you use [chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
+* A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using ddev.
 * Most people interact with ddev on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although ddev does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
 
 ### Installation/Upgrade Script - Linux and macOS

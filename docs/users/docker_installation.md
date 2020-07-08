@@ -1,20 +1,14 @@
 ## macOS Installation: Docker Desktop for Mac
 
-Most MacOS versions and computers will run Docker Desktop for Mac. Homebrew users can `brew cask install docker` or you can download from [download.docker.com](https://download.docker.com/mac/stable/Docker.dmg).
+Docker Desktop for Mac can be installed via Homebrew (`brew cask install docker`) or can be downloaded from [download.docker.com](https://download.docker.com/mac/stable/Docker.dmg).
 
 ## Windows Installation: Docker Desktop for Windows
 
-Docker Desktop for Windows is the preferred docker environment for Windows 10 Pro and Windows 10 Enterprise.
-
-[Download Docker-ce for Windows](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe)
-
-[Chocolatey](https://chocolatey.org/install) users: `choco install docker-desktop`
-
-__Please note that you *must* share your local drives in the "settings" after installation or ddev will not be able to mount your project.__
+Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe).
 
 ## Windows Installation: Docker Toolbox
 
-Docker Toolbox support is deprecated and support will be removed in the next DDEV-Local support cycle. Please use Docker Desktop, which now runs fine on Windows 10 Home.
+Docker Toolbox support is deprecated and support will be removed in the next DDEV-Local support cycle. Please use Docker Desktop, which now runs fine on all Windows 10 (Intel) versions, including Windows 10 Home.
 
 [Download and install docker toolbox](https://download.docker.com/win/stable/DockerToolbox.exe).
 
@@ -34,23 +28,24 @@ Special considerations for Docker Toolbox:
 
 * __Please don't forget that Linux installation absolutely requires post-install steps (below).__
 
-* __docker-compose must be installed or upgraded separately, as it is not bundled with docker-ce on Linux, see below.__
+* __docker-compose must be installed or upgraded separately except on very recent distros, as it is not bundled with in the Docker repositories, see below.__
 
-* __Please never use sudo to run `ddev start`. If you do this it will set wrong permissions on files, and it means that you didn't follow the post-install instructions below to add your user to the docker group.__
+* __Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with ddev, except the rare case where you need the `ddev hostname` command.__
 
 docker-ce installation on Linux depends on what flavor you're using. In all cases using the Ubuntu/Deb/yum repository is the preferred technique.
 
-* [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+* Ubuntu 20.04+ and Debian 10+ have recent enough versions that you can `sudo apt-get update && sudo apt-get install docker.io docker-compose`
+* [Ubuntu before 20.04](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 * [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/)
 * [Debian](https://docs.docker.com/install/linux/docker-ce/debian/)
 * [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/)
 * [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/)
 
-After installing docker-ce you *must* install docker-compose separately. If using Linuxbrew you can `brew install docker-compose`, otherwise [Follow download instructions](https://docs.docker.com/compose/install/#install-compose) (select "linux" tab). This really is just downloading docker-compose binary from <https://github.com/docker/compose/releases> and installing it in /usr/local/bin with executable permissions.
+After installing docker-ce you *must* install docker-compose separately except on Ubuntu 20.04+ and Debian 10+. If using Linuxbrew you can `brew install docker-compose`, otherwise [Follow download instructions](https://docs.docker.com/compose/install/#install-compose) (select "linux" tab). This really is just downloading docker-compose binary from <https://github.com/docker/compose/releases> and installing it in /usr/local/bin with executable permissions.
 
 ### Linux Post-installation steps (required)
 
-See [Docker's post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/). You need to add your linux user to the "docker" group and configure the docker daemon to start on boot.  __Please do not ever use sudo to run `ddev start`, it will break things.__
+See [Docker's post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/). You need to add your linux user to the "docker" group and configure the docker daemon to start on boot.
 
 <a name="troubleshooting"></a>
 
@@ -59,12 +54,11 @@ See [Docker's post-installation steps](https://docs.docker.com/install/linux/lin
 Docker needs to be able to a few things for ddev to work:
 
 * Mount the project code directory from the host into the container; the project code directory is usually somewhere in a subdirectory of your home directory.
-* Mount ~/.ddev for SSL cert cache and import-db.
 * Access TCP ports on the host to serve HTTP and HTTPS. These are ports 80 and 443 by default, but they can be changed on a per-project basis.
 
-So we can use a single docker command to make sure that docker is set up to do what we want:
+We can use a single docker command to make sure that docker is set up to do what we want:
 
-**On Windows this command should be run in git-bash (or Docker Quickstart Terminal with Docker Toolbox).** In your project directory run `docker run --rm -t -p 80:80 -v "/$PWD:/tmp/projdir" -v "/$HOME:/tmp/homedir" busybox sh -c "echo ---- Project Directory && ls //tmp/projdir && echo ---- Home Directory && ls //tmp/homedir"` - you should see the contents of your home directory displayed. (On Windows, make sure you do this using git-bash or Docker Quickstart Terminal.)
+**On Windows this command should be run in git-bash).** In your project directory run `docker run --rm -t -p 80:80 -v "/$PWD:/tmp/projdir" -v "/$HOME:/tmp/homedir" busybox sh -c "echo ---- Project Directory && ls //tmp/projdir && echo ---- Home Directory && ls //tmp/homedir"` - you should see the contents of your home directory displayed. (On Windows, make sure you do this using git-bash or Docker Quickstart Terminal.)
 
 If that fails (if you get an error, or you don't see the contents of your project directory and your home directory) you'll need to troubleshoot:
 

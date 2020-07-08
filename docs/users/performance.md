@@ -37,7 +37,7 @@ Also see the debugging section below, and the special Windows debugging section.
 
 ### Debian/Ubuntu Linux NFS Setup
 
-The nfsmount_enabled feature does not really add performance on Linux systems because Docker on Linux is already quite fast. The primary reason for using it on a Linux system would be just to keep consistent with other team members working on other host OSs.
+The nfsmount_enabled feature does not really add performance on Linux systems because Docker on Linux is already quite fast. The primary reason for using it on a Linux system would be just to keep consistent with other team members working on other host OSs. However, since one can now set up NFS globally with `ddev config global --nfs-mount-enabled` it no longer needs to be set up on a project-by-project basis, so most teams can get by with just leaving NFS mounting out of the project-level config.yaml.
 
 Note that for all Linux systems, you can and should install and configure the NFS daemon and configure /etc/exports as you see fit and share the directories that you choose to share. The Debian/Ubuntu Linux script is just one way of accomplishing it.
 
@@ -89,7 +89,7 @@ So Catalina upgrade step-by-step:
 * If nothing is showing, use `nfsd checkexports` and read carefully for errors
 * Use `ps -ef | grep nfsd` to make sure nfsd is running
 * Restart nfsd with `sudo nfsd restart`
-* Add the following to your /etc/nfsd.conf:
+* Add the following to your /etc/nfs.conf:
 
   ```
   nfs.server.mount.require_resv_port = 0
