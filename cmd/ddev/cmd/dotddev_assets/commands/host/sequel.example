@@ -1,0 +1,28 @@
+#!/bin/bash
+
+## #ddev-generated
+## Description: Run Sequel Ace or SequelPro against current db
+## Usage: sequel
+## Example: "ddev sequel"
+
+# This command uses $DDEV_HOST_DB_PORT to get the port for the connection
+#
+# Both apps are free, but available only for macOS-only 
+# Find Sequel Ace in the Mac App Store or at https://sequel-ace.com/
+# Find Sequel Pro at https://www.sequelpro.com/
+
+query="mysql://root:root@127.0.0.1:${DDEV_HOST_DB_PORT}/db"
+
+app=""
+if [ -f "/Applications/Sequel Ace.app/Contents/MacOS/Sequel Ace" ]; then
+    app="Sequel Ace"
+elif [ -f "/Applications/Sequel Pro.app/Contents/MacOS/Sequel Pro" ]; then
+    app="Sequel Pro"
+fi
+
+if [ ! -z "$app" ]; then
+    echo "Opening $app..."
+    open "$query" -a "$app"
+else
+    echo "ERROR - Neither Sequel Ace nor Pro seems to be installed."
+fi
