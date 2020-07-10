@@ -21,7 +21,7 @@ fi
 phpstatus=false
 htmlaccess=false
 mailhog=false
-if curl --fail -s localhost/phpstatus >/dev/null ; then
+if curl --fail -s 127.0.0.1/phpstatus >/dev/null ; then
     phpstatus=true
     printf "phpstatus: OK "
 else
@@ -35,7 +35,7 @@ else
     printf "/var/www/html access FAILED"
 fi
 
-if curl --fail -s localhost:8025 >/dev/null; then
+if curl --fail -s 127.0.0.1:8025 >/dev/null; then
     mailhog=true
     printf "mailhog: OK " ;
 else
