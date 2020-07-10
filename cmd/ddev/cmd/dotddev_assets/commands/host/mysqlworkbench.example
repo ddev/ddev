@@ -1,12 +1,12 @@
 #!/bin/bash
 
 ## #ddev-generated
-## Description: Run MySQLWorkbench against current db
+## Description: Run MySQL Workbench against current db
 ## Usage: mysqlworkbench
 ## Example: "ddev mysqlworkbench"
 
-# Note that this examle uses $DDEV_HOST_DB_PORT to get the port for the connection
-# Mysql Workbench can be obtained from https://dev.mysql.com/downloads/workbench/
+# Note that this example uses $DDEV_HOST_DB_PORT to get the port for the connection
+# MySQL Workbench can be obtained from https://dev.mysql.com/downloads/workbench/
 
 query="root:root@127.0.0.1:${DDEV_HOST_DB_PORT}"
 
