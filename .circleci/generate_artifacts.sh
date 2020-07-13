@@ -81,7 +81,7 @@ cp ddev_windows_installer*.exe $ARTIFACTS
 tar -czf $ARTIFACTS/ddev_shell_completion_scripts.$VERSION.tar.gz *completion*.sh
 
 # Create macOS and Linux homebrew bottles
-for os in sierra x86_64_linux ; do
+for os in high_sierra x86_64_linux ; do
     NO_V_VERSION=${VERSION#v}
     rm -rf /tmp/bottle
     BOTTLE_BASE=/tmp/bottle/ddev/$NO_V_VERSION
@@ -90,7 +90,7 @@ for os in sierra x86_64_linux ; do
     cp $BASE_DIR/.gotmp/bin/ddev_zsh_completion.sh $BOTTLE_BASE/share/zsh/site-functions/_ddev
     cp $BASE_DIR/.gotmp/bin/ddev_fish_completion.sh $BOTTLE_BASE/share/fish/vendor_completions.d/ddev.fish
 
-    if [ "${os}" = "sierra" ]; then cp $BASE_DIR/.gotmp/bin/darwin_amd64/ddev $BOTTLE_BASE/bin ; fi
+    if [ "${os}" = "high_sierra" ]; then cp $BASE_DIR/.gotmp/bin/darwin_amd64/ddev $BOTTLE_BASE/bin ; fi
     if [ "${os}" = "x86_64_linux" ]; then cp $BASE_DIR/.gotmp/bin/ddev $BOTTLE_BASE/bin ; fi
     cp $BASE_DIR/{README.md,LICENSE} $BOTTLE_BASE
     tar -czf $ARTIFACTS/ddev-$NO_V_VERSION.$os.bottle.tar.gz -C /tmp/bottle .
