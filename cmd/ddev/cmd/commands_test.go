@@ -73,7 +73,7 @@ func TestCustomCommands(t *testing.T) {
 	command.Stdin = f
 	byteOut, err := command.CombinedOutput()
 	require.NoError(t, err, "Failed ddev mysql; output=%v", string(byteOut))
-	assert.Equal("99\n99\n", string(byteOut))
+	assert.Contains(string(byteOut), "99\n99\n")
 
 	_ = os.RemoveAll(projectCommandsDir)
 	_ = os.RemoveAll(globalCommandsDir)
