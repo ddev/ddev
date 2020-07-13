@@ -21,7 +21,7 @@
 }
 
 @test "verify access to upstream error messages ($project_type)" {
-	ERRMSG="$(curl localhost:$HOST_HTTP_PORT/test/upstream-error.php)"
+	ERRMSG="$(curl 127.0.0.1:$HOST_HTTP_PORT/test/upstream-error.php)"
 	if [ "$ERRMSG" != "Upstream error message" ] ; then
 	  exit 108
 	fi

@@ -12,9 +12,9 @@
     docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 0 => 0" >/dev/null
 
     # Make sure that our nginx override providing /junker99 works correctly
-    curl -s http://localhost:$HOST_HTTP_PORT/junker99 | grep 'junker99!'
+    curl -s http://127.0.0.1:$HOST_HTTP_PORT/junker99 | grep 'junker99!'
     #TODO: Why wouldn't this work on Windows?
     if [ "${OS:-$(uname)}" != "Windows_NT" ]; then
-        curl -s https://localhost:$HOST_HTTPS_PORT/junker99 | grep 'junker99!'
+        curl -s https://127.0.0.1:$HOST_HTTPS_PORT/junker99 | grep 'junker99!'
     fi
 }

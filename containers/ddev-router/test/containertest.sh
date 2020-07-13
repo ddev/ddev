@@ -61,4 +61,4 @@ if [ "${OS:-$(uname)}" != "Windows_NT" ]; then
     (curl -s -I https://127.0.0.1:8443 | grep 503) || (echo "Failed to get 503 from nginx-router via https by default" && exit 103)
 fi
 # Make sure internal access to https is working
-docker exec -t $CONTAINER_NAME curl --fail https://localhost/healthcheck || (echo "Failed to run https healthcheck inside container" && exit 104)
+docker exec -t $CONTAINER_NAME curl --fail https://127.0.0.1/healthcheck || (echo "Failed to run https healthcheck inside container" && exit 104)
