@@ -33,7 +33,7 @@ The following environment variables must be added to the **org context** named [
 
 ## Manually updating homebrew formulas
 
-* Update the `ddev` homebrew formulas (ddev-edge and ddev) as necessary, <https://github.com/drud/homebrew-ddev> and <https://github.com/drud/homebrew-ddev-edge,> with the source .tar.gz and SHA checksum of the tarball and the bottle builds and tarballs. The bottles and checksums for macOS (sierra) and x86_64_linux are built and pushed to the release page automatically by the CircleCI release build process. Test `brew upgrade ddev` both on macOS and Linux and make sure ddev is the right version and behaves well.
+* Update the `ddev` homebrew formulas (ddev-edge and ddev) as necessary, <https://github.com/drud/homebrew-ddev> and <https://github.com/drud/homebrew-ddev-edge,> with the source .tar.gz and SHA checksum of the tarball and the bottle builds and tarballs. The bottles and checksums for macOS (high sierra) and x86_64_linux are built and pushed to the release page automatically by the CircleCI release build process. Test `brew upgrade ddev` both on macOS and Linux and make sure ddev is the right version and behaves well.
 
 ## Manually updating Chocolatey
 

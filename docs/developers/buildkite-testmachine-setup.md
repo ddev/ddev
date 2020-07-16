@@ -32,7 +32,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 9. Add the path `/private/var` or on Catalina `/System/Volumes/Data/private/var` to `/etc/exports` and `sudo nfsd restart`.
 10. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add
     * the agent token
-    * Tags, like `"os=macos,osvariant=highsierra,dockertype=dockerformac"`
+    * Tags, like `"os=macos,osvariant=catalina,dockertype=dockerformac"`
     * `build-path="~/tmp/buildkite-agent/builds"`
 11. `brew services start buildkite-agent`
 12. Enable nosleep using its shortcut in the Mac status bar.
