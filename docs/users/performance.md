@@ -18,9 +18,9 @@ Note that you can use the NFS setup described for each operating system below (a
 
 ### macOS NFS Setup
 
-__macOS Mojave (and later) warning:__ You'll need to temporarily give your terminal "Full disk access" before you (or the script provided) can edit /etc/exports. If you're using iterm2, here are [full instructions for iterm2](https://gitlab.com/gnachman/iterm2/wikis/fulldiskaccess). The basic idea is that in the System Preferences -> Security and Privacy -> Privacy you need to give "Full Disk Access" permissions to your terminal app. Note that the "Full Disk Access" privilege is only needed when the /etc/exports file is being edited by you, usually a one-time event.
+__macOS Mojave (and above) warning:__ You'll need to temporarily give your terminal "Full disk access" before you (or the script provided) can edit /etc/exports. If you're using iterm2, here are [full instructions for iterm2](https://gitlab.com/gnachman/iterm2/wikis/fulldiskaccess). The basic idea is that in the System Preferences -> Security and Privacy -> Privacy you need to give "Full Disk Access" permissions to your terminal app. Note that the "Full Disk Access" privilege is only needed when the /etc/exports file is being edited by you, usually a one-time event.
 
-__macOS Catalina warning:__ If the projects are in a subdirectory of the ~/Documents directory or on an external drive, it is necessary to grant the "Full Disk Access" permission to the `/sbin/nfsd` binary. To access that directory, in the file open dialog use the `command - /` keyboard combination and type in `/sbin` into the dialog, then select the `nfsd` binary. If this step is not done ddev will give errors when starting.
+__macOS Catalina (and above) warning:__ If the projects are in a subdirectory of the ~/Documents directory or on an external drive, it is necessary to grant the "Full Disk Access" permission to the `/sbin/nfsd` binary. Full details are [below](#upgrading-catalina).
 
 Download, inspect, make executable, and run the [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) script. Use `curl -O https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh`. This stops running ddev projects, adds your home directory to the /etc/exports config file that nfsd uses, and enables nfsd to run on your computer. This is a one-time setup. Note that this shares your home directory via NFS to any NFS client on your computer, so it's critical to consider security issues; It's easy to make the shares in /etc/exports more limited as well, as long as they don't overlap (NFS doesn't allow overlapping exports).
 
@@ -65,11 +65,23 @@ Tools to debug and solve permission problems:
 * `showmount -e` on macOS or Linux will show the shared mounts.
 * On Linux, the primary IP address needs to be in /etc/exports. Temporarily set the share in /etc/exports to `/home *`, which shares /home with any client, and `sudo systemctl restart nfs-kernel-server`. Then start a ddev project doing an nfs mount, and `showmount -a` and you'll find out what the primary IP address in use is. You can add that address to /etc/exports.
 
-### macOS Catalina Upgrades
+<a name="upgrading-catalina"></a>
 
-Initial releases of macOS Catalina required changing the /etc/exports file to an alternative format, but this is no longer necessary in recent point releases of the OS.
+### Upgrading to macOS Catalina and Above
 
-If the projects are in a subdirectory of the ~/Documents directory or on an external drive, it is necessary to grant the "Full Disk Access" permission to the `/sbin/nfsd` binary. To access that directory, in the file open dialog use the `command - /` keyboard combination and type in `/sbin` into the dialog, then select the `nfsd` binary. If this step is not done ddev will give errors when starting.
+* If you are on macOS Catalina and above, and your projects are in a subdirectory of the ~/Documents directory or on an external drive, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Preferences. On the "Full disk access" section, click the "+" and add `/sbin/nfsd` as shown here: ![screenshot](images/sbin_nfsd_selection.png)
+You should then see nfsd in the list as shown:
+![screenshot](images/nfsd_full_disk_access.png).
+* `sudo nfsd restart`
+* Use `ddev debug nfsmount` in a project directory to make sure it gives successful output like
+
+    ```
+    $ ddev debug nfsmount
+    Successfully accessed NFS mount of /Users/rfay/workspace/d8composer
+    TARGET    SOURCE                                                FSTYPE OPTIONS
+    /nfsmount :/System/Volumes/Data/Users/rfay/workspace/d8composer nfs    rw,relatime,vers=3,rsize=65536,wsize=65536,namlen=255,hard,nolock,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.65.2,mountvers=3,mountproto=tcp,local_lock=all,addr=192.168.65.2
+    /nfsmount/.ddev
+    ```
 
 ### macOS-specific NFS debugging
 
@@ -80,7 +92,9 @@ If the projects are in a subdirectory of the ~/Documents directory or on an exte
 * Add the following to your /etc/nfs.conf:
 
   ```nfs.server.mount.require_resv_port = 0
+
 nfs.server.verbose = 3
+
 ```
 
 * Run Console.app and put "nfsd" in the search box at the top. `sudo nfsd restart` and read the messages carefully. Attempt to `ddev debug nfsmount` the problematic project directory.
