@@ -1065,7 +1065,11 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
 		shell = "sh"
 	}
-	exec = append(exec, shell, "-c", "set -eu -o pipefail && ( "+opts.Cmd+")")
+	errcheck := "set -eu"
+	if shell == "bash" {
+		errcheck = errcheck + " -o pipefail "
+	}
+	exec = append(exec, shell, "-c", errcheck+` && ( `+opts.Cmd+`)`)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
