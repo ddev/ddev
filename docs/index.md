@@ -1,6 +1,6 @@
 # Intro to DDEV-Local
 
-[ddev](https://github.com/drud/ddev) is an open source tool that makes it dead simple to get local PHP development environments up and running within minutes. It's powerful and flexible as a result of its per-project environment configurations, which can be extended, version controlled, and shared. In short, ddev aims to allow development teams to use Docker in their workflow without the complexities of bespoke configuration.
+[DDEV](https://github.com/drud/ddev) is an open source tool that makes it dead simple to get local PHP development environments up and running within minutes. It's powerful and flexible as a result of its per-project environment configurations, which can be extended, version controlled, and shared. In short, DDEV aims to allow development teams to use Docker in their workflow without the complexities of bespoke configuration.
 
 ## System Requirements
 
@@ -13,21 +13,21 @@
     * Windows 10 (all editions) with WSL2 (version 2004 or later)
     * (Non-WSL2) Windows 10 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
 
-### Using ddev alongside other development environments
+## Using DDEV alongside other development environments
 
-ddev by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure ddev to use different ports. See [troubleshooting](users/troubleshooting.md#unable-listen) for more detailed problem solving.
+DDEV by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](users/troubleshooting.md#unable-listen) for more detailed problem solving.
 
-## Installation
+### Installation
 
 _When upgrading, please run `ddev poweroff` and check the [release notes](https://github.com/drud/ddev/releases) for actions you might need to take on each project._
 
 ### Docker Installation
 
-Docker and docker-compose are required before anything will work with ddev. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux.
+Docker and docker-compose are required before anything will work with DDEV. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux.
 
 ### Homebrew/Linuxbrew - macOS/Linux
 
-For macOS and Linux users, we recommend installing and upgrading via [homebrew](https://brew.sh/) (macOS) or [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux) (Linux):
+For macOS and Linux users, we recommend installing and upgrading via [Homebrew](https://brew.sh/) (macOS) or [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux) (Linux):
 
 ```
 brew tap drud/ddev && brew install ddev
@@ -37,7 +37,7 @@ If you would like more frequent "edge" releases then use `brew tap drud/ddev-edg
 
 As a one-time initialization, run `mkcert -install`. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
 
-Later, to upgrade to a newer version of ddev, run:
+Later, to upgrade to a newer version of DDEV, run:
 
 ```
 ddev poweroff && brew upgrade ddev
@@ -55,7 +55,7 @@ The WSL2 install process involves:
 * One time initialization of mkcert.
 * Installing WSL2, setting version 2 as the default version, and installing a distro like Ubuntu.
 * Installing or upgrading to the latest Docker Desktop for Windows with WSL2 enabled.
-* Installing ddev inside your distro.
+* Installing DDEV inside your distro.
 
 We'll walk through these in more detail. You may prefer other techniques of installation or may not need some steps, but this is the full recipe:
 
@@ -102,16 +102,16 @@ curl -L https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.
 
 * As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
 
-Later, to upgrade ddev to the latest version, just run `ddev poweroff` and run the script again.
+Later, to upgrade DDEV to the latest version, just run `ddev poweroff` and run the script again.
 
 ### Manual Installation or Upgrade - Linux and macOS
 
-You can also easily perform the installation or upgrade manually if preferred. ddev is just a single executable, no special installation is actually required, so for all operating systems, the installation is just copying ddev into place where it's in the system path.
+You can also easily perform the installation or upgrade manually if preferred. DDEV is just a single executable, no special installation is actually required, so for all operating systems, the installation is just copying DDEV into place where it's in the system path.
 
 * `ddev poweroff` if upgrading
 * Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 * Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
-* Run `ddev` to test your installation. You should see ddev's command usage output.
+* Run `ddev` to test your installation. You should see DDEV's command usage output.
 * As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions
 
 ### Installation via package managers - Linux
@@ -165,13 +165,13 @@ For instructions to uninstall DDEV-Local see [Uninstallation](users/uninstall.md
 
 ## Support and User-Contributed Documentation
 
-We love to hear from our users and help them be successful with ddev. Support options include:
+We love to hear from our users and help them be successful with DDEV. Support options include:
 
-* [ddev Documentation](users/faq.md)
-* [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
-* [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
+* [DDEV Documentation](users/faq.md)
+* [DDEV Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
+* [DDEV issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
 * The [gitter drud/ddev channel](https://gitter.im/drud/ddev) (it's easy to log in many different ways)
 * The `#ddev` channels in [Drupal Slack](https://www.drupal.org/slack), [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support.
-* [ddev-contrib](https://github.com/drud/ddev-contrib) repo provides a number of vetted user-contributed recipes for extending and using ddev. Your contributions are welcome.
+* [ddev-contrib](https://github.com/drud/ddev-contrib) repo provides a number of vetted user-contributed recipes for extending and using DDEV. Your contributions are welcome.
 * [awesome-ddev](https://github.com/drud/awesome-ddev) repo has loads of external resources, blog posts, recipes, screencasts, and the like. Your contributions are welcome.
 * [Twitter with tag #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us, but it's not as good for interactive support, but we'll answer anywhere.
