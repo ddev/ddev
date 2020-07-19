@@ -1,4 +1,4 @@
-## ddev Command-Line Usage
+## DDEV Command-Line Usage
 
 Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands. There are commands to configure a project, start, stop, describe, etc. Each command also has help. For example, `ddev stop -h` shows that `ddev rm` is an alias, and shows all the many flags that can be used with `ddev stop`.
 
@@ -40,14 +40,14 @@ Here are quickstart instructions for generic PHP, WordPress, Drupal 6, Drupal 7,
 DDEV works happily with most any PHP or static HTML project, although it has special additional support for several CMSs. But you don't need special support if you already know how to configure your project.
 
 1. Create a directory (`mkdir my-new-project`)
-2. cd into the directory
-3. `ddev config`
+2. Change to the new directory (`cd my-new-project`)
+3. Run `ddev config`
 4. Get initial code:
     * Clone your project into the current directory
     * Or build it with `ddev composer create <package_name>`
-5. `ddev start`
+5. Run `ddev start`
 6. Configure any database settings; host='db', user='db', password='db', database='db'
-7. If needed, import a database with `ddev import-db`
+7. If needed, import a database with `ddev import-db --src=databasename.sql`. The database has to be in your project directory.
 8. Visit the project and continue on.
 
 ### WordPress Quickstart
@@ -62,7 +62,7 @@ ddev start
 ddev composer create roots/bedrock
 ```
 
-Now, since [bedrock](https://roots.io/bedrock/) uses a configuration technique which is unusual for WordPress:
+Now, since [Bedrock](https://roots.io/bedrock/) uses a configuration technique which is unusual for WordPress:
 
 * Edit the .env file which has been created in the project root, and set:
 
@@ -77,11 +77,11 @@ Now, since [bedrock](https://roots.io/bedrock/) uses a configuration technique w
 
 You can then `ddev start` and `ddev launch`.
 
-For more details see [bedrock installation](https://roots.io/bedrock/docs/installing-bedrock/)
+For more details see [Bedrock installation](https://roots.io/bedrock/docs/installing-bedrock/)
 
 #### Git Clone Example
 
-To get started using ddev with an existing WordPress project, clone the project's repository. Note that the git URL shown here is just an example.
+To get started using DDEV with an existing WordPress project, clone the project's repository. Note that the git URL shown here is just an example.
 
 ```bash
 git clone https://github.com/example/example-site.git
@@ -91,7 +91,7 @@ ddev config
 
 You'll see a message like:
 
-```
+```php
 An existing user-managed wp-config.php file has been detected!
 Project ddev settings have been written to:
 
@@ -162,7 +162,7 @@ ddev composer require drush/drush
 ddev launch
 ```
 
-#### drupal 9 Git Clone Example
+#### Drupal 9 Git Clone Example
 
 Note that the git URL shown below is an example only, you'll need to use your own project.
 
@@ -232,10 +232,10 @@ ddev launch
 ### OpenMage (formerly Magento 1) Quickstart
 
 1. Download OpenMage from [release page](https://github.com/OpenMage/magento-lts/releases).
-2. Make a directory for it, for example `mkdir ~/workspace/OpenMage` and change directory to the new directory.
+2. Make a directory for it, for example `mkdir ~/workspace/OpenMage` and change to the new directory `cd ~/workspace/OpenMage`.
 3. `ddev config` and accept the defaults.
 4. (Install sample data - see below)
-5. `ddev start`
+5. Run `ddev start`
 6. Follow the URL to the base site.
 
 You may want the [Magento 1 Sample Data](https://raw.githubusercontent.com/Vinai/compressed-magento-sample-data/1.9.1.0/compressed-magento-sample-data-1.9.1.0.tgz) for experimentation:
@@ -307,7 +307,7 @@ These values are DDEV's default settings for the Database connection.
 
 Instead of setting each connection variable we can add a ddev to the `connections` array in `config/databases.php` like this:
 
-```
+```php
 <?php
 
 return [
@@ -626,7 +626,7 @@ Snapshots are stored in the project's .ddev/db_snapshots directory, and the dire
 
 ## Interacting with your project
 
-ddev provides several commands to facilitate interacting with your project in the development environment. These commands can be run within the working directory of your project while the project is running in ddev.
+DDEV provides several commands to facilitate interacting with your project in the development environment. These commands can be run within the working directory of your project while the project is running in ddev.
 
 ### Executing Commands in Containers
 
@@ -656,7 +656,7 @@ To remove a project's containers run `ddev stop` in the working directory of the
 
 To remove the imported database for a project, use the flag `--remove-data`, as in `ddev stop --remove-data`. This command will destroy both the containers and the imported database contents.
 
-## ddev Command Auto-Completion
+## DDEV Command Auto-Completion
 
 Bash auto-completion is available for ddev. Bash auto-completion is included in the homebrew install on macOS and Linux. For other platforms, download the [latest ddev release](https://github.com/drud/ddev/releases) tarball and locate `ddev_bash_completion.sh` inside it. This can be installed wherever your bash_completions.d is. For example, `cp ddev_bash_completion.sh /etc/bash_completion.d/ddev`.
 
@@ -672,7 +672,7 @@ If you do choose to send the diagnostics it helps us tremendously in our effort 
 
 Of course if you have any reservations about this, please just opt-out (`ddev config global --instrumentation-opt-in=false`). If you have any problems or concerns with it, we'd like to know.
 
-## Using ddev offline, and top-level-domain options
+## Using DDEV offline, and top-level-domain options
 
 DDEV-Local attempts to make offline use work as well as possible, and you really shouldn't have to do anything to make it work:
 
