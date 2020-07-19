@@ -9,7 +9,7 @@ It's common to have a requirement for the web or db images which is not bundled 
 
 You can add extra Debian packages if that's all that is needed with lines like this in `.ddev/config.yaml`:
 
-```
+```yaml
 webimage_extra_packages: [php-yaml, php7.3-tidy]
 dbimage_extra_packages: [telnet, netcat]
 

@@ -4,7 +4,7 @@ ddev provides several ways in which the environment for a project using ddev can
 
 ### Changing PHP version
 
-The project's `.ddev/config.yaml` file defines the PHP version to use. This can be changed, and the php_version can be set there to (currently) "5.6", "7.0", "7.1", "7.2",  "7.3", or "7.4". The current default is php 7.3.
+The project's `.ddev/config.yaml` file defines the PHP version to use. This can be changed, and the php_version can be set there to (currently) `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, or `7.4`. The current default is php 7.3.
 
 #### Older versions of PHP
 
@@ -28,7 +28,7 @@ Each project can have an unlimited number of .ddev/docker-compose.*.yaml files a
 
 For example, a `.ddev/docker-compose.environment.yaml` with these contents would add a $TYPO3_CONTEXT environment variable to the web container, and a $SOMETHING environment variable to the db container:
 
-```
+```yaml
 version: '3.6'
 
 services:
@@ -86,7 +86,7 @@ To load the new configuration, just run a `ddev restart`.
 
 An example file in .ddev/php/my-php.ini might look like this:
 
-```
+```ini
 [PHP]
 max_execution_time = 240;
 ```
@@ -112,7 +112,7 @@ You may add additional config.*.yaml files to organize additional commands as yo
 
 For example, many teams commit their config.yaml and share it throughout the team, but some team members may require overrides to the checked-in version that are custom to their environment and should not be checked in. For example, a team member may want to use a router_http_port other than the team default due to a conflict in their development environment. In this case they could add the file .ddev/config.ports.yaml with the contents:
 
-```
+```yaml
 # My machine can't use port 80 so override with port 8080, but don't check this in.
 router_http_port: 8080
 ```

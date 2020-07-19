@@ -23,11 +23,11 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 1. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 2. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
-3. Install [homebrew](https://brew.sh/) `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+3. Install [Homebrew](https://brew.sh/) `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
 4. Install golang/git/docker with `brew cask install iterm2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew tap drud/ddev && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer ddev netcat mkcert && brew cask install ngrok`
 5. `mkcert -install`
-6. Run docker manually and go through its configuration routine.
-7. Run `iterm`. On Mojave it may prompt for requiring full disk access permissions, follow through with that.
+6. Run Docker manually and go through its configuration routine.
+7. Run `iTerm`. On Mojave it may prompt for requiring full disk access permissions, follow through with that.
 8. Set up nfsd by running `macos_ddev_nfs_setup.sh`
 9. Add the path `/private/var` or on Catalina `/System/Volumes/Data/private/var` to `/etc/exports` and `sudo nfsd restart`.
 10. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add

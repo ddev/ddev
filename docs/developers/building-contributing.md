@@ -34,7 +34,7 @@ Build/test/check static analysis with
 
 Normal test invocation is just `make test`. Run a single test with an invocation like `go test -v -run TestDevAddSites ./pkg/...` or `make testpkg TESTARGS="-run TestDevAddSites"`. The easiest way to run tests is from inside the excellent golang IDE Goland. Just click the arrowhead to the left of the test name.
 
-To see which ddev commands the tests are executing, set the environment variable DDEV_DEBUG=true.
+To see which DDEV commands the tests are executing, set the environment variable DDEV_DEBUG=true.
 
 Use GOTEST_SHORT=true to run just one CMS in each test, or GOTEST_SHORT=<integer> to run exactly one project type from the list of project types in the [TestSites array](https://github.com/drud/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, GOTEST_SHORT=5 will run many tests only against TYPO3.
 
@@ -46,7 +46,7 @@ The Buildkite automated tests require special access, which we typically grant t
 
 ## Docker image development
 
-The docker images that ddev uses are included in the containers/ directory:
+The docker images that DDEV uses are included in the containers/ directory:
 
 * containers/ddev-webserver: Provides the web servers (the "web" container).
 * containers/ddev-dbserver: Provides the "db" container.
@@ -57,4 +57,4 @@ When changes are made to an image, they have to be temporarily pushed to a tag t
 
 ## Contributing
 
-Interested in contributing to ddev? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!
+Interested in contributing to DDEV? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!

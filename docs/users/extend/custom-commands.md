@@ -14,7 +14,7 @@ There are example commands provided in `ddev/commands/*/*.example` that can just
 
 To provide host commands, place a bash script in .ddev/commands/host. For example, a PHPStorm launcher to make the `ddev PHPStorm` command might go in .ddev/commands/host/phpstorm` with these contents:
 
-```
+```bash
 #!/usr/bin/env bash
 
 ## Description: Open PHPStorm with the current project
@@ -29,7 +29,7 @@ open -a PHPStorm.app ${DDEV_APPROOT}
 
 To provide a command which will execute in a container, add a bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The bash script will be executed inside the named container. For example, the [drush.example](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/dotddev_assets/commands/web/drush.example), which executes Drupal's drush inside the container with the arguments provided, would go in `.ddev/commands/web/drush` as:
 
-```
+```bash
 #!/bin/bash
 
 ## Description: Run drush inside the web container
@@ -48,7 +48,7 @@ In addition to commands that run in the standard ddev containers like "web" and 
 
 For example, to add a "solrtail" command that runs in a solr service, add `.ddev/commands/solr/solrtail` with:
 
-```
+```bash
 #!/bin/bash
 
 ## Description: Tail the main solr log

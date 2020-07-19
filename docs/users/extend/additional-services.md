@@ -1,6 +1,6 @@
 ## Additional Service Configurations for ddev
 
-ddev projects can be extended to provide additional services. This is achieved by adding docker-compose files to a project's .ddev directory that defines the added service(s). This page provides configurations for services that are ready to be added to your project with minimal setup.
+DDEV projects can be extended to provide additional services. This is achieved by adding docker-compose files to a project's .ddev directory that defines the added service(s). This page provides configurations for services that are ready to be added to your project with minimal setup.
 
 If you need a service not provided here, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 

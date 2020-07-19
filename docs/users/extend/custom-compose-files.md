@@ -20,7 +20,7 @@ The main docker-compose file is named `.ddev/.ddev-docker-compose-base.yaml` and
 
 * Set an environment variable in the web container, in a file perhaps called `docker-compose.env.yaml`:
 
-```
+```yaml
 version: '3.6'
 
 services:
@@ -55,9 +55,9 @@ When defining additional services for your project, we recommended you follow th
         * `HTTP_EXPOSE=portNum` The `hostPort:containerPort` convention may be used here to expose a container's port to a different external port. To expose multiple ports for a single container, define the ports as comma-separated values.
         * `HTTPS_EXPOSE=portNum:<exposedPortNumber>` This will expose an http interface on `portNum` to the host (and to the web container) as `https://<project>.ddev.site:exposedPortNumber`
 
-* **Naming volumes for persistent data**: A volume with persistent data should have the same name as the service and should not have a custom name. For example, the persistent volume for the [postgres](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/postgres) service has:
+* **Naming volumes for persistent data**: A volume with persistent data should have the same name as the service and should not have a custom name. For example, the persistent volume for the [Postgres](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/postgres) service has:
 
-    ```
+    ```yaml
     volumes:
       postgres:
     ```
@@ -66,4 +66,4 @@ When defining additional services for your project, we recommended you follow th
 
 ### Interacting with additional services
 
-Certain ddev commands, namely `ddev exec`, `ddev ssh`, and `ddev logs` interact with containers on an individual basis. By default, these commands interact with the web container for a project. All of these commands, however, provide a `--service` or `-s` flag allowing you to specify the service name of the container you want to interact with. For example, if you added a service to provide Apache Solr, and the service was named `solr`, you would be able to run `ddev logs --service solr` to retrieve the logs of the Solr container.
+Certain DDEV commands, namely `ddev exec`, `ddev ssh`, and `ddev logs` interact with containers on an individual basis. By default, these commands interact with the web container for a project. All of these commands, however, provide a `--service` or `-s` flag allowing you to specify the service name of the container you want to interact with. For example, if you added a service to provide Apache Solr, and the service was named `solr`, you would be able to run `ddev logs --service solr` to retrieve the logs of the Solr container.
