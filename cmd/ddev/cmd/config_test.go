@@ -689,6 +689,8 @@ func TestConfigGitignore(t *testing.T) {
 	defer func() {
 		_, err = exec.RunCommand(DdevBin, []string{"delete", "-Oy"})
 		assert.NoError(err)
+		_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("rm -f ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name())})
+		assert.NoError(err)
 	}()
 
 	_, err = exec.RunCommand("git", []string{"init"})
@@ -703,6 +705,10 @@ func TestConfigGitignore(t *testing.T) {
 	// .ddev/config.yaml should be the only new file, remove it and check
 	out = strings.ReplaceAll(out, "new file:   .ddev/config.yaml", "")
 	assert.NotContains(out, "new file:")
+
+	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("touch ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name())})
+	assert.NoError(err)
+
 	_, err = exec.RunCommand(DdevBin, []string{"start"})
 	assert.NoError(err)
 	statusOut, err := exec.RunCommand("bash", []string{"-c", "git status"})
