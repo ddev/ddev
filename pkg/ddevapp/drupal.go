@@ -726,7 +726,7 @@ func createDrupal8SyncDir(app *DdevApp) error {
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings(app)
 
-	syncDirPath := path.Join(app.GetAppRoot(), app.GetDocroot(), drupalConfig.SyncDir)
+	syncDirPath := path.Join(app.GetAppRoot(), app.GetDocroot(), "sites/default", drupalConfig.SyncDir)
 	if fileutil.FileExists(syncDirPath) {
 		return nil
 	}
