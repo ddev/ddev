@@ -10,3 +10,5 @@ as you see fit. Use `ddev start` to restart.
 
 You can also add more configurations, for example with separate configurations
 for each site, as demonstrated by the second_docroot.conf.example, which shows how to have apache serve completely different configurations for a named site that is different from the default.
+
+The files will be copied into /etc/apache2/sites-enabled directory.
