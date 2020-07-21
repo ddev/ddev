@@ -1066,9 +1066,6 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		shell = "sh"
 	}
 	errcheck := "set -eu"
-	if shell == "bash" {
-		errcheck = errcheck + " -o pipefail "
-	}
 	exec = append(exec, shell, "-c", errcheck+` && ( `+opts.Cmd+`)`)
 
 	files, err := app.ComposeFiles()
