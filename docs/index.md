@@ -63,22 +63,25 @@ We'll walk through these in more detail. You may prefer other techniques of inst
 2. **Chocolatey:** We recommend using Chocolatey for [Chocolatey](https://chocolatey.org/install) installing required Windows apps like mkcert. In an administrative PowerShell, `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
 3. In an administrative PowerShell: `choco install -y mkcert`
 4. In administrative PowerShell, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
-5. In PowerShell, run the command `setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }`. This will set WSL2 to use the Certificate Authority installed on the Windows side.
+5. In administrative PowerShell, run the command `setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }`. This will set WSL2 to use the Certificate Authority installed on the Windows side.
 6. Install WSL2. In an administrative PowerShell `Enable-WindowsOptionalFeature -Online -FeatureName $("VirtualMachinePlatform", "Microsoft-Windows-Subsystem-Linux")` (You will be prompted to reboot your computer.) (See [detailed documentation](https://docs.microsoft.com/en-us/windows/wsl/install-win10).)
-7. Set the default WSL version to 2: `wsl --set-default-version 2` You may be prompted to upgrade the WSL2 kernel.
-8. Download and install the WSL2 kernel from [WSL2 kernel upgrade page](https://docs.microsoft.com/en-us/windows/wsl/wsl2-kernel).
+7. Download and install the WSL2 kernel from [WSL2 kernel upgrade page](https://docs.microsoft.com/en-us/windows/wsl/wsl2-kernel).
+8. Set the default WSL version to 2: `wsl --set-default-version 2` You may be prompted to upgrade the WSL2 kernel.
 9. Install a WSL2 distro from the Microsoft Store. We recommend [Ubuntu](https://www.microsoft.com/store/productId/9NBLGGH4MSV6).
 10. **Docker Desktop for Windows:** If you already have the latest Docker Desktop, configure it in the General Settings to use the WSL2-based engine. Otherwise install the latest Docker Desktop for Windows and select the WSL2-based engine (not legacy Hyper-V) when installing. Install via Chocolatey with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe).  Start Docker. It may prompt you to log out and log in again, or reboot.
 11. Go to Docker Desktop settings > Resources > WSL integration > enable integration for your distro (now `docker` commands will be available from within your WSL2 distro).
-12. Optional: If you prefer to use the *Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine.
-13. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
-14. Install Linuxbrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"` (See [brew.sh](brew.sh).)
-15. `brew tap drud/ddev && brew install ddev`
-16. `sudo apt-get update && sudo apt-get install -y xdg-utils` to install the xdg-utils package that allows `ddev launch` to work.
+12. Double-check in PowerShell: `wsl -l -v` should show three distros, and your Ubuntu should be the default. All three should be WSL version 2.
+13. Double-check in Ubuntu (or your distro): `echo $CAROOT` should show something like `/mnt/c/Users/<you>/AppData/Local/mkcert`
+14. Optional: If you prefer to use the *Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine.
+15. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
+16. Install Linuxbrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"` (See [brew.sh](brew.sh).)
+17. Add brew to your path as prompted, for example, `eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.profile && source ~/.profile`
+18. `brew tap drud/ddev && brew install gcc ddev`
+19. `sudo apt-get update && sudo apt-get install -y xdg-utils` to install the xdg-utils package that allows `ddev launch` to work.
 
 That's it! You have now installed DDEV on WSL2. If you're using WSL2 for ddev (recommended), remember to run all `ddev` commands inside the WSL2 distro.
 
-**Make sure you put your projects in the Linux filesystem (e.g. /home/<your_username>), _not_ in the Windows filesystem (/mnt/c), because you'll get vastly better performance on the Linux filesystem.**
+**Make sure you put your projects in the Linux filesystem (e.g. /home/<your_username>), _not_ in the Windows filesystem (/mnt/c), because you'll get vastly superior performance on the Linux filesystem.**
 
 Note that nfs-mount-enabled (and running NFS) are not required on WSL2 because it's perhaps faster without NFS.
 
