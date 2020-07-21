@@ -268,6 +268,17 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	if err != nil || len(w) != 2 {
 		return "", fmt.Errorf("unable to pull ddev-live database backup (output=`%s`): err=%v, command=%s", out, err, cmd)
 	}
+
+	// Now delete the db backup since we don't need it any more, and to stay under quota
+	cmd = fmt.Sprintf(`ddev-live delete backup -y %s/%s`, p.OrgName, backupName)
+	if os.Getenv("DDEV_DEBUG") != "" {
+		output.UserOut.Print(cmd)
+	}
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+	if err != nil {
+		util.Warning("unable to delete backup (output=`%s`): err=%v, command=%s", out, err, cmd)
+	}
+
 	f := strings.Trim(w[1], "\n")
 	// Rename the on-host filename to a usable extension
 	newFilename := filepath.Join(p.getDownloadDir(), "ddevlivedb.sql.gz")
