@@ -63,7 +63,7 @@ We'll walk through these in more detail. You may prefer other techniques of inst
 2. **Chocolatey:** We recommend using Chocolatey for [Chocolatey](https://chocolatey.org/install) installing required Windows apps like mkcert. In an administrative PowerShell, `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
 3. In an administrative PowerShell: `choco install -y mkcert`
 4. In administrative PowerShell, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
-5. In PowerShell, run the command `setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT*") { setx WSLENV "CAROOT/up;$Env:WSLENV" }`. This will set WSL2 to use the Certificate Authority installed on the Windows side.
+5. In PowerShell, run the command `setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }`. This will set WSL2 to use the Certificate Authority installed on the Windows side.
 6. Install WSL2. In an administrative PowerShell `Enable-WindowsOptionalFeature -Online -FeatureName $("VirtualMachinePlatform", "Microsoft-Windows-Subsystem-Linux")` (You will be prompted to reboot your computer.) (See [detailed documentation](https://docs.microsoft.com/en-us/windows/wsl/install-win10).)
 7. Set the default WSL version to 2: `wsl --set-default-version 2` You may be prompted to upgrade the WSL2 kernel.
 8. Download and install the WSL2 kernel from [WSL2 kernel upgrade page](https://docs.microsoft.com/en-us/windows/wsl/wsl2-kernel).
