@@ -100,7 +100,9 @@ func ReadGlobalConfig() error {
 	if DdevGlobalConfig.ProjectList == nil {
 		DdevGlobalConfig.ProjectList = map[string]*ProjectInfo{}
 	}
-	if DdevGlobalConfig.MkcertCARoot == "" {
+	// Set/read the CAROOT if it's unset or different from $CAROOT (perhaps $CAROOT changed)
+	caRootEnv := os.Getenv("CAROOT")
+	if DdevGlobalConfig.MkcertCARoot == "" || (caRootEnv != "" && caRootEnv != DdevGlobalConfig.MkcertCARoot) {
 		DdevGlobalConfig.MkcertCARoot = readCAROOT()
 	}
 	// This is added just so we can see it in global; not checked.
