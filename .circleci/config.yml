@@ -463,9 +463,9 @@ workflows:
     - lx_apache_fpm_test:
         requires:
         - build
-    - lx_apache_cgi_test:
-        requires:
-        - build
+#    - lx_apache_cgi_test:
+#        requires:
+#        - build
     - lx_nfsmount_test:
         requires:
         - build
