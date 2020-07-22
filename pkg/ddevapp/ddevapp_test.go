@@ -1728,17 +1728,28 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 func TestDdevExec(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
+	testDir, _ := os.Getwd()
 
-	for _, site := range TestSites {
+	for index, site := range TestSites {
 		switchDir := site.Chdir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevExec", site.Name))
 
+		if index == 0 {
+
+			err := fileutil.CopyFile(filepath.Join(testDir, "testdata", t.Name(), "docker-compose.busybox.yaml"), filepath.Join(site.Dir, ".ddev", "docker-compose.busybox.yaml"))
+			defer func() {
+				err = os.RemoveAll(filepath.Join(site.Dir, ".ddev", "docker-compose.busybox.yaml"))
+				assert.NoError(err)
+			}()
+			assert.NoError(err)
+		}
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-exec": {{"exec-host": "touch hello-post-exec-" + app.Name}}, "pre-exec": {{"exec-host": "touch hello-pre-exec-" + app.Name}}}
 		defer func() {
 			app.Hooks = nil
+			_ = app.Stop(true, false)
 			_ = app.WriteConfig()
 		}()
 
@@ -1801,6 +1812,38 @@ func TestDdevExec(t *testing.T) {
 			})
 			assert.NoError(err)
 			assert.Regexp("/etc/php.*/php.ini", out)
+
+			// Make sure error works for unset env vars, etc.
+			_, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     "echo $ENVDOESNOTEXIST",
+			})
+			assert.Error(err)
+			assert.Contains(stderr, "ENVDOESNOTEXIST: unbound variable")
+
+		}
+
+		// Make sure that exec works on non-ddev container like busybox as well
+		if index == 0 {
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "busybox",
+				Cmd:     "ls | grep bin",
+			})
+			assert.NoError(err)
+
+			_, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "busybox",
+				Cmd:     "echo $ENVDOESNOTEXIST",
+			})
+			assert.Error(err)
+			assert.Contains(stderr, "parameter not set")
+
+			_, stderr, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "busybox",
+				Cmd:     "this is an error;",
+			})
+			assert.Error(err)
+			assert.Contains(stderr, "this: not found")
 		}
 
 		err = app.Stop(true, false)
