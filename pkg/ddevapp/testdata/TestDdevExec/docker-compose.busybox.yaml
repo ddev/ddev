@@ -4,3 +4,6 @@ services:
     image: busybox
     command: tail -f /dev/null
     container_name: ddev-${DDEV_SITENAME}-busybox
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
