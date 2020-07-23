@@ -56,6 +56,12 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("internet-detection-timeout-ms").Changed {
+		val, _ := cmd.Flags().GetInt("internet-detection-timeout-ms")
+		globalconfig.DdevGlobalConfig.InternetDetectionTimeout = int64(val)
+		dirty = true
+	}
+
 	if dirty {
 		err = globalconfig.ValidateGlobalConfig()
 		if err != nil {
@@ -80,6 +86,6 @@ func init() {
 	configGlobalCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting on all projects globally")
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", false, "instrmentation-opt-in=true")
 	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces=true")
-
+	configGlobalCommand.Flags().Int("internet-detection-timeout-ms", 750, "Increase timeout when checking internet timeout, in milliseconds")
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

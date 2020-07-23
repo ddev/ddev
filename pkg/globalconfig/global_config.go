@@ -419,10 +419,10 @@ func IsInternetActive() bool {
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil
 	if os.Getenv("DDEV_DEBUG") != "" {
-		output.UserOut.Printf("IsInternetActive DEBUG: err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, randomURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, randomURL, DdevGlobalConfig.InternetDetectionTimeout)
+		output.UserErr.Printf("IsInternetActive DEBUG: err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, randomURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, randomURL, DdevGlobalConfig.InternetDetectionTimeout)
 	}
 	if active == false {
-		output.UserOut.Println("Internet connection not detected")
+		output.UserErr.Println("Internet connection not detected, see https://ddev.readthedocs.io/en/stable/users/faq/ for info.")
 	}
 
 	// remember the result to not call this twice
