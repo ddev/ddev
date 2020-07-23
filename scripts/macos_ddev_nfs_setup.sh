@@ -37,11 +37,7 @@ ddev poweroff || true
 echo "== Setting up nfs..."
 # Share /Users folder. If the projects are elsewhere the /etc/exports will need
 # to be adapted.
-# If Catalina or later, the share directory has to be /System/Volumes/Data/...
 SHAREDIR=${HOME}
-if [ -d /System/Volumes/Data${HOME} ] ; then
-    SHAREDIR=/System/Volumes/Data${HOME}
-fi
 LINE="${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) localhost"
 FILE=/etc/exports
 sudo bash -c "echo >> $FILE" || ( echo "Unable to edit /etc/exports, need Full Disk Access on Mojave and later" && exit 103 )
