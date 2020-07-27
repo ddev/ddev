@@ -1,10 +1,10 @@
 ## In-Container home directory configuration
 
-Custom shell config (bash or your preferred shell), your usual git configuration, a composer auth.json and more can be achieved within your containers.
+Custom shell config (bash or your preferred shell), your usual git configuration, a composer auth.json and more can be achieved within your containers.  Place all your dotfiles in your `~/.ddev/homeadditions` directory and DDev will use these in all your projects' Docker containers.
 
 On `ddev start`, ddev attempts to create a user inside the web and db containers with the same name and use id as the one you have on the host.
 
-If you have `homeadditions` directory either in `~/.ddev/homeadditions` (the global .ddev directory) or the `.ddev/homeadditions` directory of a particular project, their contents will be copied recursively into the in-container home directory during `ddev start`. (Note that project homeadditions contents override the global homeadditions.)
+DDev looks for `homeadditions` directory either in `~/.ddev/homeadditions` (the global .ddev directory) or the `.ddev/homeadditions` directory of a particular project, and will copy their contents recursively into the in-container home directory during `ddev start`. (Note that project homeadditions contents override the global homeadditions.)
 
 If you want to use a shell other than bash, add it as a package to [customize the Docker image](https://ddev.readthedocs.io/en/stable/users/extend/customizing-images/).
 
