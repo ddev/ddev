@@ -112,4 +112,6 @@ if ! shopt -oq posix; then
   fi
 fi
 
-source /etc/bashrc/*.bashrc
+for f in /etc/bashrc/*.bashrc; do
+  source $f;
+done

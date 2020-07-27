@@ -86,8 +86,8 @@ ADD ddev-webserver-base-files /
 RUN phpdismod xdebug
 RUN curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog
 
-RUN curl -ssL -O https://raw.githubusercontent.com/pantheon-systems/terminus-installer/master/builds/installer.phar && php installer.phar install
-RUN curl -ssL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod +x /usr/local/bin/ddev-live && rm ddev-live.zip
+RUN curl -sSL -O https://raw.githubusercontent.com/pantheon-systems/terminus-installer/master/builds/installer.phar && php installer.phar install
+RUN curl -sSL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod +x /usr/local/bin/ddev-live && rm ddev-live.zip
 
 # magerun and magerun2 for magento
 RUN curl -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun

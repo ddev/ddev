@@ -74,10 +74,12 @@ A number of environment variables are provided to the script. Useful variables f
 * DDEV_HOST_HTTPS_PORT: Localhost port for https on webserver
 * DDEV_HOST_WEBSERVER_PORT: Localhost port of the webserver
 * DDEV_PHP_VERSION
+* DDEV_PRIMARY_URL: Primary URL for the project
 * DDEV_PROJECT_TYPE: drupal8, typo3, backdrop, wordpress, etc.
 * DDEV_ROUTER_HTTP_PORT: Router port for http
 * DDEV_ROUTER_HTTPS_PORT: Router port for https
-* DDEV_SITENAME: Project name, like "d8composer". Same as $DDEV_PROJECT inside container
+* DDEV_SITENAME: Project name, like "d8composer".
+* DDEV_TLD: Top-level domain of project, like "ddev.site"
 * DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm
 
 Useful variables for container scripts are:
@@ -85,10 +87,13 @@ Useful variables for container scripts are:
 * DDEV_DOCROOT: Relative path from approot to docroot
 * DDEV_HOSTNAME: Comma-separated list of FQDN hostnames
 * DDEV_PHP_VERSION
+* DDEV_PRIMARY_URL: Primary URL for the project
 * DDEV_PROJECT: Project name, like "d8composer"
 * DDEV_PROJECT_TYPE: drupal8, typo3, backdrop, wordpress, etc.
 * DDEV_ROUTER_HTTP_PORT: Router port for http
 * DDEV_ROUTER_HTTPS_PORT: Router port for https
+* DDEV_SITENAME: Project name, like "d8composer".
+* DDEV_TLD: Top-level domain of project, like "ddev.site"
 * DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm
 
 ### Known Windows OS issues
