@@ -1,11 +1,12 @@
 ## In-Container home directory configuration
 
-There are a number of reasons that your web container home directory may need custom configuration. You may want your normal git configuration in there, or a composer auth.json, etc.
+Custom shell config (bash or your preferred shell), your usual git configuration, a composer auth.json and more can be achieved within your containers.
 
 On `ddev start`, ddev attempts to create a user inside the web and db containers with the same name and use id as the one you have on the host.
 
-If you have a ~/.ddev/homeadditions
-If you have a ~/.ddev/homeadditions directory (in the global .ddev directory) or your project has a .ddev/homeadditions directory, their contents will be copied recursively into the in-container home directory during `ddev start`. (Note that project homeadditions contents override the global homeadditions.)
+If you have `homeadditions` directory either in `~/.ddev/homeadditions` (the global .ddev directory) or the `.ddev/homeadditions` directory of a particular project, their contents will be copied recursively into the in-container home directory during `ddev start`. (Note that project homeadditions contents override the global homeadditions.)
+
+If you want to use a shell other than bash, add it as a package to [customize the Docker image](https://ddev.readthedocs.io/en/stable/users/extend/customizing-images/).
 
 Usage examples:
 
