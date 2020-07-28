@@ -17,7 +17,7 @@
 
 DDEV by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](users/troubleshooting.md#unable-listen) for more detailed problem solving.
 
-### Installation
+## Installation
 
 _When upgrading, please run `ddev poweroff` and check the [release notes](https://github.com/drud/ddev/releases) for actions you might need to take on each project._
 
@@ -37,7 +37,7 @@ If you would like more frequent "edge" releases then use `brew tap drud/ddev-edg
 
 As a one-time initialization, run `mkcert -install`. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
 
-Later, to upgrade to a newer version of DDEV, run:
+Later, to upgrade to a newer version of DDEV-Local, run:
 
 ```
 ddev poweroff && brew upgrade ddev

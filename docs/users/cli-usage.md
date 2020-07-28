@@ -1,4 +1,4 @@
-## DDEV Command-Line Usage
+## DDEV-Local Command-Line Usage
 
 Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands. There are commands to configure a project, start, stop, describe, etc. Each command also has help. For example, `ddev stop -h` shows that `ddev rm` is an alias, and shows all the many flags that can be used with `ddev stop`.
 
@@ -47,7 +47,7 @@ DDEV works happily with most any PHP or static HTML project, although it has spe
     * Or build it with `ddev composer create <package_name>`
 5. Run `ddev start`
 6. Configure any database settings; host='db', user='db', password='db', database='db'
-7. If needed, import a database with `ddev import-db --src=databasename.sql`. The database has to be in your project directory.
+7. If needed, import a database with `ddev import-db --src=/path/to/db.sql.gz`.
 8. Visit the project and continue on.
 
 ### WordPress Quickstart

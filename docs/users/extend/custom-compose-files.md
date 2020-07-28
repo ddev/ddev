@@ -66,4 +66,4 @@ When defining additional services for your project, we recommended you follow th
 
 ### Interacting with additional services
 
-Certain DDEV commands, namely `ddev exec`, `ddev ssh`, and `ddev logs` interact with containers on an individual basis. By default, these commands interact with the web container for a project. All of these commands, however, provide a `--service` or `-s` flag allowing you to specify the service name of the container you want to interact with. For example, if you added a service to provide Apache Solr, and the service was named `solr`, you would be able to run `ddev logs --service solr` to retrieve the logs of the Solr container.
+ `ddev exec`, `ddev ssh`, and `ddev logs` interact with containers on an individual basis. By default, these commands interact with the web container for a project. All of these commands, however, provide a `--service` or `-s` flag allowing you to specify the service name of the container you want to interact with. For example, if you added a service to provide Apache Solr, and the service was named `solr`, you would be able to run `ddev logs --service solr` to retrieve the logs of the Solr container.

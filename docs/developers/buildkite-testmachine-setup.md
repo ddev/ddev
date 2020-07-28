@@ -27,7 +27,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 4. Install golang/git/docker with `brew cask install iterm2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew tap drud/ddev && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer ddev netcat mkcert && brew cask install ngrok`
 5. `mkcert -install`
 6. Run Docker manually and go through its configuration routine.
-7. Run `iTerm`. On Mojave it may prompt for requiring full disk access permissions, follow through with that.
+7. Run iTerm. On Mojave and higher it may prompt for requiring full disk access permissions, follow through with that.
 8. Set up nfsd by running `macos_ddev_nfs_setup.sh`
 9. Add the path `/private/var` or on Catalina `/System/Volumes/Data/private/var` to `/etc/exports` and `sudo nfsd restart`.
 10. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add

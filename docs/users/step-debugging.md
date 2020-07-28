@@ -19,30 +19,30 @@ For each IDE the link to their documentation is provided, and the skeleton steps
 
 ### Setup for Various IDEs
 
-* [PHPStorm](#phpstorm)
+* [PhpStorm](#phpstorm)
 * [Visual Studio Code (vscode)](#vscode)
 * [Atom](#atom)
 
 <a name="phpstorm"></a>
 
-### PHPStorm Debugging Setup
+### PhpStorm Debugging Setup
 
-[PHPStorm](https://www.jetbrains.com/phpstorm/download) is a leading PHP development IDE with extensive built-in debugging support. It provides two different ways to do debugging. One requires very little effort in the PHPStorm IDE (they call it zero-configuration debugging) and the other requires you to set up a "run configuration", and is basically identical to the Netbeans or Eclipse setup.
+[PhpStorm](https://www.jetbrains.com/phpstorm/download) is a leading PHP development IDE with extensive built-in debugging support. It provides two different ways to do debugging. One requires very little effort in the PhpStorm IDE (they call it zero-configuration debugging) and the other requires you to set up a "run configuration", and is basically identical to the Netbeans or Eclipse setup.
 
-**Please note that PHPStorm 2018 and before are not compatible with current versions of XDebug.**
+**Please note that PhpStorm 2018 and before are not compatible with current versions of XDebug.**
 
-#### PHPStorm Zero-Configuration Debugging
+#### PhpStorm Zero-Configuration Debugging
 
-PHPStorm [zero-configuration debugging](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm) means you only have to:
+PhpStorm [zero-configuration debugging](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm) means you only have to:
 
 1. Toggle the “Start Listening for PHP Debug Connections” button:
   ![Start listening for debug connections button](images/phpstorm_listen_for_debug_connections.png)
 2. Set a breakpoint.
 3. Visit a page that should stop in the breakpoint you set.
 
-#### PHPStorm "Run/Debug configuration" Debugging
+#### PhpStorm "Run/Debug configuration" Debugging
 
-PHPStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/creating-and-editing-run-debug-configurations.html) require slightly more up-front work but can offer more flexibility and may be easier for some people.
+PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/creating-and-editing-run-debug-configurations.html) require slightly more up-front work but can offer more flexibility and may be easier for some people.
 
 1. Under the "Run" menu select "Edit configurations"
 2. Click the "+" in the upper left and choose "PHP Web Application" to create a configuration. Give it a reasonable name.
@@ -51,18 +51,18 @@ PHPStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/crea
 5. Set an appropriate breakpoint.
 6. Start debugging by clicking the "debug" button, which will launch a page in your browser.
 
-![PHPStorm debug start](images/phpstorm_config_debug_button.png)
+![PhpStorm debug start](images/phpstorm_config_debug_button.png)
 
 Server creation:
 
-![PHPStorm server creation](images/phpstorm_config_server_config.png)
+![PhpStorm server creation](images/phpstorm_config_server_config.png)
 
-#### PHPStorm and Command-Line Debugging
+#### PhpStorm and Command-Line Debugging
 
 If you need to debug command-line PHP processes, especially code that is outside the docroot (as in /vendor) there's a little extra work to be done:
 
 * If you have used PhpStorm with xdebug you already have a PhpStorm "server" with the same name as your primary URL (see "Languages and Frameworks" -> "PHP" -> "Servers"). The key job of the "server" is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server (in this case the ddev-webserver container). Often, PhpStorm has automatically set up a mapping that doesn't include the entire project (so the vendor directory is not mapped, for example). So map the top-level directory of your project to /var/www/html in the container, as in this image:
-![PHPStorm mapping](images/PHPStormServerMapping.png)
+![PhpStorm mapping](images/PHPStormServerMapping.png)
 * When debugging a command-line script inside the container, the environment variable PHP_IDE_CONFIG is automatically set for you, so it will be something like `PHP_IDE_CONFIG=serverName=d8composer.ddev.site`.  If debugging Drupal's drush command, you may find that launching the site-installed drush directly will avoid confusing PHPStorm with the execution of /usr/local/bin/drush (which is the drush launcher). Run it as `ddev exec /var/www/html/vendor/bin/drush` or wherever it was installed. It's often easiest to just `ddev ssh` into the web container and execute command-line scripts directly.
 
 <a name="atom"></a>

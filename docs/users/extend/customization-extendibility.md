@@ -4,7 +4,7 @@ ddev provides several ways in which the environment for a project using ddev can
 
 ### Changing PHP version
 
-The project's `.ddev/config.yaml` file defines the PHP version to use. This can be changed, and the php_version can be set there to (currently) `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, or `7.4`. The current default is php 7.3.
+The project's `.ddev/config.yaml` file defines the PHP version to use. This can be changed, and the php_version can be set there to `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, or `7.4`. The current default is php 7.3.
 
 #### Older versions of PHP
 

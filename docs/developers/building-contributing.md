@@ -46,7 +46,7 @@ The Buildkite automated tests require special access, which we typically grant t
 
 ## Docker image development
 
-The docker images that DDEV uses are included in the containers/ directory:
+The Docker images that DDEV uses are included in the containers/ directory:
 
 * containers/ddev-webserver: Provides the web servers (the "web" container).
 * containers/ddev-dbserver: Provides the "db" container.
@@ -57,4 +57,4 @@ When changes are made to an image, they have to be temporarily pushed to a tag t
 
 ## Contributing
 
-Interested in contributing to DDEV? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!
+Interested in contributing to DDEV-Local? We would love your suggestions, contributions, and help! Please review our [Guidelines for Contributing](https://github.com/drud/ddev/blob/master/CONTRIBUTING.md), then [create an issue](https://github.com/drud/ddev/issues/new) or open a pull request!
