@@ -109,7 +109,7 @@ By default, ddev is set up to contact the default port, port 9000 on your IDE. H
 
 * To override the port, add an override file in the project's .ddev/php directory. For example, a file .ddev/php/xdebug_remote_port.ini:
 
-```
+```ini
 [PHP]
 xdebug.remote_port=11011
 ```

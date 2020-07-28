@@ -91,8 +91,9 @@ You should then see nfsd in the list as shown:
 * Restart nfsd with `sudo nfsd restart`
 * Add the following to your /etc/nfs.conf:
 
-  ```nfs.server.mount.require_resv_port = 0
+  ```conf
 
+nfs.server.mount.require_resv_port = 0
 nfs.server.verbose = 3
 
 ```
