@@ -211,6 +211,16 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 	if err != nil {
 		return "", fmt.Errorf("unable to pull ddev-live files backup: %v, output=%v ", err, out)
 	}
+
+	// Now delete the files backup since we don't need it any more, and to stay under quota
+	cmd = fmt.Sprintf(`ddev-live delete backup files -y %s/%s`, p.OrgName, backupDescriptor)
+	if os.Getenv("DDEV_DEBUG") != "" {
+		output.UserOut.Print(cmd)
+	}
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+	if err != nil {
+		util.Warning("unable to delete backup (output=`%s`): err=%v, command=%s", out, err, cmd)
+	}
 	return filepath.Join(p.getDownloadDir(), "files"), nil
 }
 
@@ -270,7 +280,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	}
 
 	// Now delete the db backup since we don't need it any more, and to stay under quota
-	cmd = fmt.Sprintf(`ddev-live delete backup -y %s/%s`, p.OrgName, backupName)
+	cmd = fmt.Sprintf(`ddev-live delete backup db -y %s/%s`, p.OrgName, backupName)
 	if os.Getenv("DDEV_DEBUG") != "" {
 		output.UserOut.Print(cmd)
 	}
