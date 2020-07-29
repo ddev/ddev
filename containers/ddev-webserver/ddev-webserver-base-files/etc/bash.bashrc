@@ -56,3 +56,4 @@ fi
 
 export HISTFILE=/mnt/ddev-global-cache/bashhistory/${HOSTNAME}/bash_history
 
+export PHP_IDE_CONFIG=serverName=${DDEV_SITENAME}.${DDEV_TLD}
