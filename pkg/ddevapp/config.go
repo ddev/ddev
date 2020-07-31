@@ -849,13 +849,15 @@ func (app *DdevApp) promptForName() error {
 // AvailableDocrootLocations returns an of default docroot locations to look for.
 func AvailableDocrootLocations() []string {
 	return []string{
-		"web/public",
-		"web",
+		"_www",
 		"docroot",
 		"htdocs",
-		"_www",
-		"public",
+		"html",
 		"pub",
+		"public",
+		"web",
+		"web/public",
+		"webroot",
 	}
 }
 
