@@ -227,7 +227,7 @@ const ConfigInstructions = `
 
 # xdebug_enabled: false  # Set to true to enable xdebug and "ddev start" or "ddev restart"
 # Note that for most people the commands
-# "ddev exec enable_xdebug" and "ddev exec disable_xdebug" work better,
+# "ddev xdebug" to enable xdebug and "ddev xdebug off" to disable it work better,
 # as leaving xdebug enabled all the time is a big performance hit.
 
 # webserver_type: nginx-fpm  # Can be set to apache-fpm or apache-cgi as well
