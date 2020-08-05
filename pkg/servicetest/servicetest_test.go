@@ -108,7 +108,7 @@ func TestServices(t *testing.T) {
 			checkSolrService(t, app)
 			checkMemcachedService(t, app)
 
-			desc, err := app.Describe()
+			desc, err := app.Describe(false)
 			require.NoError(t, err)
 
 			// Make sure desc had 3 services.

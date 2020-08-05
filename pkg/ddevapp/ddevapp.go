@@ -169,7 +169,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContai
 }
 
 // Describe returns a map which provides detailed information on services associated with the running site.
-func (app *DdevApp) Describe() (map[string]interface{}, error) {
+func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to process pre-describe hooks: %v", err)
@@ -179,16 +179,21 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc := make(map[string]interface{})
 
 	appDesc["name"] = app.GetName()
-	appDesc["hostname"] = app.GetHostname()
-	appDesc["hostnames"] = app.GetHostnames()
 	appDesc["status"] = app.SiteStatus()
-	appDesc["type"] = app.GetType()
 	appDesc["approot"] = app.GetAppRoot()
-	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal)
 	appDesc["shortroot"] = shortRoot
-	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["httpurl"] = app.GetHTTPURL()
 	appDesc["httpsurl"] = app.GetHTTPSURL()
+	appDesc["primary_url"] = app.GetPrimaryURL()
+
+	// if short is set, we don't need more information, so return what we have.
+	if short {
+		return appDesc, nil
+	}
+	appDesc["hostname"] = app.GetHostname()
+	appDesc["hostnames"] = app.GetHostnames()
+	appDesc["type"] = app.GetType()
+	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal)
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
 	appDesc["httpURLs"] = httpURLs
 	appDesc["httpsURLs"] = httpsURLs
@@ -1560,7 +1565,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 				util.Success("Deleting database. Volume %s for project %s was deleted", volName, app.Name)
 			}
 		}
-		desc, err := app.Describe()
+		desc, err := app.Describe(false)
 		if err != nil {
 			util.Warning("could not run app.Describe(): %v", err)
 		}

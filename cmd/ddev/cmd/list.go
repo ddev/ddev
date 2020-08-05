@@ -39,7 +39,7 @@ ddev list -A`,
 			} else {
 				table := ddevapp.CreateAppTable()
 				for _, app := range apps {
-					desc, err := app.Describe()
+					desc, err := app.Describe(true)
 					if err != nil {
 						util.Error("Failed to describe project %s: %v", app.GetName(), err)
 					}

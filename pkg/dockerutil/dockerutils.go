@@ -97,11 +97,17 @@ func FindContainerByLabels(labels map[string]string) (*docker.APIContainers, err
 	return nil, nil
 }
 
+var currentDockerContainers []docker.APIContainers
+
 // GetDockerContainers returns a slice of all docker containers on the host system.
 func GetDockerContainers(allContainers bool) ([]docker.APIContainers, error) {
+	if currentDockerContainers != nil {
+		return currentDockerContainers, nil
+	}
 	client := GetDockerClient()
-	containers, err := client.ListContainers(docker.ListContainersOptions{All: allContainers})
-	return containers, err
+	var err error
+	currentDockerContainers, err = client.ListContainers(docker.ListContainersOptions{All: allContainers})
+	return currentDockerContainers, err
 }
 
 // FindContainersByLabels takes a map of label names and values and returns any docker containers which match all labels.

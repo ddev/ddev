@@ -141,7 +141,7 @@ func TestLaunchCommand(t *testing.T) {
 		err = app.Start()
 		assert.NoError(err)
 
-		desc, _ := app.Describe()
+		desc, _ := app.Describe(false)
 		cases := map[string]string{
 			"":   app.GetPrimaryURL(),
 			"-p": desc["phpmyadmin_https_url"].(string),
