@@ -3147,6 +3147,8 @@ func TestPortSpecifications(t *testing.T) {
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name].UsedHostPorts)
 }
 
+// TestDdevGetProjects exercises GetProjects()
+// It's only here for profiling at this point
 func TestDdevGetProjects(t *testing.T) {
 	assert := asrt.New(t)
 	runTime := util.TimeTrack(time.Now(), fmt.Sprint(t.Name()))
@@ -3158,27 +3160,10 @@ func TestDdevGetProjects(t *testing.T) {
 
 }
 
+// TestDdevList tests the ddevapp.List() functionality
+// It's only here for profiling at this point.
 func TestDdevList(t *testing.T) {
-	apps, err := ddevapp.GetProjects(false)
-	if err != nil {
-		util.Failed("failed getting GetProjects: %v", err)
-	}
-	appDescs := make([]map[string]interface{}, 0)
-
-	if len(apps) < 1 {
-		output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
-	} else {
-		table := ddevapp.CreateAppTable()
-		for _, app := range apps {
-			desc, err := app.Describe(true)
-			if err != nil {
-				util.Error("Failed to describe project %s: %v", app.GetName(), err)
-			}
-			appDescs = append(appDescs, desc)
-			ddevapp.RenderAppRow(table, desc)
-		}
-		output.UserOut.WithField("raw", appDescs).Print(table.String() + "\n" + ddevapp.RenderRouterStatus())
-	}
+	ddevapp.List(true, false, 1)
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app

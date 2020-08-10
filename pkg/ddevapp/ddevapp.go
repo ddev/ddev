@@ -111,7 +111,43 @@ type DdevApp struct {
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
-//var ComposeYaml map[string]interface{}
+// List() provides the functionality for `ddev list`
+// activeOnly if true only shows projects that are currently docker containers
+// continuous if true keeps requesting and outputting continuously
+// continuousSleepTime is the time between reports
+func List(activeOnly bool, continuous bool, continuousSleepTime int) {
+	runTime := util.TimeTrack(time.Now(), "ddev list")
+	defer runTime()
+
+	for {
+		apps, err := GetProjects(activeOnly)
+		if err != nil {
+			util.Failed("failed getting GetProjects: %v", err)
+		}
+		appDescs := make([]map[string]interface{}, 0)
+
+		if len(apps) < 1 {
+			output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
+		} else {
+			table := CreateAppTable()
+			for _, app := range apps {
+				desc, err := app.Describe(true)
+				if err != nil {
+					util.Error("Failed to describe project %s: %v", app.GetName(), err)
+				}
+				appDescs = append(appDescs, desc)
+				RenderAppRow(table, desc)
+			}
+			output.UserOut.WithField("raw", appDescs).Print(table.String() + "\n" + RenderRouterStatus())
+		}
+
+		if !continuous {
+			break
+		}
+
+		time.Sleep(time.Duration(continuousSleepTime) * time.Second)
+	}
+}
 
 // GetType returns the application type as a (lowercase) string
 func (app *DdevApp) GetType() string {
