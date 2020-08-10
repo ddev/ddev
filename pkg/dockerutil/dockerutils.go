@@ -69,19 +69,20 @@ func GetDockerClient() *docker.Client {
 	return client
 }
 
-// FindContainerByName takes a container name and returns the container
+// FindContainerByName takes a container name and returns the container ID
 func FindContainerByName(name string) (*docker.APIContainers, error) {
-	containers, err := GetDockerContainers(true)
+	client := GetDockerClient()
+	containers, err := client.ListContainers(docker.ListContainersOptions{
+		All:     true,
+		Filters: map[string][]string{"name": {name}},
+	})
 	if err != nil {
 		return nil, err
 	}
-	// First, ensure a site name is set and matches the current application.
-	for _, container := range containers {
-		if len(container.Names) > 0 && container.Names[0] == "/"+name {
-			return &container, nil
-		}
+	if len(containers) == 0 {
+		return nil, nil
 	}
-	return nil, nil
+	return &containers[0], nil
 }
 
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.

@@ -268,6 +268,46 @@ func TestGetAppContainers(t *testing.T) {
 	assert.Contains(containers[0].Image, version.WebImg)
 }
 
+// TestFindContainerByName does a simple test of FindContainerByName()
+func TestFindContainerByName(t *testing.T) {
+	assert := asrt.New(t)
+
+	pwd, _ := os.Getwd()
+	pwd, _ = filepath.Abs(pwd)
+	testdata := filepath.Join(pwd, "testdata")
+	assert.DirExists(testdata)
+	containerName := t.Name() + fileutil.RandomFilenameBase()
+
+	// Make sure we don't already have one running
+	c, err := FindContainerByName(containerName)
+	assert.NoError(err)
+	if err == nil && c != nil {
+		err = RemoveContainer(c.ID, 0)
+		assert.NoError(err)
+	}
+
+	// Run a container, don't remove it.
+	cID, _, err := RunSimpleContainer("busybox:latest", containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false)
+	assert.NoError(err)
+
+	defer func() {
+		_ = RemoveContainer(cID, 0)
+	}()
+
+	// Now find the container by name
+	c, err = FindContainerByName(containerName)
+	assert.NoError(err)
+	require.NotNil(t, c)
+	// Remove it
+	err = RemoveContainer(c.ID, 0)
+	assert.NoError(err)
+
+	// Verify that we no longer find it.
+	c, err = FindContainerByName(containerName)
+	assert.NoError(err)
+	assert.Nil(c)
+}
+
 func TestGetContainerEnv(t *testing.T) {
 	assert := asrt.New(t)
 

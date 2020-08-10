@@ -166,7 +166,10 @@ func CheckForConf(confPath string) (string, error) {
 
 // ddevContainersRunning determines if any ddev-controlled containers are currently running.
 func ddevContainersRunning() (bool, error) {
-	containers, err := dockerutil.GetDockerContainers(false)
+	labels := map[string]string{
+		"com.ddev.platform": "ddev",
+	}
+	containers, err := dockerutil.FindContainersByLabels(labels)
 	if err != nil {
 		return false, err
 	}
