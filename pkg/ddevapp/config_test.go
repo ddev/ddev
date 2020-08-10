@@ -650,6 +650,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	defer switchDir()
 
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s ConfigOverrideDetection", site.Name))
+	runTime()
 
 	// Copy test overrides into the project .ddev directory
 	for _, item := range []string{"nginx", "nginx_full", "apache", "php", "mysql"} {

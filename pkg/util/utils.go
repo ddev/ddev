@@ -173,7 +173,7 @@ func FindWindowsBashPath() string {
 // It tracks if DDEV_VERBOSE is set
 func TimeTrack(start time.Time, name string) func() {
 	if globalconfig.DdevVerbose {
-		logrus.Printf("starting %s at %v\n", name, start.Format("15:04:05"))
+		logrus.Printf("starting %s at %v\n", name, start.Format("15:04:05.000000000"))
 		return func() {
 			if globalconfig.DdevVerbose {
 				elapsed := time.Since(start)

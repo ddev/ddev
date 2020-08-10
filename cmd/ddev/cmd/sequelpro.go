@@ -108,7 +108,7 @@ var dummyDevSequelproCmd = &cobra.Command{
 func init() {
 	switch {
 	case detectSequelpro():
-		app, err := ddevapp.GetActiveApp("")
+		app, err := ddevapp.NewApp("", false, "")
 		if err == nil && app != nil && !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 			RootCmd.AddCommand(DdevSequelproCmd)
 		}

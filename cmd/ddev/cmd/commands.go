@@ -24,7 +24,7 @@ import (
 // .ddev/commands/<servicename> and .ddev/commands/host
 // and if it finds them adds them to Cobra's commands.
 func addCustomCommands(rootCmd *cobra.Command) error {
-	app, err := ddevapp.GetActiveApp("")
+	app, err := ddevapp.NewApp("", false, "")
 	if err != nil {
 		return nil
 	}
@@ -237,7 +237,7 @@ func findDirectiveInScript(script string, directive string) string {
 // embedded files.
 // "make packr2" can be used to update the packr2 cache.
 func populateExamplesCommandsHomeadditions() error {
-	app, err := ddevapp.GetActiveApp("")
+	app, err := ddevapp.NewApp("", false, "")
 	if err != nil {
 		return nil
 	}

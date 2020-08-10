@@ -1072,6 +1072,9 @@ type ExecOpts struct {
 func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	app.DockerEnv()
 
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("app.Exec %v", opts))
+	defer runTime()
+
 	if opts.Service == "" {
 		opts.Service = "web"
 	}

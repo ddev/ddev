@@ -33,18 +33,15 @@ Docs: https://ddev.readthedocs.io
 Support: https://ddev.readthedocs.io/en/stable/#support`,
 	Version: version.DdevVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		ignores := []string{"version", "config", "hostname", "help", "auth", "import-files"}
 		command := strings.Join(os.Args[1:], " ")
 
 		// LogSetup() has already been done, but now needs to be done
 		// again *after* --json flag is parsed.
 		output.LogSetUp()
 
-		// Skip docker validation for any command listed in "ignores"
-		for _, k := range ignores {
-			if strings.Contains(command, k) {
-				return
-			}
+		// Skip docker and other validation for most commands
+		if command != "start" || command != "restart" {
+			return
 		}
 
 		err := dockerutil.CheckDockerVersion(version.DockerVersionConstraint)
