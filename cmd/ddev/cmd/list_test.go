@@ -154,7 +154,7 @@ func TestCmdListContinuous(t *testing.T) {
 	byteCount, err := reader.Read(blob)
 	assert.NoError(err)
 	blob = blob[:byteCount-1]
-	require.True(t, byteCount > 1000)
+	require.True(t, byteCount > 300, "byteCount should have been >300 and was %v", byteCount)
 
 	f, err := unmarshalJSONLogs(string(blob))
 	if err != nil {

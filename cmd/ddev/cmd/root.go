@@ -40,7 +40,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 		output.LogSetUp()
 
 		// Skip docker and other validation for most commands
-		if command != "start" || command != "restart" {
+		if command != "start" && command != "restart" {
 			return
 		}
 
