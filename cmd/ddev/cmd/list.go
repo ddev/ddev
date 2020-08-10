@@ -27,6 +27,9 @@ var ListCmd = &cobra.Command{
 ddev list --active-only
 ddev list -A`,
 	Run: func(cmd *cobra.Command, args []string) {
+		runTime := util.TimeTrack(time.Now(), "ddev list")
+		defer runTime()
+
 		for {
 			apps, err := ddevapp.GetProjects(activeOnly)
 			if err != nil {
