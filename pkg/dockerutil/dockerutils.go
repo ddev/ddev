@@ -119,6 +119,7 @@ func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, e
 
 	client := GetDockerClient()
 	containers, err := client.ListContainers(docker.ListContainersOptions{
+		All:     true,
 		Filters: map[string][]string{"label": filterList},
 	})
 	if err != nil {
