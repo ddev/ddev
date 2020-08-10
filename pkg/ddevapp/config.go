@@ -103,7 +103,7 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	}
 	app.SetApptypeSettingsPaths()
 
-	app.SetInstrumentationAppTags()
+	// app.SetInstrumentationAppTags()
 
 	// Rendered yaml is not there until after ddev config or ddev start
 	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {

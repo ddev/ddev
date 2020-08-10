@@ -119,7 +119,7 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 		app, err := ddevapp.GetActiveApp("")
 		assert.NoError(err)
 
-		desc, err := app.Describe()
+		desc, err := app.Describe(false)
 		assert.NoError(err)
 		assert.EqualValues(ddevapp.SiteRunning, desc["status"])
 		assert.EqualValues(app.GetName(), desc["name"])
@@ -133,7 +133,7 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 		// Stop the router using docker and then check the describe
 		_, err = exec.RunCommand("docker", []string{"stop", "ddev-router"})
 		assert.NoError(err)
-		desc, err = app.Describe()
+		desc, err = app.Describe(false)
 		assert.NoError(err)
 		assert.Equal("exited", desc["router_status"])
 		_, err = exec.RunCommand("docker", []string{"start", "ddev-router"})
@@ -158,7 +158,7 @@ func TestCmdDescribeAppUsingSitename(t *testing.T) {
 	for _, v := range TestSites {
 		app, err := ddevapp.GetActiveApp(v.Name)
 		assert.NoError(err)
-		desc, err := app.Describe()
+		desc, err := app.Describe(false)
 		assert.NoError(err)
 		assert.EqualValues(desc["status"], ddevapp.SiteRunning)
 		assert.EqualValues(app.GetName(), desc["name"])

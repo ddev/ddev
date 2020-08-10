@@ -2092,7 +2092,7 @@ func TestDdevDescribe(t *testing.T) {
 		t.Fatalf("app.StartAndWait(%s) failed: %v, \nweb container healthcheck='%s', \n=== web container logs=\n%s\n=== END web container logs ===", site.Name, err, healthcheck, out)
 	}
 
-	desc, err := app.Describe()
+	desc, err := app.Describe(false)
 	assert.NoError(err)
 	assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
 	assert.EqualValues(app.GetName(), desc["name"])
@@ -2111,7 +2111,7 @@ func TestDdevDescribe(t *testing.T) {
 	err = app.Pause()
 	assert.NoError(err)
 
-	desc, err = app.Describe()
+	desc, err = app.Describe(false)
 	assert.NoError(err)
 	assert.EqualValues(ddevapp.SitePaused, desc["status"])
 
@@ -2150,7 +2150,7 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
-	desc, err := app.Describe()
+	desc, err := app.Describe(false)
 	assert.NoError(err)
 	assert.Contains(desc["status"], ddevapp.SiteDirMissing, "Status did not include the phrase '%s' when describing a site with missing directories.", ddevapp.SiteDirMissing)
 	// Move the site directory back to its original location.
@@ -2391,7 +2391,7 @@ func TestListWithoutDir(t *testing.T) {
 	// array first.
 	table := ddevapp.CreateAppTable()
 	for _, site := range apps {
-		desc, err := site.Describe()
+		desc, err := site.Describe(false)
 		if err != nil {
 			t.Fatalf("Failed to describe site %s: %v", site.GetName(), err)
 		}
@@ -2594,7 +2594,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
-	desc, err := app.Describe()
+	desc, err := app.Describe(false)
 	assert.NoError(err)
 	_ = desc
 
@@ -3036,7 +3036,7 @@ func TestHostDBPort(t *testing.T) {
 		err = app.Start()
 		require.NoError(t, err)
 
-		desc, err := app.Describe()
+		desc, err := app.Describe(false)
 		assert.NoError(err)
 
 		dockerIP, err := dockerutil.GetDockerIP()
@@ -3145,6 +3145,40 @@ func TestPortSpecifications(t *testing.T) {
 	defer conflictApp.Stop(true, false)
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name])
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name].UsedHostPorts)
+}
+
+func TestDdevGetProjects(t *testing.T) {
+	assert := asrt.New(t)
+	runTime := util.TimeTrack(time.Now(), fmt.Sprint(t.Name()))
+	defer runTime()
+
+	apps, err := ddevapp.GetProjects(false)
+	assert.NoError(err)
+	_ = apps
+
+}
+
+func TestDdevList(t *testing.T) {
+	apps, err := ddevapp.GetProjects(false)
+	if err != nil {
+		util.Failed("failed getting GetProjects: %v", err)
+	}
+	appDescs := make([]map[string]interface{}, 0)
+
+	if len(apps) < 1 {
+		output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
+	} else {
+		table := ddevapp.CreateAppTable()
+		for _, app := range apps {
+			desc, err := app.Describe(true)
+			if err != nil {
+				util.Error("Failed to describe project %s: %v", app.GetName(), err)
+			}
+			appDescs = append(appDescs, desc)
+			ddevapp.RenderAppRow(table, desc)
+		}
+		output.UserOut.WithField("raw", appDescs).Print(table.String() + "\n" + ddevapp.RenderRouterStatus())
+	}
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app

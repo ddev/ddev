@@ -36,7 +36,7 @@ running 'ddev describe <projectname>.`,
 			util.Failed("Failed to describe %s: %v", project.Name, err)
 		}
 
-		desc, err := project.Describe()
+		desc, err := project.Describe(false)
 		if err != nil {
 			util.Failed("Failed to describe project %s: %v", project.Name, err)
 		}
