@@ -104,40 +104,26 @@ func GetDockerContainers(allContainers bool) ([]docker.APIContainers, error) {
 }
 
 // FindContainersByLabels takes a map of label names and values and returns any docker containers which match all labels.
+// Explanation of the query:
+// * docs: https://docs.docker.com/engine/api/v1.23/
+// * Stack Overflow: https://stackoverflow.com/questions/28054203/docker-remote-api-filter-exited
 func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, error) {
-	var returnError error
-	containers, err := GetDockerContainers(true)
-	if err != nil {
-		return []docker.APIContainers{{}}, err
-	}
-	containerMatches := []docker.APIContainers{}
 	if len(labels) < 1 {
 		return []docker.APIContainers{{}}, fmt.Errorf("the provided list of labels was empty")
 	}
-
-	// First, ensure a site name is set and matches the current application.
-	for i := range containers {
-		matched := true
-		for matchName, matchValue := range labels {
-			// If the label exists check the value to ensure a match
-			if labelValue, ok := containers[i].Labels[matchName]; ok {
-				if labelValue != matchValue {
-					matched = false
-					break
-				}
-			} else {
-				// If the label does not exist, we can just fail immediately.
-				matched = false
-				break
-			}
-		}
-
-		if matched {
-			containerMatches = append(containerMatches, containers[i])
-		}
+	filterList := []string{}
+	for k, v := range labels {
+		filterList = append(filterList, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	return containerMatches, returnError
+	client := GetDockerClient()
+	containers, err := client.ListContainers(docker.ListContainersOptions{
+		Filters: map[string][]string{"label": filterList},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return containers, nil
 }
 
 // NetExists checks to see if the docker network for ddev exists.
