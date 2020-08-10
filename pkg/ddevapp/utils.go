@@ -35,16 +35,15 @@ func GetActiveProjects() []*DdevApp {
 
 	if err == nil {
 		for _, siteContainer := range containers {
-			app := &DdevApp{}
 			approot, ok := siteContainer.Labels["com.ddev.approot"]
 			if !ok {
 				break
 			}
 
-			err = app.Init(approot)
+			app, err := NewApp(approot, true, "")
 
 			// Artificially populate sitename and apptype based on labels
-			// if app.Init() failed.
+			// if NewApp() failed.
 			if err != nil {
 				app.Name = siteContainer.Labels["com.ddev.site-name"]
 				app.Type = siteContainer.Labels["com.ddev.app-type"]
