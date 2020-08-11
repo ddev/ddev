@@ -1,15 +1,14 @@
-## In-Container home directory configuration
+## In-Container home directory and shell configuration
 
-There are a number of reasons that your web container home directory may need custom configuration. You may want your normal git configuration in there, or a composer auth.json, etc.
+Custom shell configuration (bash or your preferred shell), your usual git configuration, a composer auth.json and more can be achieved within your containers.  Place all your dotfiles in your global`~/.ddev/homeadditions` or your project's .ddev/homeadditions directory and DDEV will use these in your project's web containers.
 
 On `ddev start`, ddev attempts to create a user inside the web and db containers with the same name and use id as the one you have on the host.
 
-If you have a ~/.ddev/homeadditions
-If you have a ~/.ddev/homeadditions directory (in the global .ddev directory) or your project has a .ddev/homeadditions directory, their contents will be copied recursively into the in-container home directory during `ddev start`. (Note that project homeadditions contents override the global homeadditions.)
+DDEV looks for the `homeadditions` directory either in `~/.ddev/homeadditions` (the global .ddev directory) or the `.ddev/homeadditions` directory of a particular project, and will copy their contents recursively into the in-container home directory during `ddev start`. (Note that project homeadditions contents override the global homeadditions.)
 
 Usage examples:
 
-* If you make git commits inside the container, you may want to copy your ~/.gitconfig into ~/.ddev/homeadditions or the project's .ddev/homeadditions so that use of git inside the container will use your regular username and email, etc.
+* If you use git inside the container, you may want to copy your ~/.gitconfig into ~/.ddev/homeadditions or the project's .ddev/homeadditions so that use of git inside the container will use your regular username and email, etc.
 * If you use private password-protected composer repositories with satis, for example, and use a global auth.json, you might want to `cp ~/.composer/auth.json into .ddev/homeadditions/.composer/auth.json`, but be careful that you exclude it from checking using a .gitignore or equivalent.
 * Some people have specific configuration needs for their .ssh/config. If you provide your own .ssh/config though, please make sure it includes these lines:
 
