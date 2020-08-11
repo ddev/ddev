@@ -68,9 +68,13 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		return nil, fmt.Errorf("ddev config is not useful in home directory (%s)", homeDir)
 	}
 
-	app.AppRoot = appRoot
-	if !fileutil.FileExists(appRoot) {
-		return app, fmt.Errorf("project root %s does not exist", appRoot)
+	if appRoot == "" {
+		app.AppRoot, _ = os.Getwd()
+	} else {
+		app.AppRoot = appRoot
+	}
+	if !fileutil.FileExists(app.AppRoot) {
+		return app, fmt.Errorf("project root %s does not exist", app.AppRoot)
 	}
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.Type = nodeps.AppTypePHP

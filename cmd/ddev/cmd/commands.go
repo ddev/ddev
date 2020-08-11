@@ -26,7 +26,8 @@ import (
 func addCustomCommands(rootCmd *cobra.Command) error {
 	app, err := ddevapp.NewApp("", false, "")
 	if err != nil {
-		return nil
+		pwd, _ := os.Getwd()
+		return fmt.Errorf("could not initialize project in %s: %v", pwd, err)
 	}
 
 	sourceGlobalCommandPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")

@@ -233,7 +233,9 @@ func TestMain(m *testing.M) {
 
 	token = os.Getenv("DDEV_DDEVLIVE_API_TOKEN")
 	if token != "" {
-		out, err := exec.RunCommand(DdevBin, []string{"auth", "ddev-live", token})
+		// ddev auth ddev-live can create a .ddev folder, which we don't need right now,
+		// so drop it in /tmp
+		out, err := exec.RunCommand("bash", []string{"-c", "cd /tmp && ddev auth ddev-live " + token})
 		if err != nil {
 			log.Fatalf("Unable to ddev auth ddev-live: %v (%v)", err, out)
 		}
@@ -1999,8 +2001,6 @@ func TestDdevPause(t *testing.T) {
 		assert.NoError(err)
 		assert.True(check, containerType, "container has exited")
 	}
-	pwd, _ := os.Getwd()
-	_ = pwd
 	assert.FileExists("hello-pre-pause-" + app.Name)
 	assert.FileExists("hello-post-pause-" + app.Name)
 	err = os.Remove("hello-pre-pause-" + app.Name)
@@ -3062,6 +3062,8 @@ func TestHostDBPort(t *testing.T) {
 
 		// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
 		// is getting in there available to host custom commands.
+		pwd, _ := os.Getwd()
+		_ = pwd
 		_, _ = exec.RunCommand(DdevBin, []string{})
 		out, err := exec.RunCommand(DdevBin, []string{"showport"})
 		assert.NoError(err)
