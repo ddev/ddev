@@ -63,16 +63,17 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 
 	app := &DdevApp{}
 
-	homeDir, _ := homedir.Dir()
-	if appRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
-		return nil, fmt.Errorf("ddev config is not useful in home directory (%s)", homeDir)
-	}
-
 	if appRoot == "" {
 		app.AppRoot, _ = os.Getwd()
 	} else {
 		app.AppRoot = appRoot
 	}
+
+	homeDir, _ := homedir.Dir()
+	if appRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
+		return nil, fmt.Errorf("ddev config is not useful in your home directory (%s)", homeDir)
+	}
+
 	if !fileutil.FileExists(app.AppRoot) {
 		return app, fmt.Errorf("project root %s does not exist", app.AppRoot)
 	}

@@ -377,6 +377,7 @@ func TestCmdDisasterConfig(t *testing.T) {
 	assert.NoError(err)
 	out, err := exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
 	assert.Error(err)
+	assert.Contains(out, "not useful in")
 	_ = out
 
 	err = os.Chdir(testDir)
@@ -387,16 +388,17 @@ func TestCmdDisasterConfig(t *testing.T) {
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 
-	out, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
+	// Create a project
+	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
 	assert.NoError(err)
-	subdir := filepath.Join(tmpdir, "junk")
+	subdirName := t.Name() + fileutil.RandomFilenameBase()
+	subdir := filepath.Join(tmpdir, subdirName)
 	err = os.Mkdir(subdir, 0777)
 	assert.NoError(err)
 	err = os.Chdir(subdir)
 	assert.NoError(err)
-	assert.NotContains(out, "possible you wanted to")
 
-	// Make sure that ddev config in subdir gives a warning
+	// Make sure that ddev config in a subdir gives a warning
 	out, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
 	assert.NoError(err)
 	assert.Contains(out, "possible you wanted to")

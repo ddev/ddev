@@ -24,10 +24,9 @@ import (
 // .ddev/commands/<servicename> and .ddev/commands/host
 // and if it finds them adds them to Cobra's commands.
 func addCustomCommands(rootCmd *cobra.Command) error {
-	app, err := ddevapp.NewApp("", false, "")
+	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
-		pwd, _ := os.Getwd()
-		return fmt.Errorf("could not initialize project in %s: %v", pwd, err)
+		return nil
 	}
 
 	sourceGlobalCommandPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
@@ -87,7 +86,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 				// If command has already been added, we won't work with it again.
 				if _, ok := commandsAdded[commandName]; ok {
-					util.Warning("not adding custom command %s because it was already added", onHostFullPath)
+					util.Warning("not adding command %s (%s) because it was already added to project %s", commandName, onHostFullPath, app.Name)
 					continue
 				}
 
@@ -238,7 +237,7 @@ func findDirectiveInScript(script string, directive string) string {
 // embedded files.
 // "make packr2" can be used to update the packr2 cache.
 func populateExamplesCommandsHomeadditions() error {
-	app, err := ddevapp.NewApp("", false, "")
+	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		return nil
 	}

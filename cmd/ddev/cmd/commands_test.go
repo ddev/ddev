@@ -112,6 +112,9 @@ func TestCustomCommands(t *testing.T) {
 		assert.FileExists(filepath.Join(globalCommandsDir, f))
 	}
 
+	// Make sure we haven't accidentally created anything inappropriate in ~/.ddev
+	assert.False(fileutil.FileExists(filepath.Join(tmpHome, ".ddev", ".globalcommands")))
+	assert.False(fileutil.FileExists(filepath.Join(origHome, ".ddev", ".globalcommands")))
 }
 
 // TestLaunchCommand tests that the launch command behaves all the ways it should behave
