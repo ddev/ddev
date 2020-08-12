@@ -6,7 +6,7 @@ Visit the [documentation pages for DDEV-Live](https://docs.ddev.com/getting-star
 
 ### DDEV-Live Quickstart
 
-If you have the DDEV-Local CLI (ddev) [installed](https://ddev.readthedocs.io/en/latest/#installation), and have a DDEV-Live account with an active WordPress, Drupal 7, or Drupal 8 site, you can follow this quick start guide to spin up a DDEV-Live site locally. If you don't already have a DDEV-Live account, a free short-term trial is [available on signup](https://dash.ddev.com/).
+If you have the DDEV-Local CLI (ddev) [installed](https://ddev.readthedocs.io/en/latest/#installation), and have a DDEV-Live account with an active site, you can follow this quick start guide to spin up a DDEV-Live site locally. If you don't already have a DDEV-Live account, a free short-term trial is [available on signup](https://dash.ddev.com/).
 
 1. Authenticate with DDEV-Live.
 
