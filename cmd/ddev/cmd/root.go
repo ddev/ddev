@@ -124,9 +124,14 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 		}
 
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
+			// Try to get default instrumentationApp from current directory if not already set
 			if instrumentationApp == nil {
-				instrumentationApp, _ = ddevapp.GetActiveApp("")
+				app, err := ddevapp.GetActiveApp("")
+				if err == nil {
+					instrumentationApp = app
+				}
 			}
+			// If it has been set, provide the tags, otherwise no app tags
 			if instrumentationApp != nil {
 				instrumentationApp.SetInstrumentationAppTags()
 			}
