@@ -9,6 +9,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"gopkg.in/segmentio/analytics-go.v3"
 	"os"
@@ -32,6 +33,9 @@ func GetInstrumentationUser() string {
 
 // SetInstrumentationBaseTags sets the basic always-used tags for Segment
 func SetInstrumentationBaseTags() {
+	runTime := util.TimeTrack(time.Now(), "SetInstrumentationBaseTags")
+	defer runTime()
+
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		dockerVersion, _ := version.GetDockerVersion()
 		composeVersion, _ := version.GetDockerComposeVersion()
@@ -61,6 +65,9 @@ func getProjectHash(projectName string) string {
 
 // SetInstrumentationAppTags creates app-specific tags for Segment
 func (app *DdevApp) SetInstrumentationAppTags() {
+	runTime := util.TimeTrack(time.Now(), "SetInstrumentationAppTags")
+	defer runTime()
+
 	ignoredProperties := []string{"approot", "hostname", "hostnames", "name", "router_status_log", "shortroot"}
 
 	describeTags, _ := app.Describe(false)
@@ -117,6 +124,8 @@ func SegmentEvent(client analytics.Client, hashedID string, event string) error 
 
 // SendInstrumentationEvents does the actual send to segment
 func SendInstrumentationEvents(event string) {
+	runTime := util.TimeTrack(time.Now(), "SendInstrumentationEvents")
+	defer runTime()
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn && globalconfig.IsInternetActive() {
 		client := analytics.New(version.SegmentKey)

@@ -124,6 +124,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 		}
 
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
+			runTime := util.TimeTrack(time.Now(), "Instrumentation")
 			// Try to get default instrumentationApp from current directory if not already set
 			if instrumentationApp == nil {
 				app, err := ddevapp.NewApp("", false, "")
@@ -137,6 +138,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			}
 			ddevapp.SetInstrumentationBaseTags()
 			ddevapp.SendInstrumentationEvents(event)
+			runTime()
 		}
 	},
 }
