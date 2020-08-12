@@ -110,12 +110,6 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	}
 	app.SetApptypeSettingsPaths()
 
-	// TODO: Find the right place for SetInstrumentationAppTags - it's not correct here.
-	// Probably it should be in the actual command?
-	// We can only have one set of these tags per segment event anyway, so doesn't make
-	// sense to create every time NewApp() happens.
-	// app.SetInstrumentationAppTags()
-
 	// Rendered yaml is not there until after ddev config or ddev start
 	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
 		content, err := fileutil.ReadFileIntoString(app.DockerComposeFullRenderedYAMLPath())

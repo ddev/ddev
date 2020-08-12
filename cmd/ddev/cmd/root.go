@@ -19,9 +19,10 @@ import (
 )
 
 var (
-	updateInterval = time.Hour * 24 * 7 // One week interval between updates
-	serviceType    string
-	updateDocURL   = "https://ddev.readthedocs.io/en/stable/#installation"
+	updateInterval     = time.Hour * 24 * 7 // One week interval between updates
+	serviceType        string
+	updateDocURL       = "https://ddev.readthedocs.io/en/stable/#installation"
+	instrumentationApp *ddevapp.DdevApp
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -123,6 +124,12 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 		}
 
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
+			if instrumentationApp == nil {
+				instrumentationApp, _ = ddevapp.GetActiveApp("")
+			}
+			if instrumentationApp != nil {
+				instrumentationApp.SetInstrumentationAppTags()
+			}
 			ddevapp.SetInstrumentationBaseTags()
 			ddevapp.SendInstrumentationEvents(event)
 		}
