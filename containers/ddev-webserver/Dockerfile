@@ -53,6 +53,7 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="7.4"
 ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux/ddev-live.zip
 
+# Blackfire
 RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
 RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get update
@@ -67,6 +68,12 @@ RUN mkdir /tmp/ddev && \
         printf 'MKCERT_ARCH="linux-amd64" \n\
         MAILHOG_ARCH="linux_amd64"' > /tmp/ddev/vars; \
     fi
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confold" blackfire-php blackfire-agent -y --allow-unauthenticated
+# We don't need the agent itself to run, but the CLI client is provided by blackfire-agent package.
+RUN /etc/init.d/blackfire-agent stop \
+    && update-rc.d blackfire-agent remove
+
 
 # blackfire-php is not available for arm64 (yet)
 RUN if [[ $TARGETPLATFORM != "linux/arm64" ]]; then \
