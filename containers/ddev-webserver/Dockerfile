@@ -70,9 +70,6 @@ RUN mkdir /tmp/ddev && \
     fi
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confold" blackfire-php blackfire-agent -y --allow-unauthenticated
-# We don't need the agent itself to run, but the CLI client is provided by blackfire-agent package.
-RUN /etc/init.d/blackfire-agent stop \
-    && update-rc.d blackfire-agent remove
 
 
 # blackfire-php is not available for arm64 (yet)
