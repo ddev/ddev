@@ -5,10 +5,9 @@
 ##### comment about what you did and why.
 
 # The //workdir prevents docker and friends from trying to convert the thing to a non-unix path.
-# The $(S) in fromt of paths is a slash used only for Docker Toolbox, for the same reason.
 DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
-          	    -v "$(S)$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
-          	    -v "$(S)$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
+          	    -v "$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -v "$(PWD)/$(GOTMP)/bin:/go/bin" \
           	    -e CGO_ENABLED=0                  \
           	    -e GOOS=$@						  \
           	    -e GOPATH="//workdir/$(GOTMP)" \
@@ -18,7 +17,7 @@ DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)              
           	    $(BUILD_IMAGE)
 
 DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
-          	    -v "$(S)$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -v "$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
           	    -e GOPATH="//workdir/$(GOTMP)" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -e GOLANGCI_LINT_CACHE="//workdir/$(GOTMP)/.golanci-lint-cache" \
@@ -35,7 +34,7 @@ GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
 
 BUILD_OS = $(shell go env GOHOSTOS)
 
-BUILD_IMAGE ?= drud/golang-build-container:v1.14.2
+BUILD_IMAGE ?= drud/golang-build-container:v1.15.0
 
 BUILD_BASE_DIR ?= $(PWD)
 
@@ -54,28 +53,10 @@ VERSION_VARIABLES += VERSION COMMIT BUILDINFO
 VERSION_LDFLAGS := $(foreach v,$(VERSION_VARIABLES),-X "$(PKG)/pkg/version.$(v)=$($(v))")
 
 LDFLAGS := -extldflags -static $(VERSION_LDFLAGS)
-DOCKERMOUNTFLAG := :delegated
 
 # In go 1.11 -mod=vendor is not autodetected; it probably will be in 1.12
 # See https://github.com/golang/go/issues/27227
 USEMODVENDOR := $(shell if [ -d vendor ]; then echo "-mod=vendor"; fi)
-
-ifeq ($(BUILD_OS),windows)
-    # On Windows docker toolbox, volume mounts oddly need a // at the beginning for things to work out, so
-    # add that extra slash only on Windows.
-    DOCKERMOUNTFLAG=
-endif
-
-# On Docker Toolbox we can't use paths like C:\xxx\xxx, must use /C/xxx/xxx
-# However, on Docker-for-Windows/Appveyor we must use C:\xxx
-# On all other (macos/linux) $PWD will already be OK.
-ifneq ($(shell if [ "$(BUILD_OS)" = "windows" ] && [ -z "$(DOCKER_TOOLBOX_INSTALL_PATH)" ]; then echo true; fi),)
-	PWD=$(shell cmd //c "echo %cd%")
-endif
-ifneq ($(DOCKER_TOOLBOX_INSTALL_PATH),)
-	PWD=$(shell pwd)
-    S=/
-endif
 
 build: $(BUILD_OS)
 
@@ -85,7 +66,7 @@ pull:
 
 linux darwin windows: pull $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
-	@echo $(shell if [ "$(BUILD_OS)" = "windows" ]; then echo "windows build: BUILD_OS=$(BUILD_OS)  DOCKER_TOOLBOX_INSTALL_PATH=$(DOCKER_TOOLBOX_INSTALL_PATH) PWD=$(PWD) S=$(S)"; fi )
+	@echo $(shell if [ "$(BUILD_OS)" = "windows" ]; then echo "windows build: BUILD_OS=$(BUILD_OS)  DOCKER_TOOLBOX_INSTALL_PATH=$(DOCKER_TOOLBOX_INSTALL_PATH) PWD=$(PWD) S="; fi )
 	@mkdir -p $(GOTMP)/{.cache,pkg,src,bin}
 	@$(DOCKERBUILDCMD) \
         go install -installsuffix static -ldflags ' $(LDFLAGS) ' $(SRC_AND_UNDER) && touch $@
