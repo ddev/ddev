@@ -38,7 +38,6 @@ func SetInstrumentationBaseTags() {
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		dockerVersion, _ := version.GetDockerVersion()
-		composeVersion, _ := version.GetDockerComposeVersion()
 		isToolbox := nodeps.IsDockerToolbox()
 
 		nodeps.InstrumentationTags["OS"] = runtime.GOOS
@@ -48,7 +47,6 @@ func SetInstrumentationBaseTags() {
 			nodeps.InstrumentationTags["wslDistro"] = wslDistro
 		}
 		nodeps.InstrumentationTags["dockerVersion"] = dockerVersion
-		nodeps.InstrumentationTags["dockerComposeVersion"] = composeVersion
 		nodeps.InstrumentationTags["dockerToolbox"] = strconv.FormatBool(isToolbox)
 		nodeps.InstrumentationTags["version"] = version.VERSION
 		nodeps.InstrumentationTags["ServerHash"] = GetInstrumentationUser()
