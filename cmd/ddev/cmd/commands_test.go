@@ -107,7 +107,7 @@ func TestCustomCommands(t *testing.T) {
 	}
 
 	// The TYPO3 and Drupal commands should not be available here (currently WordPress)
-	for _, c := range []string{"typo3", "typo3cms", "drush"} {
+	for _, c := range []string{"typo3", "typo3cms", "drush", "artisan", "magento"} {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
 		assert.Error(err)
 	}
@@ -115,7 +115,7 @@ func TestCustomCommands(t *testing.T) {
 	// TYPO3 commands should only be available for type typo3
 	app.Type = nodeps.AppTypeTYPO3
 	_ = app.WriteConfig()
-	_, err = exec.RunCommand(DdevBin, nil)
+	_, _ = exec.RunCommand(DdevBin, nil)
 	for _, c := range []string{"typo3", "typo3cms"} {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
 		assert.NoError(err)
@@ -124,7 +124,7 @@ func TestCustomCommands(t *testing.T) {
 	// Drupal types should only be available for type drupal*
 	app.Type = nodeps.AppTypeDrupal9
 	_ = app.WriteConfig()
-	_, err = exec.RunCommand(DdevBin, nil)
+	_, _ = exec.RunCommand(DdevBin, nil)
 	for _, c := range []string{"drush"} {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
 		assert.NoError(err)
