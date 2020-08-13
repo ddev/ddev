@@ -12,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/segmentio/analytics-go.v3"
 	"os"
 	"path/filepath"
 	"strings"
@@ -190,6 +191,15 @@ func checkDdevVersionAndOptInInstrumentation() error {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/stable/users/cli-usage/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
+			client := analytics.New(version.SegmentKey)
+			defer func() {
+				_ = client.Close()
+			}()
+
+			err := ddevapp.SegmentUser(client, ddevapp.GetInstrumentationUser())
+			if err != nil {
+				output.UserOut.Debugf("error in SegmentUser: %v", err)
+			}
 		}
 		globalconfig.DdevGlobalConfig.LastStartedVersion = version.VERSION
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)

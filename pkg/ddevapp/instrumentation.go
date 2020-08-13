@@ -133,12 +133,7 @@ func SendInstrumentationEvents(event string) {
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn && globalconfig.IsInternetActive() {
 		client := analytics.New(version.SegmentKey)
 
-		err := SegmentUser(client, GetInstrumentationUser())
-		if err != nil {
-			output.UserOut.Debugf("error sending hashedHostID to segment: %v", err)
-		}
-
-		err = SegmentEvent(client, GetInstrumentationUser(), event)
+		err := SegmentEvent(client, GetInstrumentationUser(), event)
 		if err != nil {
 			output.UserOut.Debugf("error sending event to segment: %v", err)
 		}
