@@ -40,6 +40,9 @@ func SetInstrumentationBaseTags() {
 		dockerVersion, _ := version.GetDockerVersion()
 		isToolbox := nodeps.IsDockerToolbox()
 
+		timezone, _ := time.Now().In(time.Local).Zone()
+		lang := os.Getenv("LANG")
+
 		nodeps.InstrumentationTags["OS"] = runtime.GOOS
 		wslDistro := nodeps.GetWSLDistro()
 		if wslDistro != "" {
@@ -50,6 +53,8 @@ func SetInstrumentationBaseTags() {
 		nodeps.InstrumentationTags["dockerToolbox"] = strconv.FormatBool(isToolbox)
 		nodeps.InstrumentationTags["version"] = version.VERSION
 		nodeps.InstrumentationTags["ServerHash"] = GetInstrumentationUser()
+		nodeps.InstrumentationTags["timezone"] = timezone
+		nodeps.InstrumentationTags["language"] = lang
 	}
 }
 
