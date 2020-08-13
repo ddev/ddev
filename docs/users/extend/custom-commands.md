@@ -1,4 +1,4 @@
-## Custom Commands
+## Custom (Shell) Commands
 
 It's quite easy to add custom commands to ddev; they can execute either on the host or in the various containers. The basic idea is to add a bash script to either the specific project in `.ddev/commands/host` or `.ddev/commands/<containername>` or globally for every project in `~/.ddev/commands`
 
@@ -6,9 +6,10 @@ There are example commands provided in `ddev/commands/*/*.example` that can just
 
 ### Notes for all command types
 
-* Script files should be set to executable (`chmod +x <scriptfile>`). ddev does _not_ need to be restarted to see new commands.
 * The command filename is not what determines the name of the command.  That comes from the Usage doc line (`## Usage: commandname`).
 * To confirm that your custom command is available, run `ddev -h`, and look for it in the list.
+* If your command should only be visible for a particular project type, add the line `## ProjectTypes: <list-of-project-types>`, for example `## ProjectTypes: drupal7,drupal8,drupal9,backdrop`
+`
 
 ### Host commands
 
@@ -24,6 +25,9 @@ To provide host commands, place a bash script in .ddev/commands/host. For exampl
 # Example is macOS-specific, but easy to adapt to any OS
 open -a PHPStorm.app ${DDEV_APPROOT}
 ```
+
+* If your host command should only run on one or more operating systems, add `## OSTypes:`, for example, `## OSTypes: darwin` ("darwin" for macOS, "windows" for Windows, "linux" for Linux).
+* If your host command should only run if a particular file exists, add `## HostBinaryExists:`, for example `## HostBinaryExists: /Applications/Sequel ace.app`
 
 ### Container commands
 
