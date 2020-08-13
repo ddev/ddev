@@ -98,7 +98,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		// Do not report these comamnds
-		ignores := map[string]bool{"list": true, "version": true, "help": true, "auth": true, "hostname": true}
+		ignores := map[string]bool{"auth": true, "exec": true, "help": true, "hostname": true, "list": true, "ssh": true, "version": true}
 		if _, ok := ignores[cmd.CalledAs()]; ok {
 			return
 		}
