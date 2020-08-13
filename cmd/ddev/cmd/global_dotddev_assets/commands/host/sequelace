@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run sequelace with current project database
+## Usage: sequelace
+## Example: "ddev sequelace"
+## OSTypes: darwin
+## HostBinaryExists: /Applications/Sequel ace.app
+
+set -x
+query="mysql://root:root@127.0.0.1:${DDEV_HOST_DB_PORT}/db"
+
+open "$query" -a "/Applications/Sequel Ace.app/Contents/MacOS/Sequel Ace"
+
