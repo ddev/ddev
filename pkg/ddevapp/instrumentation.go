@@ -104,7 +104,8 @@ func SegmentUser(client analytics.Client, hashedID string) error {
 // SegmentEvent provides the event and traits that go with it.
 func SegmentEvent(client analytics.Client, hashedID string, event string) error {
 	if _, ok := ReportableEvents[event]; !ok {
-		event = "customcommand"
+		// There's no need to waste people's time on custom commands.
+		return nil
 	}
 	properties := analytics.NewProperties()
 
