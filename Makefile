@@ -4,6 +4,8 @@
 # linux build and linuxbrew is installed.
 export PATH := $(EXTRA_PATH):$(PATH)
 
+DOCKERMOUNTFLAG := :cached
+
 # Not updating build-tools to get this, but this should be removed
 # when build-tools is updated.
 # BUILD_IMAGE := drud/golang-build-container:v1.12.7
