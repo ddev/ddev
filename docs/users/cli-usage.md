@@ -10,14 +10,19 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev start` and `ddev stop` start and stop the containers that comprise a project. `ddev restart` just does a stop and a start. `ddev poweroff` stops all ddev-related containers and projects.
 * `ddev describe` or `ddev describe <projectname>` gives you full details about the project, what ports it uses, how to access them, etc.
 * `ddev list` shows running projects
+* `ddev mysql` gives direct access to the mysql client
+* `ddev sequelpro` or `ddev sequelace` (macOS only, if installed) give access to the Sequel Pro or Sequel Ace database browser GUIs (if installed)
 * `ddev import-db` and `ddev export-db` let you import or export a sql or compressed sql file.
 * `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer).
 * `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev restore-snapshot`.
-* `ddev ssh` opens a bash session in the web container (or other container).
 * `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
+* `ddev ssh` opens a bash session in the web container (or other container).
 * `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). `ddev launch -p` will launch the PHPMyAdmin UI, and `ddev launch -m` will launch the MailHog UI.
 * `ddev delete` is the same as `ddev stop --remove-data` and will delete a project's database and ddev's record of the project's existence. It doesn't touch your project or code. `ddev delete -O` will omit the snapshot creation step that would otherwise take place, and `ddev delete images` gets rid of spare Docker images you may have on your machine.
 * `ddev xdebug` enables xdebug, `ddev xdebug off` disables it, `ddev xdebug status` shows status
+* `ddev drush` (Drupal and Backdrop only) gives direct access to the drush CLI
+* `ddev artisan` (Laravel only) gives direct access to the Laravel artisan CLI
+* `ddev magento` (Magento2 only) gives access to the magento CLI
 
 ## Partial Bundled Tools List
 
@@ -630,7 +635,7 @@ DDEV provides several commands to facilitate interacting with your project in th
 
 ### Executing Commands in Containers
 
-The `ddev exec` command allows you to run shell commands in the container for a ddev service. By default, commands are executed on the web service container, in the docroot path of your project. This allows you to use [the developer tools included in the web container](developer-tools.md). For example, to run the Drush CLI in the web container, you would run `ddev exec drush status`.
+The `ddev exec` command allows you to run shell commands in the container for a ddev service. By default, commands are executed on the web service container, in the docroot path of your project. This allows you to use [the developer tools included in the web container](developer-tools.md). For example, to run the "ls" in the web container, you would run `ddev exec ls` or `ddev . ls`.
 
 To run a shell command in the container for a different service, use the `--service` flag at the beginning of your exec command to specify the service the command should be run against. For example, to run the mysql client in the database, container, you would run `ddev exec --service db mysql`. To specify the directory in which a shell command will be run, use the `--dir` flag. For example, to see the contents of the `/usr/bin` directory, you would run `ddev exec --dir /usr/bin ls`.
 

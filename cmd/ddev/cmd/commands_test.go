@@ -34,14 +34,14 @@ func TestCustomCommands(t *testing.T) {
 	site := TestSites[0]
 	switchDir := TestSites[0].Chdir()
 	app, _ := ddevapp.NewApp(TestSites[0].Dir, false, "")
-	defer func() {
+	t.Cleanup(func() {
 		_ = os.RemoveAll(tmpHome)
 		_ = os.Setenv("HOME", origHome)
 		_ = os.Setenv("DDEV_DEBUG", origDebug)
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
 		switchDir()
-	}()
+	})
 
 	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
 	// It's changed via $HOME for the ddev subprocess
@@ -101,13 +101,37 @@ func TestCustomCommands(t *testing.T) {
 	}
 
 	// Make sure that all the official ddev-provided custom commands are usable by just checking help
-	for _, c := range []string{"mysql", "launch", "live", "xdebug"} {
+	for _, c := range []string{"launch", "live", "mysql", "xdebug"} {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
 		assert.NoError(err, "Failed to run ddev %s -h", c)
 	}
 
-	// Make sure that all the non-command stuff we installed is there
-	for _, f := range []string{"db/mysqldump.example", "db/README.txt", "web/drush.example", "web/README.txt", "host/README.txt", "host/phpstorm.example"} {
+	// The TYPO3 and Drupal commands should not be available here (currently WordPress)
+	for _, c := range []string{"typo3", "typo3cms", "drush", "artisan", "magento"} {
+		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		assert.Error(err)
+	}
+
+	// TYPO3 commands should only be available for type typo3
+	app.Type = nodeps.AppTypeTYPO3
+	_ = app.WriteConfig()
+	_, _ = exec.RunCommand(DdevBin, nil)
+	for _, c := range []string{"typo3", "typo3cms"} {
+		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		assert.NoError(err)
+	}
+
+	// Drupal types should only be available for type drupal*
+	app.Type = nodeps.AppTypeDrupal9
+	_ = app.WriteConfig()
+	_, _ = exec.RunCommand(DdevBin, nil)
+	for _, c := range []string{"drush"} {
+		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		assert.NoError(err)
+	}
+
+	// Make sure that the non-command stuff we installed is there
+	for _, f := range []string{"db/mysqldump.example", "db/README.txt", "web/README.txt", "host/README.txt", "host/phpstorm.example"} {
 		assert.FileExists(filepath.Join(projectCommandsDir, f))
 		assert.FileExists(filepath.Join(globalCommandsDir, f))
 	}

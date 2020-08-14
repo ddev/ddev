@@ -96,15 +96,44 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					util.Warning("command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
 					continue
 				}
-				description := findDirectiveInScript(onHostFullPath, "## Description")
-				if description == "" {
-					description = commandName
+				directives := findDirectivesInScriptCommand(onHostFullPath)
+				var description, usage, example, projectTypes, osTypes, hostBinaryExists string
+
+				description = commandName
+				if val, ok := directives["Description"]; ok {
+					description = val
 				}
-				usage := findDirectiveInScript(onHostFullPath, "## Usage")
-				if usage == "" {
-					usage = commandName + " [flags] [args]"
+
+				if val, ok := directives["Usage"]; ok {
+					usage = val
 				}
-				example := findDirectiveInScript(onHostFullPath, "## Example")
+				if val, ok := directives["Example"]; ok {
+					example = val
+				}
+				if val, ok := directives["ProjectTypes"]; ok {
+					projectTypes = val
+				}
+				// If ProjectTypes is specified and we aren't of that type, skip
+				if projectTypes != "" && !strings.Contains(projectTypes, app.Type) {
+					continue
+				}
+
+				if val, ok := directives["OSTypes"]; ok {
+					osTypes = val
+				}
+				// If OSTypes is specified and we aren't this isn't a specified OS, skip
+				if osTypes != "" && !strings.Contains(osTypes, runtime.GOOS) {
+					continue
+				}
+
+				if val, ok := directives["HostBinaryExists"]; ok {
+					hostBinaryExists = val
+				}
+				// If hostBinaryExists is specified it doesn't exist here, skip
+				if hostBinaryExists != "" && !fileutil.FileExists(hostBinaryExists) {
+					continue
+				}
+
 				descSuffix := " (shell " + service + " container command)"
 				if serviceDirOnHost[0:1] == "." {
 					descSuffix = " (global shell " + service + " container command)"
@@ -203,8 +232,9 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service strin
 	}
 }
 
-// findDirectiveInScript() looks for the named directive and returns the string following colon and spaces
-func findDirectiveInScript(script string, directive string) string {
+// findDirectivesInScriptCommand() Returns a map of directives and their contents
+// found in the named script
+func findDirectivesInScriptCommand(script string) map[string]string {
 	f, err := os.Open(script)
 	if err != nil {
 		util.Failed("Failed to open %s: %v", script, err)
@@ -213,22 +243,26 @@ func findDirectiveInScript(script string, directive string) string {
 	// nolint errcheck
 	defer f.Close()
 
+	var directives = make(map[string]string)
+
 	// Splits on newlines by default.
 	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.Contains(line, directive) && strings.Contains(line, ":") {
-			parts := strings.Split(line, ":")
-			return strings.Trim(parts[1], " ")
+		if strings.HasPrefix(line, "## ") && strings.Contains(line, ":") {
+			line = strings.Replace(line, "## ", "", 1)
+			parts := strings.SplitN(line, ":", 2)
+			parts[1] = strings.Trim(parts[1], " ")
+			directives[parts[0]] = parts[1]
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		return ""
+		return nil
 	}
 
-	return ""
+	return directives
 }
 
 // populateExamplesCommandsHomeadditions grabs packr2 assets

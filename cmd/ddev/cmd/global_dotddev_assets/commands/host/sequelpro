@@ -1,0 +1,77 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run sequelpro with current project database
+## Usage: sequelpro
+## Example: "ddev sequelpro"
+## OSTypes: darwin
+## HostBinaryExists: /Applications/Sequel Pro.app
+
+tmpdir=$(mktemp -d -t sequelpro-XXXXXXXXXX)
+templatepath="$tmpdir/sequelpro.spf"
+
+cat >$templatepath <<END
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>ContentFilters</key>
+    <dict/>
+    <key>auto_connect</key>
+    <true/>
+    <key>data</key>
+    <dict>
+        <key>connection</key>
+        <dict>
+            <key>database</key>
+            <string>db</string>
+            <key>host</key>
+            <string>127.0.0.1</string>
+            <key>name</key>
+            <string>${DDEV_SITENAME}</string>
+            <key>password</key>
+            <string>root</string>
+            <key>port</key>
+            <integer>$DDEV_HOST_DB_PORT</integer>
+            <key>rdbms_type</key>
+            <string>mysql</string>
+            <key>sslCACertFileLocation</key>
+            <string></string>
+            <key>sslCACertFileLocationEnabled</key>
+            <integer>0</integer>
+            <key>sslCertificateFileLocation</key>
+            <string></string>
+            <key>sslCertificateFileLocationEnabled</key>
+            <integer>0</integer>
+            <key>sslKeyFileLocation</key>
+            <string></string>
+            <key>sslKeyFileLocationEnabled</key>
+            <integer>0</integer>
+            <key>type</key>
+            <string>SPTCPIPConnection</string>
+            <key>useSSL</key>
+            <integer>0</integer>
+            <key>user</key>
+            <string>root</string>
+        </dict>
+    </dict>
+    <key>encrypted</key>
+    <false/>
+    <key>format</key>
+    <string>connection</string>
+    <key>queryFavorites</key>
+    <array/>
+    <key>queryHistory</key>
+    <array/>
+    <key>rdbms_type</key>
+    <string>mysql</string>
+    <key>rdbms_version</key>
+    <string>5.5.44</string>
+    <key>version</key>
+    <integer>1</integer>
+</dict>
+</plist>
+END
+
+open  "${templatepath}"
+
