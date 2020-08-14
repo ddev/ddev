@@ -233,7 +233,9 @@ func TestMain(m *testing.M) {
 
 	token = os.Getenv("DDEV_DDEVLIVE_API_TOKEN")
 	if token != "" {
-		out, err := exec.RunCommand(DdevBin, []string{"auth", "ddev-live", token})
+		// ddev auth ddev-live can create a .ddev folder, which we don't need right now,
+		// so drop it in /tmp
+		out, err := exec.RunCommand("bash", []string{"-c", "cd /tmp && ddev auth ddev-live " + token})
 		if err != nil {
 			log.Fatalf("Unable to ddev auth ddev-live: %v (%v)", err, out)
 		}
@@ -1999,8 +2001,6 @@ func TestDdevPause(t *testing.T) {
 		assert.NoError(err)
 		assert.True(check, containerType, "container has exited")
 	}
-	pwd, _ := os.Getwd()
-	_ = pwd
 	assert.FileExists("hello-pre-pause-" + app.Name)
 	assert.FileExists("hello-post-pause-" + app.Name)
 	err = os.Remove("hello-pre-pause-" + app.Name)
@@ -2092,7 +2092,7 @@ func TestDdevDescribe(t *testing.T) {
 		t.Fatalf("app.StartAndWait(%s) failed: %v, \nweb container healthcheck='%s', \n=== web container logs=\n%s\n=== END web container logs ===", site.Name, err, healthcheck, out)
 	}
 
-	desc, err := app.Describe()
+	desc, err := app.Describe(false)
 	assert.NoError(err)
 	assert.EqualValues(ddevapp.SiteRunning, desc["status"], "")
 	assert.EqualValues(app.GetName(), desc["name"])
@@ -2111,7 +2111,7 @@ func TestDdevDescribe(t *testing.T) {
 	err = app.Pause()
 	assert.NoError(err)
 
-	desc, err = app.Describe()
+	desc, err = app.Describe(false)
 	assert.NoError(err)
 	assert.EqualValues(ddevapp.SitePaused, desc["status"])
 
@@ -2150,7 +2150,7 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
-	desc, err := app.Describe()
+	desc, err := app.Describe(false)
 	assert.NoError(err)
 	assert.Contains(desc["status"], ddevapp.SiteDirMissing, "Status did not include the phrase '%s' when describing a site with missing directories.", ddevapp.SiteDirMissing)
 	// Move the site directory back to its original location.
@@ -2391,7 +2391,7 @@ func TestListWithoutDir(t *testing.T) {
 	// array first.
 	table := ddevapp.CreateAppTable()
 	for _, site := range apps {
-		desc, err := site.Describe()
+		desc, err := site.Describe(false)
 		if err != nil {
 			t.Fatalf("Failed to describe site %s: %v", site.GetName(), err)
 		}
@@ -2594,7 +2594,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 
-	desc, err := app.Describe()
+	desc, err := app.Describe(false)
 	assert.NoError(err)
 	_ = desc
 
@@ -3036,7 +3036,7 @@ func TestHostDBPort(t *testing.T) {
 		err = app.Start()
 		require.NoError(t, err)
 
-		desc, err := app.Describe()
+		desc, err := app.Describe(false)
 		assert.NoError(err)
 
 		dockerIP, err := dockerutil.GetDockerIP()
@@ -3145,6 +3145,25 @@ func TestPortSpecifications(t *testing.T) {
 	defer conflictApp.Stop(true, false)
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name])
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name].UsedHostPorts)
+}
+
+// TestDdevGetProjects exercises GetProjects()
+// It's only here for profiling at this point
+func TestDdevGetProjects(t *testing.T) {
+	assert := asrt.New(t)
+	runTime := util.TimeTrack(time.Now(), fmt.Sprint(t.Name()))
+	defer runTime()
+
+	apps, err := ddevapp.GetProjects(false)
+	assert.NoError(err)
+	_ = apps
+
+}
+
+// TestDdevList tests the ddevapp.List() functionality
+// It's only here for profiling at this point.
+func TestDdevList(t *testing.T) {
+	ddevapp.List(true, false, 1)
 }
 
 // constructContainerName builds a container name given the type (web/db/dba) and the app

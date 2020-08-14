@@ -156,7 +156,10 @@ func GetRouterStatus() (string, string) {
 // containers defining VIRTUAL_PORT env var
 func determineRouterPorts() []string {
 	var routerPorts []string
-	containers, err := dockerutil.GetDockerContainers(false)
+	labels := map[string]string{
+		"com.ddev.platform": "ddev",
+	}
+	containers, err := dockerutil.FindContainersByLabels(labels)
 	if err != nil {
 		util.Failed("failed to retrieve containers for determining port mappings: %v", err)
 	}

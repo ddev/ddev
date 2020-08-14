@@ -1,7 +1,8 @@
 # Docker ddev-webserver (webserver and php)
 
 ## Introduction
-This is a Dockerfile to build a container image for ddev's web container. 
+
+This is a Dockerfile to build a container image for ddev's web container.
 
 ## Developer Tools
 
@@ -23,6 +24,7 @@ make clean
 ```
 
 ## Running
+
 To run the container by itself:
 
 ```

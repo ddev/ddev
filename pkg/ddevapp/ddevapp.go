@@ -111,7 +111,43 @@ type DdevApp struct {
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
-//var ComposeYaml map[string]interface{}
+// List() provides the functionality for `ddev list`
+// activeOnly if true only shows projects that are currently docker containers
+// continuous if true keeps requesting and outputting continuously
+// continuousSleepTime is the time between reports
+func List(activeOnly bool, continuous bool, continuousSleepTime int) {
+	runTime := util.TimeTrack(time.Now(), "ddev list")
+	defer runTime()
+
+	for {
+		apps, err := GetProjects(activeOnly)
+		if err != nil {
+			util.Failed("failed getting GetProjects: %v", err)
+		}
+		appDescs := make([]map[string]interface{}, 0)
+
+		if len(apps) < 1 {
+			output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
+		} else {
+			table := CreateAppTable()
+			for _, app := range apps {
+				desc, err := app.Describe(true)
+				if err != nil {
+					util.Error("Failed to describe project %s: %v", app.GetName(), err)
+				}
+				appDescs = append(appDescs, desc)
+				RenderAppRow(table, desc)
+			}
+			output.UserOut.WithField("raw", appDescs).Print(table.String() + "\n" + RenderRouterStatus())
+		}
+
+		if !continuous {
+			break
+		}
+
+		time.Sleep(time.Duration(continuousSleepTime) * time.Second)
+	}
+}
 
 // GetType returns the application type as a (lowercase) string
 func (app *DdevApp) GetType() string {
@@ -169,7 +205,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContai
 }
 
 // Describe returns a map which provides detailed information on services associated with the running site.
-func (app *DdevApp) Describe() (map[string]interface{}, error) {
+func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
 		return nil, fmt.Errorf("Failed to process pre-describe hooks: %v", err)
@@ -179,16 +215,21 @@ func (app *DdevApp) Describe() (map[string]interface{}, error) {
 	appDesc := make(map[string]interface{})
 
 	appDesc["name"] = app.GetName()
-	appDesc["hostname"] = app.GetHostname()
-	appDesc["hostnames"] = app.GetHostnames()
 	appDesc["status"] = app.SiteStatus()
-	appDesc["type"] = app.GetType()
 	appDesc["approot"] = app.GetAppRoot()
-	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal)
 	appDesc["shortroot"] = shortRoot
-	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["httpurl"] = app.GetHTTPURL()
 	appDesc["httpsurl"] = app.GetHTTPSURL()
+	appDesc["primary_url"] = app.GetPrimaryURL()
+	appDesc["type"] = app.GetType()
+
+	// if short is set, we don't need more information, so return what we have.
+	if short {
+		return appDesc, nil
+	}
+	appDesc["hostname"] = app.GetHostname()
+	appDesc["hostnames"] = app.GetHostnames()
+	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal)
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
 	appDesc["httpURLs"] = httpURLs
 	appDesc["httpsURLs"] = httpsURLs
@@ -1031,6 +1072,9 @@ type ExecOpts struct {
 func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	app.DockerEnv()
 
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("app.Exec %v", opts))
+	defer runTime()
+
 	if opts.Service == "" {
 		opts.Service = "web"
 	}
@@ -1560,7 +1604,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 				util.Success("Deleting database. Volume %s for project %s was deleted", volName, app.Name)
 			}
 		}
-		desc, err := app.Describe()
+		desc, err := app.Describe(false)
 		if err != nil {
 			util.Warning("could not run app.Describe(): %v", err)
 		}

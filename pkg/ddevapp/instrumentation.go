@@ -9,6 +9,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"gopkg.in/segmentio/analytics-go.v3"
 	"os"
@@ -32,10 +33,15 @@ func GetInstrumentationUser() string {
 
 // SetInstrumentationBaseTags sets the basic always-used tags for Segment
 func SetInstrumentationBaseTags() {
+	runTime := util.TimeTrack(time.Now(), "SetInstrumentationBaseTags")
+	defer runTime()
+
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		dockerVersion, _ := version.GetDockerVersion()
-		composeVersion, _ := version.GetDockerComposeVersion()
 		isToolbox := nodeps.IsDockerToolbox()
+
+		timezone, _ := time.Now().In(time.Local).Zone()
+		lang := os.Getenv("LANG")
 
 		nodeps.InstrumentationTags["OS"] = runtime.GOOS
 		wslDistro := nodeps.GetWSLDistro()
@@ -44,10 +50,11 @@ func SetInstrumentationBaseTags() {
 			nodeps.InstrumentationTags["wslDistro"] = wslDistro
 		}
 		nodeps.InstrumentationTags["dockerVersion"] = dockerVersion
-		nodeps.InstrumentationTags["dockerComposeVersion"] = composeVersion
 		nodeps.InstrumentationTags["dockerToolbox"] = strconv.FormatBool(isToolbox)
 		nodeps.InstrumentationTags["version"] = version.VERSION
 		nodeps.InstrumentationTags["ServerHash"] = GetInstrumentationUser()
+		nodeps.InstrumentationTags["timezone"] = timezone
+		nodeps.InstrumentationTags["language"] = lang
 	}
 }
 
@@ -61,9 +68,12 @@ func getProjectHash(projectName string) string {
 
 // SetInstrumentationAppTags creates app-specific tags for Segment
 func (app *DdevApp) SetInstrumentationAppTags() {
+	runTime := util.TimeTrack(time.Now(), "SetInstrumentationAppTags")
+	defer runTime()
+
 	ignoredProperties := []string{"approot", "hostname", "hostnames", "name", "router_status_log", "shortroot"}
 
-	describeTags, _ := app.Describe()
+	describeTags, _ := app.Describe(false)
 	for key, val := range describeTags {
 		// Make sure none of the "URL" attributes or the ignoredProperties comes through
 		if strings.Contains(strings.ToLower(key), "url") || nodeps.ArrayContainsString(ignoredProperties, key) {
@@ -94,7 +104,8 @@ func SegmentUser(client analytics.Client, hashedID string) error {
 // SegmentEvent provides the event and traits that go with it.
 func SegmentEvent(client analytics.Client, hashedID string, event string) error {
 	if _, ok := ReportableEvents[event]; !ok {
-		event = "customcommand"
+		// There's no need to waste people's time on custom commands.
+		return nil
 	}
 	properties := analytics.NewProperties()
 
@@ -117,16 +128,13 @@ func SegmentEvent(client analytics.Client, hashedID string, event string) error 
 
 // SendInstrumentationEvents does the actual send to segment
 func SendInstrumentationEvents(event string) {
+	runTime := util.TimeTrack(time.Now(), "SendInstrumentationEvents")
+	defer runTime()
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn && globalconfig.IsInternetActive() {
 		client := analytics.New(version.SegmentKey)
 
-		err := SegmentUser(client, GetInstrumentationUser())
-		if err != nil {
-			output.UserOut.Debugf("error sending hashedHostID to segment: %v", err)
-		}
-
-		err = SegmentEvent(client, GetInstrumentationUser(), event)
+		err := SegmentEvent(client, GetInstrumentationUser(), event)
 		if err != nil {
 			output.UserOut.Debugf("error sending event to segment: %v", err)
 		}

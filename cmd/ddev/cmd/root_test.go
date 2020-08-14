@@ -148,14 +148,27 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert := asrt.New(t)
 
 	tmpDir := testcommon.CreateTmpDir("globalDdevCheck")
+	switchDir := TestSites[0].Chdir()
+
 	origHome := os.Getenv("HOME")
+
+	t.Cleanup(
+		func() {
+			switchDir()
+			err := os.RemoveAll(tmpDir)
+			assert.NoError(err)
+
+			err = os.Setenv("HOME", origHome)
+			assert.NoError(err)
+		})
 
 	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist before we run ddev.
 	_, err := os.Stat(filepath.Join(tmpDir, ".ddev"))
 	assert.Error(err)
 	assert.True(os.IsNotExist(err))
 
-	_, err = os.Stat(filepath.Join(tmpDir, ".ddev", ".update"))
+	tmpUpdateFilePath := filepath.Join(tmpDir, ".ddev", ".update")
+	_, err = os.Stat(tmpUpdateFilePath)
 	assert.Error(err)
 	assert.True(os.IsNotExist(err))
 
@@ -163,18 +176,11 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	err = os.Setenv("HOME", tmpDir)
 	assert.NoError(err)
 
-	args := []string{"list"}
-	_, err = exec.RunCommand(DdevBin, args)
+	// The .update file is only created by ddev start
+	_, err = exec.RunCommand(DdevBin, []string{"start"})
 	assert.NoError(err)
 
-	_, err = os.Stat(filepath.Join(tmpDir, ".ddev", ".update"))
-	assert.NoError(err)
-
-	// Cleanup our tmp homedir
-	err = os.RemoveAll(tmpDir)
-	assert.NoError(err)
-
-	err = os.Setenv("HOME", origHome)
+	_, err = os.Stat(tmpUpdateFilePath)
 	assert.NoError(err)
 }
 

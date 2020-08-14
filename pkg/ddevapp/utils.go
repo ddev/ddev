@@ -35,16 +35,15 @@ func GetActiveProjects() []*DdevApp {
 
 	if err == nil {
 		for _, siteContainer := range containers {
-			app := &DdevApp{}
 			approot, ok := siteContainer.Labels["com.ddev.approot"]
 			if !ok {
 				break
 			}
 
-			err = app.Init(approot)
+			app, err := NewApp(approot, true, "")
 
 			// Artificially populate sitename and apptype based on labels
-			// if app.Init() failed.
+			// if NewApp() failed.
 			if err != nil {
 				app.Name = siteContainer.Labels["com.ddev.site-name"]
 				app.Type = siteContainer.Labels["com.ddev.app-type"]
@@ -167,7 +166,10 @@ func CheckForConf(confPath string) (string, error) {
 
 // ddevContainersRunning determines if any ddev-controlled containers are currently running.
 func ddevContainersRunning() (bool, error) {
-	containers, err := dockerutil.GetDockerContainers(false)
+	labels := map[string]string{
+		"com.ddev.platform": "ddev",
+	}
+	containers, err := dockerutil.FindContainersByLabels(labels)
 	if err != nil {
 		return false, err
 	}

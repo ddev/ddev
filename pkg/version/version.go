@@ -22,7 +22,7 @@ var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by
 
 // SegmentKey is the ddev-specific key for Segment service
 // Compiled with link-time variables
-var SegmentKey = ""
+var SegmentKey = "CawBO33fRNynkaZsfgjY8sTxDT3yrH9c"
 
 // DockerVersionConstraint is the current minimum version of docker required for ddev.
 // See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints

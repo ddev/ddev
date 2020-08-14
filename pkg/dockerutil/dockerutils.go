@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	exec2 "github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -70,19 +69,20 @@ func GetDockerClient() *docker.Client {
 	return client
 }
 
-// FindContainerByName takes a container name and returns the container
+// FindContainerByName takes a container name and returns the container ID
 func FindContainerByName(name string) (*docker.APIContainers, error) {
-	containers, err := GetDockerContainers(true)
+	client := GetDockerClient()
+	containers, err := client.ListContainers(docker.ListContainersOptions{
+		All:     true,
+		Filters: map[string][]string{"name": {name}},
+	})
 	if err != nil {
 		return nil, err
 	}
-	// First, ensure a site name is set and matches the current application.
-	for _, container := range containers {
-		if len(container.Names) > 0 && container.Names[0] == "/"+name {
-			return &container, nil
-		}
+	if len(containers) == 0 {
+		return nil, nil
 	}
-	return nil, nil
+	return &containers[0], nil
 }
 
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.
@@ -105,40 +105,27 @@ func GetDockerContainers(allContainers bool) ([]docker.APIContainers, error) {
 }
 
 // FindContainersByLabels takes a map of label names and values and returns any docker containers which match all labels.
+// Explanation of the query:
+// * docs: https://docs.docker.com/engine/api/v1.23/
+// * Stack Overflow: https://stackoverflow.com/questions/28054203/docker-remote-api-filter-exited
 func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, error) {
-	var returnError error
-	containers, err := GetDockerContainers(true)
-	if err != nil {
-		return []docker.APIContainers{{}}, err
-	}
-	containerMatches := []docker.APIContainers{}
 	if len(labels) < 1 {
 		return []docker.APIContainers{{}}, fmt.Errorf("the provided list of labels was empty")
 	}
-
-	// First, ensure a site name is set and matches the current application.
-	for i := range containers {
-		matched := true
-		for matchName, matchValue := range labels {
-			// If the label exists check the value to ensure a match
-			if labelValue, ok := containers[i].Labels[matchName]; ok {
-				if labelValue != matchValue {
-					matched = false
-					break
-				}
-			} else {
-				// If the label does not exist, we can just fail immediately.
-				matched = false
-				break
-			}
-		}
-
-		if matched {
-			containerMatches = append(containerMatches, containers[i])
-		}
+	filterList := []string{}
+	for k, v := range labels {
+		filterList = append(filterList, fmt.Sprintf("%s=%s", k, v))
 	}
 
-	return containerMatches, returnError
+	client := GetDockerClient()
+	containers, err := client.ListContainers(docker.ListContainersOptions{
+		All:     true,
+		Filters: map[string][]string{"label": filterList},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return containers, nil
 }
 
 // NetExists checks to see if the docker network for ddev exists.
@@ -276,6 +263,9 @@ func GetContainerHealth(container *docker.APIContainers) (string, string) {
 func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, action ...string) error {
 	var arg []string
 
+	runTime := util.TimeTrack(time.Now(), "dockerutil.ComposeWithStreams")
+	defer runTime()
+
 	for _, file := range composeFiles {
 		arg = append(arg, "-f")
 		arg = append(arg, file)
@@ -403,10 +393,8 @@ func CheckDockerVersion(versionConstraint string) error {
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This
 // relies on docker-compose being somewhere in the user's $PATH.
 func CheckDockerCompose(versionConstraint string) error {
-	if globalconfig.DdevDebug {
-		runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
-		defer runTime()
-	}
+	runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
+	defer runTime()
 
 	version, err := version.GetDockerComposeVersion()
 	if err != nil {

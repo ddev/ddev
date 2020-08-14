@@ -28,6 +28,7 @@ ddev ssh -d /var/www/html`,
 			util.Failed("Failed to ddev ssh: %v", err)
 		}
 		app := projects[0]
+		instrumentationApp = app
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
 			util.Failed("Project is not currently running. Try 'ddev start'.")

@@ -12,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/segmentio/analytics-go.v3"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,9 +20,10 @@ import (
 )
 
 var (
-	updateInterval = time.Hour * 24 * 7 // One week interval between updates
-	serviceType    string
-	updateDocURL   = "https://ddev.readthedocs.io/en/stable/#installation"
+	updateInterval     = time.Hour * 24 * 7 // One week interval between updates
+	serviceType        string
+	updateDocURL       = "https://ddev.readthedocs.io/en/stable/#installation"
+	instrumentationApp *ddevapp.DdevApp
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -33,18 +35,15 @@ Docs: https://ddev.readthedocs.io
 Support: https://ddev.readthedocs.io/en/stable/#support`,
 	Version: version.DdevVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		ignores := []string{"version", "config", "hostname", "help", "auth", "import-files"}
 		command := strings.Join(os.Args[1:], " ")
 
 		// LogSetup() has already been done, but now needs to be done
 		// again *after* --json flag is parsed.
 		output.LogSetUp()
 
-		// Skip docker validation for any command listed in "ignores"
-		for _, k := range ignores {
-			if strings.Contains(command, k) {
-				return
-			}
+		// Skip docker and other validation for most commands
+		if command != "start" && command != "restart" {
+			return
 		}
 
 		err := dockerutil.CheckDockerVersion(version.DockerVersionConstraint)
@@ -99,7 +98,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		// Do not report these comamnds
-		ignores := map[string]bool{"list": true, "version": true, "help": true, "auth": true, "hostname": true}
+		ignores := map[string]bool{"auth": true, "exec": true, "help": true, "hostname": true, "list": true, "ssh": true, "version": true}
 		if _, ok := ignores[cmd.CalledAs()]; ok {
 			return
 		}
@@ -126,8 +125,21 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 		}
 
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
+			runTime := util.TimeTrack(time.Now(), "Instrumentation")
+			// Try to get default instrumentationApp from current directory if not already set
+			if instrumentationApp == nil {
+				app, err := ddevapp.NewApp("", false, "")
+				if err == nil {
+					instrumentationApp = app
+				}
+			}
+			// If it has been set, provide the tags, otherwise no app tags
+			if instrumentationApp != nil {
+				instrumentationApp.SetInstrumentationAppTags()
+			}
 			ddevapp.SetInstrumentationBaseTags()
 			ddevapp.SendInstrumentationEvents(event)
+			runTime()
 		}
 	},
 }
@@ -179,6 +191,15 @@ func checkDdevVersionAndOptInInstrumentation() error {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/stable/users/cli-usage/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
+			client := analytics.New(version.SegmentKey)
+			defer func() {
+				_ = client.Close()
+			}()
+
+			err := ddevapp.SegmentUser(client, ddevapp.GetInstrumentationUser())
+			if err != nil {
+				output.UserOut.Debugf("error in SegmentUser: %v", err)
+			}
 		}
 		globalconfig.DdevGlobalConfig.LastStartedVersion = version.VERSION
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
