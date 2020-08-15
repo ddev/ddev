@@ -266,7 +266,7 @@ jobs:
 
     - run:
         command: |
-          sudo apt-get install -qq docker-ce-cli binfmt-support qemu-user-static
+          sudo apt-get install docker-ce-cli binfmt-support qemu-user-static
 
           BUILDX_BINARY_URL="https://github.com/docker/buildx/releases/download/v0.4.1/buildx-v0.4.1.linux-amd64"
 
