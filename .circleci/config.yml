@@ -266,11 +266,12 @@ jobs:
 
     - run:
         command: |
+          docker run --rm --privileged multiarch/qemu-user-static:register --reset
           docker build --platform=local -o . git://github.com/docker/buildx
           mkdir -p ~/.docker/cli-plugins
           mv buildx ~/.docker/cli-plugins/docker-buildx
-          docker buildx create --name ddev-builder
-          docker buildx use ddev-builder
+          docker buildx create --name ddev-builder-multi
+          docker buildx use ddev-builder-multi
           docker buildx inspect --bootstrap
         name: Prepare docker buildx for multi-arch builds
 
