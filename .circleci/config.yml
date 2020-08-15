@@ -271,6 +271,7 @@ jobs:
           mv buildx ~/.docker/cli-plugins/docker-buildx
           docker buildx create --name ddev-builder
           docker buildx use ddev-builder
+          docker buildx inspect --bootstrap
         name: Prepare docker buildx for multi-arch builds
 
     - run:
