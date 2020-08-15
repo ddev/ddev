@@ -165,7 +165,7 @@ server {
 
     # {{ $host }}
     upstream {{ $upstream_name }}-{{ $upstream_port }} {
-
+    keepalive 100;
 	{{ $addrLen := len $container.Addresses }}
 
 	{{ range $knownNetwork := $CurrentContainer.Networks }}
@@ -261,6 +261,7 @@ server {
                 proxy_buffers   4 256k;
                 proxy_busy_buffers_size   256k;
                 proxy_read_timeout 10m;
+                proxy_http_version 1.1;
                 proxy_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
                 {{ end }}
                 error_page 502 @brokenupstream;
@@ -359,6 +360,7 @@ server {
                 proxy_buffers   4 256k;
                 proxy_busy_buffers_size   256k;
                 proxy_read_timeout 10m;
+                proxy_http_version 1.1;
                 proxy_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
                 {{ end }}
                 error_page 502 @brokenupstream;
