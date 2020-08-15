@@ -18,7 +18,7 @@ container: .container-$(DOTFILE_IMAGE) container-name
 	@echo "$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always)"  >.docker_image
 	# Add the .docker_image into the build so it's easy to figure out where a docker image came from.
 	@echo "ADD .docker_image /$(SANITIZED_DOCKER_REPO)_VERSION_INFO.txt" >>.dockerfile
-	docker build -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) -f .dockerfile .
+	docker buildx build --platform linux/amd64,linux/arm64 -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) -f .dockerfile .
 	@docker images -q $(DOCKER_REPO):$(VERSION) >$@
 
 container-name:

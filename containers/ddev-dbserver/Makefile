@@ -46,7 +46,7 @@ build: container
 
 # The format here is majorversion:pinnedimageversion
 # This allows to pin the version (as currently required with 8.0.19
-MARIADB_VERSIONS=5.5:5.5 10.0:10.0 10.1:10.1 10.2:10.2 10.3:10.3 10.4:10.4 10.5:10.5
+MARIADB_VERSIONS=10.1:10.1 10.2:10.2 10.3:10.3 10.4:10.4 10.5:10.5
 MYSQL_VERSIONS=5.5:5.5 5.6:5.6 5.7:5.7 8.0:8.0.19
 
 container: mariadb_containers mysql_containers
@@ -57,7 +57,7 @@ mariadb_containers:
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
 		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
 		printf "\n\n========== Building MariaDB $${baseversion} with image $${fullversion} ==========\n"; \
-		docker build $(DOCKER_ARGS) --build-arg="DBVERSION=$${baseversion}" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${baseversion}:$(VERSION)" . ; \
+		docker buildx build --platform linux/amd64,linux/arm64 $(DOCKER_ARGS) --build-arg="DBVERSION=$${baseversion}" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${baseversion}:$(VERSION)" . ; \
 	done
 
 mysql_containers:
@@ -66,7 +66,7 @@ mysql_containers:
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
 		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
 		printf "\n\n========== Building MySQL $${baseversion} with image $${fullversion} ==========\n", ${baseversion}, ${fullversion}; \
-		docker build $(DOCKER_ARGS) --build-arg="DBVERSION=$$baseversion" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)" . ; \
+		docker buildx build --platform linux/amd64,linux/arm64 $(DOCKER_ARGS) --build-arg="DBVERSION=$$baseversion" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)" . ; \
 	done
 
 push: container
