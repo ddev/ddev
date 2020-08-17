@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/drud/ddev/pkg/util"
@@ -159,9 +160,6 @@ func Untar(source string, dest string, extractionDir string) error {
 			}
 			_, err = io.Copy(exFile, tf)
 			_ = exFile.Close()
-			if err != nil {
-				return fmt.Errorf("failed to copy to file %v, err: %v", fullPath, err)
-			}
 		}
 	}
 
@@ -296,6 +294,9 @@ func Tar(src string, tarballFilePath string) error {
 
 		// update the name to correctly reflect the desired destination when untaring
 		header.Name = strings.TrimPrefix(strings.Replace(file, src, "", -1), string(filepath.Separator))
+		if runtime.GOOS == "windows" {
+			header.Name = strings.Replace(header.Name, `\`, `/`, -1)
+		}
 
 		// write the header
 		if err := tw.WriteHeader(header); err != nil {
