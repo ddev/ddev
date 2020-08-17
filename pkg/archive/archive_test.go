@@ -1,6 +1,8 @@
 package archive_test
 
 import (
+	"github.com/drud/ddev/pkg/exec"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -19,7 +21,7 @@ func TestUnarchive(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, suffix := range []string{"zip", "tar", "tar.gz", "tgz"} {
-		source := filepath.Join("testdata", "testfile"+"."+suffix)
+		source := filepath.Join("testdata", t.Name(), "testfile"+"."+suffix)
 		exDir := testcommon.CreateTmpDir("testfile" + suffix)
 
 		// default function to untar
@@ -56,5 +58,31 @@ func TestUnarchive(t *testing.T) {
 		err = os.RemoveAll(exDir)
 		assert.NoError(err)
 	}
+}
 
+// TestArchiveTar tests creation of a simple tarball
+func TestArchiveTar(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+	tarballFile, err := ioutil.TempFile("", t.Name())
+	assert.NoError(err)
+
+	err = archive.Tar(filepath.Join(pwd, "testdata", t.Name()), tarballFile.Name())
+	assert.NoError(err)
+
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+
+	t.Cleanup(
+		func() {
+			err = os.Remove(tarballFile.Name())
+			assert.NoError(err)
+			err = os.RemoveAll(tmpDir)
+			assert.NoError(err)
+		})
+	err = archive.Untar(tarballFile.Name(), tmpDir, "")
+	assert.NoError(err)
+
+	out, err := exec.RunCommand("sh", []string{"-c", "cd " + tmpDir + " && ls -R"})
+	assert.NoError(err)
+	assert.Equal("root.txt\nsubdir1\n\n./subdir1:\nsubdir1.txt\n", out)
 }
