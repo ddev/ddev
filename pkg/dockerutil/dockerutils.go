@@ -795,5 +795,18 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 		return err
 	}
 
+	// chown the uploaded content
+	e, err := client.CreateExec(docker.CreateExecOptions{
+		WorkingDir: volPath,
+		Cmd:        []string{"chown", "-R", uid, targetSubdir},
+	})
+	if err != nil {
+		return err
+	}
+	err = client.StartExec(e.ID, docker.StartExecOptions{})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
