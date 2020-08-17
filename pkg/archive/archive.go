@@ -160,6 +160,9 @@ func Untar(source string, dest string, extractionDir string) error {
 			}
 			_, err = io.Copy(exFile, tf)
 			_ = exFile.Close()
+			if err != nil {
+				return fmt.Errorf("failed to copy to file %v, err: %v", fullPath, err)
+			}
 		}
 	}
 
