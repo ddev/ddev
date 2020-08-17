@@ -471,7 +471,7 @@ func GetDockerIP() (string, error) {
 // docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
 // Returns containerID, output, error
-func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool) (containerID string, output string, returnErr error) {
+func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool) (containerID string, output string, returnErr error) {
 	client := GetDockerClient()
 
 	// Ensure image string includes a tag
@@ -548,9 +548,12 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	if err != nil {
 		return container.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
 	}
-	exitCode, err := client.WaitContainer(container.ID)
-	if err != nil {
-		return container.ID, "", fmt.Errorf("failed to WaitContainer: %v", err)
+	exitCode := 0
+	if !detach {
+		exitCode, err = client.WaitContainer(container.ID)
+		if err != nil {
+			return container.ID, "", fmt.Errorf("failed to WaitContainer: %v", err)
+		}
 	}
 
 	// Get logs so we can report them if exitCode failed
@@ -757,6 +760,7 @@ func InvalidateDockerWindowsCache() error {
 // CopyToVolume copies a directory on the host into a docker volume
 func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid string) error {
 	volPath := "/mnt/v"
+	targetSubdirFullPath := volPath + "/" + targetSubdir
 	client := GetDockerClient()
 
 	f, err := os.Open(sourcePath)
@@ -767,7 +771,7 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	// nolint errcheck
 	defer f.Close()
 
-	containerID, _, err := RunSimpleContainer("busybox:latest", "", []string{"mkdir", "-p", volPath + "/" + targetSubdir}, nil, nil, []string{volumeName + ":" + volPath}, "0", false)
+	containerID, _, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true)
 	if err != nil {
 		return err
 	}
@@ -789,7 +793,7 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 
 	err = client.UploadToContainer(containerID, docker.UploadToContainerOptions{
 		InputStream: tmpTar,
-		Path:        volPath + "/" + targetSubdir,
+		Path:        targetSubdirFullPath,
 	})
 	if err != nil {
 		return err
@@ -797,8 +801,8 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 
 	// chown the uploaded content
 	e, err := client.CreateExec(docker.CreateExecOptions{
-		WorkingDir: volPath,
-		Cmd:        []string{"chown", "-R", uid, targetSubdir},
+		Container: containerID,
+		Cmd:       []string{"chown", "-R", uid, targetSubdirFullPath},
 	})
 	if err != nil {
 		return err
