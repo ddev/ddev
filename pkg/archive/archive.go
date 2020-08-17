@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"archive/zip"
 	"compress/gzip"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -263,7 +262,7 @@ func Tar(src string, tarballFilePath string) error {
 
 	file, err := os.Create(tarballFilePath)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Could not create tarball file '%s', got error '%s'", tarballFilePath, err.Error()))
+		return fmt.Errorf("Could not create tarball file '%s', got error '%s'", tarballFilePath, err.Error())
 	}
 	// nolint: errcheck
 	defer file.Close()
