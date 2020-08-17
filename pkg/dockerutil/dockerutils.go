@@ -243,7 +243,9 @@ func GetContainerHealth(container *docker.APIContainers) (string, string) {
 	}
 
 	client := GetDockerClient()
-	inspect, err := client.InspectContainer(container.ID)
+	inspect, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{
+		ID: container.ID,
+	})
 	if err != nil || inspect == nil {
 		output.UserOut.Warnf("Error getting container to inspect: %v", err)
 		return "", ""
@@ -343,7 +345,9 @@ func GetAppContainers(sitename string) ([]docker.APIContainers, error) {
 // GetContainerEnv returns the value of a given environment variable from a given container.
 func GetContainerEnv(key string, container docker.APIContainers) string {
 	client := GetDockerClient()
-	inspect, err := client.InspectContainer(container.ID)
+	inspect, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{
+		ID: container.ID,
+	})
 	if err == nil {
 		envVars := inspect.Config.Env
 
@@ -617,7 +621,9 @@ func Pull(imageName string) error {
 // of exposed ports (and error)
 func GetExposedContainerPorts(containerID string) ([]string, error) {
 	client := GetDockerClient()
-	inspectInfo, err := client.InspectContainer(containerID)
+	inspectInfo, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{
+		ID: containerID,
+	})
 
 	if err != nil {
 		return nil, err
