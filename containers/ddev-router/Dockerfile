@@ -8,7 +8,7 @@ ENV DOCKER_HOST unix:///tmp/docker.sock
 
 RUN apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
-        ca-certificates wget vim less telnet curl procps && \
+        ca-certificates certbot curl less python-certbot-nginx procps telnet vim wget && \
     apt-get autoremove -y && \
     apt-get clean -y && \
 	rm -rf /var/lib/apt/lists/*
@@ -28,6 +28,7 @@ RUN echo "daemon off;" >> /etc/nginx/nginx.conf \
  && sed -i 's/worker_processes  1/worker_processes  auto/' /etc/nginx/nginx.conf
 
 ADD . /app/
+ADD etc /etc
 RUN chmod ugo+x /app/healthcheck.sh
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
