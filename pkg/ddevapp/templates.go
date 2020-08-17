@@ -412,6 +412,7 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ddev-global-cache:/mnt/ddev-global-cache:rw
+      - ddev-router-letsencrypt:/etc/letsencrypt:rw
     restart: "no"
     healthcheck:
       interval: 1s
@@ -426,6 +427,8 @@ networks:
 volumes:
   ddev-global-cache:
     name: ddev-global-cache
+  ddev-router-letsencrypt
+	name: ddev-router-letsencrypt
 `
 
 const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'
