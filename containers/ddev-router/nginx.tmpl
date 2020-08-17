@@ -324,8 +324,13 @@ server {
             ssl_session_cache shared:SSL:50m;
             ssl_session_tickets off;
 
+            {{ if (exists (printf "/mnt/ddev-global-cache/custom_certs/%s.crt" $host)) }}
+            ssl_certificate /mnt/ddev-global-cache/custom_certs/{{ (printf "%s.crt" $host) }};
+            ssl_certificate_key /mnt/ddev-global-cache/custom_certs/{{ (printf "%s.key" $host) }};
+            {{ else }}
             ssl_certificate /etc/nginx/certs/{{ (printf "%s.crt" $cert) }};
             ssl_certificate_key /etc/nginx/certs/{{ (printf "%s.key" $cert) }};
+            {{ end }}
 
             {{ if (exists (printf "/etc/nginx/certs/%s.dhparam.pem" $cert)) }}
             ssl_dhparam {{ printf "/etc/nginx/certs/%s.dhparam.pem" $cert }};
