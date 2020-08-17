@@ -444,22 +444,17 @@ func TestRemoveVolume(t *testing.T) {
 
 }
 
-// TestCopyToVolume makes sure CopyToVolume copies a local directory into a volume
-func TestCopyToVolume(t *testing.T) {
+// TestDockerCopyToVolume makes sure CopyToVolume copies a local directory into a volume
+func TestDockerCopyToVolume(t *testing.T) {
 	assert := asrt.New(t)
 	err := RemoveVolume(t.Name())
 	assert.NoError(err)
 
 	pwd, _ := os.Getwd()
-	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "")
+	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0")
 	assert.NoError(err)
 
-	t.Cleanup(func() {
-		err = RemoveVolume(t.Name())
-		assert.NoError(err)
-	})
-
-	_, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true)
+	mainContainerID, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true)
 	assert.NoError(err)
 	assert.Equal(`.:
 root.txt
@@ -468,6 +463,26 @@ subdir1
 ./subdir1:
 subdir1.txt
 `, out)
-	assert.Contains(out, "./subdir1:")
-	assert.Contains(out, "./subdir1:")
+
+	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501")
+	assert.NoError(err)
+	subdirContainerID, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true)
+	assert.NoError(err)
+	assert.Equal(`/mnt/TestDockerCopyToVolume/somesubdir
+.:
+root.txt
+subdir1
+
+./subdir1:
+subdir1.txt
+`, out)
+
+	t.Cleanup(func() {
+		_ = RemoveContainer(mainContainerID, 0)
+		assert.NoError(err)
+		_ = RemoveContainer(subdirContainerID, 0)
+		err = RemoveVolume(t.Name())
+		assert.NoError(err)
+	})
+
 }

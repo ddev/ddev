@@ -755,7 +755,7 @@ func InvalidateDockerWindowsCache() error {
 }
 
 // CopyToVolume copies a directory on the host into a docker volume
-func CopyToVolume(sourcePath string, volumeName string, targetSubdir string) error {
+func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid string) error {
 	volPath := "/mnt/v"
 	client := GetDockerClient()
 
@@ -767,7 +767,7 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string) err
 	// nolint errcheck
 	defer f.Close()
 
-	containerID, _, err := RunSimpleContainer("busybox:latest", "", nil, nil, nil, []string{volumeName + ":" + volPath}, "0", false)
+	containerID, _, err := RunSimpleContainer("busybox:latest", "", []string{"mkdir", "-p", volPath + "/" + targetSubdir}, nil, nil, []string{volumeName + ":" + volPath}, "0", false)
 	if err != nil {
 		return err
 	}
