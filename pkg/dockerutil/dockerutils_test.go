@@ -391,6 +391,7 @@ func TestCreateVolume(t *testing.T) {
 	RemoveVolume("junker99")
 	volume, err := CreateVolume("junker99", "local", map[string]string{})
 	require.NoError(t, err)
+
 	//nolint: errcheck
 	defer RemoveVolume("junker99")
 	require.NotNil(t, volume)
@@ -441,4 +442,32 @@ func TestRemoveVolume(t *testing.T) {
 	err = RemoveVolume(spareVolume)
 	assert.NoError(err)
 
+}
+
+// TestCopyToVolume makes sure CopyToVolume copies a local directory into a volume
+func TestCopyToVolume(t *testing.T) {
+	assert := asrt.New(t)
+	err := RemoveVolume(t.Name())
+	assert.NoError(err)
+
+	pwd, _ := os.Getwd()
+	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "")
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = RemoveVolume(t.Name())
+		assert.NoError(err)
+	})
+
+	_, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true)
+	assert.NoError(err)
+	assert.Equal(`.:
+root.txt
+subdir1
+
+./subdir1:
+subdir1.txt
+`, out)
+	assert.Contains(out, "./subdir1:")
+	assert.Contains(out, "./subdir1:")
 }

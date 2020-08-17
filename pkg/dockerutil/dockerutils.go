@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/archive"
 	exec2 "github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -750,4 +752,48 @@ func InvalidateDockerWindowsCache() error {
 	// For extra credit, a sleep
 	time.Sleep(5 * time.Second)
 	return err
+}
+
+// CopyToVolume copies a directory on the host into a docker volume
+func CopyToVolume(sourcePath string, volumeName string, targetSubdir string) error {
+	volPath := "/mnt/v"
+	client := GetDockerClient()
+
+	f, err := os.Open(sourcePath)
+	if err != nil {
+		util.Failed("Failed to open %s: %v", sourcePath, err)
+	}
+
+	// nolint errcheck
+	defer f.Close()
+
+	containerID, _, err := RunSimpleContainer("busybox:latest", "", nil, nil, nil, []string{volumeName + ":" + volPath}, "0", false)
+	if err != nil {
+		return err
+	}
+	// nolint: errcheck
+	defer RemoveContainer(containerID, 0)
+
+	tmpTar, err := ioutil.TempFile("", "CopyToVolume")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// nolint: errcheck
+	defer os.Remove(tmpTar.Name()) // clean up
+
+	err = archive.Tar(sourcePath, tmpTar.Name())
+	if err != nil {
+		return err
+	}
+
+	err = client.UploadToContainer(containerID, docker.UploadToContainerOptions{
+		InputStream: tmpTar,
+		Path:        volPath + "/" + targetSubdir,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
