@@ -38,7 +38,7 @@ To execute a fully-featured `composer create-project` command, you can execute t
 
 `ddev exec composer create-project ...`
 
-Note: if you use `composer global` command, the packages will be installed in the user's home directory and will disappear on the next container restart, requiring rerun of the command. You may need an additional step of synchronizing created composer configuration and installed packages with the DDev's [homeadditions folder](extend/in-container-configuration.md) on the host.
+Note: if you run `ddev composer global`, the global packages will be installed in the in-container user's home directory ( ~/.composer) and will disappear on the next container restart, requiring rerun of the command. You may need an additional step of synchronizing created composer configuration and installed packages with the DDev's [homeadditions folder](extend/in-container-configuration.md) on the host.
 
 <a name="windows-os-and-ddev-composer"></a>
 
