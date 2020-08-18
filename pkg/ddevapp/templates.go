@@ -427,8 +427,8 @@ networks:
 volumes:
   ddev-global-cache:
     name: ddev-global-cache
-  ddev-router-letsencrypt
-	name: ddev-router-letsencrypt
+  ddev-router-letsencrypt:
+    name: ddev-router-letsencrypt
 `
 
 const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'

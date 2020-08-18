@@ -324,6 +324,9 @@ server {
             {{ if (exists (printf "/mnt/ddev-global-cache/custom_certs/%s.crt" $host)) }}
             ssl_certificate /mnt/ddev-global-cache/custom_certs/{{ (printf "%s.crt" $host) }};
             ssl_certificate_key /mnt/ddev-global-cache/custom_certs/{{ (printf "%s.key" $host) }};
+            {{ else if (exists (printf "/etc/letsencrypt/live/%s/fullchain.pem" $host)) }}
+            ssl_certificate /etc/letsencrypt/live/{{ $host }}/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/{{ $host }}/privkey.pem;
             {{ else }}
             ssl_certificate /etc/nginx/certs/{{ (printf "%s.crt" $cert) }};
             ssl_certificate_key /etc/nginx/certs/{{ (printf "%s.key" $cert) }};
