@@ -49,6 +49,7 @@ type GlobalConfig struct {
 	MkcertCARoot             string                  `yaml:"mkcert_caroot"`
 	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
 	LetsEncryptEmail         string                  `yaml:"letsencrypt_email"`
+	AutoRestartContainers    bool                    `yaml:"auto_restart_containers"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -162,12 +163,29 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #    can be a major security issue, so choose wisely. Consider omit_containers[dba] to avoid
 #    exposing PHPMyAdmin.
 
+# Let's Encrypt:
+# This integration is entirely experimental; your mileage may vary.
+# * Your host must be directly internet-connected
+# * DNS for the hostname must be set to point to the host in question
+# * You must have router_bind_all_interfaces: true or else the Let's Encrypt certbot
+#   process will not be able to process the IP address of the host
+# * You will most likely want auto_restart_containers: true so projects will be
+#   restarted in case of a reboot or docker restart.
+# * If using several sites at a single top-level domain, you'll probably want to set
+#   project_tld to that top-level domain. Otherwise, you can use additional-hostnames or
+#   additional_fqdns
+# 
 # use_letsencrypt: false
 # (Experimental, only useful on an internet-based server)
 # Set to true if certificates are to be obtained via certbot on https://letsencrypt.org/
 
 # letsencrypt_email: <email>
 # Email to be used for experimental letsencrypt certificates
+
+# auto_restart_containers: false
+# Experimental
+# If true, attempt to automatically restart projects/containers after reboot or docker restart.
+
 `
 	cfgbytes = append(cfgbytes, instructions...)
 

@@ -638,35 +638,36 @@ func (app *DdevApp) CheckDeprecations() {
 }
 
 type composeYAMLVars struct {
-	Name                 string
-	Plugin               string
-	AppType              string
-	MailhogPort          string
-	DBAPort              string
-	DBPort               string
-	DdevGenerated        string
-	HostDockerInternalIP string
-	ComposeVersion       string
-	MountType            string
-	WebMount             string
-	WebBuildContext      string
-	DBBuildContext       string
-	WebBuildDockerfile   string
-	DBBuildDockerfile    string
-	SSHAgentBuildContext string
-	OmitDB               bool
-	OmitDBA              bool
-	OmitSSHAgent         bool
-	NFSMountEnabled      bool
-	NFSSource            string
-	DockerIP             string
-	IsWindowsFS          bool
-	NoProjectMount       bool
-	Hostnames            []string
-	Timezone             string
-	Username             string
-	UID                  string
-	GID                  string
+	Name                  string
+	Plugin                string
+	AppType               string
+	MailhogPort           string
+	DBAPort               string
+	DBPort                string
+	DdevGenerated         string
+	HostDockerInternalIP  string
+	ComposeVersion        string
+	MountType             string
+	WebMount              string
+	WebBuildContext       string
+	DBBuildContext        string
+	WebBuildDockerfile    string
+	DBBuildDockerfile     string
+	SSHAgentBuildContext  string
+	OmitDB                bool
+	OmitDBA               bool
+	OmitSSHAgent          bool
+	NFSMountEnabled       bool
+	NFSSource             string
+	DockerIP              string
+	IsWindowsFS           bool
+	NoProjectMount        bool
+	Hostnames             []string
+	Timezone              string
+	Username              string
+	UID                   string
+	GID                   string
+	AutoRestartContainers bool
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -693,33 +694,34 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	uid, gid, username := util.GetContainerUIDGid()
 
 	templateVars := composeYAMLVars{
-		Name:                 app.Name,
-		Plugin:               "ddev",
-		AppType:              app.Type,
-		MailhogPort:          GetPort("mailhog"),
-		DBAPort:              GetPort("dba"),
-		DBPort:               GetPort("db"),
-		DdevGenerated:        DdevFileSignature,
-		HostDockerInternalIP: hostDockerInternalIP,
-		ComposeVersion:       version.DockerComposeFileFormatVersion,
-		OmitDB:               nodeps.ArrayContainsString(app.GetOmittedContainers(), "db"),
-		OmitDBA:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
-		OmitSSHAgent:         nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
-		NFSMountEnabled:      app.NFSMountEnabled || app.NFSMountEnabledGlobal,
-		NFSSource:            "",
-		IsWindowsFS:          runtime.GOOS == "windows",
-		NoProjectMount:       app.NoProjectMount,
-		MountType:            "bind",
-		WebMount:             "../",
-		Hostnames:            app.GetHostnames(),
-		Timezone:             app.Timezone,
-		Username:             username,
-		UID:                  uid,
-		GID:                  gid,
-		WebBuildContext:      app.GetConfigPath("web-build"),
-		DBBuildContext:       app.GetConfigPath("db-build"),
-		WebBuildDockerfile:   app.GetConfigPath(".webimageBuild/Dockerfile"),
-		DBBuildDockerfile:    app.GetConfigPath(".dbimageBuild/Dockerfile"),
+		Name:                  app.Name,
+		Plugin:                "ddev",
+		AppType:               app.Type,
+		MailhogPort:           GetPort("mailhog"),
+		DBAPort:               GetPort("dba"),
+		DBPort:                GetPort("db"),
+		DdevGenerated:         DdevFileSignature,
+		HostDockerInternalIP:  hostDockerInternalIP,
+		ComposeVersion:        version.DockerComposeFileFormatVersion,
+		OmitDB:                nodeps.ArrayContainsString(app.GetOmittedContainers(), "db"),
+		OmitDBA:               nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
+		OmitSSHAgent:          nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
+		NFSMountEnabled:       app.NFSMountEnabled || app.NFSMountEnabledGlobal,
+		NFSSource:             "",
+		IsWindowsFS:           runtime.GOOS == "windows",
+		NoProjectMount:        app.NoProjectMount,
+		MountType:             "bind",
+		WebMount:              "../",
+		Hostnames:             app.GetHostnames(),
+		Timezone:              app.Timezone,
+		Username:              username,
+		UID:                   uid,
+		GID:                   gid,
+		WebBuildContext:       app.GetConfigPath("web-build"),
+		DBBuildContext:        app.GetConfigPath("db-build"),
+		WebBuildDockerfile:    app.GetConfigPath(".webimageBuild/Dockerfile"),
+		DBBuildDockerfile:     app.GetConfigPath(".dbimageBuild/Dockerfile"),
+		AutoRestartContainers: globalconfig.DdevGlobalConfig.AutoRestartContainers,
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"

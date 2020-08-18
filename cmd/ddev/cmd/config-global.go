@@ -74,6 +74,12 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("auto-restart-containers").Changed {
+		val, _ := cmd.Flags().GetBool("auto-restart-containers")
+		globalconfig.DdevGlobalConfig.AutoRestartContainers = val
+		dirty = true
+	}
+
 	if dirty {
 		err = globalconfig.ValidateGlobalConfig()
 		if err != nil {
@@ -93,7 +99,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("internet-detection-timeout-ms=%v", globalconfig.DdevGlobalConfig.InternetDetectionTimeout)
 	output.UserOut.Printf("use-letsencrypt=%v", globalconfig.DdevGlobalConfig.UseLetsEncrypt)
 	output.UserOut.Printf("letsencrypt-email=%v", globalconfig.DdevGlobalConfig.LetsEncryptEmail)
-
+	output.UserOut.Printf("auto-restart-containers=%v", globalconfig.DdevGlobalConfig.AutoRestartContainers)
 }
 
 func init() {
@@ -104,6 +110,7 @@ func init() {
 	configGlobalCommand.Flags().Int("internet-detection-timeout-ms", 750, "Increase timeout when checking internet timeout, in milliseconds")
 	configGlobalCommand.Flags().Bool("use-letsencrypt", false, "Enables experimental Let's Encrypt integration, 'ddev global --use-letsencrypt' or `ddev global --use-letsencrypt=false'")
 	configGlobalCommand.Flags().String("letsencrypt-email", "", "Email associated with Let's Encrypt, `ddev global --letsencrypt-email=me@example.com'")
+	configGlobalCommand.Flags().Bool("auto-restart-containers", false, "If true, automatically restart containers after a reboot or docker restart")
 
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

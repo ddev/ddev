@@ -116,13 +116,14 @@ func CreateSSHAuthComposeFile() (string, error) {
 	uid, gid, username := util.GetContainerUIDGid()
 
 	templateVars := map[string]interface{}{
-		"ssh_auth_image":  version.SSHAuthImage,
-		"ssh_auth_tag":    version.SSHAuthTag,
-		"compose_version": version.DockerComposeFileFormatVersion,
-		"Username":        username,
-		"UID":             uid,
-		"GID":             gid,
-		"BuildContext":    context,
+		"ssh_auth_image":        version.SSHAuthImage,
+		"ssh_auth_tag":          version.SSHAuthTag,
+		"compose_version":       version.DockerComposeFileFormatVersion,
+		"AutoRestartContainers": globalconfig.DdevGlobalConfig.AutoRestartContainers,
+		"Username":              username,
+		"UID":                   uid,
+		"GID":                   gid,
+		"BuildContext":          context,
 	}
 	err = templ.Execute(&doc, templateVars)
 	util.CheckErr(err)

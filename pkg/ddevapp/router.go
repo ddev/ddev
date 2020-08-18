@@ -75,6 +75,7 @@ func StartDdevRouter() error {
 		"dockerIP":                   dockerIP,
 		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
+		"AutoRestartContainers":      globalconfig.DdevGlobalConfig.AutoRestartContainers,
 	}
 
 	err = templ.Execute(&doc, templateVars)
