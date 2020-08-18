@@ -172,7 +172,11 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 				return logOutput, fmt.Errorf("container %s unhealthy: %s", container.Names[0], logOutput)
 			case "exited":
 				service := container.Labels["com.docker.compose.service"]
-				return logOutput, fmt.Errorf("container exited, please use 'ddev logs -s %s` to find out why it failed", service)
+				suggestedCommand := fmt.Sprintf("ddev logs -s %s", service)
+				if service == "ddev-router" || service == "ddev-ssh-agent" {
+					suggestedCommand = fmt.Sprintf("docker logs %s", service)
+				}
+				return logOutput, fmt.Errorf("container exited, please use '%s' to find out why it failed", suggestedCommand)
 			}
 		}
 	}

@@ -73,6 +73,8 @@ func StartDdevRouter() error {
 		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
 		"compose_version":            version.DockerComposeFileFormatVersion,
 		"dockerIP":                   dockerIP,
+		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
+		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 	}
 
 	err = templ.Execute(&doc, templateVars)
@@ -95,7 +97,7 @@ func StartDdevRouter() error {
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
 	logOutput, err := dockerutil.ContainerWait(containerWaitTimeout, label)
 	if err != nil {
-		return fmt.Errorf("ddev-router failed to become ready: logOutput=%s, err=%v", logOutput, err)
+		return fmt.Errorf("ddev-router failed to become ready; debug with 'docker logs ddev-router'; logOutput=%s, err=%v", logOutput, err)
 	}
 
 	return nil

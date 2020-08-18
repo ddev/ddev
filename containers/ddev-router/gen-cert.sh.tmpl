@@ -1,6 +1,15 @@
 #!/bin/bash
-set -euo pipefail
+set -eu -o pipefail
 set -x
+
+{{ if .Env.USE_LETSENCRYPT }}
+hostnames="{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }} {{ trim $host }},{{ end }}"
+# Remove trailing comma
+hostnames="${hostnames%?}"
+certbot --nginx certonly -n --domains "${hostnames}" --agree-tos --email {{ .Env.LETSENCRYPT_EMAIL }}
+
+#certbot --nginx certonly -n --domains "{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }} {{ trim $host }},{{ end }}" --agree-tos --email {{ .Env.LETSENCRYPT_EMAIL }}
+{{ end }}
 
 # mkcert is fully capable of generating all needed names in a single container.
 mkcert -cert-file /etc/nginx/certs/master.crt -key-file /etc/nginx/certs/master.key {{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }} {{ trim $host }} {{ end }} 127.0.0.1 localhost "*.ddev.local" "*.ddev.site"

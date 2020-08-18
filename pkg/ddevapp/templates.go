@@ -412,7 +412,14 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ddev-global-cache:/mnt/ddev-global-cache:rw
+      {{ if .letsencrypt }}
       - ddev-router-letsencrypt:/etc/letsencrypt:rw
+      {{ end }}
+{{ if .letsencrypt }}
+    environment:
+      - LETSENCRYPT_EMAIL={{ .letsencrypt_email }}
+      - USE_LETSENCRYPT={{ .letsencrypt }}
+{{ end }}
     restart: "no"
     healthcheck:
       interval: 1s

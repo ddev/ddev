@@ -47,6 +47,8 @@ type GlobalConfig struct {
 	InstrumentationUser      string                  `yaml:"instrumentation_user,omitempty"`
 	LastStartedVersion       string                  `yaml:"last_started_version"`
 	MkcertCARoot             string                  `yaml:"mkcert_caroot"`
+	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
+	LetsEncryptEmail         string                  `yaml:"letsencrypt_email"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -159,6 +161,13 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #    access those ports. Note that this exposes the PHPMyAdmin and MailHog ports as well, which
 #    can be a major security issue, so choose wisely. Consider omit_containers[dba] to avoid
 #    exposing PHPMyAdmin.
+
+# use_letsencrypt: false
+# (Experimental, only useful on an internet-based server)
+# Set to true if certificates are to be obtained via certbot on https://letsencrypt.org/
+
+# letsencrypt_email: <email>
+# Email to be used for experimental letsencrypt certificates
 `
 	cfgbytes = append(cfgbytes, instructions...)
 
