@@ -28,6 +28,11 @@ if [ "$socketMissing" = 1 -a "$1" = forego -a "$2" = start -a "$3" = '-r' ]; the
 	exit 1
 fi
 
+if [ ! -z "${USE_LETSENCRYPT}" ]; then
+  echo "Lets Encrypt is enabled:"
+  certbot certificates
+fi
+
 mkcert -install
 
 # It's unknown what docker event causes an attempt to use these certs/.crt files, but they might as well exist
