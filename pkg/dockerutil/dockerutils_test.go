@@ -287,7 +287,7 @@ func TestFindContainerByName(t *testing.T) {
 	}
 
 	// Run a container, don't remove it.
-	cID, _, err := RunSimpleContainer("busybox:latest", containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false)
+	cID, _, err := RunSimpleContainer("busybox:latest", containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false, false)
 	assert.NoError(err)
 
 	defer func() {
@@ -334,35 +334,35 @@ func TestRunSimpleContainer(t *testing.T) {
 	assert.DirExists(testdata)
 
 	// Try the success case; script found, runs, all good.
-	_, out, err := RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + "://tempmount"}, "25", true)
+	_, out, err := RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + "://tempmount"}, "25", true, false)
 	assert.NoError(err)
 	assert.Contains(out, "simplescript.sh; TEMPENV=someenv UID=25")
 	assert.Contains(out, "stdout is captured")
 	assert.Contains(out, "stderr is also captured")
 
 	// Try the case of running nonexistent script
-	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true)
+	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true, false)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "failed to StartContainer")
 	}
 
 	// Try the case of running a script that fails
-	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25", true)
+	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25", true, false)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "container run failed with exit code 5")
 	}
 
 	// Provide an unqualified tag name
-	_, _, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true)
+	_, _, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "image name must specify tag")
 	}
 
 	// Provide a malformed tag name
-	_, _, err = RunSimpleContainer("busybox:", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true)
+	_, _, err = RunSimpleContainer("busybox:", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "malformed tag provided")
@@ -391,6 +391,7 @@ func TestCreateVolume(t *testing.T) {
 	RemoveVolume("junker99")
 	volume, err := CreateVolume("junker99", "local", map[string]string{})
 	require.NoError(t, err)
+
 	//nolint: errcheck
 	defer RemoveVolume("junker99")
 	require.NotNil(t, volume)
@@ -440,5 +441,48 @@ func TestRemoveVolume(t *testing.T) {
 	_ = RemoveVolume(spareVolume)
 	err = RemoveVolume(spareVolume)
 	assert.NoError(err)
+
+}
+
+// TestDockerCopyToVolume makes sure CopyToVolume copies a local directory into a volume
+func TestDockerCopyToVolume(t *testing.T) {
+	assert := asrt.New(t)
+	err := RemoveVolume(t.Name())
+	assert.NoError(err)
+
+	pwd, _ := os.Getwd()
+	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0")
+	assert.NoError(err)
+
+	mainContainerID, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false)
+	assert.NoError(err)
+	assert.Equal(`.:
+root.txt
+subdir1
+
+./subdir1:
+subdir1.txt
+`, out)
+
+	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501")
+	assert.NoError(err)
+	subdirContainerID, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false)
+	assert.NoError(err)
+	assert.Equal(`/mnt/TestDockerCopyToVolume/somesubdir
+.:
+root.txt
+subdir1
+
+./subdir1:
+subdir1.txt
+`, out)
+
+	t.Cleanup(func() {
+		_ = RemoveContainer(mainContainerID, 0)
+		assert.NoError(err)
+		_ = RemoveContainer(subdirContainerID, 0)
+		err = RemoveVolume(t.Name())
+		assert.NoError(err)
+	})
 
 }

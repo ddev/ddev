@@ -95,7 +95,7 @@ func (p *DdevLiveProvider) GetSites() ([]string, error) {
 	// Get a list of all active environments for the current site.
 	cmd := fmt.Sprintf(`set -eo pipefail; ddev-live list sites --org="%s" -o json | jq -r ".sites[] | .name"`, p.OrgName)
 	uid, _, _ := util.GetContainerUIDGid()
-	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
 	if err != nil {
 		return []string{}, fmt.Errorf(`unable to get DDEV-Live sites for org %s - please try ddev exec ddev-live list sites --org="%s -o json" (error=%v, output=%v)`, p.OrgName, p.OrgName, err, out)
 	}
@@ -110,7 +110,7 @@ func (p *DdevLiveProvider) OrgNamePrompt() error {
 	if p.OrgName == "" {
 		uid, _, _ := util.GetContainerUIDGid()
 		cmd := `set -eo pipefail; ddev-live config default-org get -o json | jq -r .defaultOrg`
-		_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+		_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
 		if err != nil {
 			util.Failed("Failed to get default org: %v (%v) command=%s", err, out, cmd)
 		}
@@ -179,7 +179,7 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 		output.UserOut.Printf("ddev-live backup files %s/%s", p.OrgName, p.SiteName)
 	}
 	cmd := fmt.Sprintf(`ddev-live backup files %s/%s --output=json | jq -r .filesBackup`, p.OrgName, p.SiteName)
-	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true, false)
 	if err != nil {
 		return "", fmt.Errorf("unable to ddev-live backup files: %v, cmd=%v output=%v ", err, cmd, out)
 	}
@@ -190,7 +190,7 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 	}
 	// Wait for the files backup to complete
 	cmd = fmt.Sprintf(`until [ "$(ddev-live get backup file %s --output=json | jq -r .complete)" = "Completed" ]; do sleep 1; ((count++)); if [ "$count" -ge 120 ]; then echo "failed waiting for ddev-live get backup files %s: $(cat /tmp/getbackup.out)"; exit 104; fi; done`, backupDescriptor, backupDescriptor)
-	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true, false)
 	if err != nil {
 		return "", fmt.Errorf("unable to ddev-live get backup files: %v, output=%v ", err, out)
 	}
@@ -206,7 +206,7 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 		time.Sleep(10 * time.Second)
 	}
 	cmd = fmt.Sprintf(`until ddev-live pull files --dest /mnt/ddevlive-downloads/files %s/%s 2>/tmp/filespull.out; do sleep 1; ((count++)); if [ "$count" -ge 30 ]; then echo "failed waiting for ddev-live pull files: $(cat /tmp/filespull.out)"; exit 105; fi; done`, p.OrgName, p.SiteName)
-	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true, false)
 
 	if err != nil {
 		return "", fmt.Errorf("unable to pull ddev-live files backup: %v, output=%v ", err, out)
@@ -217,7 +217,7 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 	if os.Getenv("DDEV_DEBUG") != "" {
 		output.UserOut.Print(cmd)
 	}
-	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true, false)
 	if err != nil {
 		util.Warning("unable to delete backup (output=`%s`): err=%v, command=%s", out, err, cmd)
 	}
@@ -236,7 +236,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	}
 	uid, _, _ := util.GetContainerUIDGid()
 	cmd := fmt.Sprintf(`set -eo pipefail; ddev-live backup database -y -o json %s/%s 2>/dev/null | jq -r .databaseBackup`, p.OrgName, p.SiteName)
-	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
 
 	backupName := strings.Trim(out, "\n")
 	if err != nil {
@@ -252,7 +252,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 		output.UserOut.Printf("ddev-live describe backup db %s/%s", p.OrgName, backupName)
 	}
 	cmd = fmt.Sprintf(`count=0; until [ "$(set -eo pipefail; ddev-live describe backup db %s/%s -y -o json | tee /tmp/ddevlivedescribe.out | jq -r .complete)" = "true" ]; do ((count++)); if [ "$count" -ge 240 ]; then echo "Timed out waiting for ddev-live describe backup db" && cat /tmp/ddevlivedescribe.out; exit 101; fi; sleep 1; done `, p.OrgName, backupName)
-	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
 
 	if err != nil {
 		return "", fmt.Errorf("failure waiting for ddev-live backup database completion: %v; cmd=%s, output=%s", err, cmd, out)
@@ -273,7 +273,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	}
 
 	cmd = fmt.Sprintf(`cd /mnt/ddevlive-downloads && count=0; until ddev-live pull db %s/%s 2>/tmp/pull.out; do sleep 1; ((count++)); if [ "$count" -ge 5 ]; then echo "failed waiting for ddev-live pull db: $(cat /tmp/pull.out)"; exit 103; fi; done`, p.OrgName, backupName)
-	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true, false)
 	w := strings.Split(out, " ")
 	if err != nil || len(w) != 2 {
 		return "", fmt.Errorf("unable to pull ddev-live database backup (output=`%s`): err=%v, command=%s", out, err, cmd)
@@ -284,7 +284,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	if os.Getenv("DDEV_DEBUG") != "" {
 		output.UserOut.Print(cmd)
 	}
-	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true)
+	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true, false)
 	if err != nil {
 		util.Warning("unable to delete backup (output=`%s`): err=%v, command=%s", out, err, cmd)
 	}

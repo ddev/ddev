@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/archive"
 	exec2 "github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -241,7 +243,9 @@ func GetContainerHealth(container *docker.APIContainers) (string, string) {
 	}
 
 	client := GetDockerClient()
-	inspect, err := client.InspectContainer(container.ID)
+	inspect, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{
+		ID: container.ID,
+	})
 	if err != nil || inspect == nil {
 		output.UserOut.Warnf("Error getting container to inspect: %v", err)
 		return "", ""
@@ -341,7 +345,9 @@ func GetAppContainers(sitename string) ([]docker.APIContainers, error) {
 // GetContainerEnv returns the value of a given environment variable from a given container.
 func GetContainerEnv(key string, container docker.APIContainers) string {
 	client := GetDockerClient()
-	inspect, err := client.InspectContainer(container.ID)
+	inspect, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{
+		ID: container.ID,
+	})
 	if err == nil {
 		envVars := inspect.Config.Env
 
@@ -469,7 +475,7 @@ func GetDockerIP() (string, error) {
 // docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
 // Returns containerID, output, error
-func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool) (containerID string, output string, returnErr error) {
+func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool) (containerID string, output string, returnErr error) {
 	client := GetDockerClient()
 
 	// Ensure image string includes a tag
@@ -546,9 +552,12 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	if err != nil {
 		return container.ID, "", fmt.Errorf("failed to StartContainer: %v", err)
 	}
-	exitCode, err := client.WaitContainer(container.ID)
-	if err != nil {
-		return container.ID, "", fmt.Errorf("failed to WaitContainer: %v", err)
+	exitCode := 0
+	if !detach {
+		exitCode, err = client.WaitContainer(container.ID)
+		if err != nil {
+			return container.ID, "", fmt.Errorf("failed to WaitContainer: %v", err)
+		}
 	}
 
 	// Get logs so we can report them if exitCode failed
@@ -612,7 +621,9 @@ func Pull(imageName string) error {
 // of exposed ports (and error)
 func GetExposedContainerPorts(containerID string) ([]string, error) {
 	client := GetDockerClient()
-	inspectInfo, err := client.InspectContainer(containerID)
+	inspectInfo, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{
+		ID: containerID,
+	})
 
 	if err != nil {
 		return nil, err
@@ -750,4 +761,62 @@ func InvalidateDockerWindowsCache() error {
 	// For extra credit, a sleep
 	time.Sleep(5 * time.Second)
 	return err
+}
+
+// CopyToVolume copies a directory on the host into a docker volume
+func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid string) error {
+	volPath := "/mnt/v"
+	targetSubdirFullPath := volPath + "/" + targetSubdir
+	client := GetDockerClient()
+
+	f, err := os.Open(sourcePath)
+	if err != nil {
+		util.Failed("Failed to open %s: %v", sourcePath, err)
+	}
+
+	// nolint errcheck
+	defer f.Close()
+
+	containerID, _, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true)
+	if err != nil {
+		return err
+	}
+	// nolint: errcheck
+	defer RemoveContainer(containerID, 0)
+
+	tmpTar, err := ioutil.TempFile("", "CopyToVolume")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// nolint: errcheck
+	defer os.Remove(tmpTar.Name()) // clean up
+
+	err = archive.Tar(sourcePath, tmpTar.Name())
+	if err != nil {
+		return err
+	}
+
+	err = client.UploadToContainer(containerID, docker.UploadToContainerOptions{
+		InputStream: tmpTar,
+		Path:        targetSubdirFullPath,
+	})
+	if err != nil {
+		return err
+	}
+
+	// chown the uploaded content
+	e, err := client.CreateExec(docker.CreateExecOptions{
+		Container: containerID,
+		Cmd:       []string{"chown", "-R", uid, targetSubdirFullPath},
+	})
+	if err != nil {
+		return err
+	}
+	err = client.StartExec(e.ID, docker.StartExecOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

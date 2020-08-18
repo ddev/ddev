@@ -27,7 +27,7 @@ ddev auth ddev-live --default-org=some-ddevlive-org [token]`,
 		if cmd.Flag("default-org").Changed {
 			c = fmt.Sprintf(`ddev-live auth --default-org="%s" --token="%s"`, cmd.Flag("default-org").Value.String(), args[0])
 		}
-		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", c}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true)
+		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", c}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
 		if err == nil {
 			util.Success("Authentication successful!\nYou may now use the 'ddev config ddev-live' command when configuring projects.")
 		} else {

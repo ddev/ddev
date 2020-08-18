@@ -7,29 +7,33 @@ github.com/Masterminds/semver
 # github.com/Masterminds/sprig v2.15.0+incompatible
 ## explicit
 github.com/Masterminds/sprig
-# github.com/Microsoft/go-winio v0.4.11
+# github.com/Microsoft/go-winio v0.4.15-0.20200113171025-3fe6c5262873
 github.com/Microsoft/go-winio
-# github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5
-github.com/Nvveen/Gotty
+github.com/Microsoft/go-winio/pkg/guid
+# github.com/Microsoft/hcsshim v0.8.7
+github.com/Microsoft/hcsshim/osversion
 # github.com/aokoli/goutils v1.0.1
 ## explicit
 github.com/aokoli/goutils
-# github.com/aws/aws-sdk-go v1.14.31
-## explicit
 # github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 ## explicit
 # github.com/cheggaaa/pb v1.0.25
 ## explicit
 github.com/cheggaaa/pb
-# github.com/containerd/continuity v0.0.0-20180814194400-c7c5070e6f6e
-github.com/containerd/continuity/pathdriver
+# github.com/containerd/containerd v1.3.0
+github.com/containerd/containerd/errdefs
+# github.com/containerd/continuity v0.0.0-20200228182428-0f16d7a0959c
+github.com/containerd/continuity/fs
+github.com/containerd/continuity/syscallx
+github.com/containerd/continuity/sysx
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/denisbrodbeck/machineid v1.0.1
 ## explicit
 github.com/denisbrodbeck/machineid
-# github.com/docker/docker v0.7.3-0.20180827131323-0c5f8d2b9b23
-github.com/docker/docker/api/types
+# github.com/docker/distribution v2.7.1+incompatible
+github.com/docker/distribution/registry/api/errcode
+# github.com/docker/docker v1.4.2-0.20191101170500-ac7306503d23
 github.com/docker/docker/api/types/blkiodev
 github.com/docker/docker/api/types/container
 github.com/docker/docker/api/types/filters
@@ -41,35 +45,31 @@ github.com/docker/docker/api/types/swarm
 github.com/docker/docker/api/types/swarm/runtime
 github.com/docker/docker/api/types/versions
 github.com/docker/docker/errdefs
-github.com/docker/docker/opts
+github.com/docker/docker/pkg/archive
 github.com/docker/docker/pkg/fileutils
 github.com/docker/docker/pkg/homedir
 github.com/docker/docker/pkg/idtools
 github.com/docker/docker/pkg/ioutils
+github.com/docker/docker/pkg/jsonmessage
 github.com/docker/docker/pkg/longpath
 github.com/docker/docker/pkg/mount
 github.com/docker/docker/pkg/pools
 github.com/docker/docker/pkg/stdcopy
 github.com/docker/docker/pkg/system
+github.com/docker/docker/pkg/term
+github.com/docker/docker/pkg/term/windows
 # github.com/docker/go-connections v0.4.0
 github.com/docker/go-connections/nat
-# github.com/docker/go-units v0.3.3
+# github.com/docker/go-units v0.4.0
 github.com/docker/go-units
-# github.com/docker/libnetwork v0.8.0-dev.2.0.20180608203834-19279f049241
-github.com/docker/libnetwork/ipamutils
 # github.com/fatih/color v1.7.0
 ## explicit
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
-# github.com/fsouza/go-dockerclient v1.3.0
+# github.com/fsouza/go-dockerclient v1.6.5
 ## explicit
 github.com/fsouza/go-dockerclient
-github.com/fsouza/go-dockerclient/internal/archive
-github.com/fsouza/go-dockerclient/internal/jsonmessage
-github.com/fsouza/go-dockerclient/internal/term
-# github.com/go-ini/ini v1.38.1
-## explicit
 # github.com/gobuffalo/envy v1.7.0
 github.com/gobuffalo/envy
 # github.com/gobuffalo/logger v1.0.1
@@ -89,10 +89,14 @@ github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/oncer
 github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/safe
 github.com/gobuffalo/packr/v2/jam/parser
 github.com/gobuffalo/packr/v2/plog
-# github.com/gogo/protobuf v1.2.1
+# github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/proto
-# github.com/google/go-cmp v0.3.0
-## explicit
+# github.com/golang/protobuf v1.3.2
+github.com/golang/protobuf/proto
+github.com/golang/protobuf/ptypes
+github.com/golang/protobuf/ptypes/any
+github.com/golang/protobuf/ptypes/duration
+github.com/golang/protobuf/ptypes/timestamp
 # github.com/google/go-github v0.0.0-20180716180158-c0b63e2f9bb1
 ## explicit
 github.com/google/go-github/github
@@ -102,8 +106,6 @@ github.com/google/go-querystring/query
 # github.com/google/uuid v0.0.0-20161128191214-064e2069ce9c
 ## explicit
 github.com/google/uuid
-# github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e
-## explicit
 # github.com/gosuri/uitable v0.0.0-20160404203958-36ee7e946282
 ## explicit
 github.com/gosuri/uitable
@@ -130,8 +132,6 @@ github.com/imdario/mergo
 github.com/inconshreveable/mousetrap
 # github.com/joho/godotenv v1.3.0
 github.com/joho/godotenv
-# github.com/jtolds/gls v4.2.1+incompatible
-## explicit
 # github.com/karrick/godirwalk v1.10.12
 github.com/karrick/godirwalk
 # github.com/konsorten/go-windows-terminal-sequences v1.0.2
@@ -159,12 +159,15 @@ github.com/mattn/go-runewidth
 github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.1.2
 github.com/mitchellh/mapstructure
+# github.com/morikuni/aec v1.0.0
+github.com/morikuni/aec
 # github.com/opencontainers/go-digest v1.0.0-rc1
 github.com/opencontainers/go-digest
 # github.com/opencontainers/image-spec v1.0.1
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
 # github.com/opencontainers/runc v0.1.1
+github.com/opencontainers/runc/libcontainer/system
 github.com/opencontainers/runc/libcontainer/user
 # github.com/pelletier/go-toml v1.4.0
 ## explicit
@@ -185,10 +188,6 @@ github.com/segmentio/backo-go
 # github.com/sirupsen/logrus v1.4.2
 ## explicit
 github.com/sirupsen/logrus
-# github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d
-## explicit
-# github.com/smartystreets/goconvey v0.0.0-20181108003508-044398e4856c
-## explicit
 # github.com/spf13/afero v1.2.2
 ## explicit
 github.com/spf13/afero
@@ -207,32 +206,36 @@ github.com/spf13/pflag
 # github.com/spf13/viper v1.4.0
 ## explicit
 github.com/spf13/viper
-# github.com/stretchr/testify v1.3.0
+# github.com/stretchr/testify v1.4.0
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 ## explicit
 github.com/xtgo/uuid
-# golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+# golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
 ## explicit
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/net v0.0.0-20190628185345-da137c7871d7
-## explicit
-# golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7
-## explicit
+# golang.org/x/sync v0.0.0-20190423024810-112230192c58
+golang.org/x/sync/errgroup
+# golang.org/x/sys v0.0.0-20190916202348-b4ddaad3f8a3
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
 # golang.org/x/text v0.3.2
-## explicit
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
+# google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
+google.golang.org/genproto/googleapis/rpc/status
+# google.golang.org/grpc v1.27.1
+google.golang.org/grpc/codes
+google.golang.org/grpc/connectivity
+google.golang.org/grpc/grpclog
+google.golang.org/grpc/internal
+google.golang.org/grpc/status
 # gopkg.in/cheggaaa/pb.v1 v1.0.26
-## explicit
-# gopkg.in/ini.v1 v1.39.0
 ## explicit
 # gopkg.in/segmentio/analytics-go.v3 v3.1.0
 ## explicit
@@ -240,5 +243,3 @@ gopkg.in/segmentio/analytics-go.v3
 # gopkg.in/yaml.v2 v2.2.2
 ## explicit
 gopkg.in/yaml.v2
-# gotest.tools v2.2.0+incompatible
-## explicit
