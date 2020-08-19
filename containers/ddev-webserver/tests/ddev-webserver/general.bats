@@ -12,7 +12,7 @@
 }
 
 @test "verify that xdebug is enabled by default" {
-    docker exec $CONTAINER_NAME php --re xdebug | grep "xdebug version"
+    docker exec $CONTAINER_NAME bash -c 'php --version | grep "with Xdebug"'
 }
 
 @test "verify there aren't \"closed keepalive connection\" complaints" {
