@@ -90,7 +90,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
 ADD ddev-webserver-base-files /
 RUN if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
         # Issue for official arm64 support: https://github.com/mailhog/MailHog/issues/307
-        curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}-ddev/MailHog_linux_arm64" -o /usr/local/bin/mailhog; \
+        curl -sSL "https://github.com/dennisameling/MailHog/releases/download/v${MAILHOG_VERSION}-ddev/MailHog_linux_arm64" -o /usr/local/bin/mailhog; \
     else \
         curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog; \
     fi
