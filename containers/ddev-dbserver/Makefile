@@ -57,7 +57,7 @@ mariadb_containers:
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
 		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
 		printf "\n\n========== Building MariaDB $${baseversion} with image $${fullversion} ==========\n"; \
-		docker buildx build --platform linux/amd64,linux/arm64 $(DOCKER_ARGS) --build-arg="DBVERSION=$${baseversion}" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${baseversion}:$(VERSION)" . ; \
+		docker buildx build --platform linux/amd64 $(DOCKER_ARGS) --build-arg="DBVERSION=$${baseversion}" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${baseversion}:$(VERSION)" . ; \
 	done
 
 mysql_containers:
@@ -66,7 +66,7 @@ mysql_containers:
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
 		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
 		printf "\n\n========== Building MySQL $${baseversion} with image $${fullversion} ==========\n", ${baseversion}, ${fullversion}; \
-		docker buildx build --platform linux/amd64,linux/arm64 $(DOCKER_ARGS) --build-arg="DBVERSION=$$baseversion" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)" . ; \
+		docker buildx build --platform linux/amd64 $(DOCKER_ARGS) --build-arg="DBVERSION=$$baseversion" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)" . ; \
 	done
 
 push: container
