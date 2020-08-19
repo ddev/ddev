@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1604:202007-01
     working_directory: ~/ddev
     environment:
       DRUD_NONINTERACTIVE: "true"
@@ -41,7 +41,7 @@ jobs:
 
   lx_nginx_fpm_test:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1604:202007-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
@@ -162,7 +162,7 @@ jobs:
 
   lx_apache_fpm_test:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1604:202007-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
@@ -195,7 +195,7 @@ jobs:
 
   lx_apache_cgi_test:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1604:202007-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-cgi
@@ -226,7 +226,7 @@ jobs:
 
   lx_nfsmount_test:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1604:202007-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: true
@@ -260,7 +260,7 @@ jobs:
 
   staticrequired:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1604:202007-01
     working_directory: ~/ddev
     environment:
     steps:
@@ -278,7 +278,7 @@ jobs:
 
   lx_container_test:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1604:202007-01
     working_directory: ~/ddev
     environment:
       GOTEST_SHORT: true
@@ -334,7 +334,7 @@ jobs:
 
   artifacts:
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-1604:202007-01
     working_directory: ~/ddev
     steps:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
