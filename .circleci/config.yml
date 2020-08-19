@@ -193,37 +193,6 @@ jobs:
         - /home/linuxbrew
         - ~/.ddev/testcache
 
-  lx_apache_cgi_test:
-    machine:
-      image: ubuntu-1604:202007-01
-    working_directory: ~/ddev
-    environment:
-      DDEV_TEST_WEBSERVER_TYPE: apache-cgi
-      # Experiment with only testing TYPO3 with the apache run.
-      GOTEST_SHORT: 5
-      DRUD_NONINTERACTIVE: "true"
-    steps:
-    - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
-    - restore_cache:
-        keys:
-        - linux-v13
-    - attach_workspace:
-        at: ~/
-    - run:
-        command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
-    - run:
-        command: make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
-        name: ddev tests
-        no_output_timeout: "120m"
-    - store_test_results:
-        path: /tmp/testresults
-    - save_cache:
-        key: linux-v13
-        paths:
-        - /home/linuxbrew
-        - ~/.ddev/testcache
-
   lx_nfsmount_test:
     machine:
       image: ubuntu-1604:202007-01

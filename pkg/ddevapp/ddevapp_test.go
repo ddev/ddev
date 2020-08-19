@@ -2504,7 +2504,7 @@ func TestHttpsRedirection(t *testing.T) {
 	}
 
 	types := ddevapp.GetValidAppTypes()
-	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM, nodeps.WebserverApacheCGI}
+	webserverTypes := []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
 	if os.Getenv("GOTEST_SHORT") != "" {
 		types = []string{nodeps.AppTypePHP, nodeps.AppTypeDrupal8}
 		webserverTypes = []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM}
@@ -2696,7 +2696,7 @@ func TestGetAllURLs(t *testing.T) {
 	runTime()
 }
 
-// TestWebserverType checks that webserver_type:apache-cgi or apache-fpm does the right thing
+// TestWebserverType checks that webserver_type:apache-fpm does the right thing
 func TestWebserverType(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -2714,7 +2714,7 @@ func TestWebserverType(t *testing.T) {
 		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "servertype.php"), filepath.Join(app.AppRoot, app.Docroot, "servertype.php"))
 
 		assert.NoError(err)
-		for _, app.WebserverType = range []string{nodeps.WebserverApacheFPM, nodeps.WebserverApacheCGI, nodeps.WebserverNginxFPM} {
+		for _, app.WebserverType = range []string{nodeps.WebserverApacheFPM, nodeps.WebserverNginxFPM} {
 
 			err = app.WriteConfig()
 			assert.NoError(err)

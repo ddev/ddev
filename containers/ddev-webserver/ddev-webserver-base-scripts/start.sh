@@ -30,7 +30,6 @@ if [ -d /mnt/ddev_config/php ] ; then
     if [ -n "$(ls -A /mnt/ddev_config/php/*.ini 2>/dev/null)" ]; then
         cp /mnt/ddev_config/php/*.ini /etc/php/${DDEV_PHP_VERSION}/cli/conf.d/
         cp /mnt/ddev_config/php/*.ini /etc/php/${DDEV_PHP_VERSION}/fpm/conf.d/
-        cp /mnt/ddev_config/php/*.ini /etc/php/${DDEV_PHP_VERSION}/apache2/conf.d/
     fi
 fi
 
@@ -45,11 +44,6 @@ printf "\nexport APACHE_RUN_USER=$(id -un)\nexport APACHE_RUN_GROUP=$(id -gn)\n"
 a2enmod access_compat alias auth_basic authn_core authn_file authz_core authz_host authz_user autoindex deflate dir env filter mime mpm_prefork negotiation reqtimeout rewrite setenvif status
 a2enconf charset localized-error-pages other-vhosts-access-log security serve-cgi-bin
 
-if [ "$DDEV_WEBSERVER_TYPE" = "apache-cgi" ] ; then
-    a2enmod php${DDEV_PHP_VERSION}
-    a2dismod proxy_fcgi
-    a2dissite 000-default
-fi
 if [ "$DDEV_WEBSERVER_TYPE" = "apache-fpm" ] ; then
     a2enmod proxy_fcgi 
     a2enconf php${DDEV_PHP_VERSION}-fpm

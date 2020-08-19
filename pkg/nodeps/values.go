@@ -117,7 +117,6 @@ var NFSMountEnabledDefault = false
 var ValidWebserverTypes = map[string]bool{
 	WebserverNginxFPM:  true,
 	WebserverApacheFPM: true,
-	WebserverApacheCGI: true,
 }
 
 // App types
