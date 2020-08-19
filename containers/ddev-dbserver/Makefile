@@ -46,7 +46,7 @@ build: container
 
 # The format here is majorversion:pinnedimageversion
 # This allows to pin the version (as currently required with 8.0.19
-MARIADB_VERSIONS=10.1:10.1 10.2:10.2 10.3:10.3 10.4:10.4 10.5:10.5
+MARIADB_VERSIONS=5.5:5.5 10.0:10.0 10.1:10.1 10.2:10.2 10.3:10.3 10.4:10.4 10.5:10.5
 MYSQL_VERSIONS=5.5:5.5 5.6:5.6 5.7:5.7 8.0:8.0.19
 
 container: mariadb_containers mysql_containers
