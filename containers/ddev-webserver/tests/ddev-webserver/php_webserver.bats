@@ -22,6 +22,10 @@
     curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php | grep "Xdebug is disabled"
 }
 
+@test "verify that xdebug is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
+  docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --version | grep "with Xdebug"'
+}
+
 @test "verify mailhog for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
     curl -s 127.0.0.1:$HOST_HTTP_PORT/test/test-email.php | grep "Test email sent"
     curl -s --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php

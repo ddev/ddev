@@ -11,8 +11,8 @@
     docker exec $CONTAINER_NAME bash -c 'echo $PATH | grep /var/www/html/vendor/bin'
 }
 
-@test "verify that xdebug is enabled by default" {
-    docker exec $CONTAINER_NAME bash -c 'php --version | grep "with Xdebug"'
+@test "verify that xdebug is disabled by default when using start.sh to start" {
+    docker exec $CONTAINER_NAME bash -c 'php --version | grep -v "with Xdebug"'
 }
 
 @test "verify there aren't \"closed keepalive connection\" complaints" {
