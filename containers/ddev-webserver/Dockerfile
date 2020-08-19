@@ -89,7 +89,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
 
 ADD ddev-webserver-base-files /
 RUN if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
-        curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_arm" -o /usr/local/bin/mailhog; \
+        # Issue for official arm64 support: https://github.com/mailhog/MailHog/issues/307
+        curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}-ddev/MailHog_linux_arm64" -o /usr/local/bin/mailhog; \
     else \
         curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog; \
     fi
@@ -124,7 +125,8 @@ RUN mkdir -p /home/.composer /home/.drush/commands /home/.drush/aliases /mnt/dde
 RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
 RUN if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
-        curl -sSL https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-$MKCERT_VERSION-linux-arm -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert; \
+        # PR for official arm64 support pending: https://github.com/FiloSottile/mkcert/pull/284
+        curl -sSL https://github.com/dennisameling/mkcert/releases/download/$MKCERT_VERSION-ddev/mkcert-$MKCERT_VERSION-linux-arm64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert; \
     else \
         curl -sSL https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-$MKCERT_VERSION-linux-amd64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert; \
     fi

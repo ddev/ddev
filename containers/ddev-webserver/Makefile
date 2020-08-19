@@ -38,6 +38,8 @@ include ../../build-tools/makefile_components/base_container.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
 
+# In CI environments, use the plain Docker build progress to not overload the CI logs
+PROGRESS := $(if $(CI),plain,auto)
 
 DOCKER_BUILDKIT=1
 
@@ -52,7 +54,10 @@ push: images
 	done
 
 ddev-webserver:
-	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker buildx build --platform linux/amd64,linux/arm64 --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker buildx build --progress=$(PROGRESS) --platform linux/amd64,linux/arm64 --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+
+ddev-webserver-arm64:
+    DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker buildx build --progress=$(PROGRESS) --platform linux/arm64 --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 test: images
 	for item in $(DEFAULT_IMAGES); do \
