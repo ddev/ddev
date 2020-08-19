@@ -97,7 +97,6 @@ var ValidMySQLVersions = map[string]bool{
 const (
 	WebserverNginxFPM  = "nginx-fpm"
 	WebserverApacheFPM = "apache-fpm"
-	WebserverApacheCGI = "apache-cgi"
 )
 
 var ValidOmitContainers = map[string]bool{
