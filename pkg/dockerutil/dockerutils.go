@@ -851,9 +851,6 @@ func Exec(containerID string, command string) (string, string, error) {
 
 	info, err := client.InspectExec(exec.ID)
 	if err != nil {
-
-	}
-	if err != nil {
 		return stdout.String(), stderr.String(), err
 	}
 	var execErr error

@@ -3204,11 +3204,6 @@ func TestCustomCerts(t *testing.T) {
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
-	})
-	stdout = strings.Trim(stdout, "\n")
-
 	// Create a certfile/key in .ddev/custom_certs with just one DNS name in it
 	// mkcert --cert-file d9composer.ddev.site.crt --key-file d9composer.ddev.site.key d9composer.ddev.site
 	out, err := exec.RunCommand("mkcert", []string{"--cert-file", filepath.Join(certDir, app.GetHostname()+".crt"), "--key-file", filepath.Join(certDir, app.GetHostname()+".key"), app.GetHostname()})
