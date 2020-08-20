@@ -2012,3 +2012,13 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 func (app *DdevApp) GetNFSMountVolName() string {
 	return strings.ToLower("ddev-" + app.Name + "_nfsmount")
 }
+
+// StartAppIfNotRunning() is intended to replace much-duplicated code in the commands.
+func (app *DdevApp) StartAppIfNotRunning() error {
+	var err error
+	if app.SiteStatus() != SiteRunning {
+		err = app.Start()
+	}
+
+	return err
+}
