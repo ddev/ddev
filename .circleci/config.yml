@@ -247,7 +247,9 @@ jobs:
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
-        command: make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+        # CircleCI image ubuntu-1604:202007-01 has umask 002, which results in
+        # default perms 700 for new directories, which doesn't seem to work with NFS
+        command: umask u=rwx,g=rwx,o=rx && make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
         no_output_timeout: "120m"
     - store_test_results:

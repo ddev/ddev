@@ -172,6 +172,8 @@ func CreateTmpDir(prefix string) string {
 	if err != nil {
 		log.Fatalln("Failed to create temp directory, err=", err)
 	}
+	// Make the tmpdir fully writeable/readable, NFS problems
+	_ = os.Chmod(fullPath, 0777)
 	return fullPath
 }
 
