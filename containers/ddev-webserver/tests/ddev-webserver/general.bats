@@ -11,12 +11,11 @@
     docker exec $CONTAINER_NAME bash -c 'echo $PATH | grep /var/www/html/vendor/bin'
 }
 
-@test "verify that xdebug is disabled by default ($project_type)" {
-	# xdebug should be disabled by default.
-    docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
+@test "verify that xdebug is disabled by default when using start.sh to start" {
+    docker exec $CONTAINER_NAME bash -c 'php --version | grep -v "with Xdebug"'
 }
 
-@test "verify there aren't \"closed keepalive connection\" complaints ($project_type)" {
+@test "verify there aren't \"closed keepalive connection\" complaints" {
 	(docker logs $CONTAINER_NAME 2>&1 | grep -v "closed keepalive connection")  || (echo "Found unwanted closed keepalive connection messages" && exit 103)
 }
 
