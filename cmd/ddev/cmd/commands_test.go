@@ -104,6 +104,8 @@ func TestCustomCommands(t *testing.T) {
 	}
 
 	app.Type = nodeps.AppTypePHP
+	err = app.WriteConfig()
+	assert.NoError(err)
 
 	// Make sure that all the official ddev-provided custom commands are usable by just checking help
 	for _, c := range []string{"launch", "live", "mysql", "xdebug"} {
@@ -114,7 +116,7 @@ func TestCustomCommands(t *testing.T) {
 	// The various CMS commands should not be available here
 	for _, c := range []string{"artisan", "drush", "magento", "typo3", "typo3cms", "wp"} {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
-		assert.Error(err)
+		assert.Error(err, "found command %s when it should not have been there (no error) app.Type=%s", c, app.Type)
 	}
 
 	// TYPO3 commands should only be available for type typo3
@@ -150,7 +152,7 @@ func TestCustomCommands(t *testing.T) {
 	_, _ = exec.RunCommand(DdevBin, nil)
 	for _, c := range []string{"wp"} {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
-		assert.NoError(err)
+		assert.NoError(err, "expected to find command %s for app.Type=%s", c, app.Type)
 	}
 
 	// Make sure that the non-command stuff we installed is there
