@@ -201,7 +201,7 @@ server {
 {{/* Get the VIRTUAL_ROOT By containers w/ use fastcgi root */}}
 {{ $vhost_root := or (first (groupByKeys $containers "Env.VIRTUAL_ROOT")) "/var/www/public" }}
 
-# Use a single master.crt/master.key
+# Default to a single master.crt/master.key
 {{ $cert := "master" }}
 
 {{ range $container := whereExist $containers "Env.HTTP_EXPOSE" }}

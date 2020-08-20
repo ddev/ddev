@@ -3160,6 +3160,72 @@ func TestDdevGetProjects(t *testing.T) {
 
 }
 
+// TestCustomCerts makes sure that added custom certificates are respected and used
+func TestCustomCerts(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Force router stop - shouldn't be necessary
+	//dest := ddevapp.RouterComposeYAMLPath()
+	//_, _, err := dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
+	//assert.NoError(err)
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	app, err := ddevapp.NewApp(site.Dir, false, "")
+	assert.NoError(err)
+
+	certDir := app.GetConfigPath("custom_certs")
+	err = os.MkdirAll(certDir, 0755)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		_ = os.RemoveAll(certDir)
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: "rm /mnt/ddev-global-cache/custom_certs/" + app.GetHostname() + "*",
+		})
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	// Start without cert and make sure normal DNS names are there
+	err = app.Start()
+	assert.NoError(err)
+	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
+	})
+	stdout = strings.Trim(stdout, "\n")
+	// This should be our regular wildcard cert
+	assert.Contains(stdout, "*.ddev.local\n*.ddev.site")
+
+	// Now stop it so we can install new custom cert.
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
+	})
+	stdout = strings.Trim(stdout, "\n")
+
+	// Create a certfile/key in .ddev/custom_certs with just one DNS name in it
+	// mkcert --cert-file d9composer.ddev.site.crt --key-file d9composer.ddev.site.key d9composer.ddev.site
+	out, err := exec.RunCommand("mkcert", []string{"--cert-file", filepath.Join(certDir, app.GetHostname()+".crt"), "--key-file", filepath.Join(certDir, app.GetHostname()+".key"), app.GetHostname()})
+	assert.NoError(err, "mkcert command failed, out=%s", out)
+
+	err = app.Start()
+	assert.NoError(err)
+
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
+	})
+	stdout = strings.Trim(stdout, "\n")
+	// If we had the regular cert, there would be several things here including *.ddev.site
+	// But e should only see the hostname listed.
+	assert.Equal(app.GetHostname(), stdout)
+}
+
 // TestDdevList tests the ddevapp.List() functionality
 // It's only here for profiling at this point.
 func TestDdevList(t *testing.T) {
