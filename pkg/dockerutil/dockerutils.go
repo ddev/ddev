@@ -824,3 +824,42 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 
 	return nil
 }
+
+// Exec does a simple docker exec, no frills, just executes the command
+func Exec(containerID string, command string) (string, string, error) {
+	client := GetDockerClient()
+
+	exec, err := client.CreateExec(docker.CreateExecOptions{
+		Container:    containerID,
+		Cmd:          []string{"sh", "-c", command},
+		AttachStdout: true,
+		AttachStderr: true,
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	var stdout, stderr bytes.Buffer
+	err = client.StartExec(exec.ID, docker.StartExecOptions{
+		OutputStream: &stdout,
+		ErrorStream:  &stderr,
+		Detach:       false,
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	info, err := client.InspectExec(exec.ID)
+	if err != nil {
+
+	}
+	if err != nil {
+		return stdout.String(), stderr.String(), err
+	}
+	var execErr error
+	if info.ExitCode != 0 {
+		execErr = fmt.Errorf("command '%s' returned exit code %v", command, info.ExitCode)
+	}
+
+	return stdout.String(), stderr.String(), execErr
+}

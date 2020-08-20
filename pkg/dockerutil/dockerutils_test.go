@@ -383,6 +383,32 @@ func TestGetExposedContainerPorts(t *testing.T) {
 	assert.Equal([]string{"8889", "8890"}, ports)
 }
 
+// TestDockerExec() checks docker.Exec()
+func TestDockerExec(t *testing.T) {
+	assert := asrt.New(t)
+	client := GetDockerClient()
+
+	id, _, err := RunSimpleContainer("busybox:latest", "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = client.RemoveContainer(docker.RemoveContainerOptions{
+			ID:    id,
+			Force: true,
+		})
+		assert.NoError(err)
+	})
+
+	stdout, _, err := Exec(id, "ls /etc")
+	assert.NoError(err)
+	assert.Contains(stdout, "group\nhostname")
+
+	_, stderr, err := Exec(id, "ls /nothingthere")
+	assert.Error(err)
+	assert.Contains(stderr, "No such file or directory")
+
+}
+
 // TestCreateVolume does a trivial test of creating a trivial docker volume.
 func TestCreateVolume(t *testing.T) {
 	assert := asrt.New(t)
