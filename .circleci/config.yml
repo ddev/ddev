@@ -11,7 +11,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v12
+        - linux-v13
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
@@ -34,7 +34,7 @@ jobs:
         root: ~/
         paths: ddev
     - save_cache:
-        key: linux-v12
+        key: linux-v13
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -52,7 +52,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v12
+        - linux-v13
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
@@ -66,7 +66,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v12
+        key: linux-v13
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -173,7 +173,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v12
+        - linux-v13
     - attach_workspace:
         at: ~/
     - run:
@@ -188,7 +188,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v12
+        key: linux-v13
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -206,7 +206,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v12
+        - linux-v13
     - attach_workspace:
         at: ~/
     - run:
@@ -219,7 +219,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v12
+        key: linux-v13
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -237,7 +237,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v12
+        - linux-v13
     - attach_workspace:
         at: ~/
     - run:
@@ -247,13 +247,15 @@ jobs:
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
-        command: make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+        # CircleCI image ubuntu-1604:202007-01 has umask 002, which results in
+        # default perms 700 for new directories, which doesn't seem to work with NFS
+        command: umask u=rwx,g=rwx,o=rx && make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
         no_output_timeout: "120m"
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v12
+        key: linux-v13
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -268,7 +270,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v12
+        - linux-v13
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
@@ -287,7 +289,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v12
+        - linux-v13
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
@@ -305,7 +307,7 @@ jobs:
           done
         name: linux container test
     - save_cache:
-        key: linux-v12
+        key: linux-v13
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -340,7 +342,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v12
+        - linux-v13
     - attach_workspace:
         at: ~/
     - run:
@@ -348,7 +350,7 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-v12
+        key: linux-v13
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
