@@ -400,7 +400,7 @@ func (app *DdevApp) GetPhpVersion() string {
 	return v
 }
 
-// GetWebserverType returns the app's webserver type (nginx-fpm/apache-fpm/apache-cgi)
+// GetWebserverType returns the app's webserver type (nginx-fpm/apache-fpm)
 func (app *DdevApp) GetWebserverType() string {
 	v := nodeps.WebserverDefault
 	if app.WebserverType != "" {

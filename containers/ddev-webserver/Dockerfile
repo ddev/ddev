@@ -22,19 +22,14 @@ RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key &&
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y apache2 libcap2-bin locales-all nginx supervisor
 
-# Add additional modules not used in php-base
-RUN for v in $PHP_VERSIONS; do \
-    DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y libapache2-mod-$v || exit $?; \
-done
-
-RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
-
 # Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 
 ADD ddev-webserver-base-files /
 ADD ddev-webserver-base-scripts /
+RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+
 # END ddev-webserver-base
 
 ### ---------------------------ddev-webserver-prod--------------------------------------
@@ -122,7 +117,6 @@ RUN chmod 644 /home/.my.cnf
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
 
-RUN for v in $PHP_VERSIONS; do a2dismod $v || exit $?; done
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
 

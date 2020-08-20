@@ -735,7 +735,7 @@ func TestPHPOverrides(t *testing.T) {
 		}
 	}()
 
-	for _, webserverType := range []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM, nodeps.WebserverApacheCGI} {
+	for _, webserverType := range []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM} {
 		testcommon.ClearDockerEnv()
 		app.WebserverType = webserverType
 		err = app.Init(site.Dir)

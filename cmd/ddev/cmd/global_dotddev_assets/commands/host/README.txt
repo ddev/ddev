@@ -11,7 +11,7 @@ DDEV_HOST_HTTPS_PORT: Localhost port for https on webserver
 DDEV_DOCROOT: Relative path from approot to docroot
 DDEV_HOSTNAME: Comma-separated list of FQDN hostnames
 DDEV_PHP_VERSION
-DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm, apache-cgi
+DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm
 DDEV_PROJECT_TYPE: drupal8, typo3, backdrop, wordpress, etc.
 DDEV_ROUTER_HTTP_PORT: Router port for http
 DDEV_ROUTER_HTTPS_PORT: Router port for https

@@ -230,7 +230,7 @@ const ConfigInstructions = `
 # "ddev xdebug" to enable xdebug and "ddev xdebug off" to disable it work better,
 # as leaving xdebug enabled all the time is a big performance hit.
 
-# webserver_type: nginx-fpm  # Can be set to apache-fpm or apache-cgi as well
+# webserver_type: nginx-fpm  # or apache-fpm
 
 # timezone: Europe/Berlin
 # This is the timezone used in the containers and by PHP;

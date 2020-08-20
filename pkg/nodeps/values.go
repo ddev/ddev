@@ -97,7 +97,6 @@ var ValidMySQLVersions = map[string]bool{
 const (
 	WebserverNginxFPM  = "nginx-fpm"
 	WebserverApacheFPM = "apache-fpm"
-	WebserverApacheCGI = "apache-cgi"
 )
 
 var ValidOmitContainers = map[string]bool{
@@ -117,7 +116,6 @@ var NFSMountEnabledDefault = false
 var ValidWebserverTypes = map[string]bool{
 	WebserverNginxFPM:  true,
 	WebserverApacheFPM: true,
-	WebserverApacheCGI: true,
 }
 
 // App types
