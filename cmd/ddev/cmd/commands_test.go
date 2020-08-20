@@ -100,14 +100,17 @@ func TestCustomCommands(t *testing.T) {
 		assert.Contains(out, fmt.Sprintf("%s was executed with args=hostarg1 hostarg2 --hostflag1 on host %s", c, expectedHost))
 	}
 
+	assert.Equal("wordpress", app.Type)
+
 	// Make sure that all the official ddev-provided custom commands are usable by just checking help
-	for _, c := range []string{"launch", "live", "mysql", "xdebug"} {
+	// Also "wp" should be here because type wordpress
+	for _, c := range []string{"launch", "live", "mysql", "wp", "xdebug"} {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
 		assert.NoError(err, "Failed to run ddev %s -h", c)
 	}
 
 	// The TYPO3 and Drupal commands should not be available here (currently WordPress)
-	for _, c := range []string{"typo3", "typo3cms", "drush", "artisan", "magento"} {
+	for _, c := range []string{"artisan", "drush", "magento", "typo3", "typo3cms"} {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
 		assert.Error(err)
 	}
