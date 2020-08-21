@@ -91,10 +91,6 @@ func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"stop", projectName})
 	assert.NoError(err)
 
-	// Docker seems not always to release resources already, so sleep a bit before rename
-	err = dockerutil.InvalidateDockerWindowsCache()
-	assert.NoError(err, "unable to invalidate docker cache")
-
 	err = os.Chdir(projDir)
 	assert.NoError(err)
 

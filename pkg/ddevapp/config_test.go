@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mitchellh/go-homedir"
@@ -671,9 +670,6 @@ func TestConfigOverrideDetection(t *testing.T) {
 				t.Logf("failed to delete %s: %v", f, err)
 			}
 		}
-
-		err = dockerutil.InvalidateDockerWindowsCache()
-		assert.NoError(err, "unable to invalidate docker cache")
 	})
 
 	stdoutFunc, err := util.CaptureOutputToFile()
