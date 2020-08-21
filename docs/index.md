@@ -10,7 +10,7 @@
 * OS Support
     * macOS High Sierra and higher (macOS 10.13 and higher; it should run anywhere Docker Desktop for Mac runs.
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 16.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
-    * Windows 10 (all editions) with WSL2 (version 2004 or later)
+    * Windows 10 (all editions) with WSL2 (version [1903.1049, 1909.1049](https://devblogs.microsoft.com/commandline/wsl-2-support-is-coming-to-windows-10-versions-1903-and-1909/), 2004 or later)
     * (Non-WSL2) Windows 10 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
 
 ## Using DDEV alongside other development environments
@@ -45,7 +45,7 @@ ddev poweroff && brew upgrade ddev
 
 ### Installation or Upgrade - Windows (WSL2)
 
-**This is the recommended installation method for all Windows users that are on Windows 10 2004 or higher.** If you don't have this version yet, or if you don't want to use WSL2, please follow the legacy instructions for Windows below.
+**This is the recommended installation method for all Windows users that are on Windows 10 [1903.1049, 1909.1049](https://devblogs.microsoft.com/commandline/wsl-2-support-is-coming-to-windows-10-versions-1903-and-1909/), 2004 or higher** If you don't have this version yet, or if you don't want to use WSL2, please follow the legacy instructions for Windows below.
 
 **All Windows 10 editions (including Windows 10 Home) support WSL2**. Docker Toolbox support for DDEV is deprecated and will be removed, as we'll move testing capacity towards WSL2. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
 
