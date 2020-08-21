@@ -34,7 +34,10 @@ func TestCustomCommands(t *testing.T) {
 	site := TestSites[0]
 	switchDir := TestSites[0].Chdir()
 	app, _ := ddevapp.NewApp(TestSites[0].Dir, false, "")
+	origType := app.Type
 	t.Cleanup(func() {
+		app.Type = origType
+		_ = app.WriteConfig()
 		_ = os.RemoveAll(tmpHome)
 		_ = os.Setenv("HOME", origHome)
 		_ = os.Setenv("DDEV_DEBUG", origDebug)
@@ -100,16 +103,20 @@ func TestCustomCommands(t *testing.T) {
 		assert.Contains(out, fmt.Sprintf("%s was executed with args=hostarg1 hostarg2 --hostflag1 on host %s", c, expectedHost))
 	}
 
+	app.Type = nodeps.AppTypePHP
+	err = app.WriteConfig()
+	assert.NoError(err)
+
 	// Make sure that all the official ddev-provided custom commands are usable by just checking help
 	for _, c := range []string{"launch", "live", "mysql", "xdebug"} {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
 		assert.NoError(err, "Failed to run ddev %s -h", c)
 	}
 
-	// The TYPO3 and Drupal commands should not be available here (currently WordPress)
-	for _, c := range []string{"typo3", "typo3cms", "drush", "artisan", "magento"} {
+	// The various CMS commands should not be available here
+	for _, c := range []string{"artisan", "drush", "magento", "typo3", "typo3cms", "wp"} {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
-		assert.Error(err)
+		assert.Error(err, "found command %s when it should not have been there (no error) app.Type=%s", c, app.Type)
 	}
 
 	// TYPO3 commands should only be available for type typo3
@@ -128,6 +135,24 @@ func TestCustomCommands(t *testing.T) {
 	for _, c := range []string{"drush"} {
 		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
 		assert.NoError(err)
+	}
+
+	// Laravel types should only be available for type laravel
+	app.Type = nodeps.AppTypeLaravel
+	_ = app.WriteConfig()
+	_, _ = exec.RunCommand(DdevBin, nil)
+	for _, c := range []string{"artisan"} {
+		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		assert.NoError(err)
+	}
+
+	// Wordpress types should only be available for type drupal*
+	app.Type = nodeps.AppTypeWordPress
+	_ = app.WriteConfig()
+	_, _ = exec.RunCommand(DdevBin, nil)
+	for _, c := range []string{"wp"} {
+		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		assert.NoError(err, "expected to find command %s for app.Type=%s", c, app.Type)
 	}
 
 	// Make sure that the non-command stuff we installed is there
