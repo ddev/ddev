@@ -51,7 +51,7 @@ var WebTag = "20200818_remove_apache_cgi" // Note that this can be overridden by
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.15.1"
+var BaseDBTag = "20200821_remove_docker_toolbox"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin/phpmyadmin"
