@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -eu -o pipefail
 
 rm -f /tmp/healthy
 
@@ -24,7 +24,7 @@ if [ "x$RESOLVERS" = "x" ]; then
 fi
 
 # If the user has run the default command and the socket doesn't exist, fail
-if [ "$socketMissing" = 1 -a "$1" = forego -a "$2" = start -a "$3" = '-r' ]; then
+if [ "${socketMissing:-}" = 1 -a "$1" = forego -a "$2" = start -a "$3" = '-r' ]; then
 	exit 1
 fi
 
