@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	exec2 "github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"io"
@@ -655,10 +654,6 @@ func MassageWindowsHostMountpoint(mountPoint string) string {
 		pathPortion := strings.Replace(mountPoint[2:], `\`, "/", -1)
 		drive := strings.ToLower(string(mountPoint[0]))
 		mountPoint = "/" + drive + pathPortion
-
-		if nodeps.IsDockerToolbox() {
-			mountPoint = "//" + drive + pathPortion
-		}
 	}
 	return mountPoint
 }
@@ -704,7 +699,6 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 
 // GetHostDockerInternalIP() returns either "host.docker.internal"
 // (for docker-for-mac and Win10 Docker-for-windows) or a usable IP address
-// for docker toolbox and linux.
 func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
 
@@ -724,18 +718,6 @@ func GetHostDockerInternalIP() (string, error) {
 				return "", fmt.Errorf("docker0 interface IP address cannot be determined. You may need to 'ip link set docker0 up' or restart docker or reboot to get xdebug or nfsmount_enabled to work")
 			}
 		}
-	} else if nodeps.IsDockerToolbox() {
-		dockerIP, err := GetDockerIP()
-		if err != nil {
-			return "", err
-		}
-		octets := strings.Split(dockerIP, ".")
-		if len(octets) != 4 {
-			return "", fmt.Errorf("dockerIP %s does not have 4 octets", dockerIP)
-		}
-		// If the docker IP is 192.168.99.100, the *router* ip is 192.168.99.1
-		// So replace the final octet with 1.
-		hostDockerInternal = fmt.Sprintf("%s.%s.%s.1", octets[0], octets[1], octets[2])
 	}
 	return hostDockerInternal, nil
 }
@@ -750,21 +732,6 @@ func RemoveImage(tag string) error {
 		util.Warning("Unable to delete %s: %v", tag, err)
 	}
 	return nil
-}
-
-// InvalidateDockerWindowsCache On Windows, invalidate the docker cache since it's asynchronous
-// Synchronously delete docker cache so these things don't show up in the next test
-// Suggested in https://github.com/docker/for-win/issues/5530#issuecomment-620812432
-func InvalidateDockerWindowsCache() error {
-	if runtime.GOOS != "windows" || nodeps.IsDockerToolbox() {
-		return nil
-	}
-	// The grpcfuse-control seems not to be relevant with WSL2 Docker
-	var err error
-	//_, _, err = RunSimpleContainer("djs55/grpcfuse-control:2.3.0.3", "", []string{"invalidate", "all"}, nil, nil, []string{"/run:/run"}, "0", true)
-	// For extra credit, a sleep
-	time.Sleep(5 * time.Second)
-	return err
 }
 
 // CopyToVolume copies a directory on the host into a docker volume

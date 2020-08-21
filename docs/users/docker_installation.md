@@ -6,24 +6,6 @@ Docker Desktop for Mac can be installed via Homebrew (`brew cask install docker`
 
 Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe).
 
-## Windows Installation: Docker Toolbox
-
-Docker Toolbox support is deprecated and support will be removed in the next DDEV-Local support cycle. Please use Docker Desktop, which now runs fine on all Windows 10 (Intel) versions, including Windows 10 Home.
-
-[Download and install docker toolbox](https://download.docker.com/win/stable/DockerToolbox.exe).
-
-[Chocolatey](https://chocolatey.org/install) users: `choco install -y docker-toolbox`
-
-Special considerations for Docker Toolbox:
-
-* Your project directory must be inside your home directory, as only the home directory is shared with Docker by default. Docker Toolbox (via Virtualbox) can share other paths, see [link](https://stackoverflow.com/a/35498478/215713).
-* Please increase the memory allocated from the default 1GB to at least 2GB and increase the disk size to at least 50GB.
-
-    1. `docker-machine rm default`
-    2. `docker-machine create -d virtualbox --virtualbox-cpu-count=2 --virtualbox-memory=2048 --virtualbox-disk-size=50000 default`
-    3. `docker-machine stop`
-    4. Then exit Docker Quickstart Terminal and restart it to restart Docker Toolbox.
-
 ## Linux Installation: Docker-ce
 
 * __Please don't forget that Linux installation absolutely requires post-install steps (below).__
@@ -74,5 +56,3 @@ If you are on Docker Desktop for Windows or Docker Desktop for Mac and you are s
 * Consider resetting Docker to factory defaults. This often helps in this situation because Docker goes through the whole authentication process again.
 
 If you are on Linux, the most common problem is having an old docker-compose, since the docker-compose that installs by default is incompatible with ddev. You'll find out about this right away because ddev will tell you on `ddev start` or most other ddev commands.
-
-If you are on Docker Toolbox on Windows, the most common problem is trying to put the project directory outside the home directory.

@@ -102,11 +102,7 @@ func GetVersionInfo() map[string]string {
 		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
 	}
 	if runtime.GOOS == "windows" {
-		if nodeps.IsDockerToolbox() {
-			versionInfo["docker type"] = "Docker Toolbox"
-		} else {
-			versionInfo["docker type"] = "Docker Desktop For Windows"
-		}
+		versionInfo["docker type"] = "Docker Desktop For Windows"
 	}
 
 	return versionInfo

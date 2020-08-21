@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mattn/go-isatty"
 	"os"
 	"runtime"
@@ -27,7 +26,7 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 		return stdout, stderr, fmt.Errorf("composer command failed: %v", err)
 	}
 
-	if runtime.GOOS == "windows" && !nodeps.IsDockerToolbox() {
+	if runtime.GOOS == "windows" {
 		fileutil.ReplaceSimulatedLinks(app.AppRoot)
 	}
 	err = app.ProcessHooks("post-composer")

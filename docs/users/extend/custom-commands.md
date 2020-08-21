@@ -104,4 +104,3 @@ Useful variables for container scripts are:
 
 * **Line Endings**: If you are editing a custom command which will run in a container, it must have LF line endings (not traditional Windows CRLF line endings). Remember that a custom command in a container is a script that must execute in a Linux environmet.
 * If ddev can't find "bash" to execute it, then the commands can't be used. If you are running inside git-bash in most any terminal, this shouldn't be an issue, and ddev should be able to find git-bash if it's in "C:\Program Files\Git\bin" as well. But if neither of those is true, add the directory of bash.exe to your PATH environment variable.
-* If you're using Docker Toolbox, the IP address for things like `ddev mysql` is not 127.0.0.1, it's likely 192.168.99.100.
