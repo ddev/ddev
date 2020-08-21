@@ -28,7 +28,7 @@ if [ "${socketMissing:-}" = 1 -a "$1" = forego -a "$2" = start -a "$3" = '-r' ];
 	exit 1
 fi
 
-if [ ! -z "${USE_LETSENCRYPT}" ]; then
+if [ ! -z "${USE_LETSENCRYPT:-}" ]; then
   echo "Lets Encrypt is enabled:"
   certbot certificates
 fi
