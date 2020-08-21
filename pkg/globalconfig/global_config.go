@@ -165,15 +165,14 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # Let's Encrypt:
 # This integration is entirely experimental; your mileage may vary.
-# * Your host must be directly internet-connected
+# * Your host must be directly internet-connected.
 # * DNS for the hostname must be set to point to the host in question
 # * You must have router_bind_all_interfaces: true or else the Let's Encrypt certbot
-#   process will not be able to process the IP address of the host
-# * You will most likely want auto_restart_containers: true so projects will be
-#   restarted in case of a reboot or docker restart.
+#   process will not be able to process the IP address of the host (and nobody will be able to access your site)
+# * You will need to add a startup script to start your sites after a host reboot.
 # * If using several sites at a single top-level domain, you'll probably want to set
 #   project_tld to that top-level domain. Otherwise, you can use additional-hostnames or
-#   additional_fqdns
+#   additional_fqdns. 
 # 
 # use_letsencrypt: false
 # (Experimental, only useful on an internet-based server)
@@ -185,6 +184,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # auto_restart_containers: false
 # Experimental
 # If true, attempt to automatically restart projects/containers after reboot or docker restart.
+
 
 `
 	cfgbytes = append(cfgbytes, instructions...)
