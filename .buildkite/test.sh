@@ -23,7 +23,9 @@ rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/co
 chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
 # Kill off any running containers before sanetestbot.
-docker rm -f $(docker ps -aq) || true
+ddev poweroff
+ddev stop --unlist --all
+docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
 
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
@@ -36,7 +38,7 @@ echo "--- running sanetestbot.sh"
 echo "--- cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
 if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
-	docker rm -f $(docker ps -aq) >/dev/null || true
+	docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
 fi
 docker system prune --volumes --force >/dev/null || true
 
