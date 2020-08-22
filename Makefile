@@ -176,7 +176,7 @@ darwin_notarized: darwin_signed
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(PWD)/$(GOTMP)/bin/darwin_amd64/ddev" ; \
 	fi
 
-$(GOTMP)/bin/windows_amd64/ddev.exe: windows
+$(GOTMP)/bin/windows_amd64/ddev.exe: windows_amd64
 
 windows_install: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
 
