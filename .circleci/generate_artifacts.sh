@@ -52,7 +52,7 @@ $BUILTPATH/ddev_gen_autocomplete
 
 # The completion scripts get placed into the linux build dir (.gotmp/bin)
 # So now copy them into the real build directory
-for dir in .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64; do
+for dir in .gotmp/bin/linux_arm64 .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64 .gotmp/bin/windows_arm; do
   cp .gotmp/bin/ddev_*completion* $dir
 done
 
@@ -67,7 +67,7 @@ curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MK
 tar -czf $ARTIFACTS/ddev_linux-amd64.$VERSION.tar.gz ddev *completion*.sh mkcert
 
 # Generate linux-arm64 tarball/zipball
-cd $BASE_DIR/.gotmp/bin/linux-amd64
+cd $BASE_DIR/.gotmp/bin/linux_arm64
 # mkcert will be ready later
 # curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-amd64 && chmod +x mkcert
 tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev *completion*.sh
