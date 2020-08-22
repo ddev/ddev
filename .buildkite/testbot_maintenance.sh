@@ -27,7 +27,7 @@ darwin)
     done
     ;;
 windows)
-    choco upgrade -y git golang mkcert
+    choco upgrade -y golang mkcert || true
     if [ "$(bats --version)" != "Bats 1.2.0" ]; then
         cd ~/workspace/bats-core/ && git fetch && git checkout v1.2.0 && ./install.sh /usr/local
     fi
