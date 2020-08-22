@@ -11,11 +11,21 @@ set -o pipefail
 set -o nounset
 set -x
 
-# In case test machine has just booted, wait for docker to come up
+# On macOS, restart docker to avoid bugs where containers can't be deleted
+if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
+  killall Docker
+  open -a /Applications/Docker.app
+fi
+
+# Make sure docker is working
 timeout -v 10m bash -c 'while ! docker ps 2>/dev/null ; do
-  sleep 5
+  sleep 10
   echo "Waiting for docker to come up: $(date)"
 done'
+if ! docker ps 2>/dev/null ; then
+  echo "Docker never came up, exiting"
+  exit 1
+fi
 
 rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/commands
 
