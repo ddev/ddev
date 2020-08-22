@@ -11,6 +11,12 @@ set -o pipefail
 set -o nounset
 set -x
 
+# In case test machine has just booted, wait for docker to come up
+timeout -v 10m bash -c 'while ! docker ps 2>/dev/null ; do
+  sleep 5
+  echo "Waiting for docker to come up: $(date)"
+done'
+
 rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/commands
 
 # There are discrepancies in golang hash checking in 1.11+, so kill off modcache to solve.
