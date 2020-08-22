@@ -22,11 +22,6 @@ rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/co
 # go clean -modcache  (Doesn't work due to current bug in golang)
 chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
-# Kill off any running containers before sanetestbot.
-ddev poweroff
-ddev stop --unlist --all
-docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
-
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
 bash $(dirname $0)/testbot_maintenance.sh
@@ -37,7 +32,7 @@ echo "--- running sanetestbot.sh"
 
 echo "--- cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
-if [ "$(docker ps -aq | wc -l)" -gt 0 ] ; then
+if [ "$(docker ps -aq | wc -l )" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
 fi
 docker system prune --volumes --force >/dev/null || true
