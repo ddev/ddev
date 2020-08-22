@@ -64,6 +64,30 @@ VERSION := $(shell git describe --tags --always --dirty)
 NO_V_VERSION=$(shell echo $(VERSION) | awk  -F"-" '{ OFS="-"; sub(/^./, "", $$1); printf $$0; }')
 GITHUB_ORG := drud
 
+# DOCKERBUILDCMD overrides the build in build-tools and should be transplanted back there
+override VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
+override LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
+override DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
+          	    -v "$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -v "$(PWD)/$(GOTMP)/bin:/go/bin" \
+          	    -e GOPATH="/workdir/$(GOTMP)" \
+          	    -e GOCACHE="/workdir/$(GOTMP)/.cache" \
+          	    -e GOFLAGS="$(USEMODVENDOR)" \
+          	    -w /workdir              \
+          	    $(BUILD_IMAGE)
+
+build: $(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
+
+linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm: pull $(GOFILES)
+	@echo "building $@ from $(SRC_AND_UNDER)"
+	@echo $(shell if [ "$(BUILD_OS)" = "windows" ]; then echo "windows build: BUILD_OS=$(BUILD_OS)  DOCKER_TOOLBOX_INSTALL_PATH=$(DOCKER_TOOLBOX_INSTALL_PATH) PWD=$(PWD) S="; fi )
+	@mkdir -p $(GOTMP)/{.cache,pkg,src,bin}
+	@echo "LDFLAGS=$(LDFLAGS)"
+	$(DOCKERBUILDCMD) \
+        bash -c "GOOS=$(word 1, $(subst _, ,$@)) GOARCH=$(word 2, $(subst _, ,$@)) go install -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER) && touch $@"
+	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
+	@echo $(VERSION) >VERSION.txt
+
 #
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
