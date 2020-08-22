@@ -785,7 +785,7 @@ func TestExtraPackages(t *testing.T) {
 		_ = app.WriteConfig()
 		_ = fileutil.RemoveContents(app.GetConfigPath("web-build"))
 		_ = fileutil.RemoveContents(app.GetConfigPath("db-build"))
-		command := fmt.Sprintf("docker rmi -f %s-%s-built %s-%s-built", app.WebImage, app.Name, app.GetDBImage(), app.Name)
+		command := fmt.Sprintf("docker rmi -f %s-%s-built %s-%s-built >/dev/null 2>&1", app.WebImage, app.Name, app.GetDBImage(), app.Name)
 		_, _ = exec.RunCommand("bash", []string{"-c", command})
 	})
 
@@ -796,7 +796,7 @@ func TestExtraPackages(t *testing.T) {
 	// Test db container to make sure no ncdu in there at beginning
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     "command -v ncdu",
+		Cmd:     "command -v ncdu 2>/dev/null",
 	})
 	assert.Error(err)
 	assert.Contains(err.Error(), "exit status 1")
@@ -806,7 +806,7 @@ func TestExtraPackages(t *testing.T) {
 
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "web",
-		Cmd:     "dpkg -s php" + app.PHPVersion + "-" + addedPackage,
+		Cmd:     fmt.Sprintf("dpkg -s php%s-%s >/dev/null 2>&1", app.PHPVersion, addedPackage),
 	})
 	assert.Error(err)
 	assert.Contains(err.Error(), "exit status 1")
