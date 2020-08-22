@@ -724,7 +724,8 @@ func TestPHPOverrides(t *testing.T) {
 	assert.NoError(err)
 
 	// And when we're done, we have to clean those out again.
-	defer func() {
+	t.Cleanup(func() {
+		runTime()
 		err = os.RemoveAll(filepath.Join(site.Dir, ".ddev/php"))
 		if err != nil {
 			t.Logf("failed to remove .ddev/php: %v", err)
@@ -733,29 +734,25 @@ func TestPHPOverrides(t *testing.T) {
 		if err != nil {
 			t.Logf("failed to remove phpinfo.php: %v", err)
 		}
-	}()
+	})
 
-	for _, webserverType := range []string{nodeps.WebserverNginxFPM, nodeps.WebserverApacheFPM} {
-		testcommon.ClearDockerEnv()
-		app.WebserverType = webserverType
-		err = app.Init(site.Dir)
-		assert.NoError(err)
-		_ = app.Stop(true, false)
-		// nolint: errcheck
-		defer app.Stop(true, false)
-		startErr := app.StartAndWait(5)
-		if startErr != nil {
-			logs, _ := GetErrLogsFromApp(app, startErr)
-			t.Logf("failed app.StartAndWait(): %v", startErr)
-			t.Fatalf("============== logs from app.StartAndWait() ==============\n%s\n", logs)
-		}
-
-		_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+app.GetHostname()+"/phpinfo.php", `max_input_time</td><td class="v">999`)
-		err = app.Stop(true, false)
-		assert.NoError(err)
+	testcommon.ClearDockerEnv()
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+	_ = app.Stop(true, false)
+	// nolint: errcheck
+	defer app.Stop(true, false)
+	startErr := app.StartAndWait(5)
+	if startErr != nil {
+		logs, _ := GetErrLogsFromApp(app, startErr)
+		t.Logf("failed app.StartAndWait(): %v", startErr)
+		t.Fatalf("============== logs from app.StartAndWait() ==============\n%s\n", logs)
 	}
 
-	runTime()
+	_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+app.GetHostname()+"/phpinfo.php", `max_input_time</td><td class="v">999`)
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
 }
 
 // TestExtraPackages tests to make sure that *extra_packages config.yaml directives
@@ -779,7 +776,8 @@ func TestExtraPackages(t *testing.T) {
 	command := fmt.Sprintf("docker rmi -f %s-%s-built %s-%s-built", app.WebImage, app.Name, app.GetDBImage(), app.Name)
 	_, _ = exec.RunCommand("bash", []string{"-c", command})
 
-	defer func() {
+	t.Cleanup(func() {
+		runTime()
 		_ = app.Stop(true, false)
 		app.WebImageExtraPackages = nil
 		app.DBImageExtraPackages = nil
@@ -789,7 +787,7 @@ func TestExtraPackages(t *testing.T) {
 		_ = fileutil.RemoveContents(app.GetConfigPath("db-build"))
 		command := fmt.Sprintf("docker rmi -f %s-%s-built %s-%s-built", app.WebImage, app.Name, app.GetDBImage(), app.Name)
 		_, _ = exec.RunCommand("bash", []string{"-c", command})
-	}()
+	})
 
 	// Start and make sure that the packages don't exist already
 	err = app.Start()
@@ -805,47 +803,38 @@ func TestExtraPackages(t *testing.T) {
 
 	addedPackage := "tidy"
 	addedPackageTitle := "Tidy"
-	for _, v := range nodeps.GetValidPHPVersions() {
-		t.Log("Testing extra packages with PHP" + v)
-		app.PHPVersion = v
-		// Start and make sure that the packages don't exist already
-		err = app.Start()
-		assert.NoError(err)
 
-		_, _, err = app.Exec(&ExecOpts{
-			Service: "web",
-			Cmd:     "dpkg -s php" + v + "-" + addedPackage,
-		})
-		assert.Error(err)
-		assert.Contains(err.Error(), "exit status 1")
+	_, _, err = app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     "dpkg -s php" + app.PHPVersion + "-" + addedPackage,
+	})
+	assert.Error(err)
+	assert.Contains(err.Error(), "exit status 1")
 
-		// Now add the packages and start again, they should be in there
-		app.WebImageExtraPackages = []string{"php" + v + "-" + addedPackage}
-		app.DBImageExtraPackages = []string{"ncdu"}
-		err = app.Start()
-		assert.NoError(err)
+	// Now add the packages and start again, they should be in there
+	app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-" + addedPackage}
+	app.DBImageExtraPackages = []string{"ncdu"}
+	err = app.Start()
+	assert.NoError(err)
 
-		stdout, stderr, err := app.Exec(&ExecOpts{
-			Service: "web",
-			Cmd:     "dpkg -s php" + v + "-" + addedPackage,
-		})
-		assert.NoError(err, "dpkg -s php%s-%s failed", v, addedPackage, stdout, stderr)
+	stdout, stderr, err := app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     "dpkg -s php" + app.PHPVersion + "-" + addedPackage,
+	})
+	assert.NoError(err, "dpkg -s php%s-%s failed", app.PHPVersion, addedPackage, stdout, stderr)
 
-		stdout, stderr, err = app.Exec(&ExecOpts{
-			Service: "web",
-			Cmd:     fmt.Sprintf("php -i | grep  '%s support =. enabled'", addedPackageTitle),
-		})
-		assert.NoError(err, "failed to grep for %s support, stdout=%s, stderr=%s", addedPackage, stdout, stderr)
+	stdout, stderr, err = app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     fmt.Sprintf("php -i | grep  '%s support =. enabled'", addedPackageTitle),
+	})
+	assert.NoError(err, "failed to grep for %s support, stdout=%s, stderr=%s", addedPackage, stdout, stderr)
 
-	}
-
-	stdout, _, err := app.Exec(&ExecOpts{
+	stdout, _, err = app.Exec(&ExecOpts{
 		Service: "db",
 		Cmd:     "command -v ncdu",
 	})
 	assert.NoError(err)
 	assert.Equal("/usr/bin/ncdu", strings.Trim(stdout, "\n"))
-	runTime()
 }
 
 // TestTimezoneConfig tests to make sure setting timezone config takes effect in the container.
