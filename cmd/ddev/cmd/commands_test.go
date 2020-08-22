@@ -191,9 +191,10 @@ func TestLaunchCommand(t *testing.T) {
 		app.RouterHTTPSPort = routerPort
 		_ = app.WriteConfig()
 		err = app.Start()
-		assert.NoError(err)
+		require.NoError(t, err)
 
-		desc, _ := app.Describe(false)
+		desc, err := app.Describe(false)
+		require.NoError(t, err)
 		cases := map[string]string{
 			"":   app.GetPrimaryURL(),
 			"-p": desc["phpmyadmin_https_url"].(string),
