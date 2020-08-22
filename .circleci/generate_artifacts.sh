@@ -56,41 +56,46 @@ for dir in .gotmp/bin/linux_arm64 .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd
   cp .gotmp/bin/ddev_*completion* $dir
 done
 
+cp $BASE_DIR/.gotmp/bin/windows_amd64/ddev_windows_installer*.exe $ARTIFACTS
+
 # Generate macOS-amd64 tarball/zipball
-cd $BASE_DIR/.gotmp/bin/darwin_amd64
+pushd $BASE_DIR/.gotmp/bin/darwin_amd64
 curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-darwin-amd64 && chmod +x mkcert
 tar -czf $ARTIFACTS/ddev_macos_amd64.$VERSION.tar.gz ddev *completion*.sh mkcert
+popd
 
 # Generate linux-amd64 tarball/zipball
-cd $BASE_DIR/.gotmp/bin
+pushd $BASE_DIR/.gotmp/bin
 curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-amd64 && chmod +x mkcert
 tar -czf $ARTIFACTS/ddev_linux-amd64.$VERSION.tar.gz ddev *completion*.sh mkcert
+popd
 
 # Generate linux-arm64 tarball/zipball
-cd $BASE_DIR/.gotmp/bin/linux_arm64
+pushd $BASE_DIR/.gotmp/bin/linux_arm64
 # mkcert will be ready later
 # curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-amd64 && chmod +x mkcert
 tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev *completion*.sh
+popd
 
 # generate windows-amd64 tarball/zipball
-cd $BASE_DIR/.gotmp/bin/windows_amd64
+pushd $BASE_DIR/.gotmp/bin/windows_amd64
 curl -sSL -o mkcert.exe https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-amd64.exe
 tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe *completion*.sh mkcert.exe
 zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe *completion*.sh
 if [ -d chocolatey ]; then
     tar -czf $ARTIFACTS/ddev_chocolatey.$VERSION.tar.gz chocolatey
 fi
+popd
 
 # generate windows-arm tarball/zipball
-cd $BASE_DIR/.gotmp/bin/windows_arm
+pushd $BASE_DIR/.gotmp/bin/windows_arm
 # mkcert not available yet
 #curl -sSL -o mkcert.exe https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-amd64.exe
 tar -czf $ARTIFACTS/ddev_windows_arm.$VERSION.tar.gz ddev.exe *completion*.sh
 #if [ -d chocolatey ]; then
 #    tar -czf $ARTIFACTS/ddev_chocolatey.$VERSION.tar.gz chocolatey
 #fi
-
-cp ddev_windows_installer*.exe $ARTIFACTS
+popd
 
 # Create tarball of completion scripts
 tar -czf $ARTIFACTS/ddev_shell_completion_scripts.$VERSION.tar.gz *completion*.sh
