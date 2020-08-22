@@ -13,8 +13,8 @@ set -x
 
 # On macOS, restart docker to avoid bugs where containers can't be deleted
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
-  killall Docker
-  open -a /Applications/Docker.app
+  killall Docker || true
+  nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 fi
 
 # Make sure docker is working
