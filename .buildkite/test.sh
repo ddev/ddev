@@ -18,7 +18,7 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
 fi
 
 # Make sure docker is working
-timeout -v 10m bash -c 'while ! docker ps 2>/dev/null ; do
+timeout 10m bash -c 'while ! docker ps 2>/dev/null ; do
   sleep 10
   echo "Waiting for docker to come up: $(date)"
 done'
