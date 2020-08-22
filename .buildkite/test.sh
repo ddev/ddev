@@ -26,16 +26,17 @@ chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 echo "--- running testbot_maintenance.sh"
 bash $(dirname $0)/testbot_maintenance.sh
 
-# Our testbot should be sane, run the testbot checker to make sure.
-echo "--- running sanetestbot.sh"
-./.buildkite/sanetestbot.sh
-
 echo "--- cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
+ddev poweroff || true
 if [ "$(docker ps -aq | wc -l )" -gt 0 ] ; then
 	docker rm -f $(docker ps -aq) >/dev/null 2>&1 || true
 fi
 docker system prune --volumes --force >/dev/null || true
+
+# Our testbot should be sane, run the testbot checker to make sure.
+echo "--- running sanetestbot.sh"
+./.buildkite/sanetestbot.sh
 
 # Update all images that could have changed
 ( docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
