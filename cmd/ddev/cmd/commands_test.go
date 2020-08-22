@@ -180,11 +180,13 @@ func TestLaunchCommand(t *testing.T) {
 	require.NoError(t, err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		_ = os.RemoveAll(tmpdir)
+	})
 	err = app.Start()
 	require.NoError(t, err)
-	defer func() {
-		_ = app.Stop(true, false)
-	}()
 
 	// This only tests the https port changes, but that might be enough
 	for _, routerPort := range []string{nodeps.DdevDefaultRouterHTTPSPort, "8443"} {
