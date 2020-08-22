@@ -15,15 +15,18 @@ set -x
 if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   killall Docker || true
   nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+  sleep 10
 fi
 
 # Make sure docker is working
-timeout 10m bash -c 'while ! docker ps 2>/dev/null ; do
+echo "Waiting for docker to come up: $(date)"
+date && timeout -v 10m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
   sleep 10
   echo "Waiting for docker to come up: $(date)"
 done'
-if ! docker ps 2>/dev/null ; then
-  echo "Docker never came up, exiting"
+echo "Testing again to make sure docker came up: $(date)"
+if ! docker ps >/dev/null 2>&1 ; then
+  echo "Docker is not running, exiting"
   exit 1
 fi
 
