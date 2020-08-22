@@ -1,8 +1,5 @@
 #!/bin/bash
-
 # This script is used to build drud/ddev using buildkite
-
-
 
 echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with golang=$(go version) docker=$(docker version --format '{{.Server.Version}}') and docker-compose $(docker-compose version --short) ddev version=$(ddev --version)"
 
@@ -48,4 +45,5 @@ echo "Running tests..."
 time make test
 RV=$?
 echo "build.sh completed with status=$RV"
+ddev poweroff || true
 exit $RV
