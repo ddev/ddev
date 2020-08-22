@@ -56,6 +56,8 @@ for dir in .gotmp/bin/linux_arm64 .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd
   cp .gotmp/bin/ddev_*completion* $dir
 done
 
+# Create tarball of completion scripts
+pushd .gotmp/bin >/dev/null && tar -czf $ARTIFACTS/ddev_shell_completion_scripts.$VERSION.tar.gz *completion*.sh && popd >/dev/null
 cp $BASE_DIR/.gotmp/bin/windows_amd64/ddev_windows_installer*.exe $ARTIFACTS
 
 # Generate macOS-amd64 tarball/zipball
@@ -97,8 +99,6 @@ tar -czf $ARTIFACTS/ddev_windows_arm.$VERSION.tar.gz ddev.exe *completion*.sh
 #fi
 popd
 
-# Create tarball of completion scripts
-tar -czf $ARTIFACTS/ddev_shell_completion_scripts.$VERSION.tar.gz *completion*.sh
 
 # Create macOS and Linux homebrew bottles
 for os in high_sierra x86_64_linux ; do
