@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"strings"
@@ -43,7 +44,7 @@ func TestCmdRestartJSON(t *testing.T) {
 
 	args := []string{"restart", "-j"}
 	out, err := exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	logItems, err := unmarshalJSONLogs(out)
 	assert.NoError(err)

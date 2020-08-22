@@ -7,6 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -14,11 +15,13 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // TestCustomCommands does basic checks to make sure custom commands work OK.
 func TestCustomCommands(t *testing.T) {
 	assert := asrt.New(t)
+	runTime := util.TimeTrack(time.Now(), "ddev list")
 
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
 	origHome := os.Getenv("HOME")
@@ -36,6 +39,7 @@ func TestCustomCommands(t *testing.T) {
 	app, _ := ddevapp.NewApp(TestSites[0].Dir, false, "")
 	origType := app.Type
 	t.Cleanup(func() {
+		runTime()
 		app.Type = origType
 		_ = app.WriteConfig()
 		_ = os.RemoveAll(tmpHome)
@@ -45,6 +49,8 @@ func TestCustomCommands(t *testing.T) {
 		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
 		switchDir()
 	})
+	err = app.Start()
+	require.NoError(t, err)
 
 	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
 	// It's changed via $HOME for the ddev subprocess
@@ -170,43 +176,45 @@ func TestCustomCommands(t *testing.T) {
 func TestLaunchCommand(t *testing.T) {
 	assert := asrt.New(t)
 
+	pwd, _ := os.Getwd()
 	// Create a temporary directory and switch to it.
 	tmpdir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpdir)
-	defer testcommon.Chdir(tmpdir)()
+	err := os.Chdir(tmpdir)
+	assert.NoError(err)
 
 	_ = os.Setenv("DDEV_DEBUG", "true")
 	app, err := ddevapp.NewApp(tmpdir, false, "")
 	require.NoError(t, err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
-	err = app.Start()
-	require.NoError(t, err)
-	defer func() {
-		_ = app.Stop(true, false)
-	}()
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		_ = os.RemoveAll(tmpdir)
+	})
 
 	// This only tests the https port changes, but that might be enough
-	for _, routerPort := range []string{nodeps.DdevDefaultRouterHTTPSPort, "8443"} {
-		app.RouterHTTPSPort = routerPort
-		_ = app.WriteConfig()
-		err = app.Start()
-		assert.NoError(err)
+	app.RouterHTTPSPort = "8443"
+	_ = app.WriteConfig()
+	err = app.Start()
+	require.NoError(t, err)
 
-		desc, _ := app.Describe(false)
-		cases := map[string]string{
-			"":   app.GetPrimaryURL(),
-			"-p": desc["phpmyadmin_https_url"].(string),
-			"-m": desc["mailhog_https_url"].(string),
-		}
-		for partialCommand, expect := range cases {
-			// Try with the base URL, simplest case
-			c := DdevBin + `  launch ` + partialCommand + ` | awk '/FULLURL/ {print $2}'`
-			out, err := exec.RunCommand("bash", []string{"-c", c})
-			out = strings.Trim(out, "\n")
-			assert.NoError(err, `couldn't run "%s"", output=%s`, c, out)
-			assert.Equal(expect, out, "ouptput of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
-		}
+	desc, err := app.Describe(false)
+	require.NoError(t, err)
+	cases := map[string]string{
+		"":   app.GetPrimaryURL(),
+		"-p": desc["phpmyadmin_https_url"].(string),
+		"-m": desc["mailhog_https_url"].(string),
+	}
+	for partialCommand, expect := range cases {
+		// Try with the base URL, simplest case
+		c := DdevBin + `  launch ` + partialCommand + ` | awk '/FULLURL/ {print $2}'`
+		out, err := exec.RunCommand("bash", []string{"-c", c})
+		out = strings.Trim(out, "\n")
+		assert.NoError(err, `couldn't run "%s"", output=%s`, c, out)
+		assert.Contains(out, expect, "ouptput of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
 	}
 }
 
