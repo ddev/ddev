@@ -172,7 +172,11 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 				return logOutput, fmt.Errorf("container %s unhealthy: %s", container.Names[0], logOutput)
 			case "exited":
 				service := container.Labels["com.docker.compose.service"]
-				return logOutput, fmt.Errorf("container exited, please use 'ddev logs -s %s` to find out why it failed", service)
+				suggestedCommand := fmt.Sprintf("ddev logs -s %s", service)
+				if service == "ddev-router" || service == "ddev-ssh-agent" {
+					suggestedCommand = fmt.Sprintf("docker logs %s", service)
+				}
+				return logOutput, fmt.Errorf("container exited, please use '%s' to find out why it failed", suggestedCommand)
 			}
 		}
 	}
@@ -819,4 +823,40 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	}
 
 	return nil
+}
+
+// Exec does a simple docker exec, no frills, just executes the command
+func Exec(containerID string, command string) (string, string, error) {
+	client := GetDockerClient()
+
+	exec, err := client.CreateExec(docker.CreateExecOptions{
+		Container:    containerID,
+		Cmd:          []string{"sh", "-c", command},
+		AttachStdout: true,
+		AttachStderr: true,
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	var stdout, stderr bytes.Buffer
+	err = client.StartExec(exec.ID, docker.StartExecOptions{
+		OutputStream: &stdout,
+		ErrorStream:  &stderr,
+		Detach:       false,
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	info, err := client.InspectExec(exec.ID)
+	if err != nil {
+		return stdout.String(), stderr.String(), err
+	}
+	var execErr error
+	if info.ExitCode != 0 {
+		execErr = fmt.Errorf("command '%s' returned exit code %v", command, info.ExitCode)
+	}
+
+	return stdout.String(), stderr.String(), execErr
 }

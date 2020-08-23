@@ -939,6 +939,17 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
+	certPath := app.GetConfigPath("custom_certs")
+	if fileutil.FileExists(certPath) {
+		uid, _, _ := util.GetContainerUIDGid()
+		err = dockerutil.CopyToVolume(certPath, "ddev-global-cache", "custom_certs", uid)
+		if err != nil {
+			util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
+		} else {
+			util.Success("Copied custom certs in %s to ddev-global-cache/custom_certs", certPath)
+		}
+	}
+
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
 	if err != nil {
@@ -2000,4 +2011,14 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 // Returns the docker volume name of the nfs mount volume
 func (app *DdevApp) GetNFSMountVolName() string {
 	return strings.ToLower("ddev-" + app.Name + "_nfsmount")
+}
+
+// StartAppIfNotRunning() is intended to replace much-duplicated code in the commands.
+func (app *DdevApp) StartAppIfNotRunning() error {
+	var err error
+	if app.SiteStatus() != SiteRunning {
+		err = app.Start()
+	}
+
+	return err
 }

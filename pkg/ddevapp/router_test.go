@@ -1,10 +1,14 @@
 package ddevapp_test
 
 import (
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/netutil"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/stretchr/testify/require"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -87,4 +91,59 @@ func TestPortOverride(t *testing.T) {
 		assert.True(netutil.IsPortActive(app.RouterHTTPSPort))
 	}
 
+}
+
+// Do a modest test of Lets Encrypt functionality
+// This just checks to see that certbot ran and populated /etc/letsencrypt and
+// that /etc/letsencrypt is mounted on volume.
+func TestLetsEncrypt(t *testing.T) {
+	assert := asrt.New(t)
+
+	savedGlobalconfig := globalconfig.DdevGlobalConfig
+
+	globalconfig.DdevGlobalConfig.UseLetsEncrypt = true
+	globalconfig.DdevGlobalConfig.LetsEncryptEmail = "nobody@example.com"
+	globalconfig.DdevGlobalConfig.RouterBindAllInterfaces = true
+	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	// Force router stop so it will start up with Lets Encrypt mount
+	dest := ddevapp.RouterComposeYAMLPath()
+	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
+	assert.NoError(err)
+
+	err = dockerutil.RemoveVolume("ddev-router-letsencrypt")
+	assert.NoError(err)
+
+	app, err := ddevapp.NewApp(site.Dir, false, "")
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig = savedGlobalconfig
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		assert.NoError(err)
+		_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = dockerutil.RemoveVolume("ddev-router-letsencrypt")
+		assert.NoError(err)
+	})
+
+	container, err := dockerutil.FindContainerByName("ddev-router")
+	require.NoError(t, err)
+
+	stdout, _, err := dockerutil.Exec(container.ID, "df -T /etc/letsencrypt  | awk 'NR==2 {print $7;}'")
+	assert.NoError(err)
+	stdout = strings.Trim(stdout, "\n")
+
+	assert.Equal("/etc/letsencrypt", stdout)
+
+	_, _, err = dockerutil.Exec(container.ID, "test -f /etc/letsencrypt/options-ssl-nginx.conf")
+	assert.NoError(err)
 }

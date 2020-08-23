@@ -24,27 +24,27 @@ func init() {
 }
 
 func powerOff() {
-	projects, err := ddevapp.GetProjects(true)
+	apps, err := ddevapp.GetProjects(true)
 	if err != nil {
 		util.Failed("Failed to get project(s): %v", err)
 	}
 
-	// Iterate through the list of projects built above, removing each one.
-	for _, project := range projects {
-		if project.SiteStatus() == ddevapp.SiteStopped {
-			util.Warning("Project %s is not currently running. Try 'ddev start'.", project.GetName())
+	// Iterate through the list of apps built above, removing each one.
+	for i, app := range apps {
+		if i == 0 {
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Cmd: `if [ -d /mnt/ddev-global-cache/custom_certs ]; then rm -f /mnt/ddev-global-cache/custom_certs/*; fi`,
+			})
+			if err == nil {
+				util.Success("Removed any existing custom TLS certificates")
+			} else {
+				util.Warning("Could not remove existing custom TLS certificates: %v", err)
+			}
 		}
-
-		// We do the snapshot if either --snapshot or --remove-data UNLESS omit-snapshot is set
-		doSnapshot := (createSnapshot || removeData) && !omitSnapshot
-		if err := project.Stop(removeData, doSnapshot); err != nil {
-			util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
+		if err := app.Stop(false, false); err != nil {
+			util.Failed("Failed to stop project %s: \n%v", app.GetName(), err)
 		}
-		if unlist {
-			project.RemoveGlobalProjectInfo()
-		}
-
-		util.Success("Project %s has been stopped.", project.GetName())
+		util.Success("Project %s has been stopped.", app.GetName())
 	}
 
 	if err := ddevapp.RemoveSSHAgentContainer(); err != nil {

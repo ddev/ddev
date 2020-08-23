@@ -28,7 +28,7 @@ services:
         source: "."
         target: "/mnt/ddev_config"
       - ddev-global-cache:/mnt/ddev-global-cache
-    restart: "no"
+    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     user: "$DDEV_UID:$DDEV_GID"
     hostname: {{ .Name }}-db
     ports:
@@ -83,7 +83,7 @@ services:
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       {{ end }}
 
-    restart: "no"
+    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     user: "$DDEV_UID:$DDEV_GID"
     hostname: {{ .Name }}-web
     {{if not .OmitDB }}
@@ -143,7 +143,7 @@ services:
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
-    restart: "no"
+    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .Plugin }}
@@ -412,7 +412,15 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ddev-global-cache:/mnt/ddev-global-cache:rw
-    restart: "no"
+      {{ if .letsencrypt }}
+      - ddev-router-letsencrypt:/etc/letsencrypt:rw
+      {{ end }}
+{{ if .letsencrypt }}
+    environment:
+      - LETSENCRYPT_EMAIL={{ .letsencrypt_email }}
+      - USE_LETSENCRYPT={{ .letsencrypt }}
+{{ end }}
+    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     healthcheck:
       interval: 1s
       retries: 20
@@ -426,6 +434,8 @@ networks:
 volumes:
   ddev-global-cache:
     name: ddev-global-cache
+  ddev-router-letsencrypt:
+    name: ddev-router-letsencrypt
 `
 
 const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'
@@ -446,7 +456,7 @@ services:
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
     image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built
-
+    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
       - "dot_ssh:/tmp/.ssh"

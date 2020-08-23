@@ -38,9 +38,6 @@ map $http_upgrade $proxy_connection {
   '' close;
 }
 
-# Apply fix for very long server names
-server_names_hash_bucket_size 128;
-
 # Default dhparam
 # ssl_dhparam /etc/nginx/dhparam/dhparam.pem;
 
@@ -204,7 +201,7 @@ server {
 {{/* Get the VIRTUAL_ROOT By containers w/ use fastcgi root */}}
 {{ $vhost_root := or (first (groupByKeys $containers "Env.VIRTUAL_ROOT")) "/var/www/public" }}
 
-# Use a single master.crt/master.key
+# Default to a single master.crt/master.key
 {{ $cert := "master" }}
 
 {{ range $container := whereExist $containers "Env.HTTP_EXPOSE" }}
@@ -324,8 +321,16 @@ server {
             ssl_session_cache shared:SSL:50m;
             ssl_session_tickets off;
 
+            {{ if (exists (printf "/mnt/ddev-global-cache/custom_certs/%s.crt" $host)) }}
+            ssl_certificate /mnt/ddev-global-cache/custom_certs/{{ (printf "%s.crt" $host) }};
+            ssl_certificate_key /mnt/ddev-global-cache/custom_certs/{{ (printf "%s.key" $host) }};
+            {{ else if (exists (printf "/etc/letsencrypt/live/%s/fullchain.pem" $host)) }}
+            ssl_certificate /etc/letsencrypt/live/{{ $host }}/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/{{ $host }}/privkey.pem;
+            {{ else }}
             ssl_certificate /etc/nginx/certs/{{ (printf "%s.crt" $cert) }};
             ssl_certificate_key /etc/nginx/certs/{{ (printf "%s.key" $cert) }};
+            {{ end }}
 
             {{ if (exists (printf "/etc/nginx/certs/%s.dhparam.pem" $cert)) }}
             ssl_dhparam {{ printf "/etc/nginx/certs/%s.dhparam.pem" $cert }};
