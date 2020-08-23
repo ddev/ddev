@@ -4,7 +4,6 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"os"
@@ -71,11 +70,6 @@ func TestComposerCmd(t *testing.T) {
 	assert.Contains(out, "Generating autoload files")
 	assert.FileExists(filepath.Join(tmpDir, "vendor/sebastian/version/composer.json"))
 	// Test a composer remove
-	if nodeps.IsDockerToolbox() {
-		// On docker toolbox, git objects are read-only, causing the composer remove to fail.
-		_, err = exec.RunCommand(DdevBin, []string{"exec", "chmod", "-R", "u+w", "//var/www/html/"})
-		assert.NoError(err)
-	}
 	args = []string{"composer", "remove", "sebastian/version"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)

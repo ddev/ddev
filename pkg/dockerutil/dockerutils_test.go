@@ -3,7 +3,6 @@ package dockerutil_test
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -158,9 +157,7 @@ func TestContainerWait(t *testing.T) {
 	healthDetail, err := ContainerWait(30, labels)
 	assert.NoError(err)
 
-	if !nodeps.IsDockerToolbox() {
-		assert.Contains(healthDetail, "phpstatus: OK")
-	}
+	assert.Contains(healthDetail, "phpstatus: OK")
 
 	// Try a nonexistent container, should get error
 	labels = map[string]string{

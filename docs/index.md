@@ -47,7 +47,7 @@ ddev poweroff && brew upgrade ddev
 
 **This is the recommended installation method for all Windows users that are on Windows 10 [1903.1049, 1909.1049](https://devblogs.microsoft.com/commandline/wsl-2-support-is-coming-to-windows-10-versions-1903-and-1909/), 2004 or higher** If you don't have this version yet, or if you don't want to use WSL2, please follow the legacy instructions for Windows below.
 
-**All Windows 10 editions (including Windows 10 Home) support WSL2**. Docker Toolbox support for DDEV is deprecated and will be removed, as we'll move testing capacity towards WSL2. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
+**All Windows 10 editions (including Windows 10 Home) support WSL2**. Docker Toolbox support for DDEV has been removed. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
 
 The WSL2 install process involves:
 

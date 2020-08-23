@@ -51,7 +51,6 @@ You generally don't have to worry about any of this, but it does keep things cle
 * On Docker Desktop for Windows, symlinks are created in the container as "simulated symlinks", or XSym files. These are special text files that behave as symlinks inside the container (on CIFS filesystem), but appear as simple text files on the Windows host. (on the CIFS filesystem used by Docker for Windows inside the container there is no capability to create real symlinks, even though Windows now has this capability.)
 * DDEV-Local attempts to clean up for this situation. Since Windows 10 (in developer mode) can now create real symlinks, DDEV-Local scans your repository after a `ddev composer` command and attempts to convert XSym files into real symlinks. It can only do this if your Windows 10 host is set to Developer Mode.
 * On Windows 10, to set your computer to developer mode, search for "developer" in settings. Screenshots are below.
-* Docker Toolbox (Windows 10 Home) does not have any capability to create symlinks inside the web container on a mount. But composer detects this and uses copies instead of symlinks.
 
 ![finding developer mode](images/developer_mode_1.png)
 

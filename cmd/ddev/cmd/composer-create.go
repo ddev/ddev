@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mattn/go-isatty"
 	"os"
 	"path"
@@ -151,7 +150,7 @@ ddev composer create --repository=https://repo.magento.com/ magento/project-comm
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
-		if runtime.GOOS == "windows" && !nodeps.IsDockerToolbox() {
+		if runtime.GOOS == "windows" {
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)
 		}
 		// Do a spare start, which will create any needed settings files

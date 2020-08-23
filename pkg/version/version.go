@@ -51,7 +51,7 @@ var WebTag = "20200818_remove_apache_cgi" // Note that this can be overridden by
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.15.1"
+var BaseDBTag = "20200821_remove_docker_toolbox"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin/phpmyadmin"
@@ -102,11 +102,7 @@ func GetVersionInfo() map[string]string {
 		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
 	}
 	if runtime.GOOS == "windows" {
-		if nodeps.IsDockerToolbox() {
-			versionInfo["docker type"] = "Docker Toolbox"
-		} else {
-			versionInfo["docker type"] = "Docker Desktop For Windows"
-		}
+		versionInfo["docker type"] = "Docker Desktop For Windows"
 	}
 
 	return versionInfo

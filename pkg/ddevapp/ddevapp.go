@@ -1414,14 +1414,6 @@ func (app *DdevApp) StartAndWait(extraSleep int) error {
 	if err != nil {
 		return err
 	}
-	// Gratuitous wait for docker toolbox or NFS.
-	if nodeps.IsDockerToolbox() || (app.NFSMountEnabled || app.NFSMountEnabledGlobal) {
-		// Docker Toolbox seems not to get the router properly
-		// updated with certs as fast as we expect, use the extraSleep for that.
-		if extraSleep > 0 {
-			time.Sleep(time.Duration(extraSleep) * time.Second)
-		}
-	}
 	return nil
 }
 
@@ -1794,7 +1786,6 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 		if app.UseDNSWhenPossible && globalconfig.IsInternetActive() {
 			hostIPs, err := net.LookupHost(name)
 			// If we had successful lookup and dockerIP matches
-			// (which won't happen on Docker Toolbox) then don't bother
 			// with adding to hosts file.
 			if err == nil && len(hostIPs) > 0 && hostIPs[0] == dockerIP {
 				continue

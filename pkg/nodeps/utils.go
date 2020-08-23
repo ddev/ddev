@@ -23,18 +23,6 @@ func posString(slice []string, element string) int {
 	return -1
 }
 
-// IsDockerToolbox detects if the running docker is docker toolbox
-// It shouldn't be run much as it requires actually running the executable.
-// This lives here instead of in dockerutils to avoid unecessary import cycles.
-// Inspired by https://stackoverflow.com/questions/43242218/how-can-a-script-distinguish-docker-toolbox-and-docker-for-windows
-func IsDockerToolbox() bool {
-	dockerToolboxPath := os.Getenv("DOCKER_TOOLBOX_INSTALL_PATH")
-	if dockerToolboxPath != "" {
-		return true
-	}
-	return false
-}
-
 // From https://www.calhoun.io/creating-random-strings-in-go/
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))

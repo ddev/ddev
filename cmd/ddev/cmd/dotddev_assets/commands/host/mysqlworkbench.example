@@ -25,8 +25,6 @@ case $OSTYPE in
   "win*"* | "msys"*)
     # 'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\mysqlworkbench.exe'
     # You may need to add it to your system %PATH% or change the path here
-    # On docker toolbox you'll need to change the query to use the toolbox IP address,
-    # likely 192.168.99.100
     'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\mysqlworkbench.exe' --query "$query"
     #;;
 esac
