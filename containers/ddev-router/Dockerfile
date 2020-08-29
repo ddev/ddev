@@ -11,6 +11,8 @@ ENV DOCKER_HOST unix:///tmp/docker.sock
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
+SHELL ["/bin/bash", "-c"]
+
 RUN apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
         ca-certificates certbot curl iputils-ping less python-certbot-nginx procps telnet vim wget && \
