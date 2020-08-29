@@ -34,6 +34,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 #include ../build-tools/makefile_components/base_build_go.mak
 #include ../../build-tools/makefile_components/base_build_python-docker.mak
 include ../../build-tools/makefile_components/base_container.mak
+include ../../build-tools/makefile_components/base_container_arm64.mak
 #include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak
@@ -55,9 +56,6 @@ push: images
 
 ddev-webserver:
 	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker buildx build --progress=$(PROGRESS) --platform linux/amd64,linux/arm64 --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
-
-ddev-webserver-arm64:
-    DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker buildx build --progress=$(PROGRESS) --platform linux/arm64 --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 test: images
 	for item in $(DEFAULT_IMAGES); do \

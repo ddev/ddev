@@ -30,6 +30,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 #include ../build-tools/makefile_components/base_build_go.mak
 #include ../../build-tools/makefile_components/base_build_python-docker.mak
 include ../../build-tools/makefile_components/base_container.mak
+include ../../build-tools/makefile_components/base_container_arm64.mak
 include ../../build-tools/makefile_components/base_push.mak
 #include build-tools/makefile_components/base_test_go.mak
 #include build-tools/makefile_components/base_test_python.mak

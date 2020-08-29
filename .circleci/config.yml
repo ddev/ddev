@@ -266,28 +266,6 @@ jobs:
 
     - run:
         command: |
-          sudo apt-get install docker-ce-cli binfmt-support qemu-user-static
-
-          BUILDX_BINARY_URL="https://github.com/docker/buildx/releases/download/v0.4.1/buildx-v0.4.1.linux-amd64"
-
-          curl --output docker-buildx \
-            --silent --show-error --location --fail --retry 3 \
-            "$BUILDX_BINARY_URL"
-
-          mkdir -p ~/.docker/cli-plugins
-          mv docker-buildx ~/.docker/cli-plugins
-          chmod a+x ~/.docker/cli-plugins/docker-buildx
-
-          # We need this to get arm64 qemu to work https://github.com/docker/buildx/issues/138#issuecomment-569240559
-          docker run --rm --privileged docker/binfmt:66f9012c56a8316f9244ffd7622d7c21c1f6f28d
-
-          docker buildx create --name ddev-builder-multi
-          docker buildx use ddev-builder-multi
-          docker buildx inspect --bootstrap
-        name: Prepare docker buildx for multi-arch builds
-
-    - run:
-        command: |
           . ~/.bashrc
           for dir in containers/*
               do pushd $dir
@@ -307,6 +285,43 @@ jobs:
           make ddev-webserver-arm64
 
         name: create ddev-webserver arm64 build
+    - save_cache:
+        key: linux-v13
+        paths:
+        - /home/linuxbrew
+        - ~/.ddev/testcache
+
+  lx_container_arm64_build:
+    machine:
+      image: ubuntu-1604:202007-01
+    working_directory: ~/ddev
+    environment:
+      GOTEST_SHORT: true
+      DOCKER_BUILDKIT: 1
+    steps:
+    - checkout
+    - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
+    - restore_cache:
+        keys:
+        - linux-v13
+    - run:
+        command: ./.circleci/linux_circle_vm_setup.sh
+        name: Circle VM setup - tools, docker, golang
+    - run:
+        command: ./.circleci/linux_docker_buildx_setup.sh
+        name: Docker buildx setup for multi-arch builds
+    
+    - run:
+        command: |
+          containers=( "ddev-router" "ddev-webserver" "ddev-ssh-agent" )
+          for dir in "${containers[@]}"
+              do pushd containers/$dir
+              echo "--- Build container $dir"
+              time make container-arm64 DOCKER_ARGS=--no-cache EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+              popd
+          done
+        name: Build arm64 images
+
     - save_cache:
         key: linux-v13
         paths:
@@ -450,6 +465,7 @@ workflows:
     - build
 #    - mac_container_test
     - lx_container_test
+    - lx_container_arm64_build
 #    - staticrequired
     - lx_nginx_fpm_test:
         requires:
