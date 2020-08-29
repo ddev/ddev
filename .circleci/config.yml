@@ -253,7 +253,6 @@ jobs:
     working_directory: ~/ddev
     environment:
       GOTEST_SHORT: true
-      DOCKER_BUILDKIT: 1
     steps:
     - checkout
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
@@ -276,15 +275,7 @@ jobs:
               popd
           done
         name: linux container test
-    
-    - run:
-        command: |
-          . ~/.bashrc
-          cd containers/ddev-webserver
-          echo "--- Build ddev-webserver for arm64"
-          make ddev-webserver-arm64
 
-        name: create ddev-webserver arm64 build
     - save_cache:
         key: linux-v13
         paths:
