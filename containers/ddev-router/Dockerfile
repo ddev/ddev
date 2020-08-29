@@ -20,13 +20,29 @@ RUN apt-get -qq update && \
     apt-get clean -y && \
 	rm -rf /var/lib/apt/lists/*
 
-ADD https://github.com/jwilder/forego/releases/download/v0.16.1/forego /usr/local/bin/forego
+RUN if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
+        # jwilder/forego doesn't have an arm64 download so we resort to the original forego repo
+        wget -q https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-arm64.tgz && \
+        tar -C /usr/local/bin -xvzf forego-stable-linux-arm64.tgz && \
+        rm /forego-stable-linux-arm64.tgz && \
+        chmod ugo+x /usr/local/bin/forego; \
+    else \
+        curl -sSL https://github.com/jwilder/forego/releases/download/v0.16.1/forego -o /usr/local/bin/forego && \
+        chmod ugo+x /usr/local/bin/forego; \
+    fi
 
-RUN wget -q https://github.com/jwilder/docker-gen/releases/download/$DOCKER_GEN_VERSION/docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz && \
-    tar -C /usr/local/bin -xvzf docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz && \
-    rm /docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz && \
-    chmod ugo+x /usr/local/bin/forego && \
-    mkdir -p /etc/nginx/certs /mnt/ddev-global-cache/mkcert
+RUN if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
+        # jwilder/docker-gen doesn't have an arm64 download so we created a custom build
+        wget -q https://github.com/dennisameling/docker-gen/releases/download/0.7.5/docker-gen-linux-arm64-0.7.5.tar.gz && \
+        tar -C /usr/local/bin -xvzf docker-gen-linux-arm64-0.7.5.tar.gz && \
+        rm /docker-gen-linux-arm64-0.7.5.tar.gz; \
+    else \
+        wget -q https://github.com/jwilder/docker-gen/releases/download/$DOCKER_GEN_VERSION/docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz && \
+        tar -C /usr/local/bin -xvzf docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz && \
+        rm /docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz; \
+    fi
+    
+RUN mkdir -p /etc/nginx/certs /mnt/ddev-global-cache/mkcert
 
 RUN if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
         # PR for official arm64 support pending: https://github.com/FiloSottile/mkcert/pull/284
