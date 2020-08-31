@@ -75,8 +75,9 @@ override DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)     
           	    -e GOFLAGS="$(USEMODVENDOR)" \
           	    -w /workdir              \
           	    $(BUILD_IMAGE)
+DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
-build: $(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
+build: $(DEFAULT_BUILD)
 
 linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm: pull $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
@@ -113,22 +114,24 @@ ifeq ($(BUILD_OS),linux)
     DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/ddev
 endif
 
-ifeq ($(BUILD_OS),windows)
+ifeq ($(BUILD_OS),windows_amd64)
     DDEV_BINARY_FULLPATH=$(shell pwd)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
 endif
 
-ifeq ($(BUILD_OS),darwin)
+ifeq ($(BUILD_OS),darwin_amd64)
     DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev
 endif
 
 # Override test section with tests specific to ddev
 test: testpkg testcmd
 
-testcmd: $(BUILD_OS) setup
-	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
+testcmd: $(DEFAULT_BUILD) setup
+	echo LDFLAGS=$(LDFLAGS)
+	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./cmd/... $(TESTARGS)
 
-testpkg: $(BUILD_OS) setup
-	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
+testpkg: $(DEFAULT_BUILD) setup
+	echo LDFLAGS=$(LDFLAGS)
+	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/... $(TESTARGS)
 
 setup:
 	@mkdir -p $(GOTMP)/{src,pkg/mod/cache,.cache}
@@ -163,7 +166,7 @@ mkdocs:
 	@sleep 1 && $(DOCKERTESTCMD) \
 		bash -c "mkdocs build -d /tmp/mkdocsbuld >/dev/null 2>&1"
 
-darwin_signed: darwin
+darwin_signed: darwin_amd64
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
 		set -o errexit -o pipefail; \
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
