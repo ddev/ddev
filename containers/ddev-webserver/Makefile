@@ -55,7 +55,7 @@ push: images
 	done
 
 ddev-webserver:
-	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker buildx build --progress=$(PROGRESS) --platform linux/amd64,linux/arm64 --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+	DOCKER_BUILDKIT=$(DOCKER_BUILDKIT) docker build --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 test: images
 	for item in $(DEFAULT_IMAGES); do \
