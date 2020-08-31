@@ -42,7 +42,7 @@ var DockerComposeVersionConstraint = ">= 1.21.0-alpha1"
 var DockerComposeFileFormatVersion = "3.6"
 
 // WebImg defines the default web image used for applications.
-var WebImg = "drud/ddev-webserver"
+var WebImg = "dennisameling/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
 var WebTag = "20200929_arm64_testing" // Note that this can be overridden by make
@@ -60,12 +60,12 @@ var DBAImg = "phpmyadmin"
 var DBATag = "5" // Note that this can be overridden by make
 
 // RouterImage defines the image used for the router.
-var RouterImage = "drud/ddev-router"
+var RouterImage = "dennisameling/ddev-router"
 
 // RouterTag defines the tag used for the router.
 var RouterTag = "20200929_arm64_testing" // Note that this can be overridden by make
 
-var SSHAuthImage = "drud/ddev-ssh-agent"
+var SSHAuthImage = "dennisameling/ddev-ssh-agent"
 
 var SSHAuthTag = "20200929_arm64_testing"
 
