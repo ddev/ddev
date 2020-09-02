@@ -351,13 +351,14 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 
 		app, err := NewApp(info.AppRoot, true, nodeps.ProviderDefault)
 		if err != nil {
-			util.Warning("unable to create project at project root %s: %v", info.AppRoot, err)
-			app.Name = name
+			util.Warning("unable to create project at project root '%s': %v", info.AppRoot, err)
+			continue
 		}
 
 		// If the app we just loaded was already found with a different name, complain
 		if _, ok := apps[app.Name]; ok {
 			util.Warning(`Project '%s' was found in configured directory %s and it is already used by project '%s'. If you have changed the name of the project, please "ddev stop --unlist %s" `, app.Name, app.AppRoot, name, name)
+			continue
 		}
 
 		if !activeOnly || (app.SiteStatus() != SiteStopped && app.SiteStatus() != SiteConfigMissing && app.SiteStatus() != SiteDirMissing) {
