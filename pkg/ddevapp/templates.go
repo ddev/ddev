@@ -39,10 +39,21 @@ services:
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
     environment:
-      - COLUMNS=$COLUMNS
-      - LINES=$LINES
-      - TZ={{ .Timezone }}
+      - COLUMNS
+      - DDEV_HOSTNAME
+      - DDEV_PHP_VERSION
+      - DDEV_PRIMARY_URL
       - DDEV_PROJECT={{ .Name }}
+      - DDEV_PROJECT_TYPE
+      - DDEV_ROUTER_HTTP_PORT
+      - DDEV_ROUTER_HTTPS_PORT
+      - DDEV_SITENAME
+      - DDEV_TLD
+      - DOCKER_IP={{ .DockerIP }}
+      - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
+      - IS_DDEV_PROJECT=true
+      - LINES
+      - TZ={{ .Timezone }}
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
       interval: 1s
@@ -95,33 +106,35 @@ services:
       - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
       - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
     environment:
-      - DOCROOT=$DDEV_DOCROOT
-      - DDEV_PHP_VERSION=$DDEV_PHP_VERSION
-      - DDEV_WEBSERVER_TYPE=$DDEV_WEBSERVER_TYPE
-      - DDEV_PROJECT_TYPE=$DDEV_PROJECT_TYPE
-      - DDEV_ROUTER_HTTP_PORT=$DDEV_ROUTER_HTTP_PORT
-      - DDEV_ROUTER_HTTPS_PORT=$DDEV_ROUTER_HTTPS_PORT
-      - DDEV_XDEBUG_ENABLED=$DDEV_XDEBUG_ENABLED
-      - IS_DDEV_PROJECT=true
+      - COLUMNS
+      - DOCROOT=${DDEV_DOCROOT}
+      - DDEV_DOCROOT
+      - DDEV_HOSTNAME
+      - DDEV_PHP_VERSION
+      - DDEV_PRIMARY_URL
+      - DDEV_PROJECT={{ .Name }}
+      - DDEV_PROJECT_TYPE
+      - DDEV_ROUTER_HTTP_PORT
+      - DDEV_ROUTER_HTTPS_PORT
+      - DDEV_SITENAME
+      - DDEV_TLD
+      - DDEV_WEBSERVER_TYPE
+      - DDEV_XDEBUG_ENABLED
+      - DEPLOY_NAME=local
       - DRUSH_OPTIONS_URI=$DDEV_PRIMARY_URL
       - DOCKER_IP={{ .DockerIP }}
       - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
-      - DEPLOY_NAME=local
-      - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - COLUMNS=$COLUMNS
-      - LINES=$LINES
-      - TZ={{ .Timezone }}
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       # To expose a container port to a different host port, define the port as hostPort:containerPort
       - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILHOG_PORT}:{{ .MailhogPort }}
       # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
       # To expose an HTTPS port, define the port as securePort:containerPort.
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}
+      - IS_DDEV_PROJECT=true
+      - LINES
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
-      - DDEV_PROJECT={{ .Name }}
-      - DDEV_SITENAME
-      - DDEV_TLD
-      - DDEV_PRIMARY_URL
+      - TZ={{ .Timezone }}
+      - VIRTUAL_HOST=${DDEV_HOSTNAME}
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .Plugin }}
