@@ -133,7 +133,7 @@ staticrequired: setup golangci-lint markdownlint mkdocs
 markdownlint:
 	@echo "markdownlint: "
 	@sleep 1 && $(DOCKERTESTCMD) \
-		bash -c "markdownlint *.md docs >/dev/null 2>&1"
+		bash -c "markdownlint *.md docs 2>&1"
 mkdocs:
 	@echo "mkdocs: "
 	@sleep 1 && $(DOCKERTESTCMD) \
