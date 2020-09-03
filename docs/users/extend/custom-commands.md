@@ -79,6 +79,7 @@ A number of environment variables are provided to the script. These are generall
 * DDEV_HOST_WEBSERVER_PORT: Localhost port of the webserver
 * DDEV_PHP_VERSION
 * DDEV_PRIMARY_URL: Primary URL for the project
+* DDEV_PROJECT: Project name, like "d8composer"
 * DDEV_PROJECT_TYPE: drupal8, typo3, backdrop, wordpress, etc.
 * DDEV_ROUTER_HTTP_PORT: Router port for http
 * DDEV_ROUTER_HTTPS_PORT: Router port for https

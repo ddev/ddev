@@ -1313,6 +1313,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_TLD":                      app.ProjectTLD,
 		"DDEV_DBIMAGE":                  app.GetDBImage(),
 		"DDEV_DBAIMAGE":                 app.DBAImage,
+		"DDEV_PROJECT":                  app.Name,
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_APPROOT":                  app.AppRoot,
 		"DDEV_HOST_DB_PORT":             dbPortStr,
