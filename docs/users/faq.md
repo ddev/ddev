@@ -8,7 +8,7 @@
 
 * **How can I troubleshoot what's going wrong?** See the [troubleshooting](troubleshooting.md) and [Docker troubleshooting](docker_installation.md#troubleshooting) sections of the docs.
 
-* **Do I need to install PHP or Composer or Nginx or DDEV on my computer?** Absolutely *not*. All of these tools live inside DDEV's docker containers, so you need only Docker and DDEV. This is especially handy for Windows users where there's a bit more friction installing those tools.
+* **Do I need to install PHP or Composer or Nginx on my computer?** Absolutely *not*. All of these tools live inside DDEV's docker containers, so you need only Docker and DDEV. This is especially handy for Windows users where there's a bit more friction installing those tools.
 
 * **How do I get support?** See the (many) [support options](../index.md#support), including Slack, Gitter, Stack Overflow and others.
 
