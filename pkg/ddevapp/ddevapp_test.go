@@ -3221,6 +3221,94 @@ func TestDdevList(t *testing.T) {
 	ddevapp.List(true, false, 1)
 }
 
+// TestEnvironmentVariables tests to make sure that documented environment variables appear
+// in the web container and on the host.
+func TestEnvironmentVariables(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+	customCmd := filepath.Join(pwd, "testdata", t.Name(), "showhostenvvar")
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	app, err := ddevapp.NewApp(site.Dir, false, "")
+	assert.NoError(err)
+	customCmdDest := app.GetConfigPath("commands/host/" + "showhostenvvar")
+
+	err = os.MkdirAll(filepath.Dir(customCmdDest), 0755)
+	require.NoError(t, err)
+	err = fileutil.CopyFile(customCmd, customCmdDest)
+	require.NoError(t, err)
+
+	// This set of webContainerExpectations should be maintained to match the list in the docs
+	webContainerExpectations := map[string]string{
+		"DDEV_DOCROOT":           app.GetDocroot(),
+		"DDEV_HOSTNAME":          app.GetHostname(),
+		"DDEV_PHP_VERSION":       app.PHPVersion,
+		"DDEV_PRIMARY_URL":       app.GetPrimaryURL(),
+		"DDEV_PROJECT":           app.Name,
+		"DDEV_PROJECT_TYPE":      app.Type,
+		"DDEV_ROUTER_HTTP_PORT":  app.RouterHTTPPort,
+		"DDEV_ROUTER_HTTPS_PORT": app.RouterHTTPSPort,
+		"DDEV_SITENAME":          app.Name,
+		"DDEV_TLD":               app.ProjectTLD,
+		"DDEV_WEBSERVER_TYPE":    app.WebserverType,
+	}
+
+	err = app.Start()
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = os.RemoveAll(customCmdDest)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	for k, v := range webContainerExpectations {
+		envVal, _, err := app.Exec(&ddevapp.ExecOpts{
+			Cmd: fmt.Sprintf("echo ${%s}", k),
+		})
+		assert.NoError(err)
+		envVal = strings.Trim(envVal, "\n")
+		assert.Equal(v, envVal)
+	}
+
+	dbPort, err := app.GetPublishedPort("db")
+	dbPortStr := strconv.Itoa(dbPort)
+	if dbPortStr == "-1" || err != nil {
+		dbPortStr = ""
+	}
+	if app.HostDBPort != "" {
+		dbPortStr = app.HostDBPort
+	}
+
+	// This set of hostExpections should bne maintained in parallel with documentation
+	hostExpectations := map[string]string{
+		"DDEV_APPROOT":             app.AppRoot,
+		"DDEV_DOCROOT":             app.GetDocroot(),
+		"DDEV_HOST_DB_PORT":        dbPortStr,
+		"DDEV_HOST_HTTPS_PORT":     app.HostHTTPSPort,
+		"DDEV_HOST_WEBSERVER_PORT": app.HostWebserverPort,
+		"DDEV_HOSTNAME":            app.GetHostname(),
+		"DDEV_PHP_VERSION":         app.PHPVersion,
+		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
+		"DDEV_PROJECT":             app.Name,
+		"DDEV_PROJECT_TYPE":        app.Type,
+		"DDEV_ROUTER_HTTP_PORT":    app.RouterHTTPPort,
+		"DDEV_ROUTER_HTTPS_PORT":   app.RouterHTTPSPort,
+		"DDEV_SITENAME":            app.Name,
+		"DDEV_TLD":                 app.ProjectTLD,
+		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
+	}
+	for k, v := range hostExpectations {
+		envVal, err := exec.RunCommand(DdevBin, []string{"showhostenvvar", k})
+		assert.NoError(err, "could not run %s %s %s, result=%s", DdevBin, "showhostenvvar", k, envVal)
+		envVal = strings.Trim(envVal, "\n")
+		assert.Equal(v, envVal, "expected envvar $%s to equal '%s', but it was '%s'", k, v, envVal)
+	}
+
+}
+
 // constructContainerName builds a container name given the type (web/db/dba) and the app
 func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
 	container, err := app.FindContainerByType(containerType)

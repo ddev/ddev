@@ -43,7 +43,7 @@ services:
       - DDEV_HOSTNAME
       - DDEV_PHP_VERSION
       - DDEV_PRIMARY_URL
-      - DDEV_PROJECT={{ .Name }}
+      - DDEV_PROJECT
       - DDEV_PROJECT_TYPE
       - DDEV_ROUTER_HTTP_PORT
       - DDEV_ROUTER_HTTPS_PORT
@@ -112,7 +112,7 @@ services:
       - DDEV_HOSTNAME
       - DDEV_PHP_VERSION
       - DDEV_PRIMARY_URL
-      - DDEV_PROJECT={{ .Name }}
+      - DDEV_PROJECT
       - DDEV_PROJECT_TYPE
       - DDEV_ROUTER_HTTP_PORT
       - DDEV_ROUTER_HTTPS_PORT

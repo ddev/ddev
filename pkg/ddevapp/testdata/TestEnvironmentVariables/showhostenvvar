@@ -1,0 +1,8 @@
+#!/bin/bash
+
+## Description: showhostenvvar envname
+## Usage: showhostenvvar [name]
+## Example: "ddev showhostenvvar DDEV_PROJECT"
+
+ENVNAME=$1
+echo ${!ENVNAME}
