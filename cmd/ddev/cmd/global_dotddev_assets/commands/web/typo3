@@ -4,8 +4,35 @@
 # This assumes that the typo3 command will be in the $PATH; if in vendor/bin/ it will be
 
 ## Description: Run TYPO3 CLI (typo3) command inside the web container
-## Usage: typo3 [args]
-## Example: "ddev typo3 site:list" or "ddev typo3 list" or "ddev typo3 extension:list"
+## Usage: typo3 [flags] [command] [options] [arguments]
+## Example: ddev typo3 --first-install\nddev typo3 list\nddev typo3 site:list\nddev typo3 extension:list
+## Flags: [{"Name":"first-install","Shorthand":"f","Usage":"Enable the TYPO3 Install Wizard by creating the file $DOCROOT/FIRST_INSTALL"},{"Name":"enable-install-tool","Shorthand":"e","Usage":"Enable the TYPO3 Install Tool by creating the file $DOCROOT/typo3conf/ENABLE_INSTALL_TOOL"}]
 ## ProjectTypes: typo3
+
+function create_file {
+    touch $1
+    printf '"%s" was created successfully.\n' "$1" >&2
+}
+
+while :; do
+    case ${1:-} in
+        -f|--first-install)
+            create_file ${DDEV_DOCROOT}/FIRST_INSTALL
+            exit
+            ;;
+        -e|--enable-install-tool)
+            create_file ${DDEV_DOCROOT}/typo3conf/ENABLE_INSTALL_TOOL
+            exit
+            ;;
+        --)              # End of all options.
+            shift
+            break
+            ;;
+        *)               # Default case: No more options, so break out of the loop.
+            break
+    esac
+
+    shift
+done
 
 typo3 "$@"
