@@ -668,6 +668,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	// Copy test overrides into the project .ddev directory
 	for _, item := range []string{"nginx", "nginx_full", "apache", "php", "mysql"} {
+		_ = os.RemoveAll(filepath.Join(site.Dir, ".ddev", item))
 		err := fileutil.CopyDir(filepath.Join(testDir, testDataDdevDir, item), filepath.Join(site.Dir, ".ddev", item))
 		assert.NoError(err)
 	}
