@@ -1785,7 +1785,10 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 
 	for _, name := range app.GetHostnames() {
 		if app.UseDNSWhenPossible && globalconfig.IsInternetActive() {
-			hostIPs, err := net.LookupHost(name)
+			// If they have provided "*.<name>" then look up the suffix
+			checkName := strings.TrimPrefix(name, "*.")
+			hostIPs, err := net.LookupHost(checkName)
+
 			// If we had successful lookup and dockerIP matches
 			// with adding to hosts file.
 			if err == nil && len(hostIPs) > 0 && hostIPs[0] == dockerIP {

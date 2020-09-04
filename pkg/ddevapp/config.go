@@ -413,6 +413,11 @@ func (app *DdevApp) ValidateConfig() error {
 
 	// validate hostnames
 	for _, hn := range app.GetHostnames() {
+		// If they have provided "*.<hostname>" then ignore the *. part.
+		hn = strings.TrimPrefix(hn, "*.")
+		if hn == "ddev.site" {
+			return fmt.Errorf("wildcaring the full hostname or using 'ddev.site' as fqdn is not allowed because other projects would not work in that case")
+		}
 		if !hostRegex.MatchString(hn) {
 			return fmt.Errorf("invalid hostname: %s. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", hn).(invalidHostname)
 		}

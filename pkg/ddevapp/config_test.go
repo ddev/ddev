@@ -524,21 +524,20 @@ func TestReadConfigCRLF(t *testing.T) {
 func TestConfigValidate(t *testing.T) {
 	assert := asrt.New(t)
 
-	cwd, err := os.Getwd()
+	//pwd, err := os.Getwd()
+	//assert.NoError(err)
+
+	site := TestSites[0]
+	app, err := NewApp(site.Dir, false, "")
 	assert.NoError(err)
 
-	app := &DdevApp{
-		Name:           "TestConfigValidate",
-		ConfigPath:     filepath.Join("testdata", "config.yaml"),
-		AppRoot:        cwd,
-		Docroot:        "testdata",
-		Type:           nodeps.AppTypeWordPress,
-		PHPVersion:     nodeps.PHPDefault,
-		MariaDBVersion: version.MariaDBDefaultVersion,
-		WebserverType:  nodeps.WebserverDefault,
-		ProjectTLD:     nodeps.DdevDefaultTLD,
-		Provider:       nodeps.ProviderDefault,
-	}
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	appName := app.Name
+	appType := app.Type
 
 	err = app.ValidateConfig()
 	if err != nil {
@@ -550,14 +549,13 @@ func TestConfigValidate(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "not a valid project name")
 
-	app.Docroot = "testdata"
-	app.Name = "valid"
+	app.Name = appName
 	app.Type = "potato"
 	err = app.ValidateConfig()
 	assert.Error(err)
 	assert.Contains(err.Error(), "invalid app type")
 
-	app.Type = nodeps.AppTypeWordPress
+	app.Type = appType
 	app.PHPVersion = "1.1"
 	err = app.ValidateConfig()
 	assert.Error(err)
@@ -591,6 +589,23 @@ func TestConfigValidate(t *testing.T) {
 		err = app.ValidateConfig()
 		assert.NoError(err)
 	}
+
+	// Make sure that wildcards work
+	app.AdditionalHostnames = []string{"x", "*.any"}
+	err = app.ValidateConfig()
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+	staticURI := site.Safe200URIWithExpectation.URI
+	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://x.ddev.site/"+staticURI, 1)
+	assert.NoError(err)
+	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://somethjingrandom.any.ddev.site/"+staticURI, 1)
+	assert.NoError(err)
+
+	// Make sure that a bare "*" in the additional_hostnames does *not* work
+	app.AdditionalHostnames = []string{"x", "*"}
+	err = app.ValidateConfig()
+	assert.Error(err)
 }
 
 // TestWriteConfig tests writing config values to file
@@ -653,6 +668,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	// Copy test overrides into the project .ddev directory
 	for _, item := range []string{"nginx", "nginx_full", "apache", "php", "mysql"} {
+		_ = os.RemoveAll(filepath.Join(site.Dir, ".ddev", item))
 		err := fileutil.CopyDir(filepath.Join(testDir, testDataDdevDir, item), filepath.Join(site.Dir, ".ddev", item))
 		assert.NoError(err)
 	}
