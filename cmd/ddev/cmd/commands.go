@@ -154,8 +154,6 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				descSuffix := " (shell " + service + " container command)"
 				if commandSet == targetGlobalCommandPath {
 					descSuffix = " (global shell " + service + " container command)"
-				} else {
-					descSuffix := " (shell " + service + " container command)"
 				}
 
 				commandToAdd := &cobra.Command{
