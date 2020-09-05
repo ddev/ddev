@@ -123,7 +123,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				if val, ok := directives["Flags"]; ok {
 					flags, err = parseFlags(val)
 					if err != nil {
-						util.Warning("command '%s' contains an invalid flags definition '%s', skipping add flags of %s", commandName, val, onHostFullPath)
+						util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, onHostFullPath)
 					}
 				}
 				if val, ok := directives["ProjectTypes"]; ok {
@@ -164,11 +164,25 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 
 				for flag, flagDef := range flags {
-					if flagDef.Shorthand != "" {
-						commandToAdd.Flags().BoolP(flag, flagDef.Shorthand, false, flagDef.Usage)
-					} else {
-						commandToAdd.Flags().Bool(flag, false, flagDef.Usage)
+					// Check usage is defined
+					if commandToAdd.Flags().Lookup(flag) != nil {
+						util.Warning("No usage defined for flag '%s' of command '%s', skipping add flag of %s", flag, commandName, onHostFullPath)
+						continue
 					}
+
+					// Check flag and shorthand does not already exist
+					if commandToAdd.Flags().Lookup(flag) != nil {
+						util.Warning("Flag '%s' already defined for command '%s', skipping add flag of %s", flag, commandName, onHostFullPath)
+						continue
+					}
+
+					if commandToAdd.Flags().ShorthandLookup(flagDef.Shorthand) != nil {
+						util.Warning("Shorthand '%s' already defined for command '%s', skipping add flag of %s", flagDef.Shorthand, commandName, onHostFullPath)
+						continue
+					}
+
+					// Add flag to command
+					commandToAdd.Flags().BoolP(flag, flagDef.Shorthand, false, flagDef.Usage)
 				}
 
 				if service == "host" {
