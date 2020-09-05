@@ -169,7 +169,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 				for flag, flagDef := range flags {
 					// Check usage is defined
-					if commandToAdd.Flags().Lookup(flag) != nil {
+					if flagDef.Usage == "" {
 						util.Warning("No usage defined for flag '%s' of command '%s', skipping add flag of %s", flag, commandName, onHostFullPath)
 						continue
 					}
