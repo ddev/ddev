@@ -170,18 +170,18 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				for flag, flagDef := range flags {
 					// Check usage is defined
 					if flagDef.Usage == "" {
-						util.Warning("No usage defined for flag '%s' of command '%s', skipping add flag of %s", flag, commandName, onHostFullPath)
+						util.Warning("No usage defined for flag '%s' of command '%s', skipping add flag defined in %s", flag, commandName, onHostFullPath)
 						continue
 					}
 
 					// Check flag and shorthand does not already exist
 					if commandToAdd.Flags().Lookup(flag) != nil {
-						util.Warning("Flag '%s' already defined for command '%s', skipping add flag of %s", flag, commandName, onHostFullPath)
+						util.Warning("Flag '%s' already defined for command '%s', skipping add flag defined in %s", flag, commandName, onHostFullPath)
 						continue
 					}
 
 					if commandToAdd.Flags().ShorthandLookup(flagDef.Shorthand) != nil {
-						util.Warning("Shorthand '%s' already defined for command '%s', skipping add flag of %s", flagDef.Shorthand, commandName, onHostFullPath)
+						util.Warning("Shorthand '%s' already defined for command '%s', skipping add flag defined in %s", flagDef.Shorthand, commandName, onHostFullPath)
 						continue
 					}
 
