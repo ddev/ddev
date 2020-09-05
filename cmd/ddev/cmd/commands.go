@@ -4,6 +4,13 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -12,12 +19,6 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"os"
-	"path"
-	"path/filepath"
-	"runtime"
-	"strings"
 )
 
 // Define the structure for flags, the long option is used as map key
@@ -153,7 +154,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				descSuffix := " (shell " + service + " container command)"
 				if commandSet == targetGlobalCommandPath {
 					descSuffix = " (global shell " + service + " container command)"
+				} else {
+					descSuffix := " (shell " + service + " container command)"
 				}
+
 				commandToAdd := &cobra.Command{
 					Use:     usage,
 					Short:   description + descSuffix,
