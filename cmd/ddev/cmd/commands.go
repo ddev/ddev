@@ -363,13 +363,11 @@ func populateExamplesCommandsHomeadditions() error {
 
 // parseFlags() Returns a map of flags found in the named script before
 func parseFlags(flags string) (FlagsDefinitions, error) {
-	var result = FlagsDefinitions{}
+	var defs = FlagsDefinitions{}
 
-	if err := json.Unmarshal([]byte(flags), &result); err != nil {
+	if err := json.Unmarshal([]byte(flags), &defs); err != nil {
 		return nil, err
 	}
 
-	//fmt.Errorf("ddev config is not useful in your home directory (%s)", homeDir)
-
-	return result, nil
+	return defs, nil
 }
