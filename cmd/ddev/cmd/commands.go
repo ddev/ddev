@@ -19,6 +19,12 @@ import (
 	"strings"
 )
 
+// Define the structure for flags, the long option is used as map key
+type flagsDefinition = map[string]struct {
+	shorthand string
+	usage string
+}
+
 // addCustomCommands looks for custom command scripts in
 // ~/.ddev/commands/<servicename> etc. and
 // .ddev/commands/<servicename> and .ddev/commands/host
@@ -98,6 +104,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 				directives := findDirectivesInScriptCommand(onHostFullPath)
 				var description, usage, example, projectTypes, osTypes, hostBinaryExists string
+				var flags = flagsDefinition {}
 
 				description = commandName
 				if val, ok := directives["Description"]; ok {
@@ -109,6 +116,9 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 				if val, ok := directives["Example"]; ok {
 					example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
+				}
+				if val, ok := directives["Flags"]; ok {
+					flags = parseFlags(val)
 				}
 				if val, ok := directives["ProjectTypes"]; ok {
 					projectTypes = val
@@ -145,6 +155,14 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					FParseErrWhitelist: cobra.FParseErrWhitelist{
 						UnknownFlags: true,
 					},
+				}
+
+				for flag, flagDef := range flags {
+					if flagDef.shorthand != "" {
+						commandToAdd.Flags().BoolP(flag, flagDef.shorthand, false, flagDef.usage)
+					} else {
+						commandToAdd.Flags().Bool(flag, false, flagDef.usage)
+					}
 				}
 
 				if service == "host" {
@@ -321,4 +339,11 @@ func populateExamplesCommandsHomeadditions() error {
 		}
 	}
 	return nil
+}
+
+// parseFlags() Returns a map of flags found in the named script before
+func parseFlags(flags string) flagsDefinition {
+	var result = flagsDefinition {}
+
+	return result
 }
