@@ -22,12 +22,10 @@ import (
 )
 
 // Define the structure for flags, the long option is used as map key
-type FlagDefinition = struct {
+type FlagsDefinitions = map[string]struct {
 	Usage     string
 	Shorthand string
 }
-
-type FlagsDefinitions = map[string]FlagDefinition
 
 // addCustomCommands looks for custom command scripts in
 // ~/.ddev/commands/<servicename> etc. and
