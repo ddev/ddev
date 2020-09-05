@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
@@ -20,10 +21,12 @@ import (
 )
 
 // Define the structure for flags, the long option is used as map key
-type flagsDefinition = map[string]struct {
-	shorthand string
-	usage string
+type FlagDefinition = struct {
+	Usage     string
+	Shorthand string
 }
+
+type FlagsDefinitions = map[string]FlagDefinition
 
 // addCustomCommands looks for custom command scripts in
 // ~/.ddev/commands/<servicename> etc. and
@@ -104,7 +107,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 				directives := findDirectivesInScriptCommand(onHostFullPath)
 				var description, usage, example, projectTypes, osTypes, hostBinaryExists string
-				var flags = flagsDefinition {}
+				var flags = FlagsDefinitions{}
 
 				description = commandName
 				if val, ok := directives["Description"]; ok {
@@ -118,7 +121,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
 				}
 				if val, ok := directives["Flags"]; ok {
-					flags = parseFlags(val)
+					flags, err = parseFlags(val)
+					if err != nil {
+						util.Warning("command '%s' contains an invalid flags definition '%s', skipping add flags of %s", commandName, val, onHostFullPath)
+					}
 				}
 				if val, ok := directives["ProjectTypes"]; ok {
 					projectTypes = val
@@ -158,10 +164,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 
 				for flag, flagDef := range flags {
-					if flagDef.shorthand != "" {
-						commandToAdd.Flags().BoolP(flag, flagDef.shorthand, false, flagDef.usage)
+					if flagDef.Shorthand != "" {
+						commandToAdd.Flags().BoolP(flag, flagDef.Shorthand, false, flagDef.Usage)
 					} else {
-						commandToAdd.Flags().Bool(flag, false, flagDef.usage)
+						commandToAdd.Flags().Bool(flag, false, flagDef.Usage)
 					}
 				}
 
@@ -342,8 +348,14 @@ func populateExamplesCommandsHomeadditions() error {
 }
 
 // parseFlags() Returns a map of flags found in the named script before
-func parseFlags(flags string) flagsDefinition {
-	var result = flagsDefinition {}
+func parseFlags(flags string) (FlagsDefinitions, error) {
+	var result = FlagsDefinitions{}
 
-	return result
+	if err := json.Unmarshal([]byte(flags), &result); err != nil {
+		return nil, err
+	}
+
+	//fmt.Errorf("ddev config is not useful in your home directory (%s)", homeDir)
+
+	return result, nil
 }
