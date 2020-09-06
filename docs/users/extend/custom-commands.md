@@ -102,6 +102,16 @@ Useful variables for container scripts are:
 * DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm
 * IS_DDEV_PROJECT: if set to "true" it means that php is running under DDEV
 
+### Annotations supported
+
+The custom commands support various annotations in the header which are used to provide additional information about the command to the user:
+
+* Description
+* Usage
+* Example (use `\n` to force a line break)
+* ProjectTypes
+* OSTypes
+
 ### Known Windows OS issues
 
 * **Line Endings**: If you are editing a custom command which will run in a container, it must have LF line endings (not traditional Windows CRLF line endings). Remember that a custom command in a container is a script that must execute in a Linux environmet.
