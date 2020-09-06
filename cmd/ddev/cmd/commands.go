@@ -118,7 +118,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					usage = val
 				}
 				if val, ok := directives["Example"]; ok {
-					example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
+					example = val
 				}
 				if val, ok := directives["Flags"]; ok {
 					flags, err = parseFlags(val)
