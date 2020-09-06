@@ -95,8 +95,10 @@ func TestCustomCommands(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "testhostcmd project (shell host container command)")
 	assert.Contains(out, "testwebcmd project (shell web container command)")
+	assert.Contains(out, "testhostglobal global (global shell host container command)")
+	assert.Contains(out, "testwebglobal global (global shell web container command)")
+	assert.NotContains(out, "testhostcmd global") //the global testhostcmd should have been overridden by the projct one
 	assert.NotContains(out, "testwebcmd global") //the global testwebcmd should have been overridden by the projct one
-	assert.Contains(out, "testhostglobal")
 
 	for _, c := range []string{"testhostcmd", "testhostglobal", "testwebcmd", "testwebglobal"} {
 		args := []string{c, "hostarg1", "hostarg2", "--hostflag1"}
