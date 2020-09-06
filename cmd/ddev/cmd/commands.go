@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -20,13 +19,6 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
-
-// Define the array structure for flags
-type FlagsDefinitions = []struct {
-	Long  string  // mandatory and unique
-	Short string  // optional but unique, can be omitted or set to ""
-	Usage string  // mandatory
-}
 
 // addCustomCommands looks for custom command scripts in
 // ~/.ddev/commands/<servicename> etc. and
@@ -107,7 +99,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 				directives := findDirectivesInScriptCommand(onHostFullPath)
 				var description, usage, example, projectTypes, osTypes, hostBinaryExists string
-				var flags = FlagsDefinitions{}
+				var flags = Flags{}
 
 				description = commandName
 				if val, ok := directives["Description"]; ok {
@@ -121,7 +113,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					example = val
 				}
 				if val, ok := directives["Flags"]; ok {
-					flags, err = parseFlags(val)
+					err = flags.assign(val)
 					if err != nil {
 						util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, onHostFullPath)
 					}
@@ -164,32 +156,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					},
 				}
 
-				for _, flagDef := range flags {
-					// Check usage is defined
-					if flagDef.Usage == "" {
-						util.Warning("No usage defined for flag '%s' of command '%s', skipping add flag defined in %s", flagDef.Long, commandName, onHostFullPath)
-						continue
-					}
-
-					// Check flag and shorthand does not already exist
-					if commandToAdd.Flags().Lookup(flagDef.Long) != nil {
-						util.Warning("Flag '%s' already defined for command '%s', skipping add flag defined in %s", flagDef.Long, commandName, onHostFullPath)
-						continue
-					}
-
-					if len(flagDef.Short) > 1 {
-						util.Warning("Shorthand '%s' with more than one ASCII character defined for command '%s', skipping add flag defined in %s", flagDef.Short, commandName, onHostFullPath)
-						continue
-					}
-
-					if commandToAdd.Flags().ShorthandLookup(flagDef.Short) != nil {
-						util.Warning("Shorthand '%s' already defined for command '%s', skipping add flag defined in %s", flagDef.Short, commandName, onHostFullPath)
-						continue
-					}
-
-					// Add flag to command
-					commandToAdd.Flags().BoolP(flagDef.Long, flagDef.Short, false, flagDef.Usage)
-				}
+				flags.addToCommand(commandToAdd, onHostFullPath, commandName)
 
 				if service == "host" {
 					commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
@@ -365,15 +332,4 @@ func populateExamplesCommandsHomeadditions() error {
 		}
 	}
 	return nil
-}
-
-// parseFlags() Returns a map of flags found in the named script before
-func parseFlags(flags string) (FlagsDefinitions, error) {
-	var defs = FlagsDefinitions{}
-
-	if err := json.Unmarshal([]byte(flags), &defs); err != nil {
-		return nil, err
-	}
-
-	return defs, nil
 }
