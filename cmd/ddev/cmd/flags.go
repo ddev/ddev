@@ -9,7 +9,7 @@ import (
 // The array structure for the flags, the json from the annotation is
 // unmarshaled into this structure. For more information see also
 // github.com/spf13/pflag/flag
-type FlagsDef []struct {
+type FlagsDefinition []struct {
 	Name        string              // name as it appears on command line
 	Shorthand   string              // one-letter abbreviated flag
 	Usage       string              // help message
@@ -20,13 +20,13 @@ type FlagsDef []struct {
 }
 
 type Flags struct {
-	Flags FlagsDef
+	Definition FlagsDefinition
 }
 
 // Converts the defs provided by the custom command as json into the flags
 // structure.
 func (f *Flags) assign(defs string) error {
-	if err := json.Unmarshal([]byte(defs), &f.Flags); err != nil {
+	if err := json.Unmarshal([]byte(defs), &f.Definition); err != nil {
 		return err
 	}
 
@@ -36,7 +36,7 @@ func (f *Flags) assign(defs string) error {
 // Iterates the flags, makes a simple verification and assigns it to the
 // provided command.
 func (f *Flags) addToCommand(command *cobra.Command, onHostFullPath, commandName string) error {
-	for _, flag := range f.Flags {
+	for _, flag := range f.Definition {
 		// Check usage is defined
 		if flag.Usage == "" {
 			util.Warning("No usage defined for flag '%s' of command '%s', skipping add flag defined in %s", flag.Name, commandName, onHostFullPath)
@@ -67,4 +67,3 @@ func (f *Flags) addToCommand(command *cobra.Command, onHostFullPath, commandName
 
 	return nil
 }
-
