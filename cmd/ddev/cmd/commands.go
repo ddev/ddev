@@ -150,7 +150,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 
 				descSuffix := " (shell " + service + " container command)"
-				if commandSet == targetGlobalCommandPath {
+				if serviceDirOnHost[0:1] == "." {
 					descSuffix = " (global shell " + service + " container command)"
 				}
 
