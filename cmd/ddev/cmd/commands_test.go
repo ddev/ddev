@@ -118,7 +118,6 @@ func TestCustomCommands(t *testing.T) {
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err, "Failed to run ddev %s %v", c, args)
 	assert.Contains(out, "Examples:\n  ddev testhostcmd\n  ddev testhostcmd -h")
-	
 
 	app.Type = nodeps.AppTypePHP
 	err = app.WriteConfig()
