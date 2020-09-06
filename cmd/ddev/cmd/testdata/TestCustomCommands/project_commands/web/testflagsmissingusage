@@ -1,0 +1,6 @@
+#!/bin/bash
+
+## Description: testcmd for flags for missing usage
+## Usage: testflagsmissingusage
+## Flags: [{"Long":"test-1","Short":"t","Usage":""},{"Long":"test-2"}]
+## Example: "ddev testflagsmissingusage"

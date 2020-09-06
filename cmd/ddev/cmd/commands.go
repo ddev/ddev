@@ -21,10 +21,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Define the structure for flags, the long option is used as map key
-type FlagsDefinitions = map[string]struct {
-	Usage     string
-	Shorthand string
+// Define the array structure for flags
+type FlagsDefinitions = []struct {
+	Long  string  // mandatory and unique
+	Short string  // optional but unique, can be omitted or set to ""
+	Usage string  // mandatory
 }
 
 // addCustomCommands looks for custom command scripts in
@@ -163,26 +164,31 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					},
 				}
 
-				for flag, flagDef := range flags {
+				for _, flagDef := range flags {
 					// Check usage is defined
 					if flagDef.Usage == "" {
-						util.Warning("No usage defined for flag '%s' of command '%s', skipping add flag defined in %s", flag, commandName, onHostFullPath)
+						util.Warning("No usage defined for flag '%s' of command '%s', skipping add flag defined in %s", flagDef.Long, commandName, onHostFullPath)
 						continue
 					}
 
 					// Check flag and shorthand does not already exist
-					if commandToAdd.Flags().Lookup(flag) != nil {
-						util.Warning("Flag '%s' already defined for command '%s', skipping add flag defined in %s", flag, commandName, onHostFullPath)
+					if commandToAdd.Flags().Lookup(flagDef.Long) != nil {
+						util.Warning("Flag '%s' already defined for command '%s', skipping add flag defined in %s", flagDef.Long, commandName, onHostFullPath)
 						continue
 					}
 
-					if commandToAdd.Flags().ShorthandLookup(flagDef.Shorthand) != nil {
-						util.Warning("Shorthand '%s' already defined for command '%s', skipping add flag defined in %s", flagDef.Shorthand, commandName, onHostFullPath)
+					if len(flagDef.Short) > 1 {
+						util.Warning("Shorthand '%s' with more than one ASCII character defined for command '%s', skipping add flag defined in %s", flagDef.Short, commandName, onHostFullPath)
+						continue
+					}
+
+					if commandToAdd.Flags().ShorthandLookup(flagDef.Short) != nil {
+						util.Warning("Shorthand '%s' already defined for command '%s', skipping add flag defined in %s", flagDef.Short, commandName, onHostFullPath)
 						continue
 					}
 
 					// Add flag to command
-					commandToAdd.Flags().BoolP(flag, flagDef.Shorthand, false, flagDef.Usage)
+					commandToAdd.Flags().BoolP(flagDef.Long, flagDef.Short, false, flagDef.Usage)
 				}
 
 				if service == "host" {

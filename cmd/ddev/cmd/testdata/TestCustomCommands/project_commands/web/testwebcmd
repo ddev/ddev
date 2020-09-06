@@ -2,6 +2,7 @@
 
 ## Description: testwebcmd project
 ## Usage: testwebcmd
+## Flags: [{"Long":"test-1","Short":"t","Usage":"Usage of test 1"},{"Long":"test-2","Usage":"Usage of test 2 without shorthand"}]
 ## Example: "ddev testwebcmd"
 
 echo "testwebcmd was executed with args=$@ on host $(hostname)"

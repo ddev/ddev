@@ -119,6 +119,37 @@ func TestCustomCommands(t *testing.T) {
 	assert.NoError(err, "Failed to run ddev %s %v", c, args)
 	assert.Contains(out, "Examples:\n  ddev testhostcmd\n  ddev testhostcmd -h")
 
+	// Test possible user errors are handled properly for Flags
+	c := "testflagsinvalidjson"
+	args := []string{c}
+	out, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err, "Failed to run ddev %s", c)
+	assert.Contains(out, fmt.Sprintf("command '%s' contains an invalid flags definition", c))
+
+	c = "testflagsmissingusage"
+	args = []string{c}
+	out, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err, "Failed to run ddev %s", c)
+	assert.Contains(out, fmt.Sprintf("No usage defined for flag '%s' of command '%s', skipping add flag defined in ", "test-1", c))
+
+	c = "testflagsduplicate"
+	args = []string{c}
+	out, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err, "Failed to run ddev %s", c)
+	assert.Contains(out, fmt.Sprintf("Flag '%s' already defined for command '%s', skipping add flag defined in ", "test-1", c))
+
+	c = "testflagsduplicateshorthand"
+	args = []string{c}
+	out, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err, "Failed to run ddev %s", c)
+	assert.Contains(out, fmt.Sprintf("Shorthand '%s' already defined for command '%s', skipping add flag defined in ", "t", c))
+
+	c = "testflagslongshorthand"
+	args = []string{c}
+	out, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err, "Failed to run ddev %s", c)
+	assert.Contains(out, fmt.Sprintf("Shorthand '%s' with more than one ASCII character defined for command '%s', skipping add flag defined in ", "t1", c))
+
 	// Provide app configuration
 	app.Type = nodeps.AppTypePHP
 	err = app.WriteConfig()
