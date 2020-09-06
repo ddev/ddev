@@ -2,6 +2,6 @@
 
 ## Description: testhostcmd project
 ## Usage: testhostcmd
-## Example: "ddev testhostcmd"
+## Example: ddev testhostcmd\nddev testhostcmd -h
 
 echo "testhostcmd was executed with args=$@ on host $(hostname)"
