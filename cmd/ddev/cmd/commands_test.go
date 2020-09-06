@@ -2,6 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	osexec "os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -10,12 +17,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	osexec "os/exec"
-	"path/filepath"
-	"strings"
-	"testing"
-	"time"
 )
 
 // TestCustomCommands does basic checks to make sure custom commands work OK.
