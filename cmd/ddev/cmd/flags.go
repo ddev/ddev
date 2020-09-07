@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -9,7 +10,7 @@ import (
 // The array structure for the flags, the json from the annotation is
 // unmarshaled into this structure. For more information see also
 // github.com/spf13/pflag/flag
-type FlagsDefinition []struct {
+type Flag struct {
 	Name        string              // name as it appears on command line
 	Shorthand   string              // one-letter abbreviated flag
 	Usage       string              // help message
@@ -19,45 +20,192 @@ type FlagsDefinition []struct {
 	Annotations map[string][]string // used by cobra.Command bash autocomple code
 }
 
-type Flags struct {
-	Definition FlagsDefinition
+type FlagsDefinition []Flag
+
+// Defines the constants for the valid types which always should used in the
+// source code.
+const (
+	FT_BOOL             = "bool"
+	FT_BOOL_SLICE       = "boolSlice"
+	FT_BYTES_HEX        = "bytesHex"
+	FT_BYTES_BASE64     = "bytesBase64"
+	FT_COUNT            = "count"
+	FT_DURATION         = "duration"
+	FT_DURATION_SLICE   = "durationSlice"
+	FT_FLOAT32          = "float32"
+	FT_FLOAT32_SLICE    = "float32Slice"
+	FT_FLOAT64          = "float64"
+	FT_FLOAT64_SLICE    = "float64Slice"
+	FT_INT              = "int"
+	FT_INT_SLICE        = "intSlice"
+	FT_INT8             = "int8"
+	FT_INT16            = "int16"
+	FT_INT32            = "int32"
+	FT_INT32_SLICE      = "int32Slice"
+	FT_INT64            = "int64"
+	FT_INT64_SLICE      = "int64Slice"
+	FT_IP               = "ip"
+	FT_IP_SLICE         = "ipSlice"
+	FT_IP_MASK          = "ipMask"
+	FT_IP_NET           = "ipNet"
+	FT_STRING           = "string"
+	FT_STRING_ARRAY     = "stringArray"
+	FT_STRING_SLICE     = "stringSlice"
+	FT_STRING_TO_INT    = "stringToInt"
+	FT_STRING_TO_INT64  = "stringToInt64"
+	FT_STRING_TO_STRING = "stringToString"
+	FT_UINT             = "uint"
+	FT_UINT_Slice       = "uintSlice"
+	FT_UINT8            = "uint8"
+	FT_UINT16           = "uint16"
+	FT_UINT32           = "uint32"
+	FT_UINT64           = "uint64"
+)
+
+// Defines the valid types, a value of true indicates it's implemented
+var ValidTypes = map[string]bool{
+	FT_BOOL:             true,
+	FT_BOOL_SLICE:       false,
+	FT_BYTES_HEX:        false,
+	FT_BYTES_BASE64:     false,
+	FT_COUNT:            false,
+	FT_DURATION:         false,
+	FT_DURATION_SLICE:   false,
+	FT_FLOAT32:          false,
+	FT_FLOAT32_SLICE:    false,
+	FT_FLOAT64:          false,
+	FT_FLOAT64_SLICE:    false,
+	FT_INT:              false,
+	FT_INT_SLICE:        false,
+	FT_INT8:             false,
+	FT_INT16:            false,
+	FT_INT32:            false,
+	FT_INT32_SLICE:      false,
+	FT_INT64:            false,
+	FT_INT64_SLICE:      false,
+	FT_IP:               false,
+	FT_IP_SLICE:         false,
+	FT_IP_MASK:          false,
+	FT_IP_NET:           false,
+	FT_STRING:           false,
+	FT_STRING_ARRAY:     false,
+	FT_STRING_SLICE:     false,
+	FT_STRING_TO_INT:    false,
+	FT_STRING_TO_INT64:  false,
+	FT_STRING_TO_STRING: false,
+	FT_UINT:             false,
+	FT_UINT_Slice:       false,
+	FT_UINT8:            false,
+	FT_UINT16:           false,
+	FT_UINT32:           false,
+	FT_UINT64:           false,
 }
 
-// Converts the defs provided by the custom command as json into the flags
-// structure.
-func (f *Flags) assign(defs string) error {
-	if err := json.Unmarshal([]byte(defs), &f.Definition); err != nil {
-		return err
+// The main type used to access flags and methods
+type Flags struct {
+	CommandName string
+	Script      string
+	Definition  FlagsDefinition
+}
+
+func (f *Flags) Init(commandName, script string) {
+	f.CommandName = commandName
+	f.Script = script
+}
+
+func (f *Flags) validateFlags(flags FlagsDefinition) error {
+	var errors string
+	var long map[string]bool
+	var short map[string]string
+
+	for _, flag := range flags {
+		// Check flag does not already exist
+		if _, found := long[flag.Name]; found {
+			errors += fmt.Sprintf("\n - flag '%s' already defined", flag.Name)
+		} else {
+			long[flag.Name] = true
+		}
+
+		// Check shorthand is one letter only
+		if len(flag.Shorthand) > 1 {
+			errors += fmt.Sprintf("\n - shorthand '%s' for flag '%s' is more than one ASCII character", flag.Shorthand, flag.Name)
+		} else {
+			// Check shorthand does not already exist
+			if flagOfShorthand, found := short[flag.Shorthand]; found {
+				errors += fmt.Sprintf("\n - shorthand '%s' is already defined flag '%s'", flag.Shorthand, flagOfShorthand)
+			} else {
+				short[flag.Shorthand] = flag.Name
+			}
+		}
+
+		// Check usage is defined
+		if flag.Usage == "" {
+			errors += fmt.Sprintf("\n - no usage defined for flag '%s'", flag.Name)
+		}
+
+		// Check type is valid
+		implemented, found := ValidTypes[flag.Type]
+		if !found {
+			errors += fmt.Sprintf("\n - type '%s' for flag '%s' is not known", flag.Type, flag.Name)
+		} else if !implemented {
+			errors += fmt.Sprintf("\n - type '%s' for flag '%s' is not implemented", flag.Type, flag.Name)
+		}
+	}
+
+	if errors != "" {
+		return fmt.Errorf("The following problems were found in the flags definition of the command '%s' in '%s':%s", f.CommandName, f.Script, errors)
 	}
 
 	return nil
 }
 
+// Converts the defs provided by the custom command as json into the flags
+// structure.
+func (f *Flags) LoadFromJson(data string) error {
+	var defs FlagsDefinition
+	var err error
+
+	// Convert the JSON to the FlagsDefinition structure and return in case of
+	// error
+	if err = json.Unmarshal([]byte(data), &defs); err != nil {
+		return err
+	}
+
+	// Validate the user provided flags and return in case of error
+	if err = f.validateFlags(defs); err != nil {
+		return err
+	}
+
+	// Assign the data to the field
+	f.Definition = defs
+	return nil
+}
+
 // Iterates the flags, makes a simple verification and assigns it to the
 // provided command.
-func (f *Flags) addToCommand(command *cobra.Command, onHostFullPath, commandName string) error {
+func (f *Flags) AssignToCommand(command *cobra.Command) error {
 	for _, flag := range f.Definition {
 		// Check usage is defined
 		if flag.Usage == "" {
-			util.Warning("No usage defined for flag '%s' of command '%s', skipping add flag defined in %s", flag.Name, commandName, onHostFullPath)
+			util.Warning("No usage defined for flag '%s' of command '%s', skipping add flag defined in %s", flag.Name, f.CommandName, f.Script)
 			continue
 		}
 
 		// Check flag does not already exist
 		if command.Flags().Lookup(flag.Name) != nil {
-			util.Warning("Flag '%s' already defined for command '%s', skipping add flag defined in %s", flag.Name, commandName, onHostFullPath)
+			util.Warning("Flag '%s' already defined for command '%s', skipping add flag defined in %s", flag.Name, f.CommandName, f.Script)
 			continue
 		}
 
 		// Check shorthand is one letter only
 		if len(flag.Shorthand) > 1 {
-			util.Warning("Shorthand '%s' with more than one ASCII character defined for command '%s', skipping add flag defined in %s", flag.Shorthand, commandName, onHostFullPath)
+			util.Warning("Shorthand '%s' with more than one ASCII character defined for command '%s', skipping add flag defined in %s", flag.Shorthand, f.CommandName, f.Script)
 			continue
 		}
 
 		// Check shorthand does not already exist
 		if command.Flags().ShorthandLookup(flag.Shorthand) != nil {
-			util.Warning("Shorthand '%s' already defined for command '%s', skipping add flag defined in %s", flag.Shorthand, commandName, onHostFullPath)
+			util.Warning("Shorthand '%s' already defined for command '%s', skipping add flag defined in %s", flag.Shorthand, f.CommandName, f.Script)
 			continue
 		}
 

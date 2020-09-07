@@ -99,7 +99,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 				directives := findDirectivesInScriptCommand(onHostFullPath)
 				var description, usage, example, projectTypes, osTypes, hostBinaryExists string
-				var flags = Flags{}
+				var flags = Flags{CommandName: commandName, Script: onHostFullPath}
 
 				description = commandName
 				if val, ok := directives["Description"]; ok {
@@ -113,8 +113,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					example = val
 				}
 				if val, ok := directives["Flags"]; ok {
-					err = flags.assign(val)
-					if err != nil {
+					if err = flags.LoadFromJson(val); err != nil {
 						util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, onHostFullPath)
 					}
 				}
@@ -156,7 +155,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					},
 				}
 
-				flags.addToCommand(commandToAdd, onHostFullPath, commandName)
+				flags.AssignToCommand(commandToAdd)
 
 				if service == "host" {
 					commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
