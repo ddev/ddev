@@ -1,6 +1,0 @@
-#!/bin/bash
-
-## Description: testcmd for flags with invalid json
-## Usage: testflagsinvalidjson
-## Flags: {[{"Long":"test-1","Short":"t","Usage":"Usage of test 1"}]
-## Example: "ddev testflagsinvalidjson"

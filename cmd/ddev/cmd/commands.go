@@ -99,7 +99,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 				directives := findDirectivesInScriptCommand(onHostFullPath)
 				var description, usage, example, projectTypes, osTypes, hostBinaryExists string
-				var flags = Flags{CommandName: commandName, Script: onHostFullPath}
+
+				// Declare and init flags
+				var flags Flags
+				flags.Init(commandName, onHostFullPath)
 
 				description = commandName
 				if val, ok := directives["Description"]; ok {

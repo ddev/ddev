@@ -1,6 +1,0 @@
-#!/bin/bash
-
-## Description: testcmd for flags with shorthand longer than one char
-## Usage: testflagslongshorthand
-## Flags: [{"Long":"test-1","Short":"t1","Usage":"Usage of test 1"}]
-## Example: "ddev testflagslongshorthand"
