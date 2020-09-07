@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -62,7 +61,10 @@ const (
 	FT_UINT64           = "uint64"
 )
 
-// Defines the valid types, a value of true indicates it's implemented
+// Defines the valid types, a value of true indicates it's implemented.
+// To implement a new type add the required line to the switch statement in
+// AssignToCommand and set it here to true, that's all. If a new type is
+// added which is not defined here just add a new constant above and here.
 var ValidTypes = map[string]bool{
 	FT_BOOL:             true,
 	FT_BOOL_SLICE:       false,
@@ -75,7 +77,7 @@ var ValidTypes = map[string]bool{
 	FT_FLOAT32_SLICE:    false,
 	FT_FLOAT64:          false,
 	FT_FLOAT64_SLICE:    false,
-	FT_INT:              false,
+	FT_INT:              true,
 	FT_INT_SLICE:        false,
 	FT_INT8:             false,
 	FT_INT16:            false,
@@ -87,13 +89,13 @@ var ValidTypes = map[string]bool{
 	FT_IP_SLICE:         false,
 	FT_IP_MASK:          false,
 	FT_IP_NET:           false,
-	FT_STRING:           false,
+	FT_STRING:           true,
 	FT_STRING_ARRAY:     false,
 	FT_STRING_SLICE:     false,
 	FT_STRING_TO_INT:    false,
 	FT_STRING_TO_INT64:  false,
 	FT_STRING_TO_STRING: false,
-	FT_UINT:             false,
+	FT_UINT:             true,
 	FT_UINT_Slice:       false,
 	FT_UINT8:            false,
 	FT_UINT16:           false,
@@ -159,13 +161,13 @@ func (f *Flags) validateFlags(flags FlagsDefinition) error {
 	return nil
 }
 
-// Converts the defs provided by the custom command as json into the flags
+// Imports the defs provided by the custom command as json into the flags
 // structure.
 func (f *Flags) LoadFromJson(data string) error {
 	var defs FlagsDefinition
 	var err error
 
-	// Convert the JSON to the FlagsDefinition structure and return in case of
+	// Import the JSON to the FlagsDefinition structure and return in case of
 	// error
 	if err = json.Unmarshal([]byte(data), &defs); err != nil {
 		return err
@@ -181,36 +183,36 @@ func (f *Flags) LoadFromJson(data string) error {
 	return nil
 }
 
-// Iterates the flags, makes a simple verification and assigns it to the
-// provided command.
+// Iterates the flags and assigns it to the provided command.
 func (f *Flags) AssignToCommand(command *cobra.Command) error {
 	for _, flag := range f.Definition {
-		// Check usage is defined
-		if flag.Usage == "" {
-			util.Warning("No usage defined for flag '%s' of command '%s', skipping add flag defined in %s", flag.Name, f.CommandName, f.Script)
-			continue
+		// Create the flag at the command
+		switch flag.Type {
+		case FT_BOOL:
+			command.Flags().BoolP(flag.Name, flag.Shorthand, false, flag.Usage)
+		case FT_INT:
+			command.Flags().IntP(flag.Name, flag.Shorthand, 0, flag.Usage)
+		case FT_STRING:
+			command.Flags().StringP(flag.Name, flag.Shorthand, "", flag.Usage)
+		case FT_UINT:
+			command.Flags().UintP(flag.Name, flag.Shorthand, 0, flag.Usage)
+		default:
+			continue // continue here, nothing to set for this flag
 		}
 
-		// Check flag does not already exist
-		if command.Flags().Lookup(flag.Name) != nil {
-			util.Warning("Flag '%s' already defined for command '%s', skipping add flag defined in %s", flag.Name, f.CommandName, f.Script)
-			continue
+		// Update default values and annotations
+		newFlag := command.Flags().Lookup(flag.Name)
+
+		if err := newFlag.Value.Set(flag.DefValue); err != nil {
+			// Invalid default value was defined by the user, hide the flag
+			// and return
+			newFlag.Hidden = true
+			return err
 		}
 
-		// Check shorthand is one letter only
-		if len(flag.Shorthand) > 1 {
-			util.Warning("Shorthand '%s' with more than one ASCII character defined for command '%s', skipping add flag defined in %s", flag.Shorthand, f.CommandName, f.Script)
-			continue
-		}
-
-		// Check shorthand does not already exist
-		if command.Flags().ShorthandLookup(flag.Shorthand) != nil {
-			util.Warning("Shorthand '%s' already defined for command '%s', skipping add flag defined in %s", flag.Shorthand, f.CommandName, f.Script)
-			continue
-		}
-
-		// Add flag to command
-		command.Flags().BoolP(flag.Name, flag.Shorthand, false, flag.Usage)
+		newFlag.DefValue = flag.DefValue
+		newFlag.NoOptDefVal = flag.NoOptDefVal
+		newFlag.Annotations = flag.Annotations
 	}
 
 	return nil

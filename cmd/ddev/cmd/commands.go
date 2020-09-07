@@ -155,15 +155,20 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					},
 				}
 
-				flags.AssignToCommand(commandToAdd)
+				// Add flags to command
+				if err = flags.AssignToCommand(commandToAdd); err != nil {
+					util.Warning("Error '%s' in the flags definition for command '%s', skipping %s", err, commandName, onHostFullPath)
+					continue
+				}
 
 				if service == "host" {
 					commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
 				} else {
 					commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service)
 				}
-				rootCmd.AddCommand(commandToAdd)
 
+				// Add the command and mark as added
+				rootCmd.AddCommand(commandToAdd)
 				commandsAdded[commandName] = 1
 			}
 		}
