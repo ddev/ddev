@@ -35,7 +35,9 @@ func TestFlags(t *testing.T) {
 }
 
 /*
-[{"Long":"test-1","Short":"t","Usage":"Usage of test 1"},{"Long":"test-1","Usage":"Test duplicate"}]
+## Flags: [{"Long":"test-1","Short":"t","Usage":"Usage of test 1"},{"Long":"test-2","Usage":"Usage of test 2 without shorthand"}]
+
+## Flags: [{"Long":"test-1","Short":"t","Usage":"Usage of test 1"},{"Long":"test-1","Usage":"Test duplicate"}]
 ## Flags: [{"Long":"test-1","Short":"t","Usage":"Usage of test 1"},{"Long":"test-2","Short":"t","Usage":"Usage of test 2 with existing shorthand"}]
 ## Flags: {[{"Long":"test-1","Short":"t","Usage":"Usage of test 1"}]
 ## Flags: [{"Long":"test-1","Short":"t1","Usage":"Usage of test 1"}]
