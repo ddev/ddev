@@ -21,6 +21,12 @@ import (
 
 var hashedHostID string
 
+// Define a no-op logger to prevent Segment log messages from being emitted
+type SegmentNoopLogger struct{}
+
+func (n *SegmentNoopLogger) Logf(format string, args ...interface{})   {}
+func (n *SegmentNoopLogger) Errorf(format string, args ...interface{}) {}
+
 // ReportableEvents is the list of events that we choose to report specifically.
 // Excludes non-ddev custom commands.
 var ReportableEvents = map[string]bool{"auth": true, "composer": true, "config": true, "debug": true, "delete": true, "describe": true, "exec": true, "export-db": true, "import-db": true, "import-files": true, "launch": true, "list": true, "logs": true, "mysql": true, "pause": true, "poweroff": true, "pull": true, "restart": true, "restore-snapshot": true, "sequelace": true, "sequelpro": true, "share": true, "snapshot": true, "ssh": true, "start": true, "stop": true, "xdebug": true}
@@ -131,7 +137,9 @@ func SendInstrumentationEvents(event string) {
 	defer runTime()
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn && globalconfig.IsInternetActive() {
-		client := analytics.New(version.SegmentKey)
+		client, _ := analytics.NewWithConfig(version.SegmentKey, analytics.Config{
+			Logger: &SegmentNoopLogger{},
+		})
 
 		err := SegmentEvent(client, GetInstrumentationUser(), event)
 		if err != nil {
