@@ -249,3 +249,8 @@ column_stats
 columns_priv`)
 
 }
+
+//
+func TestFlagsAreLoadedFromComment(t *testing.T) {
+	//assert := asrt.New(t)
+}

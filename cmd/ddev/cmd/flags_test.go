@@ -16,21 +16,36 @@ func getSubject() Flags {
 	return subject
 }
 
-func TestInit(t *testing.T) {
+func TestCmdFlagsInit(t *testing.T) {
 	assert := asrt.New(t)
 	subject := getSubject()
 
-	assert.Exactly(t, commandName, subject.CommandName)
-	assert.Exactly(t, script, subject.Script)
+	assert.Exactly(commandName, subject.CommandName)
+	assert.Exactly(script, subject.Script)
 }
 
-// TestFlags does basic checks to make sure custom commands work OK.
-func TestFlags(t *testing.T) {
+// TestCmdFlagsLoadFromJson checks LoadFromJson works correctly and handles
+// user errors.
+func TestCmdFlagsLoadFromJson(t *testing.T) {
 	assert := asrt.New(t)
 	subject := getSubject()
 
-	//
-	err := subject.LoadFromJson("[]")
+	var err error
+
+	// Empty value
+	err = subject.LoadFromJson(``)
+	assert.NoError(err)
+
+	// Invalid JSON
+	err = subject.LoadFromJson(`this is no valid JSON`)
+	assert.Error(err)
+
+	// Empty array
+	err = subject.LoadFromJson(`[]`)
+	assert.NoError(err)
+
+	// Minimal
+	err = subject.LoadFromJson(`[{"Name":"test-1","Usage":"Usage of test 1"}]`)
 	assert.NoError(err)
 }
 

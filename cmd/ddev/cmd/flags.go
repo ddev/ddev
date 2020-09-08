@@ -117,8 +117,8 @@ func (f *Flags) Init(commandName, script string) {
 
 func (f *Flags) validateFlags(flags FlagsDefinition) error {
 	var errors string
-	var long map[string]bool
-	var short map[string]string
+	long := map[string]bool{}
+	short := map[string]string{}
 
 	for _, flag := range flags {
 		// Check flag does not already exist
@@ -146,11 +146,14 @@ func (f *Flags) validateFlags(flags FlagsDefinition) error {
 		}
 
 		// Check type is valid
-		implemented, found := ValidTypes[flag.Type]
-		if !found {
-			errors += fmt.Sprintf("\n - type '%s' for flag '%s' is not known", flag.Type, flag.Name)
-		} else if !implemented {
-			errors += fmt.Sprintf("\n - type '%s' for flag '%s' is not implemented", flag.Type, flag.Name)
+		if flag.Type != "" {
+			implemented, found := ValidTypes[flag.Type]
+
+			if !found {
+				errors += fmt.Sprintf("\n - type '%s' for flag '%s' is not known", flag.Type, flag.Name)
+			} else if !implemented {
+				errors += fmt.Sprintf("\n - type '%s' for flag '%s' is not implemented", flag.Type, flag.Name)
+			}
 		}
 	}
 
@@ -164,6 +167,10 @@ func (f *Flags) validateFlags(flags FlagsDefinition) error {
 // Imports the defs provided by the custom command as json into the flags
 // structure.
 func (f *Flags) LoadFromJson(data string) error {
+	if data == "" {
+		return nil
+	}
+
 	var defs FlagsDefinition
 	var err error
 
@@ -188,7 +195,7 @@ func (f *Flags) AssignToCommand(command *cobra.Command) error {
 	for _, flag := range f.Definition {
 		// Create the flag at the command
 		switch flag.Type {
-		case FT_BOOL:
+		case FT_BOOL, "": // no type defaults to bool
 			command.Flags().BoolP(flag.Name, flag.Shorthand, false, flag.Usage)
 		case FT_INT:
 			command.Flags().IntP(flag.Name, flag.Shorthand, 0, flag.Usage)
