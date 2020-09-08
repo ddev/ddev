@@ -49,6 +49,7 @@ func SetInstrumentationBaseTags() {
 		lang := os.Getenv("LANG")
 
 		nodeps.InstrumentationTags["OS"] = runtime.GOOS
+		nodeps.InstrumentationTags["architecture"] = runtime.GOARCH
 		wslDistro := nodeps.GetWSLDistro()
 		if wslDistro != "" {
 			nodeps.InstrumentationTags["isWSL"] = "true"
