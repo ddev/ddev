@@ -40,13 +40,18 @@ PhpStorm [zero-configuration debugging](https://confluence.jetbrains.com/display
 2. Set a breakpoint.
 3. Visit a page that should stop in the breakpoint you set.
 
+Several things to note when using this recommended option:
+
+1. Make sure you have the most up to date DDEV versions.
+1. Under Run >> Edit Configurations, make sure there are no "Servers" defined. Having existing servers will override PHPstorm's ability to auto-map the incoming request to your file system.
+
 #### PhpStorm "Run/Debug configuration" Debugging
 
 PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/creating-and-editing-run-debug-configurations.html) require slightly more up-front work but can offer more flexibility and may be easier for some people.
 
 1. Under the "Run" menu select "Edit configurations"
 2. Click the "+" in the upper left and choose "PHP Web Application" to create a configuration. Give it a reasonable name.
-3. Create a "server" for the project. (Screenshot below)
+3. Create a "server" for the project. Make sure that "Name" is exactly the same as your "host" (e.g. `my-site.ddev.site`) (Screenshot below)
 4. Add file mappings for the files on the server. Click on the local repo path and add "/var/www/html" as the "Absolute path on the server" and your repository root as the path on the host.
 5. Set an appropriate breakpoint.
 6. Start debugging by clicking the "debug" button, which will launch a page in your browser.
