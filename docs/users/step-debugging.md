@@ -43,7 +43,7 @@ PhpStorm [zero-configuration debugging](https://confluence.jetbrains.com/display
 Several things to note when using this recommended option:
 
 1. Make sure you have the most up to date DDEV versions.
-1. Under Run >> Edit Configurations, make sure there are no "Servers" defined. Having existing servers will override PHPstorm's ability to auto-map the incoming request to your file system.
+2. Under Run >> Edit Configurations, make sure there are no "Servers" defined. Having existing servers will override PHPstorm's ability to auto-map the incoming request to your file system.
 
 #### PhpStorm "Run/Debug configuration" Debugging
 
