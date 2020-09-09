@@ -69,7 +69,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 // a project's settings.php in the event that the file already exists.
 const settingsIncludeStanza = `{{ $config := . }}
 // Automatically generated include for settings managed by ddev.
-$ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsDdev }}';
+$ddev_settings = dirname(__FILE__) . '/settings.ddev.php';
 if (is_readable($ddev_settings) && getenv('IS_DDEV_PROJECT') == 'true') {
   require $ddev_settings;
 }
