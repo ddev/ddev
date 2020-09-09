@@ -73,16 +73,21 @@ If you need to debug command-line PHP processes, especially code that is outside
 
 1. Under Preferences->+Install install the php-debug add-on:
 ![php-debug installation](images/atom_php_debug_install.png)
-2. Add configuration to the Atom config.cson by choosing "Config..." under the "Atom" menu. A "php-debug" stanza must be added, with file mappings that relate to your project. (Example [config.cson snippet](snippets/atom_config_cson_snippet.txt)
+2. Add configuration to the Atom config.cson by choosing "Config..." under the "Atom" menu. A "php-debug" stanza must be added, with file mappings that relate to your project. Additionally, you will need to disable the debugger that comes with the `atom-ide-ui` package. (Example [config.cson snippet](snippets/atom_config_cson_snippet.txt)
 ![Atom cson config](images/atom_cson_config.png)
-3. Open a project/folder and open a PHP file you'd like to debug.
-4. Set a breakpoint. (Right-click->PHP Debug->Toggle breakpoint)
-5. Open the debug view and enable debugging by choosing Packages->PHP-Debug->Toggle Debugging. You should see "Listening on address:port 127.0.0.1:9000".
-6. Visit a page that should trigger your breakpoint.
+3. Restart Atom to ensure new settings are loaded.
+4. Open a project/folder and open a PHP file you'd like to debug.
+5. Set a breakpoint. (Right-click->PHP Debug->Toggle breakpoint)
+6. Open the debug view and enable debugging by choosing Packages->PHP-Debug->Toggle Debugging. You should see "Listening on address:port 127.0.0.1:9000".
+7. Visit a page that should trigger your breakpoint.
 
 An example configuration:
 
 ```
+  "atom-ide-ui":
+    "atom-ide-debugger": {}
+    use:
+      "atom-ide-debugger": "never"
   "php-debug":
     PathMaps: [
       "remotepath;localpath"
