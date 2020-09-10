@@ -86,37 +86,12 @@ proxy_set_header Proxy "";
 {{ $default_cert := trimSuffix ".crt" $default_cert }}
 {{ $default_cert := trimSuffix ".key" $default_cert }}
 server {
-	server_name _; # This is just an invalid value which will never trigger on a real hostname.
-	listen 80;
-	{{ if $enable_ipv6 }}
-	listen [::]:80;
-	{{ end }}
-	access_log /var/log/nginx/access.log vhost;
-	
-    error_page 503 @noupstream;
-    location @noupstream {
-        rewrite ^(.*)$ /503.html break;
-        root /app;
-    }
+	server_name _; # Catch-all for any server_name that is not matched in the config
 
-    location / {
-        return 503;
-    }
+    # Listen on all configured http ports + 80 (HTTPS_EXPOSE)
+    # So that we can redirect any server_name that is invalid
 
-    ## provide a health check endpoint
-    location = /healthcheck {
-        access_log off;
-        return 200;
-    }
-}
-
-{{ if exists (printf "/etc/nginx/certs/%s.crt" $default_cert) }}
-server {
-	server_name _; # This is just an invalid value which will never trigger on a real hostname.
-	listen 443 ssl http2;
-	{{ if $enable_ipv6 }}
-	listen [::]:443 ssl http2;
-	{{ end }}
+	include /tmp/http_ports.conf;
 	access_log /var/log/nginx/access.log vhost;
 
     error_page 503 @noupstream;
@@ -134,12 +109,42 @@ server {
         access_log off;
         return 200;
     }
-
-	ssl_session_tickets off;
-    ssl_certificate /etc/nginx/certs/{{ (printf "%s.crt" $default_cert) }};
-    ssl_certificate_key /etc/nginx/certs/{{ (printf "%s.key" $default_cert) }};
 }
-{{ end }}
+
+ {{ if exists (printf "/etc/nginx/certs/%s.crt" $default_cert) }}
+ server {
+ 	server_name _; # Catch-all for any server_name that is not matched in the config
+
+ 	# Listen on all configured https ports + 443 (HTTPS_EXPOSE)
+ 	# So that we can redirect any server_name that is invalid
+	include /tmp/https_ports.conf;
+
+ 	{{ if $enable_ipv6 }}
+ 	listen [::]:443 ssl http2;
+ 	{{ end }}
+ 	access_log /var/log/nginx/access.log vhost;
+ 
+     error_page 503 @noupstream;
+     location @noupstream {
+         rewrite ^(.*)$ /503.html break;
+         root /app;
+     }
+ 
+     location / {
+         return 503;
+     }
+ 
+     ## provide a health check endpoint
+     location = /healthcheck {
+         access_log off;
+         return 200;
+     }
+ 
+ 	ssl_session_tickets off;
+     ssl_certificate /etc/nginx/certs/{{ (printf "%s.crt" $default_cert) }};
+     ssl_certificate_key /etc/nginx/certs/{{ (printf "%s.key" $default_cert) }};
+ }
+ {{ end }}
 
 {{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
 
@@ -151,7 +156,7 @@ server {
 {{/* upstream {{ $upstream_name }} { */}}
 
 {{ range $container := $containers }}
-    {{/* This replaces the VIRTUAL_PORT var originally provided by jwilder/nginx-proxy. */}}
+    {{/* HTTP_EXPOSE replaces the VIRTUAL_PORT var originally provided by jwilder/nginx-proxy. */}}
     {{/* HTTP_EXPOSE provides comma-separated ports to serve for container. Ports can be defined as hostPort:containerPort */}}
     {{ $ports := coalesce $container.Env.HTTP_EXPOSE "80" }}
     {{ $ports := split $ports "," }}

@@ -8,7 +8,7 @@ ENV DOCKER_HOST unix:///tmp/docker.sock
 
 RUN apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
-        ca-certificates certbot curl less python-certbot-nginx procps telnet vim wget && \
+        ca-certificates certbot curl iputils-ping less python-certbot-nginx procps telnet vim wget && \
     apt-get autoremove -y && \
     apt-get clean -y && \
 	rm -rf /var/lib/apt/lists/*
