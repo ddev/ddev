@@ -3192,7 +3192,7 @@ func TestCustomCerts(t *testing.T) {
 	})
 	stdout = strings.Trim(stdout, "\n")
 	// This should be our regular wildcard cert
-	assert.Contains(stdout, "*.ddev.local\n*.ddev.site")
+	assert.Contains(stdout, "*.ddev.site")
 
 	// Now stop it so we can install new custom cert.
 	err = app.Stop(true, false)
