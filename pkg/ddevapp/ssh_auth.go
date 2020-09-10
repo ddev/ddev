@@ -18,10 +18,18 @@ import (
 // SSHAuthName is the "machine name" of the ddev-ssh-agent docker-compose service
 const SSHAuthName = "ddev-ssh-agent"
 
-// SSHAuthComposeYAMLPath returns the full filepath to the ssh-auth docker-compose yaml file.
+// SSHAuthComposeYAMLPath returns the filepath to the base .ssh-auth-compose yaml file.
 func SSHAuthComposeYAMLPath() string {
 	globalDir := globalconfig.GetGlobalDdevDir()
-	dest := path.Join(globalDir, "ssh-auth-compose.yaml")
+	dest := path.Join(globalDir, ".ssh-auth-compose.yaml")
+	return dest
+}
+
+// FullRenderedSSHAuthComposeYAMLPath returns the filepath to the rendered
+//.ssh-auth-compose-full.yaml file.
+func FullRenderedSSHAuthComposeYAMLPath() string {
+	globalDir := globalconfig.GetGlobalDdevDir()
+	dest := path.Join(globalDir, ".ssh-auth-compose-full.yaml")
 	return dest
 }
 
@@ -92,10 +100,8 @@ func RemoveSSHAgentContainer() error {
 // CreateSSHAuthComposeFile creates the docker-compose file for the ddev-ssh-agent
 func CreateSSHAuthComposeFile() (string, error) {
 
-	sshAuthComposePath := SSHAuthComposeYAMLPath()
-
 	var doc bytes.Buffer
-	f, ferr := os.Create(sshAuthComposePath)
+	f, ferr := os.Create(SSHAuthComposeYAMLPath())
 	if ferr != nil {
 		return "", ferr
 	}
@@ -129,7 +135,26 @@ func CreateSSHAuthComposeFile() (string, error) {
 	util.CheckErr(err)
 	_, err = f.WriteString(doc.String())
 	util.CheckErr(err)
-	return sshAuthComposePath, nil
+
+	fullHandle, err := os.Create(FullRenderedSSHAuthComposeYAMLPath())
+	if err != nil {
+		return "", err
+	}
+
+	userFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "ssh-auth-compose.*.yaml"))
+	if err != nil {
+		return "", err
+	}
+	files := append([]string{SSHAuthComposeYAMLPath()}, userFiles...)
+	fullContents, _, err := dockerutil.ComposeCmd(files, "config")
+	if err != nil {
+		return "", err
+	}
+	_, err = fullHandle.WriteString(fullContents)
+	if err != nil {
+		return "", err
+	}
+	return FullRenderedSSHAuthComposeYAMLPath(), nil
 }
 
 // findDdevSSHAuth usees FindContainerByLabels to get our sshAuth container and
