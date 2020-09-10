@@ -67,7 +67,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 
 // settingsIncludeStanza defines the template that will be appended to
 // a project's settings.php in the event that the file already exists.
-const settingsIncludeStanza = `{{ $config := . }}
+const settingsIncludeStanza = `
 // Automatically generated include for settings managed by ddev.
 $ddev_settings = dirname(__FILE__) . '/settings.ddev.php';
 if (is_readable($ddev_settings) && getenv('IS_DDEV_PROJECT') == 'true') {

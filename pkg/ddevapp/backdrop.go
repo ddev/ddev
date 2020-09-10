@@ -129,7 +129,7 @@ func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) 
 			return nil
 		}
 	}
-	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(BackdropDdevSettingsTemplate)
+	tmpl, err := template.New("settings.ddev.php").Funcs(getTemplateFuncMap()).Parse(BackdropDdevSettingsTemplate)
 	if err != nil {
 		return err
 	}
