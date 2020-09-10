@@ -31,14 +31,16 @@ func RouterComposeYAMLPath() string {
 
 // StopRouterIfNoContainers stops the router if there are no ddev containers running.
 func StopRouterIfNoContainers() error {
-
+	dest, err := generateRouterCompose()
+	if err != nil {
+		return err
+	}
 	containersRunning, err := ddevContainersRunning()
 	if err != nil {
 		return err
 	}
 
 	if !containersRunning {
-		dest := RouterComposeYAMLPath()
 		_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "down")
 		return err
 	}
@@ -47,42 +49,10 @@ func StopRouterIfNoContainers() error {
 
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
-	newExposedPorts := determineRouterPorts()
-
-	routerComposePath := RouterComposeYAMLPath()
-
-	var doc bytes.Buffer
-	f, ferr := os.Create(routerComposePath)
-	if ferr != nil {
-		return ferr
-	}
-	defer util.CheckClose(f)
-
-	templ := template.New("routerTemplate")
-	templ, err := templ.Parse(DdevRouterTemplate)
+	routerComposePath, err := generateRouterCompose()
 	if err != nil {
 		return err
 	}
-
-	dockerIP, _ := dockerutil.GetDockerIP()
-
-	templateVars := map[string]interface{}{
-		"router_image":               version.RouterImage,
-		"router_tag":                 version.RouterTag,
-		"ports":                      newExposedPorts,
-		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
-		"compose_version":            version.DockerComposeFileFormatVersion,
-		"dockerIP":                   dockerIP,
-		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
-		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
-		"AutoRestartContainers":      globalconfig.DdevGlobalConfig.AutoRestartContainers,
-	}
-
-	err = templ.Execute(&doc, templateVars)
-	util.CheckErr(err)
-	_, err = f.WriteString(doc.String())
-	util.CheckErr(err)
-
 	err = CheckRouterPorts()
 	if err != nil {
 		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen", err)
@@ -102,6 +72,49 @@ func StartDdevRouter() error {
 	}
 
 	return nil
+}
+
+// generateRouterCompose() generates the ~/.ddev/router_compose.yaml
+func generateRouterCompose() (string, error) {
+	exposedPorts := determineRouterPorts()
+
+	routerComposePath := RouterComposeYAMLPath()
+	var doc bytes.Buffer
+	f, ferr := os.Create(routerComposePath)
+	if ferr != nil {
+		return "", ferr
+	}
+	defer util.CheckClose(f)
+
+	templ := template.New("routerTemplate")
+	templ, err := templ.Parse(DdevRouterTemplate)
+	if err != nil {
+		return "", err
+	}
+
+	dockerIP, _ := dockerutil.GetDockerIP()
+
+	templateVars := map[string]interface{}{
+		"router_image":               version.RouterImage,
+		"router_tag":                 version.RouterTag,
+		"ports":                      exposedPorts,
+		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
+		"compose_version":            version.DockerComposeFileFormatVersion,
+		"dockerIP":                   dockerIP,
+		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
+		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
+		"AutoRestartContainers":      globalconfig.DdevGlobalConfig.AutoRestartContainers,
+	}
+
+	err = templ.Execute(&doc, templateVars)
+	if err != nil {
+		return "", err
+	}
+	_, err = f.WriteString(doc.String())
+	if err != nil {
+		return "", err
+	}
+	return routerComposePath, nil
 }
 
 // FindDdevRouter usees FindContainerByLabels to get our router container and
@@ -158,7 +171,7 @@ func GetRouterStatus() (string, string) {
 // determineRouterPorts returns a list of port mappings retrieved from running site
 // containers defining VIRTUAL_PORT env var
 func determineRouterPorts() []string {
-	var routerPorts []string
+	routerPorts := []string{"80"}
 	labels := map[string]string{
 		"com.ddev.platform": "ddev",
 	}
