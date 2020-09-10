@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/gobuffalo/packr/v2"
 
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -64,54 +65,15 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 	}
 }
 
-// drupal8SettingsTemplate defines the template that will become a Drupal 8 app's settings.php
-// in the event that one does not already exist.
-const drupal8SettingsTemplate = `<?php
-{{ $config := . }}
-// {{ $config.Signature }}: Automatically generated Drupal settings file.
-if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}') && getenv('IS_DDEV_PROJECT') == 'true') {
-  include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}';
-}
-`
-
-// drupal8SettingsAppendTemplate defines the template that will be appended to
-// a Drupal 8 app's settings.php in the event that one exists.
-const drupal8SettingsAppendTemplate = `{{ $config := . }}
+// settingsIncludeStanza defines the template that will be appended to
+// a project's settings.php in the event that the file already exists.
+const settingsIncludeStanza = `
 // Automatically generated include for settings managed by ddev.
-if (file_exists($app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}') && getenv('IS_DDEV_PROJECT') == 'true') {
-  include $app_root . '/' . $site_path . '/{{ $config.SiteSettingsDdev }}';
-}
-`
-
-// drupal7SettingsTemplate defines the template that will become a Drupal 7
-// app's settings.php in the event that one does not already exist.
-const drupal7SettingsTemplate = `<?php
-{{ $config := . }}
-// {{ $config.Signature }}: Automatically generated Drupal settings file.
-$ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsDdev }}';
+$ddev_settings = dirname(__FILE__) . '/settings.ddev.php';
 if (is_readable($ddev_settings) && getenv('IS_DDEV_PROJECT') == 'true') {
   require $ddev_settings;
 }
 `
-
-// drupal7SettingsAppendTemplate defines the template that will be appended to
-// a Drupal 7 app's settings.php in the event that one exists.
-const drupal7SettingsAppendTemplate = `{{ $config := . }}
-// Automatically generated include for settings managed by ddev.
-$ddev_settings = dirname(__FILE__) . '/{{ $config.SiteSettingsDdev }}';
-if (is_readable($ddev_settings) && getenv('IS_DDEV_PROJECT') == 'true') {
-  require $ddev_settings;
-}
-`
-
-// drupal6SettingsTemplate defines the template that will become a Drupal 6
-// app's settings.php in the event that one does not already exist.
-const drupal6SettingsTemplate = drupal7SettingsTemplate
-
-// drupal7SettingsAppendTemplate defines the template that will be appended to
-// a Drupal 7 app's settings.php in the event that one exists.
-const drupal6SettingsAppendTemplate = drupal7SettingsAppendTemplate
-
 const (
 	drupal8DdevSettingsTemplate = `<?php
 {{ $config := . }}
@@ -226,7 +188,7 @@ $db_url = "{{ $config.DatabaseDriver }}://{{ $config.DatabaseUsername }}:{{ $con
 )
 
 // manageDrupalSettingsFile will direct inspecting and writing of settings.php.
-func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, settingsTemplate, appendTemplate string) error {
+func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, appType string) error {
 	// We'll be writing/appending to the settings files and parent directory, make sure we have permissions to do so
 	if err := drupalEnsureWritePerms(app); err != nil {
 		return err
@@ -235,7 +197,7 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, settin
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		output.UserOut.Printf("No %s file exists, creating one", drupalConfig.SiteSettings)
 
-		if err := writeDrupalSettingsFile(drupalConfig, app.SiteSettingsPath, settingsTemplate); err != nil {
+		if err := writeDrupalSettingsFile(app.SiteSettingsPath, appType); err != nil {
 			return fmt.Errorf("failed to write: %v", err)
 		}
 	}
@@ -250,7 +212,7 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, settin
 	} else {
 		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 
-		if err := appendIncludeToDrupalSettingsFile(drupalConfig, app.SiteSettingsPath, appendTemplate); err != nil {
+		if err := appendIncludeToDrupalSettingsFile(app.SiteSettingsPath, app.Type); err != nil {
 			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsDdev, drupalConfig.SiteSettings, err)
 		}
 	}
@@ -258,10 +220,10 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, settin
 	return nil
 }
 
-// writeDrupalSettingsFile creates the app's settings.php or equivalent,
-// which does nothing more than import the ddev-managed settings.ddev.php.
-func writeDrupalSettingsFile(drupalConfig *DrupalSettings, filePath string, versionTemplate string) error {
-	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(versionTemplate)
+// writeDrupalSettingsFile creates the project's settings.php if it doesn't exist
+func writeDrupalSettingsFile(filePath string, appType string) error {
+	box := packr.New("drupal_settings_packr_assets", "./drupal_settings_packr_assets")
+	content, err := box.Find(appType + "/settings.php")
 	if err != nil {
 		return err
 	}
@@ -277,13 +239,8 @@ func writeDrupalSettingsFile(drupalConfig *DrupalSettings, filePath string, vers
 	}
 
 	// Create file
-	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
+	err = ioutil.WriteFile(filePath, content, 0755)
 	if err != nil {
-		return err
-	}
-	defer util.CheckClose(file)
-
-	if err := tmpl.Execute(file, drupalConfig); err != nil {
 		return err
 	}
 
@@ -298,7 +255,7 @@ func createDrupal7SettingsFile(app *DdevApp) (string, error) {
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings(app)
 
-	if err := manageDrupalSettingsFile(app, drupalConfig, drupal7SettingsTemplate, drupal7SettingsAppendTemplate); err != nil {
+	if err := manageDrupalSettingsFile(app, drupalConfig, app.Type); err != nil {
 		return "", err
 	}
 
@@ -317,7 +274,7 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 	// we may want to do some kind of customization in the future.
 	drupalConfig := NewDrupalSettings(app)
 
-	if err := manageDrupalSettingsFile(app, drupalConfig, drupal8SettingsTemplate, drupal8SettingsAppendTemplate); err != nil {
+	if err := manageDrupalSettingsFile(app, drupalConfig, app.Type); err != nil {
 		return "", err
 	}
 
@@ -343,7 +300,7 @@ func createDrupal6SettingsFile(app *DdevApp) (string, error) {
 	// mysqli is required in latest D6LTS and works fine in ddev in old D6
 	drupalConfig.DatabaseDriver = "mysqli"
 
-	if err := manageDrupalSettingsFile(app, drupalConfig, drupal6SettingsTemplate, drupal6SettingsAppendTemplate); err != nil {
+	if err := manageDrupalSettingsFile(app, drupalConfig, app.Type); err != nil {
 		return "", err
 	}
 
@@ -751,16 +708,16 @@ func settingsHasInclude(drupalConfig *DrupalSettings, siteSettingsPath string) (
 
 // appendIncludeToDrupalSettingsFile modifies the settings.php file to include the settings.ddev.php
 // file, which contains ddev-specific configuration.
-func appendIncludeToDrupalSettingsFile(drupalConfig *DrupalSettings, siteSettingsPath string, appendTemplate string) error {
+func appendIncludeToDrupalSettingsFile(siteSettingsPath string, appType string) error {
 	// Check if file is empty
 	contents, err := ioutil.ReadFile(siteSettingsPath)
 	if err != nil {
 		return err
 	}
 
-	// If the file is empty, write the complete settings template and return
+	// If the file is empty, write the complete settings file and return
 	if len(contents) == 0 {
-		return writeDrupalSettingsFile(drupalConfig, siteSettingsPath, appendTemplate)
+		return writeDrupalSettingsFile(siteSettingsPath, appType)
 	}
 
 	// The file is not empty, open it for appending
@@ -770,16 +727,10 @@ func appendIncludeToDrupalSettingsFile(drupalConfig *DrupalSettings, siteSetting
 	}
 	defer util.CheckClose(file)
 
-	tmpl, err := template.New("settings").Funcs(getTemplateFuncMap()).Parse(appendTemplate)
+	_, err = file.Write([]byte(settingsIncludeStanza))
 	if err != nil {
 		return err
 	}
-
-	// Write the template to the file
-	if err := tmpl.Execute(file, drupalConfig); err != nil {
-		return err
-	}
-
 	return nil
 }
 

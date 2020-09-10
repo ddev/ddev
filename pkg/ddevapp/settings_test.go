@@ -202,10 +202,8 @@ func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 		_ = os.Remove(expectedSettingsDdevLocation)
 
 		// Create a settings.php that does not include settings.ddev.php
-		originalContents := "not empty"
-		settingsFile, err := os.Create(expectedSettingsLocation)
-		assert.NoError(err)
-		_, err = settingsFile.Write([]byte(originalContents))
+		originalContents := "// this file is not empty\n"
+		err = ioutil.WriteFile(expectedSettingsLocation, []byte(originalContents), 0644)
 		assert.NoError(err)
 
 		// Invoke the settings file creation process
@@ -222,7 +220,7 @@ func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 		settingsDdev := filepath.Base(relativeSettingsDdevLocation)
 		existingSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, settingsDdev)
 		assert.NoError(err)
-		assert.True(existingSettingsIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedSettingsLocation)
+		assert.True(existingSettingsIncludesSettingsDdev, "Failed to find %s in %s, apptype=%s", settingsDdev, expectedSettingsLocation, appType)
 
 		// Ensure that settings.php includes original contents
 		modifiedSettingsIncludesOriginalContents, err := fileutil.FgrepStringInFile(expectedSettingsLocation, originalContents)
