@@ -1,4 +1,6 @@
 #ddev-generated
+/.router-compose.yaml
+/.router-composer-full.yaml
 /.gitignore
 /**/*.example
 /**/README.*

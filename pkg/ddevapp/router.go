@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -25,7 +26,14 @@ const RouterProjectName = "ddev-router"
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
 	globalDir := globalconfig.GetGlobalDdevDir()
-	dest := path.Join(globalDir, "router-compose.yaml")
+	dest := path.Join(globalDir, ".router-compose.yaml")
+	return dest
+}
+
+// FullRenderedRouterComposeYAMLPath returns the path of the full rendered .router-compose-full.yaml
+func FullRenderedRouterComposeYAMLPath() string {
+	globalDir := globalconfig.GetGlobalDdevDir()
+	dest := path.Join(globalDir, ".router-compose-full.yaml")
 	return dest
 }
 
@@ -74,7 +82,7 @@ func StartDdevRouter() error {
 	return nil
 }
 
-// generateRouterCompose() generates the ~/.ddev/router_compose.yaml
+// generateRouterCompose() generates the ~/.ddev/.router-compose.yaml and ~/.ddev/.router-compose-full.yaml
 func generateRouterCompose() (string, error) {
 	exposedPorts := determineRouterPorts()
 
@@ -114,6 +122,26 @@ func generateRouterCompose() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	fullHandle, err := os.Create(FullRenderedRouterComposeYAMLPath())
+	if err != nil {
+		return "", err
+	}
+
+	userFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "router-compose.*.yaml"))
+	if err != nil {
+		return "", err
+	}
+	files := append([]string{RouterComposeYAMLPath()}, userFiles...)
+	fullContents, _, err := dockerutil.ComposeCmd(files, "config")
+	if err != nil {
+		return "", err
+	}
+	_, err = fullHandle.WriteString(fullContents)
+	if err != nil {
+		return "", err
+	}
+
 	return routerComposePath, nil
 }
 
