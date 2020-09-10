@@ -116,7 +116,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					example = val
 				}
 				if val, ok := directives["Flags"]; ok {
-					if err = flags.LoadFromJson(val); err != nil {
+					if err = flags.LoadFromJSON(val); err != nil {
 						util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, onHostFullPath)
 					}
 				}
