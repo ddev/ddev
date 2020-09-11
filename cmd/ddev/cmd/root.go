@@ -191,7 +191,9 @@ func checkDdevVersionAndOptInInstrumentation() error {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/stable/users/cli-usage/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
-			client := analytics.New(version.SegmentKey)
+			client, _ := analytics.NewWithConfig(version.SegmentKey, analytics.Config{
+				Logger: &ddevapp.SegmentNoopLogger{},
+			})
 			defer func() {
 				_ = client.Close()
 			}()
