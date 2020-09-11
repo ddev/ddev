@@ -121,7 +121,7 @@ func (f *Flags) Init(commandName, script string) {
 	f.Script = script
 }
 
-func validateFlag(flag Flag) error {
+func validateFlag(flag *Flag) error {
 	var errors string
 
 	// Check shorthand is one letter only
@@ -148,7 +148,7 @@ func validateFlag(flag Flag) error {
 	return fmt.Errorf("%s", errors)
 }
 
-func (f *Flags) validateFlags(flags FlagsDefinition) error {
+func (f *Flags) validateFlags(flags *FlagsDefinition) error {
 	var errors string
 
 	// Temporay vars to precheck for duplicated flags. It's still possible
@@ -157,7 +157,9 @@ func (f *Flags) validateFlags(flags FlagsDefinition) error {
 	long := map[string]bool{}
 	short := map[string]string{}
 
-	for _, flag := range flags {
+	for i := range *flags {
+		flag := &(*flags)[i]
+
 		// Check flag does not already exist
 		if _, found := long[flag.Name]; found {
 			errors += fmt.Sprintf("\n - flag '%s' already defined", flag.Name)
@@ -170,6 +172,11 @@ func (f *Flags) validateFlags(flags FlagsDefinition) error {
 			errors += fmt.Sprintf("\n - shorthand '%s' is already defined flag '%s'", flag.Shorthand, flagOfShorthand)
 		} else {
 			short[flag.Shorthand] = flag.Name
+		}
+
+		// Check type and set default if empty
+		if flag.Type == "" {
+			flag.Type = FtBool
 		}
 
 		// Additional validations of the flag fields
@@ -190,7 +197,7 @@ func (f *Flags) LoadFromJSON(data string) error {
 		return nil
 	}
 
-	var defs FlagsDefinition
+	var defs *FlagsDefinition
 	var err error
 
 	// Import the JSON to the FlagsDefinition structure and return in case of
@@ -205,7 +212,7 @@ func (f *Flags) LoadFromJSON(data string) error {
 	}
 
 	// Assign the data to the field
-	f.Definition = defs
+	f.Definition = *defs
 	return nil
 }
 
@@ -214,7 +221,7 @@ func (f *Flags) AssignToCommand(command *cobra.Command) error {
 	for _, flag := range f.Definition {
 		// Create the flag at the command
 		switch flag.Type {
-		case FtBool, "": // empty type defaults to bool
+		case FtBool /*, ""*/ : // empty type defaults to bool
 			command.Flags().BoolP(flag.Name, flag.Shorthand, false, flag.Usage)
 		case FtInt:
 			command.Flags().IntP(flag.Name, flag.Shorthand, 0, flag.Usage)
