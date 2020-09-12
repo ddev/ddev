@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -46,7 +47,7 @@ func TestUnitCmdFlagsLoadFromJSON(t *testing.T) {
 	assert.EqualValues("test", subject.Definition[0].Name)
 	assert.EqualValues("", subject.Definition[0].Shorthand)
 	assert.EqualValues("Usage of test", subject.Definition[0].Usage)
-	assert.EqualValues("bool", subject.Definition[0].Type)
+	assert.EqualValues(FtBool, subject.Definition[0].Type)
 	assert.EqualValues("false", subject.Definition[0].DefValue)
 	assert.EqualValues("", subject.Definition[0].NoOptDefVal)
 	assert.Empty(subject.Definition[0].Annotations)
@@ -56,14 +57,14 @@ func TestUnitCmdFlagsLoadFromJSON(t *testing.T) {
 	assert.EqualValues("test-1", subject.Definition[0].Name)
 	assert.EqualValues("t", subject.Definition[0].Shorthand)
 	assert.EqualValues("Usage of test 1", subject.Definition[0].Usage)
-	assert.EqualValues("string", subject.Definition[0].Type)
+	assert.EqualValues(FtString, subject.Definition[0].Type)
 	assert.EqualValues("true", subject.Definition[0].DefValue)
 	assert.EqualValues("true", subject.Definition[0].NoOptDefVal)
 	assert.EqualValues(map[string][]string{"test-1": {"test-1-1", "test-1-2"}}, subject.Definition[0].Annotations)
 	assert.EqualValues("test-2", subject.Definition[1].Name)
 	assert.EqualValues("", subject.Definition[1].Shorthand)
 	assert.EqualValues("Usage of test 2", subject.Definition[1].Usage)
-	assert.EqualValues("bool", subject.Definition[1].Type)
+	assert.EqualValues(FtBool, subject.Definition[1].Type)
 	assert.EqualValues("true", subject.Definition[1].DefValue)
 	assert.EqualValues("true", subject.Definition[1].NoOptDefVal)
 	assert.EqualValues(map[string][]string{"test-2": {"test-2-1", "test-2-2"}}, subject.Definition[1].Annotations)
@@ -108,6 +109,7 @@ func TestUnitCmdFlagsAssignToCommand(t *testing.T) {
 	subject := getSubject()
 
 	var c cobra.Command
+	var f *pflag.Flag
 
 	// No flags
 	c = getCommand()
@@ -116,30 +118,56 @@ func TestUnitCmdFlagsAssignToCommand(t *testing.T) {
 	// Minimal
 	assert.NoError(subject.LoadFromJSON(`[{"Name":"test","Usage":"Usage of test"}]`))
 	assert.NoError(subject.AssignToCommand(&c))
-	assert.EqualValues("test", subject.Definition[0].Name)
-	assert.EqualValues("", subject.Definition[0].Shorthand)
-	assert.EqualValues("Usage of test", subject.Definition[0].Usage)
-	assert.EqualValues("bool", subject.Definition[0].Type)
-	assert.EqualValues("false", subject.Definition[0].DefValue)
-	assert.EqualValues("", subject.Definition[0].NoOptDefVal)
-	assert.Empty(subject.Definition[0].Annotations)
+
+	f = c.Flags().Lookup("test")
+	assert.NotEmpty(f)
+	assert.EqualValues("test", f.Name)
+	assert.EqualValues("", f.Shorthand)
+	assert.EqualValues("Usage of test", f.Usage)
+	assert.EqualValues(FtBool, f.Value.Type())
+	assert.EqualValues("false", f.DefValue)
+	assert.EqualValues("", f.NoOptDefVal)
+	assert.Empty(f.Annotations)
 
 	// Full
 	c = getCommand()
-	assert.NoError(subject.LoadFromJSON(`[{"Name":"test-1","Shorthand":"t","Usage":"Usage of test 1","Type":"string","DefValue":"true","NoOptDefVal":"true","Annotations":{"test-1":["test-1-1","test-1-2"]}},{"Name":"test-2","Usage":"Usage of test 2","Type":"bool","DefValue":"true","NoOptDefVal":"true","Annotations":{"test-2":["test-2-1","test-2-2"]}}]`))
+	assert.NoError(subject.LoadFromJSON(`[{"Name":"test-1","Shorthand":"t","Usage":"Usage of test 1","Type":"bool","DefValue":"true","NoOptDefVal":"true","Annotations":{"test-1":["test-1-1","test-1-2"]}},{"Name":"test-2","Usage":"Usage of test 2","Type":"string","DefValue":"DefValue","NoOptDefVal":"NoOptDefVal"},{"Name":"test-3","Usage":"Usage of test 3","Type":"int","DefValue":"1","NoOptDefVal":"-1"},{"Name":"test-4","Usage":"Usage of test 4","Type":"uint","DefValue":"1","NoOptDefVal":"2"}]`))
 	assert.NoError(subject.AssignToCommand(&c))
-	assert.EqualValues("test-1", subject.Definition[0].Name)
-	assert.EqualValues("t", subject.Definition[0].Shorthand)
-	assert.EqualValues("Usage of test 1", subject.Definition[0].Usage)
-	assert.EqualValues("string", subject.Definition[0].Type)
-	assert.EqualValues("true", subject.Definition[0].DefValue)
-	assert.EqualValues("true", subject.Definition[0].NoOptDefVal)
-	assert.EqualValues(map[string][]string{"test-1": {"test-1-1", "test-1-2"}}, subject.Definition[0].Annotations)
-	assert.EqualValues("test-2", subject.Definition[1].Name)
-	assert.EqualValues("", subject.Definition[1].Shorthand)
-	assert.EqualValues("Usage of test 2", subject.Definition[1].Usage)
-	assert.EqualValues("bool", subject.Definition[1].Type)
-	assert.EqualValues("true", subject.Definition[1].DefValue)
-	assert.EqualValues("true", subject.Definition[1].NoOptDefVal)
-	assert.EqualValues(map[string][]string{"test-2": {"test-2-1", "test-2-2"}}, subject.Definition[1].Annotations)
+
+	f = c.Flags().Lookup("test-1")
+	assert.NotEmpty(f)
+	assert.EqualValues("test-1", f.Name)
+	assert.EqualValues("t", f.Shorthand)
+	assert.EqualValues("Usage of test 1", f.Usage)
+	assert.EqualValues(FtBool, f.Value.Type())
+	assert.EqualValues("true", f.DefValue)
+	assert.EqualValues("true", f.NoOptDefVal)
+	assert.EqualValues(map[string][]string{"test-1": {"test-1-1", "test-1-2"}}, f.Annotations)
+
+	f = c.Flags().Lookup("test-2")
+	assert.EqualValues("test-2", f.Name)
+	assert.EqualValues("", f.Shorthand)
+	assert.EqualValues("Usage of test 2", f.Usage)
+	assert.EqualValues(FtString, f.Value.Type())
+	assert.EqualValues("DefValue", f.DefValue)
+	assert.EqualValues("NoOptDefVal", f.NoOptDefVal)
+	assert.Empty(f.Annotations)
+
+	f = c.Flags().Lookup("test-3")
+	assert.EqualValues("test-3", f.Name)
+	assert.EqualValues("", f.Shorthand)
+	assert.EqualValues("Usage of test 3", f.Usage)
+	assert.EqualValues(FtInt, f.Value.Type())
+	assert.EqualValues("1", f.DefValue)
+	assert.EqualValues("-1", f.NoOptDefVal)
+	assert.Empty(f.Annotations)
+
+	f = c.Flags().Lookup("test-4")
+	assert.EqualValues("test-4", f.Name)
+	assert.EqualValues("", f.Shorthand)
+	assert.EqualValues("Usage of test 4", f.Usage)
+	assert.EqualValues(FtUint, f.Value.Type())
+	assert.EqualValues("1", f.DefValue)
+	assert.EqualValues("2", f.NoOptDefVal)
+	assert.Empty(f.Annotations)
 }

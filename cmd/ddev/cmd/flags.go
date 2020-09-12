@@ -137,14 +137,34 @@ func extractError(err error) string {
 	return ""
 }
 
-func (v *nameValue) validate() error {
+func (v *nameValue) validate(longOptions *map[nameValue]bool) error {
+	// Check flag does not already exist
+	if _, found := (*longOptions)[*v]; found {
+		return formatErrorItem(2, "-", "flag '%s' already defined", *v)
+	}
+
+	(*longOptions)[*v] = true
+
 	return nil
 }
 
-func (v *shorthandValue) validate() error {
+func (v *shorthandValue) validate(shortOptions *map[shorthandValue]nameValue, name nameValue) error {
+	var errors string = ""
+
+	// Check shorthand does not already exist
+	if flagOfShorthand, found := (*shortOptions)[*v]; found {
+		errors += extractError(formatErrorItem(2, "-", "shorthand '%s' is already defined for flag '%s'", *v, flagOfShorthand))
+	} else if *v != "" {
+		(*shortOptions)[*v] = name
+	}
+
 	// Check shorthand is one letter only
 	if len(*v) > 1 {
-		return formatErrorItem(2, "-", "shorthand '%s' is more than one ASCII character", *v)
+		errors += extractError(formatErrorItem(2, "-", "shorthand '%s' is more than one ASCII character", *v))
+	}
+
+	if errors != "" {
+		return fmt.Errorf("%s", errors)
 	}
 
 	return nil
@@ -201,12 +221,12 @@ func (v *annotationsValue) validate() error {
 	return nil
 }
 
-func (f *Flag) validateFlag() error {
+func (f *Flag) validateFlag(longOptions *map[nameValue]bool, shortOptions *map[shorthandValue]nameValue) error {
 	errors := ""
 
 	// Chech all fields
-	errors += extractError(f.Name.validate())
-	errors += extractError(f.Shorthand.validate())
+	errors += extractError(f.Name.validate(longOptions))
+	errors += extractError(f.Shorthand.validate(shortOptions, f.Name))
 	errors += extractError(f.Usage.validate())
 	errors += extractError(f.Type.validate())
 	errors += extractError(f.DefValue.validate(f.Type))
@@ -232,29 +252,14 @@ func (f *Flags) validateFlags(flags *FlagsDefinition) error {
 	// Temporay vars to precheck for duplicated flags. It's still possible
 	// other commands will introduce the same flags which is tested
 	// afterwards by cobra.
-	long := map[nameValue]bool{}
-	short := map[shorthandValue]nameValue{}
+	long := map[nameValue]bool{"help": true}
+	short := map[shorthandValue]nameValue{"h": "help"}
 
 	for i := range *flags {
 		flag := &(*flags)[i]
-		flagErrors := ""
-
-		// Check flag does not already exist
-		if _, found := long[flag.Name]; found {
-			flagErrors += extractError(formatErrorItem(2, "-", "flag '%s' already defined", flag.Name))
-		} else {
-			long[flag.Name] = true
-		}
-
-		// Check shorthand does not already exist
-		if flagOfShorthand, found := short[flag.Shorthand]; found {
-			flagErrors += extractError(formatErrorItem(2, "-", "shorthand '%s' is already defined for flag '%s'", flag.Shorthand, flagOfShorthand))
-		} else {
-			short[flag.Shorthand] = flag.Name
-		}
 
 		// Additional validations of the flag fields
-		flagErrors += extractError(flag.validateFlag())
+		flagErrors := extractError(flag.validateFlag(&long, &short))
 
 		if flagErrors != "" {
 			errors += extractError(formatErrorItem(1, "*", "for flag '%s':%s", flag.Name, flagErrors))
