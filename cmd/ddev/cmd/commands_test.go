@@ -112,6 +112,20 @@ func TestCustomCommands(t *testing.T) {
 		assert.Contains(out, fmt.Sprintf("%s was executed with args=hostarg1 hostarg2 --hostflag1 on host %s", c, expectedHost))
 	}
 
+	// Test flags are imported from comments
+	c := "testhostcmdflags"
+	args := []string{c, "--test"}
+	out, err = exec.RunCommand(DdevBin, args)
+	expectedHost, _ := os.Hostname()
+	assert.NoError(err, "Failed to run ddev %s %v", c, args)
+	assert.Contains(out, fmt.Sprintf("%s was executed with args=--test on host %s", c, expectedHost))
+
+	args = []string{c, "-h"}
+	out, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err, "Failed to run ddev %s %v", c, args)
+	assert.Contains(out, "  -t, --test   Usage of test")
+
+	// Tests with app type PHP
 	app.Type = nodeps.AppTypePHP
 	err = app.WriteConfig()
 	assert.NoError(err)
@@ -248,9 +262,4 @@ func TestMysqlCommand(t *testing.T) {
 column_stats
 columns_priv`)
 
-}
-
-//
-func TestFlagsAreLoadedFromComment(t *testing.T) {
-	//assert := asrt.New(t)
 }
