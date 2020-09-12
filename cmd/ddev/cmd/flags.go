@@ -3,21 +3,31 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
+
+type nameValue string
+type shorthandValue string
+type usageValue string
+type typeValue string
+type defValueValue string
+type noOptDefValValue string
+type annotationsValue map[string][]string
 
 // Flag is the structure for the flags, the json from the annotation is
 // unmarshaled into this structure. For more information see also
 // github.com/spf13/pflag/flag
 type Flag struct {
-	Name        string              // name as it appears on command line
-	Shorthand   string              // one-letter abbreviated flag
-	Usage       string              // help message
-	Type        string              // type, defaults to bool
-	DefValue    string              // default value (as text); for usage message
-	NoOptDefVal string              // default value (as text); if the flag is on the command line without any options
-	Annotations map[string][]string // used by cobra.Command bash autocomple code
+	Name        nameValue        // name as it appears on command line
+	Shorthand   shorthandValue   // one-letter abbreviated flag
+	Usage       usageValue       // help message
+	Type        typeValue        // type, defaults to bool
+	DefValue    defValueValue    // default value (as text); for usage message
+	NoOptDefVal noOptDefValValue // default value (as text); if the flag is on the command line without any options
+	Annotations annotationsValue // used by cobra.Command bash autocomple code
 }
 
 // FlagsDefinition is an array of Flag holding all defined flags of a command.
@@ -26,6 +36,7 @@ type FlagsDefinition []Flag
 // Defines the constants for the valid types which always should used in the
 // source code.
 const (
+	ftNotImplemented = "notimplemented" // used for testing only
 	FtBool           = "bool"
 	FtBoolSlice      = "boolSlice"
 	FtBytesHex       = "bytesHex"
@@ -61,7 +72,6 @@ const (
 	FtUint16         = "uint16"
 	FtUint32         = "uint32"
 	FtUint64         = "uint64"
-	FtNotImplemented = "notimplemented" // is used for testing only
 )
 
 // ValidTypes defines the valid types, a value of true indicates it's
@@ -69,7 +79,8 @@ const (
 // To implement a new type add the required line to the switch statement in
 // AssignToCommand and set it here to true, that's all. If a new type is
 // added which is not defined here just add a new constant above and here.
-var ValidTypes = map[string]bool{
+var ValidTypes = map[typeValue]bool{
+	ftNotImplemented: false, // used for testing only
 	FtBool:           true,
 	FtBoolSlice:      false,
 	FtBytesHex:       false,
@@ -105,7 +116,6 @@ var ValidTypes = map[string]bool{
 	FtUint16:         false,
 	FtUint32:         false,
 	FtUint64:         false,
-	FtNotImplemented: false,
 }
 
 // Flags is the main type used to access flags and methods.
@@ -115,37 +125,105 @@ type Flags struct {
 	Definition  FlagsDefinition
 }
 
+func formatErrorItem(level int, prefix string, format string, a ...interface{}) error {
+	return fmt.Errorf("%s %s %s", strings.Repeat(" ", (level-1)*2), prefix, fmt.Sprintf(format, a...))
+}
+
+func extractError(err error) string {
+	if err != nil {
+		return "\n" + strings.Trim(err.Error(), "\n")
+	}
+
+	return ""
+}
+
+func (v *nameValue) validate() error {
+	return nil
+}
+
+func (v *shorthandValue) validate() error {
+	// Check shorthand is one letter only
+	if len(*v) > 1 {
+		return formatErrorItem(2, "-", "shorthand '%s' is more than one ASCII character", *v)
+	}
+
+	return nil
+}
+
+func (v *usageValue) validate() error {
+	// Check usage is defined
+	if *v == "" {
+		return formatErrorItem(2, "-", "no usage defined")
+	}
+
+	return nil
+}
+
+func (v *typeValue) validate() error {
+	// Check type and set default if empty
+	if *v == "" {
+		*v = FtBool
+	}
+
+	// Check type is valid
+	implemented, found := ValidTypes[*v]
+
+	if !found {
+		return formatErrorItem(2, "-", "type '%s' is not known", *v)
+	} else if !implemented {
+		return formatErrorItem(2, "-", "type '%s' is not implemented", *v)
+	}
+
+	return nil
+}
+
+func (v *defValueValue) validate(typ typeValue) error {
+	if *v != "" {
+		return nil
+	}
+
+	// Init the DefValue
+	switch typ {
+	case FtBool:
+		*v = defValueValue(strconv.FormatBool(false))
+	case FtCount, FtDuration, FtFloat32, FtFloat64, FtInt, FtInt8, FtInt16, FtInt32, FtUint, FtUint8, FtUint16, FtUint32:
+		*v = defValueValue(strconv.FormatInt(0, 10))
+	}
+
+	return nil
+}
+
+func (v *noOptDefValValue) validate() error {
+	return nil
+}
+
+func (v *annotationsValue) validate() error {
+	return nil
+}
+
+func (f *Flag) validateFlag() error {
+	errors := ""
+
+	// Chech all fields
+	errors += extractError(f.Name.validate())
+	errors += extractError(f.Shorthand.validate())
+	errors += extractError(f.Usage.validate())
+	errors += extractError(f.Type.validate())
+	errors += extractError(f.DefValue.validate(f.Type))
+	errors += extractError(f.NoOptDefVal.validate())
+	errors += extractError(f.Annotations.validate())
+
+	if errors != "" {
+		return fmt.Errorf("%s", errors)
+	}
+
+	return nil
+}
+
 // Init initializes the Flags structure.
 func (f *Flags) Init(commandName, script string) {
 	f.CommandName = commandName
 	f.Script = script
-}
-
-func validateFlag(flag *Flag) error {
-	var errors string
-
-	// Check shorthand is one letter only
-	if len(flag.Shorthand) > 1 {
-		errors += fmt.Sprintf("\n - shorthand '%s' for flag '%s' is more than one ASCII character", flag.Shorthand, flag.Name)
-	}
-
-	// Check usage is defined
-	if flag.Usage == "" {
-		errors += fmt.Sprintf("\n - no usage defined for flag '%s'", flag.Name)
-	}
-
-	// Check type is valid
-	if flag.Type != "" {
-		implemented, found := ValidTypes[flag.Type]
-
-		if !found {
-			errors += fmt.Sprintf("\n - type '%s' for flag '%s' is not known", flag.Type, flag.Name)
-		} else if !implemented {
-			errors += fmt.Sprintf("\n - type '%s' for flag '%s' is not implemented", flag.Type, flag.Name)
-		}
-	}
-
-	return fmt.Errorf("%s", errors)
 }
 
 func (f *Flags) validateFlags(flags *FlagsDefinition) error {
@@ -154,33 +232,33 @@ func (f *Flags) validateFlags(flags *FlagsDefinition) error {
 	// Temporay vars to precheck for duplicated flags. It's still possible
 	// other commands will introduce the same flags which is tested
 	// afterwards by cobra.
-	long := map[string]bool{}
-	short := map[string]string{}
+	long := map[nameValue]bool{}
+	short := map[shorthandValue]nameValue{}
 
 	for i := range *flags {
 		flag := &(*flags)[i]
+		flagErrors := ""
 
 		// Check flag does not already exist
 		if _, found := long[flag.Name]; found {
-			errors += fmt.Sprintf("\n - flag '%s' already defined", flag.Name)
+			flagErrors += extractError(formatErrorItem(2, "-", "flag '%s' already defined", flag.Name))
 		} else {
 			long[flag.Name] = true
 		}
 
 		// Check shorthand does not already exist
 		if flagOfShorthand, found := short[flag.Shorthand]; found {
-			errors += fmt.Sprintf("\n - shorthand '%s' is already defined flag '%s'", flag.Shorthand, flagOfShorthand)
+			flagErrors += extractError(formatErrorItem(2, "-", "shorthand '%s' is already defined for flag '%s'", flag.Shorthand, flagOfShorthand))
 		} else {
 			short[flag.Shorthand] = flag.Name
 		}
 
-		// Check type and set default if empty
-		if flag.Type == "" {
-			flag.Type = FtBool
-		}
-
 		// Additional validations of the flag fields
-		errors += validateFlag(flag).Error()
+		flagErrors += extractError(flag.validateFlag())
+
+		if flagErrors != "" {
+			errors += extractError(formatErrorItem(1, "*", "for flag '%s':%s", flag.Name, flagErrors))
+		}
 	}
 
 	if errors != "" {
@@ -197,8 +275,9 @@ func (f *Flags) LoadFromJSON(data string) error {
 		return nil
 	}
 
-	var defs *FlagsDefinition
 	var err error
+	var defs = FlagsDefinition{}
+	//var pDefs = &defs
 
 	// Import the JSON to the FlagsDefinition structure and return in case of
 	// error
@@ -207,12 +286,12 @@ func (f *Flags) LoadFromJSON(data string) error {
 	}
 
 	// Validate the user provided flags and return in case of error
-	if err = f.validateFlags(defs); err != nil {
+	if err = f.validateFlags(&defs); err != nil {
 		return err
 	}
 
 	// Assign the data to the field
-	f.Definition = *defs
+	f.Definition = defs
 	return nil
 }
 
@@ -222,29 +301,29 @@ func (f *Flags) AssignToCommand(command *cobra.Command) error {
 		// Create the flag at the command
 		switch flag.Type {
 		case FtBool /*, ""*/ : // empty type defaults to bool
-			command.Flags().BoolP(flag.Name, flag.Shorthand, false, flag.Usage)
+			command.Flags().BoolP(string(flag.Name), string(flag.Shorthand), false, string(flag.Usage))
 		case FtInt:
-			command.Flags().IntP(flag.Name, flag.Shorthand, 0, flag.Usage)
+			command.Flags().IntP(string(flag.Name), string(flag.Shorthand), 0, string(flag.Usage))
 		case FtString:
-			command.Flags().StringP(flag.Name, flag.Shorthand, "", flag.Usage)
+			command.Flags().StringP(string(flag.Name), string(flag.Shorthand), "", string(flag.Usage))
 		case FtUint:
-			command.Flags().UintP(flag.Name, flag.Shorthand, 0, flag.Usage)
+			command.Flags().UintP(string(flag.Name), string(flag.Shorthand), 0, string(flag.Usage))
 		default:
 			continue // continue here, nothing to set for this flag
 		}
 
 		// Update default values and annotations
-		newFlag := command.Flags().Lookup(flag.Name)
+		newFlag := command.Flags().Lookup(string(flag.Name))
 
-		if err := newFlag.Value.Set(flag.DefValue); err != nil {
+		if err := newFlag.Value.Set(string(flag.DefValue)); err != nil {
 			// Invalid default value was defined by the user, hide the flag
 			// and return
 			newFlag.Hidden = true
 			return err
 		}
 
-		newFlag.DefValue = flag.DefValue
-		newFlag.NoOptDefVal = flag.NoOptDefVal
+		newFlag.DefValue = string(flag.DefValue)
+		newFlag.NoOptDefVal = string(flag.NoOptDefVal)
 		newFlag.Annotations = flag.Annotations
 	}
 
