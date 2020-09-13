@@ -36,7 +36,9 @@ type FlagsDefinition []Flag
 // Defines the constants for the valid types which always should used in the
 // source code.
 const (
-	ftNotImplemented = "notimplemented" // used for testing only
+	ftTest1          = "_test1_" // used for testing only
+	ftTest2          = "_test2_" // used for testing only
+	ftTest3          = "_test3_" // used for testing only
 	FtBool           = "bool"
 	FtBoolSlice      = "boolSlice"
 	FtBytesHex       = "bytesHex"
@@ -80,7 +82,9 @@ const (
 // AssignToCommand and set it here to true, that's all. If a new type is
 // added which is not defined here just add a new constant above and here.
 var ValidTypes = map[typeValue]bool{
-	ftNotImplemented: false, // used for testing only
+	ftTest1:          false, // used for testing only
+	ftTest2:          true,  // used for testing only
+	ftTest3:          true,  // used for testing only
 	FtBool:           true,
 	FtBoolSlice:      false,
 	FtBytesHex:       false,
@@ -208,6 +212,13 @@ func (v *defValueValue) validate(typ typeValue) error {
 		*v = defValueValue(strconv.FormatBool(false))
 	case FtCount, FtDuration, FtFloat32, FtFloat64, FtInt, FtInt8, FtInt16, FtInt32, FtUint, FtUint8, FtUint16, FtUint32:
 		*v = defValueValue(strconv.FormatInt(0, 10))
+	case ftTest3:
+		*v = ""
+	default:
+		if implemented := ValidTypes[typ]; implemented {
+			// Mandatory implementation missing -> panic
+			panic(fmt.Sprintf("Error implementation of DefValue validation missing for type '%s'", typ))
+		}
 	}
 
 	return nil
@@ -282,7 +293,6 @@ func (f *Flags) LoadFromJSON(data string) error {
 
 	var err error
 	var defs = FlagsDefinition{}
-	//var pDefs = &defs
 
 	// Import the JSON to the FlagsDefinition structure and return in case of
 	// error
@@ -302,6 +312,8 @@ func (f *Flags) LoadFromJSON(data string) error {
 
 // AssignToCommand iterates the flags and assigns it to the provided command.
 func (f *Flags) AssignToCommand(command *cobra.Command) error {
+	var errors string
+
 	for _, flag := range f.Definition {
 		// Create the flag at the command
 		switch flag.Type {
@@ -314,6 +326,11 @@ func (f *Flags) AssignToCommand(command *cobra.Command) error {
 		case FtUint:
 			command.Flags().UintP(string(flag.Name), string(flag.Shorthand), 0, string(flag.Usage))
 		default:
+			if implemented := ValidTypes[flag.Type]; implemented {
+				// Mandatory implementation missing -> panic
+				panic(fmt.Sprintf("Error implementation missing for type '%s'", flag.Type))
+			}
+
 			continue // continue here, nothing to set for this flag
 		}
 
@@ -322,14 +339,18 @@ func (f *Flags) AssignToCommand(command *cobra.Command) error {
 
 		if err := newFlag.Value.Set(string(flag.DefValue)); err != nil {
 			// Invalid default value was defined by the user, hide the flag
-			// and return
+			// and save the error
 			newFlag.Hidden = true
-			return err
+			errors += extractError(formatErrorItem(1, "-", "error '%s' while set value of flag '%s'", err.Error(), flag.Name))
 		}
 
 		newFlag.DefValue = string(flag.DefValue)
 		newFlag.NoOptDefVal = string(flag.NoOptDefVal)
 		newFlag.Annotations = flag.Annotations
+	}
+
+	if errors != "" {
+		return fmt.Errorf("The following problems were found while assigning the flags to the command '%s' in '%s':%s", f.CommandName, f.Script, errors)
 	}
 
 	return nil
