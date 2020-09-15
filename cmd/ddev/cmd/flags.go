@@ -212,7 +212,7 @@ func (v *defValueValue) validate(typ typeValue) error {
 		*v = defValueValue(strconv.FormatBool(false))
 	case FtCount, FtDuration, FtFloat32, FtFloat64, FtInt, FtInt8, FtInt16, FtInt32, FtUint, FtUint8, FtUint16, FtUint32:
 		*v = defValueValue(strconv.FormatInt(0, 10))
-	case ftTest3:
+	case ftTest3: // used for testing only
 		*v = ""
 	default:
 		if implemented := ValidTypes[typ]; implemented {

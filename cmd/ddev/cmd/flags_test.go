@@ -88,7 +88,9 @@ func TestUnitCmdFlagsLoadFromJSON(t *testing.T) {
 	// Invalid and not implemented type
 	assert.EqualError(subject.LoadFromJSON(`[{"Name":"test-1","Shorthand":"t","Usage":"Usage of test 1","Type":"_invalid_"},{"Name":"test-2","Usage":"Usage of test 2","Type":"_test1_"}]`),
 		"The following problems were found in the flags definition of the command 'command' in 'script':\n * for flag 'test-1':\n   - type '_invalid_' is not known\n * for flag 'test-2':\n   - type '_test1_' is not implemented")
-	assert.PanicsWithValue("Error implementation of DefValue validation missing for type '_test2_'", func() { subject.LoadFromJSON(`[{"Name":"test-1","Usage":"Usage of test 1","Type":"_test2_"}]`) })
+	assert.PanicsWithValue("Error implementation of DefValue validation missing for type '_test2_'", func() {
+		assert.NoError(subject.LoadFromJSON(`[{"Name":"test-1","Usage":"Usage of test 1","Type":"_test2_"}]`))
+	})
 }
 
 func getCommand() cobra.Command {
@@ -178,7 +180,9 @@ func TestUnitCmdFlagsAssignToCommand(t *testing.T) {
 	subject = getSubject()
 	c = getCommand()
 	assert.NoError(subject.LoadFromJSON(`[{"Name":"test","Usage":"Usage of test","Type":"_test3_"}]`))
-	assert.PanicsWithValue("Error implementation missing for type '_test3_'", func() { subject.AssignToCommand(&c) })
+	assert.PanicsWithValue("Error implementation missing for type '_test3_'", func() {
+		assert.NoError(subject.AssignToCommand(&c))
+	})
 
 	// Invalid DefValue
 	subject = getSubject()
