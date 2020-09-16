@@ -57,7 +57,7 @@ func StopRouterIfNoContainers() error {
 
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
-	routerComposePath, err := generateRouterCompose()
+	routerComposeFullPath, err := generateRouterCompose()
 	if err != nil {
 		return err
 	}
@@ -66,8 +66,8 @@ func StartDdevRouter() error {
 		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen", err)
 	}
 
-	// run docker-compose up -d against the ddev-router compose file
-	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "up", "-d")
+	// run docker-compose up -d against the ddev-router full compose file
+	_, _, err = dockerutil.ComposeCmd([]string{routerComposeFullPath}, "-p", RouterProjectName, "up", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
