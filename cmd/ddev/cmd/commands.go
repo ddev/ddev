@@ -149,6 +149,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					descSuffix = " (global shell " + service + " container command)"
 				}
 
+				// Initialize the new command
 				commandToAdd := &cobra.Command{
 					Use:     usage,
 					Short:   description + descSuffix,
