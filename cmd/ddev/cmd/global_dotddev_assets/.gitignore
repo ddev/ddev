@@ -6,6 +6,7 @@
 /global_config.yaml
 /pantheon*
 /*compose.yaml
+/*compose-full.yaml
 /.sshimageBuild
 /.update
 /testcache
