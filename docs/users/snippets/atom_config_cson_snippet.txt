@@ -1,3 +1,7 @@
+  "atom-ide-ui":
+    "atom-ide-debugger": {}
+    use:
+      "atom-ide-debugger": "never"
   "php-debug":
     PathMaps: [
       "remotepath;localpath"
