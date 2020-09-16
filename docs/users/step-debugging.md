@@ -33,17 +33,18 @@ For each IDE the link to their documentation is provided, and the skeleton steps
 
 #### PhpStorm Zero-Configuration Debugging
 
-PhpStorm [zero-configuration debugging](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm) means you only have to:
+PhpStorm [zero-configuration debugging](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm) will automatically detect a connection and offer to create a "server", a file mapping from your workstation to the container. This means you only have to:
 
 1. Toggle the “Start Listening for PHP Debug Connections” button:
   ![Start listening for debug connections button](images/phpstorm_listen_for_debug_connections.png)
 2. Set a breakpoint.
 3. Visit a page that should stop in the breakpoint you set.
+4. PhpStorm will ask you what mapping to use, so it can figure out how to map the path inside the container to the path on your workstation. The first time you do this with a project, PhpStorm will pop up a "server" dialog box to set the mapping. The default will work, but it's best to click the checkbox to map the whole project directory to /var/www/html.
 
-Several things to note when using this recommended option:
+Note when using this recommended option:
 
-1. Make sure you have the most up to date DDEV versions.
-2. Under Run >> Edit Configurations, make sure there are no "Servers" defined. Having existing servers will override PHPstorm's ability to auto-map the incoming request to your file system.
+1. Please use the latest DDEV version.
+2. Under Run >> Edit Configurations, check that there are no "Servers" already defined. PhpStorm will create a new "Server" (file mapping) for you as discussed above, but only if you don't already have one. You can delete all servers and have PhpStorm create a new one, or you can create/edit an existing server as discussed below.
 
 #### PhpStorm "Run/Debug configuration" Debugging
 
@@ -128,7 +129,7 @@ Debugging Xdebug in any setup can be a little trouble, but here are the steps to
 * Make sure you have a 2019+ version of PHPStorm. Many PHPStorm versions up to and (including?) 2018.3 were incompatible with current XDebug versions.
 * Make sure xdebug has been enabled in ddev; it's disabled by default for performance reasons. Most people use `ddev xdebug on` to enable it when they want it, and `ddev xdebug off` when they're done with it, but it can also be enabled in `.ddev/config.yaml`.
 * Don't assume that some obscure piece of code is being executed and put a breakpoint there. Start by putting a breakpoint at the first executable line in your index.php. Oh-so-many times people think it should be stopping, but their code is not being executed.
-* `ddev ssh` into the web container. Can you `ping host.docker.internal` (and get responses)? If you can't, you might have an over-aggressive firewall. Try to disable it, or add a rule that would allow the connection to pass through. For example, on Debian/ Ubuntu that would be `sudo ufw allow 9000/tcp`. 
+* `ddev ssh` into the web container. Can you `ping host.docker.internal` (and get responses)? If you can't, you might have an over-aggressive firewall. Try to disable it, or add a rule that would allow the connection to pass through. For example, on Debian/ Ubuntu that would be `sudo ufw allow 9000/tcp`.
 * In PHPStorm, disable the "listen for connections" button so it won't listen. Or just exit PHPStorm.
 * `ddev ssh`: Can `telnet host.docker.internal 9000` connect? If it does, you have something else running on port 9000, probably php-fpm. On the host, use `sudo lsof -i :9000 -sTCP:LISTEN` to find out what is there and stop it, or [change the xdebug port and configure PHPStorm to use the new one](#using-xdebug-on-a-port-other-than-the-default) . Don't continue debugging until your telnet command does not connect.
 * Now click the listen button on PHPStorm to start it listening for connections.
