@@ -113,7 +113,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					usage = val
 				}
 				if val, ok := directives["Example"]; ok {
-					example = val
+					example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
 				}
 				if val, ok := directives["Flags"]; ok {
 					if err = flags.LoadFromJSON(val); err != nil {
@@ -145,7 +145,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 
 				descSuffix := " (shell " + service + " container command)"
-				if serviceDirOnHost[0:1] == "." {
+				if commandSet == targetGlobalCommandPath {
 					descSuffix = " (global shell " + service + " container command)"
 				}
 
