@@ -121,7 +121,9 @@ services:
       - DDEV_WEBSERVER_TYPE
       - DDEV_XDEBUG_ENABLED
       - DEPLOY_NAME=local
+{{ if not .DisableSettingsManagement }}
       - DRUSH_OPTIONS_URI=$DDEV_PRIMARY_URL
+{{ end }}
       - DOCKER_IP={{ .DockerIP }}
       - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
