@@ -2,6 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	osexec "os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -10,12 +17,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	osexec "os/exec"
-	"path/filepath"
-	"strings"
-	"testing"
-	"time"
 )
 
 // TestCustomCommands does basic checks to make sure custom commands work OK.
@@ -111,6 +112,14 @@ func TestCustomCommands(t *testing.T) {
 		assert.Contains(out, fmt.Sprintf("%s was executed with args=hostarg1 hostarg2 --hostflag1 on host %s", c, expectedHost))
 	}
 
+	// Test line breaks in examples
+	c := "testhostcmd"
+	args := []string{c, "-h"}
+	out, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err, "Failed to run ddev %s %v", c, args)
+	assert.Contains(out, "Examples:\n  ddev testhostcmd\n  ddev testhostcmd -h")
+
+	// Provide app configuration
 	app.Type = nodeps.AppTypePHP
 	err = app.WriteConfig()
 	assert.NoError(err)

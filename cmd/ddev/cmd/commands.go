@@ -108,7 +108,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					usage = val
 				}
 				if val, ok := directives["Example"]; ok {
-					example = val
+					example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
 				}
 				if val, ok := directives["ProjectTypes"]; ok {
 					projectTypes = val
