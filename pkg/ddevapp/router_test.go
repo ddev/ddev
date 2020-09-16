@@ -155,7 +155,7 @@ func TestLetsEncrypt(t *testing.T) {
 func TestRouterConfigOverride(t *testing.T) {
 	assert := asrt.New(t)
 	pwd, _ := os.Getwd()
-	testDir := testcommon.CreateTmpDir("TestPortOverride")
+	testDir := testcommon.CreateTmpDir(t.Name())
 	_ = os.Chdir(testDir)
 	overrideYaml := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-compose.override.yaml")
 

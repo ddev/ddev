@@ -5,6 +5,8 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -124,4 +126,47 @@ func TestSSHAuth(t *testing.T) {
 
 	runTime()
 	switchDir()
+}
+
+// TestSshAuthConfigOverride tests that the ~/.ddev/.ssh-auth-compose-compose.yaml can be overridden
+// with ~/.ddev/ssh-auth-compose.*.yaml
+func TestSshAuthConfigOverride(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+	testDir := testcommon.CreateTmpDir(t.Name())
+	_ = os.Chdir(testDir)
+	overrideYaml := filepath.Join(globalconfig.GetGlobalDdevDir(), "ssh-auth-compose.override.yaml")
+
+	// Remove the ddev-ssh-agent, since the start code simply checks to see if it's
+	// running and doesn't restart it if it's running
+	_ = dockerutil.RemoveContainer("ddev-ssh-agent", 0)
+
+	testcommon.ClearDockerEnv()
+
+	app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
+	assert.NoError(err)
+	err = app.WriteConfig()
+	assert.NoError(err)
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "ssh-auth-compose.override.yaml"), overrideYaml)
+	assert.NoError(err)
+
+	answer := fileutil.RandomFilenameBase()
+	sedCommand := "sed -i  '' 's/ANSWER=.*$/ANSWER=" + answer + "/' " + overrideYaml
+	_, err = exec.RunCommand("bash", []string{"-c", sedCommand})
+	assert.NoError(err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+		err = os.Remove(overrideYaml)
+		assert.NoError(err)
+	})
+
+	err = app.Start()
+	assert.NoError(err)
+
+	stdout, _, err := dockerutil.Exec("ddev-ssh-agent", "bash -c 'echo $ANSWER'")
+	assert.Equal(answer+"\n", stdout)
 }
