@@ -86,9 +86,11 @@ func StartDdevRouter() error {
 func generateRouterCompose() (string, error) {
 	exposedPorts := determineRouterPorts()
 
-	routerComposePath := RouterComposeYAMLPath()
+	routerComposeBasePath := RouterComposeYAMLPath()
+	routerComposeFullPath := FullRenderedRouterComposeYAMLPath()
+
 	var doc bytes.Buffer
-	f, ferr := os.Create(routerComposePath)
+	f, ferr := os.Create(routerComposeBasePath)
 	if ferr != nil {
 		return "", ferr
 	}
@@ -123,7 +125,7 @@ func generateRouterCompose() (string, error) {
 		return "", err
 	}
 
-	fullHandle, err := os.Create(FullRenderedRouterComposeYAMLPath())
+	fullHandle, err := os.Create(routerComposeFullPath)
 	if err != nil {
 		return "", err
 	}
@@ -142,7 +144,7 @@ func generateRouterCompose() (string, error) {
 		return "", err
 	}
 
-	return routerComposePath, nil
+	return routerComposeFullPath, nil
 }
 
 // FindDdevRouter usees FindContainerByLabels to get our router container and
