@@ -151,8 +151,8 @@ func TestSshAuthConfigOverride(t *testing.T) {
 	assert.NoError(err)
 
 	answer := fileutil.RandomFilenameBase()
-	sedCommand := "sed -i  '' 's/ANSWER=.*$/ANSWER=" + answer + "/' " + overrideYaml
-	_, err = exec.RunCommand("bash", []string{"-c", sedCommand})
+	os.Setenv("ANSWER", answer)
+	assert.NoError(err)
 	assert.NoError(err)
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
