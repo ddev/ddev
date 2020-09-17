@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Internal types to allow to provide methods.
 type nameValue string
 type shorthandValue string
 type usageValue string
@@ -19,7 +20,7 @@ type annotationsValue map[string][]string
 
 // Flag is the structure for the flags, the json from the annotation is
 // unmarshaled into this structure. For more information see also
-// github.com/spf13/pflag/flag
+// github.com/spf13/pflag/flag.
 type Flag struct {
 	Name        nameValue        // name as it appears on command line
 	Shorthand   shorthandValue   // one-letter abbreviated flag
@@ -129,10 +130,14 @@ type Flags struct {
 	Definition  FlagsDefinition
 }
 
+// formatErrorItem returns a formatted message indented by the number of
+// `level` and prefixed by a `prefix`.
 func formatErrorItem(level int, prefix string, format string, a ...interface{}) error {
 	return fmt.Errorf("%s %s %s", strings.Repeat(" ", (level-1)*2), prefix, fmt.Sprintf(format, a...))
 }
 
+// extractError returns the error message of an error `err` prefixed by a new
+// line or an empty string if no error was given.
 func extractError(err error) string {
 	if err != nil {
 		return "\n" + strings.Trim(err.Error(), "\n")
@@ -141,6 +146,7 @@ func extractError(err error) string {
 	return ""
 }
 
+// validate checks a nameValue for uniqueness.
 func (v *nameValue) validate(longOptions *map[nameValue]bool) error {
 	// Check flag does not already exist
 	if _, found := (*longOptions)[*v]; found {
@@ -152,6 +158,8 @@ func (v *nameValue) validate(longOptions *map[nameValue]bool) error {
 	return nil
 }
 
+// validate checks a shorthandValue for uniqueness and containing one ASCII
+// character only.
 func (v *shorthandValue) validate(shortOptions *map[shorthandValue]nameValue, name nameValue) error {
 	var errors string = ""
 
@@ -174,6 +182,7 @@ func (v *shorthandValue) validate(shortOptions *map[shorthandValue]nameValue, na
 	return nil
 }
 
+// validate checks a usageValue to be defined.
 func (v *usageValue) validate() error {
 	// Check usage is defined
 	if *v == "" {
@@ -183,6 +192,7 @@ func (v *usageValue) validate() error {
 	return nil
 }
 
+// validate checks a typeValue and sets a default value if empty.
 func (v *typeValue) validate() error {
 	// Check type and set default if empty
 	if *v == "" {
@@ -201,6 +211,7 @@ func (v *typeValue) validate() error {
 	return nil
 }
 
+// validate checks a defValueValue and sets a default value if empty.
 func (v *defValueValue) validate(typ typeValue) error {
 	if *v != "" {
 		return nil
@@ -224,14 +235,17 @@ func (v *defValueValue) validate(typ typeValue) error {
 	return nil
 }
 
+// validate checks a noOptDefValValue.
 func (v *noOptDefValValue) validate() error {
 	return nil
 }
 
+// validate checks a annotationsValue.
 func (v *annotationsValue) validate() error {
 	return nil
 }
 
+// validateFlag checks all fields by calling the corresponding validate method.
 func (f *Flag) validateFlag(longOptions *map[nameValue]bool, shortOptions *map[shorthandValue]nameValue) error {
 	errors := ""
 
@@ -257,6 +271,7 @@ func (f *Flags) Init(commandName, script string) {
 	f.Script = script
 }
 
+// validateFlags checks all Flags by calling the validateFlag method.
 func (f *Flags) validateFlags(flags *FlagsDefinition) error {
 	var errors string
 

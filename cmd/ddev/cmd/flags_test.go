@@ -13,12 +13,14 @@ const (
 	script      = "script"
 )
 
+// getSubject returns a new, initialized Flags struct.
 func getSubject() Flags {
 	var subject Flags
 	subject.Init(commandName, script)
 	return subject
 }
 
+// TestUnitCmdFlagsInit tests the Init method.
 func TestUnitCmdFlagsInit(t *testing.T) {
 	assert := asrt.New(t)
 	subject := getSubject()
@@ -93,6 +95,7 @@ func TestUnitCmdFlagsLoadFromJSON(t *testing.T) {
 	})
 }
 
+// getCommand returns a new cobra Command.
 func getCommand() cobra.Command {
 	return cobra.Command{
 		Use:     "usage of command",
