@@ -63,7 +63,7 @@ var DBATag = "5" // Note that this can be overridden by make
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "20200817_custom_certs" // Note that this can be overridden by make
+var RouterTag = "20200909_ddev_router" // Note that this can be overridden by make
 
 var SSHAuthImage = "drud/ddev-ssh-agent"
 

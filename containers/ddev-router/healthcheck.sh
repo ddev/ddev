@@ -20,6 +20,9 @@ connect=false
 if nginx -t ; then
     config=true
     printf "nginx config: OK  "
+else
+  printf "nginx configuration invalid: $(nginx -t)"
+  exit 2
 fi
 
 # Check our healthcheck endpoint
