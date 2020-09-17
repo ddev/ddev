@@ -7,6 +7,8 @@ import (
 	"github.com/drud/ddev/pkg/netutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -146,4 +148,42 @@ func TestLetsEncrypt(t *testing.T) {
 
 	_, _, err = dockerutil.Exec(container.ID, "test -f /etc/letsencrypt/options-ssl-nginx.conf")
 	assert.NoError(err)
+}
+
+// TestRouterConfigOverride tests that the ~/.ddev/.router-compose.yaml can be overridden
+// with ~/.ddev/router-compose.*.yaml
+func TestRouterConfigOverride(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+	testDir := testcommon.CreateTmpDir(t.Name())
+	_ = os.Chdir(testDir)
+	overrideYaml := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-compose.override.yaml")
+
+	testcommon.ClearDockerEnv()
+
+	app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
+	assert.NoError(err)
+	err = app.WriteConfig()
+	assert.NoError(err)
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "router-compose.override.yaml"), overrideYaml)
+	assert.NoError(err)
+
+	answer := fileutil.RandomFilenameBase()
+	os.Setenv("ANSWER", answer)
+	assert.NoError(err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+		err = os.Remove(overrideYaml)
+		assert.NoError(err)
+	})
+
+	err = app.Start()
+	assert.NoError(err)
+
+	stdout, _, err := dockerutil.Exec("ddev-router", "bash -c 'echo $ANSWER'")
+	assert.Equal(answer+"\n", stdout)
 }
