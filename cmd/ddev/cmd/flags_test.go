@@ -179,7 +179,7 @@ func TestUnitCmdFlagsAssignToCommand(t *testing.T) {
 	assert.EqualValues("2", f.NoOptDefVal)
 	assert.Empty(f.Annotations)
 
-	// No fully implemented type
+	// Not fully implemented type
 	subject = getSubject()
 	c = getCommand()
 	assert.NoError(subject.LoadFromJSON(`[{"Name":"test","Usage":"Usage of test","Type":"_test3_"}]`))
