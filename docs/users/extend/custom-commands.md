@@ -120,7 +120,7 @@ Example: `## Usage: commandname [flags] [args]`
 `Example` is used for the help message to provide some usage examples to the user. Use `\n` to force a line break.
 
 Usage: `## Example: <command-example>`
-Example: `## Example: commandname\commandname -h`
+Example: `## Example: commandname\ncommandname -h`
 
 #### Flags
 
