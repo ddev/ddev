@@ -212,13 +212,13 @@ func (v *typeValue) validate() error {
 }
 
 // validate checks a defValueValue and sets a default value if empty.
-func (v *defValueValue) validate(typ typeValue) error {
+func (v *defValueValue) validate(aType typeValue) error {
 	if *v != "" {
 		return nil
 	}
 
 	// Init the DefValue
-	switch typ {
+	switch aType {
 	case FtBool:
 		*v = defValueValue(strconv.FormatBool(false))
 	case FtCount, FtDuration, FtFloat32, FtFloat64, FtInt, FtInt8, FtInt16, FtInt32, FtUint, FtUint8, FtUint16, FtUint32:
@@ -226,17 +226,27 @@ func (v *defValueValue) validate(typ typeValue) error {
 	case ftTest3: // used for testing only
 		*v = ""
 	default:
-		if implemented := ValidTypes[typ]; implemented {
+		if implemented := ValidTypes[aType]; implemented {
 			// Mandatory implementation missing -> panic
-			panic(fmt.Sprintf("Error implementation of DefValue validation missing for type '%s'", typ))
+			panic(fmt.Sprintf("Error implementation of DefValue validation missing for type '%s'", aType))
 		}
 	}
 
 	return nil
 }
 
-// validate checks a noOptDefValValue.
-func (v *noOptDefValValue) validate() error {
+// validate checks a noOptDefValValue and sets a default value if needed.
+func (v *noOptDefValValue) validate(aType typeValue) error {
+	if *v != "" {
+		return nil
+	}
+
+	// Init the NoOptDefValValue
+	switch aType {
+	case FtBool:
+		*v = noOptDefValValue(strconv.FormatBool(true))
+	}
+
 	return nil
 }
 
@@ -255,7 +265,7 @@ func (f *Flag) validateFlag(longOptions *map[nameValue]bool, shortOptions *map[s
 	errors += extractError(f.Usage.validate())
 	errors += extractError(f.Type.validate())
 	errors += extractError(f.DefValue.validate(f.Type))
-	errors += extractError(f.NoOptDefVal.validate())
+	errors += extractError(f.NoOptDefVal.validate(f.Type))
 	errors += extractError(f.Annotations.validate())
 
 	if errors != "" {
