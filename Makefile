@@ -3,13 +3,13 @@
 # Circleci doesn't seem to provide a decent way to add to path, just adding here, for case where
 # linux build and linuxbrew is installed.
 export PATH := $(EXTRA_PATH):$(PATH)
-
 DOCKERMOUNTFLAG := :cached
 
 BUILD_BASE_DIR ?= $(PWD)
 
 GOTMP=.gotmp
 SHELL = /bin/bash
+PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
@@ -74,15 +74,15 @@ VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
 BUILD_IMAGE ?= drud/golang-build-container:v1.15.2
 DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
-          	    -v "$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
-          	    -v "$(PWD)/$(GOTMP)/bin:/go/bin" \
-          	    -e GOPATH="/workdir/$(GOTMP)" \
-          	    -e GOCACHE="/workdir/$(GOTMP)/.cache" \
+          	    -v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -v "/$(PWD)/$(GOTMP)/bin:/go/bin" \
+          	    -e GOPATH="//workdir/$(GOTMP)" \
+          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -e GOFLAGS="$(USEMODVENDOR)" \
-          	    -w /workdir              \
+          	    -w //workdir              \
           	    $(BUILD_IMAGE)
 DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
-          	    -v "$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
           	    -e GOPATH="//workdir/$(GOTMP)" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -e GOLANGCI_LINT_CACHE="//workdir/$(GOTMP)/.golanci-lint-cache" \
@@ -141,14 +141,14 @@ setup:
 # using the golang-build-container's packr2 command
 packr2:
 	docker run -t --rm -u $(shell id -u):$(shell id -g)    \
-          	    -v "$(S)$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
-          	    -v "$(S)$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
+          	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
+          	    -v "/$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -w //workdir/cmd/ddev/cmd       \
           	    $(BUILD_IMAGE) packr2
 	docker run -t --rm -u $(shell id -u):$(shell id -g)    \
-          	    -v "$(S)$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
-          	    -v "$(S)$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
+          	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
+          	    -v "/$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -w //workdir/pkg/ddevapp       \
           	    $(BUILD_IMAGE) packr2
@@ -198,7 +198,7 @@ chocolatey: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
 	perl -pi -e 's/REPLACE_DDEV_VERSION/$(VERSION)/g' $(GOTMP)/bin/windows_amd64/chocolatey/tools/*.ps1
 	perl -pi -e 's/REPLACE_GITHUB_ORG/$(GITHUB_ORG)/g' $(GOTMP)/bin/windows_amd64/chocolatey/*.nuspec $(GOTMP)/bin/windows_amd64/chocolatey/tools/*.ps1 #GITHUB_ORG is for testing, for example when the binaries are on rfay acct
 	perl -pi -e "s/REPLACE_INSTALLER_CHECKSUM/$$(cat $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe.sha256.txt | awk '{ print $$1; }')/g" $(GOTMP)/bin/windows_amd64/chocolatey/tools/*
-	docker run --rm -v $(PWD)/$(GOTMP)/bin/windows_amd64/chocolatey:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco pack ddev.nuspec
+	docker run --rm -v "/$(PWD)/$(GOTMP)/bin/windows_amd64/chocolatey:/tmp/chocolatey" -w /tmp/chocolatey linuturk/mono-choco pack ddev.nuspec
 	@echo "chocolatey package is in $(GOTMP)/bin/windows_amd64/chocolatey"
 
 $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt:
