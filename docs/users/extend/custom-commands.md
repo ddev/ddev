@@ -8,8 +8,6 @@ There are example commands provided in `ddev/commands/*/*.example` that can just
 
 * The command filename is not what determines the name of the command.  That comes from the Usage doc line (`## Usage: commandname`).
 * To confirm that your custom command is available, run `ddev -h`, and look for it in the list.
-* If your command should only be visible for a particular project type, add the line `## ProjectTypes: <list-of-project-types>`, for example `## ProjectTypes: drupal7,drupal8,drupal9,backdrop`
-`
 
 ### Host commands
 
@@ -25,9 +23,6 @@ To provide host commands, place a bash script in .ddev/commands/host. For exampl
 # Example is macOS-specific, but easy to adapt to any OS
 open -a PHPStorm.app ${DDEV_APPROOT}
 ```
-
-* If your host command should only run on one or more operating systems, add `## OSTypes:`, for example, `## OSTypes: darwin` ("darwin" for macOS, "windows" for Windows, "linux" for Linux).
-* If your host command should only run if a particular file exists, add `## HostBinaryExists:`, for example `## HostBinaryExists: /Applications/Sequel ace.app`
 
 ### Container commands
 
@@ -104,13 +99,92 @@ Useful variables for container scripts are:
 
 ### Annotations supported
 
-The custom commands support various annotations in the header which are used to provide additional information about the command to the user:
+The custom commands support various annotations in the header which are used to provide additional information about the command to the user.
 
-* Description
-* Usage
-* Example (use `\n` to force a line break)
-* ProjectTypes
-* OSTypes
+#### Description
+
+`Description` is used for the listing of available commands and for the help message of the custom command.
+
+Usage: `## Description: <command-description>`
+Example: `## Description: my great custom command`
+
+#### Usage
+
+`Usage` is used for the help message to provide an idea to the user how to use this command.
+
+Usage: `## Usage: <command-usage>`
+Example: `## Usage: commandname [flags] [args]`
+
+#### Example
+
+`Example` is used for the help message to provide some usage examples to the user. Use `\n` to force a line break.
+
+Usage: `## Example: <command-example>`
+Example: `## Example: commandname\ncommandname -h`
+
+#### Flags
+
+`Flags` is used for the help message. All defined flags here are listed with their shorthand if available. It has to be encoded according the following definition:
+
+Usage: `## Flags: <json-definition>`
+
+This is the minimal usage of a flags definition:
+
+Example: `## Flags: [{"Name":"flag","Usage":"sets the flag option"}]`
+Output:
+
+```bash
+Flags:
+  -h, --help          help for ddev
+  -f, --flag          sets the flag option
+```
+
+Multiple flags are separated by a comma:
+
+Example: `## Flags: [{"Name":"flag1","Shorthand":"f","Usage":"flag1 usage"},{"Name":"flag2","Usage":"flag2 usage"}]`
+Output:
+
+```bash
+Flags:
+  -h, --help          help for ddev
+  -f, --flag1         flag1 usage
+      --flag2         flag2 usage
+```
+
+The following fields can be used for a flag definition:
+
+* `Name`: the name as it appears on command line
+* `Shorthand`: one-letter abbreviated flag
+* `Usage`: help message
+* `Type`: possible values are `bool`, `string`, `int`, `uint` (defaults to bool)
+* `DefValue`: default value for usage message
+* `NoOptDefVal`: default value, if the flag is on the command line without any options
+* `Annotations`: used by cobra.Command bash autocomple code see <https://github.com/spf13/cobra/blob/master/bash_completions.md>
+
+#### ProjectTypes
+
+If your command should only be visible for a particular project type, `ProjectTypes` will allow you to define the supported types. This is especially useful for global custom commands. See <https://ddev.readthedocs.io/en/stable/users/cli-usage/#quickstart-guides> for more information about the supported project types. Multiple types are separated by a comma.
+
+Usage: `## ProjectTypes: <list-of-project-types>`
+Example: `## ProjectTypes: drupal7,drupal8,drupal9,backdrop`
+
+#### OSTypes (host commands only)
+
+If your host command should only run on one or more operating systems, add the `OSTypes` annotation. Multiple types are separated by a comma. Valid types are:
+
+* `darwin` for macOS
+* `windows` for Windows
+* `linux` for Linux
+
+Usage: `## OSTypes: <list-of-os-types>`
+Example: `## OSTypes: darwin,linux`
+
+#### HostBinaryExists (host commands only)
+
+If your host command should only run if a particular file exists, add the `HostBinaryExists` annotation.
+
+Usage: `## HostBinaryExists: <path/to/file>`
+Example: `## HostBinaryExists: /Applications/Sequel ace.app`
 
 ### Known Windows OS issues
 

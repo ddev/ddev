@@ -1,0 +1,8 @@
+#!/bin/bash
+
+## Description: testhostcmdflags project
+## Usage: testhostcmdflags
+## Flags: [{"Name":"test","Shorthand":"t","Usage":"Usage of test"}]
+## Example: "ddev testhostcmdflags"
+
+echo "testhostcmdflags was executed with args=$@ on host $(hostname)"

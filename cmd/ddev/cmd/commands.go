@@ -3,6 +3,13 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -11,12 +18,6 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"os"
-	"path"
-	"path/filepath"
-	"runtime"
-	"strings"
 )
 
 // addCustomCommands looks for custom command scripts in
@@ -96,6 +97,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					util.Warning("command '%s' contains CRLF, please convert to Linux-style linefeeds with dos2unix or another tool, skipping %s", commandName, onHostFullPath)
 					continue
 				}
+
 				directives := findDirectivesInScriptCommand(onHostFullPath)
 				var description, usage, example, projectTypes, osTypes, hostBinaryExists string
 
@@ -107,37 +109,58 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				if val, ok := directives["Usage"]; ok {
 					usage = val
 				}
+
 				if val, ok := directives["Example"]; ok {
 					example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
 				}
+
+				// Init and import flags
+				var flags Flags
+				flags.Init(commandName, onHostFullPath)
+
+				if val, ok := directives["Flags"]; ok {
+					if err = flags.LoadFromJSON(val); err != nil {
+						util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, onHostFullPath)
+					}
+				}
+
+				// Import and handle ProjectTypes
 				if val, ok := directives["ProjectTypes"]; ok {
 					projectTypes = val
 				}
+
 				// If ProjectTypes is specified and we aren't of that type, skip
 				if projectTypes != "" && !strings.Contains(projectTypes, app.Type) {
 					continue
 				}
 
+				// Import and handle OSTypes
 				if val, ok := directives["OSTypes"]; ok {
 					osTypes = val
 				}
+
 				// If OSTypes is specified and we aren't this isn't a specified OS, skip
 				if osTypes != "" && !strings.Contains(osTypes, runtime.GOOS) {
 					continue
 				}
 
+				// Import and handle HostBinaryExists
 				if val, ok := directives["HostBinaryExists"]; ok {
 					hostBinaryExists = val
 				}
+
 				// If hostBinaryExists is specified it doesn't exist here, skip
 				if hostBinaryExists != "" && !fileutil.FileExists(hostBinaryExists) {
 					continue
 				}
 
+				// Create proper description suffix
 				descSuffix := " (shell " + service + " container command)"
 				if commandSet == targetGlobalCommandPath {
 					descSuffix = " (global shell " + service + " container command)"
 				}
+
+				// Initialize the new command
 				commandToAdd := &cobra.Command{
 					Use:     usage,
 					Short:   description + descSuffix,
@@ -147,13 +170,20 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					},
 				}
 
+				// Add flags to command
+				if err = flags.AssignToCommand(commandToAdd); err != nil {
+					util.Warning("Error '%s' in the flags definition for command '%s', skipping %s", err, commandName, onHostFullPath)
+					continue
+				}
+
 				if service == "host" {
 					commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
 				} else {
 					commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service)
 				}
-				rootCmd.AddCommand(commandToAdd)
 
+				// Add the command and mark as added
+				rootCmd.AddCommand(commandToAdd)
 				commandsAdded[commandName] = 1
 			}
 		}
