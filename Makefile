@@ -6,11 +6,15 @@ export PATH := $(EXTRA_PATH):$(PATH)
 
 DOCKERMOUNTFLAG := :cached
 
-# Not updating build-tools to get this, but this should be removed
-# when build-tools is updated.
-# BUILD_IMAGE := drud/golang-build-container:v1.12.7
+BUILD_BASE_DIR ?= $(PWD)
 
-GOMETALINTER_ARGS := --vendored-linters --disable-all --enable=gofmt --enable=vet --enable vetshadow --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode --deadline=4m
+GOTMP=.gotmp
+SHELL = /bin/bash
+GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
+
+# Expands SRC_DIRS into the common golang ./dir/... format for "all below"
+SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
+
 GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode
 
 WINDOWS_SUDO_VERSION=v0.0.1
@@ -64,10 +68,12 @@ VERSION := $(shell git describe --tags --always --dirty)
 NO_V_VERSION=$(shell echo $(VERSION) | awk  -F"-" '{ OFS="-"; sub(/^./, "", $$1); printf $$0; }')
 GITHUB_ORG := drud
 
-# DOCKERBUILDCMD overrides the build in build-tools and should be transplanted back there
-override VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
-override LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
-override DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
+BUILD_OS = $(shell go env GOHOSTOS)
+BUILD_ARCH = $(shell go env GOHOSTARCH)
+VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
+LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
+BUILD_IMAGE ?= drud/golang-build-container:v1.15.0
+DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
           	    -v "$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
           	    -v "$(PWD)/$(GOTMP)/bin:/go/bin" \
           	    -e GOPATH="/workdir/$(GOTMP)" \
@@ -79,7 +85,10 @@ DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
 build: $(DEFAULT_BUILD)
 
-linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm: pull $(GOFILES)
+pullbuildimage:
+	docker pull $(BUILD_IMAGE) || true
+
+linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm: pullbuildimage $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
 	@echo $(shell if [ "$(BUILD_OS)" = "windows" ]; then echo "windows build: BUILD_OS=$(BUILD_OS)  DOCKER_TOOLBOX_INSTALL_PATH=$(DOCKER_TOOLBOX_INSTALL_PATH) PWD=$(PWD) S="; fi )
 	@mkdir -p $(GOTMP)/{.cache,pkg,src,bin}
@@ -89,24 +98,6 @@ linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm: pul
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
-#
-# This version-strategy uses a manual value to set the version string
-#VERSION := 1.2.3
-
-# Each section of the Makefile is included from standard components below.
-# If you need to override one, import its contents below and comment out the
-# include. That way the base components can easily be updated as our general needs
-# change.
-include build-tools/makefile_components/base_build_go.mak
-#include build-tools/makefile_components/base_build_python-docker.mak
-#include build-tools/makefile_components/base_container.mak
-#include build-tools/makefile_components/base_push.mak
-#include build-tools/makefile_components/base_test_go.mak
-#include build-tools/makefile_components/base_test_python.mak
-
-.PHONY: test testcmd testpkg build setup staticrequired windows_install darwin_signed darwin_notarized markdownlint mkdocs
-
-TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 TEST_TIMEOUT=150m
 BUILD_ARCH = $(shell go env GOARCH)
@@ -216,3 +207,23 @@ $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.t
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/nssm.exe https://github.com/drud/nssm/releases/download/$(NSSM_VERSION)/nssm.exe
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd_license.txt https://www.gnu.org/licenses/gpl.txt
 
+golangci-lint:
+	@echo "golangci-lint: "
+	@$(DOCKERTESTCMD) \
+		time bash -c "golangci-lint run $(GOLANGCI_LINT_ARGS) $(SRC_AND_UNDER)"
+
+version:
+	@echo VERSION:$(VERSION)
+
+clean: container-clean bin-clean
+
+container-clean:
+	@if docker image inspect $(DOCKER_REPO):$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO):$(VERSION); fi
+	@rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
+
+bin-clean:
+	@rm -rf bin
+	$(shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP) && rm -rf $(GOTMP); fi )
+
+# print-ANYVAR prints the expanded variable
+print-%: ; @echo $* = $($*)
