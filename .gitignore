@@ -4,6 +4,9 @@
 /bin/
 /.container*
 /.push*
+/linux
+/darwin
+/windows
 /linux_*64
 /darwin_*64
 /windows_*64
