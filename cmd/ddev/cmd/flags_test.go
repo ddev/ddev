@@ -51,7 +51,7 @@ func TestUnitCmdFlagsLoadFromJSON(t *testing.T) {
 	assert.EqualValues("Usage of test", subject.Definition[0].Usage)
 	assert.EqualValues(FtBool, subject.Definition[0].Type)
 	assert.EqualValues("false", subject.Definition[0].DefValue)
-	assert.EqualValues("", subject.Definition[0].NoOptDefVal)
+	assert.EqualValues("true", subject.Definition[0].NoOptDefVal)
 	assert.Empty(subject.Definition[0].Annotations)
 
 	// Full
@@ -133,7 +133,7 @@ func TestUnitCmdFlagsAssignToCommand(t *testing.T) {
 	assert.EqualValues("Usage of test", f.Usage)
 	assert.EqualValues(FtBool, f.Value.Type())
 	assert.EqualValues("false", f.DefValue)
-	assert.EqualValues("", f.NoOptDefVal)
+	assert.EqualValues("true", f.NoOptDefVal)
 	assert.Empty(f.Annotations)
 
 	// Full
