@@ -72,7 +72,7 @@ BUILD_OS = $(shell go env GOHOSTOS)
 BUILD_ARCH = $(shell go env GOHOSTARCH)
 VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
-BUILD_IMAGE ?= drud/golang-build-container:v1.15.0
+BUILD_IMAGE ?= drud/golang-build-container:v1.15.2
 DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
           	    -v "$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
           	    -v "$(PWD)/$(GOTMP)/bin:/go/bin" \
