@@ -109,27 +109,28 @@ linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm: pul
 
 TEST_TIMEOUT=150m
 BUILD_ARCH = $(shell go env GOARCH)
-ifeq ($(BUILD_OS),linux)
-    DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/ddev
-endif
 
-ifeq ($(BUILD_OS),windows_amd64)
-    DDEV_BINARY_FULLPATH=$(shell pwd)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
+DDEVNAME=ddev
+ifeq ($(BUILD_OS),windows)
+	DDEVNAME=ddev.exe
 endif
-
-ifeq ($(BUILD_OS),darwin_amd64)
-    DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev
+# Default case is buildos_build_arch
+DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/$(DDEVNAME)
+# But Linux_amd64 installs into bin/ for some reason
+ifeq ($(BUILD_OS)_$(BUILD_ARCH),linux_amd64)
+	DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/ddev
 endif
 
 # Override test section with tests specific to ddev
 test: testpkg testcmd
 
 testcmd: $(DEFAULT_BUILD) setup
-	echo LDFLAGS=$(LDFLAGS)
+	@echo LDFLAGS=$(LDFLAGS)
+	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
 	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./cmd/... $(TESTARGS)
 
 testpkg: $(DEFAULT_BUILD) setup
-	echo LDFLAGS=$(LDFLAGS)
+	@echo LDFLAGS=$(LDFLAGS)
 	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/... $(TESTARGS)
 
 setup:
