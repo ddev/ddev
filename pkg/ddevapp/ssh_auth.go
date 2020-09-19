@@ -73,26 +73,13 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 // RemoveSSHAgentContainer brings down the ddev-ssh-agent if it's running.
 func RemoveSSHAgentContainer() error {
-	sshContainer, err := findDdevSSHAuth()
+	// Stop the container if it exists
+	err := dockerutil.RemoveContainer(globalconfig.DdevSSHAgentContainer, 0)
 	if err != nil {
-		return err
+		if _, ok := err.(*docker.NoSuchContainer); !ok {
+			return err
+		}
 	}
-	// If we don't have a container, there's nothing to do.
-	if sshContainer == nil {
-		return nil
-	}
-
-	// Otherwise we'll "down" the container"
-	path, err := CreateSSHAuthComposeFile()
-	if err != nil {
-		return err
-	}
-	// run docker-compose rm -f
-	_, _, err = dockerutil.ComposeCmd([]string{path}, "-p", SSHAuthName, "down")
-	if err != nil {
-		return fmt.Errorf("failed to rm ddev-ssh-agent: %v", err)
-	}
-
 	util.Warning("The ddev-ssh-agent container has been removed. When you start it again you will have to use 'ddev auth ssh' to provide key authentication again.")
 	return nil
 }

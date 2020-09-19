@@ -39,18 +39,18 @@ func FullRenderedRouterComposeYAMLPath() string {
 
 // StopRouterIfNoContainers stops the router if there are no ddev containers running.
 func StopRouterIfNoContainers() error {
-	dest, err := generateRouterCompose()
-	if err != nil {
-		return err
-	}
 	containersRunning, err := ddevContainersRunning()
 	if err != nil {
 		return err
 	}
 
 	if !containersRunning {
-		_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "down")
-		return err
+		err = dockerutil.RemoveContainer(nodeps.RouterContainer, 0)
+		if err != nil {
+			if _, ok := err.(*docker.NoSuchContainer); !ok {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -201,7 +201,7 @@ func GetRouterStatus() (string, string) {
 // determineRouterPorts returns a list of port mappings retrieved from running site
 // containers defining VIRTUAL_PORT env var
 func determineRouterPorts() []string {
-	routerPorts := []string{"80"}
+	var routerPorts []string
 	labels := map[string]string{
 		"com.ddev.platform": "ddev",
 	}

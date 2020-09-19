@@ -1639,9 +1639,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		return fmt.Errorf("Failed to process post-stop hooks: %v", err)
 	}
 
-	err = StopRouterIfNoContainers()
-
-	return err
+	return nil
 }
 
 // RemoveGlobalProjectInfo() deletes the project from ProjectList
