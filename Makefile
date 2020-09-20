@@ -96,7 +96,7 @@ build: $(DEFAULT_BUILD)
 pullbuildimage:
 	docker pull $(BUILD_IMAGE) || true
 
-linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_arm: pullbuildimage $(GOFILES)
+linux_amd64 linux_arm64 linux_arm darwin_amd64 darwin_arm64 windows_amd64 windows_arm: pullbuildimage $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
 	@echo $(shell if [ "$(BUILD_OS)" = "windows" ]; then echo "windows build: BUILD_OS=$(BUILD_OS)  DOCKER_TOOLBOX_INSTALL_PATH=$(DOCKER_TOOLBOX_INSTALL_PATH) PWD=$(PWD) S="; fi )
 	@mkdir -p $(GOTMP)/{.cache,pkg,src,bin}

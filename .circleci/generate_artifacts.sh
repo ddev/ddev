@@ -52,7 +52,7 @@ $BUILTPATH/ddev_gen_autocomplete
 
 # The completion scripts get placed into the linux build dir (.gotmp/bin)
 # So now copy them into the real build directory
-for dir in .gotmp/bin/linux_arm64 .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64 .gotmp/bin/windows_arm; do
+for dir in .gotmp/bin/linux_arm64 .gotmp/bin/linux_arm .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64 .gotmp/bin/windows_arm; do
   cp .gotmp/bin/ddev_*completion* $dir
 done
 
@@ -63,7 +63,7 @@ cp $BASE_DIR/.gotmp/bin/windows_amd64/ddev_windows_installer*.exe $ARTIFACTS
 # Generate macOS-amd64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/darwin_amd64
 curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-darwin-amd64 && chmod +x mkcert
-tar -czf $ARTIFACTS/ddev_macos_amd64.$VERSION.tar.gz ddev *completion*.sh mkcert
+tar -czf $ARTIFACTS/ddev_macos-amd64.$VERSION.tar.gz ddev *completion*.sh mkcert
 popd
 
 # Generate linux-amd64 tarball/zipball
@@ -75,28 +75,32 @@ popd
 # Generate linux-arm64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/linux_arm64
 # mkcert will be ready later
-# curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-amd64 && chmod +x mkcert
+# curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm64 && chmod +x mkcert
 tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev *completion*.sh
+popd
+
+# Generate linux-arm tarball/zipball
+pushd $BASE_DIR/.gotmp/bin/linux_arm
+# mkcert will be ready later
+# curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm && chmod +x mkcert
+tar -czf $ARTIFACTS/ddev_linux-arm.$VERSION.tar.gz ddev *completion*.sh
 popd
 
 # generate windows-amd64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/windows_amd64
 curl -sSL -o mkcert.exe https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-amd64.exe
-tar -czf $ARTIFACTS/ddev_windows.$VERSION.tar.gz ddev.exe *completion*.sh mkcert.exe
-zip $ARTIFACTS/ddev_windows.$VERSION.zip ddev.exe *completion*.sh
+tar -czf $ARTIFACTS/ddev_windows-amd64.$VERSION.tar.gz ddev.exe *completion*.sh mkcert.exe
 if [ -d chocolatey ]; then
-    tar -czf $ARTIFACTS/ddev_chocolatey.$VERSION.tar.gz chocolatey
+    tar -czf $ARTIFACTS/ddev_chocolatey_amd64-.$VERSION.tar.gz chocolatey
 fi
 popd
 
 # generate windows-arm tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/windows_arm
 # mkcert not available yet
-#curl -sSL -o mkcert.exe https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-amd64.exe
-tar -czf $ARTIFACTS/ddev_windows_arm.$VERSION.tar.gz ddev.exe *completion*.sh
-#if [ -d chocolatey ]; then
-#    tar -czf $ARTIFACTS/ddev_chocolatey.$VERSION.tar.gz chocolatey
-#fi
+#curl -sSL -o mkcert.exe https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-arm.exe
+tar -czf $ARTIFACTS/ddev_windows-arm.$VERSION.tar.gz ddev.exe *completion*.sh
+# No expected chocolatey support at this point
 popd
 
 

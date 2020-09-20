@@ -8,6 +8,7 @@
 /darwin
 /windows
 /linux_*64
+/linux_arm
 /darwin_*64
 /windows_*64
 /windows_arm
