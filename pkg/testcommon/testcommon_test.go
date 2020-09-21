@@ -29,12 +29,12 @@ var TestSites = []TestSite{
 	},
 }
 
-// TestTmpDir tests the ability to create a temporary directory.
-func TestTmpDir(t *testing.T) {
+// TestCreateTmpDir tests the ability to create a temporary directory.
+func TestCreateTmpDir(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Create a temporary directory and ensure it exists.
-	testDir := CreateTmpDir("TestTmpDir")
+	testDir := CreateTmpDir("TestCreateTmpDir")
 	dirStat, err := os.Stat(testDir)
 	assert.NoError(err, "There is no error when getting directory details")
 	assert.True(dirStat.IsDir(), "Temp Directory created and exists")
