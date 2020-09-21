@@ -3,7 +3,7 @@
 ##### These variables need to be adjusted in most repositories #####
 
 # Docker repo for a push
-DOCKER_ORG ?= dennisameling
+DOCKER_ORG ?= drud
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
 
 DEFAULT_IMAGES = ddev-webserver
