@@ -2,6 +2,7 @@ package testcommon
 
 import (
 	"crypto/tls"
+	"github.com/docker/docker/pkg/homedir"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
@@ -164,13 +165,11 @@ func OsTempDir() (string, error) {
 
 // CreateTmpDir creates a temporary directory and returns its path as a string.
 func CreateTmpDir(prefix string) string {
-	systemTempDir, err := OsTempDir()
+	baseTmpDir := filepath.Join(homedir.Get(), "tmp", "ddevtest")
+	_ = os.MkdirAll(baseTmpDir, 0755)
+	fullPath, err := ioutil.TempDir(baseTmpDir, prefix)
 	if err != nil {
-		log.Fatalln("Failed getting system temp dir", err)
-	}
-	fullPath, err := ioutil.TempDir(systemTempDir, prefix)
-	if err != nil {
-		log.Fatalln("Failed to create temp directory, err=", err)
+		log.Fatalf("Failed to create temp directory %s, err=%v", fullPath, err)
 	}
 	// Make the tmpdir fully writeable/readable, NFS problems
 	_ = os.Chmod(fullPath, 0777)
