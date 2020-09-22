@@ -272,46 +272,11 @@ jobs:
               time make container DOCKER_ARGS=--no-cache EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
               echo "--- Test container $dir"
               time make test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+              echo "--- Cross-compile container $dir"
+              time make multi-arch EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
               popd
           done
         name: linux container test
-
-    - save_cache:
-        key: linux-v13
-        paths:
-        - /home/linuxbrew
-        - ~/.ddev/testcache
-
-  lx_container_arm64_build:
-    machine:
-      image: ubuntu-1604:202007-01
-    working_directory: ~/ddev
-    environment:
-      GOTEST_SHORT: true
-      DOCKER_BUILDKIT: 1
-    steps:
-    - checkout
-    - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
-    - restore_cache:
-        keys:
-        - linux-v13
-    - run:
-        command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
-    - run:
-        command: ./.circleci/linux_docker_buildx_setup.sh
-        name: Docker buildx setup for multi-arch builds
-    
-    - run:
-        command: |
-          containers=( "ddev-router" "ddev-webserver" "ddev-ssh-agent" )
-          for dir in "${containers[@]}"
-              do pushd containers/$dir
-              echo "--- Build container $dir"
-              time make container-arm64 DOCKER_ARGS=--no-cache EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
-              popd
-          done
-        name: Build arm64 images
 
     - save_cache:
         key: linux-v13
@@ -456,7 +421,6 @@ workflows:
     - build
 #    - mac_container_test
     - lx_container_test
-    - lx_container_arm64_build
 #    - staticrequired
     - lx_nginx_fpm_test:
         requires:
