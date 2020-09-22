@@ -1,9 +1,43 @@
 #!/bin/bash
 
 ## #ddev-generated
-## Description: run mysql client in db container
+## Description: Run MySql client in db container
 ## Usage: mysql [flags] [args]
-## Example: "ddev mysql" or "ddev mysql -uroot -proot" or "echo 'SHOW TABLES;' | ddev mysql"
+## Flags: [{"Long":"user","Short":"u","Usage":"User for login if not user db."},{"Long":"password","Short":"p","Usage":"Password to use when connecting to server if not db. If password is not given it's asked from the tty."}]
+## Example: ddev mysql\nddev mysql -uroot -proot\necho 'SHOW TABLES;' | ddev mysql
 ## `ddev mysql --database=mysql -uroot -proot` gets you to the 'mysql' database with root privileges
+
+USER="db"
+PASSWORD="db"
+
+while :; do
+    case ${1:-} in
+        -u|--user)
+            if [ "${HTTPS}" = "" ]; then
+                FULLURL="${FULLURL%:[0-9]*}:${DDEV_PHPMYADMIN_PORT}"
+            else
+                FULLURL="${FULLURL%:[0-9]*}:${DDEV_PHPMYADMIN_HTTPS_PORT}"
+            fi
+            ;;
+        -m|--mailhog)
+            if [ "${HTTPS}" = "" ]; then
+                FULLURL="${FULLURL%:[0-9]*}:${DDEV_MAILHOG_PORT}"
+            else
+                FULLURL="${FULLURL%:[0-9]*}:${DDEV_MAILHOG_HTTPS_PORT}"
+            fi
+            ;;
+        --)     # End of all options.
+            shift
+            break
+            ;;
+        -?*)
+            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            ;;
+        *)      # Default case: No more options, so break out of the loop.
+            break
+    esac
+
+    shift
+ done
 
 mysql -udb -pdb $@
