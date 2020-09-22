@@ -188,32 +188,50 @@ func FgrepStringInFile(fullPath string, needle string) (bool, error) {
 	return strings.Contains(fullFileString, needle), nil
 }
 
-// ListFilesInDir returns an array of files found in a directory
-func ListFilesInDir(path string) ([]string, error) {
+// ListFilesInDir returns an array of files found in a directory, if the
+// optional parameter excludeDirectories is set to true directories will be
+// excluded.
+func ListFilesInDir(path string, excludeDirectories ...bool) ([]string, error) {
 	var fileList []string
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return fileList, err
 	}
 
-	for _, f := range files {
-		fileList = append(fileList, f.Name())
+	// Check optional parameter
+	excludeDirs := false
+	if len(excludeDirectories) > 0 {
+		excludeDirs = excludeDirectories[0]
 	}
+
+	for _, f := range files {
+		if !f.IsDir() || !excludeDirs {
+			fileList = append(fileList, f.Name())
+		}
+	}
+
 	return fileList, nil
 }
 
-// ListFilesInDirFullPath returns an array of full path of files found in a directory
-func ListFilesInDirFullPath(path string) ([]string, error) {
-	var fileList []string
+// ListDirectoriesWithFullPath returns an array of full path of directories
+// found in a directory.
+func ListDirectoriesWithFullPath(path string) ([]string, error) {
+	// Read content of the path
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		return fileList, err
+		return nil, err
 	}
 
+	var directoryList []string
+
+	// Iterate files and create a proper list
 	for _, f := range files {
-		fileList = append(fileList, filepath.Join(path, f.Name()))
+		if f.IsDir() {
+			directoryList = append(directoryList, filepath.Join(path, f.Name()))
+		}
 	}
-	return fileList, nil
+
+	return directoryList, nil
 }
 
 // RandomFilenameBase generates a temporary filename for use in testing or whatever.

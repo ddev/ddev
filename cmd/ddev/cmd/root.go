@@ -1,6 +1,11 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -13,10 +18,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/segmentio/analytics-go.v3"
-	"os"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 var (
@@ -150,10 +151,21 @@ func Execute() {
 	// bind flags to viper config values...allows override by flag
 	viper.AutomaticEnv() // read in environment variables that match
 
+	// Disable errors on the first execute and lazyload custom commands in case
+	// of an error.
+	RootCmd.SilenceErrors = true
 	if err := RootCmd.Execute(); err != nil {
-		os.Exit(-1)
-	}
+		err = addCustomCommands(RootCmd)
+		if err != nil {
+			util.Warning("Adding custom commands failed: %v", err)
+		}
 
+		// Enable errors now as all commands are loaded now.
+		RootCmd.SilenceErrors = false
+		if err := RootCmd.Execute(); err != nil {
+			os.Exit(1)
+		}
+	}
 }
 
 func init() {
@@ -168,11 +180,6 @@ func init() {
 		err := populateExamplesCommandsHomeadditions()
 		if err != nil {
 			util.Warning("populateExamplesAndCommands() failed: %v", err)
-		}
-
-		err = addCustomCommands(RootCmd)
-		if err != nil {
-			util.Warning("Adding custom commands failed: %v", err)
 		}
 	}
 }

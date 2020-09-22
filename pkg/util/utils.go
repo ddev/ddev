@@ -2,15 +2,16 @@ package util
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/sirupsen/logrus"
 	"math/rand"
 	osexec "os/exec"
 	"os/user"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/sirupsen/logrus"
 
 	"github.com/drud/ddev/pkg/output"
 	"github.com/fatih/color"
@@ -50,14 +51,19 @@ func Warning(format string, a ...interface{}) {
 	}
 }
 
-// Success will indicate an operation succeeded with colored confirmation text.
-func Success(format string, a ...interface{}) {
-	format = color.CyanString(format)
+// Info will show an information to the user.
+func Info(format string, a ...interface{}) {
 	if a != nil {
 		output.UserOut.Infof(format, a...)
 	} else {
 		output.UserOut.Info(format)
 	}
+}
+
+// Success will indicate an operation succeeded with colored confirmation text.
+func Success(format string, a ...interface{}) {
+	format = color.CyanString(format)
+	Info(format, a...)
 }
 
 // FormatPlural is a simple wrapper which returns different strings based on the count value.
@@ -113,7 +119,7 @@ func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
 	return result
 }
 
-// GetContainerUIDGid() returns the uid and gid (and string forms) to be used running most containers.
+// GetContainerUIDGid returns the uid and gid (and string forms) to be used running most containers.
 func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	curUser, err := user.Current()
 	CheckErr(err)
