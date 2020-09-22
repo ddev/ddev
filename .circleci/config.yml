@@ -262,6 +262,9 @@ jobs:
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+    - run:
+        command: ./.circleci/linux_docker_buildx_setup.sh
+        name: Docker buildx setup for multi-arch builds
 
     - run:
         command: |
