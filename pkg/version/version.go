@@ -51,7 +51,7 @@ var WebTag = "20200831_nlisgo_ping" // Note that this can be overridden by make
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20200821_remove_docker_toolbox"
+var BaseDBTag = "20200923_improve_mysql_docker_entrypoint"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin/phpmyadmin"
