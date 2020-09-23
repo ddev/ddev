@@ -54,8 +54,6 @@ MARIADB_VERSIONS_arm64=10.1:10.1 10.2:10.2 10.3:10.3 10.4:10.4 10.5:10.5
 # MySQL images on Docker Hub currently are amd64 only
 MYSQL_VERSIONS_arm64=
 
-BUILD_ARCHS=linux/amd64,linux/arm64
-
 # In CI environments, use the plain Docker build progress to not overload the CI logs
 PROGRESS := $(if $(CI),plain,auto)
 
@@ -90,18 +88,20 @@ multi-arch: prep mariadb_containers mysql_containers
 		docker buildx build --platform=linux/arm64 $(DOCKER_ARGS) --progress=$(PROGRESS) --build-arg="DBVERSION=$${baseversion}" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${baseversion}:$(VERSION)" . ; \
 	done	
 
-push: prep container
-	for item in $(MARIADB_VERSIONS); do \
+push: prep
+	for item in $(MARIADB_VERSIONS_amd64); do \
 		set -euo pipefail ;\
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
-		docker push "drud/ddev-dbserver-mariadb-$${baseversion%%%.*}:$(VERSION)"; \
+		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
+		export archs=$$(if [[ "$(MARIADB_VERSIONS_arm64)" == *"$$item"* ]]; then echo "linux/amd64,linux/arm64"; else echo "linux/amd64"; fi);\
+		docker buildx build --push --platform $${archs} $(DOCKER_ARGS) --progress=$(PROGRESS) --build-arg="DBVERSION=$${baseversion}" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${baseversion}:$(VERSION)" .; \
 	done
-	for item in $(MYSQL_VERSIONS) ; do \
+	for item in $(MYSQL_VERSIONS_amd64) ; do \
 		set -euo pipefail ;\
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
-		docker push "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)"; \
+		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
+		docker buildx build --push --platform linux/amd64 $(DOCKER_ARGS) --progress=$(PROGRESS) --build-arg="DBVERSION=$$baseversion" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)" .; \
 	done
-
 
 test: prep container
 	bash ./test/test_dbserver.sh $(VERSION) # bash execution just for windows make
