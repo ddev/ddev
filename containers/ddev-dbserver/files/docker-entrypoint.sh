@@ -53,9 +53,9 @@ fi
 export BACKUPTOOL=mariabackup
 if command -v xtrabackup; then BACKUPTOOL="xtrabackup"; fi
 
-# If mariadb has not been initialized, copy in the base image from either the default starter image (/var/tmp/mysqlbase)
+# If mariadb has not been initialized, copy in the base image from either the default starter image (/mysqlbase)
 # or from a provided $snapshot_dir.
-if [ ! -d "/var/lib/mysql/mysql" ]; then
+if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     target=${snapshot_dir:-/mysqlbase/}
     name=$(basename $target)
     sudo rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]* && sudo chmod -R ugo+w /var/lib/mysql
@@ -65,15 +65,11 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo 'Database initialized from $target'
 fi
 
-if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
-   database_db_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
-else
-    database_db_version="unknown"
- fi
+database_db_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
 
 if [ "${server_db_version}" != "${database_db_version}" ]; then
    echo "Starting with db server version=${server_db_version} but database was created with '${database_db_version}'."
-   echo "Attempting upgrade, but it may not work, you may need to export your database, 'ddev stop -RO', start, and reimport".
+   echo "Attempting upgrade, but it may not work, you may need to export your database, 'ddev delete --omit-snapshot', start, and reimport".
 
     PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
     pid=$!
