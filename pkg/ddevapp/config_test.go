@@ -89,10 +89,9 @@ func TestDisasterConfig(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(tmpDir)
-		assert.NoError(err)
 		err = os.Chdir(pwd)
 		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
 	})
 
 	// WriteConfig the app.
@@ -175,8 +174,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(pwd)
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 
 	app.Name = util.RandString(32)
