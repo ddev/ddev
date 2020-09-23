@@ -13,6 +13,26 @@ ARG BUILDPLATFORM
 
 SHELL ["/bin/bash", "-c"]
 
+RUN mkdir /tmp/ddev && \
+    if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
+        printf '# jwilder/forego doesnt have an arm64 download so we resort to the original forego repo \n\
+FORGO_IS_TGZ="true" \n\
+FORGO_FILENAME="forego-stable-linux-arm64.tgz" \n\
+FORGO_URL="https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-arm64.tgz" \n\
+# jwilder/docker-gen doesnt have an arm64 download so we created a custom build \n\
+DOCKER_GEN_URL="https://github.com/dennisameling/docker-gen/releases/download/0.7.5/docker-gen-linux-arm64-0.7.5.tar.gz" \n\
+DOCKER_GEN_FILE="docker-gen-linux-arm64-0.7.5.tar.gz" \n\
+# PR for official arm64 support pending: https://github.com/FiloSottile/mkcert/pull/284 \n\
+MKCERT_URL="https://github.com/dennisameling/mkcert/releases/download/${MKCERT_VERSION}-ddev/mkcert-${MKCERT_VERSION}-linux-arm64"' > /tmp/ddev/vars; \
+
+    else \
+        printf 'FORGO_IS_TGZ="false" \n\
+FORGO_URL="https://github.com/jwilder/forego/releases/download/v0.16.1/forego" \n\
+DOCKER_GEN_URL="https://github.com/jwilder/docker-gen/releases/download/${DOCKER_GEN_VERSION}/docker-gen-linux-amd64-${DOCKER_GEN_VERSION}.tar.gz" \n\
+DOCKER_GEN_FILE="docker-gen-linux-amd64-${DOCKER_GEN_VERSION}.tar.gz" \n\
+MKCERT_URL="https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-${MKCERT_VERSION}-linux-amd64"' > /tmp/ddev/vars; \
+    fi
+
 RUN apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
         ca-certificates certbot curl iputils-ping less python-certbot-nginx procps telnet vim wget && \
@@ -20,36 +40,26 @@ RUN apt-get -qq update && \
     apt-get clean -y && \
 	rm -rf /var/lib/apt/lists/*
 
-RUN if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
-        # jwilder/forego doesn't have an arm64 download so we resort to the original forego repo
-        wget -q https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-arm64.tgz && \
-        tar -C /usr/local/bin -xvzf forego-stable-linux-arm64.tgz && \
-        rm /forego-stable-linux-arm64.tgz && \
+RUN source /tmp/ddev/vars && \
+    if [[ $FORGO_IS_TGZ == "true" ]]; then \
+        wget -q $FORGO_URL && \
+        tar -C /usr/local/bin -xvzf $FORGO_FILENAME && \
+        rm /$FORGO_FILENAME && \
         chmod ugo+x /usr/local/bin/forego; \
     else \
-        curl -sSL https://github.com/jwilder/forego/releases/download/v0.16.1/forego -o /usr/local/bin/forego && \
+        curl -sSL $FORGO_URL -o /usr/local/bin/forego && \
         chmod ugo+x /usr/local/bin/forego; \
     fi
 
-RUN if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
-        # jwilder/docker-gen doesn't have an arm64 download so we created a custom build
-        wget -q https://github.com/dennisameling/docker-gen/releases/download/0.7.5/docker-gen-linux-arm64-0.7.5.tar.gz && \
-        tar -C /usr/local/bin -xvzf docker-gen-linux-arm64-0.7.5.tar.gz && \
-        rm /docker-gen-linux-arm64-0.7.5.tar.gz; \
-    else \
-        wget -q https://github.com/jwilder/docker-gen/releases/download/$DOCKER_GEN_VERSION/docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz && \
-        tar -C /usr/local/bin -xvzf docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz && \
-        rm /docker-gen-linux-amd64-$DOCKER_GEN_VERSION.tar.gz; \
-    fi
+RUN source /tmp/ddev/vars && \
+    wget -q $DOCKER_GEN_URL && \
+    tar -C /usr/local/bin -xvzf $DOCKER_GEN_FILE && \
+    rm /$DOCKER_GEN_FILE
     
 RUN mkdir -p /etc/nginx/certs /mnt/ddev-global-cache/mkcert
 
-RUN if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
-        # PR for official arm64 support pending: https://github.com/FiloSottile/mkcert/pull/284
-        curl -sSL https://github.com/dennisameling/mkcert/releases/download/$MKCERT_VERSION-ddev/mkcert-$MKCERT_VERSION-linux-arm64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkdir -p /root/.local/share && ln -s /mnt/ddev-global-cache/mkcert /root/.local/share/mkcert && mkcert -install; \
-    else \
-        curl -sSL https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-$MKCERT_VERSION-linux-amd64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkdir -p /root/.local/share && ln -s /mnt/ddev-global-cache/mkcert /root/.local/share/mkcert && mkcert -install; \
-    fi
+RUN source /tmp/ddev/vars && \
+    curl -sSL $MKCERT_URL -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkdir -p /root/.local/share && ln -s /mnt/ddev-global-cache/mkcert /root/.local/share/mkcert && mkcert -install
 
 # Configure Nginx and apply fix for very long server names
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf \
