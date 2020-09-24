@@ -159,12 +159,23 @@ staticrequired: setup golangci-lint markdownlint mkdocs
 
 markdownlint:
 	@echo "markdownlint: "
-	@sleep 1 && $(DOCKERTESTCMD) \
-		bash -c "markdownlint *.md docs 2>&1"
+	@CMD="markdownlint *.md docs 2>&1"; \
+	set -eu -o pipefail; \
+	if command -v markdownlint >/dev/null 2>&1 ; then \
+	  	$$CMD;  \
+  	else \
+		sleep 1 && $(DOCKERTESTCMD) \
+		bash -c "$$CMD"; \
+	fi
+
 mkdocs:
 	@echo "mkdocs: "
-	@sleep 1 && $(DOCKERTESTCMD) \
-		bash -c "mkdocs build -d /tmp/mkdocsbuld >/dev/null 2>&1"
+	@CMD="mkdocs -q build -d /tmp/mkdocsbuild"; \
+	if command -v mkdocs >/dev/null 2>&1; then \
+		$$CMD ; \
+	else  \
+		sleep 1 && $(DOCKERTESTCMD) bash -c "$$CMD"; \
+	fi
 
 darwin_signed: darwin_amd64
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
@@ -218,8 +229,14 @@ $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.t
 
 golangci-lint:
 	@echo "golangci-lint: "
-	@$(DOCKERTESTCMD) \
-		time bash -c "golangci-lint run $(GOLANGCI_LINT_ARGS) $(SRC_AND_UNDER)"
+	@CMD="golangci-lint run $(GOLANGCI_LINT_ARGS) $(SRC_AND_UNDER)"; \
+	set -eu -o pipefail; \
+	if command -v golangci-lint >/dev/null 2>&1; then \
+		$$CMD; \
+	else \
+		$(DOCKERTESTCMD) \
+		time bash -c "$$CMD"; \
+	fi
 
 version:
 	@echo VERSION:$(VERSION)
