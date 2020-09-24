@@ -11,11 +11,6 @@ ENV MYSQL_USER db
 ENV MYSQL_PASSWORD db
 ENV MYSQL_ROOT_PASSWORD root
 
-# TARGETPLATFORM is Docker buildx's target platform (e.g. linux/arm64), while 
-# BUILDPLATFORM is the platform of the build host (e.g. linux/amd64)
-ARG TARGETPLATFORM
-ARG BUILDPLATFORM
-
 # Install extra packages
 RUN apt-get update && apt-get install -y tzdata sudo gnupg2 pv less vim wget curl
 

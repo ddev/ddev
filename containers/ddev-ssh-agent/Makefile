@@ -32,22 +32,11 @@ PROGRESS := $(if $(CI),plain,auto)
 # will be generated and pushed (the amd64 build will be cached automatically to prevent it from building twice).
 BUILD_ARCHS=linux/amd64,linux/arm64
 
-# Each section of the Makefile is included from standard components below.
-# If you need to override one, import its contents below and comment out the
-# include. That way the base components can easily be updated as our general needs
-# change.
-#include ../build-tools/makefile_components/base_build_go.mak
-#include ../../build-tools/makefile_components/base_build_python-docker.mak
-include ../../build-tools/makefile_components/base_container.mak
-include ../../build-tools/makefile_components/base_push.mak
-#include build-tools/makefile_components/base_test_go.mak
-#include build-tools/makefile_components/base_test_python.mak
+include ../containers_shared.mak
 
-multi-arch: prep
+multi-arch:
 	docker buildx build --platform $(BUILD_ARCHS) --progress=$(PROGRESS) -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) .; \
 	echo "created multi-arch builds $(BUILD_ARCHS) for $(DOCKER_REPO)";
 
-test: prep
+test:
 	true >/dev/null
-
-prep: 

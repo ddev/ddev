@@ -7,7 +7,7 @@ FROM drud/ddev-php-base:v0.4.0 as ddev-webserver-base
 
 ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4"
 ENV BACKDROP_DRUSH_VERSION=1.4.0
-ENV MKCERT_VERSION=v1.4.1
+ENV MKCERT_VERSION=v1.4.3
 ENV DEBIAN_FRONTEND=noninteractive
 
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
@@ -62,6 +62,17 @@ RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.l
 RUN apt-get update
 
 SHELL ["/bin/bash", "-c"]
+
+RUN mkdir /tmp/ddev && \
+    if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
+        printf 'MKCERT_ARCH="linux-arm64" \n\
+        MAILHOG_URL="https://github.com/dennisameling/MailHog/releases/download/v${MAILHOG_VERSION}-ddev/MailHog_linux_arm64"' > /tmp/ddev/vars; \
+
+    else \
+        printf 'MKCERT_ARCH="linux-amd64" \n\
+        MAILHOG_URL="https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64"' > /tmp/ddev/vars; \
+    fi
+
 # blackfire-php is not available for arm64 (yet)
 RUN if [[ $TARGETPLATFORM != "linux/arm64" ]]; then \
     DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confold" blackfire-php -y --allow-unauthenticated; \
@@ -88,12 +99,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     zip
 
 ADD ddev-webserver-base-files /
-RUN if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
-        # Issue for official arm64 support: https://github.com/mailhog/MailHog/issues/307
-        curl -sSL "https://github.com/dennisameling/MailHog/releases/download/v${MAILHOG_VERSION}-ddev/MailHog_linux_arm64" -o /usr/local/bin/mailhog; \
-    else \
-        curl -sSL "https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64" -o /usr/local/bin/mailhog; \
-    fi
+RUN source /tmp/ddev/vars && curl -sSL ${MAILHOG_URL} -o /usr/local/bin/mailhog; 
 
 RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod +x /usr/local/bin/terminus
 RUN curl -sSL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod +x /usr/local/bin/ddev-live && rm ddev-live.zip
@@ -125,12 +131,7 @@ RUN mkdir -p /home/.composer /home/.drush/commands /home/.drush/aliases /mnt/dde
 
 RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
-RUN if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
-        # PR for official arm64 support pending: https://github.com/FiloSottile/mkcert/pull/284
-        curl -sSL https://github.com/dennisameling/mkcert/releases/download/$MKCERT_VERSION-ddev/mkcert-$MKCERT_VERSION-linux-arm64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert; \
-    else \
-        curl -sSL https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-$MKCERT_VERSION-linux-amd64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert; \
-    fi
+RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-${MKCERT_ARCH} -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert
 
 # Except that .my.cnf can't be writeable or mysql won't use it.
 RUN chmod 644 /home/.my.cnf

@@ -44,25 +44,13 @@ PROGRESS := $(if $(CI),plain,auto)
 # arm64 doesn't make sense here (yet) since gotechnies/alpine-ssh is amd64-only
 BUILD_ARCHS=linux/amd64
 
-# Each section of the Makefile is included from standard components below.
-# If you need to override one, import its contents below and comment out the
-# include. That way the base components can easily be updated as our general needs
-# change.
-# include build-tools/makefile_components/base_build_go.mak
-include ../../build-tools/makefile_components/base_build_python-docker.mak
-include ../../build-tools/makefile_components/base_container.mak
-include ../../build-tools/makefile_components/base_push.mak
-# include build-tools/makefile_components/base_test_go.mak
-#include build-tools/makefile_components/base_test_python.mak
-
+include ../containers_shared.mak
 
 # Additional targets can be added here
 # Also, existing targets can be overridden by copying and customizing them.
-multi-arch: prep
+multi-arch:
 	docker buildx build --platform $(BUILD_ARCHS) --progress=$(PROGRESS) -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) .; \
 	echo "created multi-arch builds $(BUILD_ARCHS) for $(DOCKER_REPO)";
 
-test: prep container
+test: container
 	true
-
-prep: 

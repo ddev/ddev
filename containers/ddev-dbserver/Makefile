@@ -33,17 +33,6 @@ VERSION := $(shell git describe --tags --always --dirty)
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
 
-# Each section of the Makefile is included from standard components below.
-# If you need to override one, import its contents below and comment out the
-# include. That way the base components can easily be updated as our general needs
-# change.
-#include ../../../build-tools/makefile_components/base_build_go.mak
-#include ../../build-tools/makefile_components/base_build_python-docker.mak
-#include ../../build-tools/makefile_components/base_container.mak
-#include ../../build-tools/makefile_components/base_push.mak
-#include build-tools/makefile_components/base_test_go.mak
-#include ../../build-tools/makefile_components/base_test_python.mak
-
 build: container
 
 # The format here is majorversion:pinnedimageversion
@@ -59,7 +48,7 @@ PROGRESS := $(if $(CI),plain,auto)
 
 container: mariadb_containers mysql_containers
 
-mariadb_containers: prep
+mariadb_containers:
 	for item in $(MARIADB_VERSIONS_amd64); do \
 		set -euo pipefail ; \
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
@@ -68,7 +57,7 @@ mariadb_containers: prep
 		docker buildx build -o type=docker $(DOCKER_ARGS) --progress=$(PROGRESS) --build-arg="DBVERSION=$${baseversion}" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${baseversion}:$(VERSION)" . ; \
 	done
 
-mysql_containers: prep
+mysql_containers:
 	for item in $(MYSQL_VERSIONS_amd64) ; do \
 		set -euo pipefail ; \
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
@@ -79,7 +68,7 @@ mysql_containers: prep
 
 # Below has mariadb_containers and mysql_containers as a prerequisite because those build the amd64 images.
 # So, the multi-arch approach here is a bit different from the ones in the other Makefiles.
-multi-arch: prep mariadb_containers mysql_containers
+multi-arch: mariadb_containers mysql_containers
 	for item in $(MARIADB_VERSIONS_arm64); do \
 		set -euo pipefail ; \
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
@@ -88,7 +77,7 @@ multi-arch: prep mariadb_containers mysql_containers
 		docker buildx build --platform=linux/arm64 $(DOCKER_ARGS) --progress=$(PROGRESS) --build-arg="DBVERSION=$${baseversion}" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${baseversion}:$(VERSION)" . ; \
 	done	
 
-push: prep
+push:
 	for item in $(MARIADB_VERSIONS_amd64); do \
 		set -euo pipefail ;\
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
@@ -103,7 +92,7 @@ push: prep
 		docker buildx build --push --platform linux/amd64 $(DOCKER_ARGS) --progress=$(PROGRESS) --build-arg="DBVERSION=$$baseversion" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)" .; \
 	done
 
-test: prep container
+test: container
 	bash ./test/test_dbserver.sh $(VERSION) # bash execution just for windows make
 
 clean:
@@ -114,5 +103,3 @@ clean:
 		if docker image inspect $(DOCKER_REPO)-mysql-${item}:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mysql-$${item}:$(VERSION); fi; \
 	done
 	@rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
-
-prep: 

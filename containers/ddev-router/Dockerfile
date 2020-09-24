@@ -1,6 +1,6 @@
 FROM nginx:1.18
 
-ENV MKCERT_VERSION=v1.4.1
+ENV MKCERT_VERSION=v1.4.4
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DOCKER_GEN_VERSION 0.7.4
@@ -23,14 +23,14 @@ FORGO_URL="https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-arm64.tgz" \
 DOCKER_GEN_URL="https://github.com/dennisameling/docker-gen/releases/download/0.7.5/docker-gen-linux-arm64-0.7.5.tar.gz" \n\
 DOCKER_GEN_FILE="docker-gen-linux-arm64-0.7.5.tar.gz" \n\
 # PR for official arm64 support pending: https://github.com/FiloSottile/mkcert/pull/284 \n\
-MKCERT_URL="https://github.com/dennisameling/mkcert/releases/download/${MKCERT_VERSION}-ddev/mkcert-${MKCERT_VERSION}-linux-arm64"' > /tmp/ddev/vars; \
+MKCERT_ARCH="linux-arm64"' > /tmp/ddev/vars; \
 
     else \
         printf 'FORGO_IS_TGZ="false" \n\
 FORGO_URL="https://github.com/jwilder/forego/releases/download/v0.16.1/forego" \n\
 DOCKER_GEN_URL="https://github.com/jwilder/docker-gen/releases/download/${DOCKER_GEN_VERSION}/docker-gen-linux-amd64-${DOCKER_GEN_VERSION}.tar.gz" \n\
 DOCKER_GEN_FILE="docker-gen-linux-amd64-${DOCKER_GEN_VERSION}.tar.gz" \n\
-MKCERT_URL="https://github.com/FiloSottile/mkcert/releases/download/$MKCERT_VERSION/mkcert-${MKCERT_VERSION}-linux-amd64"' > /tmp/ddev/vars; \
+MKCERT_ARCH="linux-amd64"' > /tmp/ddev/vars; \
     fi
 
 RUN apt-get -qq update && \
@@ -59,7 +59,7 @@ RUN source /tmp/ddev/vars && \
 RUN mkdir -p /etc/nginx/certs /mnt/ddev-global-cache/mkcert
 
 RUN source /tmp/ddev/vars && \
-    curl -sSL $MKCERT_URL -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkdir -p /root/.local/share && ln -s /mnt/ddev-global-cache/mkcert /root/.local/share/mkcert && mkcert -install
+    curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-${MKCERT_ARCH} -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkdir -p /root/.local/share && ln -s /mnt/ddev-global-cache/mkcert /root/.local/share/mkcert && mkcert -install
 
 # Configure Nginx and apply fix for very long server names
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf \
