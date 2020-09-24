@@ -11,6 +11,6 @@ mv docker-buildx ~/.docker/cli-plugins
 chmod a+x ~/.docker/cli-plugins/docker-buildx
 
 # We need this to get arm64 qemu to work https://github.com/docker/buildx/issues/138#issuecomment-569240559
-	docker run --privileged --rm tonistiigi/binfmt --install all
-	if ! docker buildx inspect ddev-builder-multi --bootstrap >/dev/null; then docker buildx create --name ddev-builder-multi; fi
-	docker buildx use ddev-builder-multi
+docker run --privileged --rm docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
+if ! docker buildx inspect ddev-builder-multi --bootstrap >/dev/null; then docker buildx create --name ddev-builder-multi; fi
+docker buildx use ddev-builder-multi
