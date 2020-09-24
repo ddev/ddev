@@ -154,6 +154,10 @@ ddev composer create --repository=https://repo.magento.com/ magento/project-comm
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)
 		}
 		// Do a spare start, which will create any needed settings files
+		err = app.Stop(false, false)
+		if err != nil {
+			util.Warning("Failed to stop project after composer create: %v", err)
+		}
 		err = app.Start()
 		if err != nil {
 			util.Failed("Failed to start project after composer create: %v", err)
