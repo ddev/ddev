@@ -52,7 +52,7 @@ RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/
 ### ---------------------------ddev-webserver-dev-base--------------------------------------
 ### Build ddev-webserver-dev-base from ddev-webserver-base
 FROM ddev-webserver-base as ddev-webserver-dev-base
-ENV MAILHOG_VERSION=1.0.0
+ENV MAILHOG_VERSION=1.0.1
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="7.3"
 ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux/ddev-live.zip
@@ -66,11 +66,11 @@ SHELL ["/bin/bash", "-c"]
 RUN mkdir /tmp/ddev && \
     if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
         printf 'MKCERT_ARCH="linux-arm64" \n\
-        MAILHOG_URL="https://github.com/dennisameling/MailHog/releases/download/v${MAILHOG_VERSION}-ddev/MailHog_linux_arm64"' > /tmp/ddev/vars; \
+        MAILHOG_ARCH="linux_arm64"' > /tmp/ddev/vars; \
 
     else \
         printf 'MKCERT_ARCH="linux-amd64" \n\
-        MAILHOG_URL="https://github.com/mailhog/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_amd64"' > /tmp/ddev/vars; \
+        MAILHOG_ARCH="linux_amd64"' > /tmp/ddev/vars; \
     fi
 
 # blackfire-php is not available for arm64 (yet)
@@ -99,7 +99,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     zip
 
 ADD ddev-webserver-base-files /
-RUN source /tmp/ddev/vars && curl -sSL ${MAILHOG_URL} -o /usr/local/bin/mailhog; 
+RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/download/v{MAILHOG_VERSION}/MailHog_{MAILHOG_ARCH} -o /usr/local/bin/mailhog; 
 
 RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod +x /usr/local/bin/terminus
 RUN curl -sSL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod +x /usr/local/bin/ddev-live && rm ddev-live.zip

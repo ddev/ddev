@@ -3,7 +3,7 @@ FROM nginx:1.18
 ENV MKCERT_VERSION=v1.4.4
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV DOCKER_GEN_VERSION 0.7.4
+ENV DOCKER_GEN_VERSION 0.7.5
 ENV DOCKER_HOST unix:///tmp/docker.sock
 
 # TARGETPLATFORM is Docker buildx's target platform (e.g. linux/arm64), while 
@@ -19,17 +19,13 @@ RUN mkdir /tmp/ddev && \
 FORGO_IS_TGZ="true" \n\
 FORGO_FILENAME="forego-stable-linux-arm64.tgz" \n\
 FORGO_URL="https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-arm64.tgz" \n\
-# jwilder/docker-gen doesnt have an arm64 download so we created a custom build \n\
-DOCKER_GEN_URL="https://github.com/dennisameling/docker-gen/releases/download/0.7.5/docker-gen-linux-arm64-0.7.5.tar.gz" \n\
-DOCKER_GEN_FILE="docker-gen-linux-arm64-0.7.5.tar.gz" \n\
-# PR for official arm64 support pending: https://github.com/FiloSottile/mkcert/pull/284 \n\
+DOCKER_GEN_ARCH="linux-arm64" \n\
 MKCERT_ARCH="linux-arm64"' > /tmp/ddev/vars; \
 
     else \
         printf 'FORGO_IS_TGZ="false" \n\
 FORGO_URL="https://github.com/jwilder/forego/releases/download/v0.16.1/forego" \n\
-DOCKER_GEN_URL="https://github.com/jwilder/docker-gen/releases/download/${DOCKER_GEN_VERSION}/docker-gen-linux-amd64-${DOCKER_GEN_VERSION}.tar.gz" \n\
-DOCKER_GEN_FILE="docker-gen-linux-amd64-${DOCKER_GEN_VERSION}.tar.gz" \n\
+DOCKER_GEN_ARCH="linux-amd64" \n\
 MKCERT_ARCH="linux-amd64"' > /tmp/ddev/vars; \
     fi
 
@@ -52,7 +48,8 @@ RUN source /tmp/ddev/vars && \
     fi
 
 RUN source /tmp/ddev/vars && \
-    wget -q $DOCKER_GEN_URL && \
+    DOCKER_GEN_FILE="docker-gen-${DOCKER_GEN_ARCH}-${DOCKER_GEN_VERSION}.tar.gz" && \
+    wget -q https://github.com/drud/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_FILE} && \
     tar -C /usr/local/bin -xvzf $DOCKER_GEN_FILE && \
     rm /$DOCKER_GEN_FILE
     
