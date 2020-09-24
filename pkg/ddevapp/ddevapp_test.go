@@ -454,9 +454,8 @@ func TestDdevStart(t *testing.T) {
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
 func TestDdevStartMultipleHostnames(t *testing.T) {
-	if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
-		t.Skipf("Skpping %s on OS=%s because it requires sudo to add to /etc/hosts", t.Name(), runtime.GOOS)
-		// Note that linux is usually run on CircleCi where sudo *is* available
+	if os.Getenv("CI") == "true" || os.Getenv("BUILDKITE") == "true" {
+		t.Skipf("Skpping %s on OS=%s because running on CI and it requires sudo to add to /etc/hosts", t.Name(), runtime.GOOS)
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
