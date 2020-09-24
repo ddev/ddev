@@ -269,7 +269,7 @@ jobs:
     - run:
         command: |
           . ~/.bashrc
-          for dir in containers/*
+          for dir in containers/*/
               do pushd $dir
               echo "--- Build container $dir"
               time make container DOCKER_ARGS=--no-cache EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
@@ -282,7 +282,7 @@ jobs:
     - run:
         command: |
           . ~/.bashrc
-          for dir in containers/*
+          for dir in containers/*/
               do pushd $dir
               echo "--- Cross-compile container $dir"
               time make multi-arch EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
