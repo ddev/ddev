@@ -2,7 +2,7 @@
 PROGRESS := $(if $(CI),plain,auto)
 
 container:
-    docker buildx build --platform linux/amd64 --progress=$(PROGRESS) -o type=docker -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) -f .dockerfile .
+	docker buildx build --platform linux/amd64 --progress=$(PROGRESS) -o type=docker -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) -f .dockerfile .
 
 push:
-    docker buildx build --push --platform $(BUILD_ARCHS) --progress=$(PROGRESS) -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) -f .dockerfile .
+	docker buildx build --push --platform $(BUILD_ARCHS) --progress=$(PROGRESS) -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) -f .dockerfile .
