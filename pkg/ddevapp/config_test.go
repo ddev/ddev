@@ -30,14 +30,22 @@ import (
 func TestNewConfig(t *testing.T) {
 	assert := asrt.New(t)
 	// Create a temporary directory and change to it for the duration of this test.
-	testDir := testcommon.CreateTmpDir("TestNewConfig")
+	testDir := testcommon.CreateTmpDir(t.Name())
 
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
+	pwd, _ := os.Getwd()
 
 	// Load a new Config
 	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+	})
 
 	// Ensure the config uses specified defaults.
 	assert.Equal(app.GetDBImage(), version.GetDBImage(nodeps.MariaDB))
@@ -62,24 +70,29 @@ func TestNewConfig(t *testing.T) {
 func TestDisasterConfig(t *testing.T) {
 	assert := asrt.New(t)
 
-	testDir, _ := os.Getwd()
+	pwd, _ := os.Getwd()
 
 	// Make sure we're not allowed to config in home directory.
 	tmpDir, _ := homedir.Dir()
 	_, err := NewApp(tmpDir, false, nodeps.ProviderDefault)
 	assert.Error(err)
 	assert.Contains(err.Error(), "ddev config is not useful")
-	_ = os.Chdir(testDir)
+	_ = os.Chdir(pwd)
 
 	// Create a temporary directory and change to it for the duration of this test.
-	tmpDir = testcommon.CreateTmpDir("TestDisasterConfig")
-
-	defer testcommon.CleanupDir(tmpDir)
-	defer testcommon.Chdir(tmpDir)()
+	tmpDir = testcommon.CreateTmpDir(t.Name())
 
 	// Load a new Config
 	app, err := NewApp(tmpDir, false, nodeps.ProviderDefault)
 	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
+	})
 
 	// WriteConfig the app.
 	err = app.WriteConfig()
@@ -148,15 +161,21 @@ func TestHostName(t *testing.T) {
 func TestWriteDockerComposeYaml(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	testDir := testcommon.CreateTmpDir("TestWriteDockerCompose")
+	pwd, _ := os.Getwd()
+	testDir := testcommon.CreateTmpDir(t.Name())
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
 	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
 
-	// nolint: errcheck
-	defer app.Stop(true, false)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+	})
 
 	app.Name = util.RandString(32)
 	app.Type = GetValidAppTypes()[0]
@@ -186,6 +205,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 func TestConfigCommand(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
 
 	const apptypePos = 0
 	const phpVersionPos = 1
@@ -196,12 +216,7 @@ func TestConfigCommand(t *testing.T) {
 	}
 
 	for testName, testValues := range testMatrix {
-
-		testDir := testcommon.CreateTmpDir("TestConfigCommand_" + testName)
-
-		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-		defer testcommon.CleanupDir(testDir)
-		defer testcommon.Chdir(testDir)()
+		testDir := testcommon.CreateTmpDir(t.Name() + "_" + testName)
 
 		// Create a docroot folder.
 		err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
@@ -214,6 +229,14 @@ func TestConfigCommand(t *testing.T) {
 		app, err := NewApp(testDir, true, nodeps.ProviderDefault)
 		assert.NoError(err)
 
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
+			assert.NoError(err)
+			err = os.Chdir(pwd)
+			assert.NoError(err)
+			err = os.RemoveAll(testDir)
+			assert.NoError(err)
+		})
 		// Randomize some values to use for Stdin during testing.
 		name := strings.ToLower(util.RandString(16))
 		invalidAppType := strings.ToLower(util.RandString(8))
@@ -612,22 +635,27 @@ func TestConfigValidate(t *testing.T) {
 func TestWriteConfig(t *testing.T) {
 	assert := asrt.New(t)
 
-	testDir, _ := os.Getwd()
-	//nolint: errcheck
-	defer os.Chdir(testDir)
+	pwd, _ := os.Getwd()
 
 	projDir, err := filepath.Abs(testcommon.CreateTmpDir("TestWriteConfig"))
 	require.NoError(t, err)
 
 	err = fileutil.CopyDir("./testdata/TestWriteConfig/.ddev", filepath.Join(projDir, ".ddev"))
 	require.NoError(t, err)
-	//nolint: errcheck
-	defer os.RemoveAll(projDir)
 
 	app, err := NewApp(projDir, true, "")
 	assert.NoError(err)
 	err = os.Chdir(projDir)
 	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		err = os.RemoveAll(projDir)
+		assert.NoError(err)
+	})
 
 	// The default NewApp read should read config overrides, so we should have "config.extra.yaml"
 	// as the APIVersion
@@ -735,9 +763,16 @@ func TestPHPOverrides(t *testing.T) {
 	err = fileutil.CopyFile(filepath.Join(tDir, "testdata/TestPHPOverrides/phpinfo.php"), filepath.Join(site.Dir, site.Docroot, "phpinfo.php"))
 	assert.NoError(err)
 
+	testcommon.ClearDockerEnv()
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+	_ = app.Stop(true, false)
+
 	// And when we're done, we have to clean those out again.
 	t.Cleanup(func() {
 		runTime()
+		_ = app.Stop(true, false)
+
 		err = os.RemoveAll(filepath.Join(site.Dir, ".ddev/php"))
 		if err != nil {
 			t.Logf("failed to remove .ddev/php: %v", err)
@@ -748,12 +783,6 @@ func TestPHPOverrides(t *testing.T) {
 		}
 	})
 
-	testcommon.ClearDockerEnv()
-	err = app.Init(site.Dir)
-	assert.NoError(err)
-	_ = app.Stop(true, false)
-	// nolint: errcheck
-	defer app.Stop(true, false)
 	startErr := app.StartAndWait(5)
 	if startErr != nil {
 		logs, _ := GetErrLogsFromApp(app, startErr)
@@ -865,8 +894,10 @@ func TestTimezoneConfig(t *testing.T) {
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
-	// nolint: errcheck
-	defer app.Stop(true, false)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
 
 	err = app.Start()
 	assert.NoError(err)
@@ -963,20 +994,25 @@ RUN touch /var/tmp/`+"added-by-"+item+".txt"))
 // AFTER config.yaml
 func TestConfigLoadingOrder(t *testing.T) {
 	assert := asrt.New(t)
-	testDir, _ := os.Getwd()
-	//nolint: errcheck
-	defer os.Chdir(testDir)
+	pwd, _ := os.Getwd()
 
-	projDir, err := filepath.Abs(testcommon.CreateTmpDir("TestConfigLoadingOrder"))
+	projDir, err := filepath.Abs(testcommon.CreateTmpDir(t.Name()))
 	require.NoError(t, err)
 
 	err = fileutil.CopyDir("./testdata/TestConfigLoadingOrder/.ddev", filepath.Join(projDir, ".ddev"))
 	require.NoError(t, err)
-	//nolint: errcheck
-	defer os.RemoveAll(projDir)
 
 	app, err := NewApp(projDir, true, "")
 	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(projDir)
+		assert.NoError(err)
+	})
 	err = os.Chdir(app.AppRoot)
 	assert.NoError(err)
 	_, err = app.ReadConfig(true)

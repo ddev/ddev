@@ -25,21 +25,21 @@ if curl --fail -s 127.0.0.1/phpstatus >/dev/null ; then
     phpstatus=true
     printf "phpstatus: OK "
 else
-    printf "phpstatus FAILED "
+    printf "phpstatus: FAILED "
 fi
 
 if ls /var/www/html >/dev/null; then
     htmlstatus=true
     printf "/var/www/html: OK "
 else
-    printf "/var/www/html access FAILED"
+    printf "/var/www/html: FAILED"
 fi
 
 if curl --fail -s 127.0.0.1:8025 >/dev/null; then
     mailhog=true
     printf "mailhog: OK " ;
 else
-    printf "mailhog FAILED "
+    printf "mailhog: FAILED "
 fi
 
 if ${phpstatus} = true -a ${htmlaccess} = true -a ${mailhog} = true ; then
