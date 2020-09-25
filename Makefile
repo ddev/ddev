@@ -127,12 +127,8 @@ DDEVNAME=ddev
 ifeq ($(BUILD_OS),windows)
 	DDEVNAME=ddev.exe
 endif
-# Default case is buildos_build_arch
+
 DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/$(DDEVNAME)
-# But Linux_amd64 installs into bin/ for some reason
-ifeq ($(BUILD_OS)_$(BUILD_ARCH),linux_amd64)
-	DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/ddev
-endif
 
 # Override test section with tests specific to ddev
 test: testpkg testcmd
