@@ -62,14 +62,17 @@ func TestPostConfigAction(t *testing.T) {
 	}
 
 	for appType, expectedPHPVersion := range appTypes {
-		testDir := testcommon.CreateTmpDir("TestApptype")
-
-		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-		defer testcommon.CleanupDir(testDir)
-		defer testcommon.Chdir(testDir)()
+		testDir := testcommon.CreateTmpDir(t.Name())
 
 		app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
 		assert.NoError(err)
+
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
+			assert.NoError(err)
+			err = os.RemoveAll(testDir)
+			assert.NoError(err)
+		})
 
 		// Prompt for apptype as a way to get it into the config.
 		input := fmt.Sprintf(appType + "\n")

@@ -471,6 +471,8 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 		// sub1.<sitename>.ddev.site and sitename.ddev.site are deliberately included to prove they don't
 		// cause ddev-router failures"
+		// Note that these AdditionalFQDNs require sudo privileges, which the test runners
+		// don't typically have.
 		app.AdditionalFQDNs = []string{"one.example.com", "two.example.com", "a.one.example.com", site.Name + "." + app.ProjectTLD, "sub1." + site.Name + "." + app.ProjectTLD}
 
 		err = app.WriteConfig()
@@ -3094,14 +3096,19 @@ func TestPortSpecifications(t *testing.T) {
 	_ = os.Chdir(testDir)
 	ddevDir, _ := filepath.Abs("./testdata/TestPortSpecifications/.ddev")
 
-	specAppPath := testcommon.CreateTmpDir("specapp")
-	//nolint: errcheck
-	defer os.RemoveAll(specAppPath)
+	specAppPath := testcommon.CreateTmpDir(t.Name() + "_specapp")
+
 	err = fileutil.CopyDir(ddevDir, filepath.Join(specAppPath, ".ddev"))
-	require.NoError(t, err, "could not copy to spectAppPath %v", specAppPath)
+	require.NoError(t, err, "could not copy to specAppPath %v", specAppPath)
 
 	specAPP, err := ddevapp.NewApp(specAppPath, false, "")
 	assert.NoError(err)
+
+	t.Cleanup(func() {
+		_ = specAPP.Stop(true, false)
+		err = os.RemoveAll(specAppPath)
+		assert.NoError(err)
+	})
 
 	// It should be able to WriteConfig and Start with the configured host ports it came up with
 	err = specAPP.WriteConfig()
@@ -3121,6 +3128,9 @@ func TestPortSpecifications(t *testing.T) {
 	assert.NoError(err)
 	conflictApp.Name = "conflictapp"
 
+	t.Cleanup(func() {
+		_ = conflictApp.Stop(true, false)
+	})
 	err = conflictApp.WriteConfig()
 	assert.Error(err)
 	err = conflictApp.Start()
@@ -3135,8 +3145,7 @@ func TestPortSpecifications(t *testing.T) {
 	assert.NoError(err)
 	err = conflictApp.Start()
 	assert.NoError(err)
-	//nolint: errcheck
-	defer conflictApp.Stop(true, false)
+
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name])
 	require.NotEmpty(t, globalconfig.DdevGlobalConfig.ProjectList[conflictApp.Name].UsedHostPorts)
 }
