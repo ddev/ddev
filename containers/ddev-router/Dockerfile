@@ -3,7 +3,7 @@ FROM nginx:1.18
 ENV MKCERT_VERSION=v1.4.4
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV DOCKER_GEN_VERSION 0.7.6
+ENV DOCKER_GEN_VERSION 0.7.7
 ENV DOCKER_HOST unix:///tmp/docker.sock
 
 # TARGETPLATFORM is Docker buildx's target platform (e.g. linux/arm64), while 
