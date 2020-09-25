@@ -6,7 +6,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-MKCERT_VERSION=v1.4.4
+MKCERT_VERSION=v1.4.6
 BUILD_IMAGE_TARBALLS=false
 
 ARTIFACTS=${1:-/artifacts}
@@ -42,7 +42,7 @@ $BUILTPATH/ddev_gen_autocomplete
 
 # The completion scripts get placed into the linux build dir (.gotmp/bin)
 # So now copy them into the real build directory
-for dir in .gotmp/bin/linux_amd64 .gotmp/bin/linux_arm64 .gotmp/bin/linux_arm .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64 .gotmp/bin/windows_arm; do
+for dir in .gotmp/bin/linux_amd64 .gotmp/bin/linux_arm64 .gotmp/bin/linux_arm .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64; do
   cp .gotmp/bin/ddev_*completion* $dir
 done
 
@@ -82,13 +82,6 @@ if [ -d chocolatey ]; then
     tar -czf $ARTIFACTS/ddev_chocolatey_amd64-.$VERSION.tar.gz chocolatey
 fi
 popd
-
-# generate windows-arm tarball/zipball
-pushd $BASE_DIR/.gotmp/bin/windows_arm
-curl -sSL -o mkcert.exe https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-arm.exe
-tar -czf $ARTIFACTS/ddev_windows-arm.$VERSION.tar.gz ddev.exe *completion*.sh
-popd
-
 
 # Create macOS and Linux homebrew bottles
 for os in high_sierra x86_64_linux ; do

@@ -11,7 +11,7 @@ GOTMP=.gotmp
 SHELL = /bin/bash
 PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
-.PHONY: darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64 windows_arm
+.PHONY: darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
@@ -21,7 +21,7 @@ GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --en
 WINDOWS_SUDO_VERSION=v0.0.1
 WINNFSD_VERSION=2.4.0
 NSSM_VERSION=2.24-101-g897c7ad
-MKCERT_VERSION=v1.4.1
+MKCERT_VERSION=v1.4.6
 
 GOTESTSUM_FORMAT ?= short-verbose
 TESTTMP=/tmp/testresults
@@ -104,9 +104,8 @@ darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev
 darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev
 windows_amd64: $(GOTMP)/bin/windows_amd64/ddev.exe
 windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
-windows_arm: $(GOTMP)/bin/windows_arm/ddev.exe
 
-TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm/ddev.exe
+TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
 $(TARGETS): pullbuildimage $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
 	@echo "LDFLAGS=$(LDFLAGS)"
