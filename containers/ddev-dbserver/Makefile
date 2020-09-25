@@ -76,15 +76,14 @@ multi-arch: mariadb_containers mysql_containers
 	done	
 
 push:
+	set -euo pipefail ;\
 	for item in $(MARIADB_VERSIONS_amd64); do \
-		set -euo pipefail ;\
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
 		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
-		export archs=$$(if [[ "$(MARIADB_VERSIONS_arm64)" == *"$$item"* ]]; then echo "linux/amd64,linux/arm64,linux/arm/v7"; else echo "linux/amd64"; fi);\
+		export archs=$$(if [[ "$(MARIADB_VERSIONS_arm64)" == *"$$item"* ]]; then echo "linux/amd64,linux/arm64"; else echo "linux/amd64"; fi);\
 		docker buildx build --push --platform $${archs} $(DOCKER_ARGS) --progress=$(PROGRESS) --build-arg="DBVERSION=$${baseversion}" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${baseversion}:$(VERSION)" .; \
-	done
+	done \
 	for item in $(MYSQL_VERSIONS_amd64) ; do \
-		set -euo pipefail ;\
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
 		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
 		docker buildx build --push --platform linux/amd64 $(DOCKER_ARGS) --progress=$(PROGRESS) --build-arg="DBVERSION=$$baseversion" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)" .; \

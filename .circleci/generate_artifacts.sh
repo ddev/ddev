@@ -42,7 +42,7 @@ $BUILTPATH/ddev_gen_autocomplete
 
 # The completion scripts get placed into the linux build dir (.gotmp/bin)
 # So now copy them into the real build directory
-for dir in .gotmp/bin/linux_amd64 .gotmp/bin/linux_arm64 .gotmp/bin/linux_arm .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64; do
+for dir in .gotmp/bin/linux_amd64 .gotmp/bin/linux_arm64 .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64; do
   cp .gotmp/bin/ddev_*completion* $dir
 done
 
@@ -69,10 +69,10 @@ tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev *completion*.sh
 popd
 
 # Generate linux-arm tarball/zipball
-pushd $BASE_DIR/.gotmp/bin/linux_arm
-curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm && chmod +x mkcert
-tar -czf $ARTIFACTS/ddev_linux-arm.$VERSION.tar.gz ddev *completion*.sh
-popd
+#pushd $BASE_DIR/.gotmp/bin/linux_arm
+#curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm && chmod +x mkcert
+#tar -czf $ARTIFACTS/ddev_linux-arm.$VERSION.tar.gz ddev *completion*.sh
+#popd
 
 # generate windows-amd64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/windows_amd64
