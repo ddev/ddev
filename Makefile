@@ -94,7 +94,8 @@ DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 build: $(DEFAULT_BUILD)
 
 pullbuildimage:
-	docker pull $(BUILD_IMAGE) || true
+	@echo "Pulling $(BUILD_IMAGE) if possible..."
+	@docker pull $(BUILD_IMAGE) || true
 
 # Provide shorthand targets
 linux_amd64: $(GOTMP)/bin/linux_amd64/ddev
@@ -108,8 +109,8 @@ windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
 $(TARGETS): pullbuildimage $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
-	@echo "LDFLAGS=$(LDFLAGS)"
-	export TARGET=$(word 3, $(subst /, ,$@)); \
+	@#echo "LDFLAGS=$(LDFLAGS)"
+	@export TARGET=$(word 3, $(subst /, ,$@)); \
 	export GOOS="$${TARGET%_*}"; \
 	export GOARCH="$${TARGET#*_}"; \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} \
