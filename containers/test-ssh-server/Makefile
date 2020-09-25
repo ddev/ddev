@@ -34,19 +34,21 @@ VERSION := $(shell git describe --tags --always --dirty)
 # This version-strategy uses a manual value to set the version string
 #VERSION := 1.2.3
 
-# Each section of the Makefile is included from standard components below.
-# If you need to override one, import its contents below and comment out the
-# include. That way the base components can easily be updated as our general needs
-# change.
-# include build-tools/makefile_components/base_build_go.mak
-include ../../build-tools/makefile_components/base_build_python-docker.mak
-include ../../build-tools/makefile_components/base_container.mak
-include ../../build-tools/makefile_components/base_push.mak
-# include build-tools/makefile_components/base_test_go.mak
-#include build-tools/makefile_components/base_test_python.mak
+# In CI environments, use the plain Docker build progress to not overload the CI logs
+PROGRESS := $(if $(CI),plain,auto)
 
+# Tests always run against amd64 (build host). Once tests have passed, a multi-arch build
+# will be generated and pushed (the amd64 build will be cached automatically to prevent it from building twice).
+# arm64 doesn't make sense here (yet) since gotechnies/alpine-ssh is amd64-only
+BUILD_ARCHS=linux/amd64
+
+include ../containers_shared.mak
 
 # Additional targets can be added here
 # Also, existing targets can be overridden by copying and customizing them.
+multi-arch:
+	docker buildx build --platform $(BUILD_ARCHS) --progress=$(PROGRESS) -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) .; \
+	echo "created multi-arch builds $(BUILD_ARCHS) for $(DOCKER_REPO)";
+
 test: container
 	true
