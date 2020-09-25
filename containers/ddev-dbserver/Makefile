@@ -80,7 +80,7 @@ push:
 		set -euo pipefail ;\
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
 		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
-		export archs=$$(if [[ "$(MARIADB_VERSIONS_arm64)" == *"$$item"* ]]; then echo "linux/amd64,linux/arm64,linux_arm"; else echo "linux/amd64"; fi);\
+		export archs=$$(if [[ "$(MARIADB_VERSIONS_arm64)" == *"$$item"* ]]; then echo "linux/amd64,linux/arm64,linux/arm/v7"; else echo "linux/amd64"; fi);\
 		docker buildx build --push --platform $${archs} $(DOCKER_ARGS) --progress=$(PROGRESS) --build-arg="DBVERSION=$${baseversion}" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${baseversion}:$(VERSION)" .; \
 	done
 	for item in $(MYSQL_VERSIONS_amd64) ; do \
@@ -100,4 +100,4 @@ clean:
 	for item in $(MYSQL_VERSIONS); do \
 		if docker image inspect $(DOCKER_REPO)-mysql-${item}:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mysql-$${item}:$(VERSION); fi; \
 	done
-	@rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
+	@rm -rf darwin windows container VERSION.txt .docker_image

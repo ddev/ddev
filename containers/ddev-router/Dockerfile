@@ -14,13 +14,14 @@ ARG BUILDPLATFORM
 SHELL ["/bin/bash", "-c"]
 
 RUN mkdir /tmp/ddev && \
-    if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
-        printf '# jwilder/forego doesnt have an arm64 download so we resort to the original forego repo \n\
+    ARCH=${TARGETPLATFORM#*/}; \
+    if [[ ${ARCH} = "arm*" ]]; then \
+        printf '# jwilder/forego doesnt have arm downloads so we resort to the original forego repo \n\
 FORGO_IS_TGZ="true" \n\
-FORGO_FILENAME="forego-stable-linux-arm64.tgz" \n\
-FORGO_URL="https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-arm64.tgz" \n\
-DOCKER_GEN_ARCH="linux-arm64" \n\
-MKCERT_ARCH="linux-arm64"' > /tmp/ddev/vars; \
+FORGO_FILENAME="forego-stable-linux-${ARCH}.tgz" \n\
+FORGO_URL="https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-${ARCH}.tgz" \n\
+DOCKER_GEN_ARCH="linux-${ARCH}" \n\
+MKCERT_ARCH="linux-${ARCH}"' > /tmp/ddev/vars; \
 
     else \
         printf 'FORGO_IS_TGZ="false" \n\
