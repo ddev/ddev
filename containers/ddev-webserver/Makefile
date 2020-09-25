@@ -8,8 +8,6 @@ DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
 
 DEFAULT_IMAGES = ddev-webserver
 
-.PHONY: prep
-
 # Top-level directories to build
 #SRC_DIRS := filexs drudapi secrets utils
 

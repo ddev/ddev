@@ -8,8 +8,6 @@
 # Docker repo for a push
 DOCKER_REPO ?= drud/test-ssh-server
 
-.PHONY: prep
-
 # Top-level directories to build
 # SRC_DIRS := files drudapi secrets utils
 

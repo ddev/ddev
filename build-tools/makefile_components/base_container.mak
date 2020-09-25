@@ -8,9 +8,6 @@ SANITIZED_DOCKER_REPO = $(subst /,_,$(DOCKER_REPO))
 
 DOTFILE_IMAGE = $(subst /,_,$(IMAGE))-$(VERSION)
 
-# In CI environments, use the plain Docker build progress to not overload the CI logs
-PROGRESS := $(if $(CI),plain,auto)
-
 container: .container-$(DOTFILE_IMAGE) container-name
 
 .container-$(DOTFILE_IMAGE): $(wildcard Dockerfile Dockerfile.in) container-name
@@ -21,8 +18,7 @@ container: .container-$(DOTFILE_IMAGE) container-name
 	@echo "$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always)"  >.docker_image
 	# Add the .docker_image into the build so it's easy to figure out where a docker image came from.
 	@echo "ADD .docker_image /$(SANITIZED_DOCKER_REPO)_VERSION_INFO.txt" >>.dockerfile
-	# docker build -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) -f .dockerfile .
-	docker buildx build --platform linux/amd64 --progress=$(PROGRESS) -o type=docker -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) -f .dockerfile .
+	docker build -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) -f .dockerfile .
 	@docker images -q $(DOCKER_REPO):$(VERSION) >$@
 
 container-name:

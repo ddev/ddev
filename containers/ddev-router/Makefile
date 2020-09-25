@@ -8,8 +8,6 @@
 # Docker repo for a push
 DOCKER_REPO ?= drud/ddev-router
 
-.PHONY: prep
-
 # Upstream repo used in the Dockerfile
 # UPSTREAM_REPO ?=
 

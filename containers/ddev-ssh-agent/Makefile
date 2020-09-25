@@ -5,8 +5,6 @@
 # Docker repo for a push
 DOCKER_REPO ?= drud/ddev-ssh-agent
 
-.PHONY: prep
-
 # Top-level directories to build
 #SRC_DIRS := filexs drudapi secrets utils
 

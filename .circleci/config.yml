@@ -275,20 +275,11 @@ jobs:
               time make container DOCKER_ARGS=--no-cache EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
               echo "--- Test container $dir"
               time make test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
-              popd
-          done
-        name: linux container test
-    
-    - run:
-        command: |
-          . ~/.bashrc
-          for dir in containers/*/
-              do pushd $dir
               echo "--- Cross-compile container $dir"
               time make multi-arch EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
               popd
           done
-        name: linux container multi-arch
+        name: linux container test
 
     - save_cache:
         key: linux-v13

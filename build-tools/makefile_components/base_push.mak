@@ -6,7 +6,7 @@
 
 push: .push-$(DOTFILE_IMAGE) push-name
 .push-$(DOTFILE_IMAGE): .container-$(DOTFILE_IMAGE)
-	docker buildx build --push --platform $(BUILD_ARCHS) --progress=$(PROGRESS) -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) -f .dockerfile .
+	docker push $(DOCKER_REPO):$(VERSION)
 	@docker images -q $(DOCKER_REPO):$(VERSION) > $@
 
 push-name:

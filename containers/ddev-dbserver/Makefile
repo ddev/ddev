@@ -9,8 +9,6 @@
 DOCKER_REPO ?= drud/ddev-dbserver
 SHELL=/bin/bash
 
-.PHONY: prep
-
 # Upstream repo used in the Dockerfile
 # UPSTREAM_REPO ?= oraclelinux:7.3
 
