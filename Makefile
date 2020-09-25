@@ -11,6 +11,7 @@ GOTMP=.gotmp
 SHELL = /bin/bash
 PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
+.PHONY: darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64 windows_arm
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
@@ -75,7 +76,6 @@ LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
 BUILD_IMAGE ?= drud/golang-build-container:v1.15.2
 DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
           	    -v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)"                              \
-          	    -v "/$(PWD)/$(GOTMP)/bin:/go/bin" \
           	    -e GOPATH="//workdir/$(GOTMP)" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -e GOFLAGS="$(USEMODVENDOR)" \
@@ -96,13 +96,27 @@ build: $(DEFAULT_BUILD)
 pullbuildimage:
 	docker pull $(BUILD_IMAGE) || true
 
-linux_amd64 linux_arm64 linux_arm darwin_amd64 darwin_arm64 windows_amd64 windows_arm: pullbuildimage $(GOFILES)
+# Provide shorthand targets
+linux_amd64: $(GOTMP)/bin/linux_amd64/ddev
+linux_arm64: $(GOTMP)/bin/linux_arm64/ddev
+linux_arm: $(GOTMP)/bin/linux_arm/ddev
+darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev
+darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev
+windows_amd64: $(GOTMP)/bin/windows_amd64/ddev.exe
+windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
+windows_arm: $(GOTMP)/bin/windows_arm/ddev.exe
+
+TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_arm/ddev.exe
+$(TARGETS): pullbuildimage $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)"
-	@echo $(shell if [ "$(BUILD_OS)" = "windows" ]; then echo "windows build: BUILD_OS=$(BUILD_OS)  DOCKER_TOOLBOX_INSTALL_PATH=$(DOCKER_TOOLBOX_INSTALL_PATH) PWD=$(PWD) S="; fi )
-	@mkdir -p $(GOTMP)/{.cache,pkg,src,bin}
 	@echo "LDFLAGS=$(LDFLAGS)"
+	export TARGET=$(word 3, $(subst /, ,$@)); \
+	export GOOS="$${TARGET%_*}"; \
+	export GOARCH="$${TARGET#*_}"; \
+	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} \
+	echo "TARGET=$$TARGET; GOOS=$$GOOS; GOARCH=$$GOARCH"; \
 	$(DOCKERBUILDCMD) \
-        bash -c "GOOS=$(word 1, $(subst _, ,$@)) GOARCH=$(word 2, $(subst _, ,$@)) go install -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER) && touch $@"
+        bash -c "GOOS=$$GOOS GOARCH=$$GOARCH go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)"
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 

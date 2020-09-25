@@ -6,7 +6,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-MKCERT_VERSION=v1.4.0
+MKCERT_VERSION=v1.4.4
 BUILD_IMAGE_TARBALLS=false
 
 ARTIFACTS=${1:-/artifacts}
@@ -21,17 +21,7 @@ if [ "${VERSION}" = "${VERSION%%-*}" ]; then
     BUILD_IMAGE_TARBALLS=true
 fi
 
-case "${OSTYPE}" in
-darwin*)
-  BUILTPATH=.gotmp/bin/darwin_amd64
-  ;;
-linux*)
-  BUILTPATH=.gotmp/bin
-  ;;
-windows*)
-  BUILTPATH=.gotmp/bin/windows_amd64
-  ;;
-esac
+BUILTPATH=.gotmp/bin/$(go env GOOS)_$(go env GOARCH)
 
 if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
     # Make sure we have all our docker images, and save them in a tarball
@@ -52,7 +42,7 @@ $BUILTPATH/ddev_gen_autocomplete
 
 # The completion scripts get placed into the linux build dir (.gotmp/bin)
 # So now copy them into the real build directory
-for dir in .gotmp/bin/linux_arm64 .gotmp/bin/linux_arm .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64 .gotmp/bin/windows_arm; do
+for dir in .gotmp/bin/linux_amd64 .gotmp/bin/linux_arm64 .gotmp/bin/linux_arm .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64 .gotmp/bin/windows_arm; do
   cp .gotmp/bin/ddev_*completion* $dir
 done
 
@@ -62,33 +52,31 @@ cp $BASE_DIR/.gotmp/bin/windows_amd64/ddev_windows_installer*.exe $ARTIFACTS
 
 # Generate macOS-amd64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/darwin_amd64
-curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-darwin-amd64 && chmod +x mkcert
+curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-darwin-amd64 && chmod +x mkcert
 tar -czf $ARTIFACTS/ddev_macos-amd64.$VERSION.tar.gz ddev *completion*.sh mkcert
 popd
 
 # Generate linux-amd64 tarball/zipball
-pushd $BASE_DIR/.gotmp/bin
-curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-amd64 && chmod +x mkcert
+pushd $BASE_DIR/.gotmp/bin/linux_amd64
+curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-amd64 && chmod +x mkcert
 tar -czf $ARTIFACTS/ddev_linux-amd64.$VERSION.tar.gz ddev *completion*.sh mkcert
 popd
 
 # Generate linux-arm64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/linux_arm64
-# mkcert will be ready later
-# curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm64 && chmod +x mkcert
+curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm64 && chmod +x mkcert
 tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev *completion*.sh
 popd
 
 # Generate linux-arm tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/linux_arm
-# mkcert will be ready later
-# curl -sSL -o mkcert https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm && chmod +x mkcert
+curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm && chmod +x mkcert
 tar -czf $ARTIFACTS/ddev_linux-arm.$VERSION.tar.gz ddev *completion*.sh
 popd
 
 # generate windows-amd64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/windows_amd64
-curl -sSL -o mkcert.exe https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-amd64.exe
+curl -sSL -o mkcert.exe https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-amd64.exe
 tar -czf $ARTIFACTS/ddev_windows-amd64.$VERSION.tar.gz ddev.exe *completion*.sh mkcert.exe
 if [ -d chocolatey ]; then
     tar -czf $ARTIFACTS/ddev_chocolatey_amd64-.$VERSION.tar.gz chocolatey
@@ -97,10 +85,8 @@ popd
 
 # generate windows-arm tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/windows_arm
-# mkcert not available yet
-#curl -sSL -o mkcert.exe https://github.com/FiloSottile/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-arm.exe
+curl -sSL -o mkcert.exe https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-arm.exe
 tar -czf $ARTIFACTS/ddev_windows-arm.$VERSION.tar.gz ddev.exe *completion*.sh
-# No expected chocolatey support at this point
 popd
 
 
@@ -115,7 +101,7 @@ for os in high_sierra x86_64_linux ; do
     cp $BASE_DIR/.gotmp/bin/ddev_fish_completion.sh $BOTTLE_BASE/share/fish/vendor_completions.d/ddev.fish
 
     if [ "${os}" = "high_sierra" ]; then cp $BASE_DIR/.gotmp/bin/darwin_amd64/ddev $BOTTLE_BASE/bin ; fi
-    if [ "${os}" = "x86_64_linux" ]; then cp $BASE_DIR/.gotmp/bin/ddev $BOTTLE_BASE/bin ; fi
+    if [ "${os}" = "x86_64_linux" ]; then cp $BASE_DIR/.gotmp/bin/linux_amd64/ddev $BOTTLE_BASE/bin ; fi
     cp $BASE_DIR/{README.md,LICENSE} $BOTTLE_BASE
     tar -czf $ARTIFACTS/ddev-$NO_V_VERSION.$os.bottle.tar.gz -C /tmp/bottle .
 done
