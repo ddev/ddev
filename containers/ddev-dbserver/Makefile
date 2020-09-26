@@ -20,6 +20,8 @@ MARIADB_VERSIONS_arm64=10.2:10.2 10.3:10.3 10.4:10.4 10.5:10.5
 # MySQL images on Docker Hub currently are amd64 only
 MYSQL_VERSIONS_arm64=
 
+include ../containers_shared.mak
+
 container: mariadb_containers mysql_containers
 
 mariadb_containers:
