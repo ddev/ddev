@@ -1,34 +1,28 @@
 FROM nginx:1.18
 
-ENV MKCERT_VERSION=v1.4.4
+ENV MKCERT_VERSION=v1.4.6
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DOCKER_GEN_VERSION 0.7.7
 ENV DOCKER_HOST unix:///tmp/docker.sock
 
-# TARGETPLATFORM is Docker buildx's target platform (e.g. linux/arm64), while 
-# BUILDPLATFORM is the platform of the build host (e.g. linux/amd64)
 ARG TARGETPLATFORM
-ARG BUILDPLATFORM
 
 SHELL ["/bin/bash", "-c"]
 
-RUN mkdir /tmp/ddev && \
-    ARCH=${TARGETPLATFORM#*/}; \
-    if [[ ${ARCH} = "arm*" ]]; then \
-        printf '# jwilder/forego doesnt have arm downloads so we resort to the original forego repo \n\
-FORGO_IS_TGZ="true" \n\
-FORGO_FILENAME="forego-stable-linux-${ARCH}.tgz" \n\
-FORGO_URL="https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-${ARCH}.tgz" \n\
-DOCKER_GEN_ARCH="linux-${ARCH}" \n\
-MKCERT_ARCH="linux-${ARCH}"' > /tmp/ddev/vars; \
-
-    else \
-        printf 'FORGO_IS_TGZ="false" \n\
-FORGO_URL="https://github.com/jwilder/forego/releases/download/v0.16.1/forego" \n\
-DOCKER_GEN_ARCH="linux-amd64" \n\
-MKCERT_ARCH="linux-amd64"' > /tmp/ddev/vars; \
-    fi
+# Get forego, which may be either a binary download (jwilder) or
+# a tarball (from https://github.com/ddollar/forego download)
+RUN set -eu -o pipefail && \
+    ARCH=${TARGETPLATFORM#*/} && \
+    FOREGO_URL="https://github.com/jwilder/forego/releases/download/v0.16.1/forego" && \
+    if [[ "${ARCH}" = "arm"* ]]; then \
+        FOREGO_URL="https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-${ARCH}.tgz"; \
+    fi && \
+    cd /tmp && curl -sSL -O "${FOREGO_URL}"  && \
+    if [ ${FOREGO_URL##*.} = "tgz" ]; then \
+        tar -zxf ${FOREGO_URL##*/} ; \
+    fi && \
+    mv forego /usr/local/bin && chmod +x /usr/local/bin/forego
 
 RUN apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
@@ -37,27 +31,25 @@ RUN apt-get -qq update && \
     apt-get clean -y && \
 	rm -rf /var/lib/apt/lists/*
 
-RUN source /tmp/ddev/vars && \
-    if [[ $FORGO_IS_TGZ == "true" ]]; then \
-        wget -q $FORGO_URL && \
-        tar -C /usr/local/bin -xvzf $FORGO_FILENAME && \
-        rm /$FORGO_FILENAME && \
-        chmod ugo+x /usr/local/bin/forego; \
-    else \
-        curl -sSL $FORGO_URL -o /usr/local/bin/forego && \
-        chmod ugo+x /usr/local/bin/forego; \
-    fi
+# Download docker-gen
+RUN set -eu -o pipefail && \
+    ARCH=${TARGETPLATFORM#*/} && \
+    export DOCKER_GEN_FILE="docker-gen-linux-${ARCH}-${DOCKER_GEN_VERSION}.tar.gz" && \
+    cd /tmp && wget -q https://github.com/drud/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_FILE} && \
+    tar -C /usr/local/bin -xzf "${DOCKER_GEN_FILE}" && \
+    rm $DOCKER_GEN_FILE
 
-RUN source /tmp/ddev/vars && \
-    DOCKER_GEN_FILE="docker-gen-${DOCKER_GEN_ARCH}-${DOCKER_GEN_VERSION}.tar.gz" && \
-    wget -q https://github.com/drud/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_FILE} && \
-    tar -C /usr/local/bin -xvzf $DOCKER_GEN_FILE && \
-    rm /$DOCKER_GEN_FILE
-    
 RUN mkdir -p /etc/nginx/certs /mnt/ddev-global-cache/mkcert
 
-RUN source /tmp/ddev/vars && \
-    curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-${MKCERT_ARCH} -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert && mkdir -p /root/.local/share && ln -s /mnt/ddev-global-cache/mkcert /root/.local/share/mkcert && mkcert -install
+# curl mkcert and install it
+RUN set -eu -o pipefail && \
+    ARCH=${TARGETPLATFORM#*/} && \
+    curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-${ARCH} -o /usr/local/bin/mkcert && \
+    chmod +x /usr/local/bin/mkcert && \
+    mkdir -p /root/.local/share && \
+    ln -s /mnt/ddev-global-cache/mkcert /root/.local/share/mkcert && \
+    mkcert -install
+
 
 # Configure Nginx and apply fix for very long server names
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf \
