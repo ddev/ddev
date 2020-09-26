@@ -1,6 +1,5 @@
 # Temporary build-tools artifacts to be ignored
 /VERSION.txt
-/.docker_image
 # These are not artifacts that should be ignored
 !files/usr/bin/
 !files/usr/local/bin/

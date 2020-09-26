@@ -100,4 +100,4 @@ clean:
 	for item in $(MYSQL_VERSIONS); do \
 		if docker image inspect $(DOCKER_REPO)-mysql-${item}:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mysql-$${item}:$(VERSION); fi; \
 	done
-	@rm -rf darwin windows container VERSION.txt .docker_image
+	@rm -rf VERSION.txt

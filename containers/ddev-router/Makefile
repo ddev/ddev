@@ -18,7 +18,7 @@ BUILD_ARCHS=linux/amd64,linux/arm64
 include ../containers_shared.mak
 
 test: container
-	bash -c test/containertest.sh
+	bash -c "test/containertest.sh $(DOCKER_REPO):$(VERSION)"
 
 multi-arch:
 	docker buildx build --platform $(BUILD_ARCHS) --progress=$(PROGRESS) -t $(DOCKER_REPO):$(VERSION) $(DOCKER_ARGS) .; \
