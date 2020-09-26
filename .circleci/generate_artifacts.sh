@@ -65,7 +65,7 @@ popd
 # Generate linux-arm64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/linux_arm64
 curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm64 && chmod +x mkcert
-tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev *completion*.sh
+tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev *completion*.sh mkcert
 popd
 
 # Generate linux-arm tarball/zipball
