@@ -6,17 +6,16 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV DOCKER_GEN_VERSION 0.7.7
 ENV DOCKER_HOST unix:///tmp/docker.sock
 
-ARG TARGETPLATFORM
+ARG TARGETARCH
 
 SHELL ["/bin/bash", "-c"]
 
 # Get forego, which may be either a binary download (jwilder) or
 # a tarball (from https://github.com/ddollar/forego download)
 RUN set -eu -o pipefail && \
-    ARCH=${TARGETPLATFORM#*/} && \
     FOREGO_URL="https://github.com/jwilder/forego/releases/download/v0.16.1/forego" && \
-    if [[ "${ARCH}" = "arm"* ]]; then \
-        FOREGO_URL="https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-${ARCH}.tgz"; \
+    if [[ "${TARGETARCH}" = "arm"* ]]; then \
+        FOREGO_URL="https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-${TARGETARCH}.tgz"; \
     fi && \
     cd /tmp && curl -sSL -O "${FOREGO_URL}"  && \
     if [ ${FOREGO_URL##*.} = "tgz" ]; then \
@@ -33,8 +32,7 @@ RUN apt-get -qq update && \
 
 # Download docker-gen
 RUN set -eu -o pipefail && \
-    ARCH=${TARGETPLATFORM#*/} && \
-    export DOCKER_GEN_FILE="docker-gen-linux-${ARCH}-${DOCKER_GEN_VERSION}.tar.gz" && \
+    export DOCKER_GEN_FILE="docker-gen-linux-${TARGETARCH}-${DOCKER_GEN_VERSION}.tar.gz" && \
     cd /tmp && wget -q https://github.com/drud/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_FILE} && \
     tar -C /usr/local/bin -xzf "${DOCKER_GEN_FILE}" && \
     rm $DOCKER_GEN_FILE
@@ -43,8 +41,7 @@ RUN mkdir -p /etc/nginx/certs /mnt/ddev-global-cache/mkcert
 
 # curl mkcert and install it
 RUN set -eu -o pipefail && \
-    ARCH=${TARGETPLATFORM#*/} && \
-    curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-${ARCH} -o /usr/local/bin/mkcert && \
+    curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-${TARGETARCH} -o /usr/local/bin/mkcert && \
     chmod +x /usr/local/bin/mkcert && \
     mkdir -p /root/.local/share && \
     ln -s /mnt/ddev-global-cache/mkcert /root/.local/share/mkcert && \
