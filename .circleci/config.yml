@@ -253,6 +253,7 @@ jobs:
     working_directory: ~/ddev
     environment:
       GOTEST_SHORT: true
+      BUILDKIT_PROGRESS: plain
     steps:
     - checkout
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
