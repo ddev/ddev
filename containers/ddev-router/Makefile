@@ -1,24 +1,5 @@
-# Makefile for a standard repo with associated container
-
-##### These variables need to be adjusted in most repositories #####
-
-# This repo's root import path (under GOPATH).
-#PKG := github.com/drud/repo_name
-
 # Docker repo for a push
 DOCKER_REPO ?= drud/ddev-router
-
-# Upstream repo used in the Dockerfile
-# UPSTREAM_REPO ?=
-
-# Top-level directories to build
-#SRC_DIRS := files drudapi secrets utils
-
-
-# VERSION can be set by
-  # Default: git tag
-  # make command line: make VERSION=0.9.0
-# It can also be explicitly set in the Makefile as commented out below.
 
 # This version-strategy uses git tags to set the version string
 # VERSION can be overridden on make commandline: make VERSION=0.9.1 push
