@@ -1,16 +1,8 @@
-# Makefile for a standard repo with associated container
-
-##### These variables need to be adjusted in most repositories #####
-
-# This repo's root import path (under GOPATH).
-# PKG := github.com/drud/repo_name
-
-# Docker repo for a push
 DOCKER_REPO ?= drud/ddev-dbserver
 
 VERSION := $(shell git describe --tags --always --dirty)
 
-build: container
+.PHONY: build container mariadb_containers mysql_containers
 
 # The format here is majorversion:pinnedimageversion
 # This allows to pin the version (as currently required with 8.0.19
@@ -20,9 +12,12 @@ MARIADB_VERSIONS_arm64=10.2:10.2 10.3:10.3 10.4:10.4 10.5:10.5
 # MySQL images on Docker Hub currently are amd64 only
 MYSQL_VERSIONS_arm64=
 
-include ../containers_shared.mak
+# This Makefile explicitly does not include containers/containers_shared.mak,
+# So has to explicitly declare anything it might need from there (like SHELL)
+SHELL = /bin/bash
 
-container: mariadb_containers mysql_containers
+build: container
+container: mariadb_containers mysql_containers multi-arch push test clean
 
 mariadb_containers:
 	set -eu -o pipefail; \
