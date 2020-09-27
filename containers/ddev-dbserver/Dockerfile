@@ -12,18 +12,17 @@ ENV MYSQL_PASSWORD db
 ENV MYSQL_ROOT_PASSWORD root
 
 # Install extra packages
-RUN apt-get update && apt-get install -y tzdata sudo gnupg2 pv less vim wget curl
+RUN apt-get -qq update && apt-get -qq install -y tzdata sudo gnupg2 pv less vim wget curl lsb-release >/dev/null
 
 RUN if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
-    apt-get install -y lsb-release; \
-    wget https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb ; \
-    sudo dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb ; \
+    wget --quiet https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb ; \
+    sudo dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
     xtrabackup_version=percona-xtrabackup-24 ; \
     if [ "$DBVERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; fi ; \
-    apt-get update && apt-get install -y ${xtrabackup_version}; \
+    apt-get -qq update && apt-get -qq install -y ${xtrabackup_version} >/dev/null ; \
 fi
-RUN apt-get autoclean
+RUN apt-get -qq autoclean
 
 RUN rm -rf /var/lib/mysql/* /etc/mysql
 RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql

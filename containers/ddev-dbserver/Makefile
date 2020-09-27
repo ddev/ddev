@@ -2,7 +2,7 @@ DOCKER_REPO ?= drud/ddev-dbserver
 
 VERSION := $(shell git describe --tags --always --dirty)
 
-.PHONY: build container mariadb_containers mysql_containers
+.PHONY: build container mariadb_containers mysql_containers multi-arch push test clean
 
 # The format here is majorversion:pinnedimageversion
 # This allows to pin the version (as currently required with 8.0.19
@@ -16,8 +16,7 @@ MYSQL_VERSIONS_arm64=
 # So has to explicitly declare anything it might need from there (like SHELL)
 SHELL = /bin/bash
 
-build: container
-container: mariadb_containers mysql_containers multi-arch push test clean
+container: mariadb_containers mysql_containers
 
 mariadb_containers:
 	set -eu -o pipefail; \
