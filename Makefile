@@ -3,20 +3,25 @@
 # Circleci doesn't seem to provide a decent way to add to path, just adding here, for case where
 # linux build and linuxbrew is installed.
 export PATH := $(EXTRA_PATH):$(PATH)
-
 DOCKERMOUNTFLAG := :cached
 
-# Not updating build-tools to get this, but this should be removed
-# when build-tools is updated.
-# BUILD_IMAGE := drud/golang-build-container:v1.12.7
+BUILD_BASE_DIR ?= $(PWD)
 
-GOMETALINTER_ARGS := --vendored-linters --disable-all --enable=gofmt --enable=vet --enable vetshadow --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode --deadline=4m
+GOTMP=.gotmp
+SHELL = /bin/bash
+PWD = $(shell pwd)
+GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
+.PHONY: darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64
+
+# Expands SRC_DIRS into the common golang ./dir/... format for "all below"
+SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
+
 GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode
 
 WINDOWS_SUDO_VERSION=v0.0.1
 WINNFSD_VERSION=2.4.0
 NSSM_VERSION=2.24-101-g897c7ad
-MKCERT_VERSION=v1.4.1
+MKCERT_VERSION=v1.4.6
 
 GOTESTSUM_FORMAT ?= short-verbose
 TESTTMP=/tmp/testresults
@@ -64,47 +69,79 @@ VERSION := $(shell git describe --tags --always --dirty)
 NO_V_VERSION=$(shell echo $(VERSION) | awk  -F"-" '{ OFS="-"; sub(/^./, "", $$1); printf $$0; }')
 GITHUB_ORG := drud
 
-#
-# This version-strategy uses a manual value to set the version string
-#VERSION := 1.2.3
+BUILD_OS = $(shell go env GOHOSTOS)
+BUILD_ARCH = $(shell go env GOHOSTARCH)
+VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
+LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
+BUILD_IMAGE ?= drud/golang-build-container:v1.15.2
+DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
+          	    -v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -e GOPATH="//workdir/$(GOTMP)" \
+          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
+          	    -e GOFLAGS="$(USEMODVENDOR)" \
+          	    -w //workdir              \
+          	    $(BUILD_IMAGE)
+DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
+          	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -e GOPATH="//workdir/$(GOTMP)" \
+          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
+          	    -e GOLANGCI_LINT_CACHE="//workdir/$(GOTMP)/.golanci-lint-cache" \
+          	    -e GOFLAGS="$(USEMODVENDOR)" \
+          	    -w //workdir              \
+          	    $(BUILD_IMAGE)
+DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
-# Each section of the Makefile is included from standard components below.
-# If you need to override one, import its contents below and comment out the
-# include. That way the base components can easily be updated as our general needs
-# change.
-include build-tools/makefile_components/base_build_go.mak
-#include build-tools/makefile_components/base_build_python-docker.mak
-#include build-tools/makefile_components/base_container.mak
-#include build-tools/makefile_components/base_push.mak
-#include build-tools/makefile_components/base_test_go.mak
-#include build-tools/makefile_components/base_test_python.mak
+build: $(DEFAULT_BUILD)
 
-.PHONY: test testcmd testpkg build setup staticrequired windows_install darwin_signed darwin_notarized markdownlint mkdocs
+pullbuildimage:
+	@echo "Pulling $(BUILD_IMAGE) if possible..."
+	@docker pull $(BUILD_IMAGE) || true
 
-TESTOS = $(shell uname -s | tr '[:upper:]' '[:lower:]')
+# Provide shorthand targets
+linux_amd64: $(GOTMP)/bin/linux_amd64/ddev
+linux_arm64: $(GOTMP)/bin/linux_arm64/ddev
+linux_arm: $(GOTMP)/bin/linux_arm/ddev
+darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev
+darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev
+windows_amd64: $(GOTMP)/bin/windows_amd64/ddev.exe
+windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
+
+TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
+$(TARGETS): pullbuildimage $(GOFILES)
+	@echo "building $@ from $(SRC_AND_UNDER)"
+	@#echo "LDFLAGS=$(LDFLAGS)"
+	@export TARGET=$(word 3, $(subst /, ,$@)); \
+	export GOOS="$${TARGET%_*}"; \
+	export GOARCH="$${TARGET#*_}"; \
+	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} \
+	echo "TARGET=$$TARGET; GOOS=$$GOOS; GOARCH=$$GOARCH"; \
+	$(DOCKERBUILDCMD) \
+        bash -c "GOOS=$$GOOS GOARCH=$$GOARCH go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)"
+	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
+	@echo $(VERSION) >VERSION.txt
+
 
 TEST_TIMEOUT=150m
 BUILD_ARCH = $(shell go env GOARCH)
-ifeq ($(BUILD_OS),linux)
-    DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/ddev
-endif
 
+DDEVNAME=ddev
 ifeq ($(BUILD_OS),windows)
-    DDEV_BINARY_FULLPATH=$(shell pwd)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev.exe
+	DDEVNAME=ddev.exe
 endif
 
-ifeq ($(BUILD_OS),darwin)
-    DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev
-endif
+DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/$(DDEVNAME)
 
 # Override test section with tests specific to ddev
 test: testpkg testcmd
 
-testcmd: $(BUILD_OS) setup
-	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./cmd/... $(TESTARGS)
+testcmd: $(DEFAULT_BUILD) setup
+	@echo LDFLAGS=$(LDFLAGS)
+	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
+	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./cmd/... $(TESTARGS)
 
-testpkg: $(BUILD_OS) setup
-	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags '$(LDFLAGS)' ./pkg/... $(TESTARGS)
+testpkg: $(DEFAULT_BUILD) setup
+	@echo LDFLAGS=$(LDFLAGS)
+	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/... $(TESTARGS)
 
 setup:
 	@mkdir -p $(GOTMP)/{src,pkg/mod/cache,.cache}
@@ -115,14 +152,14 @@ setup:
 # using the golang-build-container's packr2 command
 packr2:
 	docker run -t --rm -u $(shell id -u):$(shell id -g)    \
-          	    -v "$(S)$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
-          	    -v "$(S)$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
+          	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
+          	    -v "/$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -w //workdir/cmd/ddev/cmd       \
           	    $(BUILD_IMAGE) packr2
 	docker run -t --rm -u $(shell id -u):$(shell id -g)    \
-          	    -v "$(S)$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
-          	    -v "$(S)$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
+          	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
+          	    -v "/$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -w //workdir/pkg/ddevapp       \
           	    $(BUILD_IMAGE) packr2
@@ -132,14 +169,25 @@ staticrequired: setup golangci-lint markdownlint mkdocs
 
 markdownlint:
 	@echo "markdownlint: "
-	@sleep 1 && $(DOCKERTESTCMD) \
-		bash -c "markdownlint *.md docs 2>&1"
+	@CMD="markdownlint *.md docs 2>&1"; \
+	set -eu -o pipefail; \
+	if command -v markdownlint >/dev/null 2>&1 ; then \
+	  	$$CMD;  \
+  	else \
+		sleep 1 && $(DOCKERTESTCMD) \
+		bash -c "$$CMD"; \
+	fi
+
 mkdocs:
 	@echo "mkdocs: "
-	@sleep 1 && $(DOCKERTESTCMD) \
-		bash -c "mkdocs build -d /tmp/mkdocsbuld >/dev/null 2>&1"
+	@CMD="mkdocs -q build -d /tmp/mkdocsbuild"; \
+	if command -v mkdocs >/dev/null 2>&1; then \
+		$$CMD ; \
+	else  \
+		sleep 1 && $(DOCKERTESTCMD) bash -c "$$CMD"; \
+	fi
 
-darwin_signed: darwin
+darwin_signed: darwin_amd64
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
 		set -o errexit -o pipefail; \
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
@@ -152,7 +200,7 @@ darwin_notarized: darwin_signed
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(PWD)/$(GOTMP)/bin/darwin_amd64/ddev" ; \
 	fi
 
-$(GOTMP)/bin/windows_amd64/ddev.exe: windows
+$(GOTMP)/bin/windows_amd64/ddev.exe: windows_amd64
 
 windows_install: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
 
@@ -172,12 +220,12 @@ chocolatey: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
 	perl -pi -e 's/REPLACE_DDEV_VERSION/$(VERSION)/g' $(GOTMP)/bin/windows_amd64/chocolatey/tools/*.ps1
 	perl -pi -e 's/REPLACE_GITHUB_ORG/$(GITHUB_ORG)/g' $(GOTMP)/bin/windows_amd64/chocolatey/*.nuspec $(GOTMP)/bin/windows_amd64/chocolatey/tools/*.ps1 #GITHUB_ORG is for testing, for example when the binaries are on rfay acct
 	perl -pi -e "s/REPLACE_INSTALLER_CHECKSUM/$$(cat $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe.sha256.txt | awk '{ print $$1; }')/g" $(GOTMP)/bin/windows_amd64/chocolatey/tools/*
-	docker run --rm -v $(PWD)/$(GOTMP)/bin/windows_amd64/chocolatey:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco pack ddev.nuspec
+	docker run --rm -v "/$(PWD)/$(GOTMP)/bin/windows_amd64/chocolatey:/tmp/chocolatey" -w /tmp/chocolatey linuturk/mono-choco pack ddev.nuspec
 	@echo "chocolatey package is in $(GOTMP)/bin/windows_amd64/chocolatey"
 
 $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt:
-	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert.exe  https://github.com/FiloSottile/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-amd64.exe
-	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
+	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert.exe  https://github.com/drud/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-amd64.exe
+	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/drud/mkcert/master/LICENSE
 
 $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt:
 	curl  -sSL --create-dirs -o $(DOWNLOADTMP)/sudo.zip  https://github.com/mattn/sudo/releases/download/$(WINDOWS_SUDO_VERSION)/sudo-x86_64.zip
@@ -189,3 +237,29 @@ $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.t
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/nssm.exe https://github.com/drud/nssm/releases/download/$(NSSM_VERSION)/nssm.exe
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd_license.txt https://www.gnu.org/licenses/gpl.txt
 
+golangci-lint:
+	@echo "golangci-lint: "
+	@CMD="golangci-lint run $(GOLANGCI_LINT_ARGS) $(SRC_AND_UNDER)"; \
+	set -eu -o pipefail; \
+	if command -v golangci-lint >/dev/null 2>&1; then \
+		$$CMD; \
+	else \
+		$(DOCKERTESTCMD) \
+		time bash -c "$$CMD"; \
+	fi
+
+version:
+	@echo VERSION:$(VERSION)
+
+clean: container-clean bin-clean
+
+container-clean:
+	@if docker image inspect $(DOCKER_REPO):$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO):$(VERSION); fi
+	@rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
+
+bin-clean:
+	@rm -rf bin
+	$(shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP) && rm -rf $(GOTMP); fi )
+
+# print-ANYVAR prints the expanded variable
+print-%: ; @echo $* = $($*)
