@@ -14,6 +14,70 @@ BINOWNER=$(ls -ld /usr/local/bin | awk '{print $3}')
 USER=$(whoami)
 SHACMD=""
 FILEBASE=""
+
+# semver_compare from https://gist.github.com/Ariel-Rodriguez/9e3c2163f4644d7a389759b224bfe7f3
+semver_compare() {
+  local version_a version_b pr_a pr_b
+  # strip word "v" and extract first subset version (x.y.z from x.y.z-foo.n)
+  version_a=$(echo "${1//v/}" | awk -F'-' '{print $1}')
+  version_b=$(echo "${2//v/}" | awk -F'-' '{print $1}')
+
+  if [ "$version_a" \= "$version_b" ]
+  then
+    # check for pre-release
+    # extract pre-release (-foo.n from x.y.z-foo.n)
+    pr_a=$(echo "$1" | awk -F'-' '{print $2}')
+    pr_b=$(echo "$2" | awk -F'-' '{print $2}')
+
+    ####
+    # Return 0 when A is equal to B
+    [ "$pr_a" \= "$pr_b" ] && echo 0 && return 0
+
+    ####
+    # Return 1
+
+    # Case when A is not pre-release
+    if [ -z "$pr_a" ]
+    then
+      echo 1 && return 0
+    fi
+
+    ####
+    # Case when pre-release A exists and is greater than B's pre-release
+
+    # extract numbers -rc.x --> x
+    number_a=$(echo ${pr_a//[!0-9]/})
+    number_b=$(echo ${pr_b//[!0-9]/})
+    [ -z "${number_a}" ] && number_a=0
+    [ -z "${number_b}" ] && number_b=0
+
+    [ "$pr_a" \> "$pr_b" ] && [ -n "$pr_b" ] && [ "$number_a" -gt "$number_b" ] && echo 1 && return 0
+
+    ####
+    # Retrun -1 when A is lower than B
+    echo -1 && return 0
+  fi
+  arr_version_a=(${version_a//./ })
+  arr_version_b=(${version_b//./ })
+  cursor=0
+  # Iterate arrays from left to right and find the first difference
+  while [ "$([ "${arr_version_a[$cursor]}" -eq "${arr_version_b[$cursor]}" ] && [ $cursor -lt ${#arr_version_a[@]} ] && echo true)" == true ]
+  do
+    cursor=$((cursor+1))
+  done
+  [ "${arr_version_a[$cursor]}" -gt "${arr_version_b[$cursor]}" ] && echo 1 || echo -1
+}
+
+unamearch=$(uname -m)
+case ${unamearch} in
+  x86_64) ARCH="amd64";
+  ;;
+  aarch64) ARCH="arm64";
+  ;;
+  *) printf "${RED}Sorry, your machine architecture ${unamearch} is not currently supported.\n${RESET}" && exit 106
+  ;;
+esac
+
 LATEST_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/drud/ddev/releases/latest)
 # The releases are returned in the format {"id":3622206,"tag_name":"hello-1.0.0.11",...}, we have to extract the tag_name.
 LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
@@ -22,7 +86,13 @@ VERSION=$LATEST_VERSION
 if [ $# -ge 1 ]; then
   VERSION=$1
 fi
-URL="https://github.com/drud/ddev/releases/download/$VERSION"
+RELEASE_BASE_URL="https://github.com/drud/ddev/releases/download/$VERSION"
+
+rv=$(semver_compare "${VERSION}" "v1.10.0")
+if [[ ${rv} -lt 0 ]]; then
+  printf "${RED}Sorry, this installer does not support specifying versions of ddev prior to v1.10.0${RESET}\n"
+  exit 1
+fi
 
 if [[ "$OS" == "Darwin" ]]; then
     SHACMD="shasum -a 256"
@@ -34,6 +104,13 @@ else
     printf "${RED}Sorry, this installer does not support your platform at this time.${RESET}\n"
     exit 1
 fi
+
+USE_ARCH=$(semver_compare "${VERSION}" "v1.16.0-alpha4")
+# Versions after v1.16.0-alpha4 need the architecture in the filename
+if [ "${USE_ARCH}" == 1 ]; then
+  FILEBASE="${FILEBASE}.${ARCH}"
+fi
+
 
 if ! docker --version >/dev/null 2>&1; then
     printf "${YELLOW}Docker is required for ddev. Download and install docker at https://www.docker.com/community-edition#/download before attempting to use ddev.${RESET}\n"
@@ -47,9 +124,9 @@ TARBALL="$FILEBASE.$VERSION.tar.gz"
 SHAFILE="$TARBALL.sha256.txt"
 NFS_INSTALLER=macos_ddev_nfs_setup.sh
 
-curl -sSL "$URL/$TARBALL" -o "/tmp/$TARBALL"
-curl -sSL "$URL/$SHAFILE" -o "/tmp/$SHAFILE"
-curl -sSL "$URL/macos_ddev_nfs_setup.sh" -o /tmp/macos_ddev_nfs_setup.sh
+curl -sSL "$RELEASE_BASE_URL/$TARBALL" -o "/tmp/$TARBALL"
+curl -sSL "$RELEASE_BASE_URL/$SHAFILE" -o "/tmp/$SHAFILE"
+curl -sSL "$RELEASE_BASE_URL/macos_ddev_nfs_setup.sh" -o /tmp/macos_ddev_nfs_setup.sh
 
 cd /tmp; $SHACMD -c "$SHAFILE"
 tar -xzf $TARBALL -C /tmp
