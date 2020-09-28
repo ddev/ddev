@@ -17,7 +17,12 @@ FILEBASE=""
 LATEST_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/drud/ddev/releases/latest)
 # The releases are returned in the format {"id":3622206,"tag_name":"hello-1.0.0.11",...}, we have to extract the tag_name.
 LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
-URL="https://github.com/drud/ddev/releases/download/$LATEST_VERSION"
+
+VERSION=$LATEST_VERSION
+if [ $# -ge 1 ]; then
+  VERSION=$1
+fi
+URL="https://github.com/drud/ddev/releases/download/$VERSION"
 
 if [[ "$OS" == "Darwin" ]]; then
     SHACMD="shasum -a 256"
@@ -38,7 +43,7 @@ if ! docker-compose --version >/dev/null 2>&1; then
     printf "${YELLOW}Docker Compose is required for ddev. Download and install docker-compose at https://www.docker.com/community-edition#/download before attempting to use ddev.${RESET}\n"
 fi
 
-TARBALL="$FILEBASE.$LATEST_VERSION.tar.gz"
+TARBALL="$FILEBASE.$VERSION.tar.gz"
 SHAFILE="$TARBALL.sha256.txt"
 NFS_INSTALLER=macos_ddev_nfs_setup.sh
 
