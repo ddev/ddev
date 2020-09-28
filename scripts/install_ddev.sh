@@ -84,7 +84,7 @@ case ${unamearch} in
   ;;
 esac
 
-LATEST_RELEASE=$(curl -f -L -s -H 'Accept: application/json' https://github.com/${GITHUB_USERNAME}/ddev/releases/latest)
+LATEST_RELEASE=$(curl -fsSL -H 'Accept: application/json' https://github.com/${GITHUB_USERNAME}/ddev/releases/latest || (printf "${RED}Failed to get find latest release${RESET}\n" >/dev/stderr && exit 107))
 # The releases are returned in the format {"id":3622206,"tag_name":"hello-1.0.0.11",...}, we have to extract the tag_name.
 LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
 
