@@ -78,7 +78,7 @@ case ${unamearch} in
   ;;
 esac
 
-LATEST_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/drud/ddev/releases/latest)
+LATEST_RELEASE=$(curl -f -L -s -H 'Accept: application/json' https://github.com/drud/ddev/releases/latest)
 # The releases are returned in the format {"id":3622206,"tag_name":"hello-1.0.0.11",...}, we have to extract the tag_name.
 LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
 
@@ -108,25 +108,27 @@ fi
 USE_ARCH=$(semver_compare "${VERSION}" "v1.16.0-alpha4")
 # Versions after v1.16.0-alpha4 need the architecture in the filename
 if [ "${USE_ARCH}" == 1 ]; then
-  FILEBASE="${FILEBASE}.${ARCH}"
+  FILEBASE="${FILEBASE}-${ARCH}"
 fi
 
 
 if ! docker --version >/dev/null 2>&1; then
-    printf "${YELLOW}Docker is required for ddev. Download and install docker at https://www.docker.com/community-edition#/download before attempting to use ddev.${RESET}\n"
+    printf "${YELLOW}Docker is required for ddev. Please see https://ddev.readthedocs.io/en/stable/#docker-installation.${RESET}\n"
 fi
 
 if ! docker-compose --version >/dev/null 2>&1; then
-    printf "${YELLOW}Docker Compose is required for ddev. Download and install docker-compose at https://www.docker.com/community-edition#/download before attempting to use ddev.${RESET}\n"
+    printf "${YELLOW}docker-compose is required for ddev. Please see https://ddev.readthedocs.io/en/stable/#docker-installation.${RESET}\n"
 fi
 
+set -x
 TARBALL="$FILEBASE.$VERSION.tar.gz"
 SHAFILE="$TARBALL.sha256.txt"
 NFS_INSTALLER=macos_ddev_nfs_setup.sh
 
-curl -sSL "$RELEASE_BASE_URL/$TARBALL" -o "/tmp/$TARBALL"
-curl -sSL "$RELEASE_BASE_URL/$SHAFILE" -o "/tmp/$SHAFILE"
-curl -sSL "$RELEASE_BASE_URL/macos_ddev_nfs_setup.sh" -o /tmp/macos_ddev_nfs_setup.sh
+curl -fsSL "$RELEASE_BASE_URL/$TARBALL" -o "/tmp/$TARBALL"
+curl -fsSL "$RELEASE_BASE_URL/$SHAFILE" -o "/tmp/$SHAFILE"
+curl -fsSL "$RELEASE_BASE_URL/macos_ddev_nfs_setup.sh" -o /tmp/macos_ddev_nfs_setup.sh
+set +x
 
 cd /tmp; $SHACMD -c "$SHAFILE"
 tar -xzf $TARBALL -C /tmp
