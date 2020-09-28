@@ -22,8 +22,8 @@ AUR_REPO=$1
 VERSION_NUMBER=$2
 ARTIFACTS_DIR=$3
 NO_V_VERSION=$(echo ${VERSION_NUMBER} | awk  -F"-" '{ OFS="-"; sub(/^./, "", $1); printf $0; }')
-LINUX_HASH=$(cat $ARTIFACTS_DIR/ddev_linux.${VERSION_NUMBER}.tar.gz.sha256.txt | awk '{print $1;}' )
-LINUX_TARBALL_URL=https://github.com/${GITHUB_USERNAME}/ddev/releases/download/${VERSION_NUMBER}/ddev_linux.${VERSION_NUMBER}.tar.gz
+LINUX_HASH=$(cat $ARTIFACTS_DIR/ddev_linux-amd64.${VERSION_NUMBER}.tar.gz.sha256.txt | awk '{print $1;}' )
+LINUX_TARBALL_URL=https://github.com/${GITHUB_USERNAME}/ddev/releases/download/${VERSION_NUMBER}/ddev_linux-amd64.${VERSION_NUMBER}.tar.gz
 if [ ! -z "${LINUX_TARBALL_OVERRIDE:-}" ]; then
     LINUX_TARBALL_URL=${LINUX_TARBALL_OVERRIDE}
     LINUX_HASH=$(curl -sSL "${LINUX_TARBALL_URL}.sha256.txt" | awk '{print $1}')
