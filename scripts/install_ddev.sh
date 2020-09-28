@@ -55,7 +55,7 @@ cd /tmp; $SHACMD -c "$SHAFILE"
 tar -xzf $TARBALL -C /tmp
 chmod ugo+x /tmp/ddev /tmp/macos_ddev_nfs_setup.sh
 
-printf "Download verified. Ready to place ddev in your /usr/local/bin.\n"
+printf "Download verified. Ready to place ddev and mkcert in your /usr/local/bin.\n"
 
 if [ -L /usr/local/bin/ddev ] ; then
     printf "${RED}ddev already exists as a link in /usr/local/bin. Was it installed with homebrew?${RESET}\n"
@@ -64,10 +64,10 @@ if [ -L /usr/local/bin/ddev ] ; then
     exit 101
 fi
 if [[ "$BINOWNER" == "$USER" ]]; then
-    mv /tmp/ddev /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/
+    mv /tmp/ddev /tmp/mkcert /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/
 else
-    printf "${YELLOW}Running \"sudo mv /tmp/ddev /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/\" Please enter your password if prompted.${RESET}\n"
-    sudo mv /tmp/ddev /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/
+    printf "${YELLOW}Running \"sudo mv /tmp/ddev /tmp/mkcert /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/\" Please enter your password if prompted.${RESET}\n"
+    sudo mv /tmp/ddev /tmp/mkcert /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/
 fi
 
 if command -v brew >/dev/null ; then
@@ -93,6 +93,7 @@ fi
 rm /tmp/$TARBALL /tmp/$SHAFILE
 
 printf "${GREEN}ddev is now installed. Run \"ddev\" to verify your installation and see usage.${RESET}\n"
-if ! command -v mkcert >/dev/null ; then
-    printf "${YELLOW}Please install mkcert from https://github.com/FiloSottile/mkcert/releases and then run 'mkcert -install'.${RESET}\n"
-fi
+
+printf "${YELLOW}Running mkcert -install, which may request your sudo password.'.${RESET}\n"
+mkcert -install
+
