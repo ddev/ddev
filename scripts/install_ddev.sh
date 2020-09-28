@@ -1,9 +1,15 @@
 #!/bin/bash
+
+# Script to download and install DDEV-Local, https://github.com/drud/ddev
+# Usage: install_ddev.sh or install_ddev.sh <version>
+
 set -o errexit
 set -o pipefail
 set -o nounset
 
-# Download and install latest ddev release
+GITHUB_USERNAME=drud
+ARTIFACTS="ddev mkcert macos_ddev_nfs_setup.sh"
+TMPDIR=/tmp
 
 RED='\033[31m'
 GREEN='\033[32m'
@@ -78,7 +84,7 @@ case ${unamearch} in
   ;;
 esac
 
-LATEST_RELEASE=$(curl -f -L -s -H 'Accept: application/json' https://github.com/drud/ddev/releases/latest)
+LATEST_RELEASE=$(curl -f -L -s -H 'Accept: application/json' https://github.com/${GITHUB_USERNAME}/ddev/releases/latest)
 # The releases are returned in the format {"id":3622206,"tag_name":"hello-1.0.0.11",...}, we have to extract the tag_name.
 LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
 
@@ -86,7 +92,7 @@ VERSION=$LATEST_VERSION
 if [ $# -ge 1 ]; then
   VERSION=$1
 fi
-RELEASE_BASE_URL="https://github.com/drud/ddev/releases/download/$VERSION"
+RELEASE_BASE_URL="https://github.com/${GITHUB_USERNAME}/ddev/releases/download/$VERSION"
 
 rv=$(semver_compare "${VERSION}" "v1.10.0")
 if [[ ${rv} -lt 0 ]]; then
@@ -120,21 +126,19 @@ if ! docker-compose --version >/dev/null 2>&1; then
     printf "${YELLOW}docker-compose is required for ddev. Please see https://ddev.readthedocs.io/en/stable/#docker-installation.${RESET}\n"
 fi
 
-set -x
 TARBALL="$FILEBASE.$VERSION.tar.gz"
 SHAFILE="$TARBALL.sha256.txt"
-NFS_INSTALLER=macos_ddev_nfs_setup.sh
 
-curl -fsSL "$RELEASE_BASE_URL/$TARBALL" -o "/tmp/$TARBALL"
-curl -fsSL "$RELEASE_BASE_URL/$SHAFILE" -o "/tmp/$SHAFILE"
-curl -fsSL "$RELEASE_BASE_URL/macos_ddev_nfs_setup.sh" -o /tmp/macos_ddev_nfs_setup.sh
-set +x
+curl -fsSL "$RELEASE_BASE_URL/$TARBALL" -o "${TMPDIR}/${TARBALL}"
+curl -fsSL "$RELEASE_BASE_URL/$SHAFILE" -o "${TMPDIR}/${SHAFILE}"
+curl -fsSL "https://raw.githubusercontent.com/${GITHUB_USERNAME}/ddev/master/scripts/macos_ddev_nfs_setup.sh" -o "${TMPDIR}/macos_ddev_nfs_setup.sh"
 
-cd /tmp; $SHACMD -c "$SHAFILE"
-tar -xzf $TARBALL -C /tmp
-chmod ugo+x /tmp/ddev /tmp/macos_ddev_nfs_setup.sh
+cd $TMPDIR
+$SHACMD -c "$SHAFILE"
+tar -xzf $TARBALL
 
-printf "Download verified. Ready to place ddev and mkcert in your /usr/local/bin.\n"
+
+printf "${GREEN}Download verified. Ready to place ddev and mkcert in your /usr/local/bin.${RESET}\n"
 
 if [ -L /usr/local/bin/ddev ] ; then
     printf "${RED}ddev already exists as a link in /usr/local/bin. Was it installed with homebrew?${RESET}\n"
@@ -142,37 +146,46 @@ if [ -L /usr/local/bin/ddev ] ; then
     printf "${RED}Use 'brew unlink ddev' to remove the symlink. Or use 'brew upgrade ddev' to upgrade.${RESET}\n"
     exit 101
 fi
-if [[ "$BINOWNER" == "$USER" ]]; then
-    mv /tmp/ddev /tmp/mkcert /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/
-else
-    printf "${YELLOW}Running \"sudo mv /tmp/ddev /tmp/mkcert /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/\" Please enter your password if prompted.${RESET}\n"
-    sudo mv /tmp/ddev /tmp/mkcert /tmp/macos_ddev_nfs_setup.sh /usr/local/bin/
+
+SUDO=""
+if [[ "$BINOWNER" != "$USER" ]]; then
+  SUDO=sudo
 fi
+if [ ! -z "${SUDO}" ]; then
+    printf "${YELLOW}Running \"sudo mv  -f ${ARTIFACTS} /usr/local/bin/\" Please enter your password if prompted.${RESET}\n"
+fi
+for item in ${ARTIFACTS}; do
+  if [ -f ${item} ]; then
+    chmod +x ${item}
+    ${SUDO} mv ${item} /usr/local/bin/
+  fi
+done
 
 if command -v brew >/dev/null ; then
     if [ -d "$(brew --prefix)/etc/bash_completion.d" ]; then
         bash_completion_dir=$(brew --prefix)/etc/bash_completion.d
-        cp /tmp/ddev_bash_completion.sh $bash_completion_dir/ddev
+        cp ddev_bash_completion.sh $bash_completion_dir/ddev
         printf "${GREEN}Installed ddev bash completions in $bash_completion_dir${RESET}\n"
-        rm /tmp/ddev_bash_completion.sh
+        rm ddev_bash_completion.sh
     else
         printf "${YELLOW}Bash completion for ddev was not installed. You may manually install /tmp/ddev_bash_completion.sh in your bash_completion.d directory.${RESET}\n"
     fi
 
-    if  [ -d "$(brew --prefix)/share/zsh-completions" ] && [ -f /tmp/ddev_zsh_completion.sh ]; then
+    if  [ -d "$(brew --prefix)/share/zsh-completions" ] && [ -f ddev_zsh_completion.sh ]; then
         zsh_completion_dir=$(brew --prefix)/share/zsh-completions
-        cp /tmp/ddev_zsh_completion.sh $zsh_completion_dir/_ddev
+        cp ddev_zsh_completion.sh $zsh_completion_dir/_ddev
         printf "${GREEN}Installed ddev zsh completions in $zsh_completion_dir${RESET}\n"
-        rm /tmp/ddev_zsh_completion.sh
+        rm ddev_zsh_completion.sh
     else
-        printf "${YELLOW}zsh completion for ddev was not installed. You may manually install /tmp/ddev_zsh_completion.sh in your zsh-completions directory.${RESET}\n"
+        printf "${YELLOW}zsh completion for ddev was not installed. You may manually install ${TMPDIR}/ddev_zsh_completion.sh in your zsh-completions directory.${RESET}\n"
     fi
 fi
 
-rm /tmp/$TARBALL /tmp/$SHAFILE
+rm -f ${TMPDIR}$TARBALL ${TMPDIR}/$SHAFILE
 
-printf "${GREEN}ddev is now installed. Run \"ddev\" to verify your installation and see usage.${RESET}\n"
+if command -v mkcert >/dev/null; then
+  printf "${YELLOW}Running mkcert -install, which may request your sudo password.'.${RESET}\n"
+  mkcert -install
+fi
 
-printf "${YELLOW}Running mkcert -install, which may request your sudo password.'.${RESET}\n"
-mkcert -install
-
+printf "${GREEN}ddev is now installed. Run \"ddev\" and \"ddev --version\" to verify your installation and see usage.${RESET}\n"
