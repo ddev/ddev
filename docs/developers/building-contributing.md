@@ -21,10 +21,11 @@ Build the project with `make` and your resulting executable will end up in .gotm
 Build/test/check static analysis with
 
  ```
- make
- make linux
- make darwin
- make windows
+ make # Builds on current os/architecture
+ make linux_amd64
+ make linux_arm64
+ make darwin_amd64
+ make windows_amd64
  make test
  make clean
  make staticrequired
@@ -50,8 +51,8 @@ The Docker images that DDEV uses are included in the containers/ directory:
 
 * containers/ddev-webserver: Provides the web servers (the "web" container).
 * containers/ddev-dbserver: Provides the "db" container.
-* containers/phpmyadmin: Provides the phpmyadmin (dba) container
 * containers/ddev-router: The router image
+* containers/ddev-ssh-agent
 
 When changes are made to an image, they have to be temporarily pushed to a tag that is preferably the same as the branch name of the PR, and the tag updated in pkg/version/version.go. Just ask if you need a container pushed to support a PR.
 
