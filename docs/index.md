@@ -97,10 +97,14 @@ Note that nfs-mount-enabled (and running NFS) are not required on WSL2 because i
 Linux and macOS end-users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh):
 
 ```
-curl -L https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
+curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh
 ```
 
-* As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
+The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
+
+```
+curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.16.0-alpha5
+```
 
 Later, to upgrade DDEV to the latest version, just run `ddev poweroff` and run the script again.
 
