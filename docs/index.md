@@ -92,9 +92,9 @@ Note that nfs-mount-enabled (and running NFS) are not required on WSL2 because i
 * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using ddev.
 * Most people interact with ddev on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although ddev does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
 
-### Installation/Upgrade Script - Linux and macOS
+### Installation/Upgrade Script - Linux and macOS (ARM/ARM64 and AMD64 architectures)
 
-Linux and macOS end-users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh):
+Windows WSL2, Linux and macOS users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It will be updated to work with 64-bit arm64 macOS hardware when the hardware and software become available.
 
 ```
 curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh
