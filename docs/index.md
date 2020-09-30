@@ -8,7 +8,7 @@
 
 * docker-compose 1.21.0 and higher (bundled with Docker in Docker Desktop for Mac and Docker Desktop for Windows)
 * OS Support
-    * macOS High Sierra and higher (macOS 10.13 and higher; it should run anywhere Docker Desktop for Mac runs.
+    * macOS Mojave and higher (macOS 10.14 and higher; it should run anywhere Docker Desktop for Mac runs (Current Docker Desktop has deprecated macOS 10.13 High Sierra, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra.)
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 16.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
     * Windows 10 (all editions) with WSL2 (version [1903.1049, 1909.1049](https://devblogs.microsoft.com/commandline/wsl-2-support-is-coming-to-windows-10-versions-1903-and-1909/), 2004 or later)
     * (Non-WSL2) Windows 10 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
