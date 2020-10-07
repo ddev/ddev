@@ -21,7 +21,9 @@ ddev snapshot --all`,
 		if err != nil {
 			util.Failed("Unable to get project(s) %v: %v", args, err)
 		}
-		instrumentationApp = apps[0]
+		if len(apps) > 0 {
+			instrumentationApp = apps[0]
+		}
 
 		for _, app := range apps {
 			if snapshotNameOutput, err := app.Snapshot(snapshotName); err != nil {
