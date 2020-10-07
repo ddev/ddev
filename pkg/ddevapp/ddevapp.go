@@ -883,14 +883,24 @@ func (app *DdevApp) Start() error {
 
 	// Pull the main images with full output, since docker-compose up won't
 	// show enough output.
-	for _, imageName := range []string{app.WebImage, app.DBImage, app.DBAImage, version.GetSSHAuthImage(), version.GetRouterImage()} {
+	for _, imageName := range []string{app.WebImage, app.DBImage, version.GetRouterImage()} {
 		err = dockerutil.Pull(imageName)
+		if err != nil {
+			return err
+		}
+	}
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") {
+		err = dockerutil.Pull(app.DBAImage)
 		if err != nil {
 			return err
 		}
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
+		err = dockerutil.Pull(version.GetSSHAuthImage())
+		if err != nil {
+			return err
+		}
 		err = app.EnsureSSHAgentContainer()
 		if err != nil {
 			return err
