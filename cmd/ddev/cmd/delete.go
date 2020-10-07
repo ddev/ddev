@@ -32,7 +32,9 @@ ddev delete --all`,
 		if err != nil {
 			util.Failed("Failed to get project(s): %v", err)
 		}
-		instrumentationApp = projects[0]
+		if len(projects) > 0 {
+			instrumentationApp = projects[0]
+		}
 
 		// Iterate through the list of projects built above, removing each one.
 		for _, project := range projects {
