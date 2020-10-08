@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"path/filepath"
 )
 
@@ -90,5 +91,12 @@ func shopware6PostStartAction(app *DdevApp) error {
 		envSettingsWarning(WarnTypeAbsent)
 	}
 
+	return nil
+}
+
+// shopware6ConfigOverrideAction overrides mariadb_version for shopware6,
+// since it requires at least 10.3
+func shopware6ConfigOverrideAction(app *DdevApp) error {
+	app.MariaDBVersion = nodeps.MariaDB103
 	return nil
 }
