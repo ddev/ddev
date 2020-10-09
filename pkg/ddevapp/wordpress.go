@@ -89,6 +89,7 @@ const wordpressSettingsTemplate = `<?php
 /**
  {{ $config.Signature }}: Automatically generated WordPress settings file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ It is recommended that you leave this file alone.
  */
 
 /** Authentication Unique Keys and Salts. */

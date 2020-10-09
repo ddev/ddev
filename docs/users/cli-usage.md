@@ -410,7 +410,7 @@ For **Wordpress**, DDEV settings are written to a DDEV-managed file, wp-config-d
 * If a DDEV-managed wp-config.php exists, create one that includes wp-config.php
 * If a user-managed wp-config.php exists, instruct the user on how to modify it to include DDEV settings
 
-How do you know if DDEV manages a settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!
+How do you know if DDEV manages a settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!  If you are letting DDEV create its settings file, it is recommended that you leave this comment so DDEV can continue to manage it, and make any needed changes in another settings file.
 
 ```
 
