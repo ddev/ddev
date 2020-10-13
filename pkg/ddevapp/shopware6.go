@@ -1,7 +1,6 @@
 package ddevapp
 
 import (
-	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"path/filepath"
@@ -81,15 +80,17 @@ func setShopware6SiteSettingsPaths(app *DdevApp) {
 //}
 
 func shopware6PostStartAction(app *DdevApp) error {
-	if fileutil.FileExists(filepath.Join(app.AppRoot, ".env")) {
-		isConfiguredDbConnection, _ := fileutil.FgrepStringInFile(app.SiteSettingsPath, `DATABASE_URL="mysql://db:db@db:3306/db"`)
-		isAppURLCorrect, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL()))
-		if err == nil && !isConfiguredDbConnection && !isAppURLCorrect {
-			envSettingsWarning(WarnTypeNotConfigured)
-		}
-	} else {
-		envSettingsWarning(WarnTypeAbsent)
-	}
+	//TODO: Set this up to use the right warning message
+
+	//if fileutil.FileExists(filepath.Join(app.AppRoot, ".env")) {
+	//	isConfiguredDbConnection, _ := fileutil.FgrepStringInFile(app.SiteSettingsPath, `DATABASE_URL="mysql://db:db@db:3306/db"`)
+	//	isAppURLCorrect, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL()))
+	//	if err == nil && !isConfiguredDbConnection && !isAppURLCorrect {
+	//		envSettingsWarning(WarnTypeNotConfigured)
+	//	}
+	//} else {
+	//	envSettingsWarning(WarnTypeAbsent)
+	//}
 
 	return nil
 }
