@@ -111,7 +111,7 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.SetApptypeSettingsPaths()
 
 	// Rendered yaml is not there until after ddev config or ddev start
-	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
+	if fileutil.FileExists(app.ConfigPath) && fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
 		content, err := fileutil.ReadFileIntoString(app.DockerComposeFullRenderedYAMLPath())
 		if err != nil {
 			return app, err
@@ -123,7 +123,7 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 
 		_, err = app.ReadConfig(includeOverrides)
 		if err != nil {
-			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
+			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error: %v", app.ConfigPath, err)
 		}
 	}
 

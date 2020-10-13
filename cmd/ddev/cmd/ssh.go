@@ -24,7 +24,7 @@ ddev ssh -d /var/www/html`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		projects, err := getRequestedProjects(args, false)
-		if err != nil {
+		if err != nil || len(projects) == 0 {
 			util.Failed("Failed to ddev ssh: %v", err)
 		}
 		app := projects[0]

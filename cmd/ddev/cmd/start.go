@@ -40,7 +40,9 @@ ddev start --all`,
 		if err != nil {
 			util.Failed("Failed to get project(s): %v", err)
 		}
-		instrumentationApp = projects[0]
+		if len(projects) > 0 {
+			instrumentationApp = projects[0]
+		}
 
 		for _, project := range projects {
 			if err := ddevapp.CheckForMissingProjectFiles(project); err != nil {
