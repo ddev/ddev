@@ -56,3 +56,9 @@ timeout -v 10m bash -c 'while ! docker ps 2>/dev/null ; do
   sleep 5
   echo "Waiting for docker to come up: $(date)"
 done'
+
+if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
+  set +x
+  echo "${DOCKERHUB_PULL_PASSWORD:-}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
+  set -x
+fi
