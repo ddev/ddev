@@ -878,6 +878,12 @@ func TestDdevImportDB(t *testing.T) {
 		_ = app.Stop(true, false)
 	}()
 
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     "mysql -N -e 'DROP DATABASE IF EXISTS test;'",
+	})
+	assert.NoError(err)
+
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
 
 	// Test simple db loads.
