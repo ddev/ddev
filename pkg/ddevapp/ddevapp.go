@@ -76,7 +76,7 @@ type DdevApp struct {
 	NoProjectMount            bool                   `yaml:"no_project_mount,omitempty"`
 	AdditionalHostnames       []string               `yaml:"additional_hostnames"`
 	AdditionalFQDNs           []string               `yaml:"additional_fqdns"`
-	MariaDBVersion            string                 `yaml:"mariadb_version,omitempty"`
+	MariaDBVersion            string                 `yaml:"mariadb_version"`
 	MySQLVersion              string                 `yaml:"mysql_version,omitempty"`
 	NFSMountEnabled           bool                   `yaml:"nfs_mount_enabled,omitempty"`
 	NFSMountEnabledGlobal     bool                   `yaml:"-"`
