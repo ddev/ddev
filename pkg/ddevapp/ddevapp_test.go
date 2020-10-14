@@ -326,9 +326,6 @@ func TestDdevStart(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	// Before start, since we haven't changed MariaDBVersion, it should be ""
-	assert.EqualValues("", app.MariaDBVersion)
-
 	err = app.Start()
 	assert.NoError(err)
 
@@ -338,10 +335,6 @@ func TestDdevStart(t *testing.T) {
 	exists, err := dockerutil.ImageExistsLocally(webBuilt)
 	assert.NoError(err)
 	assert.True(exists)
-
-	// After start, we haven't changed default version, the dbimage
-	// should now be set and should be the default
-	assert.EqualValues(app.DBImage, version.GetDBImage(nodeps.MariaDB))
 
 	//nolint: errcheck
 	defer app.Stop(true, false)
@@ -884,6 +877,12 @@ func TestDdevImportDB(t *testing.T) {
 		_ = app.WriteConfig()
 		_ = app.Stop(true, false)
 	}()
+
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     "mysql -N -e 'DROP DATABASE IF EXISTS test;'",
+	})
+	assert.NoError(err)
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
 
