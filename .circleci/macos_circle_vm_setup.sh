@@ -35,12 +35,6 @@ mkcert -install
 
 pip3 install -q yq
 
-curl -fsSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/releases/download/v0.3.2/gotestsum_0.3.2_darwin_amd64.tar.gz && tar -C /usr/local/bin -zxf /tmp/gotestsum.tgz gotestsum
-
-# gotestsum
-GOTESTSUM_VERSION=0.3.2
-curl -fsSL -o /tmp/gotestsum.tgz https://github.com/gotestyourself/gotestsum/releases/download/v${GOTESTSUM_VERSION}/gotestsum_${GOTESTSUM_VERSION}_darwin_amd64.tar.gz && tar -C /usr/local/bin -zxf /tmp/gotestsum.tgz gotestsum
-
 sudo bash -c "cat <<EOF >/etc/exports
 ${HOME} -alldirs -mapall=$(id -u):$(id -g) localhost
 /private/var -alldirs -mapall=$(id -u):$(id -g) localhost

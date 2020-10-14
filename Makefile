@@ -27,9 +27,6 @@ GOTESTSUM_FORMAT ?= short-verbose
 TESTTMP=/tmp/testresults
 DOWNLOADTMP=$(HOME)/tmp
 
-TESTTOOL ?= $(shell if command -v gotestsum >/dev/null ; then echo "gotestsum --format $(GOTESTSUM_FORMAT) --junitfile '$(TESTTMP)/$(@).xml'  --"; else echo "go test"; fi)
-##### These variables need to be adjusted in most repositories #####
-
 # This repo's root import path (under GOPATH).
 PKG := github.com/drud/ddev
 
@@ -73,12 +70,13 @@ BUILD_OS = $(shell go env GOHOSTOS)
 BUILD_ARCH = $(shell go env GOHOSTARCH)
 VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
-BUILD_IMAGE ?= drud/golang-build-container:v1.15.2
+BUILD_IMAGE ?= golang:1.15.2
 DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
           	    -v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)"                              \
           	    -e GOPATH="//workdir/$(GOTMP)" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -e GOFLAGS="$(USEMODVENDOR)" \
+          	    -e CGO_ENABLED=0 \
           	    -w //workdir              \
           	    $(BUILD_IMAGE)
 DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \

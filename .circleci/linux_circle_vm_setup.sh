@@ -25,7 +25,7 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_INSTALL_CLEANUP=1
 
 brew tap drud/ddev >/dev/null
-for item in osslsigncode golang mkcert ddev makensis bats-core; do
+for item in osslsigncode golang golangci-lint mkcert mkdocs ddev makensis bats-core; do
     brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done
 
@@ -52,10 +52,6 @@ ${HOME} ${primary_ip}/255.255.255.255(rw,sync,no_subtree_check)
 EOF"
 
 sudo service nfs-kernel-server restart
-
-# gotestsum
-GOTESTSUM_VERSION=0.3.2
-curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v$GOTESTSUM_VERSION/gotestsum_${GOTESTSUM_VERSION}_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum && sudo chmod +x /usr/local/bin/gotestsum
 
 # Install ghr
 GHR_RELEASE="v0.13.0"
