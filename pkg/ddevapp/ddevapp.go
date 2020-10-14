@@ -881,13 +881,9 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	// Pull the main images with full output, since docker-compose up won't
-	// show enough output.
-	for _, imageName := range []string{app.WebImage, app.DBImage, app.DBAImage, version.GetSSHAuthImage(), version.GetRouterImage()} {
-		err = dockerutil.Pull(imageName)
-		if err != nil {
-			return err
-		}
+	err = app.PullContainerImages()
+	if err != nil {
+		return err
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
@@ -993,6 +989,32 @@ func (app *DdevApp) Start() error {
 	err = app.ProcessHooks("post-start")
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// PullContainerImages pulls the main images with full output, since docker-compose up won't show enough output
+func (app *DdevApp) PullContainerImages() error {
+	containerImages := map[string]string{
+		"db":             app.DBImage,
+		"dba":            app.DBAImage,
+		"ddev-ssh-agent": version.GetSSHAuthImage(),
+		"web":            app.WebImage,
+		"router":         version.GetRouterImage(),
+	}
+
+	omitted := app.GetOmittedContainers()
+	for containerName, imageName := range containerImages {
+		if !nodeps.ArrayContainsString(omitted, containerName) {
+			err := dockerutil.Pull(imageName)
+			if err != nil {
+				return err
+			}
+			if globalconfig.DdevDebug {
+				output.UserOut.Printf("Pulling image for %s: %s", containerName, imageName)
+			}
+		}
 	}
 
 	return nil
