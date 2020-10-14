@@ -460,7 +460,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	assert.NoError(err)
 	_, err = app.ReadConfig(false)
 	assert.NoError(err)
-	assert.Equal("", app.MariaDBVersion)
+	assert.Equal(version.MariaDBDefaultVersion, app.MariaDBVersion)
 	err = app.Start()
 	assert.NoError(err)
 	assert.EqualValues(version.GetDBImage(nodeps.MariaDB, version.MariaDBDefaultVersion), app.DBImage)

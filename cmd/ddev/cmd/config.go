@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
 	"os"
 	"strings"
@@ -424,12 +423,6 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	err = app.ConfigFileOverrideAction()
 	if err != nil {
 		util.Failed("failed to run ConfigFileOverrideAction: %v", err)
-	}
-
-	// We don't want to write out dbimage if it's just the one that goes with
-	// the mariadb_version.
-	if app.DBImage == version.GetDBImage(nodeps.MariaDB, "", app.MariaDBVersion) {
-		app.DBImage = ""
 	}
 
 	if phpVersionArg != "" {

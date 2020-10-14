@@ -182,9 +182,6 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
 		appcopy.ProjectTLD = ""
 	}
-	if appcopy.MariaDBVersion == version.GetDBImage(nodeps.MariaDB) {
-		appcopy.MariaDBVersion = ""
-	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
 	// accidentally get used for other projects.
@@ -443,7 +440,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if app.MariaDBVersion != "" {
-		// Validate mariadb version version
+		// Validate mariadb version
 		if !nodeps.IsValidMariaDBVersion(app.MariaDBVersion) {
 			return fmt.Errorf("invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, nodeps.GetValidMariaDBVersions()).(invalidMariaDBVersion)
 		}
