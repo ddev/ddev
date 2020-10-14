@@ -76,6 +76,7 @@ DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)              
           	    -e GOPATH="//workdir/$(GOTMP)" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -e GOFLAGS="$(USEMODVENDOR)" \
+          	    -e CGO_ENABLED=0 \
           	    -w //workdir              \
           	    $(BUILD_IMAGE)
 DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
