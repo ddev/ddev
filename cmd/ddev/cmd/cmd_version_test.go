@@ -38,7 +38,7 @@ func TestCmdVersion(t *testing.T) {
 	assert.Contains(versionData["msg"], version.WebImg)
 	assert.Contains(versionData["msg"], version.WebTag)
 	assert.Contains(versionData["msg"], version.DBImg)
-	assert.Contains(versionData["msg"], version.GetDBImage(nodeps.MariaDB, version.MariaDBDefaultVersion))
+	assert.Contains(versionData["msg"], version.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
 	assert.Contains(versionData["msg"], version.DBAImg)
 	assert.Contains(versionData["msg"], version.DBATag)
 	assert.NotEmpty(version.DockerVersion)

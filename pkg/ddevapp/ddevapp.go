@@ -242,7 +242,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		appDesc["database_type"] = "mariadb" // default
 		appDesc["mariadb_version"] = app.MariaDBVersion
 		if app.MariaDBVersion == "" {
-			appDesc["mariadb_version"] = version.MariaDBDefaultVersion
+			appDesc["mariadb_version"] = nodeps.MariaDBDefaultVersion
 		}
 	}
 
@@ -267,7 +267,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 				if app.MariaDBVersion != "" {
 					dbinfo["mariadb_version"] = app.MariaDBVersion
 				} else {
-					dbinfo["mariadb_version"] = version.MariaDBDefaultVersion
+					dbinfo["mariadb_version"] = nodeps.MariaDBDefaultVersion
 				}
 			}
 			appDesc["dbinfo"] = dbinfo
@@ -1521,7 +1521,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("Failed to process pre-restore-snapshot hooks: %v", err)
 	}
 
-	currentDBVersion := version.MariaDBDefaultVersion
+	currentDBVersion := nodeps.MariaDBDefaultVersion
 	if app.MariaDBVersion != "" {
 		currentDBVersion = app.MariaDBVersion
 	} else if app.MySQLVersion != "" {

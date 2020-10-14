@@ -182,6 +182,9 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
 		appcopy.ProjectTLD = ""
 	}
+	if appcopy.MariaDBVersion == "" {
+		appcopy.MariaDBVersion = nodeps.MariaDBDefaultVersion
+	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
 	// accidentally get used for other projects.

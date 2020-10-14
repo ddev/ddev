@@ -460,10 +460,10 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	assert.NoError(err)
 	_, err = app.ReadConfig(false)
 	assert.NoError(err)
-	assert.Equal(version.MariaDBDefaultVersion, app.MariaDBVersion)
+	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
 	err = app.Start()
 	assert.NoError(err)
-	assert.EqualValues(version.GetDBImage(nodeps.MariaDB, version.MariaDBDefaultVersion), app.DBImage)
+	assert.EqualValues(version.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion), app.DBImage)
 	_ = app.Stop(true, false)
 
 	// Verify behavior with no existing config.yaml. It should
