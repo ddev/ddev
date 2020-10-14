@@ -106,13 +106,12 @@ windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
 $(TARGETS): pullbuildimage $(GOFILES)
-	@echo "building $@ from $(SRC_AND_UNDER)"
-	@#echo "LDFLAGS=$(LDFLAGS)"
-	@export TARGET=$(word 3, $(subst /, ,$@)); \
-	export GOOS="$${TARGET%_*}"; \
-	export GOARCH="$${TARGET#*_}"; \
-	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} \
-	echo "TARGET=$$TARGET; GOOS=$$GOOS; GOARCH=$$GOARCH"; \
+	@echo "building $@ from $(SRC_AND_UNDER)";
+	@#echo "LDFLAGS=$(LDFLAGS)";
+	@export TARGET=$(word 3, $(subst /, ,$@)) && \
+	export GOOS="$${TARGET%_*}" && \
+	export GOARCH="$${TARGET#*_}" && \
+	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	$(DOCKERBUILDCMD) \
         bash -c "GOOS=$$GOOS GOARCH=$$GOARCH go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)"
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
