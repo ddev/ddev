@@ -92,7 +92,7 @@ $port = {{ $config.DatabasePort }};
 if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
   $host = "{{ $config.DockerIP }}";
   $port = {{ $config.DBPublishedPort }};
-} 
+}
 
 $databases['default']['default'] = array(
   'database' => "{{ $config.DatabaseName }}",
@@ -121,18 +121,21 @@ $settings['class_loader_auto_detect'] = FALSE;
 // If a configuration sync directory wasn't set yet, ddev is going to set a default one.
 // Ddev checks first which setup (Drupal 8 or Drupal 9) is being used.
 
-// Pre-Drupal 8.8 configuration
-if (defined('CONFIG_SYNC_DIRECTORY')) {
-  if (empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
-    // Set the configuration sync directory if it is not set for the project.
-    $config_directories[CONFIG_SYNC_DIRECTORY] = 'sites/default/files/sync';
-  }
-}
+// Check if post-Drupal 8.8 configuration already exists.
+if (empty($settings['config_sync_directory'])) {
 
-// Post-Drupal 8.8 configuration
-elseif (empty($settings['config_sync_directory'])) {
-  // Set the configuration sync directory if it is not set for the project.
-  $settings['config_sync_directory'] = 'sites/default/files/sync';
+  // Check for pre-Drupal 8.8 configuration.
+  if (defined('CONFIG_SYNC_DIRECTORY')) {
+    if (empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
+      // Set a default configuration sync directory.
+      $config_directories[CONFIG_SYNC_DIRECTORY] = 'sites/default/files/sync';
+    }
+  }
+  // Post-Drupal 8.8 configuration is needed.
+  else {
+    // Set a default configuration sync directory.
+    $settings['config_sync_directory'] = 'sites/default/files/sync';
+  }
 }
 `
 )
@@ -155,7 +158,7 @@ $port = {{ $config.DatabasePort }};
 if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
   $host = "{{ $config.DockerIP }}";
   $port = {{ $config.DBPublishedPort }};
-} 
+}
 
 $databases['default']['default'] = array(
   'database' => "{{ $config.DatabaseName }}",
@@ -188,7 +191,7 @@ $port = {{ $config.DatabasePort }};
 if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
   $host = "{{ $config.DockerIP }}";
   $port = {{ $config.DBPublishedPort }};
-} 
+}
 
 $db_url = "{{ $config.DatabaseDriver }}://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@$host:$port/{{ $config.DatabaseName }}";
 `
