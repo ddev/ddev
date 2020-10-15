@@ -448,17 +448,19 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.HostDBPort = hostDBPortArg
 	}
 
-	// If the mariaDBVersionArg is set, use it
+	// If the mariadb-version changed, use it
 	if cmd.Flag("mariadb-version").Changed {
-		app.MariaDBVersion = mariaDBVersionArg
+		app.MariaDBVersion, err = cmd.Flags().GetString("mariadb-version")
+		if err != nil {
+			util.Failed("Incorrect mariadb-version: %v", err)
+		}
 	}
-	// If the mariaDBVersionArg is set, use it
+	// If the mysql-version was changed is set, use it
 	if cmd.Flag("mysql-version").Changed {
 		app.MySQLVersion, err = cmd.Flags().GetString("mysql-version")
 		if err != nil {
 			util.Failed("Incorrect mysql-version: %v", err)
 		}
-
 	}
 
 	if cmd.Flag("nfs-mount-enabled").Changed {

@@ -80,6 +80,7 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
+	app.MariaDBVersion = nodeps.MariaDBDefaultVersion
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
@@ -182,7 +183,8 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
 		appcopy.ProjectTLD = ""
 	}
-	if appcopy.MariaDBVersion == "" {
+	// If mariadb-version is "" and mysql-version is not set, then set mariadb-version to default
+	if appcopy.MariaDBVersion == "" && appcopy.MySQLVersion == "" {
 		appcopy.MariaDBVersion = nodeps.MariaDBDefaultVersion
 	}
 
