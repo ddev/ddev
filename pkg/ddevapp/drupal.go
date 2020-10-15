@@ -118,14 +118,21 @@ $settings['trusted_host_patterns'] = ['.*'];
 $settings['class_loader_auto_detect'] = FALSE;
 
 // This specifies the default configuration sync directory.
-// $config_directories (pre-Drupal 8.8) and
-// $settings['config_sync_directory'] are supported
-// so it should work on any Drupal 8 or 9 version.
-if (defined('CONFIG_SYNC_DIRECTORY') && empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
-  $config_directories[CONFIG_SYNC_DIRECTORY] = '{{ joinPath $config.SitePath $config.SyncDir }}';
+// If a configuration sync directory wasn't set yet, ddev is going to set a default one.
+// Ddev checks first which setup (Drupal 8 or Drupal 9) is being used.
+
+// Pre-Drupal 8.8 configuration
+if (defined('CONFIG_SYNC_DIRECTORY')) {
+  if (empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
+    // Set the configuration sync directory if it is not set for the project.
+    $config_directories[CONFIG_SYNC_DIRECTORY] = 'sites/default/files/sync';
+  }
 }
+
+// Post-Drupal 8.8 configuration
 elseif (empty($settings['config_sync_directory'])) {
-  $settings['config_sync_directory'] = '{{ joinPath $config.SitePath $config.SyncDir }}';
+  // Set the configuration sync directory if it is not set for the project.
+  $settings['config_sync_directory'] = 'sites/default/files/sync';
 }
 `
 )
