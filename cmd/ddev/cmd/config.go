@@ -450,6 +450,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	// If the mariadb-version changed, use it
 	if cmd.Flag("mariadb-version").Changed {
+		if app.MySQLVersion != "" {
+			util.Failed(`mariadb-version cannot be set if mysql-version is already set. mysql-version is set to %s. Use ddev config --mariadb-version=%s --mysql-version=""`, app.MySQLVersion, app.MySQLVersion)
+		}
+
 		app.MariaDBVersion, err = cmd.Flags().GetString("mariadb-version")
 		if err != nil {
 			util.Failed("Incorrect mariadb-version: %v", err)
@@ -457,6 +461,9 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 	// If the mysql-version was changed is set, use it
 	if cmd.Flag("mysql-version").Changed {
+		if app.MariaDBVersion != "" {
+			util.Failed(`mysql-version cannot be set if mariadb-version is already set. mariadb-version is set to %s. Use ddev config --mysql-version=%s --mariadb-version=""`, app.MariaDBVersion, app.MariaDBVersion)
+		}
 		app.MySQLVersion, err = cmd.Flags().GetString("mysql-version")
 		if err != nil {
 			util.Failed("Incorrect mysql-version: %v", err)
