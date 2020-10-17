@@ -450,24 +450,33 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	// If the mariadb-version changed, use it
 	if cmd.Flag("mariadb-version").Changed {
-		if app.MySQLVersion != "" {
-			util.Failed(`mariadb-version cannot be set if mysql-version is already set. mysql-version is set to %s. Use ddev config --mariadb-version=%s --mysql-version=""`, app.MySQLVersion, app.MySQLVersion)
+		wantVer, err := cmd.Flags().GetString("mariadb-version")
+		if err != nil {
+			util.Failed("Incorrect mariadb-version %s: '%v'", wantVer, err)
+		}
+		if wantVer != "" && !nodeps.IsValidMariaDBVersion(wantVer) {
+			util.Failed("Invalid mariadb-version %s", wantVer)
 		}
 
-		app.MariaDBVersion, err = cmd.Flags().GetString("mariadb-version")
-		if err != nil {
-			util.Failed("Incorrect mariadb-version: %v", err)
+		if app.MySQLVersion != "" && wantVer != "" {
+			util.Failed(`mariadb-version cannot be set if mysql-version is already set. mysql-version is set to %s. Use ddev config --mysql-version="" and then ddev config --mariadb-version=%s`, app.MySQLVersion, wantVer)
 		}
+
+		app.MariaDBVersion = wantVer
 	}
 	// If the mysql-version was changed is set, use it
 	if cmd.Flag("mysql-version").Changed {
-		if app.MariaDBVersion != "" {
-			util.Failed(`mysql-version cannot be set if mariadb-version is already set. mariadb-version is set to %s. Use ddev config --mysql-version=%s --mariadb-version=""`, app.MariaDBVersion, app.MariaDBVersion)
-		}
-		app.MySQLVersion, err = cmd.Flags().GetString("mysql-version")
+		wantVer, err := cmd.Flags().GetString("mysql-version")
 		if err != nil {
-			util.Failed("Incorrect mysql-version: %v", err)
+			util.Failed("Incorrect mysql-version %s: '%v'", wantVer, err)
 		}
+		if wantVer != "" && !nodeps.IsValidMySQLVersion(wantVer) {
+			util.Failed("Invalid mysql-version %s", wantVer)
+		}
+		if app.MariaDBVersion != "" && wantVer != "" {
+			util.Failed(`mysql-version cannot be set if mariadb-version is already set. mariadb-version is set to %s. Use ddev config --mariadb-version="" --mysql-version=%s`, app.MariaDBVersion, wantVer)
+		}
+		app.MySQLVersion = wantVer
 	}
 
 	if cmd.Flag("nfs-mount-enabled").Changed {
