@@ -385,7 +385,7 @@ And you can now visit your working project by URL or just give the command `ddev
 
 ### Configuration files
 
-_**Note:** If you're providing the settings.php or wp-config.php and DDEV is creating the settings.ddev.php (or wp-config-local.php, AdditionalConfig.php, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file._
+_**Note:** If you're providing the settings.php or wp-config.php and DDEV is creating the settings.ddev.php (or wp-config-local.php, AdditionalConfig.php, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file.  Any changes you need should be included somewhere that loads after DDEV's settings file, for example in Drupal's settings.php *after* settings.ddev.php is included. (see "Adding Configuration" below)._
 
 _**Note:** If you do *not* want DDEV-Local to create or manage settings files, set `disable_settings_management: true` in your .ddev/config.yaml or `ddev config --disable-settings-management` and you will be the only one that edits or updates settings files._
 
@@ -410,7 +410,7 @@ For **Wordpress**, DDEV settings are written to a DDEV-managed file, wp-config-d
 * If a DDEV-managed wp-config.php exists, create one that includes wp-config.php
 * If a user-managed wp-config.php exists, instruct the user on how to modify it to include DDEV settings
 
-How do you know if DDEV manages a settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!
+How do you know if DDEV manages a settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!  If you are letting DDEV create its settings file, it is recommended that you leave this comment so DDEV can continue to manage it, and make any needed changes in another settings file.
 
 ```
 
@@ -420,6 +420,12 @@ How do you know if DDEV manages a settings file? You will see the following comm
  */
 
 ```
+
+#### Adding configuration
+
+__Drupal and Backdrop__:  In settings.php, enable loading settings.local.php after settings.ddev.php is included (create a new one if it doesn't already exist), and make changes there (wrapping with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed).
+
+__WordPress__:  Load a wp-config-local.php after wp-config-ddev.php, and make changes there (wrapping with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed).
 
 ## Listing project information
 
