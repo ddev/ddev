@@ -76,6 +76,9 @@ var ValidPHPVersions = map[string]bool{
 	PHP74: true,
 }
 
+// MariaDBDefaultVersion is the default MariaDB version
+const MariaDBDefaultVersion = MariaDB102
+
 var ValidMariaDBVersions = map[string]bool{
 	MariaDB55:  true,
 	MariaDB100: true,

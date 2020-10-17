@@ -9,9 +9,6 @@ import (
 	"strings"
 )
 
-// MariaDBDefaultVersion is the default version we use in the db container
-const MariaDBDefaultVersion = "10.2"
-
 // VERSION is supplied with the git committish this is built from
 var VERSION = ""
 
@@ -115,7 +112,7 @@ func GetWebImage() string {
 
 // GetDBImage returns the correctly formatted db image:tag reference
 func GetDBImage(dbType string, dbVersion ...string) string {
-	v := MariaDBDefaultVersion
+	v := nodeps.MariaDBDefaultVersion
 	if len(dbVersion) > 0 {
 		v = dbVersion[0]
 	}

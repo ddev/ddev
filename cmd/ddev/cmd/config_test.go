@@ -460,10 +460,10 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	assert.NoError(err)
 	_, err = app.ReadConfig(false)
 	assert.NoError(err)
-	assert.Equal("", app.MariaDBVersion)
+	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
 	err = app.Start()
 	assert.NoError(err)
-	assert.EqualValues(version.GetDBImage(nodeps.MariaDB, version.MariaDBDefaultVersion), app.DBImage)
+	assert.EqualValues(version.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion), app.DBImage)
 	_ = app.Stop(true, false)
 
 	// Verify behavior with no existing config.yaml. It should
@@ -644,7 +644,7 @@ func TestConfigMySQLVersion(t *testing.T) {
 	configArgs := append(args, "--project-name=conflicting-db-versions")
 	out, err := exec.RunCommand(DdevBin, configArgs)
 	assert.Error(err)
-	assert.Contains(out, "failed to validate config: both mariadb_version (10.1) and mysql_version (5.6) are set")
+	assert.Contains(out, "mysql-version cannot be set if mariadb-version is already set. mariadb-version is set to 10.1")
 
 	for cmdMySQLVersion := range versionsToTest {
 		for cmdDBImageVersion := range versionsToTest {
@@ -657,6 +657,7 @@ func TestConfigMySQLVersion(t *testing.T) {
 				"--project-name=" + projectName,
 				"--db-image=" + version.GetDBImage(nodeps.MySQL, cmdDBImageVersion),
 				"--mysql-version=" + cmdMySQLVersion,
+				`--mariadb-version=`,
 			}...)
 			ddevCmd := strings.Join(configArgs, " ")
 			out, err = exec.RunCommand(DdevBin, configArgs)

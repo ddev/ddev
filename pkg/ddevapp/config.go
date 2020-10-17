@@ -80,6 +80,7 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
+	app.MariaDBVersion = nodeps.MariaDBDefaultVersion
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
@@ -182,8 +183,9 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
 		appcopy.ProjectTLD = ""
 	}
-	if appcopy.MariaDBVersion == version.GetDBImage(nodeps.MariaDB) {
-		appcopy.MariaDBVersion = ""
+	// If mariadb-version is "" and mysql-version is not set, then set mariadb-version to default
+	if appcopy.MariaDBVersion == "" && appcopy.MySQLVersion == "" {
+		appcopy.MariaDBVersion = nodeps.MariaDBDefaultVersion
 	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
@@ -443,7 +445,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if app.MariaDBVersion != "" {
-		// Validate mariadb version version
+		// Validate mariadb version
 		if !nodeps.IsValidMariaDBVersion(app.MariaDBVersion) {
 			return fmt.Errorf("invalid mariadb_version: %s, must be one of %s", app.MariaDBVersion, nodeps.GetValidMariaDBVersions()).(invalidMariaDBVersion)
 		}

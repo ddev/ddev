@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
 	"os"
 	"strings"
@@ -426,12 +425,6 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		util.Failed("failed to run ConfigFileOverrideAction: %v", err)
 	}
 
-	// We don't want to write out dbimage if it's just the one that goes with
-	// the mariadb_version.
-	if app.DBImage == version.GetDBImage(nodeps.MariaDB, "", app.MariaDBVersion) {
-		app.DBImage = ""
-	}
-
 	if phpVersionArg != "" {
 		app.PHPVersion = phpVersionArg
 	}
@@ -455,17 +448,35 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.HostDBPort = hostDBPortArg
 	}
 
-	// If the mariaDBVersionArg is set, use it
+	// If the mariadb-version changed, use it
 	if cmd.Flag("mariadb-version").Changed {
-		app.MariaDBVersion = mariaDBVersionArg
-	}
-	// If the mariaDBVersionArg is set, use it
-	if cmd.Flag("mysql-version").Changed {
-		app.MySQLVersion, err = cmd.Flags().GetString("mysql-version")
+		wantVer, err := cmd.Flags().GetString("mariadb-version")
 		if err != nil {
-			util.Failed("Incorrect mysql-version: %v", err)
+			util.Failed("Incorrect mariadb-version %s: '%v'", wantVer, err)
+		}
+		if wantVer != "" && !nodeps.IsValidMariaDBVersion(wantVer) {
+			util.Failed("Invalid mariadb-version %s", wantVer)
 		}
 
+		if app.MySQLVersion != "" && wantVer != "" {
+			util.Failed(`mariadb-version cannot be set if mysql-version is already set. mysql-version is set to %s. Use ddev config --mysql-version="" and then ddev config --mariadb-version=%s`, app.MySQLVersion, wantVer)
+		}
+
+		app.MariaDBVersion = wantVer
+	}
+	// If the mysql-version was changed is set, use it
+	if cmd.Flag("mysql-version").Changed {
+		wantVer, err := cmd.Flags().GetString("mysql-version")
+		if err != nil {
+			util.Failed("Incorrect mysql-version %s: '%v'", wantVer, err)
+		}
+		if wantVer != "" && !nodeps.IsValidMySQLVersion(wantVer) {
+			util.Failed("Invalid mysql-version %s", wantVer)
+		}
+		if app.MariaDBVersion != "" && wantVer != "" {
+			util.Failed(`mysql-version cannot be set if mariadb-version is already set. mariadb-version is set to %s. Use ddev config --mariadb-version="" --mysql-version=%s`, app.MariaDBVersion, wantVer)
+		}
+		app.MySQLVersion = wantVer
 	}
 
 	if cmd.Flag("nfs-mount-enabled").Changed {
