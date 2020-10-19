@@ -121,7 +121,6 @@ services:
       - DDEV_WEBSERVER_TYPE
       - DDEV_XDEBUG_ENABLED
       - DEPLOY_NAME=local
-      - COMPOSER_VERSION={{.ComposerVersion}} 
 {{ if not .DisableSettingsManagement }}
       - DRUSH_OPTIONS_URI=$DDEV_PRIMARY_URL
 {{ end }}
