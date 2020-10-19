@@ -255,8 +255,8 @@ const ConfigInstructions = `
 # For example Europe/Dublin or MST7MDT
 
 # composer_version: "2.0.0-RC2"
-# composer_version may be set to "" (use default)
-# or to any existing specific composer version.
+# if composer_version:"" it will use the default for this ddev release
+# But it can be set to any existing specific composer version.
 
 # additional_hostnames:
 #  - somename
