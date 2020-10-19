@@ -825,6 +825,10 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg:
 	// If composerVersion is set, and composer is in the container,
 	// run composer self-update
 	if composerVersion != "" {
+		// IF they have set composer-version to "latest" then let composer self-update make the choice
+		if composerVersion == "latest" {
+			composerVersion = ""
+		}
 		contents = contents + `
 RUN if command -v composer >/dev/null 2>&1 ; then composer self-update ` + composerVersion + ";  fi\n"
 	}

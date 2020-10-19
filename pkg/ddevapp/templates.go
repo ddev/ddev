@@ -256,6 +256,9 @@ const ConfigInstructions = `
 # composer_version: "2.0.0-RC2"
 # if composer_version:"" it will use the default for this ddev release
 # But it can be set to any existing specific composer version.
+# If composer_version: "latest", then on first start the most recent composer
+# version will be updated. However, that will remain the compuser version until
+# it is changed.
 
 # additional_hostnames:
 #  - somename
