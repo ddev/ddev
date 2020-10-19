@@ -940,6 +940,46 @@ func TestTimezoneConfig(t *testing.T) {
 	runTime()
 }
 
+// TestComposerVersionConfig tests to make sure setting composer version takes effect in the container.
+func TestComposerVersionConfig(t *testing.T) {
+	assert := asrt.New(t)
+	app := &DdevApp{}
+	testVersion := "2.0.0-RC2"
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", t.Name(), site.Name))
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		app.ComposerVersion = ""
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	app.ComposerVersion = testVersion
+	err = app.Start()
+	assert.NoError(err)
+
+	// Without timezone set, we should find Etc/UTC
+	stdout, _, err := app.Exec(&ExecOpts{
+		Service: "web",
+		Cmd:     "composer --version | awk '{print $3;}'",
+	})
+	assert.NoError(err)
+	assert.Equal(testVersion, strings.Trim(stdout, "\n"))
+
+	runTime()
+}
+
 // TestCustomBuildDockerfiles tests to make sure that custom web-build and db-build
 // Dockerfiles work properly
 func TestCustomBuildDockerfiles(t *testing.T) {
