@@ -107,6 +107,7 @@ type DdevApp struct {
 	MkcertEnabled             bool                   `yaml:"-"`
 	NgrokArgs                 string                 `yaml:"ngrok_args,omitempty"`
 	Timezone                  string                 `yaml:"timezone,omitempty"`
+	ComposerVersion           string                 `yaml:"composer_version"`
 	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }

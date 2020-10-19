@@ -175,6 +175,7 @@ services:
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       - UPLOAD_LIMIT=1024M
       - TZ={{ .Timezone }}
+      - COMPOSER_VERSION={{.ComposerVersion}}
       # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
       - HTTP_EXPOSE=${DDEV_PHPMYADMIN_PORT}:{{ .DBAPort }}
       - HTTPS_EXPOSE=${DDEV_PHPMYADMIN_HTTPS_PORT}:{{ .DBAPort }}
@@ -252,6 +253,10 @@ const ConfigInstructions = `
 # it can be set to any valid timezone,
 # see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 # For example Europe/Dublin or MST7MDT
+
+# composer_version: "2.0.0-RC2"
+# composer_version may be set to "" (use default)
+# or to any existing specific composer version.
 
 # additional_hostnames:
 #  - somename

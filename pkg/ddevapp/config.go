@@ -672,6 +672,7 @@ type composeYAMLVars struct {
 	NoProjectMount            bool
 	Hostnames                 []string
 	Timezone                  string
+	ComposerVersion           string
 	Username                  string
 	UID                       string
 	GID                       string
@@ -723,6 +724,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		WebMount:                  "../",
 		Hostnames:                 app.GetHostnames(),
 		Timezone:                  app.Timezone,
+		ComposerVersion:           app.ComposerVersion,
 		Username:                  username,
 		UID:                       uid,
 		GID:                       gid,

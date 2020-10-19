@@ -23,6 +23,10 @@ if [ ! -z ${TZ} ]; then
     perl -pi -e "s%date.timezone *=.*$%date.timezone = $TZ%g" $(find /etc/php -name php.ini)
 fi
 
+if [[ ! -z ${COMPOSER_VERSION} ]]; then
+  composer self-update ${COMPOSER_VERSION} || true
+fi
+
 # If the user has provided custom PHP configuration, copy it into a directory
 # where PHP will automatically include it.
 if [ -d /mnt/ddev_config/php ] ; then
