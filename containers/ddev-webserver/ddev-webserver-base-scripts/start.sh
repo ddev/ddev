@@ -24,7 +24,7 @@ if [ ! -z ${TZ} ]; then
 fi
 
 if [[ ! -z ${COMPOSER_VERSION} ]]; then
-  composer self-update ${COMPOSER_VERSION} || true
+  sudo composer self-update ${COMPOSER_VERSION} || true
 fi
 
 # If the user has provided custom PHP configuration, copy it into a directory
