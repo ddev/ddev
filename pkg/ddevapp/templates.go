@@ -104,10 +104,7 @@ services:
     # ports is list of exposed *container* ports
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
-      - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"	
-    expose:
-      - 9997
-      - 9998
+      - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
     environment:
       - COLUMNS
       - DOCROOT=${DDEV_DOCROOT}
@@ -135,7 +132,7 @@ services:
       - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILHOG_PORT}:{{ .MailhogPort }}
       # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
       # To expose an HTTPS port, define the port as securePort:containerPort.
-      - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }},9999:9998
+      - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}
       - IS_DDEV_PROJECT=true
       - LINES
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
