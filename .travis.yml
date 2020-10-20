@@ -6,4 +6,6 @@ go:
 arch:
 - arm64-graviton2
 
+virt: lxd
+
 script: make test
