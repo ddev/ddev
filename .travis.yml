@@ -3,9 +3,11 @@ language: go
 go:
 - 1.x
 
-arch:
-- arm64-graviton2
-
-virt: lxd
+jobs:
+  include:
+   - os: linux
+     arch: arm64-graviton2
+     virt: lxd
+     group: edge
 
 script: make test
