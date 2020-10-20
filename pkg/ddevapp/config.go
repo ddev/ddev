@@ -672,6 +672,7 @@ type composeYAMLVars struct {
 	NoProjectMount            bool
 	Hostnames                 []string
 	Timezone                  string
+	ComposerVersion           string
 	Username                  string
 	UID                       string
 	GID                       string
@@ -723,6 +724,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		WebMount:                  "../",
 		Hostnames:                 app.GetHostnames(),
 		Timezone:                  app.Timezone,
+		ComposerVersion:           app.ComposerVersion,
 		Username:                  username,
 		UID:                       uid,
 		GID:                       gid,
@@ -762,19 +764,19 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 
-	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages)
+	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages, app.ComposerVersion)
 	if err != nil {
 		return "", err
 	}
 
-	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages)
+	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages, "")
 
 	if err != nil {
 		return "", err
 	}
 
 	// SSH agent just needs extra to add the official related user, nothing else
-	err = WriteBuildDockerfile(app.GetConfigPath(".sshimageBuild/Dockerfile"), "", nil)
+	err = WriteBuildDockerfile(app.GetConfigPath(".sshimageBuild/Dockerfile"), "", nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -791,7 +793,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 // WriteBuildDockerfile writes a Dockerfile to be used in the
 // docker-compose 'build'
 // It may include the contents of .ddev/<container>-build
-func WriteBuildDockerfile(fullpath string, userDockerfile string, extraPackages []string) error {
+func WriteBuildDockerfile(fullpath string, userDockerfile string, extraPackages []string, composerVersion string) error {
 	// Start with user-built dockerfile if there is one.
 	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
@@ -819,6 +821,16 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 	if extraPackages != nil {
 		contents = contents + `
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
+	}
+	// If composerVersion is set, and composer is in the container,
+	// run composer self-update
+	if composerVersion != "" {
+		// IF they have set composer-version to "latest" then let composer self-update make the choice
+		if composerVersion == "latest" {
+			composerVersion = ""
+		}
+		contents = contents + `
+RUN if command -v composer >/dev/null 2>&1 ; then composer self-update ` + composerVersion + ";  fi\n"
 	}
 	return WriteImageDockerfile(fullpath, []byte(contents))
 }

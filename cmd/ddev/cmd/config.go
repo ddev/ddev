@@ -311,6 +311,8 @@ func init() {
 
 	ConfigCommand.Flags().Bool("disable-settings-management", false, "Prevent ddev from creating or updating CMS settings files")
 
+	ConfigCommand.Flags().String("composer-version", "", "Specify override for composer version in web container")
+
 	RootCmd.AddCommand(ConfigCommand)
 }
 
@@ -551,6 +553,13 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.Timezone, err = cmd.Flags().GetString("timezone")
 		if err != nil {
 			util.Failed("Incorrect timezone: %v", err)
+		}
+	}
+
+	if cmd.Flag("composer-version").Changed {
+		app.ComposerVersion, err = cmd.Flags().GetString("composer-version")
+		if err != nil {
+			util.Failed("Incorrect composer-version: %v", err)
 		}
 	}
 
