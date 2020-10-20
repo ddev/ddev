@@ -59,6 +59,7 @@ bats tests/ddev-webserver/general.bats
 
 cleanup
 
+# Do not test php8.0 yet, as xdebug is not bundled
 for PHP_VERSION in 5.6 7.0 7.1 7.2 7.3 7.4; do
     for WEBSERVER_TYPE in nginx-fpm apache-fpm; do
         export PHP_VERSION WEBSERVER_TYPE DOCKER_IMAGE

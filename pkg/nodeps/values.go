@@ -26,6 +26,7 @@ const (
 	PHP72 = "7.2"
 	PHP73 = "7.3"
 	PHP74 = "7.4"
+	PHP80 = "8.0"
 )
 
 // MariaDB Versions
@@ -74,6 +75,7 @@ var ValidPHPVersions = map[string]bool{
 	PHP72: true,
 	PHP73: true,
 	PHP74: true,
+	PHP80: true,
 }
 
 // MariaDBDefaultVersion is the default MariaDB version
