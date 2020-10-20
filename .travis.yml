@@ -3,12 +3,11 @@ language: go
 go:
 - 1.x
 
-jobs:
-  include:
-   - os: linux
-     arch: arm64-graviton2
-     virt: lxd
-     group: edge
+arch: arm64-graviton2
+virt: lxd
+os: linux
+dist: focal
+group: edge
 
 before_install:
   # Install mkcert
