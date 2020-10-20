@@ -118,24 +118,24 @@ $settings['trusted_host_patterns'] = ['.*'];
 $settings['class_loader_auto_detect'] = FALSE;
 
 // This specifies the default configuration sync directory.
-// If a configuration sync directory wasn't set yet, ddev is going to set a default one.
-// Ddev checks first which setup (Drupal 8 or Drupal 9) is being used.
-
-// Check if post-Drupal 8.8 configuration already exists.
-if (empty($settings['config_sync_directory'])) {
-
-  // Check for pre-Drupal 8.8 configuration.
-  if (defined('CONFIG_SYNC_DIRECTORY')) {
-    if (empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
-      // Set a default configuration sync directory.
-      $config_directories[CONFIG_SYNC_DIRECTORY] = 'sites/default/files/sync';
-    }
-  }
-  // Post-Drupal 8.8 configuration is needed.
-  else {
-    // Set a default configuration sync directory.
-    $settings['config_sync_directory'] = 'sites/default/files/sync';
-  }
+// For D8 before 8.8.0, we set $config_directories[CONFIG_SYNC_DIRECTORY] if not set
+if (version_compare(Drupal::VERSION, "8.8.0", '<') &&
+  empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
+  $config_directories[CONFIG_SYNC_DIRECTORY] = 'sites/default/files/sync';
+}
+// For D8.8/D8.9, set $settings['config_sync_directory'] if neither 
+// $config_directories nor $settings['config_sync_directory is set
+if (version_compare(DRUPAL::VERSION, "8.8.0", '>=') &&
+  version_compare(DRUPAL::VERSION, "9.0.0", '<') &&
+  empty($config_directories[CONFIG_SYNC_DIRECTORY]) &&
+  empty($settings['config_sync_directory'])) {
+  $settings['config_sync_directory'] = 'sites/default/files/sync';
+}
+// For Drupal9, it's always $settings['config_sync_directory']
+if (version_compare(DRUPAL::VERSION, "9.0.0", '>=') &&
+  empty($settings['config_sync_directory'])) {
+  $settings['config_sync_directory'] = 'sites/default/files/sync';
+}
 }
 `
 )
