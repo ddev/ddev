@@ -8,7 +8,7 @@
 
 * docker-compose 1.21.0 and higher (bundled with Docker in Docker Desktop for Mac and Docker Desktop for Windows)
 * OS Support
-    * macOS High Sierra and higher (macOS 10.13 and higher; it should run anywhere Docker Desktop for Mac runs.
+    * macOS Mojave and higher (macOS 10.14 and higher; it should run anywhere Docker Desktop for Mac runs (Current Docker Desktop has deprecated macOS 10.13 High Sierra, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra.)
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 16.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
     * Windows 10 (all editions) with WSL2 (version [1903.1049, 1909.1049](https://devblogs.microsoft.com/commandline/wsl-2-support-is-coming-to-windows-10-versions-1903-and-1909/), 2004 or later)
     * (Non-WSL2) Windows 10 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
@@ -92,15 +92,19 @@ Note that nfs-mount-enabled (and running NFS) are not required on WSL2 because i
 * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using ddev.
 * Most people interact with ddev on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although ddev does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
 
-### Installation/Upgrade Script - Linux and macOS
+### Installation/Upgrade Script - Linux and macOS (ARM/ARM64 and AMD64 architectures)
 
-Linux and macOS end-users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh):
+Windows WSL2, Linux and macOS users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It will be updated to work with 64-bit arm64 macOS hardware when the hardware and software become available.
 
 ```
-curl -L https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
+curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh
 ```
 
-* As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
+The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
+
+```
+curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.16.0-alpha5
+```
 
 Later, to upgrade DDEV to the latest version, just run `ddev poweroff` and run the script again.
 

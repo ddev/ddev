@@ -147,19 +147,20 @@ setup:
 
 # packr2 target currently builds packr2 caches in cmd/ddev/cmd and pkg/ddevapp
 # using the golang-build-container's packr2 command
+PACKR2_BUILD_IMAGE ?= drud/golang-build-container:v1.15.2
 packr2:
 	docker run -t --rm -u $(shell id -u):$(shell id -g)    \
           	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
           	    -v "/$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -w //workdir/cmd/ddev/cmd       \
-          	    $(BUILD_IMAGE) packr2
+          	    $(PACKR2_BUILD_IMAGE) packr2
 	docker run -t --rm -u $(shell id -u):$(shell id -g)    \
           	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
           	    -v "/$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -w //workdir/pkg/ddevapp       \
-          	    $(BUILD_IMAGE) packr2
+          	    $(PACKR2_BUILD_IMAGE) packr2
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint markdownlint mkdocs

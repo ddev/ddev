@@ -6,7 +6,7 @@ Docker Desktop for Mac can be installed via Homebrew (`brew cask install docker`
 
 Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe).
 
-## Linux Installation: Docker-ce
+## Linux Installation: Docker and docker-compose
 
 * __Please don't forget that Linux installation absolutely requires post-install steps (below).__
 
@@ -16,7 +16,7 @@ Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey
 
 docker-ce installation on Linux depends on what flavor you're using. In all cases using the Ubuntu/Deb/yum repository is the preferred technique.
 
-* Ubuntu 20.04+ and Debian 10+ have recent enough versions that you can `sudo apt-get update && sudo apt-get install docker.io docker-compose`
+* Ubuntu 20.04+ have recent enough versions that you can `sudo apt-get update && sudo apt-get install docker.io docker-compose`
 * [Ubuntu before 20.04](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 * [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/)
 * [Debian](https://docs.docker.com/install/linux/docker-ce/debian/)
