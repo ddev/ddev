@@ -10,4 +10,9 @@ jobs:
      virt: lxd
      group: edge
 
+before_install:
+  # Install mkcert
+  - curl -sSL https://github.com/drud/mkcert/releases/download/v1.4.6/mkcert-v1.4.6-linux-arm64 -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert
+  - mkcert -install
+
 script: make test
