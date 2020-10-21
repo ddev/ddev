@@ -3,13 +3,13 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"os/exec"
+	"strings"
+
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
-	"os"
-	"os/exec"
-	"runtime"
-	"strings"
 )
 
 // YAMLTask defines tasks like Exec to be run in hooks
@@ -73,9 +73,9 @@ func (c ExecHostTask) Execute() error {
 		return err
 	}
 
-	bashPath := "bash"
-	if runtime.GOOS == "windows" {
-		bashPath = util.FindWindowsBashPath()
+	bashPath, err := util.FindBashPath()
+	if err != nil {
+		return err
 	}
 
 	cmd := exec.Command(bashPath, "-c", c.exec)

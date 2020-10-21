@@ -1,10 +1,6 @@
 package util
 
 import (
-	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/sirupsen/logrus"
 	"math/rand"
 	osexec "os/exec"
 	"os/user"
@@ -12,8 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/fatih/color"
+	"github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -113,7 +112,7 @@ func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
 	return result
 }
 
-// GetContainerUIDGid() returns the uid and gid (and string forms) to be used running most containers.
+// GetContainerUIDGid returns the uid and gid (and string forms) to be used running most containers.
 func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	curUser, err := user.Current()
 	CheckErr(err)
@@ -151,21 +150,6 @@ func IsCommandAvailable(cmdName string) bool {
 func GetFirstWord(s string) string {
 	arr := strings.Split(s, " ")
 	return arr[0]
-}
-
-// On Windows we'll need the path to bash to execute anything.
-// Returns empty string if not found, path if found
-func FindWindowsBashPath() string {
-	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
-	if err != nil {
-		// This one could come back with the WSL bash, in which case we may have some trouble.
-		windowsBashPath, err = osexec.LookPath("bash.exe")
-		if err != nil {
-			fmt.Println("Not loading custom commands; bash is not in PATH")
-			return ""
-		}
-	}
-	return windowsBashPath
 }
 
 // TimeTrack determines the amount of time a function takes to return. Timing starts when it is called.

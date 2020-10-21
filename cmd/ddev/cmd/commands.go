@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -50,6 +49,9 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 		return nil
 	}
 
+	// Avoid displaying the same error twice later
+	findBashErrorShown := false
+
 	commandsAdded := map[string]int{}
 	for _, commandSet := range []string{projectCommandPath, targetGlobalCommandPath} {
 		commandDirs, err := fileutil.ListFilesInDirFullPath(commandSet)
@@ -63,16 +65,24 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 			if !fileutil.IsDirectory(serviceDirOnHost) {
 				continue
 			}
+
+			// Lookup the BASH binary on Windows for host commands
+			if service == "host" && runtime.GOOS == "windows" {
+				_, err = util.FindBashPath()
+				if err != nil {
+					if !findBashErrorShown {
+						util.Warning("Failed to lookup %s, not loading custom host commands: %v", util.BashBinary, err)
+						findBashErrorShown = true
+					}
+
+					// Continue with the next service
+					continue
+				}
+			}
+
 			commandFiles, err := fileutil.ListFilesInDir(serviceDirOnHost)
 			if err != nil {
 				return err
-			}
-			if runtime.GOOS == "windows" {
-				windowsBashPath := util.FindWindowsBashPath()
-				if windowsBashPath == "" {
-					fmt.Println("Unable to find bash.exe in PATH, not loading custom commands")
-					return nil
-				}
 			}
 
 			for _, commandName := range commandFiles {
@@ -194,37 +204,28 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 // makeHostCmd creates a command which will run on the host
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
-	var windowsBashPath = ""
-	if runtime.GOOS == "windows" {
-		windowsBashPath = util.FindWindowsBashPath()
-	}
-
 	return func(cmd *cobra.Command, cobraArgs []string) {
+		// Try to start app
 		if app.SiteStatus() != ddevapp.SiteRunning {
 			err := app.Start()
 			if err != nil {
 				util.Failed("Failed to start project for custom command: %v", err)
 			}
 		}
-		app.DockerEnv()
 
+		// Extract args
+		// todo: should be replaced with cobraArgs instead
 		osArgs := []string{}
 		if len(os.Args) > 2 {
 			osArgs = os.Args[2:]
 		}
-		var err error
+
 		// Load environment variables that may be useful for script.
 		app.DockerEnv()
-		if runtime.GOOS == "windows" {
-			// Sadly, not sure how to have a bash interpreter without this.
-			args := []string{fullPath}
-			args = append(args, osArgs...)
-			err = exec.RunInteractiveCommand(windowsBashPath, args)
-		} else {
-			err = exec.RunInteractiveCommand(fullPath, osArgs)
-		}
+
+		err := exec.RunBashScriptInteractive(fullPath, osArgs)
 		if err != nil {
-			util.Failed("Failed to run %s %v; error=%v", name, strings.Join(osArgs, " "), err)
+			util.Failed("Failed to run %s with error: %v", name, err)
 		}
 	}
 }
