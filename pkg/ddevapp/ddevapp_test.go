@@ -178,6 +178,19 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/api/status-code/200", Expect: "indicates that the request has succeeded."},
 			FilesImageURI:                 "/images/200.jpg",
 		},
+		{
+			Name:                          "TestPkgShopware6",
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware_code.tgz",
+			ArchiveInternalExtractionPath: "",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware_files.tgz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware_db.sql.gz",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeShopware6,
+			Docroot:                       "public",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/maintenance.html", Expect: "Our website is currently undergoing maintenance"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/Main-product-with-properties/SWDEMO10007.1", Expect: "Main product with properties"},
+			FilesImageURI:                 "/media/2f/b0/e2/1603218072/hemd_600x600.jpg",
+		},
 	}
 
 	FullTestSites = TestSites
