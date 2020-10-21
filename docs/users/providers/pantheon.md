@@ -6,7 +6,7 @@ ddev's Pantheon integration pulls an existing backup from an existing Pantheon s
 
 ### Pantheon Quickstart
 
-If you have ddev installed, and have an active Pantheon account with an active WordPress, Drupal 7, or Drupal 8 site, you can follow this quick start guide to spin up a pantheon project locally.
+If you have ddev installed, and have an active Pantheon account with an active WordPress, Drupal 7, or Drupal 8 site, you can follow this guide to spin up a pantheon project locally.
 
 1. Authenticate with Pantheon.
 

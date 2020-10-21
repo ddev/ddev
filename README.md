@@ -22,6 +22,7 @@ ddev is an open source tool that makes it simple to get local PHP development en
     * [Magento 1 Quickstart](https://ddev.readthedocs.io/en/stable/users/cli-usage#magento-1-quickstart)
     * [Magento 2 Quickstart](https://ddev.readthedocs.io/en/stable/users/cli-usage#magento-2-quickstart)
     * [Laravel Quickstart](https://ddev.readthedocs.io/en/stable/users/cli-usage#laravel-quickstart)
+    * [Shopware 6 Quickstart](https://ddev.readthedocs.io/en/latest/users/cli-usage#shopware-6-quickstart)
 
 Having trouble? See our [support options below](#support). You might have trouble if [another local development tool is already using port 80 or 443](https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen).
 
