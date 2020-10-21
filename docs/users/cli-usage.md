@@ -367,7 +367,7 @@ ddev exec bin/console system:setup
 # Database Port: (default)
 # Database Name: db
 ddev exec bin/console system:install --create-database --basic-setup
-ddev launch
+ddev launch /admin
 ```
 
 Edit the created .env to add a line with
@@ -378,7 +378,7 @@ MAILER_URL="smtp://localhost:1025?encryption=&auth_mode="
 
 to make it use the MailHog, ddev's built-in mail handler.
 
-Now log into the site using the web browser. The default credentials are username=admin, password=shopware. You can use the web UI to install sample data or accomplish many other tasks.
+Now log into the admin site (/admin) using the web browser. The default credentials are username=admin, password=shopware. You can use the web UI to install sample data or accomplish many other tasks.
 
 For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
 
