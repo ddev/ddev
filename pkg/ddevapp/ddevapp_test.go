@@ -180,9 +180,9 @@ var (
 		},
 		{
 			Name:                          "TestPkgShopware6",
-			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware_code.tgz",
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_code.tgz",
 			ArchiveInternalExtractionPath: "",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware_files.tgz",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_files.tgz",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware_db.sql.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeShopware6,

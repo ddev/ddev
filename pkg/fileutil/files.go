@@ -254,12 +254,26 @@ func IsSameFile(path1 string, path2 string) (bool, error) {
 
 // ReadFileIntoString just gets the contents of file into string
 func ReadFileIntoString(path string) (string, error) {
-
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
 	return string(bytes), err
+}
+
+// AppendStirngtoFile takes a path to a file and a string to append
+// and it appends it, returning err
+func AppendStringToFile(path string, appendString string) error {
+	f, err := os.OpenFile(path,
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if _, err := f.WriteString(appendString); err != nil {
+		return err
+	}
+	return nil
 }
 
 type XSymContents struct {

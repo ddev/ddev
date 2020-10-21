@@ -69,10 +69,10 @@ func shopware6ImportFilesAction(app *DdevApp, importPath, extPath string) error 
 }
 
 // getShopwareUploadDir will return a custom upload dir if defined,
-//returning a default path if not.
+//returning a default path if not; this is relative to the docroot
 func getShopwareUploadDir(app *DdevApp) string {
 	if app.UploadDir == "" {
-		return "public/media"
+		return "media"
 	}
 
 	return app.UploadDir
@@ -81,12 +81,32 @@ func getShopwareUploadDir(app *DdevApp) string {
 // shopware6PostStartAction checks to see if the .env file is set up
 func shopware6PostStartAction(app *DdevApp) error {
 	envFile := filepath.Join(app.AppRoot, ".env")
+	var addOnConfig string
 	expectedDatabaseURL := `DATABASE_URL="mysql://db:db@db:3306/db"`
+	expectedPrimaryURL := fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL())
+	expectedMailerURL := `MAILER_URL="smtp://localhost:1025?encryption=&auth_mode="`
+
 	if fileutil.FileExists(envFile) {
 		isConfiguredDbConnection, _ := fileutil.FgrepStringInFile(app.SiteSettingsPath, expectedDatabaseURL)
-		isAppURLCorrect, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL()))
-		if err == nil && !isConfiguredDbConnection && !isAppURLCorrect {
-			util.Warning("The DATABASE_URL does not seem to be configured in %s; it should be '%s'", envFile, expectedDatabaseURL)
+		isAppURLCorrect, _ := fileutil.FgrepStringInFile(app.SiteSettingsPath, expectedPrimaryURL)
+		isMailhogConfigCorrect, _ := fileutil.FgrepStringInFile(envFile, expectedMailerURL)
+
+		if !isConfiguredDbConnection {
+			addOnConfig = addOnConfig + expectedDatabaseURL + "\n"
+		}
+		if !isAppURLCorrect {
+			addOnConfig = addOnConfig + expectedPrimaryURL + "\n"
+		}
+		if !isMailhogConfigCorrect {
+			addOnConfig = addOnConfig + expectedMailerURL + "\n"
+		}
+		if addOnConfig != "" {
+			addOnConfig = "# =================\n# Configuration added by ddev\n" + addOnConfig
+			err := fileutil.AppendStringToFile(envFile, addOnConfig)
+			if err != nil {
+				return err
+			}
+			util.Warning("ddev configuration added to %s", envFile)
 		}
 	} else {
 		util.Warning("the .env file has not yet been created (%s)", envFile)
