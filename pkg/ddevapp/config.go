@@ -491,7 +491,7 @@ func (app *DdevApp) DockerComposeFullRenderedYAMLPath() string {
 
 // GetHostname returns the primary hostname of the app.
 func (app *DdevApp) GetHostname() string {
-	return app.Name + "." + app.ProjectTLD
+	return strings.ToLower(app.Name) + "." + app.ProjectTLD
 }
 
 // GetHostnames returns an array of all the configured hostnames.
@@ -502,10 +502,12 @@ func (app *DdevApp) GetHostnames() []string {
 	nameListMap := make(map[string]int)
 
 	for _, name := range app.AdditionalHostnames {
+		name = strings.ToLower(name)
 		nameListMap[name+"."+app.ProjectTLD] = 1
 	}
 
 	for _, name := range app.AdditionalFQDNs {
+		name = strings.ToLower(name)
 		nameListMap[name] = 1
 	}
 

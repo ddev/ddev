@@ -179,7 +179,7 @@ var (
 			FilesImageURI:                 "/images/200.jpg",
 		},
 		{
-			Name:                          "TestPkgShopware6",
+			Name:                          "testpkgshopware6",
 			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_code.tgz",
 			ArchiveInternalExtractionPath: "",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_files.tgz",
