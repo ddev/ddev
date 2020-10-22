@@ -183,7 +183,7 @@ var (
 			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_code.tgz",
 			ArchiveInternalExtractionPath: "",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_files.tgz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware_db.sql.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_db.tgz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeShopware6,
 			Docroot:                       "public",
@@ -1292,7 +1292,10 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
-		assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
+
+		if app.Type != nodeps.AppTypeShopware6 {
+			assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
+		}
 		if nodeps.ArrayContainsString([]string{"drupal6", "drupal7"}, app.Type) {
 			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 		}
