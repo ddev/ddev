@@ -367,6 +367,7 @@ ddev exec bin/console system:setup
 # Database Port: (default)
 # Database Name: db
 ddev exec bin/console system:install --create-database --basic-setup
+ddev start
 ddev launch /admin
 ```
 
