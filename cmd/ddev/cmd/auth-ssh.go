@@ -4,6 +4,8 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
@@ -53,8 +55,16 @@ var AuthSSHCommand = &cobra.Command{
 			util.Failed("The ssh key directory (%s) must be a directory", sshKeyPath)
 		}
 
-		// We don't actually have to start ssh-agent in a project directory, so use a dummy app.
-		app := ddevapp.DdevApp{}
+		app, err := ddevapp.GetActiveApp("")
+		if err != nil || app == nil {
+			// We don't actually have to start ssh-agent in a project directory, so use a dummy app.
+			app = &ddevapp.DdevApp{OmitContainerGlobal: globalconfig.DdevGlobalConfig.OmitContainersGlobal}
+		}
+		omitted := app.GetOmittedContainers()
+		if nodeps.ArrayContainsString(omitted, nodeps.DdevSSHAgentContainer) {
+			util.Failed("ddev-ssh-agent is omitted in your configuration so ssh auth cannot be used")
+		}
+
 		err = app.EnsureSSHAgentContainer()
 		if err != nil {
 			util.Failed("Failed to start ddev-ssh-agent container: %v", err)
