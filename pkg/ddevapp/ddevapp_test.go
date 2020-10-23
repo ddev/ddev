@@ -671,10 +671,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	phpVersions := nodeps.ValidPHPVersions
 	phpKeys := make([]string, 0, len(phpVersions))
 	for k := range phpVersions {
-		// PHP80 does not yet have xdebug, 2020-1019
-		if k != nodeps.PHP80 {
-			phpKeys = append(phpKeys, k)
-		}
+		phpKeys = append(phpKeys, k)
 	}
 	sort.Strings(phpKeys)
 
