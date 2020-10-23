@@ -154,7 +154,7 @@ func TestHostName(t *testing.T) {
 	assert.NoError(err)
 	app.Name = util.RandString(32)
 
-	assert.Equal(app.GetHostname(), app.Name+"."+app.ProjectTLD)
+	assert.Equal(app.GetHostname(), strings.ToLower(app.Name+"."+app.ProjectTLD))
 }
 
 // TestWriteDockerComposeYaml tests the writing of a .ddev/docker-compose-* file.

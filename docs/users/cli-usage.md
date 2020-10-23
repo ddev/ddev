@@ -36,7 +36,7 @@ In addition to the *commands* listed above, there are loads and loads of tools i
 
 ## Quickstart Guides
 
-Here are quickstart instructions for generic PHP, WordPress, Drupal 6, Drupal 7, Drupal 8, TYPO3, Backdrop, Magento, Magento 2, and Laravel.
+Here are quickstart instructions for generic PHP, WordPress, Drupal 6, Drupal 7, Drupal 8, TYPO3, Backdrop, Magento, Magento 2, Laravel, and Shopware 6.
 
 **Prerequisites:** Before you start, follow the [installation instructions](../index.md#installation). Make sure to [check the system requirements](../index.md#system-requirements), you will need *docker* and *docker-compose* to use ddev.
 
@@ -347,6 +347,33 @@ return [
 
 This way we only need to change the value of `DB_CONNECTION` to `ddev` in the `.env` to work with the `db` service.
 This is very handy if you have a local database installed and you want to switch between the connections faster by changing only one variable in `.env`
+
+### Shopware 6 Quickstart
+
+You can set up a Shopware 6 environment many ways, but this shows you one recommended technique:
+
+```bash
+git clone --branch=6.2 https://github.com/shopware/production my-shopware6
+cd my-shopware6
+ddev config --project-type=shopware6 --docroot=public
+ddev start
+ddev composer install
+ddev exec bin/console system:setup
+# In system:startup use
+# URL https://<project.ddev.site>, here https://my-shopware6.ddev.site
+# Database User: db
+# Database Password: db
+# Database Host: db
+# Database Port: (default)
+# Database Name: db
+ddev exec bin/console system:install --create-database --basic-setup
+ddev start
+ddev launch /admin
+```
+
+Now log into the admin site (/admin) using the web browser. The default credentials are username=admin, password=shopware. You can use the web UI to install sample data or accomplish many other tasks.
+
+For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
 
 ### Database Imports
 

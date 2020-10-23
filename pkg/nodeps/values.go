@@ -136,6 +136,7 @@ const (
 	AppTypeMagento   = "magento"
 	AppTypeMagento2  = "magento2"
 	AppTypeLaravel   = "laravel"
+	AppTypeShopware6 = "shopware6"
 )
 
 // Ports and other defaults

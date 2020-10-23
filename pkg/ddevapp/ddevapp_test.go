@@ -178,6 +178,19 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/api/status-code/200", Expect: "indicates that the request has succeeded."},
 			FilesImageURI:                 "/images/200.jpg",
 		},
+		{
+			Name:                          "testpkgshopware6",
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_code.tgz",
+			ArchiveInternalExtractionPath: "",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_files.tgz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_db.tgz",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeShopware6,
+			Docroot:                       "public",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/maintenance.html", Expect: "Our website is currently undergoing maintenance"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/Main-product-with-properties/SWDEMO10007.1", Expect: "Main product with properties"},
+			FilesImageURI:                 "/media/2f/b0/e2/1603218072/hemd_600x600.jpg",
+		},
 	}
 
 	FullTestSites = TestSites
@@ -1279,7 +1292,10 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
-		assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
+
+		if app.Type != nodeps.AppTypeShopware6 {
+			assert.Equal(filepath.Dir(settingsLocation), filepath.Dir(app.SiteSettingsPath))
+		}
 		if nodeps.ArrayContainsString([]string{"drupal6", "drupal7"}, app.Type) {
 			assert.FileExists(filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 		}
