@@ -33,7 +33,7 @@ function containerwait {
 		fi
 		sleep 1
 	done
-	echo "# --- ddev-dbserver FAIL: information"
+	echo "# --- ddev-webserver containerwait failed: information:"
 	docker ps -a
 	docker logs $CONTAINER_NAME
 	docker inspect $CONTAINER_NAME
