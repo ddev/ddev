@@ -710,8 +710,18 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Errorf("Aborting xdebug check for php%s: %v", v, err)
 			continue
 		}
-		assert.Contains(stdout, "xdebug support => enabled", "xdebug not enabled for %s", v)
-		assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
+		if app.PHPVersion == nodeps.PHP80 {
+			assert.Contains(stdout, "xdebug.mode => debug => debug", "xdebug is not enabled for %s", v)
+
+		} else {
+			assert.Contains(stdout, "xdebug support => enabled", "xdebug is not enabled for %s", v)
+		}
+
+		if app.PHPVersion == nodeps.PHP80 {
+			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
+		} else {
+			assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
+		}
 
 		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
 		listener, err := net.Listen("tcp", ":9000")
