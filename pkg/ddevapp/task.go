@@ -1,15 +1,15 @@
 package ddevapp
 
 import (
-	"bytes"
 	"fmt"
+	"os"
+	"runtime"
+	"strings"
+
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
-	"os"
-	"os/exec"
-	"runtime"
-	"strings"
 )
 
 // YAMLTask defines tasks like Exec to be run in hooks
@@ -36,12 +36,14 @@ type ExecHostTask struct {
 	app  *DdevApp
 }
 
+// ComposerTask is the struct that defines "composer" tasks for hooks, commands
+// to be run in containers.
 type ComposerTask struct {
 	exec string
 	app  *DdevApp
 }
 
-// Execute() executes an ExecTask
+// Execute executes an ExecTask
 func (c ExecTask) Execute() error {
 	_, _, err := c.app.Exec(&ExecOpts{
 		Service:   c.service,
@@ -78,12 +80,12 @@ func (c ExecHostTask) Execute() error {
 		bashPath = util.FindWindowsBashPath()
 	}
 
-	cmd := exec.Command(bashPath, "-c", c.exec)
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err = cmd.Run()
+	args := []string{
+		"-c",
+		c.exec,
+	}
+
+	err = exec.RunInteractiveCommand(bashPath, args)
 
 	_ = os.Chdir(cwd)
 
@@ -104,7 +106,7 @@ func (c ComposerTask) GetDescription() string {
 	return fmt.Sprintf("Composer command '%s' in web container", c.exec)
 }
 
-// NewTask() is the factory method to create whatever kind of task
+// NewTask is the factory method to create whatever kind of task
 // we need using the yaml description of the task.
 // Returns a task (of various types) or nil
 func NewTask(app *DdevApp, ytask YAMLTask) Task {
