@@ -10,8 +10,6 @@ dist: focal
 group: edge
 
 before_install:
-  # Install mkcert
-  - sudo curl -sSL https://github.com/drud/mkcert/releases/download/v1.4.6/mkcert-v1.4.6-linux-arm64 -o /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert
-  - mkcert -install
+  - ./.travis/linux_travis_arm64_setup.sh
 
 script: make test
