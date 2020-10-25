@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 
@@ -25,8 +26,18 @@ var HostNameCmd = &cobra.Command{
 	Short:   "Manage your hostfile entries.",
 	Long: `Manage your hostfile entries. Managing host names has security and usability
 implications and requires elevated privileges. You may be asked for a password
-to allow ddev to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, becauses the hosts file never gets manipulated.`,
+to allow ddev to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, becauses the hosts file never gets manipulated. Note that if running on WSL2 and using a browser on Windows, you need to have the Windows ddev.exe installed.'`,
 	Run: func(cmd *cobra.Command, args []string) {
+		if nodeps.GetWSLDistro() != "" {
+			sudoArgs := append([]string{"hostname"}, args...)
+			out, err := exec.RunCommand("sudo.exe", sudoArgs)
+			if err != nil {
+				util.Success("Executed 'sudo.exe %v on Windows", sudoArgs)
+				return
+			} else {
+				util.Warning("Unable to run sudo.exe %v on Windows, your hosts file may not work for you, only available on WSL2: %s", sudoArgs, out)
+			}
+		}
 		hosts, err := goodhosts.NewHosts()
 		if err != nil {
 			rawResult := make(map[string]interface{})
