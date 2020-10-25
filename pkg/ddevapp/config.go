@@ -109,6 +109,11 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
 		}
 	}
+	// If MySQLVersion is now non-default/non-empty, then empty
+	// MariaDBVersion in its favor.
+	if app.MySQLVersion != "" {
+		app.MariaDBVersion = ""
+	}
 	app.SetApptypeSettingsPaths()
 
 	// Rendered yaml is not there until after ddev config or ddev start
