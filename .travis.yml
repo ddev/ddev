@@ -3,6 +3,9 @@ language: go
 go:
 - 1.x
 
+services:
+  - docker
+
 arch: arm64-graviton2
 virt: vm
 os: linux
