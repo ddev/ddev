@@ -29,13 +29,13 @@ implications and requires elevated privileges. You may be asked for a password
 to allow ddev to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, becauses the hosts file never gets manipulated. Note that if running on WSL2 and using a browser on Windows, you need to have the Windows ddev.exe installed.'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if nodeps.GetWSLDistro() != "" {
-			sudoArgs := append([]string{"hostname"}, args...)
+			sudoArgs := append([]string{"ddev.exe", "hostname"}, args...)
 			out, err := exec.RunCommand("sudo.exe", sudoArgs)
-			if err != nil {
-				util.Success("Executed 'sudo.exe %v on Windows", sudoArgs)
+			if err == nil {
+				util.Success("Executed 'sudo.exe %v on Windows", strings.Join(sudoArgs, " "))
 				return
 			} else {
-				util.Warning("Unable to run sudo.exe %v on Windows, your hosts file may not work for you, only available on WSL2: %s", sudoArgs, out)
+				util.Warning("Unable to run sudo.exe %v on Windows, your hosts file may not work for you, only available on WSL2: %v (%s)", strings.Join(sudoArgs, " "), err, out)
 			}
 		}
 		hosts, err := goodhosts.NewHosts()
