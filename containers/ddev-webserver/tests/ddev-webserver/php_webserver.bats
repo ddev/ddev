@@ -15,10 +15,14 @@
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
     docker exec -t $CONTAINER_NAME enable_xdebug
-    docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
+    if [ ]${PHP_VERSION} != "8.0" ] ; then
+      docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
+    else
+      docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.mode"
+    fi
     curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php | grep "Xdebug is enabled"
     docker exec -t $CONTAINER_NAME disable_xdebug
-    docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug does not exist"
+    docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.*does not exist"
     curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php | grep "Xdebug is disabled"
 }
 
@@ -32,8 +36,12 @@
 }
 
 @test "verify PHP ini settings for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-    # Default settings for assert.active should be 1
+  # Default settings for assert.active should be 1
+  if [ ${PHP_VERSION} != "8.0" ]; then
     docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 1 => 1"
+  else
+    docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> On => On"
+  fi
 }
 
 @test "verify phpstatus endpoint for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
