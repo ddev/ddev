@@ -15,6 +15,9 @@ fi
 sudo apt-get update -qq
 sudo apt-get install -qq mysql-client zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev docker-compose
 
+# Copy docker-compose to /usr/local/bin because Travis' pre-installed version leads to exec format error
+sudo cp /usr/bin/docker-compose /usr/local/bin/docker-compose
+
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-arm64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
 # Without this .curlrc CircleCI linux image doesn't respect mkcert certs
