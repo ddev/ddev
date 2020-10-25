@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"os"
@@ -438,7 +439,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 
 	assert := asrt.New(t)
 
-	testDir, _ := os.Getwd()
+	pwd, _ := os.Getwd()
 	versionsToTest := nodeps.ValidMariaDBVersions
 
 	// Create a temporary directory and switch to it.
@@ -455,7 +456,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	// it should end up with default mariadb version dbimage
 	_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
 	_ = os.MkdirAll(filepath.Join(tmpDir, ".ddev"), 0777)
-	err := fileutil.CopyFile(filepath.Join(testDir, "testdata", t.Name(), "config.yaml.empty"), filepath.Join(tmpDir, ".ddev", "config.yaml"))
+	err := fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.empty"), filepath.Join(tmpDir, ".ddev", "config.yaml"))
 	assert.NoError(err)
 	app, err := ddevapp.NewApp(tmpDir, false, "")
 	//nolint: errcheck
@@ -507,7 +508,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 		for configMariaDBVersion := range versionsToTest {
 			_ = os.Remove(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 
-			err := fileutil.CopyFile(filepath.Join(testDir, "testdata/TestConfigMariaDBVersion", "config.yaml."+configMariaDBVersion), filepath.Join(tmpDir, ".ddev", "config.yaml"))
+			err := fileutil.CopyFile(filepath.Join(pwd, "testdata/TestConfigMariaDBVersion", "config.yaml."+configMariaDBVersion), filepath.Join(tmpDir, ".ddev", "config.yaml"))
 			assert.NoError(err)
 			configArgs := append(args, cmdMariaDBVersion, "--project-name", "hasconfig-"+cmdMariaDBVersion)
 			out, err := exec.RunCommand(DdevBin, configArgs)
@@ -541,7 +542,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 		for configMariaDBVersion := range versionsToTest {
 			_ = os.Remove(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 
-			testConfigFile := filepath.Join(testDir, "testdata/TestConfigMariaDBVersion", "config.yaml.imagespec."+configMariaDBVersion)
+			testConfigFile := filepath.Join(pwd, "testdata/TestConfigMariaDBVersion", "config.yaml.imagespec."+configMariaDBVersion)
 			err := fileutil.CopyFile(testConfigFile, filepath.Join(tmpDir, ".ddev", "config.yaml"))
 			assert.NoError(err)
 			tmpProjectName := "imagespec-" + cmdMariaDBVersion + ".cmdversion." + cmdMariaDBVersion
@@ -631,10 +632,21 @@ func TestConfigMySQLVersion(t *testing.T) {
 	assert := asrt.New(t)
 	versionsToTest := nodeps.ValidMySQLVersions
 
+	pwd, _ := os.Getwd()
+
 	// Create a temporary directory and switch to it.
-	tmpDir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpDir)
-	defer testcommon.Chdir(tmpDir)()
+	testDir := testcommon.CreateTmpDir(t.Name())
+	_ = os.Chdir(testDir)
+
+	t.Cleanup(func() {
+		err := os.Chdir(pwd)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
+
+	err := os.MkdirAll(filepath.Join(testDir, ".ddev"), 0777)
+	require.NoError(t, err)
 
 	args := []string{
 		"config",
@@ -643,7 +655,7 @@ func TestConfigMySQLVersion(t *testing.T) {
 	}
 
 	// Try conflicting configurations
-	_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
+	_ = os.RemoveAll(filepath.Join(testDir, ".ddev"))
 	configArgs := append(args, "--project-name=conflicting-db-versions")
 	out, err := exec.RunCommand(DdevBin, configArgs)
 	assert.Error(err)
@@ -654,7 +666,7 @@ func TestConfigMySQLVersion(t *testing.T) {
 			args := []string{
 				"config",
 			}
-			_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
+			_ = os.RemoveAll(filepath.Join(testDir, ".ddev"))
 			projectName := "mysqlversion-" + cmdMySQLVersion + "-dbimageversion-" + cmdDBImageVersion
 			configArgs := append(args, []string{
 				"--project-name=" + projectName,
@@ -667,7 +679,7 @@ func TestConfigMySQLVersion(t *testing.T) {
 			assert.NoError(err, "failed to run ddevcmd=%s, out=%s", ddevCmd, out)
 			assert.Contains(out, "You may now run 'ddev start'")
 
-			app, err := ddevapp.NewApp(tmpDir, false, "")
+			app, err := ddevapp.NewApp(testDir, false, "")
 			assert.NoError(err)
 			// If the two versions are equal, we expect the app.DBImage to be empty
 			// because it's identical to the image we'd get with just app.MySQLVersion
@@ -679,6 +691,59 @@ func TestConfigMySQLVersion(t *testing.T) {
 			_, _ = exec.RunCommand(DdevBin, []string{"remove", "-RO"})
 		}
 	}
+
+}
+
+// TestMariaMysqlConflicts tests the various ways that mysql_version
+// and mariadb_version can interact.
+func TestMariaMysqlConflicts(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+
+	// Create a temporary directory and switch to it.
+	testDir := testcommon.CreateTmpDir(t.Name())
+	_ = os.Chdir(testDir)
+	t.Cleanup(func() {
+		err := os.Chdir(pwd)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
+
+	_ = os.MkdirAll(filepath.Join(testDir, ".ddev"), 0777)
+
+	// Use a config file that does not specify mariadb version
+	// but does specify mysql_version
+	err := fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mysql8only"), filepath.Join(testDir, ".ddev", "config.yaml"))
+	assert.NoError(err)
+	app, err := ddevapp.NewApp(testDir, false, "")
+	assert.NoError(err)
+	assert.Equal(nodeps.MySQL80, app.MySQLVersion)
+	assert.Empty(app.MariaDBVersion)
+
+	// Use a config file that specifies both but with empty mariadb_version
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mysqlwithemptymaria"), filepath.Join(testDir, ".ddev", "config.yaml"))
+	assert.NoError(err)
+	app, err = ddevapp.NewApp(testDir, false, "")
+	assert.NoError(err)
+	assert.Equal(nodeps.MySQL80, app.MySQLVersion)
+	assert.Empty(app.MariaDBVersion)
+
+	// Use a config file that specifies both but with empty mysql_version
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mariawithemptymysql"), filepath.Join(testDir, ".ddev", "config.yaml"))
+	assert.NoError(err)
+	app, err = ddevapp.NewApp(testDir, false, "")
+	assert.NoError(err)
+	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
+	assert.Empty(app.MySQLVersion)
+
+	// Use a config file that specifies neither.
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.nodbspecified"), filepath.Join(testDir, ".ddev", "config.yaml"))
+	assert.NoError(err)
+	app, err = ddevapp.NewApp(testDir, false, "")
+	assert.NoError(err)
+	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
+	assert.Empty(app.MySQLVersion)
 }
 
 //TestConfigGitignore checks that our gitignore is ignoring the right things.
