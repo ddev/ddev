@@ -4,7 +4,7 @@ go:
 - 1.x
 
 arch: arm64-graviton2
-virt: lxd
+virt: vm
 os: linux
 dist: focal
 group: edge

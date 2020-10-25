@@ -15,7 +15,7 @@ fi
 sudo apt-get update -qq
 sudo apt-get install -qq mysql-client zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
 
-curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-arm64.tgz && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
+curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-arm64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
 # Without this .curlrc CircleCI linux image doesn't respect mkcert certs
 echo "capath=/etc/ssl/certs/" >>~/.curlrc
