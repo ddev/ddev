@@ -819,7 +819,7 @@ func TestDdevMysqlWorks(t *testing.T) {
 func TestStartWithoutDdevConfig(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	testDir := testcommon.CreateTmpDir("TestStartWithoutDdevConfig")
+	testDir := testcommon.CreateTmpDir(t.Name())
 
 	// testcommon.Chdir()() and CleanupDir() check their own errors (and exit)
 	defer testcommon.CleanupDir(testDir)
