@@ -1,7 +1,9 @@
 DOCKER_ORG ?= drud
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
 
-DEFAULT_IMAGES = ddev-webserver
+# TODO: Switch this back to build both.
+#DEFAULT_IMAGES = ddev-webserver ddev-webserver-prod-base
+DEFAULT_IMAGES = ddev-webserver-prod-base
 
 VERSION := $(shell git describe --tags --always --dirty)
 
@@ -31,8 +33,9 @@ multi-arch:
 		echo "created multi-arch builds $(BUILD_ARCHS) for $(DOCKER_ORG)/$$item"; \
 	done
 
-ddev-webserver:
+ddev-webserver ddev-webserver-prod-base ddev-webserver-prod:
 	docker buildx build -o type=docker --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+
 
 test: images
 	set -eu -o pipefail; \

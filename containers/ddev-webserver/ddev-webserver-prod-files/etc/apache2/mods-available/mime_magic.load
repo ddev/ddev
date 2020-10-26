@@ -1,0 +1,1 @@
+LoadModule mime_magic_module /usr/lib/apache2/modules/mod_mime_magic.so

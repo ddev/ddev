@@ -1,0 +1,2 @@
+# Depends: ldap
+LoadModule authnz_ldap_module /usr/lib/apache2/modules/mod_authnz_ldap.so

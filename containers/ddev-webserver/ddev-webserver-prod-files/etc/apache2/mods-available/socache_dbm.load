@@ -1,0 +1,1 @@
+LoadModule socache_dbm_module /usr/lib/apache2/modules/mod_socache_dbm.so

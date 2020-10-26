@@ -1,0 +1,1 @@
+LoadModule authn_socache_module /usr/lib/apache2/modules/mod_authn_socache.so

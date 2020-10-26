@@ -1,0 +1,1 @@
+LoadModule log_debug_module /usr/lib/apache2/modules/mod_log_debug.so

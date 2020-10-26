@@ -1,0 +1,5 @@
+#!/bin/bash
+export PATH=$PATH:/usr/sbin:/sbin
+phpdismod xdebug
+killall -HUP php-fpm 2>/dev/null || true
+echo "Disabled xdebug"
