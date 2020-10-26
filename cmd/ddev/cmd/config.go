@@ -311,7 +311,7 @@ func init() {
 
 	ConfigCommand.Flags().Bool("disable-settings-management", false, "Prevent ddev from creating or updating CMS settings files")
 
-	ConfigCommand.Flags().String("composer-version", "", "Specify override for composer version in web container")
+	ConfigCommand.Flags().String("composer-version", "", `Specify override for composer version in web container. This may be "", "1", "2", or a specific version.`)
 
 	RootCmd.AddCommand(ConfigCommand)
 }
