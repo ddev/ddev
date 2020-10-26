@@ -36,13 +36,13 @@ RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/
 
 # END ddev-webserver-base
 
+
 ### ---------------------------ddev-webserver-prod--------------------------------------
 ### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
 ### (Withut dev features, single layer)
 #FROM scratch as ddev-webserver-prod
 #ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 #ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
-#ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
 #ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
 #
 #COPY --from=ddev-webserver-base / /
@@ -74,7 +74,7 @@ RUN mkdir /tmp/ddev && \
 
 # blackfire-php is not available for arm64 (yet)
 RUN if [[ $TARGETPLATFORM != "linux/arm64" ]]; then \
-    DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confold" blackfire-php -y --allow-unauthenticated; \
+    DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" blackfire-php -y --allow-unauthenticated; \
     fi
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     fontconfig \
