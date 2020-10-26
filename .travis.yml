@@ -3,9 +3,6 @@ language: go
 go:
 - 1.x
 
-services:
-  - docker
-
 arch: arm64-graviton2
 virt: vm
 os: linux
@@ -14,6 +11,13 @@ group: edge
 
 before_install:
   - ./.travis/linux_travis_arm64_setup.sh
+  - echo '{"experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
+  - mkdir -p $HOME/.docker
+  - echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
+  - sudo service docker start
+
+install:
+  - docker buildx create --name ddev-builder-multi --use
 
 jobs:
   include:

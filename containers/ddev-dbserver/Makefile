@@ -11,6 +11,7 @@ MYSQL_VERSIONS_amd64=5.5:5.5 5.6:5.6 5.7:5.7 8.0:8.0.21
 MARIADB_VERSIONS_arm64=10.2:10.2 10.3:10.3 10.4:10.4 10.5:10.5
 # MySQL images on Docker Hub currently are amd64 only
 MYSQL_VERSIONS_arm64=
+CURRENT_ARCH= $(shell ../get_arch.sh)
 
 # This Makefile explicitly does not include containers/containers_shared.mak,
 # So has to explicitly declare anything it might need from there (like SHELL)
@@ -20,7 +21,7 @@ container: mariadb_containers mysql_containers
 
 mariadb_containers:
 	set -eu -o pipefail; \
-	for item in $(MARIADB_VERSIONS_amd64); do \
+	for item in $(MARIADB_VERSIONS_$(CURRENT_ARCH)); do \
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
 		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
 		printf "\n\n========== Building MariaDB $${baseversion} with image $${fullversion} ==========\n"; \
@@ -29,7 +30,7 @@ mariadb_containers:
 
 mysql_containers:
 	set -eu -o pipefail ; \
-	for item in $(MYSQL_VERSIONS_amd64) ; do \
+	for item in $(MYSQL_VERSIONS_$(CURRENT_ARCH)) ; do \
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
 		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
 		printf "\n\n========== Building MySQL $${baseversion} with image $${fullversion} ==========\n", ${baseversion}, ${fullversion}; \
