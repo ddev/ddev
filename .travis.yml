@@ -15,4 +15,18 @@ group: edge
 before_install:
   - ./.travis/linux_travis_arm64_setup.sh
 
-script: make test
+jobs:
+  include:
+    - stage: test
+      name: Run make test
+      script: make test
+    - name: Linux container tests
+      script: |
+        for dir in containers/*/
+          do pushd $dir
+          echo "--- Build container $dir"
+          time make container DOCKER_ARGS=--no-cache
+          echo "--- Test container $dir"
+          time make test
+          popd
+        done
