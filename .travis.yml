@@ -34,6 +34,7 @@ jobs:
       script: make test
     - name: Linux container tests
       script: |
+        set -eu -o pipefail 
         for dir in containers/*/
           do pushd $dir
           echo "--- Build container $dir"
