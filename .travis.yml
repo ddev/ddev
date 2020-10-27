@@ -60,8 +60,9 @@ jobs:
       script: make testcmd
     - name: Linux container tests
       script: |
-        set -eu -o pipefail 
-        for dir in containers/*/
+        set -eu -o pipefail
+        pushd containers
+        for dir in ddev-dbserver ddev-router ddev-ssh-agent ddev-webserver
           do pushd $dir
           echo "--- Build container $dir"
           time make container DOCKER_ARGS=--no-cache
@@ -69,5 +70,6 @@ jobs:
           time make test
           popd
         done
+        popd
 
 script: make testpkg
