@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Find the directory of this script
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
 set -o errexit
 set -o pipefail
 set -o nounset
@@ -13,10 +16,10 @@ function cleanup {
 trap cleanup EXIT
 
 export tag=${VERSION}
-export CURRENT_ARCH=$(../../get_arch.sh)
+export CURRENT_ARCH=$($DIR/../../get_arch.sh)
 
 # Get database versions per database type
-source ../database-versions
+source $DIR/../database-versions
 
 export MARIADB_VERSIONS="MARIADB_VERSIONS_$CURRENT_ARCH"
 export MYSQL_VERSIONS="MYSQL_VERSIONS_$CURRENT_ARCH"
