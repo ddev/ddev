@@ -70,4 +70,4 @@ jobs:
           popd
         done
 
-script: make test
+script: make testpkg
