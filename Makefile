@@ -172,6 +172,7 @@ packr2:
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint markdownlint mkdocs
 
+# Best to install markdownlint-cli locally with "npm install -g markdownlint-cli"
 markdownlint:
 	@echo "markdownlint: "
 	@CMD="markdownlint *.md docs 2>&1"; \
@@ -183,6 +184,7 @@ markdownlint:
 		bash -c "$$CMD"; \
 	fi
 
+# Best to install mkdocs locally with "sudo pip3 install mkdocs"
 mkdocs:
 	@echo "mkdocs: "
 	@CMD="mkdocs -q build -d /tmp/mkdocsbuild"; \
@@ -242,6 +244,7 @@ $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.t
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/nssm.exe https://github.com/drud/nssm/releases/download/$(NSSM_VERSION)/nssm.exe
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd_license.txt https://www.gnu.org/licenses/gpl.txt
 
+# Best to install golangci-lint locally with "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.31.0"
 golangci-lint:
 	@echo "golangci-lint: "
 	@CMD="golangci-lint run $(GOLANGCI_LINT_ARGS) $(SRC_AND_UNDER)"; \
