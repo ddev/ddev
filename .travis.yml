@@ -38,27 +38,14 @@ before_install:
 jobs:
   include:
     - stage: test
-      name: testpkg
-      env: TESTDIR=nodeps
-    - env: TESTDIR=appports
-    - env: TESTDIR=fileutil
-    - env: TESTDIR=version
-    - env: TESTDIR=ddevhosts
-    - env: TESTDIR=exec
-    - env: TESTDIR=output
-    - env: TESTDIR=globalconfig
-    - env: TESTDIR=util
-    - env: TESTDIR=testcommon
-    - env: TESTDIR=appimport
-    - env: TESTDIR=ddevapp
-    - env: TESTDIR=netutil
-    - env: TESTDIR=servicetest
-    - env: TESTDIR=updatecheck
-    - env: TESTDIR=archive
-    - env: TESTDIR=dockerutil
+      name: test
     - name: make testcmd
       script: make testcmd
-    - name: Linux container tests
+    - name: make testnotddevapp
+      script: make testnotddevapp
+    - name: make testddevapp
+      script: make testddevapp
+    - name: Container tests
       script: |
         set -eu -o pipefail
         pushd containers
@@ -71,5 +58,3 @@ jobs:
           popd
         done
         popd
-
-script: make testpkg
