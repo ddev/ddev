@@ -254,12 +254,12 @@ const ConfigInstructions = `
 # see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 # For example Europe/Dublin or MST7MDT
 
-# composer_version: "2.0.0-RC2"
-# if composer_version:"" it will use the default for this ddev release
-# But it can be set to any existing specific composer version.
-# If composer_version: "latest", then on first start the most recent composer
-# version will be updated. However, that will remain the compuser version until
-# it is changed.
+# composer_version: "2"
+# if composer_version:"" it will use the current ddev default composer release.
+# It can also be set to "1", to get most recent composer v1
+# or "2" for most recent composer v2.
+# It can be set to any existing specific composer version.
+# After first project 'ddev start' this will not be updated until it changes
 
 # additional_hostnames:
 #  - somename
