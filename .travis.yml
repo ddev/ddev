@@ -12,6 +12,7 @@ group: edge
 env:
   global:
     - BUILDKIT_PROGRESS=plain
+    - GOTEST_SHORT=true
 
 before_install:
   - ./.travis/linux_travis_arm64_setup.sh
@@ -27,11 +28,36 @@ before_install:
   - docker info
   - docker buildx create --name ddev-builder-multi --use  
 
+# Group tests by directory to logically break up travis-CI build.
+#
+# Here's the bash if you need to update this. Be sure to maintain the 
+# lines that are currently commented out (these cannot run in Travis)
+#   cd pkg
+#   find . -maxdepth 1 -type d | sed 's|./|    - env: TESTDIR=|' | sed 's/$//g'
+#
 jobs:
   include:
     - stage: test
-      name: Run make test
-      script: make test
+      name: testpkg
+      env: TESTDIR=nodeps
+    - env: TESTDIR=appports
+    - env: TESTDIR=fileutil
+    - env: TESTDIR=version
+    - env: TESTDIR=ddevhosts
+    - env: TESTDIR=exec
+    - env: TESTDIR=output
+    - env: TESTDIR=globalconfig
+    - env: TESTDIR=util
+    - env: TESTDIR=testcommon
+    - env: TESTDIR=appimport
+    - env: TESTDIR=ddevapp
+    - env: TESTDIR=netutil
+    - env: TESTDIR=servicetest
+    - env: TESTDIR=updatecheck
+    - env: TESTDIR=archive
+    - env: TESTDIR=dockerutil
+    - name: make testcmd
+      script: make testcmd
     - name: Linux container tests
       script: |
         set -eu -o pipefail 
@@ -43,3 +69,5 @@ jobs:
           time make test
           popd
         done
+
+script: make test

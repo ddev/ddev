@@ -6,6 +6,7 @@ export PATH := $(EXTRA_PATH):$(PATH)
 DOCKERMOUNTFLAG := :cached
 
 BUILD_BASE_DIR ?= $(PWD)
+TESTDIR ?= ...
 
 GOTMP=.gotmp
 SHELL = /bin/bash
@@ -138,7 +139,7 @@ testcmd: $(DEFAULT_BUILD) setup
 
 testpkg: $(DEFAULT_BUILD) setup
 	@echo LDFLAGS=$(LDFLAGS)
-	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/... $(TESTARGS)
+	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/$(TESTDIR) $(TESTARGS)
 
 setup:
 	@mkdir -p $(GOTMP)/{src,pkg/mod/cache,.cache}
