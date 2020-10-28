@@ -35,7 +35,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	assert.NoError(err)
 
 	// Run a simple ssh server to act on and get its internal IP address
-	_, err = exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev_default", "drud/test-ssh-server"})
+	_, err = exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev_default", "drud/test-ssh-server:v1.16.0"})
 	assert.NoError(err)
 	//nolint: errcheck
 	defer dockerutil.RemoveContainer("test-cmd-ssh-server", 10)
