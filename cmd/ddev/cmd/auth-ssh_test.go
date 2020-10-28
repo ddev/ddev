@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -21,9 +20,6 @@ func TestCmdAuthSSH(t *testing.T) {
 	assert := asrt.New(t)
 	if !util.IsCommandAvailable("expect") {
 		t.Skip("Skipping TestCmdAuthSSH because expect scripting tool is not available")
-	}
-	if runtime.GOARCH == "arm64" {
-		t.Skip("Skipping TestCmdAuthSSH on arm64 because necessary test-ssh-server image not available")
 	}
 
 	testDir, _ := os.Getwd()

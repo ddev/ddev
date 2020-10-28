@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -23,9 +22,6 @@ import (
 
 // TestSSHAuth tests basic ssh authentication
 func TestSSHAuth(t *testing.T) {
-	if runtime.GOARCH == "arm64" {
-		t.Skip(("Skipping TestSSHAuth on arm64 because the test-ssh-server is not available for arm64"))
-	}
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
