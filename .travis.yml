@@ -28,13 +28,7 @@ before_install:
   - docker info
   - docker buildx create --name ddev-builder-multi --use  
 
-# Group tests by directory to logically break up travis-CI build.
-#
-# Here's the bash if you need to update this. Be sure to maintain the 
-# lines that are currently commented out (these cannot run in Travis)
-#   cd pkg
-#   find . -maxdepth 1 -type d | sed 's|./|    - env: TESTDIR=|' | sed 's/$//g'
-#
+# Group tests to break up travis-CI build so it doesn't hit time limit.
 jobs:
   include:
     - name: testcmd tests
