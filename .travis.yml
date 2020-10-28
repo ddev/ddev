@@ -37,15 +37,13 @@ before_install:
 #
 jobs:
   include:
-    - stage: test
-      name: test
-    - name: make testcmd
+    - name: testcmd tests
       script: make testcmd
-    - name: make testnotddevapp
+    - name: testpkg tests except ddevapp
       script: make testnotddevapp
-    - name: make testddevapp
+    - name: ddevapp tests
       script: make testddevapp
-    - name: Container tests
+    - name: container tests
       script: |
         set -eu -o pipefail
         pushd containers
