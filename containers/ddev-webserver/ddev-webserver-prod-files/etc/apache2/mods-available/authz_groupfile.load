@@ -1,2 +1,0 @@
-# Depends: authz_core
-LoadModule authz_groupfile_module /usr/lib/apache2/modules/mod_authz_groupfile.so

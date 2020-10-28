@@ -1,2 +1,0 @@
-# Depends: session
-LoadModule session_dbd_module /usr/lib/apache2/modules/mod_session_dbd.so

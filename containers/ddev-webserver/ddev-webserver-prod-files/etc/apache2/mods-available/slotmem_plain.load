@@ -1,1 +1,0 @@
-LoadModule slotmem_plain_module /usr/lib/apache2/modules/mod_slotmem_plain.so

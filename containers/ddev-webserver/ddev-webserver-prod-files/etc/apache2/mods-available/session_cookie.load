@@ -1,2 +1,0 @@
-# Depends: session
-LoadModule session_cookie_module /usr/lib/apache2/modules/mod_session_cookie.so

@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod (for DDEV-Live)
 ### and ddev-webserver-* (For DDEV-Local)
-FROM drud/ddev-php-base:v0.5.8 as ddev-webserver-base
+FROM drud/ddev-php-base:20201028_www_data as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV MKCERT_VERSION=v1.4.6
@@ -19,10 +19,12 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
-RUN groupadd www-data -g 33 && useradd www-data -u 33 -g 33 -m
 RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
     apt-key add /tmp/nginx_signing.key && \
     echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
+
+ADD ddev-webserver-etc-skel /
+RUN /sbin/mkhomedir_helper www-data
 
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y apache2 libcap2-bin locales-all nginx supervisor
@@ -267,6 +269,8 @@ RUN chmod -R go-w /home/.ssh
 # scripts added last because they're most likely place to make changes, speeds up build
 ADD ddev-webserver-prod-scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
+
+RUN /sbin/mkhomedir_helper www-data
 
 HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]

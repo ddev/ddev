@@ -1,3 +1,0 @@
-# Conflicts: php5
-# Depends: mpm_prefork
-LoadModule php5_module /usr/lib/apache2/modules/libphp5.6.so

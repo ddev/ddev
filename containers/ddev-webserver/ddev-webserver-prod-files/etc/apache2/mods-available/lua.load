@@ -1,1 +1,0 @@
-LoadModule lua_module /usr/lib/apache2/modules/mod_lua.so

@@ -1,6 +1,0 @@
-[core]
-	autocrlf = input
-
-[user]
-    name = DDEV-Local User
-    email = nobody@example.com

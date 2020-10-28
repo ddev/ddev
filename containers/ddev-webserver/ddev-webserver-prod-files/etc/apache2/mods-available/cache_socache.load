@@ -1,2 +1,0 @@
-# Depends: cache
-LoadModule cache_socache_module /usr/lib/apache2/modules/mod_cache_socache.so

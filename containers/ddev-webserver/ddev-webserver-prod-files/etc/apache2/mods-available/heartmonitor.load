@@ -1,3 +1,0 @@
-# This module depends on mod_watchdog to be loaded before. In Debian, this
-# module is statically linked.
-LoadModule heartmonitor_module /usr/lib/apache2/modules/mod_heartmonitor.so

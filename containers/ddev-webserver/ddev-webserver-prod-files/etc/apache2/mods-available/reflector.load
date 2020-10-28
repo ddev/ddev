@@ -1,1 +1,0 @@
-LoadModule reflector_module /usr/lib/apache2/modules/mod_reflector.so
