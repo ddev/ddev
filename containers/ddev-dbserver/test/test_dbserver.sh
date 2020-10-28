@@ -27,7 +27,7 @@ export MYSQL_VERSIONS="MYSQL_VERSIONS_$CURRENT_ARCH"
 export DB_TYPE=mariadb
 for v in ${!MARIADB_VERSIONS}; do
     export baseversion=$(echo $v | awk -F ':' '{print $1}')
-	export fullversion=$(echo $v | awk -F ':' '{print $2}')
+    export fullversion=$(echo $v | awk -F ':' '{print $2}')
     export IMAGE="drud/ddev-dbserver-$DB_TYPE-$baseversion:$tag"
     export DB_VERSION=$baseversion
     # /usr/local/bin is added for git-bash, where it may not be in the $PATH.
