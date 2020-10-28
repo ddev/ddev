@@ -22,7 +22,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	if !util.IsCommandAvailable("expect") {
 		t.Skip("Skipping TestCmdAuthSSH because expect scripting tool is not available")
 	}
-	if runtime.GOOS == "arm64" {
+	if runtime.GOARCH == "arm64" {
 		t.Skip("Skipping TestCmdAuthSSH on arm64 because necessary test-ssh-server image not available")
 	}
 
