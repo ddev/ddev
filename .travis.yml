@@ -58,3 +58,4 @@ jobs:
           popd
         done
         popd
+        set +eu
