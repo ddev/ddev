@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -22,6 +23,9 @@ import (
 
 // TestSSHAuth tests basic ssh authentication
 func TestSSHAuth(t *testing.T) {
+	if runtime.GOARCH == "arm64" {
+		t.Skip(("Skipping TestSSHAuth on arm64 because the test-ssh-server is not available for arm64"))
+	}
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
@@ -48,7 +52,7 @@ func TestSSHAuth(t *testing.T) {
 		}
 	}
 	destDdev := filepath.Join(app.AppRoot, ".ddev")
-	srcDdev := filepath.Join(testDir, "testdata", "TestSSHAuth", ".ddev")
+	srcDdev := filepath.Join(testDir, "testdata", t.Name(), ".ddev")
 	err = fileutil.CopyDir(filepath.Join(srcDdev, ".ssh"), filepath.Join(destDdev, ".ssh"))
 	require.NoError(t, err)
 	err = os.Chmod(filepath.Join(destDdev, ".ssh"), 0700)
