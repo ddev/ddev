@@ -6,7 +6,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 
 include database-versions
 
-CURRENT_ARCH= $(shell ../get_arch.sh)
+CURRENT_ARCH=$(shell ../get_arch.sh)
 
 # This Makefile explicitly does not include containers/containers_shared.mak,
 # So has to explicitly declare anything it might need from there (like SHELL)
