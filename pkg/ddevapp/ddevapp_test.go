@@ -669,12 +669,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	phpVersions := nodeps.ValidPHPVersions
-
-	// arm64 builds from deb.sury.org do not have xdebug in php5.6
-	if runtime.GOARCH == "arm64" {
-		t.Log("Skipping php5.6 test on arm64 because deb.sury.org packages do not include it currently")
-		delete(phpVersions, "5.6")
-	}
 	phpKeys := make([]string, 0, len(phpVersions))
 	for k := range phpVersions {
 		phpKeys = append(phpKeys, k)
@@ -1072,12 +1066,6 @@ func TestDdevAllDatabases(t *testing.T) {
 			"mariadb": {nodeps.MariaDB102: true, nodeps.MariaDB103: true},
 			"mysql":   {nodeps.MySQL80: true, nodeps.MySQL56: true},
 		}
-	}
-	if runtime.GOARCH == "arm64" {
-		t.Log("Skipping mariadb < 10.1 and mysql servers because not supported on arm64")
-		delete(dbVersions, "mysql")
-		delete(dbVersions["mariadb"], nodeps.MariaDB55)
-		delete(dbVersions["mariadb"], nodeps.MariaDB100)
 	}
 
 	app := &ddevapp.DdevApp{}
