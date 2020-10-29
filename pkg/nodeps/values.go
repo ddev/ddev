@@ -161,7 +161,7 @@ func GetValidMariaDBVersions() []string {
 	for p := range ValidMariaDBVersions {
 		s = append(s, p)
 	}
-
+	sort.Strings(s)
 	return s
 }
 
@@ -172,7 +172,7 @@ func GetValidMySQLVersions() []string {
 	for p := range ValidMySQLVersions {
 		s = append(s, p)
 	}
-
+	sort.Strings(s)
 	return s
 }
 

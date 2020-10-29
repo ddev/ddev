@@ -1,3 +1,5 @@
+// +build !arm64
+
 package nodeps
 
 // MariaDBDefaultVersion is the default MariaDB version
