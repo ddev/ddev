@@ -2,8 +2,8 @@ DOCKER_ORG ?= drud
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
 
 # TODO: Switch this back to build both.
-#DEFAULT_IMAGES = ddev-webserver ddev-webserver-prod-base
-DEFAULT_IMAGES = ddev-webserver-prod-base
+DEFAULT_IMAGES = ddev-webserver ddev-webserver-prod-base
+#DEFAULT_IMAGES = ddev-webserver-prod-base
 
 VERSION := $(shell git describe --tags --always --dirty)
 
