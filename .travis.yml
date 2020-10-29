@@ -30,7 +30,6 @@ jobs:
     - name: container tests
       script: |
         set -eu -o pipefail
-        pushd containers
         for dir in containers/*/
           do pushd $dir
           echo "--- Build container $dir"
