@@ -144,6 +144,9 @@ RUN a2enmod ssl headers expires
 ADD ddev-webserver-base-scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
 
+#TODO: Security implications; must be revisited
+RUN chmod ugo+w /etc/ssl/certs
+
 HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*

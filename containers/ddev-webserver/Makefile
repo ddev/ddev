@@ -33,7 +33,7 @@ multi-arch:
 		echo "created multi-arch builds $(BUILD_ARCHS) for $(DOCKER_ORG)/$$item"; \
 	done
 
-ddev-webserver ddev-webserver-prod-base ddev-webserver-prod:
+ddev-webserver ddev-webserver-dev-base ddev-webserver-prod-base ddev-webserver-prod:
 	docker buildx build -o type=docker --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 
