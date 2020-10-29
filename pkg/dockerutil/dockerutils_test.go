@@ -68,7 +68,7 @@ func testMain(m *testing.M) int {
 				"com.ddev.site-name":         testContainerName,
 			},
 			Env:  []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
-			User: "98:98", // The "testuser" pre-installed in container
+			User: "33:33", // The "www-data" pre-installed in container
 		},
 		HostConfig: &docker.HostConfig{
 			PortBindings: map[docker.Port][]docker.PortBinding{
