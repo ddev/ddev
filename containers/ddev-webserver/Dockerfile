@@ -25,6 +25,7 @@ RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key &&
 
 ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
+RUN cp -r ~www-data/.[^.]* ~root/
 
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y apache2 libcap2-bin locales-all nginx supervisor
@@ -40,17 +41,6 @@ RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/
 
 # END ddev-webserver-base
 
-
-### ---------------------------ddev-webserver-prod--------------------------------------
-### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
-### (Withut dev features, single layer)
-#FROM scratch as ddev-webserver-prod
-#ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
-#ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
-#ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
-#
-#COPY --from=ddev-webserver-base / /
-# END ddev-webserver-prod
 
 ### ---------------------------ddev-webserver-dev-base--------------------------------------
 ### Build ddev-webserver-dev-base from ddev-webserver-base
@@ -276,3 +266,14 @@ HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/
 CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 #END ddev-webserver-prod-base
+
+### ---------------------------ddev-webserver-prod--------------------------------------
+### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
+### (Withut dev features, single layer)
+FROM scratch as ddev-webserver-prod
+ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
+ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
+ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
+
+COPY --from=ddev-webserver-prod-base / /
+#END ddev-webserver-prod
