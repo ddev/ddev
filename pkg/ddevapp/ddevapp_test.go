@@ -1064,7 +1064,10 @@ func TestDdevAllDatabases(t *testing.T) {
 		t.Log("Using limited set of database servers because GOTEST_SHORT is set")
 		dbVersions = map[string]map[string]bool{
 			"mariadb": {nodeps.MariaDB102: true, nodeps.MariaDB103: true},
-			"mysql":   {nodeps.MySQL80: true, nodeps.MySQL56: true},
+		}
+		// If we have any mysql, limit what we test (but there may not be any)
+		if len(dbVersions["mysql"]) != 0 {
+			dbVersions["mysql"] = map[string]bool{nodeps.MySQL80: true, nodeps.MySQL56: true}
 		}
 	}
 
