@@ -90,7 +90,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     unzip \
     zip
 
-ADD ddev-webserver-base-files /
+ADD ddev-webserver-dev-base-files /
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_${MAILHOG_ARCH} -o /usr/local/bin/mailhog; 
 
 RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod +x /usr/local/bin/terminus
@@ -212,12 +212,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     patch \
     rsync \
     sqlite3 \
-    sudo \
     unzip \
     zip
 
 ADD ddev-webserver-prod-files /
-RUN rm /etc/supervisor/conf.d/mailhog.conf
 
 # magerun and magerun2 for magento
 RUN curl -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun
@@ -260,7 +258,7 @@ RUN chmod ugo+x /start.sh /healthcheck.sh
 RUN /sbin/mkhomedir_helper www-data
 
 #TODO: Security implications; must be revisited
-RUN chmod ugo+w /etc/ssl/certs
+RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
 HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
