@@ -13,6 +13,7 @@ env:
   global:
     - BUILDKIT_PROGRESS=plain
     - GOTEST_SHORT=true
+    - DOCKER_CLI_EXPERIMENTAL=enabled
 
 before_install:
   - ./.travis/linux_travis_arm64_setup.sh
