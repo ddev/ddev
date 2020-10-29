@@ -48,7 +48,7 @@ func TestSSHAuth(t *testing.T) {
 		}
 	}
 	destDdev := filepath.Join(app.AppRoot, ".ddev")
-	srcDdev := filepath.Join(testDir, "testdata", "TestSSHAuth", ".ddev")
+	srcDdev := filepath.Join(testDir, "testdata", t.Name(), ".ddev")
 	err = fileutil.CopyDir(filepath.Join(srcDdev, ".ssh"), filepath.Join(destDdev, ".ssh"))
 	require.NoError(t, err)
 	err = os.Chmod(filepath.Join(destDdev, ".ssh"), 0700)

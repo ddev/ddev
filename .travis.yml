@@ -1,0 +1,41 @@
+language: go
+
+go:
+- 1.x
+
+arch: arm64-graviton2
+virt: vm
+os: linux
+dist: focal
+group: edge
+
+env:
+  global:
+    - BUILDKIT_PROGRESS=plain
+    - GOTEST_SHORT=true
+    - DOCKER_CLI_EXPERIMENTAL=enabled
+
+before_install:
+  - ./.travis/linux_travis_arm64_setup.sh
+
+# Group tests to break up travis-CI build so it doesn't hit time limit.
+jobs:
+  include:
+    - name: testcmd tests
+      script: make testcmd
+    - name: testpkg tests except ddevapp
+      script: make testnotddevapp
+    - name: ddevapp tests
+      script: make testddevapp
+    - name: container tests
+      script: |
+        set -eu -o pipefail
+        for dir in containers/*/
+          do pushd $dir
+          echo "--- Build container $dir"
+          time make container DOCKER_ARGS=--no-cache
+          echo "--- Test container $dir"
+          time make test
+          popd
+        done
+        set +eu

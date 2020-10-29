@@ -14,6 +14,12 @@
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    CURRENT_ARCH=$(../get_arch.sh)
+
+    if [ ${PHP_VERSION} == "5.6" ] && [ ${CURRENT_ARCH} == 'arm64' ]; then
+      skip "XDebug isn't available on arm64 PHP 5.6"
+    fi
+
     docker exec -t $CONTAINER_NAME enable_xdebug
     if [ ]${PHP_VERSION} != "8.0" ] ; then
       docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
@@ -27,6 +33,12 @@
 }
 
 @test "verify that xdebug is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
+  CURRENT_ARCH=$(../get_arch.sh)
+
+  if [ ${PHP_VERSION} == "5.6" ] && [ ${CURRENT_ARCH} == 'arm64' ]; then
+    skip "XDebug isn't available on arm64 PHP 5.6"
+  fi
+
   docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --version | grep "with Xdebug"'
 }
 

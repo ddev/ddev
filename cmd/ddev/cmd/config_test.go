@@ -110,7 +110,7 @@ func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 	assert.NoError(err)
 
 	// Create a config
-	args := []string{"config", "--project-name=config-with-sitename"}
+	args := []string{"config", "--project-name=config-with-sitename", "--php-version=7.2"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	defer func() {
