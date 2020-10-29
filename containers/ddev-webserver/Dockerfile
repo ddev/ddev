@@ -224,6 +224,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     zip
 
 ADD ddev-webserver-prod-files /
+RUN rm /etc/supervisor/conf.d/mailhog.conf
 
 # magerun and magerun2 for magento
 RUN curl -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun
@@ -246,25 +247,18 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
 
 RUN chmod -R 777 /var/log
 
-# /home is a prototype for the actual user dir, but leave it writable
 # we need to create the /var/cache/linux and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
-RUN mkdir -p /home/.composer /home/.drush/commands /home/.drush/aliases /mnt/ddev-global-cache/mkcert /run/php /var/cache/nginx /var/lib/nginx && chmod -R ugo+rw /home /mnt/ddev-global-cache/
+RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /var/cache/nginx /var/lib/nginx && chmod -R ugo+rw /home /mnt/ddev-global-cache/
 
 RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-${MKCERT_ARCH} -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert
-
-# Except that .my.cnf can't be writeable or mysql won't use it.
-RUN chmod 644 /home/.my.cnf
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
 
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
-
-# ssh is very particular about permissions in ~/.ssh
-RUN chmod -R go-w /home/.ssh
 
 # scripts added last because they're most likely place to make changes, speeds up build
 ADD ddev-webserver-prod-scripts /
