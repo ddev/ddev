@@ -39,3 +39,15 @@ ${HOME} ${primary_ip}/255.255.255.255(rw,sync,no_subtree_check)
 EOF"
 
 sudo service nfs-kernel-server restart
+
+# Configure environment so changes are picked up when the Docker daemon is restarted after upgrading
+echo '{"experimental":true}' | sudo tee /etc/docker/daemon.json
+export DOCKER_CLI_EXPERIMENTAL=enabled
+# Upgrade to Docker CE 19.03 for BuildKit support
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=arm64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update
+sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+# Show info to simplify debugging and create a builder
+docker info
+docker buildx create --name ddev-builder-multi --use  
