@@ -10,8 +10,8 @@ function setup {
     outdir="${HOME}/tmp/mariadb_testserver/output_${RANDOM}_$$"
     VOLUME="dbserver_test-${RANDOM}_$$"
 
-    export MOUNTUID=98
-    export MOUNTGID=98
+    export MOUNTUID=33
+    export MOUNTGID=33
 
     # Homebrew mysql client realy really wants /usr/local/etc/my.cnf.d
     if [ "${OS:-$(uname)}" != "Windows_NT" ] && [ ! -d /usr/local/etc/my.cnf.d ]; then
