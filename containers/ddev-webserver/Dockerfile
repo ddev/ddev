@@ -269,9 +269,20 @@ RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 ### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
 ### (Withut dev features, single layer)
 FROM scratch as ddev-webserver-prod
+ENV PHP_DEFAULT_VERSION="7.3"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
+ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
+ENV COMPOSER_ALLOW_SUPERUSER=1
+ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
+ENV COMPOSER_PROCESS_TIMEOUT=2000
+ENV DEBIAN_FRONTEND noninteractive
+ENV TERM xterm
+
+ENV BASH_ENV /etc/bash.nointeractive.bashrc
 
 COPY --from=ddev-webserver-prod-base / /
+HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
+CMD ["/start.sh"]
 #END ddev-webserver-prod
