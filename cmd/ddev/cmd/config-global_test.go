@@ -45,13 +45,13 @@ func TestCmdGlobalConfig(t *testing.T) {
 	args := []string{"config", "global"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false\ninternet-detection-timeout-ms=750\nuse-letsencrypt=false\nletsencrypt-email=")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false\ninternet-detection-timeout-ms=750\nuse-letsencrypt=false\nletsencrypt-email=\nauto-restart-containers=false\nuse-hardened-images=false")
 
 	// Update a config
-	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--use-letsencrypt", "--letsencrypt-email=nobody@example.com"}
+	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--use-letsencrypt", "--letsencrypt-email=nobody@example.com", "--auto-restart-containers=true", "--use-hardened-images=true"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\nuse-letsencrypt=true\nletsencrypt-email=nobody@example.com")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\nuse-letsencrypt=true\nletsencrypt-email=nobody@example.com\nauto-restart-containers=true\nuse-hardened-images=true")
 
 	err = globalconfig.ReadGlobalConfig()
 	assert.NoError(err)
@@ -60,6 +60,9 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "dba")
 	assert.True(globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal)
 	assert.Len(globalconfig.DdevGlobalConfig.OmitContainersGlobal, 2)
+	assert.Equal("nobody@example.com", globalconfig.DdevGlobalConfig.LetsEncryptEmail)
+	assert.True(globalconfig.DdevGlobalConfig.UseLetsEncrypt)
+	assert.True(globalconfig.DdevGlobalConfig.UseHardenedImages)
 
 	// Even though the global config is going to be deleted, make sure it's sane before leaving
 	args = []string{"config", "global", "--omit-containers", "", "--nfs-mount-enabled=true"}

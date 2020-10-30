@@ -110,7 +110,7 @@ func GetVersionInfo() map[string]string {
 func GetWebImage() string {
 	fullWebImg := WebImg
 	if globalconfig.DdevGlobalConfig.UseHardenedImages {
-		fullWebImg = fullWebImg + "_hardened"
+		fullWebImg = fullWebImg + "-prod"
 	}
 	return fmt.Sprintf("%s:%s", fullWebImg, WebTag)
 }
