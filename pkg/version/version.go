@@ -2,6 +2,7 @@ package version
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/fsouza/go-dockerclient"
 	"os/exec"
@@ -107,7 +108,11 @@ func GetVersionInfo() map[string]string {
 
 // GetWebImage returns the correctly formatted web image:tag reference
 func GetWebImage() string {
-	return fmt.Sprintf("%s:%s", WebImg, WebTag)
+	fullWebImg := WebImg
+	if globalconfig.DdevGlobalConfig.UseHardenedImages {
+		fullWebImg = fullWebImg + "_hardened"
+	}
+	return fmt.Sprintf("%s:%s", fullWebImg, WebTag)
 }
 
 // GetDBImage returns the correctly formatted db image:tag reference
