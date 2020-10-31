@@ -22,11 +22,36 @@ An experimental feature of DDEV-local is simplified small-project hosting on the
 6. Create your DDEV-Local project as you normally would, but `ddev config --project-tld=your-tld`. For example, if the top-level domain you're using were "ddev.example.com" you might use `ddev config --project-tld=ddev.example.com`
 7. `ddev start` and visit your site.
 
+To make ddev start sites on system boot, you'll want to set up a systemd unit on systemd systems like Debian/Ubuntu and Fedora. For example, a file named /etc/systemd/system/ddev.service containing:
+
+```
+# Start ddev when system starts (after docker)
+# Stop ddev when docker shuts down
+# Start with `sudo systemctl start ddev`
+# Enable on boot with `sudo systemctl enable ddev`
+# Make sure to edit the User= for your user and the
+# full path to ddev on your system.
+# Optionally give a list of sites instead of --all
+[Unit]
+Description=DDEV-Local sites
+After=network.target
+Requires=docker.service
+PartOf=docker.service
+[Service]
+User=rfay
+Type=oneshot
+ExecStart=/usr/local/bin/ddev start --all
+RemainAfterExit=true
+ExecStop=/usr/local/bin/ddev poweroff
+
+[Install]
+WantedBy=multi-user.target
+```
+
 Caveats:
 
 * It's unknown how much traffic a given server and docker setup can sustain, or what the results will be if the traffic is more than the server can handle.
 * Debugging Let's Encrypt failures requires viewing the ddev-router logs with `docker logs ddev-router`
-* You will need to set up a startup script to make sure that your sites are restarted after a server restart.
 * A malicious attack on a website hosted with `use_hardened_images` will likely not be able to do anything significant to the host, but it can certainly change your code, which is mounted on the host.
 
 When using `use_hardened_images` docker runs the webimage as an unprivileged user, and the container does not have sudo. However, any docker server hosted on the internet is a potential vulnerability. Keep your packages up-to-date. Make sure that your firewall does not allow access to ports other than (normally) 22, 80, and 443.
