@@ -6,6 +6,14 @@ set -o nounset
 
 if [ $# != "1" ]; then echo "docker image spec must be \$1"; exit 1; fi
 DOCKER_IMAGE=$1
+export IS_HARDENED=false
+SUDO=sudo
+DOCKER_REPO=${DOCKER_IMAGE##:*}
+if [ ${DOCKER_REPO%_prod} ]; then
+  SUDO=""
+  IS_HARDENED=true
+fi
+
 export HOST_HTTP_PORT="8080"
 export HOST_HTTPS_PORT="8443"
 export CONTAINER_HTTP_PORT="80"
@@ -47,7 +55,7 @@ trap cleanup EXIT
 cleanup
 
 # We have to push the CA into the ddev-global-cache volume so it will be respected
-docker run -t --rm -u "$MOUNTUID:$MOUNTGID" -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache $DOCKER_IMAGE bash -c "sudo mkdir -p /mnt/ddev-global-cache/mkcert && sudo chmod -R ugo+w /mnt/ddev-global-cache/* && sudo cp -R /mnt/mkcert /mnt/ddev-global-cache"
+docker run -t --rm -u "$MOUNTUID:$MOUNTGID" -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache $DOCKER_IMAGE bash -c "${SUDO} mkdir -p /mnt/ddev-global-cache/mkcert && ${SUDO} chmod -R ugo+w /mnt/ddev-global-cache/* && ${SUDO} cp -R /mnt/mkcert /mnt/ddev-global-cache"
 
 # Run general tests with a default container
 docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE >/dev/null

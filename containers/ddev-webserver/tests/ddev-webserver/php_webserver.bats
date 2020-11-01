@@ -43,8 +43,9 @@
 }
 
 @test "verify mailhog for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-    curl -s 127.0.0.1:$HOST_HTTP_PORT/test/test-email.php | grep "Test email sent"
-    curl -s --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
+  if [ ${IS_HARDENED} == "true" ]; then skip "Skipping because mailhog is not installed on hardened prod image"; fi
+  curl -s 127.0.0.1:$HOST_HTTP_PORT/test/test-email.php | grep "Test email sent"
+  curl -s --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
 }
 
 @test "verify PHP ini settings for ${WEBSERVER_TYPE} php${PHP_VERSION}" {

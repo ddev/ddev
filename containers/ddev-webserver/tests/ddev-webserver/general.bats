@@ -1,9 +1,20 @@
 #!/usr/bin/env bats
 
-@test "Verify required binaries are installed in container" {
-    COMMANDS="composer ddev-live drush git magerun magerun2 mkcert terminus wp"
+@test "Verify required binaries are installed in normal image" {
+    if [ "${IS_HARDENED}" == "true" ]; then skip "Skipping because IS_HARDENED==true"; fi
+    COMMANDS="composer ddev-live drush git magerun magerun2 mkcert sudo terminus wp"
     for item in $COMMANDS; do
        docker exec $CONTAINER_NAME bash -c "command -v $item >/dev/null"
+    done
+}
+
+@test "Verify some binaries binaries (sudo) are NOT installed in hardened image" {
+    if [ "${IS_HARDENED}" != "true" ]; then skip "Skipping because IS_HARDENED==false"; fi
+    COMMANDS="ddev-live sudo terminus"
+    for item in $COMMANDS; do
+      rv=1
+      docker exec $CONTAINER_NAME bash -c "command -v $item >/dev/null 2>/dev/null" || rv=$?
+      if [ ${rv} -eq 0 ]; then echo "Found $item which should not be found" >/dev/stderr; return 1; fi
     done
 }
 
