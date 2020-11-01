@@ -51,6 +51,7 @@ WantedBy=multi-user.target
 Caveats:
 
 * It's unknown how much traffic a given server and docker setup can sustain, or what the results will be if the traffic is more than the server can handle.
+* DDEV-Local does not provide outgoing SMTP mailhandling service, and the development-focued MailHog feature is disabled if you're using `use_hardened_images`. You can provide SMTP service a number of ways, but the recommended way is to enable SMTP mailsending in your application and leverage a third-party transactional email service such as SendGrid, Mandrill, or Mailgun. This is the best way to make sure your mail actually gets delivered. See [DDEV-Live email sending docs](https://docs.ddev.com/services/#email) for hints.
 * Debugging Let's Encrypt failures requires viewing the ddev-router logs with `docker logs ddev-router`
 * A malicious attack on a website hosted with `use_hardened_images` will likely not be able to do anything significant to the host, but it can certainly change your code, which is mounted on the host.
 
