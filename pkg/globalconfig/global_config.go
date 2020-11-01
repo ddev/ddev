@@ -47,6 +47,7 @@ type GlobalConfig struct {
 	InstrumentationUser      string                  `yaml:"instrumentation_user,omitempty"`
 	LastStartedVersion       string                  `yaml:"last_started_version"`
 	MkcertCARoot             string                  `yaml:"mkcert_caroot"`
+	UseHardenedImages        bool                    `yaml:"use_hardened_images"`
 	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
 	LetsEncryptEmail         string                  `yaml:"letsencrypt_email"`
 	AutoRestartContainers    bool                    `yaml:"auto_restart_containers"`
@@ -162,6 +163,14 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #    access those ports. Note that this exposes the PHPMyAdmin and MailHog ports as well, which
 #    can be a major security issue, so choose wisely. Consider omit_containers[dba] to avoid
 #    exposing PHPMyAdmin.
+
+# use_hardened_images: false
+# With hardened images a container that is exposed to the internet is 
+# a harder target, although not as hard as a fully-secured host.
+# sudo is removed, mailhog is removed, and since the web container
+# is run only as the owning user, only project files might be changed
+# if a CMS or PHP bug allowed creating or altering files, and 
+# permissions should not allow escalation.
 
 # Let's Encrypt:
 # This integration is entirely experimental; your mileage may vary.

@@ -6,6 +6,12 @@ set -o nounset
 
 if [ $# != "1" ]; then echo "docker image spec must be \$1"; exit 1; fi
 DOCKER_IMAGE=$1
+export IS_HARDENED=false
+DOCKER_REPO=${DOCKER_IMAGE##:*}
+if [ ${DOCKER_REPO%_prod} ]; then
+  IS_HARDENED=true
+fi
+
 export HOST_HTTP_PORT="8080"
 export HOST_HTTPS_PORT="8443"
 export CONTAINER_HTTP_PORT="80"
@@ -14,12 +20,14 @@ export CONTAINER_NAME=webserver-test
 export PHP_VERSION=7.4
 export WEBSERVER_TYPE=nginx-fpm
 
-MOUNTUID=98
-MOUNTGID=98
+MOUNTUID=33
+MOUNTGID=33
 # /usr/local/bin is added for git-bash, where it may not be in the $PATH.
 export PATH="/usr/local/bin:$PATH"
 
 mkcert -install
+docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache busybox sh -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
+
 
 # Wait for container to be ready.
 function containerwait {
@@ -47,7 +55,7 @@ trap cleanup EXIT
 cleanup
 
 # We have to push the CA into the ddev-global-cache volume so it will be respected
-docker run -t --rm -u "$MOUNTUID:$MOUNTGID" -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache $DOCKER_IMAGE bash -c "sudo mkdir -p /mnt/ddev-global-cache/mkcert && sudo chmod -R ugo+w /mnt/ddev-global-cache/* && sudo cp -R /mnt/mkcert /mnt/ddev-global-cache"
+docker run --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache ${DOCKER_IMAGE} bash -c "mkdir -p /mnt/ddev-global-cache/{mkcert,bashhistory,ddev-live,terminus} && cp -R /mnt/mkcert /mnt/ddev-global-cache/ && chown -Rf ${MOUNTUID}:${MOUNTGID} /mnt/ddev-global-cache/* && chmod -Rf ugo+w /mnt/ddev-global-cache/*"
 
 # Run general tests with a default container
 docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE >/dev/null

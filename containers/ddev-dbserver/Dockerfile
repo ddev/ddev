@@ -40,7 +40,7 @@ RUN chmod ugo+wx /mnt /var/tmp
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 RUN ln -s -f /dev/stderr /var/log/mysqld.err
 
-RUN addgroup --gid 98 testgroup && adduser testuser --ingroup testgroup --disabled-password --gecos "" --uid 98
+RUN /sbin/mkhomedir_helper www-data
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 

@@ -16,13 +16,45 @@ An experimental feature of DDEV-local is simplified small-project hosting on the
 
 1. Install DDEV-Local on a regular Linux server that is directly connected to the Internet. You're responsible for your firewall and maintenance of the server, of course.
 2. Use `ddev config global --router-bind-all-interfaces` to tell DDEV to listen to all network interfaces, not just localhost.
-3. Use `ddev config global --use-letencrypt --letsencrypt-email=you@example.com` to configure Let's Encrypt.
-4. Use a DNS provider to point a DNS name at the server.
-5. Create your DDEV-Local project as you normally would, but `ddev config --project-tld=your-tld`. For example, if the top-level domain you're using were "ddev.example.com" you might use `ddev config --project-tld=ddev.example.com`
-6. `ddev start` and visit your site.
+3. Use `ddev config global --use-hardened-images` to tell DDEV to use a hardened image which does not contain sudo, for example.
+4. Use `ddev config global --use-letencrypt --letsencrypt-email=you@example.com` to configure Let's Encrypt.
+5. Use a DNS provider to point a DNS name at the server.
+6. Create your DDEV-Local project as you normally would, but `ddev config --project-tld=your-tld`. For example, if the top-level domain you're using were "ddev.example.com" you might use `ddev config --project-tld=ddev.example.com`
+7. `ddev start` and visit your site.
+
+To make ddev start sites on system boot, you'll want to set up a systemd unit on systemd systems like Debian/Ubuntu and Fedora. For example, a file named /etc/systemd/system/ddev.service containing:
+
+```
+# Start ddev when system starts (after docker)
+# Stop ddev when docker shuts down
+# Start with `sudo systemctl start ddev`
+# Enable on boot with `sudo systemctl enable ddev`
+# Make sure to edit the User= for your user and the
+# full path to ddev on your system.
+# Optionally give a list of sites instead of --all
+[Unit]
+Description=DDEV-Local sites
+After=network.target
+Requires=docker.service
+PartOf=docker.service
+[Service]
+User=rfay
+Type=oneshot
+ExecStart=/usr/local/bin/ddev start --all
+RemainAfterExit=true
+ExecStop=/usr/local/bin/ddev poweroff
+
+[Install]
+WantedBy=multi-user.target
+```
 
 Caveats:
 
 * It's unknown how much traffic a given server and docker setup can sustain, or what the results will be if the traffic is more than the server can handle.
+* DDEV-Local does not provide outgoing SMTP mailhandling service, and the development-focued MailHog feature is disabled if you're using `use_hardened_images`. You can provide SMTP service a number of ways, but the recommended way is to enable SMTP mailsending in your application and leverage a third-party transactional email service such as SendGrid, Mandrill, or Mailgun. This is the best way to make sure your mail actually gets delivered. See [DDEV-Live email sending docs](https://docs.ddev.com/services/#email) for hints.
 * Debugging Let's Encrypt failures requires viewing the ddev-router logs with `docker logs ddev-router`
-* You will need to set up a startup script to make sure that your sites are restarted after a server restart.
+* A malicious attack on a website hosted with `use_hardened_images` will likely not be able to do anything significant to the host, but it can certainly change your code, which is mounted on the host.
+
+When using `use_hardened_images` docker runs the webimage as an unprivileged user, and the container does not have sudo. However, any docker server hosted on the internet is a potential vulnerability. Keep your packages up-to-date. Make sure that your firewall does not allow access to ports other than (normally) 22, 80, and 443.
+
+There are no warranties implied or expressed.

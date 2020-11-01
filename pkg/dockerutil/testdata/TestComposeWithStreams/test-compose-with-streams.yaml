@@ -21,6 +21,7 @@ services:
       LINES: '25'
       VIRTUAL_HOST: junk.ddev.site
     image: TEST-COMPOSE-WITH-STREAMS-IMAGE
+    user: "33:33"
     labels:
       com.ddev.app-type: php
       com.ddev.app-url: http://test-compose-with-streams.ddev.site

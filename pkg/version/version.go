@@ -2,6 +2,7 @@ package version
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/fsouza/go-dockerclient"
 	"os/exec"
@@ -42,13 +43,13 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20201026_new_upstream_webimage" // Note that this can be overridden by make
+var WebTag = "20201026_hardened" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20201023_mysql_version_bump"
+var BaseDBTag = "20201026_hardened"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
@@ -107,7 +108,11 @@ func GetVersionInfo() map[string]string {
 
 // GetWebImage returns the correctly formatted web image:tag reference
 func GetWebImage() string {
-	return fmt.Sprintf("%s:%s", WebImg, WebTag)
+	fullWebImg := WebImg
+	if globalconfig.DdevGlobalConfig.UseHardenedImages {
+		fullWebImg = fullWebImg + "-prod"
+	}
+	return fmt.Sprintf("%s:%s", fullWebImg, WebTag)
 }
 
 // GetDBImage returns the correctly formatted db image:tag reference

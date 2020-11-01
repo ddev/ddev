@@ -59,12 +59,10 @@ fi
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-# Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-global-cache/terminus/cache) exists
-# Along with ddev-live equivalent
-sudo mkdir -p ${TERMINUS_CACHE_DIR} /mnt/ddev-global-cache/ddev-live
+mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
 
-sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
-sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/{.ssh*,.drush,.gitconfig,.my.cnf}
+# This will need to be done by a separate container with privileges
+# chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
 
 if [ -d /mnt/ddev_config/.homeadditions ]; then
     cp -r /mnt/ddev_config/.homeadditions/. ~/
@@ -74,12 +72,12 @@ if [ -d /mnt/ddev_config/homeadditions ]; then
 fi
 
 # It's possible CAROOT does not exist or is not writeable (if host-side mkcert -install not run yet)
-sudo mkdir -p ${CAROOT} && sudo chmod -R ugo+rw ${CAROOT}
+mkdir -p ${CAROOT}
 # This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
 mkcert -install
 
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
-sudo CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web ddev-${DDEV_PROJECT:-}-web ddev-${DDEV_PROJECT:-}-web.ddev_default && sudo chown $UID /etc/ssl/certs/master.*
+CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web ddev-${DDEV_PROJECT:-}-web ddev-${DDEV_PROJECT:-}-web.ddev_default && chown $UID /etc/ssl/certs/master.*
 
 echo 'Server started'
 
