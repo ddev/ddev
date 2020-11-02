@@ -151,8 +151,8 @@ services:
     {{ end }}
     healthcheck:
       interval: 1s
-      retries: 20
-      start_period: 20s
+      retries: 120
+      start_period: 120s
       timeout: 120s
 
 {{ if not .OmitDBA }}
