@@ -57,8 +57,8 @@ services:
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
       interval: 1s
-      retries: 30
-      start_period: 20s
+      retries: 120
+      start_period: 120s
       timeout: 120s
 {{end}}
   web:
@@ -446,8 +446,8 @@ services:
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     healthcheck:
       interval: 1s
-      retries: 20
-      start_period: 20s
+      retries: 120
+      start_period: 120s
       timeout: 120s
 
 networks:

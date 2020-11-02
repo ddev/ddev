@@ -662,6 +662,8 @@ Restored database snapshot: /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git
 
 Snapshots are stored in the project's .ddev/db_snapshots directory, and the directory can be renamed as necessary. For example, if you rename the above d8git_20180801132403 directory to "working_before_migration", then you can use `ddev restore-snapshot working_before_migration`.
 
+There are some interesting consequences of restoring huge multi-gigabyte databases. Ddev may show the project as ready and started when in reality tables are still being loaded. You can see this behavior with `ddev logs -s db -f`.
+
 ## Interacting with your project
 
 DDEV provides several commands to facilitate interacting with your project in the development environment. These commands can be run within the working directory of your project while the project is running in ddev.
