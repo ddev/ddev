@@ -166,13 +166,6 @@ func setMagento2SiteSettingsPaths(app *DdevApp) {
 	app.SiteSettingsPath = filepath.Join(app.AppRoot, "app", "etc", "env.php")
 }
 
-// magento2ConfigOverrideAction overrides php_version for magento2, since it is incompatible
-// with php7.3+
-func magento2ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP72
-	return nil
-}
-
 // magentoConfigOverrideAction overrides php_version for magento2, since it is incompatible
 // with php7.3+
 func magentoConfigOverrideAction(app *DdevApp) error {
