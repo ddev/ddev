@@ -2,7 +2,8 @@
 
 # Runs "make test" in each container directory
 
-for dir in containers/*
+set -eu -o pipefail
+for dir in containers/*/
     do pushd $dir
     echo "--- Build container $dir"
     time make container DOCKER_ARGS=--no-cache
@@ -10,3 +11,4 @@ for dir in containers/*
     time make test
     popd
 done
+set +eu
