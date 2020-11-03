@@ -34,5 +34,5 @@ jobs:
           DOCKER_CLI_EXPERIMENTAL: enabled
         run: |
           echo 'Running in MSYS2!'
-          docker info
+          docker version
           ./.github/workflows/test_containers.sh
