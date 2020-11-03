@@ -1,4 +1,4 @@
-name: Windows container tests
+name: Windows tests
 
 on:
   push:
@@ -6,13 +6,17 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  global:
+    - BUILDKIT_PROGRESS=plain
+
 jobs:
 
-  build:
-    name: Run tests
+  container-tests:
+    name: Container tests
     runs-on: windows-latest
+
     steps:
     - uses: actions/checkout@v2
-
     - name: Run tests
       run: ./.github/workflows/test_containers.cmd
