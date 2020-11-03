@@ -15,7 +15,17 @@ jobs:
     name: Container tests
     runs-on: windows-latest
 
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
-    - uses: actions/checkout@v2
-    - name: Run tests
-      run: ./.github/workflows/test_containers.cmd
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: git mingw-w64-x86_64-toolchain
+      - name: CI-Build
+        run: |
+          echo 'Running in MSYS2!'
+          ./github/workflows/test_containers.sh
