@@ -21,7 +21,7 @@ jobs:
         with:
           msystem: MINGW64
           update: true
-          install: mingw-w64-make
+          install: git mingw-w64-make
           path-type: inherit
       - name: CI-Build
         env:
