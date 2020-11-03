@@ -1822,6 +1822,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 		if hosts.Has(dockerIP, name) {
 			continue
 		}
+		util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
 		err = addHostEntry(name, dockerIP)
 		if err != nil {
 			return err
@@ -1831,10 +1832,16 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	return nil
 }
 
+// addHostEntry adds an entry to /etc/hosts
+// We would have hoped to use DNS or have found the entry already in hosts
+// But if it's not, try to add one.
 func addHostEntry(name string, ip string) error {
 	_, err := osexec.LookPath("sudo")
 	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
 		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
+		if os.Getenv("WSL_DISTRO") != "" {
+			util.Warning("For WSL2, execute 'sudo ddev hostname %s %s' on Windows", name, ip)
+		}
 		return nil
 	}
 
@@ -1842,6 +1849,9 @@ func addHostEntry(name string, ip string) error {
 	util.CheckErr(err)
 
 	output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt will require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
+	if os.Getenv("WSL_DISTRO") != "" {
+		output.UserOut.Printf("You are on WSL2, so should manually execute 'sudo ddev hostname %s %s' on Windows", name, ip)
+	}
 
 	hostnameArgs := []string{ddevFullpath, "hostname", name, ip}
 	command := strings.Join(hostnameArgs, " ")
