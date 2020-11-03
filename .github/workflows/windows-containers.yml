@@ -17,6 +17,11 @@ jobs:
         shell: msys2 {0}
     steps:
       - uses: actions/checkout@v2
+      - name: Set up Docker buildx
+        shell: powershell
+        run: |
+          [Environment]::SetEnvironmentVariable("DOCKER_CLI_EXPERIMENTAL", "enabled", [EnvironmentVariableTarget]::Machine)
+          Restart-Service docker
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -29,4 +34,5 @@ jobs:
           DOCKER_CLI_EXPERIMENTAL: enabled
         run: |
           echo 'Running in MSYS2!'
+          docker info
           ./.github/workflows/test_containers.sh
