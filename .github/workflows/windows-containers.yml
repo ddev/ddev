@@ -20,8 +20,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Set up Docker buildx
         run: |
-          Restart-Service com.docker.service
           ls C:\ProgramData\Docker\cli-plugins
+          Restart-Service docker
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
