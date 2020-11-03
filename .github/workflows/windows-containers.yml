@@ -6,22 +6,22 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  BUILDKIT_PROGRESS: plain
+  DOCKER_CLI_EXPERIMENTAL: enabled
+
 jobs:
 
   container-tests:
     name: Container tests
     runs-on: windows-latest
 
-    defaults:
-      run:
-        shell: msys2 {0}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Docker buildx
-        shell: powershell
         run: |
-          [Environment]::SetEnvironmentVariable("DOCKER_CLI_EXPERIMENTAL", "enabled", [EnvironmentVariableTarget]::Machine)
-          Restart-Service docker
+          Restart-Service com.docker.service
+          ls C:\ProgramData\Docker\cli-plugins
       - uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -29,9 +29,7 @@ jobs:
           install: git make
           path-type: inherit
       - name: CI-Build
-        env:
-          BUILDKIT_PROGRESS: plain
-          DOCKER_CLI_EXPERIMENTAL: enabled
+        shell: msys2 {0}
         run: |
           echo 'Running in MSYS2!'
           docker version
