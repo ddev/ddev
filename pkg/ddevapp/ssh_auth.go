@@ -46,7 +46,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 	dockerutil.EnsureDdevNetwork()
 
-	path, err := CreateSSHAuthComposeFile()
+	path, err := app.CreateSSHAuthComposeFile()
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func RemoveSSHAgentContainer() error {
 }
 
 // CreateSSHAuthComposeFile creates the docker-compose file for the ddev-ssh-agent
-func CreateSSHAuthComposeFile() (string, error) {
+func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 
 	var doc bytes.Buffer
 	f, ferr := os.Create(SSHAuthComposeYAMLPath())
@@ -107,6 +107,8 @@ func CreateSSHAuthComposeFile() (string, error) {
 	}
 
 	uid, gid, username := util.GetContainerUIDGid()
+
+	app.DockerEnv()
 
 	templateVars := map[string]interface{}{
 		"ssh_auth_image":        version.SSHAuthImage,
