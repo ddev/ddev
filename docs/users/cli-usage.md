@@ -253,7 +253,7 @@ Note that OpenMage is a huge codebase and using `nfs_mount_enabled: true` is rec
 
 ### Magento 2 Quickstart
 
-Normal details of a composer build for Magento 2 are on [Magento 2 site](https://devdocs.magento.com/guides/v2.3/install-gde/composer.html) You must have a public and private key to install from Magento's repository; when prompted for "username" and "password" in the composer create it's asking for your public and private keys.
+Normal details of a composer build for Magento 2 are on [Magento 2 site](https://devdocs.magento.com/guides/v2.4/install-gde/composer.html) You must have a public and private key to install from Magento's repository; when prompted for "username" and "password" in the composer create it's asking for your public and private keys.
 
 ```bash
 mkdir ddev-magento2 && cd ddev-magento2
@@ -269,7 +269,7 @@ bin/magento deploy:mode:set developer
 
 Of course, change the admin name and related information is needed. The project name here is derived from the directory name (ddev-magento2 in this example). Your project name (and thus the `setup:store-config:set --base-url`) will almost certainly be different.
 
-You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.3/install-gde/install/sample-data-after-composer.html).
+You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html).
 
 Note that Magento 2 is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
 
