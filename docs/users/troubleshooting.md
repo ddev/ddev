@@ -4,7 +4,7 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 
 ## General Troubleshooting Strategies
 
-* Start with a `ddev poweroff` to make sure all containers can start fresh.
+* Please start with a `ddev poweroff` to make sure all containers can start fresh.
 * Temporarily turn off firewalls and virus checkers while you're troubleshooting.
 * If you have customizations (PHP overrides, nginx or Apache overrides, MySQL overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
 * Check your Docker disk space and memory allocation if you're using Docker Desktop on Windows or macOS.
@@ -175,7 +175,37 @@ You could test it with `ddev ssh`, `sudo -s` and then `npm install --global gulp
 
 The error messages you get will be more informative than messages that come when the Dockerfile is processed.
 
-## Windows-Specific Issues
+## Ddev starts fine, but my browser can't access the URL "<url> server IP address could not be found" or "We can’t connect to the server at <url>"
+
+Most people use *.ddev.site URLs for most projects, and that works great most of the time, but requires internet access. "*.ddev.site" is a wildcard DNS entry that always returns the IP address 127.0.0.1 (localhost). However, if you're not connected to the internet, or if various other name resolution issues (below) fail, this name resolution won't work.
+
+While ddev can create a webserver and a docker network infrastructure for a project, it doesn't have control of your computer's name resolution, so its backup technique to make a hostname resolvable by the browser is to add an entry to the hosts file (/etc/hosts on Linux and macOS, C:\Windows\system32\drivers\etc\hosts on traditional Windows).
+
+* If you're not connected to the internet, your browser will not be able to look up *.ddev.site hostnames. DDEV works fine offline, but for your browser to look up names they'll have to be resolved in a different way.
+* DDEV assumes that hostnames can be resolved within 750ms (3/4 of a second). That assumption is not valid on all networks or computers, so you can increase the amount of time it waits for resolution with `ddev config global --internet-detection-timeout-ms=3000` for example.
+* If DDEV detects that it can't look up one of the hostnames assigned to your project for that or other reasons, it will try to add that to the hosts file on your computer, but of course that requires administrative privileges (sudo or Windows UAC)
+    * This technique may not work on Windows WSL2, see below.
+    * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited-to-10-hosts-per-ip-address-line); beyond that hostnames are ignored.
+
+## Windows WSL2 Name resolution on non-ddev.site hostnames or when not internet-connected
+
+On Windows WSL2, there is a hosts file inside the WSL2 instance (`/etc/hosts`), and there is also one on the Windows side (`C:\Windows\systsem32\drivers\etc\hosts`). Most people use a browser on the Windows side, which has no idea about hostnames that may be set up in the WSL2 /etc/hosts file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available (DNS lookups of `*.ddev.site` succeed).
+
+However, if the project uses non-ddev.site hostnames, or if not connected to the Internet, a Windows-side browser will be unable to look up project hostnames, and you'll get complaints from the browser like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".  In this case, you can
+
+1. Add the needed hostname(s) manually to the Windows hosts file. This can easily be done with the *Windows* version of ddev.exe with `sudo ddev hostname <hostname> 127.0.0.1` on *Windows* in PowerShell or Cmd or git-bash.
+2. Or run a browser within WSL2 (currently requires an X11 server like X410, but Microsoft plans to provide natively)
+
+## DNS Rebinding Prohibited
+
+Some DNS servers prevent the use of DNS records that resolve to `localhost` (127.0.0.1) because in uncontrolled environments this may be used as a form of attack called [DNS Rebinding](https://en.wikipedia.org/wiki/DNS_rebinding). Since *.ddev.site resolves to 127.0.0.1, they may refuse to resolve, and your browser may be unable to look up a hostname, and give you messages like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".
+
+In this case, you can
+
+1. Reconfigure the DNS server to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it, see [issue](https://github.com/drud/ddev/issues/2409#issuecomment-686718237).
+2. Most computers can use most relaxed DNS resolution if they are not on corporate intranets that have non-internet DNS. So for example, the computer can be set to use 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare) for DNS name resolution.
+3. If you have control of the router, you can usually change its DHCP settings to choose a DNS server to a public, relaxed DNS server as in #2.
+4. You can live with ddev trying to edit the /etc/hosts file, which it only has to do when a new name is added to a project.
 
 <a name="windows-hosts-file-limited"></a>
 
