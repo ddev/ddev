@@ -1569,7 +1569,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	err = os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
 	util.CheckErr(err)
 
-	util.Success("Restored database snapshot: %s", hostSnapshotDir)
+	util.Success("Restored database snapshot %s\n(On huge databases restore may be ongoing, view with 'ddev logs -s db -f')", hostSnapshotDir)
 	err = app.ProcessHooks("post-restore-snapshot")
 	if err != nil {
 		return fmt.Errorf("Failed to process post-restore-snapshot hooks: %v", err)
