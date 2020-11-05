@@ -65,15 +65,16 @@ func TestSSHAuth(t *testing.T) {
 	//nolint: errcheck
 	defer os.Remove(filepath.Join(destDdev, "docker-compose.sshserver.yaml"))
 
+	// Start with the testsite stopped (and everything stopped)
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
 	// Make absolutely sure the ssh-agent is created from scratch.
 	err = ddevapp.RemoveSSHAgentContainer()
 	require.NoError(t, err)
 
-	startErr := app.StartAndWait(0)
-	if startErr != nil {
-		logs, _ := ddevapp.GetErrLogsFromApp(app, startErr)
-		t.Fatalf("app.StartAndWait failed, err=%v, logs=\n========\n%s\n===========\n", startErr, logs)
-	}
+	err = app.Start()
+	require.NoError(t, err)
 
 	err = app.EnsureSSHAgentContainer()
 	require.NoError(t, err)
