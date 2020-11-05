@@ -2828,7 +2828,8 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		for _, item := range URLList {
 			// Make sure internal (web container) access is successful
 			parts, err := url.Parse(item)
-			assert.NoError(err)
+			require.NoError(t, err, "url.Parse of item=%v failed", item)
+			require.NotNil(t, parts, "url.Parse of item=%v failed", item)
 			// Only try it if not an IP address URL; those won't be right
 			hostParts := strings.Split(parts.Host, ".")
 
