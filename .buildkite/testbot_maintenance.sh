@@ -37,7 +37,7 @@ windows)
     ;;
 esac
 
-ddev delete images --yes
+yes | ddev delete images
 
 # Remove any -built images, as we want to make sure tests do the building.
 docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null || true
