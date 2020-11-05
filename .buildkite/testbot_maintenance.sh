@@ -27,7 +27,7 @@ darwin)
     done
     ;;
 windows)
-    choco upgrade -y golang markdownlint-cli mkcert mkdocs || true
+    choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs || true
     if ! command -v golangci-lint >/dev/null 2>&1 ; then
       (curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.31.0) || true
     fi
@@ -36,6 +36,8 @@ windows)
     fi
     ;;
 esac
+
+ddev delete images --yes
 
 # Remove any -built images, as we want to make sure tests do the building.
 docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null || true
