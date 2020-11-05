@@ -835,16 +835,21 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg:
 	switch composerVersion {
 	case "1":
 		composerSelfUpdateArg = "--1"
-	case "":
-		composerSelfUpdateArg = "--1"
 	case "2":
 		composerSelfUpdateArg = "--2"
 	default:
 		composerSelfUpdateArg = composerVersion
 	}
 
-	contents = contents + `
-RUN if command -v composer >/dev/null 2>&1 ; then composer self-update ` + composerSelfUpdateArg + ";  fi\n"
+	// If composerVersion is not set, we don't need to self-update.
+	// Currently by default it will be composer v1 because of upstream setting
+	// Try composer self-update twice because of troubles with composer downloads
+	// breaking testing.
+	if composerVersion != "" {
+		contents = contents + fmt.Sprintf(`
+RUN if command -v composer >/dev/null 2>&1 ; then ( composer self-update %s || composer self-update %s );  fi
+`, composerSelfUpdateArg, composerSelfUpdateArg)
+	}
 	return WriteImageDockerfile(fullpath, []byte(contents))
 }
 
