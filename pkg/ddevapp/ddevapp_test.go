@@ -1391,9 +1391,6 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-snapshot": {{"exec-host": "touch hello-post-snapshot-" + app.Name}}, "pre-snapshot": {{"exec-host": "touch hello-pre-snapshot-" + app.Name}}}
 
-	// Try using php72 to avoid SIGBUS failures after restore.
-	app.PHPVersion = nodeps.PHP72
-
 	// First do regular start, which is good enough to get us to an ImportDB()
 	err = app.Start()
 	require.NoError(t, err)
