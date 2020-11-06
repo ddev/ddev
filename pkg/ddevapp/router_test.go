@@ -139,6 +139,7 @@ func TestLetsEncrypt(t *testing.T) {
 
 	container, err := dockerutil.FindContainerByName("ddev-router")
 	require.NoError(t, err)
+	require.NotNil(t, container)
 
 	stdout, _, err := dockerutil.Exec(container.ID, "df -T /etc/letsencrypt  | awk 'NR==2 {print $7;}'")
 	assert.NoError(err)

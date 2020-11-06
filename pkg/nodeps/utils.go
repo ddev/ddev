@@ -9,18 +9,33 @@ import (
 
 // ArrayContainsString returns true if slice contains element
 func ArrayContainsString(slice []string, element string) bool {
-	return !(posString(slice, element) == -1)
+	return !(PosString(slice, element) == -1)
 }
 
-// posString returns the first index of element in slice.
+// PosString returns the first index of element in slice.
 // If slice does not contain element, returns -1.
-func posString(slice []string, element string) int {
+func PosString(slice []string, element string) int {
 	for index, elem := range slice {
 		if elem == element {
 			return index
 		}
 	}
 	return -1
+}
+
+// RemoveItemFromSlice returns a slice with item removed
+// If the item does not exist, the slice is unchanged
+// This is quite slow in the scheme of things, so shouldn't
+// be used without examination
+func RemoveItemFromSlice(slice []string, item string) []string {
+	pos := PosString(slice, item)
+	if pos != -1 {
+		// Remove the element at index i from a.
+		copy(slice[pos:], slice[pos+1:]) // Shift slice[pos+1:] left one index.
+		slice[len(slice)-1] = ""         // Erase last element (write zero value).
+		slice = slice[:len(slice)-1]     // Truncate slice.
+	}
+	return slice
 }
 
 // From https://www.calhoun.io/creating-random-strings-in-go/

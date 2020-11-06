@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mattn/go-isatty"
 	"os"
 	"path"
@@ -17,6 +18,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var composerCreateYesFlag bool
+
 var ComposerCreateCmd = &cobra.Command{
 	Use: "create [args] [flags]",
 	FParseErrWhitelist: cobra.FParseErrWhitelist{
@@ -28,9 +31,12 @@ web container. Projects will be installed to a temporary directory and moved to
 the project root directory after installation. Any existing files in the
 project root will be deleted when creating a project.`,
 	Example: `ddev composer create drupal/recommended-project
+ddev composer create -y drupal/recommended-project
 ddev composer create "typo3/cms-base-distribution:^10"
 ddev composer create drupal/recommended-project --no-install
-ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition`,
+ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
+ddev composer create --prefer-dist --no-interaction --no-dev psr/log
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// We only want to pass all flags and args to composer
@@ -38,6 +44,8 @@ ddev composer create --repository=https://repo.magento.com/ magento/project-comm
 		osargs := []string{}
 		if len(os.Args) > 3 {
 			osargs = os.Args[3:]
+			osargs = nodeps.RemoveItemFromSlice(osargs, "--yes")
+			osargs = nodeps.RemoveItemFromSlice(osargs, "-y")
 		}
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
@@ -54,8 +62,10 @@ ddev composer create --repository=https://repo.magento.com/ magento/project-comm
 
 		// Make the user confirm that existing contents will be deleted
 		util.Warning("Warning: ALL EXISTING CONTENT of the project root (%s) will be deleted", app.AppRoot)
-		if !util.Confirm("Would you like to continue?") {
-			util.Failed("create-project cancelled")
+		if !composerCreateYesFlag {
+			if !util.Confirm("Would you like to continue?") {
+				util.Failed("create-project cancelled")
+			}
 		}
 
 		// Remove any contents of project root
@@ -175,6 +185,7 @@ for basic project creation or 'ddev ssh' into the web container and execute
 }
 
 func init() {
+	ComposerCreateCmd.Flags().BoolVarP(&composerCreateYesFlag, "yes", "y", false, "Yes - skip confirmation prompt")
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
 }

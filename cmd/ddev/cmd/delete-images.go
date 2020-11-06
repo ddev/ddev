@@ -12,16 +12,20 @@ import (
 	"strings"
 )
 
+// noConfirm: If true, --yes, we won't stop and prompt before each deletion
+var deleteImagesNocConfirm bool
+
 // DeleteImagesCmd implements the ddev delete images command
 var DeleteImagesCmd = &cobra.Command{
 	Use:     "images",
 	Short:   "Delete docker images not currently in use",
-	Example: `ddev delete images`,
+	Example: `ddev delete images\nddev delete images -y`,
 	Args:    cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
-		// This is were stuff goes
-		if !util.Confirm("Deleting unused ddev images. \nThis is a non-destructive operation, \nbut it may require that the images be downloaded again when you need them. \nOK to continue?") {
-			os.Exit(1)
+		if !deleteImagesNocConfirm {
+			if !util.Confirm("Deleting unused ddev images. \nThis is a non-destructive operation, \nbut it may require that the images be downloaded again when you need them. \nOK to continue?") {
+				os.Exit(1)
+			}
 		}
 		util.Success("Powering off ddev to avoid conflicts")
 		powerOff()
@@ -94,5 +98,6 @@ var DeleteImagesCmd = &cobra.Command{
 }
 
 func init() {
+	DeleteImagesCmd.Flags().BoolVarP(&deleteImagesNocConfirm, "yes", "y", false, "Yes - skip confirmation prompt")
 	DeleteCmd.AddCommand(DeleteImagesCmd)
 }
