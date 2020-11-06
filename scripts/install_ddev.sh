@@ -56,8 +56,7 @@ semver_compare() {
     number_b=$(echo ${pr_b//[!0-9]/})
     [ -z "${number_a}" ] && number_a=0
     [ -z "${number_b}" ] && number_b=0
-
-    [ "$pr_a" \> "$pr_b" ] && [ -n "$pr_b" ] && [ "$number_a" -gt "$number_b" ] && echo 1 && return 0
+    [ "$pr_a" \> "$pr_b" ] && [ -n "$pr_b" ] && echo 1 && return 0
 
     ####
     # Retrun -1 when A is lower than B
@@ -129,9 +128,9 @@ fi
 TARBALL="$FILEBASE.$VERSION.tar.gz"
 SHAFILE="$TARBALL.sha256.txt"
 
-curl -fsSL "$RELEASE_BASE_URL/$TARBALL" -o "${TMPDIR}/${TARBALL}"
-curl -fsSL "$RELEASE_BASE_URL/$SHAFILE" -o "${TMPDIR}/${SHAFILE}"
-curl -fsSL "https://raw.githubusercontent.com/${GITHUB_USERNAME}/ddev/master/scripts/macos_ddev_nfs_setup.sh" -o "${TMPDIR}/macos_ddev_nfs_setup.sh"
+curl -fsSL "$RELEASE_BASE_URL/$TARBALL" -o "${TMPDIR}/${TARBALL}" || (printf "${RED}Failed downloading $RELEASE_BASE_URL/$TARBALL${RESET}\n" && exit 108)
+curl -fsSL "$RELEASE_BASE_URL/$SHAFILE" -o "${TMPDIR}/${SHAFILE}" || (printf "${RED}Failed downloading $RELEASE_BASE_URL/$SHAFILE${RESET}\n" && exit 109)
+curl -fsSL "https://raw.githubusercontent.com/${GITHUB_USERNAME}/ddev/master/scripts/macos_ddev_nfs_setup.sh" -o "${TMPDIR}/macos_ddev_nfs_setup.sh" || (printf "${RED}Failed downloading "https://raw.githubusercontent.com/${GITHUB_USERNAME}/ddev/master/scripts/macos_ddev_nfs_setup.sh"${RESET}\n" && exit 110)
 
 cd $TMPDIR
 $SHACMD -c "$SHAFILE"
