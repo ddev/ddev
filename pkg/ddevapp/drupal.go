@@ -585,13 +585,6 @@ func drupal6ConfigOverrideAction(app *DdevApp) error {
 	return nil
 }
 
-// drupal7ConfigOverrideAction overrides php_version for D7,
-// since it is not yet compatible with php7.3
-func drupal7ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP72
-	return nil
-}
-
 // drupal8ConfigOverrideAction overrides mariadb_version for Druapl 8 for future
 // compatibility with Drupal 9, since it requires at least 10.3.
 func drupal8ConfigOverrideAction(app *DdevApp) error {

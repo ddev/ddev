@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
 	"io/ioutil"
 
 	"os"
@@ -162,12 +161,6 @@ func isTypo3App(app *DdevApp) bool {
 		return true
 	}
 	return false
-}
-
-// typo3ConfigOverrideAction sets a safe php_version for TYPO3
-func typo3ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP72
-	return nil
 }
 
 // typo3ImportFilesAction defines the TYPO3 workflow for importing project files.
