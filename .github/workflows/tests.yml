@@ -53,9 +53,10 @@ jobs:
     name: DDEV tests - ${{ matrix.os }} - make ${{ matrix.commands }}
     runs-on: macos-latest
 
-    matrix:
-      commands: [testcmd, testnotddevapp, testddevapp]
-      os: [ubuntu-20.04, macos-latest]
+    strategy:
+      matrix:
+        commands: [testcmd, testnotddevapp, testddevapp]
+        os: [ubuntu-20.04, macos-latest]
 
     steps:
       - name: Install Docker and deps
