@@ -19,6 +19,7 @@ jobs:
     steps:
       - name: Install Docker
         run: |
+          mkdir ~/.docker
           brew install make docker docker-machine
           brew cask install virtualbox
           mkdir ~/.docker/cli-plugins
@@ -52,6 +53,7 @@ jobs:
     steps:
       - name: Install Docker
         run: |
+          mkdir ~/.docker
           brew install make docker docker-machine
           brew cask install virtualbox
           mkdir ~/.docker/cli-plugins
