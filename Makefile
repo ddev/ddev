@@ -117,7 +117,7 @@ $(TARGETS): pullbuildimage $(GOFILES)
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	$(DOCKERBUILDCMD) \
-        bash -c "GOOS=$$GOOS GOARCH=$$GOARCH go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)"
+        bash -c "ls /workdir && GOOS=$$GOOS GOARCH=$$GOARCH go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)"
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
