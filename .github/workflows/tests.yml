@@ -35,6 +35,9 @@ jobs:
 
       - name: Run container tests
         run: |
+          if [[ "${{ matrix.os }}" == macos* ]]; then
+            eval "$(docker-machine env default)"
+          fi
           docker version
           set -eu -o pipefail
           for dir in containers/*/
@@ -49,7 +52,7 @@ jobs:
 
   ddev-tests:
     name: DDEV tests - ${{ matrix.os }} - make ${{ matrix.commands }}
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
@@ -71,6 +74,9 @@ jobs:
 
       - name: Run make ${{ matrix.commands }}
         run: |
+          if [[ "${{ matrix.os }}" == macos* ]]; then
+            eval "$(docker-machine env default)"
+          fi
           docker version
           echo "Running tests..."
           make ${{ matrix.commands }}
