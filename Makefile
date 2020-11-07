@@ -72,20 +72,20 @@ VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
 BUILD_IMAGE ?= golang:1.15.3
 DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
-          	    -v "/$(PWD)://tmp/ddev$(DOCKERMOUNTFLAG)"                              \
-          	    -e GOPATH="//tmp/ddev/$(GOTMP)" \
-          	    -e GOCACHE="//tmp/ddev/$(GOTMP)/.cache" \
+          	    -v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -e GOPATH="//workdir/$(GOTMP)" \
+          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -e GOFLAGS="$(USEMODVENDOR)" \
           	    -e CGO_ENABLED=0 \
-          	    -w //tmp/ddev             \
+          	    -w //workdir              \
           	    $(BUILD_IMAGE)
 DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
-          	    -v "/$(PWD):/tmp/ddev$(DOCKERMOUNTFLAG)"                              \
-          	    -e GOPATH="//tmp/ddev/$(GOTMP)" \
-          	    -e GOCACHE="//tmp/ddev/$(GOTMP)/.cache" \
-          	    -e GOLANGCI_LINT_CACHE="//tmp/ddev/$(GOTMP)/.golanci-lint-cache" \
+          	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
+          	    -e GOPATH="//workdir/$(GOTMP)" \
+          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
+          	    -e GOLANGCI_LINT_CACHE="//workdir/$(GOTMP)/.golanci-lint-cache" \
           	    -e GOFLAGS="$(USEMODVENDOR)" \
-          	    -w //tmp/ddev              \
+          	    -w //workdir              \
           	    $(BUILD_IMAGE)
 DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
