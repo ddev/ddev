@@ -80,12 +80,12 @@ DOCKERBUILDCMD=docker run -t --rm                     \
           	    -w //workdir              \
           	    $(BUILD_IMAGE)
 DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
-          	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
-          	    -e GOPATH="//workdir/$(GOTMP)" \
-          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
-          	    -e GOLANGCI_LINT_CACHE="//workdir/$(GOTMP)/.golanci-lint-cache" \
+          	    -v "/$(PWD):/tmp/ddev$(DOCKERMOUNTFLAG)"                              \
+          	    -e GOPATH="//tmp/ddev/$(GOTMP)" \
+          	    -e GOCACHE="//tmp/ddev/$(GOTMP)/.cache" \
+          	    -e GOLANGCI_LINT_CACHE="//tmp/ddev/$(GOTMP)/.golanci-lint-cache" \
           	    -e GOFLAGS="$(USEMODVENDOR)" \
-          	    -w //workdir              \
+          	    -w //tmp/ddev              \
           	    $(BUILD_IMAGE)
 DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
