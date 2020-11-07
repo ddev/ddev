@@ -36,7 +36,7 @@ for item in osslsigncode golang golangci-lint mkcert mkdocs ddev makensis bats-c
     brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done
 
-npm install --global markdownlint-cli
+sudo npm install --global markdownlint-cli
 markdownlint --version
 pip3 install -q yq mkdocs==0.17.5
 
