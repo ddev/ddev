@@ -22,6 +22,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Install Docker and deps
         run: |
           if [[ "${{ matrix.os }}" == ubuntu* ]]; then
@@ -31,7 +32,11 @@ jobs:
           else
             echo "Unsupported OS in matrix"
             exit 1
-          fi      
+          fi
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15.3'
 
       - name: Run container tests
         run: |
@@ -61,6 +66,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+
       - name: Install Docker and deps
         run: |
           if [[ "${{ matrix.os }}" == ubuntu* ]]; then
@@ -71,6 +77,10 @@ jobs:
             echo "Unsupported OS in matrix"
             exit 1
           fi
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15.3'
 
       - name: Run make ${{ matrix.commands }}
         run: |
