@@ -1,0 +1,79 @@
+name: DDEV tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  BUILDKIT_PROGRESS: plain
+  DOCKER_CLI_EXPERIMENTAL: enabled
+
+jobs:
+
+  container-tests:
+    name: Container tests - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-latest]
+
+    steps:
+      - name: Install Docker and deps
+        run: |
+          if [[ "${{ matrix.os }}" == ubuntu* ]]; then
+            ./linux-setup.sh
+          elif [[ "${{ matrix.os }}" == macos* ]]; then
+            ./macos-setup.sh
+          else
+            echo "Unsupported OS in matrix"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v2
+
+      - name: Run container tests
+        run: |
+          eval "$(docker-machine env default)"
+          docker version
+          set -eu -o pipefail
+          for dir in containers/*/
+              do pushd $dir
+              echo "--- Build container $dir"
+              time make container DOCKER_ARGS=--no-cache
+              echo "--- Test container $dir"
+              time make test
+              popd
+          done
+          set +eu
+
+  ddev-tests:
+    name: DDEV tests - ${{ matrix.os }} - make ${{ matrix.commands }}
+    runs-on: macos-latest
+
+    matrix:
+      commands: [testcmd, testnotddevapp, testddevapp]
+      os: [ubuntu-20.04, macos-latest]
+
+    steps:
+      - name: Install Docker and deps
+        run: |
+          if [[ "${{ matrix.os }}" == ubuntu* ]]; then
+            ./linux-setup.sh
+          elif [[ "${{ matrix.os }}" == macos* ]]; then
+            ./macos-setup.sh
+          else
+            echo "Unsupported OS in matrix"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v2
+
+      - name: Run make ${{ matrix.commands }}
+        run: |
+          eval "$(docker-machine env default)"
+          docker version
+          echo "Running tests..."
+          make ${{ matrix.commands }}
