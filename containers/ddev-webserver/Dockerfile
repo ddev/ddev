@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod (for DDEV-Live)
 ### and ddev-webserver-* (For DDEV-Local)
-FROM drud/ddev-php-base:v0.6.0 as ddev-webserver-base
+FROM drud/ddev-php-base:v0.6.1 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV MKCERT_VERSION=v1.4.6
@@ -93,7 +93,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
 ADD ddev-webserver-dev-base-files /
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_${MAILHOG_ARCH} -o /usr/local/bin/mailhog; 
 
-RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod +x /usr/local/bin/terminus
+RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
 RUN curl -sSL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod +x /usr/local/bin/ddev-live && rm ddev-live.zip
 
 # magerun and magerun2 for magento
@@ -133,6 +133,9 @@ RUN a2enmod ssl headers expires
 # scripts added last because they're most likely place to make changes, speeds up build
 ADD ddev-webserver-base-scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
+
+# Composer may need to be updated by composer self-update
+RUN chmod -f ugo+wx /usr/local/bin/composer /usr/local/bin/ddev-live
 
 #TODO: Security implications; must be revisited
 RUN chmod ugo+w /etc/ssl/certs
