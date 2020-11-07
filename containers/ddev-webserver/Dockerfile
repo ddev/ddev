@@ -134,8 +134,8 @@ RUN a2enmod ssl headers expires
 ADD ddev-webserver-base-scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
 
-# Composer may need to be updated by composer self-update
-RUN chmod -f ugo+wx /usr/local/bin/composer /usr/local/bin/ddev-live
+# Composer, etc may need to be updated by composer self-update
+RUN chmod -f ugo+wx /usr/local/bin /usr/local/bin/composer /usr/local/bin/ddev-live
 
 #TODO: Security implications; must be revisited
 RUN chmod ugo+w /etc/ssl/certs
