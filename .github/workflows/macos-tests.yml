@@ -20,7 +20,6 @@ jobs:
       - name: Install Docker
         run: |
           brew install make docker docker-machine mysql-client
-          brew cask install virtualbox
           mkdir ~/.docker/cli-plugins
           curl -sSL https://github.com/docker/buildx/releases/download/v0.4.2/buildx-v0.4.2.darwin-amd64 -o ~/.docker/cli-plugins/docker-buildx
           chmod a+x ~/.docker/cli-plugins/docker-buildx
@@ -53,7 +52,6 @@ jobs:
       - name: Install Docker
         run: |
           brew install make docker docker-machine mysql-client
-          brew cask install virtualbox
           mkdir ~/.docker/cli-plugins
           curl -sSL https://github.com/docker/buildx/releases/download/v0.4.2/buildx-v0.4.2.darwin-amd64 -o ~/.docker/cli-plugins/docker-buildx
           chmod a+x ~/.docker/cli-plugins/docker-buildx
