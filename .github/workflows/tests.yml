@@ -35,7 +35,6 @@ jobs:
 
       - name: Run container tests
         run: |
-          eval "$(docker-machine env default)"
           docker version
           set -eu -o pipefail
           for dir in containers/*/
@@ -72,7 +71,6 @@ jobs:
 
       - name: Run make ${{ matrix.commands }}
         run: |
-          eval "$(docker-machine env default)"
           docker version
           echo "Running tests..."
           make ${{ matrix.commands }}
