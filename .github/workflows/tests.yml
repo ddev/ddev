@@ -24,9 +24,9 @@ jobs:
       - name: Install Docker and deps
         run: |
           if [[ "${{ matrix.os }}" == ubuntu* ]]; then
-            ./linux-setup.sh
+            ./.github/workflows/linux-setup.sh
           elif [[ "${{ matrix.os }}" == macos* ]]; then
-            ./macos-setup.sh
+            ./.github/workflows/macos-setup.sh
           else
             echo "Unsupported OS in matrix"
             exit 1
@@ -62,9 +62,9 @@ jobs:
       - name: Install Docker and deps
         run: |
           if [[ "${{ matrix.os }}" == ubuntu* ]]; then
-            ./linux-setup.sh
+            ./.github/workflows/linux-setup.sh
           elif [[ "${{ matrix.os }}" == macos* ]]; then
-            ./macos-setup.sh
+            ./.github/workflows/macos-setup.sh
           else
             echo "Unsupported OS in matrix"
             exit 1
