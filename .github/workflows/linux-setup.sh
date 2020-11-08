@@ -32,18 +32,9 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_INSTALL_CLEANUP=1
 
 brew tap drud/ddev >/dev/null
-for item in osslsigncode golang golangci-lint mkcert mkdocs ddev makensis bats-core; do
+for item in golang golangci-lint mkcert bats-core; do
     brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done
-
-sudo npm install --global markdownlint-cli
-markdownlint --version
-pip3 install -q yq mkdocs==0.17.5
-
-# Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
-wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.04/nsis-3.04.zip/download && sudo unzip -o -d /usr/local/share download && sudo mv /usr/local/share/nsis-3.04 /usr/local/share/nsis
-wget https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d /usr/local/share/nsis EnVar-Plugin.zip
-wget https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -o -d /usr/local/share/nsis/Plugins INetC.zip
 
 mkcert -install
 
