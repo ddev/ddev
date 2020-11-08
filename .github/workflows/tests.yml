@@ -22,6 +22,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Setup tmate session
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
+        uses: mxschmitt/action-tmate@v3
 
       - name: Install Docker and deps
         run: |
@@ -61,11 +64,15 @@ jobs:
 
     strategy:
       matrix:
-        commands: [testcmd, testnotddevapp, testddevapp]
+        #commands: [testcmd, testnotddevapp, testddevapp]
+        commands: [testcmd]
         os: [ubuntu-20.04, macos-latest]
 
     steps:
       - uses: actions/checkout@v2
+      - name: Setup tmate session
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
+        uses: mxschmitt/action-tmate@v3
 
       - name: Install Docker and deps
         run: |
