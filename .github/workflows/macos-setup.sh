@@ -12,3 +12,5 @@ docker-machine env default
 
 # Install other dependencies
 brew install make mysql-client mkcert
+
+mkcert -install

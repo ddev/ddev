@@ -13,12 +13,12 @@ env:
 jobs:
 
   container-tests:
-    name: Container tests - ${{ matrix.os }}
+    name: ${{ matrix.os }} - Container tests
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-20.04, macos-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -56,13 +56,13 @@ jobs:
           set +eu
 
   ddev-tests:
-    name: DDEV tests - ${{ matrix.os }} - make ${{ matrix.commands }}
+    name: ${{ matrix.os }} - make ${{ matrix.commands }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
         commands: [testcmd, testnotddevapp, testddevapp]
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-20.04, macos-latest]
 
     steps:
       - uses: actions/checkout@v2
