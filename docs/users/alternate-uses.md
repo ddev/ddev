@@ -8,19 +8,29 @@ Examples of this approach are shown in [Codeception tests in Travis CI with DDEV
 
 ### Integration of DDEV-Local Docker Images Into Other Projects
 
-It is possible to use DDEV-Local Docker images outside the context of the DDEV-Local environment. In the future we plan to share "hardened" images that share most of the characteristics of the regular DDEV-Local images, but pay more attention to security. For example, they will not have sudo installed inside them.
+It is possible to use DDEV-Local Docker images outside the context of the DDEV-Local environment. People have used the ddev-webserver image for running tests in PHPStorm, for example.
 
-### Project Hosting on the Internet (including Let's Encrypt)
+### Casual Project Webosting on the Internet (including Let's Encrypt)
 
 An experimental feature of DDEV-local is simplified small-project hosting on the internet. One can run DDEV-Local on an internet server and point their DNS to it and use it as a regular (though limited) hosting environment.
 
-1. Install DDEV-Local on a regular Linux server that is directly connected to the Internet. You're responsible for your firewall and maintenance of the server, of course.
-2. Use `ddev config global --router-bind-all-interfaces` to tell DDEV to listen to all network interfaces, not just localhost.
-3. Use `ddev config global --use-hardened-images` to tell DDEV to use a hardened image which does not contain sudo, for example.
-4. Use `ddev config global --use-letencrypt --letsencrypt-email=you@example.com` to configure Let's Encrypt.
-5. Use a DNS provider to point a DNS name at the server.
-6. Create your DDEV-Local project as you normally would, but `ddev config --project-tld=your-tld`. For example, if the top-level domain you're using were "ddev.example.com" you might use `ddev config --project-tld=ddev.example.com`
-7. `ddev start` and visit your site.
+This may be completely appropriate for small or abandoned sites that have special requirements like old versions of PHP that aren't supported elsewhere.
+
+**Note that this is no replacement for a scaleable managed hosting offering like [DDEV-Live](https://www.ddev.com/ddev-live/) or other similar services. It's unknown how much traffic it can handle in a given environment. And it's EXPERIMENTAL. And it will never replace managed hosting.**
+
+1. Install DDEV-Local on a regular Linux server that is directly connected to the Internet. You're responsible for your firewall and maintenance of the server, of course.  
+2. On Debian/Ubuntu, you can set up a simple firewall with `ufw allow 80 && ufw allow 443 && ufw allow 22 && ufw enable`
+3. Point DNS for the site you're going to host to the server.
+4. Before proceeding, your project must be accessible on port 80 and your project DNS name (myproject.example.com) must resolve to the appropriate server.
+5. Configure your project with `ddev config`
+6. Import your database and files using `ddev import-db` and `ddev import-files`.
+7. Use `ddev config global --router-bind-all-interfaces` to tell DDEV to listen to all network interfaces, not just localhost.
+8. Use `ddev config global --use-hardened-images` to tell DDEV to use a hardened image which does not contain sudo, for example.
+9. Use `ddev config global --use-letencrypt --letsencrypt-email=you@example.com` to configure Let's Encrypt.
+10. Create your DDEV-Local project as you normally would, but `ddev config --additional-fqdns=<internet_fqdn`.
+11. `ddev start` and visit your site. Clear your cache (on some CMSs).
+
+You may have to restart ddev with `ddev poweroff && ddev start --all` if LetsEncrypt has failed due to port 80 not being open or the DNS name not yet resolving. (Use `docker logs ddev-router` to see Let's Encrypt activity.)
 
 To make ddev start sites on system boot, you'll want to set up a systemd unit on systemd systems like Debian/Ubuntu and Fedora. For example, a file named /etc/systemd/system/ddev.service containing:
 
@@ -52,6 +62,7 @@ Caveats:
 
 * It's unknown how much traffic a given server and docker setup can sustain, or what the results will be if the traffic is more than the server can handle.
 * DDEV-Local does not provide outgoing SMTP mailhandling service, and the development-focued MailHog feature is disabled if you're using `use_hardened_images`. You can provide SMTP service a number of ways, but the recommended way is to enable SMTP mailsending in your application and leverage a third-party transactional email service such as SendGrid, Mandrill, or Mailgun. This is the best way to make sure your mail actually gets delivered. See [DDEV-Live email sending docs](https://docs.ddev.com/services/#email) for hints.
+* You may need an external cron trigger for some types of CMS.
 * Debugging Let's Encrypt failures requires viewing the ddev-router logs with `docker logs ddev-router`
 * A malicious attack on a website hosted with `use_hardened_images` will likely not be able to do anything significant to the host, but it can certainly change your code, which is mounted on the host.
 
