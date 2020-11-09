@@ -49,7 +49,7 @@ var WebTag = "20201107_writeable_composer" // Note that this can be overridden b
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.16.0-rc1"
+var BaseDBTag = "20201109_pin_mariadb"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
