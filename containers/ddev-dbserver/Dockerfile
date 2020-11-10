@@ -4,7 +4,7 @@ FROM ${DBTYPE}:${PARENTIMAGEVERSION}
 
 # This must be reiterated because everything is emptied on FROM
 ARG DBVERSION
-
+ARG GITHUB_ACTIONS=false
 
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
@@ -30,7 +30,7 @@ RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql
 ADD files /
 
 # Build a starter base db
-RUN /create_base_db.sh;
+RUN /create_base_db.sh --github-actions $GITHUB_ACTIONS;
 
 RUN chmod ugo+x /healthcheck.sh /backuptool.sh
 

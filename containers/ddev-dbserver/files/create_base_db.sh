@@ -3,8 +3,20 @@
 set -eu
 set -o pipefail
 
+GITHUB_ACTIONS=false
+
+while [[ "$#" -gt 0 ]]; do case $1 in
+        --github-actions) GITHUB_ACTIONS="$2"; shift;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+esac; shift; done
+
 SOCKET=/var/tmp/mysql.sock
 OUTDIR=/mysqlbase
+
+if [[ "$GITHUB_ACTIONS" == "true" ]]; then
+  echo "GitHub Actions detected. Setting SOCKET to /var/run/mysqld/mysqld.sock"
+  SOCKET=/var/run/mysqld/mysqld.sock
+fi
 
 mkdir -p ${OUTDIR}
 sudo chown -R "$(id -u):$(id -g)" $OUTDIR
