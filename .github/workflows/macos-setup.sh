@@ -11,6 +11,6 @@ docker-machine create --driver virtualbox default
 docker-machine env default
 
 # Install other dependencies
-brew install make mysql-client mkcert
+brew install make mysql mkcert
 
 mkcert -install
