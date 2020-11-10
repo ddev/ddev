@@ -3,20 +3,8 @@
 set -eu
 set -o pipefail
 
-GITHUB_ACTIONS=false
-
-while [[ "$#" -gt 0 ]]; do case $1 in
-        --github-actions) GITHUB_ACTIONS="$2"; shift;;
-        *) echo "Unknown parameter passed: $1"; exit 1 ;;
-esac; shift; done
-
 SOCKET=/var/tmp/mysql.sock
 OUTDIR=/mysqlbase
-
-if [[ "$GITHUB_ACTIONS" == "true" ]]; then
-  echo "GitHub Actions detected. Setting SOCKET to /var/run/mysqld/mysqld.sock"
-  SOCKET=/var/run/mysqld/mysqld.sock
-fi
 
 mkdir -p ${OUTDIR}
 sudo chown -R "$(id -u):$(id -g)" $OUTDIR
@@ -43,7 +31,7 @@ else
     mysql_install_db --force --datadir=/var/lib/mysql
 fi
 echo "Starting mysqld --skip-networking --socket=${SOCKET}"
-mysqld --user=root --socket=$SOCKET --innodb_log_file_size=48M --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
+mysqld --user=root --socket=$SOCKET --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
 pid="$!"
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
