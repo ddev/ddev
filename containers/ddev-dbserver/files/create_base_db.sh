@@ -12,6 +12,10 @@ sudo chown -R "$(id -u):$(id -g)" $OUTDIR
 sudo chmod ugo+w /var/tmp
 sudo mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && sudo rm -f /var/lib/mysql/* && sudo chmod -R ugo+w /var/lib/mysql
 
+if test -f "/etc/my.cnf"; then
+    echo "Found a my.cnf file, using that to load MySQL config..."
+fi
+
 echo 'Initializing mysql'
 mysqld --version
 mysqld_version=$(mysqld --version | awk '{ gsub(/-log/, ""); gsub(/\.[0-9]+$/, "", $3);  print $3}')
