@@ -13,7 +13,7 @@ sudo chmod ugo+w /var/tmp
 sudo mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && sudo rm -f /var/lib/mysql/* && sudo chmod -R ugo+w /var/lib/mysql
 
 if test -f "/etc/my.cnf"; then
-    echo "Found a /etc/my.cnf file for configuration!"
+    echo "Found a my.cnf file, using that to load MySQL config..."
 fi
 
 echo 'Initializing mysql'
