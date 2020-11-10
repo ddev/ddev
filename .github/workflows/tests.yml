@@ -59,6 +59,8 @@ jobs:
           set +eu
 
   ddev-tests:
+    # temporary, so we can focus on container tests first
+    needs: container-tests
     name: ${{ matrix.os }} - make ${{ matrix.commands }}
     runs-on: ${{ matrix.os }}
 
