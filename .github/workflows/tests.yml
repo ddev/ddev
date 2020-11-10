@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-latest]
+        os: [ubuntu-18.04, macos-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -68,7 +68,7 @@ jobs:
       matrix:
         #commands: [testcmd, testnotddevapp, testddevapp]
         commands: [testcmd]
-        os: [ubuntu-20.04, macos-latest]
+        os: [ubuntu-18.04, macos-latest]
 
     steps:
       - uses: actions/checkout@v2
