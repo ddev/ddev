@@ -13,7 +13,7 @@ sudo chmod ugo+w /var/tmp
 sudo mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && sudo rm -f /var/lib/mysql/* && sudo chmod -R ugo+w /var/lib/mysql
 
 if test -f "/etc/my.cnf"; then
-    echo "Found a my.cnf file, using that to load MySQL config..."
+    echo "Found a /etc/my.cnf file for configuration!"
 fi
 
 echo 'Initializing mysql'
@@ -31,7 +31,7 @@ else
     mysql_install_db --force --datadir=/var/lib/mysql
 fi
 echo "Starting mysqld --skip-networking --socket=${SOCKET}"
-mysqld --user=root --socket=$SOCKET --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
+mysqld --user=root --socket=$SOCKET --innodb_log_file_size=48M --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
 pid="$!"
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
