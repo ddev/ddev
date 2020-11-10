@@ -248,7 +248,7 @@ func TestMain(m *testing.M) {
 	if token != "" {
 		// ddev auth ddev-live can create a .ddev folder, which we don't need right now,
 		// so drop it in /tmp
-		out, err := exec.RunCommand("bash", []string{"-c", "cd /tmp && ddev auth ddev-live " + token})
+		out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf("cd /tmp && %s auth ddev-live %s", DdevBin, token)})
 		if err != nil {
 			log.Fatalf("Unable to ddev auth ddev-live: %v (%v)", err, out)
 		}
