@@ -186,13 +186,13 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 	backupDescriptor := fmt.Sprintf("%s/%s", p.OrgName, strings.TrimRight(out, "\n"))
 
 	if os.Getenv("DDEV_DEBUG") != "" {
-		output.UserOut.Printf("ddev-live describe backup file %s", backupDescriptor)
+		output.UserOut.Printf("ddev-live describe backup files %s", backupDescriptor)
 	}
 	// Wait for the files backup to complete
-	cmd = fmt.Sprintf(`until [ "$(ddev-live describe backup file %s --output=json | jq -r .complete)" = "Completed" ]; do sleep 1; ((count++)); if [ "$count" -ge 120 ]; then echo "failed waiting for ddev-live get backup files %s: $(cat /tmp/getbackup.out)"; exit 104; fi; done`, backupDescriptor, backupDescriptor)
+	cmd = fmt.Sprintf(`until [ "$(ddev-live describe backup files %s --output=json 2>/tmp/getbackup.out | jq -r .complete)" = "Completed" ]; do sleep 1; ((count++)); if [ "$count" -ge 120 ]; then echo "failed waiting for ddev-live get backup files %s: $(cat /tmp/getbackup.out)"; exit 104; fi; done`, backupDescriptor, backupDescriptor)
 	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true, false)
 	if err != nil {
-		return "", fmt.Errorf("unable to ddev-live describe backup file: %v, output=%v ", err, out)
+		return "", fmt.Errorf("unable to ddev-live describe backup files: %v, output=%v ", err, out)
 	}
 
 	// Retrieve files with ddev-live pull files
