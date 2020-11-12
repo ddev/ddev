@@ -183,16 +183,16 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 	if err != nil {
 		return "", fmt.Errorf("unable to ddev-live backup files: %v, cmd=%v output=%v ", err, cmd, out)
 	}
-	backupDescriptor := strings.TrimRight(out, "\n")
+	backupDescriptor := fmt.Sprintf("%s/%s", p.OrgName, strings.TrimRight(out, "\n"))
 
 	if os.Getenv("DDEV_DEBUG") != "" {
-		output.UserOut.Printf("ddev-live get backup file %s", backupDescriptor)
+		output.UserOut.Printf("ddev-live describe backup files %s", backupDescriptor)
 	}
 	// Wait for the files backup to complete
-	cmd = fmt.Sprintf(`until [ "$(ddev-live get backup file %s --output=json | jq -r .complete)" = "Completed" ]; do sleep 1; ((count++)); if [ "$count" -ge 120 ]; then echo "failed waiting for ddev-live get backup files %s: $(cat /tmp/getbackup.out)"; exit 104; fi; done`, backupDescriptor, backupDescriptor)
+	cmd = fmt.Sprintf(`until [ "$(ddev-live describe backup files %s --output=json 2>/tmp/getbackup.out | jq -r .complete)" = "Completed" ]; do sleep 1; ((count++)); if [ "$count" -ge 360 ]; then echo "failed waiting for ddev-live describe backup files %s: $(cat /tmp/getbackup.out); onemoretry=$(ddev-live describe backup files %s --output=json)"; exit 104; fi; done`, backupDescriptor, backupDescriptor, backupDescriptor)
 	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true, false)
 	if err != nil {
-		return "", fmt.Errorf("unable to ddev-live get backup files: %v, output=%v ", err, out)
+		return "", fmt.Errorf("unable to ddev-live describe backup files: %v, output=%v ", err, out)
 	}
 
 	// Retrieve files with ddev-live pull files
@@ -213,13 +213,13 @@ func (p *DdevLiveProvider) getFilesBackup() (filename string, error error) {
 	}
 
 	// Now delete the files backup since we don't need it any more, and to stay under quota
-	cmd = fmt.Sprintf(`ddev-live delete backup files -y %s/%s`, p.OrgName, backupDescriptor)
+	cmd = fmt.Sprintf(`ddev-live delete backup files -y %s`, backupDescriptor)
 	if os.Getenv("DDEV_DEBUG") != "" {
 		output.UserOut.Print(cmd)
 	}
 	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache", fmt.Sprintf("%s:/mnt/ddevlive-downloads", p.getDownloadDir())}, uid, true, false)
 	if err != nil {
-		util.Warning("unable to delete backup (output=`%s`): err=%v, command=%s", out, err, cmd)
+		util.Warning("unable to delete backup files (output=`%s`): err=%v, command=%s", out, err, cmd)
 	}
 	return filepath.Join(p.getDownloadDir(), "files"), nil
 }
@@ -251,7 +251,7 @@ func (p *DdevLiveProvider) getDatabaseBackup() (filename string, error error) {
 	if os.Getenv("DDEV_DEBUG") != "" {
 		output.UserOut.Printf("ddev-live describe backup db %s/%s", p.OrgName, backupName)
 	}
-	cmd = fmt.Sprintf(`count=0; until [ "$(set -eo pipefail; ddev-live describe backup db %s/%s -y -o json | tee /tmp/ddevlivedescribe.out | jq -r .complete)" = "true" ]; do ((count++)); if [ "$count" -ge 240 ]; then echo "Timed out waiting for ddev-live describe backup db" && cat /tmp/ddevlivedescribe.out; exit 101; fi; sleep 1; done `, p.OrgName, backupName)
+	cmd = fmt.Sprintf(`count=0; until [ "$(set -eo pipefail; ddev-live describe backup db %s/%s -y -o json | tee /tmp/ddevlivedescribe.out | jq -r .complete)" = "true" ]; do ((count++)); if [ "$count" -ge 360 ]; then echo "Timed out waiting for ddev-live describe backup db onemoretry=$(ddev-live describe backup db %s/%s -o json)" && cat /tmp/ddevlivedescribe.out; exit 101; fi; sleep 1; done `, p.OrgName, backupName, p.OrgName, backupName)
 	_, out, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"DDEV_LIVE_NO_ANALYTICS=" + os.Getenv("DDEV_LIVE_NO_ANALYTICS")}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
 
 	if err != nil {

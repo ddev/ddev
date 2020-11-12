@@ -33,6 +33,7 @@ func TestDdevLiveConfigCommand(t *testing.T) {
 	if os.Getenv("DDEV_DDEVLIVE_API_TOKEN") == "" {
 		t.Skipf("No DDEV_DDEVLIVE_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
+	_ = os.Setenv("DDEV_LIVE_NO_ANALYTICS", "true")
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
@@ -97,6 +98,7 @@ func TestDdevLivePull(t *testing.T) {
 	if os.Getenv("DDEV_DDEVLIVE_API_TOKEN") == "" {
 		t.Skipf("No DDEV_DDEVLIVE_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
+	_ = os.Setenv("DDEV_LIVE_NO_ANALYTICS", "true")
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
