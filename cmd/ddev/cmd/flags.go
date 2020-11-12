@@ -223,6 +223,8 @@ func (v *defValueValue) validate(aType typeValue) error {
 		*v = defValueValue(strconv.FormatBool(false))
 	case FtCount, FtDuration, FtFloat32, FtFloat64, FtInt, FtInt8, FtInt16, FtInt32, FtUint, FtUint8, FtUint16, FtUint32:
 		*v = defValueValue(strconv.FormatInt(0, 10))
+	case FtString:
+		*v = ""
 	case ftTest3: // used for testing only
 		*v = ""
 	default:
