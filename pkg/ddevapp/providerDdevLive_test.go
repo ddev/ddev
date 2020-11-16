@@ -120,7 +120,7 @@ func TestDdevLivePull(t *testing.T) {
 	// nolint: errcheck
 	defer app.Stop(true, false)
 
-	app.Name = ddevliveTestSite
+	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal8
 	app.Docroot = "web"
 	_ = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files"), 0755)
