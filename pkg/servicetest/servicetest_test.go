@@ -1,7 +1,7 @@
 package servicetest_test
 
 import (
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
@@ -14,56 +14,9 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
-	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
-
-var (
-	TestSites = []testcommon.TestSite{
-		{
-			Name:                          "TestServicesDrupal7", // Drupal D7
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.61.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-7.61/",
-			FullSiteTarballURL:            "",
-			Docroot:                       "",
-			Type:                          nodeps.AppTypeDrupal7,
-		},
-	}
-	ServiceFiles []string
-	ServiceDir   string
-)
-
-// TestMain runs the tests in servicetest
-func TestMain(m *testing.M) {
-	output.LogSetUp()
-
-	if os.Getenv("GOTEST_SHORT") != "" {
-		log.Info("servicetest skipped in short mode because GOTEST_SHORT is set")
-		os.Exit(0)
-	}
-
-	var err error
-	ServiceDir, err = filepath.Abs("testdata/services")
-	util.CheckErr(err)
-
-	err = filepath.Walk(ServiceDir, func(path string, f os.FileInfo, _ error) error {
-		if !f.IsDir() && strings.HasPrefix(f.Name(), "docker-compose") {
-			ServiceFiles = append(ServiceFiles, f.Name())
-		}
-		return nil
-	})
-	util.CheckErr(err)
-
-	err = dockerutil.EnsureNetwork(dockerutil.GetDockerClient(), dockerutil.NetName)
-	util.CheckErr(err)
-	log.Debugln("Running tests in servicetest...")
-	testRun := m.Run()
-
-	os.Exit(testRun)
-}
 
 // TestServices tests each service compose file in the services folder.
 // It tests that a site can fully start w/ the compose file present, and
@@ -71,69 +24,71 @@ func TestMain(m *testing.M) {
 // the web container.
 func TestServices(t *testing.T) {
 	assert := asrt.New(t)
+	os.Setenv("DRUD_NONINTERACTIVE", "true")
+	err := globalconfig.ReadGlobalConfig()
+	assert.NoError(err)
 
-	if len(ServiceFiles) > 0 {
-		for _, site := range TestSites {
-			// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-			if site.Dir == "" || !fileutil.FileExists(site.Dir) {
-				err := site.Prepare()
-				if err != nil {
-					t.Fatalf("Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
-				}
-			}
+	pwd, _ := os.Getwd()
 
-			app := &ddevapp.DdevApp{}
+	testDir := testcommon.CreateTmpDir(t.Name())
 
-			err := app.Init(site.Dir)
-			assert.NoError(err)
+	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
+	defer testcommon.CleanupDir(testDir)
+	defer testcommon.Chdir(testDir)()
+	err = os.Chdir(testDir)
+	assert.NoError(err)
 
-			// nolint: errcheck
-			defer app.Stop(true, false)
+	app, err := ddevapp.NewApp(testDir, false, "")
+	assert.NoError(err)
+	err = fileutil.CopyDir(filepath.Join(pwd, "testdata", t.Name()), app.AppConfDir())
+	assert.NoError(err)
 
-			for _, service := range ServiceFiles {
-				confdir := filepath.Join(app.GetAppRoot(), ".ddev")
-				err = fileutil.CopyFile(filepath.Join(ServiceDir, service), filepath.Join(confdir, service))
-				assert.NoError(err)
-			}
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
 
-			err = app.Start()
-			assert.NoError(err)
+	app.Name = t.Name()
+	err = app.WriteConfig()
+	assert.NoError(err)
 
-			// Normally a ddev start would happen, which would create the fully interpreted compose file
-			// In a test environment, we recreate app as if ddev start had happened.
-			// We need app.Describe to get us real running info.
-			app, err = ddevapp.NewApp(app.AppRoot, false, "")
-			require.NoError(t, err)
+	testcommon.ClearDockerEnv()
 
-			checkSolrService(t, app)
-			checkMemcachedService(t, app)
+	err = app.Start()
+	require.NoError(t, err)
 
-			desc, err := app.Describe(false)
-			require.NoError(t, err)
+	// Unfortunately to get service description to work, we have to create a new app
+	// now that files are in place
+	app, err = ddevapp.NewApp(app.AppRoot, false, "")
 
-			// Make sure desc had 3 services.
-			require.Len(t, desc["extra_services"], 3)
+	checkSolrService(t, app)
+	checkMemcachedService(t, app)
 
-			// A volume should have been created for solr (only)
-			assert.True(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
+	desc, err := app.Describe(false)
+	require.NoError(t, err)
 
-			err = app.Stop(true, false)
-			assert.NoError(err)
+	// Make sure desc had 3 services.
+	require.Len(t, desc["extra_services"], 3)
 
-			// Solr volume should have been deleted
-			assert.False(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
+	// A volume should have been created for solr (only)
+	assert.True(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
 
-			site.Cleanup()
-		}
-	}
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
+	// Solr volume should have been deleted
+	assert.False(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
 }
 
 // checkSolrService ensures that the solr service's container is
 // running and that the service is accessible from the web container
 func checkSolrService(t *testing.T, app *ddevapp.DdevApp) {
 	service := "solr"
-	port := "8983"
-	path := fmt.Sprintf("http://%s:%s/solr/", service, port)
+	httpPort := 8983
+	httpsPort := 8984
+	path := fmt.Sprintf("http://%s:%d/solr/", service, httpPort)
 
 	var err error
 	assert := asrt.New(t)
@@ -152,13 +107,21 @@ func checkSolrService(t *testing.T, app *ddevapp.DdevApp) {
 	assert.True(check, "%s container is not running", service)
 
 	// Ensure service is accessible from web container
-	checkCommand := fmt.Sprintf("curl -sL -w '%%{http_code}' '%s' -o /dev/null", path)
+	checkCommand := fmt.Sprintf("curl -slL -w '%%{http_code}' %s -o /dev/null", path)
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     checkCommand,
 	})
-	assert.NoError(err, "Unable to make request to http://%s:%s/solr/", service, port)
+	assert.NoError(err, "Unable to make in-webcontainer request to http://%s:%d/solr/", service, httpPort)
 	assert.Equal("200", out)
+
+	// Ensure solr service is available via HTTP at exposed port location
+	resp, err := testcommon.EnsureLocalHTTPContent(t, fmt.Sprintf("http://%s.ddev.site:%d/solr/", app.GetName(), httpPort), "", 5)
+	assert.NoError(err, "resp=%v", resp)
+
+	// Ensure solr service is available via HTTPS at exposed port location 8984
+	resp, err = testcommon.EnsureLocalHTTPContent(t, fmt.Sprintf("https://%s.ddev.site:%d/solr/", app.GetName(), httpsPort), "", 5)
+	assert.NoError(err, "resp=%v", resp)
 }
 
 // checkMemcachedService ensures that the memcached service's

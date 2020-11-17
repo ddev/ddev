@@ -44,9 +44,12 @@ services:
       # This defines the host name the service should be accessible from. This
       # will be sitename.ddev.site.
       - VIRTUAL_HOST=$DDEV_HOSTNAME
-      # This defines the port the service should be accessible from at
-      # sitename.ddev.site.
-      - HTTP_EXPOSE=8983
+      # HTTP_EXPOSE exposes http traffic from the container port 8983
+      # to the host port 8983 vid ddev-router reverse proxy.
+      - HTTP_EXPOSE=8983:8983
+      # HTTPS_EXPOSE exposes https traffic from the container port 8983
+      # to the host port 8984 vid ddev-router reverse proxy.
+      - HTTPS_EXPOSE=8984:8983
     volumes:
       # solr core *data* is stored on the 'solr' docker volume
       # This mount is optional; without it your search index disappears

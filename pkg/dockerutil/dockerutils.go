@@ -129,6 +129,20 @@ func FindContainersByLabels(labels map[string]string) ([]docker.APIContainers, e
 	return containers, nil
 }
 
+// FindContainersWithLabel returns all containers with the given label
+// It ignores the value of the label, is only interested that the label exists.
+func FindContainersWithLabel(label string) ([]docker.APIContainers, error) {
+	client := GetDockerClient()
+	containers, err := client.ListContainers(docker.ListContainersOptions{
+		All:     true,
+		Filters: map[string][]string{"label": {label}},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return containers, nil
+}
+
 // NetExists checks to see if the docker network for ddev exists.
 func NetExists(client *docker.Client, name string) bool {
 	nets, _ := client.ListNetworks()
