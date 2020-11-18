@@ -53,7 +53,7 @@ When defining additional services for your project, we recommended you follow th
 
         * `VIRTUAL_HOST=$DDEV_HOSTNAME`
         * `HTTP_EXPOSE=portNum` The `hostPort:containerPort` convention may be used here to expose a container's port to a different external port. To expose multiple ports for a single container, define the ports as comma-separated values.
-        * `HTTPS_EXPOSE=<exposedPortNumber>:portNum` This will expose an https interface on `<exposedPortNumber>` to the host (and to the web container) as `https://<project>.ddev.site:exposedPortNumber`
+        * `HTTPS_EXPOSE=<exposedPortNumber>:portNum` This will expose an https interface on `<exposedPortNumber>` to the host (and to the web container) as `https://<project>.ddev.site:exposedPortNumber`. To expose multiple ports for a single container, use comma-separated definitions, as in `HTTPS_EXPOSE=9998:80,9999:81`, which would expose http port 80 from the container as `https://<project>.ddev.site:9998` and http port 81 from the container as `https://<project>.ddev.site:9999`.
 
 * **Naming volumes for persistent data**: A volume with persistent data should have the same name as the service and should not have a custom name. For example, the persistent volume for the [Postgres](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/postgres) service has:
 
