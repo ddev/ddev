@@ -10,7 +10,7 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 
 #### Installation
 
-* Copy [docker-compose.solr.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/docker-compose.solr.yaml) to the .ddev folder for your project.
+* Copy [docker-compose.solr.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/TestServices/docker-compose.solr.yaml) to the .ddev folder for your project.
 * The recommended Solr version is: `image: solr:8`, from [hub.docker.com](https://hub.docker.com/_/solr/).
 * Create the folder path .ddev/solr/conf.
 * Copy/extract the Solr configuration files for your project into `.ddev/solr/conf`.
@@ -34,7 +34,7 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 
 The default [solr-precreate script](https://github.com/docker-solr/docker-solr/blob/master/scripts/solr-precreate) provided in [docker-solr](https://github.com/docker-solr/docker-solr) and used in the `entrypoint` in docker-compose.solr.yaml does not have the capability to update core configuration after the core has been created. It just copies mounted config into the core, where it would otherwise live forever. However, a simple optional script executed on startup can re-copy config into place. Here's the technique:
 
-* Copy [solr-configupdate.sh](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/solr-configupdate.sh) to .ddev/solr. This simple script is mounted into the container and updates config from .ddev/solr/conf on `ddev restart`: `cd .ddev/solr && rm -rf solr-configupdate.sh && curl -O https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/solr-configupdate.sh && chmod +x solr-configupdate.sh`
+* Copy [solr-configupdate.sh](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/TestServices/solr-configupdate.sh) to .ddev/solr. This simple script is mounted into the container and updates config from .ddev/solr/conf on `ddev restart`: `cd .ddev/solr && rm -rf solr-configupdate.sh && curl -O https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/solr-configupdate.sh && chmod +x solr-configupdate.sh`
 * Make sure solr-configupdate.sh is executable: `chmod +x .ddev/solr/solr-configupdate.sh`
 * You can now copy/edit/update the solr configuration files for your project in .ddev/solr/conf and when you `ddev restart` the solr configuration will be live.
 
@@ -50,7 +50,7 @@ This recipe adds a Memcached 1.5 container to a project. The default configurati
 
 #### Memcached Installation
 
-* Copy [docker-compose.memcached.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/docker-compose.memcached.yaml) to the .ddev folder for your project.
+* Copy [docker-compose.memcached.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/TestServices/docker-compose.memcached.yaml) to the .ddev folder for your project.
 * Run `ddev start`.
 
 #### Interacting with Memcached
@@ -65,7 +65,7 @@ This recipe adds a [Beanstalk](https://beanstalkd.github.io/) container to a pro
 
 #### Beanstalk Installation
 
-* Copy [docker-compose.beanstalk.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/services/docker-compose.beanstalkd.yaml) to the .ddev folder for your project.
+* Copy [docker-compose.beanstalk.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/TestServices/docker-compose.beanstalkd.yaml) to the .ddev folder for your project.
 * Run `ddev start`.
 
 #### Interacting with the Beanstalk Queue
