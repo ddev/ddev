@@ -12,7 +12,60 @@ env:
 
 jobs:
 
+  container-build:
+    name: ${{ matrix.os }} - Build container ${{ matrix.containers }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-18.04]
+        containers: [ddev-dbserver-mariadb, ddev-dbserver-mysql, ddev-router, ddev-ssh-agent, ddev-webserver, test-ssh-agent]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Docker and deps
+        run: ./.github/workflows/linux-setup.sh   
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15.3'
+
+      - name: Run container tests 
+        run: |
+          docker version
+          set -eu -o pipefail
+          mkdir containers/export
+
+          if [[ "${{ matrix.containers }}" == "ddev-dbserver-mariadb"]]; then
+            do pushd containers/ddev-dbserver
+            echo "--- Build container ddev-dbserver-mariadb"
+            time make mariadb_containers DOCKER_ARGS="-o type=docker,dest=../export/ddev-dbserver-mariadb.tar"
+
+          elif [[ "${{ matrix.containers }}" == "ddev-dbserver-mysql"]]; then
+            do pushd containers/ddev-dbserver
+            echo "--- Build container ddev-dbserver-mysql"
+            time make mysql_containers DOCKER_ARGS="-o type=docker,dest=../export/ddev-dbserver-mysql.tar"
+
+          else
+            do pushd containers/${{ matrix.containers }}
+            echo "--- Build container ${{ matrix.containers }}"
+            time make container DOCKER_ARGS="-o type=docker,dest=../export/${{ matrix.containers }}.tar"
+
+          fi
+
+          popd
+          set +eu
+
+      - name: Upload artifact ${{ matrix.containers }}.tar
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-artifact
+          path: containers/export/*.tar
+
   container-tests:
+    needs: container-build
+    if: 'disabled' == 'disable'
     name: ${{ matrix.os }} - Container tests
     runs-on: ${{ matrix.os }}
 
@@ -47,20 +100,12 @@ jobs:
             eval "$(docker-machine env default)"
           fi
           docker version
-          set -eu -o pipefail
-          for dir in containers/*/
-              do pushd $dir
-              echo "--- Build container $dir"
-              time make container DOCKER_ARGS=--no-cache
-              echo "--- Test container $dir"
-              time make test
-              popd
-          done
-          set +eu
+          exit 1;
 
   ddev-tests:
     # temporary, so we can focus on container tests first
     needs: container-tests
+    if: 'disabled' == 'disable'
     name: ${{ matrix.os }} - make ${{ matrix.commands }}
     runs-on: ${{ matrix.os }}
 
