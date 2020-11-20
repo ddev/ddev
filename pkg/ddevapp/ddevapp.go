@@ -809,12 +809,11 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 
 		if err != nil {
 			if app.FailOnHookFail || app.FailOnHookFailGlobal {
+				output.UserOut.Errorf("task failed: %v: %v", a.GetDescription(), err)
 				return fmt.Errorf("task failed: %v", err)
-				output.UserOut.Errorf("task failed: %v: %v", a.GetDescription(), err)
-			} else {
-				output.UserOut.Errorf("task failed: %v: %v", a.GetDescription(), err)
-				output.UserOut.Warn("A task failure does not mean that ddev failed, but your hook configuration has a command that failed.")
 			}
+			output.UserOut.Errorf("task failed: %v: %v", a.GetDescription(), err)
+			output.UserOut.Warn("A task failure does not mean that ddev failed, but your hook configuration has a command that failed.")
 		}
 	}
 
