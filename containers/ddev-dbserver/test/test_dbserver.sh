@@ -7,8 +7,14 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-if [ $# != "1" ]; then echo "Argument 'version' is required"; exit 1; fi
+if [ -z "$1" ]; then echo "Argument 'version' is required"; exit 1; fi
 VERSION=$1
+
+if [[ -n "${2-}" ]]; then
+    ONLY_TESTS_FOR=$2
+else
+    ONLY_TESTS_FOR=
+fi
 
 function cleanup {
     true
@@ -26,6 +32,7 @@ export MYSQL_VERSIONS="MYSQL_VERSIONS_$CURRENT_ARCH"
 
 export DB_TYPE=mariadb
 for v in ${!MARIADB_VERSIONS}; do
+    if [[ "$ONLY_TESTS_FOR" == "mysql" ]]; then continue; fi;
     export baseversion=$(echo $v | awk -F ':' '{print $1}')
     export fullversion=$(echo $v | awk -F ':' '{print $2}')
     export IMAGE="drud/ddev-dbserver-$DB_TYPE-$baseversion:$tag"
@@ -38,6 +45,7 @@ done
 
 export DB_TYPE=mysql
 for v in ${!MYSQL_VERSIONS}; do
+    if [[ "$ONLY_TESTS_FOR" == "mariadb" ]]; then continue; fi;
     export baseversion=$(echo $v | awk -F ':' '{print $1}')
 	export fullversion=$(echo $v | awk -F ':' '{print $2}')
     export IMAGE="drud/ddev-dbserver-$DB_TYPE-$baseversion:$tag"

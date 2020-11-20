@@ -58,6 +58,12 @@ push:
 		docker buildx build --push --platform linux/amd64 $(DOCKER_ARGS) --build-arg="DBVERSION=$$baseversion" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)" .; \
 	done
 
+test_mariadb: mariadb_containers
+	bash ./test/test_dbserver.sh $(VERSION) mariadb # bash execution just for windows make, only mariadb tests
+
+test_mysql: mysql_containers
+	bash ./test/test_dbserver.sh $(VERSION) mysql # bash execution just for windows make, only mysql tests
+
 test: container
 	bash ./test/test_dbserver.sh $(VERSION) # bash execution just for windows make
 
