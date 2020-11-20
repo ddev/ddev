@@ -4,6 +4,7 @@ FROM ${DBTYPE}:${PARENTIMAGEVERSION}
 
 # This must be reiterated because everything is emptied on FROM
 ARG DBVERSION
+ARG DBTYPE
 
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
