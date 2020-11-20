@@ -1,0 +1,86 @@
+name: DDEV tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    # Only run when something changes in the actual containers
+    paths:
+    - "containers/**"
+
+env:
+  BUILDKIT_PROGRESS: plain
+  DOCKER_CLI_EXPERIMENTAL: enabled
+
+jobs:
+
+  container-build-and-test:
+    name: ${{ matrix.os }} - Build container ${{ matrix.containers }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-18.04]
+        containers: [ddev-dbserver, ddev-router, ddev-ssh-agent, ddev-webserver, test-ssh-server]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Docker and deps
+        run: ./.github/workflows/linux-setup.sh   
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15.3'
+
+      - name: Build and test container ${{ matrix.containers }}
+        run: |
+          docker version
+          set -eu -o pipefail
+          
+          pushd containers/${{ matrix.containers }}
+          echo "--- Test container ${{ matrix.containers }}"
+          time make test DOCKER_ARGS="--no-cache"
+          popd
+
+          set +eu
+
+  # ddev-tests:
+  #   # temporary, so we can focus on container tests first
+  #   needs: container-tests
+  #   name: ${{ matrix.os }} - make ${{ matrix.commands }}
+  #   runs-on: ${{ matrix.os }}
+
+  #   strategy:
+  #     matrix:
+  #       #commands: [testcmd, testnotddevapp, testddevapp]
+  #       commands: [testcmd]
+  #       os: [ubuntu-18.04, macos-latest]
+
+  #   steps:
+  #     - uses: actions/checkout@v2
+
+  #     - name: Install Docker and deps
+  #       run: |
+  #         if [[ "${{ matrix.os }}" == ubuntu* ]]; then
+  #           ./.github/workflows/linux-setup.sh
+  #         elif [[ "${{ matrix.os }}" == macos* ]]; then
+  #           ./.github/workflows/macos-setup.sh
+  #         else
+  #           echo "Unsupported OS in matrix"
+  #           exit 1
+  #         fi
+
+  #     - uses: actions/setup-go@v2
+  #       with:
+  #         go-version: '^1.15.3'
+
+  #     - name: Run make ${{ matrix.commands }}
+  #       run: |
+  #         if [[ "${{ matrix.os }}" == macos* ]]; then
+  #           eval "$(docker-machine env default)"
+  #         fi
+  #         docker version
+  #         echo "Running tests..."
+  #         make ${{ matrix.commands }}
