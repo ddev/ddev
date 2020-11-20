@@ -65,7 +65,6 @@ jobs:
 
   container-tests:
     needs: container-build
-    if: 'disabled' == 'disable'
     name: ${{ matrix.os }} - Container tests
     runs-on: ${{ matrix.os }}
 
@@ -105,7 +104,6 @@ jobs:
   ddev-tests:
     # temporary, so we can focus on container tests first
     needs: container-tests
-    if: 'disabled' == 'disable'
     name: ${{ matrix.os }} - make ${{ matrix.commands }}
     runs-on: ${{ matrix.os }}
 
