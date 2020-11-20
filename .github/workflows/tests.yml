@@ -34,6 +34,8 @@ jobs:
       - name: Build container ${{ matrix.containers }}
         run: |
           docker version
+          docker buildx version
+          docker buildx create --name ddev-builder-multi --use
           set -eu -o pipefail
           mkdir containers/export
           DATE=$(date +'%Y%m%d')
