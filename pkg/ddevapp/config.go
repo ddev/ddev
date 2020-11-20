@@ -84,8 +84,8 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
-  app.FailOnHookFail = nodeps.FailOnHookFailDefault
-  app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
+	app.FailOnHookFail = nodeps.FailOnHookFailDefault
+	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
 	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
 	app.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
 	app.PHPMyAdminPort = nodeps.DdevDefaultPHPMyAdminPort
@@ -686,7 +686,7 @@ type composeYAMLVars struct {
 	UID                       string
 	GID                       string
 	AutoRestartContainers     bool
-  FailOnHookFail            bool
+	FailOnHookFail            bool
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -743,7 +743,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		WebBuildDockerfile:        app.GetConfigPath(".webimageBuild/Dockerfile"),
 		DBBuildDockerfile:         app.GetConfigPath(".dbimageBuild/Dockerfile"),
 		AutoRestartContainers:     globalconfig.DdevGlobalConfig.AutoRestartContainers,
-    FailOnHookFail:            app.FailOnHookFail || app.FailOnHookFailGlobal,
+		FailOnHookFail:            app.FailOnHookFail || app.FailOnHookFailGlobal,
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"

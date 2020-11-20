@@ -51,7 +51,7 @@ type GlobalConfig struct {
 	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
 	LetsEncryptEmail         string                  `yaml:"letsencrypt_email"`
 	AutoRestartContainers    bool                    `yaml:"auto_restart_containers"`
-  FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
+	FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 

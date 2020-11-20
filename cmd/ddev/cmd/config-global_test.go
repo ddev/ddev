@@ -63,7 +63,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.Equal("nobody@example.com", globalconfig.DdevGlobalConfig.LetsEncryptEmail)
 	assert.True(globalconfig.DdevGlobalConfig.UseLetsEncrypt)
 	assert.True(globalconfig.DdevGlobalConfig.UseHardenedImages)
-  assert.True(globalconfig.DdevGlobalConfig.FailOnHookFailGlobal)
+	assert.True(globalconfig.DdevGlobalConfig.FailOnHookFailGlobal)
 
 	// Even though the global config is going to be deleted, make sure it's sane before leaving
 	args = []string{"config", "global", "--omit-containers", "", "--nfs-mount-enabled=true"}
