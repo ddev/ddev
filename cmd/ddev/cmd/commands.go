@@ -106,6 +106,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					description = val
 				}
 
+				usage = commandName + " [flags] [args]"
 				if val, ok := directives["Usage"]; ok {
 					usage = val
 				}
