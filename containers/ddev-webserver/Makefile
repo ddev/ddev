@@ -32,7 +32,7 @@ multi-arch:
 	done
 
 ddev-webserver ddev-webserver-dev-base ddev-webserver-prod-base ddev-webserver-prod:
-	docker buildx build --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+	docker buildx build -o type=docker --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 
 test: images
