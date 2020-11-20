@@ -37,12 +37,12 @@ jobs:
           set -eu -o pipefail
           mkdir containers/export
 
-          if [[ "${{ matrix.containers }}" == "ddev-dbserver-mariadb"]]; then
+          if [[ "${{ matrix.containers }}" == "ddev-dbserver-mariadb" ]]; then
             do pushd containers/ddev-dbserver
             echo "--- Build container ddev-dbserver-mariadb"
             time make mariadb_containers DOCKER_ARGS="-o type=docker,dest=../export/ddev-dbserver-mariadb.tar"
 
-          elif [[ "${{ matrix.containers }}" == "ddev-dbserver-mysql"]]; then
+          elif [[ "${{ matrix.containers }}" == "ddev-dbserver-mysql" ]]; then
             do pushd containers/ddev-dbserver
             echo "--- Build container ddev-dbserver-mysql"
             time make mysql_containers DOCKER_ARGS="-o type=docker,dest=../export/ddev-dbserver-mysql.tar"
