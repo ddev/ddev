@@ -80,6 +80,8 @@ type DdevApp struct {
 	MySQLVersion              string                 `yaml:"mysql_version"`
 	NFSMountEnabled           bool                   `yaml:"nfs_mount_enabled,omitempty"`
 	NFSMountEnabledGlobal     bool                   `yaml:"-"`
+  FailOnHookFail            bool                   `yaml:"fail_on_hook_fail,omitempty"`
+  FailOnHookFailGlobal      bool                   `yaml:"-"`
 	ConfigPath                string                 `yaml:"-"`
 	AppRoot                   string                 `yaml:"-"`
 	Platform                  string                 `yaml:"-"`
@@ -231,6 +233,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["hostname"] = app.GetHostname()
 	appDesc["hostnames"] = app.GetHostnames()
 	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal)
+  appDesc["fail_on_hook_fail"] = (app.FailOnHookFail || app.FailOnHookFailGlobal)
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
 	appDesc["httpURLs"] = httpURLs
 	appDesc["httpsURLs"] = httpsURLs
@@ -805,8 +808,13 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 		err := a.Execute()
 
 		if err != nil {
-			output.UserOut.Errorf("task failed: %v: %v", a.GetDescription(), err)
-			output.UserOut.Warn("A task failure does not mean that ddev failed, but your hook configuration has a command that failed.")
+      if app.FailOnHookFail || app.FailOnHookFailGlobal {
+        return fmt.Errorf("task failed: %v", err)
+        output.UserOut.Println(stdout + "\n" + stderr)
+      } else {
+  			output.UserOut.Errorf("task failed: %v: %v", a.GetDescription(), err)
+  			output.UserOut.Warn("A task failure does not mean that ddev failed, but your hook configuration has a command that failed.")
+      }
 		}
 	}
 

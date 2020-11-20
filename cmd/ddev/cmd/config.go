@@ -111,6 +111,9 @@ var (
 	// nfsMountEnabled sets nfs_mount_enabled
 	nfsMountEnabled bool
 
+  // failOnHookFail sets fail_on_hook_fail
+  failOnHookFail bool
+
 	// hostDBPortArg sets host_db_port
 	hostDBPortArg string
 
@@ -267,6 +270,7 @@ func init() {
 	ConfigCommand.Flags().String("mysql-version", "", "Oracle mysql version to use (incompatible with --mariadb-version)")
 
 	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")
+  ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
 	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound port")
 	ConfigCommand.Flags().StringVar(&hostHTTPSPortArg, "host-https-port", "", "The web container's localhost-bound https port")
 
@@ -478,6 +482,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	if cmd.Flag("nfs-mount-enabled").Changed {
 		app.NFSMountEnabled = nfsMountEnabled
 	}
+
+  if cmd.Flag("fail-on-hook-fail").Changed {
+    app.FailOnHookFail = failOnHookFail
+  }
 
 	// This bool flag is false by default, so only use the value if the flag was explicity set.
 	if cmd.Flag("xdebug-enabled").Changed {
