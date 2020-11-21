@@ -23,7 +23,7 @@ jobs:
         run: ./.github/workflows/linux-setup.sh
 
       - name: Install build tools
-        run: ./.github/workflows/linux-build-setup.sh   
+        run: ./.github/workflows/linux-build-setup.sh
 
       - uses: actions/setup-go@v2
         with:
