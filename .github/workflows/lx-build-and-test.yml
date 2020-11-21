@@ -13,20 +13,14 @@ env:
 jobs:
 
   build:
-    name: Build DDEV executables
+    name: ${{ matrix.os }} - Build DDEV executables
     runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v2
-        with:
-          # We need to get all branches and tags for git describe to work properly
-          fetch-depth: 0
 
       - name: Install Docker and deps
-        run: ./.github/workflows/linux-setup.sh
-
-      - name: Install build tools
-        run: ./.github/workflows/linux-build-setup.sh
+        run: ./.github/workflows/linux-setup.sh   
 
       - uses: actions/setup-go@v2
         with:
@@ -37,30 +31,27 @@ jobs:
         with:
           node-version: '10'
 
-      #- name: staticrequired
-      #  run: make staticrequired
+      - name: staticrequired
+        run: make staticrequired
 
       - name: Build DDEV executables
         run: make linux_amd64 linux_arm64 darwin_amd64 windows_amd64 windows_install
 
       - name: Generate artifacts
-        run: ./.github/workflows/generate_artifacts.sh ${{ github.workspace }}/artifacts
+        run: ./.circleci/generate_artifacts.sh ${{ GITHUB_WORKSPACE }}/artifacts
+        timeout-minutes: 10
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ddev-executables
-          path: ${{ github.workspace }}/artifacts/*
-          # 90 retention days are overkill for this
-          retention-days: 7
+          path: ${{ GITHUB_WORKSPACE }}/artifacts/*
 
       - name: Upload .gotmp/bin folder
         uses: actions/upload-artifact@v2
         with:
           name: ddev-gotmp-bin
-          path: ${{ github.workspace }}/.gotmp/bin/*
-          # 90 retention days are overkill for this
-          retention-days: 7
+          path: ${{ GITHUB_WORKSPACE }}/.gotmp/bin/*
 
   tests:
     needs: build
@@ -70,7 +61,6 @@ jobs:
     strategy:
       matrix:
         containers: [apache-fpm, nginx-fpm]
-      fail-fast: false
 
     env:
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.containers }}
@@ -99,12 +89,6 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
         working-directory: .gotmp/bin
-
-      # https://github.com/drud/ddev/pull/2615#issuecomment-731635753
-      - name: Copy patched nginx.tmpl for GH Actions
-        run: |
-          mkdir -p ~/.ddev
-          cp ./.github/workflows/nginx/* ~/.ddev
 
       - name: DDEV tests
         run: make -s test

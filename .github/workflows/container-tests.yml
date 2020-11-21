@@ -1,4 +1,4 @@
-name: DDEV tests
+name: Container tests
 
 on:
   push:
