@@ -20,7 +20,10 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install Docker and deps
-        run: ./.github/workflows/linux-setup.sh   
+        run: ./.github/workflows/linux-setup.sh
+
+      - name: Install build tools
+        run: ./.github/workflows/linux-build-setup.sh   
 
       - uses: actions/setup-go@v2
         with:
