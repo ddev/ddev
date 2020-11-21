@@ -42,6 +42,19 @@ RUN npm install --global gulp-cli
 ADD README.txt /
 ```
 
+Another example would be changing the installed nodejs version to a preferred version, for example nodejs 12:
+
+```dockerfile
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+# Install whatever nodejs version you want
+ENV NODE_VERSION=12
+RUN sudo apt-get remove -y nodejs
+RUN curl -sSL --fail https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests nodejs
+
+```
+
 Note that if a Dockerfile is provided, any config.yaml `webimage_extra_packages`, `dbimage_extra_packages`, or `composer_version` statements will be ignored. If you need to add packages as well as other custom configuration, add them to your Dockerfile with a line like
 
 ```dockerfile
