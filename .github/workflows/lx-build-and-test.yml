@@ -1,0 +1,101 @@
+name: Build and test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  BUILDKIT_PROGRESS: plain
+  DOCKER_CLI_EXPERIMENTAL: enabled
+
+jobs:
+
+  build:
+    name: ${{ matrix.os }} - Build DDEV executables
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Docker and deps
+        run: ./.github/workflows/linux-setup.sh   
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15.3'
+      
+      # Install Node v10 for the staticrequired step
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10'
+
+      - name: staticrequired
+        run: make staticrequired
+
+      - name: Build DDEV executables
+        run: make linux_amd64 linux_arm64 darwin_amd64 windows_amd64 windows_install
+
+      - name: Generate artifacts
+        run: ./.circleci/generate_artifacts.sh ${{ GITHUB_WORKSPACE }}/artifacts
+        timeout-minutes: 10
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-executables
+          path: ${{ GITHUB_WORKSPACE }}/artifacts/*
+
+      - name: Upload .gotmp/bin folder
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-gotmp-bin
+          path: ${{ GITHUB_WORKSPACE }}/.gotmp/bin/*
+
+  tests:
+    needs: build
+    name: Linux ${{ matrix.containers }} test
+    runs-on: ubuntu-20.04
+
+    strategy:
+      matrix:
+        containers: [apache-fpm, nginx-fpm]
+
+    env:
+      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.containers }}
+      DRUD_NONINTERACTIVE: "true"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      # Experiment with only testing TYPO3 with the apache run.
+      - name: GOTEST_SHORT on Apache
+        if: matrix.containers == 'apache-fpm'
+        run: echo "GOTEST_SHORT=5" >> $GITHUB_ENV 
+
+      - name: Install Docker and deps
+        run: ./.github/workflows/linux-setup.sh   
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15.3'
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: ddev-gotmp-bin
+          path: .gotmp/bin
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: .gotmp/bin
+
+      - name: DDEV tests
+        run: make -s test
+        timeout-minutes: 120
+
+      - name: Store test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-test-results-apache-fpm
+          path: /tmp/testresults/
