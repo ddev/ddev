@@ -18,6 +18,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        # We need to get all branches and tags for git describe to work properly
+        fetch-depth: 0
 
       - name: Install Docker and deps
         run: ./.github/workflows/linux-setup.sh
@@ -42,7 +44,6 @@ jobs:
 
       - name: Generate artifacts
         run: ./.circleci/generate_artifacts.sh ${{ github.workspace }}/artifacts
-        timeout-minutes: 10
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
