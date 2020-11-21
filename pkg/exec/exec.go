@@ -49,3 +49,10 @@ func RunInteractiveCommand(command string, args []string) error {
 	err = cmd.Wait()
 	return err
 }
+
+// RunMeWithRootRights runs the current call with root rights on Unix like
+// systems or elevated on Windows.
+func RunMeWithRootRights() (string, error) {
+	command, _ := os.Executable()
+	return RunCommandWithRootRights(command, os.Args[1:])
+}

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
@@ -28,16 +29,33 @@ var HostNameCmd = &cobra.Command{
 implications and requires elevated privileges. You may be asked for a password
 to allow ddev to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, becauses the hosts file never gets manipulated. Note that if running on WSL2 and using a browser on Windows, you need to have the Windows ddev.exe installed.'`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if nodeps.GetWSLDistro() != "" {
-			sudoArgs := append([]string{"ddev.exe", "hostname"}, args...)
-			out, err := exec.RunCommand("sudo.exe", sudoArgs)
+		// Forward the command to the Windows side in WSL. Running a Windows
+		// binary (PE file) in WSL will automatically run the command on the
+		// Windows side. The location of ddev.exe gets evaluated through the
+		// PATH variable and should normally be found on the Linux side as
+		// the ddev.exe is installed side by side with the Linux binary.
+		// Because the PATH variable also contains the PATH from the Windows
+		// side this could also be resolved to a ddev.exe on the Windows side.
+		// See also https://docs.microsoft.com/en-US/windows/wsl/interop#run-windows-tools-from-linux
+		if nodeps.IsWSL() {
+			newArgs := append([]string{cmd.Name()}, args...)
+			out, err := exec.RunCommand("ddev.exe", newArgs)
 			if err == nil {
-				util.Success("Executed 'sudo.exe %v on Windows", strings.Join(sudoArgs, " "))
+				util.Success("Executed 'ddev %v' on Windows", strings.Join(newArgs, " "))
 				return
 			} else {
-				util.Warning("Unable to run sudo.exe %v on Windows, your hosts file may not work for you, only available on WSL2: %v (%s)", strings.Join(sudoArgs, " "), err, out)
+				util.Warning("Unable to run 'ddev %v' on Windows, your hosts file may not work for you, only available on WSL2: %v (%s)", strings.Join(args, " "), err, out)
 			}
 		}
+
+		// Check for root rights and forward to sudo if not
+		if !exec.HasRootRights() {
+			exec.RunMeWithRootRights()
+
+			return
+		}
+
+		// Open hosts file
 		hosts, err := goodhosts.NewHosts()
 		if err != nil {
 			rawResult := make(map[string]interface{})

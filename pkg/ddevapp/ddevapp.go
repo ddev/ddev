@@ -3,12 +3,6 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/gobuffalo/packr/v2"
-	"github.com/lextoumbourou/goodhosts"
-	"github.com/mattn/go-isatty"
-	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
 	"os"
@@ -17,6 +11,13 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/gobuffalo/packr/v2"
+	"github.com/lextoumbourou/goodhosts"
+	"github.com/mattn/go-isatty"
+	"golang.org/x/crypto/ssh/terminal"
 
 	osexec "os/exec"
 
@@ -32,7 +33,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 // containerWaitTimeout is the max time we wait for all containers to become ready.
@@ -1975,6 +1976,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 // We would have hoped to use DNS or have found the entry already in hosts
 // But if it's not, try to add one.
 func addHostEntry(name string, ip string) error {
+	// todo: change to RunCommandWithRootRights
 	_, err := osexec.LookPath("sudo")
 	if (os.Getenv("DRUD_NONINTERACTIVE") != "") || err != nil {
 		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
@@ -2005,6 +2007,7 @@ func addHostEntry(name string, ip string) error {
 
 // RemoveHostsEntries will remote the site URL from the host's /etc/hosts.
 func (app *DdevApp) RemoveHostsEntries() error {
+	// todo: change to RunCommandWithRootRights
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
 		return fmt.Errorf("could not get Docker IP: %v", err)
