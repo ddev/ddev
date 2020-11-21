@@ -44,19 +44,23 @@ jobs:
         run: make linux_amd64 linux_arm64 darwin_amd64 windows_amd64 windows_install
 
       - name: Generate artifacts
-        run: ./.circleci/generate_artifacts.sh ${{ github.workspace }}/artifacts
+        run: ./.github/workflows/generate_artifacts.sh ${{ github.workspace }}/artifacts
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ddev-executables
           path: ${{ github.workspace }}/artifacts/*
+          # 90 retention days are overkill for this
+          retention-days: 7
 
       - name: Upload .gotmp/bin folder
         uses: actions/upload-artifact@v2
         with:
           name: ddev-gotmp-bin
           path: ${{ github.workspace }}/.gotmp/bin/*
+          # 90 retention days are overkill for this
+          retention-days: 7
 
   tests:
     needs: build
@@ -66,6 +70,7 @@ jobs:
     strategy:
       matrix:
         containers: [apache-fpm, nginx-fpm]
+      fail-fast: false
 
     env:
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.containers }}
@@ -94,6 +99,9 @@ jobs:
       - name: Display structure of downloaded files
         run: ls -R
         working-directory: .gotmp/bin
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
 
       - name: DDEV tests
         run: make -s test
