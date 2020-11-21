@@ -13,7 +13,7 @@ env:
 jobs:
 
   build:
-    name: ${{ matrix.os }} - Build DDEV executables
+    name: Build DDEV executables
     runs-on: ubuntu-20.04
 
     steps:
@@ -31,8 +31,8 @@ jobs:
         with:
           node-version: '10'
 
-      - name: staticrequired
-        run: make staticrequired
+      #- name: staticrequired
+      #  run: make staticrequired
 
       - name: Build DDEV executables
         run: make linux_amd64 linux_arm64 darwin_amd64 windows_amd64 windows_install
