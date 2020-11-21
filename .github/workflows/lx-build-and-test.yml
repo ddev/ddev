@@ -18,8 +18,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-        # We need to get all branches and tags for git describe to work properly
-        fetch-depth: 0
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
 
       - name: Install Docker and deps
         run: ./.github/workflows/linux-setup.sh
