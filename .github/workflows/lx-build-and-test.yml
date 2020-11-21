@@ -38,20 +38,20 @@ jobs:
         run: make linux_amd64 linux_arm64 darwin_amd64 windows_amd64 windows_install
 
       - name: Generate artifacts
-        run: ./.circleci/generate_artifacts.sh ${{ GITHUB_WORKSPACE }}/artifacts
+        run: ./.circleci/generate_artifacts.sh ${{ github.workspace }}/artifacts
         timeout-minutes: 10
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ddev-executables
-          path: ${{ GITHUB_WORKSPACE }}/artifacts/*
+          path: ${{ github.workspace }}/artifacts/*
 
       - name: Upload .gotmp/bin folder
         uses: actions/upload-artifact@v2
         with:
           name: ddev-gotmp-bin
-          path: ${{ GITHUB_WORKSPACE }}/.gotmp/bin/*
+          path: ${{ github.workspace }}/.gotmp/bin/*
 
   tests:
     needs: build
