@@ -1,0 +1,394 @@
+## jonaseberle edition
+{{ $CurrentContainer := where $ "ID" .Docker.CurrentContainerID | first }}
+
+{{ define "upstream" }}
+	{{ if .Address }}
+		{{/* If we got the containers from swarm and this container's port is published to host, use host IP:PORT */}}
+		{{ if and .Container.Node.ID .Address.HostPort }}
+			# {{ .Container.Node.Name }}/{{ .Container.Name }}
+			server {{ .Container.Node.Address.IP }}:{{ .Address.HostPort }};
+		{{/* If there is no swarm node or the port is not published on host, use container's IP:PORT */}}
+		{{ else if .Network }}
+			# {{ .Container.Name }}
+			server {{ .Network.IP }}:{{ .Address.Port }};
+		{{ end }}
+	{{ else if .Network }}
+		# {{ .Container.Name }}
+		server {{ .Network.IP }} down;
+	{{ end }}
+{{ end }}
+
+# If we receive X-Forwarded-Proto, pass it through; otherwise, pass along the
+# scheme used to connect to this server
+map $http_x_forwarded_proto $proxy_x_forwarded_proto {
+  default $http_x_forwarded_proto;
+  ''      $scheme;
+}
+
+# If we receive X-Forwarded-Port, pass it through; otherwise, pass along the
+# server port the client connected to
+map $http_x_forwarded_port $proxy_x_forwarded_port {
+  default $http_x_forwarded_port;
+  ''      $server_port;
+}
+
+# If we receive Upgrade, set Connection to "upgrade"; otherwise, delete any
+# Connection header that may have been passed to this server
+map $http_upgrade $proxy_connection {
+  default upgrade;
+  '' close;
+}
+
+# Default dhparam
+# ssl_dhparam /etc/nginx/dhparam/dhparam.pem;
+
+# Set appropriate X-Forwarded-Ssl header
+map $scheme $proxy_x_forwarded_ssl {
+  default off;
+  https on;
+}
+
+gzip_types text/plain text/css application/javascript application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript;
+
+log_format vhost '$host $remote_addr - $remote_user [$time_local] '
+                 '"$request" $status $body_bytes_sent '
+                 '"$http_referer" "$http_user_agent"';
+
+access_log off;
+
+client_max_body_size 0;
+
+{{ if $.Env.RESOLVERS }}
+resolver {{ $.Env.RESOLVERS }};
+{{ end }}
+
+{{ if (exists "/etc/nginx/proxy.conf") }}
+include /etc/nginx/proxy.conf;
+{{ else }}
+# HTTP 1.1 support
+proxy_http_version 1.1;
+proxy_buffering off;
+proxy_set_header Host $http_host;
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection $proxy_connection;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+proxy_set_header X-Forwarded-Ssl $proxy_x_forwarded_ssl;
+proxy_set_header X-Forwarded-Port $proxy_x_forwarded_port;
+
+# Mitigate httpoxy attack (see README for details)
+proxy_set_header Proxy "";
+{{ end }}
+
+{{ $enable_ipv6 := eq (or ($.Env.ENABLE_IPV6) "") "true" }}
+{{/* Use the first cert we can find as the 'default' cert */}}
+{{ $default_cert := coalesce (first (dir "/etc/nginx/certs")) "" }}
+{{ $default_cert := trimSuffix ".crt" $default_cert }}
+{{ $default_cert := trimSuffix ".key" $default_cert }}
+server {
+	server_name _; # Catch-all for any server_name that is not matched in the config
+
+    # Listen on all configured http ports + 80 (HTTPS_EXPOSE)
+    # So that we can redirect any server_name that is invalid
+
+	include /tmp/http_ports.conf;
+	access_log /var/log/nginx/access.log vhost;
+
+    error_page 503 @noupstream;
+    location @noupstream {
+        rewrite ^(.*)$ /503.html break;
+        root /app;
+    }
+
+    location / {
+        return 503;
+    }
+
+    ## provide a health check endpoint
+    location = /healthcheck {
+        access_log off;
+        return 200;
+    }
+}
+
+ {{ if exists (printf "/etc/nginx/certs/%s.crt" $default_cert) }}
+ server {
+ 	server_name _; # Catch-all for any server_name that is not matched in the config
+
+ 	# Listen on all configured https ports + 443 (HTTPS_EXPOSE)
+ 	# So that we can redirect any server_name that is invalid
+	include /tmp/https_ports.conf;
+
+ 	{{ if $enable_ipv6 }}
+ 	listen [::]:443 ssl http2;
+ 	{{ end }}
+ 	access_log /var/log/nginx/access.log vhost;
+ 
+     error_page 503 @noupstream;
+     location @noupstream {
+         rewrite ^(.*)$ /503.html break;
+         root /app;
+     }
+ 
+     location / {
+         return 503;
+     }
+ 
+     ## provide a health check endpoint
+     location = /healthcheck {
+         access_log off;
+         return 200;
+     }
+ 
+ 	ssl_session_tickets off;
+     ssl_certificate /etc/nginx/certs/{{ (printf "%s.crt" $default_cert) }};
+     ssl_certificate_key /etc/nginx/certs/{{ (printf "%s.key" $default_cert) }};
+ }
+ {{ end }}
+
+{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
+
+{{ $host := trim $host }}
+{{ $is_regexp := hasPrefix "~" $host }}
+{{ $upstream_name := when $is_regexp (sha1 $host) $host }}
+
+{{/* # {{ $host }} */}}
+{{/* upstream {{ $upstream_name }} { */}}
+
+{{ range $container := $containers }}
+    ### Looking at {{ $container.Name }}
+    {{/* HTTP_EXPOSE replaces the VIRTUAL_PORT var originally provided by jwilder/nginx-proxy. */}}
+    {{/* HTTP_EXPOSE provides comma-separated ports to serve for container. Ports can be defined as hostPort:containerPort */}}
+    {{ $ports := coalesce $container.Env.HTTP_EXPOSE "80" }}
+    {{ $ports := split $ports "," }}
+    {{ range $port := $ports }}
+    {{/* process values in hostPort:containerPort docker format, containerPort is upstream */}}
+    {{ $container_ports := split $port ":" }}
+    {{ $upstream_port := last $container_ports }}
+
+    # {{ $host }}
+    upstream {{ $upstream_name }}-{{ $upstream_port }} {
+    keepalive 100;
+	{{ $addrLen := len $container.Addresses }}
+
+    # jonaseberle/github-action-setup-ddev version (patched)
+    {{ range $containerNetwork := $container.Networks }}
+        ## checking containerNetwork="{{ $containerNetwork.Name }}"
+        {{ if (ne $containerNetwork.Name "ingress") }}
+            ## Can be connected with "{{ $containerNetwork.Name }}" network
+
+            {{/* If only 1 port exposed, use that */}}
+            {{ if eq $addrLen 1 }}
+                {{ $address := index $container.Addresses 0 }}
+                {{ template "upstream" (dict "Container" $container "Address" $address "Network" $containerNetwork) }}
+            {{/* If more than one port exposed, use the one matching HTTP_EXPOSE env var, falling back to standard web port 80 */}}
+            {{ else }}
+                {{ $address := where $container.Addresses "Port" $upstream_port | first }}
+                {{/* $port := coalesce $container.Env.VIRTUAL_PORT "80" */}}
+                {{/* $address := where $container.Addresses "Port" $port | first */}}
+                {{ template "upstream" (dict "Container" $container "Address" $address "Network" $containerNetwork) }}
+            {{ end }}
+        {{ end }}
+    {{ end }}
+    }
+    {{ end }}
+{{ end }}
+
+{{ $default_host := or ($.Env.DEFAULT_HOST) "" }}
+{{ $default_server := index (dict $host "" $default_host "default_server") $host }}
+
+{{/* Get the VIRTUAL_PROTO defined by containers w/ the same vhost, falling back to "http" */}}
+{{ $proto := trim (or (first (groupByKeys $containers "Env.VIRTUAL_PROTO")) "http") }}
+
+{{/* Get the NETWORK_ACCESS defined by containers w/ the same vhost, falling back to "external" */}}
+{{ $network_tag := or (first (groupByKeys $containers "Env.NETWORK_ACCESS")) "external" }}
+
+{{/* Get the NETWORK_ACCESS defined by containers w/ the same vhost, falling back to "external" */}}
+{{ $network_tag := or (first (groupByKeys $containers "Env.NETWORK_ACCESS")) "external" }}
+
+{{/* Get the VIRTUAL_ROOT By containers w/ use fastcgi root */}}
+{{ $vhost_root := or (first (groupByKeys $containers "Env.VIRTUAL_ROOT")) "/var/www/public" }}
+
+# Default to a single master.crt/master.key
+{{ $cert := "master" }}
+
+{{ range $container := whereExist $containers "Env.HTTP_EXPOSE" }}
+    {{/* Get the HTTP_EXPOSE defined by containers w/ the same vhost, falling back to port 80 */}}
+    {{ $ports := coalesce $container.Env.HTTP_EXPOSE "80" }}
+    {{ $ports := split $ports "," }}
+    {{ range $port := $ports }}
+        {{/* process values in hostPort:containerPort docker format */}}
+        {{ $container_ports := split $port ":" }}
+        {{/* hostPort is port to listen on */}}
+        {{ $listen_port := first $container_ports }}
+        {{/* containerPort is upstream */}}
+        {{ $upstream_port := last $container_ports }}
+
+
+        server {
+            server_name {{ $host }};
+            listen {{ $listen_port }} {{ $default_server }};
+            {{ if $enable_ipv6 }}
+            listen [::]:{{ $listen_port }} {{ $default_server }};
+            {{ end }}
+            access_log /var/log/nginx/access.log vhost;
+
+            location @brokenupstream {
+                rewrite ^(.*)$ /502.html break;
+                root /app;
+            }
+
+            {{ if eq $network_tag "internal" }}
+            # Only allow traffic from internal clients
+            allow 127.0.0.0/8;
+            allow 10.0.0.0/8;
+            allow 192.168.0.0/16;
+            allow 172.16.0.0/12;
+            deny all;
+            {{ end }}
+
+            {{ if (exists (printf "/etc/nginx/vhost.d/%s" $host)) }}
+            include {{ printf "/etc/nginx/vhost.d/%s" $host }};
+            {{ else if (exists "/etc/nginx/vhost.d/default") }}
+            include /etc/nginx/vhost.d/default;
+            {{ end }}
+
+            location / {
+                {{ if eq $proto "uwsgi" }}
+                include uwsgi_params;
+                uwsgi_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
+                {{ else if eq $proto "fastcgi" }}
+                root   {{ trim $vhost_root }};
+                include fastcgi.conf;
+                fastcgi_pass {{ trim $upstream_name }}-{{ trim $upstream_port }};
+                {{ else }}
+                proxy_buffer_size   128k;
+                proxy_buffers   4 256k;
+                proxy_busy_buffers_size   256k;
+                proxy_read_timeout 10m;
+                proxy_http_version 1.1;
+                proxy_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
+                {{ end }}
+                error_page 502 @brokenupstream;
+                {{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
+                auth_basic	"Restricted {{ $host }}";
+                auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
+                {{ end }}
+                {{ if (exists (printf "/etc/nginx/vhost.d/%s_location" $host)) }}
+                include {{ printf "/etc/nginx/vhost.d/%s_location" $host}};
+                {{ else if (exists "/etc/nginx/vhost.d/default_location") }}
+                include /etc/nginx/vhost.d/default_location;
+                {{ end }}
+            }
+        }
+    {{ end }}
+
+{{ end }}
+
+{{/* HTTPS_EXPOSE works similar to HTTP_EXPOSE, only no upstreams are created for HTTPS_EXPOSE ports. */}}
+{{/* Instead, an existing upstream for HTTP should be defined along with the port to listen for. e.g. 443:80 would listen on 443 and use an existing port 80 upstream */}}
+{{ range $container := whereExist $containers "Env.HTTPS_EXPOSE" }}
+    {{/* Get the HTTP_EXPOSE defined by containers w/ the same vhost, falling back to port 443:80 */}}
+    {{ $ports := coalesce $container.Env.HTTPS_EXPOSE "443:80" }}
+    {{ $ports := split $ports "," }}
+    {{ range $port := $ports }}
+        {{/* process values in hostPort:containerPort docker format */}}
+        {{ $container_ports := split $port ":" }}
+        {{/* hostPort is port to listen on */}}
+        {{ $listen_port := first $container_ports }}
+        {{/* containerPort is upstream */}}
+        {{ $upstream_port := last $container_ports }}
+
+        server {
+            server_name {{ $host }};
+            listen {{ $listen_port }} ssl http2 {{ $default_server }};
+            {{ if $enable_ipv6 }}
+            listen [::]:{{ $listen_port }} ssl http2 {{ $default_server }};
+            {{ end }}
+            access_log /var/log/nginx/access.log vhost;
+
+            location @brokenupstream {
+                rewrite ^(.*)$ /502.html break;
+                root /app;
+            }
+
+            {{ if eq $network_tag "internal" }}
+            # Only allow traffic from internal clients
+            allow 127.0.0.0/8;
+            allow 10.0.0.0/8;
+            allow 192.168.0.0/16;
+            allow 172.16.0.0/12;
+            deny all;
+            {{ end }}
+
+            ssl_prefer_server_ciphers on;
+            ssl_session_timeout 5m;
+            ssl_session_cache shared:SSL:50m;
+            ssl_session_tickets off;
+
+            {{ if (exists (printf "/mnt/ddev-global-cache/custom_certs/%s.crt" $host)) }}
+            ssl_certificate /mnt/ddev-global-cache/custom_certs/{{ (printf "%s.crt" $host) }};
+            ssl_certificate_key /mnt/ddev-global-cache/custom_certs/{{ (printf "%s.key" $host) }};
+            {{ else if (exists (printf "/etc/letsencrypt/live/%s/fullchain.pem" $host)) }}
+            ssl_certificate /etc/letsencrypt/live/{{ $host }}/fullchain.pem;
+            ssl_certificate_key /etc/letsencrypt/live/{{ $host }}/privkey.pem;
+            {{ else }}
+            ssl_certificate /etc/nginx/certs/{{ (printf "%s.crt" $cert) }};
+            ssl_certificate_key /etc/nginx/certs/{{ (printf "%s.key" $cert) }};
+            {{ end }}
+
+            {{ if (exists (printf "/etc/nginx/certs/%s.dhparam.pem" $cert)) }}
+            ssl_dhparam {{ printf "/etc/nginx/certs/%s.dhparam.pem" $cert }};
+            {{ end }}
+
+            {{ if (exists (printf "/etc/nginx/certs/%s.chain.crt" $cert)) }}
+            ssl_stapling on;
+            ssl_stapling_verify on;
+            ssl_trusted_certificate {{ printf "/etc/nginx/certs/%s.chain.crt" $cert }};
+            {{ end }}
+
+            {{/* if (ne $https_method "noredirect") */}}
+            {{/* add_header Strict-Transport-Security "max-age=31536000"; */}}
+            {{/* end */}}
+
+            {{ if (exists (printf "/etc/nginx/vhost.d/%s" $host)) }}
+            include {{ printf "/etc/nginx/vhost.d/%s" $host }};
+            {{ else if (exists "/etc/nginx/vhost.d/default") }}
+            include /etc/nginx/vhost.d/default;
+            {{ end }}
+
+            location / {
+                {{ if eq $proto "uwsgi" }}
+                include uwsgi_params;
+                uwsgi_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
+                {{ else if eq $proto "fastcgi" }}
+                root   {{ trim $vhost_root }};
+                include fastcgi.conf;
+                fastcgi_pass {{ trim $upstream_name }}-{{ trim $upstream_port }};
+                {{ else }}
+                proxy_buffer_size   128k;
+                proxy_buffers   4 256k;
+                proxy_busy_buffers_size   256k;
+                proxy_read_timeout 10m;
+                proxy_http_version 1.1;
+                proxy_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
+                {{ end }}
+                error_page 502 @brokenupstream;
+
+                {{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
+                auth_basic	"Restricted {{ $host }}";
+                auth_basic_user_file	{{ (printf "/etc/nginx/htpasswd/%s" $host) }};
+                {{ end }}
+                {{ if (exists (printf "/etc/nginx/vhost.d/%s_location" $host)) }}
+                include {{ printf "/etc/nginx/vhost.d/%s_location" $host}};
+                {{ else if (exists "/etc/nginx/vhost.d/default_location") }}
+                include /etc/nginx/vhost.d/default_location;
+                {{ end }}
+            }
+        }
+    {{ end }}
+
+{{ end }}
+
+{{ end }}
