@@ -1,0 +1,6 @@
+# This override puts the nginx.tmpl customized for github actions into ~/.ddev
+version: '3.6'
+services:
+  ddev-router:
+    volumes:
+    - ./nginx.tmpl:/app/nginx.tmpl
