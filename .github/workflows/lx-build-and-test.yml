@@ -64,16 +64,17 @@ jobs:
 
   tests:
     needs: build
-    name: Linux ${{ matrix.containers }} test
-    runs-on: ubuntu-20.04
+    name: Linux ${{ matrix.webserver }} - make ${{ matrix.tests }}
+    runs-on: ubuntu-18.04
 
     strategy:
       matrix:
-        containers: [apache-fpm, nginx-fpm]
+        webserver: [apache-fpm, nginx-fpm]
+        tests: [testcmd, testnotddevapp, testddevapp]
       fail-fast: false
 
     env:
-      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.containers }}
+      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DRUD_NONINTERACTIVE: "true"
 
     steps:
@@ -81,7 +82,7 @@ jobs:
 
       # Experiment with only testing TYPO3 with the apache run.
       - name: GOTEST_SHORT on Apache
-        if: matrix.containers == 'apache-fpm'
+        if: matrix.webserver == 'apache-fpm'
         run: echo "GOTEST_SHORT=5" >> $GITHUB_ENV 
 
       - name: Install Docker and deps
@@ -107,7 +108,7 @@ jobs:
           cp ./.github/workflows/nginx/* ~/.ddev
 
       - name: DDEV tests
-        run: make -s test
+        run: make ${{ matrix.tests }}
         timeout-minutes: 120
 
       - name: Store test results
