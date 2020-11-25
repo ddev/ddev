@@ -5,6 +5,15 @@
 
 set -eu -o pipefail
 
+{{/* Output details about each container into the output script file */}}
+{{/* Not only is this good for debugging, but it makes the output file */}}
+{{/* unique so that docker-gen won't fail to update it if any of these details change */}}
+{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
+{{ range $container := $containers }}
+# {{ $container.Name }} HTTP_EXPOSE={{ $container.Env.HTTP_EXPOSE }} HTTPS_EXPOSE={{ $container.Env.HTTPS_EXPOSE }}
+{{ end }}
+{{ end }}
+
 hostnames='{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}{{ trim $host }} {{ end }}'
 echo "Processing certs and nginx for hostnames: $hostnames"
 
