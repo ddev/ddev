@@ -12,7 +12,7 @@
 			server {{ .Network.IP }}:{{ .Address.Port }};
 		{{ end }}
 	{{ else if .Network }}
-			# Container={{ .Container.Name }} {{ .Network.IP }}:{{ .Address.Port }} (down)
+			# Container={{ .Container.Name }} (down)
 		server {{ .Network.IP }} down;
 	{{ end }}
 {{ end }}
@@ -111,8 +111,8 @@ server {
     }
 }
 
- {{ if exists (printf "/etc/nginx/certs/%s.crt" $default_cert) }}
- server {
+{{ if exists (printf "/etc/nginx/certs/%s.crt" $default_cert) }}
+server {
  	server_name _; # Catch-all for any server_name that is not matched in the config
 
  	# Listen on all configured https ports + 443 (HTTPS_EXPOSE)
@@ -152,9 +152,7 @@ server {
 {{ $is_regexp := hasPrefix "~" $host }}
 {{ $upstream_name := when $is_regexp (sha1 $host) $host }}
 
-# host={{ $host }} }}
 {{/* upstream {{ $upstream_name }} { */}}
-
 {{ range $container := $containers }}
     {{/* HTTP_EXPOSE replaces the VIRTUAL_PORT var originally provided by jwilder/nginx-proxy. */}}
     {{/* HTTP_EXPOSE provides comma-separated ports to serve for container. Ports can be defined as hostPort:containerPort */}}
