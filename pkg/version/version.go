@@ -67,9 +67,6 @@ var SSHAuthImage = "drud/ddev-ssh-agent"
 
 var SSHAuthTag = "v1.16.0"
 
-// COMMIT is the actual committish, supplied by make
-var COMMIT = "COMMIT should be overridden"
-
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
 
@@ -90,7 +87,6 @@ func GetVersionInfo() map[string]string {
 	versionInfo["dba"] = GetDBAImage()
 	versionInfo["router"] = RouterImage + ":" + RouterTag
 	versionInfo["ddev-ssh-agent"] = SSHAuthImage + ":" + SSHAuthTag
-	versionInfo["commit"] = COMMIT
 	versionInfo["build info"] = BUILDINFO
 	versionInfo["os"] = runtime.GOOS
 	if versionInfo["docker"], err = GetDockerVersion(); err != nil {
