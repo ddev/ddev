@@ -34,7 +34,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	if cmd.Flag("instrumentation-opt-in").Changed {
 		globalconfig.DdevGlobalConfig.InstrumentationOptIn = instrumentationOptIn
 		// Make sure that they don't get prompted again right after they opted out.
-		globalconfig.DdevGlobalConfig.LastStartedVersion = version.VERSION
+		globalconfig.DdevGlobalConfig.LastStartedVersion = version.DdevVersion
 		dirty = true
 	}
 	if cmd.Flag("omit-containers").Changed {

@@ -10,9 +10,6 @@ import (
 	"strings"
 )
 
-// VERSION is supplied with the git committish this is built from
-var VERSION = ""
-
 // IMPORTANT: These versions are overridden by version ldflags specifications VERSION_VARIABLES in the Makefile
 
 // DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
