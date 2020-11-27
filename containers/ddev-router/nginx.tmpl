@@ -8,11 +8,11 @@
 			server {{ .Container.Node.Address.IP }}:{{ .Address.HostPort }};
 		{{/* If there is no swarm node or the port is not published on host, use container's IP:PORT */}}
 		{{ else if .Network }}
-			# {{ .Container.Name }}
+			# Container={{ .Container.Name }} {{ .Network.IP }}:{{ .Address.Port }}
 			server {{ .Network.IP }}:{{ .Address.Port }};
 		{{ end }}
 	{{ else if .Network }}
-		# {{ .Container.Name }}
+			# Container={{ .Container.Name }} (down)
 		server {{ .Network.IP }} down;
 	{{ end }}
 {{ end }}
@@ -111,8 +111,8 @@ server {
     }
 }
 
- {{ if exists (printf "/etc/nginx/certs/%s.crt" $default_cert) }}
- server {
+{{ if exists (printf "/etc/nginx/certs/%s.crt" $default_cert) }}
+server {
  	server_name _; # Catch-all for any server_name that is not matched in the config
 
  	# Listen on all configured https ports + 443 (HTTPS_EXPOSE)
@@ -152,9 +152,7 @@ server {
 {{ $is_regexp := hasPrefix "~" $host }}
 {{ $upstream_name := when $is_regexp (sha1 $host) $host }}
 
-{{/* # {{ $host }} */}}
 {{/* upstream {{ $upstream_name }} { */}}
-
 {{ range $container := $containers }}
     {{/* HTTP_EXPOSE replaces the VIRTUAL_PORT var originally provided by jwilder/nginx-proxy. */}}
     {{/* HTTP_EXPOSE provides comma-separated ports to serve for container. Ports can be defined as hostPort:containerPort */}}
@@ -285,7 +283,7 @@ server {
 {{/* HTTPS_EXPOSE works similar to HTTP_EXPOSE, only no upstreams are created for HTTPS_EXPOSE ports. */}}
 {{/* Instead, an existing upstream for HTTP should be defined along with the port to listen for. e.g. 443:80 would listen on 443 and use an existing port 80 upstream */}}
 {{ range $container := whereExist $containers "Env.HTTPS_EXPOSE" }}
-    {{/* Get the HTTP_EXPOSE defined by containers w/ the same vhost, falling back to port 443:80 */}}
+    {{/* Get the HTTPS_EXPOSE defined by containers w/ the same vhost, falling back to port 443:80 */}}
     {{ $ports := coalesce $container.Env.HTTPS_EXPOSE "443:80" }}
     {{ $ports := split $ports "," }}
     {{ range $port := $ports }}

@@ -8,4 +8,3 @@ make push
 make push VERSION=someversion
 make clean
 ```
-
