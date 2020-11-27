@@ -10,9 +10,6 @@ import (
 	"strings"
 )
 
-// VERSION is supplied with the git committish this is built from
-var VERSION = ""
-
 // IMPORTANT: These versions are overridden by version ldflags specifications VERSION_VARIABLES in the Makefile
 
 // DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
@@ -20,7 +17,7 @@ var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by
 
 // SegmentKey is the ddev-specific key for Segment service
 // Compiled with link-time variables
-var SegmentKey = "CawBO33fRNynkaZsfgjY8sTxDT3yrH9c"
+var SegmentKey = ""
 
 // DockerVersionConstraint is the current minimum version of docker required for ddev.
 // See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
@@ -67,9 +64,6 @@ var SSHAuthImage = "drud/ddev-ssh-agent"
 
 var SSHAuthTag = "v1.16.0"
 
-// COMMIT is the actual committish, supplied by make
-var COMMIT = "COMMIT should be overridden"
-
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
 
@@ -90,7 +84,6 @@ func GetVersionInfo() map[string]string {
 	versionInfo["dba"] = GetDBAImage()
 	versionInfo["router"] = RouterImage + ":" + RouterTag
 	versionInfo["ddev-ssh-agent"] = SSHAuthImage + ":" + SSHAuthTag
-	versionInfo["commit"] = COMMIT
 	versionInfo["build info"] = BUILDINFO
 	versionInfo["os"] = runtime.GOOS
 	if versionInfo["docker"], err = GetDockerVersion(); err != nil {
