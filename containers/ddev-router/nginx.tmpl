@@ -167,10 +167,10 @@ server {
     keepalive 100;
 	{{ $addrLen := len $container.Addresses }}
 
-    {{ /* jonaseberle/github-action-setup-ddev version *; }}
+    {{/* jonaseberle/github-action-setup-ddev version */}}
     {{ range $containerNetwork := $container.Networks }}
         ## checking containerNetwork="{{ $containerNetwork.Name }}"
-        {{ if (and (ne $containerNetwork.Name "ingress") (or (eq $knownNetwork.Name $containerNetwork.Name) (eq $knownNetwork.Name "host"))) }}
+        {{ if (and (ne $containerNetwork.Name "ingress") (or (eq $containerNetwork.Name $containerNetwork.Name) (eq $containerNetwork.Name "host"))) }}
         ## Container {{ $container.Name }} can connect to network "{{ $containerNetwork.Name }}"
 
           {{/* If only 1 port exposed, use that */}}
