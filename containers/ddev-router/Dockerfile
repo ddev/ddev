@@ -52,6 +52,9 @@ RUN set -eu -o pipefail && \
 RUN echo "daemon off;" >> /etc/nginx/nginx.conf \
  && sed -i 's/worker_processes  1/worker_processes  auto/' /etc/nginx/nginx.conf
 
+# We don't want the default.conf provided by nginx package
+RUN rm -f /etc/nginx/conf.d/default.conf
+
 ADD . /app/
 ADD etc /etc
 RUN chmod ugo+x /app/healthcheck.sh

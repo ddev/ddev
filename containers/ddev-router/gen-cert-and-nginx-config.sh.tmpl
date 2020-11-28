@@ -44,4 +44,4 @@ mkcert -cert-file /etc/nginx/certs/master.crt -key-file /etc/nginx/certs/master.
 # This is not recursive, as it executes completely different instructions.
 # It's important for the nginx config creation and the nginx reload to take place after all cert
 # activities are completed.
-docker-gen -only-exposed -notify-output -notify "nginx -s reload" /app/nginx.tmpl /etc/nginx/conf.d/default.conf
+docker-gen -only-exposed -notify-output -notify "nginx -s reload" /app/nginx.tmpl /etc/nginx/conf.d/ddev.conf
