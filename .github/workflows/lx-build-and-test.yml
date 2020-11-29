@@ -101,12 +101,6 @@ jobs:
         run: ls -R
         working-directory: .gotmp/bin
 
-      # https://github.com/drud/ddev/pull/2615#issuecomment-731635753
-      - name: Copy patched nginx.tmpl for GH Actions
-        run: |
-          mkdir -p ~/.ddev
-          cp ./.github/workflows/nginx/* ~/.ddev
-
       - name: DDEV tests
         run: make ${{ matrix.tests }}
         timeout-minutes: 120
