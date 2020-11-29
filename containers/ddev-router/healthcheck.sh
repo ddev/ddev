@@ -26,13 +26,11 @@ else
   exit 2
 fi
 
-# If SOMETHING IS WRONG is in default.conf, then the config
-# has not been generated yet, or a failure happened generating
-if grep -v "SOMETHING IS WRONG" /etc/nginx/conf.d/default.conf >/dev/null; then
+if [ -f /etc/nginx/conf.d/ddev.conf ]; then
   configgenerated=true
-  printf "nginx default config:OK "
+  printf "ddev nginx config:generated "
 else
-  printf "nginx default.conf not yet generated "
+  printf "ddev nginx config not yet generated "
   exit 3
 fi
 
@@ -45,8 +43,8 @@ else
   exit 4
 fi
 
-if [ ${config} = true -a ${connect} = true ]; then
-  printf "ddev-router is healthy "
+if [ ${config} = true -a ${connect} = true -a ${configgenerated} = true ]; then
+  printf "ddev-router is healthy with %d upstreams" $(grep "upstream.*-" /etc/nginx/conf.d/ddev.conf | wc -l)
   touch /tmp/healthy
   exit 0
 fi
