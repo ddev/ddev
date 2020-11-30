@@ -172,7 +172,7 @@ services:
     hostname: {{ .Name }}-dba
     environment:
       - PMA_USER=root
-      - PMA_USER=root
+      - PMA_PASSWORD=root
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       - UPLOAD_LIMIT=1024M
       - TZ={{ .Timezone }}
