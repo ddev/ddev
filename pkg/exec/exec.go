@@ -52,6 +52,7 @@ func RunInteractiveCommand(command string, args []string) error {
 
 // RunMeWithRootRights runs the current call with root rights on Unix like
 // systems or elevated on Windows.
+// It returns stdout of command and error if any.
 func RunMeWithRootRights() (string, error) {
 	command, _ := os.Executable()
 	return RunCommandWithRootRights(command, os.Args[1:])

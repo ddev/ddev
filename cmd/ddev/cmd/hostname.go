@@ -43,15 +43,16 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 			if err == nil {
 				util.Success("Executed 'ddev %v' on Windows", strings.Join(newArgs, " "))
 				return
-			} else {
-				util.Warning("Unable to run 'ddev %v' on Windows, your hosts file may not work for you, only available on WSL2: %v (%s)", strings.Join(args, " "), err, out)
 			}
+			util.Warning("Unable to run 'ddev %v' on Windows, your hosts file may not work for you, only available on WSL2: %v (%s)", strings.Join(args, " "), err, out)
 		}
 
 		// Check for root rights and forward to sudo if not
 		if !exec.HasRootRights() {
-			exec.RunMeWithRootRights()
-
+			stdout, err := exec.RunMeWithRootRights()
+			if err != nil {
+				util.Warning("Failed to run admin-privileged privileged ddev hostname: %v, %s", err, stdout)
+			}
 			return
 		}
 

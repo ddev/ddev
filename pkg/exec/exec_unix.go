@@ -10,7 +10,8 @@ import (
 )
 
 // RunCommandWithRootRights runs a command with sudo on Unix like systems or
-// with elevated rights on Windows.
+// with elevated rights on Windows.It returns
+//stdout of command and an error if any
 func RunCommandWithRootRights(command string, args []string) (string, error) {
 	if HasRootRights() {
 		return RunCommand(command, args)
