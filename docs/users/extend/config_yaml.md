@@ -3,7 +3,7 @@
 Each project has a (hidden) directory named .ddev, and
 the .ddev/config.yaml is the primary configuration for the project.
 
-* You can override the config.yaml with extra files named "config.*.yaml". For example, many teams use `config.local.yaml` for configuration that is specific to one environment, and that is not intended to be checked into the team's default config.yaml.
+* You can override the config.yaml with extra files named "config.\*.yaml". For example, many teams use `config.local.yaml` for configuration that is specific to one environment, and that is not intended to be checked into the team's default config.yaml.
 * Most configuration options take effect on `ddev start`
 * Nearly all configuration options have equivalent `ddev config` flags, so you can use ddev config instead of editing the config.yaml. See `ddev help config` to see all the flags.
 

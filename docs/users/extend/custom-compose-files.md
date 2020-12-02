@@ -16,7 +16,7 @@ To add custom configuration or additional services to your project, create docke
 
 The main docker-compose file is named `.ddev/.ddev-docker-compose-base.yaml` and exclusively reserved for ddev's use; it is overwritten every time a project is started, so it should not be edited because edits will be lost. If you need to override configuration provided by .ddev/.ddev-docker-compose-base.yaml, use an additional file "docker-compose.<whatever>.yaml" to do so.
 
-### docker-compose.*.yaml examples
+### docker-compose.\*.yaml examples
 
 * Set an environment variable in the web container, in a file perhaps called `docker-compose.env.yaml`:
 
