@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, macos-latest ]
+        os: [ ubuntu-20.04 ]
     steps:
     - uses: actions/checkout@v1
     - name: Set environment variables
