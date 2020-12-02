@@ -24,7 +24,7 @@ If you need to create a service configuration for your project, see [Defining an
 
 ## Providing custom environment variables to a container
 
-Each project can have an unlimited number of .ddev/docker-compose.*.yaml files as described in [Custom Compose Files](./custom-compose-files.md), so it's easy to maintain custom environment variables in a .ddev/docker-compose.environment.yaml file (the exact name doesn't matter, if it just matches docker-compose.*.yaml).
+Each project can have an unlimited number of .ddev/docker-compose.\*.yaml files as described in [Custom Compose Files](./custom-compose-files.md), so it's easy to maintain custom environment variables in a .ddev/docker-compose.environment.yaml file (the exact name doesn't matter, if it just matches docker-compose.\*.yaml).
 
 For example, a `.ddev/docker-compose.environment.yaml` with these contents would add a $TYPO3_CONTEXT environment variable to the web container, and a $SOMETHING environment variable to the db container:
 
@@ -78,7 +78,7 @@ If you're using `webserver_type: apache-fpm` in your .ddev/config.yaml, you can 
 
 ### Providing custom PHP configuration (php.ini)
 
-You can provide additional PHP configuration for a project by creating a directory called `.ddev/php/` and adding any number of php configuration ini files (they must be *.ini files). Normally, you should just override the specific option that you need to override. Note that any file that exists in `.ddev/php/` will be copied into `/etc/php/[version]/(cli|fpm)/conf.d`, so it's possible to replace files that already exist in the container. Common usage is to put custom overrides in a file called `my-php.ini`. Make sure you include the section header that goes with each item (like `[PHP]`)
+You can provide additional PHP configuration for a project by creating a directory called `.ddev/php/` and adding any number of php configuration ini files (they must be \*.ini files). Normally, you should just override the specific option that you need to override. Note that any file that exists in `.ddev/php/` will be copied into `/etc/php/[version]/(cli|fpm)/conf.d`, so it's possible to replace files that already exist in the container. Common usage is to put custom overrides in a file called `my-php.ini`. Make sure you include the section header that goes with each item (like `[PHP]`)
 
 One interesting implication of this behavior is that it's possible to disable extensions by replacing the configuration file that loads them. For instance, if you were to create an empty file at `.ddev/php/20-xdebug.ini`, it would replace the configuration that loads xdebug, which would cause xdebug to not be loaded!
 
@@ -106,9 +106,9 @@ innodb_large_prefix=false
 
 To load the new configuration, run `ddev restart`.
 
-### Extending config.yaml with custom config.*.yaml files
+### Extending config.yaml with custom config.\*.yaml files
 
-You may add additional config.*.yaml files to organize additional commands as you see fit for your project and team.
+You may add additional config.\*.yaml files to organize additional commands as you see fit for your project and team.
 
 For example, many teams commit their config.yaml and share it throughout the team, but some team members may require overrides to the checked-in version that are custom to their environment and should not be checked in. For example, a team member may want to use a router_http_port other than the team default due to a conflict in their development environment. In this case they could add the file .ddev/config.ports.yaml with the contents:
 
@@ -117,8 +117,8 @@ For example, many teams commit their config.yaml and share it throughout the tea
 router_http_port: 8080
 ```
 
-config.*.yaml is by default omitted from git by the .ddev/.gitignore file.
+config.\*.yaml is by default omitted from git by the .ddev/.gitignore file.
 
-Extra config.*.yaml files are loaded in lexicographic order, so "config.a.yaml" will be overridden by "config.b.yaml".
+Extra config.\*.yaml files are loaded in lexicographic order, so "config.a.yaml" will be overridden by "config.b.yaml".
 
 Teams may choose to use "config.local.yaml" or "config.override.yaml" for all local non-committed config changes, for example.

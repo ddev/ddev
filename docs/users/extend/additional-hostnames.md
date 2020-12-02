@@ -10,7 +10,7 @@ additional_hostnames:
 - "fr.mysite"
 - "es.mysite"
 - "it.mysite"
-- "*.lotsofnames"
+- "\*.lotsofnames"
 ```
 
 This configuration would result in working hostnames of mysite.ddev.site, extraname.ddev.site, fr.mysite.ddev.site, es.mysite.ddev.site, and it.mysite.ddev.site (with full http and https URLs for each).
