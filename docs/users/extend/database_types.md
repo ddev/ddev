@@ -8,6 +8,8 @@ Note that `mariadb_version` and `mysql_version` are mutually exclusive.
 
 The default version is MariaDB 10.2 and it works for most purposes.
 
+If you decide to use MySQL, you can set the version to 5.7 with `mysql_version: 5.7`
+
 You can also use `ddev config --mariadb-version=10.4` or `ddev config --mysql-version=8.0`
 
 ### Caveats
