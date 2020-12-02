@@ -42,7 +42,7 @@ docker --version
 docker-compose --version
 
 #ddev poweroff
-for i in {1..10}; do
+for i in {1..5}; do
   site=testsite-${i}
   sites="$sites $site"
   printf "\n\nStarting ${site}...\n"
