@@ -2,15 +2,26 @@
 
 #ddev-generated
 # Support for TablePlus, https://tableplus.com/
-# This command is available if macOS and TablePlus is installed in the normal place
+# This command is available if macOS and Windows (including WSL2)
+# and TablePlus is installed in the normal place
 ## Description: Run tableplus with current project database
 ## Usage: tableplus
 ## Example: "ddev tableplus"
-## OSTypes: darwin
-## HostBinaryExists: /Applications/TablePlus.app
+## OSTypes: darwin,windows,wsl2
+## HostBinaryExists: "/Applications/TablePlus.app,C:\Program Files\TablePlus\TablePlus.exe,/mnt/c/Program Files/TablePlus/TablePlus.exe"
 
-set -x
 query="mysql://root:root@127.0.0.1:${DDEV_HOST_DB_PORT}/db"
 
-open "$query" -a "/Applications/TablePlus.app/Contents/MacOS/TablePlus"
-
+case $OSTYPE in
+  "darwin")
+    open "$query" -a "/Applications/TablePlus.app/Contents/MacOS/TablePlus"
+    ;;
+  "win*"* | "msys"*)
+    # We don't know how to do this yet on Windows, see https://github.com/TablePlus/TablePlus/issues/2224
+    '/c/Program Files/TablePlus/TablePlus.exe' "$query" &
+    ;;
+  "linux-gnu")
+    # Start TablePlus in WSL2
+    "/mnt/c/Program Files/TablePlus/TablePlus.exe" "$query" &
+    ;;
+esac
