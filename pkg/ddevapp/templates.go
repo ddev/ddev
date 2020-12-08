@@ -171,8 +171,8 @@ services:
       - "80"
     hostname: {{ .Name }}-dba
     environment:
-      - PMA_USER=db
-      - PMA_PASSWORD=db
+      - PMA_USER=root
+      - PMA_PASSWORD=root
       - VIRTUAL_HOST=$DDEV_HOSTNAME
       - UPLOAD_LIMIT=1024M
       - TZ={{ .Timezone }}
