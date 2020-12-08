@@ -4,21 +4,17 @@
 ## Description: Run HeidiSQL against current db
 ## Usage: heidisql
 ## Example: "ddev heidisql"
-## OSTypes: linux,windows
+## OSTypes: windows,wsl2
+## HostBinaryExists: "/mnt/c/Program Files/HeidiSQL/heidisql.exe,/c/Program Files/HeidiSQL/Heidisql.exe"
 
 arguments="--host=127.0.0.1 --port=${DDEV_HOST_DB_PORT} --user=root --password=root --description=${DDEV_SITENAME}"
 
 case $OSTYPE in
-  linux-gnu)
-    # "/mnt/c/Program Files/HeidiSQL/heidisql.exe"
+  "win*"* | "msys"*)
+    '/c/Program Files/HeidiSQL/heidisql.exe' "$arguments" &
+    ;;
+  "linux-gnu")
     # HeidiSQL is Microsoft only, but we want to starting it from WSL2
     "/mnt/c/Program Files/HeidiSQL/heidisql.exe" "$arguments" &
-    echo "Attempted to launch heidisql.exe"
     ;;
-
-  "win*"* | "msys"*)
-    # 'C:\Program Files\HeidiSQL\heidisql.exe'
-    # You may need to add it to your system %PATH% or change the path here
-    'C:\Program Files\HeidiSQL\heidisql.exe' "$arguments"
-    #;;
 esac

@@ -53,6 +53,11 @@ func RandomString(length int) string {
 	return string(b)
 }
 
+// IsWSL2() returns true if running WSL2
+func IsWSL2() bool {
+	return GetWSLDistro() != ""
+}
+
 // GetWSLDistro returns the WSL2 distro name if on Linux
 func GetWSLDistro() string {
 	wslDistro := ""

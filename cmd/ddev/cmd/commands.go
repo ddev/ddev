@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"io/ioutil"
 	"os"
 	"path"
@@ -140,9 +141,11 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					osTypes = val
 				}
 
-				// If OSTypes is specified and we aren't this isn't a specified OS, skip
-				if osTypes != "" && !strings.Contains(osTypes, runtime.GOOS) {
-					continue
+				// If OSTypes is specified and we aren't on one of the specified OSes, skip
+				if osTypes != "" {
+					if !strings.Contains(osTypes, runtime.GOOS) && !(strings.Contains(osTypes, "wsl2") && nodeps.IsWSL2()) {
+						continue
+					}
 				}
 
 				// Import and handle HostBinaryExists
@@ -151,8 +154,18 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 
 				// If hostBinaryExists is specified it doesn't exist here, skip
-				if hostBinaryExists != "" && !fileutil.FileExists(hostBinaryExists) {
-					continue
+				if hostBinaryExists != "" {
+					binExists := false
+					bins := strings.Split(hostBinaryExists, ",")
+					for _, bin := range bins {
+						if fileutil.FileExists(bin) {
+							binExists = true
+							break
+						}
+					}
+					if !binExists {
+						continue
+					}
 				}
 
 				// Create proper description suffix
