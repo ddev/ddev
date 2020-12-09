@@ -456,6 +456,11 @@ func writeDrupal6DdevSettingsFile(settings *DrupalSettings, filePath string) err
 // WriteDrushrc writes out drushrc.php based on passed-in values.
 // This works on Drupal 6 and Drupal 7 or with drush8 and older
 func WriteDrushrc(app *DdevApp, filePath string) error {
+	// Ignore because this is a settings file.
+	if app.DisableSettingsManagement {
+		return nil
+	}
+
 	if fileutil.FileExists(filePath) {
 		// Check if the file is managed by ddev.
 		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
